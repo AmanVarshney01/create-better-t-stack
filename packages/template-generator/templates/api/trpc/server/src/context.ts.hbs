@@ -1,3 +1,18 @@
+{{#if (eq auth "clerk")}}
+type ClerkContextAuth = {
+	userId: string | null;
+};
+
+type ClerkRequestContext = {
+	auth: ClerkContextAuth | null;
+	session: null;
+};
+
+function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContextAuth | null {
+	return auth ? { userId: auth.userId } : null;
+}
+{{/if}}
+
 {{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
 import { createClerkClient } from "@clerk/backend";
 import { env } from "@{{projectName}}/env/server";
@@ -7,12 +22,12 @@ const clerkClient = createClerkClient({
 	publishableKey: env.CLERK_PUBLISHABLE_KEY,
 });
 
-async function authenticateClerkRequest(request: Request) {
+async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth | null> {
 	const origin = request.headers.get("origin");
 	const requestState = await clerkClient.authenticateRequest(request, {
 		...(origin === env.CORS_ORIGIN ? { authorizedParties: [env.CORS_ORIGIN] } : {}),
 	});
-	return requestState.toAuth();
+	return toClerkContextAuth(requestState.toAuth());
 }
 {{/if}}
 
@@ -22,7 +37,7 @@ import type { NextRequest } from "next/server";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
-export async function createContext(req: NextRequest) {
+export async function createContext(req: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: req.headers,
@@ -50,7 +65,7 @@ export async function createContext(req: NextRequest) {
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
-export async function createContext({ req }: { req: Request }) {
+export async function createContext({ req }: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: req.headers,
@@ -83,7 +98,7 @@ export type CreateContextOptions = {
 	context: HonoContext;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
+export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.req.raw.headers,
@@ -116,7 +131,7 @@ export type CreateContextOptions = {
 	context: ElysiaContext;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
+export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
@@ -148,7 +163,7 @@ import { auth } from "@{{projectName}}/auth";
 import { getAuth } from "@clerk/express";
 {{/if}}
 
-export async function createContext(opts: CreateExpressContextOptions) {
+export async function createContext(opts: CreateExpressContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
@@ -158,7 +173,7 @@ export async function createContext(opts: CreateExpressContextOptions) {
 		session,
 	};
 {{else if (eq auth "clerk")}}
-	const clerkAuth = getAuth(opts.req);
+	const clerkAuth = toClerkContextAuth(getAuth(opts.req));
 	return {
 		auth: clerkAuth,
 		session: null,
@@ -180,7 +195,7 @@ import { auth } from "@{{projectName}}/auth";
 import { getAuth } from "@clerk/fastify";
 {{/if}}
 
-export async function createContext({ req }: CreateFastifyContextOptions) {
+export async function createContext({ req }: CreateFastifyContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(req.headers),
@@ -190,7 +205,7 @@ export async function createContext({ req }: CreateFastifyContextOptions) {
 		session,
 	};
 {{else if (eq auth "clerk")}}
-	const clerkAuth = getAuth(req);
+	const clerkAuth = toClerkContextAuth(getAuth(req));
 	return {
 		auth: clerkAuth,
 		session: null,

@@ -176,6 +176,18 @@ describe("Clerk matrix", () => {
           );
         }
 
+        if (!contextFile?.includes("type ClerkContextAuth")) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing ClerkContextAuth in packages/api/src/context.ts`,
+          );
+        }
+
+        if (!contextFile?.includes("type ClerkRequestContext")) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing ClerkRequestContext in packages/api/src/context.ts`,
+          );
+        }
+
         if (
           usesBackendClerkClient(combo.backend, combo.api) &&
           !contextFile.includes("publishableKey: env.CLERK_PUBLISHABLE_KEY")
@@ -207,6 +219,14 @@ describe("Clerk matrix", () => {
           failures.push(
             `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: Next dashboard still uses SignedIn/SignedOut`,
           );
+        } else if (
+          combo.backend !== "convex" &&
+          combo.api !== "none" &&
+          !dashboard.includes("privateData.queryOptions()")
+        ) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: Next dashboard is missing protected privateData query`,
+          );
         }
 
         if (combo.backend !== "convex") {
@@ -236,6 +256,14 @@ describe("Clerk matrix", () => {
           failures.push(
             `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: React Router dashboard still uses SignedIn/SignedOut`,
           );
+        } else if (
+          combo.backend !== "convex" &&
+          combo.api !== "none" &&
+          !dashboard.includes("privateData.queryOptions()")
+        ) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: React Router dashboard is missing protected privateData query`,
+          );
         }
       }
 
@@ -249,6 +277,14 @@ describe("Clerk matrix", () => {
           failures.push(
             `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: TanStack Router dashboard still uses SignedIn/SignedOut`,
           );
+        } else if (
+          combo.backend !== "convex" &&
+          combo.api !== "none" &&
+          !dashboard.includes("privateData.queryOptions()")
+        ) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: TanStack Router dashboard is missing protected privateData query`,
+          );
         }
       }
 
@@ -261,6 +297,14 @@ describe("Clerk matrix", () => {
         } else if (dashboard.includes("SignedIn") || dashboard.includes("SignedOut")) {
           failures.push(
             `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: TanStack Start dashboard still uses SignedIn/SignedOut`,
+          );
+        } else if (
+          combo.backend !== "convex" &&
+          combo.api !== "none" &&
+          !dashboard.includes("privateData.queryOptions()")
+        ) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: TanStack Start dashboard is missing protected privateData query`,
           );
         }
 
@@ -276,6 +320,70 @@ describe("Clerk matrix", () => {
           ) {
             failures.push(
               `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: TanStack Start entry still imports shared server env`,
+            );
+          }
+        }
+      }
+
+      const nativeFrontend = combo.frontend.find((entry) => entry.startsWith("native-"));
+      if (nativeFrontend) {
+        const nativePackage = files.get("apps/native/package.json");
+        const nativeSignIn = files.get("apps/native/app/(auth)/sign-in.tsx");
+        const nativeSignUp = files.get("apps/native/app/(auth)/sign-up.tsx");
+
+        if (!nativePackage?.includes('"@clerk/expo": "^3.1.3"')) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: native package is missing @clerk/expo ^3.1.3`,
+          );
+        }
+
+        if (!nativeSignIn) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing native sign-in screen`,
+          );
+        } else {
+          if (nativeSignIn.includes("setActive") || nativeSignIn.includes("signIn.create")) {
+            failures.push(
+              `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: native sign-in still uses the legacy Clerk Expo API`,
+            );
+          }
+
+          if (
+            !nativeSignIn.includes("const { signIn, errors, fetchStatus } = useSignIn()") ||
+            !nativeSignIn.includes("await signIn.password") ||
+            !nativeSignIn.includes("await signIn.finalize")
+          ) {
+            failures.push(
+              `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: native sign-in is missing the current Clerk Expo flow`,
+            );
+          }
+        }
+
+        if (!nativeSignUp) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing native sign-up screen`,
+          );
+        } else {
+          if (
+            nativeSignUp.includes("setActive") ||
+            nativeSignUp.includes("prepareEmailAddressVerification") ||
+            nativeSignUp.includes("attemptEmailAddressVerification")
+          ) {
+            failures.push(
+              `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: native sign-up still uses the legacy Clerk Expo API`,
+            );
+          }
+
+          if (
+            !nativeSignUp.includes("const { signUp, errors, fetchStatus } = useSignUp()") ||
+            !nativeSignUp.includes("await signUp.password") ||
+            !nativeSignUp.includes("await signUp.verifications.sendEmailCode()") ||
+            !nativeSignUp.includes("await signUp.verifications.verifyEmailCode") ||
+            !nativeSignUp.includes("await signUp.finalize") ||
+            !nativeSignUp.includes('nativeID="clerk-captcha"')
+          ) {
+            failures.push(
+              `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: native sign-up is missing the current Clerk Expo flow`,
             );
           }
         }

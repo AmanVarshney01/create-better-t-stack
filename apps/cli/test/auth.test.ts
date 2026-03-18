@@ -280,6 +280,11 @@ describe("Authentication Configurations", () => {
       expect(dashboardFile).not.toContain("SignedIn");
       expect(dashboardFile).not.toContain("SignedOut");
       expect(dashboardFile).toContain("useUser");
+      expect(dashboardFile).toContain("privateData.queryOptions()");
+      expect(apiContextFile).toContain("type ClerkContextAuth");
+      expect(apiContextFile).toContain("type ClerkRequestContext");
+      expect(apiContextFile).toContain("function toClerkContextAuth");
+      expect(apiContextFile).toContain("Promise<ClerkRequestContext>");
       expect(apiContextFile).toContain("publishableKey: env.CLERK_PUBLISHABLE_KEY");
       expect(serverEnvPackageFile).toContain("CLERK_PUBLISHABLE_KEY");
       expect(serverEnvFile).toContain("CLERK_PUBLISHABLE_KEY=");
@@ -322,18 +327,19 @@ describe("Authentication Configurations", () => {
       expect(dashboardFile).not.toContain("SignedIn");
       expect(dashboardFile).not.toContain("SignedOut");
       expect(dashboardFile).toContain("useUser");
+      expect(dashboardFile).toContain("privateData.queryOptions()");
     });
 
-    it("should work with clerk + native frontend on hono", async () => {
+    it("should scaffold Clerk native auth with the current Expo SDK flow", async () => {
       const result = await runTRPCTest({
-        projectName: "clerk-native-hono-success",
+        projectName: "clerk-native-hono-current",
         auth: "clerk",
         backend: "hono",
         runtime: "bun",
         database: "sqlite",
         orm: "drizzle",
         api: "trpc",
-        frontend: ["native-bare"],
+        frontend: ["native-uniwind"],
         addons: ["turborepo"],
         examples: ["todo"],
         dbSetup: "none",
@@ -343,6 +349,40 @@ describe("Authentication Configurations", () => {
       });
 
       expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const nativePackageFile = await fs.readFile(
+        path.join(result.projectDir, "apps/native/package.json"),
+        "utf8",
+      );
+      const signInFile = await fs.readFile(
+        path.join(result.projectDir, "apps/native/app/(auth)/sign-in.tsx"),
+        "utf8",
+      );
+      const signUpFile = await fs.readFile(
+        path.join(result.projectDir, "apps/native/app/(auth)/sign-up.tsx"),
+        "utf8",
+      );
+
+      expect(nativePackageFile).toContain('"@clerk/expo": "^3.1.3"');
+
+      expect(signInFile).not.toContain("setActive");
+      expect(signInFile).not.toContain("signIn.create");
+      expect(signInFile).toContain("const { signIn, errors, fetchStatus } = useSignIn()");
+      expect(signInFile).toContain("await signIn.password");
+      expect(signInFile).toContain("await signIn.finalize");
+
+      expect(signUpFile).not.toContain("setActive");
+      expect(signUpFile).not.toContain("prepareEmailAddressVerification");
+      expect(signUpFile).not.toContain("attemptEmailAddressVerification");
+      expect(signUpFile).toContain("const { signUp, errors, fetchStatus } = useSignUp()");
+      expect(signUpFile).toContain("await signUp.password");
+      expect(signUpFile).toContain("await signUp.verifications.sendEmailCode()");
+      expect(signUpFile).toContain("await signUp.verifications.verifyEmailCode");
+      expect(signUpFile).toContain("await signUp.finalize");
+      expect(signUpFile).toContain('nativeID="clerk-captcha"');
     });
 
     const compatibleFrontends = [

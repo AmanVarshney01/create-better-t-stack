@@ -662,7 +662,22 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   "devDependencies": {},
   "dependencies": {}
 }`],
-  ["api/orpc/server/src/context.ts.hbs", `{{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
+  ["api/orpc/server/src/context.ts.hbs", `{{#if (eq auth "clerk")}}
+type ClerkContextAuth = {
+	userId: string | null;
+};
+
+type ClerkRequestContext = {
+	auth: ClerkContextAuth | null;
+	session: null;
+};
+
+function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContextAuth | null {
+	return auth ? { userId: auth.userId } : null;
+}
+{{/if}}
+
+{{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
 import { createClerkClient } from "@clerk/backend";
 import { env } from "@{{projectName}}/env/server";
 
@@ -671,12 +686,12 @@ const clerkClient = createClerkClient({
 	publishableKey: env.CLERK_PUBLISHABLE_KEY,
 });
 
-async function authenticateClerkRequest(request: Request) {
+async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth | null> {
 	const origin = request.headers.get("origin");
 	const requestState = await clerkClient.authenticateRequest(request, {
 		...(origin === env.CORS_ORIGIN ? { authorizedParties: [env.CORS_ORIGIN] } : {}),
 	});
-	return requestState.toAuth();
+	return toClerkContextAuth(requestState.toAuth());
 }
 {{/if}}
 
@@ -686,7 +701,7 @@ import type { NextRequest } from "next/server";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
-export async function createContext(req: NextRequest) {
+export async function createContext(req: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: req.headers,
@@ -714,7 +729,7 @@ export async function createContext(req: NextRequest) {
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
-export async function createContext({ req }: { req: Request }) {
+export async function createContext({ req }: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: req.headers,
@@ -795,7 +810,7 @@ export type CreateContextOptions = {
 	context: HonoContext;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
+export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.req.raw.headers,
@@ -828,7 +843,7 @@ export type CreateContextOptions = {
 	context: ElysiaContext;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
+export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
@@ -864,7 +879,7 @@ interface CreateContextOptions {
 	req: Request;
 }
 
-export async function createContext(opts: CreateContextOptions) {
+export async function createContext(opts: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
@@ -874,7 +889,7 @@ export async function createContext(opts: CreateContextOptions) {
 		session,
 	};
 {{else if (eq auth "clerk")}}
-	const clerkAuth = getAuth(opts.req);
+	const clerkAuth = toClerkContextAuth(getAuth(opts.req));
 	return {
 		auth: clerkAuth,
 		session: null,
@@ -898,7 +913,7 @@ import { getAuth } from "@clerk/fastify";
 import type { IncomingHttpHeaders } from "node:http";
 {{/if}}
 
-export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typeof getAuth>[0]{{else}}IncomingHttpHeaders{{/if}}) {
+export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typeof getAuth>[0]{{else}}IncomingHttpHeaders{{/if}}){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(req),
@@ -908,7 +923,7 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 		session,
 	};
 {{else if (eq auth "clerk")}}
-	const clerkAuth = getAuth(req);
+	const clerkAuth = toClerkContextAuth(getAuth(req));
 	return {
 		auth: clerkAuth,
 		session: null,
@@ -1496,7 +1511,22 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   "scripts": {},
   "devDependencies": {}
 }`],
-  ["api/trpc/server/src/context.ts.hbs", `{{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
+  ["api/trpc/server/src/context.ts.hbs", `{{#if (eq auth "clerk")}}
+type ClerkContextAuth = {
+	userId: string | null;
+};
+
+type ClerkRequestContext = {
+	auth: ClerkContextAuth | null;
+	session: null;
+};
+
+function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContextAuth | null {
+	return auth ? { userId: auth.userId } : null;
+}
+{{/if}}
+
+{{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
 import { createClerkClient } from "@clerk/backend";
 import { env } from "@{{projectName}}/env/server";
 
@@ -1505,12 +1535,12 @@ const clerkClient = createClerkClient({
 	publishableKey: env.CLERK_PUBLISHABLE_KEY,
 });
 
-async function authenticateClerkRequest(request: Request) {
+async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth | null> {
 	const origin = request.headers.get("origin");
 	const requestState = await clerkClient.authenticateRequest(request, {
 		...(origin === env.CORS_ORIGIN ? { authorizedParties: [env.CORS_ORIGIN] } : {}),
 	});
-	return requestState.toAuth();
+	return toClerkContextAuth(requestState.toAuth());
 }
 {{/if}}
 
@@ -1520,7 +1550,7 @@ import type { NextRequest } from "next/server";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
-export async function createContext(req: NextRequest) {
+export async function createContext(req: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: req.headers,
@@ -1548,7 +1578,7 @@ export async function createContext(req: NextRequest) {
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
-export async function createContext({ req }: { req: Request }) {
+export async function createContext({ req }: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: req.headers,
@@ -1581,7 +1611,7 @@ export type CreateContextOptions = {
 	context: HonoContext;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
+export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.req.raw.headers,
@@ -1614,7 +1644,7 @@ export type CreateContextOptions = {
 	context: ElysiaContext;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
+export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
@@ -1646,7 +1676,7 @@ import { auth } from "@{{projectName}}/auth";
 import { getAuth } from "@clerk/express";
 {{/if}}
 
-export async function createContext(opts: CreateExpressContextOptions) {
+export async function createContext(opts: CreateExpressContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
@@ -1656,7 +1686,7 @@ export async function createContext(opts: CreateExpressContextOptions) {
 		session,
 	};
 {{else if (eq auth "clerk")}}
-	const clerkAuth = getAuth(opts.req);
+	const clerkAuth = toClerkContextAuth(getAuth(opts.req));
 	return {
 		auth: clerkAuth,
 		session: null,
@@ -1678,7 +1708,7 @@ import { auth } from "@{{projectName}}/auth";
 import { getAuth } from "@clerk/fastify";
 {{/if}}
 
-export async function createContext({ req }: CreateFastifyContextOptions) {
+export async function createContext({ req }: CreateFastifyContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(req.headers),
@@ -1688,7 +1718,7 @@ export async function createContext({ req }: CreateFastifyContextOptions) {
 		session,
 	};
 {{else if (eq auth "clerk")}}
-	const clerkAuth = getAuth(req);
+	const clerkAuth = toClerkContextAuth(getAuth(req));
 	return {
 		auth: clerkAuth,
 		session: null,
@@ -11058,181 +11088,458 @@ export default function AuthRoutesLayout() {
 }
 `],
   ["auth/clerk/convex/native/base/app/(auth)/sign-in.tsx.hbs", `import { useSignIn } from "@clerk/expo";
-import { Link, useRouter } from "expo-router";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { type Href, Link, useRouter } from "expo-router";
 import React from "react";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+
+function pushDecoratedUrl(router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) {
+  const url = decorateUrl(href);
+  const nextHref = url.startsWith("http") ? new URL(url).pathname : url;
+  router.push(nextHref as Href);
+}
 
 export default function Page() {
-  const { signIn, setActive, isLoaded } = useSignIn();
+  const { signIn, errors, fetchStatus } = useSignIn();
   const router = useRouter();
-
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
-
-  // Handle the submission of the sign-in form
-  const onSignInPress = async () => {
-    if (!isLoaded) return;
-
-    // Start the sign-in process using the email and password provided
-    try {
-      const signInAttempt = await signIn.create({
-        identifier: emailAddress,
-        password,
-      });
-
-      // If sign-in process is complete, set the created session as active
-      // and redirect the user
-      if (signInAttempt.status === "complete") {
-        await setActive({ session: signInAttempt.createdSessionId });
-        router.replace("/");
-      } else {
-        // If the status isn't complete, check why. User might need to
-        // complete further steps.
-        console.error(JSON.stringify(signInAttempt, null, 2));
-      }
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
-    }
-  };
-
-  return (
-    <View>
-      <Text>Sign in</Text>
-      <TextInput
-        autoCapitalize="none"
-        value={emailAddress}
-        placeholder="Enter email"
-        onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
-      />
-      <TextInput
-        value={password}
-        placeholder="Enter password"
-        secureTextEntry={true}
-        onChangeText={(password) => setPassword(password)}
-      />
-      <TouchableOpacity onPress={onSignInPress}>
-        <Text>Continue</Text>
-      </TouchableOpacity>
-      <View style=\\{{ display: "flex", flexDirection: "row", gap: 3 }}>
-        <Text>Don't have an account?</Text>
-        <Link href="/sign-up">
-          <Text>Sign up</Text>
-        </Link>
-      </View>
-    </View>
-  );
-}
-`],
-  ["auth/clerk/convex/native/base/app/(auth)/sign-up.tsx.hbs", `import * as React from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useSignUp } from "@clerk/expo";
-import { Link, useRouter } from "expo-router";
-
-export default function SignUpScreen() {
-  const { isLoaded, signUp, setActive } = useSignUp();
-  const router = useRouter();
-
-  const [emailAddress, setEmailAddress] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [pendingVerification, setPendingVerification] = React.useState(false);
   const [code, setCode] = React.useState("");
+  const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
 
-  // Handle submission of sign-up form
-  const onSignUpPress = async () => {
-    if (!isLoaded) return;
+  const emailCodeFactor = signIn.supportedSecondFactors.find(
+    (factor) => factor.strategy === "email_code",
+  );
+  const requiresEmailCode =
+    signIn.status === "needs_client_trust" ||
+    (signIn.status === "needs_second_factor" && !!emailCodeFactor);
 
-    // Start sign-up process using email and password provided
-    try {
-      await signUp.create({
-        emailAddress,
-        password,
-      });
+  const handleSubmit = async () => {
+    setStatusMessage(null);
 
-      // Send user an email with verification code
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+    const { error } = await signIn.password({
+      emailAddress,
+      password,
+    });
 
-      // Set 'pendingVerification' to true to display second form
-      // and capture OTP code
-      setPendingVerification(true);
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
+    if (error) {
+      console.error(JSON.stringify(error, null, 2));
+      setStatusMessage(error.longMessage ?? "Unable to sign in. Please try again.");
+      return;
     }
-  };
 
-  // Handle submission of verification form
-  const onVerifyPress = async () => {
-    if (!isLoaded) return;
+    if (signIn.status === "complete") {
+      await signIn.finalize({
+        navigate: ({ session, decorateUrl }) => {
+          if (session?.currentTask) {
+            console.log(session.currentTask);
+            return;
+          }
 
-    try {
-      // Use the code the user provided to attempt verification
-      const signUpAttempt = await signUp.attemptEmailAddressVerification({
-        code,
+          pushDecoratedUrl(router, decorateUrl, "/");
+        },
       });
-
-      // If verification was completed, set the session to active
-      // and redirect the user
-      if (signUpAttempt.status === "complete") {
-        await setActive({ session: signUpAttempt.createdSessionId });
-        router.replace("/");
+    } else if (signIn.status === "needs_second_factor" || signIn.status === "needs_client_trust") {
+      if (emailCodeFactor) {
+        await signIn.mfa.sendEmailCode();
+        setStatusMessage(\`We sent a verification code to \${emailCodeFactor.safeIdentifier}.\`);
       } else {
-        // If the status is not complete, check why. User may need to
-        // complete further steps.
-        console.error(JSON.stringify(signUpAttempt, null, 2));
+        console.error("Second factor is required, but email_code is not available:", signIn);
+        setStatusMessage("A second factor is required, but this screen only supports email codes right now.");
       }
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
+    } else {
+      console.error("Sign-in attempt not complete:", signIn);
+      setStatusMessage("Sign-in could not be completed. Check the logs for more details.");
     }
   };
 
-  if (pendingVerification) {
+  const handleVerify = async () => {
+    setStatusMessage(null);
+
+    await signIn.mfa.verifyEmailCode({ code });
+
+    if (signIn.status === "complete") {
+      await signIn.finalize({
+        navigate: ({ session, decorateUrl }) => {
+          if (session?.currentTask) {
+            console.log(session.currentTask);
+            return;
+          }
+
+          pushDecoratedUrl(router, decorateUrl, "/");
+        },
+      });
+    } else {
+      console.error("Sign-in attempt not complete:", signIn);
+      setStatusMessage("That code did not complete sign-in. Please try again.");
+    }
+  };
+
+  if (requiresEmailCode) {
     return (
-      <>
-        <Text>Verify your email</Text>
+      <View style={styles.container}>
+        <Text style={styles.title}>Verify your account</Text>
+        {statusMessage && <Text style={styles.helper}>{statusMessage}</Text>}
         <TextInput
+          style={styles.input}
           value={code}
           placeholder="Enter your verification code"
-          onChangeText={(code) => setCode(code)}
+          placeholderTextColor="#666666"
+          onChangeText={(value) => setCode(value)}
+          keyboardType="numeric"
         />
-        <TouchableOpacity onPress={onVerifyPress}>
-          <Text>Verify</Text>
-        </TouchableOpacity>
-      </>
+        {errors.fields.code && <Text style={styles.error}>{errors.fields.code.message}</Text>}
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            fetchStatus === "fetching" && styles.buttonDisabled,
+            pressed && styles.buttonPressed,
+          ]}
+          onPress={handleVerify}
+          disabled={fetchStatus === "fetching"}
+        >
+          <Text style={styles.buttonText}>Verify</Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
+          onPress={() => signIn.mfa.sendEmailCode()}
+        >
+          <Text style={styles.secondaryButtonText}>I need a new code</Text>
+        </Pressable>
+      </View>
     );
   }
 
   return (
-    <View>
-      <Text>Sign up</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Sign in</Text>
+      {statusMessage && <Text style={styles.helper}>{statusMessage}</Text>}
+      <Text style={styles.label}>Email address</Text>
       <TextInput
+        style={styles.input}
         autoCapitalize="none"
         value={emailAddress}
         placeholder="Enter email"
-        onChangeText={(email) => setEmailAddress(email)}
+        placeholderTextColor="#666666"
+        onChangeText={(value) => setEmailAddress(value)}
+        keyboardType="email-address"
       />
+      {errors.fields.identifier && <Text style={styles.error}>{errors.fields.identifier.message}</Text>}
+      <Text style={styles.label}>Password</Text>
       <TextInput
+        style={styles.input}
         value={password}
         placeholder="Enter password"
+        placeholderTextColor="#666666"
         secureTextEntry={true}
-        onChangeText={(password) => setPassword(password)}
+        onChangeText={(value) => setPassword(value)}
       />
-      <TouchableOpacity onPress={onSignUpPress}>
-        <Text>Continue</Text>
-      </TouchableOpacity>
-      <View style=\\{{ display: "flex", flexDirection: "row", gap: 3 }}>
-        <Text>Already have an account?</Text>
-        <Link href="/sign-in">
-          <Text>Sign in</Text>
+      {errors.fields.password && <Text style={styles.error}>{errors.fields.password.message}</Text>}
+      <Pressable
+        style={({ pressed }) => [
+          styles.button,
+          (!emailAddress || !password || fetchStatus === "fetching") && styles.buttonDisabled,
+          pressed && styles.buttonPressed,
+        ]}
+        onPress={handleSubmit}
+        disabled={!emailAddress || !password || fetchStatus === "fetching"}
+      >
+        <Text style={styles.buttonText}>Sign in</Text>
+      </Pressable>
+      <View style={styles.linkContainer}>
+        <Text>Don't have an account? </Text>
+        <Link href="/sign-up">
+          <Text style={styles.linkText}>Sign up</Text>
         </Link>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    gap: 12,
+  },
+  title: {
+    marginBottom: 8,
+    fontSize: 24,
+    fontWeight: "700",
+  },
+  label: {
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: "#fff",
+  },
+  button: {
+    backgroundColor: "#0a7ea4",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  buttonPressed: {
+    opacity: 0.7,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  secondaryButtonText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  linkContainer: {
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 12,
+    alignItems: "center",
+  },
+  linkText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  error: {
+    color: "#d32f2f",
+    fontSize: 12,
+    marginTop: -8,
+  },
+  helper: {
+    color: "#555555",
+    fontSize: 13,
+  },
+});
+`],
+  ["auth/clerk/convex/native/base/app/(auth)/sign-up.tsx.hbs", `import { useAuth, useSignUp } from "@clerk/expo";
+import { type Href, Link, useRouter } from "expo-router";
+import React from "react";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+
+function pushDecoratedUrl(router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) {
+  const url = decorateUrl(href);
+  const nextHref = url.startsWith("http") ? new URL(url).pathname : url;
+  router.push(nextHref as Href);
+}
+
+export default function Page() {
+  const { signUp, errors, fetchStatus } = useSignUp();
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
+  const [emailAddress, setEmailAddress] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [code, setCode] = React.useState("");
+
+  const handleSubmit = async () => {
+    const { error } = await signUp.password({
+      emailAddress,
+      password,
+    });
+
+    if (error) {
+      console.error(JSON.stringify(error, null, 2));
+      return;
+    }
+
+    await signUp.verifications.sendEmailCode();
+  };
+
+  const handleVerify = async () => {
+    await signUp.verifications.verifyEmailCode({
+      code,
+    });
+
+    if (signUp.status === "complete") {
+      await signUp.finalize({
+        navigate: ({ session, decorateUrl }) => {
+          if (session?.currentTask) {
+            console.log(session.currentTask);
+            return;
+          }
+
+          pushDecoratedUrl(router, decorateUrl, "/");
+        },
+      });
+    } else {
+      console.error("Sign-up attempt not complete:", signUp);
+    }
+  };
+
+  if (signUp.status === "complete" || isSignedIn) {
+    return null;
+  }
+
+  if (
+    signUp.status === "missing_requirements" &&
+    signUp.unverifiedFields.includes("email_address") &&
+    signUp.missingFields.length === 0
+  ) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Verify your account</Text>
+        <TextInput
+          style={styles.input}
+          value={code}
+          placeholder="Enter your verification code"
+          placeholderTextColor="#666666"
+          onChangeText={(value) => setCode(value)}
+          keyboardType="numeric"
+        />
+        {errors.fields.code && <Text style={styles.error}>{errors.fields.code.message}</Text>}
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            fetchStatus === "fetching" && styles.buttonDisabled,
+            pressed && styles.buttonPressed,
+          ]}
+          onPress={handleVerify}
+          disabled={fetchStatus === "fetching"}
+        >
+          <Text style={styles.buttonText}>Verify</Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
+          onPress={() => signUp.verifications.sendEmailCode()}
+        >
+          <Text style={styles.secondaryButtonText}>I need a new code</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Sign up</Text>
+      <Text style={styles.label}>Email address</Text>
+      <TextInput
+        style={styles.input}
+        autoCapitalize="none"
+        value={emailAddress}
+        placeholder="Enter email"
+        placeholderTextColor="#666666"
+        onChangeText={(value) => setEmailAddress(value)}
+        keyboardType="email-address"
+      />
+      {errors.fields.emailAddress && (
+        <Text style={styles.error}>{errors.fields.emailAddress.message}</Text>
+      )}
+      <Text style={styles.label}>Password</Text>
+      <TextInput
+        style={styles.input}
+        value={password}
+        placeholder="Enter password"
+        placeholderTextColor="#666666"
+        secureTextEntry={true}
+        onChangeText={(value) => setPassword(value)}
+      />
+      {errors.fields.password && <Text style={styles.error}>{errors.fields.password.message}</Text>}
+      <Pressable
+        style={({ pressed }) => [
+          styles.button,
+          (!emailAddress || !password || fetchStatus === "fetching") && styles.buttonDisabled,
+          pressed && styles.buttonPressed,
+        ]}
+        onPress={handleSubmit}
+        disabled={!emailAddress || !password || fetchStatus === "fetching"}
+      >
+        <Text style={styles.buttonText}>Sign up</Text>
+      </Pressable>
+      <View style={styles.linkContainer}>
+        <Text>Already have an account? </Text>
+        <Link href="/sign-in">
+          <Text style={styles.linkText}>Sign in</Text>
+        </Link>
+      </View>
+      <View nativeID="clerk-captcha" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    gap: 12,
+  },
+  title: {
+    marginBottom: 8,
+    fontSize: 24,
+    fontWeight: "700",
+  },
+  label: {
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: "#fff",
+  },
+  button: {
+    backgroundColor: "#0a7ea4",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  buttonPressed: {
+    opacity: 0.7,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  secondaryButtonText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  linkContainer: {
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 12,
+    alignItems: "center",
+  },
+  linkText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  error: {
+    color: "#d32f2f",
+    fontSize: 12,
+    marginTop: -8,
+  },
+});
 `],
   ["auth/clerk/convex/native/base/components/sign-out-button.tsx.hbs", `import { useClerk } from "@clerk/expo";
 import { useRouter } from "expo-router";
@@ -11440,157 +11747,458 @@ export default function AuthRoutesLayout() {
 }
 `],
   ["auth/clerk/native/base/app/(auth)/sign-in.tsx.hbs", `import { useSignIn } from "@clerk/expo";
-import { Link, useRouter } from "expo-router";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { type Href, Link, useRouter } from "expo-router";
 import React from "react";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+
+function pushDecoratedUrl(router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) {
+  const url = decorateUrl(href);
+  const nextHref = url.startsWith("http") ? new URL(url).pathname : url;
+  router.push(nextHref as Href);
+}
 
 export default function Page() {
-  const { signIn, setActive, isLoaded } = useSignIn();
+  const { signIn, errors, fetchStatus } = useSignIn();
   const router = useRouter();
-
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
-
-  const onSignInPress = async () => {
-    if (!isLoaded) return;
-
-    try {
-      const signInAttempt = await signIn.create({
-        identifier: emailAddress,
-        password,
-      });
-
-      if (signInAttempt.status === "complete") {
-        await setActive({ session: signInAttempt.createdSessionId });
-        router.replace("/");
-      } else {
-        console.error(JSON.stringify(signInAttempt, null, 2));
-      }
-    } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
-    }
-  };
-
-  return (
-    <View>
-      <Text>Sign in</Text>
-      <TextInput
-        autoCapitalize="none"
-        value={emailAddress}
-        placeholder="Enter email"
-        onChangeText={(value) => setEmailAddress(value)}
-      />
-      <TextInput
-        value={password}
-        placeholder="Enter password"
-        secureTextEntry={true}
-        onChangeText={(value) => setPassword(value)}
-      />
-      <TouchableOpacity onPress={onSignInPress}>
-        <Text>Continue</Text>
-      </TouchableOpacity>
-      <View style=\\{{ display: "flex", flexDirection: "row", gap: 3 }}>
-        <Text>Don't have an account?</Text>
-        <Link href="/sign-up">
-          <Text>Sign up</Text>
-        </Link>
-      </View>
-    </View>
-  );
-}
-`],
-  ["auth/clerk/native/base/app/(auth)/sign-up.tsx.hbs", `import * as React from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useSignUp } from "@clerk/expo";
-import { Link, useRouter } from "expo-router";
-
-export default function SignUpScreen() {
-  const { isLoaded, signUp, setActive } = useSignUp();
-  const router = useRouter();
-
-  const [emailAddress, setEmailAddress] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [pendingVerification, setPendingVerification] = React.useState(false);
   const [code, setCode] = React.useState("");
+  const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
 
-  const onSignUpPress = async () => {
-    if (!isLoaded) return;
+  const emailCodeFactor = signIn.supportedSecondFactors.find(
+    (factor) => factor.strategy === "email_code",
+  );
+  const requiresEmailCode =
+    signIn.status === "needs_client_trust" ||
+    (signIn.status === "needs_second_factor" && !!emailCodeFactor);
 
-    try {
-      await signUp.create({
-        emailAddress,
-        password,
-      });
+  const handleSubmit = async () => {
+    setStatusMessage(null);
 
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-      setPendingVerification(true);
-    } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
+    const { error } = await signIn.password({
+      emailAddress,
+      password,
+    });
+
+    if (error) {
+      console.error(JSON.stringify(error, null, 2));
+      setStatusMessage(error.longMessage ?? "Unable to sign in. Please try again.");
+      return;
     }
-  };
 
-  const onVerifyPress = async () => {
-    if (!isLoaded) return;
+    if (signIn.status === "complete") {
+      await signIn.finalize({
+        navigate: ({ session, decorateUrl }) => {
+          if (session?.currentTask) {
+            console.log(session.currentTask);
+            return;
+          }
 
-    try {
-      const signUpAttempt = await signUp.attemptEmailAddressVerification({
-        code,
+          pushDecoratedUrl(router, decorateUrl, "/");
+        },
       });
-
-      if (signUpAttempt.status === "complete") {
-        await setActive({ session: signUpAttempt.createdSessionId });
-        router.replace("/");
+    } else if (signIn.status === "needs_second_factor" || signIn.status === "needs_client_trust") {
+      if (emailCodeFactor) {
+        await signIn.mfa.sendEmailCode();
+        setStatusMessage(\`We sent a verification code to \${emailCodeFactor.safeIdentifier}.\`);
       } else {
-        console.error(JSON.stringify(signUpAttempt, null, 2));
+        console.error("Second factor is required, but email_code is not available:", signIn);
+        setStatusMessage("A second factor is required, but this screen only supports email codes right now.");
       }
-    } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
+    } else {
+      console.error("Sign-in attempt not complete:", signIn);
+      setStatusMessage("Sign-in could not be completed. Check the logs for more details.");
     }
   };
 
-  if (pendingVerification) {
+  const handleVerify = async () => {
+    setStatusMessage(null);
+
+    await signIn.mfa.verifyEmailCode({ code });
+
+    if (signIn.status === "complete") {
+      await signIn.finalize({
+        navigate: ({ session, decorateUrl }) => {
+          if (session?.currentTask) {
+            console.log(session.currentTask);
+            return;
+          }
+
+          pushDecoratedUrl(router, decorateUrl, "/");
+        },
+      });
+    } else {
+      console.error("Sign-in attempt not complete:", signIn);
+      setStatusMessage("That code did not complete sign-in. Please try again.");
+    }
+  };
+
+  if (requiresEmailCode) {
     return (
-      <>
-        <Text>Verify your email</Text>
+      <View style={styles.container}>
+        <Text style={styles.title}>Verify your account</Text>
+        {statusMessage && <Text style={styles.helper}>{statusMessage}</Text>}
         <TextInput
+          style={styles.input}
           value={code}
           placeholder="Enter your verification code"
+          placeholderTextColor="#666666"
           onChangeText={(value) => setCode(value)}
+          keyboardType="numeric"
         />
-        <TouchableOpacity onPress={onVerifyPress}>
-          <Text>Verify</Text>
-        </TouchableOpacity>
-      </>
+        {errors.fields.code && <Text style={styles.error}>{errors.fields.code.message}</Text>}
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            fetchStatus === "fetching" && styles.buttonDisabled,
+            pressed && styles.buttonPressed,
+          ]}
+          onPress={handleVerify}
+          disabled={fetchStatus === "fetching"}
+        >
+          <Text style={styles.buttonText}>Verify</Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
+          onPress={() => signIn.mfa.sendEmailCode()}
+        >
+          <Text style={styles.secondaryButtonText}>I need a new code</Text>
+        </Pressable>
+      </View>
     );
   }
 
   return (
-    <View>
-      <Text>Sign up</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Sign in</Text>
+      {statusMessage && <Text style={styles.helper}>{statusMessage}</Text>}
+      <Text style={styles.label}>Email address</Text>
       <TextInput
+        style={styles.input}
         autoCapitalize="none"
         value={emailAddress}
         placeholder="Enter email"
+        placeholderTextColor="#666666"
         onChangeText={(value) => setEmailAddress(value)}
+        keyboardType="email-address"
       />
+      {errors.fields.identifier && <Text style={styles.error}>{errors.fields.identifier.message}</Text>}
+      <Text style={styles.label}>Password</Text>
       <TextInput
+        style={styles.input}
         value={password}
         placeholder="Enter password"
+        placeholderTextColor="#666666"
         secureTextEntry={true}
         onChangeText={(value) => setPassword(value)}
       />
-      <TouchableOpacity onPress={onSignUpPress}>
-        <Text>Continue</Text>
-      </TouchableOpacity>
-      <View style=\\{{ display: "flex", flexDirection: "row", gap: 3 }}>
-        <Text>Already have an account?</Text>
-        <Link href="/sign-in">
-          <Text>Sign in</Text>
+      {errors.fields.password && <Text style={styles.error}>{errors.fields.password.message}</Text>}
+      <Pressable
+        style={({ pressed }) => [
+          styles.button,
+          (!emailAddress || !password || fetchStatus === "fetching") && styles.buttonDisabled,
+          pressed && styles.buttonPressed,
+        ]}
+        onPress={handleSubmit}
+        disabled={!emailAddress || !password || fetchStatus === "fetching"}
+      >
+        <Text style={styles.buttonText}>Sign in</Text>
+      </Pressable>
+      <View style={styles.linkContainer}>
+        <Text>Don't have an account? </Text>
+        <Link href="/sign-up">
+          <Text style={styles.linkText}>Sign up</Text>
         </Link>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    gap: 12,
+  },
+  title: {
+    marginBottom: 8,
+    fontSize: 24,
+    fontWeight: "700",
+  },
+  label: {
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: "#fff",
+  },
+  button: {
+    backgroundColor: "#0a7ea4",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  buttonPressed: {
+    opacity: 0.7,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  secondaryButtonText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  linkContainer: {
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 12,
+    alignItems: "center",
+  },
+  linkText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  error: {
+    color: "#d32f2f",
+    fontSize: 12,
+    marginTop: -8,
+  },
+  helper: {
+    color: "#555555",
+    fontSize: 13,
+  },
+});
+`],
+  ["auth/clerk/native/base/app/(auth)/sign-up.tsx.hbs", `import { useAuth, useSignUp } from "@clerk/expo";
+import { type Href, Link, useRouter } from "expo-router";
+import React from "react";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+
+function pushDecoratedUrl(router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) {
+  const url = decorateUrl(href);
+  const nextHref = url.startsWith("http") ? new URL(url).pathname : url;
+  router.push(nextHref as Href);
+}
+
+export default function Page() {
+  const { signUp, errors, fetchStatus } = useSignUp();
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
+  const [emailAddress, setEmailAddress] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [code, setCode] = React.useState("");
+
+  const handleSubmit = async () => {
+    const { error } = await signUp.password({
+      emailAddress,
+      password,
+    });
+
+    if (error) {
+      console.error(JSON.stringify(error, null, 2));
+      return;
+    }
+
+    await signUp.verifications.sendEmailCode();
+  };
+
+  const handleVerify = async () => {
+    await signUp.verifications.verifyEmailCode({
+      code,
+    });
+
+    if (signUp.status === "complete") {
+      await signUp.finalize({
+        navigate: ({ session, decorateUrl }) => {
+          if (session?.currentTask) {
+            console.log(session.currentTask);
+            return;
+          }
+
+          pushDecoratedUrl(router, decorateUrl, "/");
+        },
+      });
+    } else {
+      console.error("Sign-up attempt not complete:", signUp);
+    }
+  };
+
+  if (signUp.status === "complete" || isSignedIn) {
+    return null;
+  }
+
+  if (
+    signUp.status === "missing_requirements" &&
+    signUp.unverifiedFields.includes("email_address") &&
+    signUp.missingFields.length === 0
+  ) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Verify your account</Text>
+        <TextInput
+          style={styles.input}
+          value={code}
+          placeholder="Enter your verification code"
+          placeholderTextColor="#666666"
+          onChangeText={(value) => setCode(value)}
+          keyboardType="numeric"
+        />
+        {errors.fields.code && <Text style={styles.error}>{errors.fields.code.message}</Text>}
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            fetchStatus === "fetching" && styles.buttonDisabled,
+            pressed && styles.buttonPressed,
+          ]}
+          onPress={handleVerify}
+          disabled={fetchStatus === "fetching"}
+        >
+          <Text style={styles.buttonText}>Verify</Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
+          onPress={() => signUp.verifications.sendEmailCode()}
+        >
+          <Text style={styles.secondaryButtonText}>I need a new code</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Sign up</Text>
+      <Text style={styles.label}>Email address</Text>
+      <TextInput
+        style={styles.input}
+        autoCapitalize="none"
+        value={emailAddress}
+        placeholder="Enter email"
+        placeholderTextColor="#666666"
+        onChangeText={(value) => setEmailAddress(value)}
+        keyboardType="email-address"
+      />
+      {errors.fields.emailAddress && (
+        <Text style={styles.error}>{errors.fields.emailAddress.message}</Text>
+      )}
+      <Text style={styles.label}>Password</Text>
+      <TextInput
+        style={styles.input}
+        value={password}
+        placeholder="Enter password"
+        placeholderTextColor="#666666"
+        secureTextEntry={true}
+        onChangeText={(value) => setPassword(value)}
+      />
+      {errors.fields.password && <Text style={styles.error}>{errors.fields.password.message}</Text>}
+      <Pressable
+        style={({ pressed }) => [
+          styles.button,
+          (!emailAddress || !password || fetchStatus === "fetching") && styles.buttonDisabled,
+          pressed && styles.buttonPressed,
+        ]}
+        onPress={handleSubmit}
+        disabled={!emailAddress || !password || fetchStatus === "fetching"}
+      >
+        <Text style={styles.buttonText}>Sign up</Text>
+      </Pressable>
+      <View style={styles.linkContainer}>
+        <Text>Already have an account? </Text>
+        <Link href="/sign-in">
+          <Text style={styles.linkText}>Sign in</Text>
+        </Link>
+      </View>
+      <View nativeID="clerk-captcha" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    gap: 12,
+  },
+  title: {
+    marginBottom: 8,
+    fontSize: 24,
+    fontWeight: "700",
+  },
+  label: {
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: "#fff",
+  },
+  button: {
+    backgroundColor: "#0a7ea4",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  buttonPressed: {
+    opacity: 0.7,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  secondaryButtonText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  linkContainer: {
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 12,
+    alignItems: "center",
+  },
+  linkText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  error: {
+    color: "#d32f2f",
+    fontSize: 12,
+    marginTop: -8,
+  },
+});
 `],
   ["auth/clerk/native/base/components/sign-out-button.tsx.hbs", `import { useClerk } from "@clerk/expo";
 import { useRouter } from "expo-router";
@@ -11642,10 +12250,30 @@ export async function getClerkAuthToken() {
 `],
   ["auth/clerk/web/react/next/src/app/dashboard/page.tsx.hbs", `"use client";
 
+{{#if (eq api "orpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/utils/orpc";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+{{/if}}
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
 export default function Dashboard() {
   const user = useUser();
+  {{#if (eq api "orpc")}}
+  const privateData = useQuery({
+    ...orpc.privateData.queryOptions(),
+    enabled: user.isLoaded && !!user.user,
+  });
+  {{/if}}
+  {{#if (eq api "trpc")}}
+  const privateData = useQuery({
+    ...trpc.privateData.queryOptions(),
+    enabled: user.isLoaded && !!user.user,
+  });
+  {{/if}}
 
   if (!user.isLoaded) {
     return <div className="p-6">Loading...</div>;
@@ -11663,6 +12291,9 @@ export default function Dashboard() {
     <div className="space-y-4 p-6">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
       <p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+      {{#if (or (eq api "orpc") (eq api "trpc"))}}
+      <p>API: {privateData.data?.message}</p>
+      {{/if}}
       <UserButton />
     </div>
   );
@@ -11681,10 +12312,30 @@ export const config = {
 	],
 };
 `],
-  ["auth/clerk/web/react/react-router/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/react-router";
+  ["auth/clerk/web/react/react-router/src/routes/dashboard.tsx.hbs", `{{#if (eq api "orpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/utils/orpc";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+{{/if}}
+import { SignInButton, UserButton, useUser } from "@clerk/react-router";
 
 export default function Dashboard() {
   const user = useUser();
+  {{#if (eq api "orpc")}}
+  const privateData = useQuery({
+    ...orpc.privateData.queryOptions(),
+    enabled: user.isLoaded && !!user.user,
+  });
+  {{/if}}
+  {{#if (eq api "trpc")}}
+  const privateData = useQuery({
+    ...trpc.privateData.queryOptions(),
+    enabled: user.isLoaded && !!user.user,
+  });
+  {{/if}}
 
   if (!user.isLoaded) {
     return <div className="p-6">Loading...</div>;
@@ -11702,12 +12353,23 @@ export default function Dashboard() {
     <div className="space-y-4 p-6">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
       <p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+      {{#if (or (eq api "orpc") (eq api "trpc"))}}
+      <p>API: {privateData.data?.message}</p>
+      {{/if}}
       <UserButton />
     </div>
   );
 }
 `],
-  ["auth/clerk/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/react";
+  ["auth/clerk/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `{{#if (eq api "orpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/utils/orpc";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+{{/if}}
+import { SignInButton, UserButton, useUser } from "@clerk/react";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard")({
@@ -11716,6 +12378,18 @@ export const Route = createFileRoute("/dashboard")({
 
 function RouteComponent() {
 	const user = useUser();
+	{{#if (eq api "orpc")}}
+	const privateData = useQuery({
+		...orpc.privateData.queryOptions(),
+		enabled: user.isLoaded && !!user.user,
+	});
+	{{/if}}
+	{{#if (eq api "trpc")}}
+	const privateData = useQuery({
+		...trpc.privateData.queryOptions(),
+		enabled: user.isLoaded && !!user.user,
+	});
+	{{/if}}
 
 	if (!user.isLoaded) {
 		return <div className="p-6">Loading...</div>;
@@ -11733,12 +12407,23 @@ function RouteComponent() {
 		<div className="space-y-4 p-6">
 			<h1 className="text-2xl font-semibold">Dashboard</h1>
 			<p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+			{{#if (or (eq api "orpc") (eq api "trpc"))}}
+			<p>API: {privateData.data?.message}</p>
+			{{/if}}
 			<UserButton />
 		</div>
 	);
 }
 `],
-  ["auth/clerk/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/tanstack-react-start";
+  ["auth/clerk/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `{{#if (eq api "trpc")}}
+import { useTRPC } from "@/utils/trpc";
+import { useQuery } from "@tanstack/react-query";
+{{/if}}
+{{#if (eq api "orpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/utils/orpc";
+{{/if}}
+import { SignInButton, UserButton, useUser } from "@clerk/tanstack-react-start";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard")({
@@ -11747,6 +12432,19 @@ export const Route = createFileRoute("/dashboard")({
 
 function RouteComponent() {
 	const user = useUser();
+	{{#if (eq api "trpc")}}
+	const trpc = useTRPC();
+	const privateData = useQuery({
+		...trpc.privateData.queryOptions(),
+		enabled: user.isLoaded && !!user.user,
+	});
+	{{/if}}
+	{{#if (eq api "orpc")}}
+	const privateData = useQuery({
+		...orpc.privateData.queryOptions(),
+		enabled: user.isLoaded && !!user.user,
+	});
+	{{/if}}
 
 	if (!user.isLoaded) {
 		return <div className="p-6">Loading...</div>;
@@ -11764,6 +12462,9 @@ function RouteComponent() {
 		<div className="space-y-4 p-6">
 			<h1 className="text-2xl font-semibold">Dashboard</h1>
 			<p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+			{{#if (or (eq api "orpc") (eq api "trpc"))}}
+			<p>API: {privateData.data?.message}</p>
+			{{/if}}
 			<UserButton />
 		</div>
 	);
@@ -23408,6 +24109,8 @@ module.exports = uniwindConfig;
     "**/*.tsx"
   ]
 }`],
+  ["frontend/native/uniwind/uniwind-env.d.ts", `/// <reference types="uniwind/types" />
+`],
   ["frontend/nuxt/_gitignore", `# Nuxt dev/build outputs
 .output
 .data
@@ -24661,7 +25364,7 @@ export default defineConfig({
 		"build": "vite build",
 		"serve": "vite preview",
 		"start": "vite",
-		"check-types": "tsc --noEmit"
+		"check-types": "vite build && tsc --noEmit"
 	},
 	"dependencies": {
         "@hookform/resolvers": "^5.1.1",
@@ -28054,4 +28757,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 456;
+export const TEMPLATE_COUNT = 457;

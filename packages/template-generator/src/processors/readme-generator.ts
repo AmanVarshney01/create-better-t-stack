@@ -44,6 +44,98 @@ function getClerkQuickstartUrl(frontend: ProjectConfig["frontend"]): string {
   return "https://clerk.com/docs";
 }
 
+function getClerkFrontendEnvLines(frontend: ProjectConfig["frontend"]): string[] {
+  const lines: string[] = [];
+
+  if (frontend.includes("next")) {
+    lines.push("- Set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` in `apps/web/.env`");
+  }
+
+  if (
+    frontend.some((value) => ["react-router", "tanstack-router", "tanstack-start"].includes(value))
+  ) {
+    lines.push("- Set `VITE_CLERK_PUBLISHABLE_KEY` in `apps/web/.env`");
+  }
+
+  if (
+    frontend.some((value) => ["native-bare", "native-uniwind", "native-unistyles"].includes(value))
+  ) {
+    lines.push("- Set `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` in `apps/native/.env`");
+  }
+
+  return lines;
+}
+
+function getClerkSetupLines(
+  frontend: ProjectConfig["frontend"],
+  backend: ProjectConfig["backend"],
+  api: ProjectConfig["api"],
+  isConvex: boolean,
+): string[] {
+  const lines = getClerkFrontendEnvLines(frontend);
+  const hasClerkServerFrontend = frontend.some((value) =>
+    ["next", "react-router", "tanstack-start"].includes(value),
+  );
+
+  if (isConvex) {
+    return [
+      "- Set `CLERK_JWT_ISSUER_DOMAIN` in Convex Dashboard",
+      ...lines,
+      ...(hasClerkServerFrontend
+        ? ["- Set `CLERK_SECRET_KEY` in `apps/web/.env` for Clerk server middleware"]
+        : []),
+    ];
+  }
+
+  const serverEnvPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
+  const needsServerSideClerkAuth = backend !== "none";
+  const needsClerkRequestVerification =
+    api !== "none" && ["self", "hono", "elysia"].includes(backend);
+
+  if (hasClerkServerFrontend && backend === "self") {
+    lines.push(
+      "- Set `CLERK_SECRET_KEY` in `apps/web/.env` for Clerk server middleware and server-side Clerk auth",
+    );
+  } else {
+    if (hasClerkServerFrontend) {
+      lines.push("- Set `CLERK_SECRET_KEY` in `apps/web/.env` for Clerk server middleware");
+    }
+
+    if (needsServerSideClerkAuth) {
+      lines.push(`- Set \`CLERK_SECRET_KEY\` in \`${serverEnvPath}\` for server-side Clerk auth`);
+    }
+  }
+
+  if (needsClerkRequestVerification) {
+    lines.push(
+      `- Set \`CLERK_PUBLISHABLE_KEY\` in \`${serverEnvPath}\` for server-side Clerk request verification`,
+    );
+  }
+
+  return lines;
+}
+
+function hasNativeFrontend(frontend: ProjectConfig["frontend"]): boolean {
+  return frontend.some((value) =>
+    ["native-bare", "native-uniwind", "native-unistyles"].includes(value),
+  );
+}
+
+function hasWebFrontend(frontend: ProjectConfig["frontend"]): boolean {
+  return frontend.some((value) =>
+    [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+      "svelte",
+      "nuxt",
+      "solid",
+      "astro",
+    ].includes(value),
+  );
+}
+
 export function processReadme(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const content = generateReadmeContent(config);
   vfs.writeFile("README.md", content);
@@ -67,17 +159,10 @@ function generateReadmeContent(options: ProjectConfig): string {
 
   const isConvex = backend === "convex";
   const hasReactRouter = frontend.includes("react-router");
-  const hasNative = frontend.some((f) =>
-    ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
-  );
+  const hasNative = hasNativeFrontend(frontend);
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
   );
-  const hasClerkServerFrontend = frontend.some((f) =>
-    ["next", "react-router", "tanstack-start"].includes(f),
-  );
-  const hasClerkBackendRequestAuth =
-    auth === "clerk" && api !== "none" && ["self", "hono", "elysia"].includes(backend);
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
   const packageManagerRunCmd = `${packageManager} run`;
@@ -122,12 +207,7 @@ ${
 ### Clerk Authentication Setup
 
 - Follow the guide: [Convex + Clerk](https://docs.convex.dev/auth/clerk)
-- Set \`CLERK_JWT_ISSUER_DOMAIN\` in Convex Dashboard
-- Set your Clerk publishable key in \`apps/*/.env\`${
-        hasClerkServerFrontend
-          ? "\n- Set `CLERK_SECRET_KEY` in the web app env for Clerk server middleware"
-          : ""
-      }`
+${getClerkSetupLines(frontend, backend, api, true).join("\n")}`
     : ""
 }`
     : generateDatabaseSetup(options, packageManagerRunCmd)
@@ -138,17 +218,7 @@ ${
 ## Clerk Authentication Setup
 
 - Follow the guide: [Clerk Quickstart](${getClerkQuickstartUrl(frontend)})
-- Set your Clerk publishable key in \`apps/*/.env\`${
-        hasClerkServerFrontend
-          ? "\n- Set `CLERK_SECRET_KEY` in the web app env for Clerk server middleware"
-          : ""
-      }${
-        hasClerkBackendRequestAuth
-          ? `\n- Set \`CLERK_PUBLISHABLE_KEY\` in the ${
-              backend === "self" ? "web app" : "server app"
-            } env for server-side Clerk request verification`
-          : ""
-      }`
+${getClerkSetupLines(frontend, backend, api, false).join("\n")}`
     : ""
 }
 
@@ -197,6 +267,9 @@ function generateStackDescription(
     nuxt: "Nuxt",
     solid: "SolidJS",
     astro: "Astro",
+    "native-bare": "React Native, Expo",
+    "native-uniwind": "React Native, Expo",
+    "native-unistyles": "React Native, Expo",
   };
 
   for (const fe of frontend) {
@@ -225,10 +298,10 @@ function generateRunningInstructions(
   isConvex: boolean,
 ): string {
   const instructions: string[] = [];
-  const hasFrontend = frontend.length > 0 && !frontend.includes("none");
+  const hasAppWebFrontend = hasWebFrontend(frontend);
   const isBackendSelf = backend === "self";
 
-  if (hasFrontend) {
+  if (hasAppWebFrontend) {
     const desc = isBackendSelf ? "fullstack application" : "web application";
     instructions.push(
       `Open [http://localhost:${webPort}](http://localhost:${webPort}) in your browser to see the ${desc}.`,
@@ -284,17 +357,15 @@ function generateProjectStructure(config: ProjectConfig): string {
   const { projectName, frontend, backend, addons, api, auth, database, orm } = config;
   const isConvex = backend === "convex";
   const structure: string[] = [`${projectName}/`, "├── apps/"];
-  const hasFrontend = frontend.length > 0 && !frontend.includes("none");
+  const hasAppWebFrontend = hasWebFrontend(frontend);
   const isBackendSelf = backend === "self";
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
   );
-  const hasNative = frontend.some((f) =>
-    ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
-  );
+  const hasNative = hasNativeFrontend(frontend);
   const hasDbPackage = !isConvex && database !== "none" && orm !== "none";
 
-  if (hasFrontend) {
+  if (hasAppWebFrontend) {
     const frontendTypes: Record<string, string> = {
       "tanstack-router": "React + TanStack Router",
       "react-router": "React + React Router",
@@ -373,13 +444,12 @@ function generateFeaturesList(
   api: ProjectConfig["api"],
 ): string {
   const isConvex = backend === "convex";
-  const hasNative = frontend.some((f) =>
-    ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
-  );
-  const hasFrontend = frontend.length > 0 && !frontend.includes("none");
+  const hasNative = hasNativeFrontend(frontend);
+  const hasAppWebFrontend = hasWebFrontend(frontend);
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
   );
+  const usesTailwind = hasAppWebFrontend || frontend.includes("native-uniwind");
 
   const features = ["- **TypeScript** - For type safety and improved developer experience"];
 
@@ -408,7 +478,7 @@ function generateFeaturesList(
     );
   }
 
-  if (hasFrontend) {
+  if (usesTailwind) {
     features.push("- **TailwindCSS** - Utility-first CSS for rapid UI development");
   }
 

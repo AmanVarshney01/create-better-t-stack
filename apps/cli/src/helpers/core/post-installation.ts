@@ -105,7 +105,7 @@ export async function displayPostInstallInstructions(
     ? getStarlightInstructions(runCmd)
     : "";
   const clerkInstructions =
-    config.auth === "clerk" ? getClerkInstructions(frontend || [], backend) : "";
+    config.auth === "clerk" ? getClerkInstructions(frontend || [], backend, api) : "";
   const polarInstructions =
     config.payments === "polar" && config.auth === "better-auth"
       ? getPolarInstructions(backend)
@@ -468,23 +468,76 @@ function getClerkQuickstartUrl(frontend: Frontend[]) {
   return "https://clerk.com/docs";
 }
 
-function getClerkInstructions(frontend: Frontend[], backend: Backend) {
+function getClerkInstructionLines(
+  frontend: Frontend[],
+  backend: Backend,
+  api: ProjectConfig["api"],
+) {
+  const lines: string[] = [];
+
+  if (frontend.includes("next")) {
+    lines.push("Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in apps/web/.env");
+  }
+
+  if (
+    frontend.some((value) => ["react-router", "tanstack-router", "tanstack-start"].includes(value))
+  ) {
+    lines.push("Set VITE_CLERK_PUBLISHABLE_KEY in apps/web/.env");
+  }
+
+  if (
+    frontend.some((value) => ["native-bare", "native-uniwind", "native-unistyles"].includes(value))
+  ) {
+    lines.push("Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in apps/native/.env");
+  }
+
+  if (backend === "convex") {
+    return [
+      "Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard",
+      ...lines,
+      ...(frontend.some((value) => ["next", "react-router", "tanstack-start"].includes(value))
+        ? ["Set CLERK_SECRET_KEY in apps/web/.env for Clerk server middleware"]
+        : []),
+    ];
+  }
+
+  const hasClerkServerFrontend = frontend.some((value) =>
+    ["next", "react-router", "tanstack-start"].includes(value),
+  );
+  const serverEnvPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
+  const needsServerSideClerkAuth = backend !== "none";
+  const needsClerkRequestVerification =
+    api !== "none" && ["self", "hono", "elysia"].includes(backend);
+
+  if (hasClerkServerFrontend && backend === "self") {
+    lines.push(
+      "Set CLERK_SECRET_KEY in apps/web/.env for Clerk server middleware and server-side Clerk auth",
+    );
+  } else {
+    if (hasClerkServerFrontend) {
+      lines.push("Set CLERK_SECRET_KEY in apps/web/.env for Clerk server middleware");
+    }
+
+    if (needsServerSideClerkAuth) {
+      lines.push(`Set CLERK_SECRET_KEY in ${serverEnvPath} for server-side Clerk auth`);
+    }
+  }
+
+  if (needsClerkRequestVerification) {
+    lines.push(
+      `Set CLERK_PUBLISHABLE_KEY in ${serverEnvPath} for server-side Clerk request verification`,
+    );
+  }
+
+  return lines;
+}
+
+function getClerkInstructions(frontend: Frontend[], backend: Backend, api: ProjectConfig["api"]) {
   const lines = [
     `${pc.bold("Clerk Authentication Setup:")}`,
     `${pc.cyan("•")} Follow the guide: ${pc.underline(getClerkQuickstartUrl(frontend))}`,
+    ...getClerkInstructionLines(frontend, backend, api).map((line) => `${pc.cyan("•")} ${line}`),
   ];
-
-  if (backend === "convex") {
-    lines.push(`${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard`);
-  }
-
-  lines.push(`${pc.cyan("•")} Set your Clerk publishable key in apps/*/.env`);
-
-  if (frontend.some((value) => ["next", "react-router", "tanstack-start"].includes(value))) {
-    lines.push(
-      `${pc.cyan("•")} Set CLERK_SECRET_KEY when your web app uses Clerk server middleware`,
-    );
-  }
 
   return lines.join("\n");
 }

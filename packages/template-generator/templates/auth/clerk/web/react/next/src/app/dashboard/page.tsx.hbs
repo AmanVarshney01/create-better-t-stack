@@ -1,9 +1,29 @@
 "use client";
 
+{{#if (eq api "orpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/utils/orpc";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+{{/if}}
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
 export default function Dashboard() {
   const user = useUser();
+  {{#if (eq api "orpc")}}
+  const privateData = useQuery({
+    ...orpc.privateData.queryOptions(),
+    enabled: user.isLoaded && !!user.user,
+  });
+  {{/if}}
+  {{#if (eq api "trpc")}}
+  const privateData = useQuery({
+    ...trpc.privateData.queryOptions(),
+    enabled: user.isLoaded && !!user.user,
+  });
+  {{/if}}
 
   if (!user.isLoaded) {
     return <div className="p-6">Loading...</div>;
@@ -21,6 +41,9 @@ export default function Dashboard() {
     <div className="space-y-4 p-6">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
       <p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+      {{#if (or (eq api "orpc") (eq api "trpc"))}}
+      <p>API: {privateData.data?.message}</p>
+      {{/if}}
       <UserButton />
     </div>
   );
