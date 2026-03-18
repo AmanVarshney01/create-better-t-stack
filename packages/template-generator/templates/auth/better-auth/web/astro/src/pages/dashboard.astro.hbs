@@ -26,7 +26,7 @@ import Layout from "../layouts/Layout.astro";
           </div>
           {{/if}}
 
-          {{#if (eq payments "polar")}}
+          {{#if (or (eq payments "polar") (eq payments "dodo"))}}
           <div class="rounded-lg bg-neutral-800/50 p-4">
             <p class="text-sm text-neutral-400 mb-2">Subscription</p>
             <div id="subscription-info" class="space-y-2">
