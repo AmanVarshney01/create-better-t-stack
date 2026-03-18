@@ -24506,7 +24506,7 @@ initOpenNextCloudflareForDev();
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
     "lucide-react": "^0.546.0",
-    "next": "^16.1.1",
+    "next": "^16.2.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
@@ -24867,7 +24867,7 @@ export function ThemeProvider({
     "resolveJsonModule": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
@@ -24886,10 +24886,11 @@ export function ThemeProvider({
     {{#if (eq serverDeploy "cloudflare")}}
     "../server/env.d.ts",
     {{/if}}
-    "./next-env.d.ts",
-    "./**/*.ts",
-    "./**/*.tsx",
-    "./.next/types/**/*.ts"
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "./node_modules"
