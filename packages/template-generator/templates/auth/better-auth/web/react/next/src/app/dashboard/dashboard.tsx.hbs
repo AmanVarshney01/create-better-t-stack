@@ -1,5 +1,5 @@
 "use client";
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -32,10 +32,13 @@ export default function Dashboard({
 	const privateData = useQuery(trpc.privateData.queryOptions());
 	{{/if}}
 
-	{{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
 	const hasProSubscription = customerState?.activeSubscriptions?.length! > 0;
 	console.log("Active subscriptions:", customerState?.activeSubscriptions);
-	{{/if}}
+{{else if (eq payments "dodo")}}
+	const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0;
+	console.log("Active subscriptions:", customerState?.data?.items);
+{{/if}}
 
 	return (
 		<>
