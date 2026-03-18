@@ -142,6 +142,7 @@ export const McpServerSchema = z
     "clerk",
     "expo",
     "polar",
+    "dodo",
   ])
   .describe("MCP server to install");
 
