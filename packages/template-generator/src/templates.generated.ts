@@ -8919,7 +8919,7 @@ export default function Dashboard() {
     }
   }, [session, isPending, navigate]);
 
-  {{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
   useEffect(() => {
     async function fetchCustomerState() {
       if (session) {
@@ -9339,7 +9339,7 @@ export default function UserMenu() {
   );
 }
 `],
-  ["auth/better-auth/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
+  ["auth/better-auth/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -9374,7 +9374,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function RouteComponent() {
-	const { session{{#if (eq payments "polar")}}, customerState{{/if}} } = Route.useRouteContext();
+	const { session{{#if (or (eq payments "polar") (eq payments "dodo"))}}, customerState{{/if}} } = Route.useRouteContext();
 
 	{{#if (eq api "orpc")}}
 	const privateData = useQuery(orpc.privateData.queryOptions());
@@ -9830,7 +9830,7 @@ export const authMiddleware = createMiddleware().server(
 {{/if}}
 `],
   ["auth/better-auth/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `import { getUser } from "@/functions/get-user";
-{{#if (eq payments "polar") }}
+{{#if (or (eq payments "polar") (eq payments "dodo")) }}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
 import { getPayment } from "@/functions/get-payment";
@@ -9849,7 +9849,7 @@ export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
   beforeLoad: async () => {
     const session = await getUser();
-    {{#if (eq payments "polar") }}
+    {{#if (or (eq payments "polar") (eq payments "dodo")) }}
     const customerState = await getPayment();
     return { session, customerState };
     {{else}}
@@ -9866,7 +9866,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function RouteComponent() {
-  const { session{{#if (eq payments "polar") }}, customerState{{/if}} } = Route.useRouteContext();
+  const { session{{#if (or (eq payments "polar") (eq payments "dodo")) }}, customerState{{/if}} } = Route.useRouteContext();
 
   {{#if (eq api "trpc") }}
   const trpc = useTRPC();
@@ -9903,7 +9903,7 @@ function RouteComponent() {
       ) : (
         <Button
           onClick={async function handleUpgrade() {
-            await authClient.checkout({ slug: "pro" });
+            await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({ slug: "pro" });
           }}
         >
           Upgrade to Pro
@@ -10305,7 +10305,7 @@ function RouteComponent() {
 	const context = Route.useRouteContext();
 
 	const session = context().session;
-	{{#if (eq payments "polar")}}
+	{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 	const customerState = context().customerState;
 	{{/if}}
 
@@ -10709,7 +10709,7 @@ export const authClient = createAuthClient({
 		}
 	});
 
-	{{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
 	$effect(() => {
 		if ($sessionQuery.data) {
 			authClient.customer.state().then(({ data }) => {
@@ -10731,7 +10731,7 @@ export const authClient = createAuthClient({
 		{{#if (eq api "orpc")}}
 		<p>API: {$privateDataQuery.data?.message}</p>
 		{{/if}}
-		{{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
 		<p>Plan: {customerState?.activeSubscriptions?.length > 0 ? "Pro" : "Free"}</p>
 		{#if customerState?.activeSubscriptions?.length > 0}
 			<button onclick={async () => await authClient.customer.portal()}>
@@ -26866,4 +26866,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 444;
+export const TEMPLATE_COUNT = 454;
