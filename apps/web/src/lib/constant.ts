@@ -456,6 +456,15 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "dodo",
+      name: "Dodo Payments",
+      description: "Payments, billing, and distribution. One integration.",
+      // need to update the dodo logo in r2
+      icon: `${ICON_BASE_URL}/dodo.svg`,
+      color: "from-amber-400 to-amber-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Payments",
       description: "Skip payments integration",
