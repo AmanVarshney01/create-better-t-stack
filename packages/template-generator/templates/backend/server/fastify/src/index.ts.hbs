@@ -88,7 +88,7 @@ fastify.register(async (rpcApp) => {
 
 	rpcApp.all("/rpc/*", async (request, reply) => {
 		const { matched } = await rpcHandler.handle(request, reply, {
-			context: await createContext(request),
+			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
 			prefix: "/rpc",
 		});
 
@@ -99,7 +99,7 @@ fastify.register(async (rpcApp) => {
 
 	rpcApp.all("/api-reference/*", async (request, reply) => {
 		const { matched } = await apiHandler.handle(request, reply, {
-			context: await createContext(request),
+			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
 			prefix: "/api-reference",
 		});
 

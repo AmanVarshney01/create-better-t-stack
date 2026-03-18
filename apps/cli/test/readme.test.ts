@@ -66,8 +66,8 @@ describe("README generation", () => {
     expect(readme).toContain("`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` in `apps/web/.env`");
     expect(readme).toContain("`CLERK_SECRET_KEY` in `apps/web/.env` for Clerk server middleware");
     expect(readme).toContain("`CLERK_SECRET_KEY` in `apps/server/.env` for server-side Clerk auth");
-    expect(readme).not.toContain(
-      "`CLERK_PUBLISHABLE_KEY` in `apps/server/.env` for server-side Clerk request verification",
+    expect(readme).toContain(
+      "`CLERK_PUBLISHABLE_KEY` in `apps/server/.env` for Clerk backend middleware",
     );
   });
 

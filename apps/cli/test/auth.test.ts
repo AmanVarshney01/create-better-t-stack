@@ -286,8 +286,11 @@ describe("Authentication Configurations", () => {
       expect(apiContextFile).toContain("function toClerkContextAuth");
       expect(apiContextFile).toContain("Promise<ClerkRequestContext>");
       expect(apiContextFile).toContain("publishableKey: env.CLERK_PUBLISHABLE_KEY");
+      expect(apiContextFile).toContain("authorizedParties: [env.CORS_ORIGIN]");
       expect(serverEnvPackageFile).toContain("CLERK_PUBLISHABLE_KEY");
+      expect(serverEnvPackageFile).toContain("CLERK_SECRET_KEY");
       expect(serverEnvFile).toContain("CLERK_PUBLISHABLE_KEY=");
+      expect(serverEnvFile).toContain("CLERK_SECRET_KEY=");
     });
 
     it("should scaffold TanStack Start Clerk templates without stale control components", async () => {

@@ -75,6 +75,14 @@ function usesBackendClerkClient(backend: string, api: string) {
   return api !== "none" && (backend === "self" || backend === "hono" || backend === "elysia");
 }
 
+function needsServerClerkPublishableKey(backend: string, api: string) {
+  return (
+    backend === "express" ||
+    backend === "fastify" ||
+    (api !== "none" && (backend === "self" || backend === "hono" || backend === "elysia"))
+  );
+}
+
 describe("Clerk matrix", () => {
   it("should generate every supported Clerk combination", { timeout: 30_000 }, async () => {
     const standardFrontendCombos = buildFrontendCombos(standardWeb);
@@ -157,8 +165,8 @@ describe("Clerk matrix", () => {
         }
 
         if (
-          usesBackendClerkClient(combo.backend, combo.api) &&
-          !serverEnv.includes("CLERK_PUBLISHABLE_KEY")
+          needsServerClerkPublishableKey(combo.backend, combo.api) &&
+          !serverEnv?.includes("CLERK_PUBLISHABLE_KEY")
         ) {
           failures.push(
             `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing CLERK_PUBLISHABLE_KEY in packages/env/src/server.ts`,
@@ -190,15 +198,24 @@ describe("Clerk matrix", () => {
 
         if (
           usesBackendClerkClient(combo.backend, combo.api) &&
-          !contextFile.includes("publishableKey: env.CLERK_PUBLISHABLE_KEY")
+          !contextFile?.includes("publishableKey: env.CLERK_PUBLISHABLE_KEY")
         ) {
           failures.push(
             `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing publishableKey in packages/api/src/context.ts`,
           );
         }
+
+        if (
+          usesBackendClerkClient(combo.backend, combo.api) &&
+          !contextFile?.includes("authorizedParties: [env.CORS_ORIGIN]")
+        ) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing authorizedParties in packages/api/src/context.ts`,
+          );
+        }
       }
 
-      if (usesBackendClerkClient(combo.backend, combo.api)) {
+      if (needsServerClerkPublishableKey(combo.backend, combo.api)) {
         const appEnvPath = combo.backend === "self" ? "apps/web/.env" : "apps/server/.env";
         const appEnvFile = files.get(appEnvPath);
 

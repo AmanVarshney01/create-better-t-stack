@@ -408,7 +408,9 @@ function buildServerVars(
   const hasBetterAuth = auth === "better-auth";
   const hasClerk = auth === "clerk";
   const needsClerkPublishableKey =
-    hasClerk && api !== "none" && ["self", "hono", "elysia"].includes(backend);
+    hasClerk &&
+    (["express", "fastify"].includes(backend) ||
+      (api !== "none" && ["self", "hono", "elysia"].includes(backend)));
 
   return [
     {

@@ -23,9 +23,8 @@ const clerkClient = createClerkClient({
 });
 
 async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth | null> {
-	const origin = request.headers.get("origin");
 	const requestState = await clerkClient.authenticateRequest(request, {
-		...(origin === env.CORS_ORIGIN ? { authorizedParties: [env.CORS_ORIGIN] } : {}),
+		authorizedParties: [env.CORS_ORIGIN],
 	});
 	return toClerkContextAuth(requestState.toAuth());
 }

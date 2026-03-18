@@ -16,8 +16,11 @@ export default function Page() {
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [code, setCode] = React.useState("");
+  const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
 
   const handleSubmit = async () => {
+    setStatusMessage(null);
+
     const { error } = await signUp.password({
       emailAddress,
       password,
@@ -25,13 +28,17 @@ export default function Page() {
 
     if (error) {
       console.error(JSON.stringify(error, null, 2));
+      setStatusMessage(error.longMessage ?? "Unable to sign up. Please try again.");
       return;
     }
 
     await signUp.verifications.sendEmailCode();
+    setStatusMessage(`We sent a verification code to ${emailAddress}.`);
   };
 
   const handleVerify = async () => {
+    setStatusMessage(null);
+
     await signUp.verifications.verifyEmailCode({
       code,
     });
@@ -49,6 +56,7 @@ export default function Page() {
       });
     } else {
       console.error("Sign-up attempt not complete:", signUp);
+      setStatusMessage("That code did not complete sign-up. Please try again.");
     }
   };
 
@@ -64,6 +72,7 @@ export default function Page() {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Verify your account</Text>
+        {statusMessage && <Text style={styles.helper}>{statusMessage}</Text>}
         <TextInput
           style={styles.input}
           value={code}
@@ -97,6 +106,7 @@ export default function Page() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign up</Text>
+      {statusMessage && <Text style={styles.helper}>{statusMessage}</Text>}
       <Text style={styles.label}>Email address</Text>
       <TextInput
         style={styles.input}
@@ -208,5 +218,9 @@ const styles = StyleSheet.create({
     color: "#d32f2f",
     fontSize: 12,
     marginTop: -8,
+  },
+  helper: {
+    color: "#555555",
+    fontSize: 13,
   },
 });

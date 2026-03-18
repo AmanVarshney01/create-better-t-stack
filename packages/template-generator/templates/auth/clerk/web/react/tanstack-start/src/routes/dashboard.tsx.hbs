@@ -15,6 +15,14 @@ export const Route = createFileRoute("/dashboard")({
 
 function RouteComponent() {
 	const user = useUser();
+	const nameFromParts = [user.user?.firstName, user.user?.lastName].filter(Boolean).join(" ");
+	const displayName =
+		user.user?.fullName ||
+		nameFromParts ||
+		user.user?.username ||
+		user.user?.primaryEmailAddress?.emailAddress ||
+		user.user?.primaryPhoneNumber?.phoneNumber ||
+		"User";
 	{{#if (eq api "trpc")}}
 	const trpc = useTRPC();
 	const privateData = useQuery({
@@ -44,7 +52,7 @@ function RouteComponent() {
 	return (
 		<div className="space-y-4 p-6">
 			<h1 className="text-2xl font-semibold">Dashboard</h1>
-			<p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+			<p>Welcome {displayName}</p>
 			{{#if (or (eq api "orpc") (eq api "trpc"))}}
 			<p>API: {privateData.data?.message}</p>
 			{{/if}}

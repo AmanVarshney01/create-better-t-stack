@@ -687,9 +687,8 @@ const clerkClient = createClerkClient({
 });
 
 async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth | null> {
-	const origin = request.headers.get("origin");
 	const requestState = await clerkClient.authenticateRequest(request, {
-		...(origin === env.CORS_ORIGIN ? { authorizedParties: [env.CORS_ORIGIN] } : {}),
+		authorizedParties: [env.CORS_ORIGIN],
 	});
 	return toClerkContextAuth(requestState.toAuth());
 }
@@ -1536,9 +1535,8 @@ const clerkClient = createClerkClient({
 });
 
 async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth | null> {
-	const origin = request.headers.get("origin");
 	const requestState = await clerkClient.authenticateRequest(request, {
-		...(origin === env.CORS_ORIGIN ? { authorizedParties: [env.CORS_ORIGIN] } : {}),
+		authorizedParties: [env.CORS_ORIGIN],
 	});
 	return toClerkContextAuth(requestState.toAuth());
 }
@@ -11346,8 +11344,11 @@ export default function Page() {
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [code, setCode] = React.useState("");
+  const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
 
   const handleSubmit = async () => {
+    setStatusMessage(null);
+
     const { error } = await signUp.password({
       emailAddress,
       password,
@@ -11355,13 +11356,17 @@ export default function Page() {
 
     if (error) {
       console.error(JSON.stringify(error, null, 2));
+      setStatusMessage(error.longMessage ?? "Unable to sign up. Please try again.");
       return;
     }
 
     await signUp.verifications.sendEmailCode();
+    setStatusMessage(\`We sent a verification code to \${emailAddress}.\`);
   };
 
   const handleVerify = async () => {
+    setStatusMessage(null);
+
     await signUp.verifications.verifyEmailCode({
       code,
     });
@@ -11379,6 +11384,7 @@ export default function Page() {
       });
     } else {
       console.error("Sign-up attempt not complete:", signUp);
+      setStatusMessage("That code did not complete sign-up. Please try again.");
     }
   };
 
@@ -11394,6 +11400,7 @@ export default function Page() {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Verify your account</Text>
+        {statusMessage && <Text style={styles.helper}>{statusMessage}</Text>}
         <TextInput
           style={styles.input}
           value={code}
@@ -11427,6 +11434,7 @@ export default function Page() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign up</Text>
+      {statusMessage && <Text style={styles.helper}>{statusMessage}</Text>}
       <Text style={styles.label}>Email address</Text>
       <TextInput
         style={styles.input}
@@ -11538,6 +11546,10 @@ const styles = StyleSheet.create({
     color: "#d32f2f",
     fontSize: 12,
     marginTop: -8,
+  },
+  helper: {
+    color: "#555555",
+    fontSize: 13,
   },
 });
 `],
@@ -12005,8 +12017,11 @@ export default function Page() {
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [code, setCode] = React.useState("");
+  const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
 
   const handleSubmit = async () => {
+    setStatusMessage(null);
+
     const { error } = await signUp.password({
       emailAddress,
       password,
@@ -12014,13 +12029,17 @@ export default function Page() {
 
     if (error) {
       console.error(JSON.stringify(error, null, 2));
+      setStatusMessage(error.longMessage ?? "Unable to sign up. Please try again.");
       return;
     }
 
     await signUp.verifications.sendEmailCode();
+    setStatusMessage(\`We sent a verification code to \${emailAddress}.\`);
   };
 
   const handleVerify = async () => {
+    setStatusMessage(null);
+
     await signUp.verifications.verifyEmailCode({
       code,
     });
@@ -12038,6 +12057,7 @@ export default function Page() {
       });
     } else {
       console.error("Sign-up attempt not complete:", signUp);
+      setStatusMessage("That code did not complete sign-up. Please try again.");
     }
   };
 
@@ -12053,6 +12073,7 @@ export default function Page() {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Verify your account</Text>
+        {statusMessage && <Text style={styles.helper}>{statusMessage}</Text>}
         <TextInput
           style={styles.input}
           value={code}
@@ -12086,6 +12107,7 @@ export default function Page() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign up</Text>
+      {statusMessage && <Text style={styles.helper}>{statusMessage}</Text>}
       <Text style={styles.label}>Email address</Text>
       <TextInput
         style={styles.input}
@@ -12198,6 +12220,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: -8,
   },
+  helper: {
+    color: "#555555",
+    fontSize: 13,
+  },
 });
 `],
   ["auth/clerk/native/base/components/sign-out-button.tsx.hbs", `import { useClerk } from "@clerk/expo";
@@ -12262,6 +12288,14 @@ import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
 export default function Dashboard() {
   const user = useUser();
+  const nameFromParts = [user.user?.firstName, user.user?.lastName].filter(Boolean).join(" ");
+  const displayName =
+    user.user?.fullName ||
+    nameFromParts ||
+    user.user?.username ||
+    user.user?.primaryEmailAddress?.emailAddress ||
+    user.user?.primaryPhoneNumber?.phoneNumber ||
+    "User";
   {{#if (eq api "orpc")}}
   const privateData = useQuery({
     ...orpc.privateData.queryOptions(),
@@ -12290,7 +12324,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-4 p-6">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+      <p>Welcome {displayName}</p>
       {{#if (or (eq api "orpc") (eq api "trpc"))}}
       <p>API: {privateData.data?.message}</p>
       {{/if}}
@@ -12324,6 +12358,14 @@ import { SignInButton, UserButton, useUser } from "@clerk/react-router";
 
 export default function Dashboard() {
   const user = useUser();
+  const nameFromParts = [user.user?.firstName, user.user?.lastName].filter(Boolean).join(" ");
+  const displayName =
+    user.user?.fullName ||
+    nameFromParts ||
+    user.user?.username ||
+    user.user?.primaryEmailAddress?.emailAddress ||
+    user.user?.primaryPhoneNumber?.phoneNumber ||
+    "User";
   {{#if (eq api "orpc")}}
   const privateData = useQuery({
     ...orpc.privateData.queryOptions(),
@@ -12352,7 +12394,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-4 p-6">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+      <p>Welcome {displayName}</p>
       {{#if (or (eq api "orpc") (eq api "trpc"))}}
       <p>API: {privateData.data?.message}</p>
       {{/if}}
@@ -12378,6 +12420,14 @@ export const Route = createFileRoute("/dashboard")({
 
 function RouteComponent() {
 	const user = useUser();
+	const nameFromParts = [user.user?.firstName, user.user?.lastName].filter(Boolean).join(" ");
+	const displayName =
+		user.user?.fullName ||
+		nameFromParts ||
+		user.user?.username ||
+		user.user?.primaryEmailAddress?.emailAddress ||
+		user.user?.primaryPhoneNumber?.phoneNumber ||
+		"User";
 	{{#if (eq api "orpc")}}
 	const privateData = useQuery({
 		...orpc.privateData.queryOptions(),
@@ -12406,7 +12456,7 @@ function RouteComponent() {
 	return (
 		<div className="space-y-4 p-6">
 			<h1 className="text-2xl font-semibold">Dashboard</h1>
-			<p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+			<p>Welcome {displayName}</p>
 			{{#if (or (eq api "orpc") (eq api "trpc"))}}
 			<p>API: {privateData.data?.message}</p>
 			{{/if}}
@@ -12432,6 +12482,14 @@ export const Route = createFileRoute("/dashboard")({
 
 function RouteComponent() {
 	const user = useUser();
+	const nameFromParts = [user.user?.firstName, user.user?.lastName].filter(Boolean).join(" ");
+	const displayName =
+		user.user?.fullName ||
+		nameFromParts ||
+		user.user?.username ||
+		user.user?.primaryEmailAddress?.emailAddress ||
+		user.user?.primaryPhoneNumber?.phoneNumber ||
+		"User";
 	{{#if (eq api "trpc")}}
 	const trpc = useTRPC();
 	const privateData = useQuery({
@@ -12461,7 +12519,7 @@ function RouteComponent() {
 	return (
 		<div className="space-y-4 p-6">
 			<h1 className="text-2xl font-semibold">Dashboard</h1>
-			<p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+			<p>Welcome {displayName}</p>
 			{{#if (or (eq api "orpc") (eq api "trpc"))}}
 			<p>API: {privateData.data?.message}</p>
 			{{/if}}
@@ -13112,7 +13170,7 @@ fastify.register(async (rpcApp) => {
 
 	rpcApp.all("/rpc/*", async (request, reply) => {
 		const { matched } = await rpcHandler.handle(request, reply, {
-			context: await createContext(request),
+			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
 			prefix: "/rpc",
 		});
 
@@ -13123,7 +13181,7 @@ fastify.register(async (rpcApp) => {
 
 	rpcApp.all("/api-reference/*", async (request, reply) => {
 		const { matched } = await apiHandler.handle(request, reply, {
-			context: await createContext(request),
+			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
 			prefix: "/api-reference",
 		});
 
@@ -27305,7 +27363,7 @@ export const env = createEnv({
 {{/if}}
 {{#if (eq auth "clerk")}}
 		CLERK_SECRET_KEY: z.string().min(1),
-{{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
+{{#if (or (eq backend "express") (eq backend "fastify") (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia"))))}}
 		CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 {{/if}}

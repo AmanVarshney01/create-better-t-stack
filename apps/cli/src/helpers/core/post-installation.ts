@@ -506,6 +506,7 @@ function getClerkInstructionLines(
   );
   const serverEnvPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
   const needsServerSideClerkAuth = backend !== "none";
+  const needsClerkBackendPublishableKey = ["express", "fastify"].includes(backend);
   const needsClerkRequestVerification =
     api !== "none" && ["self", "hono", "elysia"].includes(backend);
 
@@ -527,6 +528,10 @@ function getClerkInstructionLines(
     lines.push(
       `Set CLERK_PUBLISHABLE_KEY in ${serverEnvPath} for server-side Clerk request verification`,
     );
+  }
+
+  if (needsClerkBackendPublishableKey) {
+    lines.push(`Set CLERK_PUBLISHABLE_KEY in ${serverEnvPath} for Clerk backend middleware`);
   }
 
   return lines;
