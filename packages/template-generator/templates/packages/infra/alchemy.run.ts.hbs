@@ -85,6 +85,11 @@ export const web = await Nextjs("web", {
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
     {{/if}}
+    {{#if (eq payments "dodo")}}
+    DODO_PAYMENTS_API_KEY: alchemy.secret.env.DODO_PAYMENTS_API_KEY!,
+    DODO_PAYMENTS_WEBHOOK_SECRET: alchemy.secret.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
+    DODO_PAYMENTS_ENVIRONMENT: alchemy.env.DODO_PAYMENTS_ENVIRONMENT!,
+    {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
     {{/if}}
@@ -136,6 +141,11 @@ export const web = await Nuxt("web", {
     {{#if (eq payments "polar")}}
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq payments "dodo")}}
+    DODO_PAYMENTS_API_KEY: alchemy.secret.env.DODO_PAYMENTS_API_KEY!,
+    DODO_PAYMENTS_WEBHOOK_SECRET: alchemy.secret.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
+    DODO_PAYMENTS_ENVIRONMENT: alchemy.env.DODO_PAYMENTS_ENVIRONMENT!,
     {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
@@ -197,6 +207,11 @@ export const web = await TanStackStart("web", {
     {{#if (eq payments "polar")}}
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq payments "dodo")}}
+    DODO_PAYMENTS_API_KEY: alchemy.secret.env.DODO_PAYMENTS_API_KEY!,
+    DODO_PAYMENTS_WEBHOOK_SECRET: alchemy.secret.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
+    DODO_PAYMENTS_ENVIRONMENT: alchemy.env.DODO_PAYMENTS_ENVIRONMENT!,
     {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
@@ -280,6 +295,11 @@ export const web = await Astro("web", {
     {{#if (eq payments "polar")}}
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq payments "dodo")}}
+    DODO_PAYMENTS_API_KEY: alchemy.secret.env.DODO_PAYMENTS_API_KEY!,
+    DODO_PAYMENTS_WEBHOOK_SECRET: alchemy.secret.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
+    DODO_PAYMENTS_ENVIRONMENT: alchemy.env.DODO_PAYMENTS_ENVIRONMENT!,
     {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
