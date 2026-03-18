@@ -23,8 +23,14 @@ import type { QueryClient } from "@tanstack/react-query";
 {{/if}}
 {{/if}}
 
+{{#if (eq auth "clerk")}}
+import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/tanstack-react-start";
+{{/if}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+import { useEffect } from "react";
+import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
+{{/if}}
 {{#if (and (eq backend "convex") (eq auth "clerk"))}}
-import { ClerkProvider, useAuth } from "@clerk/tanstack-react-start";
 import { auth } from "@clerk/tanstack-react-start/server";
 import { createServerFn } from "@tanstack/react-start";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
@@ -45,6 +51,22 @@ const getAuth = createServerFn({ method: "GET" }).handler(async () => {
 });
 {{else if (eq backend "convex")}}
 import { ConvexProvider } from "convex/react";
+{{/if}}
+
+{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+function ClerkApiAuthBridge() {
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    setClerkAuthTokenGetter(getToken);
+
+    return () => {
+      setClerkAuthTokenGetter(null);
+    };
+  }, [getToken]);
+
+  return null;
+}
 {{/if}}
 
 {{#if (eq backend "convex")}}
@@ -163,6 +185,31 @@ function RootDocument() {
         </body>
       </html>
     </ConvexBetterAuthProvider>
+  );
+  {{else if (eq auth "clerk")}}
+  return (
+    <ClerkProvider>
+      {{#unless (eq api "none")}}
+      <ClerkApiAuthBridge />
+      {{/unless}}
+      <html lang="en" className="dark">
+        <head>
+          <HeadContent />
+        </head>
+        <body>
+          <div className="grid h-svh grid-rows-[auto_1fr]">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+          <TanStackRouterDevtools position="bottom-left" />
+          {{#unless (eq api "none")}}
+          <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+          {{/unless}}
+          <Scripts />
+        </body>
+      </html>
+    </ClerkProvider>
   );
   {{else if (eq backend "convex")}}
   const { convexQueryClient } = Route.useRouteContext();

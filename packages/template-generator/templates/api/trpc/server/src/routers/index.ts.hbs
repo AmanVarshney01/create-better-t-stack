@@ -25,7 +25,7 @@ export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;
 {{else if (eq api "trpc")}}
 import {
-  {{#if (eq auth "better-auth")}}protectedProcedure, {{/if}}publicProcedure,
+  {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}protectedProcedure, {{/if}}publicProcedure,
   router,
 } from "../index";
 {{#if (includes examples "todo")}}
@@ -36,11 +36,15 @@ export const appRouter = router({
   healthCheck: publicProcedure.query(() => {
     return "OK";
   }),
-  {{#if (eq auth "better-auth")}}
+  {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
   privateData: protectedProcedure.query(({ ctx }) => {
     return {
       message: "This is private",
+      {{#if (eq auth "better-auth")}}
       user: ctx.session.user,
+      {{else}}
+      userId: ctx.auth.userId,
+      {{/if}}
     };
   }),
   {{/if}}

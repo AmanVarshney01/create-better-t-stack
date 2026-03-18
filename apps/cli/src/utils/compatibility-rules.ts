@@ -179,7 +179,7 @@ export function isFrontendAllowedWithBackend(
 ) {
   if (backend === "convex" && (frontend === "solid" || frontend === "astro")) return false;
 
-  if (auth === "clerk" && backend === "convex") {
+  if (auth === "clerk") {
     const incompatibleFrontends = ["nuxt", "svelte", "solid", "astro"];
     if (incompatibleFrontends.includes(frontend)) return false;
   }

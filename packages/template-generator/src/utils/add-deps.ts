@@ -17,10 +17,14 @@ export const dependencyVersionMap = {
   "better-auth": "1.5.2",
   "@better-auth/expo": "1.5.2",
 
-  "@clerk/nextjs": "^6.31.5",
-  "@clerk/clerk-react": "^5.45.0",
-  "@clerk/tanstack-react-start": "^0.26.3",
-  "@clerk/clerk-expo": "^2.14.25",
+  "@clerk/backend": "^3.2.1",
+  "@clerk/express": "^2.0.5",
+  "@clerk/fastify": "^3.1.3",
+  "@clerk/nextjs": "^7.0.5",
+  "@clerk/react": "^6.1.1",
+  "@clerk/react-router": "^3.0.5",
+  "@clerk/tanstack-react-start": "^1.0.5",
+  "@clerk/expo": "^3.1.3",
 
   "drizzle-orm": "^0.45.1",
   "drizzle-kit": "^0.31.8",

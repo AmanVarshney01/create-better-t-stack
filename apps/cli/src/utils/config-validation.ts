@@ -327,15 +327,9 @@ export function validateBackendConstraints(
 ): ValidationResult {
   const { backend } = config;
 
-  if (config.auth === "clerk" && backend !== "convex") {
-    return validationErr(
-      "Clerk authentication is only supported with the Convex backend. Please use '--backend convex' or choose a different auth provider.",
-    );
-  }
-
-  if (backend === "convex" && config.auth === "clerk" && config.frontend) {
+  if (config.auth === "clerk" && config.frontend) {
     const incompatibleFrontends = config.frontend.filter((f) =>
-      ["nuxt", "svelte", "solid"].includes(f),
+      ["nuxt", "svelte", "solid", "astro"].includes(f),
     );
     if (incompatibleFrontends.length > 0) {
       return validationErr(

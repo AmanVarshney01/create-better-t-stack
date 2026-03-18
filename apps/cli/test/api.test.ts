@@ -1,7 +1,30 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 
+import { createVirtual } from "../src/index";
 import type { API, Backend, Database, Examples, Frontend, ORM, Runtime } from "../src/types";
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+
+function collectFiles(
+  node:
+    | { type: "file"; path: string; content: string }
+    | { type: "directory"; path: string; children: unknown[] },
+  rootPath: string,
+  files = new Map<string, string>(),
+) {
+  if (node.type === "file") {
+    const relativePath = node.path.startsWith(`${rootPath}/`)
+      ? node.path.slice(rootPath.length + 1)
+      : node.path;
+    files.set(relativePath, node.content);
+    return files;
+  }
+
+  for (const child of node.children as Parameters<typeof collectFiles>[0][]) {
+    collectFiles(child, rootPath, files);
+  }
+
+  return files;
+}
 
 describe("API Configurations", () => {
   describe("tRPC API", () => {
@@ -538,6 +561,42 @@ describe("API Configurations", () => {
   });
 
   describe("API Edge Cases", () => {
+    it("should scaffold Fastify oRPC context with matching request shapes", async () => {
+      const result = await createVirtual({
+        projectName: "fastify-orpc-request-shape",
+        api: "orpc",
+        frontend: ["tanstack-router"],
+        backend: "fastify",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+        payments: "none",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const serverFile = files.get("apps/server/src/index.ts");
+      const contextFile = files.get("packages/api/src/context.ts");
+
+      expect(serverFile).toContain("context: await createContext(request.headers)");
+      expect(contextFile).toContain('import type { IncomingHttpHeaders } from "node:http";');
+      expect(contextFile).toContain(
+        "export async function createContext(req: IncomingHttpHeaders)",
+      );
+    });
+
     it("should handle API with complex frontend combinations", async () => {
       const result = await runTRPCTest({
         projectName: "api-complex-frontend",
