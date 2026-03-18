@@ -7,8 +7,9 @@ export const router = t.router;
 
 export const publicProcedure = t.procedure;
 
-{{#if (eq auth "better-auth")}}
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
+  {{#if (eq auth "better-auth")}}
   if (!ctx.session) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
@@ -16,10 +17,23 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
       cause: "No session",
     });
   }
+  {{else}}
+  if (!ctx.auth?.userId) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Authentication required",
+      cause: "No Clerk userId",
+    });
+  }
+  {{/if}}
   return next({
     ctx: {
       ...ctx,
+      {{#if (eq auth "better-auth")}}
       session: ctx.session,
+      {{else}}
+      auth: ctx.auth,
+      {{/if}}
     },
   });
 });

@@ -27,6 +27,9 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{#if (eq auth "better-auth")}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
+{{#if (eq auth "clerk")}}
+import { clerkPlugin } from "@clerk/fastify";
+{{/if}}
 
 const baseCorsConfig = {
 	origin: env.CORS_ORIGIN,
@@ -72,6 +75,9 @@ const fastify = Fastify({
 {{/if}}
 
 fastify.register(fastifyCors, baseCorsConfig);
+{{#if (eq auth "clerk")}}
+fastify.register(clerkPlugin);
+{{/if}}
 
 {{#if (eq api "orpc")}}
 fastify.register(async (rpcApp) => {
@@ -82,7 +88,7 @@ fastify.register(async (rpcApp) => {
 
 	rpcApp.all("/rpc/*", async (request, reply) => {
 		const { matched } = await rpcHandler.handle(request, reply, {
-			context: await createContext(request.headers),
+			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
 			prefix: "/rpc",
 		});
 
@@ -93,7 +99,7 @@ fastify.register(async (rpcApp) => {
 
 	rpcApp.all("/api-reference/*", async (request, reply) => {
 		const { matched } = await apiHandler.handle(request, reply, {
-			context: await createContext(request.headers),
+			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
 			prefix: "/api-reference",
 		});
 

@@ -22,6 +22,9 @@ import { TRPCProvider } from "./utils/trpc";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 {{/unless}}
+{{#if (eq auth "clerk")}}
+import { getClerkAuthToken } from "@/utils/clerk-auth";
+{{/if}}
 {{else if (eq api "orpc")}}
 import { QueryClientProvider } from "@tanstack/react-query";
 import { orpc, queryClient } from "./utils/orpc";
@@ -82,6 +85,12 @@ const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
 			url: {{#if (eq backend "self")}}"/api/trpc"{{else}}`${env.VITE_SERVER_URL}/trpc`{{/if}},
+{{#if (eq auth "clerk")}}
+			headers: async () => {
+				const token = await getClerkAuthToken();
+				return token ? { Authorization: `Bearer ${token}` } : {};
+			},
+{{/if}}
 {{#if (eq auth "better-auth")}}
 			fetch(url, options) {
 				return fetch(url, {
