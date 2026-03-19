@@ -14,7 +14,7 @@ import { Trash2 } from "lucide-react";
 {{else}}
 import { Loader2, Trash2 } from "lucide-react";
 {{/if}}
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 {{#if (eq backend "convex")}}
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -47,7 +47,7 @@ function TodosRoute() {
   const toggleTodo = useMutation(api.todos.toggle);
   const removeTodo = useMutation(api.todos.deleteTodo);
 
-  const handleAddTodo = async (e) => {
+  const handleAddTodo = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = newTodoText.trim();
     if (text) {
@@ -126,7 +126,7 @@ function TodosRoute() {
   );
     {{/if}}
 
-  const handleAddTodo = (e) => {
+  const handleAddTodo = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (newTodoText.trim()) {
       createMutation.mutate({ text: newTodoText });

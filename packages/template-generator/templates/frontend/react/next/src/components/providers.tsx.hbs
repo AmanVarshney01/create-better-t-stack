@@ -1,8 +1,14 @@
 "use client";
 
+{{#if (and (eq auth "clerk") (ne api "none"))}}
+import { useEffect } from "react";
+import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
+{{/if}}
+{{#if (and (eq auth "clerk") (or (eq backend "convex") (ne api "none")))}}
+import { useAuth } from "@clerk/nextjs";
+{{/if}}
 {{#if (eq backend "convex")}}
 {{#if (eq auth "clerk")}}
-import { useAuth } from "@clerk/nextjs";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { env } from "@{{projectName}}/env/web";
@@ -32,6 +38,22 @@ import { Toaster } from "@{{projectName}}/ui/components/sonner";
 
 {{#if (eq backend "convex")}}
 const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);
+{{/if}}
+
+{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+function ClerkApiAuthBridge() {
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    setClerkAuthTokenGetter(getToken);
+
+    return () => {
+      setClerkAuthTokenGetter(null);
+    };
+  }, [getToken]);
+
+  return null;
+}
 {{/if}}
 
 export default function Providers({
@@ -71,6 +93,9 @@ export default function Providers({
       {{else}}
       {{#unless (eq api "none")}}
       <QueryClientProvider client={queryClient}>
+        {{#if (eq auth "clerk")}}
+        <ClerkApiAuthBridge />
+        {{/if}}
         {{#if (eq api "orpc")}}
         {children}
         {{/if}}

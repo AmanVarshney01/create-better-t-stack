@@ -14,7 +14,11 @@ import { trpc } from "@/utils/trpc";
 import { Link } from "expo-router";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
-import { useUser } from "@clerk/clerk-expo";
+import { useUser } from "@clerk/expo";
+import { SignOutButton } from "@/components/sign-out-button";
+{{else if (and (ne backend "convex") (eq auth "clerk"))}}
+import { Link } from "expo-router";
+import { useAuth, useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { useConvexAuth, useQuery } from "convex/react";
@@ -38,6 +42,9 @@ export default function Home() {
   const { user } = useUser();
   const healthCheck = useQuery(api.healthCheck.get);
   const privateData = useQuery(api.privateData.get);
+  {{else if (and (ne backend "convex") (eq auth "clerk"))}}
+  const { isLoaded, isSignedIn } = useAuth();
+  const { user } = useUser();
   {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
   const healthCheck = useQuery(api.healthCheck.get);
   const { isAuthenticated } = useConvexAuth();
@@ -138,6 +145,32 @@ export default function Home() {
         <AuthLoading>
           <Text>Loading...</Text>
         </AuthLoading>
+        {{/if}}
+
+        {{#if (and (ne backend "convex") (eq auth "clerk"))}}
+        {!isLoaded ? (
+          <Text style={styles.apiStatusText}>Loading...</Text>
+        ) : isSignedIn ? (
+          <View style={styles.userCard}>
+            <View style={styles.userHeader}>
+              <Text style={styles.userWelcome}>
+                Welcome,{" "}
+                <Text style={styles.userName}>{user?.fullName ?? user?.firstName ?? "there"}</Text>
+              </Text>
+            </View>
+            <Text style={styles.userEmail}>{user?.emailAddresses[0]?.emailAddress}</Text>
+            <SignOutButton />
+          </View>
+        ) : (
+          <>
+            <Link href="/(auth)/sign-in">
+              <Text style={styles.apiStatusText}>Sign in</Text>
+            </Link>
+            <Link href="/(auth)/sign-up">
+              <Text style={styles.apiStatusText}>Sign up</Text>
+            </Link>
+          </>
+        )}
         {{/if}}
 
         {{#if (and (eq backend "convex") (eq auth "better-auth"))}}

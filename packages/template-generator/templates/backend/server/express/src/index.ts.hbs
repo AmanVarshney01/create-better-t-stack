@@ -11,7 +11,7 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/node";
 import { onError } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
-{{#if (eq auth "better-auth")}}
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 import { createContext } from "@{{projectName}}/api/context";
 {{/if}}
 {{/if}}
@@ -26,6 +26,9 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { auth } from "@{{projectName}}/auth";
 import { toNodeHandler } from "better-auth/node";
 {{/if}}
+{{#if (eq auth "clerk")}}
+import { clerkMiddleware } from "@clerk/express";
+{{/if}}
 
 const app = express();
 
@@ -33,12 +36,18 @@ app.use(
 	cors({
 		origin: env.CORS_ORIGIN,
 		methods: ["GET", "POST", "OPTIONS"],
-{{#if (eq auth "better-auth")}}
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 		allowedHeaders: ["Content-Type", "Authorization"],
+{{/if}}
+{{#if (eq auth "better-auth")}}
 		credentials: true,
 {{/if}}
 	})
 );
+
+{{#if (eq auth "clerk")}}
+app.use(clerkMiddleware());
+{{/if}}
 
 {{#if (eq auth "better-auth")}}
 app.all("/api/auth{/*path}", toNodeHandler(auth));
@@ -78,7 +87,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 app.use(async (req, res, next) => {
 	const rpcResult = await rpcHandler.handle(req, res, {
 		prefix: "/rpc",
-{{#if (eq auth "better-auth")}}
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 		context: await createContext({ req }),
 {{else}}
 		context: {},
@@ -88,7 +97,7 @@ app.use(async (req, res, next) => {
 
 	const apiResult = await apiHandler.handle(req, res, {
 		prefix: "/api-reference",
-{{#if (eq auth "better-auth")}}
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 		context: await createContext({ req }),
 {{else}}
 		context: {},

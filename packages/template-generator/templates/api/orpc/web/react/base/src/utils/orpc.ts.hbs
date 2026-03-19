@@ -14,11 +14,17 @@ import { createContext } from "@{{projectName}}/api/context";
 import type { RouterClient } from "@orpc/server";
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { env } from "@{{projectName}}/env/web";
+{{#if (eq auth "clerk")}}
+import { getClerkAuthToken } from "@/utils/clerk-auth";
+{{/if}}
 {{else}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 {{/unless}}
+{{#if (eq auth "clerk")}}
+import { getClerkAuthToken } from "@/utils/clerk-auth";
+{{/if}}
 {{/if}}
 
 export const queryClient = new QueryClient({
@@ -63,6 +69,12 @@ export const client: RouterClient<typeof appRouter> = getORPCClient();
 {{else if (includes frontend "tanstack-start")}}
 const link = new RPCLink({
 	url: `${env.VITE_SERVER_URL}/rpc`,
+{{#if (eq auth "clerk")}}
+	headers: async () => {
+		const token = await getClerkAuthToken();
+		return token ? { Authorization: `Bearer ${token}` } : {};
+	},
+{{/if}}
 {{#if (eq auth "better-auth")}}
 	fetch(url, options) {
 		return fetch(url, {
@@ -86,6 +98,25 @@ export const link = new RPCLink({
 	url: `${env.NEXT_PUBLIC_SERVER_URL}/rpc`,
 {{else}}
 	url: `${env.VITE_SERVER_URL}/rpc`,
+{{/if}}
+{{#if (eq auth "clerk")}}
+	headers: async () => {
+		{{#if (includes frontend "next")}}
+		if (typeof window !== "undefined") {
+			const token = await getClerkAuthToken();
+			return token ? { Authorization: `Bearer ${token}` } : {};
+		}
+
+		const { auth } = await import("@clerk/nextjs/server");
+		const clerkAuth = await auth();
+		const token = await clerkAuth.getToken();
+
+		return token ? { Authorization: `Bearer ${token}` } : {};
+		{{else}}
+		const token = await getClerkAuthToken();
+		return token ? { Authorization: `Bearer ${token}` } : {};
+		{{/if}}
+	},
 {{/if}}
 {{#if (eq auth "better-auth")}}
 	fetch(url, options) {
@@ -111,4 +142,3 @@ export const client: AppRouterClient = createORPCClient(link)
 {{/if}}
 
 export const orpc = createTanstackQueryUtils(client)
-

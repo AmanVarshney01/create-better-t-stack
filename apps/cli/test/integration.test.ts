@@ -110,6 +110,27 @@ describe("Integration Tests - Real World Scenarios", () => {
       expectSuccess(result);
     });
 
+    it("should create Hono app with Clerk auth", async () => {
+      const result = await runTRPCTest({
+        projectName: "hono-clerk-app",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "clerk",
+        api: "trpc",
+        frontend: ["react-router"],
+        addons: ["biome", "turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
     it("should create Convex app with AI example + React frontend", async () => {
       const result = await runTRPCTest({
         projectName: "convex-ai-react-app",
@@ -394,13 +415,13 @@ describe("Integration Tests - Real World Scenarios", () => {
     it("should fail with Clerk + incompatible frontend", async () => {
       const result = await runTRPCTest({
         projectName: "clerk-svelte-fail",
-        backend: "convex",
-        runtime: "none",
-        database: "none",
-        orm: "none",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
         auth: "clerk",
-        api: "none",
-        frontend: ["svelte"], // Clerk + Convex not compatible with Svelte
+        api: "orpc",
+        frontend: ["svelte"], // Clerk is not compatible with Svelte
         addons: ["none"],
         examples: ["none"],
         dbSetup: "none",
