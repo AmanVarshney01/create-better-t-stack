@@ -123,6 +123,74 @@ describe("Authentication Configurations", () => {
       expectSuccess(result);
     });
 
+    it("should scaffold react-router with Convex Better Auth wiring", async () => {
+      const result = await runTRPCTest({
+        projectName: "better-auth-convex-react-router",
+        auth: "better-auth",
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        api: "none",
+        frontend: ["react-router"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const rootFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/root.tsx"),
+        "utf8",
+      );
+      const authClientFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/lib/auth-client.ts"),
+        "utf8",
+      );
+      const dashboardFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/routes/dashboard.tsx"),
+        "utf8",
+      );
+
+      expect(rootFile).toContain("ConvexBetterAuthProvider");
+      expect(rootFile).toContain('import { authClient } from "@/lib/auth-client";');
+      expect(authClientFile).toContain("crossDomainClient(), convexClient()");
+      expect(dashboardFile).toContain("Authenticated");
+      expect(dashboardFile).toContain("Unauthenticated");
+    });
+
+    const convexUnsupportedFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
+    for (const frontend of convexUnsupportedFrontends) {
+      it(`should fail with Convex Better Auth + ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `better-auth-convex-${frontend}-fail`,
+          auth: "better-auth",
+          backend: "convex",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          frontend: [frontend],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+          expectError: true,
+        });
+
+        expectError(result, "Better Auth with '--backend convex' is not compatible");
+      });
+    }
+
     const compatibleFrontends = [
       "tanstack-router",
       "react-router",

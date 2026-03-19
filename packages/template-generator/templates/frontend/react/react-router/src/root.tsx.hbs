@@ -25,6 +25,9 @@ import { ConvexReactClient } from "convex/react";
 import { env } from "@{{projectName}}/env/web";
   {{#if (eq auth "clerk")}}
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+  {{else if (eq auth "better-auth")}}
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+import { authClient } from "@/lib/auth-client";
   {{else}}
 import { ConvexProvider } from "convex/react";
   {{/if}}
@@ -94,6 +97,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 {{#if (eq backend "convex")}}
 {{#if (eq auth "clerk")}}
 export default function App({ loaderData }: Route.ComponentProps) {
+{{else if (eq auth "better-auth")}}
+export default function App() {
 {{else}}
 export default function App() {
 {{/if}}
@@ -116,6 +121,23 @@ export default function App() {
         </ThemeProvider>
       </ConvexProviderWithClerk>
     </ClerkProvider>
+  );
+  {{else if (eq auth "better-auth")}}
+  return (
+    <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        disableTransitionOnChange
+        storageKey="vite-ui-theme"
+      >
+        <div className="grid grid-rows-[auto_1fr] h-svh">
+          <Header />
+          <Outlet />
+        </div>
+        <Toaster richColors />
+      </ThemeProvider>
+    </ConvexBetterAuthProvider>
   );
   {{else}}
   return (
