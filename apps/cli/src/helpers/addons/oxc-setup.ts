@@ -49,9 +49,9 @@ export async function setupOxc(
         const oxfmtArgs = getPackageExecutionArgs(packageManager, "oxfmt@latest --init");
         await $({ cwd: projectDir, env: { CI: "true" } })`${oxfmtArgs}`;
 
-        s.stop("oxlint and oxfmt initialized successfully!");
+        s.stop("oxc initialized successfully!");
       } catch (error) {
-        s.stop("Failed to initialize oxlint and oxfmt");
+        s.stop("Failed to initialize oxc");
         throw error;
       }
     },
