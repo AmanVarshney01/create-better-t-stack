@@ -1,0 +1,62 @@
+{{#if (eq api "trpc")}}
+import { useTRPC } from "@/utils/trpc";
+import { useQuery } from "@tanstack/react-query";
+{{/if}}
+{{#if (eq api "orpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/utils/orpc";
+{{/if}}
+import { SignInButton, UserButton, useUser } from "@clerk/tanstack-react-start";
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/dashboard")({
+	component: RouteComponent,
+});
+
+function RouteComponent() {
+	const user = useUser();
+	const nameFromParts = [user.user?.firstName, user.user?.lastName].filter(Boolean).join(" ");
+	const displayName =
+		user.user?.fullName ||
+		nameFromParts ||
+		user.user?.username ||
+		user.user?.primaryEmailAddress?.emailAddress ||
+		user.user?.primaryPhoneNumber?.phoneNumber ||
+		"User";
+	{{#if (eq api "trpc")}}
+	const trpc = useTRPC();
+	const privateData = useQuery({
+		...trpc.privateData.queryOptions(),
+		enabled: user.isLoaded && !!user.user,
+	});
+	{{/if}}
+	{{#if (eq api "orpc")}}
+	const privateData = useQuery({
+		...orpc.privateData.queryOptions(),
+		enabled: user.isLoaded && !!user.user,
+	});
+	{{/if}}
+
+	if (!user.isLoaded) {
+		return <div className="p-6">Loading...</div>;
+	}
+
+	if (!user.user) {
+		return (
+			<div className="p-6">
+				<SignInButton />
+			</div>
+		);
+	}
+
+	return (
+		<div className="space-y-4 p-6">
+			<h1 className="text-2xl font-semibold">Dashboard</h1>
+			<p>Welcome {displayName}</p>
+			{{#if (or (eq api "orpc") (eq api "trpc"))}}
+			<p>API: {privateData.data?.message}</p>
+			{{/if}}
+			<UserButton />
+		</div>
+	);
+}

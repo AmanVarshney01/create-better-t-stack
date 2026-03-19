@@ -1,6 +1,8 @@
 {{#if (eq auth "better-auth")}}
 import { authClient } from "@/lib/auth-client";
 import { Platform } from "react-native";
+{{else if (eq auth "clerk")}}
+import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 import { QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
@@ -37,6 +39,11 @@ const trpcClient = createTRPCClient<AppRouter>({
 					headers.set("Cookie", cookies);
 				}
 				return Object.fromEntries(headers);
+			},
+{{else if (eq auth "clerk")}}
+			headers: async function () {
+				const token = await getClerkAuthToken();
+				return token ? { Authorization: `Bearer ${token}` } : {};
 			},
 {{/if}}
 		}),

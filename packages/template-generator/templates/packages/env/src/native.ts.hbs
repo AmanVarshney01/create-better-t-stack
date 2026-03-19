@@ -9,11 +9,11 @@ export const env = createEnv({
 {{#if (eq auth "better-auth")}}
 		EXPO_PUBLIC_CONVEX_SITE_URL: z.url(),
 {{/if}}
-{{#if (eq auth "clerk")}}
-		EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
-{{/if}}
 {{else}}
 		EXPO_PUBLIC_SERVER_URL: z.url(),
+{{/if}}
+{{#if (eq auth "clerk")}}
+		EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 	},
 	runtimeEnv: process.env,
