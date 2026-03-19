@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export function ChartCard({
-  eyebrow,
   title,
   description,
   aside,
@@ -12,7 +11,6 @@ export function ChartCard({
   className,
   contentClassName,
 }: {
-  eyebrow?: string;
   title: string;
   description: string;
   aside?: ReactNode;
@@ -30,18 +28,9 @@ export function ChartCard({
     >
       <div className="space-y-5 p-4 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="max-w-2xl space-y-3">
-            {eyebrow ? (
-              <span className="inline-flex w-fit items-center rounded-full bg-muted/30 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                {eyebrow}
-              </span>
-            ) : null}
-            <div className="space-y-1.5">
-              <h3 className="font-semibold text-[1rem] tracking-tight sm:text-[1.08rem]">
-                {title}
-              </h3>
-              <p className="max-w-xl text-muted-foreground text-sm leading-6">{description}</p>
-            </div>
+          <div className="max-w-2xl space-y-1.5">
+            <h3 className="font-semibold text-[1rem] tracking-tight sm:text-[1.08rem]">{title}</h3>
+            <p className="max-w-xl text-muted-foreground text-sm leading-6">{description}</p>
           </div>
           {aside ? <div className="shrink-0">{aside}</div> : null}
         </div>
