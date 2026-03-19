@@ -1,127 +1,29 @@
 "use client";
 
-import * as Plot from "@observablehq/plot";
-
 import { cn } from "@/lib/utils";
 
-import {
-  buildCompactCategoryLabels,
-  formatPercent,
-  getPlotFontSize,
-  isCompactPlot,
-  resolvePlotMargins,
-} from "./analytics-helpers";
+import { formatCount, formatPercent } from "./analytics-helpers";
 import { ChartCard } from "./chart-card";
-import { PlotChart } from "./plot-chart";
 import { PreferenceChartCard } from "./preference-chart-card";
 import { SectionHeader } from "./section-header";
-import type { AggregatedAnalyticsData, ShareDistributionItem, VersionDistribution } from "./types";
-
-function VersionCard({
-  eyebrow,
-  title,
-  description,
-  data,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-  data: VersionDistribution;
-}) {
-  const ranking = data.slice(0, 6);
-
-  return (
-    <ChartCard eyebrow={eyebrow} title={title} description={description}>
-      <PlotChart
-        ariaLabel={title}
-        className="min-h-[240px]"
-        build={({ width, palette }) => {
-          const compact = isCompactPlot(width);
-          const shareMax = Math.max(...ranking.map((item) => item.share), 0.12);
-          const compactLabels = compact
-            ? buildCompactCategoryLabels(
-                ranking.map((item) => item.version),
-                width < 360 ? 8 : 10,
-              )
-            : null;
-          const chartData = ranking.map((item, index) => ({
-            ...item,
-            label: compact ? (compactLabels?.[index] ?? item.version) : item.version,
-          }));
-          const margins = resolvePlotMargins(
-            width,
-            { top: 16, right: 48, bottom: 28, left: 96 },
-            { top: 12, right: 40, bottom: 12, left: 74 },
-          );
-
-          return Plot.plot({
-            width,
-            height: compact
-              ? Math.max(200, chartData.length * 28 + 24)
-              : Math.max(220, chartData.length * 34 + 70),
-            marginTop: margins.top,
-            marginRight: margins.right,
-            marginBottom: margins.bottom,
-            marginLeft: margins.left,
-            style: {
-              background: "transparent",
-              color: palette.foreground,
-              fontFamily: "var(--font-mono)",
-              fontSize: getPlotFontSize(width),
-            },
-            x: {
-              axis: compact ? null : undefined,
-              label: null,
-              domain: [0, shareMax * (compact ? 1.34 : 1.24)],
-              ticks: 4,
-              grid: !compact,
-              tickFormat: (value) => formatPercent(Number(value), true),
-            },
-            y: {
-              label: null,
-            },
-            marks: [
-              Plot.barX(chartData, {
-                x: "share",
-                y: "label",
-                fill: palette.chart5,
-                rx: 10,
-                title: (item) =>
-                  `${item.version}\nShare: ${formatPercent(item.share, true)}\nProjects: ${item.count.toLocaleString()}`,
-              }),
-              Plot.text(chartData, {
-                x: "share",
-                y: "label",
-                text: (item) => formatPercent(item.share, true),
-                dx: compact ? 6 : 10,
-                textAnchor: "start",
-                fill: palette.foreground,
-                fontWeight: 600,
-              }),
-            ],
-          });
-        }}
-      />
-    </ChartCard>
-  );
-}
+import type { AggregatedAnalyticsData, ShareDistributionItem } from "./types";
 
 function SplitMeterCard({
-  eyebrow,
   title,
   description,
   data,
 }: {
-  eyebrow: string;
   title: string;
   description: string;
   data: ShareDistributionItem[];
 }) {
   const yesShare = data.find((item) => item.name === "Yes")?.share ?? 0;
   const noShare = data.find((item) => item.name === "No")?.share ?? 0;
+  const yesCount = data.find((item) => item.name === "Yes")?.value ?? 0;
+  const noCount = data.find((item) => item.name === "No")?.value ?? 0;
 
   return (
-    <ChartCard eyebrow={eyebrow} title={title} description={description}>
+    <ChartCard title={title} description={description}>
       <div className="space-y-4">
         <div className="overflow-hidden rounded-full border border-border/45 bg-background/65">
           <div className="flex h-4 w-full">
@@ -134,13 +36,15 @@ function SplitMeterCard({
             <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
               yes
             </div>
-            <div className="mt-2 font-semibold text-2xl">{formatPercent(yesShare)}</div>
+            <div className="mt-2 font-semibold text-2xl">{formatCount(yesCount)}</div>
+            <div className="mt-1 text-muted-foreground text-xs">{formatPercent(yesShare)}</div>
           </div>
           <div className="rounded-2xl border border-border/45 bg-background/55 p-4">
             <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
               no
             </div>
-            <div className="mt-2 font-semibold text-2xl">{formatPercent(noShare)}</div>
+            <div className="mt-2 font-semibold text-2xl">{formatCount(noCount)}</div>
+            <div className="mt-1 text-muted-foreground text-xs">{formatPercent(noShare)}</div>
           </div>
         </div>
       </div>
@@ -149,16 +53,26 @@ function SplitMeterCard({
 }
 
 export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
-  const webDeployTargets = data.webDeployDistribution.filter((item) => item.name !== "none");
-  const serverDeployTargets = data.serverDeployDistribution.filter((item) => item.name !== "none");
-  const hasDeployTargets = webDeployTargets.length > 0 || serverDeployTargets.length > 0;
+  const webDeployOptions = data.webDeployDistribution;
+  const serverDeployOptions = data.serverDeployDistribution;
+  const hasDeploymentOptions = webDeployOptions.length > 0 || serverDeployOptions.length > 0;
+  const nodeVersionPreferences = data.nodeVersionDistribution.map((item) => ({
+    name: item.version,
+    value: item.count,
+    share: item.share,
+  }));
+  const cliVersionPreferences = data.cliVersionDistribution.map((item) => ({
+    name: item.version,
+    value: item.count,
+    share: item.share,
+  }));
 
   return (
     <div className="space-y-6">
       <SectionHeader
         label="Environment"
-        title="Tooling and deployment details, trimmed down to the parts worth comparing."
-        description="This section keeps the operational details that matter, but avoids wasting space on decorative charts that don’t help anyone make sense of the telemetry."
+        title="Package manager, setup, deployment, and addon choices."
+        description="These charts show the environment and setup options selected in tracked CLI runs."
         aside={
           <div className="rounded-full border border-border/60 bg-background/55 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
             packages {data.summary.mostPopularPackageManager} • runtime{" "}
@@ -167,48 +81,61 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
         }
       />
 
-      <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
         <PreferenceChartCard
-          eyebrow="Package manager"
-          title="Dependency tooling"
-          description="How people install and manage their stack."
+          title="Database setup"
+          description="How often each database setup option was selected."
+          data={data.dbSetupDistribution}
+          colorKey="chart4"
+          className="xl:min-h-full"
+          chartClassName="min-h-[290px]"
+        />
+        <PreferenceChartCard
+          title="Package manager"
+          description="How often each package manager was selected."
           data={data.packageManagerDistribution}
           colorKey="chart1"
         />
+      </div>
+
+      <div
+        className={cn(
+          "grid gap-4",
+          data.paymentsDistribution.length > 0 ? "xl:grid-cols-2" : "grid-cols-1",
+        )}
+      >
         <PreferenceChartCard
-          eyebrow="Platform"
-          title="Operating systems"
-          description="Where the CLI is most often being run."
+          title="Platform"
+          description="How many tracked CLI runs came from each platform."
           data={data.platformDistribution}
           colorKey="chart2"
         />
-        <PreferenceChartCard
-          eyebrow="Database setup"
-          title="Provisioning preference"
-          description="Database setup services and strategies by project share."
-          data={data.dbSetupDistribution}
-          colorKey="chart4"
-        />
+        {data.paymentsDistribution.length > 0 ? (
+          <PreferenceChartCard
+            title="Payments"
+            description="How often each payments option was selected, including none."
+            data={data.paymentsDistribution}
+            colorKey="chart3"
+          />
+        ) : null}
       </div>
 
-      {hasDeployTargets ? (
+      {hasDeploymentOptions ? (
         <div className="grid gap-4 xl:grid-cols-2">
-          {webDeployTargets.length > 0 ? (
+          {webDeployOptions.length > 0 ? (
             <PreferenceChartCard
-              eyebrow="Web target"
-              title="Web deploy targets"
-              description="The deployment platforms picked for the web surface."
-              data={webDeployTargets}
+              title="Web deployment"
+              description="How often each web deployment option was selected, including none."
+              data={webDeployOptions}
               colorKey="chart3"
             />
           ) : null}
 
-          {serverDeployTargets.length > 0 ? (
+          {serverDeployOptions.length > 0 ? (
             <PreferenceChartCard
-              eyebrow="Server target"
-              title="Server deploy targets"
-              description="Back-end hosting destinations selected during setup."
-              data={serverDeployTargets}
+              title="Server deployment"
+              description="How often each server deployment option was selected, including none."
+              data={serverDeployOptions}
               colorKey="chart2"
             />
           ) : null}
@@ -217,61 +144,66 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <SplitMeterCard
-          eyebrow="Git init"
-          title="Repository initialization"
-          description="How often projects are scaffolded with git already initialized."
+          title="Git initialization"
+          description="Share of tracked setups where Git was initialized during project creation."
           data={data.gitDistribution}
         />
         <SplitMeterCard
-          eyebrow="Install"
-          title="Auto dependency install"
-          description="Whether users let the CLI install dependencies immediately."
+          title="Install dependencies"
+          description="Share of tracked setups where dependencies were installed during project creation."
           data={data.installDistribution}
-        />
-        <VersionCard
-          eyebrow="Node"
-          title="Node major versions"
-          description="Major Node versions observed in tracked runs."
-          data={data.nodeVersionDistribution}
-        />
-        <VersionCard
-          eyebrow="CLI"
-          title="CLI versions"
-          description="Most common release versions in the live telemetry stream."
-          data={data.cliVersionDistribution}
         />
       </div>
 
       <div
         className={cn(
           "grid gap-4",
-          data.addonsDistribution.length > 0 && data.examplesDistribution.length > 0
-            ? "xl:grid-cols-2"
-            : "grid-cols-1",
+          data.examplesDistribution.length > 0 ? "xl:grid-cols-2" : "grid-cols-1",
         )}
       >
-        {data.addonsDistribution.length > 0 ? (
-          <PreferenceChartCard
-            eyebrow="Add-ons"
-            title="Extra capabilities"
-            description="Additional tooling and generators selected during setup."
-            data={data.addonsDistribution}
-            colorKey="chart1"
-            maxItems={8}
-          />
-        ) : null}
+        <PreferenceChartCard
+          title="Node versions"
+          description="How many tracked CLI runs reported each Node major version."
+          data={nodeVersionPreferences}
+          colorKey="chart5"
+          layout="vertical"
+          chartClassName="min-h-[280px]"
+        />
 
         {data.examplesDistribution.length > 0 ? (
           <PreferenceChartCard
-            eyebrow="Examples"
-            title="Included examples"
-            description="Sample templates people choose to include."
+            title="Examples"
+            description="How often each example was included."
             data={data.examplesDistribution}
             colorKey="chart4"
-            maxItems={8}
+            layout="vertical"
+            chartClassName="min-h-[280px]"
           />
         ) : null}
       </div>
+
+      {data.addonsDistribution.length > 0 ? (
+        <PreferenceChartCard
+          title="Addons"
+          description="How often each addon was selected."
+          data={data.addonsDistribution}
+          colorKey="chart1"
+          columnCount={2}
+          chartClassName="min-h-[280px]"
+        />
+      ) : null}
+
+      {cliVersionPreferences.length > 0 ? (
+        <PreferenceChartCard
+          title="CLI versions"
+          description="How many tracked setups were created with each CLI version."
+          data={cliVersionPreferences}
+          colorKey="chart4"
+          columnCount={4}
+          columnGridClassName="xl:grid-cols-2"
+          chartClassName="min-h-[300px]"
+        />
+      ) : null}
     </div>
   );
 }

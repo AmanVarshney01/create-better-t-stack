@@ -17,20 +17,18 @@ import { SectionHeader } from "./section-header";
 import type { AggregatedAnalyticsData } from "./types";
 
 function PairingMatrix({
-  eyebrow,
   title,
   description,
   matrix,
   tone,
 }: {
-  eyebrow: string;
   title: string;
   description: string;
   matrix: AggregatedAnalyticsData["stackMatrix"];
   tone: "chart1" | "chart4";
 }) {
   return (
-    <ChartCard eyebrow={eyebrow} title={title} description={description}>
+    <ChartCard title={title} description={description}>
       <PlotChart
         ariaLabel={title}
         className="min-h-[320px]"
@@ -38,6 +36,8 @@ function PairingMatrix({
           const compact = isCompactPlot(width);
           const maxValue = Math.max(matrix.maxValue, 1);
           const fillEnd = tone === "chart1" ? palette.chart1 : palette.chart4;
+          const xLabelCount = matrix.xDomain.length;
+          const needsDenseXAxis = xLabelCount > (compact ? 5 : 7);
           const cells = matrix.data.map((item) => ({
             ...item,
             tone:
@@ -48,8 +48,18 @@ function PairingMatrix({
 
           const margins = resolvePlotMargins(
             width,
-            { top: 18, right: 18, bottom: 54, left: 88 },
-            { top: 12, right: 8, bottom: 38, left: 62 },
+            {
+              top: 18,
+              right: 18,
+              bottom: needsDenseXAxis ? 78 : 54,
+              left: 88,
+            },
+            {
+              top: 12,
+              right: 8,
+              bottom: needsDenseXAxis ? 58 : 38,
+              left: 62,
+            },
           );
 
           return Plot.plot({
@@ -70,6 +80,7 @@ function PairingMatrix({
             x: {
               label: null,
               domain: matrix.xDomain,
+              tickRotate: needsDenseXAxis ? -40 : 0,
               tickFormat: (value) => shortenLabel(String(value), compact ? 8 : 16),
             },
             y: {
@@ -111,8 +122,8 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
     <div className="space-y-6">
       <SectionHeader
         label="Stack choices"
-        title="Clearer answers to the real question: which combinations keep winning?"
-        description="Instead of treating each category in isolation, the pairing matrices show how choices cluster together. The preference boards underneath answer the simpler question of what keeps getting picked."
+        title="Frontend, backend, database, ORM, API, auth, and runtime choices."
+        description="These charts show which stack options were selected most often and which combinations appear together."
         aside={
           <div className="rounded-full border border-border/60 bg-background/55 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
             top stack {shortenLabel(data.summary.topStack, 28)}
@@ -122,16 +133,14 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <PairingMatrix
-          eyebrow="Frontend x backend"
-          title="Popular frontend and backend pairings stop being abstract when you can see the hotspots."
-          description="The brightest cells show where builders are converging, not just which standalone options top the list."
+          title="Frontend x Backend"
+          description="How often each frontend and backend combination was selected."
           matrix={data.stackMatrix}
           tone="chart1"
         />
         <PairingMatrix
-          eyebrow="Database x ORM"
-          title="Database and ORM choices reveal which data layer combinations feel safest."
-          description="This view removes string clutter and makes the strongest backend data pairings immediately visible."
+          title="Database x ORM"
+          description="How often each database and ORM combination was selected."
           matrix={data.databaseOrmMatrix}
           tone="chart4"
         />
@@ -139,30 +148,30 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <PreferenceChartCard
-          eyebrow="Frontend"
-          title="Frontend frameworks"
-          description="Most-selected frontend surfaces, ranked by project share."
+          title="Frontend"
+          description="How often each frontend was selected."
           data={data.frontendDistribution}
           colorKey="chart1"
         />
         <PreferenceChartCard
-          eyebrow="Backend"
-          title="Backend frameworks"
-          description="Backend choices by share of tracked projects."
+          title="Backend"
+          description="How often each backend was selected."
           data={data.backendDistribution}
           colorKey="chart2"
         />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <PreferenceChartCard
-          eyebrow="Database"
-          title="Databases"
-          description="Storage backends builders reach for most often."
+          title="Database"
+          description="How often each database was selected."
           data={data.databaseDistribution}
           colorKey="chart4"
+          chartClassName="min-h-[280px]"
         />
         <PreferenceChartCard
-          eyebrow="ORM"
-          title="ORMs and query builders"
-          description="Data-access tooling ranked by selection share."
+          title="ORM"
+          description="How often each ORM was selected."
           data={data.ormDistribution}
           colorKey="chart5"
         />
@@ -170,23 +179,20 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
 
       <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
         <PreferenceChartCard
-          eyebrow="API"
-          title="API layer"
-          description="Transport choices used in tracked projects."
+          title="API"
+          description="How often each API type was selected."
           data={data.apiDistribution}
           colorKey="chart3"
         />
         <PreferenceChartCard
-          eyebrow="Auth"
           title="Authentication provider"
-          description="Auth preferences across the live dataset."
+          description="How often each authentication provider was selected."
           data={data.authDistribution}
           colorKey="chart1"
         />
         <PreferenceChartCard
-          eyebrow="Runtime"
-          title="Runtime preference"
-          description="Which JavaScript runtimes show up most often."
+          title="Runtime"
+          description="How often each runtime was selected."
           data={data.runtimeDistribution}
           colorKey="chart2"
         />

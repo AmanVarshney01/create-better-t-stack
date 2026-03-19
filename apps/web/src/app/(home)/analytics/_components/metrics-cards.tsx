@@ -95,8 +95,7 @@ export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
                   isolate
                 />
                 <p className="max-w-lg text-muted-foreground text-sm leading-6">
-                  Live tracked project creations. The cards around this chart focus on what changed
-                  recently, not just what is biggest.
+                  The live total of tracked project creations in the current telemetry dataset.
                 </p>
               </div>
 
@@ -117,7 +116,7 @@ export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
                     {shortenLabel(data.summary.topStack, 24)}
                   </div>
                   <p className="mt-2 text-muted-foreground text-xs">
-                    strongest backend + frontend pairing
+                    Most common backend + frontend pairing
                   </p>
                 </div>
               </div>
@@ -252,7 +251,7 @@ export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
             `${data.summary.mostPopularFrontend} / ${data.summary.mostPopularBackend}`,
             24,
           )}
-          detail={`${data.summary.mostPopularDatabase} is the most common database and ${data.summary.mostPopularORM} leads ORM picks.`}
+          detail={`${data.summary.mostPopularDatabase} leads database choices, and ${data.summary.mostPopularORM} leads ORM picks.`}
           icon={<Sparkles className="h-4 w-4" />}
         />
 
@@ -262,7 +261,7 @@ export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
             `${data.summary.mostPopularRuntime} / ${data.summary.mostPopularPackageManager}`,
             24,
           )}
-          detail={`${data.summary.mostPopularAPI} leads the API layer while ${data.summary.mostPopularAuth} leads auth.`}
+          detail="Top runtime and package-manager choices across tracked project setups."
           icon={<Radar className="h-4 w-4" />}
         />
       </div>

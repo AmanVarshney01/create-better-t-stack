@@ -15,6 +15,8 @@ const compactNumberFormatter = new Intl.NumberFormat("en", {
   maximumFractionDigits: 1,
 });
 
+const countFormatter = new Intl.NumberFormat("en");
+
 const percentFormatter = new Intl.NumberFormat("en", {
   style: "percent",
   maximumFractionDigits: 0,
@@ -36,6 +38,10 @@ export type PlotMargins = {
 
 export function formatCompactNumber(value: number): string {
   return compactNumberFormatter.format(value);
+}
+
+export function formatCount(value: number): string {
+  return countFormatter.format(value);
 }
 
 export function formatPercent(value: number, precise = value > 0 && value < 0.1): string {
@@ -193,8 +199,8 @@ export function buildComboMatrix({
   total,
   xFromLabel,
   yFromLabel,
-  xLimit = 5,
-  yLimit = 5,
+  xLimit,
+  yLimit,
 }: MatrixOptions): ComboMatrix {
   const pairs = distribution
     .map((item) => ({
@@ -214,15 +220,16 @@ export function buildComboMatrix({
     counts.set(`${pair.x}:::${pair.y}`, (counts.get(`${pair.x}:::${pair.y}`) || 0) + pair.count);
   }
 
-  const xDomain = Array.from(xTotals.entries())
+  const rankedXDomain = Array.from(xTotals.entries())
     .sort((a, b) => b[1] - a[1])
-    .slice(0, xLimit)
     .map(([name]) => name);
 
-  const yDomain = Array.from(yTotals.entries())
+  const rankedYDomain = Array.from(yTotals.entries())
     .sort((a, b) => b[1] - a[1])
-    .slice(0, yLimit)
     .map(([name]) => name);
+
+  const xDomain = typeof xLimit === "number" ? rankedXDomain.slice(0, xLimit) : rankedXDomain;
+  const yDomain = typeof yLimit === "number" ? rankedYDomain.slice(0, yLimit) : rankedYDomain;
 
   const data = yDomain.flatMap((y) =>
     xDomain.map((x) => {
@@ -275,4 +282,40 @@ export function resolvePlotMargins(
 
 export function getPlotFontSize(width: number): string {
   return isCompactPlot(width) ? "11px" : "12px";
+}
+
+export function resolveHorizontalBarMargins({
+  width,
+  longestLabelLength,
+  longestValueLength,
+  desktop,
+  compact,
+}: {
+  width: number;
+  longestLabelLength: number;
+  longestValueLength: number;
+  desktop: PlotMargins;
+  compact: PlotMargins;
+}): PlotMargins {
+  const compactView = isCompactPlot(width);
+  const base = compactView ? compact : desktop;
+
+  return {
+    top: base.top,
+    bottom: base.bottom,
+    left: Math.max(
+      base.left,
+      Math.min(
+        compactView ? 132 : 188,
+        base.left + Math.max(0, longestLabelLength - 8) * (compactView ? 4 : 5.5),
+      ),
+    ),
+    right: Math.max(
+      base.right,
+      Math.min(
+        compactView ? 82 : 112,
+        base.right + Math.max(0, longestValueLength - 3) * (compactView ? 5 : 7),
+      ),
+    ),
+  };
 }

@@ -28,8 +28,8 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
     <div className="space-y-6">
       <SectionHeader
         label="Activity"
-        title="Momentum, rhythm, and where the live stream actually concentrates."
-        description="The old dashboard showed raw volume, but not behavior. This section focuses on movement over time, weekly rhythm, and the hours when builders are most active."
+        title="How project creation volume changes over time."
+        description="These charts show recent momentum, the longer monthly trend, weekday patterns, and the UTC hours when activity is most concentrated."
         aside={
           <div className="rounded-full border border-border/60 bg-background/55 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
             peak day {peakDayLabel} • hot hour {busiestHourLabel}
@@ -39,9 +39,8 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
 
       <div className="grid gap-4 xl:grid-cols-[1.35fr_0.95fr]">
         <ChartCard
-          eyebrow="30 day pulse"
-          title="Daily activity with a rolling average that makes the swings readable."
-          description="Raw daily counts can bounce around, so the rolling line shows whether interest is actually building or just spiking."
+          title="Daily project starts over the last 30 days."
+          description="The daily line shows raw activity, while the rolling average smooths out short-term noise."
           footer={
             <>
               Last 7 days:{" "}
@@ -150,9 +149,8 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
         </ChartCard>
 
         <ChartCard
-          eyebrow="Archive cadence"
-          title="Monthly creation volume for the entire live dataset."
-          description="This is the slower signal: how much project creation volume each month contributed to the overall curve."
+          title="Monthly project starts across the tracked history."
+          description="Use this to see which months contributed the most total activity."
           footer={
             <>
               Total live projects:{" "}
@@ -214,7 +212,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
                     x: "month",
                     y: "totalProjects",
                     fill: palette.chart4,
-                    rx: 10,
+                    rx: 4,
                     title: (point) =>
                       `${formatMonthLabel(point.month)}\nProjects: ${point.totalProjects.toLocaleString()}`,
                   }),
@@ -227,9 +225,8 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartCard
-          eyebrow="Week rhythm"
-          title="Average daily volume by weekday over the recent 30-day window."
-          description="This normalizes for how many Mondays or Fridays are actually in the sample so the pattern is easier to trust."
+          title="Average project starts by weekday over the last 30 days."
+          description="Each bar shows the average for that weekday across the last month, including quieter days."
           footer={
             <>
               Active days in the last 30:{" "}
@@ -276,7 +273,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
                     x: "shortLabel",
                     y: "averageDailyProjects",
                     fill: palette.chart2,
-                    rx: 10,
+                    rx: 4,
                     title: (point) =>
                       `${point.weekday}\nAverage: ${point.averageDailyProjects.toFixed(1)}\nTotal: ${point.count.toLocaleString()}`,
                   }),
@@ -287,9 +284,8 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
         </ChartCard>
 
         <ChartCard
-          eyebrow="Hour profile"
-          title="Hourly project starts across the UTC day."
-          description="This keeps the daily rhythm obvious without making you decode a heat strip."
+          title="Project starts by hour of day in UTC."
+          description="This shows when activity clusters during the day, with the busiest hour highlighted."
           footer={
             <>
               Busiest hour:{" "}
@@ -360,7 +356,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
                     y: "count",
                     fill: "tone",
                     inset: 1.5,
-                    rx: 5,
+                    rx: 3,
                     title: (point) =>
                       `${formatHourLabel(point.hour)}:00 UTC\nProjects: ${point.count.toLocaleString()}`,
                   }),
