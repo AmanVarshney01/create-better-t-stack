@@ -53,9 +53,9 @@ function SplitMeterCard({
 }
 
 export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
-  const webDeployTargets = data.webDeployDistribution;
-  const serverDeployTargets = data.serverDeployDistribution;
-  const hasDeployTargets = webDeployTargets.length > 0 || serverDeployTargets.length > 0;
+  const webDeployOptions = data.webDeployDistribution;
+  const serverDeployOptions = data.serverDeployDistribution;
+  const hasDeploymentOptions = webDeployOptions.length > 0 || serverDeployOptions.length > 0;
   const nodeVersionPreferences = data.nodeVersionDistribution.map((item) => ({
     name: item.version,
     value: item.count,
@@ -112,30 +112,30 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
         />
         {data.paymentsDistribution.length > 0 ? (
           <PreferenceChartCard
-            title="Payments provider"
-            description="How often each payments provider was selected."
+            title="Payments"
+            description="How often each payments option was selected, including none."
             data={data.paymentsDistribution}
             colorKey="chart3"
           />
         ) : null}
       </div>
 
-      {hasDeployTargets ? (
+      {hasDeploymentOptions ? (
         <div className="grid gap-4 xl:grid-cols-2">
-          {webDeployTargets.length > 0 ? (
+          {webDeployOptions.length > 0 ? (
             <PreferenceChartCard
               title="Web deployment"
-              description="How often each web deployment option was selected."
-              data={webDeployTargets}
+              description="How often each web deployment option was selected, including none."
+              data={webDeployOptions}
               colorKey="chart3"
             />
           ) : null}
 
-          {serverDeployTargets.length > 0 ? (
+          {serverDeployOptions.length > 0 ? (
             <PreferenceChartCard
               title="Server deployment"
-              description="How often each server deployment option was selected."
-              data={serverDeployTargets}
+              description="How often each server deployment option was selected, including none."
+              data={serverDeployOptions}
               colorKey="chart2"
             />
           ) : null}
