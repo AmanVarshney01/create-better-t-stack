@@ -14,8 +14,8 @@ type PackageJson = {
 export const dependencyVersionMap = {
   typescript: "^5",
 
-  "better-auth": "1.5.2",
-  "@better-auth/expo": "1.5.2",
+  "better-auth": "1.5.5",
+  "@better-auth/expo": "1.5.5",
 
   "@clerk/backend": "^3.2.1",
   "@clerk/express": "^2.0.5",
@@ -108,19 +108,19 @@ export const dependencyVersionMap = {
   "@orpc/zod": "^1.12.2",
   "@orpc/tanstack-query": "^1.13.6",
 
-  "@trpc/tanstack-react-query": "^11.7.2",
-  "@trpc/server": "^11.7.2",
-  "@trpc/client": "^11.7.2",
+  "@trpc/tanstack-react-query": "^11.13.4",
+  "@trpc/server": "^11.13.4",
+  "@trpc/client": "^11.13.4",
 
   next: "^16.2.0",
 
-  convex: "^1.32.0",
+  convex: "^1.33.1",
   "@convex-dev/react-query": "^0.1.0",
   "@convex-dev/agent": "^0.3.2",
   "convex-svelte": "^0.0.12",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
-  "@convex-dev/better-auth": "^0.10.13",
+  "@convex-dev/better-auth": "^0.11.2",
 
   "@tanstack/svelte-query": "^5.85.3",
   "@tanstack/svelte-query-devtools": "^5.85.3",
@@ -157,7 +157,7 @@ export const dependencyVersionMap = {
   "@t3-oss/env-nextjs": "^0.13.1",
   "@t3-oss/env-nuxt": "^0.13.1",
 
-  "@polar-sh/better-auth": "^1.6.4",
+  "@polar-sh/better-auth": "^1.8.3",
   "@polar-sh/sdk": "^0.42.2",
 } as const;
 

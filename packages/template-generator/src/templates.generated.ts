@@ -24144,8 +24144,8 @@ module.exports = uniwindConfig;
     "react-native-worklets": "0.7.2",
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "^3.2.2",
-    "tailwindcss": "^4.1.18",
-    "uniwind": "^1.4.0"
+    "tailwindcss": "^4.2.2",
+    "uniwind": "^1.6.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
