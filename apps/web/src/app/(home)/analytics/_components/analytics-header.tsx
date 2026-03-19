@@ -81,8 +81,8 @@ export function AnalyticsHeader({
             <h1 className="font-bold font-mono text-xl sm:text-2xl">CLI_ANALYTICS.JSON</h1>
           </div>
           <p className="max-w-2xl text-muted-foreground text-sm">
-            Observable Plot-powered usage analytics for Better T Stack, keeping the site’s existing
-            terminal-style visual language while making the charts much more readable.
+            Usage analytics for Better T Stack, combining the live telemetry stream with the
+            historical archive in the site’s existing terminal-style UI.
           </p>
         </div>
       </div>
@@ -120,7 +120,7 @@ export function AnalyticsHeader({
               {formatCompactNumber(liveTotal)}
             </div>
             <p className="mt-2 text-muted-foreground text-xs leading-5">
-              Convex-tracked creations since the telemetry cutover.
+              Project creations tracked in the live Convex telemetry stream.
             </p>
           </div>
 
@@ -142,7 +142,7 @@ export function AnalyticsHeader({
               {formatCompactNumber(legacy.total)}
             </div>
             <p className="mt-2 text-muted-foreground text-xs leading-5">
-              Historical pre-Convex dataset captured through {legacyDate}.
+              Historical project creations from the pre-Convex archive through {legacyDate}.
             </p>
           </div>
 
