@@ -3,6 +3,7 @@ import path from "node:path";
 
 import fs from "fs-extra";
 
+import { getAvailableAuthProviders } from "../src/prompts/auth";
 import type { Backend, Database, Frontend, ORM } from "../src/types";
 import {
   AUTH_PROVIDERS,
@@ -13,6 +14,18 @@ import {
 } from "./test-utils";
 
 describe("Authentication Configurations", () => {
+  describe("Auth Prompt Availability", () => {
+    it("should offer Better Auth for Convex + react-router", () => {
+      expect(getAvailableAuthProviders("convex", ["react-router"])).toContain("better-auth");
+    });
+
+    it("should not offer Better Auth for unsupported Convex web frontends", () => {
+      for (const frontend of ["nuxt", "svelte", "solid", "astro"] as const) {
+        expect(getAvailableAuthProviders("convex", [frontend])).toEqual(["none"]);
+      }
+    });
+  });
+
   describe("Better-Auth Provider", () => {
     it("should work with better-auth + database", async () => {
       const result = await runTRPCTest({

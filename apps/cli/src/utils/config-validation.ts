@@ -3,8 +3,10 @@ import { Result } from "better-result";
 import type { CLIInput, Database, DatabaseSetup, ProjectConfig, Runtime } from "../types";
 import {
   CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS,
+  CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS,
   ensureSingleWebAndNative,
   isWebFrontend,
+  supportsConvexBetterAuth,
   validateAddonsAgainstFrontends,
   validateApiFrontendCompatibility,
   validateExamplesCompatibility,
@@ -217,22 +219,13 @@ export function validateConvexConstraints(
   }
 
   if (has("auth") && config.auth === "better-auth") {
-    const supportedFrontends = [
-      "tanstack-router",
-      "react-router",
-      "tanstack-start",
-      "next",
-      "native-bare",
-      "native-uniwind",
-      "native-unistyles",
-    ];
     const incompatibleFrontends =
       config.frontend?.filter((f) =>
         CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS.includes(
           f as (typeof CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS)[number],
         ),
       ) ?? [];
-    const hasSupportedFrontend = config.frontend?.some((f) => supportedFrontends.includes(f));
+    const hasSupportedFrontend = supportsConvexBetterAuth(config.frontend);
 
     if (incompatibleFrontends.length > 0) {
       return validationErr(
@@ -244,7 +237,9 @@ export function validateConvexConstraints(
 
     if (!hasSupportedFrontend) {
       return validationErr(
-        "Better Auth with '--backend convex' requires a supported frontend (next, tanstack-start, tanstack-router, react-router, native-bare, native-uniwind, or native-unistyles).",
+        `Better Auth with '--backend convex' requires a supported frontend (${CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS.join(
+          ", ",
+        )}).`,
       );
     }
   }
