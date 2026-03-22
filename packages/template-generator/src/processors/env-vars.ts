@@ -268,7 +268,14 @@ function buildConvexBackendVars(
     frontend.includes("solid") ||
     frontend.includes("svelte") ||
     frontend.includes("astro");
-  const defaultSiteUrl = hasNative && !hasWeb ? "http://localhost:8081" : "http://localhost:3001";
+  const defaultSiteUrl =
+    hasNative && !hasWeb
+      ? "http://localhost:8081"
+      : frontend.includes("react-router") || frontend.includes("svelte")
+        ? "http://localhost:5173"
+        : frontend.includes("astro")
+          ? "http://localhost:4321"
+          : "http://localhost:3001";
 
   const vars: EnvVariable[] = [];
 
@@ -337,7 +344,14 @@ function buildConvexCommentBlocks(
     frontend.includes("solid") ||
     frontend.includes("svelte") ||
     frontend.includes("astro");
-  const defaultSiteUrl = hasNative && !hasWeb ? "http://localhost:8081" : "http://localhost:3001";
+  const defaultSiteUrl =
+    hasNative && !hasWeb
+      ? "http://localhost:8081"
+      : frontend.includes("react-router") || frontend.includes("svelte")
+        ? "http://localhost:5173"
+        : frontend.includes("astro")
+          ? "http://localhost:4321"
+          : "http://localhost:3001";
 
   let commentBlocks = "";
 

@@ -171,12 +171,17 @@ describe("Authentication Configurations", () => {
         path.join(result.projectDir, "apps/web/src/routes/dashboard.tsx"),
         "utf8",
       );
+      const convexEnvFile = await fs.readFile(
+        path.join(result.projectDir, "packages/backend/.env.local"),
+        "utf8",
+      );
 
       expect(rootFile).toContain("ConvexBetterAuthProvider");
       expect(rootFile).toContain('import { authClient } from "@/lib/auth-client";');
       expect(authClientFile).toContain("crossDomainClient(), convexClient()");
       expect(dashboardFile).toContain("Authenticated");
       expect(dashboardFile).toContain("Unauthenticated");
+      expect(convexEnvFile).toContain("SITE_URL=http://localhost:5173");
     });
 
     const convexUnsupportedFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
