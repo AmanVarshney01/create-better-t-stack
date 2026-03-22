@@ -3,7 +3,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency } from "../utils/add-deps";
 
-const CONVEX_BETTER_AUTH_VERSION = "1.4.9";
+const CONVEX_BETTER_AUTH_VERSION = "1.5.3";
 
 export function processAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { auth, backend } = config;
