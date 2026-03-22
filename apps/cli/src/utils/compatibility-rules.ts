@@ -18,6 +18,23 @@ import { ValidationError } from "./errors";
 
 type ValidationResult = Result<void, ValidationError>;
 
+export const CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS = [
+  "nuxt",
+  "svelte",
+  "solid",
+  "astro",
+] as const;
+
+export const CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS = [
+  "tanstack-router",
+  "react-router",
+  "tanstack-start",
+  "next",
+  "native-bare",
+  "native-uniwind",
+  "native-unistyles",
+] as const;
+
 function validationErr(message: string): ValidationResult {
   return Result.err(new ValidationError({ message }));
 }
@@ -177,7 +194,18 @@ export function isFrontendAllowedWithBackend(
   backend?: ProjectConfig["backend"],
   auth?: string,
 ) {
-  if (backend === "convex" && (frontend === "solid" || frontend === "astro")) return false;
+  if (backend === "convex") {
+    if (
+      auth === "better-auth" &&
+      CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS.includes(
+        frontend as (typeof CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS)[number],
+      )
+    ) {
+      return false;
+    }
+
+    if (frontend === "solid" || frontend === "astro") return false;
+  }
 
   if (auth === "clerk") {
     const incompatibleFrontends = ["nuxt", "svelte", "solid", "astro"];
@@ -185,6 +213,14 @@ export function isFrontendAllowedWithBackend(
   }
 
   return true;
+}
+
+export function supportsConvexBetterAuth(frontends: readonly Frontend[] = []) {
+  return frontends.some((frontend) =>
+    CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS.includes(
+      frontend as (typeof CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS)[number],
+    ),
+  );
 }
 
 export function allowedApisForFrontends(frontends: Frontend[] = []) {

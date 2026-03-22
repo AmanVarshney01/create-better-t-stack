@@ -73,6 +73,8 @@ When using `--backend convex`, these constraints apply:
 
 **Note:** Convex supports Clerk authentication with compatible frontends (React frameworks, Next.js, TanStack Start, and native frameworks). Nuxt, Svelte, Solid, and Astro are not compatible with Clerk.
 
+**Better Auth with Convex:** supported frontends are `react-router`, `tanstack-router`, `tanstack-start`, `next`, `native-bare`, `native-uniwind`, and `native-unistyles`. Nuxt, Svelte, Solid, and Astro are not supported with Convex Better Auth.
+
 #### No Backend
 
 When using `--backend none`, the following options are automatically set:
@@ -187,6 +189,7 @@ Better-Auth authentication requires:
 - A backend framework (cannot be `none`)
 - With database: Requires an ORM
 - Without database: Works with Convex backend or custom configuration
+- With `--backend convex`: requires `react-router`, `tanstack-router`, `tanstack-start`, `next`, or a native Expo frontend
 
 ### Clerk Requirements
 

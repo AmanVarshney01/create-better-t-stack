@@ -268,7 +268,16 @@ function buildConvexBackendVars(
     frontend.includes("solid") ||
     frontend.includes("svelte") ||
     frontend.includes("astro");
-  const defaultSiteUrl = hasNative && !hasWeb ? "http://localhost:8081" : "http://localhost:3001";
+  const defaultSiteUrl =
+    hasNative && !hasWeb
+      ? "http://localhost:8081"
+      : frontend.includes("react-router") ||
+          frontend.includes("tanstack-router") ||
+          frontend.includes("svelte")
+        ? "http://localhost:5173"
+        : frontend.includes("astro")
+          ? "http://localhost:4321"
+          : "http://localhost:3001";
 
   const vars: EnvVariable[] = [];
 
@@ -337,7 +346,16 @@ function buildConvexCommentBlocks(
     frontend.includes("solid") ||
     frontend.includes("svelte") ||
     frontend.includes("astro");
-  const defaultSiteUrl = hasNative && !hasWeb ? "http://localhost:8081" : "http://localhost:3001";
+  const defaultSiteUrl =
+    hasNative && !hasWeb
+      ? "http://localhost:8081"
+      : frontend.includes("react-router") ||
+          frontend.includes("tanstack-router") ||
+          frontend.includes("svelte")
+        ? "http://localhost:5173"
+        : frontend.includes("astro")
+          ? "http://localhost:4321"
+          : "http://localhost:3001";
 
   let commentBlocks = "";
 
@@ -371,13 +389,14 @@ function buildServerVars(
   examples: ProjectConfig["examples"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
+  const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
 
   let corsOrigin = "http://localhost:3001";
   if (hasAstro) {
     corsOrigin = "http://localhost:4321";
-  } else if (hasReactRouter || hasSvelte) {
+  } else if (hasReactRouter || hasTanStackRouter || hasSvelte) {
     corsOrigin = "http://localhost:5173";
   } else if (backend === "self") {
     corsOrigin = "http://localhost:3001";
