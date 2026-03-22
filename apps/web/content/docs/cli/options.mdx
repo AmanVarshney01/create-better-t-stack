@@ -275,6 +275,7 @@ create-better-t-stack --auth none
 
 - `better-auth` requires a backend framework (cannot be `none`)
 - if you choose a database, you should also choose an ORM
+- with `--backend convex`, `better-auth` supports `react-router`, `tanstack-router`, `tanstack-start`, `next`, and native Expo frontends
 - `clerk` requires a compatible frontend
 - Supported Clerk backends: `convex`, `hono`, `express`, `fastify`, `elysia`, and `self` with Next.js or TanStack Start
 - Authentication is automatically set to `none` when using `--backend none`
