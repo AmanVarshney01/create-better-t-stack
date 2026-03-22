@@ -2053,7 +2053,14 @@ import { authComponent, createAuth } from "./auth";
 const http = httpRouter();
 
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+authComponent.registerRoutesLazy(http, createAuth, {
+  cors: true,
+  trustedOrigins: [process.env.SITE_URL!],
+});
+{{else}}
 authComponent.registerRoutes(http, createAuth, { cors: true });
+{{/if}}
 {{else}}
 authComponent.registerRoutes(http, createAuth);
 {{/if}}
@@ -3841,8 +3848,8 @@ export default function SignInForm({
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                     {error?.message}
                   </p>
                 ))}
@@ -3864,8 +3871,8 @@ export default function SignInForm({
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                     {error?.message}
                   </p>
                 ))}
@@ -3974,8 +3981,8 @@ export default function SignUpForm({
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                     {error?.message}
                   </p>
                 ))}
@@ -3997,8 +4004,8 @@ export default function SignUpForm({
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                     {error?.message}
                   </p>
                 ))}
@@ -4020,8 +4027,8 @@ export default function SignUpForm({
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                     {error?.message}
                   </p>
                 ))}
@@ -4132,18 +4139,25 @@ import {
 } from "convex/react";
 import { useState } from "react";
 
+function PrivateDashboardContent() {
+  const privateData = useQuery(api.privateData.get);
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>privateData: {privateData?.message}</p>
+      <UserMenu />
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [showSignIn, setShowSignIn] = useState(false);
-  const privateData = useQuery(api.privateData.get);
 
   return (
     <>
       <Authenticated>
-        <div>
-          <h1>Dashboard</h1>
-          <p>privateData: {privateData?.message}</p>
-          <UserMenu />
-        </div>
+        <PrivateDashboardContent />
       </Authenticated>
       <Unauthenticated>
         {showSignIn ? (
@@ -4234,8 +4248,8 @@ export default function SignInForm({
                                     onBlur={field.handleBlur}
                                     onChange={(e) => field.handleChange(e.target.value)}
                                 />
-                                {field.state.meta.errors.map((error) => (
-                                    <p key={error?.message} className="text-red-500">
+                                {field.state.meta.errors.map((error, index) => (
+                                    <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                                         {error?.message}
                                     </p>
                                 ))}
@@ -4257,8 +4271,8 @@ export default function SignInForm({
                                     onBlur={field.handleBlur}
                                     onChange={(e) => field.handleChange(e.target.value)}
                                 />
-                                {field.state.meta.errors.map((error) => (
-                                    <p key={error?.message} className="text-red-500">
+                                {field.state.meta.errors.map((error, index) => (
+                                    <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                                         {error?.message}
                                     </p>
                                 ))}
@@ -4370,8 +4384,8 @@ export default function SignUpForm({
                                     onBlur={field.handleBlur}
                                     onChange={(e) => field.handleChange(e.target.value)}
                                 />
-                                {field.state.meta.errors.map((error) => (
-                                    <p key={error?.message} className="text-red-500">
+                                {field.state.meta.errors.map((error, index) => (
+                                    <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                                         {error?.message}
                                     </p>
                                 ))}
@@ -4393,8 +4407,8 @@ export default function SignUpForm({
                                     onBlur={field.handleBlur}
                                     onChange={(e) => field.handleChange(e.target.value)}
                                 />
-                                {field.state.meta.errors.map((error) => (
-                                    <p key={error?.message} className="text-red-500">
+                                {field.state.meta.errors.map((error, index) => (
+                                    <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                                         {error?.message}
                                     </p>
                                 ))}
@@ -4416,8 +4430,8 @@ export default function SignUpForm({
                                     onBlur={field.handleBlur}
                                     onChange={(e) => field.handleChange(e.target.value)}
                                 />
-                                {field.state.meta.errors.map((error) => (
-                                    <p key={error?.message} className="text-red-500">
+                                {field.state.meta.errors.map((error, index) => (
+                                    <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                                         {error?.message}
                                     </p>
                                 ))}
@@ -4534,18 +4548,25 @@ export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
 });
 
+function PrivateDashboardContent() {
+  const privateData = useQuery(api.privateData.get);
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>privateData: {privateData?.message}</p>
+      <UserMenu />
+    </div>
+  );
+}
+
 function RouteComponent() {
   const [showSignIn, setShowSignIn] = useState(false);
-  const privateData = useQuery(api.privateData.get);
 
   return (
     <>
       <Authenticated>
-        <div>
-          <h1>Dashboard</h1>
-          <p>privateData: {privateData?.message}</p>
-          <UserMenu />
-        </div>
+        <PrivateDashboardContent />
       </Authenticated>
       <Unauthenticated>
         {showSignIn ? (
@@ -21375,6 +21396,9 @@ export const unstable_settings = {
 
 {{#if (eq backend "convex")}}
 const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
+  {{#if (eq auth "better-auth")}}
+  expectAuth: true,
+  {{/if}}
   unsavedChangesWarning: false,
 });
 {{/if}}
@@ -22423,6 +22447,9 @@ export const unstable_settings = {
 
 {{#if (eq backend "convex")}}
 const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
+  {{#if (eq auth "better-auth")}}
+  expectAuth: true,
+  {{/if}}
   unsavedChangesWarning: false,
 });
 {{/if}}
@@ -23723,6 +23750,9 @@ export const unstable_settings = {
 
 {{#if (eq backend "convex")}}
   const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
+    {{#if (eq auth "better-auth")}}
+    expectAuth: true,
+    {{/if}}
     unsavedChangesWarning: false,
   });
 {{/if}}
@@ -25480,7 +25510,13 @@ export default function App() {
 {{else}}
 export default function App() {
 {{/if}}
+  {{#if (eq auth "better-auth")}}
+  const convex = new ConvexReactClient(env.VITE_CONVEX_URL, {
+    expectAuth: true,
+  });
+  {{else}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
+  {{/if}}
   {{#if (eq auth "clerk")}}
   return (
     <ClerkProvider loaderData={loaderData}>
@@ -25935,7 +25971,13 @@ import { routeTree } from "./routeTree.gen";
   {{else}}
   import { ConvexProvider } from "convex/react";
   {{/if}}
+  {{#if (eq auth "better-auth")}}
+  const convex = new ConvexReactClient(env.VITE_CONVEX_URL, {
+    expectAuth: true,
+  });
+  {{else}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
+  {{/if}}
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}

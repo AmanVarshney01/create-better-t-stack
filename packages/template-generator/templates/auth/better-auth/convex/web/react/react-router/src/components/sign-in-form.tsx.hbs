@@ -69,8 +69,8 @@ export default function SignInForm({
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={`${field.name}-error-${index}`} className="text-red-500">
                     {error?.message}
                   </p>
                 ))}
@@ -92,8 +92,8 @@ export default function SignInForm({
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-                {field.state.meta.errors.map((error) => (
-                  <p key={error?.message} className="text-red-500">
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={`${field.name}-error-${index}`} className="text-red-500">
                     {error?.message}
                   </p>
                 ))}

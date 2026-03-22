@@ -47,6 +47,9 @@ export const unstable_settings = {
 
 {{#if (eq backend "convex")}}
 const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
+  {{#if (eq auth "better-auth")}}
+  expectAuth: true,
+  {{/if}}
   unsavedChangesWarning: false,
 });
 {{/if}}

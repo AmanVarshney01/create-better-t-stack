@@ -102,7 +102,13 @@ export default function App() {
 {{else}}
 export default function App() {
 {{/if}}
+  {{#if (eq auth "better-auth")}}
+  const convex = new ConvexReactClient(env.VITE_CONVEX_URL, {
+    expectAuth: true,
+  });
+  {{else}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
+  {{/if}}
   {{#if (eq auth "clerk")}}
   return (
     <ClerkProvider loaderData={loaderData}>
