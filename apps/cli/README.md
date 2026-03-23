@@ -58,7 +58,7 @@ Options:
   --orm <type>                    ORM type (none, drizzle, prisma, mongoose)
   --dry-run                       Validate configuration without writing files
   --auth <provider>               Authentication (better-auth, clerk, none)
-  --payments <provider>           Payments provider (polar, none)
+  --payments <provider>           Payments provider (polar, dodo, none)
   --frontend <types...>           Frontend types (tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, astro, native-bare, native-uniwind, native-unistyles, none)
   --addons <types...>             Additional addons (pwa, tauri, electrobun, starlight, biome, lefthook, husky, mcp, turborepo, nx, fumadocs, ultracite, oxlint, opentui, wxt, skills, none)
   --examples <types...>           Examples to include (todo, ai, none)

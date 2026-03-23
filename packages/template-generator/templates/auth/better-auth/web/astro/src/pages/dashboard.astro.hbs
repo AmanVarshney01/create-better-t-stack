@@ -26,7 +26,7 @@ import Layout from "../layouts/Layout.astro";
           </div>
           {{/if}}
 
-          {{#if (eq payments "polar")}}
+          {{#if (or (eq payments "polar") (eq payments "dodo"))}}
           <div class="rounded-lg bg-neutral-800/50 p-4">
             <p class="text-sm text-neutral-400 mb-2">Subscription</p>
             <div id="subscription-info" class="space-y-2">
@@ -115,6 +115,46 @@ import Layout from "../layouts/Layout.astro";
           `;
           document.getElementById("upgrade-button")?.addEventListener("click", async () => {
             await authClient.checkout({ slug: "pro" });
+          });
+        }
+      } catch (e) {
+        console.error("Failed to load subscription info", e);
+      }
+      {{else if (eq payments "dodo")}}
+      try {
+        const customerState = await authClient.dodopayments.customer.subscriptions.list({
+          query: {
+            limit: 10,
+            page: 1,
+            active: true
+          }
+        });
+        const subscriptionInfo = document.getElementById("subscription-info")!;
+        if (customerState?.data?.items?.length > 0) {
+          subscriptionInfo.innerHTML = `
+            <p class="text-white">Plan: <span class="text-green-400">Pro</span></p>
+            <button
+              id="manage-subscription"
+              class="mt-2 rounded px-3 py-1.5 text-sm bg-neutral-700 hover:bg-neutral-600 text-white transition-colors"
+            >
+              Manage Subscription
+            </button>
+          `;
+          document.getElementById("manage-subscription")?.addEventListener("click", async () => {
+            await authClient.dodopayments.customer.portal();
+          });
+        } else {
+          subscriptionInfo.innerHTML = `
+            <p class="text-white">Plan: <span class="text-neutral-400">Free</span></p>
+            <button
+              id="upgrade-button"
+              class="mt-2 rounded px-3 py-1.5 text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+            >
+              Upgrade to Pro
+            </button>
+          `;
+          document.getElementById("upgrade-button")?.addEventListener("click", async () => {
+            await authClient.dodopayments.checkoutSession({ slug: "pro" });
           });
         }
       } catch (e) {

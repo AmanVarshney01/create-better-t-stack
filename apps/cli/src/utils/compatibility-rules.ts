@@ -353,17 +353,18 @@ export function validatePaymentsCompatibility(
 ): ValidationResult {
   if (!payments || payments === "none") return Result.ok(undefined);
 
-  if (payments === "polar") {
+  if (payments === "polar" || payments === "dodo") {
+    const providerLabel = payments === "polar" ? "Polar" : "Dodo";
     if (!auth || auth === "none" || auth !== "better-auth") {
       return validationErr(
-        "Polar payments requires Better Auth. Please use '--auth better-auth' or choose a different payments provider.",
+        `${providerLabel} payments requires Better Auth. Please use '--auth better-auth' or choose a different payments provider.`,
       );
     }
 
     const { web } = splitFrontends(frontends);
     if (web.length === 0 && frontends.length > 0) {
       return validationErr(
-        "Polar payments requires a web frontend or no frontend. Please select a web frontend or choose a different payments provider.",
+        `${providerLabel} payments requires a web frontend or no frontend. Please select a web frontend or choose a different payments provider.`,
       );
     }
   }

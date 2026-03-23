@@ -10,6 +10,19 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
   const authPath = "packages/auth/package.json";
   const webPath = "apps/web/package.json";
 
+  const hasWebFrontend = frontend.some((f: ProjectConfig["frontend"][number]) =>
+    [
+      "react-router",
+      "tanstack-router",
+      "tanstack-start",
+      "next",
+      "nuxt",
+      "svelte",
+      "solid",
+      "astro",
+    ].includes(f),
+  );
+
   if (payments === "polar") {
     if (vfs.exists(authPath)) {
       addPackageDependency({
@@ -19,26 +32,30 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
       });
     }
 
-    if (vfs.exists(webPath)) {
-      const hasWebFrontend = frontend.some((f) =>
-        [
-          "react-router",
-          "tanstack-router",
-          "tanstack-start",
-          "next",
-          "nuxt",
-          "svelte",
-          "solid",
-          "astro",
-        ].includes(f),
-      );
-      if (hasWebFrontend) {
-        addPackageDependency({
-          vfs,
-          packagePath: webPath,
-          dependencies: ["@polar-sh/better-auth"],
-        });
-      }
+    if (vfs.exists(webPath) && hasWebFrontend) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: ["@polar-sh/better-auth"],
+      });
+    }
+  }
+
+  if (payments === "dodo") {
+    if (vfs.exists(authPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: authPath,
+        dependencies: ["@dodopayments/better-auth", "dodopayments"],
+      });
+    }
+
+    if (vfs.exists(webPath) && hasWebFrontend) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: ["@dodopayments/better-auth"],
+      });
     }
   }
 }

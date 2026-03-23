@@ -202,7 +202,7 @@ Clerk authentication requires:
 
 ### Payments Requirements
 
-Polar payments require:
+Polar and Dodo payments require:
 
 - Better-Auth authentication
 - A web frontend (or no frontend selected)
@@ -261,11 +261,12 @@ create-better-t-stack --runtime workers --backend hono
 create-better-t-stack --frontend tanstack-router
 ```
 
-### "Polar payments requires Better Auth"
+### "Polar/Dodo payments requires Better Auth"
 
 ```bash
 # Fix by using Better-Auth
 create-better-t-stack --payments polar --auth better-auth
+create-better-t-stack --payments dodo --auth better-auth
 
 # Or use Clerk without Polar payments
 create-better-t-stack --auth clerk --backend hono --frontend tanstack-router

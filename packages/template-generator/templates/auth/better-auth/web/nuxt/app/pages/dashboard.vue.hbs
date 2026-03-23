@@ -13,6 +13,8 @@ const session = $authClient.useSession()
 
 {{#if (eq payments "polar")}}
 const customerState = ref<any>(null)
+{{else if (eq payments "dodo")}}
+const customerState = ref<{ data?: { items?: unknown[] } } | null>(null)
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -32,6 +34,23 @@ onMounted(async () => {
 
 const hasProSubscription = computed(() => 
   customerState.value?.activeSubscriptions?.length! > 0
+)
+{{else if (eq payments "dodo")}}
+onMounted(async () => {
+  if (session.value?.data) {
+    const data = await $authClient.dodopayments.customer.subscriptions.list({
+      query: {
+        limit: 10,
+        page: 1,
+        active: true
+      }
+    })
+    customerState.value = data
+  }
+})
+
+const hasProSubscription = computed(() => 
+  (customerState.value?.data?.items?.length ?? 0) > 0
 )
 {{/if}}
 </script>
@@ -88,6 +107,32 @@ const hasProSubscription = computed(() =>
           <UButton 
             v-else
             @click="() => { $authClient.checkout({ slug: 'pro' }) }"
+          >
+            Upgrade to Pro
+          </UButton>
+        </div>
+      </UCard>
+      {{else if (eq payments "dodo")}}
+      <UCard>
+        <template #header>
+          <div class="font-medium">Subscription</div>
+        </template>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <UIcon :name="hasProSubscription ? 'i-lucide-crown' : 'i-lucide-user'" :class="hasProSubscription ? 'text-warning' : 'text-muted'" />
+            <span>Plan: \{{ hasProSubscription ? "Pro" : "Free" }}</span>
+          </div>
+          <UButton 
+            v-if="hasProSubscription"
+            variant="outline"
+            @click="() => { $authClient.dodopayments.customer.portal() }"
+          >
+            Manage Subscription
+          </UButton>
+          <UButton 
+            v-else
+            @click="() => { $authClient.dodopayments.checkoutSession({ slug: 'pro' }) }"
           >
             Upgrade to Pro
           </UButton>

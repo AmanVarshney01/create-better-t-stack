@@ -1,0 +1,7 @@
+import DodoPayments from "dodopayments";
+import { env } from "@{{projectName}}/env/server";
+
+export const dodoPaymentsClient = new DodoPayments({
+	bearerToken: env.DODO_PAYMENTS_API_KEY,
+	environment: env.DODO_PAYMENTS_ENVIRONMENT,
+});

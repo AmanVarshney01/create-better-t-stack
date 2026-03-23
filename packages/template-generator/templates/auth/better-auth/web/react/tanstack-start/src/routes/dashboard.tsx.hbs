@@ -1,5 +1,5 @@
 import { getUser } from "@/functions/get-user";
-{{#if (eq payments "polar") }}
+{{#if (or (eq payments "polar") (eq payments "dodo")) }}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
 import { getPayment } from "@/functions/get-payment";
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
   beforeLoad: async () => {
     const session = await getUser();
-    {{#if (eq payments "polar") }}
+    {{#if (or (eq payments "polar") (eq payments "dodo")) }}
     const customerState = await getPayment();
     return { session, customerState };
     {{else}}
@@ -35,7 +35,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function RouteComponent() {
-  const { session{{#if (eq payments "polar") }}, customerState{{/if}} } = Route.useRouteContext();
+  const { session{{#if (or (eq payments "polar") (eq payments "dodo")) }}, customerState{{/if}} } = Route.useRouteContext();
 
   {{#if (eq api "trpc") }}
   const trpc = useTRPC();
@@ -48,6 +48,9 @@ function RouteComponent() {
   {{#if (eq payments "polar") }}
   const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
   // For debugging: console.log("Active subscriptions:", customerState?.activeSubscriptions);
+  {{else if (eq payments "dodo") }}
+  const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0;
+  // For debugging: console.log("Active subscriptions:", customerState?.data?.items);
   {{/if}}
 
   return (
@@ -59,12 +62,12 @@ function RouteComponent() {
       {{else if (eq api "orpc") }}
       <p>API: {privateData.data?.message}</p>
       {{/if}}
-      {{#if (eq payments "polar") }}
+      {{#if (or (eq payments "polar") (eq payments "dodo")) }}
       <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
       {hasProSubscription ? (
         <Button
           onClick={async function handlePortal() {
-            await authClient.customer.portal();
+            await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}();
           }}
         >
           Manage Subscription
@@ -72,7 +75,7 @@ function RouteComponent() {
       ) : (
         <Button
           onClick={async function handleUpgrade() {
-            await authClient.checkout({ slug: "pro" });
+            await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({ slug: "pro" });
           }}
         >
           Upgrade to Pro

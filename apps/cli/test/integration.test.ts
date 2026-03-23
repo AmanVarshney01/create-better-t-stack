@@ -521,6 +521,28 @@ describe("Integration Tests - Real World Scenarios", () => {
       expectError(result, "Polar payments requires Better Auth");
     });
 
+    it("should fail with Dodo payments incompatibility", async () => {
+      const result = await runTRPCTest({
+        projectName: "dodo-no-auth-fail",
+        backend: "hono",
+        runtime: "bun",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "dodo",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Dodo payments requires Better Auth");
+    });
+
     it("should fail with deployment constraint violation", async () => {
       const result = await runTRPCTest({
         projectName: "web-deploy-no-frontend-fail",

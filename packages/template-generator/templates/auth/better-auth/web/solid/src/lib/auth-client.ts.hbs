@@ -2,11 +2,21 @@ import { createAuthClient } from "better-auth/solid";
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopaymentsClient } from "@dodopayments/better-auth";
+{{/if}}
 import { env } from "@{{projectName}}/env/web";
 
 export const authClient = createAuthClient({
 	baseURL: env.VITE_SERVER_URL,
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+	plugins: [
 {{#if (eq payments "polar")}}
-	plugins: [polarClient()]
+		polarClient(),
+{{/if}}
+{{#if (eq payments "dodo")}}
+		dodopaymentsClient(),
+{{/if}}
+	]
 {{/if}}
 });

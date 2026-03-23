@@ -2,6 +2,9 @@ import { createAuthClient } from "better-auth/react";
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopaymentsClient } from "@dodopayments/better-auth";
+{{/if}}
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 {{/unless}}
@@ -10,7 +13,14 @@ export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
 	baseURL: env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}},
 {{/unless}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+	plugins: [
 {{#if (eq payments "polar")}}
-	plugins: [polarClient()]
+		polarClient(),
+{{/if}}
+{{#if (eq payments "dodo")}}
+		dodopaymentsClient(),
+{{/if}}
+	]
 {{/if}}
 });

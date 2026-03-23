@@ -1,5 +1,5 @@
 "use client";
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -13,14 +13,16 @@ import { trpc } from "@/utils/trpc";
 {{/if}}
 
 export default function Dashboard({
-	{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 	customerState,
-	{{/if}}
+{{/if}}
 	session
 }: {
-	{{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
 	customerState: ReturnType<typeof authClient.customer.state>;
-	{{/if}}
+{{else if (eq payments "dodo")}}
+	customerState: { data?: { items?: unknown[] } };
+{{/if}}
 	session: typeof authClient.$Infer.Session;
 }) {
 	{{#if (eq api "orpc")}}
@@ -30,10 +32,13 @@ export default function Dashboard({
 	const privateData = useQuery(trpc.privateData.queryOptions());
 	{{/if}}
 
-	{{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
 	const hasProSubscription = customerState?.activeSubscriptions?.length! > 0;
 	console.log("Active subscriptions:", customerState?.activeSubscriptions);
-	{{/if}}
+{{else if (eq payments "dodo")}}
+	const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0;
+	console.log("Active subscriptions:", customerState?.data?.items);
+{{/if}}
 
 	return (
 		<>
@@ -43,18 +48,24 @@ export default function Dashboard({
 			{{#if (eq api "trpc")}}
 			<p>API: {privateData.data?.message}</p>
 			{{/if}}
-			{{#if (eq payments "polar")}}
-			<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
-			{hasProSubscription ? (
-				<Button onClick={async () => await authClient.customer.portal()}>
-					Manage Subscription
-				</Button>
-			) : (
-				<Button onClick={async () => await authClient.checkout({ slug: "pro" })}>
-					Upgrade to Pro
-				</Button>
-			)}
-			{{/if}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+		<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
+		{hasProSubscription ? (
+			<Button onClick={async () => await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}()}>
+				Manage Subscription
+			</Button>
+		) : (
+			<Button
+				onClick={async () =>
+					await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({
+						slug: "pro",
+					})
+				}
+			>
+				Upgrade to Pro
+			</Button>
+		)}
+{{/if}}
 		</>
 	);
 }

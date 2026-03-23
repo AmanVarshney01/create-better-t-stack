@@ -1,0 +1,57 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Payment Success - {{projectName}}">
+  <div id="success-content" class="hidden">
+    <main class="mx-auto max-w-4xl px-4 py-8">
+      <div class="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8">
+        <h1 class="text-3xl font-bold text-white mb-4">Payment Successful!</h1>
+        <p id="checkout-id" class="text-neutral-300"></p>
+      </div>
+    </main>
+  </div>
+
+  <div id="loading" class="flex h-[calc(100vh-4rem)] items-center justify-center">
+    <p class="text-neutral-400">Loading...</p>
+  </div>
+
+  <div id="redirect" class="hidden flex h-[calc(100vh-4rem)] items-center justify-center">
+    <p class="text-neutral-400">Redirecting to login...</p>
+  </div>
+</Layout>
+
+<script>
+  import { authClient } from "../../lib/auth-client";
+
+  const successContent = document.getElementById("success-content")!;
+  const loading = document.getElementById("loading")!;
+  const redirect = document.getElementById("redirect")!;
+  const checkoutId = document.getElementById("checkout-id")!;
+
+  async function init() {
+    try {
+      const { data: session } = await authClient.getSession();
+
+      if (!session?.user) {
+        loading.classList.add("hidden");
+        redirect.classList.remove("hidden");
+        window.location.href = "/login";
+        return;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const checkout_id = params.get("checkout_id");
+      checkoutId.textContent = checkout_id ? `Checkout ID: ${checkout_id}` : "";
+
+      loading.classList.add("hidden");
+      successContent.classList.remove("hidden");
+    } catch (error) {
+      loading.classList.add("hidden");
+      redirect.classList.remove("hidden");
+      window.location.href = "/login";
+    }
+  }
+
+  init();
+</script>

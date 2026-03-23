@@ -468,6 +468,21 @@ function buildServerVars(
       condition: payments === "polar",
     },
     {
+      key: "DODO_PAYMENTS_API_KEY",
+      value: "",
+      condition: payments === "dodo",
+    },
+    {
+      key: "DODO_PAYMENTS_WEBHOOK_SECRET",
+      value: "",
+      condition: payments === "dodo",
+    },
+    {
+      key: "DODO_PAYMENTS_ENVIRONMENT",
+      value: "test_mode",
+      condition: payments === "dodo",
+    },
+    {
       key: "CORS_ORIGIN",
       value: corsOrigin,
       condition: true,

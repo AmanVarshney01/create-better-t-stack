@@ -5,9 +5,11 @@
 	import { orpc } from '$lib/orpc';
 	import { createQuery } from '@tanstack/svelte-query';
 	{{/if}}
-	{{#if (eq payments "polar")}}
-	let customerState = $state<{ activeSubscriptions?: unknown[] } | null>(null);
-	{{/if}}
+{{#if (eq payments "polar")}}
+let customerState = $state<{ activeSubscriptions?: unknown[] } | null>(null);
+{{else if (eq payments "dodo")}}
+let customerState = $state<{ data?: { items?: unknown[] } } | null>(null);
+{{/if}}
 
 	const sessionQuery = authClient.useSession();
 
@@ -21,7 +23,7 @@
 		}
 	});
 
-	{{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
 	$effect(() => {
 		if ($sessionQuery.data) {
 			authClient.customer.state().then(({ data }) => {
@@ -29,7 +31,23 @@
 			});
 		}
 	});
-	{{/if}}
+{{else if (eq payments "dodo")}}
+	$effect(() => {
+		if ($sessionQuery.data) {
+			authClient.dodopayments.customer.subscriptions
+				.list({
+					query: {
+						limit: 10,
+						page: 1,
+						active: true,
+					},
+				})
+				.then((data) => {
+					customerState = data;
+				});
+		}
+	});
+{{/if}}
 </script>
 
 {#if $sessionQuery.isPending}
@@ -43,7 +61,7 @@
 		{{#if (eq api "orpc")}}
 		<p>API: {$privateDataQuery.data?.message}</p>
 		{{/if}}
-		{{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
 		<p>Plan: {customerState?.activeSubscriptions?.length > 0 ? "Pro" : "Free"}</p>
 		{#if customerState?.activeSubscriptions?.length > 0}
 			<button onclick={async () => await authClient.customer.portal()}>
@@ -54,6 +72,17 @@
 				Upgrade to Pro
 			</button>
 		{/if}
-		{{/if}}
+{{else if (eq payments "dodo")}}
+		<p>Plan: {customerState?.data?.items?.length ? "Pro" : "Free"}</p>
+		{#if customerState?.data?.items?.length}
+			<button onclick={async () => await authClient.dodopayments.customer.portal()}>
+				Manage Subscription
+			</button>
+		{:else}
+			<button onclick={async () => await authClient.dodopayments.checkoutSession({ slug: "pro" })}>
+				Upgrade to Pro
+			</button>
+		{/if}
+{{/if}}
 	</div>
 {/if}

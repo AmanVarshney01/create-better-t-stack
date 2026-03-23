@@ -1,4 +1,4 @@
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -17,9 +17,9 @@ import { useNavigate } from "react-router";
 export default function Dashboard() {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
-  {{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
   const [customerState, setCustomerState] = useState<any>(null);
-  {{/if}}
+{{/if}}
 
   {{#if (eq api "orpc")}}
   const privateData = useQuery(orpc.privateData.queryOptions());
@@ -34,7 +34,7 @@ export default function Dashboard() {
     }
   }, [session, isPending, navigate]);
 
-  {{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
   useEffect(() => {
     async function fetchCustomerState() {
       if (session) {
@@ -45,16 +45,36 @@ export default function Dashboard() {
 
     fetchCustomerState();
   }, [session]);
-  {{/if}}
+{{else if (eq payments "dodo")}}
+  useEffect(() => {
+    async function fetchCustomerState() {
+      if (session) {
+        const data = await authClient.dodopayments.customer.subscriptions.list({
+          query: {
+            limit: 10,
+            page: 1,
+            active: true,
+          },
+        });
+        setCustomerState(data);
+      }
+    }
+
+    fetchCustomerState();
+  }, [session]);
+{{/if}}
 
   if (isPending) {
     return <div>Loading...</div>;
   }
 
-  {{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
   const hasProSubscription = customerState?.activeSubscriptions?.length! > 0;
   console.log("Active subscriptions:", customerState?.activeSubscriptions);
-  {{/if}}
+{{else if (eq payments "dodo")}}
+  const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0;
+  console.log("Active subscriptions:", customerState?.data?.items);
+{{/if}}
 
   return (
     <div>
@@ -63,18 +83,24 @@ export default function Dashboard() {
       {{#if ( or (eq api "orpc") (eq api "trpc"))}}
       <p>API: {privateData.data?.message}</p>
       {{/if}}
-      {{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
       <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
       {hasProSubscription ? (
-        <Button onClick={async () => await authClient.customer.portal()}>
+        <Button onClick={async () => await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}()}>
           Manage Subscription
         </Button>
       ) : (
-        <Button onClick={async () => await authClient.checkout({ slug: "pro" })}>
+        <Button
+          onClick={async () =>
+            await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({
+              slug: "pro",
+            })
+          }
+        >
           Upgrade to Pro
         </Button>
       )}
-      {{/if}}
+{{/if}}
     </div>
   );
 }

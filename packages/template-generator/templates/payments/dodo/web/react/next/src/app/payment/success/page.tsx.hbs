@@ -1,0 +1,39 @@
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+{{#if (eq backend "self")}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import { authClient } from "@/lib/auth-client";
+
+export default async function SuccessPage({
+	searchParams,
+}: {
+	searchParams: Promise<{ checkout_id: string }>
+}) {
+	{{#if (eq backend "self")}}
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
+	{{else}}
+	const session = await authClient.getSession({
+		fetchOptions: {
+			headers: await headers(),
+			throw: true
+		}
+	});
+	{{/if}}
+
+	if (!session?.user) {
+		redirect("/login");
+	}
+
+	const params = await searchParams;
+	const checkout_id = params.checkout_id;
+
+	return (
+		<div className="px-4 py-8">
+			<h1>Payment Successful!</h1>
+			{checkout_id && <p>Checkout ID: {checkout_id}</p>}
+		</div>
+	);
+}

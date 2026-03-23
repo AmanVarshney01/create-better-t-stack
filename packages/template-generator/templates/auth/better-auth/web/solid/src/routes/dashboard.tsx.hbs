@@ -18,6 +18,15 @@ export const Route = createFileRoute("/dashboard")({
 		{{#if (eq payments "polar")}}
 		const { data: customerState } = await authClient.customer.state();
 		return { session, customerState };
+		{{else if (eq payments "dodo")}}
+		const customerState = await authClient.dodopayments.customer.subscriptions.list({
+			query: {
+				limit: 10,
+				page: 1,
+				active: true,
+			}
+		});
+		return { session, customerState };
 		{{else}}
 		return { session };
 		{{/if}}
@@ -28,7 +37,7 @@ function RouteComponent() {
 	const context = Route.useRouteContext();
 
 	const session = context().session;
-	{{#if (eq payments "polar")}}
+	{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 	const customerState = context().customerState;
 	{{/if}}
 
@@ -39,6 +48,9 @@ function RouteComponent() {
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
 		customerState?.activeSubscriptions?.length! > 0;
+	{{else if (eq payments "dodo")}}
+	const hasProSubscription = () =>
+		(customerState?.data?.items?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -57,6 +69,21 @@ function RouteComponent() {
 			) : (
 				<button
 					onClick={async () => await authClient.checkout({ slug: "pro" })}
+				>
+					Upgrade to Pro
+				</button>
+			)}
+			{{else if (eq payments "dodo")}}
+			<p>Plan: {hasProSubscription() ? "Pro" : "Free"}</p>
+			{hasProSubscription() ? (
+				<button onClick={async () => await authClient.dodopayments.customer.portal()}>
+					Manage Subscription
+				</button>
+			) : (
+				<button
+					onClick={async () =>
+						await authClient.dodopayments.checkoutSession({ slug: "pro" })
+					}
 				>
 					Upgrade to Pro
 				</button>

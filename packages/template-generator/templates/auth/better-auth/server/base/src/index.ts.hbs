@@ -6,6 +6,10 @@ import { env } from "@{{projectName}}/env/server";
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
 {{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
+import { dodoPaymentsClient } from "./lib/payments";
+{{/if}}
 import prisma from "@{{projectName}}/db";
 
 export const auth = betterAuth({
@@ -65,6 +69,31 @@ export const auth = betterAuth({
 			],
 		}),
 {{/if}}
+{{#if (eq payments "dodo")}}
+		dodopayments({
+			client: dodoPaymentsClient,
+			createCustomerOnSignUp: true,
+			use: [
+				checkout({
+					products: [
+						{
+							productId: "your-product-id",
+							slug: "pro",
+						},
+					],
+					successUrl: "/payment/success",
+					authenticatedUsersOnly: true,
+				}),
+				portal(),
+				webhooks({
+					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
+					onPayload: async (payload) => {
+						console.log("Received webhook:", payload.event_type);
+					},
+				}),
+			],
+		}),
+{{/if}}
 	],
 });
 {{/if}}
@@ -77,6 +106,10 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
+{{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
+import { dodoPaymentsClient } from "./lib/payments";
 {{/if}}
 import { db } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
@@ -138,6 +171,31 @@ export const auth = betterAuth({
 			],
 		}),
 {{/if}}
+{{#if (eq payments "dodo")}}
+		dodopayments({
+			client: dodoPaymentsClient,
+			createCustomerOnSignUp: true,
+			use: [
+				checkout({
+					products: [
+						{
+							productId: "your-product-id",
+							slug: "pro",
+						},
+					],
+					successUrl: "/payment/success",
+					authenticatedUsersOnly: true,
+				}),
+				portal(),
+				webhooks({
+					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
+					onPayload: async (payload) => {
+						console.log("Received webhook:", payload.event_type);
+					},
+				}),
+			],
+		}),
+{{/if}}
 	],
 });
 {{/if}}
@@ -149,6 +207,10 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
+{{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
+import { dodoPaymentsClient } from "./lib/payments";
 {{/if}}
 import { db } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
@@ -200,8 +262,9 @@ export const auth = betterAuth({
 		//   domain: "<your-workers-subdomain>",
 		// },
 	},
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 	plugins: [
+{{#if (eq payments "polar")}}
 		polar({
 			client: polarClient,
 			createCustomerOnSignUp: true,
@@ -220,6 +283,32 @@ export const auth = betterAuth({
 				portal(),
 			],
 		}),
+{{/if}}
+{{#if (eq payments "dodo")}}
+		dodopayments({
+			client: dodoPaymentsClient,
+			createCustomerOnSignUp: true,
+			use: [
+				checkout({
+					products: [
+						{
+							productId: "your-product-id",
+							slug: "pro",
+						},
+					],
+					successUrl: "/payment/success",
+					authenticatedUsersOnly: true,
+				}),
+				portal(),
+				webhooks({
+					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
+					onPayload: async (payload) => {
+						console.log("Received webhook:", payload.event_type);
+					},
+				}),
+			],
+		}),
+{{/if}}
 	],
 {{/if}}
 });
@@ -266,8 +355,9 @@ export const auth = betterAuth({
 		},
 	},
 {{/if}}
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 	plugins: [
+{{#if (eq payments "polar")}}
 		polar({
 			client: polarClient,
 			createCustomerOnSignUp: true,
@@ -286,6 +376,32 @@ export const auth = betterAuth({
 				portal(),
 			],
 		}),
+{{/if}}
+{{#if (eq payments "dodo")}}
+		dodopayments({
+			client: dodoPaymentsClient,
+			createCustomerOnSignUp: true,
+			use: [
+				checkout({
+					products: [
+						{
+							productId: "your-product-id",
+							slug: "pro",
+						},
+					],
+					successUrl: "/payment/success",
+					authenticatedUsersOnly: true,
+				}),
+				portal(),
+				webhooks({
+					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
+					onPayload: async (payload) => {
+						console.log("Received webhook:", payload.event_type);
+					},
+				}),
+			],
+		}),
+{{/if}}
 	],
 {{/if}}
 });
@@ -330,8 +446,9 @@ export const auth = betterAuth({
 		},
 	},
 {{/if}}
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 	plugins: [
+{{#if (eq payments "polar")}}
 		polar({
 			client: polarClient,
 			createCustomerOnSignUp: true,
@@ -350,6 +467,32 @@ export const auth = betterAuth({
 				portal(),
 			],
 		}),
+{{/if}}
+{{#if (eq payments "dodo")}}
+		dodopayments({
+			client: dodoPaymentsClient,
+			createCustomerOnSignUp: true,
+			use: [
+				checkout({
+					products: [
+						{
+							productId: "your-product-id",
+							slug: "pro",
+						},
+					],
+					successUrl: "/payment/success",
+					authenticatedUsersOnly: true,
+				}),
+				portal(),
+				webhooks({
+					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
+					onPayload: async (payload) => {
+						console.log("Received webhook:", payload.event_type);
+					},
+				}),
+			],
+		}),
+{{/if}}
 	],
 {{/if}}
 });

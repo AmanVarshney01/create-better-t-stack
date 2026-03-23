@@ -565,13 +565,14 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // PAYMENTS CONSTRAINTS
   // ============================================
 
-  if (nextStack.payments === "polar") {
+  if (nextStack.payments === "polar" || nextStack.payments === "dodo") {
+    const providerLabel = nextStack.payments === "polar" ? "Polar" : "Dodo";
     if (nextStack.auth !== "better-auth") {
       nextStack.payments = "none";
       changed = true;
       changes.push({
         category: "payments",
-        message: "Payments set to 'None' (Polar requires Better Auth)",
+        message: `Payments set to 'None' (${providerLabel} requires Better Auth)`,
       });
     }
     if (nextStack.backend === "convex") {
@@ -579,7 +580,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       changed = true;
       changes.push({
         category: "payments",
-        message: "Payments set to 'None' (Polar incompatible with Convex)",
+        message: `Payments set to 'None' (${providerLabel} incompatible with Convex)`,
       });
     }
     const hasWebFrontend = nextStack.webFrontend.some((f) => f !== "none");
@@ -588,7 +589,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       changed = true;
       changes.push({
         category: "payments",
-        message: "Payments set to 'None' (Polar requires web frontend)",
+        message: `Payments set to 'None' (${providerLabel} requires web frontend)`,
       });
     }
   }
@@ -771,8 +772,8 @@ export const getDisabledReason = (
         return `Convex AI example only supports React-based frontends (not ${frontendName})`;
       }
     }
-    if (category === "payments" && optionId === "polar") {
-      return "Polar is not compatible with Convex";
+    if (category === "payments" && (optionId === "polar" || optionId === "dodo")) {
+      return `${optionId === "polar" ? "Polar" : "Dodo"} is not compatible with Convex`;
     }
   }
 
@@ -1025,12 +1026,13 @@ export const getDisabledReason = (
   // ============================================
   // PAYMENTS CONSTRAINTS
   // ============================================
-  if (category === "payments" && optionId === "polar") {
+  if (category === "payments" && (optionId === "polar" || optionId === "dodo")) {
+    const providerLabel = optionId === "polar" ? "Polar" : "Dodo";
     if (currentStack.auth !== "better-auth") {
-      return "Polar requires Better Auth";
+      return `${providerLabel} requires Better Auth`;
     }
     if (!currentStack.webFrontend.some((f) => f !== "none")) {
-      return "Polar requires a web frontend";
+      return `${providerLabel} requires a web frontend`;
     }
   }
 

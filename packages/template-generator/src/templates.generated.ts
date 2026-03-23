@@ -6974,6 +6974,10 @@ import { env } from "@{{projectName}}/env/server";
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
 {{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
+import { dodoPaymentsClient } from "./lib/payments";
+{{/if}}
 import prisma from "@{{projectName}}/db";
 
 export const auth = betterAuth({
@@ -7033,6 +7037,31 @@ export const auth = betterAuth({
 			],
 		}),
 {{/if}}
+{{#if (eq payments "dodo")}}
+		dodopayments({
+			client: dodoPaymentsClient,
+			createCustomerOnSignUp: true,
+			use: [
+				checkout({
+					products: [
+						{
+							productId: "your-product-id",
+							slug: "pro",
+						},
+					],
+					successUrl: "/payment/success",
+					authenticatedUsersOnly: true,
+				}),
+				portal(),
+				webhooks({
+					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
+					onPayload: async (payload) => {
+						console.log("Received webhook:", payload.event_type);
+					},
+				}),
+			],
+		}),
+{{/if}}
 	],
 });
 {{/if}}
@@ -7045,6 +7074,10 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
+{{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
+import { dodoPaymentsClient } from "./lib/payments";
 {{/if}}
 import { db } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
@@ -7106,6 +7139,31 @@ export const auth = betterAuth({
 			],
 		}),
 {{/if}}
+{{#if (eq payments "dodo")}}
+		dodopayments({
+			client: dodoPaymentsClient,
+			createCustomerOnSignUp: true,
+			use: [
+				checkout({
+					products: [
+						{
+							productId: "your-product-id",
+							slug: "pro",
+						},
+					],
+					successUrl: "/payment/success",
+					authenticatedUsersOnly: true,
+				}),
+				portal(),
+				webhooks({
+					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
+					onPayload: async (payload) => {
+						console.log("Received webhook:", payload.event_type);
+					},
+				}),
+			],
+		}),
+{{/if}}
 	],
 });
 {{/if}}
@@ -7117,6 +7175,10 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
+{{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
+import { dodoPaymentsClient } from "./lib/payments";
 {{/if}}
 import { db } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
@@ -7168,8 +7230,9 @@ export const auth = betterAuth({
 		//   domain: "<your-workers-subdomain>",
 		// },
 	},
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 	plugins: [
+{{#if (eq payments "polar")}}
 		polar({
 			client: polarClient,
 			createCustomerOnSignUp: true,
@@ -7188,6 +7251,32 @@ export const auth = betterAuth({
 				portal(),
 			],
 		}),
+{{/if}}
+{{#if (eq payments "dodo")}}
+		dodopayments({
+			client: dodoPaymentsClient,
+			createCustomerOnSignUp: true,
+			use: [
+				checkout({
+					products: [
+						{
+							productId: "your-product-id",
+							slug: "pro",
+						},
+					],
+					successUrl: "/payment/success",
+					authenticatedUsersOnly: true,
+				}),
+				portal(),
+				webhooks({
+					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
+					onPayload: async (payload) => {
+						console.log("Received webhook:", payload.event_type);
+					},
+				}),
+			],
+		}),
+{{/if}}
 	],
 {{/if}}
 });
@@ -7234,8 +7323,9 @@ export const auth = betterAuth({
 		},
 	},
 {{/if}}
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 	plugins: [
+{{#if (eq payments "polar")}}
 		polar({
 			client: polarClient,
 			createCustomerOnSignUp: true,
@@ -7254,6 +7344,32 @@ export const auth = betterAuth({
 				portal(),
 			],
 		}),
+{{/if}}
+{{#if (eq payments "dodo")}}
+		dodopayments({
+			client: dodoPaymentsClient,
+			createCustomerOnSignUp: true,
+			use: [
+				checkout({
+					products: [
+						{
+							productId: "your-product-id",
+							slug: "pro",
+						},
+					],
+					successUrl: "/payment/success",
+					authenticatedUsersOnly: true,
+				}),
+				portal(),
+				webhooks({
+					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
+					onPayload: async (payload) => {
+						console.log("Received webhook:", payload.event_type);
+					},
+				}),
+			],
+		}),
+{{/if}}
 	],
 {{/if}}
 });
@@ -7298,8 +7414,9 @@ export const auth = betterAuth({
 		},
 	},
 {{/if}}
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 	plugins: [
+{{#if (eq payments "polar")}}
 		polar({
 			client: polarClient,
 			createCustomerOnSignUp: true,
@@ -7318,6 +7435,32 @@ export const auth = betterAuth({
 				portal(),
 			],
 		}),
+{{/if}}
+{{#if (eq payments "dodo")}}
+		dodopayments({
+			client: dodoPaymentsClient,
+			createCustomerOnSignUp: true,
+			use: [
+				checkout({
+					products: [
+						{
+							productId: "your-product-id",
+							slug: "pro",
+						},
+					],
+					successUrl: "/payment/success",
+					authenticatedUsersOnly: true,
+				}),
+				portal(),
+				webhooks({
+					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
+					onPayload: async (payload) => {
+						console.log("Received webhook:", payload.event_type);
+					},
+				}),
+			],
+		}),
+{{/if}}
 	],
 {{/if}}
 });
@@ -8161,6 +8304,9 @@ import { authClient } from "../lib/auth-client";
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopaymentsClient } from "@dodopayments/better-auth";
+{{/if}}
 {{#if (ne backend "self")}}
 import { PUBLIC_SERVER_URL } from "astro:env/client";
 {{/if}}
@@ -8169,8 +8315,15 @@ export const authClient = createAuthClient({
 {{#if (ne backend "self")}}
   baseURL: PUBLIC_SERVER_URL,
 {{/if}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+  plugins: [
 {{#if (eq payments "polar")}}
-  plugins: [polarClient()],
+    polarClient(),
+{{/if}}
+{{#if (eq payments "dodo")}}
+    dodopaymentsClient(),
+{{/if}}
+  ],
 {{/if}}
 });
 `],
@@ -8202,7 +8355,7 @@ import Layout from "../layouts/Layout.astro";
           </div>
           {{/if}}
 
-          {{#if (eq payments "polar")}}
+          {{#if (or (eq payments "polar") (eq payments "dodo"))}}
           <div class="rounded-lg bg-neutral-800/50 p-4">
             <p class="text-sm text-neutral-400 mb-2">Subscription</p>
             <div id="subscription-info" class="space-y-2">
@@ -8291,6 +8444,46 @@ import Layout from "../layouts/Layout.astro";
           \`;
           document.getElementById("upgrade-button")?.addEventListener("click", async () => {
             await authClient.checkout({ slug: "pro" });
+          });
+        }
+      } catch (e) {
+        console.error("Failed to load subscription info", e);
+      }
+      {{else if (eq payments "dodo")}}
+      try {
+        const customerState = await authClient.dodopayments.customer.subscriptions.list({
+          query: {
+            limit: 10,
+            page: 1,
+            active: true
+          }
+        });
+        const subscriptionInfo = document.getElementById("subscription-info")!;
+        if (customerState?.data?.items?.length > 0) {
+          subscriptionInfo.innerHTML = \`
+            <p class="text-white">Plan: <span class="text-green-400">Pro</span></p>
+            <button
+              id="manage-subscription"
+              class="mt-2 rounded px-3 py-1.5 text-sm bg-neutral-700 hover:bg-neutral-600 text-white transition-colors"
+            >
+              Manage Subscription
+            </button>
+          \`;
+          document.getElementById("manage-subscription")?.addEventListener("click", async () => {
+            await authClient.dodopayments.customer.portal();
+          });
+        } else {
+          subscriptionInfo.innerHTML = \`
+            <p class="text-white">Plan: <span class="text-neutral-400">Free</span></p>
+            <button
+              id="upgrade-button"
+              class="mt-2 rounded px-3 py-1.5 text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+            >
+              Upgrade to Pro
+            </button>
+          \`;
+          document.getElementById("upgrade-button")?.addEventListener("click", async () => {
+            await authClient.dodopayments.checkoutSession({ slug: "pro" });
           });
         }
       } catch (e) {
@@ -8580,6 +8773,8 @@ const session = $authClient.useSession()
 
 {{#if (eq payments "polar")}}
 const customerState = ref<any>(null)
+{{else if (eq payments "dodo")}}
+const customerState = ref<{ data?: { items?: unknown[] } } | null>(null)
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -8599,6 +8794,23 @@ onMounted(async () => {
 
 const hasProSubscription = computed(() => 
   customerState.value?.activeSubscriptions?.length! > 0
+)
+{{else if (eq payments "dodo")}}
+onMounted(async () => {
+  if (session.value?.data) {
+    const data = await $authClient.dodopayments.customer.subscriptions.list({
+      query: {
+        limit: 10,
+        page: 1,
+        active: true
+      }
+    })
+    customerState.value = data
+  }
+})
+
+const hasProSubscription = computed(() => 
+  (customerState.value?.data?.items?.length ?? 0) > 0
 )
 {{/if}}
 </script>
@@ -8660,6 +8872,32 @@ const hasProSubscription = computed(() =>
           </UButton>
         </div>
       </UCard>
+      {{else if (eq payments "dodo")}}
+      <UCard>
+        <template #header>
+          <div class="font-medium">Subscription</div>
+        </template>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <UIcon :name="hasProSubscription ? 'i-lucide-crown' : 'i-lucide-user'" :class="hasProSubscription ? 'text-warning' : 'text-muted'" />
+            <span>Plan: \\{{ hasProSubscription ? "Pro" : "Free" }}</span>
+          </div>
+          <UButton 
+            v-if="hasProSubscription"
+            variant="outline"
+            @click="() => { $authClient.dodopayments.customer.portal() }"
+          >
+            Manage Subscription
+          </UButton>
+          <UButton 
+            v-else
+            @click="() => { $authClient.dodopayments.checkoutSession({ slug: 'pro' }) }"
+          >
+            Upgrade to Pro
+          </UButton>
+        </div>
+      </UCard>
       {{/if}}
     </div>
   </UContainer>
@@ -8697,14 +8935,24 @@ watchEffect(() => {
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopaymentsClient } from "@dodopayments/better-auth";
+{{/if}}
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
 
   const authClient = createAuthClient({
     baseURL: config.public.serverUrl,
-    {{#if (eq payments "polar")}}
-    plugins: [polarClient()],
+    {{#if (or (eq payments "polar") (eq payments "dodo"))}}
+    plugins: [
+      {{#if (eq payments "polar")}}
+      polarClient(),
+      {{/if}}
+      {{#if (eq payments "dodo")}}
+      dodopaymentsClient(),
+      {{/if}}
+    ],
     {{/if}}
   });
 
@@ -8719,6 +8967,9 @@ export default defineNuxtPlugin(() => {
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopaymentsClient } from "@dodopayments/better-auth";
+{{/if}}
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 {{/unless}}
@@ -8727,13 +8978,20 @@ export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
 	baseURL: env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}},
 {{/unless}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+	plugins: [
 {{#if (eq payments "polar")}}
-	plugins: [polarClient()]
+		polarClient(),
+{{/if}}
+{{#if (eq payments "dodo")}}
+		dodopaymentsClient(),
+{{/if}}
+	]
 {{/if}}
 });
 `],
   ["auth/better-auth/web/react/next/src/app/dashboard/dashboard.tsx.hbs", `"use client";
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -8747,14 +9005,16 @@ import { trpc } from "@/utils/trpc";
 {{/if}}
 
 export default function Dashboard({
-	{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 	customerState,
-	{{/if}}
+{{/if}}
 	session
 }: {
-	{{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
 	customerState: ReturnType<typeof authClient.customer.state>;
-	{{/if}}
+{{else if (eq payments "dodo")}}
+	customerState: { data?: { items?: unknown[] } };
+{{/if}}
 	session: typeof authClient.$Infer.Session;
 }) {
 	{{#if (eq api "orpc")}}
@@ -8764,10 +9024,13 @@ export default function Dashboard({
 	const privateData = useQuery(trpc.privateData.queryOptions());
 	{{/if}}
 
-	{{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
 	const hasProSubscription = customerState?.activeSubscriptions?.length! > 0;
 	console.log("Active subscriptions:", customerState?.activeSubscriptions);
-	{{/if}}
+{{else if (eq payments "dodo")}}
+	const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0;
+	console.log("Active subscriptions:", customerState?.data?.items);
+{{/if}}
 
 	return (
 		<>
@@ -8777,18 +9040,24 @@ export default function Dashboard({
 			{{#if (eq api "trpc")}}
 			<p>API: {privateData.data?.message}</p>
 			{{/if}}
-			{{#if (eq payments "polar")}}
-			<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
-			{hasProSubscription ? (
-				<Button onClick={async () => await authClient.customer.portal()}>
-					Manage Subscription
-				</Button>
-			) : (
-				<Button onClick={async () => await authClient.checkout({ slug: "pro" })}>
-					Upgrade to Pro
-				</Button>
-			)}
-			{{/if}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+		<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
+		{hasProSubscription ? (
+			<Button onClick={async () => await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}()}>
+				Manage Subscription
+			</Button>
+		) : (
+			<Button
+				onClick={async () =>
+					await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({
+						slug: "pro",
+					})
+				}
+			>
+				Upgrade to Pro
+			</Button>
+		)}
+{{/if}}
 		</>
 	);
 }
@@ -8819,19 +9088,30 @@ export default async function DashboardPage() {
 		redirect("/login");
 	}
 
-	{{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
 	const { data: customerState } = await authClient.customer.state({
 		fetchOptions: {
 			headers: await headers(),
 		},
 	});
-	{{/if}}
+{{else if (eq payments "dodo")}}
+	const customerState = await authClient.dodopayments.customer.subscriptions.list({
+		query: {
+			limit: 10,
+			page: 1,
+			active: true,
+		},
+		fetchOptions: {
+			headers: await headers(),
+		},
+	});
+{{/if}}
 
 	return (
 		<div>
 			<h1>Dashboard</h1>
 			<p>Welcome {session.user.name}</p>
-			<Dashboard session={session} {{#if (eq payments "polar")}}customerState={customerState}{{/if}} />
+			<Dashboard session={session} {{#if (or (eq payments "polar") (eq payments "dodo"))}}customerState={customerState}{{/if}} />
 		</div>
 	);
 }
@@ -9572,7 +9852,7 @@ export default function UserMenu() {
   );
 }
 `],
-  ["auth/better-auth/web/react/react-router/src/routes/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
+  ["auth/better-auth/web/react/react-router/src/routes/dashboard.tsx.hbs", `{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -9591,9 +9871,9 @@ import { useNavigate } from "react-router";
 export default function Dashboard() {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
-  {{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
   const [customerState, setCustomerState] = useState<any>(null);
-  {{/if}}
+{{/if}}
 
   {{#if (eq api "orpc")}}
   const privateData = useQuery(orpc.privateData.queryOptions());
@@ -9608,7 +9888,7 @@ export default function Dashboard() {
     }
   }, [session, isPending, navigate]);
 
-  {{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
   useEffect(() => {
     async function fetchCustomerState() {
       if (session) {
@@ -9619,16 +9899,36 @@ export default function Dashboard() {
 
     fetchCustomerState();
   }, [session]);
-  {{/if}}
+{{else if (eq payments "dodo")}}
+  useEffect(() => {
+    async function fetchCustomerState() {
+      if (session) {
+        const data = await authClient.dodopayments.customer.subscriptions.list({
+          query: {
+            limit: 10,
+            page: 1,
+            active: true,
+          },
+        });
+        setCustomerState(data);
+      }
+    }
+
+    fetchCustomerState();
+  }, [session]);
+{{/if}}
 
   if (isPending) {
     return <div>Loading...</div>;
   }
 
-  {{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
   const hasProSubscription = customerState?.activeSubscriptions?.length! > 0;
   console.log("Active subscriptions:", customerState?.activeSubscriptions);
-  {{/if}}
+{{else if (eq payments "dodo")}}
+  const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0;
+  console.log("Active subscriptions:", customerState?.data?.items);
+{{/if}}
 
   return (
     <div>
@@ -9637,18 +9937,24 @@ export default function Dashboard() {
       {{#if ( or (eq api "orpc") (eq api "trpc"))}}
       <p>API: {privateData.data?.message}</p>
       {{/if}}
-      {{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
       <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
       {hasProSubscription ? (
-        <Button onClick={async () => await authClient.customer.portal()}>
+        <Button onClick={async () => await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}()}>
           Manage Subscription
         </Button>
       ) : (
-        <Button onClick={async () => await authClient.checkout({ slug: "pro" })}>
+        <Button
+          onClick={async () =>
+            await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({
+              slug: "pro",
+            })
+          }
+        >
           Upgrade to Pro
         </Button>
       )}
-      {{/if}}
+{{/if}}
     </div>
   );
 }
@@ -10028,7 +10334,7 @@ export default function UserMenu() {
   );
 }
 `],
-  ["auth/better-auth/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
+  ["auth/better-auth/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -10056,6 +10362,15 @@ export const Route = createFileRoute("/dashboard")({
 		{{#if (eq payments "polar")}}
 		const {data: customerState} = await authClient.customer.state()
 		return { session, customerState };
+		{{else if (eq payments "dodo")}}
+		const customerState = await authClient.dodopayments.customer.subscriptions.list({
+			query: {
+				limit: 10,
+				page: 1,
+				active: true,
+			}
+		})
+		return { session, customerState };
 		{{else}}
 		return { session };
 		{{/if}}
@@ -10063,7 +10378,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function RouteComponent() {
-	const { session{{#if (eq payments "polar")}}, customerState{{/if}} } = Route.useRouteContext();
+	const { session{{#if (or (eq payments "polar") (eq payments "dodo"))}}, customerState{{/if}} } = Route.useRouteContext();
 
 	{{#if (eq api "orpc")}}
 	const privateData = useQuery(orpc.privateData.queryOptions());
@@ -10075,6 +10390,9 @@ function RouteComponent() {
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = customerState?.activeSubscriptions?.length! > 0
     console.log("Active subscriptions:", customerState?.activeSubscriptions)
+	{{else if (eq payments "dodo")}}
+	const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0
+    console.log("Active subscriptions:", customerState?.data?.items)
 	{{/if}}
 
 	return (
@@ -10084,14 +10402,20 @@ function RouteComponent() {
 			{{#if ( or (eq api "orpc") (eq api "trpc"))}}
 			<p>API: {privateData.data?.message}</p>
 			{{/if}}
-			{{#if (eq payments "polar")}}
+			{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 			<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
 			{hasProSubscription ? (
-				<Button onClick={async () => await authClient.customer.portal()}>
+				<Button onClick={async () => await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}()}>
 					Manage Subscription
 				</Button>
 			) : (
-				<Button onClick={async () => await authClient.checkout({ slug: "pro" })}>
+				<Button
+					onClick={async () =>
+						await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({
+							slug: "pro",
+						})
+					}
+				>
 					Upgrade to Pro
 				</Button>
 			)}
@@ -10519,7 +10843,7 @@ export const authMiddleware = createMiddleware().server(
 {{/if}}
 `],
   ["auth/better-auth/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `import { getUser } from "@/functions/get-user";
-{{#if (eq payments "polar") }}
+{{#if (or (eq payments "polar") (eq payments "dodo")) }}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
 import { getPayment } from "@/functions/get-payment";
@@ -10538,7 +10862,7 @@ export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
   beforeLoad: async () => {
     const session = await getUser();
-    {{#if (eq payments "polar") }}
+    {{#if (or (eq payments "polar") (eq payments "dodo")) }}
     const customerState = await getPayment();
     return { session, customerState };
     {{else}}
@@ -10555,7 +10879,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function RouteComponent() {
-  const { session{{#if (eq payments "polar") }}, customerState{{/if}} } = Route.useRouteContext();
+  const { session{{#if (or (eq payments "polar") (eq payments "dodo")) }}, customerState{{/if}} } = Route.useRouteContext();
 
   {{#if (eq api "trpc") }}
   const trpc = useTRPC();
@@ -10568,6 +10892,9 @@ function RouteComponent() {
   {{#if (eq payments "polar") }}
   const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
   // For debugging: console.log("Active subscriptions:", customerState?.activeSubscriptions);
+  {{else if (eq payments "dodo") }}
+  const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0;
+  // For debugging: console.log("Active subscriptions:", customerState?.data?.items);
   {{/if}}
 
   return (
@@ -10579,12 +10906,12 @@ function RouteComponent() {
       {{else if (eq api "orpc") }}
       <p>API: {privateData.data?.message}</p>
       {{/if}}
-      {{#if (eq payments "polar") }}
+      {{#if (or (eq payments "polar") (eq payments "dodo")) }}
       <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
       {hasProSubscription ? (
         <Button
           onClick={async function handlePortal() {
-            await authClient.customer.portal();
+            await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}();
           }}
         >
           Manage Subscription
@@ -10592,7 +10919,7 @@ function RouteComponent() {
       ) : (
         <Button
           onClick={async function handleUpgrade() {
-            await authClient.checkout({ slug: "pro" });
+            await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({ slug: "pro" });
           }}
         >
           Upgrade to Pro
@@ -10601,7 +10928,8 @@ function RouteComponent() {
       {{/if}}
     </div>
   );
-}`],
+}
+`],
   ["auth/better-auth/web/react/tanstack-start/src/routes/login.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import { createFileRoute } from "@tanstack/react-router";
@@ -10955,12 +11283,22 @@ export default function UserMenu() {
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopaymentsClient } from "@dodopayments/better-auth";
+{{/if}}
 import { env } from "@{{projectName}}/env/web";
 
 export const authClient = createAuthClient({
 	baseURL: env.VITE_SERVER_URL,
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+	plugins: [
 {{#if (eq payments "polar")}}
-	plugins: [polarClient()]
+		polarClient(),
+{{/if}}
+{{#if (eq payments "dodo")}}
+		dodopaymentsClient(),
+{{/if}}
+	]
 {{/if}}
 });
 `],
@@ -10984,6 +11322,15 @@ export const Route = createFileRoute("/dashboard")({
 		{{#if (eq payments "polar")}}
 		const { data: customerState } = await authClient.customer.state();
 		return { session, customerState };
+		{{else if (eq payments "dodo")}}
+		const customerState = await authClient.dodopayments.customer.subscriptions.list({
+			query: {
+				limit: 10,
+				page: 1,
+				active: true,
+			}
+		});
+		return { session, customerState };
 		{{else}}
 		return { session };
 		{{/if}}
@@ -10994,7 +11341,7 @@ function RouteComponent() {
 	const context = Route.useRouteContext();
 
 	const session = context().session;
-	{{#if (eq payments "polar")}}
+	{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 	const customerState = context().customerState;
 	{{/if}}
 
@@ -11005,6 +11352,9 @@ function RouteComponent() {
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
 		customerState?.activeSubscriptions?.length! > 0;
+	{{else if (eq payments "dodo")}}
+	const hasProSubscription = () =>
+		(customerState?.data?.items?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -11023,6 +11373,21 @@ function RouteComponent() {
 			) : (
 				<button
 					onClick={async () => await authClient.checkout({ slug: "pro" })}
+				>
+					Upgrade to Pro
+				</button>
+			)}
+			{{else if (eq payments "dodo")}}
+			<p>Plan: {hasProSubscription() ? "Pro" : "Free"}</p>
+			{hasProSubscription() ? (
+				<button onClick={async () => await authClient.dodopayments.customer.portal()}>
+					Manage Subscription
+				</button>
+			) : (
+				<button
+					onClick={async () =>
+						await authClient.dodopayments.checkoutSession({ slug: "pro" })
+					}
 				>
 					Upgrade to Pro
 				</button>
@@ -11367,11 +11732,21 @@ import { createAuthClient } from "better-auth/svelte";
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopaymentsClient } from "@dodopayments/better-auth";
+{{/if}}
 
 export const authClient = createAuthClient({
 	baseURL: PUBLIC_SERVER_URL,
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+	plugins: [
 {{#if (eq payments "polar")}}
-	plugins: [polarClient()]
+		polarClient(),
+{{/if}}
+{{#if (eq payments "dodo")}}
+		dodopaymentsClient(),
+{{/if}}
+	]
 {{/if}}
 });
 `],
@@ -11382,9 +11757,11 @@ export const authClient = createAuthClient({
 	import { orpc } from '$lib/orpc';
 	import { createQuery } from '@tanstack/svelte-query';
 	{{/if}}
-	{{#if (eq payments "polar")}}
-	let customerState = $state<{ activeSubscriptions?: unknown[] } | null>(null);
-	{{/if}}
+{{#if (eq payments "polar")}}
+let customerState = $state<{ activeSubscriptions?: unknown[] } | null>(null);
+{{else if (eq payments "dodo")}}
+let customerState = $state<{ data?: { items?: unknown[] } } | null>(null);
+{{/if}}
 
 	const sessionQuery = authClient.useSession();
 
@@ -11398,7 +11775,7 @@ export const authClient = createAuthClient({
 		}
 	});
 
-	{{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
 	$effect(() => {
 		if ($sessionQuery.data) {
 			authClient.customer.state().then(({ data }) => {
@@ -11406,7 +11783,23 @@ export const authClient = createAuthClient({
 			});
 		}
 	});
-	{{/if}}
+{{else if (eq payments "dodo")}}
+	$effect(() => {
+		if ($sessionQuery.data) {
+			authClient.dodopayments.customer.subscriptions
+				.list({
+					query: {
+						limit: 10,
+						page: 1,
+						active: true,
+					},
+				})
+				.then((data) => {
+					customerState = data;
+				});
+		}
+	});
+{{/if}}
 </script>
 
 {#if $sessionQuery.isPending}
@@ -11420,7 +11813,7 @@ export const authClient = createAuthClient({
 		{{#if (eq api "orpc")}}
 		<p>API: {$privateDataQuery.data?.message}</p>
 		{{/if}}
-		{{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
 		<p>Plan: {customerState?.activeSubscriptions?.length > 0 ? "Pro" : "Free"}</p>
 		{#if customerState?.activeSubscriptions?.length > 0}
 			<button onclick={async () => await authClient.customer.portal()}>
@@ -11431,7 +11824,18 @@ export const authClient = createAuthClient({
 				Upgrade to Pro
 			</button>
 		{/if}
-		{{/if}}
+{{else if (eq payments "dodo")}}
+		<p>Plan: {customerState?.data?.items?.length ? "Pro" : "Free"}</p>
+		{#if customerState?.data?.items?.length}
+			<button onclick={async () => await authClient.dodopayments.customer.portal()}>
+				Manage Subscription
+			</button>
+		{:else}
+			<button onclick={async () => await authClient.dodopayments.checkoutSession({ slug: "pro" })}>
+				Upgrade to Pro
+			</button>
+		{/if}
+{{/if}}
 	</div>
 {/if}
 `],
@@ -27825,6 +28229,11 @@ export const env = createEnv({
 		POLAR_ACCESS_TOKEN: z.string().min(1),
 		POLAR_SUCCESS_URL: z.url(),
 {{/if}}
+{{#if (eq payments "dodo")}}
+		DODO_PAYMENTS_API_KEY: z.string().min(1),
+		DODO_PAYMENTS_WEBHOOK_SECRET: z.string().min(1),
+		DODO_PAYMENTS_ENVIRONMENT: z.enum(["test_mode", "live_mode"]),
+{{/if}}
 		CORS_ORIGIN: z.url(),
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
@@ -28051,6 +28460,11 @@ export const web = await Nextjs("web", {
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
     {{/if}}
+    {{#if (eq payments "dodo")}}
+    DODO_PAYMENTS_API_KEY: alchemy.secret.env.DODO_PAYMENTS_API_KEY!,
+    DODO_PAYMENTS_WEBHOOK_SECRET: alchemy.secret.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
+    DODO_PAYMENTS_ENVIRONMENT: alchemy.env.DODO_PAYMENTS_ENVIRONMENT!,
+    {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
     {{/if}}
@@ -28105,6 +28519,11 @@ export const web = await Nuxt("web", {
     {{#if (eq payments "polar")}}
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq payments "dodo")}}
+    DODO_PAYMENTS_API_KEY: alchemy.secret.env.DODO_PAYMENTS_API_KEY!,
+    DODO_PAYMENTS_WEBHOOK_SECRET: alchemy.secret.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
+    DODO_PAYMENTS_ENVIRONMENT: alchemy.env.DODO_PAYMENTS_ENVIRONMENT!,
     {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
@@ -28169,6 +28588,11 @@ export const web = await TanStackStart("web", {
     {{#if (eq payments "polar")}}
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq payments "dodo")}}
+    DODO_PAYMENTS_API_KEY: alchemy.secret.env.DODO_PAYMENTS_API_KEY!,
+    DODO_PAYMENTS_WEBHOOK_SECRET: alchemy.secret.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
+    DODO_PAYMENTS_ENVIRONMENT: alchemy.env.DODO_PAYMENTS_ENVIRONMENT!,
     {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
@@ -28252,6 +28676,11 @@ export const web = await Astro("web", {
     {{#if (eq payments "polar")}}
     POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
     POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq payments "dodo")}}
+    DODO_PAYMENTS_API_KEY: alchemy.secret.env.DODO_PAYMENTS_API_KEY!,
+    DODO_PAYMENTS_WEBHOOK_SECRET: alchemy.secret.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
+    DODO_PAYMENTS_ENVIRONMENT: alchemy.env.DODO_PAYMENTS_ENVIRONMENT!,
     {{/if}}
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
@@ -29123,6 +29552,294 @@ export function cn(...inputs: ClassValue[]) {
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules"]
 }
+`],
+  ["payments/dodo/server/base/src/lib/payments.ts.hbs", `import DodoPayments from "dodopayments";
+import { env } from "@{{projectName}}/env/server";
+
+export const dodoPaymentsClient = new DodoPayments({
+	bearerToken: env.DODO_PAYMENTS_API_KEY,
+	environment: env.DODO_PAYMENTS_ENVIRONMENT,
+});
+`],
+  ["payments/dodo/web/astro/src/pages/payment/success.astro.hbs", `---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Payment Success - {{projectName}}">
+  <div id="success-content" class="hidden">
+    <main class="mx-auto max-w-4xl px-4 py-8">
+      <div class="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8">
+        <h1 class="text-3xl font-bold text-white mb-4">Payment Successful!</h1>
+        <p id="checkout-id" class="text-neutral-300"></p>
+      </div>
+    </main>
+  </div>
+
+  <div id="loading" class="flex h-[calc(100vh-4rem)] items-center justify-center">
+    <p class="text-neutral-400">Loading...</p>
+  </div>
+
+  <div id="redirect" class="hidden flex h-[calc(100vh-4rem)] items-center justify-center">
+    <p class="text-neutral-400">Redirecting to login...</p>
+  </div>
+</Layout>
+
+<script>
+  import { authClient } from "../../lib/auth-client";
+
+  const successContent = document.getElementById("success-content")!;
+  const loading = document.getElementById("loading")!;
+  const redirect = document.getElementById("redirect")!;
+  const checkoutId = document.getElementById("checkout-id")!;
+
+  async function init() {
+    try {
+      const { data: session } = await authClient.getSession();
+
+      if (!session?.user) {
+        loading.classList.add("hidden");
+        redirect.classList.remove("hidden");
+        window.location.href = "/login";
+        return;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const checkout_id = params.get("checkout_id");
+      checkoutId.textContent = checkout_id ? \`Checkout ID: \${checkout_id}\` : "";
+
+      loading.classList.add("hidden");
+      successContent.classList.remove("hidden");
+    } catch (error) {
+      loading.classList.add("hidden");
+      redirect.classList.remove("hidden");
+      window.location.href = "/login";
+    }
+  }
+
+  init();
+</script>
+`],
+  ["payments/dodo/web/nuxt/app/pages/payment/success.vue.hbs", `<script setup lang="ts">
+const route = useRoute()
+const checkout_id = route.query.checkout_id as string
+
+definePageMeta({
+  middleware: ['auth']
+})
+</script>
+
+<template>
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Payment Successful!</h1>
+    <p v-if="checkout_id">Checkout ID: \\{{ checkout_id }}</p>
+  </div>
+</template>
+`],
+  ["payments/dodo/web/react/next/src/app/payment/success/page.tsx.hbs", `import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+{{#if (eq backend "self")}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import { authClient } from "@/lib/auth-client";
+
+export default async function SuccessPage({
+	searchParams,
+}: {
+	searchParams: Promise<{ checkout_id: string }>
+}) {
+	{{#if (eq backend "self")}}
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
+	{{else}}
+	const session = await authClient.getSession({
+		fetchOptions: {
+			headers: await headers(),
+			throw: true
+		}
+	});
+	{{/if}}
+
+	if (!session?.user) {
+		redirect("/login");
+	}
+
+	const params = await searchParams;
+	const checkout_id = params.checkout_id;
+
+	return (
+		<div className="px-4 py-8">
+			<h1>Payment Successful!</h1>
+			{checkout_id && <p>Checkout ID: {checkout_id}</p>}
+		</div>
+	);
+}
+`],
+  ["payments/dodo/web/react/react-router/src/routes/payment-success.tsx.hbs", `import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router";
+
+import { authClient } from "@/lib/auth-client";
+
+export default function PaymentSuccessPage() {
+	const [searchParams] = useSearchParams();
+	const navigate = useNavigate();
+	const checkout_id = searchParams.get("checkout_id");
+
+	useEffect(() => {
+		let active = true;
+		async function loadSession() {
+			const session = await authClient.getSession();
+			if (active && !session.data) {
+				navigate("/login", { replace: true });
+			}
+		}
+
+		loadSession();
+		return () => {
+			active = false;
+		};
+	}, [navigate]);
+
+	return (
+		<div className="container mx-auto px-4 py-8">
+			<h1>Payment Successful!</h1>
+			{checkout_id && <p>Checkout ID: {checkout_id}</p>}
+		</div>
+	);
+}
+`],
+  ["payments/dodo/web/react/tanstack-router/src/routes/payment/success.tsx.hbs", `import { createFileRoute, redirect } from "@tanstack/react-router";
+import { authClient } from "@/lib/auth-client";
+
+export const Route = createFileRoute("/payment/success")({
+	component: SuccessPage,
+	validateSearch: (search) => ({
+		checkout_id: search.checkout_id as string,
+	}),
+	beforeLoad: async () => {
+		const session = await authClient.getSession();
+		if (!session.data) {
+			redirect({
+				to: "/login",
+				throw: true,
+			});
+		}
+		return { session };
+	},
+});
+
+function SuccessPage() {
+	const { checkout_id } = Route.useSearch();
+
+	return (
+		<div className="container mx-auto px-4 py-8">
+			<h1>Payment Successful!</h1>
+			{checkout_id && <p>Checkout ID: {checkout_id}</p>}
+		</div>
+	);
+}
+`],
+  ["payments/dodo/web/react/tanstack-start/src/functions/get-payment.ts.hbs", `import { authClient } from "@/lib/auth-client";
+import { authMiddleware } from "@/middleware/auth";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeaders } from "@tanstack/react-start/server";
+
+export const getPayment = createServerFn({ method: "GET" })
+	.middleware([authMiddleware])
+	.handler(async () => {
+		const { data: customerState } = await authClient.dodopayments.customer.state({
+			fetchOptions: {
+				headers: getRequestHeaders(),
+			},
+		});
+		return customerState;
+	});
+`],
+  ["payments/dodo/web/react/tanstack-start/src/routes/payment/success.tsx.hbs", `import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { getUser } from "@/functions/get-user";
+
+export const Route = createFileRoute("/payment/success")({
+	component: SuccessPage,
+	validateSearch: (search) => ({
+		checkout_id: search.checkout_id as string,
+	}),
+	beforeLoad: async () => {
+		const session = await getUser();
+		return { session };
+	},
+});
+
+function SuccessPage() {
+	const { checkout_id } = useSearch({ from: "/payment/success" });
+
+	return (
+		<div className="container mx-auto px-4 py-8">
+			<h1>Payment Successful!</h1>
+			{checkout_id && <p>Checkout ID: {checkout_id}</p>}
+		</div>
+	);
+}
+`],
+  ["payments/dodo/web/solid/src/routes/payment/success.tsx.hbs", `import { createFileRoute, redirect } from "@tanstack/solid-router";
+
+import { authClient } from "@/lib/auth-client";
+
+export const Route = createFileRoute("/payment/success")({
+	component: SuccessPage,
+	validateSearch: (search) => ({
+		checkout_id: search.checkout_id as string,
+	}),
+	beforeLoad: async () => {
+		const session = await authClient.getSession();
+		if (!session.data) {
+			redirect({
+				to: "/login",
+				throw: true,
+			});
+		}
+		return { session };
+	},
+});
+
+function SuccessPage() {
+	const { checkout_id } = Route.useSearch();
+
+	return (
+		<div class="container mx-auto px-4 py-8">
+			<h1>Payment Successful!</h1>
+			{checkout_id && <p>Checkout ID: {checkout_id}</p>}
+		</div>
+	);
+}
+`],
+  ["payments/dodo/web/svelte/src/routes/payment/success/+page.svelte.hbs", `<script lang="ts">
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
+	import { authClient } from "$lib/auth-client";
+
+	const checkout_id = $derived(page.url.searchParams.get("checkout_id"));
+
+	const sessionQuery = authClient.useSession();
+
+	$effect(() => {
+		if (!$sessionQuery.isPending && !$sessionQuery.data) {
+			goto("/login");
+		}
+	});
+</script>
+
+{#if $sessionQuery.isPending}
+	<div>Loading...</div>
+{:else if !$sessionQuery.data}
+	<div>Redirecting to login...</div>
+{:else}
+	<div class="container mx-auto px-4 py-8">
+		<h1>Payment Successful!</h1>
+		{#if checkout_id}
+			<p>Checkout ID: {checkout_id}</p>
+		{/if}
+	</div>
+{/if}
 `],
   ["payments/polar/server/base/src/lib/payments.ts.hbs", `import { Polar } from "@polar-sh/sdk";
 import { env } from "@{{projectName}}/env/server";
