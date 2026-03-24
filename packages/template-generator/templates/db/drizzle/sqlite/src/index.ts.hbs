@@ -11,7 +11,7 @@ const client = createClient({
 {{/if}}
 });
 
-export const db = drizzle({ client, schema });
+export const createDb = (env?: any) => drizzle({ client, schema });
 {{/if}}
 
 {{#if (eq runtime "workers")}}
@@ -21,7 +21,7 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/d1";
 import { env } from "@{{projectName}}/env/server";
 
-export const db = drizzle(env.DB, { schema });
+export const createDb = (env: any) => drizzle(env.DB, { schema });
 {{else}}
 import { drizzle } from "drizzle-orm/libsql";
 import { env } from "@{{projectName}}/env/server";
@@ -34,6 +34,6 @@ const client = createClient({
 {{/if}}
 });
 
-export const db = drizzle({ client, schema });
+export const createDb = (env?: any) => drizzle({ client, schema });
 {{/if}}
 {{/if}}
