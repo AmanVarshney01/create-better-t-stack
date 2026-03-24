@@ -11,16 +11,26 @@ import "./index.css";
 import Header from "./components/header";
 import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
+{{#if (eq auth "clerk")}}
+import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react-router";
+import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
+{{/if}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+import { useEffect } from "react";
+import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
+{{/if}}
 
 {{#if (eq backend "convex")}}
 import { ConvexReactClient } from "convex/react";
 import { env } from "@{{projectName}}/env/web";
-{{#if (eq auth "clerk")}}
-import { ClerkProvider, useAuth } from "@clerk/clerk-react";
+  {{#if (eq auth "clerk")}}
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-{{else}}
+  {{else if (eq auth "better-auth")}}
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+import { authClient } from "@/lib/auth-client";
+  {{else}}
 import { ConvexProvider } from "convex/react";
-{{/if}}
+  {{/if}}
 {{else}}
   {{#unless (eq api "none")}}
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -32,6 +42,28 @@ import { queryClient } from "./utils/orpc";
 import { queryClient } from "./utils/trpc";
     {{/if}}
   {{/unless}}
+{{/if}}
+
+{{#if (eq auth "clerk")}}
+export const middleware: Route.MiddlewareFunction[] = [clerkMiddleware()];
+
+export const loader = (args: Route.LoaderArgs) => rootAuthLoader(args);
+{{/if}}
+
+{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+function ClerkApiAuthBridge() {
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    setClerkAuthTokenGetter(getToken);
+
+    return () => {
+      setClerkAuthTokenGetter(null);
+    };
+  }, [getToken]);
+
+  return null;
+}
 {{/if}}
 
 export const links: Route.LinksFunction = () => [
@@ -63,11 +95,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 {{#if (eq backend "convex")}}
+{{#if (eq auth "clerk")}}
+export default function App({ loaderData }: Route.ComponentProps) {
+{{else if (eq auth "better-auth")}}
 export default function App() {
+{{else}}
+export default function App() {
+{{/if}}
+  {{#if (eq auth "better-auth")}}
+  const convex = new ConvexReactClient(env.VITE_CONVEX_URL, {
+    expectAuth: true,
+  });
+  {{else}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
+  {{/if}}
   {{#if (eq auth "clerk")}}
   return (
-    <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+    <ClerkProvider loaderData={loaderData}>
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <ThemeProvider
           attribute="class"
@@ -83,6 +127,23 @@ export default function App() {
         </ThemeProvider>
       </ConvexProviderWithClerk>
     </ClerkProvider>
+  );
+  {{else if (eq auth "better-auth")}}
+  return (
+    <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        disableTransitionOnChange
+        storageKey="vite-ui-theme"
+      >
+        <div className="grid grid-rows-[auto_1fr] h-svh">
+          <Header />
+          <Outlet />
+        </div>
+        <Toaster richColors />
+      </ThemeProvider>
+    </ConvexBetterAuthProvider>
   );
   {{else}}
   return (
@@ -102,6 +163,62 @@ export default function App() {
     </ConvexProvider>
   );
   {{/if}}
+}
+{{else if (eq auth "clerk")}}
+export default function App({ loaderData }: Route.ComponentProps) {
+  return (
+    <ClerkProvider loaderData={loaderData}>
+      {{#unless (eq api "none")}}
+      <ClerkApiAuthBridge />
+      {{/unless}}
+      {{#if (eq api "orpc")}}
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          storageKey="vite-ui-theme"
+        >
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+        </ThemeProvider>
+        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+      </QueryClientProvider>
+      {{else if (eq api "trpc")}}
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          storageKey="vite-ui-theme"
+        >
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+        </ThemeProvider>
+        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+      </QueryClientProvider>
+      {{else}}
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        disableTransitionOnChange
+        storageKey="vite-ui-theme"
+      >
+        <div className="grid grid-rows-[auto_1fr] h-svh">
+          <Header />
+          <Outlet />
+        </div>
+        <Toaster richColors />
+      </ThemeProvider>
+      {{/if}}
+    </ClerkProvider>
+  );
 }
 {{else if (eq api "orpc")}}
 export default function App() {

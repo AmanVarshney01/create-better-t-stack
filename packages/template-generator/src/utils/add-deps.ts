@@ -14,13 +14,17 @@ type PackageJson = {
 export const dependencyVersionMap = {
   typescript: "^5",
 
-  "better-auth": "1.5.2",
-  "@better-auth/expo": "1.5.2",
+  "better-auth": "1.5.5",
+  "@better-auth/expo": "1.5.5",
 
-  "@clerk/nextjs": "^6.31.5",
-  "@clerk/clerk-react": "^5.45.0",
-  "@clerk/tanstack-react-start": "^0.26.3",
-  "@clerk/clerk-expo": "^2.14.25",
+  "@clerk/backend": "^3.2.1",
+  "@clerk/express": "^2.0.5",
+  "@clerk/fastify": "^3.1.3",
+  "@clerk/nextjs": "^7.0.5",
+  "@clerk/react": "^6.1.1",
+  "@clerk/react-router": "^3.0.5",
+  "@clerk/tanstack-react-start": "^1.0.5",
+  "@clerk/expo": "^3.1.3",
 
   "drizzle-orm": "^0.45.1",
   "drizzle-kit": "^0.31.8",
@@ -102,27 +106,27 @@ export const dependencyVersionMap = {
   "@orpc/client": "^1.12.2",
   "@orpc/openapi": "^1.12.2",
   "@orpc/zod": "^1.12.2",
-  "@orpc/tanstack-query": "^1.12.2",
+  "@orpc/tanstack-query": "^1.13.6",
 
-  "@trpc/tanstack-react-query": "^11.7.2",
-  "@trpc/server": "^11.7.2",
-  "@trpc/client": "^11.7.2",
+  "@trpc/tanstack-react-query": "^11.13.4",
+  "@trpc/server": "^11.13.4",
+  "@trpc/client": "^11.13.4",
 
-  next: "^16.1.1",
+  next: "^16.2.0",
 
-  convex: "^1.32.0",
+  convex: "^1.33.1",
   "@convex-dev/react-query": "^0.1.0",
   "@convex-dev/agent": "^0.3.2",
   "convex-svelte": "^0.0.12",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
-  "@convex-dev/better-auth": "^0.10.13",
+  "@convex-dev/better-auth": "^0.11.3",
 
   "@tanstack/svelte-query": "^5.85.3",
   "@tanstack/svelte-query-devtools": "^5.85.3",
 
-  "@tanstack/vue-query-devtools": "^5.90.2",
-  "@tanstack/vue-query": "^5.90.2",
+  "@tanstack/vue-query-devtools": "^6.1.5",
+  "@tanstack/vue-query": "^5.92.9",
 
   "@tanstack/react-query-devtools": "^5.91.1",
   "@tanstack/react-query": "^5.90.12",
@@ -153,7 +157,7 @@ export const dependencyVersionMap = {
   "@t3-oss/env-nextjs": "^0.13.1",
   "@t3-oss/env-nuxt": "^0.13.1",
 
-  "@polar-sh/better-auth": "^1.6.4",
+  "@polar-sh/better-auth": "^1.8.3",
   "@polar-sh/sdk": "^0.42.2",
 } as const;
 

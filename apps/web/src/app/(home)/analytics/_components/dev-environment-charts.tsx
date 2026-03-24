@@ -1,203 +1,209 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
+import { cn } from "@/lib/utils";
 
-import {
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
-
+import { formatCount, formatPercent } from "./analytics-helpers";
 import { ChartCard } from "./chart-card";
-import type { AggregatedAnalyticsData, Distribution, VersionDistribution } from "./types";
+import { PreferenceChartCard } from "./preference-chart-card";
+import { SectionHeader } from "./section-header";
+import type { AggregatedAnalyticsData, ShareDistributionItem } from "./types";
 
-const CHART_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-];
-
-function getChartConfig(data: Distribution): ChartConfig {
-  const config: ChartConfig = {};
-  for (const [index, item] of data.entries()) {
-    config[item.name] = {
-      label: item.name,
-      color: CHART_COLORS[index % CHART_COLORS.length],
-    };
-  }
-  return config;
-}
-
-function getVersionChartConfig(): ChartConfig {
-  return {
-    count: { label: "Count", color: "var(--chart-5)" },
-  };
-}
-
-function VerticalBarChart({ data, height = 280 }: { data: Distribution; height?: number }) {
-  const chartConfig = getChartConfig(data);
+function SplitMeterCard({
+  title,
+  description,
+  data,
+}: {
+  title: string;
+  description: string;
+  data: ShareDistributionItem[];
+}) {
+  const yesShare = data.find((item) => item.name === "Yes")?.share ?? 0;
+  const noShare = data.find((item) => item.name === "No")?.share ?? 0;
+  const yesCount = data.find((item) => item.name === "Yes")?.value ?? 0;
+  const noCount = data.find((item) => item.name === "No")?.value ?? 0;
 
   return (
-    <ChartContainer
-      config={chartConfig}
-      className="aspect-auto w-full min-h-[200px]"
-      style={{ height }}
-    >
-      <BarChart accessibilityLayer data={data}>
-        <CartesianGrid vertical={false} />
-        <XAxis
-          dataKey="name"
-          tickLine={false}
-          axisLine={false}
-          tickMargin={10}
-          tickFormatter={(value) => (value.length > 20 ? `${value.slice(0, 20)}…` : value)}
-        />
-        <YAxis tickLine={false} axisLine={false} />
-        <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-        <Bar dataKey="value" radius={4}>
-          {data.map((entry, index) => (
-            <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ChartContainer>
-  );
-}
-
-function VersionBarChart({ data, height = 280 }: { data: VersionDistribution; height?: number }) {
-  const chartConfig = getVersionChartConfig();
-
-  return (
-    <ChartContainer
-      config={chartConfig}
-      className="aspect-auto w-full min-h-[200px]"
-      style={{ height }}
-    >
-      <BarChart accessibilityLayer data={data}>
-        <CartesianGrid vertical={false} />
-        <XAxis
-          dataKey="version"
-          tickLine={false}
-          axisLine={false}
-          tickMargin={10}
-          tickFormatter={(value) => (value.length > 7 ? `${value.slice(0, 7)}…` : value)}
-        />
-        <YAxis tickLine={false} axisLine={false} />
-        <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
-        <Bar dataKey="count" fill="var(--chart-5)" radius={4} />
-      </BarChart>
-    </ChartContainer>
-  );
-}
-
-function PieChartComponent({ data }: { data: Distribution }) {
-  const chartConfig = getChartConfig(data);
-
-  return (
-    <ChartContainer config={chartConfig} className="aspect-auto h-[280px] w-full min-h-[200px]">
-      <PieChart>
-        <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-        <Pie
-          data={data}
-          cx="50%"
-          cy="45%"
-          outerRadius={65}
-          innerRadius={35}
-          dataKey="value"
-          nameKey="name"
-          paddingAngle={2}
-        >
-          {data.map((entry, index) => (
-            <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-          ))}
-        </Pie>
-        <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-      </PieChart>
-    </ChartContainer>
+    <ChartCard title={title} description={description}>
+      <div className="space-y-4">
+        <div className="overflow-hidden rounded-full border border-border/45 bg-background/65">
+          <div className="flex h-4 w-full">
+            <div className="bg-primary transition-all" style={{ width: `${yesShare * 100}%` }} />
+            <div className="bg-muted transition-all" style={{ width: `${noShare * 100}%` }} />
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-border/45 bg-background/55 p-4">
+            <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+              yes
+            </div>
+            <div className="mt-2 font-semibold text-2xl">{formatCount(yesCount)}</div>
+            <div className="mt-1 text-muted-foreground text-xs">{formatPercent(yesShare)}</div>
+          </div>
+          <div className="rounded-2xl border border-border/45 bg-background/55 p-4">
+            <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+              no
+            </div>
+            <div className="mt-2 font-semibold text-2xl">{formatCount(noCount)}</div>
+            <div className="mt-1 text-muted-foreground text-xs">{formatPercent(noShare)}</div>
+          </div>
+        </div>
+      </div>
+    </ChartCard>
   );
 }
 
 export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
-  const {
-    packageManagerDistribution,
-    gitDistribution,
-    installDistribution,
-    addonsDistribution,
-    examplesDistribution,
-    nodeVersionDistribution,
-    cliVersionDistribution,
-    webDeployDistribution,
-    serverDeployDistribution,
-  } = data;
+  const webDeployOptions = data.webDeployDistribution;
+  const serverDeployOptions = data.serverDeployDistribution;
+  const hasDeploymentOptions = webDeployOptions.length > 0 || serverDeployOptions.length > 0;
+  const nodeVersionPreferences = data.nodeVersionDistribution.map((item) => ({
+    name: item.version,
+    value: item.count,
+    share: item.share,
+  }));
+  const cliVersionPreferences = data.cliVersionDistribution.map((item) => ({
+    name: item.version,
+    value: item.count,
+    share: item.share,
+  }));
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-bold font-mono text-lg">DEV_TOOLS_AND_CONFIG</span>
-        <span className="rounded-full bg-muted/30 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
-          [TOOLING]
-        </span>
-        <div className="hidden h-px flex-1 bg-border/45 sm:block" />
+      <SectionHeader
+        label="Environment"
+        title="Package manager, setup, deployment, and addon choices."
+        description="These charts show the environment and setup options selected in tracked CLI runs."
+        aside={
+          <div className="rounded-full border border-border/60 bg-background/55 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+            packages {data.summary.mostPopularPackageManager} • runtime{" "}
+            {data.summary.mostPopularRuntime}
+          </div>
+        }
+      />
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+        <PreferenceChartCard
+          title="Database setup"
+          description="How often each database setup option was selected."
+          data={data.dbSetupDistribution}
+          colorKey="chart4"
+          className="xl:min-h-full"
+          chartClassName="min-h-[290px]"
+        />
+        <PreferenceChartCard
+          title="Package manager"
+          description="How often each package manager was selected."
+          data={data.packageManagerDistribution}
+          colorKey="chart1"
+        />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <ChartCard title="package_managers.bar" description="npm vs pnpm vs bun usage">
-          <VerticalBarChart data={packageManagerDistribution} />
-        </ChartCard>
-
-        <ChartCard title="git_init.pie" description="Git repository initialization">
-          <PieChartComponent data={gitDistribution} />
-        </ChartCard>
-
-        <ChartCard title="auto_install.pie" description="Automatic dependency installation">
-          <PieChartComponent data={installDistribution} />
-        </ChartCard>
-
-        <ChartCard title="node_versions.bar" description="Node.js version distribution">
-          <VersionBarChart data={nodeVersionDistribution} />
-        </ChartCard>
-      </div>
-
-      {addonsDistribution.length > 0 && (
-        <ChartCard title="addons.bar" description="Additional tooling and features">
-          <VerticalBarChart
-            data={addonsDistribution}
-            height={Math.max(200, addonsDistribution.length * 40)}
+      <div
+        className={cn(
+          "grid gap-4",
+          data.paymentsDistribution.length > 0 ? "xl:grid-cols-2" : "grid-cols-1",
+        )}
+      >
+        <PreferenceChartCard
+          title="Platform"
+          description="How many tracked CLI runs came from each platform."
+          data={data.platformDistribution}
+          colorKey="chart2"
+        />
+        {data.paymentsDistribution.length > 0 ? (
+          <PreferenceChartCard
+            title="Payments"
+            description="How often each payments option was selected, including none."
+            data={data.paymentsDistribution}
+            colorKey="chart3"
           />
-        </ChartCard>
-      )}
+        ) : null}
+      </div>
 
-      {examplesDistribution.length > 0 && (
-        <ChartCard title="examples.bar" description="Example templates included">
-          <VerticalBarChart data={examplesDistribution} />
-        </ChartCard>
-      )}
+      {hasDeploymentOptions ? (
+        <div className="grid gap-4 xl:grid-cols-2">
+          {webDeployOptions.length > 0 ? (
+            <PreferenceChartCard
+              title="Web deployment"
+              description="How often each web deployment option was selected, including none."
+              data={webDeployOptions}
+              colorKey="chart3"
+            />
+          ) : null}
 
-      {(webDeployDistribution.length > 0 || serverDeployDistribution.length > 0) && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {webDeployDistribution.length > 0 && (
-            <ChartCard title="web_deploy.bar" description="Web deployment platform">
-              <VerticalBarChart data={webDeployDistribution} />
-            </ChartCard>
-          )}
-          {serverDeployDistribution.length > 0 && (
-            <ChartCard title="server_deploy.bar" description="Server deployment platform">
-              <VerticalBarChart data={serverDeployDistribution} />
-            </ChartCard>
-          )}
+          {serverDeployOptions.length > 0 ? (
+            <PreferenceChartCard
+              title="Server deployment"
+              description="How often each server deployment option was selected, including none."
+              data={serverDeployOptions}
+              colorKey="chart2"
+            />
+          ) : null}
         </div>
-      )}
+      ) : null}
 
-      {cliVersionDistribution.length > 0 && (
-        <ChartCard title="cli_versions.bar" description="CLI version distribution (top 10)">
-          <VersionBarChart data={cliVersionDistribution} height={320} />
-        </ChartCard>
-      )}
+      <div className="grid gap-4 xl:grid-cols-2">
+        <SplitMeterCard
+          title="Git initialization"
+          description="Share of tracked setups where Git was initialized during project creation."
+          data={data.gitDistribution}
+        />
+        <SplitMeterCard
+          title="Install dependencies"
+          description="Share of tracked setups where dependencies were installed during project creation."
+          data={data.installDistribution}
+        />
+      </div>
+
+      <div
+        className={cn(
+          "grid gap-4",
+          data.examplesDistribution.length > 0 ? "xl:grid-cols-2" : "grid-cols-1",
+        )}
+      >
+        <PreferenceChartCard
+          title="Node versions"
+          description="How many tracked CLI runs reported each Node major version."
+          data={nodeVersionPreferences}
+          colorKey="chart5"
+          layout="vertical"
+          chartClassName="min-h-[280px]"
+        />
+
+        {data.examplesDistribution.length > 0 ? (
+          <PreferenceChartCard
+            title="Examples"
+            description="How often each example was included."
+            data={data.examplesDistribution}
+            colorKey="chart4"
+            layout="vertical"
+            chartClassName="min-h-[280px]"
+          />
+        ) : null}
+      </div>
+
+      {data.addonsDistribution.length > 0 ? (
+        <PreferenceChartCard
+          title="Addons"
+          description="How often each addon was selected."
+          data={data.addonsDistribution}
+          colorKey="chart1"
+          columnCount={2}
+          chartClassName="min-h-[280px]"
+        />
+      ) : null}
+
+      {cliVersionPreferences.length > 0 ? (
+        <PreferenceChartCard
+          title="CLI versions"
+          description="How many tracked setups were created with each CLI version."
+          data={cliVersionPreferences}
+          colorKey="chart4"
+          columnCount={4}
+          columnGridClassName="xl:grid-cols-2"
+          chartClassName="min-h-[300px]"
+        />
+      ) : null}
     </div>
   );
 }

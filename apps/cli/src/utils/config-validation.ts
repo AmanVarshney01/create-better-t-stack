@@ -2,8 +2,11 @@ import { Result } from "better-result";
 
 import type { CLIInput, Database, DatabaseSetup, ProjectConfig, Runtime } from "../types";
 import {
+  CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS,
+  CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS,
   ensureSingleWebAndNative,
   isWebFrontend,
+  supportsConvexBetterAuth,
   validateAddonsAgainstFrontends,
   validateApiFrontendCompatibility,
   validateExamplesCompatibility,
@@ -216,19 +219,27 @@ export function validateConvexConstraints(
   }
 
   if (has("auth") && config.auth === "better-auth") {
-    const supportedFrontends = [
-      "tanstack-router",
-      "tanstack-start",
-      "next",
-      "native-bare",
-      "native-uniwind",
-      "native-unistyles",
-    ];
-    const hasSupportedFrontend = config.frontend?.some((f) => supportedFrontends.includes(f));
+    const incompatibleFrontends =
+      config.frontend?.filter((f) =>
+        CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS.includes(
+          f as (typeof CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS)[number],
+        ),
+      ) ?? [];
+    const hasSupportedFrontend = supportsConvexBetterAuth(config.frontend);
+
+    if (incompatibleFrontends.length > 0) {
+      return validationErr(
+        `Better Auth with '--backend convex' is not compatible with the following frontends: ${incompatibleFrontends.join(
+          ", ",
+        )}. Please use a React-based web frontend (next, tanstack-start, tanstack-router, react-router), a supported native frontend, or choose a different auth provider.`,
+      );
+    }
 
     if (!hasSupportedFrontend) {
       return validationErr(
-        "Better-Auth with Convex backend requires a supported frontend (TanStack Router, TanStack Start, Next.js, or Native).",
+        `Better Auth with '--backend convex' requires a supported frontend (${CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS.join(
+          ", ",
+        )}).`,
       );
     }
   }
@@ -327,15 +338,9 @@ export function validateBackendConstraints(
 ): ValidationResult {
   const { backend } = config;
 
-  if (config.auth === "clerk" && backend !== "convex") {
-    return validationErr(
-      "Clerk authentication is only supported with the Convex backend. Please use '--backend convex' or choose a different auth provider.",
-    );
-  }
-
-  if (backend === "convex" && config.auth === "clerk" && config.frontend) {
+  if (config.auth === "clerk" && config.frontend) {
     const incompatibleFrontends = config.frontend.filter((f) =>
-      ["nuxt", "svelte", "solid"].includes(f),
+      ["nuxt", "svelte", "solid", "astro"].includes(f),
     );
     if (incompatibleFrontends.length > 0) {
       return validationErr(

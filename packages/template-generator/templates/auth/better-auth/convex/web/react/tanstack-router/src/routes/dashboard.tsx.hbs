@@ -15,18 +15,25 @@ export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
 });
 
+function PrivateDashboardContent() {
+  const privateData = useQuery(api.privateData.get);
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>privateData: {privateData?.message}</p>
+      <UserMenu />
+    </div>
+  );
+}
+
 function RouteComponent() {
   const [showSignIn, setShowSignIn] = useState(false);
-  const privateData = useQuery(api.privateData.get);
 
   return (
     <>
       <Authenticated>
-        <div>
-          <h1>Dashboard</h1>
-          <p>privateData: {privateData?.message}</p>
-          <UserMenu />
-        </div>
+        <PrivateDashboardContent />
       </Authenticated>
       <Unauthenticated>
         {showSignIn ? (

@@ -104,7 +104,8 @@ export async function displayPostInstallInstructions(
   const starlightInstructions = addons?.includes("starlight")
     ? getStarlightInstructions(runCmd)
     : "";
-  const clerkInstructions = isConvex && config.auth === "clerk" ? getClerkInstructions() : "";
+  const clerkInstructions =
+    config.auth === "clerk" ? getClerkInstructions(frontend || [], backend, api) : "";
   const polarInstructions =
     config.payments === "polar" && config.auth === "better-auth"
       ? getPolarInstructions(backend)
@@ -123,9 +124,11 @@ export async function displayPostInstallInstructions(
     frontend?.includes("native-unistyles");
 
   const hasReactRouter = frontend?.includes("react-router");
+  const hasTanStackRouter = frontend?.includes("tanstack-router");
   const hasSvelte = frontend?.includes("svelte");
   const hasAstro = frontend?.includes("astro");
-  const webPort = hasReactRouter || hasSvelte ? "5173" : hasAstro ? "4321" : "3001";
+  const webPort =
+    hasReactRouter || hasTanStackRouter || hasSvelte ? "5173" : hasAstro ? "4321" : "3001";
 
   const betterAuthConvexInstructions =
     isConvex && config.auth === "better-auth"
@@ -445,8 +448,105 @@ function getBunWebNativeWarning() {
   )} 'bun' might cause issues with web + native apps in a monorepo.\n   Use 'pnpm' if problems arise.`;
 }
 
-function getClerkInstructions() {
-  return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set CLERK_PUBLISHABLE_KEY in apps/*/.env`;
+function getClerkQuickstartUrl(frontend: Frontend[]) {
+  if (frontend.includes("next")) return "https://clerk.com/docs/nextjs/getting-started/quickstart";
+  if (frontend.includes("react-router")) {
+    return "https://clerk.com/docs/react-router/getting-started/quickstart";
+  }
+  if (frontend.includes("tanstack-start")) {
+    return "https://clerk.com/docs/tanstack-react-start/getting-started/quickstart";
+  }
+  if (frontend.includes("tanstack-router")) {
+    return "https://clerk.com/docs/react/getting-started/quickstart";
+  }
+  if (
+    frontend.includes("native-bare") ||
+    frontend.includes("native-uniwind") ||
+    frontend.includes("native-unistyles")
+  ) {
+    return "https://clerk.com/docs/expo/getting-started/quickstart";
+  }
+
+  return "https://clerk.com/docs";
+}
+
+function getClerkInstructionLines(
+  frontend: Frontend[],
+  backend: Backend,
+  api: ProjectConfig["api"],
+) {
+  const lines: string[] = [];
+
+  if (frontend.includes("next")) {
+    lines.push("Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in apps/web/.env");
+  }
+
+  if (
+    frontend.some((value) => ["react-router", "tanstack-router", "tanstack-start"].includes(value))
+  ) {
+    lines.push("Set VITE_CLERK_PUBLISHABLE_KEY in apps/web/.env");
+  }
+
+  if (
+    frontend.some((value) => ["native-bare", "native-uniwind", "native-unistyles"].includes(value))
+  ) {
+    lines.push("Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in apps/native/.env");
+  }
+
+  if (backend === "convex") {
+    return [
+      "Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard",
+      ...lines,
+      ...(frontend.some((value) => ["next", "react-router", "tanstack-start"].includes(value))
+        ? ["Set CLERK_SECRET_KEY in apps/web/.env for Clerk server middleware"]
+        : []),
+    ];
+  }
+
+  const hasClerkServerFrontend = frontend.some((value) =>
+    ["next", "react-router", "tanstack-start"].includes(value),
+  );
+  const serverEnvPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
+  const needsServerSideClerkAuth = backend !== "none";
+  const needsClerkBackendPublishableKey = ["express", "fastify"].includes(backend);
+  const needsClerkRequestVerification =
+    api !== "none" && ["self", "hono", "elysia"].includes(backend);
+
+  if (hasClerkServerFrontend && backend === "self") {
+    lines.push(
+      "Set CLERK_SECRET_KEY in apps/web/.env for Clerk server middleware and server-side Clerk auth",
+    );
+  } else {
+    if (hasClerkServerFrontend) {
+      lines.push("Set CLERK_SECRET_KEY in apps/web/.env for Clerk server middleware");
+    }
+
+    if (needsServerSideClerkAuth) {
+      lines.push(`Set CLERK_SECRET_KEY in ${serverEnvPath} for server-side Clerk auth`);
+    }
+  }
+
+  if (needsClerkRequestVerification) {
+    lines.push(
+      `Set CLERK_PUBLISHABLE_KEY in ${serverEnvPath} for server-side Clerk request verification`,
+    );
+  }
+
+  if (needsClerkBackendPublishableKey) {
+    lines.push(`Set CLERK_PUBLISHABLE_KEY in ${serverEnvPath} for Clerk backend middleware`);
+  }
+
+  return lines;
+}
+
+function getClerkInstructions(frontend: Frontend[], backend: Backend, api: ProjectConfig["api"]) {
+  const lines = [
+    `${pc.bold("Clerk Authentication Setup:")}`,
+    `${pc.cyan("•")} Follow the guide: ${pc.underline(getClerkQuickstartUrl(frontend))}`,
+    ...getClerkInstructionLines(frontend, backend, api).map((line) => `${pc.cyan("•")} ${line}`),
+  ];
+
+  return lines.join("\n");
 }
 
 function getBetterAuthConvexInstructions(hasWeb: boolean, webPort: string, packageManager: string) {

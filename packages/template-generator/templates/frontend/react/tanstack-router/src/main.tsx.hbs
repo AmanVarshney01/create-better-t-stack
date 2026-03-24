@@ -1,5 +1,9 @@
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
+{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+import { useEffect } from "react";
+import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
+{{/if}}
 import Loader from "./components/loader";
 import { routeTree } from "./routeTree.gen";
 
@@ -11,11 +15,15 @@ import { routeTree } from "./routeTree.gen";
   import { QueryClientProvider } from "@tanstack/react-query";
   import { queryClient, trpc } from "./utils/trpc";
 {{/if}}
+{{#if (or (eq backend "convex") (eq auth "clerk"))}}
+  import { env } from "@{{projectName}}/env/web";
+{{/if}}
+{{#if (eq auth "clerk")}}
+  import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react";
+{{/if}}
 {{#if (eq backend "convex")}}
   import { ConvexReactClient } from "convex/react";
-  import { env } from "@{{projectName}}/env/web";
   {{#if (eq auth "clerk")}}
-  import { ClerkProvider, useAuth } from "@clerk/clerk-react";
   import { ConvexProviderWithClerk } from "convex/react-clerk";
   {{else if (eq auth "better-auth")}}
   import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
@@ -23,7 +31,29 @@ import { routeTree } from "./routeTree.gen";
   {{else}}
   import { ConvexProvider } from "convex/react";
   {{/if}}
+  {{#if (eq auth "better-auth")}}
+  const convex = new ConvexReactClient(env.VITE_CONVEX_URL, {
+    expectAuth: true,
+  });
+  {{else}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
+  {{/if}}
+{{/if}}
+
+{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+function ClerkApiAuthBridge() {
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    setClerkAuthTokenGetter(getToken);
+
+    return () => {
+      setClerkAuthTokenGetter(null);
+    };
+  }, [getToken]);
+
+  return null;
+}
 {{/if}}
 
 const router = createRouter({
@@ -34,18 +64,36 @@ const router = createRouter({
   context: { orpc, queryClient },
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return (
+      {{#if (eq auth "clerk")}}
+      <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+        <ClerkApiAuthBridge />
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </ClerkProvider>
+      {{else}}
       <QueryClientProvider client={queryClient}>
         {children}
       </QueryClientProvider>
+      {{/if}}
     );
   },
   {{else if (eq api "trpc")}}
   context: { trpc, queryClient },
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return (
+      {{#if (eq auth "clerk")}}
+      <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+        <ClerkApiAuthBridge />
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </ClerkProvider>
+      {{else}}
       <QueryClientProvider client={queryClient}>
         {children}
       </QueryClientProvider>
+      {{/if}}
     );
   },
   {{else if (eq backend "convex")}}
@@ -66,6 +114,11 @@ const router = createRouter({
     {{else}}
     return <ConvexProvider client={convex}>{children}</ConvexProvider>;
     {{/if}}
+  },
+  {{else if (eq auth "clerk")}}
+  context: {},
+  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
+    return <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>{children}</ClerkProvider>;
   },
   {{else}}
   context: {},

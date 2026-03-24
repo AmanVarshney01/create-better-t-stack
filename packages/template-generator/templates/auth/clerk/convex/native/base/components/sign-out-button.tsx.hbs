@@ -1,4 +1,4 @@
-import { useClerk } from "@clerk/clerk-expo";
+import { useClerk } from "@clerk/expo";
 import { useRouter } from "expo-router";
 import { Text, TouchableOpacity } from "react-native";
 

@@ -1,19 +1,61 @@
+{{#if (eq auth "clerk")}}
+type ClerkContextAuth = {
+	userId: string | null;
+};
+
+type ClerkRequestContext = {
+	auth: ClerkContextAuth | null;
+	session: null;
+};
+
+function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContextAuth | null {
+	return auth ? { userId: auth.userId } : null;
+}
+{{/if}}
+
+{{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
+import { createClerkClient } from "@clerk/backend";
+import { env } from "@{{projectName}}/env/server";
+
+const clerkClient = createClerkClient({
+	secretKey: env.CLERK_SECRET_KEY,
+	publishableKey: env.CLERK_PUBLISHABLE_KEY,
+});
+
+async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth | null> {
+	const requestState = await clerkClient.authenticateRequest(request, {
+		authorizedParties: [env.CORS_ORIGIN],
+	});
+	return toClerkContextAuth(requestState.toAuth());
+}
+{{/if}}
+
 {{#if (and (eq backend 'self') (includes frontend "next"))}}
 import type { NextRequest } from "next/server";
 {{#if (eq auth "better-auth")}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
-export async function createContext(req: NextRequest) {
+export async function createContext(req: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-  const session = await auth.api.getSession({
-    headers: req.headers,
-  });
-  return {
-    session,
-  };
+	const session = await auth.api.getSession({
+		headers: req.headers,
+	});
+	return {
+		auth: null,
+		session,
+	};
+{{else if (eq auth "clerk")}}
+	const clerkAuth = await authenticateClerkRequest(req);
+	return {
+		auth: clerkAuth,
+		session: null,
+	};
 {{else}}
-  return {}
+	return {
+		auth: null,
+		session: null,
+	};
 {{/if}}
 }
 
@@ -22,16 +64,26 @@ export async function createContext(req: NextRequest) {
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
-export async function createContext({ req }: { req: Request }) {
+export async function createContext({ req }: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: req.headers,
 	});
 	return {
+		auth: null,
 		session,
 	};
+{{else if (eq auth "clerk")}}
+	const clerkAuth = await authenticateClerkRequest(req);
+	return {
+		auth: clerkAuth,
+		session: null,
+	};
 {{else}}
-	return {};
+	return {
+		auth: null,
+		session: null,
+	};
 {{/if}}
 }
 
@@ -41,17 +93,21 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export type CreateContextOptions = {
-  headers: Headers;
+	headers: Headers;
 };
 
 export async function createContext({ headers }: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
-  const session = await auth.api.getSession({ headers });
-  return {
-    session,
-  };
+	const session = await auth.api.getSession({ headers });
+	return {
+		auth: null,
+		session,
+	};
 {{else}}
-  return {};
+	return {
+		auth: null,
+		session: null,
+	};
 {{/if}}
 }
 
@@ -61,17 +117,21 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export type CreateContextOptions = {
-  headers: Headers;
+	headers: Headers;
 };
 
 export async function createContext({ headers }: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
-  const session = await auth.api.getSession({ headers });
-  return {
-    session,
-  };
+	const session = await auth.api.getSession({ headers });
+	return {
+		auth: null,
+		session,
+	};
 {{else}}
-  return {};
+	return {
+		auth: null,
+		session: null,
+	};
 {{/if}}
 }
 
@@ -82,22 +142,29 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export type CreateContextOptions = {
-  context: HonoContext;
+	context: HonoContext;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
+export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-  const session = await auth.api.getSession({
-    headers: context.req.raw.headers,
-  });
-  return {
-    session,
-  };
+	const session = await auth.api.getSession({
+		headers: context.req.raw.headers,
+	});
+	return {
+		auth: null,
+		session,
+	};
+{{else if (eq auth "clerk")}}
+	const clerkAuth = await authenticateClerkRequest(context.req.raw);
+	return {
+		auth: clerkAuth,
+		session: null,
+	};
 {{else}}
-  // No auth configured
-  return {
-    session: null,
-  };
+	return {
+		auth: null,
+		session: null,
+	};
 {{/if}}
 }
 
@@ -108,22 +175,29 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export type CreateContextOptions = {
-  context: ElysiaContext;
+	context: ElysiaContext;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
+export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-  const session = await auth.api.getSession({
-    headers: context.request.headers,
-  });
-  return {
-    session,
-  };
+	const session = await auth.api.getSession({
+		headers: context.request.headers,
+	});
+	return {
+		auth: null,
+		session,
+	};
+{{else if (eq auth "clerk")}}
+	const clerkAuth = await authenticateClerkRequest(context.request);
+	return {
+		auth: clerkAuth,
+		session: null,
+	};
 {{else}}
-  // No auth configured
-  return {
-    session: null,
-  };
+	return {
+		auth: null,
+		session: null,
+	};
 {{/if}}
 }
 
@@ -132,56 +206,77 @@ import type { Request } from "express";
 {{#if (eq auth "better-auth")}}
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "@{{projectName}}/auth";
+{{else if (eq auth "clerk")}}
+import { getAuth } from "@clerk/express";
 {{/if}}
 
 interface CreateContextOptions {
 	req: Request;
 }
 
-export async function createContext(opts: CreateContextOptions) {
+export async function createContext(opts: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
 	});
 	return {
+		auth: null,
 		session,
 	};
-{{else}}
-  // No auth configured
+{{else if (eq auth "clerk")}}
+	const clerkAuth = toClerkContextAuth(getAuth(opts.req));
 	return {
+		auth: clerkAuth,
+		session: null,
+	};
+{{else}}
+	return {
+		auth: null,
 		session: null,
 	};
 {{/if}}
 }
 
 {{else if (eq backend 'fastify')}}
-import type { IncomingHttpHeaders } from "node:http";
 {{#if (eq auth "better-auth")}}
+import type { IncomingHttpHeaders } from "node:http";
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "@{{projectName}}/auth";
+{{else if (eq auth "clerk")}}
+import { getAuth } from "@clerk/fastify";
+{{else}}
+import type { IncomingHttpHeaders } from "node:http";
 {{/if}}
 
-export async function createContext(req: IncomingHttpHeaders) {
+export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typeof getAuth>[0]{{else}}IncomingHttpHeaders{{/if}}){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-  const session = await auth.api.getSession({
-    headers: fromNodeHeaders(req),
-  });
-  return {
-    session,
-  };
+	const session = await auth.api.getSession({
+		headers: fromNodeHeaders(req),
+	});
+	return {
+		auth: null,
+		session,
+	};
+{{else if (eq auth "clerk")}}
+	const clerkAuth = toClerkContextAuth(getAuth(req));
+	return {
+		auth: clerkAuth,
+		session: null,
+	};
 {{else}}
-  // No auth configured
-  return {
-    session: null,
-  };
+	return {
+		auth: null,
+		session: null,
+	};
 {{/if}}
 }
 
 {{else}}
 export async function createContext() {
-  return {
-    session: null,
-  };
+	return {
+		auth: null,
+		session: null,
+	};
 }
 {{/if}}
 

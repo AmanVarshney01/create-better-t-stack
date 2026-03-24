@@ -1,5 +1,5 @@
 {{#if (eq api "orpc")}}
-import { {{#if (eq auth "better-auth")}}protectedProcedure, {{/if}}publicProcedure } from "../index";
+import { {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}protectedProcedure, {{/if}}publicProcedure } from "../index";
 import type { RouterClient } from "@orpc/server";
 {{#if (includes examples "todo")}}
 import { todoRouter } from "./todo";
@@ -9,11 +9,15 @@ export const appRouter = {
   healthCheck: publicProcedure.handler(() => {
     return "OK";
   }),
-  {{#if (eq auth "better-auth")}}
+  {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
   privateData: protectedProcedure.handler(({ context }) => {
     return {
       message: "This is private",
+      {{#if (eq auth "better-auth")}}
       user: context.session?.user,
+      {{else}}
+      userId: context.auth?.userId,
+      {{/if}}
     };
   }),
   {{/if}}

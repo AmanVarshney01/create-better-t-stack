@@ -313,18 +313,18 @@ describe("Frontend Configurations", () => {
   });
 
   describe("Frontend Compatibility with Auth", () => {
-    const incompatibleFrontends = ["nuxt", "svelte", "solid"] as const;
+    const incompatibleFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
     for (const frontend of incompatibleFrontends) {
-      it(`should fail incompatible ${frontend} with Clerk + Convex`, async () => {
+      it(`should fail incompatible ${frontend} with Clerk`, async () => {
         const result = await runTRPCTest({
-          projectName: `${frontend}-clerk-convex-fail`,
+          projectName: `${frontend}-clerk-fail`,
           frontend: [frontend],
-          backend: "convex",
-          runtime: "none",
-          database: "none",
-          orm: "none",
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
           auth: "clerk",
-          api: "none",
+          api: "orpc",
           addons: ["none"],
           examples: ["none"],
           dbSetup: "none",
@@ -344,16 +344,16 @@ describe("Frontend Configurations", () => {
       "next",
     ] as const;
     for (const frontend of compatibleFrontends) {
-      it(`should work with compatible ${frontend} + Clerk + Convex`, async () => {
+      it(`should work with compatible ${frontend} + Clerk`, async () => {
         const result = await runTRPCTest({
-          projectName: `${frontend}-clerk-convex`,
+          projectName: `${frontend}-clerk`,
           frontend: [frontend],
-          backend: "convex",
-          runtime: "none",
-          database: "none",
-          orm: "none",
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
           auth: "clerk",
-          api: "none",
+          api: "trpc",
           addons: ["none"],
           examples: ["none"],
           dbSetup: "none",

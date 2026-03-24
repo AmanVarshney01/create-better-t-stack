@@ -1,8 +1,17 @@
 {{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
+{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+import { useEffect } from "react";
+import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
+{{/if}}
 
 import "@/global.css";
+{{#if (and (ne backend "convex") (eq auth "clerk"))}}
+import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
+import { tokenCache } from "@clerk/expo/token-cache";
+import { env } from "@{{projectName}}/env/native";
+{{/if}}
 
 {{#if (eq backend "convex")}}
   {{#if (eq auth "better-auth")}}
@@ -16,9 +25,9 @@ import "@/global.css";
   {{/if}}
 
   {{#if (eq auth "clerk")}}
-    import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+    import { ClerkProvider, useAuth } from "@clerk/expo";
     import { ConvexProviderWithClerk } from "convex/react-clerk";
-    import { tokenCache } from "@clerk/clerk-expo/token-cache";
+    import { tokenCache } from "@clerk/expo/token-cache";
   {{/if}}
 {{else}}
   {{#unless (eq api "none")}}
@@ -45,8 +54,27 @@ export const unstable_settings = {
 
 {{#if (eq backend "convex")}}
   const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
+    {{#if (eq auth "better-auth")}}
+    expectAuth: true,
+    {{/if}}
     unsavedChangesWarning: false,
   });
+{{/if}}
+
+{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+function ClerkApiAuthBridge() {
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    setClerkAuthTokenGetter(getToken);
+
+    return () => {
+      setClerkAuthTokenGetter(null);
+    };
+  }, [getToken]);
+
+  return null;
+}
 {{/if}}
 
 function StackLayout() {
@@ -104,8 +132,47 @@ export default function Layout() {
         </ConvexProvider>
       {{/if}}
     {{else}}
-      {{#unless (eq api "none")}}
-        <QueryClientProvider client={queryClient}>
+      {{#if (eq auth "clerk")}}
+        <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+          {{#unless (eq api "none")}}
+            <ClerkApiAuthBridge />
+            <QueryClientProvider client={queryClient}>
+              <GestureHandlerRootView style=\{{ flex: 1 }}>
+                <KeyboardProvider>
+                  <AppThemeProvider>
+                    <HeroUINativeProvider>
+                      <StackLayout />
+                    </HeroUINativeProvider>
+                  </AppThemeProvider>
+                </KeyboardProvider>
+              </GestureHandlerRootView>
+            </QueryClientProvider>
+          {{else}}
+            <GestureHandlerRootView style=\{{ flex: 1 }}>
+              <KeyboardProvider>
+                <AppThemeProvider>
+                  <HeroUINativeProvider>
+                    <StackLayout />
+                  </HeroUINativeProvider>
+                </AppThemeProvider>
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          {{/unless}}
+        </ClerkProvider>
+      {{else}}
+        {{#unless (eq api "none")}}
+          <QueryClientProvider client={queryClient}>
+            <GestureHandlerRootView style=\{{ flex: 1 }}>
+              <KeyboardProvider>
+                <AppThemeProvider>
+                  <HeroUINativeProvider>
+                    <StackLayout />
+                  </HeroUINativeProvider>
+                </AppThemeProvider>
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </QueryClientProvider>
+        {{else}}
           <GestureHandlerRootView style=\{{ flex: 1 }}>
             <KeyboardProvider>
               <AppThemeProvider>
@@ -115,18 +182,8 @@ export default function Layout() {
               </AppThemeProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>
-        </QueryClientProvider>
-      {{else}}
-        <GestureHandlerRootView style=\{{ flex: 1 }}>
-          <KeyboardProvider>
-            <AppThemeProvider>
-              <HeroUINativeProvider>
-                <StackLayout />
-              </HeroUINativeProvider>
-            </AppThemeProvider>
-          </KeyboardProvider>
-        </GestureHandlerRootView>
-      {{/unless}}
+        {{/unless}}
+      {{/if}}
     {{/if}}
   );
 }

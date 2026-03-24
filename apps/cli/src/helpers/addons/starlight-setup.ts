@@ -28,8 +28,6 @@ export async function setupStarlight(
     "starlight",
     "--yes",
     "--no-install",
-    "--add",
-    "tailwind",
     "--no-git",
     "--skip-houston",
   ];

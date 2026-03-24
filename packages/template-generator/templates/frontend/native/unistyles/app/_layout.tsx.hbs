@@ -1,6 +1,15 @@
 {{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
+{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+import { useEffect } from "react";
+import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
+{{/if}}
+{{#if (and (ne backend "convex") (eq auth "clerk"))}}
+import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
+import { tokenCache } from "@clerk/expo/token-cache";
+import { env } from "@{{projectName}}/env/native";
+{{/if}}
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
 {{/if}}
@@ -18,9 +27,9 @@ import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { env } from "@{{projectName}}/env/native";
 {{/if}}
 {{#if (eq auth "clerk")}}
-import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ClerkProvider, useAuth } from "@clerk/expo";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { tokenCache } from "@clerk/expo/token-cache";
 {{/if}}
 {{else}}
   {{#unless (eq api "none")}}
@@ -38,8 +47,27 @@ export const unstable_settings = {
 
 {{#if (eq backend "convex")}}
 const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
+  {{#if (eq auth "better-auth")}}
+  expectAuth: true,
+  {{/if}}
   unsavedChangesWarning: false,
 });
+{{/if}}
+
+{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+function ClerkApiAuthBridge() {
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    setClerkAuthTokenGetter(getToken);
+
+    return () => {
+      setClerkAuthTokenGetter(null);
+    };
+  }, [getToken]);
+
+  return null;
+}
 {{/if}}
 
 export default function RootLayout() {
@@ -121,49 +149,103 @@ export default function RootLayout() {
     </ConvexProvider>
     {{/if}}
     {{else}}
-      {{#unless (eq api "none")}}
-    <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style=\{{ flex: 1 }}>
-        <Stack
-          screenOptions=\{{
-            headerStyle: {
-              backgroundColor: theme.colors.background,
-            },
-            headerTitleStyle: {
-              color: theme.colors.foreground,
-            },
-            headerTintColor: theme.colors.foreground,
-          }}
-        >
-          <Stack.Screen name="(drawer)" options=\{{ headerShown: false }} />
-          <Stack.Screen
-            name="modal"
-            options=\{{ title: "Modal", presentation: "modal" }}
-          />
-        </Stack>
-      </GestureHandlerRootView>
-    </QueryClientProvider>
+      {{#if (eq auth "clerk")}}
+      <ClerkProvider
+        tokenCache={tokenCache}
+        publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      >
+        {{#unless (eq api "none")}}
+        <ClerkApiAuthBridge />
+        <QueryClientProvider client={queryClient}>
+          <GestureHandlerRootView style=\{{ flex: 1 }}>
+            <Stack
+              screenOptions=\{{
+                headerStyle: {
+                  backgroundColor: theme.colors.background,
+                },
+                headerTitleStyle: {
+                  color: theme.colors.foreground,
+                },
+                headerTintColor: theme.colors.foreground,
+              }}
+            >
+              <Stack.Screen name="(drawer)" options=\{{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options=\{{ headerShown: false }} />
+              <Stack.Screen
+                name="modal"
+                options=\{{ title: "Modal", presentation: "modal" }}
+              />
+            </Stack>
+          </GestureHandlerRootView>
+        </QueryClientProvider>
+        {{else}}
+        <GestureHandlerRootView style=\{{ flex: 1 }}>
+          <Stack
+            screenOptions=\{{
+              headerStyle: {
+                backgroundColor: theme.colors.background,
+              },
+              headerTitleStyle: {
+                color: theme.colors.foreground,
+              },
+              headerTintColor: theme.colors.foreground,
+            }}
+          >
+            <Stack.Screen name="(drawer)" options=\{{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options=\{{ headerShown: false }} />
+            <Stack.Screen
+              name="modal"
+              options=\{{ title: "Modal", presentation: "modal" }}
+            />
+          </Stack>
+        </GestureHandlerRootView>
+        {{/unless}}
+      </ClerkProvider>
       {{else}}
-      <GestureHandlerRootView style=\{{ flex: 1 }}>
-        <Stack
-          screenOptions=\{{
-            headerStyle: {
-              backgroundColor: theme.colors.background,
-            },
-            headerTitleStyle: {
-              color: theme.colors.foreground,
-            },
-            headerTintColor: theme.colors.foreground,
-          }}
-        >
-          <Stack.Screen name="(drawer)" options=\{{ headerShown: false }} />
-          <Stack.Screen
-            name="modal"
-            options=\{{ title: "Modal", presentation: "modal" }}
-          />
-        </Stack>
-      </GestureHandlerRootView>
-      {{/unless}}
+        {{#unless (eq api "none")}}
+      <QueryClientProvider client={queryClient}>
+        <GestureHandlerRootView style=\{{ flex: 1 }}>
+          <Stack
+            screenOptions=\{{
+              headerStyle: {
+                backgroundColor: theme.colors.background,
+              },
+              headerTitleStyle: {
+                color: theme.colors.foreground,
+              },
+              headerTintColor: theme.colors.foreground,
+            }}
+          >
+            <Stack.Screen name="(drawer)" options=\{{ headerShown: false }} />
+            <Stack.Screen
+              name="modal"
+              options=\{{ title: "Modal", presentation: "modal" }}
+            />
+          </Stack>
+        </GestureHandlerRootView>
+      </QueryClientProvider>
+        {{else}}
+        <GestureHandlerRootView style=\{{ flex: 1 }}>
+          <Stack
+            screenOptions=\{{
+              headerStyle: {
+                backgroundColor: theme.colors.background,
+              },
+              headerTitleStyle: {
+                color: theme.colors.foreground,
+              },
+              headerTintColor: theme.colors.foreground,
+            }}
+          >
+            <Stack.Screen name="(drawer)" options=\{{ headerShown: false }} />
+            <Stack.Screen
+              name="modal"
+              options=\{{ title: "Modal", presentation: "modal" }}
+            />
+          </Stack>
+        </GestureHandlerRootView>
+        {{/unless}}
+      {{/if}}
     {{/if}}
   );
 }

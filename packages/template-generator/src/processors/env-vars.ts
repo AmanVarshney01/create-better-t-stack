@@ -153,14 +153,9 @@ function buildClientVars(
     },
   ];
 
-  if (backend === "convex" && auth === "clerk") {
+  if (auth === "clerk") {
     if (hasNextJs) {
       vars.push(
-        {
-          key: "NEXT_PUBLIC_CLERK_FRONTEND_API_URL",
-          value: "",
-          condition: true,
-        },
         {
           key: "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
           value: "",
@@ -178,7 +173,7 @@ function buildClientVars(
         value: "",
         condition: true,
       });
-      if (hasTanStackStart) {
+      if (hasReactRouter || hasTanStackStart) {
         vars.push({
           key: "CLERK_SECRET_KEY",
           value: "",
@@ -235,7 +230,7 @@ function buildNativeVars(
     },
   ];
 
-  if (backend === "convex" && auth === "clerk") {
+  if (auth === "clerk") {
     vars.push({
       key: "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY",
       value: "",
@@ -273,7 +268,16 @@ function buildConvexBackendVars(
     frontend.includes("solid") ||
     frontend.includes("svelte") ||
     frontend.includes("astro");
-  const defaultSiteUrl = hasNative && !hasWeb ? "http://localhost:8081" : "http://localhost:3001";
+  const defaultSiteUrl =
+    hasNative && !hasWeb
+      ? "http://localhost:8081"
+      : frontend.includes("react-router") ||
+          frontend.includes("tanstack-router") ||
+          frontend.includes("svelte")
+        ? "http://localhost:5173"
+        : frontend.includes("astro")
+          ? "http://localhost:4321"
+          : "http://localhost:3001";
 
   const vars: EnvVariable[] = [];
 
@@ -342,7 +346,16 @@ function buildConvexCommentBlocks(
     frontend.includes("solid") ||
     frontend.includes("svelte") ||
     frontend.includes("astro");
-  const defaultSiteUrl = hasNative && !hasWeb ? "http://localhost:8081" : "http://localhost:3001";
+  const defaultSiteUrl =
+    hasNative && !hasWeb
+      ? "http://localhost:8081"
+      : frontend.includes("react-router") ||
+          frontend.includes("tanstack-router") ||
+          frontend.includes("svelte")
+        ? "http://localhost:5173"
+        : frontend.includes("astro")
+          ? "http://localhost:4321"
+          : "http://localhost:3001";
 
   let commentBlocks = "";
 
@@ -366,6 +379,7 @@ function buildServerVars(
   backend: ProjectConfig["backend"],
   frontend: string[],
   auth: ProjectConfig["auth"],
+  api: ProjectConfig["api"],
   database: ProjectConfig["database"],
   dbSetup: ProjectConfig["dbSetup"],
   runtime: ProjectConfig["runtime"],
@@ -375,13 +389,14 @@ function buildServerVars(
   examples: ProjectConfig["examples"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
+  const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
 
   let corsOrigin = "http://localhost:3001";
   if (hasAstro) {
     corsOrigin = "http://localhost:4321";
-  } else if (hasReactRouter || hasSvelte) {
+  } else if (hasReactRouter || hasTanStackRouter || hasSvelte) {
     corsOrigin = "http://localhost:5173";
   } else if (backend === "self") {
     corsOrigin = "http://localhost:3001";
@@ -410,6 +425,11 @@ function buildServerVars(
   }
 
   const hasBetterAuth = auth === "better-auth";
+  const hasClerk = auth === "clerk";
+  const needsClerkPublishableKey =
+    hasClerk &&
+    (["express", "fastify"].includes(backend) ||
+      (api !== "none" && ["self", "hono", "elysia"].includes(backend)));
 
   return [
     {
@@ -426,6 +446,16 @@ function buildServerVars(
             : "http://localhost:3001"
           : "http://localhost:3000",
       condition: hasBetterAuth,
+    },
+    {
+      key: "CLERK_SECRET_KEY",
+      value: "",
+      condition: hasClerk,
+    },
+    {
+      key: "CLERK_PUBLISHABLE_KEY",
+      value: "",
+      condition: needsClerkPublishableKey,
     },
     {
       key: "POLAR_ACCESS_TOKEN",
@@ -461,6 +491,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     frontend,
     database,
     auth,
+    api,
     examples,
     dbSetup,
     webDeploy,
@@ -548,6 +579,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     backend,
     frontend,
     auth,
+    api,
     database,
     dbSetup,
     runtime,

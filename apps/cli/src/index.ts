@@ -22,6 +22,7 @@ import {
   type Backend,
   BackendSchema,
   type BetterTStackConfig,
+  type CLIInput,
   type CreateInput,
   CreateInputSchema,
   type Database,
@@ -54,6 +55,7 @@ import {
 } from "./types";
 import { CLIError, ProjectCreationError, UserCancelledError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
+import { validateConfigCompatibility } from "./validation";
 
 export const SchemaNameSchema = z
   .enum([
@@ -428,6 +430,36 @@ export async function createVirtual(
     webDeploy: options.webDeploy || "none",
     serverDeploy: options.serverDeploy || "none",
   };
+
+  const providedFlags = new Set([
+    "database",
+    "orm",
+    "backend",
+    "runtime",
+    "frontend",
+    "addons",
+    "examples",
+    "auth",
+    "dbSetup",
+    "payments",
+    "api",
+    "webDeploy",
+    "serverDeploy",
+  ]);
+  const validationResult = validateConfigCompatibility(
+    config,
+    providedFlags,
+    config as unknown as CLIInput,
+  );
+  if (validationResult.isErr()) {
+    return Result.err(
+      new GeneratorError({
+        message: validationResult.error.message,
+        phase: "validation",
+        cause: validationResult.error,
+      }),
+    );
+  }
 
   return generate({
     config,

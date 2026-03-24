@@ -73,6 +73,8 @@ When using `--backend convex`, these constraints apply:
 
 **Note:** Convex supports Clerk authentication with compatible frontends (React frameworks, Next.js, TanStack Start, and native frameworks). Nuxt, Svelte, Solid, and Astro are not compatible with Clerk.
 
+**Better Auth with Convex:** supported frontends are `react-router`, `tanstack-router`, `tanstack-start`, `next`, `native-bare`, `native-uniwind`, and `native-unistyles`. Nuxt, Svelte, Solid, and Astro are not supported with Convex Better Auth.
+
 #### No Backend
 
 When using `--backend none`, the following options are automatically set:
@@ -187,13 +189,15 @@ Better-Auth authentication requires:
 - A backend framework (cannot be `none`)
 - With database: Requires an ORM
 - Without database: Works with Convex backend or custom configuration
+- With `--backend convex`: requires `react-router`, `tanstack-router`, `tanstack-start`, `next`, or a native Expo frontend
 
 ### Clerk Requirements
 
 Clerk authentication requires:
 
-- Convex backend (`--backend convex`)
 - Compatible frontends (React frameworks, Next.js, TanStack Start, native frameworks)
+- Supported backends: Convex, Hono, Express, Fastify, and Elysia
+- Fullstack (`--backend self`) support with Next.js or TanStack Start
 - Not compatible with Nuxt, Svelte, Solid, or Astro
 
 ### Payments Requirements
@@ -210,11 +214,14 @@ create-better-t-stack --auth better-auth --database none
 # ✅ Valid - Better-Auth with full stack
 create-better-t-stack --auth better-auth --database postgres --orm drizzle --backend hono
 
-# ✅ Valid - Clerk with Convex
-create-better-t-stack --auth clerk --backend convex --frontend tanstack-router
+# ✅ Valid - Clerk with Hono
+create-better-t-stack --auth clerk --backend hono --frontend tanstack-router
 
-# ❌ Invalid - Clerk without Convex
-create-better-t-stack --auth clerk --backend hono
+# ✅ Valid - Clerk with fullstack Next.js
+create-better-t-stack --auth clerk --backend self --frontend next
+
+# ❌ Invalid - Clerk with Astro
+create-better-t-stack --auth clerk --backend self --frontend astro
 ```
 
 ## Example Compatibility
@@ -260,8 +267,8 @@ create-better-t-stack --frontend tanstack-router
 # Fix by using Better-Auth
 create-better-t-stack --payments polar --auth better-auth
 
-# Or use Clerk with Convex (no payments support)
-create-better-t-stack --auth clerk --backend convex
+# Or use Clerk without Polar payments
+create-better-t-stack --auth clerk --backend hono --frontend tanstack-router
 ```
 
 ## Validation Strategy

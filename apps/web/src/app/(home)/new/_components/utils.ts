@@ -34,6 +34,56 @@ export const hasTauriCompatibleFrontend = (webFrontend: string[]) =>
 export const hasElectrobunCompatibleFrontend = (webFrontend: string[]) =>
   webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
 
+const clerkSupportedBackends = [
+  "convex",
+  "hono",
+  "express",
+  "fastify",
+  "elysia",
+  "self-next",
+  "self-tanstack-start",
+] as const;
+
+const clerkBackendRequirementMessage =
+  "Clerk requires Convex, Hono, Express, Fastify, Elysia, or Next.js/TanStack Start fullstack backend";
+const clerkFrontendRequirementMessage =
+  "Clerk requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
+const convexBetterAuthSupportedWebFrontends = [
+  "react-router",
+  "tanstack-router",
+  "tanstack-start",
+  "next",
+] as const;
+const convexBetterAuthSupportedNativeFrontends = [
+  "native-bare",
+  "native-uniwind",
+  "native-unistyles",
+] as const;
+
+const hasConvexBetterAuthCompatibleFrontend = (webFrontend: string[], nativeFrontend: string[]) =>
+  webFrontend.some((f) =>
+    convexBetterAuthSupportedWebFrontends.includes(
+      f as (typeof convexBetterAuthSupportedWebFrontends)[number],
+    ),
+  ) ||
+  nativeFrontend.some((f) =>
+    convexBetterAuthSupportedNativeFrontends.includes(
+      f as (typeof convexBetterAuthSupportedNativeFrontends)[number],
+    ),
+  );
+
+const convexBetterAuthFrontendRequirementMessage =
+  "Better-Auth with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
+
+export const hasClerkCompatibleFrontend = (webFrontend: string[], nativeFrontend: string[]) =>
+  webFrontend.some((f) =>
+    ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
+  ) ||
+  nativeFrontend.some((f) => ["native-bare", "native-uniwind", "native-unistyles"].includes(f));
+
+export const hasClerkCompatibleBackend = (backend: string) =>
+  clerkSupportedBackends.includes(backend as (typeof clerkSupportedBackends)[number]);
+
 export const getCategoryDisplayName = (categoryKey: string): string => {
   const result = categoryKey.replace(/([A-Z])/g, " $1");
   return result.charAt(0).toUpperCase() + result.slice(1);
@@ -122,32 +172,18 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
     // Auth constraints for Convex
     if (nextStack.auth === "clerk") {
-      const hasClerkCompatible =
-        nextStack.webFrontend.some((f) =>
-          ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
-        ) ||
-        nextStack.nativeFrontend.some((f) =>
-          ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
-        );
-      if (!hasClerkCompatible) {
+      if (!hasClerkCompatibleFrontend(nextStack.webFrontend, nextStack.nativeFrontend)) {
         nextStack.auth = "none";
         changed = true;
         changes.push({
           category: "auth",
-          message: "Auth set to 'None' (Clerk requires compatible frontend)",
+          message: `Auth set to 'None' (${clerkFrontendRequirementMessage})`,
         });
       }
     }
 
     if (nextStack.auth === "better-auth") {
-      const hasBetterAuthCompatible =
-        nextStack.webFrontend.some((f) =>
-          ["tanstack-router", "tanstack-start", "next"].includes(f),
-        ) ||
-        nextStack.nativeFrontend.some((f) =>
-          ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
-        );
-      if (!hasBetterAuthCompatible) {
+      if (!hasConvexBetterAuthCompatibleFrontend(nextStack.webFrontend, nextStack.nativeFrontend)) {
         nextStack.auth = "none";
         changed = true;
         changes.push({
@@ -507,13 +543,22 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // AUTH CONSTRAINTS
   // ============================================
 
-  if (nextStack.auth === "clerk" && nextStack.backend !== "convex") {
-    nextStack.auth = "none";
-    changed = true;
-    changes.push({
-      category: "auth",
-      message: "Auth set to 'None' (Clerk only works with Convex)",
-    });
+  if (nextStack.auth === "clerk") {
+    if (!hasClerkCompatibleBackend(nextStack.backend)) {
+      nextStack.auth = "none";
+      changed = true;
+      changes.push({
+        category: "auth",
+        message: `Auth set to 'None' (${clerkBackendRequirementMessage})`,
+      });
+    } else if (!hasClerkCompatibleFrontend(nextStack.webFrontend, nextStack.nativeFrontend)) {
+      nextStack.auth = "none";
+      changed = true;
+      changes.push({
+        category: "auth",
+        message: `Auth set to 'None' (${clerkFrontendRequirementMessage})`,
+      });
+    }
   }
 
   // ============================================
@@ -703,15 +748,13 @@ export const getDisabledReason = (
       return "Convex has its own deployment";
     }
     if (category === "auth" && optionId === "better-auth") {
-      const compatible =
-        currentStack.webFrontend.some((f) =>
-          ["tanstack-router", "tanstack-start", "next"].includes(f),
-        ) ||
-        currentStack.nativeFrontend.some((f) =>
-          ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
-        );
-      if (!compatible) {
-        return "Better-Auth with Convex requires TanStack Router, TanStack Start, Next.js, or React Native";
+      if (
+        !hasConvexBetterAuthCompatibleFrontend(
+          currentStack.webFrontend,
+          currentStack.nativeFrontend,
+        )
+      ) {
+        return convexBetterAuthFrontendRequirementMessage;
       }
     }
     if (category === "webFrontend" && (optionId === "solid" || optionId === "astro")) {
@@ -970,18 +1013,11 @@ export const getDisabledReason = (
   // ============================================
   if (category === "auth") {
     if (optionId === "clerk") {
-      if (currentStack.backend !== "convex") {
-        return "Clerk only works with Convex backend";
+      if (!hasClerkCompatibleBackend(currentStack.backend)) {
+        return clerkBackendRequirementMessage;
       }
-      const hasClerkCompatibleFrontend =
-        currentStack.webFrontend.some((f) =>
-          ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
-        ) ||
-        currentStack.nativeFrontend.some((f) =>
-          ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
-        );
-      if (!hasClerkCompatibleFrontend) {
-        return "Clerk with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
+      if (!hasClerkCompatibleFrontend(currentStack.webFrontend, currentStack.nativeFrontend)) {
+        return clerkFrontendRequirementMessage;
       }
     }
   }
