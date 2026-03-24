@@ -2,29 +2,8 @@ import { describe, expect, it } from "bun:test";
 
 import { createVirtual } from "../src/index";
 import type { API, Backend, Database, Examples, Frontend, ORM, Runtime } from "../src/types";
+import { collectFiles } from "./setup";
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
-
-function collectFiles(
-  node:
-    | { type: "file"; path: string; content: string }
-    | { type: "directory"; path: string; children: unknown[] },
-  rootPath: string,
-  files = new Map<string, string>(),
-) {
-  if (node.type === "file") {
-    const relativePath = node.path.startsWith(`${rootPath}/`)
-      ? node.path.slice(rootPath.length + 1)
-      : node.path;
-    files.set(relativePath, node.content);
-    return files;
-  }
-
-  for (const child of node.children as Parameters<typeof collectFiles>[0][]) {
-    collectFiles(child, rootPath, files);
-  }
-
-  return files;
-}
 
 describe("API Configurations", () => {
   describe("tRPC API", () => {

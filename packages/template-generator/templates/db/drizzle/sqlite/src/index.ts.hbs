@@ -4,14 +4,20 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
-const client = createClient({
-	url: env.DATABASE_URL,
+export function createDb() {
+	const client = createClient({
+		url: env.DATABASE_URL,
 {{#if (eq dbSetup "turso")}}
-	authToken: env.DATABASE_AUTH_TOKEN,
+		authToken: env.DATABASE_AUTH_TOKEN,
 {{/if}}
-});
+	});
 
-export const db = drizzle({ client, schema });
+	return drizzle({ client, schema });
+}
+
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+export const db = createDb();
+{{/if}}
 {{/if}}
 
 {{#if (eq runtime "workers")}}
@@ -21,19 +27,23 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/d1";
 import { env } from "@{{projectName}}/env/server";
 
-export const db = drizzle(env.DB, { schema });
+export function createDb() {
+	return drizzle(env.DB, { schema });
+}
 {{else}}
 import { drizzle } from "drizzle-orm/libsql";
 import { env } from "@{{projectName}}/env/server";
 import { createClient } from "@libsql/client";
 
-const client = createClient({
-	url: env.DATABASE_URL || "",
+export function createDb() {
+	const client = createClient({
+		url: env.DATABASE_URL || "",
 {{#if (eq dbSetup "turso")}}
-	authToken: env.DATABASE_AUTH_TOKEN,
+		authToken: env.DATABASE_AUTH_TOKEN,
 {{/if}}
-});
+	});
 
-export const db = drizzle({ client, schema });
+	return drizzle({ client, schema });
+}
 {{/if}}
 {{/if}}
