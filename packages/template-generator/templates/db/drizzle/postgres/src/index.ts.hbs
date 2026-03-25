@@ -6,12 +6,32 @@ import * as schema from "./schema";
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 
-const sql = neon(env.DATABASE_URL);
-export const db = drizzle(sql, { schema });
+export function createDb() {
+	const sql = neon(env.DATABASE_URL);
+	return drizzle(sql, { schema });
+}
 {{else}}
 import { drizzle } from "drizzle-orm/node-postgres";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+import { Pool } from "pg";
+{{/if}}
 
-export const db = drizzle(env.DATABASE_URL, { schema });
+export function createDb() {
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+	const pool = new Pool({
+		connectionString: env.DATABASE_URL,
+		maxUses: 1,
+	});
+
+	return drizzle({ client: pool, schema });
+{{else}}
+	return drizzle(env.DATABASE_URL, { schema });
+{{/if}}
+}
+{{/if}}
+
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+export const db = createDb();
 {{/if}}
 {{/if}}
 
@@ -23,12 +43,22 @@ import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { env } from "@{{projectName}}/env/server";
 
-const sql = neon(env.DATABASE_URL || "");
-export const db = drizzle(sql, { schema });
+export function createDb() {
+	const sql = neon(env.DATABASE_URL || "");
+	return drizzle(sql, { schema });
+}
 {{else}}
 import { drizzle } from "drizzle-orm/node-postgres";
 import { env } from "@{{projectName}}/env/server";
+import { Pool } from "pg";
 
-export const db = drizzle(env.DATABASE_URL || "", { schema });
+export function createDb() {
+	const pool = new Pool({
+		connectionString: env.DATABASE_URL || "",
+		maxUses: 1,
+	});
+
+	return drizzle({ client: pool, schema });
+}
 {{/if}}
 {{/if}}

@@ -1,5 +1,12 @@
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 
 export default defineEventHandler((event) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+  const auth = createAuth();
+{{/if}}
   return auth.handler(toWebRequest(event));
 });

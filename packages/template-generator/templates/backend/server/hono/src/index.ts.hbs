@@ -14,7 +14,11 @@ import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 {{/if}}
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -48,7 +52,16 @@ app.use(
 );
 
 {{#if (eq auth "better-auth")}}
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+app.on(
+	["POST", "GET"],
+	"/api/auth/*",
+	(c) =>
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+		createAuth().handler(c.req.raw)
+{{else}}
+		auth.handler(c.req.raw)
+{{/if}}
+);
 {{/if}}
 
 {{#if (eq api "orpc")}}

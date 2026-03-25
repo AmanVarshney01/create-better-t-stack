@@ -4,22 +4,32 @@ import { PrismaClient } from "../prisma/generated/client";
 import { PrismaD1 } from "@prisma/adapter-d1";
 import { env } from "@{{projectName}}/env/server";
 
-const adapter = new PrismaD1(env.DB);
-const prisma = new PrismaClient({ adapter });
+export function createPrismaClient() {
+	const adapter = new PrismaD1(env.DB);
+	return new PrismaClient({ adapter });
+}
 
+{{#if (and (ne runtime "workers") (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+const prisma = createPrismaClient();
 export default prisma;
+{{/if}}
 {{else}}
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { env } from "@{{projectName}}/env/server";
 
-const adapter = new PrismaLibSql({
-	url: env.DATABASE_URL,
+export function createPrismaClient() {
+	const adapter = new PrismaLibSql({
+		url: env.DATABASE_URL,
 {{#if (eq dbSetup "turso")}}
-	authToken: env.DATABASE_AUTH_TOKEN || "",
+		authToken: env.DATABASE_AUTH_TOKEN || "",
 {{/if}}
-});
+	});
 
-const prisma = new PrismaClient({ adapter });
+	return new PrismaClient({ adapter });
+}
 
+{{#if (and (ne runtime "workers") (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+const prisma = createPrismaClient();
 export default prisma;
+{{/if}}
 {{/if}}
