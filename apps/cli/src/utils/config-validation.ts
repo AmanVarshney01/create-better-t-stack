@@ -126,8 +126,7 @@ export function validateDatabaseSetup(
     },
     d1: {
       database: "sqlite",
-      runtime: "workers",
-      errorMessage: "Cloudflare D1 setup requires SQLite database and Cloudflare Workers runtime.",
+      errorMessage: "Cloudflare D1 setup requires SQLite database.",
     },
     docker: {
       errorMessage:
@@ -151,6 +150,17 @@ export function validateDatabaseSetup(
 
     if (validation.runtime && runtime !== validation.runtime) {
       return validationErr(validation.errorMessage);
+    }
+
+    if (dbSetup === "d1") {
+      const isWorkersTarget = runtime === "workers" && config.serverDeploy === "cloudflare";
+      const isSelfCloudflareTarget = config.backend === "self" && config.webDeploy === "cloudflare";
+
+      if (!isWorkersTarget && !isSelfCloudflareTarget) {
+        return validationErr(
+          "Cloudflare D1 setup requires SQLite database and either Cloudflare Workers runtime with server deployment or backend 'self' with Cloudflare web deployment.",
+        );
+      }
     }
 
     if (dbSetup === "docker") {

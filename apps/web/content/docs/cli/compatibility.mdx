@@ -129,24 +129,27 @@ create-better-t-stack --frontend next native-uniwind
 
 ### Provider Requirements
 
-| Setup Provider    | Required Database              | Notes                                                                   |
-| ----------------- | ------------------------------ | ----------------------------------------------------------------------- |
-| `turso`           | `sqlite`                       | Distributed SQLite; works with Drizzle and Prisma                       |
-| `d1`              | `sqlite`                       | Cloudflare D1 (requires Workers runtime); works with Drizzle and Prisma |
-| `neon`            | `postgres`                     | Serverless PostgreSQL                                                   |
-| `supabase`        | `postgres`                     | PostgreSQL with additional features                                     |
-| `prisma-postgres` | `postgres`                     | Managed PostgreSQL via Prisma                                           |
-| `planetscale`     | `mysql`, `postgres`            | PlanetScale serverless database                                         |
-| `mongodb-atlas`   | `mongodb`                      | Managed MongoDB                                                         |
-| `docker`          | `postgres`, `mysql`, `mongodb` | Not compatible with `sqlite` or Workers                                 |
+| Setup Provider    | Required Database              | Notes                                                                                                            |
+| ----------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `turso`           | `sqlite`                       | Distributed SQLite; works with Drizzle and Prisma                                                                |
+| `d1`              | `sqlite`                       | Cloudflare D1; works with Drizzle and Prisma on Cloudflare Workers or supported self-hosted Cloudflare frontends |
+| `neon`            | `postgres`                     | Serverless PostgreSQL                                                                                            |
+| `supabase`        | `postgres`                     | PostgreSQL with additional features                                                                              |
+| `prisma-postgres` | `postgres`                     | Managed PostgreSQL via Prisma                                                                                    |
+| `planetscale`     | `mysql`, `postgres`            | PlanetScale serverless database                                                                                  |
+| `mongodb-atlas`   | `mongodb`                      | Managed MongoDB                                                                                                  |
+| `docker`          | `postgres`, `mysql`, `mongodb` | Not compatible with `sqlite` or Workers                                                                          |
 
 ### Special Cases
 
 #### Cloudflare D1
 
 - Requires `--database sqlite`
-- Requires `--runtime workers`
-- Requires `--backend hono`
+- Requires one of these Cloudflare deployment targets:
+  - `--backend hono --runtime workers --server-deploy cloudflare`
+  - `--backend self --web-deploy cloudflare`
+- With `--backend self`, D1 is supported on `next`, `tanstack-start`, `nuxt`, and `astro`
+- With `--backend self`, frontend API compatibility still applies: `nuxt` and `astro` require `--api orpc`
 
 #### Docker Setup
 

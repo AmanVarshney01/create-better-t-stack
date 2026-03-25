@@ -1,5 +1,5 @@
 import { DEFAULT_CONFIG } from "../constants";
-import type { Backend, Frontend, Runtime, WebDeploy } from "../types";
+import type { Backend, DatabaseSetup, Frontend, Runtime, WebDeploy } from "../types";
 import { WEB_FRAMEWORKS } from "../utils/compatibility";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
@@ -33,12 +33,17 @@ function getDeploymentDisplay(deployment: WebDeploy): {
 export async function getDeploymentChoice(
   deployment?: WebDeploy,
   _runtime?: Runtime,
-  _backend?: Backend,
+  backend?: Backend,
   frontend: Frontend[] = [],
+  dbSetup?: DatabaseSetup,
 ) {
   if (deployment !== undefined) return deployment;
   if (!hasWebFrontend(frontend)) {
     return "none";
+  }
+
+  if (backend === "self" && dbSetup === "d1") {
+    return "cloudflare";
   }
 
   const availableDeployments = ["cloudflare", "none"];
