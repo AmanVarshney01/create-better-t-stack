@@ -64,7 +64,8 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
     stack,
     viewMode,
   } = useStackBuilder();
-  const desktopBuildNote = getDesktopBuildNote(stack);
+  const effectiveStack = compatibilityAnalysis.adjustedStack || stack;
+  const desktopBuildNote = getDesktopBuildNote(effectiveStack);
 
   return (
     <TooltipProvider>
@@ -235,7 +236,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                 />
 
                 <div className="mt-2 grid grid-cols-3 gap-1.5">
-                  <ShareButton stackUrl={getStackUrl()} stackState={stack} />
+                  <ShareButton stackUrl={getStackUrl()} stackState={effectiveStack} />
                   <PresetDropdown onApplyPreset={applyPreset} />
                   <DropdownMenu>
                     <DropdownMenuTrigger
@@ -315,7 +316,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
               </div>
             ) : (
               <PreviewPanel
-                stack={stack}
+                stack={effectiveStack}
                 selectedFilePath={selectedFile}
                 onSelectFile={setSelectedFile}
               />
@@ -432,7 +433,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                   />
 
                   <div className="mt-2 grid grid-cols-3 gap-1.5">
-                    <ShareButton stackUrl={getStackUrl()} stackState={stack} />
+                    <ShareButton stackUrl={getStackUrl()} stackState={effectiveStack} />
                     <PresetDropdown onApplyPreset={applyPreset} />
                     <DropdownMenu>
                       <DropdownMenuTrigger
@@ -459,7 +460,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
 
           {mobileTab === "preview" && (
             <PreviewPanel
-              stack={stack}
+              stack={effectiveStack}
               selectedFilePath={selectedFile}
               onSelectFile={setSelectedFile}
             />

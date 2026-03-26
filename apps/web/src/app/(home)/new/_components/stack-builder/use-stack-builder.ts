@@ -32,6 +32,29 @@ function withFormattedProjectName(stack: StackState) {
   };
 }
 
+export function getCompatibilityAdjustmentKey(stack: StackState, adjustedStack: StackState) {
+  return `${JSON.stringify(stack)}=>${JSON.stringify(adjustedStack)}`;
+}
+
+export function getCompatibilityAdjustmentState(
+  lastAppliedAdjustmentKey: string,
+  stack: StackState,
+  adjustedStack: StackState | null,
+) {
+  if (!adjustedStack) {
+    return {
+      adjustmentKey: "",
+      shouldApply: false,
+    };
+  }
+
+  const adjustmentKey = getCompatibilityAdjustmentKey(stack, adjustedStack);
+  return {
+    adjustmentKey,
+    shouldApply: lastAppliedAdjustmentKey !== adjustmentKey,
+  };
+}
+
 export function useStackBuilder() {
   const [stack, setStack, viewMode, setViewMode, selectedFile, setSelectedFile] = useStackState();
 
@@ -43,7 +66,7 @@ export function useStackBuilder() {
 
   const contentRef = useRef<HTMLDivElement | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
-  const lastAppliedStackString = useRef<string>("");
+  const lastAppliedAdjustmentKey = useRef<string>("");
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -76,12 +99,14 @@ export function useStackBuilder() {
 
   useEffect(() => {
     const adjustedStack = compatibilityAnalysis.adjustedStack;
-    if (!adjustedStack) {
-      return;
-    }
+    const { adjustmentKey, shouldApply } = getCompatibilityAdjustmentState(
+      lastAppliedAdjustmentKey.current,
+      stack,
+      adjustedStack,
+    );
 
-    const adjustedStackString = JSON.stringify(adjustedStack);
-    if (lastAppliedStackString.current === adjustedStackString) {
+    if (!shouldApply) {
+      lastAppliedAdjustmentKey.current = adjustmentKey;
       return;
     }
 
@@ -99,10 +124,10 @@ export function useStackBuilder() {
       }
 
       setLastChanges(compatibilityAnalysis.changes);
-      setStack(adjustedStack);
-      lastAppliedStackString.current = adjustedStackString;
+      setStack(adjustedStack!);
+      lastAppliedAdjustmentKey.current = adjustmentKey;
     });
-  }, [compatibilityAnalysis.adjustedStack, compatibilityAnalysis.changes, setStack]);
+  }, [stack, compatibilityAnalysis.adjustedStack, compatibilityAnalysis.changes, setStack]);
 
   useEffect(() => {
     const stackToUse = compatibilityAnalysis.adjustedStack || stack;
