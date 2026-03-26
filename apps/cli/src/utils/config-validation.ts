@@ -24,6 +24,36 @@ function validationErr(message: string): ValidationResult {
   return Result.err(new ValidationError({ message }));
 }
 
+function hasResolvedWorkersD1Target(config: Partial<ProjectConfig>) {
+  return (
+    config.backend === "hono" &&
+    config.runtime === "workers" &&
+    config.serverDeploy === "cloudflare"
+  );
+}
+
+function hasResolvedSelfCloudflareD1Target(config: Partial<ProjectConfig>) {
+  return (
+    config.backend === "self" && config.runtime === "none" && config.webDeploy === "cloudflare"
+  );
+}
+
+function canResolveWorkersD1Target(config: Partial<ProjectConfig>) {
+  return (
+    (config.backend === undefined || config.backend === "hono") &&
+    (config.runtime === undefined || config.runtime === "workers") &&
+    (config.serverDeploy === undefined || config.serverDeploy === "cloudflare")
+  );
+}
+
+function canResolveSelfCloudflareD1Target(config: Partial<ProjectConfig>) {
+  return (
+    (config.backend === undefined || config.backend === "self") &&
+    (config.runtime === undefined || config.runtime === "none") &&
+    (config.webDeploy === undefined || config.webDeploy === "cloudflare")
+  );
+}
+
 export function validateDatabaseOrmAuth(
   cfg: Partial<ProjectConfig>,
   flags?: Set<string>,
@@ -153,10 +183,17 @@ export function validateDatabaseSetup(
     }
 
     if (dbSetup === "d1") {
-      const isWorkersTarget = runtime === "workers" && config.serverDeploy === "cloudflare";
-      const isSelfCloudflareTarget = config.backend === "self" && config.webDeploy === "cloudflare";
+      const isWorkersTarget = hasResolvedWorkersD1Target(config);
+      const isSelfCloudflareTarget = hasResolvedSelfCloudflareD1Target(config);
+      const canResolveWorkersTarget = canResolveWorkersD1Target(config);
+      const canResolveSelfCloudflareTarget = canResolveSelfCloudflareD1Target(config);
 
-      if (!isWorkersTarget && !isSelfCloudflareTarget) {
+      if (
+        !isWorkersTarget &&
+        !isSelfCloudflareTarget &&
+        !canResolveWorkersTarget &&
+        !canResolveSelfCloudflareTarget
+      ) {
         return validationErr(
           "Cloudflare D1 setup requires SQLite database and either Cloudflare Workers runtime with server deployment or backend 'self' with Cloudflare web deployment.",
         );
