@@ -217,6 +217,12 @@ Create a Cloudflare Workers project:
 npx create-better-t-stack --backend hono --runtime workers --database sqlite --orm drizzle --db-setup d1
 ```
 
+Create a self-hosted fullstack project on Cloudflare with D1:
+
+```bash
+npx create-better-t-stack --backend self --frontend next --api trpc --database sqlite --orm drizzle --db-setup d1 --web-deploy cloudflare
+```
+
 Create a minimal API-only project:
 
 ```bash
@@ -232,7 +238,8 @@ npx create-better-t-stack --frontend none --backend hono --api trpc --database n
 - **Database 'none'**: Disables database setup and requires ORM to be `none`.
 - **ORM 'none'**: Can be used when you want to handle database operations manually or use a different ORM.
 - **Runtime 'none'**: Only available with Convex backend, backend `none`, or backend `self`.
-- **Cloudflare Workers runtime**: Only compatible with Hono backend, Drizzle ORM (or no ORM), and SQLite database (with D1 setup). Not compatible with MongoDB.
+- **Cloudflare Workers runtime**: Only compatible with Hono backend. If a database is used, MongoDB is not supported.
+- **Cloudflare D1 setup**: Requires `sqlite` and either `--runtime workers --server-deploy cloudflare` or `--backend self --web-deploy cloudflare`. For `backend self`, D1 is supported on `next`, `tanstack-start`, `nuxt`, and `astro`.
 - **Addons 'none'**: Skips all addons.
 - **Examples 'none'**: Skips all example implementations (todo, AI chat).
 - **Nuxt, Svelte, SolidJS, and Astro** frontends are only compatible with oRPC API layer

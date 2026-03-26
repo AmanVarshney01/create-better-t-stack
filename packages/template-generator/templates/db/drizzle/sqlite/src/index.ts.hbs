@@ -1,4 +1,12 @@
-{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
+{{#if (eq dbSetup "d1")}}
+import * as schema from "./schema";
+import { drizzle } from "drizzle-orm/d1";
+import { env } from "@{{projectName}}/env/server";
+
+export function createDb() {
+	return drizzle(env.DB, { schema });
+}
+{{else if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 import { env } from "@{{projectName}}/env/server";
 import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
@@ -18,19 +26,8 @@ export function createDb() {
 {{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
 export const db = createDb();
 {{/if}}
-{{/if}}
-
-{{#if (eq runtime "workers")}}
+{{else if (eq runtime "workers")}}
 import * as schema from "./schema";
-
-{{#if (eq dbSetup "d1")}}
-import { drizzle } from "drizzle-orm/d1";
-import { env } from "@{{projectName}}/env/server";
-
-export function createDb() {
-	return drizzle(env.DB, { schema });
-}
-{{else}}
 import { drizzle } from "drizzle-orm/libsql";
 import { env } from "@{{projectName}}/env/server";
 import { createClient } from "@libsql/client";
@@ -45,5 +42,4 @@ export function createDb() {
 
 	return drizzle({ client, schema });
 }
-{{/if}}
 {{/if}}

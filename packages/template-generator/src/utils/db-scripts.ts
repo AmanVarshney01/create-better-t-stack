@@ -10,7 +10,10 @@ export type DbScriptSupport = {
 };
 
 export function getDbScriptSupport(config: ProjectConfig): DbScriptSupport {
-  const isD1Alchemy = config.dbSetup === "d1" && config.serverDeploy === "cloudflare";
+  const isD1Alchemy =
+    config.dbSetup === "d1" &&
+    (config.serverDeploy === "cloudflare" ||
+      (config.backend === "self" && config.webDeploy === "cloudflare"));
   const hasDbScripts =
     config.backend !== "convex" &&
     config.backend !== "none" &&

@@ -14390,7 +14390,15 @@ export default defineConfig({
   {{/if}}
 });
 `],
-  ["db/drizzle/sqlite/src/index.ts.hbs", `{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
+  ["db/drizzle/sqlite/src/index.ts.hbs", `{{#if (eq dbSetup "d1")}}
+import * as schema from "./schema";
+import { drizzle } from "drizzle-orm/d1";
+import { env } from "@{{projectName}}/env/server";
+
+export function createDb() {
+	return drizzle(env.DB, { schema });
+}
+{{else if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 import { env } from "@{{projectName}}/env/server";
 import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
@@ -14410,19 +14418,8 @@ export function createDb() {
 {{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
 export const db = createDb();
 {{/if}}
-{{/if}}
-
-{{#if (eq runtime "workers")}}
+{{else if (eq runtime "workers")}}
 import * as schema from "./schema";
-
-{{#if (eq dbSetup "d1")}}
-import { drizzle } from "drizzle-orm/d1";
-import { env } from "@{{projectName}}/env/server";
-
-export function createDb() {
-	return drizzle(env.DB, { schema });
-}
-{{else}}
 import { drizzle } from "drizzle-orm/libsql";
 import { env } from "@{{projectName}}/env/server";
 import { createClient } from "@libsql/client";
@@ -14437,7 +14434,6 @@ export function createDb() {
 
 	return drizzle({ client, schema });
 }
-{{/if}}
 {{/if}}
 `],
   ["db/mongoose/mongodb/src/index.ts.hbs", `import mongoose from "mongoose";
@@ -28103,22 +28099,24 @@ function getCloudflareEnvSync() {
 	}
 }
 
-function createEnvProxy(getValue: (key: string) => string | undefined) {
+type EnvValue = Env[keyof Env];
+
+function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefined) {
 	return new Proxy({} as Env, {
 		get(_target, prop) {
 			if (typeof prop !== "string") {
 				return undefined;
 			}
 
-			return getValue(prop);
+			return getValue(prop as keyof Env & string);
 		},
 	});
 }
 
-function resolveEnvValue(key: string) {
+function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
 	const nodeValue = getNodeEnvValue(key);
 	if (nodeValue !== undefined) {
-		return nodeValue;
+		return nodeValue as EnvValue;
 	}
 
 	return getCloudflareEnvSync()?.[key as keyof Env];

@@ -396,7 +396,7 @@ describe("Database Setup Configurations", () => {
         projectName: "d1-workers-valid",
         database: "sqlite",
         orm: "drizzle",
-        dbSetup: "none",
+        dbSetup: "d1",
         backend: "hono",
         runtime: "workers",
         auth: "none",
@@ -406,6 +406,27 @@ describe("Database Setup Configurations", () => {
         examples: ["none"],
         webDeploy: "none",
         serverDeploy: "cloudflare",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with D1 + self backend + Cloudflare web deploy", async () => {
+      const result = await runTRPCTest({
+        projectName: "d1-self-cloudflare-valid",
+        database: "sqlite",
+        orm: "drizzle",
+        dbSetup: "d1",
+        backend: "self",
+        runtime: "none",
+        auth: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
         install: false,
       });
 
@@ -432,7 +453,31 @@ describe("Database Setup Configurations", () => {
 
       expectError(
         result,
-        "Cloudflare D1 setup requires SQLite database and Cloudflare Workers runtime",
+        "Cloudflare D1 setup requires SQLite database and either Cloudflare Workers runtime with server deployment or backend 'self' with Cloudflare web deployment.",
+      );
+    });
+
+    it("should fail with D1 + self backend without Cloudflare web deploy", async () => {
+      const result = await runTRPCTest({
+        projectName: "d1-self-no-cloudflare-fail",
+        database: "sqlite",
+        orm: "drizzle",
+        dbSetup: "d1",
+        backend: "self",
+        runtime: "none",
+        auth: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(
+        result,
+        "Cloudflare D1 setup requires SQLite database and either Cloudflare Workers runtime with server deployment or backend 'self' with Cloudflare web deployment.",
       );
     });
   });

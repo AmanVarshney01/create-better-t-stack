@@ -28,7 +28,7 @@ export async function getDBSetupChoice(
         label: "Turso",
         hint: "SQLite for Production. Powered by libSQL",
       },
-      ...(runtime === "workers"
+      ...(runtime === "workers" || backend === "self"
         ? [
             {
               value: "d1" as const,
