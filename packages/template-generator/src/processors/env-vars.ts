@@ -252,6 +252,7 @@ function buildNativeVars(
 function buildConvexBackendVars(
   frontend: string[],
   auth: ProjectConfig["auth"],
+  payments: ProjectConfig["payments"],
   examples: ProjectConfig["examples"],
 ): EnvVariable[] {
   const hasNextJs = frontend.includes("next");
@@ -325,12 +326,42 @@ function buildConvexBackendVars(
     }
   }
 
+  if (payments === "polar") {
+    vars.push(
+      {
+        key: "POLAR_ORGANIZATION_TOKEN",
+        value: "",
+        condition: true,
+        comment: "Polar organization token",
+      },
+      {
+        key: "POLAR_WEBHOOK_SECRET",
+        value: "",
+        condition: true,
+        comment: "Polar webhook secret",
+      },
+      {
+        key: "POLAR_PRODUCT_ID_PRO",
+        value: "",
+        condition: true,
+        comment: "Polar product ID for the default Pro plan",
+      },
+      {
+        key: "POLAR_SERVER",
+        value: "sandbox",
+        condition: true,
+        comment: "Polar environment: sandbox or production",
+      },
+    );
+  }
+
   return vars;
 }
 
 function buildConvexCommentBlocks(
   frontend: string[],
   auth: ProjectConfig["auth"],
+  payments: ProjectConfig["payments"],
   examples: ProjectConfig["examples"],
 ): string {
   const hasNative =
@@ -370,6 +401,18 @@ function buildConvexCommentBlocks(
     commentBlocks += `# Set Convex environment variables
 # npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
 ${hasWeb || hasNative ? `# npx convex env set SITE_URL ${defaultSiteUrl}\n` : ""}`;
+  }
+
+  if (payments === "polar") {
+    commentBlocks += `# Set Polar environment variables
+# npx convex env set POLAR_ORGANIZATION_TOKEN=your_polar_token
+# npx convex env set POLAR_WEBHOOK_SECRET=your_polar_webhook_secret
+# npx convex env set POLAR_PRODUCT_ID_PRO=your_polar_product_id
+# Optional: npx convex env set POLAR_SERVER=sandbox
+# Create a Polar webhook at https://<your-convex-site-url>/polar/events
+# Enable: product.created, product.updated, subscription.created, subscription.updated
+
+`;
   }
 
   return commentBlocks;
@@ -549,7 +592,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
       const envLocalPath = `${convexBackendDir}/.env.local`;
 
       // Write comment blocks first
-      const commentBlocks = buildConvexCommentBlocks(frontend, auth, examples);
+      const commentBlocks = buildConvexCommentBlocks(frontend, auth, payments, examples);
       if (commentBlocks) {
         let currentContent = "";
         if (vfs.exists(envLocalPath)) {
@@ -559,7 +602,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
       }
 
       // Then add variables
-      const convexBackendVars = buildConvexBackendVars(frontend, auth, examples);
+      const convexBackendVars = buildConvexBackendVars(frontend, auth, payments, examples);
       if (convexBackendVars.length > 0) {
         let existingContent = "";
         if (vfs.exists(envLocalPath)) {

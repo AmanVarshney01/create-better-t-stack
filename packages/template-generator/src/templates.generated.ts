@@ -2081,6 +2081,9 @@ export const getCurrentUser = query({
 `],
   ["auth/better-auth/convex/backend/convex/http.ts.hbs", `import { httpRouter } from "convex/server";
 import { authComponent, createAuth } from "./auth";
+{{#if (eq payments "polar")}}
+import { polar } from "./polar";
+{{/if}}
 
 const http = httpRouter();
 
@@ -2095,6 +2098,10 @@ authComponent.registerRoutes(http, createAuth, { cors: true });
 {{/if}}
 {{else}}
 authComponent.registerRoutes(http, createAuth);
+{{/if}}
+{{#if (eq payments "polar")}}
+
+polar.registerRoutes(http as any);
 {{/if}}
 
 export default http;
@@ -3416,6 +3423,10 @@ export const { GET, POST } = handler;
 import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import UserMenu from "@/components/user-menu";
+{{#if (eq payments "polar")}}
+import { CheckoutLink, CustomerPortalLink } from "@convex-dev/polar/react";
+import { buttonVariants } from "@{{projectName}}/ui/components/button";
+{{/if}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
     Authenticated,
@@ -3425,18 +3436,58 @@ import {
 } from "convex/react";
 import { useState } from "react";
 
+function DashboardContent() {
+    const privateData = useQuery(api.privateData.get);
+    {{#if (eq payments "polar")}}
+    const products = useQuery(api.polar.getConfiguredProducts);
+    const subscription = useQuery(api.polar.getCurrentSubscription);
+
+    const proProduct = products?.pro;
+    const hasProSubscription = subscription?.productKey === "pro";
+    {{/if}}
+
+    return (
+        <div>
+            <h1>Dashboard</h1>
+            <p>privateData: {privateData?.message}</p>
+            {{#if (eq payments "polar")}}
+            <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
+            {products === undefined || subscription === undefined ? (
+                <p>Loading subscription options...</p>
+            ) : proProduct ? (
+                hasProSubscription ? (
+                    <CustomerPortalLink
+                        polarApi={api.polar}
+                        className={buttonVariants({ variant: "outline" })}
+                    >
+                        Manage Subscription
+                    </CustomerPortalLink>
+                ) : (
+                    <CheckoutLink
+                        polarApi={api.polar}
+                        productIds={[proProduct.id]}
+                        embed={false}
+                        className={buttonVariants({ variant: "default" })}
+                    >
+                        Upgrade to Pro
+                    </CheckoutLink>
+                )
+            ) : (
+                <p>Set POLAR_PRODUCT_ID_PRO in packages/backend/.env.local to enable checkout.</p>
+            )}
+            {{/if}}
+            <UserMenu />
+        </div>
+    );
+}
+
 export default function DashboardPage() {
     const [showSignIn, setShowSignIn] = useState(false);
-    const privateData = useQuery(api.privateData.get);
 
     return (
         <>
             <Authenticated>
-                <div>
-                    <h1>Dashboard</h1>
-                    <p>privateData: {privateData?.message}</p>
-                    <UserMenu />
-                </div>
+                <DashboardContent />
             </Authenticated>
             <Unauthenticated>
                 {showSignIn ? (
@@ -4162,6 +4213,10 @@ export const authClient = createAuthClient({
   ["auth/better-auth/convex/web/react/react-router/src/routes/dashboard.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import UserMenu from "@/components/user-menu";
+{{#if (eq payments "polar")}}
+import { CheckoutLink, CustomerPortalLink } from "@convex-dev/polar/react";
+import { buttonVariants } from "@{{projectName}}/ui/components/button";
+{{/if}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   Authenticated,
@@ -4173,11 +4228,44 @@ import { useState } from "react";
 
 function PrivateDashboardContent() {
   const privateData = useQuery(api.privateData.get);
+  {{#if (eq payments "polar")}}
+  const products = useQuery(api.polar.getConfiguredProducts);
+  const subscription = useQuery(api.polar.getCurrentSubscription);
+
+  const proProduct = products?.pro;
+  const hasProSubscription = subscription?.productKey === "pro";
+  {{/if}}
 
   return (
     <div>
       <h1>Dashboard</h1>
       <p>privateData: {privateData?.message}</p>
+      {{#if (eq payments "polar")}}
+      <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
+      {products === undefined || subscription === undefined ? (
+        <p>Loading subscription options...</p>
+      ) : proProduct ? (
+        hasProSubscription ? (
+          <CustomerPortalLink
+            polarApi={api.polar}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Manage Subscription
+          </CustomerPortalLink>
+        ) : (
+          <CheckoutLink
+            polarApi={api.polar}
+            productIds={[proProduct.id]}
+            embed={false}
+            className={buttonVariants({ variant: "default" })}
+          >
+            Upgrade to Pro
+          </CheckoutLink>
+        )
+      ) : (
+        <p>Set POLAR_PRODUCT_ID_PRO in packages/backend/.env.local to enable checkout.</p>
+      )}
+      {{/if}}
       <UserMenu />
     </div>
   );
@@ -4566,6 +4654,10 @@ export const authClient = createAuthClient({
   ["auth/better-auth/convex/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import UserMenu from "@/components/user-menu";
+{{#if (eq payments "polar")}}
+import { CheckoutLink, CustomerPortalLink } from "@convex-dev/polar/react";
+import { buttonVariants } from "@{{projectName}}/ui/components/button";
+{{/if}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -4582,11 +4674,44 @@ export const Route = createFileRoute("/dashboard")({
 
 function PrivateDashboardContent() {
   const privateData = useQuery(api.privateData.get);
+  {{#if (eq payments "polar")}}
+  const products = useQuery(api.polar.getConfiguredProducts);
+  const subscription = useQuery(api.polar.getCurrentSubscription);
+
+  const proProduct = products?.pro;
+  const hasProSubscription = subscription?.productKey === "pro";
+  {{/if}}
 
   return (
     <div>
       <h1>Dashboard</h1>
       <p>privateData: {privateData?.message}</p>
+      {{#if (eq payments "polar")}}
+      <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
+      {products === undefined || subscription === undefined ? (
+        <p>Loading subscription options...</p>
+      ) : proProduct ? (
+        hasProSubscription ? (
+          <CustomerPortalLink
+            polarApi={api.polar}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Manage Subscription
+          </CustomerPortalLink>
+        ) : (
+          <CheckoutLink
+            polarApi={api.polar}
+            productIds={[proProduct.id]}
+            embed={false}
+            className={buttonVariants({ variant: "default" })}
+          >
+            Upgrade to Pro
+          </CheckoutLink>
+        )
+      ) : (
+        <p>Set POLAR_PRODUCT_ID_PRO in packages/backend/.env.local to enable checkout.</p>
+      )}
+      {{/if}}
       <UserMenu />
     </div>
   );
@@ -4990,6 +5115,10 @@ export const Route = createFileRoute("/api/auth/$")({
   ["auth/better-auth/convex/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import UserMenu from "@/components/user-menu";
+{{#if (eq payments "polar")}}
+import { CheckoutLink, CustomerPortalLink } from "@convex-dev/polar/react";
+import { buttonVariants } from "@{{projectName}}/ui/components/button";
+{{/if}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -5004,18 +5133,58 @@ export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
 });
 
+function PrivateDashboardContent() {
+  const privateData = useQuery(api.privateData.get);
+  {{#if (eq payments "polar")}}
+  const products = useQuery(api.polar.getConfiguredProducts);
+  const subscription = useQuery(api.polar.getCurrentSubscription);
+
+  const proProduct = products?.pro;
+  const hasProSubscription = subscription?.productKey === "pro";
+  {{/if}}
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>privateData: {privateData?.message}</p>
+      {{#if (eq payments "polar")}}
+      <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
+      {products === undefined || subscription === undefined ? (
+        <p>Loading subscription options...</p>
+      ) : proProduct ? (
+        hasProSubscription ? (
+          <CustomerPortalLink
+            polarApi={api.polar}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Manage Subscription
+          </CustomerPortalLink>
+        ) : (
+          <CheckoutLink
+            polarApi={api.polar}
+            productIds={[proProduct.id]}
+            embed={false}
+            className={buttonVariants({ variant: "default" })}
+          >
+            Upgrade to Pro
+          </CheckoutLink>
+        )
+      ) : (
+        <p>Set POLAR_PRODUCT_ID_PRO in packages/backend/.env.local to enable checkout.</p>
+      )}
+      {{/if}}
+      <UserMenu />
+    </div>
+  );
+}
+
 function RouteComponent() {
   const [showSignIn, setShowSignIn] = useState(false);
-  const privateData = useQuery(api.privateData.get);
 
   return (
     <>
       <Authenticated>
-        <div>
-          <h1>Dashboard</h1>
-          <p>privateData: {privateData?.message}</p>
-          <UserMenu />
-        </div>
+        <PrivateDashboardContent />
       </Authenticated>
       <Unauthenticated>
         {showSignIn ? (
@@ -13073,6 +13242,9 @@ export const startInstance = createStart(() => {
 {{#if (eq auth "better-auth")}}
 import betterAuth from "@convex-dev/better-auth/convex.config";
 {{/if}}
+{{#if (eq payments "polar")}}
+import polar from "@convex-dev/polar/convex.config";
+{{/if}}
 {{#if (includes examples "ai")}}
 import agent from "@convex-dev/agent/convex.config";
 {{/if}}
@@ -13080,6 +13252,9 @@ import agent from "@convex-dev/agent/convex.config";
 const app = defineApp();
 {{#if (eq auth "better-auth")}}
 app.use(betterAuth);
+{{/if}}
+{{#if (eq payments "polar")}}
+app.use(polar);
 {{/if}}
 {{#if (includes examples "ai")}}
 app.use(agent);
@@ -29477,6 +29652,73 @@ export function cn(...inputs: ClassValue[]) {
   "exclude": ["node_modules"]
 }
 `],
+  ["payments/polar/convex/backend/convex/polar.ts.hbs", `import { Polar } from "@convex-dev/polar";
+
+import { api, components } from "./_generated/api";
+import type { DataModel } from "./_generated/dataModel";
+import { action, query } from "./_generated/server";
+
+export const polar = new Polar<DataModel, { pro: string }>(components.polar, {
+  getUserInfo: async (ctx) => {
+    const user = await ctx.runQuery(api.auth.getCurrentUser);
+
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    if (!user.email) {
+      throw new Error("Authenticated user is missing an email address");
+    }
+
+    return {
+      userId: user._id,
+      email: user.email,
+    };
+  },
+  products: {
+    pro: process.env.POLAR_PRODUCT_ID_PRO || "your-product-id",
+  },
+  server: (process.env.POLAR_SERVER as "sandbox" | "production" | undefined) ?? "sandbox",
+});
+
+export const {
+  changeCurrentSubscription,
+  cancelCurrentSubscription,
+  getConfiguredProducts,
+  listAllProducts,
+  listAllSubscriptions,
+  generateCheckoutLink,
+  generateCustomerPortalUrl,
+} = polar.api();
+
+export const getCurrentSubscription = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await ctx.runQuery(api.auth.getCurrentUser);
+
+    if (!user) {
+      return null;
+    }
+
+    return await polar.getCurrentSubscription(ctx, {
+      userId: user._id,
+    });
+  },
+});
+
+export const syncProducts = action({
+  args: {},
+  handler: async (ctx) => {
+    await polar.syncProducts(ctx);
+  },
+});
+`],
+  ["payments/polar/convex/web/react/tanstack-start/src/functions/get-payment.ts.hbs", `import { createServerFn } from "@tanstack/react-start";
+
+export const getPayment = createServerFn({ method: "GET" }).handler(async () => {
+  return null;
+});
+`],
   ["payments/polar/server/base/src/lib/payments.ts.hbs", `import { Polar } from "@polar-sh/sdk";
 import { env } from "@{{projectName}}/env/server";
 
@@ -29622,4 +29864,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 462;
+export const TEMPLATE_COUNT = 464;

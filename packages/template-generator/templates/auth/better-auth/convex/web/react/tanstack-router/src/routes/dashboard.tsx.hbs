@@ -1,6 +1,10 @@
 import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import UserMenu from "@/components/user-menu";
+{{#if (eq payments "polar")}}
+import { CheckoutLink, CustomerPortalLink } from "@convex-dev/polar/react";
+import { buttonVariants } from "@{{projectName}}/ui/components/button";
+{{/if}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -17,11 +21,44 @@ export const Route = createFileRoute("/dashboard")({
 
 function PrivateDashboardContent() {
   const privateData = useQuery(api.privateData.get);
+  {{#if (eq payments "polar")}}
+  const products = useQuery(api.polar.getConfiguredProducts);
+  const subscription = useQuery(api.polar.getCurrentSubscription);
+
+  const proProduct = products?.pro;
+  const hasProSubscription = subscription?.productKey === "pro";
+  {{/if}}
 
   return (
     <div>
       <h1>Dashboard</h1>
       <p>privateData: {privateData?.message}</p>
+      {{#if (eq payments "polar")}}
+      <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
+      {products === undefined || subscription === undefined ? (
+        <p>Loading subscription options...</p>
+      ) : proProduct ? (
+        hasProSubscription ? (
+          <CustomerPortalLink
+            polarApi={api.polar}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Manage Subscription
+          </CustomerPortalLink>
+        ) : (
+          <CheckoutLink
+            polarApi={api.polar}
+            productIds={[proProduct.id]}
+            embed={false}
+            className={buttonVariants({ variant: "default" })}
+          >
+            Upgrade to Pro
+          </CheckoutLink>
+        )
+      ) : (
+        <p>Set POLAR_PRODUCT_ID_PRO in packages/backend/.env.local to enable checkout.</p>
+      )}
+      {{/if}}
       <UserMenu />
     </div>
   );
