@@ -80,6 +80,7 @@ export async function displayPostInstallInstructions(
           runCmd,
           runtime,
           dbSetup,
+          webDeploy,
           serverDeploy,
           backend,
         )
@@ -124,9 +125,11 @@ export async function displayPostInstallInstructions(
     frontend?.includes("native-unistyles");
 
   const hasReactRouter = frontend?.includes("react-router");
+  const hasTanStackRouter = frontend?.includes("tanstack-router");
   const hasSvelte = frontend?.includes("svelte");
   const hasAstro = frontend?.includes("astro");
-  const webPort = hasReactRouter || hasSvelte ? "5173" : hasAstro ? "4321" : "3001";
+  const webPort =
+    hasReactRouter || hasTanStackRouter || hasSvelte ? "5173" : hasAstro ? "4321" : "3001";
 
   const betterAuthConvexInstructions =
     isConvex && config.auth === "better-auth"
@@ -307,10 +310,14 @@ async function getDatabaseInstructions(
   runCmd: string,
   _runtime: Runtime,
   dbSetup: DatabaseSetup,
+  webDeploy: WebDeploy,
   serverDeploy: ServerDeploy,
-  _backend: Backend,
+  backend: Backend,
 ) {
   const instructions: string[] = [];
+  const isD1Alchemy =
+    dbSetup === "d1" &&
+    (serverDeploy === "cloudflare" || (backend === "self" && webDeploy === "cloudflare"));
 
   if (dbSetup === "docker") {
     const dockerStatus = await getDockerStatus(database);
@@ -321,7 +328,7 @@ async function getDatabaseInstructions(
     }
   }
 
-  if (dbSetup === "d1" && serverDeploy === "cloudflare") {
+  if (isD1Alchemy) {
     if (orm === "drizzle") {
       instructions.push(`${pc.cyan("•")} Generate migrations: ${`${runCmd} db:generate`}`);
     } else if (orm === "prisma") {
@@ -362,21 +369,21 @@ async function getDatabaseInstructions(
     if (dbSetup === "docker") {
       instructions.push(`${pc.cyan("•")} Start docker container: ${`${runCmd} db:start`}`);
     }
-    if (!(dbSetup === "d1" && serverDeploy === "cloudflare")) {
+    if (!isD1Alchemy) {
       instructions.push(`${pc.cyan("•")} Generate Prisma Client: ${`${runCmd} db:generate`}`);
       instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
     }
-    if (!(dbSetup === "d1" && serverDeploy === "cloudflare")) {
+    if (!isD1Alchemy) {
       instructions.push(`${pc.cyan("•")} Database UI: ${`${runCmd} db:studio`}`);
     }
   } else if (orm === "drizzle") {
     if (dbSetup === "docker") {
       instructions.push(`${pc.cyan("•")} Start docker container: ${`${runCmd} db:start`}`);
     }
-    if (dbSetup !== "d1") {
+    if (!isD1Alchemy) {
       instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
     }
-    if (!(dbSetup === "d1" && serverDeploy === "cloudflare")) {
+    if (!isD1Alchemy) {
       instructions.push(`${pc.cyan("•")} Database UI: ${`${runCmd} db:studio`}`);
     }
   } else if (orm === "mongoose") {

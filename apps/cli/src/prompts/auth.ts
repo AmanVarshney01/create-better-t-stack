@@ -1,32 +1,18 @@
 import { DEFAULT_CONFIG } from "../constants";
-import type { Auth, Backend } from "../types";
+import type { Auth, Backend, Frontend } from "../types";
+import { supportsConvexBetterAuth } from "../utils/compatibility-rules";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
-export async function getAuthChoice(
-  auth: Auth | undefined,
+export function getAvailableAuthProviders(
   backend?: Backend,
-  frontend?: string[],
-) {
-  if (auth !== undefined) return auth;
+  frontend: readonly Frontend[] = [],
+): Auth[] {
   if (backend === "none") {
-    return "none" as Auth;
+    return ["none"];
   }
-  const supportedBetterAuthFrontends = frontend?.some((f) =>
-    [
-      "tanstack-router",
-      "tanstack-start",
-      "next",
-      "nuxt",
-      "svelte",
-      "solid",
-      "native-bare",
-      "native-uniwind",
-      "native-unistyles",
-    ].includes(f),
-  );
 
-  const hasClerkCompatibleFrontends = frontend?.some((f) =>
+  const hasClerkCompatibleFrontends = frontend.some((f) =>
     [
       "react-router",
       "tanstack-router",
@@ -38,37 +24,57 @@ export async function getAuthChoice(
     ].includes(f),
   );
 
-  const options = [];
+  const options: Auth[] = [];
 
   if (backend === "convex") {
-    if (supportedBetterAuthFrontends) {
-      options.push({
-        value: "better-auth",
-        label: "Better-Auth",
-        hint: "comprehensive auth framework for TypeScript",
-      });
+    if (supportsConvexBetterAuth(frontend)) {
+      options.push("better-auth");
     }
   } else {
-    options.push({
-      value: "better-auth",
-      label: "Better-Auth",
-      hint: "comprehensive auth framework for TypeScript",
-    });
+    options.push("better-auth");
   }
 
   if (hasClerkCompatibleFrontends) {
-    options.push({
-      value: "clerk",
-      label: "Clerk",
-      hint: "More than auth, Complete User Management",
-    });
+    options.push("clerk");
   }
 
   if (options.length === 0) {
+    return ["none"];
+  }
+
+  return [...options, "none"];
+}
+
+export async function getAuthChoice(
+  auth: Auth | undefined,
+  backend?: Backend,
+  frontend: readonly Frontend[] = [],
+) {
+  if (auth !== undefined) return auth;
+  const availableProviders = getAvailableAuthProviders(backend, frontend);
+
+  if (availableProviders.length === 1 && availableProviders[0] === "none") {
     return "none" as Auth;
   }
 
-  options.push({ value: "none", label: "None", hint: "No auth" });
+  const options = availableProviders.map((provider) => {
+    switch (provider) {
+      case "better-auth":
+        return {
+          value: "better-auth",
+          label: "Better-Auth",
+          hint: "comprehensive auth framework for TypeScript",
+        };
+      case "clerk":
+        return {
+          value: "clerk",
+          label: "Clerk",
+          hint: "More than auth, Complete User Management",
+        };
+      default:
+        return { value: "none", label: "None", hint: "No auth" };
+    }
+  });
 
   const response = await navigableSelect({
     message: "Select authentication provider",

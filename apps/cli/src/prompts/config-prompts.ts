@@ -125,7 +125,13 @@ export async function gatherConfig(
           results.runtime,
         ),
       webDeploy: ({ results }) =>
-        getDeploymentChoice(flags.webDeploy, results.runtime, results.backend, results.frontend),
+        getDeploymentChoice(
+          flags.webDeploy,
+          results.runtime,
+          results.backend,
+          results.frontend,
+          results.dbSetup,
+        ),
       serverDeploy: ({ results }) =>
         getServerDeploymentChoice(
           flags.serverDeploy,

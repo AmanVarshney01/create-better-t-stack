@@ -14,8 +14,8 @@ type PackageJson = {
 export const dependencyVersionMap = {
   typescript: "^5",
 
-  "better-auth": "1.5.2",
-  "@better-auth/expo": "1.5.2",
+  "better-auth": "1.5.5",
+  "@better-auth/expo": "1.5.5",
 
   "@clerk/backend": "^3.2.1",
   "@clerk/express": "^2.0.5",
@@ -108,19 +108,19 @@ export const dependencyVersionMap = {
   "@orpc/zod": "^1.12.2",
   "@orpc/tanstack-query": "^1.13.6",
 
-  "@trpc/tanstack-react-query": "^11.7.2",
-  "@trpc/server": "^11.7.2",
-  "@trpc/client": "^11.7.2",
+  "@trpc/tanstack-react-query": "^11.13.4",
+  "@trpc/server": "^11.13.4",
+  "@trpc/client": "^11.13.4",
 
   next: "^16.2.0",
 
-  convex: "^1.32.0",
+  convex: "^1.33.1",
   "@convex-dev/react-query": "^0.1.0",
   "@convex-dev/agent": "^0.3.2",
   "convex-svelte": "^0.0.12",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
-  "@convex-dev/better-auth": "^0.10.13",
+  "@convex-dev/better-auth": "^0.11.3",
 
   "@tanstack/svelte-query": "^5.85.3",
   "@tanstack/svelte-query-devtools": "^5.85.3",
@@ -139,16 +139,16 @@ export const dependencyVersionMap = {
   "@tanstack/solid-query-devtools": "^5.87.4",
   "@tanstack/solid-router-devtools": "^1.131.44",
 
-  wrangler: "^4.54.0",
+  wrangler: "^4.77.0",
   "@cloudflare/vite-plugin": "^1.17.1",
-  "@opennextjs/cloudflare": "^1.14.6",
+  "@opennextjs/cloudflare": "^1.17.3",
   "nitro-cloudflare-dev": "^0.2.2",
   "@sveltejs/adapter-cloudflare": "^7.2.4",
   "@cloudflare/workers-types": "^4.20251213.0",
   "@astrojs/cloudflare": "^13.0.1",
   "@astrojs/node": "^10.0.0-beta.9",
 
-  alchemy: "^0.87.0",
+  alchemy: "^0.90.0",
 
   dotenv: "^17.2.2",
   tsdown: "^0.16.5",
@@ -157,7 +157,7 @@ export const dependencyVersionMap = {
   "@t3-oss/env-nextjs": "^0.13.1",
   "@t3-oss/env-nuxt": "^0.13.1",
 
-  "@polar-sh/better-auth": "^1.6.4",
+  "@polar-sh/better-auth": "^1.8.3",
   "@polar-sh/sdk": "^0.42.2",
 } as const;
 

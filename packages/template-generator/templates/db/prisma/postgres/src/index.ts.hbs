@@ -7,58 +7,82 @@ import { neonConfig } from "@neondatabase/serverless";
 
 neonConfig.poolQueryViaFetch = true;
 
-const prisma = new PrismaClient({
-	adapter: new PrismaNeon({
-		connectionString: env.DATABASE_URL,
-	}),
-});
+export function createPrismaClient() {
+	return new PrismaClient({
+		adapter: new PrismaNeon({
+			connectionString: env.DATABASE_URL,
+		}),
+	});
+}
 
 {{else if (eq dbSetup "prisma-postgres")}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({
-	connectionString: env.DATABASE_URL,
-});
+export function createPrismaClient() {
+	const adapter = new PrismaPg({
+		connectionString: env.DATABASE_URL,
+		maxUses: 1,
+	});
 
-const prisma = new PrismaClient({ adapter });
+	return new PrismaClient({ adapter });
+}
 
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+export function createPrismaClient() {
+	const adapter = new PrismaPg({
+		connectionString: env.DATABASE_URL,
+		maxUses: 1,
+	});
+	return new PrismaClient({ adapter });
+}
 
 {{/if}}
-
-export default prisma;
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
 
-const adapter = new PrismaNeon({
-	connectionString: env.DATABASE_URL,
-});
+export function createPrismaClient() {
+	const adapter = new PrismaNeon({
+		connectionString: env.DATABASE_URL,
+	});
 
-const prisma = new PrismaClient({ adapter });
+	return new PrismaClient({ adapter });
+}
 
 {{else if (eq dbSetup "prisma-postgres")}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({
-	connectionString: env.DATABASE_URL,
-});
+export function createPrismaClient() {
+	const adapter = new PrismaPg({
+		connectionString: env.DATABASE_URL,
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+		maxUses: 1,
+{{/if}}
+	});
 
-const prisma = new PrismaClient({ adapter });
+	return new PrismaClient({ adapter });
+}
 
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+export function createPrismaClient() {
+	const adapter = new PrismaPg({
+		connectionString: env.DATABASE_URL,
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+		maxUses: 1,
+{{/if}}
+	});
+	return new PrismaClient({ adapter });
+}
 
 {{/if}}
-
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+const prisma = createPrismaClient();
 export default prisma;
+{{/if}}
 {{/if}}

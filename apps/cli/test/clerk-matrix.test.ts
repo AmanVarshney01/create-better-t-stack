@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 
 import { createVirtual } from "../src/index";
 import { validateConfigCompatibility } from "../src/validation";
+import { collectFiles } from "./setup";
 
 const standardBackends = [
   { backend: "hono", runtime: "bun" },
@@ -41,28 +42,6 @@ function buildFrontendCombos(
   }
 
   return combos;
-}
-
-function collectFiles(
-  node:
-    | { type: "file"; path: string; content: string }
-    | { type: "directory"; path: string; children: unknown[] },
-  rootPath: string,
-  files = new Map<string, string>(),
-) {
-  if (node.type === "file") {
-    const relativePath = node.path.startsWith(`${rootPath}/`)
-      ? node.path.slice(rootPath.length + 1)
-      : node.path;
-    files.set(relativePath, node.content);
-    return files;
-  }
-
-  for (const child of node.children as Parameters<typeof collectFiles>[0][]) {
-    collectFiles(child, rootPath, files);
-  }
-
-  return files;
 }
 
 function expectedContextImport(backend: string) {

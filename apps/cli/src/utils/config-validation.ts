@@ -2,8 +2,11 @@ import { Result } from "better-result";
 
 import type { CLIInput, Database, DatabaseSetup, ProjectConfig, Runtime } from "../types";
 import {
+  CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS,
+  CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS,
   ensureSingleWebAndNative,
   isWebFrontend,
+  supportsConvexBetterAuth,
   validateAddonsAgainstFrontends,
   validateApiFrontendCompatibility,
   validateExamplesCompatibility,
@@ -19,6 +22,36 @@ type ValidationResult = Result<void, ValidationError>;
 
 function validationErr(message: string): ValidationResult {
   return Result.err(new ValidationError({ message }));
+}
+
+function hasResolvedWorkersD1Target(config: Partial<ProjectConfig>) {
+  return (
+    config.backend === "hono" &&
+    config.runtime === "workers" &&
+    config.serverDeploy === "cloudflare"
+  );
+}
+
+function hasResolvedSelfCloudflareD1Target(config: Partial<ProjectConfig>) {
+  return (
+    config.backend === "self" && config.runtime === "none" && config.webDeploy === "cloudflare"
+  );
+}
+
+function canResolveWorkersD1Target(config: Partial<ProjectConfig>) {
+  return (
+    (config.backend === undefined || config.backend === "hono") &&
+    (config.runtime === undefined || config.runtime === "workers") &&
+    (config.serverDeploy === undefined || config.serverDeploy === "cloudflare")
+  );
+}
+
+function canResolveSelfCloudflareD1Target(config: Partial<ProjectConfig>) {
+  return (
+    (config.backend === undefined || config.backend === "self") &&
+    (config.runtime === undefined || config.runtime === "none") &&
+    (config.webDeploy === undefined || config.webDeploy === "cloudflare")
+  );
 }
 
 export function validateDatabaseOrmAuth(
@@ -123,8 +156,7 @@ export function validateDatabaseSetup(
     },
     d1: {
       database: "sqlite",
-      runtime: "workers",
-      errorMessage: "Cloudflare D1 setup requires SQLite database and Cloudflare Workers runtime.",
+      errorMessage: "Cloudflare D1 setup requires SQLite database.",
     },
     docker: {
       errorMessage:
@@ -148,6 +180,24 @@ export function validateDatabaseSetup(
 
     if (validation.runtime && runtime !== validation.runtime) {
       return validationErr(validation.errorMessage);
+    }
+
+    if (dbSetup === "d1") {
+      const isWorkersTarget = hasResolvedWorkersD1Target(config);
+      const isSelfCloudflareTarget = hasResolvedSelfCloudflareD1Target(config);
+      const canResolveWorkersTarget = canResolveWorkersD1Target(config);
+      const canResolveSelfCloudflareTarget = canResolveSelfCloudflareD1Target(config);
+
+      if (
+        !isWorkersTarget &&
+        !isSelfCloudflareTarget &&
+        !canResolveWorkersTarget &&
+        !canResolveSelfCloudflareTarget
+      ) {
+        return validationErr(
+          "Cloudflare D1 setup requires SQLite database and either Cloudflare Workers runtime with server deployment or backend 'self' with Cloudflare web deployment.",
+        );
+      }
     }
 
     if (dbSetup === "docker") {
@@ -216,19 +266,27 @@ export function validateConvexConstraints(
   }
 
   if (has("auth") && config.auth === "better-auth") {
-    const supportedFrontends = [
-      "tanstack-router",
-      "tanstack-start",
-      "next",
-      "native-bare",
-      "native-uniwind",
-      "native-unistyles",
-    ];
-    const hasSupportedFrontend = config.frontend?.some((f) => supportedFrontends.includes(f));
+    const incompatibleFrontends =
+      config.frontend?.filter((f) =>
+        CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS.includes(
+          f as (typeof CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS)[number],
+        ),
+      ) ?? [];
+    const hasSupportedFrontend = supportsConvexBetterAuth(config.frontend);
+
+    if (incompatibleFrontends.length > 0) {
+      return validationErr(
+        `Better Auth with '--backend convex' is not compatible with the following frontends: ${incompatibleFrontends.join(
+          ", ",
+        )}. Please use a React-based web frontend (next, tanstack-start, tanstack-router, react-router), a supported native frontend, or choose a different auth provider.`,
+      );
+    }
 
     if (!hasSupportedFrontend) {
       return validationErr(
-        "Better-Auth with Convex backend requires a supported frontend (TanStack Router, TanStack Start, Next.js, or Native).",
+        `Better Auth with '--backend convex' requires a supported frontend (${CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS.join(
+          ", ",
+        )}).`,
       );
     }
   }

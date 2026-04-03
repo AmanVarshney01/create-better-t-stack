@@ -3,6 +3,8 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency } from "../utils/add-deps";
 
+const CONVEX_BETTER_AUTH_VERSION = "1.5.3";
+
 export function processAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { auth, backend } = config;
   if (!auth || auth === "none") return;
@@ -62,7 +64,7 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         packagePath: backendPath,
         dependencies: ["better-auth", "@convex-dev/better-auth"],
         customDependencies: {
-          "better-auth": "1.4.9",
+          "better-auth": CONVEX_BETTER_AUTH_VERSION,
         },
       });
       if (hasNative) {
@@ -71,7 +73,7 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
           packagePath: backendPath,
           dependencies: ["@better-auth/expo"],
           customDependencies: {
-            "@better-auth/expo": "1.4.9",
+            "@better-auth/expo": CONVEX_BETTER_AUTH_VERSION,
           },
         });
       }
@@ -83,7 +85,7 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         packagePath: webPath,
         dependencies: ["better-auth", "@convex-dev/better-auth"],
         customDependencies: {
-          "better-auth": "1.4.9",
+          "better-auth": CONVEX_BETTER_AUTH_VERSION,
         },
       });
 
@@ -113,8 +115,8 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
           "@tanstack/react-form",
         ],
         customDependencies: {
-          "better-auth": "1.4.9",
-          "@better-auth/expo": "1.4.9",
+          "better-auth": CONVEX_BETTER_AUTH_VERSION,
+          "@better-auth/expo": CONVEX_BETTER_AUTH_VERSION,
         },
       });
     }
