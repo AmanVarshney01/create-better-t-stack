@@ -9,6 +9,7 @@ describe("Frontend Configurations", () => {
       "react-router",
       "tanstack-start",
       "next",
+      "vinext",
       "nuxt",
       "native-bare",
       "native-uniwind",
@@ -21,6 +22,7 @@ describe("Frontend Configurations", () => {
       | "react-router"
       | "tanstack-start"
       | "next"
+      | "vinext"
       | "nuxt"
       | "native-bare"
       | "native-uniwind"
@@ -52,7 +54,7 @@ describe("Frontend Configurations", () => {
           config.dbSetup = "none";
           config.webDeploy = "none";
           config.serverDeploy = "none";
-        } else if (frontend === "next") {
+        } else if (frontend === "next" || frontend === "vinext") {
           // Next.js can use self backend (fullstack)
           config.backend = "self";
           config.runtime = "none";
@@ -342,6 +344,7 @@ describe("Frontend Configurations", () => {
       "react-router",
       "tanstack-start",
       "next",
+      "vinext",
     ] as const;
     for (const frontend of compatibleFrontends) {
       it(`should work with compatible ${frontend} + Clerk`, async () => {

@@ -33,6 +33,7 @@ export async function processApiTemplates(
     const reactFramework = config.frontend.find((f) =>
       ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
     );
+    const templateReactFramework = reactFramework === "vinext" ? "next" : reactFramework;
     if (
       config.backend === "self" &&
       (reactFramework === "next" ||
@@ -42,7 +43,7 @@ export async function processApiTemplates(
       processTemplatesFromPrefix(
         vfs,
         templates,
-        `api/${config.api}/fullstack/${reactFramework}`,
+        `api/${config.api}/fullstack/${templateReactFramework}`,
         "apps/web",
         config,
       );

@@ -1,0 +1,32 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vinext dev --port 3001",
+    "build": "vinext build",
+    "start": "vinext start"
+  },
+  "dependencies": {
+    "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
+    "lucide-react": "^0.546.0",
+    "next": "^16.2.0",
+    "next-themes": "^0.4.6",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "sonner": "^2.0.5",
+    "babel-plugin-react-compiler": "^1.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "@vitejs/plugin-react": "^5.1.4",
+    "@types/node": "^20",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5",
+    "vinext": "^0.0.39",
+    "vite": "^7.0.0"
+  }
+}

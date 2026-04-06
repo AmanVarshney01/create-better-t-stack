@@ -41,7 +41,7 @@ export function processApiDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
   addApiPackageDeps(vfs, api, backend, frontend, auth);
   addServerDeps(vfs, api, backend);
   addSelfBackendWebDeps(vfs, api, backend, frontendType);
-  addWebClientDeps(vfs, api, backend, frontendType);
+  addWebClientDeps(vfs, api, backend, frontendType, frontend);
   if (frontendType.hasNative) addNativeDeps(vfs, api, backend);
   addQueryDeps(vfs, frontend, backend);
 }
@@ -149,6 +149,7 @@ function addWebClientDeps(
   api: API,
   backend: Backend,
   frontendType: FrontendType,
+  frontend: Frontend[],
 ): void {
   const webPath = "apps/web/package.json";
   if (!vfs.exists(webPath) || backend === "convex") return;

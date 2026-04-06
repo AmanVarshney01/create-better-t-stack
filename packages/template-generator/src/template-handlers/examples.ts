@@ -58,10 +58,11 @@ export async function processExampleTemplates(
         ["next", "vinext", "react-router", "tanstack-router", "tanstack-start"].includes(f),
       );
       if (reactFramework) {
+        const templateReactFramework = reactFramework === "vinext" ? "next" : reactFramework;
         processTemplatesFromPrefix(
           vfs,
           templates,
-          `examples/${example}/web/react/${reactFramework}`,
+          `examples/${example}/web/react/${templateReactFramework}`,
           "apps/web",
           config,
         );
@@ -75,7 +76,7 @@ export async function processExampleTemplates(
           processTemplatesFromPrefix(
             vfs,
             templates,
-            `examples/${example}/fullstack/${reactFramework}`,
+            `examples/${example}/fullstack/${templateReactFramework}`,
             "apps/web",
             config,
           );

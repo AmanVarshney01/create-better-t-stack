@@ -26,7 +26,7 @@ export function validateProjectName(name: string): string | undefined {
 }
 
 export const hasPWACompatibleFrontend = (webFrontend: string[]) =>
-  webFrontend.some((f) => ["tanstack-router", "react-router", "solid", "next"].includes(f));
+  webFrontend.some((f) => ["tanstack-router", "react-router", "solid", "next", "vinext"].includes(f));
 
 export const hasTauriCompatibleFrontend = (webFrontend: string[]) =>
   webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
@@ -44,25 +44,28 @@ const clerkSupportedBackends = [
   "fastify",
   "elysia",
   "self-next",
+  "self-vinext",
   "self-tanstack-start",
 ] as const;
 
 const selfHostedFullstackBackends = [
   "self-next",
+  "self-vinext",
   "self-tanstack-start",
   "self-nuxt",
   "self-astro",
 ] as const;
 
 const clerkBackendRequirementMessage =
-  "Clerk requires Convex, Hono, Express, Fastify, Elysia, or Next.js/TanStack Start fullstack backend";
+  "Clerk requires Convex, Hono, Express, Fastify, Elysia, or Next.js/Vinext/TanStack Start fullstack backend";
 const clerkFrontendRequirementMessage =
-  "Clerk requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
+  "Clerk requires React Router, TanStack Router, TanStack Start, Next.js, Vinext, or React Native";
 const convexBetterAuthSupportedWebFrontends = [
   "react-router",
   "tanstack-router",
   "tanstack-start",
   "next",
+  "vinext",
 ] as const;
 const convexBetterAuthSupportedNativeFrontends = [
   "native-bare",
@@ -83,11 +86,11 @@ const hasConvexBetterAuthCompatibleFrontend = (webFrontend: string[], nativeFron
   );
 
 const convexBetterAuthFrontendRequirementMessage =
-  "Better-Auth with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
+  "Better-Auth with Convex requires React Router, TanStack Router, TanStack Start, Next.js, Vinext, or React Native";
 
 export const hasClerkCompatibleFrontend = (webFrontend: string[], nativeFrontend: string[]) =>
   webFrontend.some((f) =>
-    ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
+    ["react-router", "tanstack-router", "tanstack-start", "next", "vinext"].includes(f),
   ) ||
   nativeFrontend.some((f) => ["native-bare", "native-uniwind", "native-unistyles"].includes(f));
 
@@ -270,6 +273,14 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       changes.push({
         category: "backend",
         message: "Frontend set to 'Next.js' (required for Next.js fullstack)",
+      });
+    }
+    if (nextStack.backend === "self-vinext" && !nextStack.webFrontend.includes("vinext")) {
+      nextStack.webFrontend = ["vinext"];
+      changed = true;
+      changes.push({
+        category: "backend",
+        message: "Frontend set to 'Vinext' (required for Vinext fullstack)",
       });
     }
     if (
@@ -848,6 +859,19 @@ export const getDisabledReason = (
     }
   }
 
+
+  if (currentStack.backend === "self-vinext") {
+    if (category === "runtime" && optionId !== "none") {
+      return "Vinext fullstack uses built-in API routes";
+    }
+    if (category === "webFrontend" && optionId !== "vinext") {
+      return "Vinext fullstack requires Vinext frontend";
+    }
+    if (category === "serverDeploy" && optionId !== "none") {
+      return "Fullstack uses frontend deployment";
+    }
+  }
+
   if (currentStack.backend === "self-nuxt") {
     if (category === "runtime" && optionId !== "none") {
       return "Nuxt fullstack uses built-in server routes";
@@ -896,6 +920,9 @@ export const getDisabledReason = (
   if (category === "backend") {
     if (optionId === "self-next" && !currentStack.webFrontend.includes("next")) {
       return "Requires Next.js frontend";
+    }
+    if (optionId === "self-vinext" && !currentStack.webFrontend.includes("vinext")) {
+      return "Requires Vinext frontend";
     }
     if (
       optionId === "self-tanstack-start" &&
@@ -1066,7 +1093,7 @@ export const getDisabledReason = (
   // ============================================
   if (category === "addons") {
     if (optionId === "pwa" && !hasPWACompatibleFrontend(currentStack.webFrontend)) {
-      return "PWA requires TanStack Router, React Router, Solid, or Next.js";
+      return "PWA requires TanStack Router, React Router, Solid, Next.js, or Vinext";
     }
     if (optionId === "tauri" && !hasTauriCompatibleFrontend(currentStack.webFrontend)) {
       return "Tauri requires a web frontend";

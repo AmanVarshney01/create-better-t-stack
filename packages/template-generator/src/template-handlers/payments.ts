@@ -33,10 +33,11 @@ export async function processPaymentsTemplates(
       ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
     );
     if (reactFramework) {
+      const templateReactFramework = reactFramework === "vinext" ? "next" : reactFramework;
       processTemplatesFromPrefix(
         vfs,
         templates,
-        `payments/${config.payments}/web/react/${reactFramework}`,
+        `payments/${config.payments}/web/react/${templateReactFramework}`,
         "apps/web",
         config,
       );

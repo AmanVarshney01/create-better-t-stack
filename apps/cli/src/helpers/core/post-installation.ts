@@ -455,6 +455,7 @@ function getBunWebNativeWarning() {
 
 function getClerkQuickstartUrl(frontend: Frontend[]) {
   if (frontend.includes("next")) return "https://clerk.com/docs/nextjs/getting-started/quickstart";
+  if (frontend.includes("vinext")) return "https://clerk.com/docs/nextjs/getting-started/quickstart";
   if (frontend.includes("react-router")) {
     return "https://clerk.com/docs/react-router/getting-started/quickstart";
   }
@@ -482,7 +483,7 @@ function getClerkInstructionLines(
 ) {
   const lines: string[] = [];
 
-  if (frontend.includes("next")) {
+  if (frontend.includes("next") || frontend.includes("vinext")) {
     lines.push("Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in apps/web/.env");
   }
 
@@ -502,14 +503,16 @@ function getClerkInstructionLines(
     return [
       "Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard",
       ...lines,
-      ...(frontend.some((value) => ["next", "react-router", "tanstack-start"].includes(value))
+      ...(frontend.some((value) =>
+        ["next", "vinext", "react-router", "tanstack-start"].includes(value),
+      )
         ? ["Set CLERK_SECRET_KEY in apps/web/.env for Clerk server middleware"]
         : []),
     ];
   }
 
   const hasClerkServerFrontend = frontend.some((value) =>
-    ["next", "react-router", "tanstack-start"].includes(value),
+    ["next", "vinext", "react-router", "tanstack-start"].includes(value),
   );
   const serverEnvPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
   const needsServerSideClerkAuth = backend !== "none";

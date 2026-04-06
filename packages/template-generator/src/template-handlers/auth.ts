@@ -38,10 +38,11 @@ export async function processAuthTemplates(
         ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
       );
       if (reactFramework) {
+        const templateReactFramework = reactFramework === "vinext" ? "next" : reactFramework;
         processTemplatesFromPrefix(
           vfs,
           templates,
-          `auth/clerk/convex/web/react/${reactFramework}`,
+          `auth/clerk/convex/web/react/${templateReactFramework}`,
           "apps/web",
           config,
         );
@@ -97,10 +98,11 @@ export async function processAuthTemplates(
         ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
       );
       if (reactFramework) {
+        const templateReactFramework = reactFramework === "vinext" ? "next" : reactFramework;
         processTemplatesFromPrefix(
           vfs,
           templates,
-          `auth/better-auth/convex/web/react/${reactFramework}`,
+          `auth/better-auth/convex/web/react/${templateReactFramework}`,
           "apps/web",
           config,
         );
@@ -167,10 +169,11 @@ export async function processAuthTemplates(
       ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
     );
     if (reactFramework) {
+      const templateReactFramework = reactFramework === "vinext" ? "next" : reactFramework;
       processTemplatesFromPrefix(
         vfs,
         templates,
-        `auth/${authProvider}/web/react/${reactFramework}`,
+        `auth/${authProvider}/web/react/${templateReactFramework}`,
         "apps/web",
         config,
       );
@@ -184,7 +187,7 @@ export async function processAuthTemplates(
         processTemplatesFromPrefix(
           vfs,
           templates,
-          `auth/${authProvider}/fullstack/${reactFramework}`,
+          `auth/${authProvider}/fullstack/${templateReactFramework}`,
           "apps/web",
           config,
         );

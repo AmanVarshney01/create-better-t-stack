@@ -210,7 +210,7 @@ export function isFrontendAllowedWithBackend(
   }
 
   if (auth === "clerk") {
-    const incompatibleFrontends = ["nuxt", "svelte", "solid", "astro", "vinext"];
+    const incompatibleFrontends = ["nuxt", "svelte", "solid", "astro"];
     if (incompatibleFrontends.includes(frontend)) return false;
   }
 
