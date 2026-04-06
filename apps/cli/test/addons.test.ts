@@ -33,7 +33,7 @@ describe("Addon Configurations", () => {
 
   describe("Frontend-Specific Addons", () => {
     describe("PWA Addon", () => {
-      const pwaCompatibleFrontends = ["tanstack-router", "react-router", "solid", "next"];
+      const pwaCompatibleFrontends = ["tanstack-router", "react-router", "solid", "next", "vinext"];
 
       for (const frontend of pwaCompatibleFrontends) {
         it(`should work with PWA + ${frontend}`, async () => {

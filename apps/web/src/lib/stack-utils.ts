@@ -29,6 +29,7 @@ const desktopAddonNames = {
 const staticDesktopFrontendNames = {
   "tanstack-start": "TanStack Start",
   next: "Next.js",
+  vinext: "Vinext",
   nuxt: "Nuxt",
   svelte: "SvelteKit",
   astro: "Astro",
@@ -112,6 +113,7 @@ export function generateStackCommand(stack: StackState) {
   const mapBackendToCli = (backend: string) => {
     if (
       backend === "self-next" ||
+      backend === "self-vinext" ||
       backend === "self-tanstack-start" ||
       backend === "self-nuxt" ||
       backend === "self-astro"

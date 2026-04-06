@@ -8,7 +8,7 @@ export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectCon
 
   if (webDeploy !== "cloudflare") return;
 
-  const isNext = frontend.includes("next");
+  const isNext = frontend.includes("next") || frontend.includes("vinext");
   const isNuxt = frontend.includes("nuxt");
   const isSvelte = frontend.includes("svelte");
   const isTanstackStart = frontend.includes("tanstack-start");

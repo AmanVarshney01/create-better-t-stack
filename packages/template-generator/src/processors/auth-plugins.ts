@@ -27,7 +27,10 @@ export function processAuthPlugins(vfs: VirtualFileSystem, config: ProjectConfig
   }
 
   // Next.js Cookies
-  if (config.backend === "self" && config.frontend.includes("next")) {
+  if (
+    config.backend === "self" &&
+    (config.frontend.includes("next") || config.frontend.includes("vinext"))
+  ) {
     pluginsToAdd.push("nextCookies()");
     importsToAdd.push({
       named: "nextCookies",

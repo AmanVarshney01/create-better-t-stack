@@ -15,7 +15,7 @@ type FrontendType = {
 function getFrontendType(frontend: Frontend[]): FrontendType {
   return {
     hasReactWeb: frontend.some((f) =>
-      ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+      ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
     ),
     hasNuxtWeb: frontend.includes("nuxt"),
     hasSvelteWeb: frontend.includes("svelte"),
@@ -41,7 +41,7 @@ export function processApiDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
   addApiPackageDeps(vfs, api, backend, frontend, auth);
   addServerDeps(vfs, api, backend);
   addSelfBackendWebDeps(vfs, api, backend, frontendType);
-  addWebClientDeps(vfs, api, backend, frontendType);
+  addWebClientDeps(vfs, api, backend, frontendType, frontend);
   if (frontendType.hasNative) addNativeDeps(vfs, api, backend);
   addQueryDeps(vfs, frontend, backend);
 }
@@ -70,8 +70,8 @@ function addApiPackageDeps(
     });
   }
 
-  // Add next dep for api package when backend is self and frontend includes next
-  if (backend === "self" && frontend.includes("next")) {
+  // Add framework dep for API package when backend is self and frontend includes next-like frameworks
+  if (backend === "self" && (frontend.includes("next") || frontend.includes("vinext"))) {
     addPackageDependency({ vfs, packagePath: pkgPath, dependencies: ["next"] });
   }
 
@@ -149,6 +149,7 @@ function addWebClientDeps(
   api: API,
   backend: Backend,
   frontendType: FrontendType,
+  frontend: Frontend[],
 ): void {
   const webPath = "apps/web/package.json";
   if (!vfs.exists(webPath) || backend === "convex") return;

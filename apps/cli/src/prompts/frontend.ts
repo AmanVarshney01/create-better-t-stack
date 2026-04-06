@@ -66,6 +66,11 @@ export async function getFrontendChoice(
           hint: "The React Framework for the Web",
         },
         {
+          value: "vinext" as const,
+          label: "Vinext",
+          hint: "Next.js API surface reimplemented on Vite",
+        },
+        {
           value: "nuxt" as const,
           label: "Nuxt",
           hint: "The Progressive Web Framework for Vue.js",

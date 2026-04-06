@@ -20,6 +20,7 @@ export const FrontendSchema = z
     "react-router",
     "tanstack-start",
     "next",
+    "vinext",
     "nuxt",
     "native-bare",
     "native-uniwind",
