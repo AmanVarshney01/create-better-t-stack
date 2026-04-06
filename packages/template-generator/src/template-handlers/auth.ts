@@ -11,7 +11,7 @@ export async function processAuthTemplates(
   if (!config.auth || config.auth === "none") return;
 
   const hasReactWeb = config.frontend.some((f) =>
-    ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+    ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
   );
   const hasNuxtWeb = config.frontend.includes("nuxt");
   const hasSvelteWeb = config.frontend.includes("svelte");
@@ -35,13 +35,14 @@ export async function processAuthTemplates(
 
     if (hasReactWeb) {
       const reactFramework = config.frontend.find((f) =>
-        ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+        ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
       );
       if (reactFramework) {
+        const templateReactFramework = reactFramework === "vinext" ? "next" : reactFramework;
         processTemplatesFromPrefix(
           vfs,
           templates,
-          `auth/clerk/convex/web/react/${reactFramework}`,
+          `auth/clerk/convex/web/react/${templateReactFramework}`,
           "apps/web",
           config,
         );
@@ -94,13 +95,14 @@ export async function processAuthTemplates(
       );
 
       const reactFramework = config.frontend.find((f) =>
-        ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+        ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
       );
       if (reactFramework) {
+        const templateReactFramework = reactFramework === "vinext" ? "next" : reactFramework;
         processTemplatesFromPrefix(
           vfs,
           templates,
-          `auth/better-auth/convex/web/react/${reactFramework}`,
+          `auth/better-auth/convex/web/react/${templateReactFramework}`,
           "apps/web",
           config,
         );
@@ -164,25 +166,28 @@ export async function processAuthTemplates(
     );
 
     const reactFramework = config.frontend.find((f) =>
-      ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+      ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
     );
     if (reactFramework) {
+      const templateReactFramework = reactFramework === "vinext" ? "next" : reactFramework;
       processTemplatesFromPrefix(
         vfs,
         templates,
-        `auth/${authProvider}/web/react/${reactFramework}`,
+        `auth/${authProvider}/web/react/${templateReactFramework}`,
         "apps/web",
         config,
       );
 
       if (
         config.backend === "self" &&
-        (reactFramework === "next" || reactFramework === "tanstack-start")
+        (reactFramework === "next" ||
+          reactFramework === "vinext" ||
+          reactFramework === "tanstack-start")
       ) {
         processTemplatesFromPrefix(
           vfs,
           templates,
-          `auth/${authProvider}/fullstack/${reactFramework}`,
+          `auth/${authProvider}/fullstack/${templateReactFramework}`,
           "apps/web",
           config,
         );

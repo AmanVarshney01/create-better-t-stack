@@ -5,6 +5,7 @@ export const desktopWebFrontends = [
   "react-router",
   "tanstack-start",
   "next",
+  "vinext",
   "nuxt",
   "svelte",
   "solid",

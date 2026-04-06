@@ -62,7 +62,7 @@ function getBaseTasks(frontend: string[]): Record<string, TurboTask> {
   // - Nuxt: .nuxt/**, .output/**
   const buildOutputs = ["dist/**"];
 
-  if (frontend.includes("next")) {
+  if (frontend.includes("next") || frontend.includes("vinext")) {
     buildOutputs.push(".next/**");
   }
 

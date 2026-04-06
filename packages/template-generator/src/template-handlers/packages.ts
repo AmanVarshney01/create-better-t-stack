@@ -22,6 +22,7 @@ export async function processEnvPackage(
       "react-router",
       "tanstack-start",
       "next",
+      "vinext",
       "nuxt",
       "svelte",
       "solid",
@@ -90,7 +91,7 @@ export async function processUiPackage(
   config: ProjectConfig,
 ): Promise<void> {
   const hasReactWeb = config.frontend.some((f) =>
-    ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+    ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
   );
 
   if (!hasReactWeb) return;

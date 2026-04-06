@@ -278,7 +278,7 @@ export function validateConvexConstraints(
       return validationErr(
         `Better Auth with '--backend convex' is not compatible with the following frontends: ${incompatibleFrontends.join(
           ", ",
-        )}. Please use a React-based web frontend (next, tanstack-start, tanstack-router, react-router), a supported native frontend, or choose a different auth provider.`,
+        )}. Please use a React-based web frontend (next, vinext, tanstack-start, tanstack-router, react-router), a supported native frontend, or choose a different auth provider.`,
       );
     }
 

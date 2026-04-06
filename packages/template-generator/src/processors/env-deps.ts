@@ -13,15 +13,16 @@ export function processEnvDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
     ["native-bare", "native-uniwind", "native-unistyles"].includes(value),
   );
   const hasNextJs = frontend.includes("next");
+  const hasVinext = frontend.includes("vinext");
   const hasNuxt = frontend.includes("nuxt");
 
-  if (hasNextJs) {
+  if (hasNextJs || hasVinext) {
     deps.push("@t3-oss/env-nextjs");
   } else if (hasNuxt) {
     deps.push("@t3-oss/env-nuxt");
   }
 
-  const needsCoreEnv = hasNative || (!hasNextJs && !hasNuxt);
+  const needsCoreEnv = hasNative || (!(hasNextJs || hasVinext) && !hasNuxt);
   if (needsCoreEnv) {
     deps.push("@t3-oss/env-core");
   }
@@ -31,7 +32,7 @@ export function processEnvDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
     deps.push("@t3-oss/env-core");
   }
 
-  if (backend === "self" && webDeploy === "cloudflare" && hasNextJs) {
+  if (backend === "self" && webDeploy === "cloudflare" && (hasNextJs || hasVinext)) {
     deps.push("@opennextjs/cloudflare");
   }
 

@@ -30,13 +30,14 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
   const hasNextJs = frontend.includes("next");
+  const hasVinext = frontend.includes("vinext");
   const hasReactRouter = frontend.includes("react-router");
   const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasTanStackStart = frontend.includes("tanstack-start");
   const hasViteReact = hasReactRouter || hasTanStackRouter;
   const hasSolid = frontend.includes("solid");
   const hasSvelte = frontend.includes("svelte");
-  const hasReactWebAuthForms = hasNextJs || hasTanStackStart || hasViteReact;
+  const hasReactWebAuthForms = hasNextJs || hasVinext || hasTanStackStart || hasViteReact;
 
   if (auth === "clerk") {
     if (webExists) {
@@ -146,6 +147,7 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
       "tanstack-router",
       "tanstack-start",
       "next",
+      "vinext",
       "nuxt",
       "svelte",
       "solid",
@@ -153,18 +155,19 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
     ].includes(f),
   );
   const hasReactWebAuthForms = frontend.some((f) =>
-    ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
+    ["react-router", "tanstack-router", "tanstack-start", "next", "vinext"].includes(f),
   );
   const hasSolid = frontend.includes("solid");
   const hasSvelte = frontend.includes("svelte");
   const hasNextJs = frontend.includes("next");
+  const hasVinext = frontend.includes("vinext");
   const hasReactRouter = frontend.includes("react-router");
   const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasTanStackStart = frontend.includes("tanstack-start");
 
   if (auth === "clerk") {
     if (webExists) {
-      if (hasNextJs) {
+      if (hasNextJs || hasVinext) {
         addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@clerk/nextjs"] });
       } else if (hasReactRouter) {
         addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@clerk/react-router"] });
