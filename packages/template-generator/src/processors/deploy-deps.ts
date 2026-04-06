@@ -35,7 +35,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     const webPkgPath = "apps/web/package.json";
     if (!vfs.exists(webPkgPath)) return;
 
-    if (frontend.includes("next")) {
+    if (frontend.includes("next") || frontend.includes("vinext")) {
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,

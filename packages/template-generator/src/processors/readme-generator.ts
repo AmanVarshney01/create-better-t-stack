@@ -7,6 +7,7 @@ function getDesktopStaticBuildNote(frontend: ProjectConfig["frontend"]): string 
   const staticBuildFrontends = new Map([
     ["tanstack-start", "TanStack Start"],
     ["next", "Next.js"],
+    ["vinext", "Vinext"],
     ["nuxt", "Nuxt"],
     ["svelte", "SvelteKit"],
     ["astro", "Astro"],
@@ -24,6 +25,7 @@ function getDesktopStaticBuildNote(frontend: ProjectConfig["frontend"]): string 
 
 function getClerkQuickstartUrl(frontend: ProjectConfig["frontend"]): string {
   if (frontend.includes("next")) return "https://clerk.com/docs/nextjs/getting-started/quickstart";
+  if (frontend.includes("vinext")) return "https://clerk.com/docs/nextjs/getting-started/quickstart";
   if (frontend.includes("react-router")) {
     return "https://clerk.com/docs/react-router/getting-started/quickstart";
   }
@@ -47,7 +49,7 @@ function getClerkQuickstartUrl(frontend: ProjectConfig["frontend"]): string {
 function getClerkFrontendEnvLines(frontend: ProjectConfig["frontend"]): string[] {
   const lines: string[] = [];
 
-  if (frontend.includes("next")) {
+  if (frontend.includes("next") || frontend.includes("vinext")) {
     lines.push("- Set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` in `apps/web/.env`");
   }
 
@@ -74,7 +76,7 @@ function getClerkSetupLines(
 ): string[] {
   const lines = getClerkFrontendEnvLines(frontend);
   const hasClerkServerFrontend = frontend.some((value) =>
-    ["next", "react-router", "tanstack-start"].includes(value),
+    ["next", "vinext", "react-router", "tanstack-start"].includes(value),
   );
 
   if (isConvex) {
@@ -135,6 +137,7 @@ function hasWebFrontend(frontend: ProjectConfig["frontend"]): boolean {
       "react-router",
       "tanstack-start",
       "next",
+      "vinext",
       "svelte",
       "nuxt",
       "solid",
@@ -169,7 +172,7 @@ function generateReadmeContent(options: ProjectConfig): string {
   const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasNative = hasNativeFrontend(frontend);
   const hasReactWeb = frontend.some((f) =>
-    ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+    ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
   );
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
@@ -271,6 +274,7 @@ function generateStackDescription(
     "tanstack-router": "React, TanStack Router",
     "react-router": "React, React Router",
     next: "Next.js",
+    vinext: "Vinext",
     "tanstack-start": "React, TanStack Start",
     svelte: "SvelteKit",
     nuxt: "Nuxt",
@@ -369,7 +373,7 @@ function generateProjectStructure(config: ProjectConfig): string {
   const hasAppWebFrontend = hasWebFrontend(frontend);
   const isBackendSelf = backend === "self";
   const hasReactWeb = frontend.some((f) =>
-    ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+    ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
   );
   const hasNative = hasNativeFrontend(frontend);
   const hasDbPackage = !isConvex && database !== "none" && orm !== "none";
@@ -379,6 +383,7 @@ function generateProjectStructure(config: ProjectConfig): string {
       "tanstack-router": "React + TanStack Router",
       "react-router": "React + React Router",
       next: "Next.js",
+      vinext: "Vinext",
       "tanstack-start": "React + TanStack Start",
       svelte: "SvelteKit",
       nuxt: "Nuxt",
@@ -456,7 +461,7 @@ function generateFeaturesList(
   const hasNative = hasNativeFrontend(frontend);
   const hasAppWebFrontend = hasWebFrontend(frontend);
   const hasReactWeb = frontend.some((f) =>
-    ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+    ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
   );
   const usesTailwind = hasAppWebFrontend || frontend.includes("native-uniwind");
 
@@ -466,6 +471,7 @@ function generateFeaturesList(
     "tanstack-router": "- **TanStack Router** - File-based routing with full type safety",
     "react-router": "- **React Router** - Declarative routing for React",
     next: "- **Next.js** - Full-stack React framework",
+    vinext: "- **Vinext** - Next.js API surface reimplemented on Vite",
     "tanstack-start": "- **TanStack Start** - SSR framework with TanStack Router",
     svelte: "- **SvelteKit** - Web framework for building Svelte apps",
     nuxt: "- **Nuxt** - The Intuitive Vue Framework",
@@ -638,6 +644,7 @@ function generateScriptsList(
       "react-router",
       "tanstack-start",
       "next",
+      "vinext",
       "nuxt",
       "svelte",
       "solid",

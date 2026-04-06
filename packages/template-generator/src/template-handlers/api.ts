@@ -14,7 +14,7 @@ export async function processApiTemplates(
   processTemplatesFromPrefix(vfs, templates, `api/${config.api}/server`, "packages/api", config);
 
   const hasReactWeb = config.frontend.some((f) =>
-    ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+    ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
   );
   const hasNuxtWeb = config.frontend.includes("nuxt");
   const hasSvelteWeb = config.frontend.includes("svelte");
@@ -31,11 +31,13 @@ export async function processApiTemplates(
     );
 
     const reactFramework = config.frontend.find((f) =>
-      ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+      ["tanstack-router", "react-router", "tanstack-start", "next", "vinext"].includes(f),
     );
     if (
       config.backend === "self" &&
-      (reactFramework === "next" || reactFramework === "tanstack-start")
+      (reactFramework === "next" ||
+        reactFramework === "vinext" ||
+        reactFramework === "tanstack-start")
     ) {
       processTemplatesFromPrefix(
         vfs,

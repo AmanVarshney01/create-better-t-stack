@@ -43,6 +43,7 @@ function generateAuthSecret() {
 
 function getClientServerVar(frontend: string[], backend: ProjectConfig["backend"]) {
   const hasNextJs = frontend.includes("next");
+  const hasVinext = frontend.includes("vinext");
   const hasNuxt = frontend.includes("nuxt");
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
@@ -54,7 +55,7 @@ function getClientServerVar(frontend: string[], backend: ProjectConfig["backend"
   }
 
   let key = "VITE_SERVER_URL";
-  if (hasNextJs) key = "NEXT_PUBLIC_SERVER_URL";
+  if (hasNextJs || hasVinext) key = "NEXT_PUBLIC_SERVER_URL";
   else if (hasNuxt) key = "NUXT_PUBLIC_SERVER_URL";
   else if (hasSvelte || hasAstro) key = "PUBLIC_SERVER_URL";
   else if (hasTanstackStart) key = "VITE_SERVER_URL";
@@ -64,10 +65,11 @@ function getClientServerVar(frontend: string[], backend: ProjectConfig["backend"
 
 function getConvexVar(frontend: string[]) {
   const hasNextJs = frontend.includes("next");
+  const hasVinext = frontend.includes("vinext");
   const hasNuxt = frontend.includes("nuxt");
   const hasSvelte = frontend.includes("svelte");
   const hasTanstackStart = frontend.includes("tanstack-start");
-  if (hasNextJs) return "NEXT_PUBLIC_CONVEX_URL";
+  if (hasNextJs || hasVinext) return "NEXT_PUBLIC_CONVEX_URL";
   if (hasNuxt) return "NUXT_PUBLIC_CONVEX_URL";
   if (hasSvelte) return "PUBLIC_CONVEX_URL";
   if (hasTanstackStart) return "VITE_CONVEX_URL";
@@ -137,6 +139,7 @@ function buildClientVars(
   auth: ProjectConfig["auth"],
 ): EnvVariable[] {
   const hasNextJs = frontend.includes("next");
+  const hasVinext = frontend.includes("vinext");
   const hasReactRouter = frontend.includes("react-router");
   const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasTanStackStart = frontend.includes("tanstack-start");
@@ -154,7 +157,7 @@ function buildClientVars(
   ];
 
   if (auth === "clerk") {
-    if (hasNextJs) {
+    if (hasNextJs || hasVinext) {
       vars.push(
         {
           key: "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
@@ -184,7 +187,7 @@ function buildClientVars(
   }
 
   if (backend === "convex" && auth === "better-auth") {
-    if (hasNextJs) {
+    if (hasNextJs || hasVinext) {
       vars.push({
         key: "NEXT_PUBLIC_CONVEX_SITE_URL",
         value: "https://<YOUR_CONVEX_URL>",
@@ -255,6 +258,7 @@ function buildConvexBackendVars(
   examples: ProjectConfig["examples"],
 ): EnvVariable[] {
   const hasNextJs = frontend.includes("next");
+  const hasVinext = frontend.includes("vinext");
   const hasNative =
     frontend.includes("native-bare") ||
     frontend.includes("native-uniwind") ||
@@ -264,6 +268,7 @@ function buildConvexBackendVars(
     frontend.includes("tanstack-router") ||
     frontend.includes("tanstack-start") ||
     hasNextJs ||
+    hasVinext ||
     frontend.includes("nuxt") ||
     frontend.includes("solid") ||
     frontend.includes("svelte") ||
@@ -303,7 +308,7 @@ function buildConvexBackendVars(
     if (hasWeb) {
       vars.push(
         {
-          key: hasNextJs ? "NEXT_PUBLIC_CONVEX_SITE_URL" : "VITE_CONVEX_SITE_URL",
+          key: hasNextJs || hasVinext ? "NEXT_PUBLIC_CONVEX_SITE_URL" : "VITE_CONVEX_SITE_URL",
           value: "",
           condition: true,
           comment: "Same as CONVEX_URL but ends in .site",
@@ -342,6 +347,7 @@ function buildConvexCommentBlocks(
     frontend.includes("tanstack-router") ||
     frontend.includes("tanstack-start") ||
     frontend.includes("next") ||
+    frontend.includes("vinext") ||
     frontend.includes("nuxt") ||
     frontend.includes("solid") ||
     frontend.includes("svelte") ||
@@ -504,6 +510,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
   const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasTanStackStart = frontend.includes("tanstack-start");
   const hasNextJs = frontend.includes("next");
+  const hasVinext = frontend.includes("vinext");
   const hasNuxt = frontend.includes("nuxt");
   const hasSvelte = frontend.includes("svelte");
   const hasSolid = frontend.includes("solid");
@@ -513,6 +520,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     hasTanStackRouter ||
     hasTanStackStart ||
     hasNextJs ||
+    hasVinext ||
     hasNuxt ||
     hasSolid ||
     hasSvelte ||

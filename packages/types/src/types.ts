@@ -62,6 +62,7 @@ export type WebFrontend = Extract<
   | "react-router"
   | "tanstack-start"
   | "next"
+  | "vinext"
   | "nuxt"
   | "svelte"
   | "solid"
