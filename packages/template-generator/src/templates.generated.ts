@@ -200,7 +200,6 @@ console.log("Electrobun desktop shell started.");
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -13317,8 +13316,7 @@ next-env.d.ts
   "compilerOptions": {
     "composite": true,
 		"outDir": "dist",
-		"baseUrl": ".",
-    "paths": {
+		"paths": {
       "@/*": ["./src/*"]
     },
     "jsx": "react-jsx"{{#if (eq backend "hono")}},
@@ -23907,7 +23905,6 @@ export const darkTheme = {
   "compilerOptions": {
     "strict": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["*"]
     }
@@ -24867,7 +24864,6 @@ module.exports = uniwindConfig;
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }
@@ -25567,7 +25563,6 @@ export function ThemeProvider({
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "baseUrl": ".",
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -26111,7 +26106,6 @@ export default function Home() {
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "rootDirs": [".", "./.react-router/types"],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
@@ -26575,7 +26569,6 @@ function HomeComponent() {
     "skipLibCheck": true,
     "types": ["vite/client"],
     "rootDirs": ["."],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
@@ -27164,7 +27157,6 @@ function HomeComponent() {
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
@@ -27656,7 +27648,6 @@ body {
     "noUncheckedSideEffectImports": true,
 
     "rootDirs": ["."],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -29466,7 +29457,6 @@ export function cn(...inputs: ClassValue[]) {
   ["packages/ui/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "paths": {
