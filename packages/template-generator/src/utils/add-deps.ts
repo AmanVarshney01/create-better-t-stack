@@ -148,7 +148,7 @@ export const dependencyVersionMap = {
   "@astrojs/cloudflare": "^13.0.1",
   "@astrojs/node": "^10.0.0-beta.9",
 
-  alchemy: "^0.90.0",
+  alchemy: "^0.91.2",
 
   dotenv: "^17.2.2",
   tsdown: "^0.16.5",
