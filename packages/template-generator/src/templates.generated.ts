@@ -25619,28 +25619,28 @@ export function ThemeProvider({
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@react-router/fs-routes": "^7.10.1",
-    "@react-router/node": "^7.10.1",
-    "@react-router/serve": "^7.10.1",
-    "isbot": "^5.1.28",
-    "lucide-react": "^0.546.0",
+    "@react-router/fs-routes": "^7.14.1",
+    "@react-router/node": "^7.14.1",
+    "@react-router/serve": "^7.14.1",
+    "isbot": "^5.1.39",
+    "lucide-react": "^1.8.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "react-router": "^7.10.1",
-    "sonner": "^2.0.5"
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-router": "^7.14.1",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
-    "@react-router/dev": "^7.10.1",
-    "@tailwindcss/vite": "^4.1.18",
+    "@react-router/dev": "^7.14.1",
+    "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^20",
-    "@types/react": "^19.2.10",
+    "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "react-router-devtools": "^1.1.0",
-    "tailwindcss": "^4.1.18",
+    "tailwindcss": "^4.2.2",
     "typescript": "^5.8.3",
-    "vite": "^7.2.7",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite": "^8.0.8",
+    "vite-tsconfig-paths": "^6.1.1"
   }
 }
 `],
@@ -26164,26 +26164,26 @@ export default defineConfig({
 		"check-types": "vite build && tsc --noEmit"
 	},
 	"dependencies": {
-        "@hookform/resolvers": "^5.1.1",
+        "@hookform/resolvers": "^5.2.2",
         "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-		"@tailwindcss/vite": "^4.1.18",
-		"@tanstack/react-router": "^1.141.1",
-		"lucide-react": "^0.546.0",
+		"@tailwindcss/vite": "^4.2.2",
+		"@tanstack/react-router": "^1.168.22",
+		"lucide-react": "^1.8.0",
         "next-themes": "^0.4.6",
-		"react": "^19.2.3",
-		"react-dom": "^19.2.3",
-        "sonner": "^2.0.5"
+		"react": "^19.2.5",
+		"react-dom": "^19.2.5",
+        "sonner": "^2.0.7"
 	},
 	"devDependencies": {
-		"@tanstack/react-router-devtools": "^1.141.1",
-		"@tanstack/router-plugin": "^1.141.1",
+		"@tanstack/react-router-devtools": "^1.166.13",
+		"@tanstack/router-plugin": "^1.167.22",
 		"@types/node": "^22.13.14",
-		"@types/react": "^19.2.10",
+		"@types/react": "^19.2.14",
 		"@types/react-dom": "^19.2.3",
-		"@vitejs/plugin-react": "^4.3.4",
-		"postcss": "^8.5.3",
-		"tailwindcss": "^4.1.18",
-		"vite": "^6.2.2"
+		"@vitejs/plugin-react": "^6.0.1",
+		"postcss": "^8.5.10",
+		"tailwindcss": "^4.2.2",
+		"vite": "^8.0.8"
 	}
 }
 `],
@@ -26290,6 +26290,7 @@ function ClerkApiAuthBridge() {
 const router = createRouter({
   routeTree,
   defaultPreload: "intent",
+  scrollRestoration: true,
   defaultPendingComponent: () => <Loader />,
   {{#if (eq api "orpc")}}
   context: { orpc, queryClient },
@@ -26571,7 +26572,6 @@ function HomeComponent() {
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "types": ["vite/client"],
     "rootDirs": ["."],
@@ -26586,24 +26586,25 @@ function HomeComponent() {
   ["frontend/react/tanstack-router/vite.config.ts.hbs", `import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
-import path from "node:path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    tanstackRouter({}),
-    react(),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
   server: {
     port: 3001,
   },
-});`],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [
+    tailwindcss(),
+    tanstackRouter({
+      target: "react",
+      autoCodeSplitting: true,
+    }),
+    react(),
+  ],
+});
+`],
   ["frontend/react/tanstack-start/package.json.hbs", `{
   "name": "web",
   "private": true,
@@ -26615,30 +26616,27 @@ export default defineConfig({
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@tailwindcss/vite": "^4.1.18",
-    "@tanstack/react-query": "^5.80.6",
-    "@tanstack/react-router": "^1.141.1",
-    "@tanstack/react-router-with-query": "^1.130.17",
-    "@tanstack/react-start": "^1.141.1",
-    "@tanstack/router-plugin": "^1.141.1",
-    "lucide-react": "^0.546.0",
+    "@tailwindcss/vite": "^4.2.2",
+    "@tanstack/react-query": "^5.99.0",
+    "@tanstack/react-router": "^1.168.22",
+    "@tanstack/react-start": "^1.167.41",
+    "lucide-react": "^1.8.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "sonner": "^2.0.5",
-    "tailwindcss": "^4.1.18",
-    "vite-tsconfig-paths": "^5.1.4"
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "sonner": "^2.0.7",
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
-    "@tanstack/react-router-devtools": "^1.141.1",
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/react": "^16.2.0",
-    "@types/react": "^19.2.10",
+    "@tanstack/react-router-devtools": "^1.166.13",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.0.4",
-    "jsdom": "^26.0.0",
-    "vite": "^7.0.2",
-    "web-vitals": "^5.0.3"
+    "@vitejs/plugin-react": "^6.0.1",
+    "jsdom": "^29.0.2",
+    "vite": "^8.0.8",
+    "web-vitals": "^5.2.0"
   }
 }
 `],
@@ -26661,7 +26659,8 @@ import Loader from "./components/loader";
 import "./index.css";
 import { routeTree } from "./routeTree.gen";
 {{#if (eq api "trpc")}}
-import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { toast } from "sonner";
@@ -26674,7 +26673,7 @@ import { env } from "@{{projectName}}/env/web";
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 {{else if (eq api "orpc")}}
-import { QueryClientProvider } from "@tanstack/react-query";
+import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { orpc, queryClient } from "./utils/orpc";
 {{/if}}
 {{/if}}
@@ -26686,7 +26685,7 @@ export function getRouter() {
 		throw new Error("VITE_CONVEX_URL is not set");
 	}
 
-	const convexQueryClient = new ConvexQueryClient(convexUrl);
+	const convexQueryClient = new ConvexQueryClient(convexUrl{{#if (eq auth "better-auth")}}, { expectAuth: true }{{/if}});
 
 	const queryClient: QueryClient = new QueryClient({
 		defaultOptions: {
@@ -26774,22 +26773,20 @@ export const getRouter = () => {
 		defaultNotFoundComponent: () => <div>Not Found</div>,
 {{#if (eq api "trpc")}}
 		Wrap: ({ children }) => (
-			<QueryClientProvider client={queryClient}>
-				<TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-					{children}
-				</TRPCProvider>
-			</QueryClientProvider>
-		),
-{{else if (eq api "orpc")}}
-		Wrap: ({ children }) => (
-			<QueryClientProvider client={queryClient}>
+			<TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
 				{children}
-			</QueryClientProvider>
+			</TRPCProvider>
 		),
-{{else}}
-		Wrap: ({ children }) => <>{children}</>,
 {{/if}}
 	});
+{{#if (or (eq api "trpc") (eq api "orpc"))}}
+
+	setupRouterSsrQueryIntegration({
+		router,
+		queryClient,
+	});
+{{/if}}
+
 	return router;
 };
 {{/if}}
@@ -27154,7 +27151,6 @@ function HomeComponent() {
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
     "noEmit": true,
 
     /* Linting */
@@ -27173,21 +27169,22 @@ function HomeComponent() {
 }
 `],
   ["frontend/react/tanstack-start/vite.config.ts.hbs", `import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import tailwindcss from "@tailwindcss/vite";
 import viteReact from "@vitejs/plugin-react";
 
 export default defineConfig({
+  server: {
+    port: 3001,
+  },
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
-    tsconfigPaths(),
     tailwindcss(),
     tanstackStart(),
     viteReact(),
   ],
-  server: {
-    port: 3001,
-  },
 {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
   ssr: {
     noExternal: ["@convex-dev/better-auth"],
@@ -27411,16 +27408,16 @@ dist-ssr
     "test": "vitest run"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.1.13",
-    "@tanstack/router-plugin": "^1.131.44",
-    "@tanstack/solid-router": "^1.131.44",
-    "lucide-solid": "^0.544.0",
-    "solid-js": "^1.9.9",
-    "tailwindcss": "^4.1.13"
+    "@tailwindcss/vite": "^4.2.2",
+    "@tanstack/router-plugin": "^1.167.22",
+    "@tanstack/solid-router": "^1.168.20",
+    "lucide-solid": "^1.8.0",
+    "solid-js": "^1.9.12",
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
-    "vite": "^7.1.5",
-    "vite-plugin-solid": "^2.11.8"
+    "vite": "^8.0.8",
+    "vite-plugin-solid": "^2.11.12"
   }
 }
 `],
@@ -27725,14 +27722,14 @@ vite.config.ts.timestamp-*
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-auto": "^6.1.0",
-		"@sveltejs/kit": "^2.31.1",
-		"@sveltejs/vite-plugin-svelte": "^6.1.2",
-		"@tailwindcss/vite": "^4.1.12",
-		"svelte": "^5.38.1",
-		"svelte-check": "^4.3.1",
-		"tailwindcss": "^4.1.12",
-		"vite": "^7.1.2"
+		"@sveltejs/adapter-auto": "^7.0.1",
+		"@sveltejs/kit": "^2.57.1",
+		"@sveltejs/vite-plugin-svelte": "^7.0.0",
+		"@tailwindcss/vite": "^4.2.2",
+		"svelte": "^5.55.4",
+		"svelte-check": "^4.4.6",
+		"tailwindcss": "^4.2.2",
+		"vite": "^8.0.8"
 	},
 	"dependencies": {}
 }

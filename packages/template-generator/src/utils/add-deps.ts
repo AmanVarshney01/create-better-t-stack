@@ -23,7 +23,7 @@ export const dependencyVersionMap = {
   "@clerk/nextjs": "^7.0.5",
   "@clerk/react": "^6.1.1",
   "@clerk/react-router": "^3.0.5",
-  "@clerk/tanstack-react-start": "^1.0.5",
+  "@clerk/tanstack-react-start": "^1.1.3",
   "@clerk/expo": "^3.1.3",
 
   "drizzle-orm": "^0.45.1",
@@ -53,8 +53,8 @@ export const dependencyVersionMap = {
 
   mongoose: "^8.14.0",
 
-  "vite-plugin-pwa": "^1.0.1",
-  "@vite-pwa/assets-generator": "^1.0.0",
+  "vite-plugin-pwa": "^1.2.0",
+  "@vite-pwa/assets-generator": "^1.0.2",
 
   "@tauri-apps/cli": "^2.4.0",
 
@@ -102,15 +102,15 @@ export const dependencyVersionMap = {
   streamdown: "^1.6.10",
   shiki: "^3.20.0",
 
-  "@orpc/server": "^1.12.2",
-  "@orpc/client": "^1.12.2",
-  "@orpc/openapi": "^1.12.2",
-  "@orpc/zod": "^1.12.2",
-  "@orpc/tanstack-query": "^1.13.6",
+  "@orpc/server": "^1.13.14",
+  "@orpc/client": "^1.13.14",
+  "@orpc/openapi": "^1.13.14",
+  "@orpc/zod": "^1.13.14",
+  "@orpc/tanstack-query": "^1.13.14",
 
-  "@trpc/tanstack-react-query": "^11.13.4",
-  "@trpc/server": "^11.13.4",
-  "@trpc/client": "^11.13.4",
+  "@trpc/tanstack-react-query": "^11.16.0",
+  "@trpc/server": "^11.16.0",
+  "@trpc/client": "^11.16.0",
 
   next: "^16.2.0",
 
@@ -120,7 +120,7 @@ export const dependencyVersionMap = {
   "convex-svelte": "^0.0.12",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
-  "@convex-dev/better-auth": "^0.11.3",
+  "@convex-dev/better-auth": "^0.11.4",
 
   "@tanstack/svelte-query": "^5.85.3",
   "@tanstack/svelte-query-devtools": "^5.85.3",
@@ -131,19 +131,19 @@ export const dependencyVersionMap = {
   "@tanstack/react-query-devtools": "^5.91.1",
   "@tanstack/react-query": "^5.90.12",
   "@tanstack/react-form": "^1.28.0",
-  "@tanstack/react-router-ssr-query": "^1.142.7",
+  "@tanstack/react-router-ssr-query": "^1.166.11",
   "@tanstack/solid-form": "^1.28.0",
   "@tanstack/svelte-form": "^1.28.0",
 
-  "@tanstack/solid-query": "^5.87.4",
-  "@tanstack/solid-query-devtools": "^5.87.4",
-  "@tanstack/solid-router-devtools": "^1.131.44",
+  "@tanstack/solid-query": "^5.99.1",
+  "@tanstack/solid-query-devtools": "^5.99.1",
+  "@tanstack/solid-router-devtools": "^1.166.13",
 
   wrangler: "^4.77.0",
   "@cloudflare/vite-plugin": "^1.17.1",
   "@opennextjs/cloudflare": "^1.17.3",
   "nitro-cloudflare-dev": "^0.2.2",
-  "@sveltejs/adapter-cloudflare": "^7.2.4",
+  "@sveltejs/adapter-cloudflare": "^7.2.8",
   "@cloudflare/workers-types": "^4.20251213.0",
   "@astrojs/cloudflare": "^13.0.1",
   "@astrojs/node": "^10.0.0-beta.9",
