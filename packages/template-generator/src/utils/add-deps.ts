@@ -41,15 +41,15 @@ export const dependencyVersionMap = {
 
   mysql2: "^3.14.0",
 
-  "@prisma/client": "^7.2.0",
-  prisma: "^7.2.0",
-  "@prisma/adapter-d1": "^7.2.0",
-  "@prisma/adapter-neon": "^7.2.0",
-  "@prisma/adapter-mariadb": "^7.2.0",
-  "@prisma/adapter-libsql": "^7.2.0",
-  "@prisma/adapter-better-sqlite3": "^7.2.0",
-  "@prisma/adapter-pg": "^7.2.0",
-  "@prisma/adapter-planetscale": "^7.2.0",
+  "@prisma/client": "^7.7.0",
+  prisma: "^7.7.0",
+  "@prisma/adapter-d1": "^7.7.0",
+  "@prisma/adapter-neon": "^7.7.0",
+  "@prisma/adapter-mariadb": "^7.7.0",
+  "@prisma/adapter-libsql": "^7.7.0",
+  "@prisma/adapter-better-sqlite3": "^7.7.0",
+  "@prisma/adapter-pg": "^7.7.0",
+  "@prisma/adapter-planetscale": "^7.7.0",
 
   mongoose: "^8.14.0",
 
