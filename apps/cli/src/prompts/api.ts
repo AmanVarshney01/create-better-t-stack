@@ -1,6 +1,6 @@
 import type { API, Backend, Frontend } from "../types";
 import { allowedApisForFrontends } from "../utils/compatibility-rules";
-import { UserCancelledError } from "../utils/errors";
+import { UserCancelledError, ValidationError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
 export async function getApiChoice(
@@ -15,7 +15,15 @@ export async function getApiChoice(
   const allowed = allowedApisForFrontends(frontend ?? []);
 
   if (Api) {
-    return allowed.includes(Api) ? Api : allowed[0];
+    if (!allowed.includes(Api)) {
+      const incompatibleFrontend = (frontend ?? []).find((f) =>
+        ["nuxt", "svelte", "solid", "astro"].includes(f),
+      );
+      throw new ValidationError({
+        message: `API '${Api}' is not supported with '${incompatibleFrontend ?? frontend?.join(", ")}' frontend. Allowed: ${allowed.join(", ")}.`,
+      });
+    }
+    return Api;
   }
   const apiOptions = allowed.map((a) =>
     a === "trpc"

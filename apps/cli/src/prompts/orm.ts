@@ -1,6 +1,6 @@
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Database, ORM, Runtime } from "../types";
-import { UserCancelledError } from "../utils/errors";
+import { UserCancelledError, ValidationError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
 const ormOptions = {
@@ -33,7 +33,21 @@ export async function getORMChoice(
   }
 
   if (!hasDatabase) return "none";
-  if (orm !== undefined) return orm;
+  if (orm !== undefined) {
+    if (orm === "drizzle" && database === "mongodb") {
+      throw new ValidationError({
+        message:
+          "Drizzle ORM does not support MongoDB. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
+      });
+    }
+    if (orm === "mongoose" && database && database !== "mongodb") {
+      throw new ValidationError({
+        message:
+          "Mongoose ORM requires MongoDB database. Please use '--database mongodb' or choose a different ORM.",
+      });
+    }
+    return orm;
+  }
 
   const options =
     database === "mongodb"
