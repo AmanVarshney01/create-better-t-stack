@@ -12,7 +12,7 @@ type PackageJson = {
 };
 
 export const dependencyVersionMap = {
-  typescript: "^6.0.3",
+  typescript: "^6",
 
   "better-auth": "1.5.5",
   "@better-auth/expo": "1.5.5",

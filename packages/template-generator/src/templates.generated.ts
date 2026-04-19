@@ -150,7 +150,7 @@ export default {
   "devDependencies": {
     "@types/bun": "^1.3.4",
     "concurrently": "^9.1.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6"
   }
 }
 `],
