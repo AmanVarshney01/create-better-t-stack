@@ -150,7 +150,7 @@ export default {
   "devDependencies": {
     "@types/bun": "^1.3.4",
     "concurrently": "^9.1.0",
-    "typescript": "^5"
+    "typescript": "^6.0.3"
   }
 }
 `],
@@ -25228,8 +25228,7 @@ initOpenNextCloudflareForDev();
     "@types/node": "^20",
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.1.18",
-    "typescript": "^5"
+    "tailwindcss": "^4.1.18"
   }
 }
 `],
@@ -25638,7 +25637,6 @@ export function ThemeProvider({
     "@types/react-dom": "^19.2.3",
     "react-router-devtools": "^1.1.0",
     "tailwindcss": "^4.2.2",
-    "typescript": "^5.8.3",
     "vite": "^8.0.8",
     "vite-tsconfig-paths": "^6.1.1"
   }
@@ -28740,8 +28738,7 @@ await app.finalize();
   "devDependencies": {
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3"
+    "tailwindcss": "^4.1.18"
   },
   "scripts": {
     "check-types": "tsc --noEmit"
