@@ -150,7 +150,7 @@ export default {
   "devDependencies": {
     "@types/bun": "^1.3.4",
     "concurrently": "^9.1.0",
-    "typescript": "^5"
+    "typescript": "^6"
   }
 }
 `],
@@ -200,7 +200,6 @@ console.log("Electrobun desktop shell started.");
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -13317,8 +13316,7 @@ next-env.d.ts
   "compilerOptions": {
     "composite": true,
 		"outDir": "dist",
-		"baseUrl": ".",
-    "paths": {
+		"paths": {
       "@/*": ["./src/*"]
     },
     "jsx": "react-jsx"{{#if (eq backend "hono")}},
@@ -23907,7 +23905,6 @@ export const darkTheme = {
   "compilerOptions": {
     "strict": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["*"]
     }
@@ -24867,7 +24864,6 @@ module.exports = uniwindConfig;
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }
@@ -25228,8 +25224,7 @@ initOpenNextCloudflareForDev();
     "@types/node": "^20",
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.1.18",
-    "typescript": "^5"
+    "tailwindcss": "^4.1.18"
   }
 }
 `],
@@ -25567,7 +25562,6 @@ export function ThemeProvider({
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "baseUrl": ".",
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -25638,7 +25632,6 @@ export function ThemeProvider({
     "@types/react-dom": "^19.2.3",
     "react-router-devtools": "^1.1.0",
     "tailwindcss": "^4.2.2",
-    "typescript": "^5.8.3",
     "vite": "^8.0.8",
     "vite-tsconfig-paths": "^6.1.1"
   }
@@ -26111,7 +26104,6 @@ export default function Home() {
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "rootDirs": [".", "./.react-router/types"],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
@@ -26575,7 +26567,6 @@ function HomeComponent() {
     "skipLibCheck": true,
     "types": ["vite/client"],
     "rootDirs": ["."],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
@@ -27160,7 +27151,6 @@ function HomeComponent() {
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
@@ -27653,7 +27643,6 @@ body {
     "noUncheckedSideEffectImports": true,
 
     "rootDirs": ["."],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -28740,8 +28729,7 @@ await app.finalize();
   "devDependencies": {
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3"
+    "tailwindcss": "^4.1.18"
   },
   "scripts": {
     "check-types": "tsc --noEmit"
@@ -29463,7 +29451,6 @@ export function cn(...inputs: ClassValue[]) {
   ["packages/ui/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "paths": {
