@@ -54,53 +54,56 @@ function canResolveSelfCloudflareD1Target(config: Partial<ProjectConfig>) {
   );
 }
 
-export function validateDatabaseOrmAuth(
-  cfg: Partial<ProjectConfig>,
-  flags?: Set<string>,
+/**
+ * Pure ORM + database compatibility check. Used by the flag-path
+ * validator below and by the orm prompt directly (for flag+prompt
+ * combos where one value came from a flag and the other from a
+ * prompt).
+ */
+export function validateOrmDatabaseCompat(
+  orm: ProjectConfig["orm"] | undefined,
+  database: ProjectConfig["database"] | undefined,
 ): ValidationResult {
-  const db = cfg.database;
-  const orm = cfg.orm;
-  const has = (k: string) => (flags ? flags.has(k) : true);
-
-  if (has("orm") && has("database") && orm === "mongoose" && db !== "mongodb") {
+  if (orm === "mongoose" && database && database !== "mongodb") {
     return validationErr(
       "Mongoose ORM requires MongoDB database. Please use '--database mongodb' or choose a different ORM.",
     );
   }
 
-  if (has("orm") && has("database") && orm === "drizzle" && db === "mongodb") {
+  if (orm === "drizzle" && database === "mongodb") {
     return validationErr(
       "Drizzle ORM does not support MongoDB. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
     );
   }
 
-  if (
-    has("database") &&
-    has("orm") &&
-    db === "mongodb" &&
-    orm &&
-    orm !== "mongoose" &&
-    orm !== "prisma" &&
-    orm !== "none"
-  ) {
+  if (database === "mongodb" && orm && orm !== "mongoose" && orm !== "prisma" && orm !== "none") {
     return validationErr(
       "MongoDB database requires Mongoose or Prisma ORM. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
     );
   }
 
-  if (has("database") && has("orm") && db && db !== "none" && orm === "none") {
+  if (database && database !== "none" && orm === "none") {
     return validationErr(
       "Database selection requires an ORM. Please choose '--orm drizzle', '--orm prisma', or '--orm mongoose'.",
     );
   }
 
-  if (has("orm") && has("database") && orm && orm !== "none" && db === "none") {
+  if (orm && orm !== "none" && database === "none") {
     return validationErr(
       "ORM selection requires a database. Please choose a database or set '--orm none'.",
     );
   }
 
   return Result.ok(undefined);
+}
+
+export function validateDatabaseOrmAuth(
+  cfg: Partial<ProjectConfig>,
+  flags?: Set<string>,
+): ValidationResult {
+  const has = (k: string) => (flags ? flags.has(k) : true);
+  if (!has("orm") || !has("database")) return Result.ok(undefined);
+  return validateOrmDatabaseCompat(cfg.orm, cfg.database);
 }
 
 export function validateDatabaseSetup(
