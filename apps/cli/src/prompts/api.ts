@@ -1,5 +1,8 @@
 import type { API, Backend, Frontend } from "../types";
-import { allowedApisForFrontends } from "../utils/compatibility-rules";
+import {
+  allowedApisForFrontends,
+  validateApiFrontendCompatibility,
+} from "../utils/compatibility-rules";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
@@ -15,7 +18,9 @@ export async function getApiChoice(
   const allowed = allowedApisForFrontends(frontend ?? []);
 
   if (Api) {
-    return allowed.includes(Api) ? Api : allowed[0];
+    const compat = validateApiFrontendCompatibility(Api, frontend ?? []);
+    if (compat.isErr()) throw compat.error;
+    return Api;
   }
   const apiOptions = allowed.map((a) =>
     a === "trpc"

@@ -151,16 +151,6 @@ export function validateWorkersCompatibility(
   }
 
   if (
-    providedFlags.has("runtime") &&
-    options.runtime === "workers" &&
-    config.dbSetup === "docker"
-  ) {
-    return validationErr(
-      "Cloudflare Workers runtime (--runtime workers) is not compatible with Docker setup. Workers runtime uses serverless databases (D1) and doesn't support local Docker containers. Please use '--db-setup d1' for SQLite or choose a different runtime.",
-    );
-  }
-
-  if (
     providedFlags.has("database") &&
     config.database === "mongodb" &&
     config.runtime === "workers"

@@ -41,7 +41,7 @@ export function processApiDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
   addApiPackageDeps(vfs, api, backend, frontend, auth);
   addServerDeps(vfs, api, backend);
   addSelfBackendWebDeps(vfs, api, backend, frontendType);
-  addWebClientDeps(vfs, api, backend, frontendType);
+  addWebClientDeps(vfs, api, backend, frontend, frontendType);
   if (frontendType.hasNative) addNativeDeps(vfs, api, backend);
   addQueryDeps(vfs, frontend, backend);
 }
@@ -148,22 +148,35 @@ function addWebClientDeps(
   vfs: VirtualFileSystem,
   api: API,
   backend: Backend,
+  frontend: Frontend[],
   frontendType: FrontendType,
 ): void {
   const webPath = "apps/web/package.json";
   if (!vfs.exists(webPath) || backend === "convex") return;
 
   if (api === "trpc" && frontendType.hasReactWeb) {
+    const deps: AvailableDependencies[] = [
+      "@trpc/tanstack-react-query",
+      "@trpc/client",
+      "@trpc/server",
+    ];
+    if (frontend.includes("tanstack-start")) {
+      deps.push("@tanstack/react-router-ssr-query");
+    }
     addPackageDependency({
       vfs,
       packagePath: webPath,
-      dependencies: ["@trpc/tanstack-react-query", "@trpc/client", "@trpc/server"],
+      dependencies: deps,
     });
   } else if (api === "orpc" && frontendType.hasReactWeb) {
+    const deps: AvailableDependencies[] = ["@orpc/tanstack-query", "@orpc/client", "@orpc/server"];
+    if (frontend.includes("tanstack-start")) {
+      deps.push("@tanstack/react-router-ssr-query");
+    }
     addPackageDependency({
       vfs,
       packagePath: webPath,
-      dependencies: ["@orpc/tanstack-query", "@orpc/client", "@orpc/server"],
+      dependencies: deps,
     });
   } else if (api === "orpc" && frontendType.hasNuxtWeb) {
     addPackageDependency({
