@@ -151,7 +151,7 @@ export const dependencyVersionMap = {
   alchemy: "^0.91.2",
 
   dotenv: "^17.2.2",
-  tsdown: "^0.16.5",
+  tsdown: "^0.21.9",
   zod: "^4.1.13",
   "@t3-oss/env-core": "^0.13.1",
   "@t3-oss/env-nextjs": "^0.13.1",
