@@ -1,5 +1,6 @@
-import { Github, Globe, Star } from "lucide-react";
+import { Globe, Star } from "lucide-react";
 import Image from "next/image";
+import { FaGithub } from "react-icons/fa6";
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { formatSponsorUrl, getSponsorUrl, shouldShowLifetimeTotal } from "@/lib/sponsor-utils";
@@ -83,7 +84,7 @@ export async function SpecialSponsorBanner() {
                           rel="noopener noreferrer"
                           className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
                         >
-                          <Github className="h-4 w-4" />
+                          <FaGithub className="h-4 w-4" />
                           <span className="truncate">{entry.githubId}</span>
                         </a>
                         {entry.websiteUrl ? (

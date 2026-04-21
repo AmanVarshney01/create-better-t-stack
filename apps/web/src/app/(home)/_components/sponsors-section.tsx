@@ -1,7 +1,8 @@
 "use client";
-import { ChevronDown, ChevronUp, Github, Globe, Heart, Star, Terminal } from "lucide-react";
+import { ChevronDown, ChevronUp, Globe, Heart, Star, Terminal } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { FaGithub } from "react-icons/fa6";
 
 import {
   formatSponsorUrl,
@@ -118,7 +119,7 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
                                 rel="noopener noreferrer"
                                 className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
                               >
-                                <Github className="size-3" />
+                                <FaGithub className="size-3" />
                                 <span className="truncate">{entry.githubId}</span>
                               </a>
                               {entry.websiteUrl && (
@@ -199,7 +200,7 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
                                 rel="noopener noreferrer"
                                 className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
                               >
-                                <Github className="size-3" />
+                                <FaGithub className="size-3" />
                                 <span className="truncate">{entry.githubId}</span>
                               </a>
                               {entry.websiteUrl && (
@@ -313,7 +314,7 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
                                   rel="noopener noreferrer"
                                   className="group flex items-center gap-2 text-muted-foreground/70 text-xs transition-colors hover:text-muted-foreground"
                                 >
-                                  <Github className="size-3" />
+                                  <FaGithub className="size-3" />
                                   <span className="truncate">{entry.githubId}</span>
                                 </a>
                                 {entry.websiteUrl && (

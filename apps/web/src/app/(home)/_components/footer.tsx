@@ -1,6 +1,7 @@
-import { Github, Terminal } from "lucide-react";
+import { Terminal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { FaGithub } from "react-icons/fa6";
 
 import npmIcon from "@/public/icon/npm.svg";
 
@@ -24,7 +25,7 @@ const Footer = () => {
                 className="inline-flex items-center justify-center rounded border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 aria-label="GitHub Repository"
               >
-                <Github size={20} />
+                <FaGithub size={20} />
               </Link>
               <Link
                 href="https://www.npmjs.com/package/create-better-t-stack"
