@@ -43,10 +43,10 @@
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
-    "zod": "^4.1.13"
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "tsdown": "^0.17.2",
-    "typescript": "^5.9.3"
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
   }
 }
