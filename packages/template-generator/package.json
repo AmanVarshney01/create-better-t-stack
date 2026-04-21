@@ -49,20 +49,20 @@
   },
   "dependencies": {
     "@better-t-stack/types": "^3.27.2",
-    "better-result": "^2.8.2",
-    "handlebars": "^4.7.9",
+    "better-result": "catalog:",
+    "handlebars": "catalog:",
     "memfs": "^4.57.2",
     "pathe": "^2.0.3",
-    "ts-morph": "^28.0.0",
-    "yaml": "^2.8.3"
+    "ts-morph": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
-    "@types/fs-extra": "^11.0.4",
-    "@types/node": "^25.6.0",
+    "@types/fs-extra": "catalog:",
+    "@types/node": "catalog:",
     "fs-extra": "^11.3.4",
     "is-binary-path": "^3.0.0",
     "tinyglobby": "^0.2.15",
-    "tsdown": "^0.21.9",
-    "typescript": "^6.0.3"
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
   }
 }
