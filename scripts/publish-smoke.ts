@@ -46,19 +46,29 @@ async function pack(pkg: Publishable, outDir: string): Promise<string> {
 
   if (pkg.rewriteWorkspaceDeps) {
     const parsed = JSON.parse(original);
-    for (const d of pkg.rewriteWorkspaceDeps) {
-      if (parsed.dependencies?.[d]?.startsWith("workspace:")) {
-        parsed.dependencies[d] = `^${parsed.version}`;
+    for (const bucket of [
+      "dependencies",
+      "devDependencies",
+      "peerDependencies",
+      "optionalDependencies",
+    ] as const) {
+      const deps = parsed[bucket];
+      if (!deps) continue;
+      for (const d of pkg.rewriteWorkspaceDeps) {
+        if (deps[d]?.startsWith("workspace:")) {
+          deps[d] = `^${parsed.version}`;
+        }
       }
     }
     writeFileSync(pkgJsonPath, `${JSON.stringify(parsed, null, 2)}\n`);
   }
 
   try {
-    const r = await $`npm pack --pack-destination=${outDir} --silent`
+    const r = await $`npm pack --pack-destination=${outDir} --json`
       .cwd(join(ROOT, pkg.dir))
       .quiet();
-    return join(outDir, r.stdout.toString().trim().split("\n").pop()!.trim());
+    const [entry] = JSON.parse(r.stdout.toString()) as Array<{ filename: string }>;
+    return join(outDir, entry.filename);
   } finally {
     if (pkg.rewriteWorkspaceDeps) writeFileSync(pkgJsonPath, original);
   }
