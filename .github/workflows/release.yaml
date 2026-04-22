@@ -87,14 +87,6 @@ jobs:
         if: steps.check-version.outputs.exists == 'false'
         run: cd packages/types && bun run build
 
-      - name: Publish types to NPM
-        if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/types && npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 1
-          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
-
       - name: Update template-generator package version and types dependency
         if: steps.check-version.outputs.exists == 'false'
         run: |
@@ -105,14 +97,6 @@ jobs:
       - name: Build template-generator package
         if: steps.check-version.outputs.exists == 'false'
         run: cd packages/template-generator && bun run build
-
-      - name: Publish template-generator to NPM
-        if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/template-generator && npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 1
-          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
       - name: Update CLI types and template-generator dependencies and version
         if: steps.check-version.outputs.exists == 'false'
@@ -139,9 +123,28 @@ jobs:
         if: steps.check-version.outputs.exists == 'false'
         run: corepack enable pnpm
 
+      # Gate all publishes on the smoke so a failure here doesn't leave a
+      # partial release on npm (e.g. types/template-generator published but
+      # create-better-t-stack broken).
       - name: Publish smoke test (npm, pnpm, bun)
         if: steps.check-version.outputs.exists == 'false'
         run: bun run smoke:publish
+
+      - name: Publish types to NPM
+        if: steps.check-version.outputs.exists == 'false'
+        run: cd packages/types && npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          BTS_TELEMETRY: 1
+          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+
+      - name: Publish template-generator to NPM
+        if: steps.check-version.outputs.exists == 'false'
+        run: cd packages/template-generator && npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          BTS_TELEMETRY: 1
+          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
       - name: Publish CLI to NPM
         if: steps.check-version.outputs.exists == 'false'
