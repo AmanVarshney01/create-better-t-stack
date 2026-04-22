@@ -135,6 +135,14 @@ jobs:
           cd packages/create-bts
           jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["create-better-t-stack"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
+      - name: Enable pnpm via corepack
+        if: steps.check-version.outputs.exists == 'false'
+        run: corepack enable pnpm
+
+      - name: Publish smoke test (npm, pnpm, bun)
+        if: steps.check-version.outputs.exists == 'false'
+        run: bun run smoke:publish
+
       - name: Publish CLI to NPM
         if: steps.check-version.outputs.exists == 'false'
         run: cd apps/cli && npm publish --access public --provenance

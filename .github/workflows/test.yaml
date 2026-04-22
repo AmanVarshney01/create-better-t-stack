@@ -50,3 +50,9 @@ jobs:
         env:
           AGENT: 1
           BTS_TELEMETRY: 0
+
+      - name: Enable pnpm via corepack
+        run: corepack enable pnpm
+
+      - name: Publish smoke test (npm, pnpm, bun)
+        run: bun run smoke:publish
