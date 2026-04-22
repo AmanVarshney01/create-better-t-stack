@@ -28,6 +28,7 @@
     "dev": "turbo run dev",
     "dev:cli": "turbo run dev --filter=create-better-t-stack",
     "cli": "cd apps/cli && node dist/cli.js",
+    "smoke:publish": "bun run scripts/publish-smoke.ts",
     "dev:web": "turbo run dev --filter=web",
     "build:web": "turbo run build --filter=web",
     "build:cli": "turbo run build --filter=create-better-t-stack",
