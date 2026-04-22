@@ -220,7 +220,7 @@ pre-commit:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
       run: {{packageManager}} biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
       stage_fixed: true
-{{else if (includes addons "oxlint")}}
+{{else if (includes addons "oxc")}}
     - name: oxlint
       run: {{packageManager}} oxlint --fix {staged_files}
       stage_fixed: true

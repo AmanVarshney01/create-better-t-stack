@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import { setupOxlint } from "../src/helpers/addons/oxlint-setup";
+import { setupOxc } from "../src/helpers/addons/oxc-setup";
 import { installDependencies } from "../src/helpers/core/install-dependencies";
 import { getPackageExecutionArgs } from "../src/utils/package-runner";
 import { SMOKE_DIR } from "./setup";
@@ -34,8 +34,8 @@ describe("External Command Guards", () => {
     expect(result.isOk()).toBe(true);
   });
 
-  it("should update package.json without running oxlint init in test mode", async () => {
-    const projectDir = join(SMOKE_DIR, "oxlint-skip");
+  it("should update package.json without running oxc init in test mode", async () => {
+    const projectDir = join(SMOKE_DIR, "oxc-skip");
     await mkdir(projectDir, { recursive: true });
 
     const pkgJsonPath = join(projectDir, "package.json");
@@ -43,7 +43,7 @@ describe("External Command Guards", () => {
       pkgJsonPath,
       JSON.stringify(
         {
-          name: "oxlint-skip",
+          name: "oxc-skip",
           version: "0.0.0",
           scripts: {},
           devDependencies: {},
@@ -53,7 +53,7 @@ describe("External Command Guards", () => {
       ),
     );
 
-    const result = await setupOxlint(projectDir, "bun");
+    const result = await setupOxc(projectDir, "bun");
     expect(result.isOk()).toBe(true);
 
     const updated = await Bun.file(pkgJsonPath).json();

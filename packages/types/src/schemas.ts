@@ -45,7 +45,7 @@ export const AddonsSchema = z
     "nx",
     "fumadocs",
     "ultracite",
-    "oxlint",
+    "oxc",
     "opentui",
     "wxt",
     "skills",
@@ -224,7 +224,7 @@ export const SkillSelectionSchema = z.strictObject({
 });
 
 export const UltraciteLinterSchema = z
-  .enum(["biome", "eslint", "oxlint"])
+  .enum(["biome", "eslint", "oxc"])
   .describe("Ultracite linter");
 
 export const UltraciteEditorSchema = z

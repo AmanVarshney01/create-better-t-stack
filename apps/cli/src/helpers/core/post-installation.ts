@@ -70,7 +70,7 @@ export async function displayPostInstallInstructions(
     addons?.includes("husky") ||
     addons?.includes("biome") ||
     addons?.includes("lefthook") ||
-    addons?.includes("oxlint");
+    addons?.includes("oxc");
 
   const databaseInstructions =
     !isConvex && database !== "none"
