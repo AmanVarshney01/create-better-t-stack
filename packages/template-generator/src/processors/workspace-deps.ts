@@ -3,6 +3,9 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
+// Expo SDK 55 requires TypeScript ~5.9.x — override the generic `^6` pin.
+const NATIVE_TYPESCRIPT_VERSION = "~5.9.2";
+
 export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const {
     projectName,
@@ -177,9 +180,8 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
       vfs,
       packagePath: "apps/native/package.json",
       dependencies: commonDeps,
-      devDependencies: ["typescript"],
       customDependencies: nativeDeps,
-      customDevDependencies: configDep,
+      customDevDependencies: { ...configDep, typescript: NATIVE_TYPESCRIPT_VERSION },
     });
   }
 }

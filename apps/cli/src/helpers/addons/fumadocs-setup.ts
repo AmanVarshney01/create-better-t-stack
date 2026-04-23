@@ -1,10 +1,11 @@
 import path from "node:path";
 
-import { isCancel, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
 
+import { navigableSelect } from "../../prompts/navigable";
+import { navigableGroup } from "../../prompts/navigable-group";
 import type { ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
@@ -21,46 +22,50 @@ type FumadocsTemplate =
   | "tanstack-start"
   | "tanstack-start-spa";
 
+type FumadocsSearch = "orama" | "orama-cloud";
+type FumadocsOgImage = "next-og" | "takumi";
+type FumadocsAiChat = "openrouter" | "inkeep";
+
 const TEMPLATES = {
   "next-mdx": {
     label: "Next.js: Fumadocs MDX",
-    hint: "Recommended template with MDX support",
+    hint: "recommended",
     value: "+next+fuma-docs-mdx",
   },
   "next-mdx-static": {
-    label: "Next.js: Fumadocs MDX (Static)",
-    hint: "Static export template with MDX support",
+    label: "Next.js Static: Fumadocs MDX",
     value: "+next+fuma-docs-mdx+static",
   },
   waku: {
-    label: "Waku: Content Collections",
-    hint: "Template using Waku with content collections",
+    label: "Waku: Fumadocs MDX",
     value: "waku",
   },
   "react-router": {
-    label: "React Router: MDX Remote",
-    hint: "Template for React Router with MDX remote",
+    label: "React Router: Fumadocs MDX (not RSC)",
     value: "react-router",
   },
   "react-router-spa": {
-    label: "React Router: SPA",
-    hint: "Template for React Router SPA",
+    label: "React Router SPA: Fumadocs MDX (not RSC)",
+    hint: "SPA mode allows you to host the site statically, compatible with a CDN.",
     value: "react-router-spa",
   },
   "tanstack-start": {
-    label: "Tanstack Start: MDX Remote",
-    hint: "Template for Tanstack Start with MDX remote",
+    label: "Tanstack Start: Fumadocs MDX (not RSC)",
     value: "tanstack-start",
   },
   "tanstack-start-spa": {
-    label: "Tanstack Start: SPA",
-    hint: "Template for Tanstack Start SPA",
+    label: "Tanstack Start SPA: Fumadocs MDX (not RSC)",
+    hint: "SPA mode allows you to host the site statically, compatible with a CDN.",
     value: "tanstack-start-spa",
   },
 } as const;
 
 const DEFAULT_TEMPLATE: FumadocsTemplate = "next-mdx";
 const DEFAULT_DEV_PORT = 4000;
+
+function aiChatDisabledForTemplate(template: FumadocsTemplate): boolean {
+  return template === "next-mdx-static" || template.endsWith("-spa");
+}
 
 export async function setupFumadocs(
   config: ProjectConfig,
@@ -74,46 +79,146 @@ export async function setupFumadocs(
   cliLog.info("Setting up Fumadocs...");
 
   const configuredOptions = config.addonOptions?.fumadocs;
+
   let template = configuredOptions?.template;
+  let search: FumadocsSearch | undefined = configuredOptions?.search;
+  let ogImage: FumadocsOgImage | undefined = configuredOptions?.ogImage;
+  let aiChat: FumadocsAiChat | undefined = configuredOptions?.aiChat;
+
+  if (isSilent()) {
+    template = template ?? DEFAULT_TEMPLATE;
+  } else {
+    const promptResult = await Result.tryPromise({
+      try: () =>
+        navigableGroup<{
+          template: FumadocsTemplate;
+          search: FumadocsSearch;
+          ogImage: FumadocsOgImage | "skip";
+          aiChat: FumadocsAiChat | "none";
+        }>({
+          template: async () => {
+            if (template !== undefined) return template;
+            return navigableSelect<FumadocsTemplate>({
+              message: "Choose a template",
+              options: Object.entries(TEMPLATES).map(([key, t]) => ({
+                value: key as FumadocsTemplate,
+                label: t.label,
+                hint: "hint" in t ? t.hint : undefined,
+              })),
+              initialValue: DEFAULT_TEMPLATE,
+            });
+          },
+          search: async () => {
+            if (search !== undefined) return search;
+            return navigableSelect<FumadocsSearch>({
+              message: "Choose a search solution?",
+              options: [
+                {
+                  value: "orama",
+                  label: "Default",
+                  hint: "local search powered by Orama, recommended",
+                },
+                {
+                  value: "orama-cloud",
+                  label: "Orama Cloud",
+                  hint: "3rd party search solution, signup needed",
+                },
+              ],
+              initialValue: "orama",
+            });
+          },
+          ogImage: async ({ results }) => {
+            if (ogImage !== undefined) return ogImage;
+            const picked = results.template ?? template ?? DEFAULT_TEMPLATE;
+            if (!picked.startsWith("next-")) return "skip";
+            return navigableSelect<FumadocsOgImage>({
+              message: "Configure Open Graph Image generation?",
+              options: [
+                { value: "next-og", label: "next/og", hint: "Next.js built-in solution" },
+                {
+                  value: "takumi",
+                  label: "Takumi",
+                  hint: "Output WebP format, framework-agnostic",
+                },
+              ],
+              initialValue: "next-og",
+            });
+          },
+          aiChat: async ({ results }) => {
+            if (aiChat !== undefined) return aiChat;
+            const picked = results.template ?? template ?? DEFAULT_TEMPLATE;
+            if (aiChatDisabledForTemplate(picked)) return "none";
+            return navigableSelect<FumadocsAiChat | "none">({
+              message: "Configure AI Chat?",
+              options: [
+                { value: "none", label: "No" },
+                { value: "openrouter", label: "AI SDK", hint: "default to OpenRouter" },
+                { value: "inkeep", label: "Inkeep AI", hint: "API key required" },
+              ],
+              initialValue: "none",
+            });
+          },
+        }),
+      catch: (e) =>
+        new AddonSetupError({
+          addon: "fumadocs",
+          message: `Failed to run Fumadocs prompts: ${e instanceof Error ? e.message : String(e)}`,
+          cause: e,
+        }),
+    });
+
+    if (promptResult.isErr()) return Result.err(promptResult.error);
+    const results = promptResult.value;
+
+    // Cancel mid-group leaves later slots undefined; skip/none sentinels are defined.
+    if (
+      results.template === undefined ||
+      results.search === undefined ||
+      results.ogImage === undefined ||
+      results.aiChat === undefined
+    ) {
+      return userCancelled("Operation cancelled");
+    }
+
+    template = results.template;
+    search = results.search;
+    ogImage = results.ogImage === "skip" ? undefined : results.ogImage;
+    aiChat = results.aiChat === "none" ? undefined : results.aiChat;
+  }
 
   if (!template) {
-    if (isSilent()) {
-      template = DEFAULT_TEMPLATE;
-    } else {
-      const selectedTemplate = await select<FumadocsTemplate>({
-        message: "Choose a template",
-        options: Object.entries(TEMPLATES).map(([key, templateOption]) => ({
-          value: key as FumadocsTemplate,
-          label: templateOption.label,
-          hint: templateOption.hint,
-        })),
-        initialValue: DEFAULT_TEMPLATE,
-      });
+    return userCancelled("Operation cancelled");
+  }
 
-      if (isCancel(selectedTemplate)) {
-        return userCancelled("Operation cancelled");
-      }
+  const isNextTemplate = template.startsWith("next-");
 
-      template = selectedTemplate;
-    }
+  // Normalize pre-configured flags against the chosen template so we don't emit
+  // upstream-broken combinations (AI chat on a static export, etc.).
+  if (!isNextTemplate) {
+    ogImage = undefined;
+  }
+  if (aiChatDisabledForTemplate(template)) {
+    aiChat = undefined;
   }
 
   const templateArg = TEMPLATES[template].value;
-  const isNextTemplate = template.startsWith("next-");
   const devPort = configuredOptions?.devPort ?? DEFAULT_DEV_PORT;
 
-  // Build command with options
   const options: string[] = [`--template ${templateArg}`, `--pm ${packageManager}`, "--no-git"];
 
-  // Add --src only for Next.js templates
   if (isNextTemplate) {
     options.push("--src");
   }
 
-  // Use biome if the addon is enabled
-  if (config.addons.includes("biome")) {
+  // create-fumadocs-app's --linter flag only accepts "eslint" or "biome"
+  // (oxlint exists only in the interactive prompt, not as a flag choice).
+  if (config.addons.includes("biome") || config.addons.includes("ultracite")) {
     options.push("--linter biome");
   }
+
+  if (search) options.push(`--search ${search}`);
+  if (ogImage) options.push(`--og-image ${ogImage}`);
+  if (aiChat) options.push(`--ai-chat ${aiChat}`);
 
   const commandWithArgs = `create-fumadocs-app@latest fumadocs ${options.join(" ")}`;
   const args = getPackageExecutionArgs(packageManager, commandWithArgs);

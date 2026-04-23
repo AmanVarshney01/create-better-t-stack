@@ -1,8 +1,9 @@
-import { group, multiselect, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
 
+import { navigableMultiselect, navigableSelect } from "../../prompts/navigable";
+import { navigableGroup } from "../../prompts/navigable-group";
 import type { ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
@@ -16,16 +17,34 @@ type UltraciteEditor =
   | "vscode"
   | "cursor"
   | "windsurf"
+  | "codebuddy"
   | "antigravity"
+  | "bob"
   | "kiro"
   | "trae"
   | "void"
   | "zed";
 
 type UltraciteAgent =
+  | "universal"
   | "claude"
   | "codex"
   | "jules"
+  | "replit"
+  | "devin"
+  | "lovable"
+  | "zencoder"
+  | "ona"
+  | "openclaw"
+  | "continue"
+  | "snowflake-cortex"
+  | "deepagents"
+  | "qoder"
+  | "kimi-cli"
+  | "mcpjam"
+  | "mux"
+  | "pi"
+  | "adal"
   | "copilot"
   | "cline"
   | "amp"
@@ -35,6 +54,7 @@ type UltraciteAgent =
   | "gemini"
   | "junie"
   | "augmentcode"
+  | "bob"
   | "kilo-code"
   | "goose"
   | "roo-code"
@@ -49,7 +69,7 @@ type UltraciteAgent =
   | "mistral-vibe"
   | "vercel";
 
-type UltraciteHook = "cursor" | "windsurf" | "claude";
+type UltraciteHook = "cursor" | "windsurf" | "codebuddy" | "claude" | "copilot";
 
 type UltraciteSetupResult = Result<void, AddonSetupError | UserCancelledError>;
 type UltraciteInitArgsInput = {
@@ -63,16 +83,18 @@ type UltraciteInitArgsInput = {
 };
 
 const LINTERS = {
-  biome: { label: "Biome", hint: "Fast formatter and linter" },
-  eslint: { label: "ESLint", hint: "Traditional JavaScript linter" },
-  oxlint: { label: "Oxlint", hint: "Oxidation compiler linter" },
+  biome: { label: "Biome (Recommended)" },
+  eslint: { label: "ESLint + Prettier + Stylelint" },
+  oxlint: { label: "Oxlint + Oxfmt" },
 } as const;
 
 const EDITORS = {
-  vscode: { label: "VS Code" },
+  vscode: { label: "Visual Studio Code" },
   cursor: { label: "Cursor" },
   windsurf: { label: "Windsurf" },
+  codebuddy: { label: "CodeBuddy" },
   antigravity: { label: "Antigravity" },
+  bob: { label: "IBM Bob" },
   kiro: { label: "Kiro" },
   trae: { label: "Trae" },
   void: { label: "Void" },
@@ -80,18 +102,35 @@ const EDITORS = {
 } as const;
 
 const AGENTS = {
-  claude: { label: "Claude" },
+  universal: { label: "Universal (AGENTS.md — covers all agents)" },
+  claude: { label: "Claude Code" },
   codex: { label: "Codex" },
   jules: { label: "Jules" },
+  replit: { label: "Replit Agent" },
+  devin: { label: "Devin" },
+  lovable: { label: "Lovable" },
+  zencoder: { label: "Zencoder" },
+  ona: { label: "Ona" },
+  openclaw: { label: "OpenClaw" },
+  continue: { label: "Continue" },
+  "snowflake-cortex": { label: "Snowflake Cortex" },
+  deepagents: { label: "Deepagents" },
+  qoder: { label: "Qoder" },
+  "kimi-cli": { label: "Kimi CLI" },
+  mcpjam: { label: "MCPJam" },
+  mux: { label: "Mux" },
+  pi: { label: "Pi" },
+  adal: { label: "AdaL" },
   copilot: { label: "GitHub Copilot" },
   cline: { label: "Cline" },
-  amp: { label: "Amp" },
+  amp: { label: "AMP" },
   aider: { label: "Aider" },
   "firebase-studio": { label: "Firebase Studio" },
-  "open-hands": { label: "Open Hands" },
+  "open-hands": { label: "OpenHands" },
   gemini: { label: "Gemini" },
   junie: { label: "Junie" },
-  augmentcode: { label: "AugmentCode" },
+  augmentcode: { label: "Augment Code" },
+  bob: { label: "IBM Bob" },
   "kilo-code": { label: "Kilo Code" },
   goose: { label: "Goose" },
   "roo-code": { label: "Roo Code" },
@@ -99,23 +138,25 @@ const AGENTS = {
   droid: { label: "Droid" },
   opencode: { label: "OpenCode" },
   crush: { label: "Crush" },
-  qwen: { label: "Qwen" },
+  qwen: { label: "Qwen Code" },
   "amazon-q-cli": { label: "Amazon Q CLI" },
   firebender: { label: "Firebender" },
   "cursor-cli": { label: "Cursor CLI" },
   "mistral-vibe": { label: "Mistral Vibe" },
-  vercel: { label: "Vercel" },
+  vercel: { label: "Vercel Agent" },
 } as const;
 
 const HOOKS = {
   cursor: { label: "Cursor" },
   windsurf: { label: "Windsurf" },
-  claude: { label: "Claude" },
+  codebuddy: { label: "CodeBuddy" },
+  claude: { label: "Claude Code" },
+  copilot: { label: "GitHub Copilot" },
 } as const;
 
 const DEFAULT_LINTER: UltraciteLinter = "biome";
-const DEFAULT_EDITORS: UltraciteEditor[] = ["vscode", "cursor"];
-const DEFAULT_AGENTS: UltraciteAgent[] = ["claude", "codex"];
+const DEFAULT_EDITORS: UltraciteEditor[] = ["vscode"];
+const DEFAULT_AGENTS: UltraciteAgent[] = ["universal"];
 const DEFAULT_HOOKS: UltraciteHook[] = [];
 
 function getFrameworksFromFrontend(frontend: string[]): string[] {
@@ -130,6 +171,7 @@ function getFrameworksFromFrontend(frontend: string[]): string[] {
     "native-unistyles": "react",
     svelte: "svelte",
     solid: "solid",
+    astro: "astro",
   };
 
   const frameworks = new Set<string>();
@@ -171,10 +213,7 @@ export function buildUltraciteInitArgs({
   }
 
   if (gitHooks.length > 0) {
-    const integrations = gitHooks.includes("husky")
-      ? [...new Set([...gitHooks, "lint-staged"])]
-      : gitHooks;
-    ultraciteArgs.push("--integrations", ...integrations);
+    ultraciteArgs.push("--integrations", ...gitHooks);
   }
 
   return [
@@ -211,80 +250,71 @@ export async function setupUltracite(
       agents = agents ?? [...DEFAULT_AGENTS];
       hooks = hooks ?? [...DEFAULT_HOOKS];
     } else {
-      const groupResult = await Result.tryPromise({
-        try: async () => {
-          return await group(
-            {
-              linter: () =>
-                select<UltraciteLinter>({
-                  message: "Choose linter/formatter",
-                  options: Object.entries(LINTERS).map(([key, linterOption]) => ({
-                    value: key as UltraciteLinter,
-                    label: linterOption.label,
-                    hint: linterOption.hint,
-                  })),
-                  initialValue: linter ?? DEFAULT_LINTER,
-                }),
-              editors: () =>
-                multiselect<UltraciteEditor>({
-                  message: "Choose editors",
-                  required: false,
-                  options: Object.entries(EDITORS).map(([key, editor]) => ({
-                    value: key as UltraciteEditor,
-                    label: editor.label,
-                  })),
-                  initialValues: editors ?? [...DEFAULT_EDITORS],
-                }),
-              agents: () =>
-                multiselect<UltraciteAgent>({
-                  message: "Choose agents",
-                  required: false,
-                  options: Object.entries(AGENTS).map(([key, agent]) => ({
-                    value: key as UltraciteAgent,
-                    label: agent.label,
-                  })),
-                  initialValues: agents ?? [...DEFAULT_AGENTS],
-                }),
-              hooks: () =>
-                multiselect<UltraciteHook>({
-                  message: "Choose hooks",
-                  required: false,
-                  options: Object.entries(HOOKS).map(([key, hook]) => ({
-                    value: key as UltraciteHook,
-                    label: hook.label,
-                  })),
-                  initialValues: hooks ?? [...DEFAULT_HOOKS],
-                }),
-            },
-            {
-              onCancel: () => {
-                throw new UserCancelledError({ message: "Operation cancelled" });
-              },
-            },
-          );
+      const results = await navigableGroup<{
+        linter: UltraciteLinter;
+        editors: UltraciteEditor[];
+        agents: UltraciteAgent[];
+        hooks: UltraciteHook[];
+      }>({
+        linter: async () => {
+          if (linter !== undefined) return linter;
+          return navigableSelect<UltraciteLinter>({
+            message: "Which linter do you want to use?",
+            options: Object.entries(LINTERS).map(([key, linterOption]) => ({
+              value: key as UltraciteLinter,
+              label: linterOption.label,
+            })),
+            initialValue: linter ?? DEFAULT_LINTER,
+          });
         },
-        catch: (e) => {
-          if (e instanceof UserCancelledError) return e;
-          return new AddonSetupError({
-            addon: "ultracite",
-            message: `Failed to get user preferences: ${e instanceof Error ? e.message : String(e)}`,
-            cause: e,
+        editors: async () => {
+          if (editors !== undefined) return editors;
+          return navigableMultiselect<UltraciteEditor>({
+            message: "Which editors do you want to configure (recommended)?",
+            required: false,
+            options: [
+              { value: "vscode", label: "VSCode / Cursor / Windsurf" },
+              { value: "zed", label: "Zed" },
+            ],
+          });
+        },
+        agents: async () => {
+          if (agents !== undefined) return agents;
+          return navigableMultiselect<UltraciteAgent>({
+            message: "Which agent files do you want to add (optional)?",
+            required: false,
+            options: Object.entries(AGENTS).map(([key, agent]) => ({
+              value: key as UltraciteAgent,
+              label: agent.label,
+            })),
+          });
+        },
+        hooks: async () => {
+          if (hooks !== undefined) return hooks;
+          return navigableMultiselect<UltraciteHook>({
+            message: "Which agent hooks do you want to enable (optional)?",
+            required: false,
+            options: Object.entries(HOOKS).map(([key, hook]) => ({
+              value: key as UltraciteHook,
+              label: hook.label,
+            })),
           });
         },
       });
 
-      if (groupResult.isErr()) {
-        if (UserCancelledError.is(groupResult.error)) {
-          return userCancelled(groupResult.error.message);
-        }
-        cliLog.error(pc.red("Failed to set up Ultracite"));
-        return groupResult;
+      if (
+        results.linter === undefined ||
+        results.editors === undefined ||
+        results.agents === undefined ||
+        results.hooks === undefined
+      ) {
+        return userCancelled("Operation cancelled");
       }
 
-      linter = groupResult.value.linter as UltraciteLinter;
-      editors = groupResult.value.editors as UltraciteEditor[];
-      agents = groupResult.value.agents as UltraciteAgent[];
-      hooks = groupResult.value.hooks as UltraciteHook[];
+      linter = results.linter;
+      editors = results.editors;
+      agents = results.agents;
+      hooks = results.hooks;
     }
   }
 

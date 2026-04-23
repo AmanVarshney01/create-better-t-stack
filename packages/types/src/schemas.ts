@@ -120,6 +120,18 @@ export const FumadocsTemplateSchema = z
   ])
   .describe("Fumadocs template");
 
+export const FumadocsSearchSchema = z
+  .enum(["orama", "orama-cloud"])
+  .describe("Fumadocs search solution");
+
+export const FumadocsOgImageSchema = z
+  .enum(["next-og", "takumi"])
+  .describe("Fumadocs OG image generator");
+
+export const FumadocsAiChatSchema = z
+  .enum(["openrouter", "inkeep"])
+  .describe("Fumadocs AI chat provider");
+
 export const InstallScopeSchema = z.enum(["project", "global"]).describe("Installation scope");
 
 export const McpServerSchema = z
@@ -228,14 +240,41 @@ export const UltraciteLinterSchema = z
   .describe("Ultracite linter");
 
 export const UltraciteEditorSchema = z
-  .enum(["vscode", "cursor", "windsurf", "antigravity", "kiro", "trae", "void", "zed"])
+  .enum([
+    "vscode",
+    "cursor",
+    "windsurf",
+    "codebuddy",
+    "antigravity",
+    "bob",
+    "kiro",
+    "trae",
+    "void",
+    "zed",
+  ])
   .describe("Ultracite editor integration");
 
 export const UltraciteAgentSchema = z
   .enum([
+    "universal",
     "claude",
     "codex",
     "jules",
+    "replit",
+    "devin",
+    "lovable",
+    "zencoder",
+    "ona",
+    "openclaw",
+    "continue",
+    "snowflake-cortex",
+    "deepagents",
+    "qoder",
+    "kimi-cli",
+    "mcpjam",
+    "mux",
+    "pi",
+    "adal",
     "copilot",
     "cline",
     "amp",
@@ -245,6 +284,7 @@ export const UltraciteAgentSchema = z
     "gemini",
     "junie",
     "augmentcode",
+    "bob",
     "kilo-code",
     "goose",
     "roo-code",
@@ -262,7 +302,7 @@ export const UltraciteAgentSchema = z
   .describe("Ultracite agent integration");
 
 export const UltraciteHookSchema = z
-  .enum(["cursor", "windsurf", "claude"])
+  .enum(["cursor", "windsurf", "codebuddy", "claude", "copilot"])
   .describe("Ultracite hook integration");
 
 export const DbSetupModeSchema = z.enum(["manual", "auto"]).describe("Database setup mode");
@@ -284,6 +324,9 @@ export const AddonOptionsSchema = z
       .strictObject({
         template: FumadocsTemplateSchema,
         devPort: z.number().int().min(1).max(65535).optional().describe("Fumadocs dev server port"),
+        search: FumadocsSearchSchema.optional().describe("Fumadocs search solution"),
+        ogImage: FumadocsOgImageSchema.optional().describe("Fumadocs OG image generator"),
+        aiChat: FumadocsAiChatSchema.optional().describe("Fumadocs AI chat provider"),
       })
       .optional()
       .describe("Options for the Fumadocs addon"),

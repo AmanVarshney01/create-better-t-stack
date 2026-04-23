@@ -1,11 +1,11 @@
 import path from "node:path";
 
-import { isCancel, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
 
+import { isCancel, navigableSelect, setIsFirstPrompt } from "../../prompts/navigable";
 import type { ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
@@ -61,7 +61,8 @@ export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
   let template = resolveTuiTemplate(config);
 
   if (!template) {
-    const selectedTemplate = await select<TuiTemplate>({
+    setIsFirstPrompt(true);
+    const selectedTemplate = await navigableSelect<TuiTemplate>({
       message: "Choose a template",
       options: Object.entries(TEMPLATES).map(([key, templateOption]) => ({
         value: key as TuiTemplate,
@@ -75,7 +76,7 @@ export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
       return userCancelled("Operation cancelled");
     }
 
-    template = selectedTemplate;
+    template = selectedTemplate as TuiTemplate;
   }
 
   const commandWithArgs = `create-tui@latest --template ${template} --no-git --no-install tui`;
