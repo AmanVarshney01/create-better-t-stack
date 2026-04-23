@@ -72,11 +72,14 @@ export const dependencyVersionMap = {
 
   "@types/bun": "^1.3.4",
 
-  "@elysiajs/node": "^1.3.1",
+  "@elysiajs/node": "^1.4.5",
 
   "@elysiajs/cors": "^1.4.1",
   "@elysiajs/trpc": "^1.1.0",
-  elysia: "^1.4.21",
+  elysia: "^1.4.28",
+  // Peer dep of elysia (>= 0.34.0 < 1). Installed explicitly so Bun's isolated
+  // linker exposes it to Node/tsx, which don't auto-resolve peers.
+  "@sinclair/typebox": "^0.34.49",
 
   "@hono/node-server": "^1.14.4",
   "@hono/trpc-server": "^0.4.0",
