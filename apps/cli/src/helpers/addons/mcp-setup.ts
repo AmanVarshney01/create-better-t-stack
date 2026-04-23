@@ -1,8 +1,9 @@
-import { isCancel, multiselect, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
 
+import { navigableMultiselect, navigableSelect } from "../../prompts/navigable";
+import { navigableGroup } from "../../prompts/navigable-group";
 import type { AddonOptions, ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
@@ -280,112 +281,108 @@ export async function setupMcp(
 
   cliLog.info("Setting up MCP servers...");
 
-  let scope = config.addonOptions?.mcp?.scope;
-
-  if (!scope) {
-    if (isSilent()) {
-      scope = DEFAULT_SCOPE;
-    } else {
-      const selectedScope = await select<InstallScope>({
-        message: "Where should MCP servers be installed?",
-        options: [
-          {
-            value: "project",
-            label: "Project",
-            hint: "Writes to project config files (recommended for teams)",
-          },
-          {
-            value: "global",
-            label: "Global",
-            hint: "Writes to user-level config files (personal machine)",
-          },
-        ],
-        initialValue: DEFAULT_SCOPE,
-      });
-
-      if (isCancel(selectedScope)) {
-        return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
-      }
-
-      scope = selectedScope;
-    }
-  }
-
-  const recommendedServers = getRecommendedMcpServers(config, scope);
-  if (recommendedServers.length === 0) {
-    return Result.ok(undefined);
-  }
-  const allServersByKey = new Map(getAllMcpServers(config).map((server) => [server.key, server]));
-
-  const serverOptions = recommendedServers.map((s) => ({
-    value: s.key,
-    label: s.label,
-    hint: s.target,
-  }));
-
+  const configuredScope = config.addonOptions?.mcp?.scope;
   const configuredServerKeys = config.addonOptions?.mcp?.servers;
-  const availableServerKeys = new Set(allServersByKey.keys());
-  let selectedServerKeys: McpServerKey[] =
-    configuredServerKeys?.filter((serverKey) => availableServerKeys.has(serverKey)) ?? [];
-
-  if (selectedServerKeys.length === 0 && configuredServerKeys === undefined) {
-    if (isSilent()) {
-      selectedServerKeys = serverOptions.map((o) => o.value);
-    } else {
-      const promptedServerKeys = await multiselect({
-        message: "Select MCP servers to install",
-        options: serverOptions,
-        required: false,
-        initialValues: serverOptions.map((o) => o.value),
-      });
-
-      if (isCancel(promptedServerKeys)) {
-        return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
-      }
-
-      selectedServerKeys = [...promptedServerKeys] as McpServerKey[];
-    }
-  }
-
-  if (selectedServerKeys.length === 0) {
-    return Result.ok(undefined);
-  }
-
-  const agentOptions = filterAgentsForScope(scope).map((a) => ({
-    value: a.value,
-    label: a.label,
-  }));
-
-  const defaultAgents: McpAgent[] = uniqueValues(
-    DEFAULT_AGENTS.filter((agent) => agentOptions.some((option) => option.value === agent)),
-  );
-
   const configuredAgents = config.addonOptions?.mcp?.agents;
-  let selectedAgents: McpAgent[] =
-    configuredAgents?.filter((agent) => agentOptions.some((option) => option.value === agent)) ??
-    [];
 
-  if (selectedAgents.length === 0 && configuredAgents === undefined) {
-    if (isSilent()) {
-      selectedAgents = defaultAgents;
-    } else {
-      const promptedAgents = await multiselect({
-        message: "Select agents to install MCP servers to",
-        options: agentOptions,
-        required: false,
-        initialValues: defaultAgents,
-      });
+  const allServersByKey = new Map(getAllMcpServers(config).map((server) => [server.key, server]));
+  const availableServerKeys = new Set(allServersByKey.keys());
 
-      if (isCancel(promptedAgents)) {
-        return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
-      }
+  let scope: InstallScope;
+  let selectedServerKeys: McpServerKey[];
+  let selectedAgents: McpAgent[];
 
-      selectedAgents = [...promptedAgents] as McpAgent[];
+  if (isSilent()) {
+    scope = configuredScope ?? DEFAULT_SCOPE;
+    const recommendedServers = getRecommendedMcpServers(config, scope);
+    if (recommendedServers.length === 0) return Result.ok(undefined);
+    const serverOptions = recommendedServers.map((s) => s.key);
+    selectedServerKeys =
+      configuredServerKeys?.filter((k) => availableServerKeys.has(k)) ?? serverOptions;
+    if (selectedServerKeys.length === 0) return Result.ok(undefined);
+    const agentOptions = filterAgentsForScope(scope);
+    const defaultAgents = uniqueValues(
+      DEFAULT_AGENTS.filter((a) => agentOptions.some((o) => o.value === a)),
+    );
+    selectedAgents =
+      configuredAgents?.filter((a) => agentOptions.some((o) => o.value === a)) ?? defaultAgents;
+    if (selectedAgents.length === 0) return Result.ok(undefined);
+  } else {
+    const results = await navigableGroup<{
+      scope: InstallScope;
+      servers: McpServerKey[];
+      agents: McpAgent[];
+    }>({
+      scope: async () => {
+        if (configuredScope !== undefined) return configuredScope;
+        return navigableSelect<InstallScope>({
+          message: "Where should MCP servers be installed?",
+          options: [
+            {
+              value: "project",
+              label: "Project",
+              hint: "Writes to project config files (recommended for teams)",
+            },
+            {
+              value: "global",
+              label: "Global",
+              hint: "Writes to user-level config files (personal machine)",
+            },
+          ],
+          initialValue: DEFAULT_SCOPE,
+        });
+      },
+      servers: async ({ results: r }) => {
+        const currentScope = (r.scope ?? configuredScope ?? DEFAULT_SCOPE) as InstallScope;
+        const recommended = getRecommendedMcpServers(config, currentScope);
+        if (recommended.length === 0) return [];
+        const options = recommended.map((s) => ({
+          value: s.key,
+          label: s.label,
+          hint: s.target,
+        }));
+        if (configuredServerKeys !== undefined) {
+          return configuredServerKeys.filter((k) => availableServerKeys.has(k));
+        }
+        return navigableMultiselect<McpServerKey>({
+          message: "Select MCP servers to install",
+          options,
+          required: false,
+          initialValues: options.map((o) => o.value),
+        });
+      },
+      agents: async ({ results: r }) => {
+        const currentScope = (r.scope ?? configuredScope ?? DEFAULT_SCOPE) as InstallScope;
+        const currentServers = r.servers as McpServerKey[] | undefined;
+        if (currentServers !== undefined && currentServers.length === 0) return [];
+        const agentOpts = filterAgentsForScope(currentScope);
+        if (agentOpts.length === 0) return [];
+        const defaults = uniqueValues(
+          DEFAULT_AGENTS.filter((a) => agentOpts.some((o) => o.value === a)),
+        );
+        if (configuredAgents !== undefined) {
+          return configuredAgents.filter((a) => agentOpts.some((o) => o.value === a));
+        }
+        return navigableMultiselect<McpAgent>({
+          message: "Select agents to install MCP servers to",
+          options: agentOpts.map((a) => ({ value: a.value, label: a.label })),
+          required: false,
+          initialValues: defaults,
+        });
+      },
+    });
+
+    if (results.scope === undefined) {
+      return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
     }
-  }
 
-  if (selectedAgents.length === 0) {
-    return Result.ok(undefined);
+    scope = results.scope;
+    selectedServerKeys = (results.servers ?? []) as McpServerKey[];
+    selectedAgents = (results.agents ?? []) as McpAgent[];
+
+    if (selectedServerKeys.length === 0 || selectedAgents.length === 0) {
+      return Result.ok(undefined);
+    }
   }
 
   const selectedServers: McpServerDef[] = [];
