@@ -21,6 +21,28 @@ type FumadocsTemplate =
   | "tanstack-start"
   | "tanstack-start-spa";
 
+type FumadocsSearch = "orama" | "orama-cloud";
+type FumadocsOgImage = "next-og" | "takumi";
+type FumadocsAiChat = "openrouter" | "inkeep";
+
+const SEARCH_OPTIONS: Array<{ value: FumadocsSearch | "none"; label: string; hint?: string }> = [
+  { value: "none", label: "No search", hint: "Skip search setup" },
+  { value: "orama", label: "Orama", hint: "Local, built-in search" },
+  { value: "orama-cloud", label: "Orama Cloud", hint: "Hosted search" },
+];
+
+const OG_IMAGE_OPTIONS: Array<{ value: FumadocsOgImage | "none"; label: string; hint?: string }> = [
+  { value: "none", label: "No OG images", hint: "Skip OG image setup" },
+  { value: "next-og", label: "Next OG", hint: "@vercel/og (Next.js only)" },
+  { value: "takumi", label: "Takumi", hint: "Framework-agnostic" },
+];
+
+const AI_CHAT_OPTIONS: Array<{ value: FumadocsAiChat | "none"; label: string; hint?: string }> = [
+  { value: "none", label: "No AI chat", hint: "Skip AI chat setup" },
+  { value: "openrouter", label: "OpenRouter", hint: "Multi-model gateway" },
+  { value: "inkeep", label: "Inkeep", hint: "Managed doc AI" },
+];
+
 const TEMPLATES = {
   "next-mdx": {
     label: "Next.js: Fumadocs MDX",
@@ -102,6 +124,48 @@ export async function setupFumadocs(
   const isNextTemplate = template.startsWith("next-");
   const devPort = configuredOptions?.devPort ?? DEFAULT_DEV_PORT;
 
+  let search: FumadocsSearch | undefined = configuredOptions?.search;
+  if (search === undefined && !isSilent()) {
+    const picked = await select<FumadocsSearch | "none">({
+      message: "Add a search solution?",
+      options: SEARCH_OPTIONS,
+      initialValue: "none",
+    });
+    if (isCancel(picked)) {
+      return userCancelled("Operation cancelled");
+    }
+    search = picked === "none" ? undefined : picked;
+  }
+
+  let ogImage: FumadocsOgImage | undefined = configuredOptions?.ogImage;
+  if (ogImage === undefined && !isSilent()) {
+    const ogOptions = isNextTemplate
+      ? OG_IMAGE_OPTIONS
+      : OG_IMAGE_OPTIONS.filter((o) => o.value !== "next-og");
+    const picked = await select<FumadocsOgImage | "none">({
+      message: "Add OG image generation?",
+      options: ogOptions,
+      initialValue: "none",
+    });
+    if (isCancel(picked)) {
+      return userCancelled("Operation cancelled");
+    }
+    ogImage = picked === "none" ? undefined : picked;
+  }
+
+  let aiChat: FumadocsAiChat | undefined = configuredOptions?.aiChat;
+  if (aiChat === undefined && !isSilent()) {
+    const picked = await select<FumadocsAiChat | "none">({
+      message: "Add AI chat?",
+      options: AI_CHAT_OPTIONS,
+      initialValue: "none",
+    });
+    if (isCancel(picked)) {
+      return userCancelled("Operation cancelled");
+    }
+    aiChat = picked === "none" ? undefined : picked;
+  }
+
   // Build command with options
   const options: string[] = [`--template ${templateArg}`, `--pm ${packageManager}`, "--no-git"];
 
@@ -113,6 +177,18 @@ export async function setupFumadocs(
   // Use biome if the addon is enabled
   if (config.addons.includes("biome")) {
     options.push("--linter biome");
+  }
+
+  if (search) {
+    options.push(`--search ${search}`);
+  }
+
+  if (ogImage) {
+    options.push(`--og-image ${ogImage}`);
+  }
+
+  if (aiChat) {
+    options.push(`--ai-chat ${aiChat}`);
   }
 
   const commandWithArgs = `create-fumadocs-app@latest fumadocs ${options.join(" ")}`;
