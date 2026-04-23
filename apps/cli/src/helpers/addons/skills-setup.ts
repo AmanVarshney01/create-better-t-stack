@@ -436,13 +436,17 @@ export async function setupSkills(
       },
     });
 
-    if (results.scope === undefined) {
+    if (
+      results.scope === undefined ||
+      results.skills === undefined ||
+      results.agents === undefined
+    ) {
       return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
     }
 
     scope = results.scope;
-    selectedSkills = (results.skills ?? []) as string[];
-    selectedAgents = (results.agents ?? []) as SkillAgent[];
+    selectedSkills = results.skills as string[];
+    selectedAgents = results.agents as SkillAgent[];
 
     if (selectedSkills.length === 0 || selectedAgents.length === 0) {
       return Result.ok(undefined);

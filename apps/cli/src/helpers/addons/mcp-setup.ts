@@ -372,13 +372,20 @@ export async function setupMcp(
       },
     });
 
-    if (results.scope === undefined) {
+    // navigableGroup returns partial results when a prompt is cancelled —
+    // any undefined slot (vs. empty array from a legit zero-select) means the
+    // user cancelled mid-flow.
+    if (
+      results.scope === undefined ||
+      results.servers === undefined ||
+      results.agents === undefined
+    ) {
       return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
     }
 
     scope = results.scope;
-    selectedServerKeys = (results.servers ?? []) as McpServerKey[];
-    selectedAgents = (results.agents ?? []) as McpAgent[];
+    selectedServerKeys = results.servers as McpServerKey[];
+    selectedAgents = results.agents as McpAgent[];
 
     if (selectedServerKeys.length === 0 || selectedAgents.length === 0) {
       return Result.ok(undefined);

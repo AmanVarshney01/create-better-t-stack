@@ -160,7 +160,15 @@ export async function setupFumadocs(
       },
     });
 
-    if (!results.template) {
+    // navigableGroup bails early on cancel without marking later prompts, so
+    // undefined in any slot (skip/none sentinels are defined) means the user
+    // cancelled mid-flow. Treat that as UserCancelledError, not partial success.
+    if (
+      results.template === undefined ||
+      results.search === undefined ||
+      results.ogImage === undefined ||
+      results.aiChat === undefined
+    ) {
       return userCancelled("Operation cancelled");
     }
 
@@ -174,8 +182,20 @@ export async function setupFumadocs(
     return userCancelled("Operation cancelled");
   }
 
-  const templateArg = TEMPLATES[template].value;
   const isNextTemplate = template.startsWith("next-");
+
+  // Pre-configured options may be invalid for the chosen template.
+  // Mirror upstream's template-scoped guards so we don't emit flags that
+  // would either be rejected or apply a broken plugin (e.g. AI chat on
+  // a static export).
+  if (!isNextTemplate) {
+    ogImage = undefined;
+  }
+  if (aiChatDisabledForTemplate(template)) {
+    aiChat = undefined;
+  }
+
+  const templateArg = TEMPLATES[template].value;
   const devPort = configuredOptions?.devPort ?? DEFAULT_DEV_PORT;
 
   const options: string[] = [`--template ${templateArg}`, `--pm ${packageManager}`, "--no-git"];
