@@ -88,71 +88,87 @@ export async function setupFumadocs(
   if (isSilent()) {
     template = template ?? DEFAULT_TEMPLATE;
   } else {
-    const results = await navigableGroup<{
-      template: FumadocsTemplate;
-      search: FumadocsSearch;
-      ogImage: FumadocsOgImage | "skip";
-      aiChat: FumadocsAiChat | "none";
-    }>({
-      template: async () => {
-        if (template !== undefined) return template;
-        return navigableSelect<FumadocsTemplate>({
-          message: "Choose a template",
-          options: Object.entries(TEMPLATES).map(([key, t]) => ({
-            value: key as FumadocsTemplate,
-            label: t.label,
-            hint: "hint" in t ? t.hint : undefined,
-          })),
-          initialValue: DEFAULT_TEMPLATE,
-        });
-      },
-      search: async () => {
-        if (search !== undefined) return search;
-        return navigableSelect<FumadocsSearch>({
-          message: "Choose a search solution?",
-          options: [
-            {
-              value: "orama",
-              label: "Default",
-              hint: "local search powered by Orama, recommended",
-            },
-            {
-              value: "orama-cloud",
-              label: "Orama Cloud",
-              hint: "3rd party search solution, signup needed",
-            },
-          ],
-          initialValue: "orama",
-        });
-      },
-      ogImage: async ({ results }) => {
-        if (ogImage !== undefined) return ogImage;
-        const picked = results.template ?? template ?? DEFAULT_TEMPLATE;
-        if (!picked.startsWith("next-")) return "skip";
-        return navigableSelect<FumadocsOgImage>({
-          message: "Configure Open Graph Image generation?",
-          options: [
-            { value: "next-og", label: "next/og", hint: "Next.js built-in solution" },
-            { value: "takumi", label: "Takumi", hint: "Output WebP format, framework-agnostic" },
-          ],
-          initialValue: "next-og",
-        });
-      },
-      aiChat: async ({ results }) => {
-        if (aiChat !== undefined) return aiChat;
-        const picked = results.template ?? template ?? DEFAULT_TEMPLATE;
-        if (aiChatDisabledForTemplate(picked)) return "none";
-        return navigableSelect<FumadocsAiChat | "none">({
-          message: "Configure AI Chat?",
-          options: [
-            { value: "none", label: "No" },
-            { value: "openrouter", label: "AI SDK", hint: "default to OpenRouter" },
-            { value: "inkeep", label: "Inkeep AI", hint: "API key required" },
-          ],
-          initialValue: "none",
-        });
-      },
+    const promptResult = await Result.tryPromise({
+      try: () =>
+        navigableGroup<{
+          template: FumadocsTemplate;
+          search: FumadocsSearch;
+          ogImage: FumadocsOgImage | "skip";
+          aiChat: FumadocsAiChat | "none";
+        }>({
+          template: async () => {
+            if (template !== undefined) return template;
+            return navigableSelect<FumadocsTemplate>({
+              message: "Choose a template",
+              options: Object.entries(TEMPLATES).map(([key, t]) => ({
+                value: key as FumadocsTemplate,
+                label: t.label,
+                hint: "hint" in t ? t.hint : undefined,
+              })),
+              initialValue: DEFAULT_TEMPLATE,
+            });
+          },
+          search: async () => {
+            if (search !== undefined) return search;
+            return navigableSelect<FumadocsSearch>({
+              message: "Choose a search solution?",
+              options: [
+                {
+                  value: "orama",
+                  label: "Default",
+                  hint: "local search powered by Orama, recommended",
+                },
+                {
+                  value: "orama-cloud",
+                  label: "Orama Cloud",
+                  hint: "3rd party search solution, signup needed",
+                },
+              ],
+              initialValue: "orama",
+            });
+          },
+          ogImage: async ({ results }) => {
+            if (ogImage !== undefined) return ogImage;
+            const picked = results.template ?? template ?? DEFAULT_TEMPLATE;
+            if (!picked.startsWith("next-")) return "skip";
+            return navigableSelect<FumadocsOgImage>({
+              message: "Configure Open Graph Image generation?",
+              options: [
+                { value: "next-og", label: "next/og", hint: "Next.js built-in solution" },
+                {
+                  value: "takumi",
+                  label: "Takumi",
+                  hint: "Output WebP format, framework-agnostic",
+                },
+              ],
+              initialValue: "next-og",
+            });
+          },
+          aiChat: async ({ results }) => {
+            if (aiChat !== undefined) return aiChat;
+            const picked = results.template ?? template ?? DEFAULT_TEMPLATE;
+            if (aiChatDisabledForTemplate(picked)) return "none";
+            return navigableSelect<FumadocsAiChat | "none">({
+              message: "Configure AI Chat?",
+              options: [
+                { value: "none", label: "No" },
+                { value: "openrouter", label: "AI SDK", hint: "default to OpenRouter" },
+                { value: "inkeep", label: "Inkeep AI", hint: "API key required" },
+              ],
+              initialValue: "none",
+            });
+          },
+        }),
+      catch: (e) =>
+        new AddonSetupError({
+          addon: "fumadocs",
+          message: `Failed to run Fumadocs prompts: ${e instanceof Error ? e.message : String(e)}`,
+          cause: e,
+        }),
     });
+
+    if (promptResult.isErr()) return Result.err(promptResult.error);
+    const results = promptResult.value;
 
     // Cancel mid-group leaves later slots undefined; skip/none sentinels are defined.
     if (
@@ -194,10 +210,10 @@ export async function setupFumadocs(
     options.push("--src");
   }
 
+  // create-fumadocs-app's --linter flag only accepts "eslint" or "biome"
+  // (oxlint exists only in the interactive prompt, not as a flag choice).
   if (config.addons.includes("biome") || config.addons.includes("ultracite")) {
     options.push("--linter biome");
-  } else if (config.addons.includes("oxlint")) {
-    options.push("--linter oxlint");
   }
 
   if (search) options.push(`--search ${search}`);
