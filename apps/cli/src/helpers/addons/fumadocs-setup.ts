@@ -26,40 +26,37 @@ type FumadocsSearch = "orama" | "orama-cloud";
 type FumadocsOgImage = "next-og" | "takumi";
 type FumadocsAiChat = "openrouter" | "inkeep";
 
+// Labels + hints mirror create-fumadocs-app/src/constants.ts upstream.
 const TEMPLATES = {
   "next-mdx": {
     label: "Next.js: Fumadocs MDX",
-    hint: "Recommended template with MDX support",
+    hint: "recommended",
     value: "+next+fuma-docs-mdx",
   },
   "next-mdx-static": {
-    label: "Next.js: Fumadocs MDX (Static)",
-    hint: "Static export template with MDX support",
+    label: "Next.js Static: Fumadocs MDX",
     value: "+next+fuma-docs-mdx+static",
   },
   waku: {
-    label: "Waku: Content Collections",
-    hint: "Template using Waku with content collections",
+    label: "Waku: Fumadocs MDX",
     value: "waku",
   },
   "react-router": {
-    label: "React Router: MDX Remote",
-    hint: "Template for React Router with MDX remote",
+    label: "React Router: Fumadocs MDX (not RSC)",
     value: "react-router",
   },
   "react-router-spa": {
-    label: "React Router: SPA",
-    hint: "Template for React Router SPA",
+    label: "React Router SPA: Fumadocs MDX (not RSC)",
+    hint: "SPA mode allows you to host the site statically, compatible with a CDN.",
     value: "react-router-spa",
   },
   "tanstack-start": {
-    label: "Tanstack Start: MDX Remote",
-    hint: "Template for Tanstack Start with MDX remote",
+    label: "Tanstack Start: Fumadocs MDX (not RSC)",
     value: "tanstack-start",
   },
   "tanstack-start-spa": {
-    label: "Tanstack Start: SPA",
-    hint: "Template for Tanstack Start SPA",
+    label: "Tanstack Start SPA: Fumadocs MDX (not RSC)",
+    hint: "SPA mode allows you to host the site statically, compatible with a CDN.",
     value: "tanstack-start-spa",
   },
 } as const;
@@ -106,7 +103,7 @@ export async function setupFumadocs(
           options: Object.entries(TEMPLATES).map(([key, t]) => ({
             value: key as FumadocsTemplate,
             label: t.label,
-            hint: t.hint,
+            hint: "hint" in t ? t.hint : undefined,
           })),
           initialValue: DEFAULT_TEMPLATE,
         });
@@ -204,8 +201,12 @@ export async function setupFumadocs(
     options.push("--src");
   }
 
-  if (config.addons.includes("biome")) {
+  // Map top-level linter addons → fumadocs --linter. ESLint is Next-only
+  // upstream; we don't ship an eslint addon so no mapping is needed for it.
+  if (config.addons.includes("biome") || config.addons.includes("ultracite")) {
     options.push("--linter biome");
+  } else if (config.addons.includes("oxlint")) {
+    options.push("--linter oxlint");
   }
 
   if (search) options.push(`--search ${search}`);

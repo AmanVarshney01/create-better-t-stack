@@ -302,7 +302,7 @@ export const UltraciteAgentSchema = z
   .describe("Ultracite agent integration");
 
 export const UltraciteHookSchema = z
-  .enum(["cursor", "windsurf", "codebuddy", "bob", "claude", "copilot"])
+  .enum(["cursor", "windsurf", "codebuddy", "claude", "copilot"])
   .describe("Ultracite hook integration");
 
 export const DbSetupModeSchema = z.enum(["manual", "auto"]).describe("Database setup mode");

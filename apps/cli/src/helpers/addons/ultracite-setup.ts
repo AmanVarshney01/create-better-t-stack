@@ -69,7 +69,7 @@ type UltraciteAgent =
   | "mistral-vibe"
   | "vercel";
 
-type UltraciteHook = "cursor" | "windsurf" | "codebuddy" | "bob" | "claude" | "copilot";
+type UltraciteHook = "cursor" | "windsurf" | "codebuddy" | "claude" | "copilot";
 
 type UltraciteSetupResult = Result<void, AddonSetupError | UserCancelledError>;
 type UltraciteInitArgsInput = {
@@ -88,13 +88,14 @@ const LINTERS = {
   oxlint: { label: "Oxlint + Oxfmt" },
 } as const;
 
+// Labels mirror @repo/data in the upstream ultracite repo (packages/data/src).
 const EDITORS = {
-  vscode: { label: "VS Code" },
+  vscode: { label: "Visual Studio Code" },
   cursor: { label: "Cursor" },
   windsurf: { label: "Windsurf" },
   codebuddy: { label: "CodeBuddy" },
   antigravity: { label: "Antigravity" },
-  bob: { label: "Bob" },
+  bob: { label: "IBM Bob" },
   kiro: { label: "Kiro" },
   trae: { label: "Trae" },
   void: { label: "Void" },
@@ -103,10 +104,10 @@ const EDITORS = {
 
 const AGENTS = {
   universal: { label: "Universal (AGENTS.md — covers all agents)" },
-  claude: { label: "Claude" },
+  claude: { label: "Claude Code" },
   codex: { label: "Codex" },
   jules: { label: "Jules" },
-  replit: { label: "Replit" },
+  replit: { label: "Replit Agent" },
   devin: { label: "Devin" },
   lovable: { label: "Lovable" },
   zencoder: { label: "Zencoder" },
@@ -114,23 +115,23 @@ const AGENTS = {
   openclaw: { label: "OpenClaw" },
   continue: { label: "Continue" },
   "snowflake-cortex": { label: "Snowflake Cortex" },
-  deepagents: { label: "DeepAgents" },
+  deepagents: { label: "Deepagents" },
   qoder: { label: "Qoder" },
   "kimi-cli": { label: "Kimi CLI" },
   mcpjam: { label: "MCPJam" },
   mux: { label: "Mux" },
   pi: { label: "Pi" },
-  adal: { label: "Adal" },
+  adal: { label: "AdaL" },
   copilot: { label: "GitHub Copilot" },
   cline: { label: "Cline" },
-  amp: { label: "Amp" },
+  amp: { label: "AMP" },
   aider: { label: "Aider" },
   "firebase-studio": { label: "Firebase Studio" },
-  "open-hands": { label: "Open Hands" },
+  "open-hands": { label: "OpenHands" },
   gemini: { label: "Gemini" },
   junie: { label: "Junie" },
-  augmentcode: { label: "AugmentCode" },
-  bob: { label: "Bob" },
+  augmentcode: { label: "Augment Code" },
+  bob: { label: "IBM Bob" },
   "kilo-code": { label: "Kilo Code" },
   goose: { label: "Goose" },
   "roo-code": { label: "Roo Code" },
@@ -138,20 +139,20 @@ const AGENTS = {
   droid: { label: "Droid" },
   opencode: { label: "OpenCode" },
   crush: { label: "Crush" },
-  qwen: { label: "Qwen" },
+  qwen: { label: "Qwen Code" },
   "amazon-q-cli": { label: "Amazon Q CLI" },
   firebender: { label: "Firebender" },
   "cursor-cli": { label: "Cursor CLI" },
   "mistral-vibe": { label: "Mistral Vibe" },
-  vercel: { label: "Vercel" },
+  vercel: { label: "Vercel Agent" },
 } as const;
 
+// Only editors/agents whose upstream data entry declares a `hooks` property.
 const HOOKS = {
   cursor: { label: "Cursor" },
   windsurf: { label: "Windsurf" },
   codebuddy: { label: "CodeBuddy" },
-  bob: { label: "Bob" },
-  claude: { label: "Claude" },
+  claude: { label: "Claude Code" },
   copilot: { label: "GitHub Copilot" },
 } as const;
 
@@ -172,6 +173,7 @@ function getFrameworksFromFrontend(frontend: string[]): string[] {
     "native-unistyles": "react",
     svelte: "svelte",
     solid: "solid",
+    astro: "astro",
   };
 
   const frameworks = new Set<string>();
