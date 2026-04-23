@@ -372,9 +372,6 @@ export async function setupMcp(
       },
     });
 
-    // navigableGroup returns partial results when a prompt is cancelled —
-    // any undefined slot (vs. empty array from a legit zero-select) means the
-    // user cancelled mid-flow.
     if (
       results.scope === undefined ||
       results.servers === undefined ||

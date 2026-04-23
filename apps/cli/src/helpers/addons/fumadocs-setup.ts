@@ -26,7 +26,6 @@ type FumadocsSearch = "orama" | "orama-cloud";
 type FumadocsOgImage = "next-og" | "takumi";
 type FumadocsAiChat = "openrouter" | "inkeep";
 
-// Labels + hints mirror create-fumadocs-app/src/constants.ts upstream.
 const TEMPLATES = {
   "next-mdx": {
     label: "Next.js: Fumadocs MDX",
@@ -64,7 +63,6 @@ const TEMPLATES = {
 const DEFAULT_TEMPLATE: FumadocsTemplate = "next-mdx";
 const DEFAULT_DEV_PORT = 4000;
 
-// Upstream auto-forces aiChat=false for these templates (no prompt, no plugin).
 function aiChatDisabledForTemplate(template: FumadocsTemplate): boolean {
   return template === "next-mdx-static" || template.endsWith("-spa");
 }
@@ -130,7 +128,6 @@ export async function setupFumadocs(
       ogImage: async ({ results }) => {
         if (ogImage !== undefined) return ogImage;
         const picked = results.template ?? template ?? DEFAULT_TEMPLATE;
-        // Non-Next templates auto-default to takumi upstream — skip prompt.
         if (!picked.startsWith("next-")) return "skip";
         return navigableSelect<FumadocsOgImage>({
           message: "Configure Open Graph Image generation?",
@@ -157,9 +154,7 @@ export async function setupFumadocs(
       },
     });
 
-    // navigableGroup bails early on cancel without marking later prompts, so
-    // undefined in any slot (skip/none sentinels are defined) means the user
-    // cancelled mid-flow. Treat that as UserCancelledError, not partial success.
+    // Cancel mid-group leaves later slots undefined; skip/none sentinels are defined.
     if (
       results.template === undefined ||
       results.search === undefined ||
@@ -181,10 +176,8 @@ export async function setupFumadocs(
 
   const isNextTemplate = template.startsWith("next-");
 
-  // Pre-configured options may be invalid for the chosen template.
-  // Mirror upstream's template-scoped guards so we don't emit flags that
-  // would either be rejected or apply a broken plugin (e.g. AI chat on
-  // a static export).
+  // Normalize pre-configured flags against the chosen template so we don't emit
+  // upstream-broken combinations (AI chat on a static export, etc.).
   if (!isNextTemplate) {
     ogImage = undefined;
   }
@@ -201,8 +194,6 @@ export async function setupFumadocs(
     options.push("--src");
   }
 
-  // Map top-level linter addons → fumadocs --linter. ESLint is Next-only
-  // upstream; we don't ship an eslint addon so no mapping is needed for it.
   if (config.addons.includes("biome") || config.addons.includes("ultracite")) {
     options.push("--linter biome");
   } else if (config.addons.includes("oxlint")) {

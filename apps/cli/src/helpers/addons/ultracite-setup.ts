@@ -88,7 +88,6 @@ const LINTERS = {
   oxlint: { label: "Oxlint + Oxfmt" },
 } as const;
 
-// Labels mirror @repo/data in the upstream ultracite repo (packages/data/src).
 const EDITORS = {
   vscode: { label: "Visual Studio Code" },
   cursor: { label: "Cursor" },
@@ -147,7 +146,6 @@ const AGENTS = {
   vercel: { label: "Vercel Agent" },
 } as const;
 
-// Only editors/agents whose upstream data entry declares a `hooks` property.
 const HOOKS = {
   cursor: { label: "Cursor" },
   windsurf: { label: "Windsurf" },
@@ -271,9 +269,6 @@ export async function setupUltracite(
         },
         editors: async () => {
           if (editors !== undefined) return editors;
-          // Upstream prompt only exposes two options — vscode covers
-          // VSCode/Cursor/Windsurf/CodeBuddy/Antigravity/Bob/Kiro/Trae/Void which
-          // all share `.vscode/settings.json`. Zed is its own.
           return navigableMultiselect<UltraciteEditor>({
             message: "Which editors do you want to configure (recommended)?",
             required: false,
@@ -281,7 +276,6 @@ export async function setupUltracite(
               { value: "vscode", label: "VSCode / Cursor / Windsurf" },
               { value: "zed", label: "Zed" },
             ],
-            initialValues: editors ?? [...DEFAULT_EDITORS],
           });
         },
         agents: async () => {
@@ -293,7 +287,6 @@ export async function setupUltracite(
               value: key as UltraciteAgent,
               label: agent.label,
             })),
-            initialValues: agents ?? [...DEFAULT_AGENTS],
           });
         },
         hooks: async () => {
@@ -305,7 +298,6 @@ export async function setupUltracite(
               value: key as UltraciteHook,
               label: hook.label,
             })),
-            initialValues: hooks ?? [...DEFAULT_HOOKS],
           });
         },
       });

@@ -59,7 +59,6 @@ export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
     if (isSilent()) {
       template = DEFAULT_TEMPLATE;
     } else {
-      // Single prompt — no meaningful "back" target, so block the 'b' handler.
       setIsFirstPrompt(true);
       const selectedTemplate = await navigableSelect<WxtTemplate>({
         message: "Choose a template",
