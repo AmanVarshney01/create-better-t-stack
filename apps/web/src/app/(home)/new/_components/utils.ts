@@ -598,14 +598,6 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         message: "Payments set to 'None' (Polar requires Better Auth)",
       });
     }
-    if (nextStack.backend === "convex") {
-      nextStack.payments = "none";
-      changed = true;
-      changes.push({
-        category: "payments",
-        message: "Payments set to 'None' (Polar incompatible with Convex)",
-      });
-    }
     const hasAnyFrontend =
       hasWebFrontend(nextStack.webFrontend) || hasNativeFrontend(nextStack.nativeFrontend);
     if (!hasWebFrontend(nextStack.webFrontend) && hasAnyFrontend) {
@@ -794,9 +786,6 @@ export const getDisabledReason = (
         );
         return `Convex AI example only supports React-based frontends (not ${frontendName})`;
       }
-    }
-    if (category === "payments" && optionId === "polar") {
-      return "Polar is not compatible with Convex";
     }
   }
 

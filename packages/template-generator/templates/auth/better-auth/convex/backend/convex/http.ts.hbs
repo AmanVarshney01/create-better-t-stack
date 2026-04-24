@@ -1,5 +1,8 @@
 import { httpRouter } from "convex/server";
 import { authComponent, createAuth } from "./auth";
+{{#if (eq payments "polar")}}
+import { polar } from "./polar";
+{{/if}}
 
 const http = httpRouter();
 
@@ -14,6 +17,10 @@ authComponent.registerRoutes(http, createAuth, { cors: true });
 {{/if}}
 {{else}}
 authComponent.registerRoutes(http, createAuth);
+{{/if}}
+{{#if (eq payments "polar")}}
+
+polar.registerRoutes(http as any);
 {{/if}}
 
 export default http;
