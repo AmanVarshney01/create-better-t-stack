@@ -112,13 +112,6 @@ jobs:
           CJS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
-      - name: Update create-cjs alias package version
-        if: steps.check-version.outputs.exists == 'false'
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          cd packages/create-cjs
-          jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["create-js-stack"] = $dep' package.json > tmp.json && mv tmp.json package.json
-
       - name: Enable pnpm via corepack
         if: steps.check-version.outputs.exists == 'false'
         run: corepack enable pnpm
@@ -149,14 +142,6 @@ jobs:
       - name: Publish CLI to NPM
         if: steps.check-version.outputs.exists == 'false'
         run: cd apps/cli && npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          CJS_TELEMETRY: 1
-          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
-
-      - name: Publish create-cjs alias to NPM
-        if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/create-cjs && npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           CJS_TELEMETRY: 1
@@ -195,7 +180,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Published Packages" >> $GITHUB_STEP_SUMMARY
           echo "- [create-js-stack@$VERSION](https://www.npmjs.com/package/create-js-stack/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
-          echo "- [create-cjs@$VERSION](https://www.npmjs.com/package/create-cjs/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "- [@create-js-stack/types@$VERSION](https://www.npmjs.com/package/@create-js-stack/types/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "- [@create-js-stack/template-generator@$VERSION](https://www.npmjs.com/package/@create-js-stack/template-generator/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
