@@ -76,12 +76,16 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Set CLI version and strip bundled workspace deps
+      - name: Set CLI version
         if: steps.check-version.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd apps/cli
-          jq --arg v "$VERSION" '.version = $v | del(.dependencies["@create-js-stack/types"]) | del(.dependencies["@create-js-stack/template-generator"])' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "$VERSION" '.version = $v' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Generate template-generator templates-binary
+        if: steps.check-version.outputs.exists == 'false'
+        run: cd packages/template-generator && bun run generate-templates
 
       - name: Build CLI
         if: steps.check-version.outputs.exists == 'false'
@@ -89,6 +93,12 @@ jobs:
         env:
           CJS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+
+      - name: Strip bundled workspace deps from CLI package.json
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          cd apps/cli
+          jq 'del(.dependencies["@create-js-stack/types"]) | del(.dependencies["@create-js-stack/template-generator"])' package.json > tmp.json && mv tmp.json package.json
 
       - name: Enable pnpm via corepack
         if: steps.check-version.outputs.exists == 'false'
