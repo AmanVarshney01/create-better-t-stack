@@ -76,34 +76,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Update types package version
-        if: steps.check-version.outputs.exists == 'false'
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          cd packages/types
-          jq --arg v "$VERSION" '.version = $v' package.json > tmp.json && mv tmp.json package.json
-
-      - name: Build types package
-        if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/types && bun run build
-
-      - name: Update template-generator package version and types dependency
-        if: steps.check-version.outputs.exists == 'false'
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          cd packages/template-generator
-          jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["@create-js-stack/types"] = $dep' package.json > tmp.json && mv tmp.json package.json
-
-      - name: Build template-generator package
-        if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/template-generator && bun run build
-
-      - name: Update CLI types and template-generator dependencies and version
+      - name: Set CLI version and strip bundled workspace deps
         if: steps.check-version.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd apps/cli
-          jq --arg v "^$VERSION" '.dependencies["@create-js-stack/types"] = $v | .dependencies["@create-js-stack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "$VERSION" '.version = $v | del(.dependencies["@create-js-stack/types"]) | del(.dependencies["@create-js-stack/template-generator"])' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build CLI
         if: steps.check-version.outputs.exists == 'false'
@@ -116,28 +94,9 @@ jobs:
         if: steps.check-version.outputs.exists == 'false'
         run: corepack enable pnpm
 
-      # Gate all publishes on the smoke so a failure here doesn't leave a
-      # partial release on npm (e.g. types/template-generator published but
-      # create-js-stack broken).
       - name: Publish smoke test (npm, pnpm, bun)
         if: steps.check-version.outputs.exists == 'false'
         run: bun run smoke:publish
-
-      - name: Publish types to NPM
-        if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/types && npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          CJS_TELEMETRY: 1
-          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
-
-      - name: Publish template-generator to NPM
-        if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/template-generator && npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          CJS_TELEMETRY: 1
-          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
       - name: Publish CLI to NPM
         if: steps.check-version.outputs.exists == 'false'
@@ -151,8 +110,8 @@ jobs:
         if: steps.check-version.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          git config --local user.email "amanvarshney.work@gmail.com"
-          git config --local user.name "Aman Varshney"
+          git config --local user.email "riteshintro@gmail.com"
+          git config --local user.name "riteshintro"
           if ! git rev-parse "v$VERSION" >/dev/null 2>&1; then
             git tag -a "v$VERSION" -m "Release v$VERSION"
             git push --tags
@@ -180,8 +139,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Published Packages" >> $GITHUB_STEP_SUMMARY
           echo "- [create-js-stack@$VERSION](https://www.npmjs.com/package/create-js-stack/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
-          echo "- [@create-js-stack/types@$VERSION](https://www.npmjs.com/package/@create-js-stack/types/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
-          echo "- [@create-js-stack/template-generator@$VERSION](https://www.npmjs.com/package/@create-js-stack/template-generator/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### GitHub Release" >> $GITHUB_STEP_SUMMARY
           echo "[v$VERSION](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY

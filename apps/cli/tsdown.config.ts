@@ -7,6 +7,17 @@ export default defineConfig({
   shims: true,
   outDir: "dist",
   dts: true,
+  noExternal: [/^@create-js-stack\//],
+  hooks: {
+    "build:done": async () => {
+      const fs = await import("node:fs/promises");
+      const path = await import("node:path");
+      const src = path.resolve("../../packages/template-generator/templates-binary");
+      const dest = path.resolve("./templates-binary");
+      await fs.rm(dest, { recursive: true, force: true });
+      await fs.cp(src, dest, { recursive: true });
+    },
+  },
   outputOptions: {
     banner: "#!/usr/bin/env node",
   },

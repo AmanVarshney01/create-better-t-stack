@@ -21,18 +21,16 @@ const ROOT = resolve(import.meta.dir, "..");
 type Publishable = {
   name: string;
   dir: string;
-  // Release workflow rewrites workspace:* → ^<version> via jq before publish.
+  // Release workflow strips bundled workspace deps via jq before publish.
   // Mirror that here so the tarball matches what actually ships.
-  rewriteWorkspaceDeps?: string[];
+  stripDeps?: string[];
 };
 
 const PUBLISHABLES: Publishable[] = [
-  { name: "@create-js-stack/types", dir: "packages/types" },
-  { name: "@create-js-stack/template-generator", dir: "packages/template-generator" },
   {
     name: "create-js-stack",
     dir: "apps/cli",
-    rewriteWorkspaceDeps: ["@create-js-stack/types", "@create-js-stack/template-generator"],
+    stripDeps: ["@create-js-stack/types", "@create-js-stack/template-generator"],
   },
 ];
 
@@ -44,7 +42,7 @@ async function pack(pkg: Publishable, outDir: string): Promise<string> {
   const pkgJsonPath = join(ROOT, pkg.dir, "package.json");
   const original = readFileSync(pkgJsonPath, "utf-8");
 
-  if (pkg.rewriteWorkspaceDeps) {
+  if (pkg.stripDeps) {
     const parsed = JSON.parse(original);
     for (const bucket of [
       "dependencies",
@@ -54,10 +52,8 @@ async function pack(pkg: Publishable, outDir: string): Promise<string> {
     ] as const) {
       const deps = parsed[bucket];
       if (!deps) continue;
-      for (const d of pkg.rewriteWorkspaceDeps) {
-        if (deps[d]?.startsWith("workspace:")) {
-          deps[d] = `^${parsed.version}`;
-        }
+      for (const d of pkg.stripDeps) {
+        if (d in deps) delete deps[d];
       }
     }
     writeFileSync(pkgJsonPath, `${JSON.stringify(parsed, null, 2)}\n`);
@@ -70,7 +66,7 @@ async function pack(pkg: Publishable, outDir: string): Promise<string> {
     const [entry] = JSON.parse(r.stdout.toString()) as Array<{ filename: string }>;
     return join(outDir, entry.filename);
   } finally {
-    if (pkg.rewriteWorkspaceDeps) writeFileSync(pkgJsonPath, original);
+    if (pkg.stripDeps) writeFileSync(pkgJsonPath, original);
   }
 }
 
@@ -83,18 +79,12 @@ async function installAndRun(
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
 
-  const overrides = {
-    "@create-js-stack/types": `file:${tarballs["@create-js-stack/types"]}`,
-    "@create-js-stack/template-generator": `file:${tarballs["@create-js-stack/template-generator"]}`,
-  };
   const fixture: Record<string, unknown> = {
     name: `smoke-${pm}`,
     private: true,
     version: "0.0.0",
     dependencies: { "create-js-stack": `file:${tarballs["create-js-stack"]}` },
   };
-  if (pm === "pnpm") fixture.pnpm = { overrides };
-  else fixture.overrides = overrides;
 
   writeFileSync(join(dir, "package.json"), JSON.stringify(fixture, null, 2));
 

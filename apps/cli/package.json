@@ -40,7 +40,8 @@
     "create-js-stack": "dist/cli.mjs"
   },
   "files": [
-    "dist"
+    "dist",
+    "templates-binary"
   ],
   "type": "module",
   "exports": {

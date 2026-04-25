@@ -5,11 +5,6 @@ import { confirm, select, text } from "@clack/prompts";
 import { $ } from "bun";
 
 const CLI_PACKAGE_JSON_PATH = join(process.cwd(), "apps/cli/package.json");
-const TYPES_PACKAGE_JSON_PATH = join(process.cwd(), "packages/types/package.json");
-const TEMPLATE_GENERATOR_PACKAGE_JSON_PATH = join(
-  process.cwd(),
-  "packages/template-generator/package.json",
-);
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -96,29 +91,13 @@ async function main(): Promise<void> {
   // Create and checkout the release branch
   await $`git checkout -b ${branchName}`;
 
-  // Update package versions
+  // Update package version
   packageJson.version = newVersion;
   await writeFile(CLI_PACKAGE_JSON_PATH, `${JSON.stringify(packageJson, null, 2)}\n`);
 
-  // Update types package version
-  const typesPackageJson = JSON.parse(await readFile(TYPES_PACKAGE_JSON_PATH, "utf-8"));
-  typesPackageJson.version = newVersion;
-  await writeFile(TYPES_PACKAGE_JSON_PATH, `${JSON.stringify(typesPackageJson, null, 2)}\n`);
-
-  // Update template-generator package version and types dependency
-  const templateGeneratorPackageJson = JSON.parse(
-    await readFile(TEMPLATE_GENERATOR_PACKAGE_JSON_PATH, "utf-8"),
-  );
-  templateGeneratorPackageJson.version = newVersion;
-  templateGeneratorPackageJson.dependencies["@create-js-stack/types"] = `^${newVersion}`;
-  await writeFile(
-    TEMPLATE_GENERATOR_PACKAGE_JSON_PATH,
-    `${JSON.stringify(templateGeneratorPackageJson, null, 2)}\n`,
-  );
-
   await $`bun install`;
   await $`bun run build:cli`;
-  await $`git add apps/cli/package.json packages/types/package.json packages/template-generator/package.json bun.lock`;
+  await $`git add apps/cli/package.json bun.lock`;
   await $`git commit -m "chore(release): ${newVersion}"`;
 
   // Push the release branch
@@ -134,8 +113,6 @@ This PR bumps the version to \`${newVersion}\`.
 
 ### Changes
 - Updated \`create-js-stack\` to v${newVersion}
-- Updated \`@create-js-stack/types\` to v${newVersion}
-- Updated \`@create-js-stack/template-generator\` to v${newVersion}
 
 ---
 *This PR was automatically created by \`bun run bump\`*`;
