@@ -83,9 +83,13 @@ jobs:
           cd apps/cli
           jq --arg v "$VERSION" '.version = $v' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Generate template-generator templates-binary
+      - name: Build types package
         if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/template-generator && bun run generate-templates
+        run: cd packages/types && bun run build
+
+      - name: Build template-generator (also generates templates-binary)
+        if: steps.check-version.outputs.exists == 'false'
+        run: cd packages/template-generator && bun run build
 
       - name: Build CLI
         if: steps.check-version.outputs.exists == 'false'
