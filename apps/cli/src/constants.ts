@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { desktopWebFrontends } from "@better-t-stack/types";
+import { desktopWebFrontends } from "@create-js-stack/types";
 
 import { getUserPkgManager } from "./utils/get-package-manager";
 
@@ -9,7 +9,7 @@ import { getUserPkgManager } from "./utils/get-package-manager";
 export {
   dependencyVersionMap,
   type AvailableDependencies,
-} from "@better-t-stack/template-generator";
+} from "@create-js-stack/template-generator";
 
 const __filename = fileURLToPath(import.meta.url);
 const distPath = path.dirname(__filename);

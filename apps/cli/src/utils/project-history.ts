@@ -7,7 +7,7 @@ import fs from "fs-extra";
 import type { ProjectConfig } from "../types";
 import { getLatestCLIVersion } from "./get-latest-cli-version";
 
-const paths = envPaths("better-t-stack", { suffix: "" });
+const paths = envPaths("create-js-stack", { suffix: "" });
 const HISTORY_FILE = "history.json";
 
 export class HistoryError extends TaggedError("HistoryError")<{

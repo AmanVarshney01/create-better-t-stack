@@ -1,20 +1,20 @@
-import type { BetterTStackConfig, ProjectConfig } from "@better-t-stack/types";
+import type { CreateJSStackConfig, ProjectConfig } from "@create-js-stack/types";
 
 import type { VirtualFileSystem } from "./core/virtual-fs";
 
-const BTS_CONFIG_FILE = "bts.jsonc";
+const CJS_CONFIG_FILE = "cjs.jsonc";
 
 /**
- * Writes the BTS configuration file to the VFS (for new project creation).
+ * Writes the Create JS Stack configuration file to the VFS (for new project creation).
  * This is browser-safe as it only writes to VFS, not the real filesystem.
  */
-export function writeBtsConfigToVfs(
+export function writeCjsConfigToVfs(
   vfs: VirtualFileSystem,
   projectConfig: ProjectConfig,
   version: string,
   reproducibleCommand?: string,
 ): void {
-  const btsConfig: BetterTStackConfig = {
+  const cjsConfig: CreateJSStackConfig = {
     version,
     createdAt: new Date().toISOString(),
     reproducibleCommand,
@@ -37,31 +37,31 @@ export function writeBtsConfigToVfs(
   };
 
   const baseContent = {
-    $schema: "https://r2.better-t-stack.dev/schema.json",
-    ...btsConfig,
+    $schema: "https://r2.create-js-stack.dev/schema.json",
+    ...cjsConfig,
   };
 
   const jsonContent = JSON.stringify(baseContent, null, 2);
 
   const addCommand =
     projectConfig.packageManager === "npm"
-      ? "npx create-better-t-stack add"
+      ? "npx create-js-stack add"
       : projectConfig.packageManager === "pnpm"
-        ? "pnpm dlx create-better-t-stack add"
-        : "bun create better-t-stack add";
+        ? "pnpm dlx create-js-stack add"
+        : "bun create create-js-stack add";
 
-  const finalContent = `// Better-T-Stack
+  const finalContent = `// Create-JS-Stack
 //
-// Website: https://www.better-t-stack.dev/
-// Stack Builder: https://www.better-t-stack.dev/new
-// Analytics: https://www.better-t-stack.dev/analytics
-// Showcase: https://www.better-t-stack.dev/showcase
-// Sponsor: https://github.com/sponsors/AmanVarshney01
+// Website: https://www.create-js-stack.dev/
+// Stack Builder: https://www.create-js-stack.dev/new
+// Analytics: https://www.create-js-stack.dev/analytics
+// Showcase: https://www.create-js-stack.dev/showcase
+// Sponsor: https://github.com/sponsors/riteshintro
 //
 // Add new addons with: ${addCommand}
 // This file is safe to delete
 
 ${jsonContent}`;
 
-  vfs.writeFile(BTS_CONFIG_FILE, finalContent);
+  vfs.writeFile(CJS_CONFIG_FILE, finalContent);
 }

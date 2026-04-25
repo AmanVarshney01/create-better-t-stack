@@ -5,7 +5,7 @@ description: JSON-first and schema-driven workflows for agents, scripts, and aut
 
 ## Overview
 
-Better-T-Stack now supports a fully JSON-first workflow for agents and automation:
+Create-JS-Stack now supports a fully JSON-first workflow for agents and automation:
 
 - Raw JSON project creation with `create-json`
 - Raw JSON addon installation with `add-json`
@@ -22,7 +22,7 @@ If you are automating the CLI from an LLM, CI job, or another tool, start here i
 Create a project from a single JSON payload instead of many flags.
 
 ```bash
-create-better-t-stack create-json --input '{
+create-js-stack create-json --input '{
   "projectName": "my-app",
   "frontend": ["tanstack-router"],
   "backend": "hono",
@@ -55,7 +55,7 @@ This is the best path when:
 Add addons to an existing project with a single JSON payload.
 
 ```bash
-create-better-t-stack add-json --input '{
+create-js-stack add-json --input '{
   "projectDir": "./my-app",
   "addons": ["skills", "ultracite"],
   "addonOptions": {
@@ -84,12 +84,12 @@ create-better-t-stack add-json --input '{
 Use the CLI itself as the source of truth for current input shapes.
 
 ```bash
-create-better-t-stack schema --name all
-create-better-t-stack schema --name cli
-create-better-t-stack schema --name createInput
-create-better-t-stack schema --name addInput
-create-better-t-stack schema --name addonOptions
-create-better-t-stack schema --name dbSetupOptions
+create-js-stack schema --name all
+create-js-stack schema --name cli
+create-js-stack schema --name createInput
+create-js-stack schema --name addInput
+create-js-stack schema --name addonOptions
+create-js-stack schema --name dbSetupOptions
 ```
 
 Useful patterns:
@@ -101,16 +101,16 @@ Useful patterns:
 
 ## `mcp`
 
-Run Better-T-Stack itself as a local MCP server over stdio:
+Run Create-JS-Stack itself as a local MCP server over stdio:
 
 ```bash
-npx create-better-t-stack@latest mcp
+npx create-js-stack@latest mcp
 ```
 
 Install it into supported agent configs with `add-mcp`:
 
 ```bash
-npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"
+npx -y add-mcp@latest "npx -y create-js-stack@latest mcp"
 ```
 
 Exposed tools:
@@ -122,7 +122,7 @@ Exposed tools:
 - `bts_plan_addons`
 - `bts_add_addons`
 
-This is the best path when an MCP-capable client should scaffold or modify Better-T-Stack projects without shelling out to a prompt-driven CLI flow.
+This is the best path when an MCP-capable client should scaffold or modify Create-JS-Stack projects without shelling out to a prompt-driven CLI flow.
 
 Recommended MCP workflow:
 
@@ -162,13 +162,13 @@ Important field rules:
 - `install` should usually be `false` for `bts_create_project`, because dependency installation can exceed common MCP client timeouts. Run `npm install`, `pnpm install`, or `bun install` separately after scaffolding.
 - If a request is still ambiguous after reading the guidance, the agent should resolve that ambiguity before calling `bts_plan_project`.
 
-If you scaffold a project with the `mcp` addon, Better-T-Stack itself is now one of the recommended MCP servers. The addon installs it through `add-mcp` with a package runner command so the generated config does not rely on a globally installed CLI:
+If you scaffold a project with the `mcp` addon, Create-JS-Stack itself is now one of the recommended MCP servers. The addon installs it through `add-mcp` with a package runner command so the generated config does not rely on a globally installed CLI:
 
 ```bash
-npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"
+npx -y add-mcp@latest "npx -y create-js-stack@latest mcp"
 ```
 
-For Bun projects, the generated config uses the equivalent `bunx create-better-t-stack@latest mcp` server command inside `add-mcp`. That means MCP-capable agents inside the generated project can talk back to Better-T-Stack without any extra global install, alongside other recommended docs, framework, and database MCP servers.
+For Bun projects, the generated config uses the equivalent `bunx create-js-stack@latest mcp` server command inside `add-mcp`. That means MCP-capable agents inside the generated project can talk back to Create-JS-Stack without any extra global install, alongside other recommended docs, framework, and database MCP servers.
 
 ## Structured Addon Options
 
@@ -197,7 +197,7 @@ Example:
 }
 ```
 
-Structured addon options are still persisted in `bts.jsonc`, but the printed reproducible command now stays on normal CLI flags for consistency. That means deeply nested addon or provider-specific setup options are not fully encoded in the one-line replay command.
+Structured addon options are still persisted in `cjs.jsonc`, but the printed reproducible command now stays on normal CLI flags for consistency. That means deeply nested addon or provider-specific setup options are not fully encoded in the one-line replay command.
 
 ## Structured Database Setup Options
 
@@ -206,7 +206,7 @@ Structured addon options are still persisted in `bts.jsonc`, but the printed rep
 Example:
 
 ```bash
-create-better-t-stack create-json --input '{
+create-js-stack create-json --input '{
   "projectName": "db-app",
   "database": "postgres",
   "orm": "drizzle",
@@ -247,9 +247,9 @@ Provider-specific options are intentionally small today:
 Use `--dry-run` to validate inputs and target directories without writing files.
 
 ```bash
-create-better-t-stack --yes --dry-run
-create-better-t-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
-create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["mcp"],"dryRun":true}'
+create-js-stack --yes --dry-run
+create-js-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
+create-js-stack add-json --input '{"projectDir":"./my-app","addons":["mcp"],"dryRun":true}'
 ```
 
 This is especially useful for:
@@ -264,12 +264,12 @@ The exported `create()` and `add()` APIs run in silent mode by default, so they 
 
 See [Programmatic API](/docs/cli/programmatic-api) for TypeScript examples.
 
-## Stored in `bts.jsonc`
+## Stored in `cjs.jsonc`
 
-Better-T-Stack persists structured configuration in `bts.jsonc`, including:
+Create-JS-Stack persists structured configuration in `cjs.jsonc`, including:
 
 - `reproducibleCommand`
 - `addonOptions`
 - `dbSetupOptions`
 
-See [`bts.jsonc`](/docs/bts-config) for the file format.
+See [`cjs.jsonc`](/docs/cjs-config) for the file format.

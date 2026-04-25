@@ -20,7 +20,7 @@ const Footer = () => {
             </p>
             <div className="flex gap-2">
               <Link
-                href="https://github.com/AmanVarshney01/create-better-t-stack"
+                href="https://github.com/riteshintro/create-js-stack"
                 target="_blank"
                 className="inline-flex items-center justify-center rounded border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 aria-label="GitHub Repository"
@@ -28,7 +28,7 @@ const Footer = () => {
                 <FaGithub size={20} />
               </Link>
               <Link
-                href="https://www.npmjs.com/package/create-better-t-stack"
+                href="https://www.npmjs.com/package/create-js-stack"
                 target="_blank"
                 className="inline-flex items-center justify-center rounded border border-border p-2 text-muted-foreground invert-0 transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:invert"
                 aria-label="NPM Package"
@@ -46,7 +46,7 @@ const Footer = () => {
               <li>
                 <Link
                   target="_blank"
-                  href="https://github.com/AmanVarshney01/create-better-t-stack"
+                  href="https://github.com/riteshintro/create-js-stack"
                   className="inline-block transition-colors hover:text-primary focus:text-primary focus:outline-none"
                 >
                   GitHub Repository
@@ -55,7 +55,7 @@ const Footer = () => {
               <li>
                 <Link
                   target="_blank"
-                  href="https://www.npmjs.com/package/create-better-t-stack"
+                  href="https://www.npmjs.com/package/create-js-stack"
                   className="inline-block transition-colors hover:text-primary focus:text-primary focus:outline-none"
                 >
                   NPM Package
@@ -93,7 +93,7 @@ const Footer = () => {
 
         <div className="flex flex-col items-center justify-between gap-4 border-border border-t pt-6 sm:flex-row sm:gap-6 sm:pt-8">
           <p className="text-center font-mono text-muted-foreground text-xs sm:text-left sm:text-sm">
-            © {new Date().getFullYear()} Better-T-Stack. All rights reserved.
+            © {new Date().getFullYear()} Create-JS-Stack. All rights reserved.
           </p>
           <p className="flex items-center gap-1.5 font-mono text-muted-foreground text-xs sm:text-sm">
             <span className="text-primary">$</span> Built with{" "}

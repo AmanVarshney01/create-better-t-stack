@@ -1,4 +1,4 @@
-import type { ProjectConfig } from "@better-t-stack/types";
+import type { ProjectConfig } from "@create-js-stack/types";
 import { TaggedError } from "better-result";
 
 export interface VirtualFile {
@@ -30,7 +30,7 @@ export interface GeneratorOptions {
   config: ProjectConfig;
   templateBasePath?: string;
   templates?: Map<string, string>;
-  /** CLI version string for bts.jsonc */
+  /** CLI version string for cjs.jsonc */
   version?: string;
 }
 

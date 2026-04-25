@@ -1,6 +1,6 @@
-import { generate, type VirtualNode } from "@better-t-stack/template-generator";
-import { EMBEDDED_TEMPLATES } from "@better-t-stack/template-generator";
-import type { ProjectConfig } from "@better-t-stack/types";
+import { generate, type VirtualNode } from "@create-js-stack/template-generator";
+import { EMBEDDED_TEMPLATES } from "@create-js-stack/template-generator";
+import type { ProjectConfig } from "@create-js-stack/types";
 import { NextResponse } from "next/server";
 
 import type { StackState } from "@/lib/constant";

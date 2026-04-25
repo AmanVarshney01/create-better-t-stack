@@ -1,6 +1,6 @@
 import { Result } from "better-result";
 
-import { writeBtsConfigToVfs } from "./bts-config";
+import { writeCjsConfigToVfs } from "./cjs-config";
 import { VirtualFileSystem } from "./core/virtual-fs";
 import { processCatalogs, processPackageConfigs } from "./post-process";
 import {
@@ -87,10 +87,10 @@ export async function generate(
       processCatalogs(vfs, config);
       processReadme(vfs, config);
 
-      // Write bts.jsonc config file
+      // Write cjs.jsonc config file
       if (options.version) {
         const reproducibleCommand = generateReproducibleCommand(config);
-        writeBtsConfigToVfs(vfs, config, options.version, reproducibleCommand);
+        writeCjsConfigToVfs(vfs, config, options.version, reproducibleCommand);
       }
 
       const tree: VirtualFileTree = {

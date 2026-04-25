@@ -40,7 +40,7 @@ jobs:
       - name: Install Dependencies
         run: bun install --frozen-lockfile
         env:
-          BTS_TELEMETRY: 0
+          CJS_TELEMETRY: 0
 
       - name: Verify NPM auth
         run: npm whoami
@@ -76,12 +76,12 @@ jobs:
         run: cd packages/types && npm publish --access public --provenance --tag ${{ steps.version.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 0
+          CJS_TELEMETRY: 0
 
       - name: Update template-generator package version and types dependency
         run: |
           cd packages/template-generator
-          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["@better-t-stack/types"] = $v' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["@create-js-stack/types"] = $v' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build template-generator package
         run: cd packages/template-generator && bun run build
@@ -90,34 +90,34 @@ jobs:
         run: cd packages/template-generator && npm publish --access public --provenance --tag ${{ steps.version.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 0
+          CJS_TELEMETRY: 0
 
       - name: Update CLI package version and dependencies
         run: |
           cd apps/cli
-          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["@better-t-stack/types"] = $v | .dependencies["@better-t-stack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["@create-js-stack/types"] = $v | .dependencies["@create-js-stack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Update create-bts alias package version
+      - name: Update create-cjs alias package version
         run: |
-          cd packages/create-bts
-          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["create-better-t-stack"] = $v' package.json > tmp.json && mv tmp.json package.json
+          cd packages/create-cjs
+          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["create-js-stack"] = $v' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build CLI
         run: cd apps/cli && bun run build
         env:
-          BTS_TELEMETRY: 0
+          CJS_TELEMETRY: 0
 
       - name: Publish CLI to NPM
         run: cd apps/cli && npm publish --access public --provenance --tag ${{ steps.version.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 0
+          CJS_TELEMETRY: 0
 
-      - name: Publish create-bts to NPM
-        run: cd packages/create-bts && npm publish --access public --provenance --tag ${{ steps.version.outputs.tag }}
+      - name: Publish create-cjs to NPM
+        run: cd packages/create-cjs && npm publish --access public --provenance --tag ${{ steps.version.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 0
+          CJS_TELEMETRY: 0
 
       - name: Find existing preview comment
         uses: peter-evans/find-comment@v3
@@ -140,10 +140,10 @@ jobs:
 
             | Package | Version | NPM Tag |
             |---------|---------|---------|
-            | `create-better-t-stack` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
-            | `create-bts` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
-            | `@better-t-stack/types` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
-            | `@better-t-stack/template-generator` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `create-js-stack` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `create-cjs` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@create-js-stack/types` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@create-js-stack/template-generator` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
 
             **Commit:** `${{ steps.version.outputs.commit }}`
 
@@ -151,23 +151,23 @@ jobs:
 
             ```bash
             # Using the PR tag (always gets latest for this PR)
-            bunx create-better-t-stack@pr${{ steps.version.outputs.pr }}
-            npx create-better-t-stack@pr${{ steps.version.outputs.pr }}
+            bunx create-js-stack@pr${{ steps.version.outputs.pr }}
+            npx create-js-stack@pr${{ steps.version.outputs.pr }}
 
             # Using exact version
-            bunx create-better-t-stack@${{ steps.version.outputs.version }}
-            npx create-better-t-stack@${{ steps.version.outputs.version }}
+            bunx create-js-stack@${{ steps.version.outputs.version }}
+            npx create-js-stack@${{ steps.version.outputs.version }}
 
             # Using the alias
-            bunx create-bts@pr${{ steps.version.outputs.pr }}
-            npx create-bts@pr${{ steps.version.outputs.pr }}
+            bunx create-cjs@pr${{ steps.version.outputs.pr }}
+            npx create-cjs@pr${{ steps.version.outputs.pr }}
             ```
 
             ### NPM Links
-            - [create-better-t-stack@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/create-better-t-stack/v/${{ steps.version.outputs.version }})
-            - [create-bts@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/create-bts/v/${{ steps.version.outputs.version }})
-            - [@better-t-stack/types@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@better-t-stack/types/v/${{ steps.version.outputs.version }})
-            - [@better-t-stack/template-generator@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@better-t-stack/template-generator/v/${{ steps.version.outputs.version }})
+            - [create-js-stack@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/create-js-stack/v/${{ steps.version.outputs.version }})
+            - [create-cjs@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/create-cjs/v/${{ steps.version.outputs.version }})
+            - [@create-js-stack/types@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@create-js-stack/types/v/${{ steps.version.outputs.version }})
+            - [@create-js-stack/template-generator@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@create-js-stack/template-generator/v/${{ steps.version.outputs.version }})
 
             ---
             *To publish a new preview after more commits, remove and re-add the `preview` label.*

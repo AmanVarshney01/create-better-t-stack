@@ -88,9 +88,9 @@ export function getDesktopBuildNote(stack: Pick<StackState, "addons" | "webFront
 
 export function generateStackCommand(stack: StackState) {
   const packageManagerCommands = {
-    npm: "npx create-better-t-stack@latest",
-    pnpm: "pnpm create better-t-stack@latest",
-    default: "bun create better-t-stack@latest",
+    npm: "npx create-js-stack@latest",
+    pnpm: "pnpm create create-js-stack@latest",
+    default: "bun create create-js-stack@latest",
   };
 
   const base =
@@ -177,7 +177,7 @@ export function generateStackCommand(stack: StackState) {
 }
 
 export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
-  const origin = baseUrl || "https://better-t-stack.dev";
+  const origin = baseUrl || "https://create-js-stack.dev";
 
   const stackParams = new URLSearchParams();
   Object.entries(stackUrlKeys).forEach(([stackKey, urlKey]) => {
@@ -192,7 +192,7 @@ export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
 }
 
 export function generateStackSharingUrl(stack: StackState, baseUrl?: string) {
-  const origin = baseUrl || "https://better-t-stack.dev";
+  const origin = baseUrl || "https://create-js-stack.dev";
 
   const stackParams = new URLSearchParams();
   Object.entries(stackUrlKeys).forEach(([stackKey, urlKey]) => {

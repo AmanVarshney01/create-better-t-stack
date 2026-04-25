@@ -58,7 +58,7 @@ const McpCreateProjectInputSchema = CreateInputSchema.safeExtend({
   dbSetupOptions: DbSetupOptionsSchema.optional(),
   directoryConflict: DirectoryConflictSchema.optional(),
 }).describe(
-  "Explicit Better T Stack project configuration for MCP use. Provide the full stack config instead of relying on inferred defaults.",
+  "Explicit Create JS Stack project configuration for MCP use. Provide the full stack config instead of relying on inferred defaults.",
 );
 
 function formatToolSuccess(data: unknown) {
@@ -167,10 +167,10 @@ function getStackGuidance() {
   };
 }
 
-export function createBtsMcpServer() {
+export function createCjsMcpServer() {
   const server = new McpServer(
     {
-      name: "create-better-t-stack",
+      name: "create-js-stack",
       version: getLatestCLIVersion(),
     },
     {
@@ -183,13 +183,13 @@ export function createBtsMcpServer() {
   server.registerTool(
     "bts_get_stack_guidance",
     {
-      title: "Get Better T Stack MCP Guidance",
+      title: "Get Create JS Stack MCP Guidance",
       description:
-        "Read MCP-specific guidance for choosing valid Better T Stack configurations. Use this before planning when user intent is ambiguous. This explains the full explicit config required by MCP project creation, plus important field semantics and ambiguity rules.",
+        "Read MCP-specific guidance for choosing valid Create JS Stack configurations. Use this before planning when user intent is ambiguous. This explains the full explicit config required by MCP project creation, plus important field semantics and ambiguity rules.",
       inputSchema: z.object({}),
       outputSchema: ToolResponseSchema,
       annotations: {
-        title: "Get Better T Stack MCP Guidance",
+        title: "Get Create JS Stack MCP Guidance",
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
@@ -208,15 +208,15 @@ export function createBtsMcpServer() {
   server.registerTool(
     "bts_get_schema",
     {
-      title: "Get Better T Stack Schemas",
+      title: "Get Create JS Stack Schemas",
       description:
-        "Inspect Better T Stack CLI and input schemas so agents can plan valid create/add requests. Use this together with bts_get_stack_guidance before creating a project if any part of the request is ambiguous.",
+        "Inspect Create JS Stack CLI and input schemas so agents can plan valid create/add requests. Use this together with bts_get_stack_guidance before creating a project if any part of the request is ambiguous.",
       inputSchema: z.object({
         name: SchemaNameSchema.optional().describe("Schema name to inspect. Defaults to all."),
       }),
       outputSchema: ToolResponseSchema,
       annotations: {
-        title: "Get Better T Stack Schemas",
+        title: "Get Create JS Stack Schemas",
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
@@ -235,13 +235,13 @@ export function createBtsMcpServer() {
   server.registerTool(
     "bts_plan_project",
     {
-      title: "Plan Better T Stack Project",
+      title: "Plan Create JS Stack Project",
       description:
-        "Validate and preview a Better T Stack project creation without writing files or provisioning resources. Always use this before bts_create_project. This tool requires an explicit full stack config rather than a partial payload with inferred defaults.",
+        "Validate and preview a Create JS Stack project creation without writing files or provisioning resources. Always use this before bts_create_project. This tool requires an explicit full stack config rather than a partial payload with inferred defaults.",
       inputSchema: McpCreateProjectInputSchema,
       outputSchema: ToolResponseSchema,
       annotations: {
-        title: "Plan Better T Stack Project",
+        title: "Plan Create JS Stack Project",
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
@@ -281,13 +281,13 @@ export function createBtsMcpServer() {
   server.registerTool(
     "bts_create_project",
     {
-      title: "Create Better T Stack Project",
+      title: "Create Create JS Stack Project",
       description:
-        "Create a Better T Stack project on disk using the same silent programmatic flow as the CLI JSON API. Call this only after bts_plan_project succeeds and the plan clearly matches the user's intent. This tool requires an explicit full stack config.",
+        "Create a Create JS Stack project on disk using the same silent programmatic flow as the CLI JSON API. Call this only after bts_plan_project succeeds and the plan clearly matches the user's intent. This tool requires an explicit full stack config.",
       inputSchema: McpCreateProjectInputSchema,
       outputSchema: ToolResponseSchema,
       annotations: {
-        title: "Create Better T Stack Project",
+        title: "Create Create JS Stack Project",
         ...getProjectToolAnnotations(),
       },
     },
@@ -316,13 +316,13 @@ export function createBtsMcpServer() {
   server.registerTool(
     "bts_plan_addons",
     {
-      title: "Plan Better T Stack Addons",
+      title: "Plan Create JS Stack Addons",
       description:
-        "Validate and preview addon installation for an existing Better T Stack project without writing files. Always use this before bts_add_addons when the addon set or nested options are uncertain.",
+        "Validate and preview addon installation for an existing Create JS Stack project without writing files. Always use this before bts_add_addons when the addon set or nested options are uncertain.",
       inputSchema: AddInputSchema,
       outputSchema: ToolResponseSchema,
       annotations: {
-        title: "Plan Better T Stack Addons",
+        title: "Plan Create JS Stack Addons",
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
@@ -350,13 +350,13 @@ export function createBtsMcpServer() {
   server.registerTool(
     "bts_add_addons",
     {
-      title: "Add Better T Stack Addons",
+      title: "Add Create JS Stack Addons",
       description:
-        "Install addons into an existing Better T Stack project using the same silent flow as add-json. Call this only after bts_plan_addons succeeds and the planned changes match the user's intent.",
+        "Install addons into an existing Create JS Stack project using the same silent flow as add-json. Call this only after bts_plan_addons succeeds and the planned changes match the user's intent.",
       inputSchema: AddInputSchema,
       outputSchema: ToolResponseSchema,
       annotations: {
-        title: "Add Better T Stack Addons",
+        title: "Add Create JS Stack Addons",
         destructiveHint: true,
         idempotentHint: false,
         openWorldHint: true,
@@ -380,8 +380,8 @@ export function createBtsMcpServer() {
   return server;
 }
 
-export async function startBtsMcpServer() {
-  const server = createBtsMcpServer();
+export async function startCjsMcpServer() {
+  const server = createCjsMcpServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }

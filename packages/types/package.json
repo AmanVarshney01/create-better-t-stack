@@ -1,20 +1,20 @@
 {
-  "name": "@better-t-stack/types",
-  "version": "3.27.5",
-  "description": "TypeScript types and schemas for create-better-t-stack CLI",
+  "name": "@create-js-stack/types",
+  "version": "1.0.0",
+  "description": "TypeScript types and schemas for create-js-stack CLI",
   "keywords": [
-    "better-t-stack",
     "cli",
+    "create-js-stack",
     "schemas",
     "types",
     "typescript"
   ],
-  "homepage": "https://better-t-stack.dev/",
+  "homepage": "https://create-js-stack.dev/",
   "license": "MIT",
   "author": "Aman Varshney",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
+    "url": "git+https://github.com/riteshintro/create-js-stack.git",
     "directory": "packages/types"
   },
   "files": [

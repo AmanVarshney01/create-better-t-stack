@@ -11,7 +11,7 @@ export default defineConfig({
     banner: "#!/usr/bin/env node",
   },
   env: {
-    BTS_TELEMETRY: process.env.BTS_TELEMETRY || "0",
+    CJS_TELEMETRY: process.env.CJS_TELEMETRY || "0",
     CONVEX_INGEST_URL: process.env.CONVEX_INGEST_URL || "",
   },
 });

@@ -14,7 +14,7 @@ type SpecialSponsorsPanelProps = {
   compact?: boolean;
 };
 
-const SPONSOR_ME_URL = "https://github.com/sponsors/AmanVarshney01";
+const SPONSOR_ME_URL = "https://github.com/sponsors/riteshintro";
 
 export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSponsorsPanelProps) {
   if (!sponsors.length) {

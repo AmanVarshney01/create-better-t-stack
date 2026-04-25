@@ -5,14 +5,14 @@ description: Complete reference for all CLI commands
 
 ## Overview
 
-The Better-T-Stack CLI provides several commands to manage your TypeScript projects.
+The Create-JS-Stack CLI provides several commands to manage your TypeScript projects.
 
 ## `create` (Default Command)
 
-Creates a new Better-T-Stack project.
+Creates a new Create-JS-Stack project.
 
 ```bash
-create-better-t-stack [project-directory] [options]
+create-js-stack [project-directory] [options]
 ```
 
 ### Parameters
@@ -54,24 +54,24 @@ For JSON-first automation and agent usage, see [Agent Workflows](/docs/cli/agent
 
 ```bash
 # Default setup with prompts
-create-better-t-stack
+create-js-stack
 
 # Quick setup with defaults
-create-better-t-stack --yes
+create-js-stack --yes
 
 # Specific configuration
-create-better-t-stack --database postgres --backend hono --frontend tanstack-router
+create-js-stack --database postgres --backend hono --frontend tanstack-router
 
 # Validate without writing files
-create-better-t-stack my-app --yes --dry-run
+create-js-stack my-app --yes --dry-run
 ```
 
 ## `add`
 
-Adds addons to an existing Better-T-Stack project.
+Adds addons to an existing Create-JS-Stack project.
 
 ```bash
-create-better-t-stack add [options]
+create-js-stack add [options]
 ```
 
 ### Options
@@ -85,13 +85,13 @@ create-better-t-stack add [options]
 
 ```bash
 # Add addons interactively
-create-better-t-stack add
+create-js-stack add
 
 # Add specific addons
-create-better-t-stack add --addons pwa tauri --install
+create-js-stack add --addons pwa tauri --install
 
 # Add addons in a specific project directory
-create-better-t-stack add --project-dir ./my-app --addons mcp skills
+create-js-stack add --project-dir ./my-app --addons mcp skills
 ```
 
 ## `create-json`
@@ -99,7 +99,7 @@ create-better-t-stack add --project-dir ./my-app --addons mcp skills
 Create a project from a raw JSON payload.
 
 ```bash
-create-better-t-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
+create-js-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
 ```
 
 Use this when you want a single machine-readable input object instead of many flags.
@@ -109,7 +109,7 @@ Use this when you want a single machine-readable input object instead of many fl
 Add addons from a raw JSON payload.
 
 ```bash
-create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["wxt"],"addonOptions":{"wxt":{"template":"react"}}}'
+create-js-stack add-json --input '{"projectDir":"./my-app","addons":["wxt"],"addonOptions":{"wxt":{"template":"react"}}}'
 ```
 
 ## `schema`
@@ -117,50 +117,50 @@ create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["wxt"
 Print runtime CLI and input schemas as JSON.
 
 ```bash
-create-better-t-stack schema --name all
-create-better-t-stack schema --name createInput
-create-better-t-stack schema --name addonOptions
-create-better-t-stack schema --name dbSetupOptions
+create-js-stack schema --name all
+create-js-stack schema --name createInput
+create-js-stack schema --name addonOptions
+create-js-stack schema --name dbSetupOptions
 ```
 
 This is the best way for scripts and agents to discover the current input contract at runtime.
 
 ## `sponsors`
 
-Displays Better-T-Stack sponsors.
+Displays Create-JS-Stack sponsors.
 
 ```bash
-create-better-t-stack sponsors
+create-js-stack sponsors
 ```
 
 Shows a list of project sponsors and supporters.
 
 ## `docs`
 
-Opens the Better-T-Stack documentation in your default browser.
+Opens the Create-JS-Stack documentation in your default browser.
 
 ```bash
-create-better-t-stack docs
+create-js-stack docs
 ```
 
-Opens `https://better-t-stack.dev/docs` in your browser.
+Opens `https://create-js-stack.dev/docs` in your browser.
 
 ## `builder`
 
 Opens the web-based stack builder in your default browser.
 
 ```bash
-create-better-t-stack builder
+create-js-stack builder
 ```
 
-Opens `https://better-t-stack.dev/new` where you can configure your stack visually.
+Opens `https://create-js-stack.dev/new` where you can configure your stack visually.
 
 ## `history`
 
 Shows project creation history stored on your local machine.
 
 ```bash
-create-better-t-stack history [options]
+create-js-stack history [options]
 ```
 
 ### Options
@@ -173,16 +173,16 @@ create-better-t-stack history [options]
 
 ```bash
 # Show latest entries
-create-better-t-stack history
+create-js-stack history
 
 # Show 5 entries
-create-better-t-stack history --limit 5
+create-js-stack history --limit 5
 
 # JSON output
-create-better-t-stack history --json
+create-js-stack history --json
 
 # Clear history
-create-better-t-stack history --clear
+create-js-stack history --clear
 ```
 
 ## Global Options
@@ -197,7 +197,7 @@ These options work with any command:
 ### Create a Full-Stack App
 
 ```bash
-create-better-t-stack \
+create-js-stack \
   --database postgres \
   --orm drizzle \
   --backend hono \
@@ -209,7 +209,7 @@ create-better-t-stack \
 ### Create a Backend-Only Project
 
 ```bash
-create-better-t-stack api-server \
+create-js-stack api-server \
   --frontend none \
   --backend hono \
   --database postgres \
@@ -221,13 +221,13 @@ create-better-t-stack api-server \
 
 ```bash
 cd my-existing-project
-create-better-t-stack add --addons tauri starlight --install
+create-js-stack add --addons tauri starlight --install
 ```
 
 ### Show Local History
 
 ```bash
-create-better-t-stack history --limit 20
+create-js-stack history --limit 20
 ```
 
 ## Programmatic Usage
@@ -235,7 +235,7 @@ create-better-t-stack history --limit 20
 For advanced use cases, automation, or integration with other tools, you can use the [Programmatic API](/docs/cli/programmatic-api) to create projects from Node.js code:
 
 ```typescript
-import { create } from "create-better-t-stack";
+import { create } from "create-js-stack";
 
 const result = await create("my-app", {
   frontend: ["tanstack-router"],

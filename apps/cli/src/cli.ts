@@ -1,20 +1,20 @@
-import { createBtsCli } from "./index";
-import { startBtsMcpServer } from "./mcp";
+import { createCjsCli } from "./index";
+import { startCjsMcpServer } from "./mcp";
 
 const [, , command, ...args] = process.argv;
 
 if (command === "mcp") {
   if (args.includes("--help") || args.includes("-h")) {
-    console.log(`Usage: create-better-t-stack mcp
+    console.log(`Usage: create-js-stack mcp
 
-Start the Better T Stack MCP server over stdio.
+Start the Create JS Stack MCP server over stdio.
 
 This command is intended to be launched by an MCP client, for example:
-  create-better-t-stack mcp`);
+  create-js-stack mcp`);
     process.exit(0);
   }
 
-  await startBtsMcpServer();
+  await startCjsMcpServer();
 } else {
-  await createBtsCli().run();
+  await createCjsCli().run();
 }

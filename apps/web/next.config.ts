@@ -10,7 +10,7 @@ const config: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "pbs.twimg.com" },
       { protocol: "https", hostname: "abs.twimg.com" },
-      { protocol: "https", hostname: "r2.better-t-stack.dev" },
+      { protocol: "https", hostname: "r2.create-js-stack.dev" },
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
     ],
   },
@@ -28,7 +28,7 @@ const config: NextConfig = {
   experimental: {
     turbopackFileSystemCacheForDev: true,
   },
-  serverExternalPackages: ["create-better-t-stack", "fs-extra", "tinyglobby", "handlebars"],
+  serverExternalPackages: ["create-js-stack", "fs-extra", "tinyglobby", "handlebars"],
 };
 
 export default withMDX(config);

@@ -3,9 +3,9 @@ import { OssStats } from "@erquhart/convex-oss-stats";
 import { components } from "./_generated/api";
 
 export const ossStats = new OssStats(components.ossStats, {
-  githubOwners: ["AmanVarshney01"],
-  githubRepos: ["AmanVarshney01/create-better-t-stack"],
-  npmPackages: ["create-better-t-stack"],
+  githubOwners: ["riteshintro"],
+  githubRepos: ["riteshintro/create-js-stack"],
+  npmPackages: ["create-js-stack"],
 });
 
 export const {

@@ -3,7 +3,7 @@
  * Deduplicates dependencies across packages using pnpm/bun catalogs
  */
 
-import type { ProjectConfig } from "@better-t-stack/types";
+import type { ProjectConfig } from "@create-js-stack/types";
 import yaml from "yaml";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";

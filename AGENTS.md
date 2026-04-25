@@ -4,7 +4,7 @@
 
 This repo is a Bun + Turborepo monorepo.
 
-- `apps/cli`: published CLI (`create-better-t-stack`), with source in `apps/cli/src` and tests in `apps/cli/test`.
+- `apps/cli`: published CLI (`create-js-stack`), with source in `apps/cli/src` and tests in `apps/cli/test`.
 - `apps/web`: Next.js docs/site (`apps/web/src`, `apps/web/content/docs`, `apps/web/public`).
 - `packages/template-generator`: template generation engine used by the CLI.
 - `packages/types`: shared schemas/types.

@@ -1,20 +1,20 @@
 import path from "node:path";
 
+import { intro, log, outro } from "@clack/prompts";
 import {
   EMBEDDED_TEMPLATES,
   processAddonTemplates,
   processAddonsDeps,
   VirtualFileSystem,
-} from "@better-t-stack/template-generator";
-import { writeTree } from "@better-t-stack/template-generator/fs-writer";
-import { intro, log, outro } from "@clack/prompts";
+} from "@create-js-stack/template-generator";
+import { writeTree } from "@create-js-stack/template-generator/fs-writer";
 import { Result } from "better-result";
 import fs from "fs-extra";
 import pc from "picocolors";
 
 import { getAddonsToAdd } from "../../prompts/addons";
 import type { AddInput, Addons, AddonOptions, ProjectConfig } from "../../types";
-import { updateBtsConfig } from "../../utils/bts-config";
+import { updateCjsConfig } from "../../utils/cjs-config";
 import { isSilent, runWithContextAsync } from "../../utils/context";
 import { CLIError, UserCancelledError, displayError } from "../../utils/errors";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
@@ -126,7 +126,7 @@ async function addHandlerInternal(
 
   if (!isSilent()) {
     renderTitle();
-    intro(pc.magenta("Add addons to your Better-T-Stack project"));
+    intro(pc.magenta("Add addons to your Create-JS-Stack project"));
   }
 
   // Detect existing project configuration
@@ -135,7 +135,7 @@ async function addHandlerInternal(
   if (!existingConfig) {
     return Result.err(
       new CLIError({
-        message: `No Better-T-Stack project found in ${projectDir}. Make sure bts.jsonc exists.`,
+        message: `No Create-JS-Stack project found in ${projectDir}. Make sure cjs.jsonc exists.`,
       }),
     );
   }
@@ -312,8 +312,8 @@ async function addHandlerInternal(
     return Result.err(setupResult.error);
   }
 
-  // Update bts.jsonc with new addons
-  await updateBtsConfig(projectDir, {
+  // Update cjs.jsonc with new addons
+  await updateCjsConfig(projectDir, {
     addons: updatedAddons,
     addonOptions: config.addonOptions,
   });

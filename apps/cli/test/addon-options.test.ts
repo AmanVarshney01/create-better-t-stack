@@ -4,14 +4,14 @@ import path from "node:path";
 import fs from "fs-extra";
 
 import { add, create } from "../src/index";
-import { readBtsConfig } from "../src/utils/bts-config";
+import { readCjsConfig } from "../src/utils/cjs-config";
 
 const SMOKE_DIR_PATH = path.join(import.meta.dir, "..", ".smoke");
 
 describe("Addon options", () => {
   beforeEach(() => {
-    process.env.BTS_SKIP_EXTERNAL_COMMANDS = "1";
-    process.env.BTS_TEST_MODE = "1";
+    process.env.CJS_SKIP_EXTERNAL_COMMANDS = "1";
+    process.env.CJS_TEST_MODE = "1";
   });
 
   it("persists addonOptions during create and keeps reproducible command on normal flags", async () => {
@@ -73,8 +73,8 @@ describe("Addon options", () => {
     );
     expect(result.value.reproducibleCommand).not.toContain("create-json --input");
 
-    const btsConfig = await readBtsConfig(projectPath);
-    expect(btsConfig?.addonOptions).toEqual(addonOptions);
+    const cjsConfig = await readCjsConfig(projectPath);
+    expect(cjsConfig?.addonOptions).toEqual(addonOptions);
   });
 
   it("persists addonOptions during add", async () => {
@@ -109,9 +109,9 @@ describe("Addon options", () => {
 
     expect(addResult?.success).toBe(true);
 
-    const btsConfig = await readBtsConfig(projectPath);
-    expect(btsConfig?.addonOptions).toEqual(addonOptions);
-    expect(btsConfig?.addons).toEqual(expect.arrayContaining(["turborepo", "wxt", "mcp"]));
+    const cjsConfig = await readCjsConfig(projectPath);
+    expect(cjsConfig?.addonOptions).toEqual(addonOptions);
+    expect(cjsConfig?.addons).toEqual(expect.arrayContaining(["turborepo", "wxt", "mcp"]));
   });
 
   it("deep merges nested addonOptions during add", async () => {
@@ -159,8 +159,8 @@ describe("Addon options", () => {
 
     expect(secondAddResult?.success).toBe(true);
 
-    const btsConfig = await readBtsConfig(projectPath);
-    expect(btsConfig?.addonOptions).toEqual({
+    const cjsConfig = await readCjsConfig(projectPath);
+    expect(cjsConfig?.addonOptions).toEqual({
       mcp: {
         scope: "project",
         servers: ["context7"],

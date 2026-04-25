@@ -1,26 +1,26 @@
 ---
 title: Programmatic API
-description: Use Better-T-Stack programmatically in your Node.js applications
+description: Use Create-JS-Stack programmatically in your Node.js applications
 ---
 
 ## Overview
 
-You can call Better-T-Stack directly from TypeScript/JavaScript without shelling out to the CLI.
+You can call Create-JS-Stack directly from TypeScript/JavaScript without shelling out to the CLI.
 
-The programmatic API is exported from `create-better-t-stack` and is designed for automation tools, internal generators, and scripted workflows.
+The programmatic API is exported from `create-js-stack` and is designed for automation tools, internal generators, and scripted workflows.
 
 Because it runs in silent mode by default, it also benefits from the same agent-safe behavior as `create-json`, including structured addon and database setup options.
 
 ## Installation
 
 ```npm
-npm i create-better-t-stack
+npm i create-js-stack
 ```
 
 ## Quick Start
 
 ```typescript
-import { create } from "create-better-t-stack";
+import { create } from "create-js-stack";
 
 const result = await create("my-app", {
   frontend: ["tanstack-router"],
@@ -67,7 +67,7 @@ Notes:
 
 ### `add(options?)`
 
-Add addons to an existing Better-T-Stack project.
+Add addons to an existing Create-JS-Stack project.
 
 ```typescript
 function add(options?: {
@@ -83,7 +83,7 @@ function add(options?: {
 Example:
 
 ```typescript
-import { add } from "create-better-t-stack";
+import { add } from "create-js-stack";
 
 const result = await add({
   projectDir: "./my-app",
@@ -110,7 +110,7 @@ if (result?.success) {
 Generate a project in memory without writing to disk.
 
 ```typescript
-import { createVirtual } from "create-better-t-stack";
+import { createVirtual } from "create-js-stack";
 
 const result = await createVirtual({
   frontend: ["tanstack-router"],
@@ -180,7 +180,7 @@ type AddResult = {
 ## Error Handling Pattern
 
 ```typescript
-import { create } from "create-better-t-stack";
+import { create } from "create-js-stack";
 
 const result = await create("existing-dir", {
   directoryConflict: "error",
@@ -199,7 +199,7 @@ console.log(result.value.projectDirectory);
 CLI:
 
 ```bash
-create-better-t-stack my-app \
+create-js-stack my-app \
   --frontend tanstack-router \
   --backend hono \
   --database postgres \

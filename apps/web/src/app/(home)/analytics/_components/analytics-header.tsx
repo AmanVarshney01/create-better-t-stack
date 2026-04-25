@@ -81,7 +81,7 @@ export function AnalyticsHeader({
             <h1 className="font-bold font-mono text-xl sm:text-2xl">CLI_ANALYTICS.JSON</h1>
           </div>
           <p className="max-w-2xl text-muted-foreground text-sm">
-            Usage analytics for Better T Stack, combining the live telemetry stream with the
+            Usage analytics for Create JS Stack, combining the live telemetry stream with the
             historical archive in the site’s existing terminal-style UI.
           </p>
         </div>

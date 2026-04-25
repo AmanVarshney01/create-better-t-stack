@@ -48,7 +48,7 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
           </div>
           <div className="rounded border border-border p-4">
             <a
-              href="https://github.com/sponsors/AmanVarshney01"
+              href="https://github.com/sponsors/riteshintro"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 text-primary transition-colors hover:text-accent"
@@ -342,7 +342,7 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
 
           <div className="rounded border border-border p-4">
             <a
-              href="https://github.com/sponsors/AmanVarshney01"
+              href="https://github.com/sponsors/riteshintro"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 text-primary transition-colors hover:text-accent"

@@ -7,13 +7,13 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import fs from "fs-extra";
 
 import { create } from "../src/index";
-import { createBtsMcpServer } from "../src/mcp";
-import { readBtsConfig } from "../src/utils/bts-config";
+import { createCjsMcpServer } from "../src/mcp";
+import { readCjsConfig } from "../src/utils/cjs-config";
 import { SMOKE_DIR } from "./setup";
 
 async function connectInMemoryClient() {
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-  const server = createBtsMcpServer();
+  const server = createCjsMcpServer();
   await server.connect(serverTransport);
 
   const client = new Client({ name: "mcp-test-client", version: "0.0.0" }, { capabilities: {} });
@@ -54,8 +54,8 @@ describe("MCP server", () => {
   let cleanups: Array<() => Promise<void>> = [];
 
   beforeEach(async () => {
-    process.env.BTS_SKIP_EXTERNAL_COMMANDS = "1";
-    process.env.BTS_TEST_MODE = "1";
+    process.env.CJS_SKIP_EXTERNAL_COMMANDS = "1";
+    process.env.CJS_TEST_MODE = "1";
   });
 
   afterEach(async () => {
@@ -250,8 +250,8 @@ describe("MCP server", () => {
     expect(payload.data?.projectDirectory).toBe(projectPath);
     expect(await fs.pathExists(projectPath)).toBe(true);
 
-    const btsConfig = await readBtsConfig(projectPath);
-    expect(btsConfig?.frontend).toEqual(["next"]);
+    const cjsConfig = await readCjsConfig(projectPath);
+    expect(cjsConfig?.frontend).toEqual(["next"]);
   });
 
   it("rejects install=true during MCP project creation with an actionable error", async () => {
@@ -296,7 +296,7 @@ describe("MCP server", () => {
     expect(payload.error).toContain("already exists and is not empty");
   });
 
-  it("plans addon installation without mutating bts.jsonc", async () => {
+  it("plans addon installation without mutating cjs.jsonc", async () => {
     const { client, cleanup } = await connectInMemoryClient();
     cleanups.push(cleanup);
 
@@ -323,7 +323,7 @@ describe("MCP server", () => {
     });
     expect(createResult.isOk()).toBe(true);
 
-    const before = await readBtsConfig(projectPath);
+    const before = await readCjsConfig(projectPath);
 
     const result = await client.callTool({
       name: "bts_plan_addons",
@@ -345,11 +345,11 @@ describe("MCP server", () => {
     expect(payload.data?.dryRun).toBe(true);
     expect(payload.data?.addedAddons).toEqual(["biome"]);
 
-    const after = await readBtsConfig(projectPath);
+    const after = await readCjsConfig(projectPath);
     expect(after).toEqual(before);
   });
 
-  it("adds addons through MCP and persists them to bts.jsonc", async () => {
+  it("adds addons through MCP and persists them to cjs.jsonc", async () => {
     const { client, cleanup } = await connectInMemoryClient();
     cleanups.push(cleanup);
 
@@ -395,7 +395,7 @@ describe("MCP server", () => {
     expect(payload.data?.success).toBe(true);
     expect(payload.data?.addedAddons).toEqual(["biome"]);
 
-    const after = await readBtsConfig(projectPath);
+    const after = await readCjsConfig(projectPath);
     expect(after?.addons).toEqual(expect.arrayContaining(["turborepo", "biome"]));
   });
 
@@ -409,8 +409,8 @@ describe("MCP server", () => {
       args: [cliEntrypoint, "mcp"],
       cwd: cliRoot,
       env: {
-        BTS_SKIP_EXTERNAL_COMMANDS: "1",
-        BTS_TEST_MODE: "1",
+        CJS_SKIP_EXTERNAL_COMMANDS: "1",
+        CJS_TEST_MODE: "1",
       },
     });
 

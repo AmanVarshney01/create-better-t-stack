@@ -5,7 +5,7 @@ import pc from "picocolors";
 import { navigableMultiselect, navigableSelect } from "../../prompts/navigable";
 import { navigableGroup } from "../../prompts/navigable-group";
 import type { AddonOptions, ProjectConfig } from "../../types";
-import { readBtsConfig } from "../../utils/bts-config";
+import { readCjsConfig } from "../../utils/cjs-config";
 import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
@@ -330,13 +330,13 @@ export async function setupSkills(
 
   const { packageManager, projectDir } = config;
 
-  // Load full config from bts.jsonc to get all addons (existing + new)
-  const btsConfig = await readBtsConfig(projectDir);
-  const fullConfig: ProjectConfig = btsConfig
+  // Load full config from cjs.jsonc to get all addons (existing + new)
+  const cjsConfig = await readCjsConfig(projectDir);
+  const fullConfig: ProjectConfig = cjsConfig
     ? {
         ...config,
-        addons: btsConfig.addons ?? config.addons,
-        addonOptions: btsConfig.addonOptions ?? config.addonOptions,
+        addons: cjsConfig.addons ?? config.addons,
+        addonOptions: cjsConfig.addonOptions ?? config.addonOptions,
       }
     : config;
 

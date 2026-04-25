@@ -1,6 +1,6 @@
 ---
 title: Deploying to Cloudflare with Alchemy
-description: Learn how to deploy your Better-T-Stack app to Cloudflare Workers using Alchemy infrastructure-as-code
+description: Learn how to deploy your Create-JS-Stack app to Cloudflare Workers using Alchemy infrastructure-as-code
 author:
   name: Oscar Gabriel
   url: https://github.com/oscabriel
@@ -9,7 +9,7 @@ date: Dec 31, 2025
 
 ## Overview
 
-This guide explains how Better-T-Stack uses [Alchemy](https://alchemy.run) to deploy your applications to [Cloudflare Workers](https://developers.cloudflare.com/workers/). You'll learn:
+This guide explains how Create-JS-Stack uses [Alchemy](https://alchemy.run) to deploy your applications to [Cloudflare Workers](https://developers.cloudflare.com/workers/). You'll learn:
 
 - What Cloudflare Workers and Alchemy are
 - How to deploy web apps, server apps, or both
@@ -28,7 +28,7 @@ Workers integrate seamlessly with Cloudflare's developer platform, including D1 
 
 **Alchemy** is an Infrastructure-as-Code (IaC) library. Unlike Terraform or Pulumi, Alchemy is pure TypeScript, resource-based, AI-friendly, and runs anywhere JS runs. You define what you want via normal async functions and Alchemy handles the creation, updating, and deletion of everything for you.
 
-When you scaffold a project with Cloudflare deployment enabled, Better-T-Stack generates an `alchemy.run.ts` file that defines your entire infrastructure as code.
+When you scaffold a project with Cloudflare deployment enabled, Create-JS-Stack generates an `alchemy.run.ts` file that defines your entire infrastructure as code.
 
 ## Enabling Cloudflare Deployment
 
@@ -37,7 +37,7 @@ When creating a project:
 **Combined deployment (web + server):**
 
 ```npm
-npm create better-t-stack@latest my-app \
+npm create create-js-stack@latest my-app \
   --frontend tanstack-router \
   --backend hono \
   --runtime workers \
@@ -48,7 +48,7 @@ npm create better-t-stack@latest my-app \
 **Web-only (e.g., with Convex backend):**
 
 ```npm
-npm create better-t-stack@latest my-app \
+npm create create-js-stack@latest my-app \
   --frontend tanstack-start \
   --backend convex \
   --web-deploy cloudflare
@@ -57,7 +57,7 @@ npm create better-t-stack@latest my-app \
 **Server-only:**
 
 ```npm
-npm create better-t-stack@latest my-app \
+npm create create-js-stack@latest my-app \
   --frontend none \
   --backend hono \
   --runtime workers \
@@ -324,7 +324,7 @@ When you define bindings in `alchemy.run.ts`, they become available in your Work
 
 ### The env.d.ts Pattern
 
-Better-T-Stack generates a `packages/env/env.d.ts` file that connects your Alchemy bindings to TypeScript:
+Create-JS-Stack generates a `packages/env/env.d.ts` file that connects your Alchemy bindings to TypeScript:
 
 ```typescript
 import { type server } from "@my-app/infra/alchemy.run";
@@ -387,7 +387,7 @@ export default {
 
 ## Integration with packages/env
 
-Better-T-Stack uses the `packages/env` package for type-safe environment variables. The setup differs between Cloudflare Workers and traditional runtimes.
+Create-JS-Stack uses the `packages/env` package for type-safe environment variables. The setup differs between Cloudflare Workers and traditional runtimes.
 
 ### For Cloudflare Workers (server.ts)
 
@@ -441,7 +441,7 @@ You can find these emulated resources in `.alchemy/miniflare/v3/`.
 
 ### Root-Level Commands
 
-Better-T-Stack adds these scripts to your root `package.json`:
+Create-JS-Stack adds these scripts to your root `package.json`:
 
 ```json
 {

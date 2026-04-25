@@ -1,5 +1,5 @@
 export default {
-  repo: "AmanVarshney01/create-better-t-stack",
+  repo: "riteshintro/create-js-stack",
   emoji: true,
   contributors: true,
 };

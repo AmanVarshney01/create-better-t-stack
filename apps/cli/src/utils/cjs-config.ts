@@ -1,24 +1,24 @@
 import path from "node:path";
 
-import type { BetterTStackConfig } from "@better-t-stack/types";
+import type { CreateJSStackConfig } from "@create-js-stack/types";
 import fs from "fs-extra";
 import { applyEdits, modify, parse } from "jsonc-parser";
 
-const BTS_CONFIG_FILE = "bts.jsonc";
+const CJS_CONFIG_FILE = "cjs.jsonc";
 
 /**
- * Reads the BTS configuration file from the project directory.
+ * Reads the Create JS Stack configuration file from the project directory.
  */
-export async function readBtsConfig(projectDir: string): Promise<BetterTStackConfig | null> {
+export async function readCjsConfig(projectDir: string): Promise<CreateJSStackConfig | null> {
   try {
-    const configPath = path.join(projectDir, BTS_CONFIG_FILE);
+    const configPath = path.join(projectDir, CJS_CONFIG_FILE);
 
     if (!(await fs.pathExists(configPath))) {
       return null;
     }
 
     const configContent = await fs.readFile(configPath, "utf-8");
-    const config = parse(configContent) as BetterTStackConfig;
+    const config = parse(configContent) as CreateJSStackConfig;
     return config;
   } catch {
     return null;
@@ -26,19 +26,19 @@ export async function readBtsConfig(projectDir: string): Promise<BetterTStackCon
 }
 
 /**
- * Updates specific fields in the BTS configuration file.
+ * Updates specific fields in the Create JS Stack configuration file.
  */
-export async function updateBtsConfig(
+export async function updateCjsConfig(
   projectDir: string,
   updates: Partial<
     Pick<
-      BetterTStackConfig,
+      CreateJSStackConfig,
       "addons" | "addonOptions" | "dbSetupOptions" | "webDeploy" | "serverDeploy"
     >
   >,
 ): Promise<void> {
   try {
-    const configPath = path.join(projectDir, BTS_CONFIG_FILE);
+    const configPath = path.join(projectDir, CJS_CONFIG_FILE);
 
     if (!(await fs.pathExists(configPath))) {
       return;

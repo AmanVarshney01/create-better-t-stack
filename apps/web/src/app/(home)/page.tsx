@@ -1,6 +1,6 @@
 export const dynamic = "force-static";
 
-import { api } from "@better-t-stack/backend/convex/_generated/api";
+import { api } from "@create-js-stack/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 
 import { fetchSponsors } from "@/lib/sponsors";

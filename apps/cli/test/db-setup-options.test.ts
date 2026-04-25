@@ -4,14 +4,14 @@ import path from "node:path";
 import fs from "fs-extra";
 
 import { create } from "../src/index";
-import { readBtsConfig } from "../src/utils/bts-config";
+import { readCjsConfig } from "../src/utils/cjs-config";
 
 const SMOKE_DIR_PATH = path.join(import.meta.dir, "..", ".smoke");
 
 describe("Database setup options", () => {
   beforeEach(() => {
-    process.env.BTS_SKIP_EXTERNAL_COMMANDS = "1";
-    process.env.BTS_TEST_MODE = "1";
+    process.env.CJS_SKIP_EXTERNAL_COMMANDS = "1";
+    process.env.CJS_TEST_MODE = "1";
   });
 
   it("defaults remote provider setup to manual in silent mode and uses flags when mode is representable", async () => {
@@ -44,8 +44,8 @@ describe("Database setup options", () => {
     expect(result.value.reproducibleCommand).toContain("--manual-db");
     expect(result.value.reproducibleCommand).not.toContain("create-json --input");
 
-    const btsConfig = await readBtsConfig(projectPath);
-    expect(btsConfig?.dbSetupOptions).toEqual({ mode: "manual" });
+    const cjsConfig = await readCjsConfig(projectPath);
+    expect(cjsConfig?.dbSetupOptions).toEqual({ mode: "manual" });
   });
 
   it("uses flags when dbSetupOptions only contains auto mode", async () => {
@@ -144,8 +144,8 @@ describe("Database setup options", () => {
 
     expect(result.value.projectConfig.dbSetupOptions).toBeUndefined();
 
-    const btsConfig = await readBtsConfig(projectPath);
-    expect(btsConfig?.dbSetupOptions).toBeUndefined();
+    const cjsConfig = await readCjsConfig(projectPath);
+    expect(cjsConfig?.dbSetupOptions).toBeUndefined();
   });
 
   it("does not persist dbSetupOptions or force create-json when dbSetup is none", async () => {
@@ -179,7 +179,7 @@ describe("Database setup options", () => {
     expect(result.value.projectConfig.dbSetupOptions).toBeUndefined();
     expect(result.value.reproducibleCommand).not.toContain("create-json --input");
 
-    const btsConfig = await readBtsConfig(projectPath);
-    expect(btsConfig?.dbSetupOptions).toBeUndefined();
+    const cjsConfig = await readCjsConfig(projectPath);
+    expect(cjsConfig?.dbSetupOptions).toBeUndefined();
   });
 });

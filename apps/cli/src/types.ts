@@ -1,1 +1,1 @@
-export * from "@better-t-stack/types";
+export * from "@create-js-stack/types";

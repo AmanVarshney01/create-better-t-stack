@@ -203,7 +203,7 @@ async function setupWithNeonDb(
 function displayManualSetupInstructions(target: "apps/web" | "apps/server") {
   cliLog.info(`Manual Neon PostgreSQL Setup Instructions:
 
-1. Get Neon with Better T Stack referral: https://get.neon.com/sbA3tIe
+1. Get Neon with Create JS Stack referral: https://get.neon.com/sbA3tIe
 2. Create a new project from the dashboard
 3. Get your connection string
 4. Add the database URL to the .env file in ${target}/.env
@@ -316,7 +316,7 @@ export async function setupNeonPostgres(
     }
 
     cliLog.info(
-      `Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`,
+      `Get Neon with Create JS Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`,
     );
     return Result.ok(undefined);
   }
@@ -386,6 +386,6 @@ export async function setupNeonPostgres(
   }
 
   finalSpinner.stop("Neon database configured!");
-  cliLog.info(`Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`);
+  cliLog.info(`Get Neon with Create JS Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`);
   return Result.ok(undefined);
 }

@@ -5,7 +5,7 @@ import { confirm, select, text } from "@clack/prompts";
 import { $ } from "bun";
 
 const CLI_PACKAGE_JSON_PATH = join(process.cwd(), "apps/cli/package.json");
-const ALIAS_PACKAGE_JSON_PATH = join(process.cwd(), "packages/create-bts/package.json");
+const ALIAS_PACKAGE_JSON_PATH = join(process.cwd(), "packages/create-cjs/package.json");
 const TYPES_PACKAGE_JSON_PATH = join(process.cwd(), "packages/types/package.json");
 const TEMPLATE_GENERATOR_PACKAGE_JSON_PATH = join(
   process.cwd(),
@@ -104,7 +104,7 @@ async function main(): Promise<void> {
   // Update alias package version
   const aliasPackageJson = JSON.parse(await readFile(ALIAS_PACKAGE_JSON_PATH, "utf-8"));
   aliasPackageJson.version = newVersion;
-  aliasPackageJson.dependencies["create-better-t-stack"] = `^${newVersion}`;
+  aliasPackageJson.dependencies["create-js-stack"] = `^${newVersion}`;
   await writeFile(ALIAS_PACKAGE_JSON_PATH, `${JSON.stringify(aliasPackageJson, null, 2)}\n`);
 
   // Update types package version
@@ -117,7 +117,7 @@ async function main(): Promise<void> {
     await readFile(TEMPLATE_GENERATOR_PACKAGE_JSON_PATH, "utf-8"),
   );
   templateGeneratorPackageJson.version = newVersion;
-  templateGeneratorPackageJson.dependencies["@better-t-stack/types"] = `^${newVersion}`;
+  templateGeneratorPackageJson.dependencies["@create-js-stack/types"] = `^${newVersion}`;
   await writeFile(
     TEMPLATE_GENERATOR_PACKAGE_JSON_PATH,
     `${JSON.stringify(templateGeneratorPackageJson, null, 2)}\n`,
@@ -125,7 +125,7 @@ async function main(): Promise<void> {
 
   await $`bun install`;
   await $`bun run build:cli`;
-  await $`git add apps/cli/package.json packages/create-bts/package.json packages/types/package.json packages/template-generator/package.json bun.lock`;
+  await $`git add apps/cli/package.json packages/create-cjs/package.json packages/types/package.json packages/template-generator/package.json bun.lock`;
   await $`git commit -m "chore(release): ${newVersion}"`;
 
   // Push the release branch
@@ -140,10 +140,10 @@ async function main(): Promise<void> {
 This PR bumps the version to \`${newVersion}\`.
 
 ### Changes
-- Updated \`create-better-t-stack\` to v${newVersion}
-- Updated \`create-bts\` to v${newVersion}
-- Updated \`@better-t-stack/types\` to v${newVersion}
-- Updated \`@better-t-stack/template-generator\` to v${newVersion}
+- Updated \`create-js-stack\` to v${newVersion}
+- Updated \`create-cjs\` to v${newVersion}
+- Updated \`@create-js-stack/types\` to v${newVersion}
+- Updated \`@create-js-stack/template-generator\` to v${newVersion}
 
 ---
 *This PR was automatically created by \`bun run bump\`*`;

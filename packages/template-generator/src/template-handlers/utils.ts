@@ -1,4 +1,4 @@
-import type { ProjectConfig } from "@better-t-stack/types";
+import type { ProjectConfig } from "@create-js-stack/types";
 
 import { processTemplateString, transformFilename, isBinaryFile } from "../core/template-processor";
 import type { VirtualFileSystem } from "../core/virtual-fs";

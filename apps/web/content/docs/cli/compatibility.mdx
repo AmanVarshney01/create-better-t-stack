@@ -27,10 +27,10 @@ The CLI validates option combinations to ensure generated projects work correctl
 
 ```bash
 # ❌ Invalid - MongoDB with Drizzle
-create-better-t-stack --database mongodb --orm drizzle
+create-js-stack --database mongodb --orm drizzle
 
 # ✅ Valid - MongoDB with Mongoose
-create-better-t-stack --database mongodb --orm mongoose
+create-js-stack --database mongodb --orm mongoose
 ```
 
 ## Backend & Runtime Compatibility
@@ -48,13 +48,13 @@ Cloudflare Workers has specific compatibility requirements:
 
 ```bash
 # ❌ Invalid - Workers with Express
-create-better-t-stack --runtime workers --backend express
+create-js-stack --runtime workers --backend express
 
 # ✅ Valid - Workers with Hono
-create-better-t-stack --runtime workers --backend hono --database sqlite --orm drizzle --db-setup d1
+create-js-stack --runtime workers --backend hono --database sqlite --orm drizzle --db-setup d1
 
 # ✅ Also valid - Workers with Prisma (D1)
-create-better-t-stack --runtime workers --backend hono --database sqlite --orm prisma --db-setup d1
+create-js-stack --runtime workers --backend hono --database sqlite --orm prisma --db-setup d1
 ```
 
 ### Backend Presets
@@ -105,10 +105,10 @@ When using `--backend none`, the following options are automatically set:
 
 ```bash
 # ❌ Invalid - Nuxt with tRPC
-create-better-t-stack --frontend nuxt --api trpc
+create-js-stack --frontend nuxt --api trpc
 
 # ✅ Valid - Nuxt with oRPC
-create-better-t-stack --frontend nuxt --api orpc
+create-js-stack --frontend nuxt --api orpc
 ```
 
 ### Frontend Restrictions
@@ -119,10 +119,10 @@ create-better-t-stack --frontend nuxt --api orpc
 
 ```bash
 # ❌ Invalid - Multiple web frontends
-create-better-t-stack --frontend next tanstack-router
+create-js-stack --frontend next tanstack-router
 
 # ✅ Valid - Web + native
-create-better-t-stack --frontend next native-uniwind
+create-js-stack --frontend next native-uniwind
 ```
 
 ## Database Setup Compatibility
@@ -212,19 +212,19 @@ Polar payments require:
 
 ```bash
 # ✅ Valid - Better-Auth without database
-create-better-t-stack --auth better-auth --database none
+create-js-stack --auth better-auth --database none
 
 # ✅ Valid - Better-Auth with full stack
-create-better-t-stack --auth better-auth --database postgres --orm drizzle --backend hono
+create-js-stack --auth better-auth --database postgres --orm drizzle --backend hono
 
 # ✅ Valid - Clerk with Hono
-create-better-t-stack --auth clerk --backend hono --frontend tanstack-router
+create-js-stack --auth clerk --backend hono --frontend tanstack-router
 
 # ✅ Valid - Clerk with fullstack Next.js
-create-better-t-stack --auth clerk --backend self --frontend next
+create-js-stack --auth clerk --backend self --frontend next
 
 # ❌ Invalid - Clerk with Astro
-create-better-t-stack --auth clerk --backend self --frontend astro
+create-js-stack --auth clerk --backend self --frontend astro
 ```
 
 ## Example Compatibility
@@ -247,31 +247,31 @@ create-better-t-stack --auth clerk --backend self --frontend astro
 
 ```bash
 # Fix by using MongoDB
-create-better-t-stack --database mongodb --orm mongoose
+create-js-stack --database mongodb --orm mongoose
 ```
 
 ### "Cloudflare Workers runtime is only supported with Hono backend"
 
 ```bash
 # Fix by using Hono
-create-better-t-stack --runtime workers --backend hono
+create-js-stack --runtime workers --backend hono
 ```
 
 ### "Cannot select multiple web frameworks"
 
 ```bash
 # Fix by choosing one web framework
-create-better-t-stack --frontend tanstack-router
+create-js-stack --frontend tanstack-router
 ```
 
 ### "Polar payments requires Better Auth"
 
 ```bash
 # Fix by using Better-Auth
-create-better-t-stack --payments polar --auth better-auth
+create-js-stack --payments polar --auth better-auth
 
 # Or use Clerk without Polar payments
-create-better-t-stack --auth clerk --backend hono --frontend tanstack-router
+create-js-stack --auth clerk --backend hono --frontend tanstack-router
 ```
 
 ## Validation Strategy

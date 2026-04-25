@@ -7,8 +7,8 @@ import { openUrl } from "../utils/open-url";
 import { renderTitle } from "../utils/render-title";
 import { displaySponsors, fetchSponsors } from "../utils/sponsors";
 
-const DOCS_URL = "https://better-t-stack.dev/docs";
-const BUILDER_URL = "https://better-t-stack.dev/new";
+const DOCS_URL = "https://create-js-stack.dev/docs";
+const BUILDER_URL = "https://create-js-stack.dev/new";
 
 async function openExternalUrl(url: string, successMessage: string) {
   const result = await Result.tryPromise({
@@ -25,7 +25,7 @@ async function openExternalUrl(url: string, successMessage: string) {
 
 export async function showSponsorsCommand() {
   renderTitle();
-  intro(pc.magenta("Better-T-Stack Sponsors"));
+  intro(pc.magenta("Create-JS-Stack Sponsors"));
 
   const sponsorsResult = await fetchSponsors();
   if (sponsorsResult.isErr()) {

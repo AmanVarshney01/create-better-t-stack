@@ -35,7 +35,7 @@ async function runSilentCreate(testCase: SilentCreateCase) {
   const result = await execa("bun", ["-e", script], {
     cwd: SMOKE_DIR,
     env: {
-      BTS_TELEMETRY_DISABLED: "1",
+      CJS_TELEMETRY_DISABLED: "1",
     },
     reject: false,
   });

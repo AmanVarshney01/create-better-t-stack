@@ -1,17 +1,6 @@
-# Better-T-Stack
+# Create-JS-Stack
 
 A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations
-
-<br />
-<a href="https://vercel.com/oss">
-  <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
-</a>
-
-## Sponsors
-
-<p align="center">
-<img src="https://sponsors.amanv.dev/sponsors.png" alt="Sponsors">
-</p>
 
 ![demo](https://github.com/user-attachments/assets/12fd4d67-8494-462a-8124-76670798308a)
 
@@ -26,13 +15,13 @@ A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with 
 
 ```bash
 # Using bun (recommended)
-bun create better-t-stack@latest
+bun create js-stack@latest
 
 # Using pnpm
-pnpm create better-t-stack@latest
+pnpm create js-stack@latest
 
 # Using npm
-npx create-better-t-stack@latest
+npx create-js-stack@latest
 ```
 
 ## Features
@@ -60,13 +49,13 @@ This repository is organized as a monorepo containing:
 
 ## Documentation
 
-Visit [better-t-stack.dev](https://better-t-stack.dev) for full documentation, guides, and examples. You can also use the visual Stack Builder at `https://better-t-stack.dev/new` to generate a command for your stack.
+Visit [create-js-stack.dev](https://create-js-stack.dev) for full documentation, guides, and examples. You can also use the visual Stack Builder at `https://create-js-stack.dev/new` to generate a command for your stack.
 
 ## Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/AmanVarshney01/create-better-t-stack.git
+git clone https://github.com/riteshintro/create-js-stack.git
 
 # Install dependencies
 bun install
@@ -87,10 +76,10 @@ Please read the Contribution Guide first and open an issue before starting new f
 
 ## Star History
 
-<a href="https://www.star-history.com/#AmanVarshney01/create-better-t-stack&Date">
+<a href="https://www.star-history.com/#riteshintro/create-js-stack&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=AmanVarshney01/create-better-t-stack&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=AmanVarshney01/create-better-t-stack&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=AmanVarshney01/create-better-t-stack&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=riteshintro/create-js-stack&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=riteshintro/create-js-stack&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=riteshintro/create-js-stack&type=Date" />
  </picture>
 </a>

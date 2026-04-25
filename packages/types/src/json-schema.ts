@@ -22,7 +22,7 @@ import {
   CreateInputSchema,
   AddInputSchema,
   ProjectConfigSchema,
-  BetterTStackConfigSchema,
+  CreateJSStackConfigSchema,
   InitResultSchema,
 } from "./schemas";
 
@@ -111,8 +111,8 @@ export function getProjectConfigJsonSchema() {
   return z.toJSONSchema(ProjectConfigSchema);
 }
 
-export function getBetterTStackConfigJsonSchema() {
-  return z.toJSONSchema(BetterTStackConfigSchema);
+export function getCreateJSStackConfigJsonSchema() {
+  return z.toJSONSchema(CreateJSStackConfigSchema);
 }
 
 export function getInitResultJsonSchema() {
@@ -143,7 +143,7 @@ export function getAllJsonSchemas() {
     createInput: getCreateInputJsonSchema(),
     addInput: getAddInputJsonSchema(),
     projectConfig: getProjectConfigJsonSchema(),
-    betterTStackConfig: getBetterTStackConfigJsonSchema(),
+    betterTStackConfig: getCreateJSStackConfigJsonSchema(),
     initResult: getInitResultJsonSchema(),
   };
 }

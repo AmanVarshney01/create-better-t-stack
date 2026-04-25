@@ -1,4 +1,4 @@
-import { desktopWebFrontends } from "@better-t-stack/types";
+import { desktopWebFrontends } from "@create-js-stack/types";
 
 import { DEFAULT_STACK, type StackState, type TECH_OPTIONS } from "@/lib/constant";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";

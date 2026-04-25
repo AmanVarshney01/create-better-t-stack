@@ -1,7 +1,7 @@
 import path from "node:path";
 
-import { generateReproducibleCommand } from "@better-t-stack/template-generator";
 import { intro, log, outro } from "@clack/prompts";
+import { generateReproducibleCommand } from "@create-js-stack/template-generator";
 import { Result, UnhandledException } from "better-result";
 import fs from "fs-extra";
 import pc from "picocolors";
@@ -152,7 +152,7 @@ async function createProjectHandlerInternal(
     if (!isSilent() && input.renderTitle !== false) {
       renderTitle();
     }
-    if (!isSilent()) intro(pc.magenta("Creating a new Better-T-Stack project"));
+    if (!isSilent()) intro(pc.magenta("Creating a new Create-JS-Stack project"));
 
     if (!isSilent() && input.yolo) {
       cliConsola.fatal("YOLO mode enabled - skipping checks. Things may break!");

@@ -87,7 +87,7 @@ export function PlotChart({
       palette: readPlotPalette(frame),
     });
 
-    plot.classList.add("bts-plot");
+    plot.classList.add("cjs-plot");
     plot.setAttribute("aria-label", ariaLabel);
     plot.setAttribute("role", "img");
     mount.replaceChildren(plot);

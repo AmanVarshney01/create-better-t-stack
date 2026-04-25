@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@better-t-stack/backend/convex/_generated/api";
+import { api } from "@create-js-stack/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { ChevronRight, Radio, Terminal } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";

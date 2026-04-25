@@ -159,7 +159,7 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
               display: "flex",
             }}
           >
-            better-t-stack.dev
+            create-js-stack.dev
           </div>
         </div>
       </div>

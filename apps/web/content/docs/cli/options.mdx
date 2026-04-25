@@ -10,7 +10,7 @@ description: Complete reference for all CLI options and flags
 Use default configuration and skip interactive prompts.
 
 ```bash
-create-better-t-stack --yes
+create-js-stack --yes
 ```
 
 ### `--template <type>`
@@ -24,7 +24,7 @@ Use a predefined project template:
 - `uniwind`: UniWind React Native template
 
 ```bash
-create-better-t-stack --template t3
+create-js-stack --template t3
 ```
 
 ### `--manual-db`
@@ -32,7 +32,7 @@ create-better-t-stack --template t3
 Skip automatic database setup prompts and use manual database configuration.
 
 ```bash
-create-better-t-stack --manual-db
+create-js-stack --manual-db
 ```
 
 ### `--dry-run`
@@ -40,7 +40,7 @@ create-better-t-stack --manual-db
 Validate configuration, compatibility, and directory handling without writing files.
 
 ```bash
-create-better-t-stack my-app --yes --dry-run
+create-js-stack my-app --yes --dry-run
 ```
 
 ### `--package-manager <pm>`
@@ -48,7 +48,7 @@ create-better-t-stack my-app --yes --dry-run
 Choose package manager: `npm`, `pnpm`, or `bun`.
 
 ```bash
-create-better-t-stack --package-manager bun
+create-js-stack --package-manager bun
 ```
 
 ### `--install / --no-install`
@@ -56,7 +56,7 @@ create-better-t-stack --package-manager bun
 Control dependency installation after project creation.
 
 ```bash
-create-better-t-stack --no-install
+create-js-stack --no-install
 ```
 
 ### `--git / --no-git`
@@ -64,7 +64,7 @@ create-better-t-stack --no-install
 Control Git repository initialization.
 
 ```bash
-create-better-t-stack --no-git
+create-js-stack --no-git
 ```
 
 ### `--yolo`
@@ -72,7 +72,7 @@ create-better-t-stack --no-git
 Bypass validations and compatibility checks. Not recommended for normal use.
 
 ```bash
-create-better-t-stack --yolo
+create-js-stack --yolo
 ```
 
 ### `--verbose`
@@ -80,7 +80,7 @@ create-better-t-stack --yolo
 Show detailed result information in JSON format after project creation.
 
 ```bash
-create-better-t-stack --verbose
+create-js-stack --verbose
 ```
 
 ### `--render-title / --no-render-title`
@@ -89,7 +89,7 @@ Control whether the ASCII art title is shown. Enabled by default.
 
 ```bash
 # Hide the title (useful in CI)
-create-better-t-stack --no-render-title
+create-js-stack --no-render-title
 ```
 
 ### `--directory-conflict <strategy>`
@@ -103,10 +103,10 @@ How to handle existing, non-empty target directories:
 
 ```bash
 # Overwrite an existing directory without prompting
-create-better-t-stack my-app --yes --directory-conflict overwrite
+create-js-stack my-app --yes --directory-conflict overwrite
 
 # Safely create a new directory name if it exists
-create-better-t-stack my-app --yes --directory-conflict increment
+create-js-stack my-app --yes --directory-conflict increment
 ```
 
 ### `--disable-analytics / --no-disable-analytics`
@@ -115,13 +115,13 @@ Control whether analytics and telemetry data is collected.
 
 ```bash
 # Disable analytics collection
-create-better-t-stack --disable-analytics
+create-js-stack --disable-analytics
 
 # Enable analytics collection (default)
-create-better-t-stack --no-disable-analytics
+create-js-stack --no-disable-analytics
 ```
 
-Analytics help improve Better-T-Stack by providing insights into usage patterns. When disabled, no data is collected or transmitted.
+Analytics help improve Create-JS-Stack by providing insights into usage patterns. When disabled, no data is collected or transmitted.
 
 For JSON-first automation, runtime schemas, and nested structured options, see [Agent Workflows](/docs/cli/agent-workflows).
 
@@ -138,7 +138,7 @@ Database type to use:
 - `mongodb`: MongoDB database
 
 ```bash
-create-better-t-stack --database postgres
+create-js-stack --database postgres
 ```
 
 ### `--orm <type>`
@@ -151,7 +151,7 @@ ORM to use with your database:
 - `mongoose`: Mongoose ODM (for MongoDB)
 
 ```bash
-create-better-t-stack --database postgres --orm drizzle
+create-js-stack --database postgres --orm drizzle
 ```
 
 ### `--db-setup <setup>`
@@ -169,7 +169,7 @@ Database hosting/setup provider:
 - `docker`: Local Docker containers
 
 ```bash
-create-better-t-stack --database postgres --db-setup neon
+create-js-stack --database postgres --db-setup neon
 ```
 
 If you need structured control over database provisioning behavior, use `dbSetupOptions` with `create-json` or the programmatic API. See [Agent Workflows](/docs/cli/agent-workflows).
@@ -189,7 +189,7 @@ Backend framework to use:
 - `self`: Self-hosted/custom backend
 
 ```bash
-create-better-t-stack --backend hono
+create-js-stack --backend hono
 ```
 
 ### `--runtime <runtime>`
@@ -202,7 +202,7 @@ Runtime environment:
 - `workers`: Cloudflare Workers
 
 ```bash
-create-better-t-stack --backend hono --runtime bun
+create-js-stack --backend hono --runtime bun
 ```
 
 ### `--api <type>`
@@ -214,7 +214,7 @@ API layer type:
 - `orpc`: oRPC (OpenAPI-compatible)
 
 ```bash
-create-better-t-stack --api trpc
+create-js-stack --api trpc
 ```
 
 ## Frontend Options
@@ -246,13 +246,13 @@ Frontend frameworks (can specify multiple):
 
 ```bash
 # Single web frontend
-create-better-t-stack --frontend tanstack-router
+create-js-stack --frontend tanstack-router
 
 # Web + native frontend
-create-better-t-stack --frontend next native-uniwind
+create-js-stack --frontend next native-uniwind
 
 # Backend-only
-create-better-t-stack --frontend none
+create-js-stack --frontend none
 ```
 
 ## Authentication
@@ -266,9 +266,9 @@ Choose authentication provider:
 - `none`: No authentication
 
 ```bash
-create-better-t-stack --auth better-auth
-create-better-t-stack --auth clerk
-create-better-t-stack --auth none
+create-js-stack --auth better-auth
+create-js-stack --auth clerk
+create-js-stack --auth none
 ```
 
 **Note:**
@@ -290,7 +290,7 @@ Payments provider:
 - `polar`: Polar payments integration
 
 ```bash
-create-better-t-stack --payments polar --auth better-auth
+create-js-stack --payments polar --auth better-auth
 ```
 
 **Note:** Polar payments requires Better-Auth authentication.
@@ -314,13 +314,13 @@ Additional features to include:
 - `nx`: Nx monorepo setup
 - `ultracite`: Ultracite configuration
 - `oxlint`: Oxlint + Oxfmt (linting & formatting)
-- `mcp`: Install MCP servers, including Better T Stack itself, with add-mcp
+- `mcp`: Install MCP servers, including Create JS Stack itself, with add-mcp
 - `opentui`: OpenTUI components
 - `wxt`: WXT browser extension framework
 - `skills`: Install AI agent skills for coding assistants (Cursor, Claude Code, GitHub Copilot, etc.)
 
 ```bash
-create-better-t-stack --addons pwa biome husky
+create-js-stack --addons pwa biome husky
 ```
 
 ## Examples
@@ -334,7 +334,7 @@ Example implementations to include:
 - `ai`: AI chat interface example
 
 ```bash
-create-better-t-stack --examples todo ai
+create-js-stack --examples todo ai
 ```
 
 ## Deployment
@@ -347,7 +347,7 @@ Web deployment configuration:
 - `cloudflare`: Cloudflare Workers deployment (via Alchemy infrastructure as code)
 
 ```bash
-create-better-t-stack --web-deploy cloudflare
+create-js-stack --web-deploy cloudflare
 ```
 
 **Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Deploying to Cloudflare with Alchemy Guide](/docs/guides/cloudflare-alchemy) for details.
@@ -373,7 +373,7 @@ Server deployment configuration:
 - `cloudflare`: Cloudflare Workers deployment (when runtime is workers, via Alchemy infrastructure as code)
 
 ```bash
-create-better-t-stack --server-deploy cloudflare
+create-js-stack --server-deploy cloudflare
 ```
 
 **Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Deploying to Cloudflare with Alchemy Guide](/docs/guides/cloudflare-alchemy) for details.
@@ -384,22 +384,22 @@ create-better-t-stack --server-deploy cloudflare
 
 View your project creation history. Projects are tracked locally using platform-specific directories:
 
-- **macOS**: `~/Library/Application Support/better-t-stack/history.json`
-- **Linux**: `~/.local/share/better-t-stack/history.json`
-- **Windows**: `%LOCALAPPDATA%\better-t-stack\Data\history.json`
+- **macOS**: `~/Library/Application Support/create-js-stack/history.json`
+- **Linux**: `~/.local/share/create-js-stack/history.json`
+- **Windows**: `%LOCALAPPDATA%\create-js-stack\Data\history.json`
 
 ```bash
 # Show last 10 projects
-create-better-t-stack history
+create-js-stack history
 
 # Show last 5 projects
-create-better-t-stack history --limit 5
+create-js-stack history --limit 5
 
 # Output as JSON
-create-better-t-stack history --json
+create-js-stack history --json
 
 # Clear all history
-create-better-t-stack history --clear
+create-js-stack history --clear
 ```
 
 **Options:**
@@ -417,7 +417,7 @@ The CLI validates option combinations and will show errors for incompatible sele
 ### Full Configuration
 
 ```bash
-create-better-t-stack \
+create-js-stack \
   --database postgres \
   --orm drizzle \
   --backend hono \
@@ -436,7 +436,7 @@ create-better-t-stack \
 ### Minimal Setup
 
 ```bash
-create-better-t-stack \
+create-js-stack \
   --backend none \
   --frontend tanstack-router \
   --addons none \

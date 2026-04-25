@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Verify create-better-t-stack installs and runs under npm, pnpm, and bun.
+// Verify create-js-stack installs and runs under npm, pnpm, and bun.
 // Catches any regression that breaks the published artifact for consumers —
 // unresolved protocol refs, missing files, broken bin entry, import failures
 // from missing transitive deps, etc.
@@ -7,7 +7,7 @@
 // Packs each publishable workspace with `npm pack` (matching the release
 // workflow, which uses `npm publish`), installs the CLI tarball in a temp
 // dir using overrides to redirect sibling workspace deps at their local
-// tarballs, then runs `create-better-t-stack --version` to prove the binary
+// tarballs, then runs `create-js-stack --version` to prove the binary
 // actually executes.
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -27,12 +27,12 @@ type Publishable = {
 };
 
 const PUBLISHABLES: Publishable[] = [
-  { name: "@better-t-stack/types", dir: "packages/types" },
-  { name: "@better-t-stack/template-generator", dir: "packages/template-generator" },
+  { name: "@create-js-stack/types", dir: "packages/types" },
+  { name: "@create-js-stack/template-generator", dir: "packages/template-generator" },
   {
-    name: "create-better-t-stack",
+    name: "create-js-stack",
     dir: "apps/cli",
-    rewriteWorkspaceDeps: ["@better-t-stack/types", "@better-t-stack/template-generator"],
+    rewriteWorkspaceDeps: ["@create-js-stack/types", "@create-js-stack/template-generator"],
   },
 ];
 
@@ -84,14 +84,14 @@ async function installAndRun(
   mkdirSync(dir, { recursive: true });
 
   const overrides = {
-    "@better-t-stack/types": `file:${tarballs["@better-t-stack/types"]}`,
-    "@better-t-stack/template-generator": `file:${tarballs["@better-t-stack/template-generator"]}`,
+    "@create-js-stack/types": `file:${tarballs["@create-js-stack/types"]}`,
+    "@create-js-stack/template-generator": `file:${tarballs["@create-js-stack/template-generator"]}`,
   };
   const fixture: Record<string, unknown> = {
     name: `smoke-${pm}`,
     private: true,
     version: "0.0.0",
-    dependencies: { "create-better-t-stack": `file:${tarballs["create-better-t-stack"]}` },
+    dependencies: { "create-js-stack": `file:${tarballs["create-js-stack"]}` },
   };
   if (pm === "pnpm") fixture.pnpm = { overrides };
   else fixture.overrides = overrides;
@@ -107,10 +107,10 @@ async function installAndRun(
 
   // Execute the CLI via its installed bin path to prove it actually works —
   // not just that the file got linked into node_modules/.bin.
-  const bin = join(dir, "node_modules", ".bin", "create-better-t-stack");
+  const bin = join(dir, "node_modules", ".bin", "create-js-stack");
   const run = await $`${bin} --version`.cwd(dir).quiet().nothrow();
   if (run.exitCode !== 0) {
-    console.error(red(`✗ ${pm}: create-better-t-stack --version failed (exit ${run.exitCode})`));
+    console.error(red(`✗ ${pm}: create-js-stack --version failed (exit ${run.exitCode})`));
     console.error(dim(run.stderr.toString() + run.stdout.toString()));
     process.exit(1);
   }
@@ -122,7 +122,7 @@ async function hasPackageManager(pm: string): Promise<boolean> {
   return (await $`which ${pm}`.quiet().nothrow()).exitCode === 0;
 }
 
-const smokeRoot = join(tmpdir(), `bts-publish-smoke-${Date.now()}`);
+const smokeRoot = join(tmpdir(), `cjs-publish-smoke-${Date.now()}`);
 const tarballDir = join(smokeRoot, "tarballs");
 mkdirSync(tarballDir, { recursive: true });
 
@@ -133,7 +133,7 @@ for (const pkg of PUBLISHABLES) {
   console.log(dim(`  ${pkg.name}`));
 }
 
-console.log("\nInstalling and running create-better-t-stack under each package manager...");
+console.log("\nInstalling and running create-js-stack under each package manager...");
 for (const pm of ["npm", "pnpm", "bun"] as const) {
   if (!(await hasPackageManager(pm))) {
     console.log(dim(`  - ${pm} not available, skipping`));

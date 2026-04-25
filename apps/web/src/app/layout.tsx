@@ -21,10 +21,10 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
 });
 
-const ogImage = "https://r2.better-t-stack.dev/og.png";
+const ogImage = "https://r2.create-js-stack.dev/og.png";
 
 export const metadata: Metadata = {
-  title: "Better-T-Stack",
+  title: "Create-JS-Stack",
   description:
     "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
   keywords: [
@@ -44,32 +44,32 @@ export const metadata: Metadata = {
     "Better-Auth",
     "convex",
     "monorepo",
-    "Better-T-Stack",
-    "create-better-t-stack",
+    "Create-JS-Stack",
+    "create-js-stack",
   ],
-  authors: [{ name: "Better-T-Stack Team" }],
-  creator: "Better-T-Stack",
-  publisher: "Better-T-Stack",
+  authors: [{ name: "Create-JS-Stack Team" }],
+  creator: "Create-JS-Stack",
+  publisher: "Create-JS-Stack",
   formatDetection: {
     email: false,
     telephone: false,
   },
-  metadataBase: new URL("https://better-t-stack.dev"),
+  metadataBase: new URL("https://create-js-stack.dev"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "Better-T-Stack",
+    title: "Create-JS-Stack",
     description:
       "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
-    url: "https://better-t-stack.dev",
-    siteName: "Better-T-Stack",
+    url: "https://create-js-stack.dev",
+    siteName: "Create-JS-Stack",
     images: [
       {
         url: ogImage,
         width: 1200,
         height: 630,
-        alt: "Better-T-Stack",
+        alt: "Create-JS-Stack",
       },
     ],
     locale: "en_US",
@@ -77,7 +77,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Better-T-Stack",
+    title: "Create-JS-Stack",
     description:
       "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
     images: [ogImage],

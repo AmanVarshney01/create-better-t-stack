@@ -1,6 +1,6 @@
 import type { TechCategory } from "./types";
 
-export const ICON_BASE_URL = "https://r2.better-t-stack.dev/icons";
+export const ICON_BASE_URL = "https://r2.create-js-stack.dev/icons";
 
 export const TECH_OPTIONS: Record<
   TechCategory,

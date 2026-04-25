@@ -1,6 +1,6 @@
 import type { SponsorsData } from "./types";
 
-const SPONSORS_URL = "https://sponsors.better-t-stack.dev/sponsors.json";
+const SPONSORS_URL = "https://sponsors.create-js-stack.dev/sponsors.json";
 
 export async function fetchSponsors() {
   try {

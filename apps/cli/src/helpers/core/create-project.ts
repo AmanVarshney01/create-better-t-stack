@@ -1,9 +1,9 @@
 import os from "node:os";
 import path from "node:path";
 
-import { generate, EMBEDDED_TEMPLATES } from "@better-t-stack/template-generator";
-import { writeTree } from "@better-t-stack/template-generator/fs-writer";
 import { log } from "@clack/prompts";
+import { generate, EMBEDDED_TEMPLATES } from "@create-js-stack/template-generator";
+import { writeTree } from "@create-js-stack/template-generator/fs-writer";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";

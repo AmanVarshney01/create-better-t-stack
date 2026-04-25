@@ -9,8 +9,8 @@ import mainLogoLight from "@/public/logo-light.svg";
 
 export const logo = (
   <>
-    <Image alt="better-t-stack" src={mainLogoLight} className="w-8 dark:hidden" />
-    <Image alt="better-t-stack" src={mainLogoDark} className="hidden w-8 dark:block" />
+    <Image alt="create-js-stack" src={mainLogoLight} className="w-8 dark:hidden" />
+    <Image alt="create-js-stack" src={mainLogoDark} className="hidden w-8 dark:block" />
   </>
 );
 
@@ -42,7 +42,7 @@ export const links: LinkItemType[] = [
     icon: <Image src={npmLogo} alt="npm" className="size-4 invert-0 dark:invert" />,
     label: "NPM",
     type: "icon",
-    url: "https://www.npmjs.com/package/create-better-t-stack",
+    url: "https://www.npmjs.com/package/create-js-stack",
     external: true,
     secondary: true,
   },
@@ -71,10 +71,10 @@ export const baseOptions: BaseLayoutProps = {
     title: (
       <>
         {logo}
-        <span className="font-medium font-mono text-md tracking-tighter">Better T Stack</span>
+        <span className="font-medium font-mono text-md tracking-tighter">Create JS Stack</span>
       </>
     ),
   },
   links: links,
-  githubUrl: "https://github.com/AmanVarshney01/create-better-t-stack",
+  githubUrl: "https://github.com/riteshintro/create-js-stack",
 };

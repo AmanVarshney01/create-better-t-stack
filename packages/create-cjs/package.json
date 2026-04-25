@@ -1,14 +1,14 @@
 {
-  "name": "create-bts",
-  "version": "3.27.5",
-  "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations (alias for create-better-t-stack)",
+  "name": "create-cjs",
+  "version": "1.0.0",
+  "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations (alias for create-js-stack)",
   "keywords": [
     "better-auth",
-    "better-t-stack",
     "biome",
     "boilerplate",
-    "bts",
+    "cjs",
     "cli",
+    "create-js-stack",
     "drizzle",
     "elysia",
     "expo",
@@ -29,16 +29,16 @@
     "type-safety",
     "typescript"
   ],
-  "homepage": "https://better-t-stack.dev/",
+  "homepage": "https://create-js-stack.dev/",
   "license": "MIT",
   "author": "Aman Varshney",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
-    "directory": "packages/create-bts"
+    "url": "git+https://github.com/riteshintro/create-js-stack.git",
+    "directory": "packages/create-cjs"
   },
   "bin": {
-    "create-bts": "cli.js"
+    "create-cjs": "cli.js"
   },
   "files": [
     "cli.js",
@@ -62,6 +62,6 @@
     "access": "public"
   },
   "dependencies": {
-    "create-better-t-stack": "^3.27.5"
+    "create-js-stack": "^1.0.0"
   }
 }

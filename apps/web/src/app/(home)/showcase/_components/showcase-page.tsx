@@ -27,7 +27,7 @@ export function ShowcasePage({ showcaseProjects }: { showcaseProjects: Array<Sho
                 <h1 className="font-bold font-mono text-xl sm:text-2xl">PROJECT_SHOWCASE.SH</h1>
               </div>
               <p className="text-muted-foreground text-sm">
-                Community projects built with create-better-t-stack
+                Community projects built with create-js-stack
               </p>
             </div>
           </div>
@@ -59,7 +59,7 @@ export function ShowcasePage({ showcaseProjects }: { showcaseProjects: Array<Sho
             <span className="text-muted-foreground">
               Want to showcase your project? Submit via{" "}
               <a
-                href="https://github.com/AmanVarshney01/create-better-t-stack/issues/new/choose"
+                href="https://github.com/riteshintro/create-js-stack/issues/new/choose"
                 target="_blank"
                 rel="noreferrer"
                 className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground"

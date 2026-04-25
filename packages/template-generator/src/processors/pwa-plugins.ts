@@ -1,4 +1,4 @@
-import type { ProjectConfig } from "@better-t-stack/types";
+import type { ProjectConfig } from "@create-js-stack/types";
 import { IndentationText, Node, Project, QuoteKind } from "ts-morph";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";

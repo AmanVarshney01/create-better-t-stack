@@ -1,5 +1,5 @@
 "use client";
-import { api } from "@better-t-stack/backend/convex/_generated/api";
+import { api } from "@create-js-stack/backend/convex/_generated/api";
 import { useNpmDownloadCounter } from "@erquhart/convex-oss-stats/react";
 import NumberFlow, { continuous } from "@number-flow/react";
 import { useQuery } from "convex/react";
@@ -11,10 +11,10 @@ export default function StatsSection() {
   const stats = useQuery(api.analytics.getStats, {});
   const dailyStats = useQuery(api.analytics.getDailyStats, { days: 30 });
   const githubRepo = useQuery(api.stats.getGithubRepo, {
-    name: "AmanVarshney01/create-better-t-stack",
+    name: "riteshintro/create-js-stack",
   });
   const npmPackages = useQuery(api.stats.getNpmPackages, {
-    names: ["create-better-t-stack"],
+    names: ["create-js-stack"],
   });
 
   const liveNpmDownloadCount = useNpmDownloadCounter(npmPackages);
@@ -84,7 +84,7 @@ export default function StatsSection() {
       </Link>
 
       <Link
-        href="https://github.com/AmanVarshney01/create-better-t-stack"
+        href="https://github.com/riteshintro/create-js-stack"
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -126,9 +126,7 @@ export default function StatsSection() {
             <div className="rounded-lg bg-muted/15 px-2.5 py-2">
               <div className="flex items-center justify-between gap-2 text-xs">
                 <span className="font-mono text-muted-foreground">Repository</span>
-                <span className="truncate font-mono text-accent">
-                  AmanVarshney01/create-better-t-stack
-                </span>
+                <span className="truncate font-mono text-accent">riteshintro/create-js-stack</span>
               </div>
             </div>
           </div>
@@ -136,7 +134,7 @@ export default function StatsSection() {
       </Link>
 
       <Link
-        href="https://www.npmjs.com/package/create-better-t-stack"
+        href="https://www.npmjs.com/package/create-js-stack"
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -183,7 +181,7 @@ export default function StatsSection() {
             <div className="rounded-lg bg-muted/15 px-2.5 py-2">
               <div className="flex items-center justify-between gap-2 text-xs">
                 <span className="font-mono text-muted-foreground">Package</span>
-                <span className="truncate font-mono text-accent">create-better-t-stack</span>
+                <span className="truncate font-mono text-accent">create-js-stack</span>
               </div>
             </div>
           </div>

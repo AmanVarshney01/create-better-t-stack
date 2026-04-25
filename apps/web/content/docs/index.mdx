@@ -1,6 +1,6 @@
 ---
 title: Quick Start
-description: Create your first Better-T-Stack project in minutes
+description: Create your first Create-JS-Stack project in minutes
 ---
 
 ## Philosophy
@@ -21,7 +21,7 @@ description: Create your first Better-T-Stack project in minutes
 ### CLI (prompts)
 
 ```npm
-npm create better-t-stack@latest
+npm create create-js-stack@latest
 ```
 
 Follow the interactive prompts to choose your frontend, backend, database, ORM, API layer, and addons.
@@ -29,7 +29,7 @@ Follow the interactive prompts to choose your frontend, backend, database, ORM, 
 Skip prompts and use the default stack:
 
 ```npm
-npm create better-t-stack@latest --yes
+npm create create-js-stack@latest --yes
 ```
 
 ### Stack Builder (UI)
@@ -38,7 +38,7 @@ npm create better-t-stack@latest --yes
 - Or open it via:
 
 ```npm
-npm create better-t-stack@latest builder
+npm create create-js-stack@latest builder
 ```
 
 ## Common Setups
@@ -46,7 +46,7 @@ npm create better-t-stack@latest builder
 ### Default Stack
 
 ```npm
-npm create better-t-stack@latest my-webapp \
+npm create create-js-stack@latest my-webapp \
   --frontend tanstack-router \
   --backend hono \
   --database sqlite \
@@ -58,7 +58,7 @@ npm create better-t-stack@latest my-webapp \
 ### Convex + React + Clerk
 
 ```npm
-npm create better-t-stack@latest my-api \
+npm create create-js-stack@latest my-api \
   --frontend tanstack-router \
   --backend convex \
   --auth clerk
@@ -67,7 +67,7 @@ npm create better-t-stack@latest my-api \
 ### Mobile App (Expo)
 
 ```npm
-npm create better-t-stack@latest my-native \
+npm create create-js-stack@latest my-native \
   --frontend native-uniwind \
   --backend hono \
   --database sqlite \
@@ -78,7 +78,7 @@ npm create better-t-stack@latest my-native \
 ### Empty Monorepo
 
 ```npm
-npm create better-t-stack@latest my-workspace \
+npm create create-js-stack@latest my-workspace \
   --frontend none \
   --backend none
 ```
@@ -110,7 +110,7 @@ See the full list in the [CLI Reference](/docs/cli). Key flags:
   <Card href="/docs/cli/compatibility" title="Compatibility">
     Valid combinations for backend, runtime, database, ORM, API
   </Card>
-  <Card href="/docs/bts-config" title="bts.jsonc">
+  <Card href="/docs/cjs-config" title="cjs.jsonc">
     Required for the add command; safe to delete if you don't use add
   </Card>
   <Card href="/docs/contributing" title="Contributing">

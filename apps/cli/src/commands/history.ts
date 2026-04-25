@@ -63,7 +63,7 @@ export async function historyHandler(input: HistoryCommandInput): Promise<void> 
 
   if (entries.length === 0) {
     log.info(pc.dim("No projects in history yet."));
-    log.info(pc.dim("Create a project with: create-better-t-stack my-app"));
+    log.info(pc.dim("Create a project with: create-js-stack my-app"));
     return;
   }
 

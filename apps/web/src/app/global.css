@@ -394,36 +394,36 @@
   overflow: visible;
 }
 
-.bts-plot {
+.cjs-plot {
   max-width: 100%;
   --plot-background: color-mix(in srgb, var(--background) 96%, var(--foreground) 4%);
 }
 
-.bts-plot text,
-.bts-plot .tick text {
+.cjs-plot text,
+.cjs-plot .tick text {
   font-family: var(--font-mono);
 }
 
-.bts-plot [aria-label="tip"] {
+.cjs-plot [aria-label="tip"] {
   color: var(--foreground);
 }
 
-.bts-plot [aria-label="tip"] path {
+.cjs-plot [aria-label="tip"] path {
   fill: var(--plot-background);
   stroke: color-mix(in srgb, var(--border) 92%, transparent);
 }
 
-.bts-plot [aria-label="tip"] text,
-.bts-plot [aria-label="tip"] tspan {
+.cjs-plot [aria-label="tip"] text,
+.cjs-plot [aria-label="tip"] tspan {
   fill: var(--foreground);
 }
 
-.bts-plot .domain,
-.bts-plot .tick line {
+.cjs-plot .domain,
+.cjs-plot .tick line {
   stroke: color-mix(in srgb, var(--border) 80%, transparent);
 }
 
-.bts-plot .grid line {
+.cjs-plot .grid line {
   stroke: color-mix(in srgb, var(--border) 55%, transparent);
   stroke-dasharray: 3 4;
 }

@@ -1,4 +1,4 @@
-# Create Better-T-Stack CLI
+# Create Create-JS-Stack CLI
 
 A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations
 
@@ -8,7 +8,7 @@ A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with 
 <img src="https://sponsors.amanv.dev/sponsors.png" alt="Sponsors">
 </p>
 
-![demo](https://cdn.jsdelivr.net/gh/amanvarshney01/create-better-t-stack@master/demo.gif)
+![demo](https://cdn.jsdelivr.net/gh/amanvarshney01/create-js-stack@master/demo.gif)
 
 ## Quick Start
 
@@ -16,13 +16,13 @@ Run without installing globally:
 
 ```bash
 # Using bun (recommended)
-bun create better-t-stack@latest
+bun create create-js-stack@latest
 
 # Using pnpm
-pnpm create better-t-stack@latest
+pnpm create create-js-stack@latest
 
 # Using npm
-npx create-better-t-stack@latest
+npx create-js-stack@latest
 ```
 
 Follow the prompts to configure your project or use the `--yes` flag for defaults.
@@ -48,7 +48,7 @@ Follow the prompts to configure your project or use the `--yes` flag for default
 ## Usage
 
 ```bash
-Usage: create-better-t-stack [project-directory] [options]
+Usage: create-js-stack [project-directory] [options]
 
 Options:
   -V, --version                   Output the version number
@@ -82,29 +82,29 @@ Options:
 
 ```bash
 # Raw JSON payload input (agent-friendly)
-create-better-t-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
-create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["wxt"],"addonOptions":{"wxt":{"template":"react"}}}'
-create-better-t-stack create-json --input '{"projectName":"db-app","database":"postgres","orm":"drizzle","dbSetup":"neon","dbSetupOptions":{"mode":"manual"}}'
+create-js-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
+create-js-stack add-json --input '{"projectDir":"./my-app","addons":["wxt"],"addonOptions":{"wxt":{"template":"react"}}}'
+create-js-stack create-json --input '{"projectName":"db-app","database":"postgres","orm":"drizzle","dbSetup":"neon","dbSetupOptions":{"mode":"manual"}}'
 
 # Runtime schema/introspection output
-create-better-t-stack schema --name all
-create-better-t-stack schema --name createInput
-create-better-t-stack schema --name addInput
-create-better-t-stack schema --name addonOptions
-create-better-t-stack schema --name dbSetupOptions
-create-better-t-stack schema --name cli
+create-js-stack schema --name all
+create-js-stack schema --name createInput
+create-js-stack schema --name addInput
+create-js-stack schema --name addonOptions
+create-js-stack schema --name dbSetupOptions
+create-js-stack schema --name cli
 
 # Local stdio MCP server
-npx create-better-t-stack@latest mcp
+npx create-js-stack@latest mcp
 ```
 
-To install Better T Stack into supported agent configs with `add-mcp` and avoid relying on a global CLI install:
+To install Create JS Stack into supported agent configs with `add-mcp` and avoid relying on a global CLI install:
 
 ```bash
-npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"
+npx -y add-mcp@latest "npx -y create-js-stack@latest mcp"
 ```
 
-When you scaffold with the `mcp` addon, Better T Stack itself can also be installed into supported agent configs through `add-mcp` using a package runner command instead of assuming a global CLI install. For Bun projects, the generated config uses the equivalent `bunx create-better-t-stack@latest mcp` server command inside `add-mcp`.
+When you scaffold with the `mcp` addon, Create JS Stack itself can also be installed into supported agent configs through `add-mcp` using a package runner command instead of assuming a global CLI install. For Bun projects, the generated config uses the equivalent `bunx create-js-stack@latest mcp` server command inside `add-mcp`.
 
 For MCP project creation, prefer `install: false`. Long dependency installs can exceed common MCP client request timeouts, so the safest flow is to scaffold first and run your package manager install command afterward in the project directory.
 
@@ -121,14 +121,14 @@ This CLI collects anonymous usage data to help improve the tool. The data collec
 
 ### Disabling Telemetry
 
-You can disable telemetry by setting the `BTS_TELEMETRY_DISABLED` environment variable:
+You can disable telemetry by setting the `CJS_TELEMETRY_DISABLED` environment variable:
 
 ```bash
 # Disable telemetry for a single run
-BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack
+CJS_TELEMETRY_DISABLED=1 npx create-js-stack
 
 # Disable telemetry globally in your shell profile (.bashrc, .zshrc, etc.)
-export BTS_TELEMETRY_DISABLED=1
+export CJS_TELEMETRY_DISABLED=1
 ```
 
 ## Examples
@@ -136,97 +136,97 @@ export BTS_TELEMETRY_DISABLED=1
 Create a project with default configuration:
 
 ```bash
-npx create-better-t-stack --yes
+npx create-js-stack --yes
 ```
 
 Validate a command without writing files:
 
 ```bash
-npx create-better-t-stack --yes --dry-run
+npx create-js-stack --yes --dry-run
 ```
 
 Create a project with specific options:
 
 ```bash
-npx create-better-t-stack --database postgres --orm drizzle --auth better-auth --addons pwa biome
+npx create-js-stack --database postgres --orm drizzle --auth better-auth --addons pwa biome
 ```
 
 Create a project with Elysia backend and Node.js runtime:
 
 ```bash
-npx create-better-t-stack --backend elysia --runtime node
+npx create-js-stack --backend elysia --runtime node
 ```
 
 Create a project with multiple frontend options (one web + one native):
 
 ```bash
-npx create-better-t-stack --frontend tanstack-router native-bare
+npx create-js-stack --frontend tanstack-router native-bare
 ```
 
 Create a project with examples:
 
 ```bash
-npx create-better-t-stack --examples todo ai
+npx create-js-stack --examples todo ai
 ```
 
 Create a project with Turso database setup:
 
 ```bash
-npx create-better-t-stack --database sqlite --orm drizzle --db-setup turso
+npx create-js-stack --database sqlite --orm drizzle --db-setup turso
 ```
 
 Create a project with Supabase PostgreSQL setup:
 
 ```bash
-npx create-better-t-stack --database postgres --orm drizzle --db-setup supabase --auth better-auth
+npx create-js-stack --database postgres --orm drizzle --db-setup supabase --auth better-auth
 ```
 
 Create a project with Convex backend:
 
 ```bash
-npx create-better-t-stack --backend convex --frontend tanstack-router
+npx create-js-stack --backend convex --frontend tanstack-router
 ```
 
 Create a project with documentation site:
 
 ```bash
-npx create-better-t-stack --addons starlight
+npx create-js-stack --addons starlight
 ```
 
 Create a minimal TypeScript project with no backend:
 
 ```bash
-npx create-better-t-stack --backend none --frontend tanstack-router
+npx create-js-stack --backend none --frontend tanstack-router
 ```
 
 Create a backend-only project with no frontend:
 
 ```bash
-npx create-better-t-stack --frontend none --backend hono --database postgres --orm drizzle
+npx create-js-stack --frontend none --backend hono --database postgres --orm drizzle
 ```
 
 Create a simple frontend-only project:
 
 ```bash
-npx create-better-t-stack --backend none --frontend next --addons none --examples none
+npx create-js-stack --backend none --frontend next --addons none --examples none
 ```
 
 Create a Cloudflare Workers project:
 
 ```bash
-npx create-better-t-stack --backend hono --runtime workers --database sqlite --orm drizzle --db-setup d1
+npx create-js-stack --backend hono --runtime workers --database sqlite --orm drizzle --db-setup d1
 ```
 
 Create a self-hosted fullstack project on Cloudflare with D1:
 
 ```bash
-npx create-better-t-stack --backend self --frontend next --api trpc --database sqlite --orm drizzle --db-setup d1 --web-deploy cloudflare
+npx create-js-stack --backend self --frontend next --api trpc --database sqlite --orm drizzle --db-setup d1 --web-deploy cloudflare
 ```
 
 Create a minimal API-only project:
 
 ```bash
-npx create-better-t-stack --frontend none --backend hono --api trpc --database none --addons none
+npx create-js-stack --frontend none --backend hono --api trpc --database none --addons none
 ```
 
 ## Compatibility Notes

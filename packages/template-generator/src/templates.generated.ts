@@ -23,7 +23,7 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 			"!**/routeTree.gen.ts",
 			"!**/src-tauri",
 			"!**/.nuxt",
-			"!bts.jsonc",
+			"!cjs.jsonc",
 			"!**/.expo",
 			"!**/.wrangler",
 			"!**/.alchemy",
@@ -14022,7 +14022,7 @@ lerna-debug.log*
 .turbo
 .nx
 
-# Better-T-Stack
+# Create-JS-Stack
 .alchemy
 
 # Testing
@@ -14036,7 +14036,7 @@ tmp
 temp
 `],
   ["base/package.json.hbs", `{
-  "name": "better-t-stack",
+  "name": "create-js-stack",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -24419,7 +24419,7 @@ return (
 <Container className="px-4 pb-4">
   <View className="py-6 mb-5">
     <Text className="text-3xl font-semibold text-foreground tracking-tight">
-      Better T Stack
+      Create JS Stack
     </Text>
     <Text className="text-muted text-sm mt-1">Full-stack TypeScript starter</Text>
   </View>

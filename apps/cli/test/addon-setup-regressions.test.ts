@@ -58,12 +58,12 @@ async function runWithFakeBunx<T>(
   await writeFakeBunx(binDir, markerFile, exitCode);
 
   const previousPath = process.env.PATH;
-  const previousSkipExternal = process.env.BTS_SKIP_EXTERNAL_COMMANDS;
-  const previousTestMode = process.env.BTS_TEST_MODE;
+  const previousSkipExternal = process.env.CJS_SKIP_EXTERNAL_COMMANDS;
+  const previousTestMode = process.env.CJS_TEST_MODE;
 
   process.env.PATH = `${binDir}${path.delimiter}${previousPath ?? ""}`;
-  delete process.env.BTS_SKIP_EXTERNAL_COMMANDS;
-  delete process.env.BTS_TEST_MODE;
+  delete process.env.CJS_SKIP_EXTERNAL_COMMANDS;
+  delete process.env.CJS_TEST_MODE;
 
   try {
     const result = await callback();
@@ -76,25 +76,25 @@ async function runWithFakeBunx<T>(
     }
 
     if (previousSkipExternal === undefined) {
-      delete process.env.BTS_SKIP_EXTERNAL_COMMANDS;
+      delete process.env.CJS_SKIP_EXTERNAL_COMMANDS;
     } else {
-      process.env.BTS_SKIP_EXTERNAL_COMMANDS = previousSkipExternal;
+      process.env.CJS_SKIP_EXTERNAL_COMMANDS = previousSkipExternal;
     }
 
     if (previousTestMode === undefined) {
-      delete process.env.BTS_TEST_MODE;
+      delete process.env.CJS_TEST_MODE;
     } else {
-      process.env.BTS_TEST_MODE = previousTestMode;
+      process.env.CJS_TEST_MODE = previousTestMode;
     }
   }
 }
 
 describe("Addon setup regressions", () => {
-  it("uses a package execution command for the Better T Stack MCP server target", () => {
+  it("uses a package execution command for the Create JS Stack MCP server target", () => {
     const servers = getRecommendedMcpServers(createProjectConfig(), "project");
-    const betterTStackServer = servers.find((server) => server.key === "better-t-stack");
+    const betterTStackServer = servers.find((server) => server.key === "create-js-stack");
 
-    expect(betterTStackServer?.target).toBe("bunx create-better-t-stack@latest mcp");
+    expect(betterTStackServer?.target).toBe("bunx create-js-stack@latest mcp");
   });
 
   it("preserves explicit empty MCP selections in silent mode", async () => {
@@ -206,7 +206,7 @@ describe("Addon setup regressions", () => {
     await fs.remove(projectDir);
     await fs.ensureDir(projectDir);
     await fs.writeFile(
-      path.join(projectDir, "bts.jsonc"),
+      path.join(projectDir, "cjs.jsonc"),
       JSON.stringify({
         version: "0.0.0-test",
         createdAt: new Date(0).toISOString(),

@@ -20,19 +20,19 @@ Not collected:
 Telemetry is enabled by default. To disable:
 
 ```bash
-BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack@latest
+CJS_TELEMETRY_DISABLED=1 npx create-js-stack@latest
 ```
 
 <Callout title="Note">The above command disables it for a single run.</Callout>
 
-Add `export BTS_TELEMETRY_DISABLED=1` to your shell profile to make it permanent.
+Add `export CJS_TELEMETRY_DISABLED=1` to your shell profile to make it permanent.
 
 ## Where to view analytics
 
 - Charts: [`/analytics`](/analytics)
 - Shared website analytics: [Umami dashboard](https://umami.amanv.cloud/share/pHvqHleyOl9PBfaK) (self-hosted on a Hostinger VPS)
-- Raw JSON snapshot: `https://r2.better-t-stack.dev/analytics-data.json`
-- CSV export: `https://r2.better-t-stack.dev/export.csv`
+- Raw JSON snapshot: `https://r2.create-js-stack.dev/analytics-data.json`
+- CSV export: `https://r2.create-js-stack.dev/export.csv`
 
 Notes:
 
@@ -43,11 +43,11 @@ Notes:
 
 Single event per scaffold; no IP or project identifiers. See source code below.
 
-If in doubt, set `BTS_TELEMETRY_DISABLED=1` and proceed. You can still use all CLI features.
+If in doubt, set `CJS_TELEMETRY_DISABLED=1` and proceed. You can still use all CLI features.
 
 ## Source code
 
-- CLI event sender: [`apps/cli/src/utils/analytics.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts)
-- Telemetry toggle logic: [`apps/cli/src/utils/telemetry.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/telemetry.ts)
-- Ingest endpoint: [`packages/backend/convex/http.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/packages/backend/convex/http.ts)
-- Analytics backend (ingest + aggregation): [`packages/backend/convex/analytics.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/packages/backend/convex/analytics.ts)
+- CLI event sender: [`apps/cli/src/utils/analytics.ts`](https://github.com/riteshintro/create-js-stack/blob/main/apps/cli/src/utils/analytics.ts)
+- Telemetry toggle logic: [`apps/cli/src/utils/telemetry.ts`](https://github.com/riteshintro/create-js-stack/blob/main/apps/cli/src/utils/telemetry.ts)
+- Ingest endpoint: [`packages/backend/convex/http.ts`](https://github.com/riteshintro/create-js-stack/blob/main/packages/backend/convex/http.ts)
+- Analytics backend (ingest + aggregation): [`packages/backend/convex/analytics.ts`](https://github.com/riteshintro/create-js-stack/blob/main/packages/backend/convex/analytics.ts)

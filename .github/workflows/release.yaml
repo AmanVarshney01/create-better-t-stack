@@ -52,7 +52,7 @@ jobs:
         id: check-version
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          if npm view create-better-t-stack@$VERSION version 2>/dev/null; then
+          if npm view create-js-stack@$VERSION version 2>/dev/null; then
             echo "Version $VERSION already exists on NPM"
             echo "exists=true" >> $GITHUB_OUTPUT
           else
@@ -92,7 +92,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd packages/template-generator
-          jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["@better-t-stack/types"] = $dep' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["@create-js-stack/types"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build template-generator package
         if: steps.check-version.outputs.exists == 'false'
@@ -103,21 +103,21 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd apps/cli
-          jq --arg v "^$VERSION" '.dependencies["@better-t-stack/types"] = $v | .dependencies["@better-t-stack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "^$VERSION" '.dependencies["@create-js-stack/types"] = $v | .dependencies["@create-js-stack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build CLI
         if: steps.check-version.outputs.exists == 'false'
         run: cd apps/cli && bun run build
         env:
-          BTS_TELEMETRY: 1
+          CJS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
-      - name: Update create-bts alias package version
+      - name: Update create-cjs alias package version
         if: steps.check-version.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          cd packages/create-bts
-          jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["create-better-t-stack"] = $dep' package.json > tmp.json && mv tmp.json package.json
+          cd packages/create-cjs
+          jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["create-js-stack"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
       - name: Enable pnpm via corepack
         if: steps.check-version.outputs.exists == 'false'
@@ -125,7 +125,7 @@ jobs:
 
       # Gate all publishes on the smoke so a failure here doesn't leave a
       # partial release on npm (e.g. types/template-generator published but
-      # create-better-t-stack broken).
+      # create-js-stack broken).
       - name: Publish smoke test (npm, pnpm, bun)
         if: steps.check-version.outputs.exists == 'false'
         run: bun run smoke:publish
@@ -135,7 +135,7 @@ jobs:
         run: cd packages/types && npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 1
+          CJS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
       - name: Publish template-generator to NPM
@@ -143,7 +143,7 @@ jobs:
         run: cd packages/template-generator && npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 1
+          CJS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
       - name: Publish CLI to NPM
@@ -151,15 +151,15 @@ jobs:
         run: cd apps/cli && npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 1
+          CJS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
-      - name: Publish create-bts alias to NPM
+      - name: Publish create-cjs alias to NPM
         if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/create-bts && npm publish --access public --provenance
+        run: cd packages/create-cjs && npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 1
+          CJS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
       - name: Create and push tag
@@ -194,10 +194,10 @@ jobs:
           echo "## Release v$VERSION Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Published Packages" >> $GITHUB_STEP_SUMMARY
-          echo "- [create-better-t-stack@$VERSION](https://www.npmjs.com/package/create-better-t-stack/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
-          echo "- [create-bts@$VERSION](https://www.npmjs.com/package/create-bts/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
-          echo "- [@better-t-stack/types@$VERSION](https://www.npmjs.com/package/@better-t-stack/types/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
-          echo "- [@better-t-stack/template-generator@$VERSION](https://www.npmjs.com/package/@better-t-stack/template-generator/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [create-js-stack@$VERSION](https://www.npmjs.com/package/create-js-stack/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [create-cjs@$VERSION](https://www.npmjs.com/package/create-cjs/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [@create-js-stack/types@$VERSION](https://www.npmjs.com/package/@create-js-stack/types/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [@create-js-stack/template-generator@$VERSION](https://www.npmjs.com/package/@create-js-stack/template-generator/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### GitHub Release" >> $GITHUB_STEP_SUMMARY
           echo "[v$VERSION](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY

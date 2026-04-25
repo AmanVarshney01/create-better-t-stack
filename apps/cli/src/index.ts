@@ -1,4 +1,4 @@
-import { getAllJsonSchemas } from "@better-t-stack/types/json-schema";
+import { getAllJsonSchemas } from "@create-js-stack/types/json-schema";
 import { initTRPC } from "@trpc/server";
 import { Result } from "better-result";
 import { createCli, type TrpcCliMeta } from "trpc-cli";
@@ -21,7 +21,7 @@ import {
   AuthSchema,
   type Backend,
   BackendSchema,
-  type BetterTStackConfig,
+  type CreateJSStackConfig,
   type CLIInput,
   type CreateInput,
   CreateInputSchema,
@@ -94,7 +94,7 @@ const t = initTRPC.meta<TrpcCliMeta>().create();
 function getCliSchemaJson(): unknown {
   return createCli({
     router,
-    name: "create-better-t-stack",
+    name: "create-js-stack",
     version: getLatestCLIVersion(),
   }).toJSON();
 }
@@ -116,7 +116,7 @@ export function getSchemaResult(name: SchemaName): unknown {
 export const router = t.router({
   create: t.procedure
     .meta({
-      description: "Create a new Better-T-Stack project",
+      description: "Create a new Create-JS-Stack project",
       default: true,
       negateBooleans: true,
     })
@@ -210,16 +210,16 @@ export const router = t.router({
     )
     .query(({ input }) => getSchemaResult(input.name)),
   sponsors: t.procedure
-    .meta({ description: "Show Better-T-Stack sponsors" })
+    .meta({ description: "Show Create-JS-Stack sponsors" })
     .mutation(() => showSponsorsCommand()),
   docs: t.procedure
-    .meta({ description: "Open Better-T-Stack documentation" })
+    .meta({ description: "Open Create-JS-Stack documentation" })
     .mutation(() => openDocsCommand()),
   builder: t.procedure
     .meta({ description: "Open the web-based stack builder" })
     .mutation(() => openBuilderCommand()),
   add: t.procedure
-    .meta({ description: "Add addons to an existing Better-T-Stack project" })
+    .meta({ description: "Add addons to an existing Create-JS-Stack project" })
     .input(
       z.object({
         addons: z.array(AddonsSchema).optional().describe("Addons to add"),
@@ -267,10 +267,10 @@ export const router = t.router({
     }),
 });
 
-export function createBtsCli(): ReturnType<typeof createCli> {
+export function createCjsCli(): ReturnType<typeof createCli> {
   return createCli({
     router,
-    name: "create-better-t-stack",
+    name: "create-js-stack",
     version: getLatestCLIVersion(),
   });
 }
@@ -284,12 +284,12 @@ export { Result } from "better-result";
 export type CreateError = UserCancelledError | CLIError | ProjectCreationError;
 
 /**
- * Programmatic API to create a new Better-T-Stack project.
+ * Programmatic API to create a new Create-JS-Stack project.
  * Returns a Result type - no console output, no interactive prompts.
  *
  * @example
  * ```typescript
- * import { create, Result } from "create-better-t-stack";
+ * import { create, Result } from "create-js-stack";
  *
  * const result = await create("my-app", {
  *   frontend: ["tanstack-router"],
@@ -371,7 +371,7 @@ export {
   generate,
   EMBEDDED_TEMPLATES,
   TEMPLATE_COUNT,
-} from "@better-t-stack/template-generator";
+} from "@create-js-stack/template-generator";
 
 // Import for createVirtual
 import {
@@ -379,7 +379,7 @@ import {
   GeneratorError,
   type VirtualFileTree,
   EMBEDDED_TEMPLATES,
-} from "@better-t-stack/template-generator";
+} from "@create-js-stack/template-generator";
 
 /**
  * Programmatic API to generate a project in-memory (virtual filesystem).
@@ -388,7 +388,7 @@ import {
  *
  * @example
  * ```typescript
- * import { createVirtual, EMBEDDED_TEMPLATES, Result } from "create-better-t-stack";
+ * import { createVirtual, EMBEDDED_TEMPLATES, Result } from "create-js-stack";
  *
  * const result = await createVirtual({
  *   frontend: ["tanstack-router"],
@@ -470,7 +470,7 @@ export async function createVirtual(
 export type {
   CreateInput,
   InitResult,
-  BetterTStackConfig,
+  CreateJSStackConfig,
   Database,
   ORM,
   Backend,
@@ -494,11 +494,11 @@ export type {
 export type { AddResult };
 
 /**
- * Programmatic API to add addons to an existing Better-T-Stack project.
+ * Programmatic API to add addons to an existing Create-JS-Stack project.
  *
  * @example
  * ```typescript
- * import { add } from "create-better-t-stack";
+ * import { add } from "create-js-stack";
  *
  * const result = await add({
  *   addons: ["biome", "husky"],

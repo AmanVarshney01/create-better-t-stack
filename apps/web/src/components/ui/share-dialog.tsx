@@ -101,7 +101,7 @@ export function ShareDialog({ children, stackUrl, stackState }: ShareDialogProps
 
   const shareToTwitter = () => {
     const text = encodeURIComponent(
-      `Check out this cool tech stack I configured with Create Better T Stack!\n\n🚀 ${techBadges.length} technologies selected\n\n`,
+      `Check out this cool tech stack I configured with Create Create JS Stack!\n\n🚀 ${techBadges.length} technologies selected\n\n`,
     );
     const url = encodeURIComponent(stackUrl);
     window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, "_blank");

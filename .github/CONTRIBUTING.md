@@ -1,6 +1,6 @@
-# Contributing to Better-T-Stack
+# Contributing to Create-JS-Stack
 
-Thank you for your interest in contributing to Better-T-Stack! This document provides guidelines and setup instructions for contributors.
+Thank you for your interest in contributing to Create-JS-Stack! This document provides guidelines and setup instructions for contributors.
 
 > **⚠️ Important**: Before starting work on any new features or major changes, please open an issue first to discuss your proposal and get approval. We don't want you to waste time on work that might not align with the project's direction or get merged.
 
@@ -8,7 +8,7 @@ Thank you for your interest in contributing to Better-T-Stack! This document pro
 
 This repository is organized as a monorepo containing:
 
-- **CLI**: [`apps/cli`](apps/cli) - The scaffolding CLI tool (`create-better-t-stack`)
+- **CLI**: [`apps/cli`](apps/cli) - The scaffolding CLI tool (`create-js-stack`)
 - **Documentation**: [`apps/web`](apps/web) - Official website and documentation
 
 ## Development Setup
@@ -24,8 +24,8 @@ This repository is organized as a monorepo containing:
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/AmanVarshney01/create-better-t-stack.git
-   cd create-better-t-stack
+   git clone https://github.com/riteshintro/create-js-stack.git
+   cd create-js-stack
    ```
 
 2. **Install dependencies**
@@ -47,7 +47,7 @@ This repository is organized as a monorepo containing:
    bun link
    ```
 
-   Now you can use `create-better-t-stack` from anywhere in your system.
+   Now you can use `create-js-stack` from anywhere in your system.
 
 3. **Start development server**
 
@@ -60,7 +60,7 @@ This repository is organized as a monorepo containing:
 4. **Test the CLI**
    Now go to anywhere else in your system (maybe like a test folder) and run:
    ```bash
-   create-better-t-stack
+   create-js-stack
    ```
    This will run the locally installed CLI.
 
@@ -184,4 +184,4 @@ Use conventional commit messages with the appropriate scope:
 
 ## License
 
-By contributing to Better-T-Stack, you agree that your contributions will be licensed under the MIT License.
+By contributing to Create-JS-Stack, you agree that your contributions will be licensed under the MIT License.

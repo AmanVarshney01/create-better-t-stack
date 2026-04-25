@@ -136,7 +136,7 @@ export const InstallScopeSchema = z.enum(["project", "global"]).describe("Instal
 
 export const McpServerSchema = z
   .enum([
-    "better-t-stack",
+    "create-js-stack",
     "context7",
     "nx",
     "cloudflare-docs",
@@ -489,7 +489,7 @@ export const ProjectConfigSchema = z.object({
   serverDeploy: ServerDeploySchema,
 });
 
-export const BetterTStackConfigSchema = z.object({
+export const CreateJSStackConfigSchema = z.object({
   version: z.string().describe("CLI version used to create this project"),
   createdAt: z.string().describe("Timestamp when the project was created"),
   reproducibleCommand: z.string().optional().describe("Command to reproduce this project setup"),
@@ -511,16 +511,16 @@ export const BetterTStackConfigSchema = z.object({
   serverDeploy: ServerDeploySchema,
 });
 
-export const BetterTStackConfigFileSchema = z
+export const CreateJSStackConfigFileSchema = z
   .object({
     $schema: z.string().optional().describe("JSON Schema reference for validation"),
   })
-  .extend(BetterTStackConfigSchema.shape)
+  .extend(CreateJSStackConfigSchema.shape)
   .strict()
   .meta({
-    id: "https://r2.better-t-stack.dev/schema.json",
-    title: "Better-T-Stack Configuration",
-    description: "Configuration file for Better-T-Stack projects",
+    id: "https://r2.create-js-stack.dev/schema.json",
+    title: "Create-JS-Stack Configuration",
+    description: "Configuration file for Create-JS-Stack projects",
   });
 
 export const InitResultSchema = z.object({

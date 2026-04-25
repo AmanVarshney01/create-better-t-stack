@@ -7,7 +7,7 @@ import { SMOKE_DIR } from "./setup";
 
 describe("add()", () => {
   it("returns an error in silent mode instead of exiting when the project config is missing", async () => {
-    const projectDir = join(SMOKE_DIR, "missing-bts-config");
+    const projectDir = join(SMOKE_DIR, "missing-cjs-config");
     await mkdir(projectDir, { recursive: true });
 
     const result = await add({
@@ -18,6 +18,6 @@ describe("add()", () => {
 
     expect(result).toBeDefined();
     expect(result?.success).toBe(false);
-    expect(result?.error).toContain("No Better-T-Stack project found");
+    expect(result?.error).toContain("No Create-JS-Stack project found");
   });
 });
