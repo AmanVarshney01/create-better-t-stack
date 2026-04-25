@@ -7,7 +7,13 @@ export default defineConfig({
   shims: true,
   outDir: "dist",
   dts: true,
-  noExternal: [/^@create-js-stack\//],
+  deps: {
+    alwaysBundle: [
+      "@create-js-stack/types",
+      "@create-js-stack/template-generator",
+      /^@create-js-stack\//,
+    ],
+  },
   hooks: {
     "build:done": async () => {
       const fs = await import("node:fs/promises");
