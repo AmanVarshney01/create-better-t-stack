@@ -94,6 +94,24 @@ jobs:
           CJS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
+      - name: Verify CLI bundle is self-contained
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          cd apps/cli
+          echo "--- workspace symlink ---"
+          ls -la node_modules/@create-js-stack/ 2>/dev/null || echo "NO SYMLINKS"
+          echo "--- dist files ---"
+          ls -la dist/
+          echo "--- templates-binary ---"
+          ls -la templates-binary/ | head -5
+          echo "--- searching dist for unbundled @create-js-stack refs ---"
+          if grep -lE "@create-js-stack/(types|template-generator)" dist/*.mjs; then
+            echo "::error::Bundle still contains unresolved @create-js-stack imports"
+            grep -nE "@create-js-stack/(types|template-generator)" dist/*.mjs
+            exit 1
+          fi
+          echo "Bundle is self-contained"
+
       - name: Strip bundled workspace deps from CLI package.json
         if: steps.check-version.outputs.exists == 'false'
         run: |
