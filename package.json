@@ -58,8 +58,11 @@
     "typescript": "catalog:"
   },
   "lint-staged": {
-    "*": [
-      "bun check"
+    "*.{ts,tsx,js,jsx,mjs,cjs,mts,cts,json,jsonc,md,yml,yaml}": [
+      "oxfmt --no-error-on-unmatched-pattern"
+    ],
+    "*.{ts,tsx,js,jsx,mjs,cjs,mts,cts}": [
+      "oxlint"
     ]
   },
   "engines": {
