@@ -3,9 +3,12 @@ name: Test
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
 
 concurrency:
-  group: test-${{ github.head_ref }}
+  group: test-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
