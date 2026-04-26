@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 1.2.6)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -17,7 +23,7 @@ concurrency:
 jobs:
   release:
     name: Release to NPM
-    if: startsWith(github.event.head_commit.message, 'chore(release):')
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'chore(release):')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -33,10 +39,14 @@ jobs:
           check-latest: true
           registry-url: https://registry.npmjs.org
 
-      - name: Extract version from commit message
+      - name: Extract version
         id: version
         run: |
-          VERSION=$(echo "${{ github.event.head_commit.message }}" | head -n1 | sed -E 's/^chore\(release\): ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION=$(echo "${{ github.event.head_commit.message }}" | grep -oE 'chore\(release\): [0-9]+\.[0-9]+\.[0-9]+' | head -n1 | sed -E 's/^chore\(release\): //')
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Releasing version: $VERSION"
 
