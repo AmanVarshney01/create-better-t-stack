@@ -76,7 +76,18 @@ export async function processApiTemplates(
         config,
       );
       if (config.auth !== "better-auth") {
-        vfs.writeFile("apps/web/src/hooks.server.ts", 'import "./lib/orpc.server";\n');
+        const hooksContent =
+          config.webDeploy === "cloudflare"
+            ? `import "./lib/orpc.server";
+import { runWithCloudflareEnv } from "@${config.projectName}/env/server";
+import type { Handle } from "@sveltejs/kit";
+
+export const handle: Handle = async ({ event, resolve }) => {
+\treturn runWithCloudflareEnv(event.platform?.env, () => resolve(event));
+};
+`
+            : 'import "./lib/orpc.server";\n';
+        vfs.writeFile("apps/web/src/hooks.server.ts", hooksContent);
       }
     }
   } else if (hasSolidWeb && config.api === "orpc") {

@@ -514,29 +514,29 @@ export default defineEventHandler(async (event) => {
   ["api/orpc/fullstack/nuxt/server/routes/rpc/index.ts.hbs", `export { default } from "./[...]";
 `],
   ["api/orpc/fullstack/svelte/src/lib/orpc.server.ts.hbs", `import { getRequestEvent } from "$app/server";
-import { createORPCClient } from "@orpc/client";
-import { RPCLink } from "@orpc/client/fetch";
-import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter, type AppRouterClient } from "@{{projectName}}/api/routers/index";
+import { createRouterClient } from "@orpc/server";
 
-declare global {
-	var $client: AppRouterClient | undefined;
+if (typeof window !== "undefined") {
+	throw new Error("This file should only be imported on the server.");
 }
 
-const link = new RPCLink({
-	url: async () => \`\${getRequestEvent().url.origin}/rpc\`,
-	async fetch(request, init) {
-		return getRequestEvent().fetch(request, init);
+const serverClient: AppRouterClient = createRouterClient(appRouter, {
+	context: async () => {
+		const event = getRequestEvent();
+		return createContext({ headers: event.request.headers });
 	},
 });
 
-const serverClient: AppRouterClient = createORPCClient(link);
-
+// oRPC's SvelteKit SSR setup loads this from hooks.server.ts so $lib/orpc can
+// reuse the in-process server client during SSR and fall back to HTTP in the browser.
 globalThis.$client = serverClient;
 `],
   ["api/orpc/fullstack/svelte/src/routes/rpc/[...rest]/+server.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 {{#if (eq webDeploy "cloudflare")}}
-import { setCloudflareEnv } from "@{{projectName}}/env/server";
+import { runWithCloudflareEnv } from "@{{projectName}}/env/server";
 {{/if}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -568,24 +568,27 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
 {{#if (eq webDeploy "cloudflare")}}
-	setCloudflareEnv(platform?.env);
+	return runWithCloudflareEnv(platform?.env, async () => {
 
 {{/if}}
-	const context = await createContext({ headers: request.headers });
+		const context = await createContext({ headers: request.headers });
 
-	const rpcResult = await rpcHandler.handle(request, {
-		prefix: "/rpc",
-		context,
+		const rpcResult = await rpcHandler.handle(request, {
+			prefix: "/rpc",
+			context,
+		});
+		if (rpcResult.response) return rpcResult.response;
+
+		const apiResult = await apiHandler.handle(request, {
+			prefix: "/rpc/api-reference",
+			context,
+		});
+		if (apiResult.response) return apiResult.response;
+
+		return new Response("Not found", { status: 404 });
+{{#if (eq webDeploy "cloudflare")}}
 	});
-	if (rpcResult.response) return rpcResult.response;
-
-	const apiResult = await apiHandler.handle(request, {
-		prefix: "/rpc/api-reference",
-		context,
-	});
-	if (apiResult.response) return apiResult.response;
-
-	return new Response("Not found", { status: 404 });
+{{/if}}
 };
 
 export const HEAD = handle;
@@ -1495,12 +1498,6 @@ import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/svelte-query";
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
-
-{{#if (eq backend "self")}}
-declare global {
-	var $client: AppRouterClient | undefined;
-}
-{{/if}}
 
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
@@ -5276,28 +5273,31 @@ import { createAuth } from "@{{projectName}}/auth";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{#if (eq webDeploy "cloudflare")}}
-import { setCloudflareEnv } from "@{{projectName}}/env/server";
+import { runWithCloudflareEnv } from "@{{projectName}}/env/server";
 {{/if}}
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import type { Handle } from "@sveltejs/kit";
 
 export const handle: Handle = async ({ event, resolve }) => {
 {{#if (eq webDeploy "cloudflare")}}
-	setCloudflareEnv(event.platform?.env);
+	return runWithCloudflareEnv(event.platform?.env, () => {
 
 {{/if}}
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-	const authInstance = createAuth();
-{{else}}
-	const authInstance = auth;
-{{/if}}
+		{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+		const authInstance = createAuth();
+		{{else}}
+		const authInstance = auth;
+		{{/if}}
 
-	return svelteKitHandler({
-		event,
-		resolve,
-		auth: authInstance,
-		building,
+		return svelteKitHandler({
+			event,
+			resolve,
+			auth: authInstance,
+			building,
+		});
+{{#if (eq webDeploy "cloudflare")}}
 	});
+{{/if}}
 };
 `],
   ["auth/better-auth/fullstack/tanstack-start/src/routes/api/auth/$.ts.hbs", `{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
@@ -11394,6 +11394,9 @@ function RouteComponent() {
 			onSubmit: validationSchema,
 		},
 	}));
+
+	type FormField = ReturnType<typeof form.createField>;
+	type SubmitState = Pick<typeof form.state, 'canSubmit' | 'isSubmitting'>;
 </script>
 
 <div class="mx-auto mt-10 w-full max-w-md p-6">
@@ -11408,7 +11411,7 @@ function RouteComponent() {
 		}}
 	>
 		<form.Field name="email">
-			{#snippet children(field)}
+			{#snippet children(field: FormField)}
 				<div class="space-y-1">
 					<label for={field.name}>Email</label>
 					<input
@@ -11433,7 +11436,7 @@ function RouteComponent() {
 		</form.Field>
 
 		<form.Field name="password">
-			{#snippet children(field)}
+			{#snippet children(field: FormField)}
 				<div class="space-y-1">
 					<label for={field.name}>Password</label>
 					<input
@@ -11457,8 +11460,8 @@ function RouteComponent() {
 			{/snippet}
 		</form.Field>
 
-		<form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
-			{#snippet children(state)}
+		<form.Subscribe selector={(state: typeof form.state): SubmitState => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+			{#snippet children(state: SubmitState)}
 				<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>
 					{state.isSubmitting ? 'Submitting...' : 'Sign In'}
 				</button>
@@ -11512,6 +11515,9 @@ function RouteComponent() {
 			onSubmit: validationSchema,
 		},
 	}));
+
+	type FormField = ReturnType<typeof form.createField>;
+	type SubmitState = Pick<typeof form.state, 'canSubmit' | 'isSubmitting'>;
 </script>
 
 <div class="mx-auto mt-10 w-full max-w-md p-6">
@@ -11527,7 +11533,7 @@ function RouteComponent() {
 		}}
 	>
 		<form.Field name="name">
-			{#snippet children(field)}
+			{#snippet children(field: FormField)}
 				<div class="space-y-1">
 					<label for={field.name}>Name</label>
 					<input
@@ -11551,7 +11557,7 @@ function RouteComponent() {
 		</form.Field>
 
 		<form.Field name="email">
-			{#snippet children(field)}
+			{#snippet children(field: FormField)}
 				<div class="space-y-1">
 					<label for={field.name}>Email</label>
 					<input
@@ -11576,7 +11582,7 @@ function RouteComponent() {
 		</form.Field>
 
 		<form.Field name="password">
-			{#snippet children(field)}
+			{#snippet children(field: FormField)}
 				<div class="space-y-1">
 					<label for={field.name}>Password</label>
 					<input
@@ -11600,8 +11606,8 @@ function RouteComponent() {
 			{/snippet}
 		</form.Field>
 
-		<form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
-			{#snippet children(state)}
+		<form.Subscribe selector={(state: typeof form.state): SubmitState => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+			{#snippet children(state: SubmitState)}
 				<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>
 					{state.isSubmitting ? 'Submitting...' : 'Sign Up'}
 				</button>
@@ -27953,16 +27959,33 @@ body {
   @apply bg-neutral-950 text-neutral-100;
 }
 `],
-  ["frontend/svelte/src/app.d.ts", `// See https://svelte.dev/docs/kit/types#app.d.ts
+  ["frontend/svelte/src/app.d.ts.hbs", `{{#if (eq webDeploy "cloudflare")}}
+/// <reference path="../../../packages/env/env.d.ts" />
+{{/if}}
+{{#if (and (eq backend "self") (eq api "orpc"))}}
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+
+{{/if}}
+// See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
-  namespace App {
-    // interface Error {}
-    // interface Locals {}
-    // interface PageData {}
-    // interface PageState {}
-    // interface Platform {}
-  }
+{{#if (and (eq backend "self") (eq api "orpc"))}}
+	var $client: AppRouterClient | undefined;
+
+{{/if}}
+	namespace App {
+		// interface Error {}
+		// interface Locals {}
+		// interface PageData {}
+		// interface PageState {}
+{{#if (eq webDeploy "cloudflare")}}
+		interface Platform {
+			env: Env;
+		}
+{{else}}
+		// interface Platform {}
+{{/if}}
+	}
 }
 
 export {};
@@ -27985,32 +28008,22 @@ export {};
     {{#if (eq auth "better-auth")}}
 	import UserMenu from './UserMenu.svelte';
     {{/if}}
-    const links = [
-        { to: "/", label: "Home" },
-        {{#if (eq auth "better-auth")}}
-        { to: "/dashboard", label: "Dashboard" },
-        {{/if}}
-        {{#if (includes examples "todo")}}
-        { to: "/todos", label: "Todos" },
-        {{/if}}
-        {{#if (includes examples "ai")}}
-        { to: "/ai", label: "AI Chat" },
-        {{/if}}
-    ];
 
 </script>
 
 <div>
 	<div class="flex flex-row items-center justify-between px-4 py-2 md:px-6">
 		<nav class="flex gap-4 text-lg">
-			{#each links as link (link.to)}
-				<a
-					href={link.to}
-					class="hover:text-neutral-400 transition-colors"
-				>
-					{link.label}
-				</a>
-			{/each}
+			<a href="/" class="hover:text-neutral-400 transition-colors">Home</a>
+		    {{#if (eq auth "better-auth")}}
+			<a href="/dashboard" class="hover:text-neutral-400 transition-colors">Dashboard</a>
+		    {{/if}}
+		    {{#if (includes examples "todo")}}
+			<a href="/todos" class="hover:text-neutral-400 transition-colors">Todos</a>
+		    {{/if}}
+		    {{#if (includes examples "ai")}}
+			<a href="/ai" class="hover:text-neutral-400 transition-colors">AI Chat</a>
+		    {{/if}}
 		</nav>
 		<div class="flex items-center gap-2">
 		    {{#if (eq auth "better-auth")}}
@@ -28302,6 +28315,10 @@ export { env } from "cloudflare:workers";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 function getNodeEnvValue(key: string) {
+	if (key === "DB") {
+		return undefined;
+	}
+
 	return process.env[key];
 }
 
@@ -28356,15 +28373,19 @@ export async function getEnvAsync() {
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 /// <reference path="../env.d.ts" />
-let cloudflareEnv: Env | undefined;
+import { AsyncLocalStorage } from "node:async_hooks";
 
-export function setCloudflareEnv(env: unknown) {
-	if (env) {
-		cloudflareEnv = env as Env;
-	}
+const cloudflareEnvStorage = new AsyncLocalStorage<Partial<Env>>();
+
+export function runWithCloudflareEnv<T>(cloudflareEnv: unknown, callback: () => T): T {
+	return cloudflareEnvStorage.run((cloudflareEnv ?? {}) as Partial<Env>, callback);
 }
 
 function getNodeEnvValue(key: string) {
+	if (key === "DB") {
+		return undefined;
+	}
+
 	if (typeof process !== "undefined" && process.env[key] !== undefined) {
 		return process.env[key];
 	}
@@ -28387,17 +28408,23 @@ function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefi
 }
 
 function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
+	const cloudflareEnv = cloudflareEnvStorage.getStore();
+	const cloudflareValue = cloudflareEnv?.[key as keyof Env];
+	if (cloudflareValue !== undefined) {
+		return cloudflareValue;
+	}
+
 	const nodeValue = getNodeEnvValue(key);
 	if (nodeValue !== undefined) {
 		return nodeValue as EnvValue;
 	}
 
-	return cloudflareEnv?.[key as keyof Env];
+	return undefined;
 }
 
-// SvelteKit passes Cloudflare bindings through event.platform.env. Apps set
-// that value at request boundaries so this shared package stays usable from
-// workspace scripts that do not understand SvelteKit-only imports.
+// SvelteKit passes Cloudflare bindings through event.platform.env. The app
+// wraps request handlers with runWithCloudflareEnv so shared packages can read
+// the current request bindings without importing SvelteKit-only modules.
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference path="../env.d.ts" />

@@ -1,19 +1,19 @@
 import { getRequestEvent } from "$app/server";
-import { createORPCClient } from "@orpc/client";
-import { RPCLink } from "@orpc/client/fetch";
-import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter, type AppRouterClient } from "@{{projectName}}/api/routers/index";
+import { createRouterClient } from "@orpc/server";
 
-declare global {
-	var $client: AppRouterClient | undefined;
+if (typeof window !== "undefined") {
+	throw new Error("This file should only be imported on the server.");
 }
 
-const link = new RPCLink({
-	url: async () => `${getRequestEvent().url.origin}/rpc`,
-	async fetch(request, init) {
-		return getRequestEvent().fetch(request, init);
+const serverClient: AppRouterClient = createRouterClient(appRouter, {
+	context: async () => {
+		const event = getRequestEvent();
+		return createContext({ headers: event.request.headers });
 	},
 });
 
-const serverClient: AppRouterClient = createORPCClient(link);
-
+// oRPC's SvelteKit SSR setup loads this from hooks.server.ts so $lib/orpc can
+// reuse the in-process server client during SSR and fall back to HTTP in the browser.
 globalThis.$client = serverClient;

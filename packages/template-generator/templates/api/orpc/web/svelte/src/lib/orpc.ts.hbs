@@ -7,12 +7,6 @@ import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/svelte-query";
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 
-{{#if (eq backend "self")}}
-declare global {
-	var $client: AppRouterClient | undefined;
-}
-{{/if}}
-
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
 		onError: (error) => {
