@@ -5,6 +5,17 @@ import { confirm, select, text } from "@clack/prompts";
 import { $ } from "bun";
 
 const CLI_PACKAGE_JSON_PATH = join(process.cwd(), "apps/cli/package.json");
+const TYPES_PACKAGE_JSON_PATH = join(process.cwd(), "packages/types/package.json");
+const TEMPLATE_GEN_PACKAGE_JSON_PATH = join(
+  process.cwd(),
+  "packages/template-generator/package.json",
+);
+
+async function setVersion(path: string, version: string): Promise<void> {
+  const pkg = JSON.parse(await readFile(path, "utf-8"));
+  pkg.version = version;
+  await writeFile(path, `${JSON.stringify(pkg, null, 2)}\n`);
+}
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -91,13 +102,15 @@ async function main(): Promise<void> {
   // Create and checkout the release branch
   await $`git checkout -b ${branchName}`;
 
-  // Update package version
+  // Update package versions across publishables
   packageJson.version = newVersion;
   await writeFile(CLI_PACKAGE_JSON_PATH, `${JSON.stringify(packageJson, null, 2)}\n`);
+  await setVersion(TYPES_PACKAGE_JSON_PATH, newVersion);
+  await setVersion(TEMPLATE_GEN_PACKAGE_JSON_PATH, newVersion);
 
   await $`bun install`;
   await $`bun run build:cli`;
-  await $`git add apps/cli/package.json bun.lock`;
+  await $`git add apps/cli/package.json packages/types/package.json packages/template-generator/package.json bun.lock`;
   await $`git commit -m "chore(release): ${newVersion}"`;
 
   // Push the release branch

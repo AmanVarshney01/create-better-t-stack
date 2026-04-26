@@ -1,6 +1,6 @@
 {
   "name": "@create-js-stack/template-generator",
-  "version": "1.0.0",
+  "version": "1.2.6",
   "description": "Virtual file system generator for Create-JS-Stack templates - works in browsers and Node.js",
   "keywords": [
     "cli",
@@ -48,7 +48,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@create-js-stack/types": "^1.0.0",
+    "@create-js-stack/types": "workspace:*",
     "better-result": "^2.8.2",
     "handlebars": "^4.7.9",
     "memfs": "^4.57.2",

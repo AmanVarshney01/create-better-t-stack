@@ -143,9 +143,9 @@
     },
     "packages/template-generator": {
       "name": "@create-js-stack/template-generator",
-      "version": "1.0.0",
+      "version": "1.2.6",
       "dependencies": {
-        "@create-js-stack/types": "^1.0.0",
+        "@create-js-stack/types": "workspace:*",
         "better-result": "^2.8.2",
         "handlebars": "^4.7.9",
         "memfs": "^4.57.2",
@@ -165,7 +165,7 @@
     },
     "packages/types": {
       "name": "@create-js-stack/types",
-      "version": "1.0.0",
+      "version": "1.2.6",
       "dependencies": {
         "zod": "^4.3.6",
       },

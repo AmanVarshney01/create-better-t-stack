@@ -1,6 +1,6 @@
 {
   "name": "@create-js-stack/types",
-  "version": "1.0.0",
+  "version": "1.2.6",
   "description": "TypeScript types and schemas for create-js-stack CLI",
   "keywords": [
     "cli",

@@ -86,20 +86,64 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Set CLI version
+      - name: Set workspace package versions
         if: steps.check-version.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          cd apps/cli
-          jq --arg v "$VERSION" '.version = $v' package.json > tmp.json && mv tmp.json package.json
+          for pkg in apps/cli packages/types packages/template-generator; do
+            jq --arg v "$VERSION" '.version = $v' $pkg/package.json > $pkg/tmp.json && mv $pkg/tmp.json $pkg/package.json
+          done
+
+      - name: Resolve workspace deps in template-generator
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cd packages/template-generator
+          jq --arg v "$VERSION" '.dependencies["@create-js-stack/types"] = ("^" + $v)' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build types package
         if: steps.check-version.outputs.exists == 'false'
         run: cd packages/types && bun run build
 
+      - name: Check if @create-js-stack/types version exists
+        id: check-types
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if npm view @create-js-stack/types@$VERSION version 2>/dev/null; then
+            echo "Version $VERSION of @create-js-stack/types already exists on NPM"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish @create-js-stack/types to NPM
+        if: steps.check-version.outputs.exists == 'false' && steps.check-types.outputs.exists == 'false'
+        run: cd packages/types && npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Build template-generator (also generates templates-binary)
         if: steps.check-version.outputs.exists == 'false'
         run: cd packages/template-generator && bun run build
+
+      - name: Check if @create-js-stack/template-generator version exists
+        id: check-tg
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if npm view @create-js-stack/template-generator@$VERSION version 2>/dev/null; then
+            echo "Version $VERSION of @create-js-stack/template-generator already exists on NPM"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish @create-js-stack/template-generator to NPM
+        if: steps.check-version.outputs.exists == 'false' && steps.check-tg.outputs.exists == 'false'
+        run: cd packages/template-generator && npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Build CLI
         if: steps.check-version.outputs.exists == 'false'
@@ -181,6 +225,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Published Packages" >> $GITHUB_STEP_SUMMARY
           echo "- [create-js-stack@$VERSION](https://www.npmjs.com/package/create-js-stack/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [@create-js-stack/types@$VERSION](https://www.npmjs.com/package/@create-js-stack/types/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [@create-js-stack/template-generator@$VERSION](https://www.npmjs.com/package/@create-js-stack/template-generator/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### GitHub Release" >> $GITHUB_STEP_SUMMARY
           echo "[v$VERSION](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY
