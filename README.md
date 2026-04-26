@@ -2,8 +2,6 @@
 
 A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations
 
-![demo](https://github.com/user-attachments/assets/12fd4d67-8494-462a-8124-76670798308a)
-
 ## Philosophy
 
 - Roll your own stack: you pick only the parts you need, nothing extra.
