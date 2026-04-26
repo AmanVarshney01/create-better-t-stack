@@ -102,7 +102,7 @@ const selfAlchemyScenarios = [
     envNeedle: 'export { env } from "cloudflare:workers";',
   },
   { frontend: "nuxt", api: "orpc", envNeedle: 'export { env } from "cloudflare:workers";' },
-  { frontend: "svelte", api: "orpc", envNeedle: "export function runWithCloudflareEnv" },
+  { frontend: "svelte", api: "orpc", envNeedle: "export function getCloudflareEnv" },
   { frontend: "astro", api: "orpc", envNeedle: 'export { env } from "cloudflare:workers";' },
 ] as const;
 

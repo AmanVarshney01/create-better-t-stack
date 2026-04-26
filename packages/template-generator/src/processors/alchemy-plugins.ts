@@ -163,6 +163,9 @@ function processSvelteAlchemy(vfs: VirtualFileSystem) {
   const sourceFile = project.createSourceFile("svelte.config.js", content);
 
   const importDeclarations = sourceFile.getImportDeclarations();
+  const alchemyImport = importDeclarations.find(
+    (imp) => imp.getModuleSpecifierValue() === "alchemy/cloudflare/sveltekit",
+  );
   const adapterImport = importDeclarations.find((imp) =>
     imp.getModuleSpecifierValue().includes("@sveltejs/adapter"),
   );
@@ -171,7 +174,7 @@ function processSvelteAlchemy(vfs: VirtualFileSystem) {
     adapterImport.setModuleSpecifier("alchemy/cloudflare/sveltekit");
     adapterImport.removeDefaultImport();
     adapterImport.setDefaultImport("alchemy");
-  } else {
+  } else if (!alchemyImport) {
     sourceFile.insertImportDeclaration(0, {
       moduleSpecifier: "alchemy/cloudflare/sveltekit",
       defaultImport: "alchemy",

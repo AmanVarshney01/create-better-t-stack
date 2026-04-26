@@ -5,15 +5,15 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export function createPrismaClient() {
-	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
+export function createPrismaClient(runtimeEnv: typeof env = env) {
+	const adapter = new PrismaPlanetScale({ url: runtimeEnv.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export function createPrismaClient() {
-	const databaseUrl: string = env.DATABASE_URL;
+export function createPrismaClient(runtimeEnv: typeof env = env) {
+	const databaseUrl: string = runtimeEnv.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
 		host: url.hostname,
@@ -34,15 +34,15 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export function createPrismaClient() {
-	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
+export function createPrismaClient(runtimeEnv: typeof env = env) {
+	const adapter = new PrismaPlanetScale({ url: runtimeEnv.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export function createPrismaClient() {
-	const databaseUrl: string = env.DATABASE_URL;
+export function createPrismaClient(runtimeEnv: typeof env = env) {
+	const databaseUrl: string = runtimeEnv.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
 		host: url.hostname,

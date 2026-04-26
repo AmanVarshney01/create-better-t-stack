@@ -1,7 +1,9 @@
 import { Polar } from "@polar-sh/sdk";
 import { env } from "@{{projectName}}/env/server";
 
-export const polarClient = new Polar({
-	accessToken: env.POLAR_ACCESS_TOKEN,
-	server: "sandbox",
-});
+export function createPolarClient(runtimeEnv: typeof env = env) {
+	return new Polar({
+		accessToken: runtimeEnv.POLAR_ACCESS_TOKEN,
+		server: "sandbox",
+	});
+}

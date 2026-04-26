@@ -4,12 +4,12 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-import { polarClient } from "./lib/payments";
+import { createPolarClient } from "./lib/payments";
 {{/if}}
 import { createPrismaClient } from "@{{projectName}}/db";
 
-export function createAuth() {
-	const prisma = createPrismaClient();
+export function createAuth(runtimeEnv: typeof env = env) {
+	const prisma = createPrismaClient(runtimeEnv);
 
 	return betterAuth({
 		database: prismaAdapter(prisma, {
@@ -20,10 +20,10 @@ export function createAuth() {
 		}),
 
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			runtimeEnv.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
+			...(runtimeEnv.NODE_ENV === "development"
 				? [
 					"exp://",
 					"exp://**",
@@ -36,8 +36,8 @@ export function createAuth() {
 		emailAndPassword: {
 			enabled: true,
 		},
-		secret: env.BETTER_AUTH_SECRET,
-		baseURL: env.BETTER_AUTH_URL,
+		secret: runtimeEnv.BETTER_AUTH_SECRET,
+		baseURL: runtimeEnv.BETTER_AUTH_URL,
 {{#if (ne backend "self")}}
 		advanced: {
 			defaultCookieAttributes: {
@@ -50,7 +50,7 @@ export function createAuth() {
 		plugins: [
 {{#if (eq payments "polar")}}
 			polar({
-				client: polarClient,
+				client: createPolarClient(runtimeEnv),
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -61,7 +61,7 @@ export function createAuth() {
 								slug: "pro",
 							},
 						],
-						successUrl: env.POLAR_SUCCESS_URL,
+						successUrl: runtimeEnv.POLAR_SUCCESS_URL,
 						authenticatedUsersOnly: true,
 					}),
 					portal(),
@@ -84,14 +84,14 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-import { polarClient } from "./lib/payments";
+import { createPolarClient } from "./lib/payments";
 {{/if}}
 import { createDb } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
 
-export function createAuth() {
-	const db = createDb();
+export function createAuth(runtimeEnv: typeof env = env) {
+	const db = createDb(runtimeEnv);
 
 	return betterAuth({
 		database: drizzleAdapter(db, {
@@ -101,10 +101,10 @@ export function createAuth() {
 			schema: schema,
 		}),
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			runtimeEnv.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
+			...(runtimeEnv.NODE_ENV === "development"
 				? [
 					"exp://",
 					"exp://**",
@@ -117,8 +117,8 @@ export function createAuth() {
 		emailAndPassword: {
 			enabled: true,
 		},
-		secret: env.BETTER_AUTH_SECRET,
-		baseURL: env.BETTER_AUTH_URL,
+		secret: runtimeEnv.BETTER_AUTH_SECRET,
+		baseURL: runtimeEnv.BETTER_AUTH_URL,
 {{#if (ne backend "self")}}
 		advanced: {
 			defaultCookieAttributes: {
@@ -131,7 +131,7 @@ export function createAuth() {
 		plugins: [
 {{#if (eq payments "polar")}}
 			polar({
-				client: polarClient,
+				client: createPolarClient(runtimeEnv),
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -142,7 +142,7 @@ export function createAuth() {
 								slug: "pro",
 							},
 						],
-						successUrl: env.POLAR_SUCCESS_URL,
+						successUrl: runtimeEnv.POLAR_SUCCESS_URL,
 						authenticatedUsersOnly: true,
 					}),
 					portal(),
@@ -164,14 +164,14 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-import { polarClient } from "./lib/payments";
+import { createPolarClient } from "./lib/payments";
 {{/if}}
 import { createDb } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
 
-export function createAuth() {
-	const db = createDb();
+export function createAuth(runtimeEnv: typeof env = env) {
+	const db = createDb(runtimeEnv);
 
 	return betterAuth({
 		database: drizzleAdapter(db, {
@@ -181,10 +181,10 @@ export function createAuth() {
 			schema: schema,
 		}),
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			runtimeEnv.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
+			...(runtimeEnv.NODE_ENV === "development"
 				? [
 					"exp://",
 					"exp://**",
@@ -204,8 +204,8 @@ export function createAuth() {
 		//     maxAge: 60,
 		//   },
 		// },
-		secret: env.BETTER_AUTH_SECRET,
-		baseURL: env.BETTER_AUTH_URL,
+		secret: runtimeEnv.BETTER_AUTH_SECRET,
+		baseURL: runtimeEnv.BETTER_AUTH_URL,
 		advanced: {
 			defaultCookieAttributes: {
 				sameSite: "none",
@@ -222,7 +222,7 @@ export function createAuth() {
 {{#if (eq payments "polar")}}
 		plugins: [
 			polar({
-				client: polarClient,
+				client: createPolarClient(runtimeEnv),
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -233,7 +233,7 @@ export function createAuth() {
 								slug: "pro",
 							},
 						],
-						successUrl: env.POLAR_SUCCESS_URL,
+						successUrl: runtimeEnv.POLAR_SUCCESS_URL,
 						authenticatedUsersOnly: true,
 					}),
 					portal(),
@@ -252,18 +252,18 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-import { polarClient } from "./lib/payments";
+import { createPolarClient } from "./lib/payments";
 {{/if}}
 import { client } from "@{{projectName}}/db";
 
-export function createAuth() {
+export function createAuth(runtimeEnv: typeof env = env) {
 	return betterAuth({
 		database: mongodbAdapter(client),
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			runtimeEnv.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
+			...(runtimeEnv.NODE_ENV === "development"
 				? [
 					"exp://",
 					"exp://**",
@@ -276,8 +276,8 @@ export function createAuth() {
 		emailAndPassword: {
 			enabled: true,
 		},
-		secret: env.BETTER_AUTH_SECRET,
-		baseURL: env.BETTER_AUTH_URL,
+		secret: runtimeEnv.BETTER_AUTH_SECRET,
+		baseURL: runtimeEnv.BETTER_AUTH_URL,
 {{#if (ne backend "self")}}
 		advanced: {
 			defaultCookieAttributes: {
@@ -290,7 +290,7 @@ export function createAuth() {
 {{#if (eq payments "polar")}}
 		plugins: [
 			polar({
-				client: polarClient,
+				client: createPolarClient(runtimeEnv),
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -301,7 +301,7 @@ export function createAuth() {
 								slug: "pro",
 							},
 						],
-						successUrl: env.POLAR_SUCCESS_URL,
+						successUrl: runtimeEnv.POLAR_SUCCESS_URL,
 						authenticatedUsersOnly: true,
 					}),
 					portal(),
@@ -322,18 +322,18 @@ import { betterAuth } from "better-auth";
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-import { polarClient } from "./lib/payments";
+import { createPolarClient } from "./lib/payments";
 {{/if}}
 
 
-export function createAuth() {
+export function createAuth(runtimeEnv: typeof env = env) {
 	return betterAuth({
 		database: "", // Invalid configuration
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			runtimeEnv.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
+			...(runtimeEnv.NODE_ENV === "development"
 				? [
 					"exp://",
 					"exp://**",
@@ -346,8 +346,8 @@ export function createAuth() {
 		emailAndPassword: {
 			enabled: true,
 		},
-		secret: env.BETTER_AUTH_SECRET,
-		baseURL: env.BETTER_AUTH_URL,
+		secret: runtimeEnv.BETTER_AUTH_SECRET,
+		baseURL: runtimeEnv.BETTER_AUTH_URL,
 {{#if (ne backend "self")}}
 		advanced: {
 			defaultCookieAttributes: {
@@ -360,7 +360,7 @@ export function createAuth() {
 {{#if (eq payments "polar")}}
 		plugins: [
 			polar({
-				client: polarClient,
+				client: createPolarClient(runtimeEnv),
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -371,7 +371,7 @@ export function createAuth() {
 								slug: "pro",
 							},
 						],
-						successUrl: env.POLAR_SUCCESS_URL,
+						successUrl: runtimeEnv.POLAR_SUCCESS_URL,
 						authenticatedUsersOnly: true,
 					}),
 					portal(),

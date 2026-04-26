@@ -1,5 +1,8 @@
 import { getRequestEvent } from "$app/server";
 import { createContext } from "@{{projectName}}/api/context";
+{{#if (eq webDeploy "cloudflare")}}
+import { getCloudflareEnv } from "@{{projectName}}/env/server";
+{{/if}}
 import { appRouter, type AppRouterClient } from "@{{projectName}}/api/routers/index";
 import { createRouterClient } from "@orpc/server";
 
@@ -10,7 +13,12 @@ if (typeof window !== "undefined") {
 const serverClient: AppRouterClient = createRouterClient(appRouter, {
 	context: async () => {
 		const event = getRequestEvent();
-		return createContext({ headers: event.request.headers });
+		return createContext({
+			headers: event.request.headers,
+{{#if (eq webDeploy "cloudflare")}}
+			env: getCloudflareEnv(event.platform),
+{{/if}}
+		});
 	},
 });
 

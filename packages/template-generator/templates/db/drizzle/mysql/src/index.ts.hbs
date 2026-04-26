@@ -5,12 +5,12 @@ import * as schema from "./schema";
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 
-export function createDb() {
+export function createDb(runtimeEnv: typeof env = env) {
 	return drizzle({
 		connection: {
-			host: env.DATABASE_HOST,
-			username: env.DATABASE_USERNAME,
-			password: env.DATABASE_PASSWORD,
+			host: runtimeEnv.DATABASE_HOST,
+			username: runtimeEnv.DATABASE_USERNAME,
+			password: runtimeEnv.DATABASE_PASSWORD,
 		},
 		schema,
 	});
@@ -18,10 +18,10 @@ export function createDb() {
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 
-export function createDb() {
+export function createDb(runtimeEnv: typeof env = env) {
 	return drizzle({
 		connection: {
-			uri: env.DATABASE_URL,
+			uri: runtimeEnv.DATABASE_URL,
 		},
 		schema,
 	});
@@ -40,12 +40,12 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 import { env } from "@{{projectName}}/env/server";
 
-export function createDb() {
+export function createDb(runtimeEnv: typeof env = env) {
 	return drizzle({
 		connection: {
-			host: env.DATABASE_HOST,
-			username: env.DATABASE_USERNAME,
-			password: env.DATABASE_PASSWORD,
+			host: runtimeEnv.DATABASE_HOST,
+			username: runtimeEnv.DATABASE_USERNAME,
+			password: runtimeEnv.DATABASE_PASSWORD,
 		},
 		schema,
 	});
@@ -54,10 +54,10 @@ export function createDb() {
 import { drizzle } from "drizzle-orm/mysql2";
 import { env } from "@{{projectName}}/env/server";
 
-export function createDb() {
+export function createDb(runtimeEnv: typeof env = env) {
 	return drizzle({
 		connection: {
-			uri: env.DATABASE_URL,
+			uri: runtimeEnv.DATABASE_URL,
 		},
 		schema,
 	});

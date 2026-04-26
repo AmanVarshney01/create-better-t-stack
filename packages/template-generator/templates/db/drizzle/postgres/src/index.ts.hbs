@@ -6,8 +6,8 @@ import * as schema from "./schema";
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 
-export function createDb() {
-	const sql = neon(env.DATABASE_URL);
+export function createDb(runtimeEnv: typeof env = env) {
+	const sql = neon(runtimeEnv.DATABASE_URL);
 	return drizzle(sql, { schema });
 }
 {{else}}
@@ -16,16 +16,16 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 {{/if}}
 
-export function createDb() {
+export function createDb(runtimeEnv: typeof env = env) {
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 	const pool = new Pool({
-		connectionString: env.DATABASE_URL,
+		connectionString: runtimeEnv.DATABASE_URL,
 		maxUses: 1,
 	});
 
 	return drizzle({ client: pool, schema });
 {{else}}
-	return drizzle(env.DATABASE_URL, { schema });
+	return drizzle(runtimeEnv.DATABASE_URL, { schema });
 {{/if}}
 }
 {{/if}}
@@ -43,8 +43,8 @@ import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { env } from "@{{projectName}}/env/server";
 
-export function createDb() {
-	const sql = neon(env.DATABASE_URL || "");
+export function createDb(runtimeEnv: typeof env = env) {
+	const sql = neon(runtimeEnv.DATABASE_URL || "");
 	return drizzle(sql, { schema });
 }
 {{else}}
@@ -52,9 +52,9 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { env } from "@{{projectName}}/env/server";
 import { Pool } from "pg";
 
-export function createDb() {
+export function createDb(runtimeEnv: typeof env = env) {
 	const pool = new Pool({
-		connectionString: env.DATABASE_URL || "",
+		connectionString: runtimeEnv.DATABASE_URL || "",
 		maxUses: 1,
 	});
 

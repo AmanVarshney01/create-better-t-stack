@@ -1,7 +1,7 @@
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 {{#if (eq webDeploy "cloudflare")}}
-import { runWithCloudflareEnv } from "@{{projectName}}/env/server";
+import { getCloudflareEnv } from "@{{projectName}}/env/server";
 {{/if}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -32,28 +32,26 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 });
 
 const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
+	const context = await createContext({
+		headers: request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-	return runWithCloudflareEnv(platform?.env, async () => {
-
+		env: getCloudflareEnv(platform),
 {{/if}}
-		const context = await createContext({ headers: request.headers });
-
-		const rpcResult = await rpcHandler.handle(request, {
-			prefix: "/rpc",
-			context,
-		});
-		if (rpcResult.response) return rpcResult.response;
-
-		const apiResult = await apiHandler.handle(request, {
-			prefix: "/rpc/api-reference",
-			context,
-		});
-		if (apiResult.response) return apiResult.response;
-
-		return new Response("Not found", { status: 404 });
-{{#if (eq webDeploy "cloudflare")}}
 	});
-{{/if}}
+
+	const rpcResult = await rpcHandler.handle(request, {
+		prefix: "/rpc",
+		context,
+	});
+	if (rpcResult.response) return rpcResult.response;
+
+	const apiResult = await apiHandler.handle(request, {
+		prefix: "/rpc/api-reference",
+		context,
+	});
+	if (apiResult.response) return apiResult.response;
+
+	return new Response("Not found", { status: 404 });
 };
 
 export const HEAD = handle;

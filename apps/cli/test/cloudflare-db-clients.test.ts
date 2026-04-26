@@ -41,9 +41,9 @@ describe("Cloudflare DB client generation", () => {
     const contextFile = files.get("packages/api/src/context.ts");
     const todoRouterFile = files.get("packages/api/src/routers/todo.ts");
 
-    expect(dbFile).toContain("export function createDb()");
+    expect(dbFile).toContain("export function createDb(runtimeEnv: typeof env = env)");
     expect(dbFile).not.toContain("export const db = createDb();");
-    expect(authFile).toContain("export function createAuth()");
+    expect(authFile).toContain("export function createAuth(runtimeEnv: typeof env = env)");
     expect(authFile).not.toContain("export const auth = createAuth();");
     expect(envFile).toContain('export { env } from "cloudflare:workers";');
     expect(serverFile).toContain("createAuth().handler(c.req.raw)");
@@ -79,9 +79,9 @@ describe("Cloudflare DB client generation", () => {
     const dashboardFile = files.get("apps/web/src/app/dashboard/page.tsx");
     const contextFile = files.get("packages/api/src/context.ts");
 
-    expect(dbFile).toContain("export function createPrismaClient()");
+    expect(dbFile).toContain("export function createPrismaClient(runtimeEnv: typeof env = env)");
     expect(dbFile).not.toContain("export default prisma;");
-    expect(authFile).toContain("const prisma = createPrismaClient();");
+    expect(authFile).toContain("const prisma = createPrismaClient(runtimeEnv);");
     expect(authFile).not.toContain("export const auth = createAuth();");
     expect(envFile).toContain('import { getCloudflareContext } from "@opennextjs/cloudflare";');
     expect(envFile).toContain("type EnvValue = Env[keyof Env];");
@@ -143,8 +143,11 @@ describe("Cloudflare DB client generation", () => {
       frontend: "svelte",
       api: "orpc",
       routePath: "apps/web/src/hooks.server.ts",
-      routeNeedles: ["const authInstance = createAuth();", "auth: authInstance"],
-      envNeedle: "export function runWithCloudflareEnv",
+      routeNeedles: [
+        "const authInstance = createAuth(getCloudflareEnv(event.platform));",
+        "auth: authInstance",
+      ],
+      envNeedle: "export function getCloudflareEnv",
       envAbsentNeedle: 'export { env } from "cloudflare:workers";',
     },
   ] as const;
@@ -179,10 +182,10 @@ describe("Cloudflare DB client generation", () => {
       const todoRouterFile = files.get("packages/api/src/routers/todo.ts");
 
       expect(dbFile).toContain('import { drizzle } from "drizzle-orm/d1";');
-      expect(dbFile).toContain("return drizzle(env.DB, { schema });");
+      expect(dbFile).toContain("return drizzle(runtimeEnv.DB, { schema });");
       expect(dbFile).not.toContain('import { drizzle } from "drizzle-orm/libsql";');
       expect(dbFile).not.toContain("export const db = createDb();");
-      expect(authFile).toContain("export function createAuth()");
+      expect(authFile).toContain("export function createAuth(runtimeEnv: typeof env = env)");
       expect(authFile).not.toContain("export const auth = createAuth();");
       expect(envFile).toContain(scenario.envNeedle);
       if (scenario.envAbsentNeedle) {
@@ -191,8 +194,16 @@ describe("Cloudflare DB client generation", () => {
       for (const needle of scenario.routeNeedles) {
         expect(routeFile).toContain(needle);
       }
-      expect(contextFile).toContain("createAuth().api.getSession");
-      expect(todoRouterFile).toContain("const db = createDb();");
+      expect(contextFile).toContain(
+        scenario.frontend === "svelte"
+          ? "createAuth(env).api.getSession"
+          : "createAuth().api.getSession",
+      );
+      expect(todoRouterFile).toContain(
+        scenario.frontend === "svelte"
+          ? "const db = createDb(context.env);"
+          : "const db = createDb();",
+      );
     });
   }
 
@@ -224,9 +235,9 @@ describe("Cloudflare DB client generation", () => {
     const contextFile = files.get("packages/api/src/context.ts");
 
     expect(dbFile).toContain('import { PrismaD1 } from "@prisma/adapter-d1";');
-    expect(dbFile).toContain("const adapter = new PrismaD1(env.DB);");
+    expect(dbFile).toContain("const adapter = new PrismaD1(runtimeEnv.DB);");
     expect(dbFile).not.toContain("export default prisma;");
-    expect(authFile).toContain("const prisma = createPrismaClient();");
+    expect(authFile).toContain("const prisma = createPrismaClient(runtimeEnv);");
     expect(authFile).not.toContain("export const auth = createAuth();");
     expect(envFile).toContain('import { getCloudflareContext } from "@opennextjs/cloudflare";');
     expect(envFile).toContain("type EnvValue = Env[keyof Env];");
@@ -285,7 +296,7 @@ describe("Cloudflare DB client generation", () => {
     const authFile = files.get("packages/auth/src/index.ts");
     const routeFile = files.get("apps/web/src/app/api/auth/[...all]/route.ts");
 
-    expect(authFile).toContain("export function createAuth()");
+    expect(authFile).toContain("export function createAuth(runtimeEnv: typeof env = env)");
     expect(authFile).not.toContain("export const auth = createAuth();");
     expect(routeFile).toContain("toNextJsHandler(createAuth()).GET(request)");
   });

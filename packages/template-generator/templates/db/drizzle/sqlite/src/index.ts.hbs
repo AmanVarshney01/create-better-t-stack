@@ -3,8 +3,8 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/d1";
 import { env } from "@{{projectName}}/env/server";
 
-export function createDb() {
-	return drizzle(env.DB, { schema });
+export function createDb(runtimeEnv: typeof env = env) {
+	return drizzle(runtimeEnv.DB, { schema });
 }
 {{else if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 import { env } from "@{{projectName}}/env/server";
@@ -12,11 +12,11 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
-export function createDb() {
+export function createDb(runtimeEnv: typeof env = env) {
 	const client = createClient({
-		url: env.DATABASE_URL,
+		url: runtimeEnv.DATABASE_URL,
 {{#if (eq dbSetup "turso")}}
-		authToken: env.DATABASE_AUTH_TOKEN,
+		authToken: runtimeEnv.DATABASE_AUTH_TOKEN,
 {{/if}}
 	});
 
@@ -32,11 +32,11 @@ import { drizzle } from "drizzle-orm/libsql";
 import { env } from "@{{projectName}}/env/server";
 import { createClient } from "@libsql/client";
 
-export function createDb() {
+export function createDb(runtimeEnv: typeof env = env) {
 	const client = createClient({
-		url: env.DATABASE_URL || "",
+		url: runtimeEnv.DATABASE_URL || "",
 {{#if (eq dbSetup "turso")}}
-		authToken: env.DATABASE_AUTH_TOKEN,
+		authToken: runtimeEnv.DATABASE_AUTH_TOKEN,
 {{/if}}
 	});
 

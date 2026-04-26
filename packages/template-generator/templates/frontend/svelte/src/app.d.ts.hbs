@@ -20,6 +20,9 @@ declare global {
 {{#if (eq webDeploy "cloudflare")}}
 		interface Platform {
 			env: Env;
+			ctx: ExecutionContext;
+			caches: CacheStorage;
+			cf: IncomingRequestCfProperties;
 		}
 {{else}}
 		// interface Platform {}

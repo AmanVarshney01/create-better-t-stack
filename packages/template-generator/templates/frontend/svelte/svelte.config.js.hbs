@@ -1,5 +1,5 @@
 {{#if (eq webDeploy "cloudflare")}}
-import adapter from '@sveltejs/adapter-cloudflare';
+import alchemy from 'alchemy/cloudflare/sveltekit';
 {{else}}
 import adapter from '@sveltejs/adapter-auto';
 {{/if}}
@@ -12,10 +12,15 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
+{{#if (eq webDeploy "cloudflare")}}
+		// Alchemy's adapter wraps SvelteKit's Cloudflare adapter for local platform.env and Worker builds.
+		adapter: alchemy()
+{{else}}
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
 		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
 		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
 		adapter: adapter()
+{{/if}}
 	}
 };
 

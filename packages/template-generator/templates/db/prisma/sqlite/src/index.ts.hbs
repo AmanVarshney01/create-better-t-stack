@@ -4,8 +4,8 @@ import { PrismaClient } from "../prisma/generated/client";
 import { PrismaD1 } from "@prisma/adapter-d1";
 import { env } from "@{{projectName}}/env/server";
 
-export function createPrismaClient() {
-	const adapter = new PrismaD1(env.DB);
+export function createPrismaClient(runtimeEnv: typeof env = env) {
+	const adapter = new PrismaD1(runtimeEnv.DB);
 	return new PrismaClient({ adapter });
 }
 
@@ -17,11 +17,11 @@ export default prisma;
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { env } from "@{{projectName}}/env/server";
 
-export function createPrismaClient() {
+export function createPrismaClient(runtimeEnv: typeof env = env) {
 	const adapter = new PrismaLibSql({
-		url: env.DATABASE_URL,
+		url: runtimeEnv.DATABASE_URL,
 {{#if (eq dbSetup "turso")}}
-		authToken: env.DATABASE_AUTH_TOKEN || "",
+		authToken: runtimeEnv.DATABASE_AUTH_TOKEN || "",
 {{/if}}
 	});
 

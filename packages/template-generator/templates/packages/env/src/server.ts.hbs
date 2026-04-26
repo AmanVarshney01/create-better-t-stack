@@ -66,13 +66,6 @@ export async function getEnvAsync() {
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 /// <reference path="../env.d.ts" />
-import { AsyncLocalStorage } from "node:async_hooks";
-
-const cloudflareEnvStorage = new AsyncLocalStorage<Partial<Env>>();
-
-export function runWithCloudflareEnv<T>(cloudflareEnv: unknown, callback: () => T): T {
-	return cloudflareEnvStorage.run((cloudflareEnv ?? {}) as Partial<Env>, callback);
-}
 
 function getNodeEnvValue(key: string) {
 	if (key === "DB") {
@@ -101,12 +94,6 @@ function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefi
 }
 
 function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
-	const cloudflareEnv = cloudflareEnvStorage.getStore();
-	const cloudflareValue = cloudflareEnv?.[key as keyof Env];
-	if (cloudflareValue !== undefined) {
-		return cloudflareValue;
-	}
-
 	const nodeValue = getNodeEnvValue(key);
 	if (nodeValue !== undefined) {
 		return nodeValue as EnvValue;
@@ -115,10 +102,13 @@ function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
 	return undefined;
 }
 
-// SvelteKit passes Cloudflare bindings through event.platform.env. The app
-// wraps request handlers with runWithCloudflareEnv so shared packages can read
-// the current request bindings without importing SvelteKit-only modules.
 export const env = createEnvProxy(resolveEnvValue);
+
+// SvelteKit's Cloudflare adapter exposes bindings on event.platform.env in
+// hooks and endpoints. Pass that through to server factories that need bindings.
+export function getCloudflareEnv(platform: Readonly<{ env?: Env }> | undefined): Env {
+	return platform?.env ?? env;
+}
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
