@@ -308,6 +308,9 @@ export default defineConfig({
 });
 `],
   ["api/orpc/fullstack/astro/src/pages/rpc/[...rest].ts.hbs", `import type { APIRoute } from "astro";
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/fetch";
 import { onError } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
@@ -321,17 +324,37 @@ const handler = new RPCHandler(appRouter, {
   ],
 });
 
+const apiHandler = new OpenAPIHandler(appRouter, {
+  plugins: [
+    new OpenAPIReferencePlugin({
+      schemaConverters: [new ZodToJsonSchemaConverter()],
+    }),
+  ],
+  interceptors: [
+    onError((error) => {
+      console.error(error);
+    }),
+  ],
+});
+
 export const prerender = false;
 
 export const ALL: APIRoute = async ({ request }) => {
   const context = await createContext({ headers: request.headers });
 
-  const { response } = await handler.handle(request, {
+  const rpcResult = await handler.handle(request, {
     prefix: "/rpc",
     context,
   });
+  if (rpcResult.response) return rpcResult.response;
 
-  return response ?? new Response("Not found", { status: 404 });
+  const apiResult = await apiHandler.handle(request, {
+    prefix: "/rpc/api-reference",
+    context,
+  });
+  if (apiResult.response) return apiResult.response;
+
+  return new Response("Not found", { status: 404 });
 };
 `],
   ["api/orpc/fullstack/next/src/app/api/rpc/[[...rest]]/route.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
@@ -489,6 +512,83 @@ export default defineEventHandler(async (event) => {
 });
 `],
   ["api/orpc/fullstack/nuxt/server/routes/rpc/index.ts.hbs", `export { default } from "./[...]";
+`],
+  ["api/orpc/fullstack/svelte/src/hooks.server.ts.hbs", `import "./lib/orpc.server";
+`],
+  ["api/orpc/fullstack/svelte/src/lib/orpc.server.ts.hbs", `import { getRequestEvent } from "$app/server";
+import { createORPCClient } from "@orpc/client";
+import { RPCLink } from "@orpc/client/fetch";
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+
+if (typeof window !== "undefined") {
+	throw new Error("This file should only be imported on the server.");
+}
+
+const link = new RPCLink({
+	url: async () => \`\${getRequestEvent().url.origin}/rpc\`,
+	async fetch(request, init) {
+		return getRequestEvent().fetch(request, init);
+	},
+});
+
+const serverClient: AppRouterClient = createORPCClient(link);
+
+globalThis.$client = serverClient;
+`],
+  ["api/orpc/fullstack/svelte/src/routes/rpc/[...rest]/+server.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { onError } from "@orpc/server";
+import { RPCHandler } from "@orpc/server/fetch";
+import type { RequestHandler } from "@sveltejs/kit";
+
+const rpcHandler = new RPCHandler(appRouter, {
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+const apiHandler = new OpenAPIHandler(appRouter, {
+	plugins: [
+		new OpenAPIReferencePlugin({
+			schemaConverters: [new ZodToJsonSchemaConverter()],
+		}),
+	],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+const handle: RequestHandler = async ({ request }) => {
+	const context = await createContext({ headers: request.headers });
+
+	const rpcResult = await rpcHandler.handle(request, {
+		prefix: "/rpc",
+		context,
+	});
+	if (rpcResult.response) return rpcResult.response;
+
+	const apiResult = await apiHandler.handle(request, {
+		prefix: "/rpc/api-reference",
+		context,
+	});
+	if (apiResult.response) return apiResult.response;
+
+	return new Response("Not found", { status: 404 });
+};
+
+export const HEAD = handle;
+export const GET = handle;
+export const POST = handle;
+export const PUT = handle;
+export const PATCH = handle;
+export const DELETE = handle;
 `],
   ["api/orpc/fullstack/tanstack-start/src/routes/api/rpc/$.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
@@ -759,6 +859,34 @@ export async function createContext({ req }: { req: Request }){{#if (eq auth "cl
 }
 
 {{else if (and (eq backend 'self') (includes frontend "nuxt"))}}
+{{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{/if}}
+
+export type CreateContextOptions = {
+	headers: Headers;
+};
+
+export async function createContext({ headers }: CreateContextOptions) {
+{{#if (eq auth "better-auth")}}
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
+	return {
+		auth: null,
+		session,
+	};
+{{else}}
+	return {
+		auth: null,
+		session: null,
+	};
+{{/if}}
+}
+
+{{else if (and (eq backend 'self') (includes frontend "svelte"))}}
 {{#if (eq auth "better-auth")}}
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 import { createAuth } from "@{{projectName}}/auth";
@@ -1354,12 +1482,20 @@ export const client: AppRouterClient = createORPCClient(link);
 
 export const orpc = createTanstackQueryUtils(client);
 `],
-  ["api/orpc/web/svelte/src/lib/orpc.ts.hbs", `import { PUBLIC_SERVER_URL } from "$env/static/public";
+  ["api/orpc/web/svelte/src/lib/orpc.ts.hbs", `{{#unless (eq backend "self")}}
+import { PUBLIC_SERVER_URL } from "$env/static/public";
+{{/unless}}
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/svelte-query";
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+
+{{#if (eq backend "self")}}
+declare global {
+	var $client: AppRouterClient | undefined;
+}
+{{/if}}
 
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
@@ -1370,7 +1506,17 @@ export const queryClient = new QueryClient({
 });
 
 export const link = new RPCLink({
+	{{#if (eq backend "self")}}
+	url: () => {
+		if (typeof window === "undefined") {
+			throw new Error("This link is not allowed on the server side.");
+		}
+
+		return \`\${window.location.origin}/rpc\`;
+	},
+	{{else}}
 	url: \`\${PUBLIC_SERVER_URL}/rpc\`,
+	{{/if}}
 	{{#if (eq auth "better-auth")}}
 	fetch(url, options) {
 		return fetch(url, {
@@ -1381,7 +1527,11 @@ export const link = new RPCLink({
 	{{/if}}
 });
 
+{{#if (eq backend "self")}}
+export const client: AppRouterClient = globalThis.$client ?? createORPCClient(link);
+{{else}}
 export const client: AppRouterClient = createORPCClient(link);
+{{/if}}
 
 export const orpc = createTanstackQueryUtils(client);
 `],
@@ -5110,6 +5260,33 @@ export default defineEventHandler((event) => {
 {{/if}}
   return auth.handler(toWebRequest(event));
 });
+`],
+  ["auth/better-auth/fullstack/svelte/src/hooks.server.ts.hbs", `{{#if (eq api "orpc")}}
+import "./lib/orpc.server";
+{{/if}}
+import { building } from "$app/environment";
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import { svelteKitHandler } from "better-auth/svelte-kit";
+import type { Handle } from "@sveltejs/kit";
+
+export const handle: Handle = async ({ event, resolve }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+	const authInstance = createAuth();
+{{else}}
+	const authInstance = auth;
+{{/if}}
+
+	return svelteKitHandler({
+		event,
+		resolve,
+		auth: authInstance,
+		building,
+	});
+};
 `],
   ["auth/better-auth/fullstack/tanstack-start/src/routes/api/auth/$.ts.hbs", `{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 import { createAuth } from '@{{projectName}}/auth'
@@ -11480,14 +11657,18 @@ function RouteComponent() {
 	{/if}
 </div>
 `],
-  ["auth/better-auth/web/svelte/src/lib/auth-client.ts.hbs", `import { PUBLIC_SERVER_URL } from "$env/static/public";
+  ["auth/better-auth/web/svelte/src/lib/auth-client.ts.hbs", `{{#unless (eq backend "self")}}
+import { PUBLIC_SERVER_URL } from "$env/static/public";
+{{/unless}}
 import { createAuthClient } from "better-auth/svelte";
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
 
 export const authClient = createAuthClient({
+{{#unless (eq backend "self")}}
 	baseURL: PUBLIC_SERVER_URL,
+{{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
 {{/if}}
@@ -14930,6 +15111,26 @@ export default defineEventHandler(async (event) => {
   return result.toUIMessageStreamResponse();
 });
 `],
+  ["examples/ai/fullstack/svelte/src/routes/api/ai/+server.ts.hbs", `import { devToolsMiddleware } from "@ai-sdk/devtools";
+import { google } from "@ai-sdk/google";
+import { convertToModelMessages, streamText, type UIMessage, wrapLanguageModel } from "ai";
+import type { RequestHandler } from "@sveltejs/kit";
+
+export const POST: RequestHandler = async ({ request }) => {
+	const { messages }: { messages: UIMessage[] } = await request.json();
+
+	const model = wrapLanguageModel({
+		model: google("gemini-2.5-flash"),
+		middleware: devToolsMiddleware(),
+	});
+	const result = streamText({
+		model,
+		messages: await convertToModelMessages(messages),
+	});
+
+	return result.toUIMessageStreamResponse();
+};
+`],
   ["examples/ai/fullstack/tanstack-start/src/routes/api/ai/$.ts.hbs", `import { createFileRoute } from "@tanstack/react-router";
 import { google } from "@ai-sdk/google";
 import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
@@ -17699,14 +17900,20 @@ function RouteComponent() {
 {{/if}}
 `],
   ["examples/ai/web/svelte/src/routes/ai/+page.svelte.hbs", `<script lang="ts">
+	{{#unless (eq backend "self")}}
 	import { PUBLIC_SERVER_URL } from "$env/static/public";
+	{{/unless}}
 	import { Chat } from "@ai-sdk/svelte";
 	import { DefaultChatTransport } from "ai";
 
 	let input = $state("");
 	const chat = new Chat({
 		transport: new DefaultChatTransport({
+			{{#if (eq backend "self")}}
+			api: "/api/ai",
+			{{else}}
 			api: \`\${PUBLIC_SERVER_URL}/ai\`,
+			{{/if}}
 		}),
 	});
 
@@ -27717,13 +27924,13 @@ vite.config.ts.timestamp-*
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.1",
-		"@sveltejs/kit": "^2.57.1",
+		"@sveltejs/kit": "^2.58.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
-		"@tailwindcss/vite": "^4.2.2",
-		"svelte": "^5.55.4",
+		"@tailwindcss/vite": "^4.2.4",
+		"svelte": "^5.55.5",
 		"svelte-check": "^4.4.6",
-		"tailwindcss": "^4.2.2",
-		"vite": "^8.0.8"
+		"tailwindcss": "^4.2.4",
+		"vite": "^8.0.10"
 	},
 	"dependencies": {}
 }
@@ -27954,7 +28161,11 @@ const TITLE_TEXT = \`
 {{/if}}
 `],
   ["frontend/svelte/static/favicon.png", `[Binary file]`],
-  ["frontend/svelte/svelte.config.js.hbs", `import adapter from '@sveltejs/adapter-auto';
+  ["frontend/svelte/svelte.config.js.hbs", `{{#if (eq webDeploy "cloudflare")}}
+import adapter from '@sveltejs/adapter-cloudflare';
+{{else}}
+import adapter from '@sveltejs/adapter-auto';
+{{/if}}
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -28069,7 +28280,7 @@ export const env = createEnv({
 	emptyStringAsUndefined: true,
 });
 `],
-  ["packages/env/src/server.ts.hbs", `{{#if (eq serverDeploy "cloudflare")}}
+  ["packages/env/src/server.ts.hbs", `{{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
@@ -28130,6 +28341,54 @@ export async function getEnvAsync() {
 	});
 }
 
+export const env = createEnvProxy(resolveEnvValue);
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+/// <reference path="../env.d.ts" />
+import { getRequestEvent } from "$app/server";
+import { env as dynamicEnv } from "$env/dynamic/private";
+
+function getNodeEnvValue(key: string) {
+	if (typeof process !== "undefined" && process.env[key] !== undefined) {
+		return process.env[key];
+	}
+
+	return dynamicEnv[key];
+}
+
+function getCloudflareEnvSync() {
+	try {
+		return getRequestEvent().platform?.env as Env | undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+type EnvValue = Env[keyof Env];
+
+function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefined) {
+	return new Proxy({} as Env, {
+		get(_target, prop) {
+			if (typeof prop !== "string") {
+				return undefined;
+			}
+
+			return getValue(prop as keyof Env & string);
+		},
+	});
+}
+
+function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
+	const nodeValue = getNodeEnvValue(key);
+	if (nodeValue !== undefined) {
+		return nodeValue as EnvValue;
+	}
+
+	return getCloudflareEnvSync()?.[key as keyof Env];
+}
+
+// SvelteKit exposes Cloudflare bindings through event.platform.env during
+// dev and deployed Workers. Keep a process/$env fallback for local scripts
+// and non-binding values.
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference path="../env.d.ts" />
@@ -28475,7 +28734,39 @@ export const web = await SvelteKit("web", {
     {{else if (ne backend "self")}}
     PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
     {{/if}}
-  }
+    {{#if (eq backend "self")}}
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    {{/if}}
+    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    {{/if}}
+    {{#if (and (includes examples "ai") (ne backend "convex"))}}
+    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
+    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
+    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    {{/if}}
+    {{/if}}
+    {{/if}}
+  },
+  dev: {
+    domain: "localhost:5173",
+  },
 });
 {{else if (includes frontend "tanstack-start")}}
 export const web = await TanStackStart("web", {
@@ -29611,4 +29902,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 462;
+export const TEMPLATE_COUNT = 467;

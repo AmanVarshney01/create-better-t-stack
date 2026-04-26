@@ -138,6 +138,15 @@ describe("Cloudflare DB client generation", () => {
       routeNeedles: ["const auth = createAuth();", "return auth.handler(ctx.request);"],
       envNeedle: 'export { env } from "cloudflare:workers";',
     },
+    {
+      name: "SvelteKit",
+      frontend: "svelte",
+      api: "orpc",
+      routePath: "apps/web/src/hooks.server.ts",
+      routeNeedles: ["const authInstance = createAuth();", "auth: authInstance"],
+      envNeedle: 'import { getRequestEvent } from "$app/server";',
+      envAbsentNeedle: 'export { env } from "cloudflare:workers";',
+    },
   ] as const;
 
   for (const scenario of selfCloudflareD1Scenarios) {

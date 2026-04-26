@@ -244,7 +244,7 @@ ${
     ? "\n## PWA Support with React Router v7\n\nThere is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809\n"
     : ""
 }
-${generateDeploymentCommands(packageManagerRunCmd, webDeploy, serverDeploy)}
+${generateDeploymentCommands(packageManagerRunCmd, webDeploy, serverDeploy, backend)}
 ${generateGitHooksSection(packageManagerRunCmd, addons)}
 
 ## Project Structure
@@ -725,36 +725,26 @@ function generateDeploymentCommands(
   packageManagerRunCmd: string,
   webDeploy: ProjectConfig["webDeploy"],
   serverDeploy: ProjectConfig["serverDeploy"],
+  backend: ProjectConfig["backend"],
 ): string {
   if (webDeploy !== "cloudflare" && serverDeploy !== "cloudflare") {
     return "";
   }
 
   const lines: string[] = ["## Deployment (Cloudflare via Alchemy)"];
+  const targetLabel =
+    webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || backend === "self")
+      ? "web + server"
+      : webDeploy === "cloudflare"
+        ? "web"
+        : "server";
 
-  if (webDeploy === "cloudflare" && serverDeploy !== "cloudflare") {
-    lines.push(
-      `- Dev: cd apps/web && ${packageManagerRunCmd} alchemy dev`,
-      `- Deploy: cd apps/web && ${packageManagerRunCmd} deploy`,
-      `- Destroy: cd apps/web && ${packageManagerRunCmd} destroy`,
-    );
-  }
-
-  if (serverDeploy === "cloudflare" && webDeploy !== "cloudflare") {
-    lines.push(
-      `- Dev: cd apps/server && ${packageManagerRunCmd} dev`,
-      `- Deploy: cd apps/server && ${packageManagerRunCmd} deploy`,
-      `- Destroy: cd apps/server && ${packageManagerRunCmd} destroy`,
-    );
-  }
-
-  if (webDeploy === "cloudflare" && serverDeploy === "cloudflare") {
-    lines.push(
-      `- Dev: ${packageManagerRunCmd} dev`,
-      `- Deploy: ${packageManagerRunCmd} deploy`,
-      `- Destroy: ${packageManagerRunCmd} destroy`,
-    );
-  }
+  lines.push(
+    `- Target: ${targetLabel}`,
+    `- Dev: ${packageManagerRunCmd} dev`,
+    `- Deploy: ${packageManagerRunCmd} deploy`,
+    `- Destroy: ${packageManagerRunCmd} destroy`,
+  );
 
   lines.push(
     "",

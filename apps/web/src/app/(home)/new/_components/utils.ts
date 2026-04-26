@@ -51,6 +51,7 @@ const selfHostedFullstackBackends = [
   "self-next",
   "self-tanstack-start",
   "self-nuxt",
+  "self-svelte",
   "self-astro",
 ] as const;
 
@@ -291,6 +292,14 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         message: "Frontend set to 'Nuxt' (required for Nuxt fullstack)",
       });
     }
+    if (nextStack.backend === "self-svelte" && !nextStack.webFrontend.includes("svelte")) {
+      nextStack.webFrontend = ["svelte"];
+      changed = true;
+      changes.push({
+        category: "backend",
+        message: "Frontend set to 'SvelteKit' (required for SvelteKit fullstack)",
+      });
+    }
     if (nextStack.backend === "self-astro" && !nextStack.webFrontend.includes("astro")) {
       nextStack.webFrontend = ["astro"];
       changed = true;
@@ -334,7 +343,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     });
   }
 
-  // Runtime "none" only for convex, self-next, self-tanstack-start, self-nuxt, self-astro
+  // Runtime "none" only for Convex, no backend, or self-hosted fullstack backends.
   if (
     nextStack.runtime === "none" &&
     nextStack.backend !== "convex" &&
@@ -863,6 +872,21 @@ export const getDisabledReason = (
     }
   }
 
+  if (currentStack.backend === "self-svelte") {
+    if (category === "runtime" && optionId !== "none") {
+      return "SvelteKit fullstack uses built-in server routes";
+    }
+    if (category === "webFrontend" && optionId !== "svelte") {
+      return "SvelteKit fullstack requires SvelteKit frontend";
+    }
+    if (category === "serverDeploy" && optionId !== "none") {
+      return "Fullstack uses frontend deployment";
+    }
+    if (category === "api" && optionId === "trpc") {
+      return "tRPC is not compatible with SvelteKit (use oRPC)";
+    }
+  }
+
   if (currentStack.backend === "self-tanstack-start") {
     if (category === "runtime" && optionId !== "none") {
       return "TanStack Start fullstack uses built-in API routes";
@@ -905,6 +929,9 @@ export const getDisabledReason = (
     }
     if (optionId === "self-nuxt" && !currentStack.webFrontend.includes("nuxt")) {
       return "Requires Nuxt frontend";
+    }
+    if (optionId === "self-svelte" && !currentStack.webFrontend.includes("svelte")) {
+      return "Requires SvelteKit frontend";
     }
     if (optionId === "self-astro" && !currentStack.webFrontend.includes("astro")) {
       return "Requires Astro frontend";

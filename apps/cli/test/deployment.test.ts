@@ -110,6 +110,7 @@ describe("Deployment Configurations", () => {
         "nuxt",
         "svelte",
         "solid",
+        "astro",
       ] as const;
 
       for (const frontend of webFrontends) {
@@ -130,7 +131,7 @@ describe("Deployment Configurations", () => {
         };
 
         // Handle API compatibility
-        if (["nuxt", "svelte", "solid"].includes(frontend)) {
+        if (["nuxt", "svelte", "solid", "astro"].includes(frontend)) {
           config.api = "orpc";
         } else {
           config.api = "trpc";
@@ -486,6 +487,7 @@ describe("Deployment Configurations", () => {
               "nuxt",
               "svelte",
               "solid",
+              "astro",
             ].includes(f),
           )
         ) {

@@ -576,6 +576,91 @@ describe("API Configurations", () => {
       );
     });
 
+    it("should scaffold SvelteKit self backend oRPC routes and same-origin clients", async () => {
+      const result = await createVirtual({
+        projectName: "svelte-self-orpc",
+        api: "orpc",
+        frontend: ["svelte"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        addons: ["none"],
+        examples: ["ai"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+        payments: "none",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const rpcRoute = files.get("apps/web/src/routes/rpc/[...rest]/+server.ts");
+      const orpcClient = files.get("apps/web/src/lib/orpc.ts");
+      const hooks = files.get("apps/web/src/hooks.server.ts");
+      const authClient = files.get("apps/web/src/lib/auth-client.ts");
+      const aiRoute = files.get("apps/web/src/routes/api/ai/+server.ts");
+      const aiPage = files.get("apps/web/src/routes/ai/+page.svelte");
+      const contextFile = files.get("packages/api/src/context.ts");
+
+      expect(rpcRoute).toContain('prefix: "/rpc"');
+      expect(rpcRoute).toContain('prefix: "/rpc/api-reference"');
+      expect(orpcClient).toContain("globalThis.$client ?? createORPCClient(link)");
+      expect(orpcClient).toContain("window.location.origin");
+      expect(hooks).toContain('import "./lib/orpc.server";');
+      expect(hooks).toContain("svelteKitHandler");
+      expect(authClient).not.toContain("PUBLIC_SERVER_URL");
+      expect(aiRoute).toContain("export const POST");
+      expect(aiPage).toContain('api: "/api/ai"');
+      expect(contextFile).toContain("export async function createContext({ headers }");
+    });
+
+    it("should scaffold SvelteKit self backend with Alchemy-compatible Cloudflare env access", async () => {
+      const result = await createVirtual({
+        projectName: "svelte-self-cloudflare",
+        api: "orpc",
+        frontend: ["svelte"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+        payments: "none",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const envServer = files.get("packages/env/src/server.ts");
+      const svelteConfig = files.get("apps/web/svelte.config.js");
+      const alchemyConfig = files.get("packages/infra/alchemy.run.ts");
+
+      expect(envServer).toContain('import { getRequestEvent } from "$app/server";');
+      expect(envServer).toContain("getRequestEvent().platform?.env");
+      expect(envServer).not.toContain('from "cloudflare:workers"');
+      expect(svelteConfig).toContain("alchemy/cloudflare/sveltekit");
+      expect(svelteConfig).toContain("adapter: alchemy()");
+      expect(alchemyConfig).toContain('export const web = await SvelteKit("web"');
+      expect(alchemyConfig).toContain('domain: "localhost:5173"');
+    });
+
     it("should handle API with complex frontend combinations", async () => {
       const result = await runTRPCTest({
         projectName: "api-complex-frontend",

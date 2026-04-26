@@ -564,6 +564,50 @@ describe("Frontend Configurations", () => {
     });
   });
 
+  describe("SvelteKit with Self Backend", () => {
+    it("should work with SvelteKit and self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "svelte-self-backend",
+        frontend: ["svelte"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "orpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with SvelteKit and traditional backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "svelte-traditional-backend",
+        frontend: ["svelte"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "orpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+  });
+
   describe("Astro with Self Backend", () => {
     it("should work with Astro and self backend", async () => {
       const result = await runTRPCTest({

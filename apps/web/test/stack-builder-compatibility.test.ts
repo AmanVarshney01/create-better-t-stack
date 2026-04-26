@@ -78,6 +78,30 @@ describe("stack builder D1 compatibility", () => {
     expect(getDisabledReason(stack, "dbSetup", "d1")).toBeNull();
   });
 
+  test("supports SvelteKit self fullstack in the builder", () => {
+    const stack = createStack({
+      backend: "self-svelte",
+      webFrontend: ["svelte"],
+      runtime: "bun",
+      api: "trpc",
+      serverDeploy: "cloudflare",
+    });
+
+    const result = analyzeStackCompatibility(stack);
+
+    expect(result.adjustedStack).toMatchObject({
+      backend: "self-svelte",
+      webFrontend: ["svelte"],
+      runtime: "none",
+      api: "orpc",
+      serverDeploy: "none",
+    });
+    expect(getDisabledReason(result.adjustedStack ?? stack, "backend", "self-svelte")).toBeNull();
+    expect(getDisabledReason(result.adjustedStack ?? stack, "api", "trpc")).toBe(
+      "tRPC is not compatible with SvelteKit (use oRPC)",
+    );
+  });
+
   test("blocks non-cloudflare web deployment for self fullstack D1 stacks", () => {
     const stack = createStack({
       backend: "self-next",

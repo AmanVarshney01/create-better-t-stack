@@ -1,4 +1,4 @@
-{{#if (eq serverDeploy "cloudflare")}}
+{{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
@@ -59,6 +59,54 @@ export async function getEnvAsync() {
 	});
 }
 
+export const env = createEnvProxy(resolveEnvValue);
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+/// <reference path="../env.d.ts" />
+import { getRequestEvent } from "$app/server";
+import { env as dynamicEnv } from "$env/dynamic/private";
+
+function getNodeEnvValue(key: string) {
+	if (typeof process !== "undefined" && process.env[key] !== undefined) {
+		return process.env[key];
+	}
+
+	return dynamicEnv[key];
+}
+
+function getCloudflareEnvSync() {
+	try {
+		return getRequestEvent().platform?.env as Env | undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+type EnvValue = Env[keyof Env];
+
+function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefined) {
+	return new Proxy({} as Env, {
+		get(_target, prop) {
+			if (typeof prop !== "string") {
+				return undefined;
+			}
+
+			return getValue(prop as keyof Env & string);
+		},
+	});
+}
+
+function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
+	const nodeValue = getNodeEnvValue(key);
+	if (nodeValue !== undefined) {
+		return nodeValue as EnvValue;
+	}
+
+	return getCloudflareEnvSync()?.[key as keyof Env];
+}
+
+// SvelteKit exposes Cloudflare bindings through event.platform.env during
+// dev and deployed Workers. Keep a process/$env fallback for local scripts
+// and non-binding values.
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference path="../env.d.ts" />

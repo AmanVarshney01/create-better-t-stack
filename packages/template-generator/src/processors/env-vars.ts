@@ -208,13 +208,18 @@ function buildNativeVars(
   auth: ProjectConfig["auth"],
 ): EnvVariable[] {
   const hasAstro = frontend.includes("astro");
+  const hasSvelte = frontend.includes("svelte");
 
   let envVarName = "EXPO_PUBLIC_SERVER_URL";
   let serverUrl = "http://localhost:3000";
 
   if (backend === "self") {
-    // Astro uses port 4321, others use port 3001 for fullstack
-    serverUrl = hasAstro ? "http://localhost:4321" : "http://localhost:3001";
+    // SvelteKit uses Vite's default port, Astro uses 4321, others use 3001.
+    serverUrl = hasSvelte
+      ? "http://localhost:5173"
+      : hasAstro
+        ? "http://localhost:4321"
+        : "http://localhost:3001";
   }
 
   if (backend === "convex") {
@@ -434,9 +439,11 @@ function buildServerVars(
       key: "BETTER_AUTH_URL",
       value:
         backend === "self"
-          ? hasAstro
-            ? "http://localhost:4321"
-            : "http://localhost:3001"
+          ? hasSvelte
+            ? "http://localhost:5173"
+            : hasAstro
+              ? "http://localhost:4321"
+              : "http://localhost:3001"
           : "http://localhost:3000",
       condition: hasBetterAuth,
     },

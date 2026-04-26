@@ -1,0 +1,19 @@
+import { getRequestEvent } from "$app/server";
+import { createORPCClient } from "@orpc/client";
+import { RPCLink } from "@orpc/client/fetch";
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+
+if (typeof window !== "undefined") {
+	throw new Error("This file should only be imported on the server.");
+}
+
+const link = new RPCLink({
+	url: async () => `${getRequestEvent().url.origin}/rpc`,
+	async fetch(request, init) {
+		return getRequestEvent().fetch(request, init);
+	},
+});
+
+const serverClient: AppRouterClient = createORPCClient(link);
+
+globalThis.$client = serverClient;

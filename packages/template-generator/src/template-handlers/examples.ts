@@ -97,6 +97,15 @@ export async function processExampleTemplates(
         config,
       );
     } else if (hasSvelteWeb) {
+      if (config.backend === "self") {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          `examples/${example}/fullstack/svelte`,
+          "apps/web",
+          config,
+        );
+      }
       processTemplatesFromPrefix(
         vfs,
         templates,
