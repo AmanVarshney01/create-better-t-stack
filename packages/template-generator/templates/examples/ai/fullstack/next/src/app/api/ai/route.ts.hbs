@@ -4,18 +4,12 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const maxDuration = 30;
 
-const aiDevToolsMiddleware =
-	(globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
-	"development"
-		? devToolsMiddleware()
-		: undefined;
-
 export async function POST(req: Request) {
 	const { messages }: { messages: UIMessage[] } = await req.json();
 
 	const model = wrapLanguageModel({
 		model: google("gemini-2.5-flash"),
-		middleware: aiDevToolsMiddleware,
+		middleware: devToolsMiddleware(),
 	});
 	const result = streamText({
 		model,

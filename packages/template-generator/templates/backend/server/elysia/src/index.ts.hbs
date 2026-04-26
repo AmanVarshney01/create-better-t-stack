@@ -27,14 +27,6 @@ import { createContext } from "@{{projectName}}/api/context";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
-{{#if (includes examples "ai")}}
-const aiDevToolsMiddleware =
-	(globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
-	"development"
-		? devToolsMiddleware()
-		: undefined;
-
-{{/if}}
 {{#if (eq api "orpc")}}
 const rpcHandler = new RPCHandler(appRouter, {
 	interceptors: [
@@ -128,7 +120,7 @@ const app = new Elysia()
 		const uiMessages = body.messages || [];
 		const model = wrapLanguageModel({
 			model: google("gemini-2.5-flash"),
-			middleware: aiDevToolsMiddleware,
+			middleware: devToolsMiddleware(),
 		});
 		const result = streamText({
 			model,

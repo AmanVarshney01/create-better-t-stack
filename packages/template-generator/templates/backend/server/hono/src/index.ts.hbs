@@ -34,14 +34,6 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 
-{{#if (includes examples "ai")}}
-const aiDevToolsMiddleware =
-	(globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
-	"development"
-		? devToolsMiddleware()
-		: undefined;
-
-{{/if}}
 const app = new Hono();
 
 app.use(logger());
@@ -137,7 +129,7 @@ app.post("/ai", async (c) => {
 	const uiMessages = body.messages || [];
 	const model = wrapLanguageModel({
 		model: google("gemini-2.5-flash"),
-		middleware: aiDevToolsMiddleware,
+		middleware: devToolsMiddleware(),
 	});
 	const result = streamText({
 		model,
@@ -157,7 +149,7 @@ app.post("/ai", async (c) => {
 	});
 	const model = wrapLanguageModel({
 		model: google("gemini-2.5-flash"),
-		middleware: aiDevToolsMiddleware,
+		middleware: devToolsMiddleware(),
 	});
 	const result = streamText({
 		model,

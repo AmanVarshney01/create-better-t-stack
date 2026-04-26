@@ -30,14 +30,6 @@ import { toNodeHandler } from "better-auth/node";
 import { clerkMiddleware } from "@clerk/express";
 {{/if}}
 
-{{#if (includes examples "ai")}}
-const aiDevToolsMiddleware =
-	(globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
-	"development"
-		? devToolsMiddleware()
-		: undefined;
-
-{{/if}}
 const app = express();
 
 app.use(
@@ -124,7 +116,7 @@ app.post("/ai", async (req, res) => {
 	const { messages = [] } = (req.body || {}) as { messages: UIMessage[] };
 	const model = wrapLanguageModel({
 		model: google("gemini-2.5-flash"),
-		middleware: aiDevToolsMiddleware,
+		middleware: devToolsMiddleware(),
 	});
 	const result = streamText({
 		model,
