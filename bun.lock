@@ -20,7 +20,7 @@
     },
     "apps/cli": {
       "name": "create-js-stack",
-      "version": "1.2.5",
+      "version": "1.2.6",
       "bin": {
         "create-js-stack": "dist/cli.mjs",
       },
