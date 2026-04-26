@@ -1,4 +1,4 @@
-# Create Create-JS-Stack CLI
+# Create-JS-Stack CLI
 
 A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations
 
@@ -8,10 +8,10 @@ Run without installing globally:
 
 ```bash
 # Using bun (recommended)
-bun create create-js-stack@latest
+bun create js-stack@latest
 
 # Using pnpm
-pnpm create create-js-stack@latest
+pnpm create js-stack@latest
 
 # Using npm
 npx create-js-stack@latest
