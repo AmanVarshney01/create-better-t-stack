@@ -2,13 +2,19 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { google } from "@ai-sdk/google";
 import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
 
+const aiDevToolsMiddleware =
+  (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
+  "development"
+    ? devToolsMiddleware()
+    : undefined;
+
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const uiMessages = body.messages || [];
 
   const model = wrapLanguageModel({
     model: google("gemini-2.5-flash"),
-    middleware: devToolsMiddleware(),
+    middleware: aiDevToolsMiddleware,
   });
 
   const result = streamText({

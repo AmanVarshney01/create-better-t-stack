@@ -31,6 +31,14 @@ import { auth } from "@{{projectName}}/auth";
 import { clerkPlugin } from "@clerk/fastify";
 {{/if}}
 
+{{#if (includes examples "ai")}}
+const aiDevToolsMiddleware =
+	(globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
+	"development"
+		? devToolsMiddleware()
+		: undefined;
+
+{{/if}}
 const baseCorsConfig = {
 	origin: env.CORS_ORIGIN,
 	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -164,7 +172,7 @@ fastify.post('/ai', async function (request) {
 	const { messages } = request.body as AiRequestBody;
 	const model = wrapLanguageModel({
 		model: google('gemini-2.5-flash'),
-		middleware: devToolsMiddleware(),
+		middleware: aiDevToolsMiddleware,
 	});
 	const result = streamText({
 		model,

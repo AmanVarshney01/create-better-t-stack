@@ -513,15 +513,13 @@ export default defineEventHandler(async (event) => {
 `],
   ["api/orpc/fullstack/nuxt/server/routes/rpc/index.ts.hbs", `export { default } from "./[...]";
 `],
-  ["api/orpc/fullstack/svelte/src/hooks.server.ts.hbs", `import "./lib/orpc.server";
-`],
   ["api/orpc/fullstack/svelte/src/lib/orpc.server.ts.hbs", `import { getRequestEvent } from "$app/server";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 
-if (typeof window !== "undefined") {
-	throw new Error("This file should only be imported on the server.");
+declare global {
+	var $client: AppRouterClient | undefined;
 }
 
 const link = new RPCLink({
@@ -537,6 +535,9 @@ globalThis.$client = serverClient;
 `],
   ["api/orpc/fullstack/svelte/src/routes/rpc/[...rest]/+server.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
+{{#if (eq webDeploy "cloudflare")}}
+import { setCloudflareEnv } from "@{{projectName}}/env/server";
+{{/if}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
@@ -565,7 +566,11 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	],
 });
 
-const handle: RequestHandler = async ({ request }) => {
+const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
+{{#if (eq webDeploy "cloudflare")}}
+	setCloudflareEnv(platform?.env);
+
+{{/if}}
 	const context = await createContext({ headers: request.headers });
 
 	const rpcResult = await rpcHandler.handle(request, {
@@ -5270,10 +5275,17 @@ import { createAuth } from "@{{projectName}}/auth";
 {{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
+{{#if (eq webDeploy "cloudflare")}}
+import { setCloudflareEnv } from "@{{projectName}}/env/server";
+{{/if}}
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import type { Handle } from "@sveltejs/kit";
 
 export const handle: Handle = async ({ event, resolve }) => {
+{{#if (eq webDeploy "cloudflare")}}
+	setCloudflareEnv(event.platform?.env);
+
+{{/if}}
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 	const authInstance = createAuth();
 {{else}}
@@ -13544,6 +13556,14 @@ import { createContext } from "@{{projectName}}/api/context";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
+{{#if (includes examples "ai")}}
+const aiDevToolsMiddleware =
+	(globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
+	"development"
+		? devToolsMiddleware()
+		: undefined;
+
+{{/if}}
 {{#if (eq api "orpc")}}
 const rpcHandler = new RPCHandler(appRouter, {
 	interceptors: [
@@ -13637,7 +13657,7 @@ const app = new Elysia()
 		const uiMessages = body.messages || [];
 		const model = wrapLanguageModel({
 			model: google("gemini-2.5-flash"),
-			middleware: devToolsMiddleware(),
+			middleware: aiDevToolsMiddleware,
 		});
 		const result = streamText({
 			model,
@@ -13684,6 +13704,14 @@ import { toNodeHandler } from "better-auth/node";
 import { clerkMiddleware } from "@clerk/express";
 {{/if}}
 
+{{#if (includes examples "ai")}}
+const aiDevToolsMiddleware =
+	(globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
+	"development"
+		? devToolsMiddleware()
+		: undefined;
+
+{{/if}}
 const app = express();
 
 app.use(
@@ -13770,7 +13798,7 @@ app.post("/ai", async (req, res) => {
 	const { messages = [] } = (req.body || {}) as { messages: UIMessage[] };
 	const model = wrapLanguageModel({
 		model: google("gemini-2.5-flash"),
-		middleware: devToolsMiddleware(),
+		middleware: aiDevToolsMiddleware,
 	});
 	const result = streamText({
 		model,
@@ -13821,6 +13849,14 @@ import { auth } from "@{{projectName}}/auth";
 import { clerkPlugin } from "@clerk/fastify";
 {{/if}}
 
+{{#if (includes examples "ai")}}
+const aiDevToolsMiddleware =
+	(globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
+	"development"
+		? devToolsMiddleware()
+		: undefined;
+
+{{/if}}
 const baseCorsConfig = {
 	origin: env.CORS_ORIGIN,
 	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -13954,7 +13990,7 @@ fastify.post('/ai', async function (request) {
 	const { messages } = request.body as AiRequestBody;
 	const model = wrapLanguageModel({
 		model: google('gemini-2.5-flash'),
-		middleware: devToolsMiddleware(),
+		middleware: aiDevToolsMiddleware,
 	});
 	const result = streamText({
 		model,
@@ -14013,6 +14049,14 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 
+{{#if (includes examples "ai")}}
+const aiDevToolsMiddleware =
+	(globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
+	"development"
+		? devToolsMiddleware()
+		: undefined;
+
+{{/if}}
 const app = new Hono();
 
 app.use(logger());
@@ -14108,7 +14152,7 @@ app.post("/ai", async (c) => {
 	const uiMessages = body.messages || [];
 	const model = wrapLanguageModel({
 		model: google("gemini-2.5-flash"),
-		middleware: devToolsMiddleware(),
+		middleware: aiDevToolsMiddleware,
 	});
 	const result = streamText({
 		model,
@@ -14128,7 +14172,7 @@ app.post("/ai", async (c) => {
 	});
 	const model = wrapLanguageModel({
 		model: google("gemini-2.5-flash"),
-		middleware: devToolsMiddleware(),
+		middleware: aiDevToolsMiddleware,
 	});
 	const result = streamText({
 		model,
@@ -15075,12 +15119,18 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const maxDuration = 30;
 
+const aiDevToolsMiddleware =
+	(globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
+	"development"
+		? devToolsMiddleware()
+		: undefined;
+
 export async function POST(req: Request) {
 	const { messages }: { messages: UIMessage[] } = await req.json();
 
 	const model = wrapLanguageModel({
 		model: google("gemini-2.5-flash"),
-		middleware: devToolsMiddleware(),
+		middleware: aiDevToolsMiddleware,
 	});
 	const result = streamText({
 		model,
@@ -15094,13 +15144,19 @@ export async function POST(req: Request) {
 import { google } from "@ai-sdk/google";
 import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
 
+const aiDevToolsMiddleware =
+  (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
+  "development"
+    ? devToolsMiddleware()
+    : undefined;
+
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const uiMessages = body.messages || [];
 
   const model = wrapLanguageModel({
     model: google("gemini-2.5-flash"),
-    middleware: devToolsMiddleware(),
+    middleware: aiDevToolsMiddleware,
   });
 
   const result = streamText({
@@ -15116,12 +15172,18 @@ import { google } from "@ai-sdk/google";
 import { convertToModelMessages, streamText, type UIMessage, wrapLanguageModel } from "ai";
 import type { RequestHandler } from "@sveltejs/kit";
 
+const aiDevToolsMiddleware =
+	(globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
+	"development"
+		? devToolsMiddleware()
+		: undefined;
+
 export const POST: RequestHandler = async ({ request }) => {
 	const { messages }: { messages: UIMessage[] } = await request.json();
 
 	const model = wrapLanguageModel({
 		model: google("gemini-2.5-flash"),
-		middleware: devToolsMiddleware(),
+		middleware: aiDevToolsMiddleware,
 	});
 	const result = streamText({
 		model,
@@ -15136,6 +15198,12 @@ import { google } from "@ai-sdk/google";
 import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 
+const aiDevToolsMiddleware =
+  (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV ===
+  "development"
+    ? devToolsMiddleware()
+    : undefined;
+
 export const Route = createFileRoute("/api/ai/$")({
   server: {
     handlers: {
@@ -15145,7 +15213,7 @@ export const Route = createFileRoute("/api/ai/$")({
 
           const model = wrapLanguageModel({
             model: google("gemini-2.5-flash"),
-            middleware: devToolsMiddleware(),
+            middleware: aiDevToolsMiddleware,
           });
           const result = streamText({
             model,
@@ -28344,23 +28412,20 @@ export async function getEnvAsync() {
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 /// <reference path="../env.d.ts" />
-import { getRequestEvent } from "$app/server";
-import { env as dynamicEnv } from "$env/dynamic/private";
+let cloudflareEnv: Env | undefined;
+
+export function setCloudflareEnv(env: unknown) {
+	if (env) {
+		cloudflareEnv = env as Env;
+	}
+}
 
 function getNodeEnvValue(key: string) {
 	if (typeof process !== "undefined" && process.env[key] !== undefined) {
 		return process.env[key];
 	}
 
-	return dynamicEnv[key];
-}
-
-function getCloudflareEnvSync() {
-	try {
-		return getRequestEvent().platform?.env as Env | undefined;
-	} catch {
-		return undefined;
-	}
+	return undefined;
 }
 
 type EnvValue = Env[keyof Env];
@@ -28383,12 +28448,12 @@ function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
 		return nodeValue as EnvValue;
 	}
 
-	return getCloudflareEnvSync()?.[key as keyof Env];
+	return cloudflareEnv?.[key as keyof Env];
 }
 
-// SvelteKit exposes Cloudflare bindings through event.platform.env during
-// dev and deployed Workers. Keep a process/$env fallback for local scripts
-// and non-binding values.
+// SvelteKit passes Cloudflare bindings through event.platform.env. Apps set
+// that value at request boundaries so this shared package stays usable from
+// workspace scripts that do not understand SvelteKit-only imports.
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference path="../env.d.ts" />
@@ -29902,4 +29967,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 467;
+export const TEMPLATE_COUNT = 466;

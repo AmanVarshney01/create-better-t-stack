@@ -649,12 +649,17 @@ describe("API Configurations", () => {
 
       const files = collectFiles(result.value.root, result.value.root.path);
       const envServer = files.get("packages/env/src/server.ts");
+      const rpcRoute = files.get("apps/web/src/routes/rpc/[...rest]/+server.ts");
+      const hooks = files.get("apps/web/src/hooks.server.ts");
       const svelteConfig = files.get("apps/web/svelte.config.js");
       const alchemyConfig = files.get("packages/infra/alchemy.run.ts");
 
-      expect(envServer).toContain('import { getRequestEvent } from "$app/server";');
-      expect(envServer).toContain("getRequestEvent().platform?.env");
+      expect(envServer).toContain("export function setCloudflareEnv");
+      expect(envServer).toContain("cloudflareEnv?.[key as keyof Env]");
+      expect(envServer).not.toContain('from "$app/server"');
       expect(envServer).not.toContain('from "cloudflare:workers"');
+      expect(rpcRoute).toContain("setCloudflareEnv(platform?.env)");
+      expect(hooks).toContain("setCloudflareEnv(event.platform?.env)");
       expect(svelteConfig).toContain("alchemy/cloudflare/sveltekit");
       expect(svelteConfig).toContain("adapter: alchemy()");
       expect(alchemyConfig).toContain('export const web = await SvelteKit("web"');

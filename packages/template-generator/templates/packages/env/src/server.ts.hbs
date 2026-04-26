@@ -62,23 +62,20 @@ export async function getEnvAsync() {
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 /// <reference path="../env.d.ts" />
-import { getRequestEvent } from "$app/server";
-import { env as dynamicEnv } from "$env/dynamic/private";
+let cloudflareEnv: Env | undefined;
+
+export function setCloudflareEnv(env: unknown) {
+	if (env) {
+		cloudflareEnv = env as Env;
+	}
+}
 
 function getNodeEnvValue(key: string) {
 	if (typeof process !== "undefined" && process.env[key] !== undefined) {
 		return process.env[key];
 	}
 
-	return dynamicEnv[key];
-}
-
-function getCloudflareEnvSync() {
-	try {
-		return getRequestEvent().platform?.env as Env | undefined;
-	} catch {
-		return undefined;
-	}
+	return undefined;
 }
 
 type EnvValue = Env[keyof Env];
@@ -101,12 +98,12 @@ function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
 		return nodeValue as EnvValue;
 	}
 
-	return getCloudflareEnvSync()?.[key as keyof Env];
+	return cloudflareEnv?.[key as keyof Env];
 }
 
-// SvelteKit exposes Cloudflare bindings through event.platform.env during
-// dev and deployed Workers. Keep a process/$env fallback for local scripts
-// and non-binding values.
+// SvelteKit passes Cloudflare bindings through event.platform.env. Apps set
+// that value at request boundaries so this shared package stays usable from
+// workspace scripts that do not understand SvelteKit-only imports.
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference path="../env.d.ts" />

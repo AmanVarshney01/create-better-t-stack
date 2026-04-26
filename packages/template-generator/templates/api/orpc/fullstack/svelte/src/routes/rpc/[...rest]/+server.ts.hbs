@@ -1,5 +1,8 @@
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
+{{#if (eq webDeploy "cloudflare")}}
+import { setCloudflareEnv } from "@{{projectName}}/env/server";
+{{/if}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
@@ -28,7 +31,11 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	],
 });
 
-const handle: RequestHandler = async ({ request }) => {
+const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
+{{#if (eq webDeploy "cloudflare")}}
+	setCloudflareEnv(platform?.env);
+
+{{/if}}
 	const context = await createContext({ headers: request.headers });
 
 	const rpcResult = await rpcHandler.handle(request, {

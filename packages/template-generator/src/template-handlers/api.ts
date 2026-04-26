@@ -75,6 +75,9 @@ export async function processApiTemplates(
         "apps/web",
         config,
       );
+      if (config.auth !== "better-auth") {
+        vfs.writeFile("apps/web/src/hooks.server.ts", 'import "./lib/orpc.server";\n');
+      }
     }
   } else if (hasSolidWeb && config.api === "orpc") {
     processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/solid`, "apps/web", config);
