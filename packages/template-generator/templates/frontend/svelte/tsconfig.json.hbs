@@ -10,10 +10,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler"{{#if (eq webDeploy "cloudflare")}},
-		"types": [
-			"@cloudflare/workers-types",
-			"../../packages/env/env.d.ts"
-		]{{/if}}
+			"types": ["@cloudflare/workers-types"]{{/if}}
 	}
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
 	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files

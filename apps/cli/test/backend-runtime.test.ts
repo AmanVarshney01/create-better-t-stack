@@ -425,27 +425,6 @@ describe("Backend and Runtime Combinations", () => {
       expectSuccess(result);
     });
 
-    it("should work with self backend and SvelteKit frontend", async () => {
-      const result = await runTRPCTest({
-        projectName: "self-backend-svelte-success",
-        backend: "self",
-        runtime: "none",
-        frontend: ["svelte"],
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "better-auth",
-        api: "orpc",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-
     it("should fail self backend with non-Next.js frontend", async () => {
       const result = await runTRPCTest({
         projectName: "self-backend-invalid-frontend",

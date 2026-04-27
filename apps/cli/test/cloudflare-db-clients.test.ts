@@ -139,19 +139,6 @@ describe("Cloudflare DB client generation", () => {
       routeNeedles: ["const auth = createAuth();", "return auth.handler(ctx.request);"],
       envNeedle: 'from "cloudflare:workers";',
     },
-    {
-      name: "SvelteKit",
-      frontend: "svelte",
-      api: "orpc",
-      routePath: "apps/web/src/hooks.server.ts",
-      routeNeedles: [
-        "if (building)",
-        "const authInstance = createAuth(event.platform.env);",
-        "auth: authInstance",
-      ],
-      envNeedle: "export type RuntimeEnv = Env",
-      envAbsentNeedle: 'export { env } from "cloudflare:workers";',
-    },
   ] as const;
 
   for (const scenario of selfCloudflareD1Scenarios) {
@@ -187,34 +174,18 @@ describe("Cloudflare DB client generation", () => {
       expect(dbFile).toContain("return drizzle(runtimeEnv.DB, { schema });");
       expect(dbFile).not.toContain('import { drizzle } from "drizzle-orm/libsql";');
       expect(dbFile).not.toContain("export const db = createDb();");
-      expect(authFile).toContain(
-        scenario.frontend === "svelte"
-          ? "export function createAuth(runtimeEnv: RuntimeEnv)"
-          : "export function createAuth(runtimeEnv: RuntimeEnv = env)",
-      );
+      expect(authFile).toContain("export function createAuth(runtimeEnv: RuntimeEnv = env)");
       expect(authFile).not.toContain("export const auth = createAuth();");
       expect(envFile).toContain(scenario.envNeedle);
-      expect(envFile).toContain(
-        scenario.frontend === "svelte"
-          ? "export type RuntimeEnv = Env"
-          : "export type RuntimeEnv = typeof env",
-      );
+      expect(envFile).toContain("export type RuntimeEnv = typeof env");
       if (scenario.envAbsentNeedle) {
         expect(envFile).not.toContain(scenario.envAbsentNeedle);
       }
       for (const needle of scenario.routeNeedles) {
         expect(routeFile).toContain(needle);
       }
-      expect(contextFile).toContain(
-        scenario.frontend === "svelte"
-          ? "createAuth(env).api.getSession"
-          : "createAuth().api.getSession",
-      );
-      expect(todoRouterFile).toContain(
-        scenario.frontend === "svelte"
-          ? "const db = createDb(context.env);"
-          : "const db = createDb();",
-      );
+      expect(contextFile).toContain("createAuth().api.getSession");
+      expect(todoRouterFile).toContain("const db = createDb();");
     });
   }
 
