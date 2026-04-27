@@ -145,6 +145,7 @@ describe("Cloudflare DB client generation", () => {
       api: "orpc",
       routePath: "apps/web/src/hooks.server.ts",
       routeNeedles: [
+        "if (building)",
         "const authInstance = createAuth(event.platform.env);",
         "auth: authInstance",
       ],

@@ -13,6 +13,10 @@ import type { Handle } from "@sveltejs/kit";
 export const handle: Handle = async ({ event, resolve }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+	if (building) {
+		return resolve(event);
+	}
+
 	if (!event.platform?.env) {
 		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
 	}

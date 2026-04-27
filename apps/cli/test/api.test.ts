@@ -666,6 +666,7 @@ describe("API Configurations", () => {
       expect(envServer).not.toContain('from "$app/server"');
       expect(envServer).not.toContain('from "cloudflare:workers"');
       expect(rpcRoute).toContain("env: platform.env");
+      expect(hooks).toContain("if (building)");
       expect(hooks).toContain("createAuth(event.platform.env)");
       expect(appDts).toContain("interface Platform");
       expect(appDts).toContain("env: Env");
