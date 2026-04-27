@@ -72,15 +72,6 @@ export type RuntimeEnv = typeof env;
 /// <reference path="../env.d.ts" />
 
 export type RuntimeEnv = Env;
-
-// SvelteKit's Cloudflare adapter exposes bindings on event.platform.env.
-export function getCloudflareEnv(platform: Readonly<{ env?: RuntimeEnv }> | undefined): RuntimeEnv {
-	if (!platform?.env) {
-		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
-	}
-
-	return platform.env;
-}
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module

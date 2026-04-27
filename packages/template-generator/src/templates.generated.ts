@@ -515,9 +515,6 @@ export default defineEventHandler(async (event) => {
 `],
   ["api/orpc/fullstack/svelte/src/lib/orpc.server.ts.hbs", `import { getRequestEvent } from "$app/server";
 import { createContext } from "@{{projectName}}/api/context";
-{{#if (eq webDeploy "cloudflare")}}
-import { getCloudflareEnv } from "@{{projectName}}/env/server";
-{{/if}}
 import { appRouter, type AppRouterClient } from "@{{projectName}}/api/routers/index";
 import { createRouterClient } from "@orpc/server";
 
@@ -528,10 +525,16 @@ if (typeof window !== "undefined") {
 const serverClient: AppRouterClient = createRouterClient(appRouter, {
 	context: async () => {
 		const event = getRequestEvent();
+{{#if (eq webDeploy "cloudflare")}}
+		if (!event.platform?.env) {
+			throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
+		}
+
+{{/if}}
 		return createContext({
 			headers: event.request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-			env: getCloudflareEnv(event.platform),
+			env: event.platform.env,
 {{/if}}
 		});
 	},
@@ -543,9 +546,6 @@ globalThis.$client = serverClient;
 `],
   ["api/orpc/fullstack/svelte/src/routes/rpc/[...rest]/+server.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
-{{#if (eq webDeploy "cloudflare")}}
-import { getCloudflareEnv } from "@{{projectName}}/env/server";
-{{/if}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
@@ -575,10 +575,16 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 });
 
 const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
+{{#if (eq webDeploy "cloudflare")}}
+	if (!platform?.env) {
+		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
+	}
+
+{{/if}}
 	const context = await createContext({
 		headers: request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-		env: getCloudflareEnv(platform),
+		env: platform.env,
 {{/if}}
 	});
 
@@ -5293,15 +5299,20 @@ import { createAuth } from "@{{projectName}}/auth";
 {{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
-import { getCloudflareEnv } from "@{{projectName}}/env/server";
-{{/if}}
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import type { Handle } from "@sveltejs/kit";
 
 export const handle: Handle = async ({ event, resolve }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-	const authInstance = createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}getCloudflareEnv(event.platform){{/if}});
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+	if (!event.platform?.env) {
+		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
+	}
+
+	const authInstance = createAuth(event.platform.env);
+{{else}}
+	const authInstance = createAuth();
+{{/if}}
 {{else}}
 	const authInstance = auth;
 {{/if}}
@@ -28292,7 +28303,8 @@ export default config;
 		"strict": true,
 		"moduleResolution": "bundler"{{#if (eq webDeploy "cloudflare")}},
 		"types": [
-			"@cloudflare/workers-types"
+			"@cloudflare/workers-types",
+			"../../packages/env/env.d.ts"
 		]{{/if}}
 	}
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
@@ -28452,15 +28464,6 @@ export type RuntimeEnv = typeof env;
 /// <reference path="../env.d.ts" />
 
 export type RuntimeEnv = Env;
-
-// SvelteKit's Cloudflare adapter exposes bindings on event.platform.env.
-export function getCloudflareEnv(platform: Readonly<{ env?: RuntimeEnv }> | undefined): RuntimeEnv {
-	if (!platform?.env) {
-		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
-	}
-
-	return platform.env;
-}
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module

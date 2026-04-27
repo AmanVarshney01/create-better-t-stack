@@ -7,15 +7,20 @@ import { createAuth } from "@{{projectName}}/auth";
 {{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
-import { getCloudflareEnv } from "@{{projectName}}/env/server";
-{{/if}}
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import type { Handle } from "@sveltejs/kit";
 
 export const handle: Handle = async ({ event, resolve }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-	const authInstance = createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}getCloudflareEnv(event.platform){{/if}});
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+	if (!event.platform?.env) {
+		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
+	}
+
+	const authInstance = createAuth(event.platform.env);
+{{else}}
+	const authInstance = createAuth();
+{{/if}}
 {{else}}
 	const authInstance = auth;
 {{/if}}

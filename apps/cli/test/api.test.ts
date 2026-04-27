@@ -658,15 +658,15 @@ describe("API Configurations", () => {
       const svelteConfig = files.get("apps/web/svelte.config.js");
       const alchemyConfig = files.get("packages/infra/alchemy.run.ts");
 
-      expect(envServer).toContain("export function getCloudflareEnv");
       expect(envServer).toContain("export type RuntimeEnv = Env");
+      expect(envServer).not.toContain("getCloudflareEnv");
       expect(envServer).not.toContain("createEnvProxy");
       expect(envServer).not.toContain("process.env");
       expect(envServer).not.toContain("export const env");
       expect(envServer).not.toContain('from "$app/server"');
       expect(envServer).not.toContain('from "cloudflare:workers"');
-      expect(rpcRoute).toContain("getCloudflareEnv(platform)");
-      expect(hooks).toContain("getCloudflareEnv(event.platform)");
+      expect(rpcRoute).toContain("env: platform.env");
+      expect(hooks).toContain("createAuth(event.platform.env)");
       expect(appDts).toContain("interface Platform");
       expect(appDts).toContain("env: Env");
       expect(appDts).toContain("ctx: ExecutionContext");
@@ -674,6 +674,7 @@ describe("API Configurations", () => {
       expect(appDts).toContain("cf: IncomingRequestCfProperties");
       expect(appDts).toContain("var $client: AppRouterClient | undefined");
       expect(tsconfig).toContain("@cloudflare/workers-types");
+      expect(tsconfig).toContain("../../packages/env/env.d.ts");
       expect(orpcServer).not.toContain("declare global");
       expect(orpcClient).not.toContain("declare global");
       expect(svelteConfig).toContain("alchemy/cloudflare/sveltekit");
