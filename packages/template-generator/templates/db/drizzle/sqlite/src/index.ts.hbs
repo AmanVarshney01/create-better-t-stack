@@ -2,29 +2,29 @@
 import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/d1";
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type { RuntimeEnv } from "@{{projectName}}/env/server";
+import type {} from "@{{projectName}}/env/server";
 {{else}}
-import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
-export function createDb(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
-	return drizzle(runtimeEnv.DB, { schema });
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	return drizzle(env.DB, { schema });
 }
 {{else if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type { RuntimeEnv } from "@{{projectName}}/env/server";
+import type {} from "@{{projectName}}/env/server";
 {{else}}
-import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+import { env } from "@{{projectName}}/env/server";
 {{/if}}
 import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
-export function createDb(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const client = createClient({
-		url: runtimeEnv.DATABASE_URL,
+		url: env.DATABASE_URL,
 {{#if (eq dbSetup "turso")}}
-		authToken: runtimeEnv.DATABASE_AUTH_TOKEN,
+		authToken: env.DATABASE_AUTH_TOKEN,
 {{/if}}
 	});
 
@@ -37,14 +37,14 @@ export const db = createDb();
 {{else if (eq runtime "workers")}}
 import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
-import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+import { env } from "@{{projectName}}/env/server";
 import { createClient } from "@libsql/client";
 
-export function createDb(runtimeEnv: RuntimeEnv = env) {
+export function createDb() {
 	const client = createClient({
-		url: runtimeEnv.DATABASE_URL || "",
+		url: env.DATABASE_URL || "",
 {{#if (eq dbSetup "turso")}}
-		authToken: runtimeEnv.DATABASE_AUTH_TOKEN,
+		authToken: env.DATABASE_AUTH_TOKEN,
 {{/if}}
 	});
 

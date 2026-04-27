@@ -2,10 +2,7 @@
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
-import { env } from "cloudflare:workers";
-
-export { env };
-export type RuntimeEnv = typeof env;
+export { env } from "cloudflare:workers";
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "next"))}}
 /// <reference path="../env.d.ts" />
 import { getCloudflareContext } from "@opennextjs/cloudflare";
@@ -67,19 +64,15 @@ export async function getEnvAsync() {
 }
 
 export const env = createEnvProxy(resolveEnvValue);
-export type RuntimeEnv = typeof env;
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 /// <reference path="../env.d.ts" />
 
-export type RuntimeEnv = Env;
+export {};
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
-import { env } from "cloudflare:workers";
-
-export { env };
-export type RuntimeEnv = typeof env;
+export { env } from "cloudflare:workers";
 {{else}}
 import "dotenv/config";
 import { createEnv } from "@t3-oss/env-core";
@@ -119,5 +112,4 @@ export const env = createEnv({
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,
 });
-export type RuntimeEnv = typeof env;
 {{/if}}

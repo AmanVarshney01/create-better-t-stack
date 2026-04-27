@@ -1,20 +1,20 @@
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type { RuntimeEnv } from "@{{projectName}}/env/server";
+import type {} from "@{{projectName}}/env/server";
 {{else}}
-import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+import { env } from "@{{projectName}}/env/server";
 {{/if}}
 import * as schema from "./schema";
 
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 
-export function createDb(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	return drizzle({
 		connection: {
-			host: runtimeEnv.DATABASE_HOST,
-			username: runtimeEnv.DATABASE_USERNAME,
-			password: runtimeEnv.DATABASE_PASSWORD,
+			host: env.DATABASE_HOST,
+			username: env.DATABASE_USERNAME,
+			password: env.DATABASE_PASSWORD,
 		},
 		schema,
 	});
@@ -22,10 +22,10 @@ export function createDb(runtimeEnv: {{#if (and (eq backend "self") (eq webDeplo
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 
-export function createDb(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	return drizzle({
 		connection: {
-			uri: runtimeEnv.DATABASE_URL,
+			uri: env.DATABASE_URL,
 		},
 		schema,
 	});
@@ -42,26 +42,26 @@ import * as schema from "./schema";
 
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
-import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+import { env } from "@{{projectName}}/env/server";
 
-export function createDb(runtimeEnv: RuntimeEnv = env) {
+export function createDb() {
 	return drizzle({
 		connection: {
-			host: runtimeEnv.DATABASE_HOST,
-			username: runtimeEnv.DATABASE_USERNAME,
-			password: runtimeEnv.DATABASE_PASSWORD,
+			host: env.DATABASE_HOST,
+			username: env.DATABASE_USERNAME,
+			password: env.DATABASE_PASSWORD,
 		},
 		schema,
 	});
 }
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
-import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+import { env } from "@{{projectName}}/env/server";
 
-export function createDb(runtimeEnv: RuntimeEnv = env) {
+export function createDb() {
 	return drizzle({
 		connection: {
-			uri: runtimeEnv.DATABASE_URL,
+			uri: env.DATABASE_URL,
 		},
 		schema,
 	});

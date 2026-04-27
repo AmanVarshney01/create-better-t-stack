@@ -1,16 +1,16 @@
 {{#if (eq runtime "workers")}}
 import { PrismaClient } from "../prisma/generated/client";
-import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { neonConfig } from "@neondatabase/serverless";
 
 neonConfig.poolQueryViaFetch = true;
 
-export function createPrismaClient(runtimeEnv: RuntimeEnv = env) {
+export function createPrismaClient() {
 	return new PrismaClient({
 		adapter: new PrismaNeon({
-			connectionString: runtimeEnv.DATABASE_URL,
+			connectionString: env.DATABASE_URL,
 		}),
 	});
 }
@@ -18,9 +18,9 @@ export function createPrismaClient(runtimeEnv: RuntimeEnv = env) {
 {{else if (eq dbSetup "prisma-postgres")}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-export function createPrismaClient(runtimeEnv: RuntimeEnv = env) {
+export function createPrismaClient() {
 	const adapter = new PrismaPg({
-		connectionString: runtimeEnv.DATABASE_URL,
+		connectionString: env.DATABASE_URL,
 		maxUses: 1,
 	});
 
@@ -30,9 +30,9 @@ export function createPrismaClient(runtimeEnv: RuntimeEnv = env) {
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-export function createPrismaClient(runtimeEnv: RuntimeEnv = env) {
+export function createPrismaClient() {
 	const adapter = new PrismaPg({
-		connectionString: runtimeEnv.DATABASE_URL,
+		connectionString: env.DATABASE_URL,
 		maxUses: 1,
 	});
 	return new PrismaClient({ adapter });
@@ -42,16 +42,16 @@ export function createPrismaClient(runtimeEnv: RuntimeEnv = env) {
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type { RuntimeEnv } from "@{{projectName}}/env/server";
+import type {} from "@{{projectName}}/env/server";
 {{else}}
-import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+import { env } from "@{{projectName}}/env/server";
 {{/if}}
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
 
-export function createPrismaClient(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const adapter = new PrismaNeon({
-		connectionString: runtimeEnv.DATABASE_URL,
+		connectionString: env.DATABASE_URL,
 	});
 
 	return new PrismaClient({ adapter });
@@ -60,9 +60,9 @@ export function createPrismaClient(runtimeEnv: {{#if (and (eq backend "self") (e
 {{else if (eq dbSetup "prisma-postgres")}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-export function createPrismaClient(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const adapter = new PrismaPg({
-		connectionString: runtimeEnv.DATABASE_URL,
+		connectionString: env.DATABASE_URL,
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 		maxUses: 1,
 {{/if}}
@@ -74,9 +74,9 @@ export function createPrismaClient(runtimeEnv: {{#if (and (eq backend "self") (e
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-export function createPrismaClient(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const adapter = new PrismaPg({
-		connectionString: runtimeEnv.DATABASE_URL,
+		connectionString: env.DATABASE_URL,
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 		maxUses: 1,
 {{/if}}

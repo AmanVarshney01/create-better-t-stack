@@ -1,8 +1,8 @@
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type { RuntimeEnv } from "@{{projectName}}/env/server";
+import type {} from "@{{projectName}}/env/server";
 {{else}}
-import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+import { env } from "@{{projectName}}/env/server";
 {{/if}}
 import * as schema from "./schema";
 
@@ -10,8 +10,8 @@ import * as schema from "./schema";
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 
-export function createDb(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
-	const sql = neon(runtimeEnv.DATABASE_URL);
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const sql = neon(env.DATABASE_URL);
 	return drizzle(sql, { schema });
 }
 {{else}}
@@ -20,16 +20,16 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 {{/if}}
 
-export function createDb(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 	const pool = new Pool({
-		connectionString: runtimeEnv.DATABASE_URL,
+		connectionString: env.DATABASE_URL,
 		maxUses: 1,
 	});
 
 	return drizzle({ client: pool, schema });
 {{else}}
-	return drizzle(runtimeEnv.DATABASE_URL, { schema });
+	return drizzle(env.DATABASE_URL, { schema });
 {{/if}}
 }
 {{/if}}
@@ -45,20 +45,20 @@ import * as schema from "./schema";
 {{#if (eq dbSetup "neon")}}
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+import { env } from "@{{projectName}}/env/server";
 
-export function createDb(runtimeEnv: RuntimeEnv = env) {
-	const sql = neon(runtimeEnv.DATABASE_URL || "");
+export function createDb() {
+	const sql = neon(env.DATABASE_URL || "");
 	return drizzle(sql, { schema });
 }
 {{else}}
 import { drizzle } from "drizzle-orm/node-postgres";
-import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+import { env } from "@{{projectName}}/env/server";
 import { Pool } from "pg";
 
-export function createDb(runtimeEnv: RuntimeEnv = env) {
+export function createDb() {
 	const pool = new Pool({
-		connectionString: runtimeEnv.DATABASE_URL || "",
+		connectionString: env.DATABASE_URL || "",
 		maxUses: 1,
 	});
 
