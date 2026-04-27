@@ -1,14 +1,18 @@
 {{#if (eq orm "prisma")}}
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type { RuntimeEnv } from "@{{projectName}}/env/server";
+{{else}}
+import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { createPolarClient } from "./lib/payments";
 {{/if}}
 import { createPrismaClient } from "@{{projectName}}/db";
 
-export function createAuth(runtimeEnv: typeof env = env) {
+export function createAuth(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
 	const prisma = createPrismaClient(runtimeEnv);
 
 	return betterAuth({
@@ -81,7 +85,11 @@ export const auth = createAuth();
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type { RuntimeEnv } from "@{{projectName}}/env/server";
+{{else}}
+import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { createPolarClient } from "./lib/payments";
@@ -90,7 +98,7 @@ import { createDb } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
 
-export function createAuth(runtimeEnv: typeof env = env) {
+export function createAuth(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
 	const db = createDb(runtimeEnv);
 
 	return betterAuth({
@@ -161,7 +169,7 @@ export const auth = createAuth();
 {{#if (eq runtime "workers")}}
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { env } from "@{{projectName}}/env/server";
+import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { createPolarClient } from "./lib/payments";
@@ -170,7 +178,7 @@ import { createDb } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
 
-export function createAuth(runtimeEnv: typeof env = env) {
+export function createAuth(runtimeEnv: RuntimeEnv = env) {
 	const db = createDb(runtimeEnv);
 
 	return betterAuth({
@@ -249,14 +257,18 @@ export function createAuth(runtimeEnv: typeof env = env) {
 {{#if (eq orm "mongoose")}}
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type { RuntimeEnv } from "@{{projectName}}/env/server";
+{{else}}
+import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { createPolarClient } from "./lib/payments";
 {{/if}}
 import { client } from "@{{projectName}}/db";
 
-export function createAuth(runtimeEnv: typeof env = env) {
+export function createAuth(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
 	return betterAuth({
 		database: mongodbAdapter(client),
 		trustedOrigins: [
@@ -319,14 +331,18 @@ export const auth = createAuth();
 
 {{#if (eq orm "none")}}
 import { betterAuth } from "better-auth";
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type { RuntimeEnv } from "@{{projectName}}/env/server";
+{{else}}
+import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { createPolarClient } from "./lib/payments";
 {{/if}}
 
 
-export function createAuth(runtimeEnv: typeof env = env) {
+export function createAuth(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
 	return betterAuth({
 		database: "", // Invalid configuration
 		trustedOrigins: [

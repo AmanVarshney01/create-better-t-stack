@@ -14,6 +14,8 @@ function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContex
 {{/if}}
 
 {{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+{{else}}
 import { createClerkClient } from "@clerk/backend";
 import { env } from "@{{projectName}}/env/server";
 
@@ -28,6 +30,7 @@ async function authenticateClerkRequest(request: Request): Promise<ClerkContextA
 	});
 	return toClerkContextAuth(requestState.toAuth());
 }
+{{/if}}
 {{/if}}
 
 {{#if (and (eq backend 'self') (includes frontend "next"))}}
@@ -132,13 +135,13 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 {{#if (eq webDeploy "cloudflare")}}
-import { env as defaultEnv } from "@{{projectName}}/env/server";
+import type { RuntimeEnv } from "@{{projectName}}/env/server";
 {{/if}}
 
 export type CreateContextOptions = {
 	headers: Headers;
 {{#if (eq webDeploy "cloudflare")}}
-	env?: typeof defaultEnv;
+	env: RuntimeEnv;
 {{/if}}
 };
 

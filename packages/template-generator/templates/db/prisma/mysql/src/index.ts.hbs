@@ -1,18 +1,18 @@
 {{#if (eq runtime "workers")}}
 import { PrismaClient } from "../prisma/generated/client";
-import { env } from "@{{projectName}}/env/server";
+import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
 
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export function createPrismaClient(runtimeEnv: typeof env = env) {
+export function createPrismaClient(runtimeEnv: RuntimeEnv = env) {
 	const adapter = new PrismaPlanetScale({ url: runtimeEnv.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export function createPrismaClient(runtimeEnv: typeof env = env) {
+export function createPrismaClient(runtimeEnv: RuntimeEnv = env) {
 	const databaseUrl: string = runtimeEnv.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
@@ -29,19 +29,23 @@ export function createPrismaClient(runtimeEnv: typeof env = env) {
 {{/if}}
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type { RuntimeEnv } from "@{{projectName}}/env/server";
+{{else}}
+import { env, type RuntimeEnv } from "@{{projectName}}/env/server";
+{{/if}}
 
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export function createPrismaClient(runtimeEnv: typeof env = env) {
+export function createPrismaClient(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
 	const adapter = new PrismaPlanetScale({ url: runtimeEnv.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export function createPrismaClient(runtimeEnv: typeof env = env) {
+export function createPrismaClient(runtimeEnv: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}RuntimeEnv{{else}}RuntimeEnv = env{{/if}}) {
 	const databaseUrl: string = runtimeEnv.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {

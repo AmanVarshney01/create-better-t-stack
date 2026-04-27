@@ -659,6 +659,10 @@ describe("API Configurations", () => {
       const alchemyConfig = files.get("packages/infra/alchemy.run.ts");
 
       expect(envServer).toContain("export function getCloudflareEnv");
+      expect(envServer).toContain("export type RuntimeEnv = Env");
+      expect(envServer).not.toContain("createEnvProxy");
+      expect(envServer).not.toContain("process.env");
+      expect(envServer).not.toContain("export const env");
       expect(envServer).not.toContain('from "$app/server"');
       expect(envServer).not.toContain('from "cloudflare:workers"');
       expect(rpcRoute).toContain("getCloudflareEnv(platform)");

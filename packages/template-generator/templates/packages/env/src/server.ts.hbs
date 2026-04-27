@@ -2,7 +2,10 @@
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
-export { env } from "cloudflare:workers";
+import { env } from "cloudflare:workers";
+
+export { env };
+export type RuntimeEnv = typeof env;
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "next"))}}
 /// <reference path="../env.d.ts" />
 import { getCloudflareContext } from "@opennextjs/cloudflare";
@@ -64,56 +67,28 @@ export async function getEnvAsync() {
 }
 
 export const env = createEnvProxy(resolveEnvValue);
+export type RuntimeEnv = typeof env;
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 /// <reference path="../env.d.ts" />
 
-function getNodeEnvValue(key: string) {
-	if (key === "DB") {
-		return undefined;
+export type RuntimeEnv = Env;
+
+// SvelteKit's Cloudflare adapter exposes bindings on event.platform.env.
+export function getCloudflareEnv(platform: Readonly<{ env?: RuntimeEnv }> | undefined): RuntimeEnv {
+	if (!platform?.env) {
+		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
 	}
 
-	if (typeof process !== "undefined" && process.env[key] !== undefined) {
-		return process.env[key];
-	}
-
-	return undefined;
-}
-
-type EnvValue = Env[keyof Env];
-
-function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefined) {
-	return new Proxy({} as Env, {
-		get(_target, prop) {
-			if (typeof prop !== "string") {
-				return undefined;
-			}
-
-			return getValue(prop as keyof Env & string);
-		},
-	});
-}
-
-function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
-	const nodeValue = getNodeEnvValue(key);
-	if (nodeValue !== undefined) {
-		return nodeValue as EnvValue;
-	}
-
-	return undefined;
-}
-
-export const env = createEnvProxy(resolveEnvValue);
-
-// SvelteKit's Cloudflare adapter exposes bindings on event.platform.env in
-// hooks and endpoints. Pass that through to server factories that need bindings.
-export function getCloudflareEnv(platform: Readonly<{ env?: Env }> | undefined): Env {
-	return platform?.env ?? env;
+	return platform.env;
 }
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
-export { env } from "cloudflare:workers";
+import { env } from "cloudflare:workers";
+
+export { env };
+export type RuntimeEnv = typeof env;
 {{else}}
 import "dotenv/config";
 import { createEnv } from "@t3-oss/env-core";
@@ -153,4 +128,5 @@ export const env = createEnv({
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,
 });
+export type RuntimeEnv = typeof env;
 {{/if}}

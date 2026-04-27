@@ -99,11 +99,11 @@ const selfAlchemyScenarios = [
   {
     frontend: "tanstack-start",
     api: "trpc",
-    envNeedle: 'export { env } from "cloudflare:workers";',
+    envNeedle: 'from "cloudflare:workers";',
   },
-  { frontend: "nuxt", api: "orpc", envNeedle: 'export { env } from "cloudflare:workers";' },
+  { frontend: "nuxt", api: "orpc", envNeedle: 'from "cloudflare:workers";' },
   { frontend: "svelte", api: "orpc", envNeedle: "export function getCloudflareEnv" },
-  { frontend: "astro", api: "orpc", envNeedle: 'export { env } from "cloudflare:workers";' },
+  { frontend: "astro", api: "orpc", envNeedle: 'from "cloudflare:workers";' },
 ] as const;
 
 describe("Alchemy Cloudflare generation", () => {
@@ -186,7 +186,8 @@ describe("Alchemy Cloudflare generation", () => {
     expect(infraFile).toContain('import { Worker } from "alchemy/cloudflare";');
     expect(infraFile).toContain('export const server = await Worker("server"');
     expect(infraFile).toContain("DB: db");
-    expect(envFile).toContain('export { env } from "cloudflare:workers";');
+    expect(envFile).toContain('from "cloudflare:workers";');
+    expect(envFile).toContain("export type RuntimeEnv = typeof env");
 
     for (const backend of ["express", "fastify", "elysia"] as const) {
       const result = await createVirtual({

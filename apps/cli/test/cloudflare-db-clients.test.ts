@@ -41,11 +41,12 @@ describe("Cloudflare DB client generation", () => {
     const contextFile = files.get("packages/api/src/context.ts");
     const todoRouterFile = files.get("packages/api/src/routers/todo.ts");
 
-    expect(dbFile).toContain("export function createDb(runtimeEnv: typeof env = env)");
+    expect(dbFile).toContain("export function createDb(runtimeEnv: RuntimeEnv = env)");
     expect(dbFile).not.toContain("export const db = createDb();");
-    expect(authFile).toContain("export function createAuth(runtimeEnv: typeof env = env)");
+    expect(authFile).toContain("export function createAuth(runtimeEnv: RuntimeEnv = env)");
     expect(authFile).not.toContain("export const auth = createAuth();");
-    expect(envFile).toContain('export { env } from "cloudflare:workers";');
+    expect(envFile).toContain('from "cloudflare:workers";');
+    expect(envFile).toContain("export type RuntimeEnv = typeof env");
     expect(serverFile).toContain("createAuth().handler(c.req.raw)");
     expect(contextFile).toContain("createAuth().api.getSession");
     expect(todoRouterFile).toContain("const db = createDb();");
@@ -79,7 +80,7 @@ describe("Cloudflare DB client generation", () => {
     const dashboardFile = files.get("apps/web/src/app/dashboard/page.tsx");
     const contextFile = files.get("packages/api/src/context.ts");
 
-    expect(dbFile).toContain("export function createPrismaClient(runtimeEnv: typeof env = env)");
+    expect(dbFile).toContain("export function createPrismaClient(runtimeEnv: RuntimeEnv = env)");
     expect(dbFile).not.toContain("export default prisma;");
     expect(authFile).toContain("const prisma = createPrismaClient(runtimeEnv);");
     expect(authFile).not.toContain("export const auth = createAuth();");
@@ -120,7 +121,7 @@ describe("Cloudflare DB client generation", () => {
       api: "trpc",
       routePath: "apps/web/src/routes/api/auth/$.ts",
       routeNeedles: ["const auth = createAuth()", "return auth.handler(request)"],
-      envNeedle: 'export { env } from "cloudflare:workers";',
+      envNeedle: 'from "cloudflare:workers";',
     },
     {
       name: "Nuxt",
@@ -128,7 +129,7 @@ describe("Cloudflare DB client generation", () => {
       api: "orpc",
       routePath: "apps/web/server/api/auth/[...all].ts",
       routeNeedles: ["const auth = createAuth();", "return auth.handler(toWebRequest(event));"],
-      envNeedle: 'export { env } from "cloudflare:workers";',
+      envNeedle: 'from "cloudflare:workers";',
     },
     {
       name: "Astro",
@@ -136,7 +137,7 @@ describe("Cloudflare DB client generation", () => {
       api: "orpc",
       routePath: "apps/web/src/pages/api/auth/[...all].ts",
       routeNeedles: ["const auth = createAuth();", "return auth.handler(ctx.request);"],
-      envNeedle: 'export { env } from "cloudflare:workers";',
+      envNeedle: 'from "cloudflare:workers";',
     },
     {
       name: "SvelteKit",
@@ -185,9 +186,18 @@ describe("Cloudflare DB client generation", () => {
       expect(dbFile).toContain("return drizzle(runtimeEnv.DB, { schema });");
       expect(dbFile).not.toContain('import { drizzle } from "drizzle-orm/libsql";');
       expect(dbFile).not.toContain("export const db = createDb();");
-      expect(authFile).toContain("export function createAuth(runtimeEnv: typeof env = env)");
+      expect(authFile).toContain(
+        scenario.frontend === "svelte"
+          ? "export function createAuth(runtimeEnv: RuntimeEnv)"
+          : "export function createAuth(runtimeEnv: RuntimeEnv = env)",
+      );
       expect(authFile).not.toContain("export const auth = createAuth();");
       expect(envFile).toContain(scenario.envNeedle);
+      expect(envFile).toContain(
+        scenario.frontend === "svelte"
+          ? "export type RuntimeEnv = Env"
+          : "export type RuntimeEnv = typeof env",
+      );
       if (scenario.envAbsentNeedle) {
         expect(envFile).not.toContain(scenario.envAbsentNeedle);
       }
@@ -296,7 +306,7 @@ describe("Cloudflare DB client generation", () => {
     const authFile = files.get("packages/auth/src/index.ts");
     const routeFile = files.get("apps/web/src/app/api/auth/[...all]/route.ts");
 
-    expect(authFile).toContain("export function createAuth(runtimeEnv: typeof env = env)");
+    expect(authFile).toContain("export function createAuth(runtimeEnv: RuntimeEnv = env)");
     expect(authFile).not.toContain("export const auth = createAuth();");
     expect(routeFile).toContain("toNextJsHandler(createAuth()).GET(request)");
   });
