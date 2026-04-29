@@ -1,4 +1,4 @@
-{{#if (eq serverDeploy "cloudflare")}}
+{{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
@@ -8,6 +8,10 @@ export { env } from "cloudflare:workers";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 function getNodeEnvValue(key: string) {
+	if (key === "DB") {
+		return undefined;
+	}
+
 	return process.env[key];
 }
 
@@ -60,6 +64,10 @@ export async function getEnvAsync() {
 }
 
 export const env = createEnvProxy(resolveEnvValue);
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+/// <reference path="../env.d.ts" />
+
+export {};
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module

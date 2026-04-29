@@ -67,6 +67,18 @@ export async function processApiTemplates(
     }
   } else if (hasSvelteWeb && config.api === "orpc") {
     processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/svelte`, "apps/web", config);
+    if (config.backend === "self") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `api/${config.api}/fullstack/svelte`,
+        "apps/web",
+        config,
+      );
+      if (config.auth !== "better-auth") {
+        vfs.writeFile("apps/web/src/hooks.server.ts", 'import "./lib/orpc.server";\n');
+      }
+    }
   } else if (hasSolidWeb && config.api === "orpc") {
     processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/solid`, "apps/web", config);
   } else if (hasAstroWeb && config.api === "orpc") {

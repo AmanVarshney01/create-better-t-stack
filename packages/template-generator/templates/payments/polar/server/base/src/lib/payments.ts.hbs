@@ -1,7 +1,20 @@
 import { Polar } from "@polar-sh/sdk";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+export function createPolarClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	return new Polar({
+		accessToken: env.POLAR_ACCESS_TOKEN,
+		server: "sandbox",
+	});
+}
+{{else}}
 export const polarClient = new Polar({
 	accessToken: env.POLAR_ACCESS_TOKEN,
 	server: "sandbox",
 });
+{{/if}}

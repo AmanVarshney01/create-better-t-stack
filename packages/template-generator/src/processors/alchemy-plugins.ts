@@ -76,6 +76,19 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
     });
   }
 
+  if (!sourceFile.getVariableDeclaration("isNuxtPrepare")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const isNuxtPrepare =
+  process.env.npm_lifecycle_event === "postinstall" ||
+  process.env.npm_lifecycle_script === "nuxt prepare" ||
+  process.argv.includes("prepare");`,
+    );
+  }
+
   const exportAssignment = sourceFile.getExportAssignment((d) => !d.isExportEquals());
 
   if (!exportAssignment) return;
@@ -99,7 +112,7 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
         name: "nitro",
         initializer: `{
     preset: "cloudflare-module",
-    cloudflare: alchemy(),
+    ...(isNuxtPrepare ? {} : { cloudflare: alchemy() }),
     prerender: {
       routes: ["/"],
       autoSubfolderIndex: false,
@@ -150,6 +163,9 @@ function processSvelteAlchemy(vfs: VirtualFileSystem) {
   const sourceFile = project.createSourceFile("svelte.config.js", content);
 
   const importDeclarations = sourceFile.getImportDeclarations();
+  const alchemyImport = importDeclarations.find(
+    (imp) => imp.getModuleSpecifierValue() === "alchemy/cloudflare/sveltekit",
+  );
   const adapterImport = importDeclarations.find((imp) =>
     imp.getModuleSpecifierValue().includes("@sveltejs/adapter"),
   );
@@ -158,7 +174,7 @@ function processSvelteAlchemy(vfs: VirtualFileSystem) {
     adapterImport.setModuleSpecifier("alchemy/cloudflare/sveltekit");
     adapterImport.removeDefaultImport();
     adapterImport.setDefaultImport("alchemy");
-  } else {
+  } else if (!alchemyImport) {
     sourceFile.insertImportDeclaration(0, {
       moduleSpecifier: "alchemy/cloudflare/sveltekit",
       defaultImport: "alchemy",

@@ -239,6 +239,13 @@ export const TECH_OPTIONS: Record<
       color: "from-green-400 to-green-700",
     },
     {
+      id: "self-svelte",
+      name: "Fullstack SvelteKit",
+      description: "Use SvelteKit's built-in server routes",
+      icon: `${ICON_BASE_URL}/svelte.svg`,
+      color: "from-orange-500 to-orange-700",
+    },
+    {
       id: "self-astro",
       name: "Fullstack Astro",
       description: "Use Astro's built-in API routes",

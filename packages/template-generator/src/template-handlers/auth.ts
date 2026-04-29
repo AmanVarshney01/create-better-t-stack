@@ -200,6 +200,15 @@ export async function processAuthTemplates(
     }
     processTemplatesFromPrefix(vfs, templates, `auth/${authProvider}/web/nuxt`, "apps/web", config);
   } else if (hasSvelteWeb) {
+    if (config.backend === "self" && authProvider === "better-auth") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `auth/${authProvider}/fullstack/svelte`,
+        "apps/web",
+        config,
+      );
+    }
     processTemplatesFromPrefix(
       vfs,
       templates,

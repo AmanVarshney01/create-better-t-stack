@@ -29,6 +29,9 @@
 			onSubmit: validationSchema,
 		},
 	}));
+
+	type FormField = ReturnType<typeof form.createField>;
+	type SubmitState = Pick<typeof form.state, 'canSubmit' | 'isSubmitting'>;
 </script>
 
 <div class="mx-auto mt-10 w-full max-w-md p-6">
@@ -43,7 +46,7 @@
 		}}
 	>
 		<form.Field name="email">
-			{#snippet children(field)}
+			{#snippet children(field: FormField)}
 				<div class="space-y-1">
 					<label for={field.name}>Email</label>
 					<input
@@ -68,7 +71,7 @@
 		</form.Field>
 
 		<form.Field name="password">
-			{#snippet children(field)}
+			{#snippet children(field: FormField)}
 				<div class="space-y-1">
 					<label for={field.name}>Password</label>
 					<input
@@ -92,8 +95,8 @@
 			{/snippet}
 		</form.Field>
 
-		<form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
-			{#snippet children(state)}
+		<form.Subscribe selector={(state: typeof form.state): SubmitState => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+			{#snippet children(state: SubmitState)}
 				<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>
 					{state.isSubmitting ? 'Submitting...' : 'Sign In'}
 				</button>

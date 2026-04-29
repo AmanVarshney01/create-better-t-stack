@@ -1,0 +1,30 @@
+import { getRequestEvent } from "$app/server";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter, type AppRouterClient } from "@{{projectName}}/api/routers/index";
+import { createRouterClient } from "@orpc/server";
+
+if (typeof window !== "undefined") {
+	throw new Error("This file should only be imported on the server.");
+}
+
+const serverClient: AppRouterClient = createRouterClient(appRouter, {
+	context: async () => {
+		const event = getRequestEvent();
+{{#if (eq webDeploy "cloudflare")}}
+		if (!event.platform?.env) {
+			throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
+		}
+
+{{/if}}
+		return createContext({
+			headers: event.request.headers,
+{{#if (eq webDeploy "cloudflare")}}
+			env: event.platform.env,
+{{/if}}
+		});
+	},
+});
+
+// oRPC's SvelteKit SSR setup loads this from hooks.server.ts so $lib/orpc can
+// reuse the in-process server client during SSR and fall back to HTTP in the browser.
+globalThis.$client = serverClient;

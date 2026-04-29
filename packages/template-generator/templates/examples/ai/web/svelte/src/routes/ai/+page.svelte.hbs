@@ -1,12 +1,18 @@
 <script lang="ts">
+	{{#unless (eq backend "self")}}
 	import { PUBLIC_SERVER_URL } from "$env/static/public";
+	{{/unless}}
 	import { Chat } from "@ai-sdk/svelte";
 	import { DefaultChatTransport } from "ai";
 
 	let input = $state("");
 	const chat = new Chat({
 		transport: new DefaultChatTransport({
+			{{#if (eq backend "self")}}
+			api: "/api/ai",
+			{{else}}
 			api: `${PUBLIC_SERVER_URL}/ai`,
+			{{/if}}
 		}),
 	});
 

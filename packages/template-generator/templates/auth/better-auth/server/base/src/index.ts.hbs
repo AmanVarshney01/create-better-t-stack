@@ -1,15 +1,23 @@
 {{#if (eq orm "prisma")}}
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { createPolarClient } from "./lib/payments";
+{{else}}
 import { polarClient } from "./lib/payments";
+{{/if}}
 {{/if}}
 import { createPrismaClient } from "@{{projectName}}/db";
 
-export function createAuth() {
-	const prisma = createPrismaClient();
+export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env{{/if}});
 
 	return betterAuth({
 		database: prismaAdapter(prisma, {
@@ -50,7 +58,7 @@ export function createAuth() {
 		plugins: [
 {{#if (eq payments "polar")}}
 			polar({
-				client: polarClient,
+				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -81,17 +89,25 @@ export const auth = createAuth();
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { createPolarClient } from "./lib/payments";
+{{else}}
 import { polarClient } from "./lib/payments";
+{{/if}}
 {{/if}}
 import { createDb } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
 
-export function createAuth() {
-	const db = createDb();
+export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env{{/if}});
 
 	return betterAuth({
 		database: drizzleAdapter(db, {
@@ -131,7 +147,7 @@ export function createAuth() {
 		plugins: [
 {{#if (eq payments "polar")}}
 			polar({
-				client: polarClient,
+				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -249,14 +265,22 @@ export function createAuth() {
 {{#if (eq orm "mongoose")}}
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { createPolarClient } from "./lib/payments";
+{{else}}
 import { polarClient } from "./lib/payments";
+{{/if}}
 {{/if}}
 import { client } from "@{{projectName}}/db";
 
-export function createAuth() {
+export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	return betterAuth({
 		database: mongodbAdapter(client),
 		trustedOrigins: [
@@ -290,7 +314,7 @@ export function createAuth() {
 {{#if (eq payments "polar")}}
 		plugins: [
 			polar({
-				client: polarClient,
+				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -319,14 +343,22 @@ export const auth = createAuth();
 
 {{#if (eq orm "none")}}
 import { betterAuth } from "better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { createPolarClient } from "./lib/payments";
+{{else}}
 import { polarClient } from "./lib/payments";
+{{/if}}
 {{/if}}
 
 
-export function createAuth() {
+export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	return betterAuth({
 		database: "", // Invalid configuration
 		trustedOrigins: [
@@ -360,7 +392,7 @@ export function createAuth() {
 {{#if (eq payments "polar")}}
 		plugins: [
 			polar({
-				client: polarClient,
+				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [

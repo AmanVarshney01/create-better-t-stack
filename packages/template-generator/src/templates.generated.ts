@@ -308,6 +308,9 @@ export default defineConfig({
 });
 `],
   ["api/orpc/fullstack/astro/src/pages/rpc/[...rest].ts.hbs", `import type { APIRoute } from "astro";
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/fetch";
 import { onError } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
@@ -321,17 +324,37 @@ const handler = new RPCHandler(appRouter, {
   ],
 });
 
+const apiHandler = new OpenAPIHandler(appRouter, {
+  plugins: [
+    new OpenAPIReferencePlugin({
+      schemaConverters: [new ZodToJsonSchemaConverter()],
+    }),
+  ],
+  interceptors: [
+    onError((error) => {
+      console.error(error);
+    }),
+  ],
+});
+
 export const prerender = false;
 
 export const ALL: APIRoute = async ({ request }) => {
   const context = await createContext({ headers: request.headers });
 
-  const { response } = await handler.handle(request, {
+  const rpcResult = await handler.handle(request, {
     prefix: "/rpc",
     context,
   });
+  if (rpcResult.response) return rpcResult.response;
 
-  return response ?? new Response("Not found", { status: 404 });
+  const apiResult = await apiHandler.handle(request, {
+    prefix: "/rpc/api-reference",
+    context,
+  });
+  if (apiResult.response) return apiResult.response;
+
+  return new Response("Not found", { status: 404 });
 };
 `],
   ["api/orpc/fullstack/next/src/app/api/rpc/[[...rest]]/route.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
@@ -489,6 +512,103 @@ export default defineEventHandler(async (event) => {
 });
 `],
   ["api/orpc/fullstack/nuxt/server/routes/rpc/index.ts.hbs", `export { default } from "./[...]";
+`],
+  ["api/orpc/fullstack/svelte/src/lib/orpc.server.ts.hbs", `import { getRequestEvent } from "$app/server";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter, type AppRouterClient } from "@{{projectName}}/api/routers/index";
+import { createRouterClient } from "@orpc/server";
+
+if (typeof window !== "undefined") {
+	throw new Error("This file should only be imported on the server.");
+}
+
+const serverClient: AppRouterClient = createRouterClient(appRouter, {
+	context: async () => {
+		const event = getRequestEvent();
+{{#if (eq webDeploy "cloudflare")}}
+		if (!event.platform?.env) {
+			throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
+		}
+
+{{/if}}
+		return createContext({
+			headers: event.request.headers,
+{{#if (eq webDeploy "cloudflare")}}
+			env: event.platform.env,
+{{/if}}
+		});
+	},
+});
+
+// oRPC's SvelteKit SSR setup loads this from hooks.server.ts so $lib/orpc can
+// reuse the in-process server client during SSR and fall back to HTTP in the browser.
+globalThis.$client = serverClient;
+`],
+  ["api/orpc/fullstack/svelte/src/routes/rpc/[...rest]/+server.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { onError } from "@orpc/server";
+import { RPCHandler } from "@orpc/server/fetch";
+import type { RequestHandler } from "@sveltejs/kit";
+
+const rpcHandler = new RPCHandler(appRouter, {
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+const apiHandler = new OpenAPIHandler(appRouter, {
+	plugins: [
+		new OpenAPIReferencePlugin({
+			schemaConverters: [new ZodToJsonSchemaConverter()],
+		}),
+	],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
+{{#if (eq webDeploy "cloudflare")}}
+	if (!platform?.env) {
+		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
+	}
+
+{{/if}}
+	const context = await createContext({
+		headers: request.headers,
+{{#if (eq webDeploy "cloudflare")}}
+		env: platform.env,
+{{/if}}
+	});
+
+	const rpcResult = await rpcHandler.handle(request, {
+		prefix: "/rpc",
+		context,
+	});
+	if (rpcResult.response) return rpcResult.response;
+
+	const apiResult = await apiHandler.handle(request, {
+		prefix: "/rpc/api-reference",
+		context,
+	});
+	if (apiResult.response) return apiResult.response;
+
+	return new Response("Not found", { status: 404 });
+};
+
+export const HEAD = handle;
+export const GET = handle;
+export const POST = handle;
+export const PUT = handle;
+export const PATCH = handle;
+export const DELETE = handle;
 `],
   ["api/orpc/fullstack/tanstack-start/src/routes/api/rpc/$.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
@@ -677,6 +797,8 @@ function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContex
 {{/if}}
 
 {{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+{{else}}
 import { createClerkClient } from "@clerk/backend";
 import { env } from "@{{projectName}}/env/server";
 
@@ -691,6 +813,7 @@ async function authenticateClerkRequest(request: Request): Promise<ClerkContextA
 	});
 	return toClerkContextAuth(requestState.toAuth());
 }
+{{/if}}
 {{/if}}
 
 {{#if (and (eq backend 'self') (includes frontend "next"))}}
@@ -782,6 +905,46 @@ export async function createContext({ headers }: CreateContextOptions) {
 	return {
 		auth: null,
 		session: null,
+	};
+{{/if}}
+}
+
+{{else if (and (eq backend 'self') (includes frontend "svelte"))}}
+{{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{/if}}
+{{#if (eq webDeploy "cloudflare")}}
+import type {} from "@{{projectName}}/env/server";
+{{/if}}
+
+export type CreateContextOptions = {
+	headers: Headers;
+{{#if (eq webDeploy "cloudflare")}}
+	env: Env;
+{{/if}}
+};
+
+export async function createContext({ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }: CreateContextOptions) {
+{{#if (eq auth "better-auth")}}
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth({{#if (eq webDeploy "cloudflare")}}env{{/if}}){{else}}auth{{/if}}.api.getSession({ headers });
+	return {
+		auth: null,
+		session,
+{{#if (eq webDeploy "cloudflare")}}
+		env,
+{{/if}}
+	};
+{{else}}
+	return {
+		auth: null,
+		session: null,
+{{#if (eq webDeploy "cloudflare")}}
+		env,
+{{/if}}
 	};
 {{/if}}
 }
@@ -1354,7 +1517,9 @@ export const client: AppRouterClient = createORPCClient(link);
 
 export const orpc = createTanstackQueryUtils(client);
 `],
-  ["api/orpc/web/svelte/src/lib/orpc.ts.hbs", `import { PUBLIC_SERVER_URL } from "$env/static/public";
+  ["api/orpc/web/svelte/src/lib/orpc.ts.hbs", `{{#unless (eq backend "self")}}
+import { PUBLIC_SERVER_URL } from "$env/static/public";
+{{/unless}}
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
@@ -1370,7 +1535,17 @@ export const queryClient = new QueryClient({
 });
 
 export const link = new RPCLink({
+	{{#if (eq backend "self")}}
+	url: () => {
+		if (typeof window === "undefined") {
+			throw new Error("This link is not allowed on the server side.");
+		}
+
+		return \`\${window.location.origin}/rpc\`;
+	},
+	{{else}}
 	url: \`\${PUBLIC_SERVER_URL}/rpc\`,
+	{{/if}}
 	{{#if (eq auth "better-auth")}}
 	fetch(url, options) {
 		return fetch(url, {
@@ -1381,7 +1556,11 @@ export const link = new RPCLink({
 	{{/if}}
 });
 
+{{#if (eq backend "self")}}
+export const client: AppRouterClient = globalThis.$client ?? createORPCClient(link);
+{{else}}
 export const client: AppRouterClient = createORPCClient(link);
+{{/if}}
 
 export const orpc = createTanstackQueryUtils(client);
 `],
@@ -5111,6 +5290,45 @@ export default defineEventHandler((event) => {
   return auth.handler(toWebRequest(event));
 });
 `],
+  ["auth/better-auth/fullstack/svelte/src/hooks.server.ts.hbs", `{{#if (eq api "orpc")}}
+import "./lib/orpc.server";
+{{/if}}
+import { building } from "$app/environment";
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import { svelteKitHandler } from "better-auth/svelte-kit";
+import type { Handle } from "@sveltejs/kit";
+
+export const handle: Handle = async ({ event, resolve }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+	if (building) {
+		return resolve(event);
+	}
+
+	if (!event.platform?.env) {
+		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
+	}
+
+	const authInstance = createAuth(event.platform.env);
+{{else}}
+	const authInstance = createAuth();
+{{/if}}
+{{else}}
+	const authInstance = auth;
+{{/if}}
+
+	return svelteKitHandler({
+		event,
+		resolve,
+		auth: authInstance,
+		building,
+	});
+};
+`],
   ["auth/better-auth/fullstack/tanstack-start/src/routes/api/auth/$.ts.hbs", `{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 import { createAuth } from '@{{projectName}}/auth'
 {{else}}
@@ -7045,15 +7263,23 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   ["auth/better-auth/server/base/src/index.ts.hbs", `{{#if (eq orm "prisma")}}
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { createPolarClient } from "./lib/payments";
+{{else}}
 import { polarClient } from "./lib/payments";
+{{/if}}
 {{/if}}
 import { createPrismaClient } from "@{{projectName}}/db";
 
-export function createAuth() {
-	const prisma = createPrismaClient();
+export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env{{/if}});
 
 	return betterAuth({
 		database: prismaAdapter(prisma, {
@@ -7094,7 +7320,7 @@ export function createAuth() {
 		plugins: [
 {{#if (eq payments "polar")}}
 			polar({
-				client: polarClient,
+				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -7125,17 +7351,25 @@ export const auth = createAuth();
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { createPolarClient } from "./lib/payments";
+{{else}}
 import { polarClient } from "./lib/payments";
+{{/if}}
 {{/if}}
 import { createDb } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
 
-export function createAuth() {
-	const db = createDb();
+export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env{{/if}});
 
 	return betterAuth({
 		database: drizzleAdapter(db, {
@@ -7175,7 +7409,7 @@ export function createAuth() {
 		plugins: [
 {{#if (eq payments "polar")}}
 			polar({
-				client: polarClient,
+				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -7293,14 +7527,22 @@ export function createAuth() {
 {{#if (eq orm "mongoose")}}
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { createPolarClient } from "./lib/payments";
+{{else}}
 import { polarClient } from "./lib/payments";
+{{/if}}
 {{/if}}
 import { client } from "@{{projectName}}/db";
 
-export function createAuth() {
+export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	return betterAuth({
 		database: mongodbAdapter(client),
 		trustedOrigins: [
@@ -7334,7 +7576,7 @@ export function createAuth() {
 {{#if (eq payments "polar")}}
 		plugins: [
 			polar({
-				client: polarClient,
+				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -7363,14 +7605,22 @@ export const auth = createAuth();
 
 {{#if (eq orm "none")}}
 import { betterAuth } from "better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { createPolarClient } from "./lib/payments";
+{{else}}
 import { polarClient } from "./lib/payments";
+{{/if}}
 {{/if}}
 
 
-export function createAuth() {
+export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	return betterAuth({
 		database: "", // Invalid configuration
 		trustedOrigins: [
@@ -7404,7 +7654,7 @@ export function createAuth() {
 {{#if (eq payments "polar")}}
 		plugins: [
 			polar({
-				client: polarClient,
+				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -11205,6 +11455,9 @@ function RouteComponent() {
 			onSubmit: validationSchema,
 		},
 	}));
+
+	type FormField = ReturnType<typeof form.createField>;
+	type SubmitState = Pick<typeof form.state, 'canSubmit' | 'isSubmitting'>;
 </script>
 
 <div class="mx-auto mt-10 w-full max-w-md p-6">
@@ -11219,7 +11472,7 @@ function RouteComponent() {
 		}}
 	>
 		<form.Field name="email">
-			{#snippet children(field)}
+			{#snippet children(field: FormField)}
 				<div class="space-y-1">
 					<label for={field.name}>Email</label>
 					<input
@@ -11244,7 +11497,7 @@ function RouteComponent() {
 		</form.Field>
 
 		<form.Field name="password">
-			{#snippet children(field)}
+			{#snippet children(field: FormField)}
 				<div class="space-y-1">
 					<label for={field.name}>Password</label>
 					<input
@@ -11268,8 +11521,8 @@ function RouteComponent() {
 			{/snippet}
 		</form.Field>
 
-		<form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
-			{#snippet children(state)}
+		<form.Subscribe selector={(state: typeof form.state): SubmitState => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+			{#snippet children(state: SubmitState)}
 				<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>
 					{state.isSubmitting ? 'Submitting...' : 'Sign In'}
 				</button>
@@ -11323,6 +11576,9 @@ function RouteComponent() {
 			onSubmit: validationSchema,
 		},
 	}));
+
+	type FormField = ReturnType<typeof form.createField>;
+	type SubmitState = Pick<typeof form.state, 'canSubmit' | 'isSubmitting'>;
 </script>
 
 <div class="mx-auto mt-10 w-full max-w-md p-6">
@@ -11338,7 +11594,7 @@ function RouteComponent() {
 		}}
 	>
 		<form.Field name="name">
-			{#snippet children(field)}
+			{#snippet children(field: FormField)}
 				<div class="space-y-1">
 					<label for={field.name}>Name</label>
 					<input
@@ -11362,7 +11618,7 @@ function RouteComponent() {
 		</form.Field>
 
 		<form.Field name="email">
-			{#snippet children(field)}
+			{#snippet children(field: FormField)}
 				<div class="space-y-1">
 					<label for={field.name}>Email</label>
 					<input
@@ -11387,7 +11643,7 @@ function RouteComponent() {
 		</form.Field>
 
 		<form.Field name="password">
-			{#snippet children(field)}
+			{#snippet children(field: FormField)}
 				<div class="space-y-1">
 					<label for={field.name}>Password</label>
 					<input
@@ -11411,8 +11667,8 @@ function RouteComponent() {
 			{/snippet}
 		</form.Field>
 
-		<form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
-			{#snippet children(state)}
+		<form.Subscribe selector={(state: typeof form.state): SubmitState => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+			{#snippet children(state: SubmitState)}
 				<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>
 					{state.isSubmitting ? 'Submitting...' : 'Sign Up'}
 				</button>
@@ -11480,14 +11736,18 @@ function RouteComponent() {
 	{/if}
 </div>
 `],
-  ["auth/better-auth/web/svelte/src/lib/auth-client.ts.hbs", `import { PUBLIC_SERVER_URL } from "$env/static/public";
+  ["auth/better-auth/web/svelte/src/lib/auth-client.ts.hbs", `{{#unless (eq backend "self")}}
+import { PUBLIC_SERVER_URL } from "$env/static/public";
+{{/unless}}
 import { createAuthClient } from "better-auth/svelte";
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
 
 export const authClient = createAuthClient({
+{{#unless (eq backend "self")}}
 	baseURL: PUBLIC_SERVER_URL,
+{{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
 {{/if}}
@@ -14208,13 +14468,17 @@ export default defineConfig({
 });
 `],
   ["db/drizzle/mysql/src/index.ts.hbs", `{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 import * as schema from "./schema";
 
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 
-export function createDb() {
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	return drizzle({
 		connection: {
 			host: env.DATABASE_HOST,
@@ -14227,7 +14491,7 @@ export function createDb() {
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 
-export function createDb() {
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	return drizzle({
 		connection: {
 			uri: env.DATABASE_URL,
@@ -14295,14 +14559,18 @@ export default defineConfig({
 });
 `],
   ["db/drizzle/postgres/src/index.ts.hbs", `{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 import * as schema from "./schema";
 
 {{#if (eq dbSetup "neon")}}
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 
-export function createDb() {
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const sql = neon(env.DATABASE_URL);
 	return drizzle(sql, { schema });
 }
@@ -14312,7 +14580,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 {{/if}}
 
-export function createDb() {
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 	const pool = new Pool({
 		connectionString: env.DATABASE_URL,
@@ -14391,18 +14659,26 @@ export default defineConfig({
   ["db/drizzle/sqlite/src/index.ts.hbs", `{{#if (eq dbSetup "d1")}}
 import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/d1";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 
-export function createDb() {
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	return drizzle(env.DB, { schema });
 }
 {{else if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
-export function createDb() {
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const client = createClient({
 		url: env.DATABASE_URL,
 {{#if (eq dbSetup "turso")}}
@@ -14563,19 +14839,23 @@ export function createPrismaClient() {
 {{/if}}
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export function createPrismaClient() {
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export function createPrismaClient() {
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
@@ -14684,11 +14964,15 @@ export function createPrismaClient() {
 {{/if}}
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
 
-export function createPrismaClient() {
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const adapter = new PrismaNeon({
 		connectionString: env.DATABASE_URL,
 	});
@@ -14699,7 +14983,7 @@ export function createPrismaClient() {
 {{else if (eq dbSetup "prisma-postgres")}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-export function createPrismaClient() {
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const adapter = new PrismaPg({
 		connectionString: env.DATABASE_URL,
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
@@ -14713,7 +14997,7 @@ export function createPrismaClient() {
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-export function createPrismaClient() {
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const adapter = new PrismaPg({
 		connectionString: env.DATABASE_URL,
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
@@ -14778,9 +15062,13 @@ datasource db {
 
 {{#if (eq dbSetup "d1")}}
 import { PrismaD1 } from "@prisma/adapter-d1";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 
-export function createPrismaClient() {
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const adapter = new PrismaD1(env.DB);
 	return new PrismaClient({ adapter });
 }
@@ -14791,9 +15079,13 @@ export default prisma;
 {{/if}}
 {{else}}
 import { PrismaLibSql } from "@prisma/adapter-libsql";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 
-export function createPrismaClient() {
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const adapter = new PrismaLibSql({
 		url: env.DATABASE_URL,
 {{#if (eq dbSetup "turso")}}
@@ -14929,6 +15221,26 @@ export default defineEventHandler(async (event) => {
 
   return result.toUIMessageStreamResponse();
 });
+`],
+  ["examples/ai/fullstack/svelte/src/routes/api/ai/+server.ts.hbs", `import { devToolsMiddleware } from "@ai-sdk/devtools";
+import { google } from "@ai-sdk/google";
+import { convertToModelMessages, streamText, type UIMessage, wrapLanguageModel } from "ai";
+import type { RequestHandler } from "@sveltejs/kit";
+
+export const POST: RequestHandler = async ({ request }) => {
+	const { messages }: { messages: UIMessage[] } = await request.json();
+
+	const model = wrapLanguageModel({
+		model: google("gemini-2.5-flash"),
+		middleware: devToolsMiddleware(),
+	});
+	const result = streamText({
+		model,
+		messages: await convertToModelMessages(messages),
+	});
+
+	return result.toUIMessageStreamResponse();
+};
 `],
   ["examples/ai/fullstack/tanstack-start/src/routes/api/ai/$.ts.hbs", `import { createFileRoute } from "@tanstack/react-router";
 import { google } from "@ai-sdk/google";
@@ -17699,14 +18011,20 @@ function RouteComponent() {
 {{/if}}
 `],
   ["examples/ai/web/svelte/src/routes/ai/+page.svelte.hbs", `<script lang="ts">
+	{{#unless (eq backend "self")}}
 	import { PUBLIC_SERVER_URL } from "$env/static/public";
+	{{/unless}}
 	import { Chat } from "@ai-sdk/svelte";
 	import { DefaultChatTransport } from "ai";
 
 	let input = $state("");
 	const chat = new Chat({
 		transport: new DefaultChatTransport({
+			{{#if (eq backend "self")}}
+			api: "/api/ai",
+			{{else}}
 			api: \`\${PUBLIC_SERVER_URL}/ai\`,
+			{{/if}}
 		}),
 	});
 
@@ -19004,18 +19322,18 @@ import { todo } from "@{{projectName}}/db/schema/todo";
 import { publicProcedure } from "../index";
 
 export const todoRouter = {
-  getAll: publicProcedure.handler(async () => {
+  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-    const db = createDb();
+    const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
 {{/if}}
     return await db.select().from(todo);
   }),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .handler(async ({ input }) => {
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb();
+      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
 {{/if}}
       return await db
         .insert(todo)
@@ -19026,9 +19344,9 @@ export const todoRouter = {
 
   toggle: publicProcedure
     .input(z.object({ id: z.number(), completed: z.boolean() }))
-    .handler(async ({ input }) => {
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb();
+      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
 {{/if}}
       return await db
         .update(todo)
@@ -19038,9 +19356,9 @@ export const todoRouter = {
 
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
-    .handler(async ({ input }) => {
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb();
+      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
 {{/if}}
       return await db.delete(todo).where(eq(todo.id, input.id));
     }),
@@ -19226,9 +19544,9 @@ import prisma from "@{{projectName}}/db";
 import { publicProcedure } from "../index";
 
 export const todoRouter = {
-  getAll: publicProcedure.handler(async () => {
+  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-    const prisma = createPrismaClient();
+    const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
 {{/if}}
     return await prisma.todo.findMany({
       orderBy: {
@@ -19239,9 +19557,9 @@ export const todoRouter = {
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .handler(async ({ input }) => {
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const prisma = createPrismaClient();
+      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
 {{/if}}
       return await prisma.todo.create({
         data: {
@@ -19256,9 +19574,9 @@ export const todoRouter = {
     {{else}}
     .input(z.object({ id: z.number(), completed: z.boolean() }))
     {{/if}}
-    .handler(async ({ input }) => {
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const prisma = createPrismaClient();
+      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
 {{/if}}
       return await prisma.todo.update({
         where: { id: input.id },
@@ -19272,9 +19590,9 @@ export const todoRouter = {
     {{else}}
     .input(z.object({ id: z.number() }))
     {{/if}}
-    .handler(async ({ input }) => {
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const prisma = createPrismaClient();
+      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
 {{/if}}
       return await prisma.todo.delete({
         where: { id: input.id },
@@ -27717,13 +28035,13 @@ vite.config.ts.timestamp-*
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.1",
-		"@sveltejs/kit": "^2.57.1",
+		"@sveltejs/kit": "^2.58.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
-		"@tailwindcss/vite": "^4.2.2",
-		"svelte": "^5.55.4",
+		"@tailwindcss/vite": "^4.2.4",
+		"svelte": "^5.55.5",
 		"svelte-check": "^4.4.6",
-		"tailwindcss": "^4.2.2",
-		"vite": "^8.0.8"
+		"tailwindcss": "^4.2.4",
+		"vite": "^8.0.10"
 	},
 	"dependencies": {}
 }
@@ -27734,16 +28052,36 @@ body {
   @apply bg-neutral-950 text-neutral-100;
 }
 `],
-  ["frontend/svelte/src/app.d.ts", `// See https://svelte.dev/docs/kit/types#app.d.ts
+  ["frontend/svelte/src/app.d.ts.hbs", `{{#if (eq webDeploy "cloudflare")}}
+/// <reference path="../../../packages/env/env.d.ts" />
+{{/if}}
+{{#if (and (eq backend "self") (eq api "orpc"))}}
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+
+{{/if}}
+// See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
-  namespace App {
-    // interface Error {}
-    // interface Locals {}
-    // interface PageData {}
-    // interface PageState {}
-    // interface Platform {}
-  }
+{{#if (and (eq backend "self") (eq api "orpc"))}}
+	var $client: AppRouterClient | undefined;
+
+{{/if}}
+	namespace App {
+		// interface Error {}
+		// interface Locals {}
+		// interface PageData {}
+		// interface PageState {}
+{{#if (eq webDeploy "cloudflare")}}
+		interface Platform {
+			env: Env;
+			ctx: ExecutionContext;
+			caches: CacheStorage;
+			cf: IncomingRequestCfProperties;
+		}
+{{else}}
+		// interface Platform {}
+{{/if}}
+	}
 }
 
 export {};
@@ -27766,32 +28104,22 @@ export {};
     {{#if (eq auth "better-auth")}}
 	import UserMenu from './UserMenu.svelte';
     {{/if}}
-    const links = [
-        { to: "/", label: "Home" },
-        {{#if (eq auth "better-auth")}}
-        { to: "/dashboard", label: "Dashboard" },
-        {{/if}}
-        {{#if (includes examples "todo")}}
-        { to: "/todos", label: "Todos" },
-        {{/if}}
-        {{#if (includes examples "ai")}}
-        { to: "/ai", label: "AI Chat" },
-        {{/if}}
-    ];
 
 </script>
 
 <div>
 	<div class="flex flex-row items-center justify-between px-4 py-2 md:px-6">
 		<nav class="flex gap-4 text-lg">
-			{#each links as link (link.to)}
-				<a
-					href={link.to}
-					class="hover:text-neutral-400 transition-colors"
-				>
-					{link.label}
-				</a>
-			{/each}
+			<a href="/" class="hover:text-neutral-400 transition-colors">Home</a>
+		    {{#if (eq auth "better-auth")}}
+			<a href="/dashboard" class="hover:text-neutral-400 transition-colors">Dashboard</a>
+		    {{/if}}
+		    {{#if (includes examples "todo")}}
+			<a href="/todos" class="hover:text-neutral-400 transition-colors">Todos</a>
+		    {{/if}}
+		    {{#if (includes examples "ai")}}
+			<a href="/ai" class="hover:text-neutral-400 transition-colors">AI Chat</a>
+		    {{/if}}
 		</nav>
 		<div class="flex items-center gap-2">
 		    {{#if (eq auth "better-auth")}}
@@ -27954,7 +28282,11 @@ const TITLE_TEXT = \`
 {{/if}}
 `],
   ["frontend/svelte/static/favicon.png", `[Binary file]`],
-  ["frontend/svelte/svelte.config.js.hbs", `import adapter from '@sveltejs/adapter-auto';
+  ["frontend/svelte/svelte.config.js.hbs", `{{#if (eq webDeploy "cloudflare")}}
+import alchemy from 'alchemy/cloudflare/sveltekit';
+{{else}}
+import adapter from '@sveltejs/adapter-auto';
+{{/if}}
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -27964,10 +28296,15 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
+{{#if (eq webDeploy "cloudflare")}}
+		// Alchemy's adapter wraps SvelteKit's Cloudflare adapter for local platform.env and Worker builds.
+		adapter: alchemy()
+{{else}}
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
 		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
 		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
 		adapter: adapter()
+{{/if}}
 	}
 };
 
@@ -27984,7 +28321,8 @@ export default config;
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"moduleResolution": "bundler"
+		"moduleResolution": "bundler"{{#if (eq webDeploy "cloudflare")}},
+			"types": ["@cloudflare/workers-types"]{{/if}}
 	}
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
 	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
@@ -28069,7 +28407,7 @@ export const env = createEnv({
 	emptyStringAsUndefined: true,
 });
 `],
-  ["packages/env/src/server.ts.hbs", `{{#if (eq serverDeploy "cloudflare")}}
+  ["packages/env/src/server.ts.hbs", `{{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
@@ -28079,6 +28417,10 @@ export { env } from "cloudflare:workers";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 function getNodeEnvValue(key: string) {
+	if (key === "DB") {
+		return undefined;
+	}
+
 	return process.env[key];
 }
 
@@ -28131,6 +28473,10 @@ export async function getEnvAsync() {
 }
 
 export const env = createEnvProxy(resolveEnvValue);
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+/// <reference path="../env.d.ts" />
+
+export {};
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
@@ -28475,7 +28821,39 @@ export const web = await SvelteKit("web", {
     {{else if (ne backend "self")}}
     PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
     {{/if}}
-  }
+    {{#if (eq backend "self")}}
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    {{/if}}
+    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    {{/if}}
+    {{#if (and (includes examples "ai") (ne backend "convex"))}}
+    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
+    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
+    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    {{/if}}
+    {{/if}}
+    {{/if}}
+  },
+  dev: {
+    domain: "localhost:5173",
+  },
 });
 {{else if (includes frontend "tanstack-start")}}
 export const web = await TanStackStart("web", {
@@ -29467,12 +29845,25 @@ export function cn(...inputs: ClassValue[]) {
 }
 `],
   ["payments/polar/server/base/src/lib/payments.ts.hbs", `import { Polar } from "@polar-sh/sdk";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+export function createPolarClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	return new Polar({
+		accessToken: env.POLAR_ACCESS_TOKEN,
+		server: "sandbox",
+	});
+}
+{{else}}
 export const polarClient = new Polar({
 	accessToken: env.POLAR_ACCESS_TOKEN,
 	server: "sandbox",
 });
+{{/if}}
 `],
   ["payments/polar/web/nuxt/app/pages/success.vue.hbs", `<script setup lang="ts">
 const route = useRoute()
@@ -29611,4 +30002,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 462;
+export const TEMPLATE_COUNT = 466;
