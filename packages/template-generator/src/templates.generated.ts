@@ -11456,7 +11456,6 @@ function RouteComponent() {
 		},
 	}));
 
-	type FormField = ReturnType<typeof form.createField>;
 	type SubmitState = Pick<typeof form.state, 'canSubmit' | 'isSubmitting'>;
 </script>
 
@@ -11472,7 +11471,7 @@ function RouteComponent() {
 		}}
 	>
 		<form.Field name="email">
-			{#snippet children(field: FormField)}
+			{#snippet children(field)}
 				<div class="space-y-1">
 					<label for={field.name}>Email</label>
 					<input
@@ -11497,7 +11496,7 @@ function RouteComponent() {
 		</form.Field>
 
 		<form.Field name="password">
-			{#snippet children(field: FormField)}
+			{#snippet children(field)}
 				<div class="space-y-1">
 					<label for={field.name}>Password</label>
 					<input
@@ -11577,7 +11576,6 @@ function RouteComponent() {
 		},
 	}));
 
-	type FormField = ReturnType<typeof form.createField>;
 	type SubmitState = Pick<typeof form.state, 'canSubmit' | 'isSubmitting'>;
 </script>
 
@@ -11594,7 +11592,7 @@ function RouteComponent() {
 		}}
 	>
 		<form.Field name="name">
-			{#snippet children(field: FormField)}
+			{#snippet children(field)}
 				<div class="space-y-1">
 					<label for={field.name}>Name</label>
 					<input
@@ -11618,7 +11616,7 @@ function RouteComponent() {
 		</form.Field>
 
 		<form.Field name="email">
-			{#snippet children(field: FormField)}
+			{#snippet children(field)}
 				<div class="space-y-1">
 					<label for={field.name}>Email</label>
 					<input
@@ -11643,7 +11641,7 @@ function RouteComponent() {
 		</form.Field>
 
 		<form.Field name="password">
-			{#snippet children(field: FormField)}
+			{#snippet children(field)}
 				<div class="space-y-1">
 					<label for={field.name}>Password</label>
 					<input
@@ -13602,7 +13600,7 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 {{#if (includes examples "ai")}}
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, streamText, wrapLanguageModel } from "ai";
+import { convertToModelMessages, streamText, type UIMessage, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (eq api "trpc")}}
@@ -13646,9 +13644,9 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 {{/if}}
 
 {{#if (eq runtime "node")}}
-const app = new Elysia({ adapter: node() })
+new Elysia({ adapter: node() })
 {{else}}
-const app = new Elysia()
+new Elysia()
 {{/if}}
 	.use(
 		cors({
@@ -13712,7 +13710,7 @@ const app = new Elysia()
 {{/if}}
 {{#if (includes examples "ai")}}
 	.post("/ai", async (context) => {
-		const body = await context.request.json();
+		const body = (await context.request.json()) as { messages?: UIMessage[] };
 		const uiMessages = body.messages || [];
 		const model = wrapLanguageModel({
 			model: google("gemini-2.5-flash"),
@@ -13720,7 +13718,7 @@ const app = new Elysia()
 		});
 		const result = streamText({
 			model,
-			messages: await convertToModelMessages(uiMessages)
+			messages: await convertToModelMessages(uiMessages),
 		});
 
 		return result.toUIMessageStreamResponse();
@@ -25512,7 +25510,7 @@ const nextConfig: NextConfig = {
 	{{#if (includes examples "ai")}}
 	transpilePackages: ["shiki"],
 	{{/if}}
-	{{#if (eq dbSetup "turso")}}
+	{{#if (and (eq backend "self") (eq dbSetup "turso"))}}
 	serverExternalPackages: ["libsql", "@libsql/client"],
 	{{/if}}
 };

@@ -84,6 +84,9 @@ const SKILL_SOURCES = {
   "haydenbleasel/ultracite": {
     label: "Ultracite",
   },
+  "https://www.evlog.dev": {
+    label: "evlog",
+  },
 } satisfies Record<string, SkillSource>;
 
 type SourceKey = keyof typeof SKILL_SOURCES;
@@ -214,6 +217,10 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
     sources.push("haydenbleasel/ultracite");
   }
 
+  if (addons.includes("evlog")) {
+    sources.push("https://www.evlog.dev");
+  }
+
   return sources;
 }
 
@@ -276,7 +283,6 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
       "building-native-ui",
       "native-data-fetching",
       "expo-deployment",
-      "upgrading-expo",
       "expo-cicd-workflows",
     ];
     if (config.frontend.includes("native-uniwind")) {
@@ -311,6 +317,7 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
   ],
   "msmps/opentui-skill": () => ["opentui"],
   "haydenbleasel/ultracite": () => ["ultracite"],
+  "https://www.evlog.dev": () => ["review-logging-patterns", "analyze-logs"],
 };
 
 function getCuratedSkillNamesForSourceKey(sourceKey: SourceKey, config: ProjectConfig): string[] {

@@ -49,6 +49,7 @@ export const AddonsSchema = z
     "opentui",
     "wxt",
     "skills",
+    "evlog",
     "none",
   ])
   .describe("Additional addons");
@@ -197,6 +198,7 @@ export const SkillsSourceSchema = z
     "waynesutton/convexskills",
     "msmps/opentui-skill",
     "haydenbleasel/ultracite",
+    "https://www.evlog.dev",
   ])
   .describe("Skill source repository");
 

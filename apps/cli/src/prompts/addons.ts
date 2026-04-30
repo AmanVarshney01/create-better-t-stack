@@ -79,6 +79,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "MCP";
       hint = "Install MCP servers, including Better T Stack, via add-mcp";
       break;
+    case "evlog":
+      label = "evlog";
+      hint = "Request logging with Better Auth context and AI SDK telemetry";
+      break;
     default:
       label = addon;
       hint = `Add ${addon}`;
@@ -92,6 +96,7 @@ const ADDON_GROUPS = {
   "Code Quality": ["biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
   "Platform Extensions": ["pwa", "tauri", "electrobun", "opentui", "wxt"],
+  Observability: ["evlog"],
   "AI & Agent Tools": ["skills", "mcp"],
 };
 

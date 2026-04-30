@@ -148,7 +148,9 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     const webPackageDeps: Record<string, string> = { ...envDep, ...uiDep };
 
     if (api !== "none" && packages.api) webPackageDeps[`@${projectName}/api`] = workspaceVersion;
-    if (auth !== "none" && packages.auth) webPackageDeps[`@${projectName}/auth`] = workspaceVersion;
+    if (backend === "self" && auth !== "none" && packages.auth) {
+      webPackageDeps[`@${projectName}/auth`] = workspaceVersion;
+    }
     if (backend === "convex" && packages.backend)
       webPackageDeps[`@${projectName}/backend`] = workspaceVersion;
 

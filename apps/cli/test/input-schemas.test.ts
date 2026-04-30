@@ -86,6 +86,24 @@ describe("Input schemas", () => {
     expect(result.success).toBe(false);
   });
 
+  it("accepts the evlog agent skills source in addon options", () => {
+    const result = CreateInputSchema.safeParse({
+      projectName: "app",
+      addonOptions: {
+        skills: {
+          selections: [
+            {
+              source: "https://www.evlog.dev",
+              skills: ["review-logging-patterns", "analyze-logs"],
+            },
+          ],
+        },
+      },
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("allows CLI input parsing on top of the refined create schema", () => {
     const result = CLIInputSchema.safeParse({
       projectDirectory: ".",

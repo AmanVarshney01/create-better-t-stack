@@ -19,6 +19,9 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     config.frontend.includes("react-router") || config.frontend.includes("tanstack-router");
   const hasSolidFrontend = config.frontend.includes("solid");
   const hasPwaCompatibleFrontend = hasViteReactFrontend || hasSolidFrontend;
+  const hasEvlogWebServer = config.frontend.some((frontend) =>
+    ["next", "nuxt", "svelte", "tanstack-start", "astro"].includes(frontend),
+  );
 
   if (config.addons.includes("turborepo")) {
     addPackageDependency({ vfs, packagePath: "package.json", devDependencies: ["turbo"] });
@@ -26,6 +29,22 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
 
   if (config.addons.includes("nx")) {
     addPackageDependency({ vfs, packagePath: "package.json", devDependencies: ["nx"] });
+  }
+
+  if (config.addons.includes("evlog")) {
+    const serverPkgPath = "apps/server/package.json";
+    if (vfs.exists(serverPkgPath) && config.backend !== "self" && config.backend !== "none") {
+      addPackageDependency({ vfs, packagePath: serverPkgPath, dependencies: ["evlog"] });
+    }
+
+    const webPkgPath = "apps/web/package.json";
+    if (vfs.exists(webPkgPath) && hasEvlogWebServer) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        dependencies: config.frontend.includes("tanstack-start") ? ["evlog", "nitro"] : ["evlog"],
+      });
+    }
   }
 
   if (config.addons.includes("pwa") && hasPwaCompatibleFrontend) {

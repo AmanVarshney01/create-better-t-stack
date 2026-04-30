@@ -242,7 +242,12 @@ async function addHandlerInternal(
   const vfs = new VirtualFileSystem();
 
   // Pre-load existing package.json files into VFS so processAddonsDeps can modify them
-  const packageJsonPaths = ["package.json", "apps/web/package.json"];
+  const packageJsonPaths = [
+    "package.json",
+    "apps/web/package.json",
+    "apps/server/package.json",
+    "apps/native/package.json",
+  ];
   for (const pkgPath of packageJsonPaths) {
     const fullPath = path.join(projectDir, pkgPath);
     if (await fs.pathExists(fullPath)) {

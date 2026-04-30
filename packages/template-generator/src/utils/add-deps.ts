@@ -115,6 +115,7 @@ export const dependencyVersionMap = {
   "@trpc/client": "^11.16.0",
 
   next: "^16.2.0",
+  nitro: "^3.0.260429-beta",
 
   convex: "^1.33.1",
   "@convex-dev/react-query": "^0.1.0",
@@ -161,6 +162,8 @@ export const dependencyVersionMap = {
 
   "@polar-sh/better-auth": "^1.8.3",
   "@polar-sh/sdk": "^0.42.2",
+
+  evlog: "^2.14.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

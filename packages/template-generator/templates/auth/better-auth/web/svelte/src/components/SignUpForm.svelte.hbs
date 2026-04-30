@@ -38,7 +38,6 @@
 		},
 	}));
 
-	type FormField = ReturnType<typeof form.createField>;
 	type SubmitState = Pick<typeof form.state, 'canSubmit' | 'isSubmitting'>;
 </script>
 
@@ -55,7 +54,7 @@
 		}}
 	>
 		<form.Field name="name">
-			{#snippet children(field: FormField)}
+			{#snippet children(field)}
 				<div class="space-y-1">
 					<label for={field.name}>Name</label>
 					<input
@@ -79,7 +78,7 @@
 		</form.Field>
 
 		<form.Field name="email">
-			{#snippet children(field: FormField)}
+			{#snippet children(field)}
 				<div class="space-y-1">
 					<label for={field.name}>Email</label>
 					<input
@@ -104,7 +103,7 @@
 		</form.Field>
 
 		<form.Field name="password">
-			{#snippet children(field: FormField)}
+			{#snippet children(field)}
 				<div class="space-y-1">
 					<label for={field.name}>Password</label>
 					<input

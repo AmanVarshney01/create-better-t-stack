@@ -8,6 +8,7 @@ import { desktopWebFrontends, type ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { cliConsola } from "../../utils/terminal-output";
+import { setupEvlog } from "./evlog-setup";
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupMcp } from "./mcp-setup";
 import { setupOxlint } from "./oxlint-setup";
@@ -117,6 +118,10 @@ export async function setupAddons(config: ProjectConfig) {
 
   if (addons.includes("mcp")) {
     await runSetup(() => setupMcp(config));
+  }
+
+  if (addons.includes("evlog")) {
+    await runSetup(() => setupEvlog(config));
   }
 }
 
