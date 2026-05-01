@@ -46,6 +46,18 @@ function expectParseableTypeScript(content: string) {
   ).toEqual([]);
 }
 
+function expectDocsShapedEvlogAuth(content: string) {
+  expect(content).not.toContain("createEvlogAuth");
+  expect(content).not.toContain("toHeaders");
+  expect(content).not.toContain("GetSessionInput");
+  expect(content).not.toContain("GetSessionResult");
+  expect(content).not.toContain("toEvlogAuthEvent");
+  expect(content).not.toContain("await identifyUser(event);");
+  expect(content).not.toContain('declare module "h3"');
+  expect(content).not.toContain("H3EventContext");
+  expect(content).not.toContain("as unknown as BetterAuthInstance");
+}
+
 describe("Addon Configurations", () => {
   describe("Universal Addons (no frontend restrictions)", () => {
     const universalAddons = ["biome", "lefthook", "husky", "turborepo", "mcp"];
@@ -613,14 +625,8 @@ describe("Addon Configurations", () => {
       expect(authMiddleware).toContain(
         "await identify(event.context.log, event.headers, event.path);",
       );
-      expect(authMiddleware).not.toContain("createEvlogAuth");
-      expect(authMiddleware).not.toContain("toHeaders");
-      expect(authMiddleware).not.toContain("as unknown");
-      expect(authMiddleware).not.toContain("await identifyUser(event);");
       expect(authMiddleware).not.toContain("createAuthIdentifier(");
-      expect(authMiddleware).not.toContain("toEvlogAuthEvent");
-      expect(authMiddleware).not.toContain('declare module "h3"');
-      expect(authMiddleware).not.toContain("H3EventContext");
+      expectDocsShapedEvlogAuth(authMiddleware);
       expectParseableTypeScript(authMiddleware);
 
       expect(authClient).not.toContain("baseURL:");
@@ -630,6 +636,154 @@ describe("Addon Configurations", () => {
       expect(envServer).toContain('/// <reference types="@cloudflare/workers-types" />');
       expectParseableTypeScript(envServer);
     });
+
+    const fullstackBetterAuthEvlogCases = [
+      {
+        frontend: "next",
+        api: "trpc",
+        path: "apps/web/src/lib/evlog-auth.ts",
+        expected: "createAuthMiddleware(auth as BetterAuthInstance",
+      },
+      {
+        frontend: "nuxt",
+        api: "orpc",
+        path: "apps/web/server/middleware/evlog-auth.ts",
+        expected: "createAuthMiddleware(auth as BetterAuthInstance",
+      },
+      {
+        frontend: "svelte",
+        api: "orpc",
+        path: "apps/web/src/hooks.server.ts",
+        expected: "createAuthMiddleware(auth as BetterAuthInstance",
+      },
+      {
+        frontend: "tanstack-start",
+        api: "trpc",
+        path: "apps/web/server/plugins/evlog-auth.ts",
+        expected: "createAuthIdentifier(auth as BetterAuthInstance",
+      },
+      {
+        frontend: "astro",
+        api: "orpc",
+        path: "apps/web/src/middleware.ts",
+        expected: "createAuthMiddleware(auth as BetterAuthInstance",
+      },
+    ] as const;
+
+    for (const webCase of fullstackBetterAuthEvlogCases) {
+      it(`should generate docs-shaped evlog Better Auth wiring for ${webCase.frontend} fullstack projects`, async () => {
+        const result = await runTRPCTest({
+          projectName: `evlog-${webCase.frontend}-fullstack-auth`,
+          addons: ["evlog"],
+          frontend: [webCase.frontend as Frontend],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "better-auth",
+          api: webCase.api,
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        const projectDir = result.result?.projectDirectory;
+        if (!projectDir) throw new Error("Expected generated project directory");
+
+        const authFile = await readFile(join(projectDir, webCase.path), "utf-8");
+        if (webCase.frontend === "tanstack-start") {
+          expect(authFile).toContain(
+            'import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";',
+          );
+          expect(authFile).not.toContain("createAuthMiddleware(");
+        } else {
+          expect(authFile).toContain(
+            'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
+          );
+        }
+        expect(authFile).toContain(webCase.expected);
+        expect(authFile).toContain('exclude: ["/api/auth/**"]');
+        expect(authFile).toContain("maskEmail: true");
+        expectDocsShapedEvlogAuth(authFile);
+        expectParseableTypeScript(authFile);
+      });
+    }
+
+    const fullstackBetterAuthFactoryEvlogCases = [
+      {
+        frontend: "next",
+        api: "trpc",
+        path: "apps/web/src/lib/evlog-auth.ts",
+        expected: "createAuthMiddleware(createAuth() as BetterAuthInstance",
+        insideMarker: "export async function identifyEvlogUser",
+      },
+      {
+        frontend: "nuxt",
+        api: "orpc",
+        path: "apps/web/server/middleware/evlog-auth.ts",
+        expected: "createAuthMiddleware(createAuth() as BetterAuthInstance",
+        insideMarker: "export default defineEventHandler",
+      },
+      {
+        frontend: "svelte",
+        api: "orpc",
+        path: "apps/web/src/hooks.server.ts",
+        expected: "createAuthMiddleware(createAuth(event.platform.env) as BetterAuthInstance",
+        insideMarker: "const evlogAuthHandle",
+      },
+      {
+        frontend: "tanstack-start",
+        api: "trpc",
+        path: "apps/web/server/plugins/evlog-auth.ts",
+        expected: "createAuthIdentifier(createAuth() as BetterAuthInstance",
+        insideMarker: 'nitroApp.hooks.hook("request", async (event) => {',
+      },
+      {
+        frontend: "astro",
+        api: "orpc",
+        path: "apps/web/src/middleware.ts",
+        expected: "createAuthMiddleware(createAuth() as BetterAuthInstance",
+        insideMarker: "export const onRequest",
+      },
+    ] as const;
+
+    for (const webCase of fullstackBetterAuthFactoryEvlogCases) {
+      it(`should keep factory-based evlog auth wiring inside the request path for ${webCase.frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `evlog-${webCase.frontend}-cloudflare-auth`,
+          addons: ["evlog"],
+          frontend: [webCase.frontend as Frontend],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "better-auth",
+          api: webCase.api,
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "cloudflare",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        const projectDir = result.result?.projectDirectory;
+        if (!projectDir) throw new Error("Expected generated project directory");
+
+        const authFile = await readFile(join(projectDir, webCase.path), "utf-8");
+        expect(authFile).toContain(webCase.expected);
+        expect(authFile.indexOf(webCase.insideMarker)).toBeLessThan(
+          authFile.indexOf(webCase.expected),
+        );
+        expect(authFile).toContain('exclude: ["/api/auth/**"]');
+        expect(authFile).toContain("maskEmail: true");
+        expectDocsShapedEvlogAuth(authFile);
+        expectParseableTypeScript(authFile);
+      });
+    }
 
     it("should reject evlog for Convex backend projects", async () => {
       const result = await runTRPCTest({
@@ -680,8 +834,12 @@ describe("Addon Configurations", () => {
         'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
       );
       expect(serverIndex).toContain(
+        "const identifyUser = createAuthMiddleware(auth as BetterAuthInstance",
+      );
+      expect(serverIndex).toContain(
         'await identifyUser(c.get("log"), c.req.raw.headers, c.req.path);',
       );
+      expectDocsShapedEvlogAuth(serverIndex);
       expect(serverIndex).toContain(
         'import { createAILogger, createEvlogIntegration } from "evlog/ai";',
       );
@@ -753,6 +911,8 @@ describe("Addon Configurations", () => {
       expect(evlogAuth).toContain(
         'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
       );
+      expect(evlogAuth).toContain("createAuthMiddleware(auth as BetterAuthInstance");
+      expectDocsShapedEvlogAuth(evlogAuth);
       expect(trpcRoute).toContain("withEvlog(handler)");
       expect(trpcRoute).toContain("await identifyEvlogUser(req);");
       expect(aiRoute).toContain("withEvlog(async (req: Request)");
@@ -802,8 +962,8 @@ describe("Addon Configurations", () => {
         expect(serverIndex).toContain(
           'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
         );
-        expect(serverIndex).toContain("createAuthMiddleware(createEvlogAuth(auth)");
-        expect(serverIndex).not.toContain("as unknown as BetterAuthInstance");
+        expect(serverIndex).toContain("createAuthMiddleware(auth as BetterAuthInstance");
+        expectDocsShapedEvlogAuth(serverIndex);
         expect(serverIndex).toContain("maskEmail: true");
         expect(webPackageJson).not.toContain(`"@${projectName}/auth"`);
         expect(webPackageJson).not.toContain('"@libsql/client"');
