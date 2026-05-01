@@ -10,6 +10,7 @@ import type {
   Frontend,
   Payments,
   ProjectConfig,
+  Runtime,
   ServerDeploy,
   WebDeploy,
 } from "../types";
@@ -17,6 +18,7 @@ import { WEB_FRAMEWORKS } from "./compatibility";
 import { ValidationError } from "./errors";
 
 type ValidationResult = Result<void, ValidationError>;
+type AddonCompatibilityConfig = Pick<ProjectConfig, "frontend" | "auth" | "backend" | "runtime">;
 
 export const CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS = [
   "nuxt",
@@ -77,6 +79,31 @@ const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "svelte",
   "astro",
 ] as const;
+
+const EVLOG_SERVER_BACKENDS: readonly Backend[] = ["hono", "express", "fastify", "elysia"];
+const EVLOG_FULLSTACK_FRONTENDS: readonly Frontend[] = FULLSTACK_FRONTENDS;
+
+const evlogCompatibilityMessage =
+  "evlog addon supports Hono, Express, Fastify, Elysia, or backend self with Next.js, TanStack Start, Nuxt, SvelteKit, or Astro. Convex and backend none are not supported yet.";
+
+export function supportsEvlogAddon(
+  frontend: Frontend[] = [],
+  backend?: Backend,
+  _runtime?: Runtime,
+) {
+  if (!backend) return true;
+
+  if (EVLOG_SERVER_BACKENDS.includes(backend)) {
+    return true;
+  }
+
+  if (backend === "self") {
+    if (frontend.length === 0) return true;
+    return frontend.some((f) => EVLOG_FULLSTACK_FRONTENDS.includes(f));
+  }
+
+  return false;
+}
 
 export function validateSelfBackendCompatibility(
   providedFlags: Set<string>,
@@ -280,7 +307,16 @@ export function validateAddonCompatibility(
   addon: Addons,
   frontend: Frontend[],
   _auth?: Auth,
+  backend?: Backend,
+  runtime?: Runtime,
 ): { isCompatible: boolean; reason?: string } {
+  if (addon === "evlog" && !supportsEvlogAddon(frontend, backend, runtime)) {
+    return {
+      isCompatible: false,
+      reason: evlogCompatibilityMessage,
+    };
+  }
+
   const compatibleFrontends = ADDON_COMPATIBILITY[addon];
 
   if (compatibleFrontends.length > 0) {
@@ -305,13 +341,15 @@ export function getCompatibleAddons(
   frontend: Frontend[],
   existingAddons: Addons[] = [],
   auth?: Auth,
+  backend?: Backend,
+  runtime?: Runtime,
 ) {
   return allAddons.filter((addon) => {
     if (existingAddons.includes(addon)) return false;
 
     if (addon === "none") return false;
 
-    const { isCompatible } = validateAddonCompatibility(addon, frontend, auth);
+    const { isCompatible } = validateAddonCompatibility(addon, frontend, auth, backend, runtime);
     return isCompatible;
   });
 }
@@ -320,6 +358,8 @@ export function validateAddonsAgainstFrontends(
   addons: Addons[] = [],
   frontends: Frontend[] = [],
   auth?: Auth,
+  backend?: Backend,
+  runtime?: Runtime,
 ): ValidationResult {
   if (addons.includes("turborepo") && addons.includes("nx")) {
     return validationErr("Cannot combine 'turborepo' and 'nx' addons. Choose one monorepo tool.");
@@ -327,12 +367,31 @@ export function validateAddonsAgainstFrontends(
 
   for (const addon of addons) {
     if (addon === "none") continue;
-    const { isCompatible, reason } = validateAddonCompatibility(addon, frontends, auth);
+    const { isCompatible, reason } = validateAddonCompatibility(
+      addon,
+      frontends,
+      auth,
+      backend,
+      runtime,
+    );
     if (!isCompatible) {
       return validationErr(`Incompatible addon/frontend combination: ${reason}`);
     }
   }
   return Result.ok(undefined);
+}
+
+export function validateAddonsAgainstConfig(
+  addons: Addons[] = [],
+  config: Partial<AddonCompatibilityConfig>,
+): ValidationResult {
+  return validateAddonsAgainstFrontends(
+    addons,
+    config.frontend ?? [],
+    config.auth,
+    config.backend,
+    config.runtime,
+  );
 }
 
 export function validatePaymentsCompatibility(

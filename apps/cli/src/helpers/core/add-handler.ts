@@ -15,6 +15,7 @@ import pc from "picocolors";
 import { getAddonsToAdd } from "../../prompts/addons";
 import type { AddInput, Addons, AddonOptions, ProjectConfig } from "../../types";
 import { updateBtsConfig } from "../../utils/bts-config";
+import { validateAddonsAgainstConfig } from "../../utils/compatibility-rules";
 import { isSilent, runWithContextAsync } from "../../utils/context";
 import { CLIError, UserCancelledError, displayError } from "../../utils/errors";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
@@ -172,8 +173,7 @@ async function addHandlerInternal(
   } else {
     // Interactive mode - prompt user to select addons
     const promptResult = await Result.tryPromise({
-      try: () =>
-        getAddonsToAdd(existingConfig.frontend, existingConfig.addons, existingConfig.auth),
+      try: () => getAddonsToAdd(existingConfig),
       catch: (e: unknown) => {
         if (UserCancelledError.is(e)) return e;
         return new CLIError({
@@ -202,6 +202,11 @@ async function addHandlerInternal(
     }
 
     addonsToAdd = selectedAddons;
+  }
+
+  const addonsValidationResult = validateAddonsAgainstConfig(addonsToAdd, existingConfig);
+  if (addonsValidationResult.isErr()) {
+    return Result.err(new CLIError({ message: addonsValidationResult.error.message }));
   }
 
   if (!isSilent()) {

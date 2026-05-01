@@ -89,6 +89,19 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
     );
   }
 
+  if (!sourceFile.getVariableDeclaration("isNuxtDev")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const isNuxtDev =
+  !isNuxtPrepare &&
+  process.env.NODE_ENV !== "production" &&
+  !process.argv.some((arg) => arg === "build" || arg === "generate");`,
+    );
+  }
+
   const exportAssignment = sourceFile.getExportAssignment((d) => !d.isExportEquals());
 
   if (!exportAssignment) return;
@@ -116,6 +129,21 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
     prerender: {
       routes: ["/"],
       autoSubfolderIndex: false,
+    },
+  }`,
+      });
+    }
+
+    if (!configObject.getProperty("vite")) {
+      configObject.addPropertyAssignment({
+        name: "vite",
+        initializer: `{
+    resolve: {
+      alias: isNuxtDev
+        ? {
+            "cloudflare:workers": "nitropack/presets/cloudflare/runtime/shims/workers.dev",
+          }
+        : {},
     },
   }`,
       });

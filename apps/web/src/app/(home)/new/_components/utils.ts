@@ -98,6 +98,9 @@ export const hasClerkCompatibleBackend = (backend: string) =>
 const isSelfHostedFullstackBackend = (backend: string) =>
   selfHostedFullstackBackends.includes(backend as (typeof selfHostedFullstackBackends)[number]);
 
+export const hasEvlogCompatibleBackend = (backend: string) =>
+  ["hono", "express", "fastify", "elysia", ...selfHostedFullstackBackends].includes(backend);
+
 export const getCategoryDisplayName = (categoryKey: string): string => {
   const result = categoryKey.replace(/([A-Z])/g, " $1");
   return result.charAt(0).toUpperCase() + result.slice(1);
@@ -634,6 +637,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   const pwaCompat = hasPWACompatibleFrontend(nextStack.webFrontend);
   const tauriCompat = hasTauriCompatibleFrontend(nextStack.webFrontend);
   const electrobunCompat = hasElectrobunCompatibleFrontend(nextStack.webFrontend);
+  const evlogCompat = hasEvlogCompatibleBackend(nextStack.backend);
 
   if (!pwaCompat && nextStack.addons.includes("pwa")) {
     nextStack.addons = nextStack.addons.filter((a) => a !== "pwa");
@@ -654,6 +658,15 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     changes.push({
       category: "addons",
       message: "Electrobun removed (requires compatible frontend)",
+    });
+  }
+  if (!evlogCompat && nextStack.addons.includes("evlog")) {
+    nextStack.addons = nextStack.addons.filter((a) => a !== "evlog");
+    if (nextStack.addons.length === 0) nextStack.addons = ["none"];
+    changed = true;
+    changes.push({
+      category: "addons",
+      message: "evlog removed (requires a server or fullstack backend)",
     });
   }
 
@@ -1100,6 +1113,9 @@ export const getDisabledReason = (
     }
     if (optionId === "electrobun" && !hasElectrobunCompatibleFrontend(currentStack.webFrontend)) {
       return "Electrobun requires a web frontend";
+    }
+    if (optionId === "evlog" && !hasEvlogCompatibleBackend(currentStack.backend)) {
+      return "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend";
     }
     if (optionId === "nx" && currentStack.addons.includes("turborepo")) {
       return "Nx and Turborepo cannot be used together";

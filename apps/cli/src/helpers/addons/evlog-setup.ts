@@ -316,10 +316,11 @@ function addNuxtEvlogSetup(content: string, serviceName: string) {
   }
 
   if (!nextContent.includes("evlog:")) {
-    nextContent = nextContent.replace(
-      /\n\}\)\s*$/,
-      `\n  evlog: {\n    env: { service: "${serviceName}" },\n  },\n})`,
-    );
+    nextContent = nextContent.replace(/\n\}\)\s*$/, (match) => {
+      const contentBeforeConfigClose = nextContent.slice(0, -match.length);
+      const needsComma = !/[,{]\s*$/.test(contentBeforeConfigClose);
+      return `${needsComma ? "," : ""}\n  evlog: {\n    env: { service: "${serviceName}" },\n  },\n})`;
+    });
   }
 
   return nextContent;

@@ -3,7 +3,16 @@ import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
+import {
+  DiagnosticCategory,
+  flattenDiagnosticMessageText,
+  ModuleKind,
+  ScriptTarget,
+  transpileModule,
+} from "typescript";
+
 import { add, type Addons, type Backend, type Frontend } from "../src";
+import { getCompatibleAddons } from "../src/utils/compatibility-rules";
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 async function readSourceFiles(dir: string): Promise<{ path: string; content: string }[]> {
@@ -22,9 +31,24 @@ async function readSourceFiles(dir: string): Promise<{ path: string; content: st
   return files.flat();
 }
 
+function expectParseableTypeScript(content: string) {
+  const diagnostics =
+    transpileModule(content, {
+      compilerOptions: {
+        module: ModuleKind.ESNext,
+        target: ScriptTarget.ESNext,
+      },
+      reportDiagnostics: true,
+    }).diagnostics?.filter((diagnostic) => diagnostic.category === DiagnosticCategory.Error) ?? [];
+
+  expect(
+    diagnostics.map((diagnostic) => flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
+  ).toEqual([]);
+}
+
 describe("Addon Configurations", () => {
   describe("Universal Addons (no frontend restrictions)", () => {
-    const universalAddons = ["biome", "lefthook", "husky", "turborepo", "mcp", "evlog"];
+    const universalAddons = ["biome", "lefthook", "husky", "turborepo", "mcp"];
 
     for (const addon of universalAddons) {
       it(`should work with ${addon} addon on any frontend`, async () => {
@@ -366,6 +390,20 @@ describe("Addon Configurations", () => {
   });
 
   describe("Evlog Addon", () => {
+    it("should not offer evlog for Convex projects", () => {
+      const compatibleAddons = getCompatibleAddons(
+        ["evlog", "mcp"] as Addons[],
+        ["tanstack-start", "native-uniwind"] as Frontend[],
+        [],
+        "better-auth",
+        "convex",
+        "none",
+      );
+
+      expect(compatibleAddons).not.toContain("evlog");
+      expect(compatibleAddons).toContain("mcp");
+    });
+
     const backendSnippets: Record<Backend, string> = {
       hono: 'import { evlog, type EvlogVariables } from "evlog/hono";',
       express: 'import { evlog } from "evlog/express";',
@@ -490,6 +528,61 @@ describe("Addon Configurations", () => {
         }
       });
     }
+
+    it("should keep Nuxt config parseable with Cloudflare web deploy", async () => {
+      const result = await runTRPCTest({
+        projectName: "evlog-nuxt-cloudflare-web",
+        addons: ["evlog"],
+        frontend: ["nuxt"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "orpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const nuxtConfig = await readFile(join(projectDir, "apps/web/nuxt.config.ts"), "utf-8");
+
+      expect(nuxtConfig).toContain('"evlog/nuxt"');
+      expect(nuxtConfig).toContain("nitro:");
+      expect(nuxtConfig).toContain("isNuxtDev");
+      expect(nuxtConfig).toContain('"cloudflare:workers"');
+      expect(nuxtConfig).toContain('"nitropack/presets/cloudflare/runtime/shims/workers.dev"');
+      expect(nuxtConfig).toContain("evlog:");
+      expectParseableTypeScript(nuxtConfig);
+    });
+
+    it("should reject evlog for Convex backend projects", async () => {
+      const result = await runTRPCTest({
+        projectName: "evlog-convex-fail",
+        addons: ["evlog"],
+        frontend: ["tanstack-start", "native-uniwind"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "better-auth",
+        api: "none",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+        expectError: true,
+      });
+
+      expectError(result, "Convex and backend none are not supported yet");
+    });
 
     it("should wire evlog Better Auth and AI SDK helpers for server projects", async () => {
       const result = await runTRPCTest({
@@ -696,6 +789,38 @@ describe("Addon Configurations", () => {
       expect(serverIndex).toContain('import { evlog, type EvlogVariables } from "evlog/hono";');
       expect(serverIndex).toContain("app.use(evlog());");
       expect(serverPackageJson).toContain('"evlog": "^2.14.1"');
+    });
+
+    it("should reject evlog when added later to a Convex project", async () => {
+      const created = await runTRPCTest({
+        projectName: "evlog-add-convex-fail",
+        addons: ["none"],
+        frontend: ["tanstack-start", "native-uniwind"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "better-auth",
+        api: "none",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["evlog"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(false);
+      expect(addResult?.error).toContain("Convex and backend none are not supported yet");
     });
   });
 
