@@ -603,16 +603,21 @@ describe("Addon Configurations", () => {
       expect(authPlugin).toContain(
         'import type { H3EventContext as EvlogH3EventContext } from "evlog";',
       );
+      expect(authPlugin).toContain('import { identifyUser } from "evlog/better-auth";');
       expect(authPlugin).toContain('declare module "h3"');
       expect(authPlugin).toContain("interface H3EventContext extends EvlogH3EventContext");
-      expect(authPlugin).toContain("type GetSessionInput = Parameters<BetterAuthInstance");
-      expect(authPlugin).toContain("function toHeaders(");
-      expect(authPlugin).toContain("function createEvlogAuth<");
       expect(authPlugin).toContain("nitroApp.hooks.hook(");
-      expect(authPlugin).toContain("createAuthIdentifier(");
+      expect(authPlugin).toContain("const log = event.context.log;");
+      expect(authPlugin).toContain(
+        "const session = await createAuth().api.getSession({ headers: event.headers });",
+      );
+      expect(authPlugin).toContain("identifyUser(log, session, { maskEmail: true });");
+      expect(authPlugin).not.toContain("BetterAuthInstance");
+      expect(authPlugin).not.toContain("createEvlogAuth");
+      expect(authPlugin).not.toContain("toHeaders");
       expect(authPlugin).not.toContain("as unknown");
       expect(authPlugin).not.toContain("await identifyUser(event);");
-      expect(authPlugin).not.toContain("async (event)");
+      expect(authPlugin).not.toContain("createAuthIdentifier(");
       expect(authPlugin).not.toContain("toEvlogAuthEvent");
       expectParseableTypeScript(authPlugin);
 

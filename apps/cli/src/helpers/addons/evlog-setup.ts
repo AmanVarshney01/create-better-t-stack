@@ -733,37 +733,44 @@ function getNitroEvlogAuthPluginFile(config: ProjectConfig) {
   if (usesCreateAuthFactory(config)) {
     return `${getAuthImportLine(config)}
 import type { H3EventContext as EvlogH3EventContext } from "evlog";
-import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
+import { identifyUser } from "evlog/better-auth";
 
 declare module "h3" {
   interface H3EventContext extends EvlogH3EventContext {}
 }
 
-${getBetterAuthBridgeSnippet()}
-
 export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook(
-    "request",
-    createAuthIdentifier(createEvlogAuth(createAuth()), { maskEmail: true }),
-  );
+  nitroApp.hooks.hook("request", async (event) => {
+    const log = event.context.log;
+    if (!log) return;
+
+    const session = await createAuth().api.getSession({ headers: event.headers });
+    if (session) {
+      identifyUser(log, session, { maskEmail: true });
+    }
+  });
 });
 `;
   }
 
   return `${getAuthImportLine(config)}
 import type { H3EventContext as EvlogH3EventContext } from "evlog";
-import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
+import { identifyUser } from "evlog/better-auth";
 
 declare module "h3" {
   interface H3EventContext extends EvlogH3EventContext {}
 }
 
-${getBetterAuthBridgeSnippet()}
-
-const identifyUser = createAuthIdentifier(createEvlogAuth(auth), { maskEmail: true });
-
 export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook("request", identifyUser);
+  nitroApp.hooks.hook("request", async (event) => {
+    const log = event.context.log;
+    if (!log) return;
+
+    const session = await auth.api.getSession({ headers: event.headers });
+    if (session) {
+      identifyUser(log, session, { maskEmail: true });
+    }
+  });
 });
 `;
 }
