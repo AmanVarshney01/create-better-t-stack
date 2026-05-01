@@ -777,12 +777,7 @@ export default defineNitroPlugin((nitroApp) => {
 
 function getNuxtEvlogAuthMiddlewareFile(config: ProjectConfig) {
   return `${getAuthImportLine(config)}
-import type { H3EventContext as EvlogH3EventContext } from "evlog";
 import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
-
-declare module "h3" {
-  interface H3EventContext extends EvlogH3EventContext {}
-}
 
 const identify = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
   exclude: ["/api/auth/**"],
