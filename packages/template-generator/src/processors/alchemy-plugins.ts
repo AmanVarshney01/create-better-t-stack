@@ -76,6 +76,37 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
     });
   }
 
+  const hasFsImport = sourceFile
+    .getImportDeclarations()
+    .some((decl) => decl.getModuleSpecifierValue() === "node:fs");
+  if (!hasFsImport) {
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: "node:fs",
+      namedImports: ["existsSync"],
+    });
+  }
+
+  const hasUrlImport = sourceFile
+    .getImportDeclarations()
+    .some((decl) => decl.getModuleSpecifierValue() === "node:url");
+  if (!hasUrlImport) {
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: "node:url",
+      namedImports: ["fileURLToPath"],
+    });
+  }
+
+  if (!sourceFile.getVariableDeclaration("alchemyConfigPath")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const alchemyConfigPath = fileURLToPath(new URL("./.alchemy/local/wrangler.jsonc", import.meta.url));
+const hasAlchemyConfig = existsSync(alchemyConfigPath);`,
+    );
+  }
+
   if (!sourceFile.getVariableDeclaration("isNuxtPrepare")) {
     const firstExport = sourceFile
       .getStatements()
@@ -86,6 +117,16 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
   process.env.npm_lifecycle_event === "postinstall" ||
   process.env.npm_lifecycle_script === "nuxt prepare" ||
   process.argv.includes("prepare");`,
+    );
+  }
+
+  if (!sourceFile.getVariableDeclaration("shouldUseAlchemy")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const shouldUseAlchemy = !isNuxtPrepare && hasAlchemyConfig;`,
     );
   }
 
@@ -125,7 +166,7 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
         name: "nitro",
         initializer: `{
     preset: "cloudflare-module",
-    ...(isNuxtPrepare ? {} : { cloudflare: alchemy() }),
+    ...(shouldUseAlchemy ? { cloudflare: alchemy({ dev: { configPath: alchemyConfigPath } }) } : {}),
     prerender: {
       routes: ["/"],
       autoSubfolderIndex: false,

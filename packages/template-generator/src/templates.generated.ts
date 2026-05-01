@@ -9057,10 +9057,14 @@ import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
 
 export default defineNuxtPlugin(() => {
+  {{#if (ne backend "self")}}
   const config = useRuntimeConfig();
+  {{/if}}
 
   const authClient = createAuthClient({
+    {{#if (ne backend "self")}}
     baseURL: config.public.serverUrl,
+    {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],
     {{/if}}
@@ -25438,7 +25442,7 @@ export default defineNuxtConfig({
   {{else if (and (ne backend "self") (ne backend "none"))}}
   runtimeConfig: {
     public: {
-      serverUrl: process.env.NUXT_PUBLIC_SERVER_URL,
+      serverUrl: process.env.NUXT_PUBLIC_SERVER_URL ?? "",
     }
   },
   {{/if}}
@@ -25457,7 +25461,7 @@ export default defineNuxtConfig({
   },
   "dependencies": {
     "@nuxt/ui": "^4.5.1",
-    "nuxt": "^4.4.2"
+    "nuxt": "^4.4.4"
   },
   "devDependencies": {
     "tailwindcss": "^4.2.1",
@@ -28406,6 +28410,7 @@ export const env = createEnv({
 });
 `],
   ["packages/env/src/server.ts.hbs", `{{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+/// <reference types="@cloudflare/workers-types" />
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
@@ -28476,6 +28481,7 @@ export const env = createEnvProxy(resolveEnvValue);
 
 export {};
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+/// <reference types="@cloudflare/workers-types" />
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings

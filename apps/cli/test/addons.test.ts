@@ -555,11 +555,73 @@ describe("Addon Configurations", () => {
 
       expect(nuxtConfig).toContain('"evlog/nuxt"');
       expect(nuxtConfig).toContain("nitro:");
+      expect(nuxtConfig).toContain('import { existsSync } from "node:fs";');
+      expect(nuxtConfig).toContain('import { fileURLToPath } from "node:url";');
+      expect(nuxtConfig).toContain("const alchemyConfigPath = fileURLToPath");
+      expect(nuxtConfig).toContain("const hasAlchemyConfig = existsSync(alchemyConfigPath);");
+      expect(nuxtConfig).toContain("const shouldUseAlchemy = !isNuxtPrepare && hasAlchemyConfig;");
+      expect(nuxtConfig).toContain("alchemy({ dev: { configPath: alchemyConfigPath } })");
       expect(nuxtConfig).toContain("isNuxtDev");
       expect(nuxtConfig).toContain('"cloudflare:workers"');
       expect(nuxtConfig).toContain('"nitropack/presets/cloudflare/runtime/shims/workers.dev"');
       expect(nuxtConfig).toContain("evlog:");
       expectParseableTypeScript(nuxtConfig);
+    });
+
+    it("should type Nitro Better Auth events for Nuxt Cloudflare projects", async () => {
+      const result = await runTRPCTest({
+        projectName: "evlog-nuxt-cloudflare-auth",
+        addons: ["evlog"],
+        frontend: ["nuxt"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "orpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const authPlugin = await readFile(
+        join(projectDir, "apps/web/server/plugins/evlog-auth.ts"),
+        "utf-8",
+      );
+      const authClient = await readFile(
+        join(projectDir, "apps/web/app/plugins/auth-client.ts"),
+        "utf-8",
+      );
+      const envServer = await readFile(join(projectDir, "packages/env/src/server.ts"), "utf-8");
+
+      expect(authPlugin).toContain(
+        'import type { H3EventContext as EvlogH3EventContext } from "evlog";',
+      );
+      expect(authPlugin).toContain('declare module "h3"');
+      expect(authPlugin).toContain("interface H3EventContext extends EvlogH3EventContext");
+      expect(authPlugin).toContain("type GetSessionInput = Parameters<BetterAuthInstance");
+      expect(authPlugin).toContain("function toHeaders(");
+      expect(authPlugin).toContain("function createEvlogAuth<");
+      expect(authPlugin).toContain("nitroApp.hooks.hook(");
+      expect(authPlugin).toContain("createAuthIdentifier(");
+      expect(authPlugin).not.toContain("as unknown");
+      expect(authPlugin).not.toContain("await identifyUser(event);");
+      expect(authPlugin).not.toContain("async (event)");
+      expect(authPlugin).not.toContain("toEvlogAuthEvent");
+      expectParseableTypeScript(authPlugin);
+
+      expect(authClient).not.toContain("baseURL:");
+      expect(authClient).not.toContain("as string");
+      expectParseableTypeScript(authClient);
+
+      expect(envServer).toContain('/// <reference types="@cloudflare/workers-types" />');
+      expectParseableTypeScript(envServer);
     });
 
     it("should reject evlog for Convex backend projects", async () => {
@@ -733,7 +795,8 @@ describe("Addon Configurations", () => {
         expect(serverIndex).toContain(
           'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
         );
-        expect(serverIndex).toContain("createAuthMiddleware(auth as unknown as BetterAuthInstance");
+        expect(serverIndex).toContain("createAuthMiddleware(createEvlogAuth(auth)");
+        expect(serverIndex).not.toContain("as unknown as BetterAuthInstance");
         expect(serverIndex).toContain("maskEmail: true");
         expect(webPackageJson).not.toContain(`"@${projectName}/auth"`);
         expect(webPackageJson).not.toContain('"@libsql/client"');

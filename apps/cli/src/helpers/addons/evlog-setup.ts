@@ -117,8 +117,38 @@ function getAuthExpression(config: ProjectConfig) {
   return usesCreateAuthFactory(config) ? "createAuth()" : "auth";
 }
 
-function getEvlogAuthExpression(config: ProjectConfig) {
-  return `${getAuthExpression(config)} as unknown as BetterAuthInstance`;
+function getBetterAuthBridgeSnippet(indent = "") {
+  return `${indent}type GetSessionInput = Parameters<BetterAuthInstance["api"]["getSession"]>[0];
+${indent}type GetSessionResult = ReturnType<BetterAuthInstance["api"]["getSession"]>;
+
+${indent}function toHeaders(headers: GetSessionInput["headers"]) {
+${indent}  if (headers instanceof Headers) return headers;
+
+${indent}  const normalized = new Headers();
+${indent}  for (const [key, value] of Object.entries(headers)) {
+${indent}    if (Array.isArray(value)) {
+${indent}      for (const item of value) normalized.append(key, item);
+${indent}    } else if (value !== undefined) {
+${indent}      normalized.set(key, value);
+${indent}    }
+${indent}  }
+
+${indent}  return normalized;
+${indent}}
+
+${indent}function createEvlogAuth<T extends { api: { getSession(input: { headers: Headers }): GetSessionResult } }>(
+${indent}  authInstance: T,
+${indent}): BetterAuthInstance {
+${indent}  return {
+${indent}    api: {
+${indent}      getSession({ headers }: GetSessionInput) {
+${indent}        return authInstance.api.getSession({ headers: toHeaders(headers) });
+${indent}      },
+${indent}    },
+${indent}  };
+${indent}}
+
+`;
 }
 
 function addAiSdkEvlogTelemetry(content: string, loggerExpression: string) {
@@ -163,10 +193,11 @@ function addEvlogBetterAuthServerSetup(
     "type BetterAuthInstance",
   ]);
   const usesAuthFactory = authExpression.endsWith("()");
-  const evlogAuthExpression = `${authExpression} as unknown as BetterAuthInstance`;
+  const evlogAuthExpression = `createEvlogAuth(${authExpression})`;
+  const bridgeSnippet = getBetterAuthBridgeSnippet();
   const identifySnippet = usesAuthFactory
-    ? ""
-    : `const identifyUser = createAuthMiddleware(${evlogAuthExpression}, { maskEmail: true });\n\n`;
+    ? bridgeSnippet
+    : `${bridgeSnippet}const identifyUser = createAuthMiddleware(${evlogAuthExpression}, { maskEmail: true });\n\n`;
   const identifyUserSetup = usesAuthFactory
     ? `\n\tconst identifyUser = createAuthMiddleware(${evlogAuthExpression}, { maskEmail: true });`
     : "";
@@ -599,10 +630,11 @@ function addSvelteBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
     nextContent = prependMissingImports(nextContent, [getAuthImportLine(config)]);
   }
   const authExpression = getAuthExpression(config);
+  const bridgeSnippet = getBetterAuthBridgeSnippet();
   const authHandleSnippet =
     usesCreateAuthFactory(config) && config.webDeploy === "cloudflare"
-      ? `const evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tif (building) {\n\t\treturn resolve(event);\n\t}\n\n\tif (!event.platform?.env) {\n\t\tthrow new Error("Cloudflare platform env is not available for this SvelteKit request.");\n\t}\n\n\tconst identifyUser = createAuthMiddleware(createAuth(event.platform.env) as unknown as BetterAuthInstance, { maskEmail: true });\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`
-      : `const identifyUser = createAuthMiddleware(${authExpression} as unknown as BetterAuthInstance, { maskEmail: true });\n\nconst evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`;
+      ? `${bridgeSnippet}const evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tif (building) {\n\t\treturn resolve(event);\n\t}\n\n\tif (!event.platform?.env) {\n\t\tthrow new Error("Cloudflare platform env is not available for this SvelteKit request.");\n\t}\n\n\tconst identifyUser = createAuthMiddleware(createEvlogAuth(createAuth(event.platform.env)), { maskEmail: true });\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`
+      : `${bridgeSnippet}const identifyUser = createAuthMiddleware(createEvlogAuth(${authExpression}), { maskEmail: true });\n\nconst evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`;
 
   nextContent = insertAfterOnce(
     nextContent,
@@ -633,12 +665,13 @@ function addAstroBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
     nextContent = prependMissingImports(nextContent, [getAuthImportLine(config)]);
   }
   const authExpression = getAuthExpression(config);
+  const bridgeSnippet = getBetterAuthBridgeSnippet("  ");
 
   for (const marker of ["context.locals.log = log;", "locals.log = log;"]) {
     if (!nextContent.includes(marker)) continue;
 
     const requestExpression = marker.startsWith("context") ? "context.request" : "request";
-    const identifySnippet = `\n\n  const identifyUser = createAuthMiddleware(${authExpression} as unknown as BetterAuthInstance, { maskEmail: true });\n  await identifyUser(log, ${requestExpression}.headers, url.pathname);`;
+    const identifySnippet = `\n\n${bridgeSnippet}  const identifyUser = createAuthMiddleware(createEvlogAuth(${authExpression}), { maskEmail: true });\n  await identifyUser(log, ${requestExpression}.headers, url.pathname);`;
 
     return insertAfterOnce(nextContent, marker, identifySnippet, "identifyUser(log");
   }
@@ -683,12 +716,14 @@ function getNextEvlogAuthFile(config: ProjectConfig) {
 import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
 import { useLogger } from "@/lib/evlog";
 
+${getBetterAuthBridgeSnippet()}
+
 function getAuth() {
-  return ${getAuthExpression(config)};
+  return createEvlogAuth(${getAuthExpression(config)});
 }
 
 export async function identifyEvlogUser(request: Request) {
-  const identifyUser = createAuthMiddleware(getAuth() as unknown as BetterAuthInstance, { maskEmail: true });
+  const identifyUser = createAuthMiddleware(getAuth(), { maskEmail: true });
   await identifyUser(useLogger(), request.headers, new URL(request.url).pathname);
 }
 `;
@@ -697,25 +732,38 @@ export async function identifyEvlogUser(request: Request) {
 function getNitroEvlogAuthPluginFile(config: ProjectConfig) {
   if (usesCreateAuthFactory(config)) {
     return `${getAuthImportLine(config)}
+import type { H3EventContext as EvlogH3EventContext } from "evlog";
 import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
 
+declare module "h3" {
+  interface H3EventContext extends EvlogH3EventContext {}
+}
+
+${getBetterAuthBridgeSnippet()}
+
 export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook("request", async (event) => {
-    const identifyUser = createAuthIdentifier(createAuth() as unknown as BetterAuthInstance, { maskEmail: true });
-    await identifyUser(event);
-  });
+  nitroApp.hooks.hook(
+    "request",
+    createAuthIdentifier(createEvlogAuth(createAuth()), { maskEmail: true }),
+  );
 });
 `;
   }
 
   return `${getAuthImportLine(config)}
+import type { H3EventContext as EvlogH3EventContext } from "evlog";
 import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
 
+declare module "h3" {
+  interface H3EventContext extends EvlogH3EventContext {}
+}
+
+${getBetterAuthBridgeSnippet()}
+
+const identifyUser = createAuthIdentifier(createEvlogAuth(auth), { maskEmail: true });
+
 export default defineNitroPlugin((nitroApp) => {
-  nitroApp.hooks.hook(
-    "request",
-    createAuthIdentifier(${getEvlogAuthExpression(config)}, { maskEmail: true }),
-  );
+  nitroApp.hooks.hook("request", identifyUser);
 });
 `;
 }

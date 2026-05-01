@@ -4,10 +4,14 @@ import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
 
 export default defineNuxtPlugin(() => {
+  {{#if (ne backend "self")}}
   const config = useRuntimeConfig();
+  {{/if}}
 
   const authClient = createAuthClient({
+    {{#if (ne backend "self")}}
     baseURL: config.public.serverUrl,
+    {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],
     {{/if}}
