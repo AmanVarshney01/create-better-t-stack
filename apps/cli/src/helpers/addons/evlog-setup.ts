@@ -778,27 +778,16 @@ export default defineNitroPlugin((nitroApp) => {
 function getNuxtEvlogAuthMiddlewareFile(config: ProjectConfig) {
   return `${getAuthImportLine(config)}
 import type { H3EventContext as EvlogH3EventContext } from "evlog";
-import { createAuthMiddleware } from "evlog/better-auth";
+import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
 
 declare module "h3" {
   interface H3EventContext extends EvlogH3EventContext {}
 }
 
-const authInstance = ${getAuthExpression(config)};
-const identify = createAuthMiddleware(
-  {
-    api: {
-      getSession({ headers }) {
-        if (!(headers instanceof Headers)) return Promise.resolve(null);
-        return authInstance.api.getSession({ headers });
-      },
-    },
-  },
-  {
-    exclude: ["/api/auth/**"],
-    maskEmail: true,
-  },
-);
+const identify = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
+  exclude: ["/api/auth/**"],
+  maskEmail: true,
+});
 
 export default defineEventHandler(async (event) => {
   if (!event.context.log) return;

@@ -604,20 +604,20 @@ describe("Addon Configurations", () => {
       expect(authMiddleware).toContain(
         'import type { H3EventContext as EvlogH3EventContext } from "evlog";',
       );
-      expect(authMiddleware).toContain('import { createAuthMiddleware } from "evlog/better-auth";');
+      expect(authMiddleware).toContain(
+        'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
+      );
       expect(authMiddleware).toContain('declare module "h3"');
       expect(authMiddleware).toContain("interface H3EventContext extends EvlogH3EventContext");
-      expect(authMiddleware).toContain("const authInstance = createAuth();");
-      expect(authMiddleware).toContain("const identify = createAuthMiddleware(");
-      expect(authMiddleware).toContain("if (!(headers instanceof Headers))");
-      expect(authMiddleware).toContain("return authInstance.api.getSession({ headers });");
+      expect(authMiddleware).toContain(
+        "const identify = createAuthMiddleware(createAuth() as BetterAuthInstance, {",
+      );
       expect(authMiddleware).toContain('exclude: ["/api/auth/**"]');
       expect(authMiddleware).toContain("maskEmail: true");
       expect(authMiddleware).toContain("export default defineEventHandler(async (event) => {");
       expect(authMiddleware).toContain(
         "await identify(event.context.log, event.headers, event.path);",
       );
-      expect(authMiddleware).not.toContain("BetterAuthInstance");
       expect(authMiddleware).not.toContain("createEvlogAuth");
       expect(authMiddleware).not.toContain("toHeaders");
       expect(authMiddleware).not.toContain("as unknown");
