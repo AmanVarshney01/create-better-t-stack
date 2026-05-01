@@ -775,6 +775,38 @@ export default defineNitroPlugin((nitroApp) => {
 `;
 }
 
+function getNuxtEvlogAuthMiddlewareFile(config: ProjectConfig) {
+  return `${getAuthImportLine(config)}
+import type { H3EventContext as EvlogH3EventContext } from "evlog";
+import { createAuthMiddleware } from "evlog/better-auth";
+
+declare module "h3" {
+  interface H3EventContext extends EvlogH3EventContext {}
+}
+
+const authInstance = ${getAuthExpression(config)};
+const identify = createAuthMiddleware(
+  {
+    api: {
+      getSession({ headers }) {
+        if (!(headers instanceof Headers)) return Promise.resolve(null);
+        return authInstance.api.getSession({ headers });
+      },
+    },
+  },
+  {
+    exclude: ["/api/auth/**"],
+    maskEmail: true,
+  },
+);
+
+export default defineEventHandler(async (event) => {
+  if (!event.context.log) return;
+  await identify(event.context.log, event.headers, event.path);
+});
+`;
+}
+
 function getTanstackNitroConfigFile(serviceName: string) {
   return `import { defineConfig } from "nitro";
 import evlog from "evlog/nitro/v3";
@@ -898,9 +930,17 @@ async function setupNuxtEvlog(config: ProjectConfig, serviceName: string) {
   );
 
   if (shouldIdentifyWebAuth(config)) {
-    const authPluginPath = path.join(webDir, "server/plugins/evlog-auth.ts");
-    if (!(await fs.pathExists(authPluginPath))) {
-      await writeFileIfChanged(authPluginPath, getNitroEvlogAuthPluginFile(config));
+    const oldAuthPluginPath = path.join(webDir, "server/plugins/evlog-auth.ts");
+    if (await fs.pathExists(oldAuthPluginPath)) {
+      const oldAuthPlugin = await fs.readFile(oldAuthPluginPath, "utf-8");
+      if (oldAuthPlugin.includes("evlog/better-auth")) {
+        await fs.remove(oldAuthPluginPath);
+      }
+    }
+
+    const authMiddlewarePath = path.join(webDir, "server/middleware/evlog-auth.ts");
+    if (!(await fs.pathExists(authMiddlewarePath))) {
+      await writeFileIfChanged(authMiddlewarePath, getNuxtEvlogAuthMiddlewareFile(config));
     }
   }
 

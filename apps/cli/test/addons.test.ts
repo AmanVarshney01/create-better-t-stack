@@ -590,8 +590,8 @@ describe("Addon Configurations", () => {
       const projectDir = result.result?.projectDirectory;
       if (!projectDir) throw new Error("Expected generated project directory");
 
-      const authPlugin = await readFile(
-        join(projectDir, "apps/web/server/plugins/evlog-auth.ts"),
+      const authMiddleware = await readFile(
+        join(projectDir, "apps/web/server/middleware/evlog-auth.ts"),
         "utf-8",
       );
       const authClient = await readFile(
@@ -600,26 +600,31 @@ describe("Addon Configurations", () => {
       );
       const envServer = await readFile(join(projectDir, "packages/env/src/server.ts"), "utf-8");
 
-      expect(authPlugin).toContain(
+      expect(existsSync(join(projectDir, "apps/web/server/plugins/evlog-auth.ts"))).toBe(false);
+      expect(authMiddleware).toContain(
         'import type { H3EventContext as EvlogH3EventContext } from "evlog";',
       );
-      expect(authPlugin).toContain('import { identifyUser } from "evlog/better-auth";');
-      expect(authPlugin).toContain('declare module "h3"');
-      expect(authPlugin).toContain("interface H3EventContext extends EvlogH3EventContext");
-      expect(authPlugin).toContain("nitroApp.hooks.hook(");
-      expect(authPlugin).toContain("const log = event.context.log;");
-      expect(authPlugin).toContain(
-        "const session = await createAuth().api.getSession({ headers: event.headers });",
+      expect(authMiddleware).toContain('import { createAuthMiddleware } from "evlog/better-auth";');
+      expect(authMiddleware).toContain('declare module "h3"');
+      expect(authMiddleware).toContain("interface H3EventContext extends EvlogH3EventContext");
+      expect(authMiddleware).toContain("const authInstance = createAuth();");
+      expect(authMiddleware).toContain("const identify = createAuthMiddleware(");
+      expect(authMiddleware).toContain("if (!(headers instanceof Headers))");
+      expect(authMiddleware).toContain("return authInstance.api.getSession({ headers });");
+      expect(authMiddleware).toContain('exclude: ["/api/auth/**"]');
+      expect(authMiddleware).toContain("maskEmail: true");
+      expect(authMiddleware).toContain("export default defineEventHandler(async (event) => {");
+      expect(authMiddleware).toContain(
+        "await identify(event.context.log, event.headers, event.path);",
       );
-      expect(authPlugin).toContain("identifyUser(log, session, { maskEmail: true });");
-      expect(authPlugin).not.toContain("BetterAuthInstance");
-      expect(authPlugin).not.toContain("createEvlogAuth");
-      expect(authPlugin).not.toContain("toHeaders");
-      expect(authPlugin).not.toContain("as unknown");
-      expect(authPlugin).not.toContain("await identifyUser(event);");
-      expect(authPlugin).not.toContain("createAuthIdentifier(");
-      expect(authPlugin).not.toContain("toEvlogAuthEvent");
-      expectParseableTypeScript(authPlugin);
+      expect(authMiddleware).not.toContain("BetterAuthInstance");
+      expect(authMiddleware).not.toContain("createEvlogAuth");
+      expect(authMiddleware).not.toContain("toHeaders");
+      expect(authMiddleware).not.toContain("as unknown");
+      expect(authMiddleware).not.toContain("await identifyUser(event);");
+      expect(authMiddleware).not.toContain("createAuthIdentifier(");
+      expect(authMiddleware).not.toContain("toEvlogAuthEvent");
+      expectParseableTypeScript(authMiddleware);
 
       expect(authClient).not.toContain("baseURL:");
       expect(authClient).not.toContain("as string");
