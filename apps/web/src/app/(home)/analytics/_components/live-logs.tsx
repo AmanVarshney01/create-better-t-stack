@@ -10,6 +10,14 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
+const eventTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
 function formatValue(value: unknown): string {
   if (Array.isArray(value)) return value.join(", ");
   if (typeof value === "string") return value;
@@ -18,7 +26,7 @@ function formatValue(value: unknown): string {
 
 export function LiveLogs() {
   const [isOpen, setIsOpen] = useState(false);
-  const events = useQuery(api.analytics.getRecentEvents, isOpen ? {} : "skip");
+  const events = useQuery(api.analytics.getRecentEvents, isOpen ? { limit: 25 } : "skip");
 
   return (
     <div className="overflow-hidden rounded border border-border bg-fd-background">
@@ -55,7 +63,14 @@ export function LiveLogs() {
             transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
             style={{ overflow: "hidden" }}
           >
-            {!events || events.length === 0 ? (
+            {events === undefined ? (
+              <div className="flex h-[220px] flex-col items-center justify-center border-border/10 border-t">
+                <div className="flex items-center gap-2 font-mono text-muted-foreground text-xs">
+                  <Activity className="h-3.5 w-3.5 animate-pulse text-primary" />
+                  Loading latest starts
+                </div>
+              </div>
+            ) : events.length === 0 ? (
               <div className="flex h-[300px] flex-col items-center justify-center border-border/10 border-t">
                 <div className="flex flex-col items-center gap-3 opacity-70">
                   <div className="rounded border border-border bg-muted/20 p-3">
@@ -74,12 +89,7 @@ export function LiveLogs() {
                 <div className="divide-y divide-border/35">
                   <AnimatePresence initial={false} mode="popLayout">
                     {events.map((event, index) => {
-                      const time = new Date(event._creationTime).toLocaleTimeString([], {
-                        hour12: false,
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      });
+                      const time = eventTimeFormatter.format(new Date(event._creationTime));
                       const logData = Object.fromEntries(
                         Object.entries(event).filter(
                           ([key]) => key !== "_id" && key !== "_creationTime",
