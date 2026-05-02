@@ -10,6 +10,28 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
+const LOG_FIELD_ORDER = [
+  "frontend",
+  "backend",
+  "database",
+  "orm",
+  "api",
+  "runtime",
+  "packageManager",
+  "auth",
+  "payments",
+  "dbSetup",
+  "webDeploy",
+  "serverDeploy",
+  "addons",
+  "examples",
+  "cli_version",
+  "node_version",
+  "platform",
+  "git",
+  "install",
+] as const;
+
 const eventTimeFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric",
@@ -19,9 +41,29 @@ const eventTimeFormatter = new Intl.DateTimeFormat("en-US", {
 });
 
 function formatValue(value: unknown): string {
-  if (Array.isArray(value)) return value.join(", ");
+  if (Array.isArray(value)) return value.length > 0 ? value.join(",") : "none";
+  if (typeof value === "boolean") return value ? "true" : "false";
   if (typeof value === "string") return value;
   return String(value);
+}
+
+function hasLogValue(value: unknown): boolean {
+  if (value === undefined || value === null) return false;
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
+}
+
+function formatStackSummary(event: Record<string, unknown>) {
+  const frontend = Array.isArray(event.frontend)
+    ? event.frontend.join("+")
+    : (event.frontend as string | undefined);
+  const backend = typeof event.backend === "string" ? event.backend : "none";
+  const database = typeof event.database === "string" ? event.database : "none";
+  const orm = typeof event.orm === "string" ? event.orm : "none";
+  const packageManager =
+    typeof event.packageManager === "string" ? event.packageManager : "unknown package manager";
+
+  return `${frontend || "none"} / ${backend} -> ${database} + ${orm} via ${packageManager}`;
 }
 
 export function LiveLogs() {
@@ -86,15 +128,25 @@ export function LiveLogs() {
               </div>
             ) : (
               <ScrollArea className="h-[400px] border-border/10 border-t">
+                <div className="border-border/60 border-b bg-muted/10 px-4 py-2">
+                  <div className="flex items-center justify-between gap-3 font-mono text-[11px]">
+                    <span className="text-muted-foreground uppercase tracking-wide">
+                      stream: project.starts
+                    </span>
+                    <span className="text-muted-foreground">{events.length} events</span>
+                  </div>
+                </div>
                 <div className="divide-y divide-border/35">
                   <AnimatePresence initial={false} mode="popLayout">
                     {events.map((event, index) => {
                       const time = eventTimeFormatter.format(new Date(event._creationTime));
-                      const logData = Object.fromEntries(
-                        Object.entries(event).filter(
-                          ([key]) => key !== "_id" && key !== "_creationTime",
-                        ),
+                      const eventRecord = event as Record<string, unknown>;
+                      const logFields = LOG_FIELD_ORDER.flatMap((key) =>
+                        hasLogValue(eventRecord[key])
+                          ? [{ key, value: formatValue(eventRecord[key]) }]
+                          : [],
                       );
+                      const eventId = String(event._id).slice(-6);
 
                       return (
                         <motion.div
@@ -102,27 +154,44 @@ export function LiveLogs() {
                           initial={{ opacity: 0, y: 6 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.2, delay: Math.min(index * 0.035, 0.35) }}
-                          className="grid gap-3 px-4 py-3 transition-colors hover:bg-muted/20 sm:grid-cols-[86px_minmax(0,1fr)]"
+                          className="grid gap-3 px-4 py-3 transition-colors hover:bg-muted/20 sm:grid-cols-[104px_minmax(0,1fr)]"
                         >
-                          <span
-                            suppressHydrationWarning
-                            className="text-muted-foreground text-xs tabular-nums"
-                          >
-                            {time}
-                          </span>
+                          <div className="flex items-start gap-2 sm:block">
+                            <span
+                              suppressHydrationWarning
+                              className="font-mono text-muted-foreground text-[11px] tabular-nums"
+                            >
+                              {time}
+                            </span>
+                            <span className="hidden font-mono text-muted-foreground/60 text-[10px] sm:mt-1 sm:block">
+                              #{String(events.length - index).padStart(2, "0")}
+                            </span>
+                          </div>
 
-                          <div className="flex min-w-0 flex-wrap gap-2">
-                            {Object.entries(logData).map(([key, value]) => (
-                              <span
-                                key={key}
-                                className="inline-flex max-w-full items-center gap-1.5 rounded border border-border bg-fd-background px-2 py-1 text-xs"
-                              >
-                                <span className="shrink-0 text-muted-foreground">{key}</span>
-                                <span className="min-w-0 truncate font-medium text-foreground/90">
-                                  {formatValue(value)}
-                                </span>
+                          <div className="min-w-0 space-y-2">
+                            <div className="flex min-w-0 flex-wrap items-center gap-2">
+                              <span className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[10px] text-primary uppercase tracking-wide">
+                                project.start
                               </span>
-                            ))}
+                              <span className="min-w-0 truncate font-mono text-[12px] text-foreground">
+                                {formatStackSummary(eventRecord)}
+                              </span>
+                              <span className="font-mono text-muted-foreground/70 text-[10px]">
+                                id={eventId}
+                              </span>
+                            </div>
+
+                            <div className="flex min-w-0 flex-wrap gap-x-3 gap-y-1.5">
+                              {logFields.map(({ key, value }) => (
+                                <code
+                                  key={key}
+                                  className="max-w-full rounded border border-border/70 bg-muted/15 px-1.5 py-0.5 font-mono text-[11px] leading-5"
+                                >
+                                  <span className="text-muted-foreground">{key}=</span>
+                                  <span className="break-all text-foreground/90">{value}</span>
+                                </code>
+                              ))}
+                            </div>
                           </div>
                         </motion.div>
                       );
