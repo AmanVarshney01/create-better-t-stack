@@ -1,5 +1,8 @@
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
+{{#if (eq webDeploy "cloudflare")}}
+import { env as localEnv } from "@{{projectName}}/env/server";
+{{/if}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
@@ -30,15 +33,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
 {{#if (eq webDeploy "cloudflare")}}
-	if (!platform?.env) {
-		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
-	}
+	const env = platform?.env ?? localEnv;
 
 {{/if}}
 	const context = await createContext({
 		headers: request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-		env: platform.env,
+		env,
 {{/if}}
 	});
 

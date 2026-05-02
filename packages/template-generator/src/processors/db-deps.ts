@@ -12,12 +12,12 @@ export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfi
   const webPkgPath = "apps/web/package.json";
 
   if (!vfs.exists(dbPkgPath)) return;
-  const webExists = vfs.exists(webPkgPath);
+  const webNeedsDbRuntime = backend === "self" && vfs.exists(webPkgPath);
 
   if (orm === "prisma") {
-    processPrismaDeps(vfs, config, dbPkgPath, webPkgPath, webExists);
+    processPrismaDeps(vfs, config, dbPkgPath, webPkgPath, webNeedsDbRuntime);
   } else if (orm === "drizzle") {
-    processDrizzleDeps(vfs, config, dbPkgPath, webPkgPath, webExists);
+    processDrizzleDeps(vfs, config, dbPkgPath, webPkgPath, webNeedsDbRuntime);
   } else if (orm === "mongoose") {
     addPackageDependency({ vfs, packagePath: dbPkgPath, dependencies: ["mongoose"] });
   }

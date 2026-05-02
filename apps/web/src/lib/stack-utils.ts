@@ -162,6 +162,7 @@ export function generateStackCommand(stack: StackState) {
                 "wxt",
                 "skills",
                 "mcp",
+                "evlog",
               ].includes(addon),
             )
             .join(" ") || "none"

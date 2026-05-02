@@ -81,6 +81,19 @@ export async function processEnvPackage(
       "packages/env/src/server.ts",
       config,
     );
+
+    if (
+      config.serverDeploy === "cloudflare" ||
+      (config.backend === "self" && config.webDeploy === "cloudflare")
+    ) {
+      processSingleTemplate(
+        vfs,
+        templates,
+        "packages/env/src/cloudflare-local.ts",
+        "packages/env/src/cloudflare-local.ts",
+        config,
+      );
+    }
   }
 }
 

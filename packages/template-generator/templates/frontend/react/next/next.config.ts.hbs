@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
 	{{#if (includes examples "ai")}}
 	transpilePackages: ["shiki"],
 	{{/if}}
-	{{#if (eq dbSetup "turso")}}
+	{{#if (and (eq backend "self") (eq dbSetup "turso"))}}
 	serverExternalPackages: ["libsql", "@libsql/client"],
 	{{/if}}
 };

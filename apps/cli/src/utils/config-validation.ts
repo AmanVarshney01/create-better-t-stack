@@ -520,7 +520,13 @@ export function validateFullConfig(
     }
 
     if (config.addons && config.addons.length > 0) {
-      yield* validateAddonsAgainstFrontends(config.addons, config.frontend, config.auth);
+      yield* validateAddonsAgainstFrontends(
+        config.addons,
+        config.frontend,
+        config.auth,
+        config.backend,
+        config.runtime,
+      );
       config.addons = [...new Set(config.addons)];
     }
 
@@ -561,7 +567,13 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
     );
 
     if (config.addons && config.addons.length > 0) {
-      yield* validateAddonsAgainstFrontends(config.addons, config.frontend, config.auth);
+      yield* validateAddonsAgainstFrontends(
+        config.addons,
+        config.frontend,
+        config.auth,
+        config.backend,
+        config.runtime,
+      );
     }
 
     yield* validateExamplesCompatibility(

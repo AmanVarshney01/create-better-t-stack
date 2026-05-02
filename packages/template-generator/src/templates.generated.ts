@@ -516,6 +516,9 @@ export default defineEventHandler(async (event) => {
   ["api/orpc/fullstack/svelte/src/lib/orpc.server.ts.hbs", `import { getRequestEvent } from "$app/server";
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter, type AppRouterClient } from "@{{projectName}}/api/routers/index";
+{{#if (eq webDeploy "cloudflare")}}
+import { env as localEnv } from "@{{projectName}}/env/server";
+{{/if}}
 import { createRouterClient } from "@orpc/server";
 
 if (typeof window !== "undefined") {
@@ -526,15 +529,13 @@ const serverClient: AppRouterClient = createRouterClient(appRouter, {
 	context: async () => {
 		const event = getRequestEvent();
 {{#if (eq webDeploy "cloudflare")}}
-		if (!event.platform?.env) {
-			throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
-		}
+		const env = event.platform?.env ?? localEnv;
 
 {{/if}}
 		return createContext({
 			headers: event.request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-			env: event.platform.env,
+			env,
 {{/if}}
 		});
 	},
@@ -546,6 +547,9 @@ globalThis.$client = serverClient;
 `],
   ["api/orpc/fullstack/svelte/src/routes/rpc/[...rest]/+server.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
+{{#if (eq webDeploy "cloudflare")}}
+import { env as localEnv } from "@{{projectName}}/env/server";
+{{/if}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
@@ -576,15 +580,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
 {{#if (eq webDeploy "cloudflare")}}
-	if (!platform?.env) {
-		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
-	}
+	const env = platform?.env ?? localEnv;
 
 {{/if}}
 	const context = await createContext({
 		headers: request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-		env: platform.env,
+		env,
 {{/if}}
 	});
 
@@ -5296,6 +5298,9 @@ import "./lib/orpc.server";
 import { building } from "$app/environment";
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 import { createAuth } from "@{{projectName}}/auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+import { env as localEnv } from "@{{projectName}}/env/server";
+{{/if}}
 {{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
@@ -5309,11 +5314,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	if (!event.platform?.env) {
-		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
-	}
-
-	const authInstance = createAuth(event.platform.env);
+	const authEnv = event.platform?.env ?? localEnv;
+	const authInstance = createAuth(authEnv);
 {{else}}
 	const authInstance = createAuth();
 {{/if}}
@@ -9057,10 +9059,14 @@ import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
 
 export default defineNuxtPlugin(() => {
+  {{#if (ne backend "self")}}
   const config = useRuntimeConfig();
+  {{/if}}
 
   const authClient = createAuthClient({
+    {{#if (ne backend "self")}}
     baseURL: config.public.serverUrl,
+    {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],
     {{/if}}
@@ -11456,7 +11462,6 @@ function RouteComponent() {
 		},
 	}));
 
-	type FormField = ReturnType<typeof form.createField>;
 	type SubmitState = Pick<typeof form.state, 'canSubmit' | 'isSubmitting'>;
 </script>
 
@@ -11472,7 +11477,7 @@ function RouteComponent() {
 		}}
 	>
 		<form.Field name="email">
-			{#snippet children(field: FormField)}
+			{#snippet children(field)}
 				<div class="space-y-1">
 					<label for={field.name}>Email</label>
 					<input
@@ -11497,7 +11502,7 @@ function RouteComponent() {
 		</form.Field>
 
 		<form.Field name="password">
-			{#snippet children(field: FormField)}
+			{#snippet children(field)}
 				<div class="space-y-1">
 					<label for={field.name}>Password</label>
 					<input
@@ -11577,7 +11582,6 @@ function RouteComponent() {
 		},
 	}));
 
-	type FormField = ReturnType<typeof form.createField>;
 	type SubmitState = Pick<typeof form.state, 'canSubmit' | 'isSubmitting'>;
 </script>
 
@@ -11594,7 +11598,7 @@ function RouteComponent() {
 		}}
 	>
 		<form.Field name="name">
-			{#snippet children(field: FormField)}
+			{#snippet children(field)}
 				<div class="space-y-1">
 					<label for={field.name}>Name</label>
 					<input
@@ -11618,7 +11622,7 @@ function RouteComponent() {
 		</form.Field>
 
 		<form.Field name="email">
-			{#snippet children(field: FormField)}
+			{#snippet children(field)}
 				<div class="space-y-1">
 					<label for={field.name}>Email</label>
 					<input
@@ -11643,7 +11647,7 @@ function RouteComponent() {
 		</form.Field>
 
 		<form.Field name="password">
-			{#snippet children(field: FormField)}
+			{#snippet children(field)}
 				<div class="space-y-1">
 					<label for={field.name}>Password</label>
 					<input
@@ -13602,7 +13606,7 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 {{#if (includes examples "ai")}}
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, streamText, wrapLanguageModel } from "ai";
+import { convertToModelMessages, streamText, type UIMessage, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (eq api "trpc")}}
@@ -13646,9 +13650,9 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 {{/if}}
 
 {{#if (eq runtime "node")}}
-const app = new Elysia({ adapter: node() })
+new Elysia({ adapter: node() })
 {{else}}
-const app = new Elysia()
+new Elysia()
 {{/if}}
 	.use(
 		cors({
@@ -13712,7 +13716,7 @@ const app = new Elysia()
 {{/if}}
 {{#if (includes examples "ai")}}
 	.post("/ai", async (context) => {
-		const body = await context.request.json();
+		const body = (await context.request.json()) as { messages?: UIMessage[] };
 		const uiMessages = body.messages || [];
 		const model = wrapLanguageModel({
 			model: google("gemini-2.5-flash"),
@@ -13720,7 +13724,7 @@ const app = new Elysia()
 		});
 		const result = streamText({
 			model,
-			messages: await convertToModelMessages(uiMessages)
+			messages: await convertToModelMessages(uiMessages),
 		});
 
 		return result.toUIMessageStreamResponse();
@@ -25440,7 +25444,7 @@ export default defineNuxtConfig({
   {{else if (and (ne backend "self") (ne backend "none"))}}
   runtimeConfig: {
     public: {
-      serverUrl: process.env.NUXT_PUBLIC_SERVER_URL,
+      serverUrl: process.env.NUXT_PUBLIC_SERVER_URL ?? "",
     }
   },
   {{/if}}
@@ -25459,7 +25463,7 @@ export default defineNuxtConfig({
   },
   "dependencies": {
     "@nuxt/ui": "^4.5.1",
-    "nuxt": "^4.4.2"
+    "nuxt": "^4.4.4"
   },
   "devDependencies": {
     "tailwindcss": "^4.2.1",
@@ -25512,7 +25516,7 @@ const nextConfig: NextConfig = {
 	{{#if (includes examples "ai")}}
 	transpilePackages: ["shiki"],
 	{{/if}}
-	{{#if (eq dbSetup "turso")}}
+	{{#if (and (eq backend "self") (eq dbSetup "turso"))}}
 	serverExternalPackages: ["libsql", "@libsql/client"],
 	{{/if}}
 };
@@ -28385,6 +28389,24 @@ export default defineConfig({
 	"type": "module",
 	"exports": {}
 }`],
+  ["packages/env/src/cloudflare-local.ts.hbs", `import { config } from "dotenv";
+import { fileURLToPath } from "node:url";
+
+config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
+config();
+
+const runtimeEnv = typeof process === "undefined" ? {} : process.env;
+
+export const env = new Proxy({} as Env, {
+	get(_target, prop) {
+		if (typeof prop !== "string") {
+			return undefined;
+		}
+
+		return runtimeEnv[prop];
+	},
+});
+`],
   ["packages/env/src/native.ts.hbs", `import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
@@ -28408,6 +28430,7 @@ export const env = createEnv({
 });
 `],
   ["packages/env/src/server.ts.hbs", `{{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+/// <reference types="@cloudflare/workers-types" />
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
@@ -28475,9 +28498,25 @@ export async function getEnvAsync() {
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 /// <reference path="../env.d.ts" />
+import { config } from "dotenv";
+import { fileURLToPath } from "node:url";
 
-export {};
+config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
+config();
+
+const runtimeEnv = typeof process === "undefined" ? {} : process.env;
+
+export const env = new Proxy({} as Env, {
+	get(_target, prop) {
+		if (typeof prop !== "string") {
+			return undefined;
+		}
+
+		return runtimeEnv[prop];
+	},
+});
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+/// <reference types="@cloudflare/workers-types" />
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
@@ -30002,4 +30041,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 466;
+export const TEMPLATE_COUNT = 467;
