@@ -88,19 +88,6 @@ const LINTERS = {
   oxlint: { label: "Oxlint + Oxfmt" },
 } as const;
 
-const EDITORS = {
-  vscode: { label: "Visual Studio Code" },
-  cursor: { label: "Cursor" },
-  windsurf: { label: "Windsurf" },
-  codebuddy: { label: "CodeBuddy" },
-  antigravity: { label: "Antigravity" },
-  bob: { label: "IBM Bob" },
-  kiro: { label: "Kiro" },
-  trae: { label: "Trae" },
-  void: { label: "Void" },
-  zed: { label: "Zed" },
-} as const;
-
 const AGENTS = {
   universal: { label: "Universal (AGENTS.md — covers all agents)" },
   claude: { label: "Claude Code" },
