@@ -140,6 +140,20 @@ const hasAlchemyConfig = existsSync(alchemyConfigPath);`,
     );
   }
 
+  if (!sourceFile.getVariableDeclaration("cloudflareWorkersAlias")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const cloudflareWorkersAlias = shouldUseAlchemy
+  ? {}
+  : {
+      "cloudflare:workers": cloudflareWorkersShimPath,
+    };`,
+    );
+  }
+
   if (!sourceFile.getVariableDeclaration("isNuxtDev")) {
     const firstExport = sourceFile
       .getStatements()
@@ -177,11 +191,7 @@ const hasAlchemyConfig = existsSync(alchemyConfigPath);`,
         initializer: `{
     preset: "cloudflare-module",
     ...(shouldUseAlchemy ? { cloudflare: alchemy({ dev: { configPath: alchemyConfigPath } }) } : {}),
-    alias: !shouldUseAlchemy
-      ? {
-          "cloudflare:workers": cloudflareWorkersShimPath,
-        }
-      : {},
+    alias: cloudflareWorkersAlias,
     prerender: {
       routes: ["/"],
       autoSubfolderIndex: false,
@@ -195,11 +205,7 @@ const hasAlchemyConfig = existsSync(alchemyConfigPath);`,
         name: "vite",
         initializer: `{
     resolve: {
-      alias: !shouldUseAlchemy
-        ? {
-            "cloudflare:workers": cloudflareWorkersShimPath,
-          }
-        : {},
+      alias: cloudflareWorkersAlias,
     },
   }`,
       });
@@ -393,6 +399,20 @@ const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
     );
   }
 
+  if (!sourceFile.getVariableDeclaration("cloudflareWorkersAlias")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const cloudflareWorkersAlias = shouldUseAlchemy
+  ? {}
+  : {
+      "cloudflare:workers": cloudflareWorkersShimPath,
+    };`,
+    );
+  }
+
   const exportAssignment = sourceFile.getExportAssignment((d) => !d.isExportEquals());
   if (!exportAssignment) return;
 
@@ -436,15 +456,13 @@ const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
       if (Node.isObjectLiteralExpression(initializer) && !initializer.getProperty("alias")) {
         initializer.addPropertyAssignment({
           name: "alias",
-          initializer:
-            '!shouldUseAlchemy ? { "cloudflare:workers": cloudflareWorkersShimPath } : {}',
+          initializer: "cloudflareWorkersAlias",
         });
       }
     } else if (!resolveProperty) {
       configObject.addPropertyAssignment({
         name: "resolve",
-        initializer:
-          '{ alias: !shouldUseAlchemy ? { "cloudflare:workers": cloudflareWorkersShimPath } : {} }',
+        initializer: "{ alias: cloudflareWorkersAlias }",
       });
     }
   }
@@ -532,6 +550,20 @@ const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
     );
   }
 
+  if (!sourceFile.getVariableDeclaration("cloudflareWorkersAlias")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const cloudflareWorkersAlias = shouldUseAlchemy
+  ? {}
+  : {
+      "cloudflare:workers": cloudflareWorkersShimPath,
+    };`,
+    );
+  }
+
   const exportAssignment = sourceFile.getExportAssignment((d) => !d.isExportEquals());
   if (exportAssignment) {
     const defineConfigCall = exportAssignment.getExpression();
@@ -561,23 +593,20 @@ const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
               ) {
                 resolveInitializer.addPropertyAssignment({
                   name: "alias",
-                  initializer:
-                    '!shouldUseAlchemy ? { "cloudflare:workers": cloudflareWorkersShimPath } : {}',
+                  initializer: "cloudflareWorkersAlias",
                 });
               }
             } else if (!resolveProperty) {
               viteInitializer.addPropertyAssignment({
                 name: "resolve",
-                initializer:
-                  '{ alias: !shouldUseAlchemy ? { "cloudflare:workers": cloudflareWorkersShimPath } : {} }',
+                initializer: "{ alias: cloudflareWorkersAlias }",
               });
             }
           }
         } else if (!viteProperty) {
           configObject.addPropertyAssignment({
             name: "vite",
-            initializer:
-              '{ resolve: { alias: !shouldUseAlchemy ? { "cloudflare:workers": cloudflareWorkersShimPath } : {} } }',
+            initializer: "{ resolve: { alias: cloudflareWorkersAlias } }",
           });
         }
       }
