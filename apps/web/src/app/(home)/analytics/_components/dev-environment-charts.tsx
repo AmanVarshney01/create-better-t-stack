@@ -1,9 +1,11 @@
 "use client";
 
+import { EvilBarChart } from "@/components/evilcharts/charts/bar-chart";
 import { cn } from "@/lib/utils";
 
-import { formatCount, formatPercent } from "./analytics-helpers";
+import { formatCompactNumber, formatCount, formatPercent } from "./analytics-helpers";
 import { ChartCard } from "./chart-card";
+import { seriesConfig } from "./evil-chart-utils";
 import { PreferenceChartCard } from "./preference-chart-card";
 import { SectionHeader } from "./section-header";
 import type { AggregatedAnalyticsData, ShareDistributionItem } from "./types";
@@ -21,32 +23,49 @@ function SplitMeterCard({
   const noShare = data.find((item) => item.name === "No")?.share ?? 0;
   const yesCount = data.find((item) => item.name === "Yes")?.value ?? 0;
   const noCount = data.find((item) => item.name === "No")?.value ?? 0;
+  const chartData = data.map((item) => ({
+    label: item.name,
+    value: item.value,
+    share: item.share,
+  }));
+  const chartConfig = seriesConfig("value", "Tracked setups", "teal");
 
   return (
     <ChartCard title={title} description={description}>
-      <div className="space-y-4">
-        <div className="overflow-hidden rounded-full border border-border/45 bg-background/65">
-          <div className="flex h-4 w-full">
-            <div className="bg-primary transition-all" style={{ width: `${yesShare * 100}%` }} />
-            <div className="bg-muted transition-all" style={{ width: `${noShare * 100}%` }} />
-          </div>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,0.9fr)_minmax(180px,0.7fr)] sm:items-center">
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-border/45 bg-background/55 p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-              yes
+          <div className="rounded border border-primary/25 bg-fd-background p-4">
+            <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+              Yes
             </div>
             <div className="mt-2 font-semibold text-2xl">{formatCount(yesCount)}</div>
             <div className="mt-1 text-muted-foreground text-xs">{formatPercent(yesShare)}</div>
           </div>
-          <div className="rounded-2xl border border-border/45 bg-background/55 p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-              no
+          <div className="rounded border border-border bg-fd-background p-4">
+            <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+              No
             </div>
             <div className="mt-2 font-semibold text-2xl">{formatCount(noCount)}</div>
             <div className="mt-1 text-muted-foreground text-xs">{formatPercent(noShare)}</div>
           </div>
         </div>
+        <EvilBarChart
+          className="h-[210px] w-full p-1"
+          data={chartData}
+          xDataKey="label"
+          yDataKey="value"
+          chartConfig={chartConfig}
+          layout="horizontal"
+          barVariant="default"
+          barRadius={5}
+          hideLegend
+          tooltipVariant="frosted-glass"
+          tooltipRoundness="md"
+          backgroundVariant="dots"
+          xAxisProps={{
+            tickFormatter: (value) => formatCompactNumber(Number(value)),
+          }}
+        />
       </div>
     </ChartCard>
   );
@@ -71,10 +90,10 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
     <div className="space-y-6">
       <SectionHeader
         label="Environment"
-        title="Package manager, setup, deployment, and addon choices."
-        description="These charts show the environment and setup options selected in tracked CLI runs."
+        title="Package manager, setup, deployment, and addon choices"
+        description="The environment choices that shape generated projects after the stack options are selected."
         aside={
-          <div className="rounded-full border border-border/60 bg-background/55 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          <div className="rounded border border-border bg-fd-background px-3 py-1.5 font-mono text-muted-foreground text-xs">
             packages {data.summary.mostPopularPackageManager} • runtime{" "}
             {data.summary.mostPopularRuntime}
           </div>
