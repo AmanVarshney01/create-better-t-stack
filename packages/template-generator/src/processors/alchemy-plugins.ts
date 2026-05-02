@@ -107,6 +107,16 @@ const hasAlchemyConfig = existsSync(alchemyConfigPath);`,
     );
   }
 
+  if (!sourceFile.getVariableDeclaration("cloudflareWorkersShimPath")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const cloudflareWorkersShimPath = fileURLToPath(new URL("../../packages/env/src/cloudflare-local.ts", import.meta.url));`,
+    );
+  }
+
   if (!sourceFile.getVariableDeclaration("isNuxtPrepare")) {
     const firstExport = sourceFile
       .getStatements()
@@ -167,6 +177,11 @@ const hasAlchemyConfig = existsSync(alchemyConfigPath);`,
         initializer: `{
     preset: "cloudflare-module",
     ...(shouldUseAlchemy ? { cloudflare: alchemy({ dev: { configPath: alchemyConfigPath } }) } : {}),
+    alias: !shouldUseAlchemy
+      ? {
+          "cloudflare:workers": cloudflareWorkersShimPath,
+        }
+      : {},
     prerender: {
       routes: ["/"],
       autoSubfolderIndex: false,
@@ -180,9 +195,9 @@ const hasAlchemyConfig = existsSync(alchemyConfigPath);`,
         name: "vite",
         initializer: `{
     resolve: {
-      alias: isNuxtDev
+      alias: !shouldUseAlchemy
         ? {
-            "cloudflare:workers": "nitropack/presets/cloudflare/runtime/shims/workers.dev",
+            "cloudflare:workers": cloudflareWorkersShimPath,
           }
         : {},
     },
@@ -231,23 +246,62 @@ function processSvelteAlchemy(vfs: VirtualFileSystem) {
 
   const sourceFile = project.createSourceFile("svelte.config.js", content);
 
-  const importDeclarations = sourceFile.getImportDeclarations();
-  const alchemyImport = importDeclarations.find(
-    (imp) => imp.getModuleSpecifierValue() === "alchemy/cloudflare/sveltekit",
-  );
-  const adapterImport = importDeclarations.find((imp) =>
-    imp.getModuleSpecifierValue().includes("@sveltejs/adapter"),
-  );
-
-  if (adapterImport) {
-    adapterImport.setModuleSpecifier("alchemy/cloudflare/sveltekit");
-    adapterImport.removeDefaultImport();
-    adapterImport.setDefaultImport("alchemy");
-  } else if (!alchemyImport) {
+  if (
+    !sourceFile
+      .getImportDeclarations()
+      .some((imp) => imp.getModuleSpecifierValue() === "alchemy/cloudflare/sveltekit")
+  ) {
     sourceFile.insertImportDeclaration(0, {
       moduleSpecifier: "alchemy/cloudflare/sveltekit",
       defaultImport: "alchemy",
     });
+  }
+
+  if (
+    !sourceFile
+      .getImportDeclarations()
+      .some((imp) => imp.getModuleSpecifierValue() === "@sveltejs/adapter-auto")
+  ) {
+    sourceFile.insertImportDeclaration(0, {
+      moduleSpecifier: "@sveltejs/adapter-auto",
+      defaultImport: "adapter",
+    });
+  }
+
+  if (
+    !sourceFile.getImportDeclarations().some((decl) => decl.getModuleSpecifierValue() === "node:fs")
+  ) {
+    sourceFile.insertImportDeclaration(0, {
+      moduleSpecifier: "node:fs",
+      namedImports: ["existsSync"],
+    });
+  }
+
+  if (
+    !sourceFile
+      .getImportDeclarations()
+      .some((decl) => decl.getModuleSpecifierValue() === "node:url")
+  ) {
+    sourceFile.insertImportDeclaration(0, {
+      moduleSpecifier: "node:url",
+      namedImports: ["fileURLToPath"],
+    });
+  }
+
+  if (!sourceFile.getVariableDeclaration("alchemyConfigPath")) {
+    const configVariableIndex = sourceFile.getStatements().findIndex(
+      (statement) =>
+        Node.isVariableStatement(statement) &&
+        statement
+          .getDeclarationList()
+          .getDeclarations()
+          .some((decl) => decl.getName() === "config"),
+    );
+    sourceFile.insertStatements(
+      configVariableIndex === -1 ? sourceFile.getStatements().length : configVariableIndex,
+      `const alchemyConfigPath = fileURLToPath(new URL("./.alchemy/local/wrangler.jsonc", import.meta.url));
+const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
+    );
   }
 
   const configVariable = sourceFile.getVariableDeclaration("config");
@@ -260,13 +314,9 @@ function processSvelteAlchemy(vfs: VirtualFileSystem) {
         if (Node.isObjectLiteralExpression(kitInitializer)) {
           const adapterProperty = kitInitializer.getProperty("adapter");
           if (adapterProperty && Node.isPropertyAssignment(adapterProperty)) {
-            const adapterInitializer = adapterProperty.getInitializer();
-            if (Node.isCallExpression(adapterInitializer)) {
-              const expression = adapterInitializer.getExpression();
-              if (Node.isIdentifier(expression) && expression.getText() === "adapter") {
-                expression.replaceWithText("alchemy");
-              }
-            }
+            adapterProperty.setInitializer(
+              "shouldUseAlchemy ? alchemy({ platformProxy: { configPath: alchemyConfigPath } }) : adapter()",
+            );
           }
         }
       }
@@ -302,6 +352,47 @@ function processTanStackStartAlchemy(vfs: VirtualFileSystem) {
     });
   }
 
+  const hasFsImport = sourceFile
+    .getImportDeclarations()
+    .some((decl) => decl.getModuleSpecifierValue() === "node:fs");
+  if (!hasFsImport) {
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: "node:fs",
+      namedImports: ["existsSync"],
+    });
+  }
+
+  const hasUrlImport = sourceFile
+    .getImportDeclarations()
+    .some((decl) => decl.getModuleSpecifierValue() === "node:url");
+  if (!hasUrlImport) {
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: "node:url",
+      namedImports: ["fileURLToPath"],
+    });
+  }
+
+  if (!sourceFile.getVariableDeclaration("alchemyConfigPath")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const alchemyConfigPath = fileURLToPath(new URL("./.alchemy/local/wrangler.jsonc", import.meta.url));
+const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
+    );
+  }
+
+  if (!sourceFile.getVariableDeclaration("cloudflareWorkersShimPath")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const cloudflareWorkersShimPath = fileURLToPath(new URL("../../packages/env/src/cloudflare-local.ts", import.meta.url));`,
+    );
+  }
+
   const exportAssignment = sourceFile.getExportAssignment((d) => !d.isExportEquals());
   if (!exportAssignment) return;
 
@@ -327,13 +418,33 @@ function processTanStackStartAlchemy(vfs: VirtualFileSystem) {
           .getElements()
           .some((el) => el.getText().includes("alchemy("));
         if (!hasAlchemy) {
-          initializer.addElement("alchemy()");
+          initializer.addElement(
+            "...(shouldUseAlchemy ? [alchemy({ configPath: alchemyConfigPath })] : [])",
+          );
         }
       }
     } else {
       configObject.addPropertyAssignment({
         name: "plugins",
-        initializer: "[alchemy()]",
+        initializer: "[...(shouldUseAlchemy ? [alchemy({ configPath: alchemyConfigPath })] : [])]",
+      });
+    }
+
+    const resolveProperty = configObject.getProperty("resolve");
+    if (resolveProperty && Node.isPropertyAssignment(resolveProperty)) {
+      const initializer = resolveProperty.getInitializer();
+      if (Node.isObjectLiteralExpression(initializer) && !initializer.getProperty("alias")) {
+        initializer.addPropertyAssignment({
+          name: "alias",
+          initializer:
+            '!shouldUseAlchemy ? { "cloudflare:workers": cloudflareWorkersShimPath } : {}',
+        });
+      }
+    } else if (!resolveProperty) {
+      configObject.addPropertyAssignment({
+        name: "resolve",
+        initializer:
+          '{ alias: !shouldUseAlchemy ? { "cloudflare:workers": cloudflareWorkersShimPath } : {} }',
       });
     }
   }
@@ -358,24 +469,69 @@ function processAstroAlchemy(vfs: VirtualFileSystem) {
 
   const sourceFile = project.createSourceFile("astro.config.mjs", content);
 
-  // Replace @astrojs/node import with alchemy/cloudflare/astro
-  const importDeclarations = sourceFile.getImportDeclarations();
-  const nodeAdapterImport = importDeclarations.find(
-    (imp) => imp.getModuleSpecifierValue() === "@astrojs/node",
-  );
-
-  if (nodeAdapterImport) {
-    nodeAdapterImport.setModuleSpecifier("alchemy/cloudflare/astro");
-    nodeAdapterImport.removeDefaultImport();
-    nodeAdapterImport.setDefaultImport("alchemy");
-  } else {
+  if (
+    !sourceFile
+      .getImportDeclarations()
+      .some((imp) => imp.getModuleSpecifierValue() === "alchemy/cloudflare/astro")
+  ) {
     sourceFile.insertImportDeclaration(0, {
       moduleSpecifier: "alchemy/cloudflare/astro",
       defaultImport: "alchemy",
     });
   }
 
-  // Update adapter: node({ mode: "standalone" }) -> alchemy()
+  if (
+    !sourceFile
+      .getImportDeclarations()
+      .some((imp) => imp.getModuleSpecifierValue() === "@astrojs/node")
+  ) {
+    sourceFile.insertImportDeclaration(0, {
+      moduleSpecifier: "@astrojs/node",
+      defaultImport: "node",
+    });
+  }
+
+  if (
+    !sourceFile.getImportDeclarations().some((decl) => decl.getModuleSpecifierValue() === "node:fs")
+  ) {
+    sourceFile.insertImportDeclaration(0, {
+      moduleSpecifier: "node:fs",
+      namedImports: ["existsSync"],
+    });
+  }
+
+  if (
+    !sourceFile
+      .getImportDeclarations()
+      .some((decl) => decl.getModuleSpecifierValue() === "node:url")
+  ) {
+    sourceFile.insertImportDeclaration(0, {
+      moduleSpecifier: "node:url",
+      namedImports: ["fileURLToPath"],
+    });
+  }
+
+  if (!sourceFile.getVariableDeclaration("alchemyConfigPath")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const alchemyConfigPath = fileURLToPath(new URL("./.alchemy/local/wrangler.jsonc", import.meta.url));
+const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
+    );
+  }
+
+  if (!sourceFile.getVariableDeclaration("cloudflareWorkersShimPath")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const cloudflareWorkersShimPath = fileURLToPath(new URL("../../packages/env/src/cloudflare-local.ts", import.meta.url));`,
+    );
+  }
+
   const exportAssignment = sourceFile.getExportAssignment((d) => !d.isExportEquals());
   if (exportAssignment) {
     const defineConfigCall = exportAssignment.getExpression();
@@ -387,7 +543,42 @@ function processAstroAlchemy(vfs: VirtualFileSystem) {
       if (Node.isObjectLiteralExpression(configObject)) {
         const adapterProperty = configObject.getProperty("adapter");
         if (adapterProperty && Node.isPropertyAssignment(adapterProperty)) {
-          adapterProperty.setInitializer("alchemy()");
+          adapterProperty.setInitializer(
+            'shouldUseAlchemy ? alchemy({ platformProxy: { configPath: alchemyConfigPath } }) : node({ mode: "standalone" })',
+          );
+        }
+
+        const viteProperty = configObject.getProperty("vite");
+        if (viteProperty && Node.isPropertyAssignment(viteProperty)) {
+          const viteInitializer = viteProperty.getInitializer();
+          if (Node.isObjectLiteralExpression(viteInitializer)) {
+            const resolveProperty = viteInitializer.getProperty("resolve");
+            if (resolveProperty && Node.isPropertyAssignment(resolveProperty)) {
+              const resolveInitializer = resolveProperty.getInitializer();
+              if (
+                Node.isObjectLiteralExpression(resolveInitializer) &&
+                !resolveInitializer.getProperty("alias")
+              ) {
+                resolveInitializer.addPropertyAssignment({
+                  name: "alias",
+                  initializer:
+                    '!shouldUseAlchemy ? { "cloudflare:workers": cloudflareWorkersShimPath } : {}',
+                });
+              }
+            } else if (!resolveProperty) {
+              viteInitializer.addPropertyAssignment({
+                name: "resolve",
+                initializer:
+                  '{ alias: !shouldUseAlchemy ? { "cloudflare:workers": cloudflareWorkersShimPath } : {} }',
+              });
+            }
+          }
+        } else if (!viteProperty) {
+          configObject.addPropertyAssignment({
+            name: "vite",
+            initializer:
+              '{ resolve: { alias: !shouldUseAlchemy ? { "cloudflare:workers": cloudflareWorkersShimPath } : {} } }',
+          });
         }
       }
     }

@@ -516,6 +516,9 @@ export default defineEventHandler(async (event) => {
   ["api/orpc/fullstack/svelte/src/lib/orpc.server.ts.hbs", `import { getRequestEvent } from "$app/server";
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter, type AppRouterClient } from "@{{projectName}}/api/routers/index";
+{{#if (eq webDeploy "cloudflare")}}
+import { env as localEnv } from "@{{projectName}}/env/server";
+{{/if}}
 import { createRouterClient } from "@orpc/server";
 
 if (typeof window !== "undefined") {
@@ -526,15 +529,13 @@ const serverClient: AppRouterClient = createRouterClient(appRouter, {
 	context: async () => {
 		const event = getRequestEvent();
 {{#if (eq webDeploy "cloudflare")}}
-		if (!event.platform?.env) {
-			throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
-		}
+		const env = event.platform?.env ?? localEnv;
 
 {{/if}}
 		return createContext({
 			headers: event.request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-			env: event.platform.env,
+			env,
 {{/if}}
 		});
 	},
@@ -546,6 +547,9 @@ globalThis.$client = serverClient;
 `],
   ["api/orpc/fullstack/svelte/src/routes/rpc/[...rest]/+server.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
+{{#if (eq webDeploy "cloudflare")}}
+import { env as localEnv } from "@{{projectName}}/env/server";
+{{/if}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
@@ -576,15 +580,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
 {{#if (eq webDeploy "cloudflare")}}
-	if (!platform?.env) {
-		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
-	}
+	const env = platform?.env ?? localEnv;
 
 {{/if}}
 	const context = await createContext({
 		headers: request.headers,
 {{#if (eq webDeploy "cloudflare")}}
-		env: platform.env,
+		env,
 {{/if}}
 	});
 
@@ -5296,6 +5298,9 @@ import "./lib/orpc.server";
 import { building } from "$app/environment";
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 import { createAuth } from "@{{projectName}}/auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+import { env as localEnv } from "@{{projectName}}/env/server";
+{{/if}}
 {{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
@@ -5309,11 +5314,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	if (!event.platform?.env) {
-		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
-	}
-
-	const authInstance = createAuth(event.platform.env);
+	const authEnv = event.platform?.env ?? localEnv;
+	const authInstance = createAuth(authEnv);
 {{else}}
 	const authInstance = createAuth();
 {{/if}}
@@ -28387,6 +28389,24 @@ export default defineConfig({
 	"type": "module",
 	"exports": {}
 }`],
+  ["packages/env/src/cloudflare-local.ts.hbs", `import { config } from "dotenv";
+import { fileURLToPath } from "node:url";
+
+config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
+config();
+
+const runtimeEnv = typeof process === "undefined" ? {} : process.env;
+
+export const env = new Proxy({} as Env, {
+	get(_target, prop) {
+		if (typeof prop !== "string") {
+			return undefined;
+		}
+
+		return runtimeEnv[prop];
+	},
+});
+`],
   ["packages/env/src/native.ts.hbs", `import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
@@ -28478,8 +28498,23 @@ export async function getEnvAsync() {
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 /// <reference path="../env.d.ts" />
+import { config } from "dotenv";
+import { fileURLToPath } from "node:url";
 
-export {};
+config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
+config();
+
+const runtimeEnv = typeof process === "undefined" ? {} : process.env;
+
+export const env = new Proxy({} as Env, {
+	get(_target, prop) {
+		if (typeof prop !== "string") {
+			return undefined;
+		}
+
+		return runtimeEnv[prop];
+	},
+});
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference types="@cloudflare/workers-types" />
 /// <reference path="../env.d.ts" />
@@ -30006,4 +30041,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 466;
+export const TEMPLATE_COUNT = 467;

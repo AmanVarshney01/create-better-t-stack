@@ -595,11 +595,20 @@ function addSvelteBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
   if (!nextContent.includes(`@${config.projectName}/auth`)) {
     nextContent = prependMissingImports(nextContent, [getAuthImportLine(config)]);
   }
+  if (
+    usesCreateAuthFactory(config) &&
+    config.webDeploy === "cloudflare" &&
+    !nextContent.includes(`@${config.projectName}/env/server`)
+  ) {
+    nextContent = prependMissingImports(nextContent, [
+      `import { env as localEnv } from "@${config.projectName}/env/server";`,
+    ]);
+  }
   const authExpression = getAuthExpression(config);
   const authOptions = '{ exclude: ["/api/auth/**"], maskEmail: true }';
   const authHandleSnippet =
     usesCreateAuthFactory(config) && config.webDeploy === "cloudflare"
-      ? `const evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tif (building) {\n\t\treturn resolve(event);\n\t}\n\n\tif (!event.platform?.env) {\n\t\tthrow new Error("Cloudflare platform env is not available for this SvelteKit request.");\n\t}\n\n\tconst identifyUser = createAuthMiddleware(createAuth(event.platform.env) as BetterAuthInstance, ${authOptions});\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`
+      ? `const evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tif (building) {\n\t\treturn resolve(event);\n\t}\n\n\tconst authEnv = event.platform?.env ?? localEnv;\n\tconst identifyUser = createAuthMiddleware(createAuth(authEnv) as BetterAuthInstance, ${authOptions});\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`
       : `const identifyUser = createAuthMiddleware(${authExpression} as BetterAuthInstance, ${authOptions});\n\nconst evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`;
 
   nextContent = insertAfterOnce(

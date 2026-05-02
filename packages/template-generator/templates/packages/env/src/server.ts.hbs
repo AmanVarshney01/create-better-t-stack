@@ -67,8 +67,23 @@ export async function getEnvAsync() {
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 /// <reference path="../env.d.ts" />
+import { config } from "dotenv";
+import { fileURLToPath } from "node:url";
 
-export {};
+config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
+config();
+
+const runtimeEnv = typeof process === "undefined" ? {} : process.env;
+
+export const env = new Proxy({} as Env, {
+	get(_target, prop) {
+		if (typeof prop !== "string") {
+			return undefined;
+		}
+
+		return runtimeEnv[prop];
+	},
+});
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 /// <reference types="@cloudflare/workers-types" />
 /// <reference path="../env.d.ts" />

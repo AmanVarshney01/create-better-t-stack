@@ -4,6 +4,9 @@ import "./lib/orpc.server";
 import { building } from "$app/environment";
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 import { createAuth } from "@{{projectName}}/auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+import { env as localEnv } from "@{{projectName}}/env/server";
+{{/if}}
 {{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
@@ -17,11 +20,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	if (!event.platform?.env) {
-		throw new Error("Cloudflare platform env is not available for this SvelteKit request.");
-	}
-
-	const authInstance = createAuth(event.platform.env);
+	const authEnv = event.platform?.env ?? localEnv;
+	const authInstance = createAuth(authEnv);
 {{else}}
 	const authInstance = createAuth();
 {{/if}}

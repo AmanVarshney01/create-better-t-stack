@@ -64,6 +64,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
+        dependencies: ["@astrojs/node"],
         devDependencies: ["alchemy", "@astrojs/cloudflare", "@cloudflare/workers-types"],
       });
     } else if (

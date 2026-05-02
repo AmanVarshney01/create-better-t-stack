@@ -574,8 +574,9 @@ describe("Addon Configurations", () => {
       expect(nuxtConfig).toContain("const shouldUseAlchemy = !isNuxtPrepare && hasAlchemyConfig;");
       expect(nuxtConfig).toContain("alchemy({ dev: { configPath: alchemyConfigPath } })");
       expect(nuxtConfig).toContain("isNuxtDev");
+      expect(nuxtConfig).toContain("const cloudflareWorkersShimPath = fileURLToPath");
       expect(nuxtConfig).toContain('"cloudflare:workers"');
-      expect(nuxtConfig).toContain('"nitropack/presets/cloudflare/runtime/shims/workers.dev"');
+      expect(nuxtConfig).toContain("cloudflareWorkersShimPath");
       expect(nuxtConfig).toContain("evlog:");
       expectParseableTypeScript(nuxtConfig);
     });
@@ -731,7 +732,7 @@ describe("Addon Configurations", () => {
         frontend: "svelte",
         api: "orpc",
         path: "apps/web/src/hooks.server.ts",
-        expected: "createAuthMiddleware(createAuth(event.platform.env) as BetterAuthInstance",
+        expected: "createAuthMiddleware(createAuth(authEnv) as BetterAuthInstance",
         insideMarker: "const evlogAuthHandle",
       },
       {
