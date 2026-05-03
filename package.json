@@ -12,7 +12,7 @@
       "@types/fs-extra": "^11.0.4",
       "@types/node": "^25.6.0",
       "better-result": "^2.9.1",
-      "convex": "^1.35.1",
+      "convex": "^1.37.0",
       "convex-helpers": "^0.1.115",
       "handlebars": "^4.7.9",
       "oxfmt": "^0.46.0",
