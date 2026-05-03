@@ -99,7 +99,7 @@
         "shiki": "^4.0.2",
         "sonner": "^2.0.7",
         "tailwind-merge": "^3.4.0",
-        "zod": "catalog:",
+        "zod": "^4.4.2",
       },
       "devDependencies": {
         "@tailwindcss/postcss": "^4.2.4",
@@ -167,7 +167,7 @@
       "name": "@better-t-stack/types",
       "version": "3.28.0",
       "dependencies": {
-        "zod": "catalog:",
+        "zod": "^4.4.2",
       },
       "devDependencies": {
         "tsdown": "^0.21.9",
