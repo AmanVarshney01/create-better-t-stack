@@ -1,6 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import type { ZodRawShapeCompat } from "@modelcontextprotocol/sdk/server/zod-compat.js";
 import z from "zod";
 
 import { add, create, type SchemaName, SchemaNameSchema, getSchemaResult } from "./index";
@@ -27,15 +26,15 @@ import {
 } from "./types";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
 
-const ToolResponseSchema = {
+const ToolResponseSchema = z.object({
   ok: z.boolean(),
   data: z.any().optional(),
   error: z.string().optional(),
-} satisfies ZodRawShapeCompat;
+});
 
-const SchemaToolInputSchema = {
+const SchemaToolInputSchema = z.object({
   name: SchemaNameSchema.optional().describe("Schema name to inspect. Defaults to all."),
-} satisfies ZodRawShapeCompat;
+});
 
 const McpCreateProjectInputSchema = CreateInputSchema.safeExtend({
   projectName: z.string().describe("Project name or relative path"),
@@ -71,9 +70,6 @@ type SchemaToolInput = {
 };
 type McpCreateProjectInput = z.infer<typeof McpCreateProjectInputSchema>;
 type McpAddInput = z.infer<typeof AddInputSchema>;
-
-const McpCreateProjectInputShape = McpCreateProjectInputSchema.shape satisfies ZodRawShapeCompat;
-const AddInputShape = AddInputSchema.shape satisfies ZodRawShapeCompat;
 
 function formatToolSuccess(data: unknown) {
   return {
@@ -249,7 +245,7 @@ export function createBtsMcpServer() {
       title: "Plan Better T Stack Project",
       description:
         "Validate and preview a Better T Stack project creation without writing files or provisioning resources. Always use this before bts_create_project. This tool requires an explicit full stack config rather than a partial payload with inferred defaults.",
-      inputSchema: McpCreateProjectInputShape,
+      inputSchema: McpCreateProjectInputSchema,
       outputSchema: ToolResponseSchema,
       annotations: {
         title: "Plan Better T Stack Project",
@@ -295,7 +291,7 @@ export function createBtsMcpServer() {
       title: "Create Better T Stack Project",
       description:
         "Create a Better T Stack project on disk using the same silent programmatic flow as the CLI JSON API. Call this only after bts_plan_project succeeds and the plan clearly matches the user's intent. This tool requires an explicit full stack config.",
-      inputSchema: McpCreateProjectInputShape,
+      inputSchema: McpCreateProjectInputSchema,
       outputSchema: ToolResponseSchema,
       annotations: {
         title: "Create Better T Stack Project",
@@ -330,7 +326,7 @@ export function createBtsMcpServer() {
       title: "Plan Better T Stack Addons",
       description:
         "Validate and preview addon installation for an existing Better T Stack project without writing files. Always use this before bts_add_addons when the addon set or nested options are uncertain.",
-      inputSchema: AddInputShape,
+      inputSchema: AddInputSchema,
       outputSchema: ToolResponseSchema,
       annotations: {
         title: "Plan Better T Stack Addons",
@@ -364,7 +360,7 @@ export function createBtsMcpServer() {
       title: "Add Better T Stack Addons",
       description:
         "Install addons into an existing Better T Stack project using the same silent flow as add-json. Call this only after bts_plan_addons succeeds and the planned changes match the user's intent.",
-      inputSchema: AddInputShape,
+      inputSchema: AddInputSchema,
       outputSchema: ToolResponseSchema,
       annotations: {
         title: "Add Better T Stack Addons",

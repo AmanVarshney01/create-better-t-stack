@@ -223,6 +223,15 @@ export async function setupNeonPostgres(
   });
   const target: "apps/web" | "apps/server" = backend === "self" ? "apps/web" : "apps/server";
 
+  if (shouldSkipExternalCommands()) {
+    const envResult = await writeEnvFile(projectDir, backend);
+    if (envResult.isErr()) {
+      return envResult;
+    }
+    displayManualSetupInstructions(target);
+    return Result.ok(undefined);
+  }
+
   if (setupMode === "manual") {
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
@@ -264,15 +273,6 @@ export async function setupNeonPostgres(
   }
 
   if (selectedMode === "manual") {
-    const envResult = await writeEnvFile(projectDir, backend);
-    if (envResult.isErr()) {
-      return envResult;
-    }
-    displayManualSetupInstructions(target);
-    return Result.ok(undefined);
-  }
-
-  if (shouldSkipExternalCommands()) {
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
       return envResult;

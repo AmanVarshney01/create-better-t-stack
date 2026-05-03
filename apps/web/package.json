@@ -8,7 +8,7 @@
     "dev": "next dev --port 3333",
     "start": "next start",
     "postinstall": "fumadocs-mdx",
-    "generate-schema": "bun scripts/generate-schema.ts"
+    "generate-schema": "(cd ../../packages/types && bun run build) && bun scripts/generate-schema.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

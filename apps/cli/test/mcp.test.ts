@@ -50,6 +50,13 @@ function getExplicitCreateInput(projectPath: string) {
   };
 }
 
+function getToolText(result: { content: Array<{ type: string; text?: string }> }) {
+  return result.content
+    .filter((item): item is { type: "text"; text: string } => item.type === "text")
+    .map((item) => item.text)
+    .join("\n");
+}
+
 describe("MCP server", () => {
   let cleanups: Array<() => Promise<void>> = [];
 
@@ -166,15 +173,66 @@ describe("MCP server", () => {
     });
 
     expect(result.isError).toBe(true);
-    const text = result.content
-      .filter((item): item is { type: "text"; text: string } => item.type === "text")
-      .map((item) => item.text)
-      .join("\n");
+    const text = getToolText(result);
 
     expect(text).toContain("Input validation error");
     expect(text).toContain("database");
     expect(text).toContain("backend");
     expect(text).toContain("packageManager");
+  });
+
+  it("rejects create inputs that violate full schema refinements", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const result = await client.callTool({
+      name: "bts_plan_project",
+      arguments: {
+        ...getExplicitCreateInput(path.join(SMOKE_DIR, "mcp-conflicting-db-mode")),
+        manualDb: true,
+        dbSetupOptions: { mode: "manual" },
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(getToolText(result)).toContain(
+      "`manualDb` and `dbSetupOptions.mode` are mutually exclusive",
+    );
+  });
+
+  it("rejects unknown create input keys through MCP", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const result = await client.callTool({
+      name: "bts_plan_project",
+      arguments: {
+        ...getExplicitCreateInput(path.join(SMOKE_DIR, "mcp-extra-key")),
+        pakageManager: "bun",
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(getToolText(result)).toContain("Unrecognized key");
+  });
+
+  it("rejects unknown addon input keys through MCP", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const result = await client.callTool({
+      name: "bts_plan_addons",
+      arguments: {
+        projectDir: path.join(SMOKE_DIR, "mcp-addon-extra-key"),
+        addons: ["biome"],
+        packageManager: "bun",
+        install: false,
+        projectDr: SMOKE_DIR,
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(getToolText(result)).toContain("Unrecognized key");
   });
 
   it("plans projects without writing files", async () => {
