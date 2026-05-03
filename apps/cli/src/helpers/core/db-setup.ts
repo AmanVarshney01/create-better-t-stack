@@ -23,7 +23,10 @@ import { setupSupabase } from "../database-providers/supabase-setup";
 import { setupTurso } from "../database-providers/turso-setup";
 import { type DatabaseSetupCliOptions, mergeResolvedDbSetupOptions } from "./db-setup-options";
 
-export async function setupDatabase(config: ProjectConfig, cliInput?: DatabaseSetupCliOptions) {
+export async function setupDatabase(
+  config: ProjectConfig,
+  cliInput?: DatabaseSetupCliOptions,
+): Promise<void> {
   const { database, dbSetup, backend, projectDir } = config;
 
   if (backend === "convex" || database === "none") {

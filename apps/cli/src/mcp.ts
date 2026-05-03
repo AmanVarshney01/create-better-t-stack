@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import type { AnySchema } from "@modelcontextprotocol/sdk/server/zod-compat.js";
 import z from "zod";
 
 import { add, create, type SchemaName, SchemaNameSchema, getSchemaResult } from "./index";
@@ -32,6 +33,16 @@ const ToolResponseSchema = z.object({
   error: z.string().optional(),
 });
 
+const EmptyInputSchema = z.object({});
+
+const SchemaToolInputSchema = z.object({
+  name: SchemaNameSchema.optional().describe("Schema name to inspect. Defaults to all."),
+});
+
+function mcpSchema<T extends z.ZodType>(schema: T): T & AnySchema {
+  return schema as unknown as T & AnySchema;
+}
+
 const McpCreateProjectInputSchema = CreateInputSchema.safeExtend({
   projectName: z.string().describe("Project name or relative path"),
   frontend: z
@@ -60,6 +71,10 @@ const McpCreateProjectInputSchema = CreateInputSchema.safeExtend({
 }).describe(
   "Explicit Better T Stack project configuration for MCP use. Provide the full stack config instead of relying on inferred defaults.",
 );
+
+type SchemaToolInput = z.infer<typeof SchemaToolInputSchema>;
+type McpCreateProjectInput = z.infer<typeof McpCreateProjectInputSchema>;
+type McpAddInput = z.infer<typeof AddInputSchema>;
 
 function formatToolSuccess(data: unknown) {
   return {
@@ -186,8 +201,8 @@ export function createBtsMcpServer() {
       title: "Get Better T Stack MCP Guidance",
       description:
         "Read MCP-specific guidance for choosing valid Better T Stack configurations. Use this before planning when user intent is ambiguous. This explains the full explicit config required by MCP project creation, plus important field semantics and ambiguity rules.",
-      inputSchema: z.object({}),
-      outputSchema: ToolResponseSchema,
+      inputSchema: mcpSchema(EmptyInputSchema),
+      outputSchema: mcpSchema(ToolResponseSchema),
       annotations: {
         title: "Get Better T Stack MCP Guidance",
         readOnlyHint: true,
@@ -211,10 +226,8 @@ export function createBtsMcpServer() {
       title: "Get Better T Stack Schemas",
       description:
         "Inspect Better T Stack CLI and input schemas so agents can plan valid create/add requests. Use this together with bts_get_stack_guidance before creating a project if any part of the request is ambiguous.",
-      inputSchema: z.object({
-        name: SchemaNameSchema.optional().describe("Schema name to inspect. Defaults to all."),
-      }),
-      outputSchema: ToolResponseSchema,
+      inputSchema: mcpSchema(SchemaToolInputSchema),
+      outputSchema: mcpSchema(ToolResponseSchema),
       annotations: {
         title: "Get Better T Stack Schemas",
         readOnlyHint: true,
@@ -223,7 +236,7 @@ export function createBtsMcpServer() {
         openWorldHint: false,
       },
     },
-    async ({ name }) => {
+    async ({ name }: SchemaToolInput) => {
       try {
         return formatToolSuccess(getSchemaResult((name ?? "all") as SchemaName));
       } catch (error) {
@@ -238,8 +251,8 @@ export function createBtsMcpServer() {
       title: "Plan Better T Stack Project",
       description:
         "Validate and preview a Better T Stack project creation without writing files or provisioning resources. Always use this before bts_create_project. This tool requires an explicit full stack config rather than a partial payload with inferred defaults.",
-      inputSchema: McpCreateProjectInputSchema,
-      outputSchema: ToolResponseSchema,
+      inputSchema: mcpSchema(McpCreateProjectInputSchema),
+      outputSchema: mcpSchema(ToolResponseSchema),
       annotations: {
         title: "Plan Better T Stack Project",
         readOnlyHint: true,
@@ -248,7 +261,7 @@ export function createBtsMcpServer() {
         openWorldHint: false,
       },
     },
-    async (input) => {
+    async (input: McpCreateProjectInput) => {
       try {
         const result = await create(input.projectName, {
           ...input,
@@ -284,14 +297,14 @@ export function createBtsMcpServer() {
       title: "Create Better T Stack Project",
       description:
         "Create a Better T Stack project on disk using the same silent programmatic flow as the CLI JSON API. Call this only after bts_plan_project succeeds and the plan clearly matches the user's intent. This tool requires an explicit full stack config.",
-      inputSchema: McpCreateProjectInputSchema,
-      outputSchema: ToolResponseSchema,
+      inputSchema: mcpSchema(McpCreateProjectInputSchema),
+      outputSchema: mcpSchema(ToolResponseSchema),
       annotations: {
         title: "Create Better T Stack Project",
         ...getProjectToolAnnotations(),
       },
     },
-    async (input) => {
+    async (input: McpCreateProjectInput) => {
       try {
         if (input.install) {
           return formatToolError(getMcpInstallTimeoutMessage(input.packageManager));
@@ -319,8 +332,8 @@ export function createBtsMcpServer() {
       title: "Plan Better T Stack Addons",
       description:
         "Validate and preview addon installation for an existing Better T Stack project without writing files. Always use this before bts_add_addons when the addon set or nested options are uncertain.",
-      inputSchema: AddInputSchema,
-      outputSchema: ToolResponseSchema,
+      inputSchema: mcpSchema(AddInputSchema),
+      outputSchema: mcpSchema(ToolResponseSchema),
       annotations: {
         title: "Plan Better T Stack Addons",
         readOnlyHint: true,
@@ -329,7 +342,7 @@ export function createBtsMcpServer() {
         openWorldHint: false,
       },
     },
-    async (input) => {
+    async (input: McpAddInput) => {
       try {
         const result = await add({
           ...input,
@@ -353,8 +366,8 @@ export function createBtsMcpServer() {
       title: "Add Better T Stack Addons",
       description:
         "Install addons into an existing Better T Stack project using the same silent flow as add-json. Call this only after bts_plan_addons succeeds and the planned changes match the user's intent.",
-      inputSchema: AddInputSchema,
-      outputSchema: ToolResponseSchema,
+      inputSchema: mcpSchema(AddInputSchema),
+      outputSchema: mcpSchema(ToolResponseSchema),
       annotations: {
         title: "Add Better T Stack Addons",
         destructiveHint: true,
@@ -362,7 +375,7 @@ export function createBtsMcpServer() {
         openWorldHint: true,
       },
     },
-    async (input) => {
+    async (input: McpAddInput) => {
       try {
         const result = await add(input);
 

@@ -11,7 +11,7 @@
       "@erquhart/convex-oss-stats": "^0.8.2",
       "@types/fs-extra": "^11.0.4",
       "@types/node": "^25.6.0",
-      "better-result": "^2.8.2",
+      "better-result": "^2.9.1",
       "convex": "^1.35.1",
       "convex-helpers": "^0.1.115",
       "handlebars": "^4.7.9",

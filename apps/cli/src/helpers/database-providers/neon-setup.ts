@@ -15,6 +15,7 @@ import {
   UserCancelledError,
   userCancelled,
 } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 import { cliLog, createSpinner } from "../../utils/terminal-output";
 import {
@@ -89,7 +90,7 @@ async function createNeonProject(
   );
 
   if (execResult.isErr()) {
-    return execResult;
+    return Result.err(execResult.error);
   }
 
   const parseResult = Result.try({
@@ -103,7 +104,7 @@ async function createNeonProject(
   });
 
   if (parseResult.isErr()) {
-    return parseResult;
+    return Result.err(parseResult.error);
   }
 
   const response = parseResult.value;
@@ -263,6 +264,15 @@ export async function setupNeonPostgres(
   }
 
   if (selectedMode === "manual") {
+    const envResult = await writeEnvFile(projectDir, backend);
+    if (envResult.isErr()) {
+      return envResult;
+    }
+    displayManualSetupInstructions(target);
+    return Result.ok(undefined);
+  }
+
+  if (shouldSkipExternalCommands()) {
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
       return envResult;
