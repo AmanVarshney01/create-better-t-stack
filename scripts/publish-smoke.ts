@@ -18,6 +18,9 @@ import { $ } from "bun";
 
 const ROOT = resolve(import.meta.dir, "..");
 
+// Corepack's pnpm shim can prompt before downloading pnpm; smoke tests run non-interactively.
+process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = "0";
+
 type Publishable = {
   name: string;
   dir: string;
