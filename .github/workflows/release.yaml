@@ -119,9 +119,9 @@ jobs:
           cd packages/create-bts
           jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["create-better-t-stack"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Enable pnpm via corepack
+      - name: Install pnpm
         if: steps.check-version.outputs.exists == 'false'
-        run: corepack enable pnpm
+        run: npm install --global pnpm@10.32.1
 
       # Gate all publishes on the smoke so a failure here doesn't leave a
       # partial release on npm (e.g. types/template-generator published but
