@@ -18,9 +18,6 @@ import { $ } from "bun";
 
 const ROOT = resolve(import.meta.dir, "..");
 
-// Corepack's pnpm shim can prompt before downloading pnpm; smoke tests run non-interactively.
-process.env.COREPACK_ENABLE_DOWNLOAD_PROMPT = "0";
-
 type Publishable = {
   name: string;
   dir: string;
@@ -104,7 +101,8 @@ async function installAndRun(
   const install = await $`${pm} install --ignore-scripts`.cwd(dir).quiet().nothrow();
   if (install.exitCode !== 0) {
     console.error(red(`✗ ${pm} install failed`));
-    console.error(dim(install.stderr.toString()));
+    const output = `${install.stderr.toString()}${install.stdout.toString()}`.trim();
+    console.error(dim(output || "(no install output)"));
     process.exit(1);
   }
 

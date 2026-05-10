@@ -51,8 +51,8 @@ jobs:
           AGENT: 1
           BTS_TELEMETRY: 0
 
-      - name: Enable pnpm via corepack
-        run: corepack enable pnpm
+      - name: Install pnpm
+        run: npm install --global pnpm@10.32.1
 
       - name: Publish smoke test (npm, pnpm, bun)
         run: bun run smoke:publish
