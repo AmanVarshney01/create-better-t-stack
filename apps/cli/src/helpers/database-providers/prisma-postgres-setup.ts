@@ -104,7 +104,7 @@ async function setupWithCreateDb(
   });
 
   if (execResult.isErr()) {
-    return execResult;
+    return Result.err(execResult.error);
   }
 
   const parseResult = Result.try({
@@ -118,7 +118,7 @@ async function setupWithCreateDb(
   });
 
   if (parseResult.isErr()) {
-    return parseResult;
+    return Result.err(parseResult.error);
   }
 
   const createDbResponse = parseResult.value;
@@ -263,7 +263,7 @@ export async function setupPrismaPostgres(
   if (prismaConfigResult.isErr()) {
     // Check for user cancellation
     if (UserCancelledError.is(prismaConfigResult.error)) {
-      return prismaConfigResult;
+      return Result.err(prismaConfigResult.error);
     }
 
     cliLog.error(pc.red(prismaConfigResult.error.message));

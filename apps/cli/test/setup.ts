@@ -3,6 +3,7 @@ import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 
 export const SMOKE_DIR = join(import.meta.dir, "..", ".smoke");
+const SMOKE_HOOK_TIMEOUT_MS = 30_000;
 
 type VirtualFileNode = {
   type: "file";
@@ -57,7 +58,7 @@ beforeAll(async () => {
     console.error("Failed to setup smoke directory:", error);
     throw error;
   }
-});
+}, SMOKE_HOOK_TIMEOUT_MS);
 
 // Global teardown - runs once after all tests
 afterAll(async () => {
@@ -66,4 +67,4 @@ afterAll(async () => {
   } catch {
     // Ignore cleanup errors on teardown
   }
-});
+}, SMOKE_HOOK_TIMEOUT_MS);

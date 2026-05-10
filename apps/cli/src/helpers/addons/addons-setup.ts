@@ -50,7 +50,7 @@ async function runAddonStep(addon: string, step: () => Promise<void>): Promise<v
   }
 }
 
-export async function setupAddons(config: ProjectConfig) {
+export async function setupAddons(config: ProjectConfig): Promise<void> {
   const { addons, frontend, projectDir } = config;
   const hasWebFrontend = frontend.some((value) =>
     (desktopWebFrontends as readonly string[]).includes(value),

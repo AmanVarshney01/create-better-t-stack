@@ -6,6 +6,7 @@ import {
   CLIInputSchema,
   CreateInputSchema,
 } from "../../../packages/types/src/schemas";
+import { getSchemaResult, SchemaNameSchema } from "../src/index";
 
 describe("Input schemas", () => {
   it("rejects conflicting manualDb and dbSetupOptions.mode inputs", () => {
@@ -118,5 +119,14 @@ describe("Input schemas", () => {
     const module = await import("../src/mcp");
 
     expect(typeof module.createBtsMcpServer).toBe("function");
+  });
+
+  it("exposes the Better T Stack config file JSON schema by name", () => {
+    const schemaName = SchemaNameSchema.safeParse("betterTStackConfigFile");
+
+    expect(schemaName.success).toBe(true);
+    expect(getSchemaResult("betterTStackConfigFile")).toMatchObject({
+      type: "object",
+    });
   });
 });
