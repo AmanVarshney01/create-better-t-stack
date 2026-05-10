@@ -11,6 +11,7 @@ const TEMPLATE_GENERATOR_PACKAGE_JSON_PATH = join(
   process.cwd(),
   "packages/template-generator/package.json",
 );
+const PREVIEW_LABEL = "preview";
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -145,10 +146,21 @@ This PR bumps the version to \`${newVersion}\`.
 - Updated \`@better-t-stack/types\` to v${newVersion}
 - Updated \`@better-t-stack/template-generator\` to v${newVersion}
 
+### Preview Release
+A preview release will be published automatically and posted as a PR comment.
+
 ---
 *This PR was automatically created by \`bun run bump\`*`;
 
-  await $`gh pr create --title ${prTitle} --body ${prBody} --base main --head ${branchName}`;
+  const prUrl = (
+    await $`gh pr create --title ${prTitle} --body ${prBody} --base main --head ${branchName}`.text()
+  ).trim();
+
+  if (prUrl) {
+    console.log(prUrl);
+  }
+
+  await enablePreviewRelease(prUrl || branchName);
 
   // Ask if user wants to enable auto-merge
   const shouldAutoMerge = await confirm({
@@ -164,16 +176,49 @@ This PR bumps the version to \`${newVersion}\`.
 
   console.log(`\n✅ Release PR created for v${newVersion}`);
   console.log(`\n📋 Next steps:`);
-  console.log(`   1. Wait for the "Test Suite" check to pass`);
+  console.log(`   1. Wait for the "Test Suite" and "Publish Preview" checks to pass`);
+  console.log(`   2. Use the preview release comment to test the release candidate`);
   if (!shouldAutoMerge) {
-    console.log(`   2. Merge the PR manually`);
+    console.log(`   3. Merge the PR manually`);
   }
   console.log(
-    `   ${shouldAutoMerge ? "2" : "3"}. The release workflow will automatically publish to NPM`,
+    `   ${shouldAutoMerge ? "3" : "4"}. The release workflow will automatically publish to NPM`,
   );
 
   // Switch back to main
   await $`git checkout main`;
+}
+
+async function enablePreviewRelease(prSelector: string): Promise<void> {
+  try {
+    await ensurePreviewLabelExists();
+    await $`gh pr edit ${prSelector} --add-label ${PREVIEW_LABEL}`;
+    console.log(
+      `✅ Added "${PREVIEW_LABEL}" label. A preview release will be published and commented on the PR.`,
+    );
+  } catch (error) {
+    console.warn(
+      `⚠️ Could not add the "${PREVIEW_LABEL}" label automatically. Add it manually to publish a preview release.`,
+    );
+    console.warn(formatError(error));
+  }
+}
+
+async function ensurePreviewLabelExists(): Promise<void> {
+  const labels =
+    await $`gh label list --search ${PREVIEW_LABEL} --json name --jq ".[].name"`.text();
+  const hasPreviewLabel = labels.split(/\r?\n/).some((name) => name.trim() === PREVIEW_LABEL);
+
+  if (hasPreviewLabel) {
+    return;
+  }
+
+  console.log(`\n🏷️ Creating "${PREVIEW_LABEL}" label for PR preview releases...`);
+  await $`gh label create ${PREVIEW_LABEL} --description "Publish an npm preview release for a PR" --color 2EA44F`;
+}
+
+function formatError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 main().catch(console.error);
