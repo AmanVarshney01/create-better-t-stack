@@ -51,8 +51,10 @@ jobs:
           AGENT: 1
           BTS_TELEMETRY: 0
 
-      - name: Install pnpm
-        run: npm install --global pnpm@10.32.1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: latest
 
       - name: Publish smoke test (npm, pnpm, bun)
         run: bun run smoke:publish

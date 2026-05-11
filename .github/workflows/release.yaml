@@ -36,7 +36,7 @@ jobs:
       - name: Extract version from commit message
         id: version
         run: |
-          VERSION=$(echo "${{ github.event.head_commit.message }}" | sed -E 's/^chore\(release\): ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          VERSION=$(git log -1 --pretty=%s | sed -nE 's/^chore\(release\): ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Releasing version: $VERSION"
 
@@ -119,9 +119,11 @@ jobs:
           cd packages/create-bts
           jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["create-better-t-stack"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Install pnpm
+      - name: Setup pnpm
         if: steps.check-version.outputs.exists == 'false'
-        run: npm install --global pnpm@10.32.1
+        uses: pnpm/action-setup@v6
+        with:
+          version: latest
 
       # Gate all publishes on the smoke so a failure here doesn't leave a
       # partial release on npm (e.g. types/template-generator published but
