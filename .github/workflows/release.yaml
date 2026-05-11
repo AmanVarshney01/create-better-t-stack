@@ -119,9 +119,11 @@ jobs:
           cd packages/create-bts
           jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["create-better-t-stack"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Install pnpm
+      - name: Setup pnpm
         if: steps.check-version.outputs.exists == 'false'
-        run: npm install --global pnpm@latest
+        uses: pnpm/action-setup@v6
+        with:
+          version: latest
 
       # Gate all publishes on the smoke so a failure here doesn't leave a
       # partial release on npm (e.g. types/template-generator published but
