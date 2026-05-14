@@ -7,15 +7,21 @@ import { BarChart3, Package, Star, Terminal, TrendingUp, Users } from "lucide-re
 import Link from "next/link";
 import { FaGithub } from "react-icons/fa6";
 
+type NpmPackageStats = NonNullable<Parameters<typeof useNpmDownloadCounter>[0]>;
+type GithubRepoStats = {
+  starCount: number;
+  contributorCount: number;
+};
+
 export default function StatsSection() {
   const stats = useQuery(api.analytics.getStats, {});
   const dailyStats = useQuery(api.analytics.getDailyStats, { days: 30 });
   const githubRepo = useQuery(api.stats.getGithubRepo, {
     name: "AmanVarshney01/create-better-t-stack",
-  });
+  }) as GithubRepoStats | null | undefined;
   const npmPackages = useQuery(api.stats.getNpmPackages, {
     names: ["create-better-t-stack"],
-  });
+  }) as NpmPackageStats | null | undefined;
 
   const liveNpmDownloadCount = useNpmDownloadCounter(npmPackages);
 
