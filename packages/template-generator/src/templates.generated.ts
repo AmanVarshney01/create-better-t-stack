@@ -828,7 +828,7 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 
-export async function createContext(req: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
@@ -860,7 +860,7 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 
-export async function createContext({ req }: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
@@ -896,7 +896,7 @@ export type CreateContextOptions = {
 	headers: Headers;
 };
 
-export async function createContext({ headers }: CreateContextOptions) {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
@@ -930,7 +930,7 @@ export type CreateContextOptions = {
 {{/if}}
 };
 
-export async function createContext({ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }: CreateContextOptions) {
+export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env: _env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth({{#if (eq webDeploy "cloudflare")}}env{{/if}}){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
@@ -964,7 +964,7 @@ export type CreateContextOptions = {
 	headers: Headers;
 };
 
-export async function createContext({ headers }: CreateContextOptions) {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
@@ -993,7 +993,7 @@ export type CreateContextOptions = {
 	context: HonoContext;
 };
 
-export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: context.req.raw.headers,
@@ -1026,7 +1026,7 @@ export type CreateContextOptions = {
 	context: ElysiaContext;
 };
 
-export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
@@ -1062,7 +1062,7 @@ interface CreateContextOptions {
 	req: Request;
 }
 
-export async function createContext(opts: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
@@ -1112,6 +1112,7 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 		session: null,
 	};
 {{else}}
+	void req;
 	return {
 		auth: null,
 		session: null,
@@ -1130,7 +1131,7 @@ export async function createContext() {
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
 `],
-  ["api/orpc/server/src/index.ts.hbs", `import { ORPCError, os } from "@orpc/server";
+  ["api/orpc/server/src/index.ts.hbs", `import { {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}ORPCError, {{/if}}os } from "@orpc/server";
 import type { Context } from "./context";
 
 export const o = os.$context<Context>();
@@ -1752,7 +1753,7 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 
-export async function createContext(req: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
@@ -1784,7 +1785,7 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 
-export async function createContext({ req }: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
@@ -1821,7 +1822,7 @@ export type CreateContextOptions = {
 	context: HonoContext;
 };
 
-export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: context.req.raw.headers,
@@ -1854,7 +1855,7 @@ export type CreateContextOptions = {
 	context: ElysiaContext;
 };
 
-export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
@@ -1886,7 +1887,7 @@ import { auth } from "@{{projectName}}/auth";
 import { getAuth } from "@clerk/express";
 {{/if}}
 
-export async function createContext(opts: CreateExpressContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateExpressContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
@@ -1934,6 +1935,7 @@ export async function createContext({ req }: CreateFastifyContextOptions){{#if (
 		session: null,
 	};
 {{else}}
+	void req;
 	return {
 		auth: null,
 		session: null,
@@ -1952,7 +1954,7 @@ export async function createContext() {
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
 `],
-  ["api/trpc/server/src/index.ts.hbs", `import { initTRPC, TRPCError } from "@trpc/server";
+  ["api/trpc/server/src/index.ts.hbs", `import { initTRPC{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}, TRPCError{{/if}} } from "@trpc/server";
 import type { Context } from "./context";
 
 export const t = initTRPC.context<Context>().create();
@@ -13332,6 +13334,82 @@ export const startInstance = createStart(() => {
   ["backend/convex/packages/backend/_gitignore", `
 .env.local
 `],
+  ["backend/convex/packages/backend/convex/_generated/api.d.ts", `/* eslint-disable */
+export declare const api: any;
+export declare const internal: any;
+export declare const components: any;
+`],
+  ["backend/convex/packages/backend/convex/_generated/api.js", `/* eslint-disable */
+import { anyApi, componentsGeneric } from "convex/server";
+
+export const api = anyApi;
+export const internal = anyApi;
+export const components = componentsGeneric();
+`],
+  ["backend/convex/packages/backend/convex/_generated/dataModel.d.ts", `/* eslint-disable */
+import type {
+  DataModelFromSchemaDefinition,
+  DocumentByName,
+  SystemTableNames,
+  TableNamesInDataModel,
+} from "convex/server";
+import type { GenericId } from "convex/values";
+
+import schema from "../schema.js";
+
+export type DataModel = DataModelFromSchemaDefinition<typeof schema>;
+export type TableNames = TableNamesInDataModel<DataModel>;
+export type Doc<TableName extends TableNames> = DocumentByName<DataModel, TableName>;
+export type Id<TableName extends TableNames | SystemTableNames> = GenericId<TableName>;
+`],
+  ["backend/convex/packages/backend/convex/_generated/server.d.ts", `/* eslint-disable */
+import type {
+  ActionBuilder,
+  GenericActionCtx,
+  GenericDatabaseReader,
+  GenericDatabaseWriter,
+  GenericMutationCtx,
+  GenericQueryCtx,
+  HttpActionBuilder,
+  MutationBuilder,
+  QueryBuilder,
+} from "convex/server";
+
+import type { DataModel } from "./dataModel.js";
+
+export declare const query: QueryBuilder<DataModel, "public">;
+export declare const internalQuery: QueryBuilder<DataModel, "internal">;
+export declare const mutation: MutationBuilder<DataModel, "public">;
+export declare const internalMutation: MutationBuilder<DataModel, "internal">;
+export declare const action: ActionBuilder<DataModel, "public">;
+export declare const internalAction: ActionBuilder<DataModel, "internal">;
+export declare const httpAction: HttpActionBuilder;
+
+export type QueryCtx = GenericQueryCtx<DataModel>;
+export type MutationCtx = GenericMutationCtx<DataModel>;
+export type ActionCtx = GenericActionCtx<DataModel>;
+export type DatabaseReader = GenericDatabaseReader<DataModel>;
+export type DatabaseWriter = GenericDatabaseWriter<DataModel>;
+`],
+  ["backend/convex/packages/backend/convex/_generated/server.js", `/* eslint-disable */
+import {
+  actionGeneric,
+  httpActionGeneric,
+  internalActionGeneric,
+  internalMutationGeneric,
+  internalQueryGeneric,
+  mutationGeneric,
+  queryGeneric,
+} from "convex/server";
+
+export const query = queryGeneric;
+export const internalQuery = internalQueryGeneric;
+export const mutation = mutationGeneric;
+export const internalMutation = internalMutationGeneric;
+export const action = actionGeneric;
+export const internalAction = internalActionGeneric;
+export const httpAction = httpActionGeneric;
+`],
   ["backend/convex/packages/backend/convex/convex.config.ts.hbs", `import { defineApp } from "convex/server";
 {{#if (eq auth "better-auth")}}
 import betterAuth from "@convex-dev/better-auth/convex.config";
@@ -13748,9 +13826,7 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/node";
 import { onError } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
-{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 import { createContext } from "@{{projectName}}/api/context";
-{{/if}}
 {{/if}}
 import cors from "cors";
 import express from "express";
@@ -13824,21 +13900,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 app.use(async (req, res, next) => {
 	const rpcResult = await rpcHandler.handle(req, res, {
 		prefix: "/rpc",
-{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 		context: await createContext({ req }),
-{{else}}
-		context: {},
-{{/if}}
 	});
 	if (rpcResult.matched) return;
 
 	const apiResult = await apiHandler.handle(req, res, {
 		prefix: "/api-reference",
-{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 		context: await createContext({ req }),
-{{else}}
-		context: {},
-{{/if}}
 	});
 	if (apiResult.matched) return;
 
@@ -30041,4 +30109,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 467;
+export const TEMPLATE_COUNT = 472;

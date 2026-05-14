@@ -944,7 +944,7 @@ describe("Addon Configurations", () => {
           orm: "drizzle",
           auth: "better-auth",
           api: webCase.api,
-          examples: ["todo", "ai"],
+          examples: webCase.frontend === "astro" ? ["todo"] : ["todo", "ai"],
           dbSetup: "turso",
           webDeploy: "none",
           serverDeploy: "none",
