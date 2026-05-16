@@ -94,6 +94,37 @@ describe("MCP server", () => {
     ]);
   });
 
+  it("exposes MCP safety annotations for read-only and mutating tools", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const result = await client.listTools();
+    const toolsByName = new Map(result.tools.map((tool) => [tool.name, tool]));
+
+    expect(toolsByName.get("bts_get_schema")?.annotations).toMatchObject({
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    });
+    expect(toolsByName.get("bts_plan_project")?.annotations).toMatchObject({
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    });
+    expect(toolsByName.get("bts_create_project")?.annotations).toMatchObject({
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: true,
+    });
+    expect(toolsByName.get("bts_add_addons")?.annotations).toMatchObject({
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: true,
+    });
+  });
+
   it("returns explicit create-contract guidance", async () => {
     const { client, cleanup } = await connectInMemoryClient();
     cleanups.push(cleanup);
@@ -136,6 +167,27 @@ describe("MCP server", () => {
       ]),
     );
     expect(payload.data?.createContract?.rule).toContain("full explicit stack config");
+  });
+
+  it("returns all MCP planning schemas by default", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const result = await client.callTool({
+      name: "bts_get_schema",
+      arguments: {},
+    });
+
+    const payload = result.structuredContent as {
+      ok: boolean;
+      data?: { cli?: unknown; schemas?: Record<string, unknown> };
+    };
+
+    expect(payload.ok).toBe(true);
+    expect(payload.data?.cli).toBeDefined();
+    expect(payload.data?.schemas).toHaveProperty("createInput");
+    expect(payload.data?.schemas).toHaveProperty("addInput");
+    expect(payload.data?.schemas).toHaveProperty("projectConfig");
   });
 
   it("returns CLI and input schemas through MCP", async () => {
@@ -197,6 +249,26 @@ describe("MCP server", () => {
     expect(result.isError).toBe(true);
     expect(getToolText(result)).toContain(
       "`manualDb` and `dbSetupOptions.mode` are mutually exclusive",
+    );
+  });
+
+  it("surfaces CLI compatibility errors through MCP planning", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const result = await client.callTool({
+      name: "bts_plan_project",
+      arguments: {
+        ...getExplicitCreateInput(path.join(SMOKE_DIR, "mcp-astro-ai")),
+        frontend: ["astro"],
+        api: "orpc",
+        examples: ["ai"],
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(getToolText(result)).toContain(
+      "The 'ai' example is not compatible with the Astro frontend",
     );
   });
 

@@ -32,6 +32,8 @@
     "dev:web": "turbo run dev --filter=web",
     "build:web": "turbo run build --filter=web",
     "build:cli": "turbo run build --filter=create-better-t-stack",
+    "test": "bun run check && cd apps/cli && bun test",
+    "test:complete": "bun run check && bun run build && cd apps/cli && BTS_MATRIX_MODE=smoke BTS_BUILD_SAMPLES=1 bun test --bail=5",
     "lint": "turbo run lint",
     "check": "oxfmt . && oxlint .",
     "prepare": "lefthook install",

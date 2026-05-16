@@ -265,6 +265,8 @@ export function isExampleTodoAllowed(
 }
 
 export function isExampleAIAllowed(backend?: ProjectConfig["backend"], frontends: Frontend[] = []) {
+  if (backend === "none") return false;
+
   const includesSolid = frontends.includes("solid");
   const includesAstro = frontends.includes("astro");
   if (includesSolid || includesAstro) return false;
@@ -445,6 +447,14 @@ export function validateExamplesCompatibility(
 
   if (examplesArr.includes("ai") && (frontend ?? []).includes("solid")) {
     return validationErr("The 'ai' example is not compatible with the Solid frontend.");
+  }
+
+  if (examplesArr.includes("ai") && (frontend ?? []).includes("astro")) {
+    return validationErr("The 'ai' example is not compatible with the Astro frontend.");
+  }
+
+  if (examplesArr.includes("ai") && backend === "none") {
+    return validationErr("The 'ai' example requires a backend.");
   }
 
   // Convex AI example only supports React-based frontends
