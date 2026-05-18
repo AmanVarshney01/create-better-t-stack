@@ -4,8 +4,9 @@ const { Schema, model } = mongoose;
 
 const todoSchema = new Schema({
   id: {
-    type: mongoose.Schema.Types.ObjectId,
-    auto: true,
+    type: String,
+    required: true,
+    default: () => new mongoose.Types.ObjectId().toString(),
   },
   text: {
     type: String,

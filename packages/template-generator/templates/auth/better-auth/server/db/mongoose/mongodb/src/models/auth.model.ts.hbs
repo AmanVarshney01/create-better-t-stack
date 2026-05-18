@@ -1,40 +1,42 @@
 import mongoose from 'mongoose';
 
 const { Schema, model } = mongoose;
+const { ObjectId } = Schema.Types;
 
 const userSchema = new Schema(
     {
-        _id: { type: String },
+        _id: { type: ObjectId, auto: true },
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
-        emailVerified: { type: Boolean, required: true },
+        emailVerified: { type: Boolean, required: true, default: false },
         image: { type: String },
-        createdAt: { type: Date, required: true },
-        updatedAt: { type: Date, required: true },
+        createdAt: { type: Date, required: true, default: Date.now },
+        updatedAt: { type: Date, required: true, default: Date.now },
     },
     { collection: 'user' }
 );
 
 const sessionSchema = new Schema(
     {
-        _id: { type: String },
+        _id: { type: ObjectId, auto: true },
         expiresAt: { type: Date, required: true },
         token: { type: String, required: true, unique: true },
-        createdAt: { type: Date, required: true },
-        updatedAt: { type: Date, required: true },
+        createdAt: { type: Date, required: true, default: Date.now },
+        updatedAt: { type: Date, required: true, default: Date.now },
         ipAddress: { type: String },
         userAgent: { type: String },
-        userId: { type: String, ref: 'User', required: true },
+        userId: { type: ObjectId, ref: 'User', required: true },
     },
     { collection: 'session' }
 );
+sessionSchema.index({ userId: 1 });
 
 const accountSchema = new Schema(
     {
-        _id: { type: String },
+        _id: { type: ObjectId, auto: true },
         accountId: { type: String, required: true },
         providerId: { type: String, required: true },
-        userId: { type: String, ref: 'User', required: true },
+        userId: { type: ObjectId, ref: 'User', required: true },
         accessToken: { type: String },
         refreshToken: { type: String },
         idToken: { type: String },
@@ -42,23 +44,25 @@ const accountSchema = new Schema(
         refreshTokenExpiresAt: { type: Date },
         scope: { type: String },
         password: { type: String },
-        createdAt: { type: Date, required: true },
-        updatedAt: { type: Date, required: true },
+        createdAt: { type: Date, required: true, default: Date.now },
+        updatedAt: { type: Date, required: true, default: Date.now },
     },
     { collection: 'account' }
 );
+accountSchema.index({ userId: 1 });
 
 const verificationSchema = new Schema(
     {
-        _id: { type: String },
+        _id: { type: ObjectId, auto: true },
         identifier: { type: String, required: true },
         value: { type: String, required: true },
         expiresAt: { type: Date, required: true },
-        createdAt: { type: Date },
-        updatedAt: { type: Date },
+        createdAt: { type: Date, required: true, default: Date.now },
+        updatedAt: { type: Date, required: true, default: Date.now },
     },
     { collection: 'verification' }
 );
+verificationSchema.index({ identifier: 1 });
 
 const User = model('User', userSchema);
 const Session = model('Session', sessionSchema);

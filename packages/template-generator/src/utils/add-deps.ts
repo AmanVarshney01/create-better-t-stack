@@ -14,8 +14,8 @@ type PackageJson = {
 export const dependencyVersionMap = {
   typescript: "^6",
 
-  "better-auth": "1.6.9",
-  "@better-auth/expo": "1.6.9",
+  "better-auth": "1.6.11",
+  "@better-auth/expo": "1.6.11",
 
   "@clerk/backend": "^3.2.1",
   "@clerk/express": "^2.0.5",
@@ -41,17 +41,18 @@ export const dependencyVersionMap = {
 
   mysql2: "^3.14.0",
 
-  "@prisma/client": "^7.7.0",
-  prisma: "^7.7.0",
-  "@prisma/adapter-d1": "^7.7.0",
-  "@prisma/adapter-neon": "^7.7.0",
-  "@prisma/adapter-mariadb": "^7.7.0",
-  "@prisma/adapter-libsql": "^7.7.0",
-  "@prisma/adapter-better-sqlite3": "^7.7.0",
-  "@prisma/adapter-pg": "^7.7.0",
-  "@prisma/adapter-planetscale": "^7.7.0",
+  "@prisma/client": "^7.8.0",
+  prisma: "^7.8.0",
+  "@prisma/adapter-d1": "^7.8.0",
+  "@prisma/adapter-neon": "^7.8.0",
+  "@prisma/adapter-mariadb": "^7.8.0",
+  "@prisma/adapter-libsql": "^7.8.0",
+  "@prisma/adapter-better-sqlite3": "^7.8.0",
+  "@prisma/adapter-pg": "^7.8.0",
+  "@prisma/adapter-planetscale": "^7.8.0",
 
-  mongoose: "^8.14.0",
+  mongoose: "^9.6.2",
+  mongodb: "^7.2.0",
 
   "vite-plugin-pwa": "^1.2.0",
   "@vite-pwa/assets-generator": "^1.0.2",
@@ -123,7 +124,7 @@ export const dependencyVersionMap = {
   "convex-svelte": "^0.0.12",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
-  "@convex-dev/better-auth": "^0.12.1",
+  "@convex-dev/better-auth": "^0.12.2",
 
   "@tanstack/svelte-query": "^5.85.3",
   "@tanstack/svelte-query-devtools": "^5.85.3",
@@ -160,7 +161,7 @@ export const dependencyVersionMap = {
   "@t3-oss/env-nextjs": "^0.13.1",
   "@t3-oss/env-nuxt": "^0.13.1",
 
-  "@polar-sh/better-auth": "^1.8.3",
+  "@polar-sh/better-auth": "^1.8.4",
   "@polar-sh/sdk": "^0.42.2",
 
   evlog: "^2.14.1",

@@ -1,18 +1,20 @@
 {{#if (eq api "orpc")}}
 import z from "zod";
+import "@{{projectName}}/db";
 import { publicProcedure } from "../index";
 import { Todo } from "@{{projectName}}/db/models/todo.model";
 
 export const todoRouter = {
     getAll: publicProcedure.handler(async () => {
-        return await Todo.find().lean();
+        const todos = await Todo.find().lean();
+        return todos.map((todo) => ({ ...todo, id: todo.id.toString() }));
     }),
 
     create: publicProcedure
         .input(z.object({ text: z.string().min(1) }))
         .handler(async ({ input }) => {
             const newTodo = await Todo.create({ text: input.text });
-            return newTodo.toObject();
+            return { ...newTodo.toObject(), id: newTodo.id.toString() };
     }),
 
     toggle: publicProcedure
@@ -34,19 +36,21 @@ export const todoRouter = {
 
 {{#if (eq api "trpc")}}
 import z from "zod";
+import "@{{projectName}}/db";
 import { router, publicProcedure } from "../index";
 import { Todo } from "@{{projectName}}/db/models/todo.model";
 
 export const todoRouter = router({
     getAll: publicProcedure.query(async () => {
-        return await Todo.find().lean();
+        const todos = await Todo.find().lean();
+        return todos.map((todo) => ({ ...todo, id: todo.id.toString() }));
     }),
 
     create: publicProcedure
         .input(z.object({ text: z.string().min(1) }))
         .mutation(async ({ input }) => {
             const newTodo = await Todo.create({ text: input.text });
-        return newTodo.toObject();
+        return { ...newTodo.toObject(), id: newTodo.id.toString() };
     }),
 
     toggle: publicProcedure

@@ -259,6 +259,8 @@ function buildConvexBackendVars(
   auth: ProjectConfig["auth"],
   examples: ProjectConfig["examples"],
 ): EnvVariable[] {
+  const hasReactRouter = frontend.includes("react-router");
+  const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasNextJs = frontend.includes("next");
   const hasNative =
     frontend.includes("native-bare") ||
@@ -294,6 +296,15 @@ function buildConvexBackendVars(
   }
 
   if (auth === "better-auth") {
+    if (hasReactRouter || hasTanStackRouter) {
+      vars.push({
+        key: "CONVEX_SITE_URL",
+        value: "",
+        condition: true,
+        comment: "Same as CONVEX_URL but ends in .site",
+      });
+    }
+
     if (hasNative) {
       vars.push({
         key: "EXPO_PUBLIC_CONVEX_SITE_URL",
@@ -336,6 +347,8 @@ function buildConvexCommentBlocks(
   auth: ProjectConfig["auth"],
   examples: ProjectConfig["examples"],
 ): string {
+  const needsConvexSiteUrl =
+    frontend.includes("react-router") || frontend.includes("tanstack-router");
   const hasNative =
     frontend.includes("native-bare") ||
     frontend.includes("native-uniwind") ||
@@ -370,7 +383,7 @@ function buildConvexCommentBlocks(
   if (auth === "better-auth") {
     commentBlocks += `# Set Convex environment variables
 # npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
-${hasWeb || hasNative ? `# npx convex env set SITE_URL ${defaultSiteUrl}\n` : ""}`;
+${needsConvexSiteUrl ? "# npx convex env set CONVEX_SITE_URL https://<YOUR_CONVEX_SITE_URL>\n" : ""}${hasWeb || hasNative ? `# npx convex env set SITE_URL ${defaultSiteUrl}\n` : ""}`;
   }
 
   return commentBlocks;
