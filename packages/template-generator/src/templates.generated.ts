@@ -13557,7 +13557,8 @@ export default defineSchema({
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["node"]
   },
   "include": ["./**/*"],
   "exclude": ["./_generated"]
@@ -14782,6 +14783,7 @@ export function createDb() {
 }
 {{/if}}
 `],
+  ["db/drizzle/sqlite/src/migrations/.gitkeep", ``],
   ["db/mongoose/mongodb/src/index.ts.hbs", `import mongoose from "mongoose";
 import { env } from "@{{projectName}}/env/server";
 
@@ -15111,6 +15113,7 @@ export default defineConfig({
     {{/if}}
   },
 });`],
+  ["db/prisma/sqlite/prisma/migrations/.gitkeep", ``],
   ["db/prisma/sqlite/prisma/schema/schema.prisma.hbs", `generator client {
   provider = "prisma-client"
   output   = "../generated"
@@ -30107,4 +30110,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 472;
+export const TEMPLATE_COUNT = 474;
