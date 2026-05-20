@@ -1,12 +1,7 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
-import {
-  type TemplateData,
-  hasTemplatesWithPrefix,
-  processTemplatesFromPrefix,
-  processSingleTemplate,
-} from "./utils";
+import { type TemplateData, processSingleTemplate } from "./utils";
 
 export async function processExtrasTemplates(
   vfs: VirtualFileSystem,
@@ -19,17 +14,21 @@ export async function processExtrasTemplates(
   const hasNuxt = config.frontend.includes("nuxt");
 
   if (config.packageManager === "pnpm") {
-    if (hasTemplatesWithPrefix(templates, "extras")) {
-      processTemplatesFromPrefix(vfs, templates, "extras/pnpm-workspace.yaml", "", config);
-    }
+    processSingleTemplate(
+      vfs,
+      templates,
+      "extras/pnpm-workspace.yaml",
+      "pnpm-workspace.yaml",
+      config,
+    );
   }
 
   if (config.packageManager === "bun") {
-    processTemplatesFromPrefix(vfs, templates, "extras/bunfig.toml", "", config);
+    processSingleTemplate(vfs, templates, "extras/bunfig.toml", "bunfig.toml", config);
   }
 
   if (config.packageManager === "pnpm" && (hasNative || hasNuxt)) {
-    processTemplatesFromPrefix(vfs, templates, "extras/_npmrc", "", config);
+    processSingleTemplate(vfs, templates, "extras/_npmrc", ".npmrc", config);
   }
 
   if (

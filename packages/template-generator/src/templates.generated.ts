@@ -21690,9 +21690,37 @@ declare module "cloudflare:workers" {
   }
 }
 `],
-  ["extras/pnpm-workspace.yaml", `packages:
+  ["extras/pnpm-workspace.yaml.hbs", `packages:
   - "apps/*"
   - "packages/*"
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
+
+# pnpm 11 blocks dependency lifecycle scripts unless they are approved here.
+# Entries are scoped to packages this generated stack can pull in.
+allowBuilds:
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (includes frontend "tanstack-start"))}}
+  esbuild: true
+{{/if}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
+  msw: true
+{{/if}}
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (includes addons "pwa"))}}
+  sharp: true
+{{/if}}
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
+  workerd: true
+{{/if}}
+{{#if (eq orm "prisma")}}
+  "@prisma/engines": true
+  prisma: true
+{{/if}}
+{{#if (includes addons "lefthook")}}
+  lefthook: true
+{{/if}}
+{{#if (includes addons "nx")}}
+  nx: true
+{{/if}}
+{{/if}}
 `],
   ["frontend/astro/_gitignore", `# build output
 dist/
