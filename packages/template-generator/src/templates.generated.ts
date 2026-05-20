@@ -19525,14 +19525,15 @@ import { Todo } from "@{{projectName}}/db/models/todo.model";
 export const todoRouter = {
     getAll: publicProcedure.handler(async () => {
         const todos = await Todo.find().lean();
-        return todos.map((todo) => ({ ...todo, id: todo.id.toString() }));
+        return todos.map((todo) => ({ ...todo, id: todo.id }));
     }),
 
     create: publicProcedure
         .input(z.object({ text: z.string().min(1) }))
         .handler(async ({ input }) => {
             const newTodo = await Todo.create({ text: input.text });
-            return { ...newTodo.toObject(), id: newTodo.id.toString() };
+            const todo = newTodo.toObject();
+            return { ...todo, id: todo.id };
     }),
 
     toggle: publicProcedure
@@ -19561,14 +19562,15 @@ import { Todo } from "@{{projectName}}/db/models/todo.model";
 export const todoRouter = router({
     getAll: publicProcedure.query(async () => {
         const todos = await Todo.find().lean();
-        return todos.map((todo) => ({ ...todo, id: todo.id.toString() }));
+        return todos.map((todo) => ({ ...todo, id: todo.id }));
     }),
 
     create: publicProcedure
         .input(z.object({ text: z.string().min(1) }))
         .mutation(async ({ input }) => {
             const newTodo = await Todo.create({ text: input.text });
-        return { ...newTodo.toObject(), id: newTodo.id.toString() };
+        const todo = newTodo.toObject();
+        return { ...todo, id: todo.id };
     }),
 
     toggle: publicProcedure
@@ -19606,7 +19608,8 @@ const todoSchema = new Schema({
     default: false,
   },
 }, {
-  collection: 'todo'
+  collection: 'todo',
+  id: false,
 });
 
 const Todo = model('Todo', todoSchema);

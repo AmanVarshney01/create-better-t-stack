@@ -17,7 +17,8 @@ const todoSchema = new Schema({
     default: false,
   },
 }, {
-  collection: 'todo'
+  collection: 'todo',
+  id: false,
 });
 
 const Todo = model('Todo', todoSchema);
