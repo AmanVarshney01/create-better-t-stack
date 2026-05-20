@@ -27037,12 +27037,10 @@ import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query
 import { ConvexQueryClient } from "@convex-dev/react-query";
 import { routeTree } from "./routeTree.gen";
 import Loader from "./components/loader";
-import "./index.css";
 import { env } from "@{{projectName}}/env/web";
 {{else}}
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import Loader from "./components/loader";
-import "./index.css";
 import { routeTree } from "./routeTree.gen";
 {{#if (eq api "trpc")}}
 import { QueryCache, QueryClient } from "@tanstack/react-query";
