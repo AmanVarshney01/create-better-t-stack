@@ -2,8 +2,8 @@
 # Preload setup file for global setup/teardown
 preload = ["./test/setup.ts"]
 
-# Per-test timeout (3 minutes for smoke tests)
-timeout = 180000
+# Default per-test timeout. Long-running smoke/build tests set explicit timeouts.
+timeout = 30000
 
 # Skip test files from coverage reports
 coverageSkipTestFiles = true

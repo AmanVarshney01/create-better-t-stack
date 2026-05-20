@@ -195,6 +195,48 @@ describe("Example Configurations", () => {
       expectError(result, "The 'ai' example is not compatible with the Solid frontend");
     });
 
+    it("should fail with AI example + Astro frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-astro-fail",
+        examples: ["ai"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "orpc",
+        frontend: ["astro"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "The 'ai' example is not compatible with the Astro frontend");
+    });
+
+    it("should fail with AI example + no backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-no-backend-fail",
+        examples: ["ai"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "The 'ai' example requires a backend");
+    });
+
     it("should work with AI example + Convex + React frontend", async () => {
       const result = await runTRPCTest({
         projectName: "ai-convex-react",

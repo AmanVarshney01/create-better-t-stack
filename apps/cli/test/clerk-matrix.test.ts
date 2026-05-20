@@ -63,7 +63,7 @@ function needsServerClerkPublishableKey(backend: string, api: string) {
 }
 
 describe("Clerk matrix", () => {
-  it("should generate every supported Clerk combination", { timeout: 30_000 }, async () => {
+  it("should generate every supported Clerk combination", async () => {
     const standardFrontendCombos = buildFrontendCombos(standardWeb);
     const selfFrontendCombos = buildFrontendCombos(selfWeb, { requireWeb: true });
 
@@ -388,5 +388,5 @@ describe("Clerk matrix", () => {
 
     expect(combos).toHaveLength(499);
     expect(failures).toEqual([]);
-  });
+  }, 30_000);
 });

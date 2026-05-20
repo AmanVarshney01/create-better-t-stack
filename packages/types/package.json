@@ -1,6 +1,6 @@
 {
   "name": "@better-t-stack/types",
-  "version": "3.28.2",
+  "version": "3.28.3",
   "description": "TypeScript types and schemas for create-better-t-stack CLI",
   "keywords": [
     "better-t-stack",
@@ -43,10 +43,10 @@
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
-    "zod": "^4.4.2"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "tsdown": "^0.21.9",
+    "tsdown": "^0.22.0",
     "typescript": "^6.0.3"
   }
 }
