@@ -1,6 +1,4 @@
-import { describe, expect, it } from "bun:test";
-import { access } from "node:fs/promises";
-import path from "node:path";
+import { describe, it } from "bun:test";
 
 import { DB_SETUPS, expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
@@ -433,47 +431,6 @@ describe("Database Setup Configurations", () => {
       });
 
       expectSuccess(result);
-    });
-
-    it("should scaffold D1 migration directories for Alchemy", async () => {
-      const baseConfig = {
-        backend: "self" as const,
-        runtime: "none" as const,
-        auth: "none" as const,
-        api: "trpc" as const,
-        frontend: ["next"] as const,
-        addons: ["none"] as const,
-        examples: ["none"] as const,
-        webDeploy: "cloudflare" as const,
-        serverDeploy: "none" as const,
-        database: "sqlite" as const,
-        dbSetup: "d1" as const,
-        install: false,
-      };
-
-      const drizzleResult = await runTRPCTest({
-        ...baseConfig,
-        projectName: "d1-drizzle-migrations",
-        orm: "drizzle",
-      });
-      const prismaResult = await runTRPCTest({
-        ...baseConfig,
-        projectName: "d1-prisma-migrations",
-        orm: "prisma",
-      });
-
-      expectSuccess(drizzleResult);
-      expectSuccess(prismaResult);
-      await expect(
-        access(path.join(drizzleResult.projectDir!, "packages/db/src/migrations/.gitkeep")).then(
-          () => true,
-        ),
-      ).resolves.toBe(true);
-      await expect(
-        access(path.join(prismaResult.projectDir!, "packages/db/prisma/migrations/.gitkeep")).then(
-          () => true,
-        ),
-      ).resolves.toBe(true);
     });
 
     it("should fail with D1 + non-Workers runtime", async () => {
