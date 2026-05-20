@@ -13558,7 +13558,8 @@ export default defineSchema({
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["node"]
   },
   "include": ["./**/*"],
   "exclude": ["./_generated"]
@@ -14783,6 +14784,7 @@ export function createDb() {
 }
 {{/if}}
 `],
+  ["db/drizzle/sqlite/src/migrations/.gitkeep", ``],
   ["db/mongoose/mongodb/src/index.ts.hbs", `import mongoose from "mongoose";
 import { env } from "@{{projectName}}/env/server";
 
@@ -15110,6 +15112,7 @@ export default defineConfig({
     {{/if}}
   },
 });`],
+  ["db/prisma/sqlite/prisma/migrations/.gitkeep", ``],
   ["db/prisma/sqlite/prisma/schema/schema.prisma.hbs", `generator client {
   provider = "prisma-client"
   output   = "../generated"
@@ -27084,12 +27087,10 @@ import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query
 import { ConvexQueryClient } from "@convex-dev/react-query";
 import { routeTree } from "./routeTree.gen";
 import Loader from "./components/loader";
-import "./index.css";
 import { env } from "@{{projectName}}/env/web";
 {{else}}
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import Loader from "./components/loader";
-import "./index.css";
 import { routeTree } from "./routeTree.gen";
 {{#if (eq api "trpc")}}
 import { QueryCache, QueryClient } from "@tanstack/react-query";
@@ -30156,4 +30157,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 472;
+export const TEMPLATE_COUNT = 474;
