@@ -3,6 +3,7 @@
 A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations
 
 <br />
+
 <a href="https://vercel.com/oss">
   <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
 </a>
@@ -10,7 +11,7 @@ A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with 
 ## Sponsors
 
 <p align="center">
-<img src="https://sponsors.amanv.dev/sponsors.png" alt="Sponsors">
+<img src="https://sponsors.better-t-stack.dev/sponsors.png" alt="Sponsors">
 </p>
 
 ![demo](https://github.com/user-attachments/assets/12fd4d67-8494-462a-8124-76670798308a)

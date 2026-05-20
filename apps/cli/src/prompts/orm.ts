@@ -1,5 +1,6 @@
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Database, ORM, Runtime } from "../types";
+import { validateOrmDatabaseCompat } from "../utils/config-validation";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
@@ -33,7 +34,11 @@ export async function getORMChoice(
   }
 
   if (!hasDatabase) return "none";
-  if (orm !== undefined) return orm;
+  if (orm !== undefined) {
+    const compat = validateOrmDatabaseCompat(orm, database);
+    if (compat.isErr()) throw compat.error;
+    return orm;
+  }
 
   const options =
     database === "mongodb"

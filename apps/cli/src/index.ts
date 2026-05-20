@@ -83,6 +83,7 @@ export const SchemaNameSchema = z
     "addInput",
     "projectConfig",
     "betterTStackConfig",
+    "betterTStackConfigFile",
     "initResult",
   ])
   .default("all");

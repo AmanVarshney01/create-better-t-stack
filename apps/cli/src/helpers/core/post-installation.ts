@@ -203,7 +203,9 @@ export async function displayPostInstallInstructions(
     }
 
     if (isBackendSelf && api === "orpc") {
-      output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:${webPort}/api/rpc/api-reference\n`;
+      const rpcPath =
+        frontend?.includes("next") || frontend?.includes("tanstack-start") ? "/api/rpc" : "/rpc";
+      output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:${webPort}${rpcPath}/api-reference\n`;
     }
 
     if (addons?.includes("starlight")) {
@@ -256,10 +258,15 @@ function getNativeInstructions(
   runCmd: string,
 ) {
   const envVar = isConvex ? "EXPO_PUBLIC_CONVEX_URL" : "EXPO_PUBLIC_SERVER_URL";
+  const selfBackendPort = frontend.includes("svelte")
+    ? "5173"
+    : frontend.includes("astro")
+      ? "4321"
+      : "3001";
   const exampleUrl = isConvex
     ? "https://<YOUR_CONVEX_URL>"
     : isBackendSelf
-      ? "http://<YOUR_LOCAL_IP>:3001"
+      ? `http://<YOUR_LOCAL_IP>:${selfBackendPort}`
       : "http://<YOUR_LOCAL_IP>:3000";
   const envFileName = ".env";
   const ipNote = isConvex
@@ -579,13 +586,13 @@ function getAlchemyDeployInstructions(
   const instructions: string[] = [];
   const isBackendSelf = backend === "self";
 
-  if (webDeploy === "cloudflare" && serverDeploy !== "cloudflare") {
+  if (webDeploy === "cloudflare" && serverDeploy !== "cloudflare" && !isBackendSelf) {
     instructions.push(
-      `${pc.bold("Deploy web with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`cd apps/web && ${runCmd} alchemy dev`}\n${pc.cyan("•")} Deploy: ${`cd apps/web && ${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`cd apps/web && ${runCmd} destroy`}`,
+      `${pc.bold("Deploy web with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
     );
   } else if (serverDeploy === "cloudflare" && webDeploy !== "cloudflare" && !isBackendSelf) {
     instructions.push(
-      `${pc.bold("Deploy server with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`cd apps/server && ${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`cd apps/server && ${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`cd apps/server && ${runCmd} destroy`}`,
+      `${pc.bold("Deploy server with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
     );
   } else if (webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || isBackendSelf)) {
     instructions.push(

@@ -1,10 +1,11 @@
 "use client";
 
-import { Check, Copy, Terminal, Twitter } from "lucide-react";
+import { Check, Copy, Terminal } from "lucide-react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import QRCode from "qrcode";
 import React, { useEffect, useState } from "react";
+import { FaXTwitter } from "react-icons/fa6";
 import { toast } from "sonner";
 
 import {
@@ -227,7 +228,7 @@ export function ShareDialog({ children, stackUrl, stackState }: ShareDialogProps
                   onClick={shareToTwitter}
                   className="flex items-center gap-2 rounded border border-border bg-fd-background px-3 py-2 font-mono text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
                 >
-                  <Twitter className="h-3 w-3" />
+                  <FaXTwitter className="h-3 w-3" />
                   <span className="text-primary">$</span>
                   <span>./share --platform twitter</span>
                 </button>

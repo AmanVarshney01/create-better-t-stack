@@ -106,10 +106,7 @@ describe("Basic Configurations", () => {
   });
 
   describe("Installation Options", () => {
-    // Skip install test in CI to avoid timeouts
-    const runInstallTest = process.env.CI ? it.skip : it;
-
-    runInstallTest(
+    it.skipIf(Boolean(process.env.CI))(
       "should work with install enabled",
       async () => {
         const result = await runTRPCTest({

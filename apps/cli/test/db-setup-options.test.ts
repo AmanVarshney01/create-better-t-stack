@@ -3,6 +3,7 @@ import path from "node:path";
 
 import fs from "fs-extra";
 
+import { setupNeonPostgres } from "../src/helpers/database-providers/neon-setup";
 import { create } from "../src/index";
 import { readBtsConfig } from "../src/utils/bts-config";
 
@@ -181,5 +182,37 @@ describe("Database setup options", () => {
 
     const btsConfig = await readBtsConfig(projectPath);
     expect(btsConfig?.dbSetupOptions).toBeUndefined();
+  });
+
+  it("skips Neon prompts when external commands are disabled", async () => {
+    const projectPath = path.join(SMOKE_DIR_PATH, "db-setup-neon-skip-external");
+    await fs.remove(projectPath);
+
+    const result = await setupNeonPostgres({
+      projectName: "db-setup-neon-skip-external",
+      projectDir: projectPath,
+      relativePath: "db-setup-neon-skip-external",
+      database: "postgres",
+      orm: "drizzle",
+      backend: "hono",
+      runtime: "bun",
+      frontend: ["tanstack-router"],
+      addons: ["none"],
+      examples: ["none"],
+      auth: "none",
+      payments: "none",
+      git: true,
+      packageManager: "bun",
+      install: false,
+      dbSetup: "neon",
+      api: "trpc",
+      webDeploy: "none",
+      serverDeploy: "none",
+    });
+
+    expect(result.isOk()).toBe(true);
+    expect(await fs.readFile(path.join(projectPath, "apps/server/.env"), "utf8")).toContain(
+      "DATABASE_URL=",
+    );
   });
 });

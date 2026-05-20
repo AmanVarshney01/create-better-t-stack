@@ -24,7 +24,7 @@ export function processBackendDeps(vfs: VirtualFileSystem, config: ProjectConfig
     deps.push("hono");
     if (runtime === "node") deps.push("@hono/node-server");
   } else if (backend === "elysia") {
-    deps.push("elysia", "@elysiajs/cors");
+    deps.push("elysia", "@elysiajs/cors", "@sinclair/typebox");
     if (runtime === "node") deps.push("@elysiajs/node");
   } else if (backend === "express") {
     deps.push("express", "cors");

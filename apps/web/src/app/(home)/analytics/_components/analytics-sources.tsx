@@ -3,9 +3,9 @@ import Link from "next/link";
 
 export function AnalyticsSources() {
   return (
-    <div className="rounded-xl bg-fd-background/85 p-5 ring-1 ring-border/35">
-      <div className="font-mono text-[10px] uppercase tracking-[0.26em] text-muted-foreground">
-        source map
+    <div className="rounded border border-border bg-fd-background p-4">
+      <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+        Source map
       </div>
 
       <div className="mt-4 space-y-3 text-sm">
@@ -13,7 +13,7 @@ export function AnalyticsSources() {
           href="https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts"
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex items-center justify-between rounded-lg border border-border/40 px-4 py-3 transition-colors hover:border-primary/30 hover:bg-muted/20"
+          className="group flex items-center justify-between rounded border border-border px-3 py-2.5 transition-colors hover:border-muted-foreground/30"
         >
           <span className="min-w-0">
             <span className="block text-muted-foreground text-xs">CLI sender</span>
@@ -26,7 +26,7 @@ export function AnalyticsSources() {
           href="https://github.com/AmanVarshney01/create-better-t-stack/blob/main/packages/backend/convex/analytics.ts"
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex items-center justify-between rounded-lg border border-border/40 px-4 py-3 transition-colors hover:border-primary/30 hover:bg-muted/20"
+          className="group flex items-center justify-between rounded border border-border px-3 py-2.5 transition-colors hover:border-muted-foreground/30"
         >
           <span className="min-w-0">
             <span className="block text-muted-foreground text-xs">Aggregator</span>
@@ -39,7 +39,7 @@ export function AnalyticsSources() {
           href="https://umami.amanv.cloud/share/pHvqHleyOl9PBfaK"
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex items-center justify-between rounded-lg border border-border/40 px-4 py-3 transition-colors hover:border-primary/30 hover:bg-muted/20"
+          className="group flex items-center justify-between rounded border border-border px-3 py-2.5 transition-colors hover:border-muted-foreground/30"
         >
           <span className="min-w-0">
             <span className="block text-muted-foreground text-xs">Website analytics</span>

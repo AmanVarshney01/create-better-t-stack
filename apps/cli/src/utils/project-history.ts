@@ -85,7 +85,7 @@ export async function readHistory(): Promise<Result<HistoryData, HistoryError>> 
   });
 
   if (existsResult.isErr()) {
-    return existsResult;
+    return Result.err(existsResult.error);
   }
 
   if (!existsResult.value) {
@@ -112,7 +112,7 @@ export async function readHistory(): Promise<Result<HistoryData, HistoryError>> 
 async function writeHistory(history: HistoryData): Promise<Result<void, HistoryError>> {
   const ensureDirResult = await ensureHistoryDir();
   if (ensureDirResult.isErr()) {
-    return ensureDirResult;
+    return Result.err(ensureDirResult.error);
   }
 
   return Result.tryPromise({
@@ -133,7 +133,7 @@ export async function addToHistory(
 ): Promise<Result<void, HistoryError>> {
   const historyResult = await readHistory();
   if (historyResult.isErr()) {
-    return historyResult;
+    return Result.err(historyResult.error);
   }
   const history = historyResult.value;
 
@@ -174,7 +174,7 @@ export async function addToHistory(
 export async function getHistory(limit = 10): Promise<Result<ProjectHistoryEntry[], HistoryError>> {
   const historyResult = await readHistory();
   if (historyResult.isErr()) {
-    return historyResult;
+    return Result.err(historyResult.error);
   }
   return Result.ok(historyResult.value.entries.slice(0, limit));
 }
@@ -199,7 +199,7 @@ export async function clearHistory(): Promise<Result<void, HistoryError>> {
 export async function removeFromHistory(id: string): Promise<Result<boolean, HistoryError>> {
   const historyResult = await readHistory();
   if (historyResult.isErr()) {
-    return historyResult;
+    return Result.err(historyResult.error);
   }
 
   const history = historyResult.value;
@@ -209,7 +209,7 @@ export async function removeFromHistory(id: string): Promise<Result<boolean, His
   if (history.entries.length < initialLength) {
     const writeResult = await writeHistory(history);
     if (writeResult.isErr()) {
-      return writeResult;
+      return Result.err(writeResult.error);
     }
     return Result.ok(true);
   }

@@ -1,4 +1,4 @@
-import { Activity, Radio } from "lucide-react";
+import { Activity, DatabaseZap, Terminal } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -29,6 +29,26 @@ function formatUtcDate(value: string) {
   return utcDateFormatter.format(new Date(value));
 }
 
+function HeaderStat({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+}) {
+  return (
+    <div className="rounded border border-border bg-fd-background p-4">
+      <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+        {label}
+      </div>
+      <div className="mt-3 font-semibold text-2xl">{value}</div>
+      <p className="mt-2 text-muted-foreground text-xs leading-5">{detail}</p>
+    </div>
+  );
+}
+
 export function AnalyticsHeader({
   lastUpdated,
   liveTotal,
@@ -51,123 +71,87 @@ export function AnalyticsHeader({
   const legacyDate = formatUtcDate(legacy.lastUpdatedIso);
   const statusMeta = {
     online: {
-      label: "streaming",
+      label: "Streaming",
       textClass: "text-primary",
       dotClass: "bg-primary",
     },
     connecting: {
-      label: "connecting",
+      label: "Connecting",
       textClass: "text-muted-foreground",
       dotClass: "bg-muted-foreground",
     },
     reconnecting: {
-      label: "reconnecting",
-      textClass: "text-accent",
-      dotClass: "bg-accent",
+      label: "Reconnecting",
+      textClass: "text-chart-3",
+      dotClass: "bg-chart-3",
     },
     offline: {
-      label: "offline",
+      label: "Offline",
       textClass: "text-destructive",
       dotClass: "bg-destructive",
     },
   }[connectionStatus];
 
   return (
-    <section className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-primary">
-            <Activity className="h-5 w-5" />
-            <h1 className="font-bold font-mono text-xl sm:text-2xl">CLI_ANALYTICS.JSON</h1>
+    <section className="space-y-5">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
+        <div className="flex min-w-0 items-center gap-2">
+          <Terminal className="h-5 w-5 shrink-0 text-primary" />
+          <div className="min-w-0">
+            <h1 className="font-bold font-mono text-lg sm:text-xl">ANALYTICS.SH</h1>
+            <p className="text-muted-foreground text-sm">
+              Aggregate CLI telemetry for create-better-t-stack.
+            </p>
           </div>
-          <p className="max-w-2xl text-muted-foreground text-sm">
-            Usage analytics for Better T Stack, combining the live telemetry stream with the
-            historical archive in the site’s existing terminal-style UI.
-          </p>
+        </div>
+        <div className="hidden h-px flex-1 bg-border sm:block" />
+        <div className="flex items-center gap-2 rounded border border-border bg-fd-background px-3 py-2 font-mono text-xs">
+          <Activity className={cn("h-3.5 w-3.5", statusMeta.textClass)} />
+          <span className={cn("h-2 w-2 rounded-full", statusMeta.dotClass)} />
+          <span className={statusMeta.textClass}>{statusMeta.label}</span>
         </div>
       </div>
 
-      <div className="rounded-xl bg-fd-background/85 p-5 ring-1 ring-border/35">
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={cn(
-              "inline-flex items-center gap-2 rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-[0.22em]",
-              statusMeta.textClass,
-              "bg-muted/30",
-            )}
-          >
-            <span
-              className={cn(
-                "h-2 w-2 rounded-full",
-                statusMeta.dotClass,
-                connectionStatus !== "online" && "animate-pulse",
-              )}
-            />
-            {statusMeta.label}
-          </span>
-          <span className="inline-flex items-center gap-2 rounded-full bg-muted/30 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-            <Radio className="h-3 w-3" />
-            anonymous telemetry
-          </span>
-        </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <HeaderStat
+          label="Live projects"
+          value={formatCompactNumber(liveTotal)}
+          detail="Project creations tracked in the current Convex stream."
+        />
+        <HeaderStat
+          label="Tracked span"
+          value={trackingDays}
+          detail="Calendar days represented in the live telemetry dataset."
+        />
+        <HeaderStat
+          label="Archive total"
+          value={formatCompactNumber(legacy.total)}
+          detail={`Historical creations from the pre-Convex archive through ${legacyDate}.`}
+        />
+        <HeaderStat
+          label="Archive pace"
+          value={legacy.avgPerDay.toFixed(1)}
+          detail="Average project creations per day in the historical snapshot."
+        />
+      </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-lg bg-muted/20 p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-              live projects
-            </div>
-            <div className="mt-2 font-semibold text-3xl tracking-tight">
-              {formatCompactNumber(liveTotal)}
-            </div>
-            <p className="mt-2 text-muted-foreground text-xs leading-5">
-              Project creations tracked in the live Convex telemetry stream.
-            </p>
+      <div className="rounded border border-border bg-fd-background p-4">
+        <div className="grid gap-3 text-sm md:grid-cols-4">
+          <div className="flex items-center gap-2">
+            <DatabaseZap className="h-4 w-4 text-primary" />
+            <span className="font-mono text-xs text-muted-foreground uppercase">Telemetry</span>
           </div>
-
-          <div className="rounded-lg bg-muted/20 p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-              tracked span
-            </div>
-            <div className="mt-2 font-semibold text-3xl tracking-tight">{trackingDays}</div>
-            <p className="mt-2 text-muted-foreground text-xs leading-5">
-              Calendar days represented in the live dataset.
-            </p>
+          <div className="flex items-center justify-between gap-3 md:block">
+            <span className="text-muted-foreground">Latest event</span>
+            <div className="font-medium md:mt-1">{formattedDate ?? "Waiting"}</div>
           </div>
-
-          <div className="rounded-lg bg-muted/20 p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-              archive total
-            </div>
-            <div className="mt-2 font-semibold text-3xl tracking-tight">
-              {formatCompactNumber(legacy.total)}
-            </div>
-            <p className="mt-2 text-muted-foreground text-xs leading-5">
-              Historical project creations from the pre-Convex archive through {legacyDate}.
-            </p>
+          <div className="flex items-center justify-between gap-3 md:block">
+            <span className="text-muted-foreground">Archive snapshot</span>
+            <div className="font-medium md:mt-1">{legacyDate}</div>
           </div>
-
-          <div className="rounded-lg bg-muted/20 p-4">
-            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-              <Activity className="h-3.5 w-3.5 text-primary" />
-              telemetry status
-            </div>
-
-            <div className="mt-4 space-y-3 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Convex stream</span>
-                <span className={cn("font-medium", statusMeta.textClass)}>{statusMeta.label}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Latest event</span>
-                <span className="text-right text-foreground/90">
-                  {formattedDate ?? "Waiting for first event"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Archive snapshot</span>
-                <span className="text-right text-foreground/90">{legacyDate}</span>
-              </div>
-            </div>
+          <div className="flex items-center justify-between gap-3 md:block">
+            <span className="text-muted-foreground">Source</span>
+            <div className="font-medium md:mt-1">{legacy.source}</div>
           </div>
         </div>
       </div>

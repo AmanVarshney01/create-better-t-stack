@@ -1,4 +1,3 @@
-import { formatRgb, interpolate } from "culori";
 import { format } from "date-fns";
 
 import type {
@@ -28,13 +27,6 @@ const precisePercentFormatter = new Intl.NumberFormat("en", {
 });
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
-
-export type PlotMargins = {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-};
 
 export function formatCompactNumber(value: number): string {
   return compactNumberFormatter.format(value);
@@ -261,61 +253,4 @@ export function getTrendTone(deltaPercentage: number | null): "up" | "down" | "f
   if (deltaPercentage > 0.02) return "up";
   if (deltaPercentage < -0.02) return "down";
   return "flat";
-}
-
-export function interpolateColor(start: string, end: string, ratio: number): string {
-  const mixer = interpolate([start, end]);
-  return formatRgb(mixer(Math.min(1, Math.max(0, ratio)))) || end;
-}
-
-export function isCompactPlot(width: number): boolean {
-  return width < 480;
-}
-
-export function resolvePlotMargins(
-  width: number,
-  desktop: PlotMargins,
-  compact: PlotMargins,
-): PlotMargins {
-  return isCompactPlot(width) ? compact : desktop;
-}
-
-export function getPlotFontSize(width: number): string {
-  return isCompactPlot(width) ? "11px" : "12px";
-}
-
-export function resolveHorizontalBarMargins({
-  width,
-  longestLabelLength,
-  longestValueLength,
-  desktop,
-  compact,
-}: {
-  width: number;
-  longestLabelLength: number;
-  longestValueLength: number;
-  desktop: PlotMargins;
-  compact: PlotMargins;
-}): PlotMargins {
-  const compactView = isCompactPlot(width);
-  const base = compactView ? compact : desktop;
-
-  return {
-    top: base.top,
-    bottom: base.bottom,
-    left: Math.max(
-      base.left,
-      Math.min(
-        compactView ? 132 : 188,
-        base.left + Math.max(0, longestLabelLength - 8) * (compactView ? 4 : 5.5),
-      ),
-    ),
-    right: Math.max(
-      base.right,
-      Math.min(
-        compactView ? 82 : 112,
-        base.right + Math.max(0, longestValueLength - 3) * (compactView ? 5 : 7),
-      ),
-    ),
-  };
 }

@@ -1,6 +1,6 @@
 {
   "name": "@better-t-stack/template-generator",
-  "version": "3.27.0",
+  "version": "3.28.3",
   "description": "Virtual file system generator for Better-T-Stack templates - works in browsers and Node.js",
   "keywords": [
     "better-t-stack",
@@ -48,21 +48,21 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-t-stack/types": "^3.27.0",
-    "better-result": "^2.3.0",
-    "handlebars": "^4.7.8",
-    "memfs": "^4.51.1",
+    "@better-t-stack/types": "^3.28.3",
+    "better-result": "^2.9.2",
+    "handlebars": "^4.7.9",
+    "memfs": "^4.57.2",
     "pathe": "^2.0.3",
-    "ts-morph": "^27.0.2",
-    "yaml": "^2.8.2"
+    "ts-morph": "^28.0.0",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^22.10.2",
-    "fs-extra": "^11.3.3",
+    "@types/node": "^25.7.0",
+    "fs-extra": "^11.3.5",
     "is-binary-path": "^3.0.0",
     "tinyglobby": "^0.2.15",
-    "tsdown": "^0.17.2",
-    "typescript": "^5.7.2"
+    "tsdown": "^0.22.0",
+    "typescript": "^6.0.3"
   }
 }

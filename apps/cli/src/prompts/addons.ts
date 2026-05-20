@@ -1,5 +1,13 @@
 import { DEFAULT_CONFIG } from "../constants";
-import { type Addons, AddonsSchema, type Auth, type Frontend } from "../types";
+import {
+  type Addons,
+  AddonsSchema,
+  type Auth,
+  type Backend,
+  type Frontend,
+  type ProjectConfig,
+  type Runtime,
+} from "../types";
 import { getCompatibleAddons, validateAddonCompatibility } from "../utils/compatibility-rules";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableGroupMultiselect } from "./navigable";
@@ -9,6 +17,11 @@ type AddonOption = {
   label: string;
   hint: string;
 };
+
+type AddonProjectConfig = Pick<
+  ProjectConfig,
+  "frontend" | "addons" | "auth" | "backend" | "runtime"
+>;
 
 function getAddonDisplay(addon: Addons): { label: string; hint: string } {
   let label: string;
@@ -79,6 +92,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "MCP";
       hint = "Install MCP servers, including Better T Stack, via add-mcp";
       break;
+    case "evlog":
+      label = "evlog";
+      hint = "Request logging with Better Auth context and AI SDK telemetry";
+      break;
     default:
       label = addon;
       hint = `Add ${addon}`;
@@ -92,6 +109,7 @@ const ADDON_GROUPS = {
   "Code Quality": ["biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
   "Platform Extensions": ["pwa", "tauri", "electrobun", "opentui", "wxt"],
+  Observability: ["evlog"],
   "AI & Agent Tools": ["skills", "mcp"],
 };
 
@@ -130,7 +148,13 @@ function validateAddonSelection(selected: Addons[] | undefined) {
   }
 }
 
-export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {
+export async function getAddonsChoice(
+  addons?: Addons[],
+  frontends?: Frontend[],
+  auth?: Auth,
+  backend?: Backend,
+  runtime?: Runtime,
+) {
   if (addons !== undefined) return addons;
 
   const allAddons = AddonsSchema.options.filter((addon) => addon !== "none");
@@ -139,7 +163,13 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
   const frontendsArray = frontends || [];
 
   for (const addon of allAddons) {
-    const { isCompatible } = validateAddonCompatibility(addon, frontendsArray, auth);
+    const { isCompatible } = validateAddonCompatibility(
+      addon,
+      frontendsArray,
+      auth,
+      backend,
+      runtime,
+    );
     if (!isCompatible) continue;
 
     const { label, hint } = getAddonDisplay(addon);
@@ -168,20 +198,18 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
   return response;
 }
 
-export async function getAddonsToAdd(
-  frontend: Frontend[],
-  existingAddons: Addons[] = [],
-  auth?: Auth,
-) {
+export async function getAddonsToAdd(config: AddonProjectConfig) {
   const groupedOptions = createGroupedOptions();
 
-  const frontendArray = frontend || [];
+  const frontendArray = config.frontend || [];
 
   const compatibleAddons = getCompatibleAddons(
     AddonsSchema.options.filter((addon) => addon !== "none"),
     frontendArray,
-    existingAddons,
-    auth,
+    config.addons,
+    config.auth,
+    config.backend,
+    config.runtime,
   );
 
   for (const addon of compatibleAddons) {
