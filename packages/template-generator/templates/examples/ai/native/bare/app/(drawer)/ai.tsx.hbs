@@ -3,7 +3,6 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
@@ -57,7 +56,7 @@ export default function AIScreen() {
   );
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   useEffect(() => {
@@ -114,7 +113,7 @@ export default function AIScreen() {
               </View>
             ) : (
               <View style={styles.messagesList}>
-                {messages.map((message: UIMessage) => (
+                {messages.map((message) => (
                   <View
                     key={message.key}
                     style={[
@@ -134,7 +133,9 @@ export default function AIScreen() {
                       {message.role === "user" ? "You" : "AI Assistant"}
                     </Text>
                     <MessageContent
-                      text={message.text ?? ""}
+                      text={(message.parts ?? [])
+                        .map((part) => (part.type === "text" ? part.text : ""))
+                        .join("")}
                       isStreaming={message.status === "streaming"}
                       textColor={theme.text}
                     />
@@ -297,6 +298,7 @@ const styles = StyleSheet.create({
 });
 {{else}}
 import { useRef, useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
   View,
   Text,
@@ -309,8 +311,6 @@ import {
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { fetch as expoFetch } from "expo/fetch";
-import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
@@ -333,7 +333,6 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const { messages, error, sendMessage } = useChat({
     transport: new DefaultChatTransport({
-      fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/ai"),
     }),
     onError: (error) => console.error(error, "AI Chat Error"),

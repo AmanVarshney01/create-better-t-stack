@@ -1,5 +1,6 @@
 import { Container } from "@/components/container";
-import { ScrollView, Text, View, StyleSheet } from "react-native";
+import { Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { ScrollView, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
@@ -11,12 +12,21 @@ export default function TabOne() {
     <Container>
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
-          <Text style={[styles.title, { color: theme.text }]}>
-            Tab One
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.text, opacity: 0.7 }]}>
-            Explore the first section of your app
-          </Text>
+          <Host matchContents=\{{ vertical: true }}>
+            <Column spacing={8}>
+              <ExpoUIText
+                textStyle=\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
+              >
+                Tab One
+              </ExpoUIText>
+              <ExpoUIText
+                textStyle=\{{ color: theme.text, fontSize: 16 }}
+                style=\{{ opacity: 0.7 }}
+              >
+                Explore the first section of your app
+              </ExpoUIText>
+            </Column>
+          </Host>
         </View>
       </ScrollView>
     </Container>
@@ -31,13 +41,4 @@ const styles = StyleSheet.create({
   content: {
     paddingVertical: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-  },
 });
-

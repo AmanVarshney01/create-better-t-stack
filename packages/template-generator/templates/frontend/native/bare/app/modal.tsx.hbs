@@ -1,5 +1,6 @@
 import { Container } from "@/components/container";
-import { Text, View, StyleSheet } from "react-native";
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
@@ -10,9 +11,22 @@ export default function Modal() {
   return (
     <Container>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>Modal</Text>
-        </View>
+        <Host style={styles.expoUiHost}>
+          <Column spacing={12} alignment="center">
+            <ExpoUIText
+              textStyle=\{{ color: theme.text, fontSize: 20, fontWeight: "bold" }}
+            >
+              Modal
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\{{ color: theme.text, fontSize: 14, textAlign: "center" }}
+              style=\{{ opacity: 0.7 }}
+            >
+              Built with Expo UI universal components
+            </ExpoUIText>
+            <Button label="Native control" onPress={() => null} />
+          </Column>
+        </Host>
       </View>
     </Container>
   );
@@ -23,12 +37,8 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  header: {
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
+  expoUiHost: {
+    alignSelf: "stretch",
+    padding: 16,
   },
 });
-

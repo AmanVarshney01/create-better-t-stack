@@ -2229,7 +2229,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
     baseURL: siteUrl,
     {{/if}}
     {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-    trustedOrigins: [siteUrl, nativeAppUrl, ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**", "exp://192.168.*.*:*/**"] : [])],
+    trustedOrigins: [siteUrl, nativeAppUrl, "exp://"],
     {{else if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
     trustedOrigins: [siteUrl],
     {{else if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
@@ -5355,7 +5355,8 @@ export const Route = createFileRoute('/api/auth/$')({
   },
 })
 `],
-  ["auth/better-auth/native/bare/app/(drawer)/index.tsx.hbs", `import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+  ["auth/better-auth/native/bare/app/(drawer)/index.tsx.hbs", `import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { View, ScrollView, StyleSheet } from "react-native";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
@@ -5392,65 +5393,101 @@ return (
 <Container>
   <ScrollView style={styles.scrollView}>
     <View style={styles.content}>
-      <Text style={[styles.title, { color: theme.text }]}>
-        BETTER T STACK
-      </Text>
+      <Host style={styles.titleHost} matchContents=\\{{ vertical: true }}>
+        <Column>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
+          >
+            BETTER T STACK
+          </ExpoUIText>
+        </Column>
+      </Host>
 
       {session?.user ? (
       <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.userHeader}>
-          <Text style={[styles.userText, { color: theme.text }]}>
-            Welcome, <Text style={styles.userName}>{session.user.name}</Text>
-          </Text>
-        </View>
-        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
-          {session.user.email}
-        </Text>
-        <TouchableOpacity style={[styles.signOutButton, { backgroundColor: theme.notification }]} onPress={()=> {
-          authClient.signOut();
-          {{#if (eq api "orpc")}}
-          queryClient.invalidateQueries();
-          {{/if}}
-          {{#if (eq api "trpc")}}
-          queryClient.invalidateQueries();
-          {{/if}}
-          }}
-          >
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+        <Host style={styles.userHeader} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 16 }}>
+              {\`Welcome, \${session.user.name}\`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 14 }}
+              style=\\{{ opacity: 0.7 }}
+            >
+              {session.user.email}
+            </ExpoUIText>
+          </Column>
+        </Host>
+        <Host matchContents=\\{{ vertical: true }}>
+          <Button
+            label="Sign Out"
+            variant="outlined"
+            onPress={() => {
+              authClient.signOut();
+              {{#if (eq api "orpc")}}
+              queryClient.invalidateQueries();
+              {{/if}}
+              {{#if (eq api "trpc")}}
+              queryClient.invalidateQueries();
+              {{/if}}
+            }}
+          />
+        </Host>
       </View>
       ) : null}
 
       {{#unless (eq api "none")}}
       <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.cardTitle, { color: theme.text }]}>
-          System Status
-        </Text>
+        <Host style={styles.cardTitleHost} matchContents=\\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}
+          >
+            System Status
+          </ExpoUIText>
+        </Host>
         <View style={styles.statusRow}>
           <View style={[styles.statusIndicator, { backgroundColor: isConnected ? "#10b981" : "#ef4444" }]} />
           <View style={styles.statusContent}>
-            <Text style={[styles.statusTitle, { color: theme.text }]}>
-              {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}} Backend
-            </Text>
-            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-              {isLoading
-              ? "Checking connection..."
-              : isConnected
-              ? "Connected to API"
-              : "API Disconnected"}
-            </Text>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14, fontWeight: "bold" }}
+                >
+                  {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}} Backend
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 12 }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  {isLoading
+                  ? "Checking connection..."
+                  : isConnected
+                  ? "Connected to API"
+                  : "API Disconnected"}
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
         </View>
       </View>
 
       <View style={[styles.privateDataCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.cardTitle, { color: theme.text }]}>
-          Private Data
-        </Text>
+        <Host style={styles.cardTitleHost} matchContents=\\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}
+          >
+            Private Data
+          </ExpoUIText>
+        </Host>
         {privateData && (
-        <Text style={[styles.privateDataText, { color: theme.text, opacity: 0.7 }]}>
-          {privateData.data?.message}
-        </Text>
+        <Host matchContents=\\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 14 }}
+            style=\\{{ opacity: 0.7 }}
+          >
+            {privateData.data?.message ?? ""}
+          </ExpoUIText>
+        </Host>
         )}
       </View>
       {{/unless}}
@@ -5472,45 +5509,30 @@ scrollView: {
 flex: 1,
 },
 content: {
-padding: 16,
+paddingHorizontal: 20,
+paddingTop: 28,
+paddingBottom: 32,
 },
-title: {
-fontSize: 24,
-fontWeight: "bold",
-marginBottom: 16,
+titleHost: {
+alignSelf: "center",
+marginBottom: 24,
 },
 userCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
 userHeader: {
 marginBottom: 8,
-},
-userText: {
-fontSize: 16,
-},
-userName: {
-fontWeight: "bold",
-},
-userEmail: {
-fontSize: 14,
-marginBottom: 12,
-},
-signOutButton: {
-padding: 12,
-},
-signOutText: {
-color: "#ffffff",
 },
 statusCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
-cardTitle: {
-fontSize: 16,
-fontWeight: "bold",
+cardTitleHost: {
 marginBottom: 12,
 },
 statusRow: {
@@ -5525,22 +5547,14 @@ width: 8,
 statusContent: {
 flex: 1,
 },
-statusTitle: {
-fontSize: 14,
-fontWeight: "bold",
-},
-statusText: {
-fontSize: 12,
-},
 privateDataCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
-privateDataText: {
-fontSize: 14,
-},
-});`],
+});
+`],
   ["auth/better-auth/native/bare/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
@@ -7293,14 +7307,8 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
@@ -7382,14 +7390,8 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
@@ -7462,14 +7464,8 @@ export function createAuth() {
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
@@ -7549,14 +7545,8 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
@@ -7627,14 +7617,8 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
@@ -13558,8 +13542,7 @@ export default defineSchema({
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "isolatedModules": true,
-    "noEmit": true,
-    "types": ["node"]
+    "noEmit": true
   },
   "include": ["./**/*"],
   "exclude": ["./_generated"]
@@ -14019,7 +14002,10 @@ const fastify = Fastify({
 
 fastify.register(fastifyCors, baseCorsConfig);
 {{#if (eq auth "clerk")}}
-fastify.register(clerkPlugin);
+fastify.register(clerkPlugin, {
+	publishableKey: env.CLERK_PUBLISHABLE_KEY,
+	secretKey: env.CLERK_SECRET_KEY,
+});
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -15358,7 +15344,6 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
@@ -15412,7 +15397,7 @@ export default function AIScreen() {
   );
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   useEffect(() => {
@@ -15469,7 +15454,7 @@ export default function AIScreen() {
               </View>
             ) : (
               <View style={styles.messagesList}>
-                {messages.map((message: UIMessage) => (
+                {messages.map((message) => (
                   <View
                     key={message.key}
                     style={[
@@ -15489,7 +15474,9 @@ export default function AIScreen() {
                       {message.role === "user" ? "You" : "AI Assistant"}
                     </Text>
                     <MessageContent
-                      text={message.text ?? ""}
+                      text={(message.parts ?? [])
+                        .map((part) => (part.type === "text" ? part.text : ""))
+                        .join("")}
                       isStreaming={message.status === "streaming"}
                       textColor={theme.text}
                     />
@@ -15652,6 +15639,7 @@ const styles = StyleSheet.create({
 });
 {{else}}
 import { useRef, useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
   View,
   Text,
@@ -15664,8 +15652,6 @@ import {
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { fetch as expoFetch } from "expo/fetch";
-import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
@@ -15688,7 +15674,6 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const { messages, error, sendMessage } = useChat({
     transport: new DefaultChatTransport({
-      fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/ai"),
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
@@ -15968,7 +15953,6 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
@@ -16019,7 +16003,7 @@ export default function AIScreen() {
   );
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   useEffect(() => {
@@ -16075,7 +16059,7 @@ export default function AIScreen() {
               </View>
             ) : (
               <View style={styles.messagesWrapper}>
-                {messages.map((message: UIMessage) => (
+                {messages.map((message) => (
                   <View
                     key={message.key}
                     style={[
@@ -16089,7 +16073,9 @@ export default function AIScreen() {
                       {message.role === "user" ? "You" : "AI Assistant"}
                     </Text>
                     <MessageContent
-                      text={message.text ?? ""}
+                      text={(message.parts ?? [])
+                        .map((part) => (part.type === "text" ? part.text : ""))
+                        .join("")}
                       isStreaming={message.status === "streaming"}
                       style={styles.messageContent}
                     />
@@ -16269,7 +16255,6 @@ import {
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { fetch as expoFetch } from "expo/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { Container } from "@/components/container";
@@ -16291,7 +16276,6 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const { messages, error, sendMessage } = useChat({
     transport: new DefaultChatTransport({
-      fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/ai"),
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
@@ -16580,7 +16564,6 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
@@ -16627,7 +16610,7 @@ export default function AIScreen() {
   );
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   useEffect(() => {
@@ -16682,7 +16665,7 @@ export default function AIScreen() {
               </Surface>
             ) : (
               <View className="gap-3">
-                {messages.map((message: UIMessage) => (
+                {messages.map((message) => (
                   <Surface
                     key={message.key}
                     variant={message.role === "user" ? "tertiary" : "secondary"}
@@ -16692,7 +16675,9 @@ export default function AIScreen() {
                       {message.role === "user" ? "You" : "AI"}
                     </Text>
                     <MessageContent
-                      text={message.text ?? ""}
+                      text={(message.parts ?? [])
+                        .map((part) => (part.type === "text" ? part.text : ""))
+                        .join("")}
                       isStreaming={message.status === "streaming"}
                     />
                   </Surface>
@@ -16755,7 +16740,6 @@ import {
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { fetch as expoFetch } from "expo/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
 import { Button, Separator, FieldError, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
@@ -16776,7 +16760,6 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const { messages, error, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
-      fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/ai"),
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
@@ -17100,7 +17083,6 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
@@ -17159,7 +17141,7 @@ export default function AIPage() {
   }, [messages]);
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -17193,7 +17175,7 @@ export default function AIPage() {
             Ask me anything to get started!
           </div>
         ) : (
-          messages.map((message: UIMessage) => (
+          messages.map((message) => (
             <div
               key={message.key}
               className={\`p-3 rounded-lg \${
@@ -17206,7 +17188,9 @@ export default function AIPage() {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.text ?? ""}
+                text={(message.parts ?? [])
+                  .map((part) => (part.type === "text" ? part.text : ""))
+                  .join("")}
                 isStreaming={message.status === "streaming"}
               />
             </div>
@@ -17366,7 +17350,6 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
@@ -17409,7 +17392,7 @@ const AI: React.FC = () => {
   }, [messages]);
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -17443,7 +17426,7 @@ const AI: React.FC = () => {
             Ask me anything to get started!
           </div>
         ) : (
-          messages.map((message: UIMessage) => (
+          messages.map((message) => (
             <div
               key={message.key}
               className={\`p-3 rounded-lg \${
@@ -17456,7 +17439,9 @@ const AI: React.FC = () => {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.text ?? ""}
+                text={(message.parts ?? [])
+                  .map((part) => (part.type === "text" ? part.text : ""))
+                  .join("")}
                 isStreaming={message.status === "streaming"}
               />
             </div>
@@ -17602,7 +17587,6 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
@@ -17650,7 +17634,7 @@ function RouteComponent() {
   }, [messages]);
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -17684,7 +17668,7 @@ function RouteComponent() {
             Ask me anything to get started!
           </div>
         ) : (
-          messages.map((message: UIMessage) => (
+          messages.map((message) => (
             <div
               key={message.key}
               className={\`p-3 rounded-lg \${
@@ -17697,7 +17681,9 @@ function RouteComponent() {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.text ?? ""}
+                text={(message.parts ?? [])
+                  .map((part) => (part.type === "text" ? part.text : ""))
+                  .join("")}
                 isStreaming={message.status === "streaming"}
               />
             </div>
@@ -17845,7 +17831,6 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
@@ -17893,7 +17878,7 @@ function RouteComponent() {
   }, [messages]);
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -17927,7 +17912,7 @@ function RouteComponent() {
             Ask me anything to get started!
           </div>
         ) : (
-          messages.map((message: UIMessage) => (
+          messages.map((message) => (
             <div
               key={message.key}
               className={\`p-3 rounded-lg \${
@@ -17940,7 +17925,9 @@ function RouteComponent() {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.text ?? ""}
+                text={(message.parts ?? [])
+                  .map((part) => (part.type === "text" ? part.text : ""))
+                  .join("")}
                 isStreaming={message.status === "streaming"}
               />
             </div>
@@ -18255,7 +18242,7 @@ import { Ionicons } from "@expo/vector-icons";
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 {{else}}
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -18305,7 +18292,7 @@ export default function TodosScreen() {
   }
 
   const isLoading = !todos;
-  const completedCount = todos?.filter((t) => t.completed).length || 0;
+  const completedCount = todos?.filter((t: Doc<"todos">) => t.completed).length || 0;
   const totalCount = todos?.length || 0;
   {{else}}
     {{#if (eq api "orpc")}}
@@ -18514,7 +18501,7 @@ export default function TodosScreen() {
 
         {todos && todos.length > 0 && (
           <View style={styles.todosList}>
-            {todos.map((todo) => (
+            {todos.map((todo: Doc<"todos">) => (
               <View
                 key={todo._id}
                 style={[
@@ -18704,9 +18691,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   addButton: {
-    padding: 12,
-    justifyContent: "center",
+    width: 48,
+    height: 48,
     alignItems: "center",
+    justifyContent: "center",
   },
   centerContainer: {
     alignItems: "center",
@@ -18744,23 +18732,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   todoTextContainer: {
     flex: 1,
   },
   todoText: {
     fontSize: 16,
   },
-  deleteButton: {
-    padding: 8,
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
-});`],
+  deleteButton: {
+    padding: 4,
+  },
+});
+`],
   ["examples/todo/native/unistyles/app/(drawer)/todos.tsx.hbs", `import { useState } from "react";
 import {
   View,
@@ -18777,7 +18766,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 {{else}}
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -18945,7 +18934,7 @@ export default function TodosScreen() {
           {todos && todos.length === 0 && !isLoading && (
             <Text style={styles.emptyText}>No todos yet. Add one!</Text>
           )}
-          {todos?.map((todo) => (
+          {todos?.map((todo: Doc<"todos">) => (
             <View key={todo._id} style={styles.todoItem}>
               <TouchableOpacity
                 onPress={() => handleToggleTodo(todo._id, todo.completed)}
@@ -19108,7 +19097,7 @@ import { Ionicons } from "@expo/vector-icons";
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 {{else}}
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -19199,7 +19188,7 @@ export default function TodosScreen() {
     };
 
     const isLoading = !todos;
-    const completedCount = todos?.filter((t) => t.completed).length || 0;
+    const completedCount = todos?.filter((t: Doc<"todos">) => t.completed).length || 0;
     const totalCount = todos?.length || 0;
   {{else}}
     const handleAddTodo = () => {
@@ -19311,7 +19300,7 @@ export default function TodosScreen() {
 
           {todos && todos.length > 0 && (
             <View className="gap-2">
-              {todos.map((todo) => (
+              {todos.map((todo: Doc<"todos">) => (
                 <Surface key={todo._id} variant="secondary" className="p-3 rounded-lg">
                   <View className="flex-row items-center gap-3">
                     <Checkbox
@@ -19383,7 +19372,8 @@ export default function TodosScreen() {
       </ScrollView>
     </Container>
   );
-}`],
+}
+`],
   ["examples/todo/server/drizzle/base/src/routers/todo.ts.hbs", `{{#if (eq api "orpc")}}
 import { eq } from "drizzle-orm";
 import z from "zod";
@@ -21670,11 +21660,15 @@ shamefully-hoist=true
 strict-peer-dependencies=false
 {{/if}}`],
   ["extras/bunfig.toml.hbs", `[install]
-{{#if (or (includes frontend "nuxt"))}}
-linker = "hoisted" # having issues with Nuxt when linker is isolated
+{{#if (includes frontend "nuxt")}}
+linker = "hoisted" # Nuxt needs hoisting for its dependency resolver
 {{else}}
 linker = "isolated"
-{{/if}}`],
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+peer = false # Expo native projects declare SDK peers explicitly; this keeps Bun isolated installs deduped for native modules
+{{/if}}
+{{/if}}
+`],
   ["extras/env.d.ts.hbs", `{{#if (eq serverDeploy "cloudflare")}}
 import { type server } from "@{{projectName}}/infra/alchemy.run";
 {{else}}
@@ -21699,7 +21693,7 @@ declare module "cloudflare:workers" {
   ["extras/pnpm-workspace.yaml.hbs", `packages:
   - "apps/*"
   - "packages/*"
-{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 
 # pnpm 11 blocks dependency lifecycle scripts unless they are approved here.
 # Entries are scoped to packages this generated stack can pull in.
@@ -21709,6 +21703,9 @@ allowBuilds:
 {{/if}}
 {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
   msw: true
+{{/if}}
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+  msgpackr-extract: true
 {{/if}}
 {{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (includes addons "pwa"))}}
   sharp: true
@@ -22095,12 +22092,7 @@ import { env } from "@{{projectName}}/env/native";
 {{/if}}
 
 import { Stack } from "expo-router";
-import {
-  DarkTheme,
-  DefaultTheme,
-  type Theme,
-  ThemeProvider,
-} from "@react-navigation/native";
+import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 {{#if (eq api "trpc")}}
@@ -22113,11 +22105,11 @@ import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { StyleSheet } from "react-native";
 
-const LIGHT_THEME: Theme = {
+const LIGHT_THEME = {
   ...DefaultTheme,
   colors: NAV_THEME.light,
 };
-const DARK_THEME: Theme = {
+const DARK_THEME = {
   ...DarkTheme,
   colors: NAV_THEME.dark,
 };
@@ -22128,9 +22120,6 @@ export const unstable_settings = {
 
 {{#if (eq backend "convex")}}
 const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
-  {{#if (eq auth "better-auth")}}
-  expectAuth: true,
-  {{/if}}
   unsavedChangesWarning: false,
 });
 {{/if}}
@@ -22397,7 +22386,8 @@ export default function TabLayout() {
 
 `],
   ["frontend/native/bare/app/(drawer)/(tabs)/index.tsx.hbs", `import { Container } from "@/components/container";
-import { ScrollView, Text, View, StyleSheet } from "react-native";
+import { Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { ScrollView, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
@@ -22409,12 +22399,21 @@ export default function TabOne() {
     <Container>
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
-          <Text style={[styles.title, { color: theme.text }]}>
-            Tab One
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.text, opacity: 0.7 }]}>
-            Explore the first section of your app
-          </Text>
+          <Host matchContents=\\{{ vertical: true }}>
+            <Column spacing={8}>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
+              >
+                Tab One
+              </ExpoUIText>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                style=\\{{ opacity: 0.7 }}
+              >
+                Explore the first section of your app
+              </ExpoUIText>
+            </Column>
+          </Host>
         </View>
       </ScrollView>
     </Container>
@@ -22429,19 +22428,11 @@ const styles = StyleSheet.create({
   content: {
     paddingVertical: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-  },
 });
-
 `],
   ["frontend/native/bare/app/(drawer)/(tabs)/two.tsx.hbs", `import { Container } from "@/components/container";
-import { ScrollView, Text, View, StyleSheet } from "react-native";
+import { Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { ScrollView, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
@@ -22453,12 +22444,21 @@ export default function TabTwo() {
     <Container>
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
-          <Text style={[styles.title, { color: theme.text }]}>
-            Tab Two
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.text, opacity: 0.7 }]}>
-            Discover more features and content
-          </Text>
+          <Host matchContents=\\{{ vertical: true }}>
+            <Column spacing={8}>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
+              >
+                Tab Two
+              </ExpoUIText>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                style=\\{{ opacity: 0.7 }}
+              >
+                Discover more features and content
+              </ExpoUIText>
+            </Column>
+          </Host>
         </View>
       </ScrollView>
     </Container>
@@ -22473,18 +22473,10 @@ const styles = StyleSheet.create({
   content: {
     paddingVertical: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-  },
 });
-
 `],
-  ["frontend/native/bare/app/(drawer)/index.tsx.hbs", `import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+  ["frontend/native/bare/app/(drawer)/index.tsx.hbs", `import { {{#if (or (eq auth "clerk") (eq auth "better-auth"))}}Button, {{/if}}Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { View, ScrollView, StyleSheet } from "react-native";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
@@ -22497,13 +22489,13 @@ import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 {{/if}}
 {{#if (and (eq backend "convex") (eq auth "clerk"))}}
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (ne backend "convex") (eq auth "clerk"))}}
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { useAuth, useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
@@ -22545,9 +22537,15 @@ return (
 <Container>
   <ScrollView style={styles.scrollView}>
     <View style={styles.content}>
-      <Text style={[styles.title, { color: theme.text }]}>
-        BETTER T STACK
-      </Text>
+      <Host style={styles.titleHost} matchContents=\\{{ vertical: true }}>
+        <Column>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
+          >
+            BETTER T STACK
+          </ExpoUIText>
+        </Column>
+      </Host>
 
       {{#unless (and (eq backend "convex") (eq auth "better-auth"))}}
       <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -22555,16 +22553,25 @@ return (
         <View style={styles.statusRow}>
           <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#f59e0b" }]} />
           <View style={styles.statusContent}>
-            <Text style={[styles.statusTitle, { color: theme.text }]}>
-              Convex
-            </Text>
-            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-              {healthCheck === undefined
-              ? "Checking..."
-              : healthCheck === "OK"
-              ? "Connected to API"
-              : "API Disconnected"}
-            </Text>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14, fontWeight: "bold" }}
+                >
+                  Convex
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 12 }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  {healthCheck === undefined
+                  ? "Checking..."
+                  : healthCheck === "OK"
+                  ? "Connected to API"
+                  : "API Disconnected"}
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
         </View>
         {{else}}
@@ -22572,16 +22579,25 @@ return (
         <View style={styles.statusRow}>
           <View style={[styles.statusIndicator, { backgroundColor: healthCheck.data ? "#10b981" : "#f59e0b" }]} />
           <View style={styles.statusContent}>
-            <Text style={[styles.statusTitle, { color: theme.text }]}>
-              {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}}
-            </Text>
-            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-              {healthCheck.isLoading
-              ? "Checking connection..."
-              : healthCheck.data
-              ? "All systems operational"
-              : "Service unavailable"}
-            </Text>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14, fontWeight: "bold" }}
+                >
+                  {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}}
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 12 }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  {healthCheck.isLoading
+                  ? "Checking connection..."
+                  : healthCheck.data
+                  ? "All systems operational"
+                  : "Service unavailable"}
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
         </View>
         {{/unless}}
@@ -22591,85 +22607,139 @@ return (
 
       {{#if (and (eq backend "convex") (eq auth "clerk"))}}
       <Authenticated>
-        <Text style=\\{{ color: theme.text }}>Hello {user?.emailAddresses[0].emailAddress}</Text>
-        <Text style=\\{{ color: theme.text }}>Private Data: {privateData?.message}</Text>
+        <Host style={styles.authHost} matchContents=\\{{ vertical: true }}>
+          <Column spacing={6}>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 14 }}>
+              {\`Hello \${user?.emailAddresses[0].emailAddress ?? ""}\`}
+            </ExpoUIText>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 14 }}>
+              {\`Private Data: \${privateData?.message ?? ""}\`}
+            </ExpoUIText>
+          </Column>
+        </Host>
         <SignOutButton />
       </Authenticated>
       <Unauthenticated>
-        <Link href="/(auth)/sign-in">
-        <Text style=\\{{ color: theme.primary }}>Sign in</Text>
-        </Link>
-        <Link href="/(auth)/sign-up">
-        <Text style=\\{{ color: theme.primary }}>Sign up</Text>
-        </Link>
+        <Host style={styles.authActionsHost} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            <Button
+              label="Sign in"
+              variant="outlined"
+              onPress={() => router.push("/(auth)/sign-in")}
+            />
+            <Button
+              label="Sign up"
+              onPress={() => router.push("/(auth)/sign-up")}
+            />
+          </Column>
+        </Host>
       </Unauthenticated>
       <AuthLoading>
-        <Text style=\\{{ color: theme.text }}>Loading...</Text>
+        <Host matchContents=\\{{ vertical: true }}>
+          <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 14 }}>
+            Loading...
+          </ExpoUIText>
+        </Host>
       </AuthLoading>
       {{/if}}
 
       {{#if (and (ne backend "convex") (eq auth "clerk"))}}
       {!isLoaded ? (
-      <Text style=\\{{ color: theme.text }}>Loading...</Text>
+      <Host matchContents=\\{{ vertical: true }}>
+        <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 14 }}>
+          Loading...
+        </ExpoUIText>
+      </Host>
       ) : isSignedIn ? (
       <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.userHeader}>
-          <Text style={[styles.userText, { color: theme.text }]}>
-            Welcome, <Text style={styles.userName}>{user?.fullName ?? user?.firstName ?? "there"}</Text>
-          </Text>
-        </View>
-        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
-          {user?.emailAddresses[0]?.emailAddress}
-        </Text>
+        <Host style={styles.userHeader} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 16 }}>
+              {\`Welcome, \${user?.fullName ?? user?.firstName ?? "there"}\`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 14 }}
+              style=\\{{ opacity: 0.7 }}
+            >
+              {user?.emailAddresses[0]?.emailAddress ?? ""}
+            </ExpoUIText>
+          </Column>
+        </Host>
         <SignOutButton />
       </View>
       ) : (
       <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Link href="/(auth)/sign-in">
-          <Text style=\\{{ color: theme.primary }}>Sign in</Text>
-        </Link>
-        <Link href="/(auth)/sign-up">
-          <Text style=\\{{ color: theme.primary }}>Sign up</Text>
-        </Link>
+        <Host style={styles.authActionsHost} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            <Button
+              label="Sign in"
+              variant="outlined"
+              onPress={() => router.push("/(auth)/sign-in")}
+            />
+            <Button
+              label="Sign up"
+              onPress={() => router.push("/(auth)/sign-up")}
+            />
+          </Column>
+        </Host>
       </View>
       )}
       {{/if}}
 
       {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+      <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Host style={styles.statusCardTitleHost} matchContents=\\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}
+          >
+            API Status
+          </ExpoUIText>
+        </Host>
+        <View style={styles.statusRow}>
+          <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#f59e0b" }]} />
+          <View style={styles.statusContent}>
+            <Host matchContents=\\{{ vertical: true }}>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 12 }}
+                style=\\{{ opacity: 0.7 }}
+              >
+                {healthCheck === undefined
+                ? "Checking..."
+                : healthCheck === "OK"
+                ? "Connected to API"
+                : "API Disconnected"}
+              </ExpoUIText>
+            </Host>
+          </View>
+        </View>
+      </View>
+
       {user ? (
       <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.userHeader}>
-          <Text style={[styles.userText, { color: theme.text }]}>
-            Welcome, <Text style={styles.userName}>{user.name}</Text>
-          </Text>
-        </View>
-        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
-          {user.email}
-        </Text>
-        <TouchableOpacity style={[styles.signOutButton, { backgroundColor: theme.notification }]} onPress={()=> {
-          authClient.signOut();
-          }}
-          >
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+        <Host style={styles.userHeader} matchContents>
+          <Column spacing={6}>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+              {\`Welcome, \${user.name}\`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 14 }}
+              style=\\{{ opacity: 0.7 }}
+            >
+              {user.email}
+            </ExpoUIText>
+          </Column>
+        </Host>
+        <Host matchContents=\\{{ vertical: true }}>
+          <Button
+            label="Sign Out"
+            variant="outlined"
+            onPress={() => {
+              authClient.signOut();
+            }}
+          />
+        </Host>
       </View>
-      ) : null}
-      <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.statusCardTitle, { color: theme.text }]}>
-          API Status
-        </Text>
-        <View style={styles.statusRow}>
-          <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#ef4444" }]} />
-          <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-            {healthCheck === undefined
-            ? "Checking..."
-            : healthCheck === "OK"
-            ? "Connected to API"
-            : "API Disconnected"}
-          </Text>
-        </View>
-      </View>
-      {!user && (
+      ) : (
       <>
         <SignIn />
         <SignUp />
@@ -22687,12 +22757,13 @@ scrollView: {
 flex: 1,
 },
 content: {
-padding: 16,
+paddingHorizontal: 20,
+paddingTop: 28,
+paddingBottom: 32,
 },
-title: {
-fontSize: 24,
-fontWeight: "bold",
-marginBottom: 16,
+titleHost: {
+alignSelf: "center",
+marginBottom: 24,
 },
 card: {
 padding: 16,
@@ -22705,56 +22776,42 @@ alignItems: "center",
 gap: 8,
 },
 statusIndicator: {
-height: 8,
-width: 8,
+height: 10,
+width: 10,
+borderRadius: 999,
 },
 statusContent: {
 flex: 1,
-},
-statusTitle: {
-fontSize: 14,
-fontWeight: "bold",
-},
-statusText: {
-fontSize: 12,
 },
 userCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
 userHeader: {
 marginBottom: 8,
 },
-userText: {
-fontSize: 16,
-},
-userName: {
-fontWeight: "bold",
-},
-userEmail: {
-fontSize: 14,
+authHost: {
 marginBottom: 12,
 },
-signOutButton: {
-padding: 12,
-},
-signOutText: {
-color: "#ffffff",
+authActionsHost: {
+marginTop: 4,
 },
 statusCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
-statusCardTitle: {
+statusCardTitleHost: {
 marginBottom: 8,
-fontWeight: "bold",
 },
 });
 `],
   ["frontend/native/bare/app/+not-found.tsx.hbs", `import { Container } from "@/components/container";
-import { Link, Stack } from "expo-router";
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { Stack, router } from "expo-router";
 import { Text, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
@@ -22770,17 +22827,26 @@ export default function NotFoundScreen() {
         <View style={styles.container}>
           <View style={styles.content}>
             <Text style={styles.emoji}>🤔</Text>
-            <Text style={[styles.title, { color: theme.text }]}>
-              Page Not Found
-            </Text>
-            <Text style={[styles.subtitle, { color: theme.text, opacity: 0.7 }]}>
-              Sorry, the page you're looking for doesn't exist.
-            </Text>
-            <Link href="/" asChild>
-              <Text style={[styles.link, { color: theme.primary, backgroundColor: \`\${theme.primary}1a\` }]}>
-                Go to Home
-              </Text>
-            </Link>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={12} alignment="center">
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 20, fontWeight: "bold", textAlign: "center" }}
+                >
+                  Page Not Found
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14, textAlign: "center" }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  Sorry, the page you're looking for doesn't exist.
+                </ExpoUIText>
+                <Button
+                  label="Go to Home"
+                  variant="outlined"
+                  onPress={() => router.replace("/")}
+                />
+              </Column>
+            </Host>
           </View>
         </View>
       </Container>
@@ -22802,25 +22868,11 @@ const styles = StyleSheet.create({
     fontSize: 48,
     marginBottom: 16,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  link: {
-    padding: 12,
-  },
 });
-
 `],
   ["frontend/native/bare/app/modal.tsx.hbs", `import { Container } from "@/components/container";
-import { Text, View, StyleSheet } from "react-native";
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
@@ -22831,9 +22883,22 @@ export default function Modal() {
   return (
     <Container>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>Modal</Text>
-        </View>
+        <Host style={styles.expoUiHost}>
+          <Column spacing={12} alignment="center">
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 20, fontWeight: "bold" }}
+            >
+              Modal
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 14, textAlign: "center" }}
+              style=\\{{ opacity: 0.7 }}
+            >
+              Built with Expo UI universal components
+            </ExpoUIText>
+            <Button label="Native control" onPress={() => null} />
+          </Column>
+        </Host>
       </View>
     </Container>
   );
@@ -22844,15 +22909,11 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  header: {
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
+  expoUiHost: {
+    alignSelf: "stretch",
+    padding: 16,
   },
 });
-
 `],
   ["frontend/native/bare/components/container.tsx.hbs", `import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22930,13 +22991,14 @@ const styles = StyleSheet.create({
 `],
   ["frontend/native/bare/components/tabbar-icon.tsx.hbs", `import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+type FontAwesomeProps = React.ComponentProps<typeof FontAwesome>;
+
 export const TabBarIcon = (props: {
-  name: React.ComponentProps<typeof FontAwesome>["name"];
-  color: string;
+  name: FontAwesomeProps["name"];
+  color: FontAwesomeProps["color"];
 }) => {
   return <FontAwesome size={24} style=\\{{ marginBottom: -3 }} {...props} />;
 };
-
 `],
   ["frontend/native/bare/lib/constants.ts.hbs", `export const NAV_THEME = {
   light: {
@@ -22998,41 +23060,39 @@ module.exports = config;
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/ui": "~56.0.12",
     "@expo/vector-icons": "^15.1.1",
-    "@react-navigation/bottom-tabs": "^7.15.9",
-    "@react-navigation/drawer": "^7.9.4",
-    "@react-navigation/native": "^7.2.2",
     "@tanstack/react-query": "^5.99.2",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
-    "expo": "^55.0.17",
-    "expo-constants": "~55.0.15",
-    "expo-crypto": "~55.0.14",
-    "expo-font": "~55.0.6",
-    "expo-linking": "~55.0.14",
-    "expo-network": "~55.0.13",
-    "expo-router": "~55.0.13",
-    "expo-secure-store": "~55.0.13",
-    "expo-splash-screen": "~55.0.19",
-    "expo-status-bar": "~55.0.5",
-    "expo-system-ui": "~55.0.16",
-    "expo-web-browser": "~55.0.14",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-native": "0.83.6",
-    "react-native-gesture-handler": "~2.30.0",
-    "react-native-reanimated": "4.2.1",
-    "react-native-safe-area-context": "~5.6.2",
-    "react-native-screens": "~4.23.0",
+    "expo": "~56.0.3",
+    "expo-constants": "~56.0.14",
+    "expo-crypto": "~56.0.3",
+    "expo-font": "~56.0.5",
+    "expo-linking": "~56.0.11",
+    "expo-network": "~56.0.4",
+    "expo-router": "~56.2.5",
+    "expo-secure-store": "~56.0.4",
+    "expo-splash-screen": "~56.0.9",
+    "expo-status-bar": "~56.0.4",
+    "expo-system-ui": "~56.0.5",
+    "expo-web-browser": "~56.0.5",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.1",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.7.4"
+    "react-native-worklets": "0.8.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.28.0",
-    "@types/react": "~19.2.10",
-    "typescript": "~5.9.2"
+    "@babel/core": "^7.29.0",
+    "@types/react": "~19.2.14",
+    "typescript": "^6"
   },
   "private": true
 }
@@ -23180,9 +23240,6 @@ export const unstable_settings = {
 
 {{#if (eq backend "convex")}}
 const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
-  {{#if (eq auth "better-auth")}}
-  expectAuth: true,
-  {{/if}}
   unsavedChangesWarning: false,
 });
 {{/if}}
@@ -24174,9 +24231,11 @@ const styles = StyleSheet.create((theme) => ({
 `],
   ["frontend/native/unistyles/components/tabbar-icon.tsx.hbs", `import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+type FontAwesomeProps = React.ComponentProps<typeof FontAwesome>;
+
 export const TabBarIcon = (props: {
-  name: React.ComponentProps<typeof FontAwesome>["name"];
-  color: string;
+  name: FontAwesomeProps["name"];
+  color: FontAwesomeProps["color"];
 }) => {
   return <FontAwesome size={24} style=\\{{ marginBottom: -3 }} {...props} />;
 };
@@ -24203,45 +24262,42 @@ module.exports = config;
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
-    "@react-navigation/bottom-tabs": "^7.15.9",
-    "@react-navigation/drawer": "^7.9.4",
-    "@react-navigation/native": "^7.2.2",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
-    "babel-preset-expo": "~55.0.18",
-    "expo": "^55.0.17",
-    "expo-constants": "~55.0.15",
-    "expo-crypto": "~55.0.14",
-    "expo-dev-client": "~55.0.28",
-    "expo-font": "~55.0.6",
-    "expo-linking": "~55.0.14",
-    "expo-network": "~55.0.13",
-    "expo-router": "~55.0.13",
-    "expo-secure-store": "~55.0.13",
-    "expo-splash-screen": "~55.0.19",
-    "expo-status-bar": "~55.0.5",
-    "expo-system-ui": "~55.0.16",
-    "expo-web-browser": "~55.0.14",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-native": "0.83.6",
+    "babel-preset-expo": "~56.0.0",
+    "expo": "~56.0.3",
+    "expo-constants": "~56.0.14",
+    "expo-crypto": "~56.0.3",
+    "expo-dev-client": "~56.0.14",
+    "expo-font": "~56.0.5",
+    "expo-linking": "~56.0.11",
+    "expo-network": "~56.0.4",
+    "expo-router": "~56.2.5",
+    "expo-secure-store": "~56.0.4",
+    "expo-splash-screen": "~56.0.9",
+    "expo-status-bar": "~56.0.4",
+    "expo-system-ui": "~56.0.5",
+    "expo-web-browser": "~56.0.5",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
     "react-native-edge-to-edge": "^1.8.1",
-    "react-native-gesture-handler": "~2.30.0",
-    "react-native-nitro-modules": "^0.35.4",
-    "react-native-reanimated": "4.2.1",
-    "react-native-safe-area-context": "~5.6.2",
-    "react-native-screens": "~4.23.0",
-    "react-native-unistyles": "^3.2.3",
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-nitro-modules": "^0.35.7",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.1",
+    "react-native-unistyles": "^3.2.4",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.7.4"
+    "react-native-worklets": "0.8.3"
   },
   "devDependencies": {
-    "ajv": "^8.17.1",
-    "@babel/core": "^7.28.0",
-    "@types/react": "~19.2.10",
-    "typescript": "~5.9.2"
+    "ajv": "^8.20.0",
+    "@babel/core": "^7.29.0",
+    "@types/react": "~19.2.14",
+    "typescript": "^6"
   }
 }
 `],
@@ -24351,7 +24407,7 @@ export const darkTheme = {
     "strict": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["./*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
@@ -24483,9 +24539,6 @@ export const unstable_settings = {
 
 {{#if (eq backend "convex")}}
   const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
-    {{#if (eq auth "better-auth")}}
-    expectAuth: true,
-    {{/if}}
     unsavedChangesWarning: false,
   });
 {{/if}}
@@ -24737,7 +24790,7 @@ export default function TabLayout() {
 				name="index"
 				options=\\{{
 					title: "Home",
-					tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+					tabBarIcon: ({ color, size }) => (
 						<Ionicons name="home" size={size} color={color} />
 					),
 				}}
@@ -24746,7 +24799,7 @@ export default function TabLayout() {
 				name="two"
 				options=\\{{
 					title: "Explore",
-					tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+					tabBarIcon: ({ color, size }) => (
 						<Ionicons name="compass" size={size} color={color} />
 					),
 				}}
@@ -25263,46 +25316,44 @@ module.exports = uniwindConfig;
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~55.0.10",
+    "@expo/metro-runtime": "~56.0.11",
     "@expo/vector-icons": "^15.1.1",
-    "@gorhom/bottom-sheet": "^5.2.10",
-    "@react-navigation/drawer": "^7.9.4",
-    "@react-navigation/elements": "^2.9.14",
+    "@gorhom/bottom-sheet": "^5.2.14",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
-    "expo": "^55.0.17",
-    "expo-constants": "~55.0.15",
-    "expo-font": "~55.0.6",
-    "expo-haptics": "~55.0.14",
-    "expo-linking": "~55.0.14",
-    "expo-network": "~55.0.13",
-    "expo-router": "~55.0.13",
-    "expo-secure-store": "~55.0.13",
-    "expo-status-bar": "~55.0.5",
-    "expo-web-browser": "~55.0.14",
-    "heroui-native": "^1.0.2",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-native": "0.83.6",
-    "react-native-gesture-handler": "~2.30.0",
-    "react-native-keyboard-controller": "1.20.7",
-    "react-native-reanimated": "4.2.1",
-    "react-native-safe-area-context": "~5.6.2",
-    "react-native-screens": "~4.23.0",
-    "react-native-svg": "15.15.3",
+    "expo": "~56.0.3",
+    "expo-constants": "~56.0.14",
+    "expo-font": "~56.0.5",
+    "expo-haptics": "~56.0.3",
+    "expo-linking": "~56.0.11",
+    "expo-network": "~56.0.4",
+    "expo-router": "~56.2.5",
+    "expo-secure-store": "~56.0.4",
+    "expo-status-bar": "~56.0.4",
+    "expo-web-browser": "~56.0.5",
+    "heroui-native": "^1.0.3",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-keyboard-controller": "1.21.6",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.1",
+    "react-native-svg": "15.15.4",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.7.4",
-    "tailwind-merge": "^3.5.0",
+    "react-native-worklets": "0.8.3",
+    "tailwind-merge": "^3.6.0",
     "tailwind-variants": "^3.2.2",
-    "tailwindcss": "^4.2.4",
-    "uniwind": "^1.6.3"
+    "tailwindcss": "^4.3.0",
+    "uniwind": "^1.7.0"
   },
   "devDependencies": {
-    "@types/node": "^24.10.0",
-    "@types/react": "~19.2.10",
-    "typescript": "~5.9.2"
+    "@types/node": "^25.9.1",
+    "@types/react": "~19.2.14",
+    "typescript": "^6"
   }
 }
 `],
@@ -25322,6 +25373,8 @@ module.exports = uniwindConfig;
   ]
 }`],
   ["frontend/native/uniwind/uniwind-env.d.ts", `/// <reference types="uniwind/types" />
+
+declare module "*.css";
 `],
   ["frontend/nuxt/_gitignore", `# Nuxt dev/build outputs
 .output
@@ -25662,15 +25715,15 @@ initOpenNextCloudflareForDev();
     "lucide-react": "^0.546.0",
     "next": "^16.2.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "sonner": "^2.0.5",
     "babel-plugin-react-compiler": "^1.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^20",
-    "@types/react": "^19.2.10",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "^4.1.18"
   }
@@ -26067,8 +26120,8 @@ export function ThemeProvider({
     "isbot": "^5.1.39",
     "lucide-react": "^1.8.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "react-router": "^7.14.1",
     "sonner": "^2.0.7"
   },
@@ -26076,7 +26129,7 @@ export function ThemeProvider({
     "@react-router/dev": "^7.14.1",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^20",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "react-router-devtools": "^1.1.0",
     "tailwindcss": "^4.2.2",
@@ -26242,13 +26295,7 @@ export default function App() {
 {{else}}
 export default function App() {
 {{/if}}
-  {{#if (eq auth "better-auth")}}
-  const convex = new ConvexReactClient(env.VITE_CONVEX_URL, {
-    expectAuth: true,
-  });
-  {{else}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
-  {{/if}}
   {{#if (eq auth "clerk")}}
   return (
     <ClerkProvider loaderData={loaderData}>
@@ -26610,15 +26657,15 @@ export default defineConfig({
 		"@tanstack/react-router": "^1.168.22",
 		"lucide-react": "^1.8.0",
         "next-themes": "^0.4.6",
-		"react": "^19.2.5",
-		"react-dom": "^19.2.5",
+		"react": "^19.2.6",
+		"react-dom": "^19.2.6",
         "sonner": "^2.0.7"
 	},
 	"devDependencies": {
 		"@tanstack/react-router-devtools": "^1.166.13",
 		"@tanstack/router-plugin": "^1.167.22",
 		"@types/node": "^22.13.14",
-		"@types/react": "^19.2.14",
+		"@types/react": "^19.2.15",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^6.0.1",
 		"postcss": "^8.5.10",
@@ -26702,13 +26749,7 @@ import { routeTree } from "./routeTree.gen";
   {{else}}
   import { ConvexProvider } from "convex/react";
   {{/if}}
-  {{#if (eq auth "better-auth")}}
-  const convex = new ConvexReactClient(env.VITE_CONVEX_URL, {
-    expectAuth: true,
-  });
-  {{else}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
-  {{/if}}
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
@@ -27061,8 +27102,8 @@ export default defineConfig({
     "@tanstack/react-start": "^1.167.41",
     "lucide-react": "^1.8.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "sonner": "^2.0.7",
     "tailwindcss": "^4.2.2"
   },
@@ -27070,7 +27111,7 @@ export default defineConfig({
     "@tanstack/react-router-devtools": "^1.166.13",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "jsdom": "^29.0.2",
@@ -29261,14 +29302,14 @@ await app.finalize();
     "clsx": "^2.1.1",
     "lucide-react": "^0.546.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "sonner": "^2.0.5",
     "tailwind-merge": "^3.3.1",
     "tw-animate-css": "^1.3.4"
   },
   "devDependencies": {
-    "@types/react": "^19.2.10",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "^4.1.18"
   },
