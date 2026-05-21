@@ -31,14 +31,8 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
@@ -120,14 +114,8 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
@@ -200,14 +188,8 @@ export function createAuth() {
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
@@ -287,14 +269,8 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
@@ -365,14 +341,8 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {

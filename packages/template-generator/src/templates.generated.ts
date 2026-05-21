@@ -2229,7 +2229,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
     baseURL: siteUrl,
     {{/if}}
     {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-    trustedOrigins: [siteUrl, nativeAppUrl, ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**", "exp://192.168.*.*:*/**"] : [])],
+    trustedOrigins: [siteUrl, nativeAppUrl, "exp://"],
     {{else if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
     trustedOrigins: [siteUrl],
     {{else if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
@@ -7307,14 +7307,8 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
@@ -7396,14 +7390,8 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
@@ -7476,14 +7464,8 @@ export function createAuth() {
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
@@ -7563,14 +7545,8 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
@@ -7641,14 +7617,8 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
-			...(env.NODE_ENV === "development"
-				? [
-					"exp://",
-					"exp://**",
-					"exp://192.168.*.*:*/**",
-					"http://localhost:8081",
-				]
-				: []),
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
 		],
 		emailAndPassword: {
