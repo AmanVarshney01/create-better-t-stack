@@ -33,17 +33,18 @@ function processPrismaDeps(
   const { database, dbSetup } = config;
 
   if (database === "mongodb") {
+    // Intentional: Prisma ORM v7 does not support MongoDB yet, so MongoDB stays on v6.
     addPackageDependency({
       vfs,
       packagePath: dbPkgPath,
-      customDependencies: { "@prisma/client": "6.19.0" },
-      customDevDependencies: { prisma: "6.19.0" },
+      customDependencies: { "@prisma/client": "6.19.3" },
+      customDevDependencies: { prisma: "6.19.3" },
     });
     if (webExists) {
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        customDependencies: { "@prisma/client": "6.19.0" },
+        customDependencies: { "@prisma/client": "6.19.3" },
       });
     }
     return;

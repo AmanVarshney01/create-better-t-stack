@@ -2222,6 +2222,9 @@ export const authComponent = createClient<DataModel>(components.betterAuth);
 
 function createAuth(ctx: GenericCtx<DataModel>) {
   return betterAuth({
+    {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router"))}}
+    baseURL: process.env.CONVEX_SITE_URL,
+    {{/if}}
     {{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
     baseURL: siteUrl,
     {{/if}}
@@ -2267,14 +2270,7 @@ import { authComponent, createAuth } from "./auth";
 const http = httpRouter();
 
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
-{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
-authComponent.registerRoutesLazy(http, createAuth, {
-  cors: true,
-  trustedOrigins: [process.env.SITE_URL!],
-});
-{{else}}
 authComponent.registerRoutes(http, createAuth, { cors: true });
-{{/if}}
 {{else}}
 authComponent.registerRoutes(http, createAuth);
 {{/if}}
@@ -4338,7 +4334,7 @@ import { env } from "@{{projectName}}/env/web";
 
 export const authClient = createAuthClient({
   baseURL: env.VITE_CONVEX_SITE_URL,
-  plugins: [crossDomainClient(), convexClient()],
+  plugins: [convexClient(), crossDomainClient()],
 });
 `],
   ["auth/better-auth/convex/web/react/react-router/src/routes/dashboard.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
@@ -4742,7 +4738,7 @@ import { env } from "@{{projectName}}/env/web";
 
 export const authClient = createAuthClient({
 	baseURL: env.VITE_CONVEX_SITE_URL,
-	plugins: [crossDomainClient(), convexClient()],
+	plugins: [convexClient(), crossDomainClient()],
 });
 `],
   ["auth/better-auth/convex/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
@@ -8001,40 +7997,42 @@ export const accountRelations = relations(account, ({ one }) => ({
   ["auth/better-auth/server/db/mongoose/mongodb/src/models/auth.model.ts.hbs", `import mongoose from 'mongoose';
 
 const { Schema, model } = mongoose;
+const { ObjectId } = Schema.Types;
 
 const userSchema = new Schema(
     {
-        _id: { type: String },
+        _id: { type: ObjectId, auto: true },
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
-        emailVerified: { type: Boolean, required: true },
+        emailVerified: { type: Boolean, required: true, default: false },
         image: { type: String },
-        createdAt: { type: Date, required: true },
-        updatedAt: { type: Date, required: true },
+        createdAt: { type: Date, required: true, default: Date.now },
+        updatedAt: { type: Date, required: true, default: Date.now },
     },
     { collection: 'user' }
 );
 
 const sessionSchema = new Schema(
     {
-        _id: { type: String },
+        _id: { type: ObjectId, auto: true },
         expiresAt: { type: Date, required: true },
         token: { type: String, required: true, unique: true },
-        createdAt: { type: Date, required: true },
-        updatedAt: { type: Date, required: true },
+        createdAt: { type: Date, required: true, default: Date.now },
+        updatedAt: { type: Date, required: true, default: Date.now },
         ipAddress: { type: String },
         userAgent: { type: String },
-        userId: { type: String, ref: 'User', required: true },
+        userId: { type: ObjectId, ref: 'User', required: true },
     },
     { collection: 'session' }
 );
+sessionSchema.index({ userId: 1 });
 
 const accountSchema = new Schema(
     {
-        _id: { type: String },
+        _id: { type: ObjectId, auto: true },
         accountId: { type: String, required: true },
         providerId: { type: String, required: true },
-        userId: { type: String, ref: 'User', required: true },
+        userId: { type: ObjectId, ref: 'User', required: true },
         accessToken: { type: String },
         refreshToken: { type: String },
         idToken: { type: String },
@@ -8042,23 +8040,25 @@ const accountSchema = new Schema(
         refreshTokenExpiresAt: { type: Date },
         scope: { type: String },
         password: { type: String },
-        createdAt: { type: Date, required: true },
-        updatedAt: { type: Date, required: true },
+        createdAt: { type: Date, required: true, default: Date.now },
+        updatedAt: { type: Date, required: true, default: Date.now },
     },
     { collection: 'account' }
 );
+accountSchema.index({ userId: 1 });
 
 const verificationSchema = new Schema(
     {
-        _id: { type: String },
+        _id: { type: ObjectId, auto: true },
         identifier: { type: String, required: true },
         value: { type: String, required: true },
         expiresAt: { type: Date, required: true },
-        createdAt: { type: Date },
-        updatedAt: { type: Date },
+        createdAt: { type: Date, required: true, default: Date.now },
+        updatedAt: { type: Date, required: true, default: Date.now },
     },
     { collection: 'verification' }
 );
+verificationSchema.index({ identifier: 1 });
 
 const User = model('User', userSchema);
 const Session = model('Session', sessionSchema);
@@ -13550,6 +13550,7 @@ export default defineSchema({
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
+    "types": ["node"],
 
     /* These compiler options are required by Convex */
     "target": "ESNext",
@@ -14787,11 +14788,9 @@ export function createDb() {
   ["db/mongoose/mongodb/src/index.ts.hbs", `import mongoose from "mongoose";
 import { env } from "@{{projectName}}/env/server";
 
-await mongoose.connect(env.DATABASE_URL).catch((error) => {
-	console.log("Error connecting to database:", error);
-});
+await mongoose.connect(env.DATABASE_URL);
 
-const client = mongoose.connection.getClient().db("myDB");
+const client = mongoose.connection.getClient().db();
 
 export { client };
 `],
@@ -19519,19 +19518,22 @@ export const todo = sqliteTable("todo", {
 `],
   ["examples/todo/server/mongoose/base/src/routers/todo.ts.hbs", `{{#if (eq api "orpc")}}
 import z from "zod";
+import "@{{projectName}}/db";
 import { publicProcedure } from "../index";
 import { Todo } from "@{{projectName}}/db/models/todo.model";
 
 export const todoRouter = {
     getAll: publicProcedure.handler(async () => {
-        return await Todo.find().lean();
+        const todos = await Todo.find().lean();
+        return todos.map((todo) => ({ ...todo, id: todo.id }));
     }),
 
     create: publicProcedure
         .input(z.object({ text: z.string().min(1) }))
         .handler(async ({ input }) => {
             const newTodo = await Todo.create({ text: input.text });
-            return newTodo.toObject();
+            const todo = newTodo.toObject();
+            return { ...todo, id: todo.id };
     }),
 
     toggle: publicProcedure
@@ -19553,19 +19555,22 @@ export const todoRouter = {
 
 {{#if (eq api "trpc")}}
 import z from "zod";
+import "@{{projectName}}/db";
 import { router, publicProcedure } from "../index";
 import { Todo } from "@{{projectName}}/db/models/todo.model";
 
 export const todoRouter = router({
     getAll: publicProcedure.query(async () => {
-        return await Todo.find().lean();
+        const todos = await Todo.find().lean();
+        return todos.map((todo) => ({ ...todo, id: todo.id }));
     }),
 
     create: publicProcedure
         .input(z.object({ text: z.string().min(1) }))
         .mutation(async ({ input }) => {
             const newTodo = await Todo.create({ text: input.text });
-        return newTodo.toObject();
+        const todo = newTodo.toObject();
+        return { ...todo, id: todo.id };
     }),
 
     toggle: publicProcedure
@@ -19590,8 +19595,9 @@ const { Schema, model } = mongoose;
 
 const todoSchema = new Schema({
   id: {
-    type: mongoose.Schema.Types.ObjectId,
-    auto: true,
+    type: String,
+    required: true,
+    default: () => new mongoose.Types.ObjectId().toString(),
   },
   text: {
     type: String,
@@ -19602,7 +19608,8 @@ const todoSchema = new Schema({
     default: false,
   },
 }, {
-  collection: 'todo'
+  collection: 'todo',
+  id: false,
 });
 
 const Todo = model('Todo', todoSchema);
@@ -20210,6 +20217,9 @@ import { trpc } from "@/utils/trpc";
   {{/if}}
 {{/if}}
 
+{{#unless (eq backend "convex")}}
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+{{/unless}}
 
 export default function TodosPage() {
   const [newTodoText, setNewTodoText] = useState("");
@@ -20286,11 +20296,11 @@ export default function TodosPage() {
     }
   };
 
-  const handleToggleTodo = (id: number, completed: boolean) => {
+  const handleToggleTodo = (id: TodoId, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: number) => {
+  const handleDeleteTodo = (id: TodoId) => {
     deleteMutation.mutate({ id });
   };
   {{/if}}
@@ -20454,6 +20464,10 @@ import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
 
+{{#unless (eq backend "convex")}}
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+{{/unless}}
+
 export default function Todos() {
   const [newTodoText, setNewTodoText] = useState("");
 
@@ -20529,11 +20543,11 @@ export default function Todos() {
     }
   };
 
-  const handleToggleTodo = (id: number, completed: boolean) => {
+  const handleToggleTodo = (id: TodoId, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: number) => {
+  const handleDeleteTodo = (id: TodoId) => {
     deleteMutation.mutate({ id });
   };
   {{/if}}
@@ -20698,6 +20712,10 @@ import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
 
+{{#unless (eq backend "convex")}}
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+{{/unless}}
+
 export const Route = createFileRoute("/todos")({
   component: TodosRoute,
 });
@@ -20777,11 +20795,11 @@ function TodosRoute() {
     }
   };
 
-  const handleToggleTodo = (id: number, completed: boolean) => {
+  const handleToggleTodo = (id: TodoId, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: number) => {
+  const handleDeleteTodo = (id: TodoId) => {
     deleteMutation.mutate({ id });
   };
   {{/if}}
@@ -20952,6 +20970,10 @@ import { orpc } from "@/utils/orpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
 
+{{#unless (eq backend "convex")}}
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+{{/unless}}
+
 export const Route = createFileRoute("/todos")({
   component: TodosRoute,
 });
@@ -21053,11 +21075,11 @@ function TodosRoute() {
     }
   };
 
-  const handleToggleTodo = (id: number, completed: boolean) => {
+  const handleToggleTodo = (id: TodoId, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: number) => {
+  const handleDeleteTodo = (id: TodoId) => {
     deleteMutation.mutate({ id });
   };
   {{/if}}
@@ -21674,9 +21696,37 @@ declare module "cloudflare:workers" {
   }
 }
 `],
-  ["extras/pnpm-workspace.yaml", `packages:
+  ["extras/pnpm-workspace.yaml.hbs", `packages:
   - "apps/*"
   - "packages/*"
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
+
+# pnpm 11 blocks dependency lifecycle scripts unless they are approved here.
+# Entries are scoped to packages this generated stack can pull in.
+allowBuilds:
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (includes frontend "tanstack-start"))}}
+  esbuild: true
+{{/if}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
+  msw: true
+{{/if}}
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (includes addons "pwa"))}}
+  sharp: true
+{{/if}}
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
+  workerd: true
+{{/if}}
+{{#if (eq orm "prisma")}}
+  "@prisma/engines": true
+  prisma: true
+{{/if}}
+{{#if (includes addons "lefthook")}}
+  lefthook: true
+{{/if}}
+{{#if (includes addons "nx")}}
+  nx: true
+{{/if}}
+{{/if}}
 `],
   ["frontend/astro/_gitignore", `# build output
 dist/

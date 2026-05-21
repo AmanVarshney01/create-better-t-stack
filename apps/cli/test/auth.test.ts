@@ -78,6 +78,43 @@ describe("Authentication Configurations", () => {
       });
 
       expectSuccess(result);
+      expect(result.projectDir).toBeDefined();
+      const projectDir = result.projectDir as string;
+      const authPackageJson = await fs.readJson(
+        path.join(projectDir, "packages/auth/package.json"),
+      );
+      expect(authPackageJson.dependencies.mongodb).toBe("^7.2.0");
+
+      const dbIndex = await fs.readFile(path.join(projectDir, "packages/db/src/index.ts"), "utf8");
+      expect(dbIndex).toContain("await mongoose.connect(env.DATABASE_URL);");
+      expect(dbIndex).toContain("mongoose.connection.getClient().db()");
+      expect(dbIndex).not.toContain(".catch(");
+      expect(dbIndex).not.toContain("myDB");
+
+      const todosRoute = await fs.readFile(
+        path.join(projectDir, "apps/web/src/routes/todos.tsx"),
+        "utf8",
+      );
+      expect(todosRoute).toContain("type TodoId = string");
+      expect(todosRoute).toContain("const handleToggleTodo = (id: TodoId");
+      expect(todosRoute).toContain("const handleDeleteTodo = (id: TodoId");
+
+      const todoRouter = await fs.readFile(
+        path.join(projectDir, "packages/api/src/routers/todo.ts"),
+        "utf8",
+      );
+      expect(todoRouter).toContain('import "@better-auth-mongodb/db";');
+      expect(todoRouter).toContain("id: todo.id");
+
+      const authModels = await fs.readFile(
+        path.join(projectDir, "packages/db/src/models/auth.model.ts"),
+        "utf8",
+      );
+      expect(authModels).toContain("const { ObjectId } = Schema.Types");
+      expect(authModels).toContain("_id: { type: ObjectId, auto: true }");
+      expect(authModels).toContain('userId: { type: ObjectId, ref: "User", required: true }');
+      expect(authModels).toContain("sessionSchema.index({ userId: 1 })");
+      expect(authModels).toContain("verificationSchema.index({ identifier: 1 })");
     });
 
     it("should add nextCookies plugin for Next.js self backend", async () => {
@@ -187,6 +224,50 @@ describe("Authentication Configurations", () => {
       });
 
       expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const packageJson = await fs.readJson(path.join(result.projectDir, "package.json"));
+      const backendPackageJson = await fs.readJson(
+        path.join(result.projectDir, "packages/backend/package.json"),
+      );
+      const webPackageJson = await fs.readJson(
+        path.join(result.projectDir, "apps/web/package.json"),
+      );
+      const authFile = await fs.readFile(
+        path.join(result.projectDir, "packages/backend/convex/auth.ts"),
+        "utf8",
+      );
+      const httpFile = await fs.readFile(
+        path.join(result.projectDir, "packages/backend/convex/http.ts"),
+        "utf8",
+      );
+      const authClientFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/lib/auth-client.ts"),
+        "utf8",
+      );
+      const convexTsconfig = await fs.readFile(
+        path.join(result.projectDir, "packages/backend/convex/tsconfig.json"),
+        "utf8",
+      );
+      const convexEnvFile = await fs.readFile(
+        path.join(result.projectDir, "packages/backend/.env.local"),
+        "utf8",
+      );
+
+      expect(packageJson.workspaces.catalog["better-auth"]).toBe("~1.6.9");
+      expect(packageJson.workspaces.catalog["@convex-dev/better-auth"]).toBe("^0.12.2");
+      expect(backendPackageJson.dependencies["better-auth"]).toBe("catalog:");
+      expect(webPackageJson.dependencies["better-auth"]).toBe("catalog:");
+      expect(authFile).toContain("baseURL: process.env.CONVEX_SITE_URL");
+      expect(httpFile).toContain("authComponent.registerRoutes(http, createAuth, { cors: true })");
+      expect(authClientFile).toContain("plugins: [convexClient(), crossDomainClient()]");
+      expect(convexTsconfig).toContain('"types": ["node"]');
+      expect(convexEnvFile).toContain(
+        "# npx convex env set CONVEX_SITE_URL https://<YOUR_CONVEX_SITE_URL>",
+      );
+      expect(convexEnvFile).toContain("# CONVEX_SITE_URL=");
     });
 
     it("should scaffold react-router with Convex Better Auth wiring", async () => {
@@ -227,7 +308,7 @@ describe("Authentication Configurations", () => {
 
       expect(rootFile).toContain("ConvexBetterAuthProvider");
       expect(rootFile).toContain('import { authClient } from "@/lib/auth-client";');
-      expect(authClientFile).toContain("crossDomainClient(), convexClient()");
+      expect(authClientFile).toContain("convexClient(), crossDomainClient()");
       expect(dashboardFile).toContain("Authenticated");
       expect(dashboardFile).toContain("Unauthenticated");
     });
