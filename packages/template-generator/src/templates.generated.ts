@@ -22139,9 +22139,6 @@ export const unstable_settings = {
 
 {{#if (eq backend "convex")}}
 const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
-  {{#if (eq auth "better-auth")}}
-  expectAuth: true,
-  {{/if}}
   unsavedChangesWarning: false,
 });
 {{/if}}
@@ -23262,9 +23259,6 @@ export const unstable_settings = {
 
 {{#if (eq backend "convex")}}
 const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
-  {{#if (eq auth "better-auth")}}
-  expectAuth: true,
-  {{/if}}
   unsavedChangesWarning: false,
 });
 {{/if}}
@@ -24564,9 +24558,6 @@ export const unstable_settings = {
 
 {{#if (eq backend "convex")}}
   const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
-    {{#if (eq auth "better-auth")}}
-    expectAuth: true,
-    {{/if}}
     unsavedChangesWarning: false,
   });
 {{/if}}
@@ -26323,13 +26314,7 @@ export default function App() {
 {{else}}
 export default function App() {
 {{/if}}
-  {{#if (eq auth "better-auth")}}
-  const convex = new ConvexReactClient(env.VITE_CONVEX_URL, {
-    expectAuth: true,
-  });
-  {{else}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
-  {{/if}}
   {{#if (eq auth "clerk")}}
   return (
     <ClerkProvider loaderData={loaderData}>
@@ -26783,13 +26768,7 @@ import { routeTree } from "./routeTree.gen";
   {{else}}
   import { ConvexProvider } from "convex/react";
   {{/if}}
-  {{#if (eq auth "better-auth")}}
-  const convex = new ConvexReactClient(env.VITE_CONVEX_URL, {
-    expectAuth: true,
-  });
-  {{else}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
-  {{/if}}
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
