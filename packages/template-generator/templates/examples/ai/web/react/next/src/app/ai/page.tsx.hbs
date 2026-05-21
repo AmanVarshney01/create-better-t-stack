@@ -5,7 +5,6 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
@@ -64,7 +63,7 @@ export default function AIPage() {
   }, [messages]);
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -98,9 +97,9 @@ export default function AIPage() {
             Ask me anything to get started!
           </div>
         ) : (
-          messages.map((message: UIMessage) => (
+          messages.map((message) => (
             <div
-              key={message.key}
+              key={`${message.order}-${message.stepOrder}`}
               className={`p-3 rounded-lg ${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"
@@ -111,7 +110,9 @@ export default function AIPage() {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.text ?? ""}
+                text={message.parts
+                  .map((part) => (part.type === "text" ? part.text : ""))
+                  .join("")}
                 isStreaming={message.status === "streaming"}
               />
             </div>

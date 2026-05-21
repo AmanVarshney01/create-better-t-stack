@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 {{else}}
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -95,7 +95,7 @@ export default function TodosScreen() {
     };
 
     const isLoading = !todos;
-    const completedCount = todos?.filter((t) => t.completed).length || 0;
+    const completedCount = todos?.filter((t: Doc<"todos">) => t.completed).length || 0;
     const totalCount = todos?.length || 0;
   {{else}}
     const handleAddTodo = () => {
@@ -207,7 +207,7 @@ export default function TodosScreen() {
 
           {todos && todos.length > 0 && (
             <View className="gap-2">
-              {todos.map((todo) => (
+              {todos.map((todo: Doc<"todos">) => (
                 <Surface key={todo._id} variant="secondary" className="p-3 rounded-lg">
                   <View className="flex-row items-center gap-3">
                     <Checkbox

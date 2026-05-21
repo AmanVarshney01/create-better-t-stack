@@ -15980,7 +15980,6 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
@@ -16031,7 +16030,7 @@ export default function AIScreen() {
   );
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   useEffect(() => {
@@ -16087,9 +16086,9 @@ export default function AIScreen() {
               </View>
             ) : (
               <View style={styles.messagesWrapper}>
-                {messages.map((message: UIMessage) => (
+                {messages.map((message) => (
                   <View
-                    key={message.key}
+                    key={\`\${message.order}-\${message.stepOrder}\`}
                     style={[
                       styles.messageContainer,
                       message.role === "user"
@@ -16101,7 +16100,9 @@ export default function AIScreen() {
                       {message.role === "user" ? "You" : "AI Assistant"}
                     </Text>
                     <MessageContent
-                      text={message.text ?? ""}
+                      text={message.parts
+                        .map((part) => (part.type === "text" ? part.text : ""))
+                        .join("")}
                       isStreaming={message.status === "streaming"}
                       style={styles.messageContent}
                     />
@@ -16590,7 +16591,6 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
@@ -16637,7 +16637,7 @@ export default function AIScreen() {
   );
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   useEffect(() => {
@@ -16692,9 +16692,9 @@ export default function AIScreen() {
               </Surface>
             ) : (
               <View className="gap-3">
-                {messages.map((message: UIMessage) => (
+                {messages.map((message) => (
                   <Surface
-                    key={message.key}
+                    key={\`\${message.order}-\${message.stepOrder}\`}
                     variant={message.role === "user" ? "tertiary" : "secondary"}
                     className={\`p-3 rounded-xl \${message.role === "user" ? "ml-8" : "mr-8"}\`}
                   >
@@ -16702,7 +16702,9 @@ export default function AIScreen() {
                       {message.role === "user" ? "You" : "AI"}
                     </Text>
                     <MessageContent
-                      text={message.text ?? ""}
+                      text={message.parts
+                        .map((part) => (part.type === "text" ? part.text : ""))
+                        .join("")}
                       isStreaming={message.status === "streaming"}
                     />
                   </Surface>
@@ -17108,7 +17110,6 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
@@ -17167,7 +17168,7 @@ export default function AIPage() {
   }, [messages]);
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -17201,9 +17202,9 @@ export default function AIPage() {
             Ask me anything to get started!
           </div>
         ) : (
-          messages.map((message: UIMessage) => (
+          messages.map((message) => (
             <div
-              key={message.key}
+              key={\`\${message.order}-\${message.stepOrder}\`}
               className={\`p-3 rounded-lg \${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"
@@ -17214,7 +17215,9 @@ export default function AIPage() {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.text ?? ""}
+                text={message.parts
+                  .map((part) => (part.type === "text" ? part.text : ""))
+                  .join("")}
                 isStreaming={message.status === "streaming"}
               />
             </div>
@@ -17374,7 +17377,6 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
@@ -17417,7 +17419,7 @@ const AI: React.FC = () => {
   }, [messages]);
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -17451,9 +17453,9 @@ const AI: React.FC = () => {
             Ask me anything to get started!
           </div>
         ) : (
-          messages.map((message: UIMessage) => (
+          messages.map((message) => (
             <div
-              key={message.key}
+              key={\`\${message.order}-\${message.stepOrder}\`}
               className={\`p-3 rounded-lg \${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"
@@ -17464,7 +17466,9 @@ const AI: React.FC = () => {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.text ?? ""}
+                text={message.parts
+                  .map((part) => (part.type === "text" ? part.text : ""))
+                  .join("")}
                 isStreaming={message.status === "streaming"}
               />
             </div>
@@ -17610,7 +17614,6 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
@@ -17658,7 +17661,7 @@ function RouteComponent() {
   }, [messages]);
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -17692,9 +17695,9 @@ function RouteComponent() {
             Ask me anything to get started!
           </div>
         ) : (
-          messages.map((message: UIMessage) => (
+          messages.map((message) => (
             <div
-              key={message.key}
+              key={\`\${message.order}-\${message.stepOrder}\`}
               className={\`p-3 rounded-lg \${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"
@@ -17705,7 +17708,9 @@ function RouteComponent() {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.text ?? ""}
+                text={message.parts
+                  .map((part) => (part.type === "text" ? part.text : ""))
+                  .join("")}
                 isStreaming={message.status === "streaming"}
               />
             </div>
@@ -17853,7 +17858,6 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
@@ -17901,7 +17905,7 @@ function RouteComponent() {
   }, [messages]);
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -17935,9 +17939,9 @@ function RouteComponent() {
             Ask me anything to get started!
           </div>
         ) : (
-          messages.map((message: UIMessage) => (
+          messages.map((message) => (
             <div
-              key={message.key}
+              key={\`\${message.order}-\${message.stepOrder}\`}
               className={\`p-3 rounded-lg \${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"
@@ -17948,7 +17952,9 @@ function RouteComponent() {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.text ?? ""}
+                text={message.parts
+                  .map((part) => (part.type === "text" ? part.text : ""))
+                  .join("")}
                 isStreaming={message.status === "streaming"}
               />
             </div>
@@ -18787,7 +18793,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 {{else}}
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -18955,7 +18961,7 @@ export default function TodosScreen() {
           {todos && todos.length === 0 && !isLoading && (
             <Text style={styles.emptyText}>No todos yet. Add one!</Text>
           )}
-          {todos?.map((todo) => (
+          {todos?.map((todo: Doc<"todos">) => (
             <View key={todo._id} style={styles.todoItem}>
               <TouchableOpacity
                 onPress={() => handleToggleTodo(todo._id, todo.completed)}
@@ -19118,7 +19124,7 @@ import { Ionicons } from "@expo/vector-icons";
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 {{else}}
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -19209,7 +19215,7 @@ export default function TodosScreen() {
     };
 
     const isLoading = !todos;
-    const completedCount = todos?.filter((t) => t.completed).length || 0;
+    const completedCount = todos?.filter((t: Doc<"todos">) => t.completed).length || 0;
     const totalCount = todos?.length || 0;
   {{else}}
     const handleAddTodo = () => {
@@ -19321,7 +19327,7 @@ export default function TodosScreen() {
 
           {todos && todos.length > 0 && (
             <View className="gap-2">
-              {todos.map((todo) => (
+              {todos.map((todo: Doc<"todos">) => (
                 <Surface key={todo._id} variant="secondary" className="p-3 rounded-lg">
                   <View className="flex-row items-center gap-3">
                     <Checkbox
@@ -19393,7 +19399,8 @@ export default function TodosScreen() {
       </ScrollView>
     </Container>
   );
-}`],
+}
+`],
   ["examples/todo/server/drizzle/base/src/routers/todo.ts.hbs", `{{#if (eq api "orpc")}}
 import { eq } from "drizzle-orm";
 import z from "zod";
@@ -25357,11 +25364,11 @@ module.exports = uniwindConfig;
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
     "react-native-gesture-handler": "~2.31.1",
-    "react-native-keyboard-controller": "1.21.8",
+    "react-native-keyboard-controller": "1.21.6",
     "react-native-reanimated": "4.3.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.1",
-    "react-native-svg": "15.15.5",
+    "react-native-svg": "15.15.4",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.8.3",
     "tailwind-merge": "^3.6.0",
