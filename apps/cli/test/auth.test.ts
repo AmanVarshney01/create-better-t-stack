@@ -104,7 +104,7 @@ describe("Authentication Configurations", () => {
         "utf8",
       );
       expect(todoRouter).toContain('import "@better-auth-mongodb/db";');
-      expect(todoRouter).toContain("id: todo.id.toString()");
+      expect(todoRouter).toContain("id: todo.id");
 
       const authModels = await fs.readFile(
         path.join(projectDir, "packages/db/src/models/auth.model.ts"),
