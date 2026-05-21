@@ -1,3 +1,6 @@
+{{#if (eq auth "clerk")}}
+import "dotenv/config";
+{{/if}}
 import { env } from "@{{projectName}}/env/server";
 import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
