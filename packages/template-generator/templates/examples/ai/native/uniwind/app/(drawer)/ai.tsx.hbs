@@ -106,7 +106,7 @@ export default function AIScreen() {
               <View className="gap-3">
                 {messages.map((message) => (
                   <Surface
-                    key={`${message.order}-${message.stepOrder}`}
+                    key={message.key}
                     variant={message.role === "user" ? "tertiary" : "secondary"}
                     className={`p-3 rounded-xl ${message.role === "user" ? "ml-8" : "mr-8"}`}
                   >
@@ -114,7 +114,7 @@ export default function AIScreen() {
                       {message.role === "user" ? "You" : "AI"}
                     </Text>
                     <MessageContent
-                      text={message.parts
+                      text={(message.parts ?? [])
                         .map((part) => (part.type === "text" ? part.text : ""))
                         .join("")}
                       isStreaming={message.status === "streaming"}

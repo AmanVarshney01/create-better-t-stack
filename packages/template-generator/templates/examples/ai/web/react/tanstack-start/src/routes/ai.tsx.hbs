@@ -86,7 +86,7 @@ function RouteComponent() {
         ) : (
           messages.map((message) => (
             <div
-              key={`${message.order}-${message.stepOrder}`}
+              key={message.key}
               className={`p-3 rounded-lg ${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"
@@ -97,7 +97,7 @@ function RouteComponent() {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.parts
+                text={(message.parts ?? [])
                   .map((part) => (part.type === "text" ? part.text : ""))
                   .join("")}
                 isStreaming={message.status === "streaming"}

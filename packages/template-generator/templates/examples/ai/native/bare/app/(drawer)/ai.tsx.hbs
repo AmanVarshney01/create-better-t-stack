@@ -115,7 +115,7 @@ export default function AIScreen() {
               <View style={styles.messagesList}>
                 {messages.map((message) => (
                   <View
-                    key={`${message.order}-${message.stepOrder}`}
+                    key={message.key}
                     style={[
                       styles.messageCard,
                       {
@@ -133,7 +133,7 @@ export default function AIScreen() {
                       {message.role === "user" ? "You" : "AI Assistant"}
                     </Text>
                     <MessageContent
-                      text={message.parts
+                      text={(message.parts ?? [])
                         .map((part) => (part.type === "text" ? part.text : ""))
                         .join("")}
                       isStreaming={message.status === "streaming"}

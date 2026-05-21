@@ -15456,7 +15456,7 @@ export default function AIScreen() {
               <View style={styles.messagesList}>
                 {messages.map((message) => (
                   <View
-                    key={\`\${message.order}-\${message.stepOrder}\`}
+                    key={message.key}
                     style={[
                       styles.messageCard,
                       {
@@ -15474,7 +15474,7 @@ export default function AIScreen() {
                       {message.role === "user" ? "You" : "AI Assistant"}
                     </Text>
                     <MessageContent
-                      text={message.parts
+                      text={(message.parts ?? [])
                         .map((part) => (part.type === "text" ? part.text : ""))
                         .join("")}
                       isStreaming={message.status === "streaming"}
@@ -16061,7 +16061,7 @@ export default function AIScreen() {
               <View style={styles.messagesWrapper}>
                 {messages.map((message) => (
                   <View
-                    key={\`\${message.order}-\${message.stepOrder}\`}
+                    key={message.key}
                     style={[
                       styles.messageContainer,
                       message.role === "user"
@@ -16073,7 +16073,7 @@ export default function AIScreen() {
                       {message.role === "user" ? "You" : "AI Assistant"}
                     </Text>
                     <MessageContent
-                      text={message.parts
+                      text={(message.parts ?? [])
                         .map((part) => (part.type === "text" ? part.text : ""))
                         .join("")}
                       isStreaming={message.status === "streaming"}
@@ -16667,7 +16667,7 @@ export default function AIScreen() {
               <View className="gap-3">
                 {messages.map((message) => (
                   <Surface
-                    key={\`\${message.order}-\${message.stepOrder}\`}
+                    key={message.key}
                     variant={message.role === "user" ? "tertiary" : "secondary"}
                     className={\`p-3 rounded-xl \${message.role === "user" ? "ml-8" : "mr-8"}\`}
                   >
@@ -16675,7 +16675,7 @@ export default function AIScreen() {
                       {message.role === "user" ? "You" : "AI"}
                     </Text>
                     <MessageContent
-                      text={message.parts
+                      text={(message.parts ?? [])
                         .map((part) => (part.type === "text" ? part.text : ""))
                         .join("")}
                       isStreaming={message.status === "streaming"}
@@ -17177,7 +17177,7 @@ export default function AIPage() {
         ) : (
           messages.map((message) => (
             <div
-              key={\`\${message.order}-\${message.stepOrder}\`}
+              key={message.key}
               className={\`p-3 rounded-lg \${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"
@@ -17188,7 +17188,7 @@ export default function AIPage() {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.parts
+                text={(message.parts ?? [])
                   .map((part) => (part.type === "text" ? part.text : ""))
                   .join("")}
                 isStreaming={message.status === "streaming"}
@@ -17428,7 +17428,7 @@ const AI: React.FC = () => {
         ) : (
           messages.map((message) => (
             <div
-              key={\`\${message.order}-\${message.stepOrder}\`}
+              key={message.key}
               className={\`p-3 rounded-lg \${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"
@@ -17439,7 +17439,7 @@ const AI: React.FC = () => {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.parts
+                text={(message.parts ?? [])
                   .map((part) => (part.type === "text" ? part.text : ""))
                   .join("")}
                 isStreaming={message.status === "streaming"}
@@ -17670,7 +17670,7 @@ function RouteComponent() {
         ) : (
           messages.map((message) => (
             <div
-              key={\`\${message.order}-\${message.stepOrder}\`}
+              key={message.key}
               className={\`p-3 rounded-lg \${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"
@@ -17681,7 +17681,7 @@ function RouteComponent() {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.parts
+                text={(message.parts ?? [])
                   .map((part) => (part.type === "text" ? part.text : ""))
                   .join("")}
                 isStreaming={message.status === "streaming"}
@@ -17914,7 +17914,7 @@ function RouteComponent() {
         ) : (
           messages.map((message) => (
             <div
-              key={\`\${message.order}-\${message.stepOrder}\`}
+              key={message.key}
               className={\`p-3 rounded-lg \${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"
@@ -17925,7 +17925,7 @@ function RouteComponent() {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.parts
+                text={(message.parts ?? [])
                   .map((part) => (part.type === "text" ? part.text : ""))
                   .join("")}
                 isStreaming={message.status === "streaming"}
@@ -22091,7 +22091,8 @@ import { env } from "@{{projectName}}/env/native";
   {{/unless}}
 {{/if}}
 
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { Stack } from "expo-router";
+import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 {{#if (eq api "trpc")}}
