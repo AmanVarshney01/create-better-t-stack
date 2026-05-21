@@ -2297,9 +2297,15 @@ export const get = query({
 `],
   ["auth/better-auth/convex/native/bare/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
-import { Button, Host, Text as ExpoUIText, TextInput as ExpoTextInput, type TextInputRef } from "@expo/ui";
-import { useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import z from "zod";
@@ -2347,8 +2353,6 @@ function SignIn() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);
-  const emailInputRef = useRef<TextInputRef>(null);
-  const passwordInputRef = useRef<TextInputRef>(null);
 
   const form = useForm({
     defaultValues: {
@@ -2371,8 +2375,6 @@ function SignIn() {
           onSuccess() {
             setError(null);
             formApi.reset();
-            emailInputRef.current?.clear();
-            passwordInputRef.current?.clear();
           },
         },
       );
@@ -2381,11 +2383,7 @@ function SignIn() {
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <Host style={styles.titleHost} matchContents>
-        <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 18, fontWeight: "bold" }}>
-          Sign In
-        </ExpoUIText>
-      </Host>
+      <Text style={[styles.title, { color: theme.text }]}>Sign In</Text>
 
       <form.Subscribe
         selector={(state) => ({
@@ -2400,91 +2398,81 @@ function SignIn() {
             <>
               {formError ? (
                 <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
-                  <Host matchContents=\\{{ vertical: true }}>
-                    <ExpoUIText
-                      textStyle=\\{{ color: theme.notification, fontSize: 14 }}
-                    >
-                      {formError}
-                    </ExpoUIText>
-                  </Host>
+                  <Text style={[styles.errorText, { color: theme.notification }]}>{formError}</Text>
                 </View>
               ) : null}
 
               <form.Field name="email">
                 {(field) => (
-                  <View style={styles.inputGroup}>
-                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
-                      <ExpoTextInput
-                        ref={emailInputRef}
-                        style=\\{{
-                          borderWidth: 1,
-                          borderColor: theme.border,
-                          backgroundColor: theme.background,
-                          padding: 12,
-                          borderRadius: 12,
-                          height: 50,
-                          width: "100%",
-                        }}
-                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
-                        placeholder="Email"
-                        placeholderTextColor={theme.text}
-                        defaultValue={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={(value) => {
-                          field.handleChange(value);
-                          if (error) {
-                            setError(null);
-                          }
-                        }}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                      />
-                    </Host>
-                  </View>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Email"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
                 )}
               </form.Field>
 
               <form.Field name="password">
                 {(field) => (
-                  <View style={styles.inputGroup}>
-                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
-                      <ExpoTextInput
-                        ref={passwordInputRef}
-                        style=\\{{
-                          borderWidth: 1,
-                          borderColor: theme.border,
-                          backgroundColor: theme.background,
-                          padding: 12,
-                          borderRadius: 12,
-                          height: 50,
-                          width: "100%",
-                        }}
-                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
-                        placeholder="Password"
-                        placeholderTextColor={theme.text}
-                        defaultValue={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={(value) => {
-                          field.handleChange(value);
-                          if (error) {
-                            setError(null);
-                          }
-                        }}
-                        secureTextEntry
-                        onSubmitEditing={form.handleSubmit}
-                      />
-                    </Host>
-                  </View>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Password"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    secureTextEntry
+                    onSubmitEditing={form.handleSubmit}
+                  />
                 )}
               </form.Field>
 
-              <Host style={styles.buttonHost} matchContents=\\{{ vertical: true }}>
-                <Button
-                  label={isSubmitting ? "Signing in..." : "Sign In"}
-                  disabled={isSubmitting}
-                  onPress={form.handleSubmit}
-                />
-              </Host>
+              <TouchableOpacity
+                onPress={form.handleSubmit}
+                disabled={isSubmitting}
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: theme.primary,
+                    opacity: isSubmitting ? 0.5 : 1,
+                  },
+                ]}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign In</Text>
+                )}
+              </TouchableOpacity>
             </>
           );
         }}
@@ -2499,22 +2487,32 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
   },
-  titleHost: {
-    alignSelf: "flex-start",
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
     marginBottom: 12,
   },
   errorContainer: {
     marginBottom: 12,
     padding: 8,
   },
-  inputGroup: {
+  errorText: {
+    fontSize: 14,
+  },
+  input: {
+    borderWidth: 1,
+    padding: 12,
+    fontSize: 16,
     marginBottom: 12,
   },
-  inputHost: {
-    alignSelf: "stretch",
+  button: {
+    padding: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  buttonHost: {
-    alignSelf: "center",
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 16,
   },
 });
 
@@ -2522,9 +2520,15 @@ export { SignIn };
 `],
   ["auth/better-auth/convex/native/bare/components/sign-up.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
-import { Button, Host, Text as ExpoUIText, TextInput as ExpoTextInput, type TextInputRef } from "@expo/ui";
-import { useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import z from "zod";
@@ -2577,9 +2581,6 @@ function SignUp() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);
-  const nameInputRef = useRef<TextInputRef>(null);
-  const emailInputRef = useRef<TextInputRef>(null);
-  const passwordInputRef = useRef<TextInputRef>(null);
 
   const form = useForm({
     defaultValues: {
@@ -2604,9 +2605,6 @@ function SignUp() {
           onSuccess() {
             setError(null);
             formApi.reset();
-            nameInputRef.current?.clear();
-            emailInputRef.current?.clear();
-            passwordInputRef.current?.clear();
           },
         },
       );
@@ -2615,11 +2613,7 @@ function SignUp() {
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <Host style={styles.titleHost} matchContents>
-        <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 18, fontWeight: "bold" }}>
-          Create Account
-        </ExpoUIText>
-      </Host>
+      <Text style={[styles.title, { color: theme.text }]}>Create Account</Text>
 
       <form.Subscribe
         selector={(state) => ({
@@ -2634,123 +2628,106 @@ function SignUp() {
             <>
               {formError ? (
                 <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
-                  <Host matchContents=\\{{ vertical: true }}>
-                    <ExpoUIText
-                      textStyle=\\{{ color: theme.notification, fontSize: 14 }}
-                    >
-                      {formError}
-                    </ExpoUIText>
-                  </Host>
+                  <Text style={[styles.errorText, { color: theme.notification }]}>{formError}</Text>
                 </View>
               ) : null}
 
               <form.Field name="name">
                 {(field) => (
-                  <View style={styles.inputGroup}>
-                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
-                      <ExpoTextInput
-                        ref={nameInputRef}
-                        style=\\{{
-                          borderWidth: 1,
-                          borderColor: theme.border,
-                          backgroundColor: theme.background,
-                          padding: 12,
-                          borderRadius: 12,
-                          height: 50,
-                          width: "100%",
-                        }}
-                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
-                        placeholder="Name"
-                        placeholderTextColor={theme.text}
-                        defaultValue={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={(value) => {
-                          field.handleChange(value);
-                          if (error) {
-                            setError(null);
-                          }
-                        }}
-                      />
-                    </Host>
-                  </View>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Name"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                  />
                 )}
               </form.Field>
 
               <form.Field name="email">
                 {(field) => (
-                  <View style={styles.inputGroup}>
-                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
-                      <ExpoTextInput
-                        ref={emailInputRef}
-                        style=\\{{
-                          borderWidth: 1,
-                          borderColor: theme.border,
-                          backgroundColor: theme.background,
-                          padding: 12,
-                          borderRadius: 12,
-                          height: 50,
-                          width: "100%",
-                        }}
-                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
-                        placeholder="Email"
-                        placeholderTextColor={theme.text}
-                        defaultValue={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={(value) => {
-                          field.handleChange(value);
-                          if (error) {
-                            setError(null);
-                          }
-                        }}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                      />
-                    </Host>
-                  </View>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Email"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
                 )}
               </form.Field>
 
               <form.Field name="password">
                 {(field) => (
-                  <View style={styles.inputGroup}>
-                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
-                      <ExpoTextInput
-                        ref={passwordInputRef}
-                        style=\\{{
-                          borderWidth: 1,
-                          borderColor: theme.border,
-                          backgroundColor: theme.background,
-                          padding: 12,
-                          borderRadius: 12,
-                          height: 50,
-                          width: "100%",
-                        }}
-                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
-                        placeholder="Password"
-                        placeholderTextColor={theme.text}
-                        defaultValue={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={(value) => {
-                          field.handleChange(value);
-                          if (error) {
-                            setError(null);
-                          }
-                        }}
-                        secureTextEntry
-                        onSubmitEditing={form.handleSubmit}
-                      />
-                    </Host>
-                  </View>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Password"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    secureTextEntry
+                    onSubmitEditing={form.handleSubmit}
+                  />
                 )}
               </form.Field>
 
-              <Host style={styles.buttonHost} matchContents=\\{{ vertical: true }}>
-                <Button
-                  label={isSubmitting ? "Creating account..." : "Sign Up"}
-                  disabled={isSubmitting}
-                  onPress={form.handleSubmit}
-                />
-              </Host>
+              <TouchableOpacity
+                onPress={form.handleSubmit}
+                disabled={isSubmitting}
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: theme.primary,
+                    opacity: isSubmitting ? 0.5 : 1,
+                  },
+                ]}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign Up</Text>
+                )}
+              </TouchableOpacity>
             </>
           );
         }}
@@ -2765,22 +2742,32 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
   },
-  titleHost: {
-    alignSelf: "flex-start",
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
     marginBottom: 12,
   },
   errorContainer: {
     marginBottom: 12,
     padding: 8,
   },
-  inputGroup: {
+  errorText: {
+    fontSize: 14,
+  },
+  input: {
+    borderWidth: 1,
+    padding: 12,
+    fontSize: 16,
     marginBottom: 12,
   },
-  inputHost: {
-    alignSelf: "stretch",
+  button: {
+    padding: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  buttonHost: {
-    alignSelf: "center",
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 16,
   },
 });
 
@@ -5576,9 +5563,15 @@ import { queryClient } from "@/utils/trpc";
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 import { useForm } from "@tanstack/react-form";
-import { Button, Host, Text as ExpoUIText, TextInput as ExpoTextInput, type TextInputRef } from "@expo/ui";
-import { useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import z from "zod";
@@ -5626,8 +5619,6 @@ function SignIn() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);
-  const emailInputRef = useRef<TextInputRef>(null);
-  const passwordInputRef = useRef<TextInputRef>(null);
 
   const form = useForm({
     defaultValues: {
@@ -5650,8 +5641,6 @@ function SignIn() {
           onSuccess() {
             setError(null);
             formApi.reset();
-            emailInputRef.current?.clear();
-            passwordInputRef.current?.clear();
             {{#if (eq api "orpc")}}
             queryClient.refetchQueries();
             {{/if}}
@@ -5666,11 +5655,7 @@ function SignIn() {
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <Host style={styles.titleHost} matchContents>
-        <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 18, fontWeight: "bold" }}>
-          Sign In
-        </ExpoUIText>
-      </Host>
+      <Text style={[styles.title, { color: theme.text }]}>Sign In</Text>
 
       <form.Subscribe
         selector={(state) => ({
@@ -5685,91 +5670,81 @@ function SignIn() {
             <>
               {formError ? (
                 <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
-                  <Host matchContents=\\{{ vertical: true }}>
-                    <ExpoUIText
-                      textStyle=\\{{ color: theme.notification, fontSize: 14 }}
-                    >
-                      {formError}
-                    </ExpoUIText>
-                  </Host>
+                  <Text style={[styles.errorText, { color: theme.notification }]}>{formError}</Text>
                 </View>
               ) : null}
 
               <form.Field name="email">
                 {(field) => (
-                  <View style={styles.inputGroup}>
-                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
-                      <ExpoTextInput
-                        ref={emailInputRef}
-                        style=\\{{
-                          borderWidth: 1,
-                          borderColor: theme.border,
-                          backgroundColor: theme.background,
-                          padding: 12,
-                          borderRadius: 12,
-                          height: 50,
-                          width: "100%",
-                        }}
-                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
-                        placeholder="Email"
-                        placeholderTextColor={theme.text}
-                        defaultValue={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={(value) => {
-                          field.handleChange(value);
-                          if (error) {
-                            setError(null);
-                          }
-                        }}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                      />
-                    </Host>
-                  </View>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Email"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
                 )}
               </form.Field>
 
               <form.Field name="password">
                 {(field) => (
-                  <View style={styles.inputGroup}>
-                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
-                      <ExpoTextInput
-                        ref={passwordInputRef}
-                        style=\\{{
-                          borderWidth: 1,
-                          borderColor: theme.border,
-                          backgroundColor: theme.background,
-                          padding: 12,
-                          borderRadius: 12,
-                          height: 50,
-                          width: "100%",
-                        }}
-                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
-                        placeholder="Password"
-                        placeholderTextColor={theme.text}
-                        defaultValue={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={(value) => {
-                          field.handleChange(value);
-                          if (error) {
-                            setError(null);
-                          }
-                        }}
-                        secureTextEntry
-                        onSubmitEditing={form.handleSubmit}
-                      />
-                    </Host>
-                  </View>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Password"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    secureTextEntry
+                    onSubmitEditing={form.handleSubmit}
+                  />
                 )}
               </form.Field>
 
-              <Host style={styles.buttonHost} matchContents=\\{{ vertical: true }}>
-                <Button
-                  label={isSubmitting ? "Signing in..." : "Sign In"}
-                  disabled={isSubmitting}
-                  onPress={form.handleSubmit}
-                />
-              </Host>
+              <TouchableOpacity
+                onPress={form.handleSubmit}
+                disabled={isSubmitting}
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: theme.primary,
+                    opacity: isSubmitting ? 0.5 : 1,
+                  },
+                ]}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign In</Text>
+                )}
+              </TouchableOpacity>
             </>
           );
         }}
@@ -5784,22 +5759,32 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
   },
-  titleHost: {
-    alignSelf: "flex-start",
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
     marginBottom: 12,
   },
   errorContainer: {
     marginBottom: 12,
     padding: 8,
   },
-  inputGroup: {
+  errorText: {
+    fontSize: 14,
+  },
+  input: {
+    borderWidth: 1,
+    padding: 12,
+    fontSize: 16,
     marginBottom: 12,
   },
-  inputHost: {
-    alignSelf: "stretch",
+  button: {
+    padding: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  buttonHost: {
-    alignSelf: "center",
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 16,
   },
 });
 
@@ -5813,9 +5798,15 @@ import { queryClient } from "@/utils/trpc";
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 import { useForm } from "@tanstack/react-form";
-import { Button, Host, Text as ExpoUIText, TextInput as ExpoTextInput, type TextInputRef } from "@expo/ui";
-import { useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import z from "zod";
@@ -5868,9 +5859,6 @@ function SignUp() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);
-  const nameInputRef = useRef<TextInputRef>(null);
-  const emailInputRef = useRef<TextInputRef>(null);
-  const passwordInputRef = useRef<TextInputRef>(null);
 
   const form = useForm({
     defaultValues: {
@@ -5895,9 +5883,6 @@ function SignUp() {
           onSuccess() {
             setError(null);
             formApi.reset();
-            nameInputRef.current?.clear();
-            emailInputRef.current?.clear();
-            passwordInputRef.current?.clear();
             {{#if (eq api "orpc")}}
             queryClient.refetchQueries();
             {{/if}}
@@ -5912,11 +5897,7 @@ function SignUp() {
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <Host style={styles.titleHost} matchContents>
-        <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 18, fontWeight: "bold" }}>
-          Create Account
-        </ExpoUIText>
-      </Host>
+      <Text style={[styles.title, { color: theme.text }]}>Create Account</Text>
 
       <form.Subscribe
         selector={(state) => ({
@@ -5931,123 +5912,106 @@ function SignUp() {
             <>
               {formError ? (
                 <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
-                  <Host matchContents=\\{{ vertical: true }}>
-                    <ExpoUIText
-                      textStyle=\\{{ color: theme.notification, fontSize: 14 }}
-                    >
-                      {formError}
-                    </ExpoUIText>
-                  </Host>
+                  <Text style={[styles.errorText, { color: theme.notification }]}>{formError}</Text>
                 </View>
               ) : null}
 
               <form.Field name="name">
                 {(field) => (
-                  <View style={styles.inputGroup}>
-                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
-                      <ExpoTextInput
-                        ref={nameInputRef}
-                        style=\\{{
-                          borderWidth: 1,
-                          borderColor: theme.border,
-                          backgroundColor: theme.background,
-                          padding: 12,
-                          borderRadius: 12,
-                          height: 50,
-                          width: "100%",
-                        }}
-                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
-                        placeholder="Name"
-                        placeholderTextColor={theme.text}
-                        defaultValue={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={(value) => {
-                          field.handleChange(value);
-                          if (error) {
-                            setError(null);
-                          }
-                        }}
-                      />
-                    </Host>
-                  </View>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Name"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                  />
                 )}
               </form.Field>
 
               <form.Field name="email">
                 {(field) => (
-                  <View style={styles.inputGroup}>
-                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
-                      <ExpoTextInput
-                        ref={emailInputRef}
-                        style=\\{{
-                          borderWidth: 1,
-                          borderColor: theme.border,
-                          backgroundColor: theme.background,
-                          padding: 12,
-                          borderRadius: 12,
-                          height: 50,
-                          width: "100%",
-                        }}
-                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
-                        placeholder="Email"
-                        placeholderTextColor={theme.text}
-                        defaultValue={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={(value) => {
-                          field.handleChange(value);
-                          if (error) {
-                            setError(null);
-                          }
-                        }}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                      />
-                    </Host>
-                  </View>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Email"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
                 )}
               </form.Field>
 
               <form.Field name="password">
                 {(field) => (
-                  <View style={styles.inputGroup}>
-                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
-                      <ExpoTextInput
-                        ref={passwordInputRef}
-                        style=\\{{
-                          borderWidth: 1,
-                          borderColor: theme.border,
-                          backgroundColor: theme.background,
-                          padding: 12,
-                          borderRadius: 12,
-                          height: 50,
-                          width: "100%",
-                        }}
-                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
-                        placeholder="Password"
-                        placeholderTextColor={theme.text}
-                        defaultValue={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChangeText={(value) => {
-                          field.handleChange(value);
-                          if (error) {
-                            setError(null);
-                          }
-                        }}
-                        secureTextEntry
-                        onSubmitEditing={form.handleSubmit}
-                      />
-                    </Host>
-                  </View>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Password"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    secureTextEntry
+                    onSubmitEditing={form.handleSubmit}
+                  />
                 )}
               </form.Field>
 
-              <Host style={styles.buttonHost} matchContents=\\{{ vertical: true }}>
-                <Button
-                  label={isSubmitting ? "Creating account..." : "Sign Up"}
-                  disabled={isSubmitting}
-                  onPress={form.handleSubmit}
-                />
-              </Host>
+              <TouchableOpacity
+                onPress={form.handleSubmit}
+                disabled={isSubmitting}
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: theme.primary,
+                    opacity: isSubmitting ? 0.5 : 1,
+                  },
+                ]}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign Up</Text>
+                )}
+              </TouchableOpacity>
             </>
           );
         }}
@@ -6062,22 +6026,32 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
   },
-  titleHost: {
-    alignSelf: "flex-start",
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
     marginBottom: 12,
   },
   errorContainer: {
     marginBottom: 12,
     padding: 8,
   },
-  inputGroup: {
+  errorText: {
+    fontSize: 14,
+  },
+  input: {
+    borderWidth: 1,
+    padding: 12,
+    fontSize: 16,
     marginBottom: 12,
   },
-  inputHost: {
-    alignSelf: "stretch",
+  button: {
+    padding: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  buttonHost: {
-    alignSelf: "center",
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 16,
   },
 });
 
