@@ -1,24 +1,19 @@
-import { useRef, useState } from "react";
-import {
-  Button,
-  Checkbox,
-  Host,
-  TextInput as ExpoTextInput,
-  type TextInputRef,
-} from "@expo/ui";
+import { useState } from "react";
 import {
   View,
   Text,
+  TextInput,
   ScrollView,
   ActivityIndicator,
   Alert,
+  TouchableOpacity,
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 {{else}}
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -38,7 +33,6 @@ export default function TodosScreen() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [newTodoText, setNewTodoText] = useState("");
-  const newTodoInputRef = useRef<TextInputRef>(null);
 
   {{#if (eq backend "convex")}}
   const todos = useQuery(api.todos.getAll);
@@ -51,7 +45,6 @@ export default function TodosScreen() {
     if (!text) return;
     await createTodoMutation({ text });
     setNewTodoText("");
-    newTodoInputRef.current?.clear();
   }
 
   function handleToggleTodo(id: Id<"todos">, currentCompleted: boolean) {
@@ -70,7 +63,7 @@ export default function TodosScreen() {
   }
 
   const isLoading = !todos;
-  const completedCount = todos?.filter((t) => t.completed).length || 0;
+  const completedCount = todos?.filter((t: Doc<"todos">) => t.completed).length || 0;
   const totalCount = todos?.length || 0;
   {{else}}
     {{#if (eq api "orpc")}}
@@ -80,7 +73,6 @@ export default function TodosScreen() {
       onSuccess: () => {
         todos.refetch();
         setNewTodoText("");
-        newTodoInputRef.current?.clear();
       },
     })
   );
@@ -106,7 +98,6 @@ export default function TodosScreen() {
       onSuccess: () => {
         todos.refetch();
         setNewTodoText("");
-        newTodoInputRef.current?.clear();
       },
     })
   );
@@ -180,44 +171,66 @@ export default function TodosScreen() {
         >
           <View style={styles.inputRow}>
             <View style={styles.inputContainer}>
-              <Host matchContents=\{{ vertical: true }}>
-                <ExpoTextInput
-                  ref={newTodoInputRef}
-                  defaultValue={newTodoText}
-                  onChangeText={setNewTodoText}
-                  placeholder="Add a new task..."
-                  placeholderTextColor={theme.text}
-                  {{#unless (eq backend "convex")}}
-                  editable={!createMutation.isPending}
-                  {{/unless}}
-                  onSubmitEditing={handleAddTodo}
-                  returnKeyType="done"
-                  style=\{{
-                    borderWidth: 1,
+              <TextInput
+                value={newTodoText}
+                onChangeText={setNewTodoText}
+                placeholder="Add a new task..."
+                placeholderTextColor={theme.text}
+                {{#unless (eq backend "convex")}}
+                editable={!createMutation.isPending}
+                {{/unless}}
+                onSubmitEditing={handleAddTodo}
+                returnKeyType="done"
+                style={[
+                  styles.input,
+                  {
+                    color: theme.text,
                     borderColor: theme.border,
                     backgroundColor: theme.background,
-                    padding: 12,
-                    width: "100%",
-                  }}
-                  textStyle=\{{ color: theme.text, fontSize: 16 }}
-                />
-              </Host>
+                  },
+                ]}
+              />
             </View>
-            <Host matchContents=\{{ vertical: true }}>
+            <TouchableOpacity
+              onPress={handleAddTodo}
               {{#if (eq backend "convex")}}
-              <Button
-                label="Add"
-                disabled={!newTodoText.trim()}
-                onPress={handleAddTodo}
+              disabled={!newTodoText.trim()}
+              style={[
+                styles.addButton,
+                {
+                  backgroundColor: !newTodoText.trim()
+                    ? theme.border
+                    : theme.primary,
+                  opacity: !newTodoText.trim() ? 0.5 : 1,
+                },
+              ]}
+            >
+              <Ionicons
+                name="add"
+                size={24}
+                color={newTodoText.trim() ? "#ffffff" : theme.text}
               />
               {{else}}
-              <Button
-                label={createMutation.isPending ? "Adding..." : "Add"}
-                disabled={createMutation.isPending || !newTodoText.trim()}
-                onPress={handleAddTodo}
-              />
+              disabled={createMutation.isPending || !newTodoText.trim()}
+              style={[
+                styles.addButton,
+                {
+                  backgroundColor:
+                    createMutation.isPending || !newTodoText.trim()
+                      ? theme.border
+                      : theme.primary,
+                  opacity:
+                    createMutation.isPending || !newTodoText.trim() ? 0.5 : 1,
+                },
+              ]}
+            >
+              {createMutation.isPending ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Ionicons name="add" size={24} color="#ffffff" />
+              )}
               {{/if}}
-            </Host>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -259,7 +272,7 @@ export default function TodosScreen() {
 
         {todos && todos.length > 0 && (
           <View style={styles.todosList}>
-            {todos.map((todo) => (
+            {todos.map((todo: Doc<"todos">) => (
               <View
                 key={todo._id}
                 style={[
@@ -268,12 +281,18 @@ export default function TodosScreen() {
                 ]}
               >
                 <View style={styles.todoRow}>
-                  <Host matchContents=\{{ vertical: true }}>
-                    <Checkbox
-                      value={todo.completed}
-                      onValueChange={() => handleToggleTodo(todo._id, todo.completed)}
-                    />
-                  </Host>
+                  <TouchableOpacity
+                    onPress={() => handleToggleTodo(todo._id, todo.completed)}
+                    style={[styles.checkbox, { borderColor: theme.border }]}
+                  >
+                    {todo.completed && (
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={theme.primary}
+                      />
+                    )}
+                  </TouchableOpacity>
                   <View style={styles.todoTextContainer}>
                     <Text
                       style={[
@@ -288,13 +307,16 @@ export default function TodosScreen() {
                       {todo.text}
                     </Text>
                   </View>
-                  <Host matchContents=\{{ vertical: true }}>
-                    <Button
-                      label="Delete"
-                      variant="text"
-                      onPress={() => handleDeleteTodo(todo._id)}
+                  <TouchableOpacity
+                    onPress={() => handleDeleteTodo(todo._id)}
+                    style={styles.deleteButton}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={24}
+                      color={theme.notification}
                     />
-                  </Host>
+                  </TouchableOpacity>
                 </View>
               </View>
             ))}
@@ -347,12 +369,18 @@ export default function TodosScreen() {
                 ]}
               >
                 <View style={styles.todoRow}>
-                  <Host matchContents=\{{ vertical: true }}>
-                    <Checkbox
-                      value={todo.completed}
-                      onValueChange={() => handleToggleTodo(todo.id, todo.completed)}
-                    />
-                  </Host>
+                  <TouchableOpacity
+                    onPress={() => handleToggleTodo(todo.id, todo.completed)}
+                    style={[styles.checkbox, { borderColor: theme.border }]}
+                  >
+                    {todo.completed && (
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={theme.primary}
+                      />
+                    )}
+                  </TouchableOpacity>
                   <View style={styles.todoTextContainer}>
                     <Text
                       style={[
@@ -367,13 +395,16 @@ export default function TodosScreen() {
                       {todo.text}
                     </Text>
                   </View>
-                  <Host matchContents=\{{ vertical: true }}>
-                    <Button
-                      label="Delete"
-                      variant="text"
-                      onPress={() => handleDeleteTodo(todo.id)}
+                  <TouchableOpacity
+                    onPress={() => handleDeleteTodo(todo.id)}
+                    style={styles.deleteButton}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={24}
+                      color={theme.notification}
                     />
-                  </Host>
+                  </TouchableOpacity>
                 </View>
               </View>
             ))}
@@ -425,6 +456,17 @@ const styles = StyleSheet.create({
   inputContainer: {
     flex: 1,
   },
+  input: {
+    borderWidth: 1,
+    padding: 12,
+    fontSize: 16,
+  },
+  addButton: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   centerContainer: {
     alignItems: "center",
     justifyContent: "center",
@@ -466,5 +508,15 @@ const styles = StyleSheet.create({
   },
   todoText: {
     fontSize: 16,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteButton: {
+    padding: 4,
   },
 });

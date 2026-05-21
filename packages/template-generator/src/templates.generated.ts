@@ -15367,11 +15367,10 @@ export const Route = createFileRoute("/api/ai/$")({
 });
 `],
   ["examples/ai/native/bare/app/(drawer)/ai.tsx.hbs", `{{#if (eq backend "convex")}}
-import { Button, Column, Host, Text as ExpoUIText, TextInput as ExpoTextInput, type TextInputRef } from "@expo/ui";
+import { Ionicons } from "@expo/vector-icons";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
@@ -15379,6 +15378,8 @@ import { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
+  TextInput,
+  TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -15411,7 +15412,6 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const inputRef = useRef<TextInputRef>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
@@ -15424,7 +15424,7 @@ export default function AIScreen() {
   );
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   useEffect(() => {
@@ -15437,7 +15437,6 @@ export default function AIScreen() {
 
     setIsLoading(true);
     setInput("");
-    inputRef.current?.clear();
 
     try {
       let currentThreadId = threadId;
@@ -15462,21 +15461,12 @@ export default function AIScreen() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Host matchContents=\\{{ vertical: true }}>
-              <Column spacing={4}>
-                <ExpoUIText
-                  textStyle=\\{{ color: theme.text, fontSize: 20, fontWeight: "bold" }}
-                >
-                  AI Chat
-                </ExpoUIText>
-                <ExpoUIText
-                  textStyle=\\{{ color: theme.text, fontSize: 14 }}
-                  style=\\{{ opacity: 0.7 }}
-                >
-                  Chat with our AI assistant
-                </ExpoUIText>
-              </Column>
-            </Host>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>
+              AI Chat
+            </Text>
+            <Text style={[styles.headerSubtitle, { color: theme.text, opacity: 0.7 }]}>
+              Chat with our AI assistant
+            </Text>
           </View>
           <ScrollView
             ref={scrollViewRef}
@@ -15491,9 +15481,9 @@ export default function AIScreen() {
               </View>
             ) : (
               <View style={styles.messagesList}>
-                {messages.map((message: UIMessage) => (
+                {messages.map((message) => (
                   <View
-                    key={message.key}
+                    key={\`\${message.order}-\${message.stepOrder}\`}
                     style={[
                       styles.messageCard,
                       {
@@ -15511,7 +15501,9 @@ export default function AIScreen() {
                       {message.role === "user" ? "You" : "AI Assistant"}
                     </Text>
                     <MessageContent
-                      text={message.text ?? ""}
+                      text={message.parts
+                        .map((part) => (part.type === "text" ? part.text : ""))
+                        .join("")}
                       isStreaming={message.status === "streaming"}
                       textColor={theme.text}
                     />
@@ -15545,36 +15537,44 @@ export default function AIScreen() {
           </ScrollView>
           <View style={[styles.inputContainer, { borderTopColor: theme.border }]}>
             <View style={styles.inputRow}>
-              <View style={styles.inputHost}>
-                <Host matchContents=\\{{ vertical: true }}>
-                  <ExpoTextInput
-                    ref={inputRef}
-                    defaultValue={input}
-                    onChangeText={setInput}
-                    placeholder="Type your message..."
-                    placeholderTextColor={theme.text}
-                    style=\\{{
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                      backgroundColor: theme.background,
-                      padding: 8,
-                      width: "100%",
-                    }}
-                    textStyle=\\{{ color: theme.text, fontSize: 14 }}
-                    onSubmitEditing={onSubmit}
-                    editable={!isLoading}
-                    autoFocus={true}
-                    multiline
-                  />
-                </Host>
-              </View>
-              <Host matchContents=\\{{ vertical: true }}>
-                <Button
-                  label={isLoading ? "Sending..." : "Send"}
-                  disabled={!input.trim() || isLoading}
-                  onPress={onSubmit}
+              <TextInput
+                value={input}
+                onChangeText={setInput}
+                placeholder="Type your message..."
+                placeholderTextColor={theme.text}
+                style={[
+                  styles.input,
+                  {
+                    color: theme.text,
+                    borderColor: theme.border,
+                    backgroundColor: theme.background,
+                  },
+                ]}
+                onSubmitEditing={(e) => {
+                  e.preventDefault();
+                  onSubmit();
+                }}
+                editable={!isLoading}
+                autoFocus={true}
+                multiline
+              />
+              <TouchableOpacity
+                onPress={onSubmit}
+                disabled={!input.trim() || isLoading}
+                style={[
+                  styles.sendButton,
+                  {
+                    backgroundColor: input.trim() && !isLoading ? theme.primary : theme.border,
+                    opacity: input.trim() && !isLoading ? 1 : 0.5,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="send"
+                  size={20}
+                  color="#ffffff"
                 />
-              </Host>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -15593,6 +15593,14 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 14,
   },
   scrollView: {
     flex: 1,
@@ -15642,16 +15650,28 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: 8,
   },
-  inputHost: {
+  input: {
     flex: 1,
+    borderWidth: 1,
+    padding: 8,
+    fontSize: 14,
+    minHeight: 36,
+    maxHeight: 100,
+  },
+  sendButton: {
+    padding: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 {{else}}
 import { useRef, useEffect, useState } from "react";
-import { Button, Column, Host, Text as ExpoUIText, TextInput as ExpoTextInput, type TextInputRef } from "@expo/ui";
+import { Ionicons } from "@expo/vector-icons";
 import {
   View,
   Text,
+  TextInput,
+  TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -15685,7 +15705,6 @@ export default function AIScreen() {
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
   });
-  const inputRef = useRef<TextInputRef>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -15697,7 +15716,6 @@ export default function AIScreen() {
     if (value) {
       sendMessage({ text: value });
       setInput("");
-      inputRef.current?.clear();
     }
   }
 
@@ -15726,21 +15744,12 @@ export default function AIScreen() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Host matchContents=\\{{ vertical: true }}>
-              <Column spacing={4}>
-                <ExpoUIText
-                  textStyle=\\{{ color: theme.text, fontSize: 20, fontWeight: "bold" }}
-                >
-                  AI Chat
-                </ExpoUIText>
-                <ExpoUIText
-                  textStyle=\\{{ color: theme.text, fontSize: 14 }}
-                  style=\\{{ opacity: 0.7 }}
-                >
-                  Chat with our AI assistant
-                </ExpoUIText>
-              </Column>
-            </Host>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>
+              AI Chat
+            </Text>
+            <Text style={[styles.headerSubtitle, { color: theme.text, opacity: 0.7 }]}>
+              Chat with our AI assistant
+            </Text>
           </View>
           <ScrollView
             ref={scrollViewRef}
@@ -15800,35 +15809,43 @@ export default function AIScreen() {
           </ScrollView>
           <View style={[styles.inputContainer, { borderTopColor: theme.border }]}>
             <View style={styles.inputRow}>
-              <View style={styles.inputHost}>
-                <Host matchContents=\\{{ vertical: true }}>
-                  <ExpoTextInput
-                    ref={inputRef}
-                    defaultValue={input}
-                    onChangeText={setInput}
-                    placeholder="Type your message..."
-                    placeholderTextColor={theme.text}
-                    style=\\{{
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                      backgroundColor: theme.background,
-                      padding: 8,
-                      width: "100%",
-                    }}
-                    textStyle=\\{{ color: theme.text, fontSize: 14 }}
-                    onSubmitEditing={onSubmit}
-                    autoFocus={true}
-                    multiline
-                  />
-                </Host>
-              </View>
-              <Host matchContents=\\{{ vertical: true }}>
-                <Button
-                  label="Send"
-                  disabled={!input.trim()}
-                  onPress={onSubmit}
+              <TextInput
+                value={input}
+                onChangeText={setInput}
+                placeholder="Type your message..."
+                placeholderTextColor={theme.text}
+                style={[
+                  styles.input,
+                  {
+                    color: theme.text,
+                    borderColor: theme.border,
+                    backgroundColor: theme.background,
+                  },
+                ]}
+                onSubmitEditing={(e) => {
+                  e.preventDefault();
+                  onSubmit();
+                }}
+                autoFocus={true}
+                multiline
+              />
+              <TouchableOpacity
+                onPress={onSubmit}
+                disabled={!input.trim()}
+                style={[
+                  styles.sendButton,
+                  {
+                    backgroundColor: input.trim() ? theme.primary : theme.border,
+                    opacity: input.trim() ? 1 : 0.5,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="send"
+                  size={20}
+                  color="#ffffff"
                 />
-              </Host>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -15847,6 +15864,14 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 14,
   },
   scrollView: {
     flex: 1,
@@ -15891,8 +15916,18 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: 8,
   },
-  inputHost: {
+  input: {
     flex: 1,
+    borderWidth: 1,
+    padding: 8,
+    fontSize: 14,
+    minHeight: 36,
+    maxHeight: 100,
+  },
+  sendButton: {
+    padding: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
   errorContainer: {
     flex: 1,
@@ -18213,27 +18248,22 @@ export const deleteTodo = mutation({
         return { success: true };
     },
 });`],
-  ["examples/todo/native/bare/app/(drawer)/todos.tsx.hbs", `import { useRef, useState } from "react";
-import {
-  Button,
-  Checkbox,
-  Host,
-  TextInput as ExpoTextInput,
-  type TextInputRef,
-} from "@expo/ui";
+  ["examples/todo/native/bare/app/(drawer)/todos.tsx.hbs", `import { useState } from "react";
 import {
   View,
   Text,
+  TextInput,
   ScrollView,
   ActivityIndicator,
   Alert,
+  TouchableOpacity,
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 {{else}}
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -18253,7 +18283,6 @@ export default function TodosScreen() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [newTodoText, setNewTodoText] = useState("");
-  const newTodoInputRef = useRef<TextInputRef>(null);
 
   {{#if (eq backend "convex")}}
   const todos = useQuery(api.todos.getAll);
@@ -18266,7 +18295,6 @@ export default function TodosScreen() {
     if (!text) return;
     await createTodoMutation({ text });
     setNewTodoText("");
-    newTodoInputRef.current?.clear();
   }
 
   function handleToggleTodo(id: Id<"todos">, currentCompleted: boolean) {
@@ -18285,7 +18313,7 @@ export default function TodosScreen() {
   }
 
   const isLoading = !todos;
-  const completedCount = todos?.filter((t) => t.completed).length || 0;
+  const completedCount = todos?.filter((t: Doc<"todos">) => t.completed).length || 0;
   const totalCount = todos?.length || 0;
   {{else}}
     {{#if (eq api "orpc")}}
@@ -18295,7 +18323,6 @@ export default function TodosScreen() {
       onSuccess: () => {
         todos.refetch();
         setNewTodoText("");
-        newTodoInputRef.current?.clear();
       },
     })
   );
@@ -18321,7 +18348,6 @@ export default function TodosScreen() {
       onSuccess: () => {
         todos.refetch();
         setNewTodoText("");
-        newTodoInputRef.current?.clear();
       },
     })
   );
@@ -18395,44 +18421,66 @@ export default function TodosScreen() {
         >
           <View style={styles.inputRow}>
             <View style={styles.inputContainer}>
-              <Host matchContents=\\{{ vertical: true }}>
-                <ExpoTextInput
-                  ref={newTodoInputRef}
-                  defaultValue={newTodoText}
-                  onChangeText={setNewTodoText}
-                  placeholder="Add a new task..."
-                  placeholderTextColor={theme.text}
-                  {{#unless (eq backend "convex")}}
-                  editable={!createMutation.isPending}
-                  {{/unless}}
-                  onSubmitEditing={handleAddTodo}
-                  returnKeyType="done"
-                  style=\\{{
-                    borderWidth: 1,
+              <TextInput
+                value={newTodoText}
+                onChangeText={setNewTodoText}
+                placeholder="Add a new task..."
+                placeholderTextColor={theme.text}
+                {{#unless (eq backend "convex")}}
+                editable={!createMutation.isPending}
+                {{/unless}}
+                onSubmitEditing={handleAddTodo}
+                returnKeyType="done"
+                style={[
+                  styles.input,
+                  {
+                    color: theme.text,
                     borderColor: theme.border,
                     backgroundColor: theme.background,
-                    padding: 12,
-                    width: "100%",
-                  }}
-                  textStyle=\\{{ color: theme.text, fontSize: 16 }}
-                />
-              </Host>
+                  },
+                ]}
+              />
             </View>
-            <Host matchContents=\\{{ vertical: true }}>
+            <TouchableOpacity
+              onPress={handleAddTodo}
               {{#if (eq backend "convex")}}
-              <Button
-                label="Add"
-                disabled={!newTodoText.trim()}
-                onPress={handleAddTodo}
+              disabled={!newTodoText.trim()}
+              style={[
+                styles.addButton,
+                {
+                  backgroundColor: !newTodoText.trim()
+                    ? theme.border
+                    : theme.primary,
+                  opacity: !newTodoText.trim() ? 0.5 : 1,
+                },
+              ]}
+            >
+              <Ionicons
+                name="add"
+                size={24}
+                color={newTodoText.trim() ? "#ffffff" : theme.text}
               />
               {{else}}
-              <Button
-                label={createMutation.isPending ? "Adding..." : "Add"}
-                disabled={createMutation.isPending || !newTodoText.trim()}
-                onPress={handleAddTodo}
-              />
+              disabled={createMutation.isPending || !newTodoText.trim()}
+              style={[
+                styles.addButton,
+                {
+                  backgroundColor:
+                    createMutation.isPending || !newTodoText.trim()
+                      ? theme.border
+                      : theme.primary,
+                  opacity:
+                    createMutation.isPending || !newTodoText.trim() ? 0.5 : 1,
+                },
+              ]}
+            >
+              {createMutation.isPending ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Ionicons name="add" size={24} color="#ffffff" />
+              )}
               {{/if}}
-            </Host>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -18474,7 +18522,7 @@ export default function TodosScreen() {
 
         {todos && todos.length > 0 && (
           <View style={styles.todosList}>
-            {todos.map((todo) => (
+            {todos.map((todo: Doc<"todos">) => (
               <View
                 key={todo._id}
                 style={[
@@ -18483,12 +18531,18 @@ export default function TodosScreen() {
                 ]}
               >
                 <View style={styles.todoRow}>
-                  <Host matchContents=\\{{ vertical: true }}>
-                    <Checkbox
-                      value={todo.completed}
-                      onValueChange={() => handleToggleTodo(todo._id, todo.completed)}
-                    />
-                  </Host>
+                  <TouchableOpacity
+                    onPress={() => handleToggleTodo(todo._id, todo.completed)}
+                    style={[styles.checkbox, { borderColor: theme.border }]}
+                  >
+                    {todo.completed && (
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={theme.primary}
+                      />
+                    )}
+                  </TouchableOpacity>
                   <View style={styles.todoTextContainer}>
                     <Text
                       style={[
@@ -18503,13 +18557,16 @@ export default function TodosScreen() {
                       {todo.text}
                     </Text>
                   </View>
-                  <Host matchContents=\\{{ vertical: true }}>
-                    <Button
-                      label="Delete"
-                      variant="text"
-                      onPress={() => handleDeleteTodo(todo._id)}
+                  <TouchableOpacity
+                    onPress={() => handleDeleteTodo(todo._id)}
+                    style={styles.deleteButton}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={24}
+                      color={theme.notification}
                     />
-                  </Host>
+                  </TouchableOpacity>
                 </View>
               </View>
             ))}
@@ -18562,12 +18619,18 @@ export default function TodosScreen() {
                 ]}
               >
                 <View style={styles.todoRow}>
-                  <Host matchContents=\\{{ vertical: true }}>
-                    <Checkbox
-                      value={todo.completed}
-                      onValueChange={() => handleToggleTodo(todo.id, todo.completed)}
-                    />
-                  </Host>
+                  <TouchableOpacity
+                    onPress={() => handleToggleTodo(todo.id, todo.completed)}
+                    style={[styles.checkbox, { borderColor: theme.border }]}
+                  >
+                    {todo.completed && (
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={theme.primary}
+                      />
+                    )}
+                  </TouchableOpacity>
                   <View style={styles.todoTextContainer}>
                     <Text
                       style={[
@@ -18582,13 +18645,16 @@ export default function TodosScreen() {
                       {todo.text}
                     </Text>
                   </View>
-                  <Host matchContents=\\{{ vertical: true }}>
-                    <Button
-                      label="Delete"
-                      variant="text"
-                      onPress={() => handleDeleteTodo(todo.id)}
+                  <TouchableOpacity
+                    onPress={() => handleDeleteTodo(todo.id)}
+                    style={styles.deleteButton}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={24}
+                      color={theme.notification}
                     />
-                  </Host>
+                  </TouchableOpacity>
                 </View>
               </View>
             ))}
@@ -18640,6 +18706,17 @@ const styles = StyleSheet.create({
   inputContainer: {
     flex: 1,
   },
+  input: {
+    borderWidth: 1,
+    padding: 12,
+    fontSize: 16,
+  },
+  addButton: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   centerContainer: {
     alignItems: "center",
     justifyContent: "center",
@@ -18681,6 +18758,16 @@ const styles = StyleSheet.create({
   },
   todoText: {
     fontSize: 16,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteButton: {
+    padding: 4,
   },
 });
 `],
