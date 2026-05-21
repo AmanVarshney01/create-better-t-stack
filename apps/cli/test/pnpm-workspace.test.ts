@@ -118,6 +118,27 @@ describe("pnpm workspace", () => {
     expect(workspace.allowBuilds).toEqual({ msw: true });
   });
 
+  it("adds build approvals for native Expo stacks", async () => {
+    const workspace = await readPnpmWorkspace({
+      projectName: "pnpm-native-expo",
+      frontend: ["native-bare"],
+      backend: "none",
+      runtime: "none",
+      api: "none",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+    });
+
+    expect(workspace.allowBuilds).toEqual({ "msgpackr-extract": true });
+  });
+
   it("does not add build approvals for stacks without lifecycle-script dependencies", async () => {
     const workspace = await readPnpmWorkspace({
       projectName: "pnpm-svelte",

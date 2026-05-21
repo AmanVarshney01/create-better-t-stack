@@ -1,4 +1,5 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { View, ScrollView, StyleSheet } from "react-native";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
@@ -35,65 +36,101 @@ return (
 <Container>
   <ScrollView style={styles.scrollView}>
     <View style={styles.content}>
-      <Text style={[styles.title, { color: theme.text }]}>
-        BETTER T STACK
-      </Text>
+      <Host style={styles.titleHost} matchContents=\{{ vertical: true }}>
+        <Column>
+          <ExpoUIText
+            textStyle=\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
+          >
+            BETTER T STACK
+          </ExpoUIText>
+        </Column>
+      </Host>
 
       {session?.user ? (
       <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.userHeader}>
-          <Text style={[styles.userText, { color: theme.text }]}>
-            Welcome, <Text style={styles.userName}>{session.user.name}</Text>
-          </Text>
-        </View>
-        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
-          {session.user.email}
-        </Text>
-        <TouchableOpacity style={[styles.signOutButton, { backgroundColor: theme.notification }]} onPress={()=> {
-          authClient.signOut();
-          {{#if (eq api "orpc")}}
-          queryClient.invalidateQueries();
-          {{/if}}
-          {{#if (eq api "trpc")}}
-          queryClient.invalidateQueries();
-          {{/if}}
-          }}
-          >
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+        <Host style={styles.userHeader} matchContents=\{{ vertical: true }}>
+          <Column spacing={8}>
+            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 16 }}>
+              {`Welcome, ${session.user.name}`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\{{ color: theme.text, fontSize: 14 }}
+              style=\{{ opacity: 0.7 }}
+            >
+              {session.user.email}
+            </ExpoUIText>
+          </Column>
+        </Host>
+        <Host matchContents=\{{ vertical: true }}>
+          <Button
+            label="Sign Out"
+            variant="outlined"
+            onPress={() => {
+              authClient.signOut();
+              {{#if (eq api "orpc")}}
+              queryClient.invalidateQueries();
+              {{/if}}
+              {{#if (eq api "trpc")}}
+              queryClient.invalidateQueries();
+              {{/if}}
+            }}
+          />
+        </Host>
       </View>
       ) : null}
 
       {{#unless (eq api "none")}}
       <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.cardTitle, { color: theme.text }]}>
-          System Status
-        </Text>
+        <Host style={styles.cardTitleHost} matchContents=\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}
+          >
+            System Status
+          </ExpoUIText>
+        </Host>
         <View style={styles.statusRow}>
           <View style={[styles.statusIndicator, { backgroundColor: isConnected ? "#10b981" : "#ef4444" }]} />
           <View style={styles.statusContent}>
-            <Text style={[styles.statusTitle, { color: theme.text }]}>
-              {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}} Backend
-            </Text>
-            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-              {isLoading
-              ? "Checking connection..."
-              : isConnected
-              ? "Connected to API"
-              : "API Disconnected"}
-            </Text>
+            <Host matchContents=\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\{{ color: theme.text, fontSize: 14, fontWeight: "bold" }}
+                >
+                  {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}} Backend
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\{{ color: theme.text, fontSize: 12 }}
+                  style=\{{ opacity: 0.7 }}
+                >
+                  {isLoading
+                  ? "Checking connection..."
+                  : isConnected
+                  ? "Connected to API"
+                  : "API Disconnected"}
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
         </View>
       </View>
 
       <View style={[styles.privateDataCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.cardTitle, { color: theme.text }]}>
-          Private Data
-        </Text>
+        <Host style={styles.cardTitleHost} matchContents=\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}
+          >
+            Private Data
+          </ExpoUIText>
+        </Host>
         {privateData && (
-        <Text style={[styles.privateDataText, { color: theme.text, opacity: 0.7 }]}>
-          {privateData.data?.message}
-        </Text>
+        <Host matchContents=\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\{{ color: theme.text, fontSize: 14 }}
+            style=\{{ opacity: 0.7 }}
+          >
+            {privateData.data?.message ?? ""}
+          </ExpoUIText>
+        </Host>
         )}
       </View>
       {{/unless}}
@@ -115,45 +152,30 @@ scrollView: {
 flex: 1,
 },
 content: {
-padding: 16,
+paddingHorizontal: 20,
+paddingTop: 28,
+paddingBottom: 32,
 },
-title: {
-fontSize: 24,
-fontWeight: "bold",
-marginBottom: 16,
+titleHost: {
+alignSelf: "center",
+marginBottom: 24,
 },
 userCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
 userHeader: {
 marginBottom: 8,
-},
-userText: {
-fontSize: 16,
-},
-userName: {
-fontWeight: "bold",
-},
-userEmail: {
-fontSize: 14,
-marginBottom: 12,
-},
-signOutButton: {
-padding: 12,
-},
-signOutText: {
-color: "#ffffff",
 },
 statusCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
-cardTitle: {
-fontSize: 16,
-fontWeight: "bold",
+cardTitleHost: {
 marginBottom: 12,
 },
 statusRow: {
@@ -168,19 +190,10 @@ width: 8,
 statusContent: {
 flex: 1,
 },
-statusTitle: {
-fontSize: 14,
-fontWeight: "bold",
-},
-statusText: {
-fontSize: 12,
-},
 privateDataCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
-},
-privateDataText: {
-fontSize: 14,
+borderRadius: 16,
 },
 });

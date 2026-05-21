@@ -1,12 +1,17 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import {
+  Button,
+  Checkbox,
+  Host,
+  TextInput as ExpoTextInput,
+  type TextInputRef,
+} from "@expo/ui";
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   ActivityIndicator,
   Alert,
-  TouchableOpacity,
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,6 +38,7 @@ export default function TodosScreen() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [newTodoText, setNewTodoText] = useState("");
+  const newTodoInputRef = useRef<TextInputRef>(null);
 
   {{#if (eq backend "convex")}}
   const todos = useQuery(api.todos.getAll);
@@ -45,6 +51,7 @@ export default function TodosScreen() {
     if (!text) return;
     await createTodoMutation({ text });
     setNewTodoText("");
+    newTodoInputRef.current?.clear();
   }
 
   function handleToggleTodo(id: Id<"todos">, currentCompleted: boolean) {
@@ -73,6 +80,7 @@ export default function TodosScreen() {
       onSuccess: () => {
         todos.refetch();
         setNewTodoText("");
+        newTodoInputRef.current?.clear();
       },
     })
   );
@@ -98,6 +106,7 @@ export default function TodosScreen() {
       onSuccess: () => {
         todos.refetch();
         setNewTodoText("");
+        newTodoInputRef.current?.clear();
       },
     })
   );
@@ -171,66 +180,44 @@ export default function TodosScreen() {
         >
           <View style={styles.inputRow}>
             <View style={styles.inputContainer}>
-              <TextInput
-                value={newTodoText}
-                onChangeText={setNewTodoText}
-                placeholder="Add a new task..."
-                placeholderTextColor={theme.text}
-                {{#unless (eq backend "convex")}}
-                editable={!createMutation.isPending}
-                {{/unless}}
-                onSubmitEditing={handleAddTodo}
-                returnKeyType="done"
-                style={[
-                  styles.input,
-                  {
-                    color: theme.text,
+              <Host matchContents=\{{ vertical: true }}>
+                <ExpoTextInput
+                  ref={newTodoInputRef}
+                  defaultValue={newTodoText}
+                  onChangeText={setNewTodoText}
+                  placeholder="Add a new task..."
+                  placeholderTextColor={theme.text}
+                  {{#unless (eq backend "convex")}}
+                  editable={!createMutation.isPending}
+                  {{/unless}}
+                  onSubmitEditing={handleAddTodo}
+                  returnKeyType="done"
+                  style=\{{
+                    borderWidth: 1,
                     borderColor: theme.border,
                     backgroundColor: theme.background,
-                  },
-                ]}
-              />
+                    padding: 12,
+                    width: "100%",
+                  }}
+                  textStyle=\{{ color: theme.text, fontSize: 16 }}
+                />
+              </Host>
             </View>
-            <TouchableOpacity
-              onPress={handleAddTodo}
+            <Host matchContents=\{{ vertical: true }}>
               {{#if (eq backend "convex")}}
-              disabled={!newTodoText.trim()}
-              style={[
-                styles.addButton,
-                {
-                  backgroundColor: !newTodoText.trim()
-                    ? theme.border
-                    : theme.primary,
-                  opacity: !newTodoText.trim() ? 0.5 : 1,
-                },
-              ]}
-            >
-              <Ionicons
-                name="add"
-                size={24}
-                color={newTodoText.trim() ? "#ffffff" : theme.text}
+              <Button
+                label="Add"
+                disabled={!newTodoText.trim()}
+                onPress={handleAddTodo}
               />
               {{else}}
-              disabled={createMutation.isPending || !newTodoText.trim()}
-              style={[
-                styles.addButton,
-                {
-                  backgroundColor:
-                    createMutation.isPending || !newTodoText.trim()
-                      ? theme.border
-                      : theme.primary,
-                  opacity:
-                    createMutation.isPending || !newTodoText.trim() ? 0.5 : 1,
-                },
-              ]}
-            >
-              {createMutation.isPending ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <Ionicons name="add" size={24} color="#ffffff" />
-              )}
+              <Button
+                label={createMutation.isPending ? "Adding..." : "Add"}
+                disabled={createMutation.isPending || !newTodoText.trim()}
+                onPress={handleAddTodo}
+              />
               {{/if}}
-            </TouchableOpacity>
+            </Host>
           </View>
         </View>
 
@@ -281,18 +268,12 @@ export default function TodosScreen() {
                 ]}
               >
                 <View style={styles.todoRow}>
-                  <TouchableOpacity
-                    onPress={() => handleToggleTodo(todo._id, todo.completed)}
-                    style={[styles.checkbox, { borderColor: theme.border }]}
-                  >
-                    {todo.completed && (
-                      <Ionicons
-                        name="checkmark"
-                        size={16}
-                        color={theme.primary}
-                      />
-                    )}
-                  </TouchableOpacity>
+                  <Host matchContents=\{{ vertical: true }}>
+                    <Checkbox
+                      value={todo.completed}
+                      onValueChange={() => handleToggleTodo(todo._id, todo.completed)}
+                    />
+                  </Host>
                   <View style={styles.todoTextContainer}>
                     <Text
                       style={[
@@ -307,16 +288,13 @@ export default function TodosScreen() {
                       {todo.text}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => handleDeleteTodo(todo._id)}
-                    style={styles.deleteButton}
-                  >
-                    <Ionicons
-                      name="trash-outline"
-                      size={24}
-                      color={theme.notification}
+                  <Host matchContents=\{{ vertical: true }}>
+                    <Button
+                      label="Delete"
+                      variant="text"
+                      onPress={() => handleDeleteTodo(todo._id)}
                     />
-                  </TouchableOpacity>
+                  </Host>
                 </View>
               </View>
             ))}
@@ -369,18 +347,12 @@ export default function TodosScreen() {
                 ]}
               >
                 <View style={styles.todoRow}>
-                  <TouchableOpacity
-                    onPress={() => handleToggleTodo(todo.id, todo.completed)}
-                    style={[styles.checkbox, { borderColor: theme.border }]}
-                  >
-                    {todo.completed && (
-                      <Ionicons
-                        name="checkmark"
-                        size={16}
-                        color={theme.primary}
-                      />
-                    )}
-                  </TouchableOpacity>
+                  <Host matchContents=\{{ vertical: true }}>
+                    <Checkbox
+                      value={todo.completed}
+                      onValueChange={() => handleToggleTodo(todo.id, todo.completed)}
+                    />
+                  </Host>
                   <View style={styles.todoTextContainer}>
                     <Text
                       style={[
@@ -395,16 +367,13 @@ export default function TodosScreen() {
                       {todo.text}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => handleDeleteTodo(todo.id)}
-                    style={styles.deleteButton}
-                  >
-                    <Ionicons
-                      name="trash-outline"
-                      size={24}
-                      color={theme.notification}
+                  <Host matchContents=\{{ vertical: true }}>
+                    <Button
+                      label="Delete"
+                      variant="text"
+                      onPress={() => handleDeleteTodo(todo.id)}
                     />
-                  </TouchableOpacity>
+                  </Host>
                 </View>
               </View>
             ))}
@@ -456,16 +425,6 @@ const styles = StyleSheet.create({
   inputContainer: {
     flex: 1,
   },
-  input: {
-    borderWidth: 1,
-    padding: 12,
-    fontSize: 16,
-  },
-  addButton: {
-    padding: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   centerContainer: {
     alignItems: "center",
     justifyContent: "center",
@@ -502,20 +461,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   todoTextContainer: {
     flex: 1,
   },
   todoText: {
     fontSize: 16,
-  },
-  deleteButton: {
-    padding: 8,
   },
 });

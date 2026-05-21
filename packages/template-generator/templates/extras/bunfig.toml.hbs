@@ -1,6 +1,9 @@
 [install]
-{{#if (or (includes frontend "nuxt"))}}
-linker = "hoisted" # having issues with Nuxt when linker is isolated
+{{#if (includes frontend "nuxt")}}
+linker = "hoisted" # Nuxt needs hoisting for its dependency resolver
 {{else}}
 linker = "isolated"
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+peer = false # Expo native projects declare SDK peers explicitly; this keeps Bun isolated installs deduped for native modules
+{{/if}}
 {{/if}}

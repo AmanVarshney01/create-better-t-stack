@@ -2297,15 +2297,9 @@ export const get = query({
 `],
   ["auth/better-auth/convex/native/bare/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Button, Host, Text as ExpoUIText, TextInput as ExpoTextInput, type TextInputRef } from "@expo/ui";
+import { useRef, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import z from "zod";
@@ -2353,6 +2347,8 @@ function SignIn() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);
+  const emailInputRef = useRef<TextInputRef>(null);
+  const passwordInputRef = useRef<TextInputRef>(null);
 
   const form = useForm({
     defaultValues: {
@@ -2375,6 +2371,8 @@ function SignIn() {
           onSuccess() {
             setError(null);
             formApi.reset();
+            emailInputRef.current?.clear();
+            passwordInputRef.current?.clear();
           },
         },
       );
@@ -2383,7 +2381,11 @@ function SignIn() {
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <Text style={[styles.title, { color: theme.text }]}>Sign In</Text>
+      <Host style={styles.titleHost} matchContents>
+        <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 18, fontWeight: "bold" }}>
+          Sign In
+        </ExpoUIText>
+      </Host>
 
       <form.Subscribe
         selector={(state) => ({
@@ -2398,81 +2400,91 @@ function SignIn() {
             <>
               {formError ? (
                 <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
-                  <Text style={[styles.errorText, { color: theme.notification }]}>{formError}</Text>
+                  <Host matchContents=\\{{ vertical: true }}>
+                    <ExpoUIText
+                      textStyle=\\{{ color: theme.notification, fontSize: 14 }}
+                    >
+                      {formError}
+                    </ExpoUIText>
+                  </Host>
                 </View>
               ) : null}
 
               <form.Field name="email">
                 {(field) => (
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        color: theme.text,
-                        borderColor: theme.border,
-                        backgroundColor: theme.background,
-                      },
-                    ]}
-                    placeholder="Email"
-                    placeholderTextColor={theme.text}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChangeText={(value) => {
-                      field.handleChange(value);
-                      if (error) {
-                        setError(null);
-                      }
-                    }}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
+                  <View style={styles.inputGroup}>
+                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
+                      <ExpoTextInput
+                        ref={emailInputRef}
+                        style=\\{{
+                          borderWidth: 1,
+                          borderColor: theme.border,
+                          backgroundColor: theme.background,
+                          padding: 12,
+                          borderRadius: 12,
+                          height: 50,
+                          width: "100%",
+                        }}
+                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                        placeholder="Email"
+                        placeholderTextColor={theme.text}
+                        defaultValue={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={(value) => {
+                          field.handleChange(value);
+                          if (error) {
+                            setError(null);
+                          }
+                        }}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                      />
+                    </Host>
+                  </View>
                 )}
               </form.Field>
 
               <form.Field name="password">
                 {(field) => (
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        color: theme.text,
-                        borderColor: theme.border,
-                        backgroundColor: theme.background,
-                      },
-                    ]}
-                    placeholder="Password"
-                    placeholderTextColor={theme.text}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChangeText={(value) => {
-                      field.handleChange(value);
-                      if (error) {
-                        setError(null);
-                      }
-                    }}
-                    secureTextEntry
-                    onSubmitEditing={form.handleSubmit}
-                  />
+                  <View style={styles.inputGroup}>
+                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
+                      <ExpoTextInput
+                        ref={passwordInputRef}
+                        style=\\{{
+                          borderWidth: 1,
+                          borderColor: theme.border,
+                          backgroundColor: theme.background,
+                          padding: 12,
+                          borderRadius: 12,
+                          height: 50,
+                          width: "100%",
+                        }}
+                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                        placeholder="Password"
+                        placeholderTextColor={theme.text}
+                        defaultValue={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={(value) => {
+                          field.handleChange(value);
+                          if (error) {
+                            setError(null);
+                          }
+                        }}
+                        secureTextEntry
+                        onSubmitEditing={form.handleSubmit}
+                      />
+                    </Host>
+                  </View>
                 )}
               </form.Field>
 
-              <TouchableOpacity
-                onPress={form.handleSubmit}
-                disabled={isSubmitting}
-                style={[
-                  styles.button,
-                  {
-                    backgroundColor: theme.primary,
-                    opacity: isSubmitting ? 0.5 : 1,
-                  },
-                ]}
-              >
-                {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <Text style={styles.buttonText}>Sign In</Text>
-                )}
-              </TouchableOpacity>
+              <Host style={styles.buttonHost} matchContents=\\{{ vertical: true }}>
+                <Button
+                  label={isSubmitting ? "Signing in..." : "Sign In"}
+                  disabled={isSubmitting}
+                  onPress={form.handleSubmit}
+                />
+              </Host>
             </>
           );
         }}
@@ -2487,32 +2499,22 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
+  titleHost: {
+    alignSelf: "flex-start",
     marginBottom: 12,
   },
   errorContainer: {
     marginBottom: 12,
     padding: 8,
   },
-  errorText: {
-    fontSize: 14,
-  },
-  input: {
-    borderWidth: 1,
-    padding: 12,
-    fontSize: 16,
+  inputGroup: {
     marginBottom: 12,
   },
-  button: {
-    padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
+  inputHost: {
+    alignSelf: "stretch",
   },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
+  buttonHost: {
+    alignSelf: "center",
   },
 });
 
@@ -2520,15 +2522,9 @@ export { SignIn };
 `],
   ["auth/better-auth/convex/native/bare/components/sign-up.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Button, Host, Text as ExpoUIText, TextInput as ExpoTextInput, type TextInputRef } from "@expo/ui";
+import { useRef, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import z from "zod";
@@ -2581,6 +2577,9 @@ function SignUp() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);
+  const nameInputRef = useRef<TextInputRef>(null);
+  const emailInputRef = useRef<TextInputRef>(null);
+  const passwordInputRef = useRef<TextInputRef>(null);
 
   const form = useForm({
     defaultValues: {
@@ -2605,6 +2604,9 @@ function SignUp() {
           onSuccess() {
             setError(null);
             formApi.reset();
+            nameInputRef.current?.clear();
+            emailInputRef.current?.clear();
+            passwordInputRef.current?.clear();
           },
         },
       );
@@ -2613,7 +2615,11 @@ function SignUp() {
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <Text style={[styles.title, { color: theme.text }]}>Create Account</Text>
+      <Host style={styles.titleHost} matchContents>
+        <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 18, fontWeight: "bold" }}>
+          Create Account
+        </ExpoUIText>
+      </Host>
 
       <form.Subscribe
         selector={(state) => ({
@@ -2628,106 +2634,123 @@ function SignUp() {
             <>
               {formError ? (
                 <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
-                  <Text style={[styles.errorText, { color: theme.notification }]}>{formError}</Text>
+                  <Host matchContents=\\{{ vertical: true }}>
+                    <ExpoUIText
+                      textStyle=\\{{ color: theme.notification, fontSize: 14 }}
+                    >
+                      {formError}
+                    </ExpoUIText>
+                  </Host>
                 </View>
               ) : null}
 
               <form.Field name="name">
                 {(field) => (
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        color: theme.text,
-                        borderColor: theme.border,
-                        backgroundColor: theme.background,
-                      },
-                    ]}
-                    placeholder="Name"
-                    placeholderTextColor={theme.text}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChangeText={(value) => {
-                      field.handleChange(value);
-                      if (error) {
-                        setError(null);
-                      }
-                    }}
-                  />
+                  <View style={styles.inputGroup}>
+                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
+                      <ExpoTextInput
+                        ref={nameInputRef}
+                        style=\\{{
+                          borderWidth: 1,
+                          borderColor: theme.border,
+                          backgroundColor: theme.background,
+                          padding: 12,
+                          borderRadius: 12,
+                          height: 50,
+                          width: "100%",
+                        }}
+                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                        placeholder="Name"
+                        placeholderTextColor={theme.text}
+                        defaultValue={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={(value) => {
+                          field.handleChange(value);
+                          if (error) {
+                            setError(null);
+                          }
+                        }}
+                      />
+                    </Host>
+                  </View>
                 )}
               </form.Field>
 
               <form.Field name="email">
                 {(field) => (
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        color: theme.text,
-                        borderColor: theme.border,
-                        backgroundColor: theme.background,
-                      },
-                    ]}
-                    placeholder="Email"
-                    placeholderTextColor={theme.text}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChangeText={(value) => {
-                      field.handleChange(value);
-                      if (error) {
-                        setError(null);
-                      }
-                    }}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
+                  <View style={styles.inputGroup}>
+                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
+                      <ExpoTextInput
+                        ref={emailInputRef}
+                        style=\\{{
+                          borderWidth: 1,
+                          borderColor: theme.border,
+                          backgroundColor: theme.background,
+                          padding: 12,
+                          borderRadius: 12,
+                          height: 50,
+                          width: "100%",
+                        }}
+                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                        placeholder="Email"
+                        placeholderTextColor={theme.text}
+                        defaultValue={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={(value) => {
+                          field.handleChange(value);
+                          if (error) {
+                            setError(null);
+                          }
+                        }}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                      />
+                    </Host>
+                  </View>
                 )}
               </form.Field>
 
               <form.Field name="password">
                 {(field) => (
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        color: theme.text,
-                        borderColor: theme.border,
-                        backgroundColor: theme.background,
-                      },
-                    ]}
-                    placeholder="Password"
-                    placeholderTextColor={theme.text}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChangeText={(value) => {
-                      field.handleChange(value);
-                      if (error) {
-                        setError(null);
-                      }
-                    }}
-                    secureTextEntry
-                    onSubmitEditing={form.handleSubmit}
-                  />
+                  <View style={styles.inputGroup}>
+                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
+                      <ExpoTextInput
+                        ref={passwordInputRef}
+                        style=\\{{
+                          borderWidth: 1,
+                          borderColor: theme.border,
+                          backgroundColor: theme.background,
+                          padding: 12,
+                          borderRadius: 12,
+                          height: 50,
+                          width: "100%",
+                        }}
+                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                        placeholder="Password"
+                        placeholderTextColor={theme.text}
+                        defaultValue={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={(value) => {
+                          field.handleChange(value);
+                          if (error) {
+                            setError(null);
+                          }
+                        }}
+                        secureTextEntry
+                        onSubmitEditing={form.handleSubmit}
+                      />
+                    </Host>
+                  </View>
                 )}
               </form.Field>
 
-              <TouchableOpacity
-                onPress={form.handleSubmit}
-                disabled={isSubmitting}
-                style={[
-                  styles.button,
-                  {
-                    backgroundColor: theme.primary,
-                    opacity: isSubmitting ? 0.5 : 1,
-                  },
-                ]}
-              >
-                {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <Text style={styles.buttonText}>Sign Up</Text>
-                )}
-              </TouchableOpacity>
+              <Host style={styles.buttonHost} matchContents=\\{{ vertical: true }}>
+                <Button
+                  label={isSubmitting ? "Creating account..." : "Sign Up"}
+                  disabled={isSubmitting}
+                  onPress={form.handleSubmit}
+                />
+              </Host>
             </>
           );
         }}
@@ -2742,32 +2765,22 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
+  titleHost: {
+    alignSelf: "flex-start",
     marginBottom: 12,
   },
   errorContainer: {
     marginBottom: 12,
     padding: 8,
   },
-  errorText: {
-    fontSize: 14,
-  },
-  input: {
-    borderWidth: 1,
-    padding: 12,
-    fontSize: 16,
+  inputGroup: {
     marginBottom: 12,
   },
-  button: {
-    padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
+  inputHost: {
+    alignSelf: "stretch",
   },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
+  buttonHost: {
+    alignSelf: "center",
   },
 });
 
@@ -5355,7 +5368,8 @@ export const Route = createFileRoute('/api/auth/$')({
   },
 })
 `],
-  ["auth/better-auth/native/bare/app/(drawer)/index.tsx.hbs", `import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+  ["auth/better-auth/native/bare/app/(drawer)/index.tsx.hbs", `import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { View, ScrollView, StyleSheet } from "react-native";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
@@ -5392,65 +5406,101 @@ return (
 <Container>
   <ScrollView style={styles.scrollView}>
     <View style={styles.content}>
-      <Text style={[styles.title, { color: theme.text }]}>
-        BETTER T STACK
-      </Text>
+      <Host style={styles.titleHost} matchContents=\\{{ vertical: true }}>
+        <Column>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
+          >
+            BETTER T STACK
+          </ExpoUIText>
+        </Column>
+      </Host>
 
       {session?.user ? (
       <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.userHeader}>
-          <Text style={[styles.userText, { color: theme.text }]}>
-            Welcome, <Text style={styles.userName}>{session.user.name}</Text>
-          </Text>
-        </View>
-        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
-          {session.user.email}
-        </Text>
-        <TouchableOpacity style={[styles.signOutButton, { backgroundColor: theme.notification }]} onPress={()=> {
-          authClient.signOut();
-          {{#if (eq api "orpc")}}
-          queryClient.invalidateQueries();
-          {{/if}}
-          {{#if (eq api "trpc")}}
-          queryClient.invalidateQueries();
-          {{/if}}
-          }}
-          >
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+        <Host style={styles.userHeader} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 16 }}>
+              {\`Welcome, \${session.user.name}\`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 14 }}
+              style=\\{{ opacity: 0.7 }}
+            >
+              {session.user.email}
+            </ExpoUIText>
+          </Column>
+        </Host>
+        <Host matchContents=\\{{ vertical: true }}>
+          <Button
+            label="Sign Out"
+            variant="outlined"
+            onPress={() => {
+              authClient.signOut();
+              {{#if (eq api "orpc")}}
+              queryClient.invalidateQueries();
+              {{/if}}
+              {{#if (eq api "trpc")}}
+              queryClient.invalidateQueries();
+              {{/if}}
+            }}
+          />
+        </Host>
       </View>
       ) : null}
 
       {{#unless (eq api "none")}}
       <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.cardTitle, { color: theme.text }]}>
-          System Status
-        </Text>
+        <Host style={styles.cardTitleHost} matchContents=\\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}
+          >
+            System Status
+          </ExpoUIText>
+        </Host>
         <View style={styles.statusRow}>
           <View style={[styles.statusIndicator, { backgroundColor: isConnected ? "#10b981" : "#ef4444" }]} />
           <View style={styles.statusContent}>
-            <Text style={[styles.statusTitle, { color: theme.text }]}>
-              {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}} Backend
-            </Text>
-            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-              {isLoading
-              ? "Checking connection..."
-              : isConnected
-              ? "Connected to API"
-              : "API Disconnected"}
-            </Text>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14, fontWeight: "bold" }}
+                >
+                  {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}} Backend
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 12 }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  {isLoading
+                  ? "Checking connection..."
+                  : isConnected
+                  ? "Connected to API"
+                  : "API Disconnected"}
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
         </View>
       </View>
 
       <View style={[styles.privateDataCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.cardTitle, { color: theme.text }]}>
-          Private Data
-        </Text>
+        <Host style={styles.cardTitleHost} matchContents=\\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}
+          >
+            Private Data
+          </ExpoUIText>
+        </Host>
         {privateData && (
-        <Text style={[styles.privateDataText, { color: theme.text, opacity: 0.7 }]}>
-          {privateData.data?.message}
-        </Text>
+        <Host matchContents=\\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 14 }}
+            style=\\{{ opacity: 0.7 }}
+          >
+            {privateData.data?.message ?? ""}
+          </ExpoUIText>
+        </Host>
         )}
       </View>
       {{/unless}}
@@ -5472,45 +5522,30 @@ scrollView: {
 flex: 1,
 },
 content: {
-padding: 16,
+paddingHorizontal: 20,
+paddingTop: 28,
+paddingBottom: 32,
 },
-title: {
-fontSize: 24,
-fontWeight: "bold",
-marginBottom: 16,
+titleHost: {
+alignSelf: "center",
+marginBottom: 24,
 },
 userCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
 userHeader: {
 marginBottom: 8,
-},
-userText: {
-fontSize: 16,
-},
-userName: {
-fontWeight: "bold",
-},
-userEmail: {
-fontSize: 14,
-marginBottom: 12,
-},
-signOutButton: {
-padding: 12,
-},
-signOutText: {
-color: "#ffffff",
 },
 statusCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
-cardTitle: {
-fontSize: 16,
-fontWeight: "bold",
+cardTitleHost: {
 marginBottom: 12,
 },
 statusRow: {
@@ -5525,22 +5560,14 @@ width: 8,
 statusContent: {
 flex: 1,
 },
-statusTitle: {
-fontSize: 14,
-fontWeight: "bold",
-},
-statusText: {
-fontSize: 12,
-},
 privateDataCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
-privateDataText: {
-fontSize: 14,
-},
-});`],
+});
+`],
   ["auth/better-auth/native/bare/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
@@ -5549,15 +5576,9 @@ import { queryClient } from "@/utils/trpc";
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Button, Host, Text as ExpoUIText, TextInput as ExpoTextInput, type TextInputRef } from "@expo/ui";
+import { useRef, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import z from "zod";
@@ -5605,6 +5626,8 @@ function SignIn() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);
+  const emailInputRef = useRef<TextInputRef>(null);
+  const passwordInputRef = useRef<TextInputRef>(null);
 
   const form = useForm({
     defaultValues: {
@@ -5627,6 +5650,8 @@ function SignIn() {
           onSuccess() {
             setError(null);
             formApi.reset();
+            emailInputRef.current?.clear();
+            passwordInputRef.current?.clear();
             {{#if (eq api "orpc")}}
             queryClient.refetchQueries();
             {{/if}}
@@ -5641,7 +5666,11 @@ function SignIn() {
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <Text style={[styles.title, { color: theme.text }]}>Sign In</Text>
+      <Host style={styles.titleHost} matchContents>
+        <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 18, fontWeight: "bold" }}>
+          Sign In
+        </ExpoUIText>
+      </Host>
 
       <form.Subscribe
         selector={(state) => ({
@@ -5656,81 +5685,91 @@ function SignIn() {
             <>
               {formError ? (
                 <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
-                  <Text style={[styles.errorText, { color: theme.notification }]}>{formError}</Text>
+                  <Host matchContents=\\{{ vertical: true }}>
+                    <ExpoUIText
+                      textStyle=\\{{ color: theme.notification, fontSize: 14 }}
+                    >
+                      {formError}
+                    </ExpoUIText>
+                  </Host>
                 </View>
               ) : null}
 
               <form.Field name="email">
                 {(field) => (
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        color: theme.text,
-                        borderColor: theme.border,
-                        backgroundColor: theme.background,
-                      },
-                    ]}
-                    placeholder="Email"
-                    placeholderTextColor={theme.text}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChangeText={(value) => {
-                      field.handleChange(value);
-                      if (error) {
-                        setError(null);
-                      }
-                    }}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
+                  <View style={styles.inputGroup}>
+                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
+                      <ExpoTextInput
+                        ref={emailInputRef}
+                        style=\\{{
+                          borderWidth: 1,
+                          borderColor: theme.border,
+                          backgroundColor: theme.background,
+                          padding: 12,
+                          borderRadius: 12,
+                          height: 50,
+                          width: "100%",
+                        }}
+                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                        placeholder="Email"
+                        placeholderTextColor={theme.text}
+                        defaultValue={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={(value) => {
+                          field.handleChange(value);
+                          if (error) {
+                            setError(null);
+                          }
+                        }}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                      />
+                    </Host>
+                  </View>
                 )}
               </form.Field>
 
               <form.Field name="password">
                 {(field) => (
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        color: theme.text,
-                        borderColor: theme.border,
-                        backgroundColor: theme.background,
-                      },
-                    ]}
-                    placeholder="Password"
-                    placeholderTextColor={theme.text}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChangeText={(value) => {
-                      field.handleChange(value);
-                      if (error) {
-                        setError(null);
-                      }
-                    }}
-                    secureTextEntry
-                    onSubmitEditing={form.handleSubmit}
-                  />
+                  <View style={styles.inputGroup}>
+                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
+                      <ExpoTextInput
+                        ref={passwordInputRef}
+                        style=\\{{
+                          borderWidth: 1,
+                          borderColor: theme.border,
+                          backgroundColor: theme.background,
+                          padding: 12,
+                          borderRadius: 12,
+                          height: 50,
+                          width: "100%",
+                        }}
+                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                        placeholder="Password"
+                        placeholderTextColor={theme.text}
+                        defaultValue={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={(value) => {
+                          field.handleChange(value);
+                          if (error) {
+                            setError(null);
+                          }
+                        }}
+                        secureTextEntry
+                        onSubmitEditing={form.handleSubmit}
+                      />
+                    </Host>
+                  </View>
                 )}
               </form.Field>
 
-              <TouchableOpacity
-                onPress={form.handleSubmit}
-                disabled={isSubmitting}
-                style={[
-                  styles.button,
-                  {
-                    backgroundColor: theme.primary,
-                    opacity: isSubmitting ? 0.5 : 1,
-                  },
-                ]}
-              >
-                {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <Text style={styles.buttonText}>Sign In</Text>
-                )}
-              </TouchableOpacity>
+              <Host style={styles.buttonHost} matchContents=\\{{ vertical: true }}>
+                <Button
+                  label={isSubmitting ? "Signing in..." : "Sign In"}
+                  disabled={isSubmitting}
+                  onPress={form.handleSubmit}
+                />
+              </Host>
             </>
           );
         }}
@@ -5745,32 +5784,22 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
+  titleHost: {
+    alignSelf: "flex-start",
     marginBottom: 12,
   },
   errorContainer: {
     marginBottom: 12,
     padding: 8,
   },
-  errorText: {
-    fontSize: 14,
-  },
-  input: {
-    borderWidth: 1,
-    padding: 12,
-    fontSize: 16,
+  inputGroup: {
     marginBottom: 12,
   },
-  button: {
-    padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
+  inputHost: {
+    alignSelf: "stretch",
   },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
+  buttonHost: {
+    alignSelf: "center",
   },
 });
 
@@ -5784,15 +5813,9 @@ import { queryClient } from "@/utils/trpc";
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Button, Host, Text as ExpoUIText, TextInput as ExpoTextInput, type TextInputRef } from "@expo/ui";
+import { useRef, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import z from "zod";
@@ -5845,6 +5868,9 @@ function SignUp() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);
+  const nameInputRef = useRef<TextInputRef>(null);
+  const emailInputRef = useRef<TextInputRef>(null);
+  const passwordInputRef = useRef<TextInputRef>(null);
 
   const form = useForm({
     defaultValues: {
@@ -5869,6 +5895,9 @@ function SignUp() {
           onSuccess() {
             setError(null);
             formApi.reset();
+            nameInputRef.current?.clear();
+            emailInputRef.current?.clear();
+            passwordInputRef.current?.clear();
             {{#if (eq api "orpc")}}
             queryClient.refetchQueries();
             {{/if}}
@@ -5883,7 +5912,11 @@ function SignUp() {
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <Text style={[styles.title, { color: theme.text }]}>Create Account</Text>
+      <Host style={styles.titleHost} matchContents>
+        <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 18, fontWeight: "bold" }}>
+          Create Account
+        </ExpoUIText>
+      </Host>
 
       <form.Subscribe
         selector={(state) => ({
@@ -5898,106 +5931,123 @@ function SignUp() {
             <>
               {formError ? (
                 <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
-                  <Text style={[styles.errorText, { color: theme.notification }]}>{formError}</Text>
+                  <Host matchContents=\\{{ vertical: true }}>
+                    <ExpoUIText
+                      textStyle=\\{{ color: theme.notification, fontSize: 14 }}
+                    >
+                      {formError}
+                    </ExpoUIText>
+                  </Host>
                 </View>
               ) : null}
 
               <form.Field name="name">
                 {(field) => (
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        color: theme.text,
-                        borderColor: theme.border,
-                        backgroundColor: theme.background,
-                      },
-                    ]}
-                    placeholder="Name"
-                    placeholderTextColor={theme.text}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChangeText={(value) => {
-                      field.handleChange(value);
-                      if (error) {
-                        setError(null);
-                      }
-                    }}
-                  />
+                  <View style={styles.inputGroup}>
+                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
+                      <ExpoTextInput
+                        ref={nameInputRef}
+                        style=\\{{
+                          borderWidth: 1,
+                          borderColor: theme.border,
+                          backgroundColor: theme.background,
+                          padding: 12,
+                          borderRadius: 12,
+                          height: 50,
+                          width: "100%",
+                        }}
+                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                        placeholder="Name"
+                        placeholderTextColor={theme.text}
+                        defaultValue={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={(value) => {
+                          field.handleChange(value);
+                          if (error) {
+                            setError(null);
+                          }
+                        }}
+                      />
+                    </Host>
+                  </View>
                 )}
               </form.Field>
 
               <form.Field name="email">
                 {(field) => (
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        color: theme.text,
-                        borderColor: theme.border,
-                        backgroundColor: theme.background,
-                      },
-                    ]}
-                    placeholder="Email"
-                    placeholderTextColor={theme.text}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChangeText={(value) => {
-                      field.handleChange(value);
-                      if (error) {
-                        setError(null);
-                      }
-                    }}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
+                  <View style={styles.inputGroup}>
+                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
+                      <ExpoTextInput
+                        ref={emailInputRef}
+                        style=\\{{
+                          borderWidth: 1,
+                          borderColor: theme.border,
+                          backgroundColor: theme.background,
+                          padding: 12,
+                          borderRadius: 12,
+                          height: 50,
+                          width: "100%",
+                        }}
+                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                        placeholder="Email"
+                        placeholderTextColor={theme.text}
+                        defaultValue={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={(value) => {
+                          field.handleChange(value);
+                          if (error) {
+                            setError(null);
+                          }
+                        }}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                      />
+                    </Host>
+                  </View>
                 )}
               </form.Field>
 
               <form.Field name="password">
                 {(field) => (
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        color: theme.text,
-                        borderColor: theme.border,
-                        backgroundColor: theme.background,
-                      },
-                    ]}
-                    placeholder="Password"
-                    placeholderTextColor={theme.text}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChangeText={(value) => {
-                      field.handleChange(value);
-                      if (error) {
-                        setError(null);
-                      }
-                    }}
-                    secureTextEntry
-                    onSubmitEditing={form.handleSubmit}
-                  />
+                  <View style={styles.inputGroup}>
+                    <Host style={styles.inputHost} matchContents=\\{{ vertical: true }}>
+                      <ExpoTextInput
+                        ref={passwordInputRef}
+                        style=\\{{
+                          borderWidth: 1,
+                          borderColor: theme.border,
+                          backgroundColor: theme.background,
+                          padding: 12,
+                          borderRadius: 12,
+                          height: 50,
+                          width: "100%",
+                        }}
+                        textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                        placeholder="Password"
+                        placeholderTextColor={theme.text}
+                        defaultValue={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={(value) => {
+                          field.handleChange(value);
+                          if (error) {
+                            setError(null);
+                          }
+                        }}
+                        secureTextEntry
+                        onSubmitEditing={form.handleSubmit}
+                      />
+                    </Host>
+                  </View>
                 )}
               </form.Field>
 
-              <TouchableOpacity
-                onPress={form.handleSubmit}
-                disabled={isSubmitting}
-                style={[
-                  styles.button,
-                  {
-                    backgroundColor: theme.primary,
-                    opacity: isSubmitting ? 0.5 : 1,
-                  },
-                ]}
-              >
-                {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <Text style={styles.buttonText}>Sign Up</Text>
-                )}
-              </TouchableOpacity>
+              <Host style={styles.buttonHost} matchContents=\\{{ vertical: true }}>
+                <Button
+                  label={isSubmitting ? "Creating account..." : "Sign Up"}
+                  disabled={isSubmitting}
+                  onPress={form.handleSubmit}
+                />
+              </Host>
             </>
           );
         }}
@@ -6012,32 +6062,22 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
+  titleHost: {
+    alignSelf: "flex-start",
     marginBottom: 12,
   },
   errorContainer: {
     marginBottom: 12,
     padding: 8,
   },
-  errorText: {
-    fontSize: 14,
-  },
-  input: {
-    borderWidth: 1,
-    padding: 12,
-    fontSize: 16,
+  inputGroup: {
     marginBottom: 12,
   },
-  button: {
-    padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
+  inputHost: {
+    alignSelf: "stretch",
   },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
+  buttonHost: {
+    alignSelf: "center",
   },
 });
 
@@ -13558,8 +13598,7 @@ export default defineSchema({
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "isolatedModules": true,
-    "noEmit": true,
-    "types": ["node"]
+    "noEmit": true
   },
   "include": ["./**/*"],
   "exclude": ["./_generated"]
@@ -15354,7 +15393,7 @@ export const Route = createFileRoute("/api/ai/$")({
 });
 `],
   ["examples/ai/native/bare/app/(drawer)/ai.tsx.hbs", `{{#if (eq backend "convex")}}
-import { Ionicons } from "@expo/vector-icons";
+import { Button, Column, Host, Text as ExpoUIText, TextInput as ExpoTextInput, type TextInputRef } from "@expo/ui";
 import {
   useUIMessages,
   useSmoothText,
@@ -15366,8 +15405,6 @@ import { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -15400,6 +15437,7 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<TextInputRef>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
@@ -15425,6 +15463,7 @@ export default function AIScreen() {
 
     setIsLoading(true);
     setInput("");
+    inputRef.current?.clear();
 
     try {
       let currentThreadId = threadId;
@@ -15449,12 +15488,21 @@ export default function AIScreen() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>
-              AI Chat
-            </Text>
-            <Text style={[styles.headerSubtitle, { color: theme.text, opacity: 0.7 }]}>
-              Chat with our AI assistant
-            </Text>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 20, fontWeight: "bold" }}
+                >
+                  AI Chat
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14 }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  Chat with our AI assistant
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
           <ScrollView
             ref={scrollViewRef}
@@ -15523,44 +15571,36 @@ export default function AIScreen() {
           </ScrollView>
           <View style={[styles.inputContainer, { borderTopColor: theme.border }]}>
             <View style={styles.inputRow}>
-              <TextInput
-                value={input}
-                onChangeText={setInput}
-                placeholder="Type your message..."
-                placeholderTextColor={theme.text}
-                style={[
-                  styles.input,
-                  {
-                    color: theme.text,
-                    borderColor: theme.border,
-                    backgroundColor: theme.background,
-                  },
-                ]}
-                onSubmitEditing={(e) => {
-                  e.preventDefault();
-                  onSubmit();
-                }}
-                editable={!isLoading}
-                autoFocus={true}
-                multiline
-              />
-              <TouchableOpacity
-                onPress={onSubmit}
-                disabled={!input.trim() || isLoading}
-                style={[
-                  styles.sendButton,
-                  {
-                    backgroundColor: input.trim() && !isLoading ? theme.primary : theme.border,
-                    opacity: input.trim() && !isLoading ? 1 : 0.5,
-                  },
-                ]}
-              >
-                <Ionicons
-                  name="send"
-                  size={20}
-                  color="#ffffff"
+              <View style={styles.inputHost}>
+                <Host matchContents=\\{{ vertical: true }}>
+                  <ExpoTextInput
+                    ref={inputRef}
+                    defaultValue={input}
+                    onChangeText={setInput}
+                    placeholder="Type your message..."
+                    placeholderTextColor={theme.text}
+                    style=\\{{
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                      backgroundColor: theme.background,
+                      padding: 8,
+                      width: "100%",
+                    }}
+                    textStyle=\\{{ color: theme.text, fontSize: 14 }}
+                    onSubmitEditing={onSubmit}
+                    editable={!isLoading}
+                    autoFocus={true}
+                    multiline
+                  />
+                </Host>
+              </View>
+              <Host matchContents=\\{{ vertical: true }}>
+                <Button
+                  label={isLoading ? "Sending..." : "Send"}
+                  disabled={!input.trim() || isLoading}
+                  onPress={onSubmit}
                 />
-              </TouchableOpacity>
+              </Host>
             </View>
           </View>
         </View>
@@ -15579,14 +15619,6 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    fontSize: 14,
   },
   scrollView: {
     flex: 1,
@@ -15636,27 +15668,16 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: 8,
   },
-  input: {
+  inputHost: {
     flex: 1,
-    borderWidth: 1,
-    padding: 8,
-    fontSize: 14,
-    minHeight: 36,
-    maxHeight: 100,
-  },
-  sendButton: {
-    padding: 8,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });
 {{else}}
 import { useRef, useEffect, useState } from "react";
+import { Button, Column, Host, Text as ExpoUIText, TextInput as ExpoTextInput, type TextInputRef } from "@expo/ui";
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -15664,8 +15685,6 @@ import {
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { fetch as expoFetch } from "expo/fetch";
-import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
@@ -15688,11 +15707,11 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const { messages, error, sendMessage } = useChat({
     transport: new DefaultChatTransport({
-      fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/ai"),
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
   });
+  const inputRef = useRef<TextInputRef>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -15704,6 +15723,7 @@ export default function AIScreen() {
     if (value) {
       sendMessage({ text: value });
       setInput("");
+      inputRef.current?.clear();
     }
   }
 
@@ -15732,12 +15752,21 @@ export default function AIScreen() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>
-              AI Chat
-            </Text>
-            <Text style={[styles.headerSubtitle, { color: theme.text, opacity: 0.7 }]}>
-              Chat with our AI assistant
-            </Text>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 20, fontWeight: "bold" }}
+                >
+                  AI Chat
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14 }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  Chat with our AI assistant
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
           <ScrollView
             ref={scrollViewRef}
@@ -15797,43 +15826,35 @@ export default function AIScreen() {
           </ScrollView>
           <View style={[styles.inputContainer, { borderTopColor: theme.border }]}>
             <View style={styles.inputRow}>
-              <TextInput
-                value={input}
-                onChangeText={setInput}
-                placeholder="Type your message..."
-                placeholderTextColor={theme.text}
-                style={[
-                  styles.input,
-                  {
-                    color: theme.text,
-                    borderColor: theme.border,
-                    backgroundColor: theme.background,
-                  },
-                ]}
-                onSubmitEditing={(e) => {
-                  e.preventDefault();
-                  onSubmit();
-                }}
-                autoFocus={true}
-                multiline
-              />
-              <TouchableOpacity
-                onPress={onSubmit}
-                disabled={!input.trim()}
-                style={[
-                  styles.sendButton,
-                  {
-                    backgroundColor: input.trim() ? theme.primary : theme.border,
-                    opacity: input.trim() ? 1 : 0.5,
-                  },
-                ]}
-              >
-                <Ionicons
-                  name="send"
-                  size={20}
-                  color="#ffffff"
+              <View style={styles.inputHost}>
+                <Host matchContents=\\{{ vertical: true }}>
+                  <ExpoTextInput
+                    ref={inputRef}
+                    defaultValue={input}
+                    onChangeText={setInput}
+                    placeholder="Type your message..."
+                    placeholderTextColor={theme.text}
+                    style=\\{{
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                      backgroundColor: theme.background,
+                      padding: 8,
+                      width: "100%",
+                    }}
+                    textStyle=\\{{ color: theme.text, fontSize: 14 }}
+                    onSubmitEditing={onSubmit}
+                    autoFocus={true}
+                    multiline
+                  />
+                </Host>
+              </View>
+              <Host matchContents=\\{{ vertical: true }}>
+                <Button
+                  label="Send"
+                  disabled={!input.trim()}
+                  onPress={onSubmit}
                 />
-              </TouchableOpacity>
+              </Host>
             </View>
           </View>
         </View>
@@ -15852,14 +15873,6 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    fontSize: 14,
   },
   scrollView: {
     flex: 1,
@@ -15904,18 +15917,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: 8,
   },
-  input: {
+  inputHost: {
     flex: 1,
-    borderWidth: 1,
-    padding: 8,
-    fontSize: 14,
-    minHeight: 36,
-    maxHeight: 100,
-  },
-  sendButton: {
-    padding: 8,
-    justifyContent: "center",
-    alignItems: "center",
   },
   errorContainer: {
     flex: 1,
@@ -16269,7 +16272,6 @@ import {
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { fetch as expoFetch } from "expo/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { Container } from "@/components/container";
@@ -16291,7 +16293,6 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const { messages, error, sendMessage } = useChat({
     transport: new DefaultChatTransport({
-      fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/ai"),
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
@@ -16755,7 +16756,6 @@ import {
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { fetch as expoFetch } from "expo/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
 import { Button, Separator, FieldError, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
@@ -16776,7 +16776,6 @@ export default function AIScreen() {
   const [input, setInput] = useState("");
   const { messages, error, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
-      fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/ai"),
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
@@ -18240,15 +18239,20 @@ export const deleteTodo = mutation({
         return { success: true };
     },
 });`],
-  ["examples/todo/native/bare/app/(drawer)/todos.tsx.hbs", `import { useState } from "react";
+  ["examples/todo/native/bare/app/(drawer)/todos.tsx.hbs", `import { useRef, useState } from "react";
+import {
+  Button,
+  Checkbox,
+  Host,
+  TextInput as ExpoTextInput,
+  type TextInputRef,
+} from "@expo/ui";
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   ActivityIndicator,
   Alert,
-  TouchableOpacity,
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -18275,6 +18279,7 @@ export default function TodosScreen() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [newTodoText, setNewTodoText] = useState("");
+  const newTodoInputRef = useRef<TextInputRef>(null);
 
   {{#if (eq backend "convex")}}
   const todos = useQuery(api.todos.getAll);
@@ -18287,6 +18292,7 @@ export default function TodosScreen() {
     if (!text) return;
     await createTodoMutation({ text });
     setNewTodoText("");
+    newTodoInputRef.current?.clear();
   }
 
   function handleToggleTodo(id: Id<"todos">, currentCompleted: boolean) {
@@ -18315,6 +18321,7 @@ export default function TodosScreen() {
       onSuccess: () => {
         todos.refetch();
         setNewTodoText("");
+        newTodoInputRef.current?.clear();
       },
     })
   );
@@ -18340,6 +18347,7 @@ export default function TodosScreen() {
       onSuccess: () => {
         todos.refetch();
         setNewTodoText("");
+        newTodoInputRef.current?.clear();
       },
     })
   );
@@ -18413,66 +18421,44 @@ export default function TodosScreen() {
         >
           <View style={styles.inputRow}>
             <View style={styles.inputContainer}>
-              <TextInput
-                value={newTodoText}
-                onChangeText={setNewTodoText}
-                placeholder="Add a new task..."
-                placeholderTextColor={theme.text}
-                {{#unless (eq backend "convex")}}
-                editable={!createMutation.isPending}
-                {{/unless}}
-                onSubmitEditing={handleAddTodo}
-                returnKeyType="done"
-                style={[
-                  styles.input,
-                  {
-                    color: theme.text,
+              <Host matchContents=\\{{ vertical: true }}>
+                <ExpoTextInput
+                  ref={newTodoInputRef}
+                  defaultValue={newTodoText}
+                  onChangeText={setNewTodoText}
+                  placeholder="Add a new task..."
+                  placeholderTextColor={theme.text}
+                  {{#unless (eq backend "convex")}}
+                  editable={!createMutation.isPending}
+                  {{/unless}}
+                  onSubmitEditing={handleAddTodo}
+                  returnKeyType="done"
+                  style=\\{{
+                    borderWidth: 1,
                     borderColor: theme.border,
                     backgroundColor: theme.background,
-                  },
-                ]}
-              />
+                    padding: 12,
+                    width: "100%",
+                  }}
+                  textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                />
+              </Host>
             </View>
-            <TouchableOpacity
-              onPress={handleAddTodo}
+            <Host matchContents=\\{{ vertical: true }}>
               {{#if (eq backend "convex")}}
-              disabled={!newTodoText.trim()}
-              style={[
-                styles.addButton,
-                {
-                  backgroundColor: !newTodoText.trim()
-                    ? theme.border
-                    : theme.primary,
-                  opacity: !newTodoText.trim() ? 0.5 : 1,
-                },
-              ]}
-            >
-              <Ionicons
-                name="add"
-                size={24}
-                color={newTodoText.trim() ? "#ffffff" : theme.text}
+              <Button
+                label="Add"
+                disabled={!newTodoText.trim()}
+                onPress={handleAddTodo}
               />
               {{else}}
-              disabled={createMutation.isPending || !newTodoText.trim()}
-              style={[
-                styles.addButton,
-                {
-                  backgroundColor:
-                    createMutation.isPending || !newTodoText.trim()
-                      ? theme.border
-                      : theme.primary,
-                  opacity:
-                    createMutation.isPending || !newTodoText.trim() ? 0.5 : 1,
-                },
-              ]}
-            >
-              {createMutation.isPending ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <Ionicons name="add" size={24} color="#ffffff" />
-              )}
+              <Button
+                label={createMutation.isPending ? "Adding..." : "Add"}
+                disabled={createMutation.isPending || !newTodoText.trim()}
+                onPress={handleAddTodo}
+              />
               {{/if}}
-            </TouchableOpacity>
+            </Host>
           </View>
         </View>
 
@@ -18523,18 +18509,12 @@ export default function TodosScreen() {
                 ]}
               >
                 <View style={styles.todoRow}>
-                  <TouchableOpacity
-                    onPress={() => handleToggleTodo(todo._id, todo.completed)}
-                    style={[styles.checkbox, { borderColor: theme.border }]}
-                  >
-                    {todo.completed && (
-                      <Ionicons
-                        name="checkmark"
-                        size={16}
-                        color={theme.primary}
-                      />
-                    )}
-                  </TouchableOpacity>
+                  <Host matchContents=\\{{ vertical: true }}>
+                    <Checkbox
+                      value={todo.completed}
+                      onValueChange={() => handleToggleTodo(todo._id, todo.completed)}
+                    />
+                  </Host>
                   <View style={styles.todoTextContainer}>
                     <Text
                       style={[
@@ -18549,16 +18529,13 @@ export default function TodosScreen() {
                       {todo.text}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => handleDeleteTodo(todo._id)}
-                    style={styles.deleteButton}
-                  >
-                    <Ionicons
-                      name="trash-outline"
-                      size={24}
-                      color={theme.notification}
+                  <Host matchContents=\\{{ vertical: true }}>
+                    <Button
+                      label="Delete"
+                      variant="text"
+                      onPress={() => handleDeleteTodo(todo._id)}
                     />
-                  </TouchableOpacity>
+                  </Host>
                 </View>
               </View>
             ))}
@@ -18611,18 +18588,12 @@ export default function TodosScreen() {
                 ]}
               >
                 <View style={styles.todoRow}>
-                  <TouchableOpacity
-                    onPress={() => handleToggleTodo(todo.id, todo.completed)}
-                    style={[styles.checkbox, { borderColor: theme.border }]}
-                  >
-                    {todo.completed && (
-                      <Ionicons
-                        name="checkmark"
-                        size={16}
-                        color={theme.primary}
-                      />
-                    )}
-                  </TouchableOpacity>
+                  <Host matchContents=\\{{ vertical: true }}>
+                    <Checkbox
+                      value={todo.completed}
+                      onValueChange={() => handleToggleTodo(todo.id, todo.completed)}
+                    />
+                  </Host>
                   <View style={styles.todoTextContainer}>
                     <Text
                       style={[
@@ -18637,16 +18608,13 @@ export default function TodosScreen() {
                       {todo.text}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => handleDeleteTodo(todo.id)}
-                    style={styles.deleteButton}
-                  >
-                    <Ionicons
-                      name="trash-outline"
-                      size={24}
-                      color={theme.notification}
+                  <Host matchContents=\\{{ vertical: true }}>
+                    <Button
+                      label="Delete"
+                      variant="text"
+                      onPress={() => handleDeleteTodo(todo.id)}
                     />
-                  </TouchableOpacity>
+                  </Host>
                 </View>
               </View>
             ))}
@@ -18698,16 +18666,6 @@ const styles = StyleSheet.create({
   inputContainer: {
     flex: 1,
   },
-  input: {
-    borderWidth: 1,
-    padding: 12,
-    fontSize: 16,
-  },
-  addButton: {
-    padding: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   centerContainer: {
     alignItems: "center",
     justifyContent: "center",
@@ -18744,23 +18702,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   todoTextContainer: {
     flex: 1,
   },
   todoText: {
     fontSize: 16,
   },
-  deleteButton: {
-    padding: 8,
-  },
-});`],
+});
+`],
   ["examples/todo/native/unistyles/app/(drawer)/todos.tsx.hbs", `import { useState } from "react";
 import {
   View,
@@ -21670,11 +21619,15 @@ shamefully-hoist=true
 strict-peer-dependencies=false
 {{/if}}`],
   ["extras/bunfig.toml.hbs", `[install]
-{{#if (or (includes frontend "nuxt"))}}
-linker = "hoisted" # having issues with Nuxt when linker is isolated
+{{#if (includes frontend "nuxt")}}
+linker = "hoisted" # Nuxt needs hoisting for its dependency resolver
 {{else}}
 linker = "isolated"
-{{/if}}`],
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+peer = false # Expo native projects declare SDK peers explicitly; this keeps Bun isolated installs deduped for native modules
+{{/if}}
+{{/if}}
+`],
   ["extras/env.d.ts.hbs", `{{#if (eq serverDeploy "cloudflare")}}
 import { type server } from "@{{projectName}}/infra/alchemy.run";
 {{else}}
@@ -21699,7 +21652,7 @@ declare module "cloudflare:workers" {
   ["extras/pnpm-workspace.yaml.hbs", `packages:
   - "apps/*"
   - "packages/*"
-{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 
 # pnpm 11 blocks dependency lifecycle scripts unless they are approved here.
 # Entries are scoped to packages this generated stack can pull in.
@@ -21709,6 +21662,9 @@ allowBuilds:
 {{/if}}
 {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
   msw: true
+{{/if}}
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+  msgpackr-extract: true
 {{/if}}
 {{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (includes addons "pwa"))}}
   sharp: true
@@ -22094,13 +22050,7 @@ import { env } from "@{{projectName}}/env/native";
   {{/unless}}
 {{/if}}
 
-import { Stack } from "expo-router";
-import {
-  DarkTheme,
-  DefaultTheme,
-  type Theme,
-  ThemeProvider,
-} from "@react-navigation/native";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 {{#if (eq api "trpc")}}
@@ -22113,11 +22063,11 @@ import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { StyleSheet } from "react-native";
 
-const LIGHT_THEME: Theme = {
+const LIGHT_THEME = {
   ...DefaultTheme,
   colors: NAV_THEME.light,
 };
-const DARK_THEME: Theme = {
+const DARK_THEME = {
   ...DarkTheme,
   colors: NAV_THEME.dark,
 };
@@ -22397,7 +22347,8 @@ export default function TabLayout() {
 
 `],
   ["frontend/native/bare/app/(drawer)/(tabs)/index.tsx.hbs", `import { Container } from "@/components/container";
-import { ScrollView, Text, View, StyleSheet } from "react-native";
+import { Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { ScrollView, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
@@ -22409,12 +22360,21 @@ export default function TabOne() {
     <Container>
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
-          <Text style={[styles.title, { color: theme.text }]}>
-            Tab One
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.text, opacity: 0.7 }]}>
-            Explore the first section of your app
-          </Text>
+          <Host matchContents=\\{{ vertical: true }}>
+            <Column spacing={8}>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
+              >
+                Tab One
+              </ExpoUIText>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                style=\\{{ opacity: 0.7 }}
+              >
+                Explore the first section of your app
+              </ExpoUIText>
+            </Column>
+          </Host>
         </View>
       </ScrollView>
     </Container>
@@ -22429,19 +22389,11 @@ const styles = StyleSheet.create({
   content: {
     paddingVertical: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-  },
 });
-
 `],
   ["frontend/native/bare/app/(drawer)/(tabs)/two.tsx.hbs", `import { Container } from "@/components/container";
-import { ScrollView, Text, View, StyleSheet } from "react-native";
+import { Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { ScrollView, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
@@ -22453,12 +22405,21 @@ export default function TabTwo() {
     <Container>
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
-          <Text style={[styles.title, { color: theme.text }]}>
-            Tab Two
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.text, opacity: 0.7 }]}>
-            Discover more features and content
-          </Text>
+          <Host matchContents=\\{{ vertical: true }}>
+            <Column spacing={8}>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
+              >
+                Tab Two
+              </ExpoUIText>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                style=\\{{ opacity: 0.7 }}
+              >
+                Discover more features and content
+              </ExpoUIText>
+            </Column>
+          </Host>
         </View>
       </ScrollView>
     </Container>
@@ -22473,18 +22434,10 @@ const styles = StyleSheet.create({
   content: {
     paddingVertical: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-  },
 });
-
 `],
-  ["frontend/native/bare/app/(drawer)/index.tsx.hbs", `import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+  ["frontend/native/bare/app/(drawer)/index.tsx.hbs", `import { {{#if (or (eq auth "clerk") (eq auth "better-auth"))}}Button, {{/if}}Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { View, ScrollView, StyleSheet } from "react-native";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
@@ -22497,13 +22450,13 @@ import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 {{/if}}
 {{#if (and (eq backend "convex") (eq auth "clerk"))}}
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (ne backend "convex") (eq auth "clerk"))}}
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { useAuth, useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
@@ -22545,9 +22498,15 @@ return (
 <Container>
   <ScrollView style={styles.scrollView}>
     <View style={styles.content}>
-      <Text style={[styles.title, { color: theme.text }]}>
-        BETTER T STACK
-      </Text>
+      <Host style={styles.titleHost} matchContents=\\{{ vertical: true }}>
+        <Column>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
+          >
+            BETTER T STACK
+          </ExpoUIText>
+        </Column>
+      </Host>
 
       {{#unless (and (eq backend "convex") (eq auth "better-auth"))}}
       <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -22555,16 +22514,25 @@ return (
         <View style={styles.statusRow}>
           <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#f59e0b" }]} />
           <View style={styles.statusContent}>
-            <Text style={[styles.statusTitle, { color: theme.text }]}>
-              Convex
-            </Text>
-            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-              {healthCheck === undefined
-              ? "Checking..."
-              : healthCheck === "OK"
-              ? "Connected to API"
-              : "API Disconnected"}
-            </Text>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14, fontWeight: "bold" }}
+                >
+                  Convex
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 12 }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  {healthCheck === undefined
+                  ? "Checking..."
+                  : healthCheck === "OK"
+                  ? "Connected to API"
+                  : "API Disconnected"}
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
         </View>
         {{else}}
@@ -22572,16 +22540,25 @@ return (
         <View style={styles.statusRow}>
           <View style={[styles.statusIndicator, { backgroundColor: healthCheck.data ? "#10b981" : "#f59e0b" }]} />
           <View style={styles.statusContent}>
-            <Text style={[styles.statusTitle, { color: theme.text }]}>
-              {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}}
-            </Text>
-            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-              {healthCheck.isLoading
-              ? "Checking connection..."
-              : healthCheck.data
-              ? "All systems operational"
-              : "Service unavailable"}
-            </Text>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14, fontWeight: "bold" }}
+                >
+                  {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}}
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 12 }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  {healthCheck.isLoading
+                  ? "Checking connection..."
+                  : healthCheck.data
+                  ? "All systems operational"
+                  : "Service unavailable"}
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
         </View>
         {{/unless}}
@@ -22591,85 +22568,139 @@ return (
 
       {{#if (and (eq backend "convex") (eq auth "clerk"))}}
       <Authenticated>
-        <Text style=\\{{ color: theme.text }}>Hello {user?.emailAddresses[0].emailAddress}</Text>
-        <Text style=\\{{ color: theme.text }}>Private Data: {privateData?.message}</Text>
+        <Host style={styles.authHost} matchContents=\\{{ vertical: true }}>
+          <Column spacing={6}>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 14 }}>
+              {\`Hello \${user?.emailAddresses[0].emailAddress ?? ""}\`}
+            </ExpoUIText>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 14 }}>
+              {\`Private Data: \${privateData?.message ?? ""}\`}
+            </ExpoUIText>
+          </Column>
+        </Host>
         <SignOutButton />
       </Authenticated>
       <Unauthenticated>
-        <Link href="/(auth)/sign-in">
-        <Text style=\\{{ color: theme.primary }}>Sign in</Text>
-        </Link>
-        <Link href="/(auth)/sign-up">
-        <Text style=\\{{ color: theme.primary }}>Sign up</Text>
-        </Link>
+        <Host style={styles.authActionsHost} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            <Button
+              label="Sign in"
+              variant="outlined"
+              onPress={() => router.push("/(auth)/sign-in")}
+            />
+            <Button
+              label="Sign up"
+              onPress={() => router.push("/(auth)/sign-up")}
+            />
+          </Column>
+        </Host>
       </Unauthenticated>
       <AuthLoading>
-        <Text style=\\{{ color: theme.text }}>Loading...</Text>
+        <Host matchContents=\\{{ vertical: true }}>
+          <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 14 }}>
+            Loading...
+          </ExpoUIText>
+        </Host>
       </AuthLoading>
       {{/if}}
 
       {{#if (and (ne backend "convex") (eq auth "clerk"))}}
       {!isLoaded ? (
-      <Text style=\\{{ color: theme.text }}>Loading...</Text>
+      <Host matchContents=\\{{ vertical: true }}>
+        <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 14 }}>
+          Loading...
+        </ExpoUIText>
+      </Host>
       ) : isSignedIn ? (
       <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.userHeader}>
-          <Text style={[styles.userText, { color: theme.text }]}>
-            Welcome, <Text style={styles.userName}>{user?.fullName ?? user?.firstName ?? "there"}</Text>
-          </Text>
-        </View>
-        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
-          {user?.emailAddresses[0]?.emailAddress}
-        </Text>
+        <Host style={styles.userHeader} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 16 }}>
+              {\`Welcome, \${user?.fullName ?? user?.firstName ?? "there"}\`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 14 }}
+              style=\\{{ opacity: 0.7 }}
+            >
+              {user?.emailAddresses[0]?.emailAddress ?? ""}
+            </ExpoUIText>
+          </Column>
+        </Host>
         <SignOutButton />
       </View>
       ) : (
       <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Link href="/(auth)/sign-in">
-          <Text style=\\{{ color: theme.primary }}>Sign in</Text>
-        </Link>
-        <Link href="/(auth)/sign-up">
-          <Text style=\\{{ color: theme.primary }}>Sign up</Text>
-        </Link>
+        <Host style={styles.authActionsHost} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            <Button
+              label="Sign in"
+              variant="outlined"
+              onPress={() => router.push("/(auth)/sign-in")}
+            />
+            <Button
+              label="Sign up"
+              onPress={() => router.push("/(auth)/sign-up")}
+            />
+          </Column>
+        </Host>
       </View>
       )}
       {{/if}}
 
       {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+      <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Host style={styles.statusCardTitleHost} matchContents=\\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}
+          >
+            API Status
+          </ExpoUIText>
+        </Host>
+        <View style={styles.statusRow}>
+          <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#f59e0b" }]} />
+          <View style={styles.statusContent}>
+            <Host matchContents=\\{{ vertical: true }}>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 12 }}
+                style=\\{{ opacity: 0.7 }}
+              >
+                {healthCheck === undefined
+                ? "Checking..."
+                : healthCheck === "OK"
+                ? "Connected to API"
+                : "API Disconnected"}
+              </ExpoUIText>
+            </Host>
+          </View>
+        </View>
+      </View>
+
       {user ? (
       <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.userHeader}>
-          <Text style={[styles.userText, { color: theme.text }]}>
-            Welcome, <Text style={styles.userName}>{user.name}</Text>
-          </Text>
-        </View>
-        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
-          {user.email}
-        </Text>
-        <TouchableOpacity style={[styles.signOutButton, { backgroundColor: theme.notification }]} onPress={()=> {
-          authClient.signOut();
-          }}
-          >
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+        <Host style={styles.userHeader} matchContents>
+          <Column spacing={6}>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+              {\`Welcome, \${user.name}\`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 14 }}
+              style=\\{{ opacity: 0.7 }}
+            >
+              {user.email}
+            </ExpoUIText>
+          </Column>
+        </Host>
+        <Host matchContents=\\{{ vertical: true }}>
+          <Button
+            label="Sign Out"
+            variant="outlined"
+            onPress={() => {
+              authClient.signOut();
+            }}
+          />
+        </Host>
       </View>
-      ) : null}
-      <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.statusCardTitle, { color: theme.text }]}>
-          API Status
-        </Text>
-        <View style={styles.statusRow}>
-          <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#ef4444" }]} />
-          <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-            {healthCheck === undefined
-            ? "Checking..."
-            : healthCheck === "OK"
-            ? "Connected to API"
-            : "API Disconnected"}
-          </Text>
-        </View>
-      </View>
-      {!user && (
+      ) : (
       <>
         <SignIn />
         <SignUp />
@@ -22687,12 +22718,13 @@ scrollView: {
 flex: 1,
 },
 content: {
-padding: 16,
+paddingHorizontal: 20,
+paddingTop: 28,
+paddingBottom: 32,
 },
-title: {
-fontSize: 24,
-fontWeight: "bold",
-marginBottom: 16,
+titleHost: {
+alignSelf: "center",
+marginBottom: 24,
 },
 card: {
 padding: 16,
@@ -22705,56 +22737,42 @@ alignItems: "center",
 gap: 8,
 },
 statusIndicator: {
-height: 8,
-width: 8,
+height: 10,
+width: 10,
+borderRadius: 999,
 },
 statusContent: {
 flex: 1,
-},
-statusTitle: {
-fontSize: 14,
-fontWeight: "bold",
-},
-statusText: {
-fontSize: 12,
 },
 userCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
 userHeader: {
 marginBottom: 8,
 },
-userText: {
-fontSize: 16,
-},
-userName: {
-fontWeight: "bold",
-},
-userEmail: {
-fontSize: 14,
+authHost: {
 marginBottom: 12,
 },
-signOutButton: {
-padding: 12,
-},
-signOutText: {
-color: "#ffffff",
+authActionsHost: {
+marginTop: 4,
 },
 statusCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
-statusCardTitle: {
+statusCardTitleHost: {
 marginBottom: 8,
-fontWeight: "bold",
 },
 });
 `],
   ["frontend/native/bare/app/+not-found.tsx.hbs", `import { Container } from "@/components/container";
-import { Link, Stack } from "expo-router";
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { Stack, router } from "expo-router";
 import { Text, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
@@ -22770,17 +22788,26 @@ export default function NotFoundScreen() {
         <View style={styles.container}>
           <View style={styles.content}>
             <Text style={styles.emoji}>🤔</Text>
-            <Text style={[styles.title, { color: theme.text }]}>
-              Page Not Found
-            </Text>
-            <Text style={[styles.subtitle, { color: theme.text, opacity: 0.7 }]}>
-              Sorry, the page you're looking for doesn't exist.
-            </Text>
-            <Link href="/" asChild>
-              <Text style={[styles.link, { color: theme.primary, backgroundColor: \`\${theme.primary}1a\` }]}>
-                Go to Home
-              </Text>
-            </Link>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={12} alignment="center">
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 20, fontWeight: "bold", textAlign: "center" }}
+                >
+                  Page Not Found
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14, textAlign: "center" }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  Sorry, the page you're looking for doesn't exist.
+                </ExpoUIText>
+                <Button
+                  label="Go to Home"
+                  variant="outlined"
+                  onPress={() => router.replace("/")}
+                />
+              </Column>
+            </Host>
           </View>
         </View>
       </Container>
@@ -22802,25 +22829,11 @@ const styles = StyleSheet.create({
     fontSize: 48,
     marginBottom: 16,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  link: {
-    padding: 12,
-  },
 });
-
 `],
   ["frontend/native/bare/app/modal.tsx.hbs", `import { Container } from "@/components/container";
-import { Text, View, StyleSheet } from "react-native";
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
@@ -22831,9 +22844,22 @@ export default function Modal() {
   return (
     <Container>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>Modal</Text>
-        </View>
+        <Host style={styles.expoUiHost}>
+          <Column spacing={12} alignment="center">
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 20, fontWeight: "bold" }}
+            >
+              Modal
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 14, textAlign: "center" }}
+              style=\\{{ opacity: 0.7 }}
+            >
+              Built with Expo UI universal components
+            </ExpoUIText>
+            <Button label="Native control" onPress={() => null} />
+          </Column>
+        </Host>
       </View>
     </Container>
   );
@@ -22844,15 +22870,11 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  header: {
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
+  expoUiHost: {
+    alignSelf: "stretch",
+    padding: 16,
   },
 });
-
 `],
   ["frontend/native/bare/components/container.tsx.hbs", `import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22930,13 +22952,14 @@ const styles = StyleSheet.create({
 `],
   ["frontend/native/bare/components/tabbar-icon.tsx.hbs", `import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+type FontAwesomeProps = React.ComponentProps<typeof FontAwesome>;
+
 export const TabBarIcon = (props: {
-  name: React.ComponentProps<typeof FontAwesome>["name"];
-  color: string;
+  name: FontAwesomeProps["name"];
+  color: FontAwesomeProps["color"];
 }) => {
   return <FontAwesome size={24} style=\\{{ marginBottom: -3 }} {...props} />;
 };
-
 `],
   ["frontend/native/bare/lib/constants.ts.hbs", `export const NAV_THEME = {
   light: {
@@ -22998,41 +23021,39 @@ module.exports = config;
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/ui": "~56.0.12",
     "@expo/vector-icons": "^15.1.1",
-    "@react-navigation/bottom-tabs": "^7.15.9",
-    "@react-navigation/drawer": "^7.9.4",
-    "@react-navigation/native": "^7.2.2",
     "@tanstack/react-query": "^5.99.2",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
-    "expo": "^55.0.17",
-    "expo-constants": "~55.0.15",
-    "expo-crypto": "~55.0.14",
-    "expo-font": "~55.0.6",
-    "expo-linking": "~55.0.14",
-    "expo-network": "~55.0.13",
-    "expo-router": "~55.0.13",
-    "expo-secure-store": "~55.0.13",
-    "expo-splash-screen": "~55.0.19",
-    "expo-status-bar": "~55.0.5",
-    "expo-system-ui": "~55.0.16",
-    "expo-web-browser": "~55.0.14",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-native": "0.83.6",
-    "react-native-gesture-handler": "~2.30.0",
-    "react-native-reanimated": "4.2.1",
-    "react-native-safe-area-context": "~5.6.2",
-    "react-native-screens": "~4.23.0",
+    "expo": "~56.0.3",
+    "expo-constants": "~56.0.14",
+    "expo-crypto": "~56.0.3",
+    "expo-font": "~56.0.5",
+    "expo-linking": "~56.0.11",
+    "expo-network": "~56.0.4",
+    "expo-router": "~56.2.5",
+    "expo-secure-store": "~56.0.4",
+    "expo-splash-screen": "~56.0.9",
+    "expo-status-bar": "~56.0.4",
+    "expo-system-ui": "~56.0.5",
+    "expo-web-browser": "~56.0.5",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.1",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.7.4"
+    "react-native-worklets": "0.8.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.28.0",
-    "@types/react": "~19.2.10",
-    "typescript": "~5.9.2"
+    "@babel/core": "^7.29.0",
+    "@types/react": "~19.2.14",
+    "typescript": "^6"
   },
   "private": true
 }
@@ -24174,9 +24195,11 @@ const styles = StyleSheet.create((theme) => ({
 `],
   ["frontend/native/unistyles/components/tabbar-icon.tsx.hbs", `import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+type FontAwesomeProps = React.ComponentProps<typeof FontAwesome>;
+
 export const TabBarIcon = (props: {
-  name: React.ComponentProps<typeof FontAwesome>["name"];
-  color: string;
+  name: FontAwesomeProps["name"];
+  color: FontAwesomeProps["color"];
 }) => {
   return <FontAwesome size={24} style=\\{{ marginBottom: -3 }} {...props} />;
 };
@@ -24203,45 +24226,42 @@ module.exports = config;
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
-    "@react-navigation/bottom-tabs": "^7.15.9",
-    "@react-navigation/drawer": "^7.9.4",
-    "@react-navigation/native": "^7.2.2",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
-    "babel-preset-expo": "~55.0.18",
-    "expo": "^55.0.17",
-    "expo-constants": "~55.0.15",
-    "expo-crypto": "~55.0.14",
-    "expo-dev-client": "~55.0.28",
-    "expo-font": "~55.0.6",
-    "expo-linking": "~55.0.14",
-    "expo-network": "~55.0.13",
-    "expo-router": "~55.0.13",
-    "expo-secure-store": "~55.0.13",
-    "expo-splash-screen": "~55.0.19",
-    "expo-status-bar": "~55.0.5",
-    "expo-system-ui": "~55.0.16",
-    "expo-web-browser": "~55.0.14",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-native": "0.83.6",
+    "babel-preset-expo": "~56.0.0",
+    "expo": "~56.0.3",
+    "expo-constants": "~56.0.14",
+    "expo-crypto": "~56.0.3",
+    "expo-dev-client": "~56.0.14",
+    "expo-font": "~56.0.5",
+    "expo-linking": "~56.0.11",
+    "expo-network": "~56.0.4",
+    "expo-router": "~56.2.5",
+    "expo-secure-store": "~56.0.4",
+    "expo-splash-screen": "~56.0.9",
+    "expo-status-bar": "~56.0.4",
+    "expo-system-ui": "~56.0.5",
+    "expo-web-browser": "~56.0.5",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
     "react-native-edge-to-edge": "^1.8.1",
-    "react-native-gesture-handler": "~2.30.0",
-    "react-native-nitro-modules": "^0.35.4",
-    "react-native-reanimated": "4.2.1",
-    "react-native-safe-area-context": "~5.6.2",
-    "react-native-screens": "~4.23.0",
-    "react-native-unistyles": "^3.2.3",
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-nitro-modules": "^0.35.7",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.1",
+    "react-native-unistyles": "^3.2.4",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.7.4"
+    "react-native-worklets": "0.8.3"
   },
   "devDependencies": {
-    "ajv": "^8.17.1",
-    "@babel/core": "^7.28.0",
-    "@types/react": "~19.2.10",
-    "typescript": "~5.9.2"
+    "ajv": "^8.20.0",
+    "@babel/core": "^7.29.0",
+    "@types/react": "~19.2.14",
+    "typescript": "^6"
   }
 }
 `],
@@ -24351,7 +24371,7 @@ export const darkTheme = {
     "strict": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["./*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
@@ -24737,7 +24757,7 @@ export default function TabLayout() {
 				name="index"
 				options=\\{{
 					title: "Home",
-					tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+					tabBarIcon: ({ color, size }) => (
 						<Ionicons name="home" size={size} color={color} />
 					),
 				}}
@@ -24746,7 +24766,7 @@ export default function TabLayout() {
 				name="two"
 				options=\\{{
 					title: "Explore",
-					tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+					tabBarIcon: ({ color, size }) => (
 						<Ionicons name="compass" size={size} color={color} />
 					),
 				}}
@@ -25263,46 +25283,44 @@ module.exports = uniwindConfig;
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~55.0.10",
+    "@expo/metro-runtime": "~56.0.11",
     "@expo/vector-icons": "^15.1.1",
-    "@gorhom/bottom-sheet": "^5.2.10",
-    "@react-navigation/drawer": "^7.9.4",
-    "@react-navigation/elements": "^2.9.14",
+    "@gorhom/bottom-sheet": "^5.2.14",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
-    "expo": "^55.0.17",
-    "expo-constants": "~55.0.15",
-    "expo-font": "~55.0.6",
-    "expo-haptics": "~55.0.14",
-    "expo-linking": "~55.0.14",
-    "expo-network": "~55.0.13",
-    "expo-router": "~55.0.13",
-    "expo-secure-store": "~55.0.13",
-    "expo-status-bar": "~55.0.5",
-    "expo-web-browser": "~55.0.14",
-    "heroui-native": "^1.0.2",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-native": "0.83.6",
-    "react-native-gesture-handler": "~2.30.0",
-    "react-native-keyboard-controller": "1.20.7",
-    "react-native-reanimated": "4.2.1",
-    "react-native-safe-area-context": "~5.6.2",
-    "react-native-screens": "~4.23.0",
-    "react-native-svg": "15.15.3",
+    "expo": "~56.0.3",
+    "expo-constants": "~56.0.14",
+    "expo-font": "~56.0.5",
+    "expo-haptics": "~56.0.3",
+    "expo-linking": "~56.0.11",
+    "expo-network": "~56.0.4",
+    "expo-router": "~56.2.5",
+    "expo-secure-store": "~56.0.4",
+    "expo-status-bar": "~56.0.4",
+    "expo-web-browser": "~56.0.5",
+    "heroui-native": "^1.0.3",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-keyboard-controller": "1.21.8",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.1",
+    "react-native-svg": "15.15.5",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.7.4",
-    "tailwind-merge": "^3.5.0",
+    "react-native-worklets": "0.8.3",
+    "tailwind-merge": "^3.6.0",
     "tailwind-variants": "^3.2.2",
-    "tailwindcss": "^4.2.4",
-    "uniwind": "^1.6.3"
+    "tailwindcss": "^4.3.0",
+    "uniwind": "^1.7.0"
   },
   "devDependencies": {
-    "@types/node": "^24.10.0",
-    "@types/react": "~19.2.10",
-    "typescript": "~5.9.2"
+    "@types/node": "^25.9.1",
+    "@types/react": "~19.2.14",
+    "typescript": "^6"
   }
 }
 `],
@@ -25322,6 +25340,8 @@ module.exports = uniwindConfig;
   ]
 }`],
   ["frontend/native/uniwind/uniwind-env.d.ts", `/// <reference types="uniwind/types" />
+
+declare module "*.css";
 `],
   ["frontend/nuxt/_gitignore", `# Nuxt dev/build outputs
 .output
@@ -25662,15 +25682,15 @@ initOpenNextCloudflareForDev();
     "lucide-react": "^0.546.0",
     "next": "^16.2.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "sonner": "^2.0.5",
     "babel-plugin-react-compiler": "^1.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^20",
-    "@types/react": "^19.2.10",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "^4.1.18"
   }
@@ -26067,8 +26087,8 @@ export function ThemeProvider({
     "isbot": "^5.1.39",
     "lucide-react": "^1.8.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "react-router": "^7.14.1",
     "sonner": "^2.0.7"
   },
@@ -26076,7 +26096,7 @@ export function ThemeProvider({
     "@react-router/dev": "^7.14.1",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^20",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "react-router-devtools": "^1.1.0",
     "tailwindcss": "^4.2.2",
@@ -26610,15 +26630,15 @@ export default defineConfig({
 		"@tanstack/react-router": "^1.168.22",
 		"lucide-react": "^1.8.0",
         "next-themes": "^0.4.6",
-		"react": "^19.2.5",
-		"react-dom": "^19.2.5",
+		"react": "^19.2.6",
+		"react-dom": "^19.2.6",
         "sonner": "^2.0.7"
 	},
 	"devDependencies": {
 		"@tanstack/react-router-devtools": "^1.166.13",
 		"@tanstack/router-plugin": "^1.167.22",
 		"@types/node": "^22.13.14",
-		"@types/react": "^19.2.14",
+		"@types/react": "^19.2.15",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^6.0.1",
 		"postcss": "^8.5.10",
@@ -27061,8 +27081,8 @@ export default defineConfig({
     "@tanstack/react-start": "^1.167.41",
     "lucide-react": "^1.8.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "sonner": "^2.0.7",
     "tailwindcss": "^4.2.2"
   },
@@ -27070,7 +27090,7 @@ export default defineConfig({
     "@tanstack/react-router-devtools": "^1.166.13",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "jsdom": "^29.0.2",
@@ -29261,14 +29281,14 @@ await app.finalize();
     "clsx": "^2.1.1",
     "lucide-react": "^0.546.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "sonner": "^2.0.5",
     "tailwind-merge": "^3.3.1",
     "tw-animate-css": "^1.3.4"
   },
   "devDependencies": {
-    "@types/react": "^19.2.10",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "^4.1.18"
   },
