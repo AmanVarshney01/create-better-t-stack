@@ -14002,7 +14002,10 @@ const fastify = Fastify({
 
 fastify.register(fastifyCors, baseCorsConfig);
 {{#if (eq auth "clerk")}}
-fastify.register(clerkPlugin);
+fastify.register(clerkPlugin, {
+	publishableKey: env.CLERK_PUBLISHABLE_KEY,
+	secretKey: env.CLERK_SECRET_KEY,
+});
 {{/if}}
 
 {{#if (eq api "orpc")}}
