@@ -54,7 +54,9 @@ export const stackParsers = {
 
 export const stackQueryStatesOptions = {
   history: "replace" as const,
-  shallow: false,
+  // The stack builder state is fully client-driven on /new, so URL updates
+  // should stay shallow instead of forcing a server navigation.
+  shallow: true,
   urlKeys: stackUrlKeys,
   clearOnDefault: true,
 };

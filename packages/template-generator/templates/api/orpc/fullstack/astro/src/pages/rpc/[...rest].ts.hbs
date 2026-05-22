@@ -1,4 +1,7 @@
 import type { APIRoute } from "astro";
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/fetch";
 import { onError } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
@@ -12,15 +15,35 @@ const handler = new RPCHandler(appRouter, {
   ],
 });
 
+const apiHandler = new OpenAPIHandler(appRouter, {
+  plugins: [
+    new OpenAPIReferencePlugin({
+      schemaConverters: [new ZodToJsonSchemaConverter()],
+    }),
+  ],
+  interceptors: [
+    onError((error) => {
+      console.error(error);
+    }),
+  ],
+});
+
 export const prerender = false;
 
 export const ALL: APIRoute = async ({ request }) => {
   const context = await createContext({ headers: request.headers });
 
-  const { response } = await handler.handle(request, {
+  const rpcResult = await handler.handle(request, {
     prefix: "/rpc",
     context,
   });
+  if (rpcResult.response) return rpcResult.response;
 
-  return response ?? new Response("Not found", { status: 404 });
+  const apiResult = await apiHandler.handle(request, {
+    prefix: "/rpc/api-reference",
+    context,
+  });
+  if (apiResult.response) return apiResult.response;
+
+  return new Response("Not found", { status: 404 });
 };

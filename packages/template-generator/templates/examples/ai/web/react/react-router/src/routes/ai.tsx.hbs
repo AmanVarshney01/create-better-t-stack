@@ -3,7 +3,6 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
@@ -46,7 +45,7 @@ const AI: React.FC = () => {
   }, [messages]);
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -80,7 +79,7 @@ const AI: React.FC = () => {
             Ask me anything to get started!
           </div>
         ) : (
-          messages.map((message: UIMessage) => (
+          messages.map((message) => (
             <div
               key={message.key}
               className={`p-3 rounded-lg ${
@@ -93,7 +92,9 @@ const AI: React.FC = () => {
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
               <MessageContent
-                text={message.text ?? ""}
+                text={(message.parts ?? [])
+                  .map((part) => (part.type === "text" ? part.text : ""))
+                  .join("")}
                 isStreaming={message.status === "streaming"}
               />
             </div>

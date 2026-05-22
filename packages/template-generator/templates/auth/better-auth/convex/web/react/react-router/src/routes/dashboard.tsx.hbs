@@ -17,11 +17,11 @@ import { useState } from "react";
 function PrivateDashboardContent() {
   const privateData = useQuery(api.privateData.get);
   {{#if (eq payments "polar")}}
-  const products = useQuery(api.polar.getConfiguredProducts);
+  const products = useQuery(api.polar.listAllProducts);
   const subscription = useQuery(api.polar.getCurrentSubscription);
 
-  const proProduct = products?.pro;
-  const hasProSubscription = subscription?.productKey === "pro";
+  const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring) ?? products?.[0];
+  const hasActiveSubscription = Boolean(subscription);
   {{/if}}
 
   return (
@@ -29,11 +29,11 @@ function PrivateDashboardContent() {
       <h1>Dashboard</h1>
       <p>privateData: {privateData?.message}</p>
       {{#if (eq payments "polar")}}
-      <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
+      <p>Plan: {hasActiveSubscription ? "Active" : "Free"}</p>
       {products === undefined || subscription === undefined ? (
         <p>Loading subscription options...</p>
-      ) : proProduct ? (
-        hasProSubscription ? (
+      ) : product ? (
+        hasActiveSubscription ? (
           <CustomerPortalLink
             polarApi={api.polar}
             className={buttonVariants({ variant: "outline" })}
@@ -43,15 +43,15 @@ function PrivateDashboardContent() {
         ) : (
           <CheckoutLink
             polarApi={api.polar}
-            productIds={[proProduct.id]}
+            productIds={[product.id]}
             embed={false}
             className={buttonVariants({ variant: "default" })}
           >
-            Upgrade to Pro
+            Upgrade
           </CheckoutLink>
         )
       ) : (
-        <p>Set POLAR_PRODUCT_ID_PRO in packages/backend/.env.local to enable checkout.</p>
+        <p>No plans available.</p>
       )}
       {{/if}}
       <UserMenu />

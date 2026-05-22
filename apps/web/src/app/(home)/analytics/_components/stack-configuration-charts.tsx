@@ -1,148 +1,40 @@
 "use client";
 
-import * as Plot from "@observablehq/plot";
-
-import {
-  formatPercent,
-  getPlotFontSize,
-  interpolateColor,
-  isCompactPlot,
-  resolvePlotMargins,
-  shortenLabel,
-} from "./analytics-helpers";
-import { ChartCard } from "./chart-card";
-import { PlotChart } from "./plot-chart";
+import { shortenLabel } from "./analytics-helpers";
 import { PreferenceChartCard } from "./preference-chart-card";
 import { SectionHeader } from "./section-header";
 import type { AggregatedAnalyticsData } from "./types";
-
-function PairingMatrix({
-  title,
-  description,
-  matrix,
-  tone,
-}: {
-  title: string;
-  description: string;
-  matrix: AggregatedAnalyticsData["stackMatrix"];
-  tone: "chart1" | "chart4";
-}) {
-  return (
-    <ChartCard title={title} description={description}>
-      <PlotChart
-        ariaLabel={title}
-        className="min-h-[320px]"
-        build={({ width, palette }) => {
-          const compact = isCompactPlot(width);
-          const maxValue = Math.max(matrix.maxValue, 1);
-          const fillEnd = tone === "chart1" ? palette.chart1 : palette.chart4;
-          const xLabelCount = matrix.xDomain.length;
-          const needsDenseXAxis = xLabelCount > (compact ? 5 : 7);
-          const cells = matrix.data.map((item) => ({
-            ...item,
-            tone:
-              item.count === 0
-                ? palette.background
-                : interpolateColor(palette.border, fillEnd, item.count / maxValue),
-          }));
-
-          const margins = resolvePlotMargins(
-            width,
-            {
-              top: 18,
-              right: 18,
-              bottom: needsDenseXAxis ? 78 : 54,
-              left: 88,
-            },
-            {
-              top: 12,
-              right: 8,
-              bottom: needsDenseXAxis ? 58 : 38,
-              left: 62,
-            },
-          );
-
-          return Plot.plot({
-            width,
-            height: compact
-              ? Math.max(240, matrix.yDomain.length * 40 + 70)
-              : Math.max(280, matrix.yDomain.length * 54 + 90),
-            marginTop: margins.top,
-            marginRight: margins.right,
-            marginBottom: margins.bottom,
-            marginLeft: margins.left,
-            style: {
-              background: "transparent",
-              color: palette.foreground,
-              fontFamily: "var(--font-mono)",
-              fontSize: getPlotFontSize(width),
-            },
-            x: {
-              label: null,
-              domain: matrix.xDomain,
-              tickRotate: needsDenseXAxis ? -40 : 0,
-              tickFormat: (value) => shortenLabel(String(value), compact ? 8 : 16),
-            },
-            y: {
-              label: null,
-              domain: matrix.yDomain,
-              tickFormat: (value) => shortenLabel(String(value), compact ? 8 : 16),
-            },
-            marks: [
-              Plot.cell(cells, {
-                x: "x",
-                y: "y",
-                fill: "tone",
-                inset: 2,
-                title: (item) =>
-                  `${item.y} + ${item.x}\nProjects: ${item.count.toLocaleString()}\nShare: ${formatPercent(item.share, true)}`,
-              }),
-              Plot.text(
-                cells.filter((item) => item.count > 0),
-                {
-                  x: "x",
-                  y: "y",
-                  text: (item) => item.count.toLocaleString(),
-                  fill: (item) =>
-                    item.count / maxValue > 0.5 ? palette.background : palette.foreground,
-                  fontSize: compact ? 10 : 12,
-                  fontWeight: 700,
-                },
-              ),
-            ],
-          });
-        }}
-      />
-    </ChartCard>
-  );
-}
 
 export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
   return (
     <div className="space-y-6">
       <SectionHeader
         label="Stack choices"
-        title="Frontend, backend, database, ORM, API, auth, and runtime choices."
-        description="These charts show which stack options were selected most often and which combinations appear together."
+        title="Frameworks, runtimes, data layers, and auth"
+        description="The most common stack decisions and pairings selected during project creation."
         aside={
-          <div className="rounded-full border border-border/60 bg-background/55 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          <div className="rounded border border-border bg-fd-background px-3 py-1.5 font-mono text-muted-foreground text-xs">
             top stack {shortenLabel(data.summary.topStack, 28)}
           </div>
         }
       />
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <PairingMatrix
-          title="Frontend x Backend"
-          description="How often each frontend and backend combination was selected."
-          matrix={data.stackMatrix}
-          tone="chart1"
+        <PreferenceChartCard
+          title="Frontend and backend pairings"
+          description="The combinations that appear most often across tracked setups."
+          data={data.stackCombinationDistribution}
+          colorKey="chart1"
+          maxItems={10}
+          chartClassName="min-h-[420px]"
         />
-        <PairingMatrix
-          title="Database x ORM"
-          description="How often each database and ORM combination was selected."
-          matrix={data.databaseOrmMatrix}
-          tone="chart4"
+        <PreferenceChartCard
+          title="Database and ORM pairings"
+          description="Which persistence choices tend to be selected together."
+          data={data.databaseORMCombinationDistribution}
+          colorKey="chart4"
+          maxItems={10}
+          chartClassName="min-h-[420px]"
         />
       </div>
 
@@ -167,7 +59,7 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
           description="How often each database was selected."
           data={data.databaseDistribution}
           colorKey="chart4"
-          chartClassName="min-h-[280px]"
+          chartClassName="min-h-[320px]"
         />
         <PreferenceChartCard
           title="ORM"

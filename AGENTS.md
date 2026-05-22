@@ -63,3 +63,17 @@ This repo is a Bun + Turborepo monorepo.
   - linked issue (if applicable),
   - verification steps run (`bun run check`, relevant tests),
   - screenshots/GIFs for web UI changes.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues for `AmanVarshney01/create-better-t-stack` using the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The canonical triage roles map directly to same-named GitHub labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This repo uses a single-context domain doc layout. See `docs/agents/domain.md`.

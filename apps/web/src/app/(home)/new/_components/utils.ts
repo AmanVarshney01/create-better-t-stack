@@ -51,6 +51,7 @@ const selfHostedFullstackBackends = [
   "self-next",
   "self-tanstack-start",
   "self-nuxt",
+  "self-svelte",
   "self-astro",
 ] as const;
 
@@ -96,6 +97,9 @@ export const hasClerkCompatibleBackend = (backend: string) =>
 
 const isSelfHostedFullstackBackend = (backend: string) =>
   selfHostedFullstackBackends.includes(backend as (typeof selfHostedFullstackBackends)[number]);
+
+export const hasEvlogCompatibleBackend = (backend: string) =>
+  ["hono", "express", "fastify", "elysia", ...selfHostedFullstackBackends].includes(backend);
 
 export const getCategoryDisplayName = (categoryKey: string): string => {
   const result = categoryKey.replace(/([A-Z])/g, " $1");
@@ -291,6 +295,14 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         message: "Frontend set to 'Nuxt' (required for Nuxt fullstack)",
       });
     }
+    if (nextStack.backend === "self-svelte" && !nextStack.webFrontend.includes("svelte")) {
+      nextStack.webFrontend = ["svelte"];
+      changed = true;
+      changes.push({
+        category: "backend",
+        message: "Frontend set to 'SvelteKit' (required for SvelteKit fullstack)",
+      });
+    }
     if (nextStack.backend === "self-astro" && !nextStack.webFrontend.includes("astro")) {
       nextStack.webFrontend = ["astro"];
       changed = true;
@@ -334,7 +346,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     });
   }
 
-  // Runtime "none" only for convex, self-next, self-tanstack-start, self-nuxt, self-astro
+  // Runtime "none" only for Convex, no backend, or self-hosted fullstack backends.
   if (
     nextStack.runtime === "none" &&
     nextStack.backend !== "convex" &&
@@ -617,6 +629,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   const pwaCompat = hasPWACompatibleFrontend(nextStack.webFrontend);
   const tauriCompat = hasTauriCompatibleFrontend(nextStack.webFrontend);
   const electrobunCompat = hasElectrobunCompatibleFrontend(nextStack.webFrontend);
+  const evlogCompat = hasEvlogCompatibleBackend(nextStack.backend);
 
   if (!pwaCompat && nextStack.addons.includes("pwa")) {
     nextStack.addons = nextStack.addons.filter((a) => a !== "pwa");
@@ -637,6 +650,15 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     changes.push({
       category: "addons",
       message: "Electrobun removed (requires compatible frontend)",
+    });
+  }
+  if (!evlogCompat && nextStack.addons.includes("evlog")) {
+    nextStack.addons = nextStack.addons.filter((a) => a !== "evlog");
+    if (nextStack.addons.length === 0) nextStack.addons = ["none"];
+    changed = true;
+    changes.push({
+      category: "addons",
+      message: "evlog removed (requires a server or fullstack backend)",
     });
   }
 
@@ -852,6 +874,21 @@ export const getDisabledReason = (
     }
   }
 
+  if (currentStack.backend === "self-svelte") {
+    if (category === "runtime" && optionId !== "none") {
+      return "SvelteKit fullstack uses built-in server routes";
+    }
+    if (category === "webFrontend" && optionId !== "svelte") {
+      return "SvelteKit fullstack requires SvelteKit frontend";
+    }
+    if (category === "serverDeploy" && optionId !== "none") {
+      return "Fullstack uses frontend deployment";
+    }
+    if (category === "api" && optionId === "trpc") {
+      return "tRPC is not compatible with SvelteKit (use oRPC)";
+    }
+  }
+
   if (currentStack.backend === "self-tanstack-start") {
     if (category === "runtime" && optionId !== "none") {
       return "TanStack Start fullstack uses built-in API routes";
@@ -894,6 +931,9 @@ export const getDisabledReason = (
     }
     if (optionId === "self-nuxt" && !currentStack.webFrontend.includes("nuxt")) {
       return "Requires Nuxt frontend";
+    }
+    if (optionId === "self-svelte" && !currentStack.webFrontend.includes("svelte")) {
+      return "Requires SvelteKit frontend";
     }
     if (optionId === "self-astro" && !currentStack.webFrontend.includes("astro")) {
       return "Requires Astro frontend";
@@ -1062,6 +1102,9 @@ export const getDisabledReason = (
     }
     if (optionId === "electrobun" && !hasElectrobunCompatibleFrontend(currentStack.webFrontend)) {
       return "Electrobun requires a web frontend";
+    }
+    if (optionId === "evlog" && !hasEvlogCompatibleBackend(currentStack.backend)) {
+      return "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend";
     }
     if (optionId === "nx" && currentStack.addons.includes("turborepo")) {
       return "Nx and Turborepo cannot be used together";

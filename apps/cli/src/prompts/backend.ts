@@ -8,8 +8,8 @@ const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "next",
   "tanstack-start",
   "nuxt",
+  "svelte",
   "astro",
-  // "svelte",    // TODO: Add support in future update
 ] as const;
 
 export async function getBackendFrameworkChoice(

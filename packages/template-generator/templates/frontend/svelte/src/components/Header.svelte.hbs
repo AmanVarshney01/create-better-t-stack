@@ -3,32 +3,22 @@
     {{#if (eq auth "better-auth")}}
 	import UserMenu from './UserMenu.svelte';
     {{/if}}
-    const links = [
-        { to: "/", label: "Home" },
-        {{#if (eq auth "better-auth")}}
-        { to: "/dashboard", label: "Dashboard" },
-        {{/if}}
-        {{#if (includes examples "todo")}}
-        { to: "/todos", label: "Todos" },
-        {{/if}}
-        {{#if (includes examples "ai")}}
-        { to: "/ai", label: "AI Chat" },
-        {{/if}}
-    ];
 
 </script>
 
 <div>
 	<div class="flex flex-row items-center justify-between px-4 py-2 md:px-6">
 		<nav class="flex gap-4 text-lg">
-			{#each links as link (link.to)}
-				<a
-					href={link.to}
-					class="hover:text-neutral-400 transition-colors"
-				>
-					{link.label}
-				</a>
-			{/each}
+			<a href="/" class="hover:text-neutral-400 transition-colors">Home</a>
+		    {{#if (eq auth "better-auth")}}
+			<a href="/dashboard" class="hover:text-neutral-400 transition-colors">Dashboard</a>
+		    {{/if}}
+		    {{#if (includes examples "todo")}}
+			<a href="/todos" class="hover:text-neutral-400 transition-colors">Todos</a>
+		    {{/if}}
+		    {{#if (includes examples "ai")}}
+			<a href="/ai" class="hover:text-neutral-400 transition-colors">AI Chat</a>
+		    {{/if}}
 		</nav>
 		<div class="flex items-center gap-2">
 		    {{#if (eq auth "better-auth")}}

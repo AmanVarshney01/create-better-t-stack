@@ -4,7 +4,7 @@ import { api, components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { action, query } from "./_generated/server";
 
-export const polar = new Polar<DataModel, { pro: string }>(components.polar, {
+export const polar = new Polar<DataModel>(components.polar, {
   getUserInfo: async (ctx) => {
     const user = await ctx.runQuery(api.auth.getCurrentUser);
 
@@ -21,10 +21,6 @@ export const polar = new Polar<DataModel, { pro: string }>(components.polar, {
       email: user.email,
     };
   },
-  products: {
-    pro: process.env.POLAR_PRODUCT_ID_PRO || "your-product-id",
-  },
-  server: (process.env.POLAR_SERVER as "sandbox" | "production" | undefined) ?? "sandbox",
 });
 
 export const {
@@ -55,6 +51,12 @@ export const getCurrentSubscription = query({
 export const syncProducts = action({
   args: {},
   handler: async (ctx) => {
+    const user = await ctx.runQuery(api.auth.getCurrentUser);
+
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
     await polar.syncProducts(ctx);
   },
 });

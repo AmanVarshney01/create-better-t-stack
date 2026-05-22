@@ -50,6 +50,13 @@ function getExplicitCreateInput(projectPath: string) {
   };
 }
 
+function getToolText(result: { content: Array<{ type: string; text?: string }> }) {
+  return result.content
+    .filter((item): item is { type: "text"; text: string } => item.type === "text")
+    .map((item) => item.text)
+    .join("\n");
+}
+
 describe("MCP server", () => {
   let cleanups: Array<() => Promise<void>> = [];
 
@@ -85,6 +92,37 @@ describe("MCP server", () => {
       "bts_plan_addons",
       "bts_plan_project",
     ]);
+  });
+
+  it("exposes MCP safety annotations for read-only and mutating tools", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const result = await client.listTools();
+    const toolsByName = new Map(result.tools.map((tool) => [tool.name, tool]));
+
+    expect(toolsByName.get("bts_get_schema")?.annotations).toMatchObject({
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    });
+    expect(toolsByName.get("bts_plan_project")?.annotations).toMatchObject({
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    });
+    expect(toolsByName.get("bts_create_project")?.annotations).toMatchObject({
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: true,
+    });
+    expect(toolsByName.get("bts_add_addons")?.annotations).toMatchObject({
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: true,
+    });
   });
 
   it("returns explicit create-contract guidance", async () => {
@@ -131,6 +169,27 @@ describe("MCP server", () => {
     expect(payload.data?.createContract?.rule).toContain("full explicit stack config");
   });
 
+  it("returns all MCP planning schemas by default", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const result = await client.callTool({
+      name: "bts_get_schema",
+      arguments: {},
+    });
+
+    const payload = result.structuredContent as {
+      ok: boolean;
+      data?: { cli?: unknown; schemas?: Record<string, unknown> };
+    };
+
+    expect(payload.ok).toBe(true);
+    expect(payload.data?.cli).toBeDefined();
+    expect(payload.data?.schemas).toHaveProperty("createInput");
+    expect(payload.data?.schemas).toHaveProperty("addInput");
+    expect(payload.data?.schemas).toHaveProperty("projectConfig");
+  });
+
   it("returns CLI and input schemas through MCP", async () => {
     const { client, cleanup } = await connectInMemoryClient();
     cleanups.push(cleanup);
@@ -166,15 +225,86 @@ describe("MCP server", () => {
     });
 
     expect(result.isError).toBe(true);
-    const text = result.content
-      .filter((item): item is { type: "text"; text: string } => item.type === "text")
-      .map((item) => item.text)
-      .join("\n");
+    const text = getToolText(result);
 
     expect(text).toContain("Input validation error");
     expect(text).toContain("database");
     expect(text).toContain("backend");
     expect(text).toContain("packageManager");
+  });
+
+  it("rejects create inputs that violate full schema refinements", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const result = await client.callTool({
+      name: "bts_plan_project",
+      arguments: {
+        ...getExplicitCreateInput(path.join(SMOKE_DIR, "mcp-conflicting-db-mode")),
+        manualDb: true,
+        dbSetupOptions: { mode: "manual" },
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(getToolText(result)).toContain(
+      "`manualDb` and `dbSetupOptions.mode` are mutually exclusive",
+    );
+  });
+
+  it("surfaces CLI compatibility errors through MCP planning", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const result = await client.callTool({
+      name: "bts_plan_project",
+      arguments: {
+        ...getExplicitCreateInput(path.join(SMOKE_DIR, "mcp-astro-ai")),
+        frontend: ["astro"],
+        api: "orpc",
+        examples: ["ai"],
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(getToolText(result)).toContain(
+      "The 'ai' example is not compatible with the Astro frontend",
+    );
+  });
+
+  it("rejects unknown create input keys through MCP", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const result = await client.callTool({
+      name: "bts_plan_project",
+      arguments: {
+        ...getExplicitCreateInput(path.join(SMOKE_DIR, "mcp-extra-key")),
+        pakageManager: "bun",
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(getToolText(result)).toContain("Unrecognized key");
+  });
+
+  it("rejects unknown addon input keys through MCP", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const result = await client.callTool({
+      name: "bts_plan_addons",
+      arguments: {
+        projectDir: path.join(SMOKE_DIR, "mcp-addon-extra-key"),
+        addons: ["biome"],
+        packageManager: "bun",
+        install: false,
+        projectDr: SMOKE_DIR,
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(getToolText(result)).toContain("Unrecognized key");
   });
 
   it("plans projects without writing files", async () => {

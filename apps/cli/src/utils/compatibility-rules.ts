@@ -10,6 +10,7 @@ import type {
   Frontend,
   Payments,
   ProjectConfig,
+  Runtime,
   ServerDeploy,
   WebDeploy,
 } from "../types";
@@ -17,6 +18,7 @@ import { WEB_FRAMEWORKS } from "./compatibility";
 import { ValidationError } from "./errors";
 
 type ValidationResult = Result<void, ValidationError>;
+type AddonCompatibilityConfig = Pick<ProjectConfig, "frontend" | "auth" | "backend" | "runtime">;
 
 export const CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS = [
   "nuxt",
@@ -58,7 +60,7 @@ export function ensureSingleWebAndNative(frontends: Frontend[]): ValidationResul
   const { web, native } = splitFrontends(frontends);
   if (web.length > 1) {
     return validationErr(
-      "Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid",
+      "Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid, astro",
     );
   }
   if (native.length > 1) {
@@ -74,9 +76,34 @@ const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "next",
   "tanstack-start",
   "nuxt",
+  "svelte",
   "astro",
-  // "svelte",    // TODO: Add support in future update
 ] as const;
+
+const EVLOG_SERVER_BACKENDS: readonly Backend[] = ["hono", "express", "fastify", "elysia"];
+const EVLOG_FULLSTACK_FRONTENDS: readonly Frontend[] = FULLSTACK_FRONTENDS;
+
+const evlogCompatibilityMessage =
+  "evlog addon supports Hono, Express, Fastify, Elysia, or backend self with Next.js, TanStack Start, Nuxt, SvelteKit, or Astro. Convex and backend none are not supported yet.";
+
+export function supportsEvlogAddon(
+  frontend: Frontend[] = [],
+  backend?: Backend,
+  _runtime?: Runtime,
+) {
+  if (!backend) return true;
+
+  if (EVLOG_SERVER_BACKENDS.includes(backend)) {
+    return true;
+  }
+
+  if (backend === "self") {
+    if (frontend.length === 0) return true;
+    return frontend.some((f) => EVLOG_FULLSTACK_FRONTENDS.includes(f));
+  }
+
+  return false;
+}
 
 export function validateSelfBackendCompatibility(
   providedFlags: Set<string>,
@@ -92,7 +119,7 @@ export function validateSelfBackendCompatibility(
 
     if (!hasSupportedWeb) {
       return validationErr(
-        "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, Nuxt, and Astro frontends. Please use --frontend next, --frontend tanstack-start, --frontend nuxt, or --frontend astro. Support for SvelteKit will be added in a future update.",
+        "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, Nuxt, SvelteKit, and Astro frontends. Please use --frontend next, --frontend tanstack-start, --frontend nuxt, --frontend svelte, or --frontend astro.",
       );
     }
 
@@ -106,7 +133,7 @@ export function validateSelfBackendCompatibility(
   const hasFullstackFrontend = frontends.some((f) => FULLSTACK_FRONTENDS.includes(f));
   if (providedFlags.has("backend") && !hasFullstackFrontend && backend === "self") {
     return validationErr(
-      "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, Nuxt, and Astro frontends. Please use --frontend next, --frontend tanstack-start, --frontend nuxt, --frontend astro, or choose a different backend. Support for SvelteKit will be added in a future update.",
+      "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, Nuxt, SvelteKit, and Astro frontends. Please use --frontend next, --frontend tanstack-start, --frontend nuxt, --frontend svelte, --frontend astro, or choose a different backend.",
     );
   }
 
@@ -147,16 +174,6 @@ export function validateWorkersCompatibility(
   ) {
     return validationErr(
       "Cloudflare Workers runtime (--runtime workers) is not compatible with MongoDB database. MongoDB requires Prisma or Mongoose ORM, but Workers runtime only supports Drizzle or Prisma ORM. Please use a different database or runtime.",
-    );
-  }
-
-  if (
-    providedFlags.has("runtime") &&
-    options.runtime === "workers" &&
-    config.dbSetup === "docker"
-  ) {
-    return validationErr(
-      "Cloudflare Workers runtime (--runtime workers) is not compatible with Docker setup. Workers runtime uses serverless databases (D1) and doesn't support local Docker containers. Please use '--db-setup d1' for SQLite or choose a different runtime.",
     );
   }
 
@@ -248,6 +265,8 @@ export function isExampleTodoAllowed(
 }
 
 export function isExampleAIAllowed(backend?: ProjectConfig["backend"], frontends: Frontend[] = []) {
+  if (backend === "none") return false;
+
   const includesSolid = frontends.includes("solid");
   const includesAstro = frontends.includes("astro");
   if (includesSolid || includesAstro) return false;
@@ -290,7 +309,16 @@ export function validateAddonCompatibility(
   addon: Addons,
   frontend: Frontend[],
   _auth?: Auth,
+  backend?: Backend,
+  runtime?: Runtime,
 ): { isCompatible: boolean; reason?: string } {
+  if (addon === "evlog" && !supportsEvlogAddon(frontend, backend, runtime)) {
+    return {
+      isCompatible: false,
+      reason: evlogCompatibilityMessage,
+    };
+  }
+
   const compatibleFrontends = ADDON_COMPATIBILITY[addon];
 
   if (compatibleFrontends.length > 0) {
@@ -315,13 +343,15 @@ export function getCompatibleAddons(
   frontend: Frontend[],
   existingAddons: Addons[] = [],
   auth?: Auth,
+  backend?: Backend,
+  runtime?: Runtime,
 ) {
   return allAddons.filter((addon) => {
     if (existingAddons.includes(addon)) return false;
 
     if (addon === "none") return false;
 
-    const { isCompatible } = validateAddonCompatibility(addon, frontend, auth);
+    const { isCompatible } = validateAddonCompatibility(addon, frontend, auth, backend, runtime);
     return isCompatible;
   });
 }
@@ -330,6 +360,8 @@ export function validateAddonsAgainstFrontends(
   addons: Addons[] = [],
   frontends: Frontend[] = [],
   auth?: Auth,
+  backend?: Backend,
+  runtime?: Runtime,
 ): ValidationResult {
   if (addons.includes("turborepo") && addons.includes("nx")) {
     return validationErr("Cannot combine 'turborepo' and 'nx' addons. Choose one monorepo tool.");
@@ -337,12 +369,31 @@ export function validateAddonsAgainstFrontends(
 
   for (const addon of addons) {
     if (addon === "none") continue;
-    const { isCompatible, reason } = validateAddonCompatibility(addon, frontends, auth);
+    const { isCompatible, reason } = validateAddonCompatibility(
+      addon,
+      frontends,
+      auth,
+      backend,
+      runtime,
+    );
     if (!isCompatible) {
       return validationErr(`Incompatible addon/frontend combination: ${reason}`);
     }
   }
   return Result.ok(undefined);
+}
+
+export function validateAddonsAgainstConfig(
+  addons: Addons[] = [],
+  config: Partial<AddonCompatibilityConfig>,
+): ValidationResult {
+  return validateAddonsAgainstFrontends(
+    addons,
+    config.frontend ?? [],
+    config.auth,
+    config.backend,
+    config.runtime,
+  );
 }
 
 export function validatePaymentsCompatibility(
@@ -396,6 +447,14 @@ export function validateExamplesCompatibility(
 
   if (examplesArr.includes("ai") && (frontend ?? []).includes("solid")) {
     return validationErr("The 'ai' example is not compatible with the Solid frontend.");
+  }
+
+  if (examplesArr.includes("ai") && (frontend ?? []).includes("astro")) {
+    return validationErr("The 'ai' example is not compatible with the Astro frontend.");
+  }
+
+  if (examplesArr.includes("ai") && backend === "none") {
+    return validationErr("The 'ai' example requires a backend.");
   }
 
   // Convex AI example only supports React-based frontends

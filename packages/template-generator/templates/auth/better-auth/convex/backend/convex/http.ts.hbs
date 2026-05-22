@@ -7,20 +7,13 @@ import { polar } from "./polar";
 const http = httpRouter();
 
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
-{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
-authComponent.registerRoutesLazy(http, createAuth, {
-  cors: true,
-  trustedOrigins: [process.env.SITE_URL!],
-});
-{{else}}
 authComponent.registerRoutes(http, createAuth, { cors: true });
-{{/if}}
 {{else}}
 authComponent.registerRoutes(http, createAuth);
 {{/if}}
 {{#if (eq payments "polar")}}
 
-polar.registerRoutes(http as any);
+polar.registerRoutes(http);
 {{/if}}
 
 export default http;

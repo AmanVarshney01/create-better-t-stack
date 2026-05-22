@@ -2,18 +2,38 @@
   "name": "better-t-stack",
   "version": "0.0.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "catalog": {
+      "@erquhart/convex-oss-stats": "^0.8.2",
+      "@types/fs-extra": "^11.0.4",
+      "@types/node": "^25.7.0",
+      "better-result": "^2.9.2",
+      "convex": "^1.38.0",
+      "convex-helpers": "^0.1.116",
+      "handlebars": "^4.7.9",
+      "oxfmt": "^0.49.0",
+      "ts-morph": "^28.0.0",
+      "tsdown": "^0.22.0",
+      "typescript": "^6.0.3",
+      "yaml": "^2.9.0",
+      "zod": "^4.4.3"
+    }
+  },
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
     "dev:cli": "turbo run dev --filter=create-better-t-stack",
     "cli": "cd apps/cli && node dist/cli.js",
+    "smoke:publish": "bun run scripts/publish-smoke.ts",
     "dev:web": "turbo run dev --filter=web",
     "build:web": "turbo run build --filter=web",
     "build:cli": "turbo run build --filter=create-better-t-stack",
+    "test": "bun run check && cd apps/cli && bun test",
+    "test:complete": "bun run check && bun run build && cd apps/cli && BTS_MATRIX_MODE=smoke BTS_BUILD_SAMPLES=1 bun test --bail=5",
     "lint": "turbo run lint",
     "check": "oxfmt . && oxlint .",
     "prepare": "lefthook install",
@@ -27,17 +47,17 @@
     "deploy": "turbo run deploy --filter=web"
   },
   "dependencies": {
-    "@clack/prompts": "^1.1.0"
+    "@clack/prompts": "^1.4.0"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.10",
+    "@types/bun": "^1.3.14",
     "changelogithub": "^14.0.0",
-    "lefthook": "^2.1.3",
-    "lint-staged": "^16.3.2",
-    "oxfmt": "^0.36.0",
-    "oxlint": "^1.51.0",
-    "turbo": "^2.8.14",
-    "typescript": "5.9.3"
+    "lefthook": "^2.1.6",
+    "lint-staged": "^17.0.4",
+    "oxfmt": "catalog:",
+    "oxlint": "^1.64.0",
+    "turbo": "^2.9.12",
+    "typescript": "catalog:"
   },
   "lint-staged": {
     "*": [
@@ -47,5 +67,5 @@
   "engines": {
     "node": "24.x"
   },
-  "packageManager": "bun@1.3.10"
+  "packageManager": "bun@1.3.13"
 }

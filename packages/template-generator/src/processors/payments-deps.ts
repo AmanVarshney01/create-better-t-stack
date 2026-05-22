@@ -29,7 +29,12 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
           addPackageDependency({
             vfs,
             packagePath: webPath,
-            dependencies: ["@convex-dev/polar", "@polar-sh/checkout"],
+            dependencies: [
+              "@convex-dev/polar",
+              "@polar-sh/checkout",
+              "@stripe/react-stripe-js",
+              "@stripe/stripe-js",
+            ],
           });
         }
       }

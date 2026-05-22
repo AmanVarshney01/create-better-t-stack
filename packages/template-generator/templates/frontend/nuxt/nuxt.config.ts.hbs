@@ -24,7 +24,7 @@ export default defineNuxtConfig({
   {{else if (and (ne backend "self") (ne backend "none"))}}
   runtimeConfig: {
     public: {
-      serverUrl: process.env.NUXT_PUBLIC_SERVER_URL,
+      serverUrl: process.env.NUXT_PUBLIC_SERVER_URL ?? "",
     }
   },
   {{/if}}

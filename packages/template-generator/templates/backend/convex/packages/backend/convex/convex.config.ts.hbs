@@ -3,7 +3,7 @@ import { defineApp } from "convex/server";
 import betterAuth from "@convex-dev/better-auth/convex.config";
 {{/if}}
 {{#if (eq payments "polar")}}
-import polar from "@convex-dev/polar/convex.config";
+import polar from "@convex-dev/polar/convex.config.js";
 {{/if}}
 {{#if (includes examples "ai")}}
 import agent from "@convex-dev/agent/convex.config";

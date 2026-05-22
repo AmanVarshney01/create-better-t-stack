@@ -208,13 +208,18 @@ function buildNativeVars(
   auth: ProjectConfig["auth"],
 ): EnvVariable[] {
   const hasAstro = frontend.includes("astro");
+  const hasSvelte = frontend.includes("svelte");
 
   let envVarName = "EXPO_PUBLIC_SERVER_URL";
   let serverUrl = "http://localhost:3000";
 
   if (backend === "self") {
-    // Astro uses port 4321, others use port 3001 for fullstack
-    serverUrl = hasAstro ? "http://localhost:4321" : "http://localhost:3001";
+    // SvelteKit uses Vite's default port, Astro uses 4321, others use 3001.
+    serverUrl = hasSvelte
+      ? "http://localhost:5173"
+      : hasAstro
+        ? "http://localhost:4321"
+        : "http://localhost:3001";
   }
 
   if (backend === "convex") {
@@ -255,6 +260,8 @@ function buildConvexBackendVars(
   payments: ProjectConfig["payments"],
   examples: ProjectConfig["examples"],
 ): EnvVariable[] {
+  const hasReactRouter = frontend.includes("react-router");
+  const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasNextJs = frontend.includes("next");
   const hasNative =
     frontend.includes("native-bare") ||
@@ -272,9 +279,7 @@ function buildConvexBackendVars(
   const defaultSiteUrl =
     hasNative && !hasWeb
       ? "http://localhost:8081"
-      : frontend.includes("react-router") ||
-          frontend.includes("tanstack-router") ||
-          frontend.includes("svelte")
+      : frontend.includes("react-router") || frontend.includes("svelte")
         ? "http://localhost:5173"
         : frontend.includes("astro")
           ? "http://localhost:4321"
@@ -292,6 +297,15 @@ function buildConvexBackendVars(
   }
 
   if (auth === "better-auth") {
+    if (hasReactRouter || hasTanStackRouter) {
+      vars.push({
+        key: "CONVEX_SITE_URL",
+        value: "",
+        condition: true,
+        comment: "Same as CONVEX_URL but ends in .site",
+      });
+    }
+
     if (hasNative) {
       vars.push({
         key: "EXPO_PUBLIC_CONVEX_SITE_URL",
@@ -341,12 +355,6 @@ function buildConvexBackendVars(
         comment: "Polar webhook secret",
       },
       {
-        key: "POLAR_PRODUCT_ID_PRO",
-        value: "",
-        condition: true,
-        comment: "Polar product ID for the default Pro plan",
-      },
-      {
         key: "POLAR_SERVER",
         value: "sandbox",
         condition: true,
@@ -364,6 +372,8 @@ function buildConvexCommentBlocks(
   payments: ProjectConfig["payments"],
   examples: ProjectConfig["examples"],
 ): string {
+  const needsConvexSiteUrl =
+    frontend.includes("react-router") || frontend.includes("tanstack-router");
   const hasNative =
     frontend.includes("native-bare") ||
     frontend.includes("native-uniwind") ||
@@ -380,9 +390,7 @@ function buildConvexCommentBlocks(
   const defaultSiteUrl =
     hasNative && !hasWeb
       ? "http://localhost:8081"
-      : frontend.includes("react-router") ||
-          frontend.includes("tanstack-router") ||
-          frontend.includes("svelte")
+      : frontend.includes("react-router") || frontend.includes("svelte")
         ? "http://localhost:5173"
         : frontend.includes("astro")
           ? "http://localhost:4321"
@@ -400,15 +408,14 @@ function buildConvexCommentBlocks(
   if (auth === "better-auth") {
     commentBlocks += `# Set Convex environment variables
 # npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
-${hasWeb || hasNative ? `# npx convex env set SITE_URL ${defaultSiteUrl}\n` : ""}`;
+${needsConvexSiteUrl ? "# npx convex env set CONVEX_SITE_URL https://<YOUR_CONVEX_SITE_URL>\n" : ""}${hasWeb || hasNative ? `# npx convex env set SITE_URL ${defaultSiteUrl}\n` : ""}`;
   }
 
   if (payments === "polar") {
     commentBlocks += `# Set Polar environment variables
-# npx convex env set POLAR_ORGANIZATION_TOKEN=your_polar_token
-# npx convex env set POLAR_WEBHOOK_SECRET=your_polar_webhook_secret
-# npx convex env set POLAR_PRODUCT_ID_PRO=your_polar_product_id
-# Optional: npx convex env set POLAR_SERVER=sandbox
+# npx convex env set POLAR_ORGANIZATION_TOKEN your_polar_token
+# npx convex env set POLAR_WEBHOOK_SECRET your_polar_webhook_secret
+# Optional: npx convex env set POLAR_SERVER sandbox
 # Create a Polar webhook at https://<your-convex-site-url>/polar/events
 # Enable: product.created, product.updated, subscription.created, subscription.updated
 
@@ -432,17 +439,14 @@ function buildServerVars(
   examples: ProjectConfig["examples"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
-  const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
 
   let corsOrigin = "http://localhost:3001";
   if (hasAstro) {
     corsOrigin = "http://localhost:4321";
-  } else if (hasReactRouter || hasTanStackRouter || hasSvelte) {
+  } else if (hasReactRouter || hasSvelte) {
     corsOrigin = "http://localhost:5173";
-  } else if (backend === "self") {
-    corsOrigin = "http://localhost:3001";
   }
 
   let databaseUrl: string | null = null;
@@ -484,9 +488,11 @@ function buildServerVars(
       key: "BETTER_AUTH_URL",
       value:
         backend === "self"
-          ? hasAstro
-            ? "http://localhost:4321"
-            : "http://localhost:3001"
+          ? hasSvelte
+            ? "http://localhost:5173"
+            : hasAstro
+              ? "http://localhost:4321"
+              : "http://localhost:3001"
           : "http://localhost:3000",
       condition: hasBetterAuth,
     },

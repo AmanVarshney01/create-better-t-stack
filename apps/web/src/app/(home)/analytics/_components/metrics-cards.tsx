@@ -1,23 +1,20 @@
 "use client";
 
 import NumberFlow from "@number-flow/react";
-import * as Plot from "@observablehq/plot";
-import { format } from "date-fns";
 import { AreaChart, Flame, Gauge, Radar, Sparkles, Sunrise } from "lucide-react";
 
+import { EvilAreaChart } from "@/components/evilcharts/charts/area-chart";
+import { EvilBarChart } from "@/components/evilcharts/charts/bar-chart";
 import { cn } from "@/lib/utils";
 
 import {
   formatCompactNumber,
   formatDateLabel,
   formatDelta,
-  getPlotFontSize,
   getTrendTone,
-  isCompactPlot,
-  resolvePlotMargins,
   shortenLabel,
 } from "./analytics-helpers";
-import { PlotChart } from "./plot-chart";
+import { multiSeriesConfig, seriesConfig } from "./evil-chart-utils";
 import type { AggregatedAnalyticsData } from "./types";
 
 function MetricTile({
@@ -36,18 +33,18 @@ function MetricTile({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[24px] border border-border/45 bg-fd-background/85 p-5",
-        tone === "success" && "border-primary/25 bg-primary/[0.08]",
-        tone === "warning" && "border-chart-3/25 bg-chart-3/[0.08]",
+        "min-w-0 rounded border border-border bg-fd-background p-4",
+        tone === "success" && "border-primary/25",
+        tone === "warning" && "border-chart-3/25",
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+        <span className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
           {label}
         </span>
         <span className="text-muted-foreground/80">{icon}</span>
       </div>
-      <div className="mt-4 font-semibold text-2xl tracking-tight">{value}</div>
+      <div className="mt-3 font-semibold text-2xl">{value}</div>
       <p className="mt-2 text-muted-foreground text-xs leading-5">{detail}</p>
     </div>
   );
@@ -55,7 +52,7 @@ function MetricTile({
 
 export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
   const momentumTone = getTrendTone(data.momentum.deltaPercentage);
-  const sparklineData =
+  const sparklineData = (
     data.timeSeries.length > 0
       ? data.timeSeries
       : [
@@ -66,204 +63,223 @@ export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
             cumulativeProjects: 0,
             date: new Date().toISOString().slice(0, 10),
           },
-        ];
+        ]
+  ).map((point) => ({
+    day: formatDateLabel(point.date),
+    projects: point.count,
+    average: Number(point.rollingAverage.toFixed(2)),
+  }));
+
+  const leadingChoices = [
+    { category: "Frontend", item: data.frontendDistribution[0] },
+    { category: "Backend", item: data.backendDistribution[0] },
+    { category: "Database", item: data.databaseDistribution[0] },
+    { category: "ORM", item: data.ormDistribution[0] },
+    { category: "Runtime", item: data.runtimeDistribution[0] },
+    {
+      category: "Packages",
+      item: data.packageManagerDistribution[0],
+    },
+  ].map(({ category, item }) => ({
+    choice: `${category} · ${shortenLabel(item?.name ?? "n/a", 18)}`,
+    setups: item?.value ?? 0,
+  }));
+  const momentumComparison = [
+    { window: "Last 7 days", projects: data.momentum.last7Days },
+    { window: "Previous 7 days", projects: data.momentum.previous7Days },
+  ];
+
+  const trendConfig = multiSeriesConfig([
+    { key: "projects", label: "Projects", tone: "blue" },
+    { key: "average", label: "7 day average", tone: "teal" },
+  ]);
+  const leadingChoicesConfig = seriesConfig("setups", "Tracked setups", "violet");
+  const momentumComparisonConfig = seriesConfig("projects", "Projects", "amber");
 
   return (
-    <div className="space-y-4">
-      <section className="rounded-xl bg-fd-background/85 p-5 ring-1 ring-border/35 sm:p-6">
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-muted/30 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              overview
-            </span>
-            <span className="inline-flex items-center rounded-full bg-muted/30 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              live trendline
-            </span>
-          </div>
-
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] xl:items-start">
-            <div className="space-y-5">
+    <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)] xl:items-start">
+      <div className="grid min-w-0 gap-4">
+        <section className="min-w-0 overflow-hidden rounded border border-border bg-fd-background p-4 sm:p-5">
+          <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(220px,0.36fr)_minmax(0,0.64fr)] xl:items-center">
+            <div className="min-w-0 space-y-5">
               <div className="space-y-2">
-                <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
                   Convex total
                 </div>
                 <NumberFlow
                   value={data.totalProjects}
-                  className="block font-semibold text-5xl tracking-tight sm:text-6xl"
+                  className="block font-semibold text-4xl sm:text-5xl"
                   transformTiming={{ duration: 850, easing: "ease-out" }}
                   willChange
                   isolate
                 />
-                <p className="max-w-lg text-muted-foreground text-sm leading-6">
-                  The live total of tracked project creations in the current telemetry dataset.
+                <p className="max-w-md text-muted-foreground text-sm leading-6">
+                  Live project starts in the current telemetry dataset.
                 </p>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-lg bg-muted/20 p-4">
-                  <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-                    average per day
+              <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                <div className="min-w-0 rounded border border-border p-3">
+                  <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+                    Average per day
                   </div>
-                  <div className="mt-2 font-semibold text-2xl tracking-tight">
+                  <div className="mt-2 font-semibold text-2xl">
                     {data.avgProjectsPerDay.toFixed(1)}
                   </div>
                 </div>
-                <div className="rounded-lg bg-muted/20 p-4">
-                  <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-                    leading pair
+                <div className="min-w-0 rounded border border-border p-3">
+                  <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+                    Leading pair
                   </div>
-                  <div className="mt-2 font-medium text-base tracking-tight">
+                  <div className="mt-2 font-medium text-base">
                     {shortenLabel(data.summary.topStack, 24)}
                   </div>
-                  <p className="mt-2 text-muted-foreground text-xs">
-                    Most common backend + frontend pairing
-                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-lg bg-muted/20 p-4">
-              <PlotChart
-                ariaLabel="Recent daily project activity and rolling average"
-                className="min-h-[280px]"
-                build={({ width, palette }) => {
-                  const compact = isCompactPlot(width);
-                  const margins = resolvePlotMargins(
-                    width,
-                    { top: 18, right: 18, bottom: 32, left: 46 },
-                    { top: 12, right: 10, bottom: 24, left: 32 },
-                  );
-
-                  return Plot.plot({
-                    width,
-                    height: compact ? 230 : 280,
-                    marginTop: margins.top,
-                    marginRight: margins.right,
-                    marginBottom: margins.bottom,
-                    marginLeft: margins.left,
-                    style: {
-                      background: "transparent",
-                      color: palette.foreground,
-                      fontFamily: "var(--font-mono)",
-                      fontSize: getPlotFontSize(width),
-                    },
-                    x: {
-                      label: null,
-                      ticks: compact ? 3 : 4,
-                      tickFormat: (value) => format(new Date(value as Date), "MMM d"),
-                    },
-                    y: {
-                      label: null,
-                      grid: true,
-                      nice: true,
-                      ticks: compact ? 3 : undefined,
-                      tickFormat: (value) => formatCompactNumber(Number(value)),
-                    },
-                    marks: [
-                      Plot.ruleY([0], { stroke: palette.border }),
-                      Plot.areaY(sparklineData, {
-                        x: "dateValue",
-                        y: "count",
-                        curve: "catmull-rom",
-                        fill: palette.chart1,
-                        fillOpacity: 0.18,
-                      }),
-                      Plot.lineY(sparklineData, {
-                        x: "dateValue",
-                        y: "count",
-                        curve: "catmull-rom",
-                        stroke: palette.chart1,
-                        strokeWidth: 2.3,
-                      }),
-                      Plot.lineY(sparklineData, {
-                        x: "dateValue",
-                        y: "rollingAverage",
-                        curve: "catmull-rom",
-                        stroke: palette.chart2,
-                        strokeWidth: 2,
-                      }),
-                      Plot.dot(sparklineData.slice(-1), {
-                        x: "dateValue",
-                        y: "count",
-                        fill: palette.chart1,
-                        r: 4,
-                      }),
-                      Plot.tip(
-                        sparklineData,
-                        Plot.pointerX({
-                          x: "dateValue",
-                          y: "count",
-                          title: (point) =>
-                            `${formatDateLabel(point.date)}\nProjects: ${point.count}\n7d avg: ${point.rollingAverage.toFixed(1)}`,
-                        }),
-                      ),
-                    ],
-                  });
-                }}
-              />
-            </div>
+            <EvilAreaChart
+              className="h-[310px] min-w-0 w-full p-1"
+              xDataKey="day"
+              yDataKey="projects"
+              data={sparklineData}
+              chartConfig={trendConfig}
+              curveType="monotone"
+              areaVariant="gradient"
+              strokeVariant="animated-dashed"
+              activeDotVariant="colored-border"
+              dotVariant="border"
+              legendVariant="horizontal-bar"
+              tooltipVariant="frosted-glass"
+              tooltipRoundness="md"
+              backgroundVariant="grid"
+              xAxisProps={{
+                interval: "preserveStartEnd",
+                tickFormatter: (value) => String(value),
+              }}
+              yAxisProps={{
+                tickFormatter: (value) => formatCompactNumber(Number(value)),
+              }}
+            />
           </div>
+        </section>
+
+        <div className="grid min-w-0 gap-4 md:grid-cols-2">
+          <MetricTile
+            label="7 day momentum"
+            value={formatDelta(data.momentum.deltaPercentage)}
+            detail={`${formatCompactNumber(data.momentum.last7Days)} projects in the last 7 days versus ${formatCompactNumber(data.momentum.previous7Days)} in the previous window.`}
+            icon={<Gauge className="h-4 w-4" />}
+            tone={
+              momentumTone === "up" ? "success" : momentumTone === "down" ? "warning" : "default"
+            }
+          />
+
+          <MetricTile
+            label="Active days"
+            value={`${data.momentum.activeDaysLast30}/30`}
+            detail="Days in the last month with at least one tracked project creation."
+            icon={<AreaChart className="h-4 w-4" />}
+          />
+
+          <MetricTile
+            label="Peak day"
+            value={data.momentum.peakDay ? formatCompactNumber(data.momentum.peakDay.count) : "0"}
+            detail={
+              data.momentum.peakDay
+                ? `Highest daily volume landed on ${formatDateLabel(data.momentum.peakDay.date)}.`
+                : "Waiting for enough activity to identify a peak."
+            }
+            icon={<Flame className="h-4 w-4" />}
+            tone="warning"
+          />
+
+          <MetricTile
+            label="Busiest hour"
+            value={data.momentum.busiestHour?.hour.replace(":00", "") ?? "--"}
+            detail={
+              data.momentum.busiestHour
+                ? `${formatCompactNumber(data.momentum.busiestHour.count)} projects kicked off during this UTC hour.`
+                : "Hour-of-day activity appears once events begin arriving."
+            }
+            icon={<Sunrise className="h-4 w-4" />}
+          />
+
+          <MetricTile
+            label="Leading choices"
+            value={shortenLabel(
+              `${data.summary.mostPopularFrontend} / ${data.summary.mostPopularBackend}`,
+              24,
+            )}
+            detail={`${data.summary.mostPopularDatabase} leads database choices, and ${data.summary.mostPopularORM} leads ORM picks.`}
+            icon={<Sparkles className="h-4 w-4" />}
+          />
+
+          <MetricTile
+            label="Runtime + package"
+            value={shortenLabel(
+              `${data.summary.mostPopularRuntime} / ${data.summary.mostPopularPackageManager}`,
+              24,
+            )}
+            detail="Top runtime and package-manager choices across tracked project setups."
+            icon={<Radar className="h-4 w-4" />}
+          />
         </div>
-      </section>
+      </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <MetricTile
-          label="7 day momentum"
-          value={formatDelta(data.momentum.deltaPercentage)}
-          detail={`${formatCompactNumber(data.momentum.last7Days)} projects in the last 7 days versus ${formatCompactNumber(data.momentum.previous7Days)} in the previous window.`}
-          icon={<Gauge className="h-4 w-4" />}
-          tone={momentumTone === "up" ? "success" : momentumTone === "down" ? "warning" : "default"}
-        />
+      <div className="grid min-w-0 gap-4">
+        <section className="min-w-0 overflow-hidden rounded border border-border bg-fd-background p-4 sm:p-5">
+          <div className="space-y-1.5">
+            <h3 className="font-semibold text-sm sm:text-base">Leading choices</h3>
+            <p className="text-muted-foreground text-sm leading-6">
+              The top selected option in each major category, shown by tracked setup count.
+            </p>
+          </div>
+          <EvilBarChart
+            className="mt-3 h-[290px] min-w-0 w-full p-1"
+            data={leadingChoices}
+            xDataKey="choice"
+            yDataKey="setups"
+            chartConfig={leadingChoicesConfig}
+            layout="horizontal"
+            barVariant="default"
+            barRadius={5}
+            hideLegend
+            enableHoverHighlight
+            tooltipVariant="frosted-glass"
+            tooltipRoundness="md"
+            backgroundVariant="grid"
+            xAxisProps={{
+              tickFormatter: (value) => formatCompactNumber(Number(value)),
+            }}
+          />
+        </section>
 
-        <MetricTile
-          label="active days"
-          value={`${data.momentum.activeDaysLast30}/30`}
-          detail="Days in the last month with at least one tracked project creation."
-          icon={<AreaChart className="h-4 w-4" />}
-        />
-
-        <MetricTile
-          label="peak day"
-          value={data.momentum.peakDay ? formatCompactNumber(data.momentum.peakDay.count) : "0"}
-          detail={
-            data.momentum.peakDay
-              ? `Highest daily volume landed on ${formatDateLabel(data.momentum.peakDay.date)}.`
-              : "Waiting for enough activity to identify a peak."
-          }
-          icon={<Flame className="h-4 w-4" />}
-          tone="warning"
-        />
-
-        <MetricTile
-          label="busiest hour"
-          value={data.momentum.busiestHour?.hour.replace(":00", "") ?? "--"}
-          detail={
-            data.momentum.busiestHour
-              ? `${formatCompactNumber(data.momentum.busiestHour.count)} projects kicked off during this UTC hour.`
-              : "Hour-of-day activity appears once events begin arriving."
-          }
-          icon={<Sunrise className="h-4 w-4" />}
-        />
-
-        <MetricTile
-          label="leading choices"
-          value={shortenLabel(
-            `${data.summary.mostPopularFrontend} / ${data.summary.mostPopularBackend}`,
-            24,
-          )}
-          detail={`${data.summary.mostPopularDatabase} leads database choices, and ${data.summary.mostPopularORM} leads ORM picks.`}
-          icon={<Sparkles className="h-4 w-4" />}
-        />
-
-        <MetricTile
-          label="runtime + package"
-          value={shortenLabel(
-            `${data.summary.mostPopularRuntime} / ${data.summary.mostPopularPackageManager}`,
-            24,
-          )}
-          detail="Top runtime and package-manager choices across tracked project setups."
-          icon={<Radar className="h-4 w-4" />}
-        />
+        <section className="min-w-0 overflow-hidden rounded border border-border bg-fd-background p-4 sm:p-5">
+          <div className="space-y-1.5">
+            <h3 className="font-semibold text-sm sm:text-base">7 day comparison</h3>
+            <p className="text-muted-foreground text-sm leading-6">
+              Recent project starts compared with the previous 7 day window.
+            </p>
+          </div>
+          <EvilBarChart
+            className="mt-3 h-[220px] min-w-0 w-full p-1"
+            data={momentumComparison}
+            xDataKey="window"
+            yDataKey="projects"
+            chartConfig={momentumComparisonConfig}
+            barVariant="default"
+            barRadius={5}
+            hideLegend
+            enableHoverHighlight
+            tooltipVariant="frosted-glass"
+            tooltipRoundness="md"
+            backgroundVariant="grid"
+            yAxisProps={{
+              tickFormatter: (value) => formatCompactNumber(Number(value)),
+            }}
+          />
+        </section>
       </div>
     </div>
   );

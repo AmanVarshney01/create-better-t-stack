@@ -69,7 +69,7 @@ async function initMongoDBAtlas(
   });
 
   if (deployResult.isErr()) {
-    return deployResult;
+    return Result.err(deployResult.error);
   }
 
   const connectionString = await text({
@@ -238,7 +238,7 @@ export async function setupMongoDBAtlas(
 
   // Handle errors - check for user cancellation
   if (UserCancelledError.is(mongoConfigResult.error)) {
-    return mongoConfigResult;
+    return Result.err(mongoConfigResult.error);
   }
 
   cliLog.warn(pc.yellow("Falling back to local MongoDB configuration"));

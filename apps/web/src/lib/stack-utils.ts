@@ -114,6 +114,7 @@ export function generateStackCommand(stack: StackState) {
       backend === "self-next" ||
       backend === "self-tanstack-start" ||
       backend === "self-nuxt" ||
+      backend === "self-svelte" ||
       backend === "self-astro"
     ) {
       return "self";
@@ -161,6 +162,7 @@ export function generateStackCommand(stack: StackState) {
                 "wxt",
                 "skills",
                 "mcp",
+                "evlog",
               ].includes(addon),
             )
             .join(" ") || "none"

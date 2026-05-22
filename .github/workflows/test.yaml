@@ -44,9 +44,9 @@ jobs:
       - name: Build Template Generator
         run: cd packages/template-generator && bun run build
 
-      - name: Build and Test CLI
+      - name: Test CLI
         working-directory: apps/cli
-        run: bun run build && bun run test:ci
+        run: bun run test:ci
         env:
           AGENT: 1
           BTS_TELEMETRY: 0
