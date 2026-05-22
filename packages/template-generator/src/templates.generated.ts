@@ -30281,12 +30281,6 @@ export const syncProducts = action({
   },
 });
 `],
-  ["payments/polar/convex/web/react/tanstack-start/src/functions/get-payment.ts.hbs", `import { createServerFn } from "@tanstack/react-start";
-
-export const getPayment = createServerFn({ method: "GET" }).handler(async () => {
-  return null;
-});
-`],
   ["payments/polar/server/base/src/lib/payments.ts.hbs", `import { Polar } from "@polar-sh/sdk";
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 import type {} from "@{{projectName}}/env/server";
@@ -30445,4 +30439,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 476;
+export const TEMPLATE_COUNT = 475;

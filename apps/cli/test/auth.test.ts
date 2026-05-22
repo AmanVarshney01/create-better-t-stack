@@ -314,78 +314,102 @@ describe("Authentication Configurations", () => {
       expect(dashboardFile).toContain("Unauthenticated");
     });
 
-    it("should scaffold Convex Better Auth with Polar payments", async () => {
-      const result = await runTRPCTest({
-        projectName: "better-auth-convex-polar",
-        auth: "better-auth",
-        payments: "polar",
-        backend: "convex",
-        runtime: "none",
-        database: "none",
-        orm: "none",
-        api: "none",
-        frontend: ["tanstack-router"],
-        addons: ["turborepo"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
+    const convexPolarFrontends = [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+    ] as const;
+
+    for (const frontend of convexPolarFrontends) {
+      it(`should scaffold Convex Better Auth with Polar payments for ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `better-auth-convex-polar-${frontend}`,
+          auth: "better-auth",
+          payments: "polar",
+          backend: "convex",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          frontend: [frontend],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        if (!result.projectDir) {
+          throw new Error("Expected projectDir to be defined");
+        }
+
+        const dashboardPath =
+          frontend === "next"
+            ? "apps/web/src/app/dashboard/page.tsx"
+            : "apps/web/src/routes/dashboard.tsx";
+        const convexConfigFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/convex/convex.config.ts"),
+          "utf8",
+        );
+        const httpFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/convex/http.ts"),
+          "utf8",
+        );
+        const polarFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/convex/polar.ts"),
+          "utf8",
+        );
+        const dashboardFile = await fs.readFile(
+          path.join(result.projectDir, dashboardPath),
+          "utf8",
+        );
+        const backendPackageFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/package.json"),
+          "utf8",
+        );
+        const webPackageFile = await fs.readFile(
+          path.join(result.projectDir, "apps/web/package.json"),
+          "utf8",
+        );
+        const convexEnvFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/.env.local"),
+          "utf8",
+        );
+
+        expect(convexConfigFile).toContain(
+          'import polar from "@convex-dev/polar/convex.config.js";',
+        );
+        expect(convexConfigFile).toContain("app.use(polar);");
+        expect(httpFile).toContain('import { polar } from "./polar";');
+        expect(httpFile).toContain("polar.registerRoutes(http);");
+        expect(polarFile).toContain('import { Polar } from "@convex-dev/polar";');
+        expect(polarFile).toContain("getUserInfo");
+        expect(polarFile).toContain("syncProducts");
+        expect(dashboardFile).toContain('from "@convex-dev/polar/react";');
+        expect(dashboardFile).toContain("api.polar.listAllProducts");
+        expect(dashboardFile).toContain("api.polar.getCurrentSubscription");
+        expect(backendPackageFile).toContain('"@convex-dev/polar"');
+        expect(backendPackageFile).toContain('"@polar-sh/sdk"');
+        expect(webPackageFile).toContain('"@convex-dev/polar"');
+        expect(webPackageFile).toContain('"@polar-sh/checkout"');
+        expect(webPackageFile).toContain('"@stripe/react-stripe-js"');
+        expect(webPackageFile).toContain('"@stripe/stripe-js"');
+        expect(webPackageFile).not.toContain('"@polar-sh/better-auth"');
+        expect(convexEnvFile).toContain("# npx convex env set POLAR_ORGANIZATION_TOKEN");
+        expect(convexEnvFile).toContain("POLAR_SERVER=sandbox");
+        expect(
+          await fs.pathExists(path.join(result.projectDir, "apps/web/src/routes/success.tsx")),
+        ).toBe(false);
+        expect(
+          await fs.pathExists(
+            path.join(result.projectDir, "apps/web/src/functions/get-payment.ts"),
+          ),
+        ).toBe(false);
       });
-
-      expectSuccess(result);
-      if (!result.projectDir) {
-        throw new Error("Expected projectDir to be defined");
-      }
-
-      const convexConfigFile = await fs.readFile(
-        path.join(result.projectDir, "packages/backend/convex/convex.config.ts"),
-        "utf8",
-      );
-      const httpFile = await fs.readFile(
-        path.join(result.projectDir, "packages/backend/convex/http.ts"),
-        "utf8",
-      );
-      const polarFile = await fs.readFile(
-        path.join(result.projectDir, "packages/backend/convex/polar.ts"),
-        "utf8",
-      );
-      const dashboardFile = await fs.readFile(
-        path.join(result.projectDir, "apps/web/src/routes/dashboard.tsx"),
-        "utf8",
-      );
-      const backendPackageFile = await fs.readFile(
-        path.join(result.projectDir, "packages/backend/package.json"),
-        "utf8",
-      );
-      const webPackageFile = await fs.readFile(
-        path.join(result.projectDir, "apps/web/package.json"),
-        "utf8",
-      );
-      const convexEnvFile = await fs.readFile(
-        path.join(result.projectDir, "packages/backend/.env.local"),
-        "utf8",
-      );
-
-      expect(convexConfigFile).toContain('import polar from "@convex-dev/polar/convex.config.js";');
-      expect(convexConfigFile).toContain("app.use(polar);");
-      expect(httpFile).toContain('import { polar } from "./polar";');
-      expect(httpFile).toContain("polar.registerRoutes(http);");
-      expect(polarFile).toContain('import { Polar } from "@convex-dev/polar";');
-      expect(polarFile).toContain("getUserInfo");
-      expect(polarFile).toContain("syncProducts");
-      expect(dashboardFile).toContain('from "@convex-dev/polar/react";');
-      expect(dashboardFile).toContain("api.polar.listAllProducts");
-      expect(dashboardFile).toContain("api.polar.getCurrentSubscription");
-      expect(backendPackageFile).toContain('"@convex-dev/polar"');
-      expect(backendPackageFile).toContain('"@polar-sh/sdk"');
-      expect(webPackageFile).toContain('"@convex-dev/polar"');
-      expect(webPackageFile).toContain('"@polar-sh/checkout"');
-      expect(webPackageFile).toContain('"@stripe/react-stripe-js"');
-      expect(webPackageFile).toContain('"@stripe/stripe-js"');
-      expect(convexEnvFile).toContain("# npx convex env set POLAR_ORGANIZATION_TOKEN");
-      expect(convexEnvFile).toContain("POLAR_SERVER=sandbox");
-    });
+    }
 
     const convexUnsupportedFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
     for (const frontend of convexUnsupportedFrontends) {

@@ -25,6 +25,7 @@ export async function processPaymentsTemplates(
       "packages/backend",
       config,
     );
+    return;
   } else if (config.backend !== "none") {
     processTemplatesFromPrefix(
       vfs,
@@ -47,16 +48,6 @@ export async function processPaymentsTemplates(
         "apps/web",
         config,
       );
-
-      if (config.backend === "convex") {
-        processTemplatesFromPrefix(
-          vfs,
-          templates,
-          `payments/${config.payments}/convex/web/react/${reactFramework}`,
-          "apps/web",
-          config,
-        );
-      }
     }
   } else if (hasNuxtWeb) {
     processTemplatesFromPrefix(
