@@ -1,6 +1,5 @@
 import { DEFAULT_CONFIG } from "../constants";
 import type { Auth, Backend, Frontend, Payments } from "../types";
-import { splitFrontends } from "../utils/compatibility-rules";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
@@ -8,7 +7,7 @@ export async function getPaymentsChoice(
   payments?: Payments,
   auth?: Auth,
   backend?: Backend,
-  frontends?: Frontend[],
+  _frontends?: Frontend[],
 ) {
   if (payments !== undefined) return payments;
 
@@ -16,8 +15,7 @@ export async function getPaymentsChoice(
     return "none" as Payments;
   }
 
-  const isPolarCompatible =
-    auth === "better-auth" && (frontends?.length === 0 || splitFrontends(frontends).web.length > 0);
+  const isPolarCompatible = auth === "better-auth";
 
   if (!isPolarCompatible) {
     return "none" as Payments;

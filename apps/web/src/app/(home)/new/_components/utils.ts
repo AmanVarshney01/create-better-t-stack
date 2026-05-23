@@ -34,9 +34,6 @@ export const hasTauriCompatibleFrontend = (webFrontend: string[]) =>
 export const hasElectrobunCompatibleFrontend = (webFrontend: string[]) =>
   webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
 
-const hasWebFrontend = (webFrontend: string[]) => webFrontend.some((f) => f !== "none");
-const hasNativeFrontend = (nativeFrontend: string[]) => nativeFrontend.some((f) => f !== "none");
-
 const clerkSupportedBackends = [
   "convex",
   "hono",
@@ -610,16 +607,6 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         message: "Payments set to 'None' (Polar requires Better Auth)",
       });
     }
-    const hasAnyFrontend =
-      hasWebFrontend(nextStack.webFrontend) || hasNativeFrontend(nextStack.nativeFrontend);
-    if (!hasWebFrontend(nextStack.webFrontend) && hasAnyFrontend) {
-      nextStack.payments = "none";
-      changed = true;
-      changes.push({
-        category: "payments",
-        message: "Payments set to 'None' (Polar requires a web frontend or no frontend)",
-      });
-    }
   }
 
   // ============================================
@@ -1082,11 +1069,6 @@ export const getDisabledReason = (
   if (category === "payments" && optionId === "polar") {
     if (currentStack.auth !== "better-auth") {
       return "Polar requires Better Auth";
-    }
-    const hasAnyFrontend =
-      hasWebFrontend(currentStack.webFrontend) || hasNativeFrontend(currentStack.nativeFrontend);
-    if (!hasWebFrontend(currentStack.webFrontend) && hasAnyFrontend) {
-      return "Polar requires a web frontend or no frontend";
     }
   }
 

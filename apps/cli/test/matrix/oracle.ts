@@ -31,7 +31,6 @@ export type MatrixRule =
   | "orm-mongodb-requires-mongoose-or-prisma"
   | "orm-requires-database"
   | "payments-polar-requires-better-auth"
-  | "payments-polar-requires-web-or-server-only"
   | "runtime-none-requires-terminal-backend"
   | "server-deploy-requires-backend"
   | "server-deploy-requires-workers-runtime"
@@ -307,11 +306,6 @@ function validatePayments(config: ProjectConfig, rules: Set<MatrixRule>) {
     config.payments === "polar" && config.auth !== "better-auth",
     "payments-polar-requires-better-auth",
   );
-  addRule(
-    rules,
-    config.payments === "polar" && !hasWebFrontend(config.frontend) && config.frontend.length > 0,
-    "payments-polar-requires-web-or-server-only",
-  );
 }
 
 function validateExamples(config: ProjectConfig, rules: Set<MatrixRule>) {
@@ -423,9 +417,6 @@ export function classifyMatrixError(message: string): MatrixRule | "unknown" {
   if (message.includes("ORM selection requires a database")) return "orm-requires-database";
   if (message.includes("Polar payments requires Better Auth")) {
     return "payments-polar-requires-better-auth";
-  }
-  if (message.includes("Polar payments requires a web frontend")) {
-    return "payments-polar-requires-web-or-server-only";
   }
   if (message.includes("'--runtime none' is only supported")) {
     return "runtime-none-requires-terminal-backend";

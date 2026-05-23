@@ -152,7 +152,7 @@ describe("stack builder D1 compatibility", () => {
     expect(getDisabledReason(stack, "payments", "polar")).toBeNull();
   });
 
-  test("blocks Polar for native-only stacks", () => {
+  test("allows Polar for native-only stacks", () => {
     const stack = createStack({
       webFrontend: ["none"],
       nativeFrontend: ["native-bare"],
@@ -160,9 +160,7 @@ describe("stack builder D1 compatibility", () => {
       auth: "better-auth",
     });
 
-    expect(getDisabledReason(stack, "payments", "polar")).toBe(
-      "Polar requires a web frontend or no frontend",
-    );
+    expect(getDisabledReason(stack, "payments", "polar")).toBeNull();
   });
 
   test("blocks the AI example for Astro frontends", () => {

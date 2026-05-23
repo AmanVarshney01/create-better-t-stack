@@ -428,6 +428,7 @@ ${needsConvexSiteUrl ? "# npx convex env set CONVEX_SITE_URL https://<YOUR_CONVE
 function buildServerVars(
   backend: ProjectConfig["backend"],
   frontend: string[],
+  projectName: string,
   auth: ProjectConfig["auth"],
   api: ProjectConfig["api"],
   database: ProjectConfig["database"],
@@ -441,6 +442,19 @@ function buildServerVars(
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
+  const hasNative =
+    frontend.includes("native-bare") ||
+    frontend.includes("native-uniwind") ||
+    frontend.includes("native-unistyles");
+  const hasWeb =
+    hasReactRouter ||
+    hasSvelte ||
+    hasAstro ||
+    frontend.includes("tanstack-router") ||
+    frontend.includes("tanstack-start") ||
+    frontend.includes("next") ||
+    frontend.includes("nuxt") ||
+    frontend.includes("solid");
 
   let corsOrigin = "http://localhost:3001";
   if (hasAstro) {
@@ -448,6 +462,8 @@ function buildServerVars(
   } else if (hasReactRouter || hasSvelte) {
     corsOrigin = "http://localhost:5173";
   }
+  const polarSuccessUrl =
+    hasNative && !hasWeb ? `${projectName}://` : `${corsOrigin}/success?checkout_id={CHECKOUT_ID}`;
 
   let databaseUrl: string | null = null;
   if (database !== "none" && dbSetup === "none") {
@@ -513,7 +529,7 @@ function buildServerVars(
     },
     {
       key: "POLAR_SUCCESS_URL",
-      value: `${corsOrigin}/success?checkout_id={CHECKOUT_ID}`,
+      value: polarSuccessUrl,
       condition: payments === "polar",
     },
     {
@@ -538,6 +554,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
   const {
     backend,
     frontend,
+    projectName,
     database,
     auth,
     api,
@@ -627,6 +644,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
   const serverVars = buildServerVars(
     backend,
     frontend,
+    projectName,
     auth,
     api,
     database,

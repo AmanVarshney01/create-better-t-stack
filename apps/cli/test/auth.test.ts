@@ -411,6 +411,122 @@ describe("Authentication Configurations", () => {
       });
     }
 
+    const nativePolarFrontends = ["native-bare", "native-uniwind", "native-unistyles"] as const;
+
+    for (const frontend of nativePolarFrontends) {
+      it(`should scaffold native-only Better Auth with Polar payments for ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `better-auth-native-polar-${frontend}`,
+          auth: "better-auth",
+          payments: "polar",
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          api: "trpc",
+          frontend: [frontend],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        if (!result.projectDir) {
+          throw new Error("Expected projectDir to be defined");
+        }
+
+        const nativeIndexFile = await fs.readFile(
+          path.join(result.projectDir, "apps/native/app/(drawer)/index.tsx"),
+          "utf8",
+        );
+        const nativeAuthClientFile = await fs.readFile(
+          path.join(result.projectDir, "apps/native/lib/auth-client.ts"),
+          "utf8",
+        );
+        const authPackageFile = await fs.readFile(
+          path.join(result.projectDir, "packages/auth/package.json"),
+          "utf8",
+        );
+        const nativePackageFile = await fs.readFile(
+          path.join(result.projectDir, "apps/native/package.json"),
+          "utf8",
+        );
+        const serverEnvFile = await fs.readFile(
+          path.join(result.projectDir, "apps/server/.env"),
+          "utf8",
+        );
+
+        expect(nativeIndexFile).toContain("polarNativeClient.checkout");
+        expect(nativeIndexFile).toContain("polarNativeClient.customer.portal");
+        expect(nativeIndexFile).toContain("WebBrowser.openAuthSessionAsync");
+        expect(nativeIndexFile).toContain("Upgrade to Pro");
+        expect(nativeIndexFile).toContain("Manage Subscription");
+        expect(nativeAuthClientFile).toContain("export const polarNativeClient");
+        expect(authPackageFile).toContain('"@polar-sh/better-auth"');
+        expect(authPackageFile).toContain('"@polar-sh/sdk"');
+        expect(nativePackageFile).not.toContain('"@polar-sh/better-auth"');
+        expect(serverEnvFile).toContain(
+          `POLAR_SUCCESS_URL=better-auth-native-polar-${frontend}://`,
+        );
+      });
+
+      it(`should scaffold native-only Convex Better Auth with Polar payments for ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `better-auth-convex-native-polar-${frontend}`,
+          auth: "better-auth",
+          payments: "polar",
+          backend: "convex",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          frontend: [frontend],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        if (!result.projectDir) {
+          throw new Error("Expected projectDir to be defined");
+        }
+
+        const nativeIndexFile = await fs.readFile(
+          path.join(result.projectDir, "apps/native/app/(drawer)/index.tsx"),
+          "utf8",
+        );
+        const backendPackageFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/package.json"),
+          "utf8",
+        );
+        const nativePackageFile = await fs.readFile(
+          path.join(result.projectDir, "apps/native/package.json"),
+          "utf8",
+        );
+        const polarFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/convex/polar.ts"),
+          "utf8",
+        );
+
+        expect(nativeIndexFile).toContain("api.polar.generateCheckoutLink");
+        expect(nativeIndexFile).toContain("api.polar.generateCustomerPortalUrl");
+        expect(nativeIndexFile).toContain("WebBrowser.openAuthSessionAsync");
+        expect(nativeIndexFile).toContain("Upgrade to Pro");
+        expect(nativeIndexFile).toContain("Manage Subscription");
+        expect(polarFile).toContain("generateCheckoutLink");
+        expect(backendPackageFile).toContain('"@convex-dev/polar"');
+        expect(backendPackageFile).toContain('"@polar-sh/sdk"');
+        expect(nativePackageFile).not.toContain('"@convex-dev/polar"');
+        expect(nativePackageFile).not.toContain('"@polar-sh/checkout"');
+      });
+    }
+
     const convexUnsupportedFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
     for (const frontend of convexUnsupportedFrontends) {
       it(`should fail with Convex Better Auth + ${frontend}`, async () => {

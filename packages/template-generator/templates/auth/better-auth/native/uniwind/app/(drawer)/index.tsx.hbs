@@ -1,6 +1,10 @@
-import { Text, View, Pressable } from "react-native";
+import { Text, View, Pressable{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
+{{#if (eq payments "polar")}}
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+{{/if}}
 import { Container } from "@/components/container";
-import { authClient } from "@/lib/auth-client";
+import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
 import { Ionicons } from "@expo/vector-icons";
 import { Card, Chip, useThemeColor } from "heroui-native";
 import { SignIn } from "@/components/sign-in";
@@ -28,6 +32,41 @@ const isConnected = healthCheck?.data === "OK";
 const isLoading = healthCheck?.isLoading;
 {{/if}}
 const { data: session } = authClient.useSession();
+{{#if (eq payments "polar")}}
+
+const openPolarLink = async (url: string, returnUrl: string) => {
+  await WebBrowser.openAuthSessionAsync(url, returnUrl);
+};
+
+const handlePolarCheckout = async () => {
+  const returnUrl = Linking.createURL("/");
+  const { data, error } = await polarNativeClient.checkout({
+    slug: "pro",
+    redirect: false,
+    successUrl: returnUrl,
+    returnUrl,
+  });
+
+  if (error || !data?.url) {
+    Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
+    return;
+  }
+
+  await openPolarLink(data.url, returnUrl);
+};
+
+const handlePolarPortal = async () => {
+  const returnUrl = Linking.createURL("/");
+  const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
+
+  if (error || !data?.url) {
+    Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");
+    return;
+  }
+
+  await openPolarLink(data.url, returnUrl);
+};
+{{/if}}
 
 const mutedColor = useThemeColor("muted");
 const successColor = useThemeColor("success");
@@ -62,6 +101,22 @@ return (
       >
       <Text className="text-foreground font-medium">Sign Out</Text>
     </Pressable>
+    {{#if (eq payments "polar")}}
+    <View className="mt-4 gap-3">
+      <Pressable
+        className="bg-primary py-3 px-4 rounded-lg self-start active:opacity-70"
+        onPress={handlePolarCheckout}
+      >
+        <Text className="text-foreground font-medium">Upgrade to Pro</Text>
+      </Pressable>
+      <Pressable
+        className="border border-border py-3 px-4 rounded-lg self-start active:opacity-70"
+        onPress={handlePolarPortal}
+      >
+        <Text className="text-foreground font-medium">Manage Subscription</Text>
+      </Pressable>
+    </View>
+    {{/if}}
   </Card>
   ) : null}
 

@@ -1,9 +1,13 @@
 import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
-import { View, ScrollView, StyleSheet } from "react-native";
+import { View, ScrollView, StyleSheet{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
+{{#if (eq payments "polar")}}
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+{{/if}}
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
-import { authClient } from "@/lib/auth-client";
+import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
 {{#if (eq api "orpc")}}
@@ -31,6 +35,41 @@ const isConnected = healthCheck?.data === "OK";
 const isLoading = healthCheck?.isLoading;
 {{/if}}
 const { data: session } = authClient.useSession();
+{{#if (eq payments "polar")}}
+
+const openPolarLink = async (url: string, returnUrl: string) => {
+	await WebBrowser.openAuthSessionAsync(url, returnUrl);
+};
+
+const handlePolarCheckout = async () => {
+	const returnUrl = Linking.createURL("/");
+	const { data, error } = await polarNativeClient.checkout({
+		slug: "pro",
+		redirect: false,
+		successUrl: returnUrl,
+		returnUrl,
+	});
+
+	if (error || !data?.url) {
+		Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
+		return;
+	}
+
+	await openPolarLink(data.url, returnUrl);
+};
+
+const handlePolarPortal = async () => {
+	const returnUrl = Linking.createURL("/");
+	const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
+
+	if (error || !data?.url) {
+		Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");
+		return;
+	}
+
+	await openPolarLink(data.url, returnUrl);
+};
+{{/if}}
 
 return (
 <Container>
@@ -76,6 +115,18 @@ return (
             }}
           />
         </Host>
+        {{#if (eq payments "polar")}}
+        <Host style={styles.paymentActions} matchContents=\{{ vertical: true }}>
+          <Column spacing={8}>
+            <Button label="Upgrade to Pro" onPress={handlePolarCheckout} />
+            <Button
+              label="Manage Subscription"
+              variant="outlined"
+              onPress={handlePolarPortal}
+            />
+          </Column>
+        </Host>
+        {{/if}}
       </View>
       ) : null}
 
@@ -168,6 +219,9 @@ borderRadius: 16,
 },
 userHeader: {
 marginBottom: 8,
+},
+paymentActions: {
+marginTop: 12,
 },
 statusCard: {
 marginBottom: 16,
