@@ -527,6 +527,72 @@ describe("Authentication Configurations", () => {
       });
     }
 
+    const standardPolarBackends = [
+      { backend: "hono", runtime: "bun", serverDeploy: "none" },
+      { backend: "hono", runtime: "node", serverDeploy: "none" },
+      { backend: "hono", runtime: "workers", serverDeploy: "cloudflare" },
+      { backend: "express", runtime: "bun", serverDeploy: "none" },
+      { backend: "express", runtime: "node", serverDeploy: "none" },
+      { backend: "fastify", runtime: "bun", serverDeploy: "none" },
+      { backend: "fastify", runtime: "node", serverDeploy: "none" },
+      { backend: "elysia", runtime: "bun", serverDeploy: "none" },
+    ] as const;
+
+    it("should scaffold native-only Better Auth with Polar payments for every standard server backend", async () => {
+      for (const { backend, runtime, serverDeploy } of standardPolarBackends) {
+        const result = await runTRPCTest({
+          projectName: `better-auth-native-polar-${backend}-${runtime}`,
+          auth: "better-auth",
+          payments: "polar",
+          backend,
+          runtime,
+          database: "sqlite",
+          orm: "drizzle",
+          api: "trpc",
+          frontend: ["native-bare"],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy,
+          install: false,
+        });
+
+        expectSuccess(result);
+        if (!result.projectDir) {
+          throw new Error("Expected projectDir to be defined");
+        }
+
+        const authFile = await fs.readFile(
+          path.join(result.projectDir, "packages/auth/src/index.ts"),
+          "utf8",
+        );
+        const authPackageFile = await fs.readFile(
+          path.join(result.projectDir, "packages/auth/package.json"),
+          "utf8",
+        );
+        const nativeIndexFile = await fs.readFile(
+          path.join(result.projectDir, "apps/native/app/(drawer)/index.tsx"),
+          "utf8",
+        );
+        const serverEnvFile = await fs.readFile(
+          path.join(result.projectDir, "apps/server/.env"),
+          "utf8",
+        );
+
+        expect(authFile).toContain('from "@polar-sh/better-auth"');
+        expect(authFile).toContain("polar({");
+        expect(authFile).toContain("checkout({");
+        expect(authFile).toContain("portal()");
+        expect(authPackageFile).toContain('"@polar-sh/better-auth"');
+        expect(authPackageFile).toContain('"@polar-sh/sdk"');
+        expect(nativeIndexFile).toContain("polarNativeClient.checkout");
+        expect(serverEnvFile).toContain(
+          `POLAR_SUCCESS_URL=better-auth-native-polar-${backend}-${runtime}://`,
+        );
+      }
+    });
+
     const convexUnsupportedFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
     for (const frontend of convexUnsupportedFrontends) {
       it(`should fail with Convex Better Auth + ${frontend}`, async () => {
