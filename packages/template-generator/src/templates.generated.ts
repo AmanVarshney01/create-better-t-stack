@@ -3630,26 +3630,26 @@ function DashboardContent() {
             <p>privateData: {privateData?.message}</p>
             {{#if (eq payments "polar")}}
             <p>Plan: {hasActiveSubscription ? "Active" : "Free"}</p>
-            {products === undefined || subscription === undefined ? (
+            {subscription === undefined ? (
+                <p>Loading subscription options...</p>
+            ) : hasActiveSubscription ? (
+                <CustomerPortalLink
+                    polarApi={api.polar}
+                    className={buttonVariants({ variant: "outline" })}
+                >
+                    Manage Subscription
+                </CustomerPortalLink>
+            ) : products === undefined ? (
                 <p>Loading subscription options...</p>
             ) : product ? (
-                hasActiveSubscription ? (
-                    <CustomerPortalLink
-                        polarApi={api.polar}
-                        className={buttonVariants({ variant: "outline" })}
-                    >
-                        Manage Subscription
-                    </CustomerPortalLink>
-                ) : (
-                    <CheckoutLink
-                        polarApi={api.polar}
-                        productIds={[product.id]}
-                        embed={false}
-                        className={buttonVariants({ variant: "default" })}
-                    >
-                        Upgrade
-                    </CheckoutLink>
-                )
+                <CheckoutLink
+                    polarApi={api.polar}
+                    productIds={[product.id]}
+                    embed={false}
+                    className={buttonVariants({ variant: "default" })}
+                >
+                    Upgrade
+                </CheckoutLink>
             ) : (
                 <p>No recurring plans available.</p>
             )}
@@ -4420,26 +4420,26 @@ function PrivateDashboardContent() {
       <p>privateData: {privateData?.message}</p>
       {{#if (eq payments "polar")}}
       <p>Plan: {hasActiveSubscription ? "Active" : "Free"}</p>
-      {products === undefined || subscription === undefined ? (
+      {subscription === undefined ? (
+        <p>Loading subscription options...</p>
+      ) : hasActiveSubscription ? (
+        <CustomerPortalLink
+          polarApi={api.polar}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          Manage Subscription
+        </CustomerPortalLink>
+      ) : products === undefined ? (
         <p>Loading subscription options...</p>
       ) : product ? (
-        hasActiveSubscription ? (
-          <CustomerPortalLink
-            polarApi={api.polar}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            Manage Subscription
-          </CustomerPortalLink>
-        ) : (
-          <CheckoutLink
-            polarApi={api.polar}
-            productIds={[product.id]}
-            embed={false}
-            className={buttonVariants({ variant: "default" })}
-          >
-            Upgrade
-          </CheckoutLink>
-        )
+        <CheckoutLink
+          polarApi={api.polar}
+          productIds={[product.id]}
+          embed={false}
+          className={buttonVariants({ variant: "default" })}
+        >
+          Upgrade
+        </CheckoutLink>
       ) : (
         <p>No recurring plans available.</p>
       )}
@@ -4866,26 +4866,26 @@ function PrivateDashboardContent() {
       <p>privateData: {privateData?.message}</p>
       {{#if (eq payments "polar")}}
       <p>Plan: {hasActiveSubscription ? "Active" : "Free"}</p>
-      {products === undefined || subscription === undefined ? (
+      {subscription === undefined ? (
+        <p>Loading subscription options...</p>
+      ) : hasActiveSubscription ? (
+        <CustomerPortalLink
+          polarApi={api.polar}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          Manage Subscription
+        </CustomerPortalLink>
+      ) : products === undefined ? (
         <p>Loading subscription options...</p>
       ) : product ? (
-        hasActiveSubscription ? (
-          <CustomerPortalLink
-            polarApi={api.polar}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            Manage Subscription
-          </CustomerPortalLink>
-        ) : (
-          <CheckoutLink
-            polarApi={api.polar}
-            productIds={[product.id]}
-            embed={false}
-            className={buttonVariants({ variant: "default" })}
-          >
-            Upgrade
-          </CheckoutLink>
-        )
+        <CheckoutLink
+          polarApi={api.polar}
+          productIds={[product.id]}
+          embed={false}
+          className={buttonVariants({ variant: "default" })}
+        >
+          Upgrade
+        </CheckoutLink>
       ) : (
         <p>No recurring plans available.</p>
       )}
@@ -5327,26 +5327,26 @@ function PrivateDashboardContent() {
       <p>privateData: {privateData?.message}</p>
       {{#if (eq payments "polar")}}
       <p>Plan: {hasActiveSubscription ? "Active" : "Free"}</p>
-      {products === undefined || subscription === undefined ? (
+      {subscription === undefined ? (
+        <p>Loading subscription options...</p>
+      ) : hasActiveSubscription ? (
+        <CustomerPortalLink
+          polarApi={api.polar}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          Manage Subscription
+        </CustomerPortalLink>
+      ) : products === undefined ? (
         <p>Loading subscription options...</p>
       ) : product ? (
-        hasActiveSubscription ? (
-          <CustomerPortalLink
-            polarApi={api.polar}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            Manage Subscription
-          </CustomerPortalLink>
-        ) : (
-          <CheckoutLink
-            polarApi={api.polar}
-            productIds={[product.id]}
-            embed={false}
-            className={buttonVariants({ variant: "default" })}
-          >
-            Upgrade
-          </CheckoutLink>
-        )
+        <CheckoutLink
+          polarApi={api.polar}
+          productIds={[product.id]}
+          embed={false}
+          className={buttonVariants({ variant: "default" })}
+        >
+          Upgrade
+        </CheckoutLink>
       ) : (
         <p>No recurring plans available.</p>
       )}

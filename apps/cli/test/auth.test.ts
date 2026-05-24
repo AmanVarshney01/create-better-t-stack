@@ -391,6 +391,12 @@ describe("Authentication Configurations", () => {
         expect(dashboardFile).toContain('from "@convex-dev/polar/react";');
         expect(dashboardFile).toContain("api.polar.listAllProducts");
         expect(dashboardFile).toContain("api.polar.getCurrentSubscription");
+        expect(dashboardFile).not.toContain("products === undefined || subscription === undefined");
+        expect(dashboardFile).toContain(") : hasActiveSubscription ? (");
+        expect(dashboardFile).toContain(") : product ? (");
+        expect(dashboardFile.indexOf(") : hasActiveSubscription ? (")).toBeLessThan(
+          dashboardFile.indexOf(") : product ? ("),
+        );
         expect(backendPackageFile).toContain('"@convex-dev/polar"');
         expect(backendPackageFile).toContain('"@polar-sh/sdk"');
         expect(webPackageFile).toContain('"@convex-dev/polar"');
