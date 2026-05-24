@@ -3620,7 +3620,7 @@ function DashboardContent() {
     const products = useQuery(api.polar.listAllProducts);
     const subscription = useQuery(api.polar.getCurrentSubscription);
 
-    const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring) ?? products?.[0];
+    const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring);
     const hasActiveSubscription = Boolean(subscription);
     {{/if}}
 
@@ -3651,7 +3651,7 @@ function DashboardContent() {
                     </CheckoutLink>
                 )
             ) : (
-                <p>No plans available.</p>
+                <p>No recurring plans available.</p>
             )}
             {{/if}}
             <UserMenu />
@@ -4410,7 +4410,7 @@ function PrivateDashboardContent() {
   const products = useQuery(api.polar.listAllProducts);
   const subscription = useQuery(api.polar.getCurrentSubscription);
 
-  const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring) ?? products?.[0];
+  const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring);
   const hasActiveSubscription = Boolean(subscription);
   {{/if}}
 
@@ -4441,7 +4441,7 @@ function PrivateDashboardContent() {
           </CheckoutLink>
         )
       ) : (
-        <p>No plans available.</p>
+        <p>No recurring plans available.</p>
       )}
       {{/if}}
       <UserMenu />
@@ -4856,7 +4856,7 @@ function PrivateDashboardContent() {
   const products = useQuery(api.polar.listAllProducts);
   const subscription = useQuery(api.polar.getCurrentSubscription);
 
-  const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring) ?? products?.[0];
+  const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring);
   const hasActiveSubscription = Boolean(subscription);
   {{/if}}
 
@@ -4887,7 +4887,7 @@ function PrivateDashboardContent() {
           </CheckoutLink>
         )
       ) : (
-        <p>No plans available.</p>
+        <p>No recurring plans available.</p>
       )}
       {{/if}}
       <UserMenu />
@@ -5317,7 +5317,7 @@ function PrivateDashboardContent() {
   const products = useQuery(api.polar.listAllProducts);
   const subscription = useQuery(api.polar.getCurrentSubscription);
 
-  const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring) ?? products?.[0];
+  const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring);
   const hasActiveSubscription = Boolean(subscription);
   {{/if}}
 
@@ -5348,7 +5348,7 @@ function PrivateDashboardContent() {
           </CheckoutLink>
         )
       ) : (
-        <p>No plans available.</p>
+        <p>No recurring plans available.</p>
       )}
       {{/if}}
       <UserMenu />
