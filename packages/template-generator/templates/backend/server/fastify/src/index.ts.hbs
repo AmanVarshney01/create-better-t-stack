@@ -82,6 +82,31 @@ fastify.register(clerkPlugin, {
 });
 {{/if}}
 
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+fastify.get("/polar/success", async (request, reply) => {
+	const requestUrl = new URL(request.url, env.BETTER_AUTH_URL);
+	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+	let redirectUrl: URL;
+	try {
+		redirectUrl = new URL(returnUrl);
+	} catch {
+		reply.status(400).send("Invalid return URL");
+		return;
+	}
+
+	if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+		reply.status(400).send("Invalid return URL");
+		return;
+	}
+
+	reply.status(302).header("Location", redirectUrl.toString()).send();
+});
+
+{{/if}}
 {{#if (eq api "orpc")}}
 fastify.register(async (rpcApp) => {
 	// Fully utilize oRPC features by letting oRPC parse the request body.

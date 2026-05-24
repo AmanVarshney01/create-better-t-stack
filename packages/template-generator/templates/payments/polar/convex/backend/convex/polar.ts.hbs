@@ -1,0 +1,64 @@
+import { Polar } from "@convex-dev/polar";
+
+import { api, components } from "./_generated/api";
+import type { DataModel } from "./_generated/dataModel";
+import { action, query } from "./_generated/server";
+
+type CurrentSubscription = Awaited<ReturnType<Polar<DataModel>["getCurrentSubscription"]>>;
+
+export const polar: Polar<DataModel> = new Polar<DataModel>(components.polar, {
+  getUserInfo: async (ctx) => {
+    const user = await ctx.runQuery(api.auth.getCurrentUser);
+
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    if (!user.email) {
+      throw new Error("Authenticated user is missing an email address");
+    }
+
+    return {
+      userId: user._id,
+      email: user.email,
+    };
+  },
+});
+
+export const {
+  changeCurrentSubscription,
+  cancelCurrentSubscription,
+  getConfiguredProducts,
+  listAllProducts,
+  listAllSubscriptions,
+  generateCheckoutLink,
+  generateCustomerPortalUrl,
+} = polar.api();
+
+export const getCurrentSubscription = query({
+  args: {},
+  handler: async (ctx): Promise<CurrentSubscription | null> => {
+    const user = await ctx.runQuery(api.auth.getCurrentUser);
+
+    if (!user) {
+      return null;
+    }
+
+    return await polar.getCurrentSubscription(ctx, {
+      userId: user._id,
+    });
+  },
+});
+
+export const syncProducts = action({
+  args: {},
+  handler: async (ctx): Promise<void> => {
+    const user = await ctx.runQuery(api.auth.getCurrentUser);
+
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    await polar.syncProducts(ctx);
+  },
+});

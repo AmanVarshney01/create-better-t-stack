@@ -1,4 +1,9 @@
-import { Text, View } from "react-native";
+import { Text, View{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
+{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
+{{/if}}
 import { Container } from "@/components/container";
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
@@ -19,7 +24,7 @@ import { Link } from "expo-router";
 import { useAuth, useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-import { useConvexAuth, useQuery } from "convex/react";
+import { {{#if (eq payments "polar")}}useAction, {{/if}}useConvexAuth, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { SignIn } from "@/components/sign-in";
@@ -51,6 +56,57 @@ const { user } = useUser();
 const healthCheck = useQuery(api.healthCheck.get);
 const { isAuthenticated } = useConvexAuth();
 const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
+{{#if (eq payments "polar")}}
+const products = useQuery(api.polar.listAllProducts);
+const subscription = useQuery(api.polar.getCurrentSubscription);
+const generateCheckoutLink = useAction(api.polar.generateCheckoutLink);
+const generateCustomerPortalUrl = useAction(api.polar.generateCustomerPortalUrl);
+const recurringProduct = products?.find((product) => product.isRecurring);
+
+const openPolarLink = async (url: string, returnUrl: string) => {
+  await WebBrowser.openAuthSessionAsync(url, returnUrl);
+};
+
+const getPolarReturnUrl = (returnUrl: string) => {
+  const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+  url.searchParams.set("returnUrl", returnUrl);
+  return url.toString();
+};
+
+const handlePolarCheckout = async () => {
+  try {
+    if (!recurringProduct) {
+      Alert.alert("Checkout unavailable", "No recurring Polar product is available yet.");
+      return;
+    }
+
+    const returnUrl = Linking.createURL("/");
+    const polarReturnUrl = getPolarReturnUrl(returnUrl);
+    const { url } = await generateCheckoutLink({
+      productIds: [recurringProduct.id],
+      origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+      successUrl: polarReturnUrl,
+    });
+
+    await openPolarLink(url, returnUrl);
+  } catch {
+    Alert.alert("Checkout failed", "Unable to open Polar checkout. Please try again.");
+  }
+};
+
+const handlePolarPortal = async () => {
+  try {
+    const returnUrl = Linking.createURL("/");
+    const { url } = await generateCustomerPortalUrl({
+      returnUrl: getPolarReturnUrl(returnUrl),
+    });
+
+    await openPolarLink(url, returnUrl);
+  } catch {
+    Alert.alert("Portal unavailable", "Unable to open the customer portal. Please try again.");
+  }
+};
+{{/if}}
 {{else if (eq backend "convex")}}
 const healthCheck = useQuery(api.healthCheck.get);
 {{/if}}
@@ -202,6 +258,19 @@ return (
         Sign Out
       </Button>
     </View>
+    {{#if (eq payments "polar")}}
+    <View className="mt-4 gap-3">
+      {subscription ? (
+      <Button variant="secondary" onPress={handlePolarPortal}>
+        Manage Subscription
+      </Button>
+      ) : (
+      <Button onPress={handlePolarCheckout}>
+        Upgrade to Pro
+      </Button>
+      )}
+    </View>
+    {{/if}}
   </Surface>
   ) : null}
   <Surface variant="secondary" className="p-4 rounded-xl">

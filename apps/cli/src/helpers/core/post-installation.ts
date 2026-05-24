@@ -107,10 +107,6 @@ export async function displayPostInstallInstructions(
     : "";
   const clerkInstructions =
     config.auth === "clerk" ? getClerkInstructions(frontend || [], backend, api) : "";
-  const polarInstructions =
-    config.payments === "polar" && config.auth === "better-auth"
-      ? getPolarInstructions(backend)
-      : "";
   const alchemyDeployInstructions = getAlchemyDeployInstructions(
     runCmd,
     webDeploy,
@@ -134,6 +130,10 @@ export async function displayPostInstallInstructions(
   const betterAuthConvexInstructions =
     isConvex && config.auth === "better-auth"
       ? getBetterAuthConvexInstructions(hasWeb ?? false, webPort, packageManager)
+      : "";
+  const polarInstructions =
+    config.payments === "polar" && config.auth === "better-auth"
+      ? getPolarInstructions(backend, packageManager)
       : "";
 
   const bunWebNativeWarning =
@@ -572,7 +572,21 @@ function getBetterAuthConvexInstructions(hasWeb: boolean, webPort: string, packa
   );
 }
 
-function getPolarInstructions(backend: Backend) {
+function getPolarInstructions(backend: Backend, packageManager: string) {
+  if (backend === "convex") {
+    const cmd = packageManager === "npm" ? "npx" : packageManager;
+    return (
+      `${pc.bold("Polar Payments Setup:")}\n` +
+      `${pc.cyan("•")} Create a Polar organization token, webhook secret, and product in ${pc.underline("https://sandbox.polar.sh/")}\n` +
+      `${pc.cyan("•")} Set the Convex env vars from ${pc.white("packages/backend")}:\n` +
+      `${pc.white("   cd packages/backend")}\n` +
+      `${pc.white(`   ${cmd} convex env set POLAR_ORGANIZATION_TOKEN your_polar_token`)}\n` +
+      `${pc.white(`   ${cmd} convex env set POLAR_WEBHOOK_SECRET your_polar_webhook_secret`)}\n` +
+      `${pc.white(`   Optional: ${cmd} convex env set POLAR_SERVER production`)}\n` +
+      `${pc.cyan("•")} Configure a Polar webhook to ${pc.white("https://<your-convex-site-url>/polar/events")}`
+    );
+  }
+
   const envPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
   return `${pc.bold("Polar Payments Setup:")}\n${pc.cyan("•")} Get access token & product ID from ${pc.underline("https://sandbox.polar.sh/")}\n${pc.cyan("•")} Set POLAR_ACCESS_TOKEN in ${envPath}`;
 }
