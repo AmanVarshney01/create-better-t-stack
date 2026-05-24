@@ -470,6 +470,12 @@ describe("Authentication Configurations", () => {
         expect(nativeIndexFile).toContain("WebBrowser.openAuthSessionAsync");
         expect(nativeIndexFile).toContain("Upgrade to Pro");
         expect(nativeIndexFile).toContain("Manage Subscription");
+        if (frontend === "native-bare") {
+          expect(nativeIndexFile).toContain('contentInsetAdjustmentBehavior="never"');
+          expect(nativeIndexFile).toContain("<Host style={styles.titleHost}>");
+          expect(nativeIndexFile).toContain('textAlign: "center"');
+          expect(nativeIndexFile).toContain("height: 34");
+        }
         expect(nativeAuthClientFile).toContain("export const polarNativeClient");
         expect(authPackageFile).toContain('"@polar-sh/better-auth"');
         expect(authPackageFile).toContain('"@polar-sh/sdk"');
@@ -525,6 +531,12 @@ describe("Authentication Configurations", () => {
         expect(nativeIndexFile).toContain("WebBrowser.openAuthSessionAsync");
         expect(nativeIndexFile).toContain("Upgrade to Pro");
         expect(nativeIndexFile).toContain("Manage Subscription");
+        if (frontend === "native-bare") {
+          expect(nativeIndexFile).toContain('contentInsetAdjustmentBehavior="never"');
+          expect(nativeIndexFile).toContain("<Host style={styles.titleHost}>");
+          expect(nativeIndexFile).toContain('textAlign: "center"');
+          expect(nativeIndexFile).toContain("height: 34");
+        }
         expect(polarFile).toContain("generateCheckoutLink");
         expect(backendPackageFile).toContain('"@convex-dev/polar"');
         expect(backendPackageFile).toContain('"@polar-sh/sdk"');

@@ -73,16 +73,14 @@ const handlePolarPortal = async () => {
 
 return (
 <Container>
-  <ScrollView style={styles.scrollView}>
+  <ScrollView style={styles.scrollView} contentInsetAdjustmentBehavior="never">
     <View style={styles.content}>
-      <Host style={styles.titleHost} matchContents=\{{ vertical: true }}>
-        <Column>
-          <ExpoUIText
-            textStyle=\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
-          >
-            BETTER T STACK
-          </ExpoUIText>
-        </Column>
+      <Host style={styles.titleHost}>
+        <ExpoUIText
+          textStyle=\{{ color: theme.text, fontSize: 24, fontWeight: "bold", textAlign: "center" }}
+        >
+          BETTER T STACK
+        </ExpoUIText>
       </Host>
 
       {session?.user ? (
@@ -208,7 +206,8 @@ paddingTop: 28,
 paddingBottom: 32,
 },
 titleHost: {
-alignSelf: "center",
+alignSelf: "stretch",
+height: 34,
 marginBottom: 24,
 },
 userCard: {

@@ -11,7 +11,10 @@ export function Container({ children }: { children: React.ReactNode }) {
     : NAV_THEME.light.background;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+    <SafeAreaView
+      edges={["left", "right", "bottom"]}
+      style={[styles.container, { backgroundColor }]}
+    >
       {children}
     </SafeAreaView>
   );
@@ -22,4 +25,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-

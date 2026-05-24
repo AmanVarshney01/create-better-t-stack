@@ -5599,16 +5599,14 @@ const handlePolarPortal = async () => {
 
 return (
 <Container>
-  <ScrollView style={styles.scrollView}>
+  <ScrollView style={styles.scrollView} contentInsetAdjustmentBehavior="never">
     <View style={styles.content}>
-      <Host style={styles.titleHost} matchContents=\\{{ vertical: true }}>
-        <Column>
-          <ExpoUIText
-            textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
-          >
-            BETTER T STACK
-          </ExpoUIText>
-        </Column>
+      <Host style={styles.titleHost}>
+        <ExpoUIText
+          textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold", textAlign: "center" }}
+        >
+          BETTER T STACK
+        </ExpoUIText>
       </Host>
 
       {session?.user ? (
@@ -5734,7 +5732,8 @@ paddingTop: 28,
 paddingBottom: 32,
 },
 titleHost: {
-alignSelf: "center",
+alignSelf: "stretch",
+height: 34,
 marginBottom: 24,
 },
 userCard: {
@@ -22966,16 +22965,14 @@ const healthCheck = useQuery(api.healthCheck.get);
 
 return (
 <Container>
-  <ScrollView style={styles.scrollView}>
+  <ScrollView style={styles.scrollView} contentInsetAdjustmentBehavior="never">
     <View style={styles.content}>
-      <Host style={styles.titleHost} matchContents=\\{{ vertical: true }}>
-        <Column>
-          <ExpoUIText
-            textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
-          >
-            BETTER T STACK
-          </ExpoUIText>
-        </Column>
+      <Host style={styles.titleHost}>
+        <ExpoUIText
+          textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold", textAlign: "center" }}
+        >
+          BETTER T STACK
+        </ExpoUIText>
       </Host>
 
       {{#unless (and (eq backend "convex") (eq auth "better-auth"))}}
@@ -23208,7 +23205,8 @@ paddingTop: 28,
 paddingBottom: 32,
 },
 titleHost: {
-alignSelf: "center",
+alignSelf: "stretch",
+height: 34,
 marginBottom: 24,
 },
 card: {
@@ -23377,7 +23375,10 @@ export function Container({ children }: { children: React.ReactNode }) {
     : NAV_THEME.light.background;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+    <SafeAreaView
+      edges={["left", "right", "bottom"]}
+      style={[styles.container, { backgroundColor }]}
+    >
       {children}
     </SafeAreaView>
   );
@@ -23388,7 +23389,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-
 `],
   ["frontend/native/bare/components/header-button.tsx.hbs", `import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { forwardRef } from "react";

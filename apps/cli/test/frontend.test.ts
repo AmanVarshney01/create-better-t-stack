@@ -1,4 +1,7 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import path from "node:path";
+
+import fs from "fs-extra";
 
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
@@ -429,6 +432,47 @@ describe("Frontend Configurations", () => {
       });
 
       expectSuccess(result);
+    });
+  });
+
+  describe("Native Bare Layout", () => {
+    it("should keep drawer content aligned under the native header", async () => {
+      const result = await runTRPCTest({
+        projectName: "native-bare-layout",
+        frontend: ["native-bare"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const nativeIndexFile = await fs.readFile(
+        path.join(result.projectDir, "apps/native/app/(drawer)/index.tsx"),
+        "utf8",
+      );
+      const containerFile = await fs.readFile(
+        path.join(result.projectDir, "apps/native/components/container.tsx"),
+        "utf8",
+      );
+
+      expect(nativeIndexFile).toContain('contentInsetAdjustmentBehavior="never"');
+      expect(nativeIndexFile).toContain("<Host style={styles.titleHost}>");
+      expect(nativeIndexFile).toContain('textAlign: "center"');
+      expect(nativeIndexFile).toContain("height: 34");
+      expect(containerFile).toContain('edges={["left", "right", "bottom"]}');
     });
   });
 
