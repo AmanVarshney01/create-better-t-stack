@@ -3610,6 +3610,9 @@ import {
     Authenticated,
     AuthLoading,
     Unauthenticated,
+    {{#if (eq payments "polar")}}
+    useAction,
+    {{/if}}
     useQuery,
 } from "convex/react";
 import { useState } from "react";
@@ -3619,9 +3622,25 @@ function DashboardContent() {
     {{#if (eq payments "polar")}}
     const products = useQuery(api.polar.listAllProducts);
     const subscription = useQuery(api.polar.getCurrentSubscription);
+    const syncProducts = useAction(api.polar.syncProducts);
+    const [isSyncingProducts, setIsSyncingProducts] = useState(false);
+    const [syncProductsError, setSyncProductsError] = useState<string | null>(null);
 
     const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring) ?? products?.[0];
     const hasActiveSubscription = Boolean(subscription);
+
+    const handleSyncProducts = async () => {
+        setIsSyncingProducts(true);
+        setSyncProductsError(null);
+
+        try {
+            await syncProducts({});
+        } catch (error) {
+            setSyncProductsError(error instanceof Error ? error.message : "Could not sync products.");
+        } finally {
+            setIsSyncingProducts(false);
+        }
+    };
     {{/if}}
 
     return (
@@ -3651,7 +3670,18 @@ function DashboardContent() {
                     </CheckoutLink>
                 )
             ) : (
-                <p>No plans available.</p>
+                <div>
+                    <p>No plans available.</p>
+                    <button
+                        type="button"
+                        className={buttonVariants({ variant: "outline" })}
+                        onClick={handleSyncProducts}
+                        disabled={isSyncingProducts}
+                    >
+                        {isSyncingProducts ? "Syncing products..." : "Sync products"}
+                    </button>
+                    {syncProductsError ? <p>{syncProductsError}</p> : null}
+                </div>
             )}
             {{/if}}
             <UserMenu />
@@ -4400,6 +4430,9 @@ import {
   Authenticated,
   AuthLoading,
   Unauthenticated,
+  {{#if (eq payments "polar")}}
+  useAction,
+  {{/if}}
   useQuery,
 } from "convex/react";
 import { useState } from "react";
@@ -4409,9 +4442,25 @@ function PrivateDashboardContent() {
   {{#if (eq payments "polar")}}
   const products = useQuery(api.polar.listAllProducts);
   const subscription = useQuery(api.polar.getCurrentSubscription);
+  const syncProducts = useAction(api.polar.syncProducts);
+  const [isSyncingProducts, setIsSyncingProducts] = useState(false);
+  const [syncProductsError, setSyncProductsError] = useState<string | null>(null);
 
   const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring) ?? products?.[0];
   const hasActiveSubscription = Boolean(subscription);
+
+  const handleSyncProducts = async () => {
+    setIsSyncingProducts(true);
+    setSyncProductsError(null);
+
+    try {
+      await syncProducts({});
+    } catch (error) {
+      setSyncProductsError(error instanceof Error ? error.message : "Could not sync products.");
+    } finally {
+      setIsSyncingProducts(false);
+    }
+  };
   {{/if}}
 
   return (
@@ -4441,7 +4490,18 @@ function PrivateDashboardContent() {
           </CheckoutLink>
         )
       ) : (
-        <p>No plans available.</p>
+        <div>
+          <p>No plans available.</p>
+          <button
+            type="button"
+            className={buttonVariants({ variant: "outline" })}
+            onClick={handleSyncProducts}
+            disabled={isSyncingProducts}
+          >
+            {isSyncingProducts ? "Syncing products..." : "Sync products"}
+          </button>
+          {syncProductsError ? <p>{syncProductsError}</p> : null}
+        </div>
       )}
       {{/if}}
       <UserMenu />
@@ -4842,6 +4902,9 @@ import {
   Authenticated,
   AuthLoading,
   Unauthenticated,
+  {{#if (eq payments "polar")}}
+  useAction,
+  {{/if}}
   useQuery,
 } from "convex/react";
 import { useState } from "react";
@@ -4855,9 +4918,25 @@ function PrivateDashboardContent() {
   {{#if (eq payments "polar")}}
   const products = useQuery(api.polar.listAllProducts);
   const subscription = useQuery(api.polar.getCurrentSubscription);
+  const syncProducts = useAction(api.polar.syncProducts);
+  const [isSyncingProducts, setIsSyncingProducts] = useState(false);
+  const [syncProductsError, setSyncProductsError] = useState<string | null>(null);
 
   const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring) ?? products?.[0];
   const hasActiveSubscription = Boolean(subscription);
+
+  const handleSyncProducts = async () => {
+    setIsSyncingProducts(true);
+    setSyncProductsError(null);
+
+    try {
+      await syncProducts({});
+    } catch (error) {
+      setSyncProductsError(error instanceof Error ? error.message : "Could not sync products.");
+    } finally {
+      setIsSyncingProducts(false);
+    }
+  };
   {{/if}}
 
   return (
@@ -4887,7 +4966,18 @@ function PrivateDashboardContent() {
           </CheckoutLink>
         )
       ) : (
-        <p>No plans available.</p>
+        <div>
+          <p>No plans available.</p>
+          <button
+            type="button"
+            className={buttonVariants({ variant: "outline" })}
+            onClick={handleSyncProducts}
+            disabled={isSyncingProducts}
+          >
+            {isSyncingProducts ? "Syncing products..." : "Sync products"}
+          </button>
+          {syncProductsError ? <p>{syncProductsError}</p> : null}
+        </div>
       )}
       {{/if}}
       <UserMenu />
@@ -5303,6 +5393,9 @@ import {
   Authenticated,
   AuthLoading,
   Unauthenticated,
+  {{#if (eq payments "polar")}}
+  useAction,
+  {{/if}}
   useQuery,
 } from "convex/react";
 import { useState } from "react";
@@ -5316,9 +5409,25 @@ function PrivateDashboardContent() {
   {{#if (eq payments "polar")}}
   const products = useQuery(api.polar.listAllProducts);
   const subscription = useQuery(api.polar.getCurrentSubscription);
+  const syncProducts = useAction(api.polar.syncProducts);
+  const [isSyncingProducts, setIsSyncingProducts] = useState(false);
+  const [syncProductsError, setSyncProductsError] = useState<string | null>(null);
 
   const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring) ?? products?.[0];
   const hasActiveSubscription = Boolean(subscription);
+
+  const handleSyncProducts = async () => {
+    setIsSyncingProducts(true);
+    setSyncProductsError(null);
+
+    try {
+      await syncProducts({});
+    } catch (error) {
+      setSyncProductsError(error instanceof Error ? error.message : "Could not sync products.");
+    } finally {
+      setIsSyncingProducts(false);
+    }
+  };
   {{/if}}
 
   return (
@@ -5348,7 +5457,18 @@ function PrivateDashboardContent() {
           </CheckoutLink>
         )
       ) : (
-        <p>No plans available.</p>
+        <div>
+          <p>No plans available.</p>
+          <button
+            type="button"
+            className={buttonVariants({ variant: "outline" })}
+            onClick={handleSyncProducts}
+            disabled={isSyncingProducts}
+          >
+            {isSyncingProducts ? "Syncing products..." : "Sync products"}
+          </button>
+          {syncProductsError ? <p>{syncProductsError}</p> : null}
+        </div>
       )}
       {{/if}}
       <UserMenu />
