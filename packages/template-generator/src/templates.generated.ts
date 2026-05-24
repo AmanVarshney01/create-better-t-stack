@@ -23534,7 +23534,7 @@ module.exports = config;
     "react-native-gesture-handler": "~2.31.1",
     "react-native-reanimated": "4.3.1",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "4.25.1",
+    "react-native-screens": "4.25.2",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.8.3"
   },
@@ -24819,7 +24819,7 @@ module.exports = config;
     "react-native-nitro-modules": "^0.35.7",
     "react-native-reanimated": "4.3.1",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "4.25.1",
+    "react-native-screens": "4.25.2",
     "react-native-unistyles": "^3.2.4",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.8.3"
@@ -25923,7 +25923,7 @@ module.exports = uniwindConfig;
     "react-native-keyboard-controller": "1.21.6",
     "react-native-reanimated": "4.3.1",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "4.25.1",
+    "react-native-screens": "4.25.2",
     "react-native-svg": "15.15.4",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.8.3",
