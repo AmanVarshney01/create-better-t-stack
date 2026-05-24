@@ -462,8 +462,18 @@ function buildServerVars(
   } else if (hasReactRouter || hasSvelte) {
     corsOrigin = "http://localhost:5173";
   }
+  const betterAuthUrl =
+    backend === "self"
+      ? hasSvelte
+        ? "http://localhost:5173"
+        : hasAstro
+          ? "http://localhost:4321"
+          : "http://localhost:3001"
+      : "http://localhost:3000";
   const polarSuccessUrl =
-    hasNative && !hasWeb ? `${projectName}://` : `${corsOrigin}/success?checkout_id={CHECKOUT_ID}`;
+    hasNative && !hasWeb
+      ? `${betterAuthUrl}/polar/success`
+      : `${corsOrigin}/success?checkout_id={CHECKOUT_ID}`;
 
   let databaseUrl: string | null = null;
   if (database !== "none" && dbSetup === "none") {
@@ -502,14 +512,7 @@ function buildServerVars(
     },
     {
       key: "BETTER_AUTH_URL",
-      value:
-        backend === "self"
-          ? hasSvelte
-            ? "http://localhost:5173"
-            : hasAstro
-              ? "http://localhost:4321"
-              : "http://localhost:3001"
-          : "http://localhost:3000",
+      value: betterAuthUrl,
       condition: hasBetterAuth,
     },
     {

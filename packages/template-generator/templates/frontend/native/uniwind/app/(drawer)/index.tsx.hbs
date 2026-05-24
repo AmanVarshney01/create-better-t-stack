@@ -2,6 +2,7 @@ import { Text, View{{#if (and (eq backend "convex") (eq auth "better-auth") (eq 
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
 {{#if (eq api "orpc")}}
@@ -66,6 +67,12 @@ const openPolarLink = async (url: string, returnUrl: string) => {
   await WebBrowser.openAuthSessionAsync(url, returnUrl);
 };
 
+const getPolarReturnUrl = (returnUrl: string) => {
+  const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+  url.searchParams.set("returnUrl", returnUrl);
+  return url.toString();
+};
+
 const handlePolarCheckout = async () => {
   if (!recurringProduct) {
     Alert.alert("Checkout unavailable", "No recurring Polar product is available yet.");
@@ -73,10 +80,11 @@ const handlePolarCheckout = async () => {
   }
 
   const returnUrl = Linking.createURL("/");
+  const polarReturnUrl = getPolarReturnUrl(returnUrl);
   const { url } = await generateCheckoutLink({
     productIds: [recurringProduct.id],
-    origin: returnUrl,
-    successUrl: returnUrl,
+    origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+    successUrl: polarReturnUrl,
   });
 
   await openPolarLink(url, returnUrl);
@@ -84,7 +92,9 @@ const handlePolarCheckout = async () => {
 
 const handlePolarPortal = async () => {
   const returnUrl = Linking.createURL("/");
-  const { url } = await generateCustomerPortalUrl({ returnUrl });
+  const { url } = await generateCustomerPortalUrl({
+    returnUrl: getPolarReturnUrl(returnUrl),
+  });
 
   await openPolarLink(url, returnUrl);
 };

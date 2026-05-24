@@ -66,6 +66,32 @@ new Elysia()
 {{/if}}
 		}),
 	)
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+	.get("/polar/success", ({ request, status }) => {
+		const nativeAppUrl = "{{projectName}}://";
+		const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+		const requestUrl = new URL(request.url);
+		const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+		let redirectUrl: URL;
+		try {
+			redirectUrl = new URL(returnUrl);
+		} catch {
+			return status(400, "Invalid return URL");
+		}
+
+		if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+			return status(400, "Invalid return URL");
+		}
+
+		return new Response(null, {
+			status: 302,
+			headers: {
+				Location: redirectUrl.toString(),
+			},
+		});
+	})
+{{/if}}
 {{#if (eq auth "better-auth")}}
 	.all("/api/auth/*", async (context) => {
 		const { request, status } = context;

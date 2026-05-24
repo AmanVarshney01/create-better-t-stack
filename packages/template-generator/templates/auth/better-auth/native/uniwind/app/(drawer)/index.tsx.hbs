@@ -2,6 +2,7 @@ import { Text, View, Pressable{{#if (eq payments "polar")}}, Alert{{/if}} } from
 {{#if (eq payments "polar")}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
 import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
@@ -38,13 +39,20 @@ const openPolarLink = async (url: string, returnUrl: string) => {
   await WebBrowser.openAuthSessionAsync(url, returnUrl);
 };
 
+const getPolarReturnUrl = (returnUrl: string) => {
+  const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+  url.searchParams.set("returnUrl", returnUrl);
+  return url.toString();
+};
+
 const handlePolarCheckout = async () => {
   const returnUrl = Linking.createURL("/");
+  const polarReturnUrl = getPolarReturnUrl(returnUrl);
   const { data, error } = await polarNativeClient.checkout({
     slug: "pro",
     redirect: false,
-    successUrl: returnUrl,
-    returnUrl,
+    successUrl: polarReturnUrl,
+    returnUrl: polarReturnUrl,
   });
 
   if (error || !data?.url) {

@@ -460,6 +460,10 @@ describe("Authentication Configurations", () => {
           path.join(result.projectDir, "apps/native/package.json"),
           "utf8",
         );
+        const serverIndexFile = await fs.readFile(
+          path.join(result.projectDir, "apps/server/src/index.ts"),
+          "utf8",
+        );
         const serverEnvFile = await fs.readFile(
           path.join(result.projectDir, "apps/server/.env"),
           "utf8",
@@ -468,6 +472,10 @@ describe("Authentication Configurations", () => {
         expect(nativeIndexFile).toContain("polarNativeClient.checkout");
         expect(nativeIndexFile).toContain("polarNativeClient.customer.portal");
         expect(nativeIndexFile).toContain("WebBrowser.openAuthSessionAsync");
+        expect(nativeIndexFile).toContain('new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL)');
+        expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
+        expect(nativeIndexFile).toContain("returnUrl: polarReturnUrl");
+        expect(nativeIndexFile).not.toContain("successUrl: returnUrl");
         expect(nativeIndexFile).toContain("Upgrade to Pro");
         expect(nativeIndexFile).toContain("Manage Subscription");
         if (frontend === "native-bare") {
@@ -480,9 +488,10 @@ describe("Authentication Configurations", () => {
         expect(authPackageFile).toContain('"@polar-sh/better-auth"');
         expect(authPackageFile).toContain('"@polar-sh/sdk"');
         expect(nativePackageFile).not.toContain('"@polar-sh/better-auth"');
-        expect(serverEnvFile).toContain(
-          `POLAR_SUCCESS_URL=better-auth-native-polar-${frontend}://`,
-        );
+        expect(serverIndexFile).toContain('"/polar/success"');
+        expect(serverIndexFile).toContain("allowedNativeProtocols");
+        expect(serverIndexFile).toContain("302");
+        expect(serverEnvFile).toContain("POLAR_SUCCESS_URL=http://localhost:3000/polar/success");
       });
 
       it(`should scaffold native-only Convex Better Auth with Polar payments for ${frontend}`, async () => {
@@ -525,10 +534,21 @@ describe("Authentication Configurations", () => {
           path.join(result.projectDir, "packages/backend/convex/polar.ts"),
           "utf8",
         );
+        const httpFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/convex/http.ts"),
+          "utf8",
+        );
 
         expect(nativeIndexFile).toContain("api.polar.generateCheckoutLink");
         expect(nativeIndexFile).toContain("api.polar.generateCustomerPortalUrl");
         expect(nativeIndexFile).toContain("WebBrowser.openAuthSessionAsync");
+        expect(nativeIndexFile).toContain(
+          'new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL)',
+        );
+        expect(nativeIndexFile).toContain("origin: env.EXPO_PUBLIC_CONVEX_SITE_URL");
+        expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
+        expect(nativeIndexFile).toContain("returnUrl: getPolarReturnUrl(returnUrl)");
+        expect(nativeIndexFile).not.toContain("successUrl: returnUrl");
         expect(nativeIndexFile).toContain("Upgrade to Pro");
         expect(nativeIndexFile).toContain("Manage Subscription");
         if (frontend === "native-bare") {
@@ -538,6 +558,9 @@ describe("Authentication Configurations", () => {
           expect(nativeIndexFile).toContain("height: 34");
         }
         expect(polarFile).toContain("generateCheckoutLink");
+        expect(httpFile).toContain('path: "/polar/success"');
+        expect(httpFile).toContain("allowedNativeProtocols");
+        expect(httpFile).toContain("status: 302");
         expect(backendPackageFile).toContain('"@convex-dev/polar"');
         expect(backendPackageFile).toContain('"@polar-sh/sdk"');
         expect(nativePackageFile).not.toContain('"@convex-dev/polar"');
@@ -593,6 +616,10 @@ describe("Authentication Configurations", () => {
           path.join(result.projectDir, "apps/native/app/(drawer)/index.tsx"),
           "utf8",
         );
+        const serverIndexFile = await fs.readFile(
+          path.join(result.projectDir, "apps/server/src/index.ts"),
+          "utf8",
+        );
         const serverEnvFile = await fs.readFile(
           path.join(result.projectDir, "apps/server/.env"),
           "utf8",
@@ -605,9 +632,11 @@ describe("Authentication Configurations", () => {
         expect(authPackageFile).toContain('"@polar-sh/better-auth"');
         expect(authPackageFile).toContain('"@polar-sh/sdk"');
         expect(nativeIndexFile).toContain("polarNativeClient.checkout");
-        expect(serverEnvFile).toContain(
-          `POLAR_SUCCESS_URL=better-auth-native-polar-${backend}-${runtime}://`,
-        );
+        expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
+        expect(nativeIndexFile).toContain("returnUrl: polarReturnUrl");
+        expect(serverIndexFile).toContain('"/polar/success"');
+        expect(serverIndexFile).toContain("allowedNativeProtocols");
+        expect(serverEnvFile).toContain("POLAR_SUCCESS_URL=http://localhost:3000/polar/success");
       }
     });
 

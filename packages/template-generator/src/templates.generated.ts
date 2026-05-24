@@ -2266,12 +2266,47 @@ export const getCurrentUser = query({
 `],
   ["auth/better-auth/convex/backend/convex/http.ts.hbs", `import { httpRouter } from "convex/server";
 import { authComponent, createAuth } from "./auth";
+{{#if (and (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+import { httpAction } from "./_generated/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar } from "./polar";
 {{/if}}
 
 const http = httpRouter();
 
+{{#if (and (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = process.env.NATIVE_APP_URL || "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+http.route({
+  path: "/polar/success",
+  method: "GET",
+  handler: httpAction(async (_ctx, request) => {
+    const requestUrl = new URL(request.url);
+    const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+    let redirectUrl: URL;
+    try {
+      redirectUrl = new URL(returnUrl);
+    } catch {
+      return new Response("Invalid return URL", { status: 400 });
+    }
+
+    if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+      return new Response("Invalid return URL", { status: 400 });
+    }
+
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: redirectUrl.toString(),
+      },
+    });
+  }),
+});
+
+{{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 authComponent.registerRoutes(http, createAuth, { cors: true });
 {{else}}
@@ -5529,6 +5564,7 @@ import { View, ScrollView, StyleSheet{{#if (eq payments "polar")}}, Alert{{/if}}
 {{#if (eq payments "polar")}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
@@ -5567,13 +5603,20 @@ const openPolarLink = async (url: string, returnUrl: string) => {
 	await WebBrowser.openAuthSessionAsync(url, returnUrl);
 };
 
+const getPolarReturnUrl = (returnUrl: string) => {
+	const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+	url.searchParams.set("returnUrl", returnUrl);
+	return url.toString();
+};
+
 const handlePolarCheckout = async () => {
 	const returnUrl = Linking.createURL("/");
+	const polarReturnUrl = getPolarReturnUrl(returnUrl);
 	const { data, error } = await polarNativeClient.checkout({
 		slug: "pro",
 		redirect: false,
-		successUrl: returnUrl,
-		returnUrl,
+		successUrl: polarReturnUrl,
+		returnUrl: polarReturnUrl,
 	});
 
 	if (error || !data?.url) {
@@ -6328,6 +6371,7 @@ import { ScrollView, Text, TouchableOpacity, View{{#if (eq payments "polar")}}, 
 {{#if (eq payments "polar")}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { StyleSheet } from "react-native-unistyles";
 
@@ -6359,13 +6403,20 @@ export default function Home() {
     await WebBrowser.openAuthSessionAsync(url, returnUrl);
   };
 
+  const getPolarReturnUrl = (returnUrl: string) => {
+    const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+    url.searchParams.set("returnUrl", returnUrl);
+    return url.toString();
+  };
+
   const handlePolarCheckout = async () => {
     const returnUrl = Linking.createURL("/");
+    const polarReturnUrl = getPolarReturnUrl(returnUrl);
     const { data, error } = await polarNativeClient.checkout({
       slug: "pro",
       redirect: false,
-      successUrl: returnUrl,
-      returnUrl,
+      successUrl: polarReturnUrl,
+      returnUrl: polarReturnUrl,
     });
 
     if (error || !data?.url) {
@@ -7060,6 +7111,7 @@ const styles = StyleSheet.create((theme) => ({
 {{#if (eq payments "polar")}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
 import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
@@ -7096,13 +7148,20 @@ const openPolarLink = async (url: string, returnUrl: string) => {
   await WebBrowser.openAuthSessionAsync(url, returnUrl);
 };
 
+const getPolarReturnUrl = (returnUrl: string) => {
+  const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+  url.searchParams.set("returnUrl", returnUrl);
+  return url.toString();
+};
+
 const handlePolarCheckout = async () => {
   const returnUrl = Linking.createURL("/");
+  const polarReturnUrl = getPolarReturnUrl(returnUrl);
   const { data, error } = await polarNativeClient.checkout({
     slug: "pro",
     redirect: false,
-    successUrl: returnUrl,
-    returnUrl,
+    successUrl: polarReturnUrl,
+    returnUrl: polarReturnUrl,
   });
 
   if (error || !data?.url) {
@@ -14121,6 +14180,32 @@ new Elysia()
 {{/if}}
 		}),
 	)
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+	.get("/polar/success", ({ request, status }) => {
+		const nativeAppUrl = "{{projectName}}://";
+		const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+		const requestUrl = new URL(request.url);
+		const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+		let redirectUrl: URL;
+		try {
+			redirectUrl = new URL(returnUrl);
+		} catch {
+			return status(400, "Invalid return URL");
+		}
+
+		if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+			return status(400, "Invalid return URL");
+		}
+
+		return new Response(null, {
+			status: 302,
+			headers: {
+				Location: redirectUrl.toString(),
+			},
+		});
+	})
+{{/if}}
 {{#if (eq auth "better-auth")}}
 	.all("/api/auth/*", async (context) => {
 		const { request, status } = context;
@@ -14243,6 +14328,31 @@ app.use(clerkMiddleware());
 app.all("/api/auth{/*path}", toNodeHandler(auth));
 {{/if}}
 
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+app.get("/polar/success", (req, res) => {
+	const requestUrl = new URL(req.url, env.BETTER_AUTH_URL);
+	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+	let redirectUrl: URL;
+	try {
+		redirectUrl = new URL(returnUrl);
+	} catch {
+		res.status(400).send("Invalid return URL");
+		return;
+	}
+
+	if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+		res.status(400).send("Invalid return URL");
+		return;
+	}
+
+	res.redirect(302, redirectUrl.toString());
+});
+
+{{/if}}
 {{#if (eq api "trpc")}}
 app.use(
 	"/trpc",
@@ -14400,6 +14510,31 @@ fastify.register(clerkPlugin, {
 });
 {{/if}}
 
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+fastify.get("/polar/success", async (request, reply) => {
+	const requestUrl = new URL(request.url, env.BETTER_AUTH_URL);
+	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+	let redirectUrl: URL;
+	try {
+		redirectUrl = new URL(returnUrl);
+	} catch {
+		reply.status(400).send("Invalid return URL");
+		return;
+	}
+
+	if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+		reply.status(400).send("Invalid return URL");
+		return;
+	}
+
+	reply.status(302).header("Location", redirectUrl.toString()).send();
+});
+
+{{/if}}
 {{#if (eq api "orpc")}}
 fastify.register(async (rpcApp) => {
 	// Fully utilize oRPC features by letting oRPC parse the request body.
@@ -14574,6 +14709,29 @@ app.on(
 );
 {{/if}}
 
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+app.get("/polar/success", (c) => {
+	const requestUrl = new URL(c.req.url);
+	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+	let redirectUrl: URL;
+	try {
+		redirectUrl = new URL(returnUrl);
+	} catch {
+		return c.text("Invalid return URL", 400);
+	}
+
+	if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+		return c.text("Invalid return URL", 400);
+	}
+
+	return c.redirect(redirectUrl.toString(), 302);
+});
+
+{{/if}}
 {{#if (eq api "orpc")}}
 export const apiHandler = new OpenAPIHandler(appRouter, {
 	plugins: [
@@ -22872,6 +23030,7 @@ import { View, ScrollView, StyleSheet{{#if (and (eq backend "convex") (eq auth "
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
@@ -22936,6 +23095,12 @@ const openPolarLink = async (url: string, returnUrl: string) => {
 	await WebBrowser.openAuthSessionAsync(url, returnUrl);
 };
 
+const getPolarReturnUrl = (returnUrl: string) => {
+	const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+	url.searchParams.set("returnUrl", returnUrl);
+	return url.toString();
+};
+
 const handlePolarCheckout = async () => {
 	if (!recurringProduct) {
 		Alert.alert("Checkout unavailable", "No recurring Polar product is available yet.");
@@ -22943,10 +23108,11 @@ const handlePolarCheckout = async () => {
 	}
 
 	const returnUrl = Linking.createURL("/");
+	const polarReturnUrl = getPolarReturnUrl(returnUrl);
 	const { url } = await generateCheckoutLink({
 		productIds: [recurringProduct.id],
-		origin: returnUrl,
-		successUrl: returnUrl,
+		origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+		successUrl: polarReturnUrl,
 	});
 
 	await openPolarLink(url, returnUrl);
@@ -22954,7 +23120,9 @@ const handlePolarCheckout = async () => {
 
 const handlePolarPortal = async () => {
 	const returnUrl = Linking.createURL("/");
-	const { url } = await generateCustomerPortalUrl({ returnUrl });
+	const { url } = await generateCustomerPortalUrl({
+		returnUrl: getPolarReturnUrl(returnUrl),
+	});
 
 	await openPolarLink(url, returnUrl);
 };
@@ -24097,6 +24265,7 @@ const styles = StyleSheet.create((theme) => ({
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
@@ -24159,6 +24328,12 @@ export default function Home() {
     await WebBrowser.openAuthSessionAsync(url, returnUrl);
   };
 
+  const getPolarReturnUrl = (returnUrl: string) => {
+    const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+    url.searchParams.set("returnUrl", returnUrl);
+    return url.toString();
+  };
+
   const handlePolarCheckout = async () => {
     if (!recurringProduct) {
       Alert.alert("Checkout unavailable", "No recurring Polar product is available yet.");
@@ -24166,10 +24341,11 @@ export default function Home() {
     }
 
     const returnUrl = Linking.createURL("/");
+    const polarReturnUrl = getPolarReturnUrl(returnUrl);
     const { url } = await generateCheckoutLink({
       productIds: [recurringProduct.id],
-      origin: returnUrl,
-      successUrl: returnUrl,
+      origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+      successUrl: polarReturnUrl,
     });
 
     await openPolarLink(url, returnUrl);
@@ -24177,7 +24353,9 @@ export default function Home() {
 
   const handlePolarPortal = async () => {
     const returnUrl = Linking.createURL("/");
-    const { url } = await generateCustomerPortalUrl({ returnUrl });
+    const { url } = await generateCustomerPortalUrl({
+      returnUrl: getPolarReturnUrl(returnUrl),
+    });
 
     await openPolarLink(url, returnUrl);
   };
@@ -25375,6 +25553,7 @@ export default function TabTwo() {
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
 {{#if (eq api "orpc")}}
@@ -25439,6 +25618,12 @@ const openPolarLink = async (url: string, returnUrl: string) => {
   await WebBrowser.openAuthSessionAsync(url, returnUrl);
 };
 
+const getPolarReturnUrl = (returnUrl: string) => {
+  const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+  url.searchParams.set("returnUrl", returnUrl);
+  return url.toString();
+};
+
 const handlePolarCheckout = async () => {
   if (!recurringProduct) {
     Alert.alert("Checkout unavailable", "No recurring Polar product is available yet.");
@@ -25446,10 +25631,11 @@ const handlePolarCheckout = async () => {
   }
 
   const returnUrl = Linking.createURL("/");
+  const polarReturnUrl = getPolarReturnUrl(returnUrl);
   const { url } = await generateCheckoutLink({
     productIds: [recurringProduct.id],
-    origin: returnUrl,
-    successUrl: returnUrl,
+    origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+    successUrl: polarReturnUrl,
   });
 
   await openPolarLink(url, returnUrl);
@@ -25457,7 +25643,9 @@ const handlePolarCheckout = async () => {
 
 const handlePolarPortal = async () => {
   const returnUrl = Linking.createURL("/");
-  const { url } = await generateCustomerPortalUrl({ returnUrl });
+  const { url } = await generateCustomerPortalUrl({
+    returnUrl: getPolarReturnUrl(returnUrl),
+  });
 
   await openPolarLink(url, returnUrl);
 };
