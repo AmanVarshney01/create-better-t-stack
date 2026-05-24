@@ -9,6 +9,7 @@ import {
   getDisabledReason,
 } from "../src/app/(home)/new/_components/utils";
 import { DEFAULT_STACK, type StackState } from "../src/lib/constant";
+import { generateStackCommand } from "../src/lib/stack-utils";
 
 function createStack(overrides: Partial<StackState> = {}): StackState {
   return {
@@ -161,6 +162,48 @@ describe("stack builder D1 compatibility", () => {
     });
 
     expect(getDisabledReason(stack, "payments", "polar")).toBeNull();
+  });
+
+  test("allows Polar for mixed web and native stacks", () => {
+    const stack = createStack({
+      webFrontend: ["tanstack-router"],
+      nativeFrontend: ["native-bare"],
+      backend: "hono",
+      runtime: "bun",
+      auth: "better-auth",
+      payments: "polar",
+    });
+
+    expect(getDisabledReason(stack, "payments", "polar")).toBeNull();
+    expect(analyzeStackCompatibility(stack).adjustedStack).toBeNull();
+
+    const command = generateStackCommand(stack);
+    expect(command).toContain("--frontend tanstack-router native-bare");
+    expect(command).toContain("--payments polar");
+  });
+
+  test("allows Polar for mixed Convex Better Auth web and native stacks", () => {
+    const stack = createStack({
+      webFrontend: ["next"],
+      nativeFrontend: ["native-bare"],
+      backend: "convex",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      dbSetup: "none",
+      auth: "better-auth",
+      payments: "polar",
+    });
+
+    expect(getDisabledReason(stack, "auth", "better-auth")).toBeNull();
+    expect(getDisabledReason(stack, "payments", "polar")).toBeNull();
+    expect(analyzeStackCompatibility(stack).adjustedStack).toBeNull();
+
+    const command = generateStackCommand(stack);
+    expect(command).toContain("--frontend next native-bare");
+    expect(command).toContain("--backend convex");
+    expect(command).toContain("--payments polar");
   });
 
   test("blocks the AI example for Astro frontends", () => {
