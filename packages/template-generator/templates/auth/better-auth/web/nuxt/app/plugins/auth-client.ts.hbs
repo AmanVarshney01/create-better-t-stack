@@ -1,6 +1,6 @@
 import { createAuthClient } from "better-auth/vue";
 {{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth";
+import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
 export default defineNuxtPlugin(() => {

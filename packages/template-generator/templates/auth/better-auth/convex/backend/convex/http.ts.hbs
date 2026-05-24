@@ -1,12 +1,54 @@
 import { httpRouter } from "convex/server";
 import { authComponent, createAuth } from "./auth";
+{{#if (and (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+import { httpAction } from "./_generated/server";
+{{/if}}
+{{#if (eq payments "polar")}}
+import { polar } from "./polar";
+{{/if}}
 
 const http = httpRouter();
 
+{{#if (and (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = process.env.NATIVE_APP_URL || "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+http.route({
+  path: "/polar/success",
+  method: "GET",
+  handler: httpAction(async (_ctx, request) => {
+    const requestUrl = new URL(request.url);
+    const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+    let redirectUrl: URL;
+    try {
+      redirectUrl = new URL(returnUrl);
+    } catch {
+      return new Response("Invalid return URL", { status: 400 });
+    }
+
+    if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+      return new Response("Invalid return URL", { status: 400 });
+    }
+
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: redirectUrl.toString(),
+      },
+    });
+  }),
+});
+
+{{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 authComponent.registerRoutes(http, createAuth, { cors: true });
 {{else}}
 authComponent.registerRoutes(http, createAuth);
+{{/if}}
+{{#if (eq payments "polar")}}
+
+polar.registerRoutes(http);
 {{/if}}
 
 export default http;

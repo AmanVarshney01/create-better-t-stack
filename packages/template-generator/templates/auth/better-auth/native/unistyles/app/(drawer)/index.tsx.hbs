@@ -1,5 +1,10 @@
-import { authClient } from "@/lib/auth-client";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
+import { ScrollView, Text, TouchableOpacity, View{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
+{{#if (eq payments "polar")}}
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
+{{/if}}
 import { StyleSheet } from "react-native-unistyles";
 
 import { Container } from "@/components/container";
@@ -24,6 +29,48 @@ export default function Home() {
     const privateData = useQuery(trpc.privateData.queryOptions());
     {{/if}}
   const { data: session } = authClient.useSession();
+  {{#if (eq payments "polar")}}
+
+  const openPolarLink = async (url: string, returnUrl: string) => {
+    await WebBrowser.openAuthSessionAsync(url, returnUrl);
+  };
+
+  const getPolarReturnUrl = (returnUrl: string) => {
+    const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+    url.searchParams.set("returnUrl", returnUrl);
+    return url.toString();
+  };
+
+  const handlePolarCheckout = async () => {
+    const returnUrl = Linking.createURL("/");
+    const polarReturnUrl = getPolarReturnUrl(returnUrl);
+    const { data, error } = await polarNativeClient.checkout({
+      slug: "pro",
+      redirect: false,
+      successUrl: polarReturnUrl,
+      returnUrl: polarReturnUrl,
+    });
+
+    if (error || !data?.url) {
+      Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
+      return;
+    }
+
+    await openPolarLink(data.url, returnUrl);
+  };
+
+  const handlePolarPortal = async () => {
+    const returnUrl = Linking.createURL("/");
+    const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
+
+    if (error || !data?.url) {
+      Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");
+      return;
+    }
+
+    await openPolarLink(data.url, returnUrl);
+  };
+  {{/if}}
 
   return (
     <Container>
@@ -54,6 +101,22 @@ export default function Home() {
               >
                 <Text style={styles.signOutButtonText}>Sign Out</Text>
               </TouchableOpacity>
+              {{#if (eq payments "polar")}}
+              <View style={styles.paymentActions}>
+                <TouchableOpacity
+                  style={styles.polarPrimaryButton}
+                  onPress={handlePolarCheckout}
+                >
+                  <Text style={styles.polarPrimaryButtonText}>Upgrade to Pro</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.polarSecondaryButton}
+                  onPress={handlePolarPortal}
+                >
+                  <Text style={styles.polarSecondaryButtonText}>Manage Subscription</Text>
+                </TouchableOpacity>
+              </View>
+              {{/if}}
             </View>
           ) : null}
           {{#unless (eq api "none")}}
@@ -144,6 +207,32 @@ const styles = StyleSheet.create((theme) => ({
     alignSelf: "flex-start",
   },
   signOutButtonText: {
+    fontWeight: "500",
+  },
+  paymentActions: {
+    marginTop: 12,
+    gap: 8,
+    alignItems: "flex-start",
+  },
+  polarPrimaryButton: {
+    backgroundColor: theme?.colors?.primary,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+  },
+  polarPrimaryButtonText: {
+    color: theme?.colors?.primaryForeground,
+    fontWeight: "500",
+  },
+  polarSecondaryButton: {
+    borderWidth: 1,
+    borderColor: theme?.colors?.border,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+  },
+  polarSecondaryButtonText: {
+    color: theme?.colors?.typography,
     fontWeight: "500",
   },
   apiStatusCard: {

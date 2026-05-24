@@ -3,7 +3,7 @@ import { PUBLIC_SERVER_URL } from "$env/static/public";
 {{/unless}}
 import { createAuthClient } from "better-auth/svelte";
 {{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth";
+import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
 export const authClient = createAuthClient({

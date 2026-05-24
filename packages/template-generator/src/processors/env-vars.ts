@@ -257,6 +257,7 @@ function buildNativeVars(
 function buildConvexBackendVars(
   frontend: string[],
   auth: ProjectConfig["auth"],
+  payments: ProjectConfig["payments"],
   examples: ProjectConfig["examples"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
@@ -339,12 +340,36 @@ function buildConvexBackendVars(
     }
   }
 
+  if (payments === "polar") {
+    vars.push(
+      {
+        key: "POLAR_ORGANIZATION_TOKEN",
+        value: "",
+        condition: true,
+        comment: "Polar organization token",
+      },
+      {
+        key: "POLAR_WEBHOOK_SECRET",
+        value: "",
+        condition: true,
+        comment: "Polar webhook secret",
+      },
+      {
+        key: "POLAR_SERVER",
+        value: "sandbox",
+        condition: true,
+        comment: "Polar environment: sandbox or production",
+      },
+    );
+  }
+
   return vars;
 }
 
 function buildConvexCommentBlocks(
   frontend: string[],
   auth: ProjectConfig["auth"],
+  payments: ProjectConfig["payments"],
   examples: ProjectConfig["examples"],
 ): string {
   const needsConvexSiteUrl =
@@ -386,12 +411,24 @@ function buildConvexCommentBlocks(
 ${needsConvexSiteUrl ? "# npx convex env set CONVEX_SITE_URL https://<YOUR_CONVEX_SITE_URL>\n" : ""}${hasWeb || hasNative ? `# npx convex env set SITE_URL ${defaultSiteUrl}\n` : ""}`;
   }
 
+  if (payments === "polar") {
+    commentBlocks += `# Set Polar environment variables
+# npx convex env set POLAR_ORGANIZATION_TOKEN your_polar_token
+# npx convex env set POLAR_WEBHOOK_SECRET your_polar_webhook_secret
+# Optional: npx convex env set POLAR_SERVER production
+# Create a Polar webhook at https://<your-convex-site-url>/polar/events
+# Enable: product.created, product.updated, subscription.created, subscription.updated
+
+`;
+  }
+
   return commentBlocks;
 }
 
 function buildServerVars(
   backend: ProjectConfig["backend"],
   frontend: string[],
+  projectName: string,
   auth: ProjectConfig["auth"],
   api: ProjectConfig["api"],
   database: ProjectConfig["database"],
@@ -405,6 +442,19 @@ function buildServerVars(
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
+  const hasNative =
+    frontend.includes("native-bare") ||
+    frontend.includes("native-uniwind") ||
+    frontend.includes("native-unistyles");
+  const hasWeb =
+    hasReactRouter ||
+    hasSvelte ||
+    hasAstro ||
+    frontend.includes("tanstack-router") ||
+    frontend.includes("tanstack-start") ||
+    frontend.includes("next") ||
+    frontend.includes("nuxt") ||
+    frontend.includes("solid");
 
   let corsOrigin = "http://localhost:3001";
   if (hasAstro) {
@@ -412,6 +462,18 @@ function buildServerVars(
   } else if (hasReactRouter || hasSvelte) {
     corsOrigin = "http://localhost:5173";
   }
+  const betterAuthUrl =
+    backend === "self"
+      ? hasSvelte
+        ? "http://localhost:5173"
+        : hasAstro
+          ? "http://localhost:4321"
+          : "http://localhost:3001"
+      : "http://localhost:3000";
+  const polarSuccessUrl =
+    hasNative && !hasWeb
+      ? `${betterAuthUrl}/polar/success`
+      : `${corsOrigin}/success?checkout_id={CHECKOUT_ID}`;
 
   let databaseUrl: string | null = null;
   if (database !== "none" && dbSetup === "none") {
@@ -450,14 +512,7 @@ function buildServerVars(
     },
     {
       key: "BETTER_AUTH_URL",
-      value:
-        backend === "self"
-          ? hasSvelte
-            ? "http://localhost:5173"
-            : hasAstro
-              ? "http://localhost:4321"
-              : "http://localhost:3001"
-          : "http://localhost:3000",
+      value: betterAuthUrl,
       condition: hasBetterAuth,
     },
     {
@@ -477,7 +532,7 @@ function buildServerVars(
     },
     {
       key: "POLAR_SUCCESS_URL",
-      value: `${corsOrigin}/success?checkout_id={CHECKOUT_ID}`,
+      value: polarSuccessUrl,
       condition: payments === "polar",
     },
     {
@@ -502,6 +557,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
   const {
     backend,
     frontend,
+    projectName,
     database,
     auth,
     api,
@@ -562,7 +618,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
       const envLocalPath = `${convexBackendDir}/.env.local`;
 
       // Write comment blocks first
-      const commentBlocks = buildConvexCommentBlocks(frontend, auth, examples);
+      const commentBlocks = buildConvexCommentBlocks(frontend, auth, payments, examples);
       if (commentBlocks) {
         let currentContent = "";
         if (vfs.exists(envLocalPath)) {
@@ -572,7 +628,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
       }
 
       // Then add variables
-      const convexBackendVars = buildConvexBackendVars(frontend, auth, examples);
+      const convexBackendVars = buildConvexBackendVars(frontend, auth, payments, examples);
       if (convexBackendVars.length > 0) {
         let existingContent = "";
         if (vfs.exists(envLocalPath)) {
@@ -591,6 +647,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
   const serverVars = buildServerVars(
     backend,
     frontend,
+    projectName,
     auth,
     api,
     database,
