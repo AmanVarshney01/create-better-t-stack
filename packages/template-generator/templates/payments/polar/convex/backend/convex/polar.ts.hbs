@@ -1,15 +1,13 @@
 import { Polar } from "@convex-dev/polar";
-import type { FunctionReturnType } from "convex/server";
 
 import { api, components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { action, query } from "./_generated/server";
 
-type CurrentUser = NonNullable<FunctionReturnType<typeof api.auth.getCurrentUser>>;
 type CurrentSubscription = Awaited<ReturnType<Polar<DataModel>["getCurrentSubscription"]>>;
 
 export const polar: Polar<DataModel> = new Polar<DataModel>(components.polar, {
-  getUserInfo: async (ctx): Promise<{ userId: CurrentUser["_id"]; email: string }> => {
+  getUserInfo: async (ctx) => {
     const user = await ctx.runQuery(api.auth.getCurrentUser);
 
     if (!user) {
