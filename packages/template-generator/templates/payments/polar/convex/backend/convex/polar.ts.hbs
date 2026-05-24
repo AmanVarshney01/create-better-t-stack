@@ -47,7 +47,7 @@ export const {
 
 export const getCurrentSubscription = query({
   args: {},
-  handler: async (ctx): Promise<CurrentSubscription> => {
+  handler: async (ctx): Promise<CurrentSubscription | null> => {
     const user = (await ctx.runQuery(api.auth.getCurrentUser)) as AuthUser | null;
 
     if (!user) {

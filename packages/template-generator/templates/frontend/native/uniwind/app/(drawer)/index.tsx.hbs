@@ -74,29 +74,37 @@ const getPolarReturnUrl = (returnUrl: string) => {
 };
 
 const handlePolarCheckout = async () => {
-  if (!recurringProduct) {
-    Alert.alert("Checkout unavailable", "No recurring Polar product is available yet.");
-    return;
+  try {
+    if (!recurringProduct) {
+      Alert.alert("Checkout unavailable", "No recurring Polar product is available yet.");
+      return;
+    }
+
+    const returnUrl = Linking.createURL("/");
+    const polarReturnUrl = getPolarReturnUrl(returnUrl);
+    const { url } = await generateCheckoutLink({
+      productIds: [recurringProduct.id],
+      origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+      successUrl: polarReturnUrl,
+    });
+
+    await openPolarLink(url, returnUrl);
+  } catch {
+    Alert.alert("Checkout failed", "Unable to open Polar checkout. Please try again.");
   }
-
-  const returnUrl = Linking.createURL("/");
-  const polarReturnUrl = getPolarReturnUrl(returnUrl);
-  const { url } = await generateCheckoutLink({
-    productIds: [recurringProduct.id],
-    origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
-    successUrl: polarReturnUrl,
-  });
-
-  await openPolarLink(url, returnUrl);
 };
 
 const handlePolarPortal = async () => {
-  const returnUrl = Linking.createURL("/");
-  const { url } = await generateCustomerPortalUrl({
-    returnUrl: getPolarReturnUrl(returnUrl),
-  });
+  try {
+    const returnUrl = Linking.createURL("/");
+    const { url } = await generateCustomerPortalUrl({
+      returnUrl: getPolarReturnUrl(returnUrl),
+    });
 
-  await openPolarLink(url, returnUrl);
+    await openPolarLink(url, returnUrl);
+  } catch {
+    Alert.alert("Portal unavailable", "Unable to open the customer portal. Please try again.");
+  }
 };
 {{/if}}
 {{else if (eq backend "convex")}}

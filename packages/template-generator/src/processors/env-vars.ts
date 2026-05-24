@@ -415,7 +415,7 @@ ${needsConvexSiteUrl ? "# npx convex env set CONVEX_SITE_URL https://<YOUR_CONVE
     commentBlocks += `# Set Polar environment variables
 # npx convex env set POLAR_ORGANIZATION_TOKEN your_polar_token
 # npx convex env set POLAR_WEBHOOK_SECRET your_polar_webhook_secret
-# Optional: npx convex env set POLAR_SERVER sandbox
+# Optional: npx convex env set POLAR_SERVER production
 # Create a Polar webhook at https://<your-convex-site-url>/polar/events
 # Enable: product.created, product.updated, subscription.created, subscription.updated
 
