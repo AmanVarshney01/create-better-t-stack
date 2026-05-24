@@ -30617,6 +30617,7 @@ export function cn(...inputs: ClassValue[]) {
   "compilerOptions": {
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": [],
     "paths": {
       "@{{projectName}}/ui/*": ["./src/*"]
     }
