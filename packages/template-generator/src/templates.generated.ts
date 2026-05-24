@@ -30631,9 +30631,21 @@ import { api, components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { action, query } from "./_generated/server";
 
-export const polar = new Polar<DataModel>(components.polar, {
-  getUserInfo: async (ctx) => {
-    const user = await ctx.runQuery(api.auth.getCurrentUser);
+type AuthUser = {
+  _id: string;
+  email?: string | null;
+};
+
+type PolarUserInfo = {
+  userId: string;
+  email: string;
+};
+
+type CurrentSubscription = Awaited<ReturnType<Polar<DataModel>["getCurrentSubscription"]>>;
+
+export const polar: Polar<DataModel> = new Polar<DataModel>(components.polar, {
+  getUserInfo: async (ctx): Promise<PolarUserInfo> => {
+    const user = (await ctx.runQuery(api.auth.getCurrentUser)) as AuthUser | null;
 
     if (!user) {
       throw new Error("Not authenticated");
@@ -30662,8 +30674,8 @@ export const {
 
 export const getCurrentSubscription = query({
   args: {},
-  handler: async (ctx) => {
-    const user = await ctx.runQuery(api.auth.getCurrentUser);
+  handler: async (ctx): Promise<CurrentSubscription> => {
+    const user = (await ctx.runQuery(api.auth.getCurrentUser)) as AuthUser | null;
 
     if (!user) {
       return null;
@@ -30677,8 +30689,8 @@ export const getCurrentSubscription = query({
 
 export const syncProducts = action({
   args: {},
-  handler: async (ctx) => {
-    const user = await ctx.runQuery(api.auth.getCurrentUser);
+  handler: async (ctx): Promise<void> => {
+    const user = (await ctx.runQuery(api.auth.getCurrentUser)) as AuthUser | null;
 
     if (!user) {
       throw new Error("Not authenticated");
