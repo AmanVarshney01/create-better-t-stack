@@ -70,12 +70,6 @@ jobs:
         if: steps.check-version.outputs.exists == 'false'
         run: bun install --frozen-lockfile
 
-      - name: Verify NPM auth
-        if: steps.check-version.outputs.exists == 'false'
-        run: npm whoami
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Update types package version
         if: steps.check-version.outputs.exists == 'false'
         run: |
@@ -134,33 +128,29 @@ jobs:
 
       - name: Publish types to NPM
         if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/types && npm publish --access public --provenance
+        run: cd packages/types && npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
       - name: Publish template-generator to NPM
         if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/template-generator && npm publish --access public --provenance
+        run: cd packages/template-generator && npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
       - name: Publish CLI to NPM
         if: steps.check-version.outputs.exists == 'false'
-        run: cd apps/cli && npm publish --access public --provenance
+        run: cd apps/cli && npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
       - name: Publish create-bts alias to NPM
         if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/create-bts && npm publish --access public --provenance
+        run: cd packages/create-bts && npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
