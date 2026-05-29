@@ -183,6 +183,44 @@ describe("Authentication Configurations", () => {
       expect(authFile).toContain("tanstackStartCookies()");
     });
 
+    it("should guard TanStack Start self dashboard before loading Polar payment state", async () => {
+      const result = await runTRPCTest({
+        projectName: "better-auth-tanstack-start-self-polar-guard",
+        auth: "better-auth",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "orpc",
+        frontend: ["tanstack-start"],
+        payments: "polar",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const authRouteFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/routes/_auth/route.tsx"),
+        "utf8",
+      );
+
+      expect(authRouteFile).toContain('createFileRoute("/_auth")');
+      const guardIndex = authRouteFile.indexOf("if (!session)");
+      const paymentIndex = authRouteFile.indexOf("const customerState = await getPayment();");
+
+      expect(guardIndex).toBeGreaterThanOrEqual(0);
+      expect(paymentIndex).toBeGreaterThanOrEqual(0);
+      expect(guardIndex).toBeLessThan(paymentIndex);
+    });
+
     it("should fail with better-auth + no database (non-convex)", async () => {
       const result = await runTRPCTest({
         projectName: "better-auth-no-db-fail",
@@ -349,7 +387,9 @@ describe("Authentication Configurations", () => {
         const dashboardPath =
           frontend === "next"
             ? "apps/web/src/app/dashboard/page.tsx"
-            : "apps/web/src/routes/dashboard.tsx";
+            : frontend === "tanstack-router" || frontend === "tanstack-start"
+              ? "apps/web/src/routes/_auth/dashboard.tsx"
+              : "apps/web/src/routes/dashboard.tsx";
         const convexConfigFile = await fs.readFile(
           path.join(result.projectDir, "packages/backend/convex/convex.config.ts"),
           "utf8",
@@ -366,6 +406,13 @@ describe("Authentication Configurations", () => {
           path.join(result.projectDir, dashboardPath),
           "utf8",
         );
+        const authRouteFile =
+          frontend === "tanstack-router" || frontend === "tanstack-start"
+            ? await fs.readFile(
+                path.join(result.projectDir, "apps/web/src/routes/_auth/route.tsx"),
+                "utf8",
+              )
+            : "";
         const backendPackageFile = await fs.readFile(
           path.join(result.projectDir, "packages/backend/package.json"),
           "utf8",
@@ -388,6 +435,11 @@ describe("Authentication Configurations", () => {
         expect(polarFile).toContain('import { Polar } from "@convex-dev/polar";');
         expect(polarFile).toContain("getUserInfo");
         expect(polarFile).toContain("syncProducts");
+        if (frontend === "tanstack-router" || frontend === "tanstack-start") {
+          expect(authRouteFile).toContain('createFileRoute("/_auth")');
+          expect(authRouteFile).toContain("Authenticated");
+          expect(authRouteFile).toContain("Unauthenticated");
+        }
         expect(dashboardFile).toContain('from "@convex-dev/polar/react";');
         expect(dashboardFile).toContain("api.polar.listAllProducts");
         expect(dashboardFile).toContain("api.polar.getCurrentSubscription");
@@ -862,13 +914,20 @@ describe("Authentication Configurations", () => {
         path.join(result.projectDir, "apps/web/src/start.ts"),
         "utf8",
       );
+      const authRouteFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/routes/_auth/route.tsx"),
+        "utf8",
+      );
       const dashboardFile = await fs.readFile(
-        path.join(result.projectDir, "apps/web/src/routes/dashboard.tsx"),
+        path.join(result.projectDir, "apps/web/src/routes/_auth/dashboard.tsx"),
         "utf8",
       );
 
       expect(startFile).not.toContain('/env/server"');
       expect(startFile).not.toContain("env.CLERK_SECRET_KEY");
+      expect(authRouteFile).toContain('createFileRoute("/_auth")');
+      expect(authRouteFile).toContain("SignInButton");
+      expect(dashboardFile).toContain('createFileRoute("/_auth/dashboard")');
       expect(dashboardFile).not.toContain("SignedIn");
       expect(dashboardFile).not.toContain("SignedOut");
       expect(dashboardFile).toContain("useUser");

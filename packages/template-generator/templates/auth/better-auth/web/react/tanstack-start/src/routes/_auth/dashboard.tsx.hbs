@@ -1,8 +1,6 @@
-import { getUser } from "@/functions/get-user";
 {{#if (eq payments "polar") }}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
-import { getPayment } from "@/functions/get-payment";
 {{/if}}
 {{#if (eq api "trpc") }}
 import { useTRPC } from "@/utils/trpc";
@@ -12,26 +10,10 @@ import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/react-query";
 {{/if}}
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
   component: RouteComponent,
-  beforeLoad: async () => {
-    const session = await getUser();
-    {{#if (eq payments "polar") }}
-    const customerState = await getPayment();
-    return { session, customerState };
-    {{else}}
-    return { session };
-    {{/if}}
-  },
-  loader: async ({ context }) => {
-    if (!context.session) {
-      throw redirect({
-        to: "/login",
-      });
-    }
-  },
 });
 
 function RouteComponent() {
@@ -47,13 +29,16 @@ function RouteComponent() {
 
   {{#if (eq payments "polar") }}
   const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
-  // For debugging: console.log("Active subscriptions:", customerState?.activeSubscriptions);
   {{/if}}
 
   return (
     <div>
       <h1>Dashboard</h1>
+      {{#if (eq backend "self")}}
       <p>Welcome {session?.user.name}</p>
+      {{else}}
+      <p>Welcome {session.data?.user.name}</p>
+      {{/if}}
       {{#if (eq api "trpc") }}
       <p>API: {privateData.data?.message}</p>
       {{else if (eq api "orpc") }}

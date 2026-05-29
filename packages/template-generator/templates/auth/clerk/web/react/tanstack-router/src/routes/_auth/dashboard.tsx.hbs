@@ -6,10 +6,10 @@ import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 {{/if}}
-import { SignInButton, UserButton, useUser } from "@clerk/react";
+import { UserButton, useUser } from "@clerk/react";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
 });
 
@@ -35,18 +35,6 @@ function RouteComponent() {
 		enabled: user.isLoaded && !!user.user,
 	});
 	{{/if}}
-
-	if (!user.isLoaded) {
-		return <div className="p-6">Loading...</div>;
-	}
-
-	if (!user.user) {
-		return (
-			<div className="p-6">
-				<SignInButton />
-			</div>
-		);
-	}
 
 	return (
 		<div className="space-y-4 p-6">

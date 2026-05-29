@@ -1,0 +1,58 @@
+{{#if (eq backend "self")}}
+import { getUser } from "@/functions/get-user";
+{{else}}
+import { authClient } from "@/lib/auth-client";
+{{/if}}
+{{#if (and (eq backend "self") (eq payments "polar"))}}
+import { getPayment } from "@/functions/get-payment";
+{{/if}}
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_auth")({
+  {{#unless (eq backend "self")}}
+  ssr: false,
+  {{/unless}}
+  component: AuthLayout,
+  beforeLoad: async () => {
+    {{#if (eq backend "self")}}
+    const session = await getUser();
+    if (!session) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+    {{#if (eq payments "polar") }}
+    const customerState = await getPayment();
+    return { session, customerState };
+    {{else}}
+    return { session };
+    {{/if}}
+    {{else}}
+    const session = await authClient.getSession();
+    if (!session.data) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+    {{#if (eq payments "polar") }}
+    const { data: customerState } = await authClient.customer.state();
+    return { session, customerState };
+    {{else}}
+    return { session };
+    {{/if}}
+    {{/if}}
+  },
+  {{#if (eq backend "self")}}
+  loader: async ({ context }) => {
+    if (!context.session) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+  },
+  {{/if}}
+});
+
+function AuthLayout() {
+  return <Outlet />;
+}

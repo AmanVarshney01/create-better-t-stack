@@ -38,7 +38,7 @@ function RouteComponent() {
 
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
-		customerState?.activeSubscriptions?.length! > 0;
+		(customerState?.activeSubscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (

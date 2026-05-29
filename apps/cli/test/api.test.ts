@@ -576,6 +576,55 @@ describe("API Configurations", () => {
       );
     });
 
+    it("should scaffold TanStack Start oRPC with a request-scoped query client", async () => {
+      const result = await createVirtual({
+        projectName: "tanstack-start-orpc-auth-workers",
+        api: "orpc",
+        frontend: ["tanstack-start"],
+        backend: "hono",
+        runtime: "workers",
+        database: "sqlite",
+        orm: "prisma",
+        auth: "better-auth",
+        payments: "none",
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "d1",
+        webDeploy: "cloudflare",
+        serverDeploy: "cloudflare",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const orpcFile = files.get("apps/web/src/utils/orpc.ts");
+      const routerFile = files.get("apps/web/src/router.tsx");
+      const authRouteFile = files.get("apps/web/src/routes/_auth/route.tsx");
+      const dashboardFile = files.get("apps/web/src/routes/_auth/dashboard.tsx");
+
+      expect(orpcFile).toContain("export function createQueryClient()");
+      expect(orpcFile).toContain("defaultOptions: { queries: { staleTime: 60 * 1000 } },");
+      expect(orpcFile).toContain("query.invalidate();");
+      expect(orpcFile).not.toContain("void query.invalidate");
+      expect(orpcFile).not.toContain("onClick: query.invalidate");
+      expect(orpcFile).not.toContain("export const queryClient");
+      expect(routerFile).toContain('import { createQueryClient, orpc } from "./utils/orpc";');
+      expect(routerFile).toContain("const queryClient = createQueryClient();");
+      expect(authRouteFile).toContain('createFileRoute("/_auth")');
+      expect(authRouteFile).toContain("ssr: false");
+      expect(authRouteFile).toContain("const session = await authClient.getSession();");
+      expect(authRouteFile).not.toContain('import { getUser } from "@/functions/get-user";');
+      expect(dashboardFile).toContain('createFileRoute("/_auth/dashboard")');
+      expect(dashboardFile).toContain("session.data?.user.name");
+      expect(dashboardFile).toContain("privateData.queryOptions()");
+      expect(dashboardFile).not.toContain("const session = await authClient.getSession();");
+    });
+
     it("should handle API with complex frontend combinations", async () => {
       const result = await runTRPCTest({
         projectName: "api-complex-frontend",
