@@ -23670,6 +23670,16 @@ export function useColorScheme() {
 const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
+// Alchemy writes runtime state here; block it to avoid Metro refresh loops.
+const blockList = config.resolver.blockList ?? [];
+const blockListPatterns = Array.isArray(blockList) ? blockList : [blockList];
+
+config.resolver.blockList = [
+	...blockListPatterns,
+	/[/\\\\]packages[/\\\\]infra[/\\\\]\\.alchemy(?:[/\\\\]|$)/,
+];
+{{/if}}
 
 module.exports = config;
 `],
@@ -24971,6 +24981,16 @@ import './unistyles';
   ["frontend/native/unistyles/metro.config.js.hbs", `const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
+// Alchemy writes runtime state here; block it to avoid Metro refresh loops.
+const blockList = config.resolver.blockList ?? [];
+const blockListPatterns = Array.isArray(blockList) ? blockList : [blockList];
+
+config.resolver.blockList = [
+	...blockListPatterns,
+	/[/\\\\]packages[/\\\\]infra[/\\\\]\\.alchemy(?:[/\\\\]|$)/,
+];
+{{/if}}
 
 module.exports = config;
 `],
@@ -26088,6 +26108,16 @@ const { wrapWithReanimatedMetroConfig } = require("react-native-reanimated/metro
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
+// Alchemy writes runtime state here; block it to avoid Metro refresh loops.
+const blockList = config.resolver.blockList ?? [];
+const blockListPatterns = Array.isArray(blockList) ? blockList : [blockList];
+
+config.resolver.blockList = [
+	...blockListPatterns,
+	/[/\\\\]packages[/\\\\]infra[/\\\\]\\.alchemy(?:[/\\\\]|$)/,
+];
+{{/if}}
 
 const uniwindConfig = withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
   cssEntryFile: "./global.css",
