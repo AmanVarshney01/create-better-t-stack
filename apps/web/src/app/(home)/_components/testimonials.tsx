@@ -119,7 +119,7 @@ const TweetCard = ({ tweetId, index }: { tweetId: string; index: number }) => (
       </div>
       <div className="w-full min-w-0 overflow-hidden">
         <div style={{ width: "100%", minWidth: 0, maxWidth: "100%" }}>
-          <Tweet id={tweetId} components={components} />
+          <Tweet id={tweetId} apiUrl={`/api/tweet/${tweetId}`} components={components} />
         </div>
       </div>
     </div>
