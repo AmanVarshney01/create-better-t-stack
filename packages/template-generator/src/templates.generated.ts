@@ -1373,18 +1373,29 @@ import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 {{/if}}
 
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error, query) => {
-			toast.error(\`Error: \${error.message}\`, {
-				action: {
-					label: "retry",
-					onClick: query.invalidate,
-				},
-			});
-		},
-	}),
-});
+export function createQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error, query) => {
+				toast.error(\`Error: \${error.message}\`, {
+					action: {
+						label: "retry",
+						onClick: () => {
+							query.invalidate();
+						},
+					},
+				});
+			},
+		}),
+{{#if (includes frontend "tanstack-start")}}
+		defaultOptions: { queries: { staleTime: 60 * 1000 } },
+{{/if}}
+	});
+}
+
+{{#unless (includes frontend "tanstack-start")}}
+export const queryClient = createQueryClient();
+{{/unless}}
 
 {{#if (and (includes frontend "tanstack-start") (eq backend "self"))}}
 const getORPCClient = createIsomorphicFn()
@@ -2084,7 +2095,9 @@ export const queryClient = new QueryClient({
 			toast.error(error.message, {
 				action: {
 					label: "retry",
-					onClick: query.invalidate,
+					onClick: () => {
+						query.invalidate();
+					},
 				},
 			});
 		},
@@ -2154,7 +2167,9 @@ export const queryClient = new QueryClient({
 			toast.error(error.message, {
 				action: {
 					label: "retry",
-					onClick: query.invalidate,
+					onClick: () => {
+						query.invalidate();
+					},
 				},
 			});
 		},
@@ -4864,28 +4879,20 @@ export const authClient = createAuthClient({
 	plugins: [convexClient(), crossDomainClient()],
 });
 `],
-  ["auth/better-auth/convex/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
-import SignUpForm from "@/components/sign-up-form";
-import UserMenu from "@/components/user-menu";
+  ["auth/better-auth/convex/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `import UserMenu from "@/components/user-menu";
 {{#if (eq payments "polar")}}
 import { CheckoutLink, CustomerPortalLink } from "@convex-dev/polar/react";
 import { buttonVariants } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Authenticated,
-  AuthLoading,
-  Unauthenticated,
-  useQuery,
-} from "convex/react";
-import { useState } from "react";
+import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/dashboard")({
-  component: RouteComponent,
+export const Route = createFileRoute("/_auth/dashboard")({
+  component: DashboardContent,
 });
 
-function PrivateDashboardContent() {
+function DashboardContent() {
   const privateData = useQuery(api.privateData.get);
   {{#if (eq payments "polar")}}
   const products = useQuery(api.polar.listAllProducts);
@@ -4929,14 +4936,24 @@ function PrivateDashboardContent() {
     </div>
   );
 }
+`],
+  ["auth/better-auth/convex/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
+import SignUpForm from "@/components/sign-up-form";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+import { useState } from "react";
 
-function RouteComponent() {
+export const Route = createFileRoute("/_auth")({
+  component: AuthLayout,
+});
+
+function AuthLayout() {
   const [showSignIn, setShowSignIn] = useState(false);
 
   return (
     <>
       <Authenticated>
-        <PrivateDashboardContent />
+        <Outlet />
       </Authenticated>
       <Unauthenticated>
         {showSignIn ? (
@@ -5313,40 +5330,20 @@ export const {
 	convexSiteUrl: env.VITE_CONVEX_SITE_URL,
 });
 `],
-  ["auth/better-auth/convex/web/react/tanstack-start/src/routes/api/auth/$.ts.hbs", `import { createFileRoute } from "@tanstack/react-router";
-import { handler } from "@/lib/auth-server";
-
-export const Route = createFileRoute("/api/auth/$")({
-  server: {
-    handlers: {
-      GET: ({ request }) => handler(request),
-      POST: ({ request }) => handler(request),
-    },
-  },
-});
-`],
-  ["auth/better-auth/convex/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
-import SignUpForm from "@/components/sign-up-form";
-import UserMenu from "@/components/user-menu";
+  ["auth/better-auth/convex/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `import UserMenu from "@/components/user-menu";
 {{#if (eq payments "polar")}}
 import { CheckoutLink, CustomerPortalLink } from "@convex-dev/polar/react";
 import { buttonVariants } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Authenticated,
-  AuthLoading,
-  Unauthenticated,
-  useQuery,
-} from "convex/react";
-import { useState } from "react";
+import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/dashboard")({
-  component: RouteComponent,
+export const Route = createFileRoute("/_auth/dashboard")({
+  component: DashboardContent,
 });
 
-function PrivateDashboardContent() {
+function DashboardContent() {
   const privateData = useQuery(api.privateData.get);
   {{#if (eq payments "polar")}}
   const products = useQuery(api.polar.listAllProducts);
@@ -5390,14 +5387,24 @@ function PrivateDashboardContent() {
     </div>
   );
 }
+`],
+  ["auth/better-auth/convex/web/react/tanstack-start/src/routes/_auth/route.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
+import SignUpForm from "@/components/sign-up-form";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+import { useState } from "react";
 
-function RouteComponent() {
+export const Route = createFileRoute("/_auth")({
+  component: AuthLayout,
+});
+
+function AuthLayout() {
   const [showSignIn, setShowSignIn] = useState(false);
 
   return (
     <>
       <Authenticated>
-        <PrivateDashboardContent />
+        <Outlet />
       </Authenticated>
       <Unauthenticated>
         {showSignIn ? (
@@ -5412,6 +5419,18 @@ function RouteComponent() {
     </>
   );
 }
+`],
+  ["auth/better-auth/convex/web/react/tanstack-start/src/routes/api/auth/$.ts.hbs", `import { createFileRoute } from "@tanstack/react-router";
+import { handler } from "@/lib/auth-server";
+
+export const Route = createFileRoute("/api/auth/$")({
+  server: {
+    handlers: {
+      GET: ({ request }) => handler(request),
+      POST: ({ request }) => handler(request),
+    },
+  },
+});
 `],
   ["auth/better-auth/fullstack/astro/src/env.d.ts.hbs", `/// <reference path="../.astro/types.d.ts" />
 
@@ -9389,7 +9408,7 @@ onMounted(async () => {
 })
 
 const hasProSubscription = computed(() => 
-  customerState.value?.activeSubscriptions?.length! > 0
+  (customerState.value?.activeSubscriptions?.length ?? 0) > 0
 )
 {{/if}}
 </script>
@@ -9560,8 +9579,7 @@ export default function Dashboard({
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
-	const hasProSubscription = customerState?.activeSubscriptions?.length! > 0;
-	console.log("Active subscriptions:", customerState?.activeSubscriptions);
+	const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -10383,7 +10401,7 @@ import { orpc } from "@/utils/orpc";
 {{#if (eq api "trpc")}}
 import { trpc } from "@/utils/trpc";
 {{/if}}
-{{#if ( or (eq api "orpc") (eq api "trpc"))}}
+{{#if (or (eq api "orpc") (eq api "trpc"))}}
 import { useQuery } from "@tanstack/react-query";
 {{/if}}
 import { useEffect, useState } from "react";
@@ -10427,15 +10445,14 @@ export default function Dashboard() {
   }
 
   {{#if (eq payments "polar")}}
-  const hasProSubscription = customerState?.activeSubscriptions?.length! > 0;
-  console.log("Active subscriptions:", customerState?.activeSubscriptions);
+  const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
   {{/if}}
 
   return (
     <div>
       <h1>Dashboard</h1>
       <p>Welcome {session?.user.name}</p>
-      {{#if ( or (eq api "orpc") (eq api "trpc"))}}
+      {{#if (or (eq api "orpc") (eq api "trpc"))}}
       <p>API: {privateData.data?.message}</p>
       {{/if}}
       {{#if (eq payments "polar")}}
@@ -10829,38 +10846,23 @@ export default function UserMenu() {
   );
 }
 `],
-  ["auth/better-auth/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
+  ["auth/better-auth/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
-{{/if}}
 import { authClient } from "@/lib/auth-client";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { trpc } from "@/utils/trpc";
 {{/if}}
-{{#if ( or (eq api "orpc") (eq api "trpc"))}}
+{{#if (or (eq api "orpc") (eq api "trpc"))}}
 import { useQuery } from "@tanstack/react-query";
 {{/if}}
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
-	beforeLoad: async () => {
-		const session = await authClient.getSession();
-		if (!session.data) {
-			redirect({
-				to: "/login",
-				throw: true
-			});
-		}
-		{{#if (eq payments "polar")}}
-		const {data: customerState} = await authClient.customer.state()
-		return { session, customerState };
-		{{else}}
-		return { session };
-		{{/if}}
-	}
 });
 
 function RouteComponent() {
@@ -10874,15 +10876,14 @@ function RouteComponent() {
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
-	const hasProSubscription = customerState?.activeSubscriptions?.length! > 0
-    console.log("Active subscriptions:", customerState?.activeSubscriptions)
+	const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
 		<div>
 			<h1>Dashboard</h1>
 			<p>Welcome {session.data?.user.name}</p>
-			{{#if ( or (eq api "orpc") (eq api "trpc"))}}
+			{{#if (or (eq api "orpc") (eq api "trpc"))}}
 			<p>API: {privateData.data?.message}</p>
 			{{/if}}
 			{{#if (eq payments "polar")}}
@@ -10899,6 +10900,31 @@ function RouteComponent() {
 			{{/if}}
 		</div>
 	);
+}
+`],
+  ["auth/better-auth/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+	beforeLoad: async () => {
+		const session = await authClient.getSession();
+		if (!session.data) {
+			throw redirect({
+				to: "/login",
+			});
+		}
+		{{#if (eq payments "polar")}}
+		const { data: customerState } = await authClient.customer.state();
+		return { session, customerState };
+		{{else}}
+		return { session };
+		{{/if}}
+	},
+});
+
+function AuthLayout() {
+	return <Outlet />;
 }
 `],
   ["auth/better-auth/web/react/tanstack-router/src/routes/login.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
@@ -11323,11 +11349,9 @@ export const authMiddleware = createMiddleware().server(
 );
 {{/if}}
 `],
-  ["auth/better-auth/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `import { getUser } from "@/functions/get-user";
-{{#if (eq payments "polar") }}
+  ["auth/better-auth/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq payments "polar") }}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
-import { getPayment } from "@/functions/get-payment";
 {{/if}}
 {{#if (eq api "trpc") }}
 import { useTRPC } from "@/utils/trpc";
@@ -11337,26 +11361,10 @@ import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/react-query";
 {{/if}}
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
   component: RouteComponent,
-  beforeLoad: async () => {
-    const session = await getUser();
-    {{#if (eq payments "polar") }}
-    const customerState = await getPayment();
-    return { session, customerState };
-    {{else}}
-    return { session };
-    {{/if}}
-  },
-  loader: async ({ context }) => {
-    if (!context.session) {
-      throw redirect({
-        to: "/login",
-      });
-    }
-  },
 });
 
 function RouteComponent() {
@@ -11372,13 +11380,16 @@ function RouteComponent() {
 
   {{#if (eq payments "polar") }}
   const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
-  // For debugging: console.log("Active subscriptions:", customerState?.activeSubscriptions);
   {{/if}}
 
   return (
     <div>
       <h1>Dashboard</h1>
+      {{#if (eq backend "self")}}
       <p>Welcome {session?.user.name}</p>
+      {{else}}
+      <p>Welcome {session.data?.user.name}</p>
+      {{/if}}
       {{#if (eq api "trpc") }}
       <p>API: {privateData.data?.message}</p>
       {{else if (eq api "orpc") }}
@@ -11406,7 +11417,67 @@ function RouteComponent() {
       {{/if}}
     </div>
   );
-}`],
+}
+`],
+  ["auth/better-auth/web/react/tanstack-start/src/routes/_auth/route.tsx.hbs", `{{#if (eq backend "self")}}
+import { getUser } from "@/functions/get-user";
+{{else}}
+import { authClient } from "@/lib/auth-client";
+{{/if}}
+{{#if (and (eq backend "self") (eq payments "polar"))}}
+import { getPayment } from "@/functions/get-payment";
+{{/if}}
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_auth")({
+  {{#unless (eq backend "self")}}
+  ssr: false,
+  {{/unless}}
+  component: AuthLayout,
+  beforeLoad: async () => {
+    {{#if (eq backend "self")}}
+    const session = await getUser();
+    if (!session) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+    {{#if (eq payments "polar") }}
+    const customerState = await getPayment();
+    return { session, customerState };
+    {{else}}
+    return { session };
+    {{/if}}
+    {{else}}
+    const session = await authClient.getSession();
+    if (!session.data) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+    {{#if (eq payments "polar") }}
+    const { data: customerState } = await authClient.customer.state();
+    return { session, customerState };
+    {{else}}
+    return { session };
+    {{/if}}
+    {{/if}}
+  },
+  {{#if (eq backend "self")}}
+  loader: async ({ context }) => {
+    if (!context.session) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+  },
+  {{/if}}
+});
+
+function AuthLayout() {
+  return <Outlet />;
+}
+`],
   ["auth/better-auth/web/react/tanstack-start/src/routes/login.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import { createFileRoute } from "@tanstack/react-router";
@@ -11809,7 +11880,7 @@ function RouteComponent() {
 
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
-		customerState?.activeSubscriptions?.length! > 0;
+		(customerState?.activeSubscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -12880,33 +12951,42 @@ export default function Dashboard() {
 	);
 }
 `],
-  ["auth/clerk/convex/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/react";
+  ["auth/clerk/convex/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `import { UserButton, useUser } from "@clerk/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-	Authenticated,
-	AuthLoading,
-	Unauthenticated,
-	useQuery,
-} from "convex/react";
+import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const privateData = useQuery(api.privateData.get);
-	const user = useUser()
+	const user = useUser();
 
+	return (
+		<div>
+			<h1>Dashboard</h1>
+			<p>Welcome {user.user?.fullName}</p>
+			<p>privateData: {privateData?.message}</p>
+			<UserButton />
+		</div>
+	);
+}
+`],
+  ["auth/clerk/convex/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import { SignInButton } from "@clerk/react";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
+
+function AuthLayout() {
 	return (
 		<>
 			<Authenticated>
-				<div>
-					<h1>Dashboard</h1>
-					<p>Welcome {user.user?.fullName}</p>
-					<p>privateData: {privateData?.message}</p>
-					<UserButton />
-				</div>
+				<Outlet />
 			</Authenticated>
 			<Unauthenticated>
 				<SignInButton />
@@ -12918,17 +12998,12 @@ function RouteComponent() {
 	);
 }
 `],
-  ["auth/clerk/convex/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/tanstack-react-start";
+  ["auth/clerk/convex/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `import { UserButton, useUser } from "@clerk/tanstack-react-start";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-	Authenticated,
-	AuthLoading,
-	Unauthenticated,
-	useQuery,
-} from "convex/react";
+import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
 });
 
@@ -12937,14 +13012,28 @@ function RouteComponent() {
 	const user = useUser();
 
 	return (
+		<div>
+			<h1>Dashboard</h1>
+			<p>Welcome {user.user?.fullName}</p>
+			<p>privateData: {privateData?.message}</p>
+			<UserButton />
+		</div>
+	);
+}
+`],
+  ["auth/clerk/convex/web/react/tanstack-start/src/routes/_auth/route.tsx.hbs", `import { SignInButton } from "@clerk/tanstack-react-start";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
+
+function AuthLayout() {
+	return (
 		<>
 			<Authenticated>
-				<div>
-					<h1>Dashboard</h1>
-					<p>Welcome {user.user?.fullName}</p>
-					<p>privateData: {privateData?.message}</p>
-					<UserButton />
-				</div>
+				<Outlet />
 			</Authenticated>
 			<Unauthenticated>
 				<SignInButton />
@@ -13626,7 +13715,7 @@ export default function Dashboard() {
   );
 }
 `],
-  ["auth/clerk/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `{{#if (eq api "orpc")}}
+  ["auth/clerk/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
 {{/if}}
@@ -13634,10 +13723,10 @@ import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 {{/if}}
-import { SignInButton, UserButton, useUser } from "@clerk/react";
+import { UserButton, useUser } from "@clerk/react";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
 });
 
@@ -13664,18 +13753,6 @@ function RouteComponent() {
 	});
 	{{/if}}
 
-	if (!user.isLoaded) {
-		return <div className="p-6">Loading...</div>;
-	}
-
-	if (!user.user) {
-		return (
-			<div className="p-6">
-				<SignInButton />
-			</div>
-		);
-	}
-
 	return (
 		<div className="space-y-4 p-6">
 			<h1 className="text-2xl font-semibold">Dashboard</h1>
@@ -13688,7 +13765,32 @@ function RouteComponent() {
 	);
 }
 `],
-  ["auth/clerk/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `{{#if (eq api "trpc")}}
+  ["auth/clerk/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import { SignInButton, useUser } from "@clerk/react";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
+
+function AuthLayout() {
+	const user = useUser();
+
+	if (!user.isLoaded) {
+		return <div className="p-6">Loading...</div>;
+	}
+
+	if (!user.user) {
+		return (
+			<div className="p-6">
+				<SignInButton />
+			</div>
+		);
+	}
+
+	return <Outlet />;
+}
+`],
+  ["auth/clerk/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq api "trpc")}}
 import { useTRPC } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -13696,10 +13798,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
 {{/if}}
-import { SignInButton, UserButton, useUser } from "@clerk/tanstack-react-start";
+import { UserButton, useUser } from "@clerk/tanstack-react-start";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
 });
 
@@ -13727,6 +13829,28 @@ function RouteComponent() {
 	});
 	{{/if}}
 
+	return (
+		<div className="space-y-4 p-6">
+			<h1 className="text-2xl font-semibold">Dashboard</h1>
+			<p>Welcome {displayName}</p>
+			{{#if (or (eq api "orpc") (eq api "trpc"))}}
+			<p>API: {privateData.data?.message}</p>
+			{{/if}}
+			<UserButton />
+		</div>
+	);
+}
+`],
+  ["auth/clerk/web/react/tanstack-start/src/routes/_auth/route.tsx.hbs", `import { SignInButton, useUser } from "@clerk/tanstack-react-start";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
+
+function AuthLayout() {
+	const user = useUser();
+
 	if (!user.isLoaded) {
 		return <div className="p-6">Loading...</div>;
 	}
@@ -13739,16 +13863,7 @@ function RouteComponent() {
 		);
 	}
 
-	return (
-		<div className="space-y-4 p-6">
-			<h1 className="text-2xl font-semibold">Dashboard</h1>
-			<p>Welcome {displayName}</p>
-			{{#if (or (eq api "orpc") (eq api "trpc"))}}
-			<p>API: {privateData.data?.message}</p>
-			{{/if}}
-			<UserButton />
-		</div>
-	);
+	return <Outlet />;
 }
 `],
   ["auth/clerk/web/react/tanstack-start/src/start.ts.hbs", `import { clerkMiddleware } from '@clerk/tanstack-react-start/server'
@@ -27976,7 +28091,7 @@ import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 {{else if (eq api "orpc")}}
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
-import { orpc, queryClient } from "./utils/orpc";
+import { createQueryClient, orpc } from "./utils/orpc";
 {{/if}}
 {{/if}}
 
@@ -28016,19 +28131,23 @@ export function getRouter() {
 }
 {{else}}
 {{#if (eq api "trpc")}}
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error, query) => {
-			toast.error(error.message, {
-				action: {
-					label: "retry",
-					onClick: query.invalidate,
-				},
-			});
-		},
-	}),
-	defaultOptions: { queries: { staleTime: 60 * 1000 } },
-});
+function createQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error, query) => {
+				toast.error(error.message, {
+					action: {
+						label: "retry",
+						onClick: () => {
+							query.invalidate();
+						},
+					},
+				});
+			},
+		}),
+		defaultOptions: { queries: { staleTime: 60 * 1000 } },
+	});
+}
 
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [
@@ -28051,15 +28170,20 @@ const trpcClient = createTRPCClient<AppRouter>({
 		}),
 	],
 });
-
-const trpc = createTRPCOptionsProxy({
-	client: trpcClient,
-	queryClient: queryClient,
-});
 {{else if (eq api "orpc")}}
 {{/if}}
 
 export const getRouter = () => {
+{{#if (eq api "trpc")}}
+	const queryClient = createQueryClient();
+	const trpc = createTRPCOptionsProxy({
+		client: trpcClient,
+		queryClient,
+	});
+{{else if (eq api "orpc")}}
+	const queryClient = createQueryClient();
+{{/if}}
+
 	const router = createTanStackRouter({
 		routeTree,
 		scrollRestoration: true,
@@ -29726,6 +29850,53 @@ const db = await D1Database("database", {
 });
 {{/if}}
 
+{{#if (eq serverDeploy "cloudflare")}}
+export const server = await Worker("server", {
+  cwd: "../../apps/server",
+  entrypoint: "src/index.ts",
+  compatibility: "node",
+  url: true,
+  bindings: {
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    {{/if}}
+    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
+    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
+    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
+    {{/if}}
+    {{/if}}
+    {{#if (includes examples "ai")}}
+    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
+    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
+    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    {{/if}}
+    {{/if}}
+  },
+  dev: {
+		port: 3000,
+	},
+});
+{{/if}}
+
 {{#if (eq webDeploy "cloudflare")}}
 {{#if (includes frontend "next")}}
 export const web = await Nextjs("web", {
@@ -29737,7 +29908,11 @@ export const web = await Nextjs("web", {
     NEXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NEXT_PUBLIC_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    NEXT_PUBLIC_SERVER_URL: server.url!,
+    {{else}}
     NEXT_PUBLIC_SERVER_URL: alchemy.env.NEXT_PUBLIC_SERVER_URL!,
+    {{/if}}
     {{/if}}
     {{#if (eq dbSetup "d1")}}
     DB: db,
@@ -29791,7 +29966,11 @@ export const web = await Nuxt("web", {
     NUXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NUXT_PUBLIC_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    NUXT_PUBLIC_SERVER_URL: server.url!,
+    {{else}}
     NUXT_PUBLIC_SERVER_URL: alchemy.env.NUXT_PUBLIC_SERVER_URL!,
+    {{/if}}
     {{/if}}
     {{#if (eq backend "self")}}
     {{#if (eq dbSetup "d1")}}
@@ -29842,7 +30021,11 @@ export const web = await SvelteKit("web", {
     PUBLIC_CONVEX_SITE_URL: alchemy.env.PUBLIC_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    PUBLIC_SERVER_URL: server.url!,
+    {{else}}
     PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
+    {{/if}}
     {{/if}}
     {{#if (eq backend "self")}}
     {{#if (eq dbSetup "d1")}}
@@ -29888,7 +30071,11 @@ export const web = await TanStackStart("web", {
     VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    VITE_SERVER_URL: server.url!,
+    {{else}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
     {{/if}}
     {{#if (eq dbSetup "d1")}}
     DB: db,
@@ -29938,7 +30125,11 @@ export const web = await Vite("web", {
     VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    VITE_SERVER_URL: server.url!,
+    {{else}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
     {{/if}}
   }
 });
@@ -29952,7 +30143,11 @@ export const web = await ReactRouter("web", {
     VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    VITE_SERVER_URL: server.url!,
+    {{else}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
     {{/if}}
   }
 });
@@ -29967,7 +30162,11 @@ export const web = await Vite("web", {
     VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    VITE_SERVER_URL: server.url!,
+    {{else}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
     {{/if}}
   }
 });
@@ -29981,7 +30180,11 @@ export const web = await Astro("web", {
   {{/if}}
   bindings: {
     {{#if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    PUBLIC_SERVER_URL: server.url!,
+    {{else}}
     PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
+    {{/if}}
     {{/if}}
     {{#if (eq backend "self")}}
     {{#if (eq dbSetup "d1")}}
@@ -30012,52 +30215,6 @@ export const web = await Astro("web", {
   }
 });
 {{/if}}
-{{/if}}
-
-{{#if (eq serverDeploy "cloudflare")}}
-export const server = await Worker("server", {
-  cwd: "../../apps/server",
-  entrypoint: "src/index.ts",
-  compatibility: "node",
-  bindings: {
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{#if (eq auth "clerk")}}
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
-    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
-    {{/if}}
-    {{/if}}
-    {{#if (includes examples "ai")}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-  },
-  dev: {
-		port: 3000,
-	},
-});
 {{/if}}
 
 {{#if (and (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
@@ -31091,4 +31248,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 475;
+export const TEMPLATE_COUNT = 483;

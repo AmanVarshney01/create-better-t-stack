@@ -1,5 +1,3 @@
-import SignInForm from "@/components/sign-in-form";
-import SignUpForm from "@/components/sign-up-form";
 import UserMenu from "@/components/user-menu";
 {{#if (eq payments "polar")}}
 import { CheckoutLink, CustomerPortalLink } from "@convex-dev/polar/react";
@@ -7,19 +5,13 @@ import { buttonVariants } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Authenticated,
-  AuthLoading,
-  Unauthenticated,
-  useQuery,
-} from "convex/react";
-import { useState } from "react";
+import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/dashboard")({
-  component: RouteComponent,
+export const Route = createFileRoute("/_auth/dashboard")({
+  component: DashboardContent,
 });
 
-function PrivateDashboardContent() {
+function DashboardContent() {
   const privateData = useQuery(api.privateData.get);
   {{#if (eq payments "polar")}}
   const products = useQuery(api.polar.listAllProducts);
@@ -61,27 +53,5 @@ function PrivateDashboardContent() {
       {{/if}}
       <UserMenu />
     </div>
-  );
-}
-
-function RouteComponent() {
-  const [showSignIn, setShowSignIn] = useState(false);
-
-  return (
-    <>
-      <Authenticated>
-        <PrivateDashboardContent />
-      </Authenticated>
-      <Unauthenticated>
-        {showSignIn ? (
-          <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
-        ) : (
-          <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
-        )}
-      </Unauthenticated>
-      <AuthLoading>
-        <div>Loading...</div>
-      </AuthLoading>
-    </>
   );
 }

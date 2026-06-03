@@ -26,7 +26,7 @@ import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 {{else if (eq api "orpc")}}
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
-import { orpc, queryClient } from "./utils/orpc";
+import { createQueryClient, orpc } from "./utils/orpc";
 {{/if}}
 {{/if}}
 
@@ -66,19 +66,23 @@ export function getRouter() {
 }
 {{else}}
 {{#if (eq api "trpc")}}
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error, query) => {
-			toast.error(error.message, {
-				action: {
-					label: "retry",
-					onClick: query.invalidate,
-				},
-			});
-		},
-	}),
-	defaultOptions: { queries: { staleTime: 60 * 1000 } },
-});
+function createQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error, query) => {
+				toast.error(error.message, {
+					action: {
+						label: "retry",
+						onClick: () => {
+							query.invalidate();
+						},
+					},
+				});
+			},
+		}),
+		defaultOptions: { queries: { staleTime: 60 * 1000 } },
+	});
+}
 
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [
@@ -101,15 +105,20 @@ const trpcClient = createTRPCClient<AppRouter>({
 		}),
 	],
 });
-
-const trpc = createTRPCOptionsProxy({
-	client: trpcClient,
-	queryClient: queryClient,
-});
 {{else if (eq api "orpc")}}
 {{/if}}
 
 export const getRouter = () => {
+{{#if (eq api "trpc")}}
+	const queryClient = createQueryClient();
+	const trpc = createTRPCOptionsProxy({
+		client: trpcClient,
+		queryClient,
+	});
+{{else if (eq api "orpc")}}
+	const queryClient = createQueryClient();
+{{/if}}
+
 	const router = createTanStackRouter({
 		routeTree,
 		scrollRestoration: true,

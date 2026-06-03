@@ -340,6 +340,42 @@ describe("Deployment Configurations", () => {
       expectSuccess(result);
     });
 
+    it("should wire Cloudflare web deploys to the generated server Worker URL", async () => {
+      const result = await createVirtual({
+        projectName: "tanstack-start-hono-cloudflare-auth",
+        webDeploy: "cloudflare",
+        serverDeploy: "cloudflare",
+        backend: "hono",
+        runtime: "workers",
+        database: "sqlite",
+        orm: "prisma",
+        auth: "better-auth",
+        payments: "none",
+        api: "orpc",
+        frontend: ["tanstack-start"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "d1",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const infraFile = files.get("packages/infra/alchemy.run.ts");
+
+      expect(infraFile).toContain('export const server = await Worker("server"');
+      expect(infraFile).toContain("url: true");
+      expect(infraFile).toContain("VITE_SERVER_URL: server.url!");
+      expect(infraFile!.indexOf('export const server = await Worker("server"')).toBeLessThan(
+        infraFile!.indexOf('export const web = await TanStackStart("web"'),
+      );
+    });
+
     it("should keep native Metro from watching Alchemy state", async () => {
       const result = await createVirtual({
         projectName: "native-astro-alchemy",
