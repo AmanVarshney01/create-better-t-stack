@@ -87,7 +87,9 @@ const app = await alchemy("my-app");
 
 // Create D1 database (if using D1)
 const db = await D1Database("database", {
-  migrationsDir: "../../packages/db/src/migrations",
+  // Prisma projects use "../../packages/db/prisma/migrations"
+  // Drizzle projects use "../../packages/db/src/migrations"
+  migrationsDir: "../../packages/db/prisma/migrations",
 });
 
 // Deploy web frontend
@@ -108,7 +110,6 @@ export const server = await Worker("server", {
     CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
     BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
     BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
   },
   dev: {
     port: 3000,
@@ -594,7 +595,7 @@ Pay careful attention to CORS settings when moving between stages. A configurati
 ### "D1 migrations failed"
 
 1. Ensure migrations directory path is correct in `alchemy.run.ts`
-2. Run migrations locally first: `bun run db:push`
+2. Generate or update migrations first: `bun run db:generate` (and `bun run db:migrate` for Prisma)
 3. Check migration files are valid SQL
 
 ### "Worker size too large"

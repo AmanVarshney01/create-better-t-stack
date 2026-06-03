@@ -160,6 +160,7 @@ function generateReadmeContent(options: ProjectConfig): string {
     frontend = ["tanstack-router"],
     backend = "hono",
     api = "trpc",
+    dbSetup,
     webDeploy,
     serverDeploy,
   } = options;
@@ -187,7 +188,7 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 
 ## Features
 
-${generateFeaturesList(database, auth, addons, orm, runtime, frontend, backend, api)}
+${generateFeaturesList(database, auth, addons, orm, runtime, frontend, backend, api, dbSetup)}
 
 ## Getting Started
 
@@ -451,6 +452,7 @@ function generateFeaturesList(
   frontend: ProjectConfig["frontend"],
   backend: ProjectConfig["backend"],
   api: ProjectConfig["api"],
+  dbSetup: ProjectConfig["dbSetup"],
 ): string {
   const isConvex = backend === "convex";
   const hasNative = hasNativeFrontend(frontend);
@@ -525,7 +527,7 @@ function generateFeaturesList(
       mongoose: "Mongoose",
     };
     const dbNames: Record<string, string> = {
-      sqlite: "SQLite/Turso",
+      sqlite: dbSetup === "d1" ? "Cloudflare D1" : "SQLite/Turso",
       postgres: "PostgreSQL",
       mysql: "MySQL",
       mongodb: "MongoDB",
@@ -576,8 +578,40 @@ function generateDatabaseSetup(config: ProjectConfig, packageManagerRunCmd: stri
   };
   const ormDesc = orm === "none" ? "" : ` with ${ormLabels[orm] || orm}`;
   const dbSupport = getDbScriptSupport(config);
+  const isD1Alchemy = dbSupport.isD1Alchemy;
 
   let setup = "## Database Setup\n\n";
+
+  if (isD1Alchemy) {
+    const steps: string[] = [];
+
+    if (dbSupport.hasDbGenerate) {
+      steps.push(
+        `${steps.length + 1}. ${
+          orm === "prisma" ? "Generate the Prisma client" : "Generate migration files"
+        }:
+\`\`\`bash
+${packageManagerRunCmd} db:generate
+\`\`\``,
+      );
+    }
+
+    if (dbSupport.hasDbMigrate) {
+      steps.push(`${steps.length + 1}. Create and apply Prisma migrations locally:
+\`\`\`bash
+${packageManagerRunCmd} db:migrate
+\`\`\``);
+    }
+
+    return `${setup}This project uses Cloudflare D1 (SQLite)${ormDesc}.
+
+Runtime database access uses the Cloudflare \`DB\` binding from \`packages/infra/alchemy.run.ts\`. If a local \`DATABASE_URL\` is present, it is only for database tooling.
+
+Alchemy provisions the D1 database and applies migrations during \`dev\` and \`deploy\`.
+
+${steps.join("\n\n")}
+`;
+  }
 
   const dbDescriptions: Record<string, string> = {
     sqlite: `This project uses SQLite${ormDesc}.
@@ -666,7 +700,9 @@ function generateScriptsList(
   }
 
   if (dbSupport.hasDbScripts) {
-    scripts += `\n- \`${packageManagerRunCmd} db:push\`: Push schema changes to database`;
+    if (dbSupport.hasDbPush) {
+      scripts += `\n- \`${packageManagerRunCmd} db:push\`: Push schema changes to database`;
+    }
     if (dbSupport.hasDbGenerate) {
       scripts += `\n- \`${packageManagerRunCmd} db:generate\`: Generate database client/types`;
     }

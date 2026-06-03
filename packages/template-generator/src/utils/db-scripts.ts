@@ -32,12 +32,13 @@ export function getDbScriptSupport(config: ProjectConfig): DbScriptSupport {
     };
   }
 
+  const hasDbPush = !isD1Alchemy;
   const hasDbMigrate = config.orm === "prisma" || (config.orm === "drizzle" && !isD1Alchemy);
   const hasDbStudio = !isD1Alchemy;
 
   return {
     hasDbScripts: true,
-    hasDbPush: true,
+    hasDbPush,
     hasDbGenerate: true,
     hasDbMigrate,
     hasDbStudio,
