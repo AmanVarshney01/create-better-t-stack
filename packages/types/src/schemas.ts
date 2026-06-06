@@ -43,6 +43,7 @@ export const AddonsSchema = z
     "mcp",
     "turborepo",
     "nx",
+    "vite-plus",
     "fumadocs",
     "ultracite",
     "oxlint",
@@ -55,10 +56,11 @@ export const AddonsSchema = z
   .describe("Additional addons");
 
 const AddonsListSchema = z.array(AddonsSchema).superRefine((addons, ctx) => {
-  if (addons.includes("nx") && addons.includes("turborepo")) {
+  const taskRunners = addons.filter((addon) => ["nx", "turborepo", "vite-plus"].includes(addon));
+  if (taskRunners.length > 1) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "`nx` and `turborepo` cannot be used together",
+      message: "`nx`, `turborepo`, and `vite-plus` cannot be used together",
     });
   }
 });

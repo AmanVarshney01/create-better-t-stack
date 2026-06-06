@@ -553,6 +553,8 @@ function generateFeaturesList(
     starlight: "- **Starlight** - Documentation site with Astro",
     turborepo: "- **Turborepo** - Optimized monorepo build system",
     nx: "- **Nx** - Smart monorepo task orchestration and caching",
+    "vite-plus":
+      "- **Vite+** - Unified Vite toolchain, workspace task runner, linting, and formatting",
   };
 
   for (const addon of addons) {
@@ -739,11 +741,20 @@ function generateScriptsList(
     scripts += `\n- \`${packageManagerRunCmd} db:local\`: Start the local SQLite database`;
   }
 
-  if (addons.includes("biome")) {
-    scripts += `\n- \`${packageManagerRunCmd} check\`: Run Biome formatting and linting`;
-  }
+  if (addons.includes("vite-plus")) {
+    const hasVitePlusNativeHooks = !addons.includes("husky") && !addons.includes("lefthook");
 
-  if (addons.includes("oxlint")) {
+    scripts += `\n- \`${packageManagerRunCmd} check\`: Run Vite+ format/lint checks and workspace TypeScript checks
+- \`${packageManagerRunCmd} lint\`: Run Vite+ lint checks
+- \`${packageManagerRunCmd} format\`: Run Vite+ formatting
+- \`${packageManagerRunCmd} staged\`: Run Vite+ checks against staged files`;
+
+    if (hasVitePlusNativeHooks) {
+      scripts += `\n- \`${packageManagerRunCmd} hooks:setup\`: Install Vite+ native Git hooks with \`vp config\``;
+    }
+  } else if (addons.includes("biome")) {
+    scripts += `\n- \`${packageManagerRunCmd} check\`: Run Biome formatting and linting`;
+  } else if (addons.includes("oxlint")) {
     scripts += `\n- \`${packageManagerRunCmd} check\`: Run Oxlint and Oxfmt`;
   }
 
@@ -835,7 +846,10 @@ function generateGitHooksSection(
   addons: ProjectConfig["addons"],
 ): string {
   const hasHusky = addons.includes("husky");
-  const hasLinting = addons.includes("biome") || addons.includes("oxlint");
+  const hasLefthook = addons.includes("lefthook");
+  const hasVitePlus = addons.includes("vite-plus");
+  const hasVitePlusNativeHooks = hasVitePlus && !hasHusky && !hasLefthook;
+  const hasLinting = addons.includes("biome") || addons.includes("oxlint") || hasVitePlus;
 
   if (!hasHusky && !hasLinting) {
     return "";
@@ -847,8 +861,15 @@ function generateGitHooksSection(
     lines.push(`- Initialize hooks: \`${packageManagerRunCmd} prepare\``);
   }
 
+  if (hasVitePlusNativeHooks) {
+    lines.push(
+      `- Optional native Vite+ hooks: \`${packageManagerRunCmd} hooks:setup\``,
+      "- Docs: [Vite+ commit hooks](https://viteplus.dev/guide/commit-hooks)",
+    );
+  }
+
   if (hasLinting) {
-    lines.push(`- Format and lint fix: \`${packageManagerRunCmd} check\``);
+    lines.push(`- Run checks: \`${packageManagerRunCmd} check\``);
   }
 
   return `${lines.join("\n")}\n\n`;

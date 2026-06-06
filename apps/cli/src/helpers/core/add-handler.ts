@@ -4,6 +4,8 @@ import {
   EMBEDDED_TEMPLATES,
   processAddonTemplates,
   processAddonsDeps,
+  processPackageConfigs,
+  processTemplateString,
   VirtualFileSystem,
 } from "@better-t-stack/template-generator";
 import { writeTree } from "@better-t-stack/template-generator/fs-writer";
@@ -37,6 +39,29 @@ export interface AddResult {
   error?: string;
 }
 
+const ADD_PACKAGE_JSON_PATHS = [
+  "package.json",
+  "apps/server/package.json",
+  "apps/web/package.json",
+  "apps/native/package.json",
+  "apps/desktop/package.json",
+  "apps/fumadocs/package.json",
+  "apps/docs/package.json",
+  "packages/api/package.json",
+  "packages/db/package.json",
+  "packages/auth/package.json",
+  "packages/backend/package.json",
+  "packages/config/package.json",
+  "packages/env/package.json",
+  "packages/infra/package.json",
+  "packages/ui/package.json",
+];
+
+const ADD_TEXT_FILE_PATHS = ["apps/web/vite.config.ts", "lefthook.yml"];
+
+const HOOK_ADDONS = ["husky", "lefthook"] as const satisfies readonly Addons[];
+const HOOK_LINTER_ADDONS = ["biome", "oxlint", "vite-plus"] as const satisfies readonly Addons[];
+
 function mergeAddonOptions(
   existingAddonOptions?: AddonOptions,
   nextAddonOptions?: AddonOptions,
@@ -68,6 +93,58 @@ function mergeAddonOptions(
   return Object.keys(mergedAddonOptions).length > 0
     ? (mergedAddonOptions as AddonOptions)
     : undefined;
+}
+
+function getSetupAddons(addonsToAdd: Addons[], updatedAddons: Addons[]): Addons[] {
+  const setupAddons = new Set(addonsToAdd);
+  const changedHookStack = addonsToAdd.some(
+    (addon) =>
+      (HOOK_ADDONS as readonly Addons[]).includes(addon) ||
+      (HOOK_LINTER_ADDONS as readonly Addons[]).includes(addon),
+  );
+
+  if (changedHookStack) {
+    for (const addon of [...HOOK_ADDONS, ...HOOK_LINTER_ADDONS]) {
+      if (updatedAddons.includes(addon)) {
+        setupAddons.add(addon);
+      }
+    }
+  }
+
+  return [...setupAddons];
+}
+
+function shouldRefreshLefthook(addonsToAdd: Addons[], updatedAddons: Addons[]): boolean {
+  return (
+    updatedAddons.includes("lefthook") &&
+    addonsToAdd.some(
+      (addon) => addon === "lefthook" || (HOOK_LINTER_ADDONS as readonly Addons[]).includes(addon),
+    )
+  );
+}
+
+function refreshLefthookTemplate(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  const template = EMBEDDED_TEMPLATES.get("addons/lefthook/lefthook.yml.hbs");
+  if (!template) return;
+
+  vfs.writeFile("lefthook.yml", processTemplateString(template, config));
+}
+
+function updateViteConfigImportsForVitePlus(vfs: VirtualFileSystem): void {
+  const viteConfigPaths = ["apps/web/vite.config.ts"];
+
+  for (const viteConfigPath of viteConfigPaths) {
+    const content = vfs.readFile(viteConfigPath);
+    if (!content) continue;
+
+    const updatedContent = content
+      .replaceAll('from "vite";', 'from "vite-plus";')
+      .replaceAll("from 'vite';", "from 'vite-plus';");
+
+    if (updatedContent !== content) {
+      vfs.writeFile(viteConfigPath, updatedContent);
+    }
+  }
 }
 
 export async function addHandler(
@@ -238,6 +315,10 @@ async function addHandlerInternal(
     webDeploy: existingConfig.webDeploy,
     serverDeploy: existingConfig.serverDeploy,
   };
+  const updatedConfig: ProjectConfig = {
+    ...config,
+    addons: updatedAddons,
+  };
 
   // Create VFS and process addon templates using template-generator's logic
   if (!isSilent()) {
@@ -246,18 +327,19 @@ async function addHandlerInternal(
 
   const vfs = new VirtualFileSystem();
 
-  // Pre-load existing package.json files into VFS so processAddonsDeps can modify them
-  const packageJsonPaths = [
-    "package.json",
-    "apps/web/package.json",
-    "apps/server/package.json",
-    "apps/native/package.json",
-  ];
-  for (const pkgPath of packageJsonPaths) {
+  // Pre-load existing files into VFS so addon processors can modify them.
+  for (const pkgPath of ADD_PACKAGE_JSON_PATHS) {
     const fullPath = path.join(projectDir, pkgPath);
     if (await fs.pathExists(fullPath)) {
       const content = await fs.readFile(fullPath, "utf-8");
       vfs.writeFile(pkgPath, content);
+    }
+  }
+  for (const filePath of ADD_TEXT_FILE_PATHS) {
+    const fullPath = path.join(projectDir, filePath);
+    if (await fs.pathExists(fullPath)) {
+      const content = await fs.readFile(fullPath, "utf-8");
+      vfs.writeFile(filePath, content);
     }
   }
 
@@ -267,12 +349,21 @@ async function addHandlerInternal(
   // Process addon dependencies (adds deps to package.json files in VFS)
   processAddonsDeps(vfs, config);
 
+  if (updatedAddons.includes("vite-plus")) {
+    processPackageConfigs(vfs, updatedConfig);
+    updateViteConfigImportsForVitePlus(vfs);
+  }
+
+  if (shouldRefreshLefthook(addonsToAdd, updatedAddons)) {
+    refreshLefthookTemplate(vfs, updatedConfig);
+  }
+
   // Write VFS to disk
   const tree = {
     root: vfs.toTree(""),
     fileCount: vfs.getFileCount(),
     directoryCount: vfs.getDirectoryCount(),
-    config,
+    config: updatedConfig,
   };
 
   if (input.dryRun) {
@@ -308,7 +399,11 @@ async function addHandlerInternal(
   // Run addon setup (handles deps and interactive prompts)
   // Wrap with Result.tryPromise since setupAddons can throw UserCancelledError
   const setupResult = await Result.tryPromise({
-    try: () => setupAddons(config),
+    try: () =>
+      setupAddons({
+        ...config,
+        addons: getSetupAddons(addonsToAdd, updatedAddons),
+      }),
     catch: (e: unknown) => {
       if (UserCancelledError.is(e)) return e;
       return new CLIError({
@@ -325,7 +420,7 @@ async function addHandlerInternal(
   // Update bts.jsonc with new addons
   await updateBtsConfig(projectDir, {
     addons: updatedAddons,
-    addonOptions: config.addonOptions,
+    addonOptions: updatedConfig.addonOptions,
   });
 
   // Install dependencies if requested

@@ -19,9 +19,9 @@ describe("Input schemas", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects conflicting nx and turborepo addon combinations", () => {
+  it("rejects conflicting task-runner addon combinations", () => {
     const result = AddInputSchema.safeParse({
-      addons: ["nx", "turborepo"],
+      addons: ["nx", "vite-plus"],
     });
 
     expect(result.success).toBe(false);

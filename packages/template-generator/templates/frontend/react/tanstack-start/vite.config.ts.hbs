@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import { nitro } from "nitro/vite";
 import tailwindcss from "@tailwindcss/vite";

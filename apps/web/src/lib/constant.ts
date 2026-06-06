@@ -593,6 +593,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "vite-plus",
+      name: "Vite+",
+      description: "Unified Vite toolchain, task runner, linting, formatting, and optional hooks",
+      icon: "",
+      color: "from-violet-500 to-cyan-600",
+      default: false,
+    },
+    {
       id: "ultracite",
       name: "Ultracite",
       description: "Biome preset with AI integration",

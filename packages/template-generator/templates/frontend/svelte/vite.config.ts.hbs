@@ -1,6 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
-import { defineConfig } from "vite";
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],

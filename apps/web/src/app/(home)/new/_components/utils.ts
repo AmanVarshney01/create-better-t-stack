@@ -1088,11 +1088,12 @@ export const getDisabledReason = (
     if (optionId === "evlog" && !hasEvlogCompatibleBackend(currentStack.backend)) {
       return "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend";
     }
-    if (optionId === "nx" && currentStack.addons.includes("turborepo")) {
-      return "Nx and Turborepo cannot be used together";
-    }
-    if (optionId === "turborepo" && currentStack.addons.includes("nx")) {
-      return "Nx and Turborepo cannot be used together";
+    const taskRunners = ["nx", "turborepo", "vite-plus"];
+    if (
+      taskRunners.includes(optionId) &&
+      currentStack.addons.some((addon) => taskRunners.includes(addon) && addon !== optionId)
+    ) {
+      return "Choose Turborepo, Nx, or Vite+ as your task runner";
     }
   }
 

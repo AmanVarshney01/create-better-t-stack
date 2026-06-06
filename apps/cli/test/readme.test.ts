@@ -81,4 +81,23 @@ describe("README generation", () => {
     expect(readme).not.toContain("Open [http://localhost:3001]");
     expect(readme).not.toContain("web/         # Frontend application");
   });
+
+  it("documents optional native Vite+ hooks when no hook addon is selected", async () => {
+    const readme = await generateReadme({
+      addons: ["vite-plus"],
+    });
+
+    expect(readme).toContain("Optional native Vite+ hooks");
+    expect(readme).toContain("`bun run hooks:setup`");
+    expect(readme).toContain("https://viteplus.dev/guide/commit-hooks");
+  });
+
+  it("keeps Vite+ native hook docs out when Husky handles hooks", async () => {
+    const readme = await generateReadme({
+      addons: ["vite-plus", "husky"],
+    });
+
+    expect(readme).not.toContain("Optional native Vite+ hooks");
+    expect(readme).toContain("Initialize hooks: `bun run prepare`");
+  });
 });

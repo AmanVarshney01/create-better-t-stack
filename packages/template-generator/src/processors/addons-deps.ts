@@ -31,6 +31,14 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     addPackageDependency({ vfs, packagePath: "package.json", devDependencies: ["nx"] });
   }
 
+  if (config.addons.includes("vite-plus")) {
+    addPackageDependency({
+      vfs,
+      packagePath: "package.json",
+      devDependencies: ["vite-plus", "rolldown"],
+    });
+  }
+
   if (config.addons.includes("evlog")) {
     const serverPkgPath = "apps/server/package.json";
     if (vfs.exists(serverPkgPath) && config.backend !== "self" && config.backend !== "none") {

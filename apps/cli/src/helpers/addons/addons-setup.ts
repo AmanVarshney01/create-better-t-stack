@@ -65,6 +65,7 @@ export async function setupAddons(config: ProjectConfig): Promise<void> {
   const hasHusky = addons.includes("husky");
   const hasLefthook = addons.includes("lefthook");
   const hasOxlint = addons.includes("oxlint");
+  const hasVitePlus = addons.includes("vite-plus");
 
   if (hasUltracite) {
     const gitHooks: string[] = [];
@@ -81,11 +82,13 @@ export async function setupAddons(config: ProjectConfig): Promise<void> {
     }
 
     if (hasHusky || hasLefthook) {
-      let linter: "biome" | "oxlint" | undefined;
+      let linter: "biome" | "oxlint" | "vite-plus" | undefined;
       if (hasOxlint) {
         linter = "oxlint";
       } else if (hasBiome) {
         linter = "biome";
+      } else if (hasVitePlus) {
+        linter = "vite-plus";
       }
       if (hasHusky) {
         await runAddonStep("husky", () => setupHusky(projectDir, linter));
@@ -144,7 +147,7 @@ export async function setupBiome(projectDir: string) {
   }
 }
 
-export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint") {
+export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint" | "vite-plus") {
   await addPackageDependency({
     devDependencies: ["husky", "lint-staged"],
     projectDir,
@@ -166,6 +169,10 @@ export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint"
     } else if (linter === "biome") {
       packageJson["lint-staged"] = {
         "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": ["biome check --write ."],
+      };
+    } else if (linter === "vite-plus") {
+      packageJson["lint-staged"] = {
+        "*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}": ["vp check --fix"],
       };
     } else {
       packageJson["lint-staged"] = {

@@ -66,11 +66,14 @@ export async function displayPostInstallInstructions(
   const cdCmd = `cd ${relativePath}`;
   const hasHusky = addons?.includes("husky");
   const hasLefthook = addons?.includes("lefthook");
+  const hasVitePlus = addons?.includes("vite-plus");
+  const hasVitePlusNativeHooks = hasVitePlus && !hasHusky && !hasLefthook;
   const hasGitHooksOrLinting =
     addons?.includes("husky") ||
     addons?.includes("biome") ||
     addons?.includes("lefthook") ||
-    addons?.includes("oxlint");
+    addons?.includes("oxlint") ||
+    hasVitePlus;
 
   const databaseInstructions =
     !isConvex && database !== "none"
@@ -92,6 +95,9 @@ export async function displayPostInstallInstructions(
     : "";
   const huskyInstructions = hasHusky ? getHuskyInstructions(runCmd) : "";
   const lefthookInstructions = hasLefthook ? getLefthookInstructions(packageManager) : "";
+  const vitePlusNativeHooksInstructions = hasVitePlusNativeHooks
+    ? getVitePlusNativeHooksInstructions(runCmd)
+    : "";
   const lintingInstructions = hasGitHooksOrLinting ? getLintingInstructions(runCmd) : "";
   const nativeInstructions =
     (frontend?.includes("native-bare") ||
@@ -223,6 +229,7 @@ export async function displayPostInstallInstructions(
   if (electrobunInstructions) output += `\n${electrobunInstructions.trim()}\n`;
   if (huskyInstructions) output += `\n${huskyInstructions.trim()}\n`;
   if (lefthookInstructions) output += `\n${lefthookInstructions.trim()}\n`;
+  if (vitePlusNativeHooksInstructions) output += `\n${vitePlusNativeHooksInstructions.trim()}\n`;
   if (lintingInstructions) output += `\n${lintingInstructions.trim()}\n`;
   if (pwaInstructions) output += `\n${pwaInstructions.trim()}\n`;
   if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
@@ -301,7 +308,7 @@ function getHuskyInstructions(runCmd: string) {
 function getLintingInstructions(runCmd: string) {
   return `${pc.bold("Linting and formatting:")}\n${pc.cyan(
     "•",
-  )} Format and lint fix: ${`${runCmd} check`}\n`;
+  )} Run checks: ${`${runCmd} check`}\n`;
 }
 
 function getLefthookInstructions(packageManager: string) {
@@ -309,6 +316,14 @@ function getLefthookInstructions(packageManager: string) {
   return `${pc.bold("Git hooks with Lefthook:")}\n${pc.cyan(
     "•",
   )} Install hooks: ${cmd} lefthook install\n`;
+}
+
+function getVitePlusNativeHooksInstructions(runCmd: string) {
+  return `${pc.bold("Vite+ native Git hooks:")}\n${pc.cyan(
+    "•",
+  )} Optional hook setup: ${`${runCmd} hooks:setup`}\n${pc.dim(
+    "   (runs vp config; hooks install into .vite-hooks and use vp staged)",
+  )}\n`;
 }
 
 async function getDatabaseInstructions(
