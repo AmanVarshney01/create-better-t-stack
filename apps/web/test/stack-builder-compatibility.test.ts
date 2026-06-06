@@ -92,6 +92,26 @@ describe("stack builder D1 compatibility", () => {
     expect(getDisabledReason(stack, "webDeploy", "none")).toBe(
       "D1 with a self fullstack backend requires Cloudflare web deployment",
     );
+    expect(getDisabledReason(stack, "webDeploy", "vercel")).toBe(
+      "D1 with a self fullstack backend requires Cloudflare web deployment",
+    );
+  });
+
+  test("allows Vercel for regular web deployments", () => {
+    const stack = createStack({
+      webFrontend: ["next"],
+      backend: "self-next",
+      runtime: "none",
+      dbSetup: "none",
+    });
+
+    expect(getDisabledReason(stack, "webDeploy", "vercel")).toBeNull();
+
+    const command = generateStackCommand({
+      ...stack,
+      webDeploy: "vercel",
+    });
+    expect(command).toContain("--web-deploy vercel");
   });
 
   test("reapplies the same D1 adjustment after leaving and returning to it", () => {

@@ -119,5 +119,9 @@ export const env = createEnv({
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
 {{/if}}
+{{#if (and (eq backend "none") (includes frontend "next"))}}
+	client: {},
+	experimental__runtimeEnv: {},
+{{/if}}
 	emptyStringAsUndefined: true,
 });

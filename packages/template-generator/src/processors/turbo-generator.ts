@@ -38,6 +38,7 @@ function generateTurboConfig(config: ProjectConfig): TurboConfig {
   const isDocker = dbSetup === "docker";
   const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
   const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const hasDeploy = hasCloudflare || webDeploy === "vercel";
 
   const tasks: Record<string, TurboTask> = {
     ...getBaseTasks(frontend),
@@ -45,7 +46,7 @@ function generateTurboConfig(config: ProjectConfig): TurboConfig {
     ...(!isConvex && hasDatabase ? getDatabaseTasks(dbSupport) : {}),
     ...(isDocker ? getDockerTasks() : {}),
     ...(isSqliteLocal ? getSqliteLocalTask() : {}),
-    ...(hasCloudflare ? getDeployTasks() : {}),
+    ...(hasDeploy ? getDeployTasks({ hasCloudflare, hasVercel: webDeploy === "vercel" }) : {}),
   };
 
   return {
@@ -157,13 +158,27 @@ function getSqliteLocalTask(): Record<string, TurboTask> {
   };
 }
 
-function getDeployTasks(): Record<string, TurboTask> {
-  return {
+function getDeployTasks(options: {
+  hasCloudflare: boolean;
+  hasVercel: boolean;
+}): Record<string, TurboTask> {
+  const tasks: Record<string, TurboTask> = {
     deploy: {
       cache: false,
     },
-    destroy: {
-      cache: false,
-    },
   };
+
+  if (options.hasVercel) {
+    tasks["deploy:prod"] = {
+      cache: false,
+    };
+  }
+
+  if (options.hasCloudflare) {
+    tasks.destroy = {
+      cache: false,
+    };
+  }
+
+  return tasks;
 }

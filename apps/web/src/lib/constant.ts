@@ -404,6 +404,13 @@ export const TECH_OPTIONS: Record<
       color: "from-orange-400 to-orange-600",
     },
     {
+      id: "vercel",
+      name: "Vercel",
+      description: "Deploy the web app with Vercel CLI and vercel.ts",
+      icon: `${ICON_BASE_URL}/vercel.svg`,
+      color: "from-neutral-700 to-black",
+    },
+    {
       id: "none",
       name: "None",
       description: "Skip deployment setup",

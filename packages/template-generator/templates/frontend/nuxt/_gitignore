@@ -7,6 +7,7 @@
 dist
 .wrangler
 .alchemy
+.vercel
 
 # Node dependencies
 node_modules
@@ -24,4 +25,3 @@ logs
 .env
 .env.*
 !.env.example
-

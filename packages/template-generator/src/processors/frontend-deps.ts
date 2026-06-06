@@ -14,6 +14,6 @@ export function processFrontendDeps(vfs: VirtualFileSystem, config: ProjectConfi
   addPackageDependency({
     vfs,
     packagePath: webPackagePath,
-    dependencies: ["@astrojs/node"],
+    dependencies: [webDeploy === "vercel" ? "@astrojs/vercel" : "@astrojs/node"],
   });
 }

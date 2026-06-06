@@ -8,4 +8,5 @@ dist-ssr
 
 .wrangler
 .alchemy
+.vercel
 .dev.vars*

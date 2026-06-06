@@ -599,6 +599,7 @@ function getAlchemyDeployInstructions(
 ) {
   const instructions: string[] = [];
   const isBackendSelf = backend === "self";
+  const hasVercelWeb = webDeploy === "vercel";
 
   if (webDeploy === "cloudflare" && serverDeploy !== "cloudflare" && !isBackendSelf) {
     instructions.push(
@@ -606,11 +607,17 @@ function getAlchemyDeployInstructions(
     );
   } else if (serverDeploy === "cloudflare" && webDeploy !== "cloudflare" && !isBackendSelf) {
     instructions.push(
-      `${pc.bold("Deploy server with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
+      `${pc.bold("Deploy server with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${hasVercelWeb ? "deploy:server" : "deploy"}`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
     );
   } else if (webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || isBackendSelf)) {
     instructions.push(
       `${pc.bold("Deploy with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
+    );
+  }
+
+  if (hasVercelWeb) {
+    instructions.push(
+      `${pc.bold("Deploy web with Vercel:")}\n${pc.cyan("•")} Link project: ${`${runCmd} deploy:link`} (select apps/web as Root Directory)\n${pc.cyan("•")} Preview deploy: ${`${runCmd} ${serverDeploy === "cloudflare" ? "deploy:web" : "deploy"}`}\n${pc.cyan("•")} Production deploy: ${`${runCmd} ${serverDeploy === "cloudflare" ? "deploy:web:prod" : "deploy:prod"}`}\n${pc.cyan("•")} Config: apps/web/vercel.ts`,
     );
   }
 

@@ -14,6 +14,10 @@ export async function processDeployTemplates(
     processTemplatesFromPrefix(vfs, templates, "packages/infra", "packages/infra", config);
   }
 
+  if (config.webDeploy === "vercel") {
+    processTemplatesFromPrefix(vfs, templates, "deploy/vercel/web", "apps/web", config);
+  }
+
   if (config.webDeploy !== "none" && config.webDeploy !== "cloudflare") {
     const templateMap: Record<string, string> = {
       "tanstack-router": "react/tanstack-router",

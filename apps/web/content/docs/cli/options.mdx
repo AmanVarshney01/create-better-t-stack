@@ -346,12 +346,13 @@ Web deployment configuration:
 
 - `none`: No deployment setup
 - `cloudflare`: Cloudflare Workers deployment (via Alchemy infrastructure as code)
+- `vercel`: Vercel web deployment using Vercel CLI and `apps/web/vercel.ts`
 
 ```bash
-create-better-t-stack --web-deploy cloudflare
+create-better-t-stack --web-deploy vercel
 ```
 
-**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Deploying to Cloudflare with Alchemy Guide](/docs/guides/cloudflare-alchemy) for details.
+**Note:** Cloudflare deployments use Alchemy to define infrastructure programmatically. See the [Deploying to Cloudflare with Alchemy Guide](/docs/guides/cloudflare-alchemy) for details.
 
 ## Automation Surfaces
 

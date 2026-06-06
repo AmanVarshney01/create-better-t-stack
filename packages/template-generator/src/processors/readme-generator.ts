@@ -663,7 +663,7 @@ function generateScriptsList(
   config: ProjectConfig,
   hasNative: boolean,
 ): string {
-  const { database, addons, backend, dbSetup, frontend } = config;
+  const { database, addons, backend, dbSetup, frontend, webDeploy, serverDeploy } = config;
   const isConvex = backend === "convex";
   const isBackendSelf = backend === "self";
   const hasWeb = frontend.some((f) =>
@@ -682,6 +682,27 @@ function generateScriptsList(
 
   let scripts = `- \`${packageManagerRunCmd} dev\`: Start all applications in development mode
 - \`${packageManagerRunCmd} build\`: Build all applications`;
+
+  const hasCloudflareDeploy = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const hasVercelDeploy = webDeploy === "vercel";
+
+  if (hasCloudflareDeploy || hasVercelDeploy) {
+    scripts += `\n- \`${packageManagerRunCmd} deploy\`: Deploy the configured deployment targets`;
+  }
+
+  if (hasVercelDeploy) {
+    scripts += `\n- \`${packageManagerRunCmd} deploy:prod\`: Deploy the web app to Vercel production
+- \`${packageManagerRunCmd} deploy:link\`: Link the monorepo to a Vercel project`;
+  }
+
+  if (hasCloudflareDeploy && hasVercelDeploy) {
+    scripts += `\n- \`${packageManagerRunCmd} deploy:server\`: Deploy only the Cloudflare server resources
+- \`${packageManagerRunCmd} deploy:web\`: Deploy only the Vercel web app`;
+  }
+
+  if (hasCloudflareDeploy) {
+    scripts += `\n- \`${packageManagerRunCmd} destroy\`: Destroy Cloudflare resources managed by Alchemy`;
+  }
 
   if (hasWeb) {
     scripts += `\n- \`${packageManagerRunCmd} dev:web\`: Start only the web application`;
@@ -763,29 +784,48 @@ function generateDeploymentCommands(
   serverDeploy: ProjectConfig["serverDeploy"],
   backend: ProjectConfig["backend"],
 ): string {
-  if (webDeploy !== "cloudflare" && serverDeploy !== "cloudflare") {
+  const hasCloudflareDeploy = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const hasVercelDeploy = webDeploy === "vercel";
+
+  if (!hasCloudflareDeploy && !hasVercelDeploy) {
     return "";
   }
 
-  const lines: string[] = ["## Deployment (Cloudflare via Alchemy)"];
-  const targetLabel =
-    webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || backend === "self")
-      ? "web + server"
-      : webDeploy === "cloudflare"
-        ? "web"
-        : "server";
+  const lines: string[] = ["## Deployment"];
 
-  lines.push(
-    `- Target: ${targetLabel}`,
-    `- Dev: ${packageManagerRunCmd} dev`,
-    `- Deploy: ${packageManagerRunCmd} deploy`,
-    `- Destroy: ${packageManagerRunCmd} destroy`,
-  );
+  if (hasVercelDeploy) {
+    lines.push(
+      "",
+      "### Web (Vercel)",
+      "",
+      "- Config: `apps/web/vercel.ts`",
+      "- Project Root Directory: `apps/web`",
+      "- Link project: `vercel link --repo` from the monorepo root, or import the repo in Vercel and set Root Directory to `apps/web`",
+      `- Preview deploy: ${packageManagerRunCmd} ${serverDeploy === "cloudflare" ? "deploy:web" : "deploy"}`,
+      `- Production deploy: ${packageManagerRunCmd} ${serverDeploy === "cloudflare" ? "deploy:web:prod" : "deploy:prod"}`,
+    );
+  }
 
-  lines.push(
-    "",
-    "For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).",
-  );
+  if (hasCloudflareDeploy) {
+    const targetLabel =
+      webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || backend === "self")
+        ? "web + server"
+        : webDeploy === "cloudflare"
+          ? "web"
+          : "server";
+
+    lines.push(
+      "",
+      "### Cloudflare via Alchemy",
+      "",
+      `- Target: ${targetLabel}`,
+      `- Dev: ${packageManagerRunCmd} dev`,
+      `- Deploy: ${hasVercelDeploy ? `${packageManagerRunCmd} deploy:server` : `${packageManagerRunCmd} deploy`}`,
+      `- Destroy: ${packageManagerRunCmd} destroy`,
+      "",
+      "For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).",
+    );
+  }
 
   return `${lines.join("\n")}\n`;
 }

@@ -1,0 +1,8 @@
+import type { VercelConfig } from "@vercel/config/v1";
+
+export const config = {
+  framework: "{{#if (includes frontend "next")}}nextjs{{else if (includes frontend "nuxt")}}nuxtjs{{else if (includes frontend "svelte")}}sveltekit{{else if (includes frontend "astro")}}astro{{else if (includes frontend "react-router")}}react-router{{else if (includes frontend "tanstack-start")}}tanstack-start{{else}}vite{{/if}}",
+  buildCommand: "{{packageManager}} run build",
+  devCommand: "{{packageManager}} run dev"{{#if (or (includes frontend "tanstack-router") (includes frontend "solid"))}},
+  outputDirectory: "dist"{{/if}}
+} satisfies VercelConfig;
