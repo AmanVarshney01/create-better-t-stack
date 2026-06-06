@@ -436,7 +436,7 @@ Electrobun adds an `apps/desktop` workspace with its own `package.json`, `electr
   "backend": "<none|hono|express|fastify|elysia|convex|self>",
   "runtime": "<bun|node|workers|none>",
   "frontend": ["<tanstack-router|react-router|tanstack-start|next|nuxt|svelte|solid|astro|native-bare|native-uniwind|native-unistyles|none>"] ,
-  "addons": ["<pwa|tauri|electrobun|starlight|fumadocs|biome|lefthook|husky|mcp|turborepo|nx|ultracite|oxlint|opentui|wxt|skills|evlog|none>"] ,
+  "addons": ["<pwa|tauri|electrobun|starlight|fumadocs|biome|lefthook|husky|mcp|turborepo|nx|vite-plus|ultracite|oxlint|opentui|wxt|skills|evlog|none>"] ,
   "examples": ["<ai|todo|none>"] ,
   "auth": <"better-auth"|"clerk"|"none">,
   "packageManager": "<bun|pnpm|npm>",
@@ -454,6 +454,12 @@ Generated only if you chose the Turborepo addon.
 ### Nx Config (nx.json)
 
 Generated only if you chose the Nx addon.
+
+### Vite+ Config
+
+Generated Vite frontends import `defineConfig` from `vite-plus` when you choose the Vite+ addon. A root `vite.config.ts` centralizes Vite+ lint, format, and staged-file checks, while root workspace scripts use `vp run` for task orchestration.
+
+When Vite+ is selected without Husky or Lefthook, generated projects also include `hooks:setup` for optional native Vite+ Git hooks. Run it if you want `vp config` to install hooks into `.vite-hooks` and use `vp staged` from `vite.config.ts`; see the [Vite+ commit hooks guide](https://viteplus.dev/guide/commit-hooks).
 
 ```json
 {
@@ -484,7 +490,7 @@ Better-T-Stack always creates `packages/config`. Other packages are added based 
 
 ## Development Scripts
 
-Scripts are adjusted based on your package manager and whether the Turborepo or Nx addon is selected.
+Scripts are adjusted based on your package manager and whether the Turborepo, Nx, or Vite+ addon is selected.
 
 With Turborepo:
 
@@ -516,7 +522,25 @@ With Nx:
 }
 ```
 
-Without Turborepo or Nx (example for Bun):
+With Vite+:
+
+```json
+{
+  "scripts": {
+    "dev": "vp run -r dev",
+    "build": "vp run -r build",
+    "check-types": "vp run -r check-types",
+    "check": "vp check && vp run -r check-types",
+    "lint": "vp lint",
+    "format": "vp fmt",
+    "staged": "vp staged",
+    "dev:web": "vp run --filter web dev",
+    "dev:server": "vp run --filter server dev"
+  }
+}
+```
+
+Without Turborepo, Nx, or Vite+ (example for Bun):
 
 ```json
 {

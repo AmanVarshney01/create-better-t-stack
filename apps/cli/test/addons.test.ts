@@ -60,7 +60,7 @@ function expectDocsShapedEvlogAuth(content: string) {
 
 describe("Addon Configurations", () => {
   describe("Universal Addons (no frontend restrictions)", () => {
-    const universalAddons = ["biome", "lefthook", "husky", "turborepo", "mcp"];
+    const universalAddons = ["biome", "lefthook", "husky", "turborepo", "vite-plus", "mcp"];
 
     for (const addon of universalAddons) {
       it(`should work with ${addon} addon on any frontend`, async () => {
@@ -358,10 +358,10 @@ describe("Addon Configurations", () => {
       expectError(result, "pwa addon requires one of these frontends");
     });
 
-    it("should fail when turborepo and nx are combined", async () => {
+    it("should fail when task runners are combined", async () => {
       const result = await runTRPCTest({
         projectName: "monorepo-addon-conflict",
-        addons: ["turborepo", "nx"],
+        addons: ["turborepo", "vite-plus"],
         frontend: ["tanstack-router"],
         backend: "hono",
         runtime: "bun",
@@ -376,7 +376,227 @@ describe("Addon Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Cannot combine 'turborepo' and 'nx' addons");
+      expectError(result, "Cannot combine 'turborepo', 'nx', and 'vite-plus' addons");
+    });
+
+    it("should wire Vite+ addon scripts, deps, overrides, and config imports", async () => {
+      const result = await runTRPCTest({
+        projectName: "vite-plus-addon",
+        addons: ["vite-plus"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.projectDir;
+      expect(projectDir).toBeDefined();
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir!, "package.json"), "utf8"));
+      const webPackageJson = JSON.parse(
+        await readFile(join(projectDir!, "apps/web/package.json"), "utf8"),
+      );
+      const webViteConfig = await readFile(join(projectDir!, "apps/web/vite.config.ts"), "utf8");
+
+      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.1.24");
+      expect(rootPackageJson.devDependencies.rolldown).toBe("1.0.3");
+      expect(rootPackageJson.overrides).toMatchObject({
+        vite: "npm:@voidzero-dev/vite-plus-core@0.1.24",
+        vitest: "npm:@voidzero-dev/vite-plus-test@0.1.24",
+      });
+      expect(rootPackageJson.scripts.dev).toBe("vp run -r dev");
+      expect(rootPackageJson.scripts.build).toBe("vp run -r build");
+      expect(rootPackageJson.scripts["check-types"]).toBe("vp run -r check-types");
+      expect(rootPackageJson.scripts.check).toBe("vp check && vp run -r check-types");
+      expect(rootPackageJson.scripts.lint).toBe("vp lint");
+      expect(rootPackageJson.scripts.format).toBe("vp fmt");
+      expect(rootPackageJson.scripts.staged).toBe("vp staged");
+      expect(rootPackageJson.scripts["hooks:setup"]).toBe("vp config");
+      expect(rootPackageJson.scripts["dev:web"]).toBe("vp run --filter web dev");
+      expect(rootPackageJson.scripts["dev:server"]).toBe("vp run --filter server dev");
+      expect(webPackageJson.scripts.dev).toBe("vp dev");
+      expect(webPackageJson.scripts.build).toBe("vp build");
+      expect(webPackageJson.scripts.start).toBe("vp dev");
+      expect(webPackageJson.scripts["check-types"]).toBe("vp build && tsc --noEmit");
+      expect(webViteConfig).toContain('import { defineConfig } from "vite-plus";');
+      expect(webViteConfig).not.toContain('import { defineConfig } from "vite";');
+      const rootViteConfig = await readFile(join(projectDir!, "vite.config.ts"), "utf8");
+      expect(rootViteConfig).toContain('import { defineConfig } from "vite-plus";');
+      expect(rootViteConfig).toContain("typeCheck: false");
+      expect(rootViteConfig).toContain('"*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}":');
+      expect(rootViteConfig).toContain('"vp check --fix"');
+    });
+
+    it("should wire Vite+ staged checks into Git hook addons", async () => {
+      const result = await runTRPCTest({
+        projectName: "vite-plus-hooks",
+        addons: ["vite-plus", "lefthook", "husky"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.projectDir;
+      expect(projectDir).toBeDefined();
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir!, "package.json"), "utf8"));
+      const lefthookConfig = await readFile(join(projectDir!, "lefthook.yml"), "utf8");
+
+      expect(rootPackageJson["lint-staged"]).toEqual({
+        "*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}": ["vp check --fix"],
+      });
+      expect(rootPackageJson.scripts["hooks:setup"]).toBeUndefined();
+      expect(lefthookConfig).toContain("name: vite-plus");
+      expect(lefthookConfig).toContain("run: bun vp staged");
+      expect(lefthookConfig).not.toContain("oxlint --fix");
+    });
+
+    it("should wire Vite+ addon when added later", async () => {
+      const created = await runTRPCTest({
+        projectName: "vite-plus-add-later",
+        addons: ["none"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["vite-plus"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir, "package.json"), "utf8"));
+      const webPackageJson = JSON.parse(
+        await readFile(join(projectDir, "apps/web/package.json"), "utf8"),
+      );
+      const webViteConfig = await readFile(join(projectDir, "apps/web/vite.config.ts"), "utf8");
+      const rootViteConfig = await readFile(join(projectDir, "vite.config.ts"), "utf8");
+
+      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.1.24");
+      expect(rootPackageJson.scripts.dev).toBe("vp run -r dev");
+      expect(rootPackageJson.scripts.staged).toBe("vp staged");
+      expect(rootPackageJson.scripts["hooks:setup"]).toBe("vp config");
+      expect(webPackageJson.scripts.dev).toBe("vp dev");
+      expect(webViteConfig).toContain('import { defineConfig } from "vite-plus";');
+      expect(webViteConfig).not.toContain('from "vite";');
+      expect(rootViteConfig).toContain('import { defineConfig } from "vite-plus";');
+    });
+
+    it("should refresh existing Git hook addons when Vite+ is added later", async () => {
+      const created = await runTRPCTest({
+        projectName: "vite-plus-add-existing-hooks",
+        addons: ["lefthook", "husky"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["vite-plus"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir, "package.json"), "utf8"));
+      const lefthookConfig = await readFile(join(projectDir, "lefthook.yml"), "utf8");
+
+      expect(rootPackageJson.scripts["hooks:setup"]).toBeUndefined();
+      expect(rootPackageJson["lint-staged"]).toEqual({
+        "*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}": ["vp check --fix"],
+      });
+      expect(lefthookConfig).toContain("name: vite-plus");
+      expect(lefthookConfig).toContain("run: bun vp staged");
+    });
+
+    it("should refresh Git hook addons when they are added after Vite+", async () => {
+      const created = await runTRPCTest({
+        projectName: "vite-plus-add-hooks-later",
+        addons: ["vite-plus"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["husky", "lefthook"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir, "package.json"), "utf8"));
+      const lefthookConfig = await readFile(join(projectDir, "lefthook.yml"), "utf8");
+
+      expect(rootPackageJson.scripts["hooks:setup"]).toBeUndefined();
+      expect(rootPackageJson["lint-staged"]).toEqual({
+        "*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}": ["vp check --fix"],
+      });
+      expect(lefthookConfig).toContain("name: vite-plus");
+      expect(lefthookConfig).toContain("run: bun vp staged");
     });
 
     it("should deduplicate addons", async () => {
@@ -1108,6 +1328,7 @@ describe("Addon Configurations", () => {
       "husky",
       "turborepo",
       "nx",
+      "vite-plus",
       "oxlint",
       "evlog",
       // Note: starlight, ultracite, fumadocs are prompt-controlled only

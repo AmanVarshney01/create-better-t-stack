@@ -1,0 +1,44 @@
+import { defineConfig } from "vite-plus";
+
+export default defineConfig({
+  lint: {
+    ignorePatterns: [
+      "dist/**",
+      "build/**",
+      ".next/**",
+      ".nuxt/**",
+      ".output/**",
+      ".vinxi/**",
+      ".tanstack/**",
+      ".vercel/**",
+      ".wrangler/**",
+      "apps/web/src/routeTree.gen.ts",
+      "node_modules/**",
+    ],
+    options: {
+      typeAware: false,
+      typeCheck: false,
+    },
+  },
+  fmt: {
+    ignorePatterns: [
+      "dist/**",
+      "build/**",
+      ".next/**",
+      ".nuxt/**",
+      ".output/**",
+      ".vinxi/**",
+      ".tanstack/**",
+      ".vercel/**",
+      ".wrangler/**",
+      "apps/web/src/routeTree.gen.ts",
+      "node_modules/**",
+    ],
+    singleQuote: false,
+    semi: true,
+    sortPackageJson: true,
+  },
+  staged: {
+    "*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}": "vp check --fix",
+  },
+});

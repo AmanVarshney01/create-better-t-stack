@@ -155,6 +155,7 @@ export function generateStackCommand(stack: StackState) {
                 "husky",
                 "turborepo",
                 "nx",
+                "vite-plus",
                 "ultracite",
                 "fumadocs",
                 "oxlint",

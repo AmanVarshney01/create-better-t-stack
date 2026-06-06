@@ -9,6 +9,7 @@ import {
   getDisabledReason,
 } from "../src/app/(home)/new/_components/utils";
 import { DEFAULT_STACK, type StackState } from "../src/lib/constant";
+import { sanitizeAddons } from "../src/lib/sanitize-stack-addons";
 import { generateStackCommand } from "../src/lib/stack-utils";
 
 function createStack(overrides: Partial<StackState> = {}): StackState {
@@ -91,6 +92,21 @@ describe("stack builder D1 compatibility", () => {
 
     expect(getDisabledReason(stack, "webDeploy", "none")).toBe(
       "D1 with a self fullstack backend requires Cloudflare web deployment",
+    );
+  });
+
+  test("keeps only the latest selected task-runner addon", () => {
+    const sanitizedAddons = sanitizeAddons(["turborepo", "vite-plus"]);
+    const command = generateStackCommand(createStack({ addons: sanitizedAddons }));
+
+    expect(command).toContain("--addons vite-plus");
+    expect(command).not.toContain("turborepo");
+
+    const stack = createStack({
+      addons: ["vite-plus"],
+    });
+    expect(getDisabledReason(stack, "addons", "nx")).toBe(
+      "Choose Turborepo, Nx, or Vite+ as your task runner",
     );
   });
 

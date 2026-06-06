@@ -95,6 +95,8 @@ export const dependencyVersionMap = {
 
   turbo: "^2.8.12",
   nx: "^21.5.2",
+  "vite-plus": "0.1.24",
+  rolldown: "1.0.3",
 
   ai: "^6.0.3",
   "@ai-sdk/google": "^3.0.1",

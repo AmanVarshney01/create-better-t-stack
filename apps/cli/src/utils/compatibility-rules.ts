@@ -363,8 +363,13 @@ export function validateAddonsAgainstFrontends(
   backend?: Backend,
   runtime?: Runtime,
 ): ValidationResult {
-  if (addons.includes("turborepo") && addons.includes("nx")) {
-    return validationErr("Cannot combine 'turborepo' and 'nx' addons. Choose one monorepo tool.");
+  const selectedTaskRunners = addons.filter((addon) =>
+    ["turborepo", "nx", "vite-plus"].includes(addon),
+  );
+  if (selectedTaskRunners.length > 1) {
+    return validationErr(
+      "Cannot combine 'turborepo', 'nx', and 'vite-plus' addons. Choose one task runner.",
+    );
   }
 
   for (const addon of addons) {

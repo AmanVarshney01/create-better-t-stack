@@ -37,12 +37,11 @@ function sanitizeMultiSelection(
 
 function resolveMonorepoAddonConflicts(addons: readonly string[]): string[] {
   const resolved: string[] = [];
+  const taskRunners = new Set(["nx", "turborepo", "vite-plus"]);
 
   for (const addon of addons) {
-    if (addon === "nx" || addon === "turborepo") {
-      const existingMonorepoIndex = resolved.findIndex(
-        (value) => value === "nx" || value === "turborepo",
-      );
+    if (taskRunners.has(addon)) {
+      const existingMonorepoIndex = resolved.findIndex((value) => taskRunners.has(value));
 
       if (existingMonorepoIndex !== -1) {
         resolved.splice(existingMonorepoIndex, 1);

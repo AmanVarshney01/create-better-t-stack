@@ -220,6 +220,10 @@ pre-commit:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
       run: {{packageManager}} biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
       stage_fixed: true
+{{else if (includes addons "vite-plus")}}
+    - name: vite-plus
+      run: {{packageManager}} vp staged
+      stage_fixed: true
 {{else if (includes addons "oxlint")}}
     - name: oxlint
       run: {{packageManager}} oxlint --fix {staged_files}
@@ -305,6 +309,51 @@ export default defineConfig({
   },
   preset,
   images: ["public/logo.png"],
+});
+`],
+  ["addons/vite-plus/vite.config.ts.hbs", `import { defineConfig } from "vite-plus";
+
+export default defineConfig({
+  lint: {
+    ignorePatterns: [
+      "dist/**",
+      "build/**",
+      ".next/**",
+      ".nuxt/**",
+      ".output/**",
+      ".vinxi/**",
+      ".tanstack/**",
+      ".vercel/**",
+      ".wrangler/**",
+      "apps/web/src/routeTree.gen.ts",
+      "node_modules/**",
+    ],
+    options: {
+      typeAware: false,
+      typeCheck: false,
+    },
+  },
+  fmt: {
+    ignorePatterns: [
+      "dist/**",
+      "build/**",
+      ".next/**",
+      ".nuxt/**",
+      ".output/**",
+      ".vinxi/**",
+      ".tanstack/**",
+      ".vercel/**",
+      ".wrangler/**",
+      "apps/web/src/routeTree.gen.ts",
+      "node_modules/**",
+    ],
+    singleQuote: false,
+    semi: true,
+    sortPackageJson: true,
+  },
+  staged: {
+    "*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}": "vp check --fix",
+  },
 });
 `],
   ["api/orpc/fullstack/astro/src/pages/rpc/[...rest].ts.hbs", `import type { APIRoute } from "astro";
@@ -14978,6 +15027,9 @@ dist
 build
 *.tsbuildinfo
 
+# Generated files
+apps/web/src/routeTree.gen.ts
+
 # Environment variables
 .env
 .env*.local
@@ -27553,7 +27605,7 @@ export default function Home() {
 `],
   ["frontend/react/react-router/vite.config.ts.hbs", `import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vite";
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
@@ -27562,7 +27614,8 @@ export default defineConfig({
     reactRouter(),
     tsconfigPaths(),
   ],
-});`],
+});
+`],
   ["frontend/react/tanstack-router/index.html.hbs", `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -28005,7 +28058,7 @@ function HomeComponent() {
   ["frontend/react/tanstack-router/vite.config.ts.hbs", `import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
 export default defineConfig({
   server: {
@@ -28593,7 +28646,7 @@ function HomeComponent() {
   }
 }
 `],
-  ["frontend/react/tanstack-start/vite.config.ts.hbs", `import { defineConfig } from "vite";
+  ["frontend/react/tanstack-start/vite.config.ts.hbs", `import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import tailwindcss from "@tailwindcss/vite";
 import viteReact from "@vitejs/plugin-react";
@@ -29084,7 +29137,7 @@ body {
   }
 }
 `],
-  ["frontend/solid/vite.config.ts.hbs", `import { defineConfig } from "vite";
+  ["frontend/solid/vite.config.ts.hbs", `import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import solidPlugin from "vite-plugin-solid";
 import tailwindcss from "@tailwindcss/vite";
@@ -29104,7 +29157,8 @@ export default defineConfig({
   server: {
     port: 3001,
   },
-});`],
+});
+`],
   ["frontend/svelte/_gitignore", `node_modules
 
 # Output
@@ -29445,7 +29499,7 @@ export default config;
 `],
   ["frontend/svelte/vite.config.ts.hbs", `import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
-import { defineConfig } from "vite";
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
@@ -31248,4 +31302,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 483;
+export const TEMPLATE_COUNT = 484;
