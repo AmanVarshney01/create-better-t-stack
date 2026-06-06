@@ -36,6 +36,7 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
   const isDocker = dbSetup === "docker";
   const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
   const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const hasDeploy = hasCloudflare || webDeploy === "vercel";
 
   const targetDefaults: Record<string, NxTargetDefaults> = {
     build: {
@@ -53,7 +54,7 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
     ...(!isConvex && hasDatabase ? getDatabaseTargets(dbSupport) : {}),
     ...(isDocker ? getDockerTargets() : {}),
     ...(isSqliteLocal ? getSqliteLocalTarget() : {}),
-    ...(hasCloudflare ? getDeployTargets() : {}),
+    ...(hasDeploy ? getDeployTargets({ hasCloudflare, hasVercel: webDeploy === "vercel" }) : {}),
   };
 
   return {
@@ -121,9 +122,21 @@ function getSqliteLocalTarget(): Record<string, NxTargetDefaults> {
   };
 }
 
-function getDeployTargets(): Record<string, NxTargetDefaults> {
-  return {
+function getDeployTargets(options: {
+  hasCloudflare: boolean;
+  hasVercel: boolean;
+}): Record<string, NxTargetDefaults> {
+  const targets: Record<string, NxTargetDefaults> = {
     deploy: { cache: false },
-    destroy: { cache: false },
   };
+
+  if (options.hasVercel) {
+    targets["deploy:prod"] = { cache: false };
+  }
+
+  if (options.hasCloudflare) {
+    targets.destroy = { cache: false };
+  }
+
+  return targets;
 }

@@ -161,11 +161,31 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     scripts["db:down"] = pmConfig.filter(dbPackageName, "db:down");
   }
 
-  // Add deploy/destroy scripts when using alchemy (cloudflare deployment)
+  // Add deployment scripts for selected providers.
   const infraPackageName = `@${projectName}/infra`;
-  if (config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare") {
-    scripts.deploy = pmConfig.filter(infraPackageName, "deploy");
-    scripts.destroy = pmConfig.filter(infraPackageName, "destroy");
+  const hasCloudflareDeploy =
+    config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare";
+  const hasVercelDeploy = config.webDeploy === "vercel";
+  const cloudflareDeployCommand = pmConfig.filter(infraPackageName, "deploy");
+  const cloudflareDestroyCommand = pmConfig.filter(infraPackageName, "destroy");
+  const vercelDeployCommand = "vercel deploy --target=preview";
+  const vercelProdCommand = "vercel deploy --prod";
+
+  if (hasCloudflareDeploy && hasVercelDeploy) {
+    scripts.deploy = `${cloudflareDeployCommand} && ${vercelDeployCommand}`;
+    scripts["deploy:prod"] = `${cloudflareDeployCommand} && ${vercelProdCommand}`;
+    scripts["deploy:server"] = cloudflareDeployCommand;
+    scripts["deploy:web"] = vercelDeployCommand;
+    scripts["deploy:web:prod"] = vercelProdCommand;
+    scripts["deploy:link"] = "vercel link --repo";
+    scripts.destroy = cloudflareDestroyCommand;
+  } else if (hasCloudflareDeploy) {
+    scripts.deploy = cloudflareDeployCommand;
+    scripts.destroy = cloudflareDestroyCommand;
+  } else if (hasVercelDeploy) {
+    scripts.deploy = vercelDeployCommand;
+    scripts["deploy:prod"] = vercelProdCommand;
+    scripts["deploy:link"] = "vercel link --repo";
   }
 
   // Note: packageManager version is set by CLI at runtime since it requires running the actual CLI

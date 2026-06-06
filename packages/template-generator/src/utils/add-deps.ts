@@ -144,7 +144,7 @@ export const dependencyVersionMap = {
 
   "@tanstack/solid-query": "^5.99.1",
   "@tanstack/solid-query-devtools": "^5.99.1",
-  "@tanstack/solid-router-devtools": "^1.166.13",
+  "@tanstack/solid-router-devtools": "1.166.13",
 
   wrangler: "^4.77.0",
   "@cloudflare/vite-plugin": "^1.17.1",
@@ -154,8 +154,11 @@ export const dependencyVersionMap = {
   "@cloudflare/workers-types": "^4.20251213.0",
   "@astrojs/cloudflare": "^13.0.1",
   "@astrojs/node": "^10.0.0-beta.9",
+  "@astrojs/vercel": "^10.0.8",
 
   alchemy: "^0.91.2",
+  vercel: "^54.9.1",
+  "@vercel/config": "^0.5.1",
 
   dotenv: "^17.2.2",
   tsdown: "^0.21.9",

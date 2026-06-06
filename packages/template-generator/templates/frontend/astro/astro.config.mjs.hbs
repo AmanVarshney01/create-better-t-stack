@@ -1,12 +1,20 @@
 // @ts-check
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, envField } from "astro/config";
+{{#if (eq webDeploy "vercel")}}
+import vercel from "@astrojs/vercel";
+{{else}}
 import node from "@astrojs/node";
+{{/if}}
 
 // https://astro.build/config
 export default defineConfig({
   output: "server",
+{{#if (eq webDeploy "vercel")}}
+  adapter: vercel(),
+{{else}}
   adapter: node({ mode: "standalone" }),
+{{/if}}
 {{#if (ne backend "self")}}
   env: {
     schema: {

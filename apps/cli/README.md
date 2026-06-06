@@ -68,7 +68,7 @@ Options:
   --install                       Install dependencies
   --no-install                    Skip installing dependencies
   --db-setup <setup>              Database setup (turso, d1, neon, supabase, prisma-postgres, planetscale, mongodb-atlas, docker, none)
-  --web-deploy <setup>            Web deployment (cloudflare, none)
+  --web-deploy <setup>            Web deployment (cloudflare, vercel, none)
   --server-deploy <setup>         Server deployment (cloudflare, none)
   --backend <framework>           Backend framework (hono, express, fastify, elysia, convex, self, none)
   --runtime <runtime>             Runtime (bun, node, workers, none)
@@ -221,6 +221,12 @@ Create a self-hosted fullstack project on Cloudflare with D1:
 
 ```bash
 npx create-better-t-stack --backend self --frontend next --api trpc --database sqlite --orm drizzle --db-setup d1 --web-deploy cloudflare
+```
+
+Create a web project with Vercel deployment:
+
+```bash
+npx create-better-t-stack --frontend next --web-deploy vercel
 ```
 
 Create a minimal API-only project:

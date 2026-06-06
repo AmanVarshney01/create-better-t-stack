@@ -8,9 +8,27 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
 
   const isCloudflareWeb = webDeploy === "cloudflare";
   const isCloudflareServer = serverDeploy === "cloudflare";
+  const isVercelWeb = webDeploy === "vercel";
   const isBackendSelf = backend === "self";
 
-  if (!isCloudflareWeb && !isCloudflareServer) return;
+  if (!isCloudflareWeb && !isCloudflareServer && !isVercelWeb) return;
+
+  if (isVercelWeb) {
+    addPackageDependency({
+      vfs,
+      packagePath: "package.json",
+      devDependencies: ["vercel"],
+    });
+
+    const webPkgPath = "apps/web/package.json";
+    if (vfs.exists(webPkgPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        devDependencies: ["@vercel/config", "vercel"],
+      });
+    }
+  }
 
   if (isCloudflareWeb || isCloudflareServer) {
     addPackageDependency({

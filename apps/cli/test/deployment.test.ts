@@ -143,6 +143,179 @@ describe("Deployment Configurations", () => {
         expectSuccess(result);
       }
     });
+
+    it("should wire Vercel web deploy with vercel.ts and CLI scripts", async () => {
+      const result = await createVirtual({
+        projectName: "next-vercel-deploy",
+        webDeploy: "vercel",
+        serverDeploy: "none",
+        frontend: ["next"],
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "prisma",
+        auth: "better-auth",
+        payments: "none",
+        api: "trpc",
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        packageManager: "bun",
+        install: false,
+        git: false,
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const vercelConfig = files.get("apps/web/vercel.ts");
+      const rootPkg = JSON.parse(files.get("package.json") ?? "{}");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const readme = files.get("README.md");
+
+      expect(vercelConfig).toContain('import type { VercelConfig } from "@vercel/config/v1";');
+      expect(vercelConfig).toContain('framework: "nextjs"');
+      expect(vercelConfig).toContain("satisfies VercelConfig");
+      expect(rootPkg.scripts.deploy).toBe("vercel deploy --target=preview");
+      expect(rootPkg.scripts["deploy:prod"]).toBe("vercel deploy --prod");
+      expect(rootPkg.scripts["deploy:link"]).toBe("vercel link --repo");
+      expect(rootPkg.devDependencies.vercel).toBeDefined();
+      expect(webPkg.scripts.deploy).toBeUndefined();
+      expect(webPkg.scripts["deploy:prod"]).toBeUndefined();
+      expect(webPkg.scripts["vercel:build"]).toBeUndefined();
+      expect(webPkg.devDependencies.vercel).toBeDefined();
+      expect(webPkg.devDependencies["@vercel/config"]).toBeDefined();
+      expect(files.has("packages/infra/alchemy.run.ts")).toBe(false);
+      expect(readme).toContain("### Web (Vercel)");
+      expect(readme).toContain("apps/web/vercel.ts");
+      expect(readme).toContain("Project Root Directory: `apps/web`");
+    });
+
+    it("should use the Astro Vercel adapter for Vercel web deploys", async () => {
+      const result = await createVirtual({
+        projectName: "astro-vercel-deploy",
+        webDeploy: "vercel",
+        serverDeploy: "none",
+        frontend: ["astro"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        packageManager: "pnpm",
+        install: false,
+        git: false,
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const astroConfig = files.get("apps/web/astro.config.mjs");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const vercelConfig = files.get("apps/web/vercel.ts");
+
+      expect(astroConfig).toContain('import vercel from "@astrojs/vercel";');
+      expect(astroConfig).toContain("adapter: vercel()");
+      expect(astroConfig).not.toContain("@astrojs/node");
+      expect(webPkg.dependencies["@astrojs/vercel"]).toBeDefined();
+      expect(webPkg.dependencies["@astrojs/node"]).toBeUndefined();
+      expect(vercelConfig).toContain('framework: "astro"');
+    });
+
+    it("should emit a valid empty Next env config for Vercel web-only deploys", async () => {
+      const result = await createVirtual({
+        projectName: "next-vercel-web-only",
+        webDeploy: "vercel",
+        serverDeploy: "none",
+        frontend: ["next"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        packageManager: "bun",
+        install: false,
+        git: false,
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const envConfig = files.get("packages/env/src/web.ts");
+
+      expect(envConfig).toContain("client: {}");
+      expect(envConfig).toContain("experimental__runtimeEnv: {}");
+    });
+
+    it("should keep Vercel-tested TanStack Start and Solid frontend deps resolvable", async () => {
+      const tanstackStart = await createVirtual({
+        projectName: "tanstack-start-vercel-deps",
+        webDeploy: "vercel",
+        serverDeploy: "none",
+        frontend: ["tanstack-start"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        packageManager: "bun",
+        install: false,
+        git: false,
+      });
+      const solid = await createVirtual({
+        projectName: "solid-vercel-deps",
+        webDeploy: "vercel",
+        serverDeploy: "none",
+        frontend: ["solid"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        packageManager: "bun",
+        install: false,
+        git: false,
+      });
+
+      if (tanstackStart.isErr()) throw tanstackStart.error;
+      if (solid.isErr()) throw solid.error;
+
+      const tanstackFiles = collectFiles(tanstackStart.value.root, tanstackStart.value.root.path);
+      const solidFiles = collectFiles(solid.value.root, solid.value.root.path);
+      const tanstackPkg = JSON.parse(tanstackFiles.get("apps/web/package.json") ?? "{}");
+      const solidPkg = JSON.parse(solidFiles.get("apps/web/package.json") ?? "{}");
+
+      expect(tanstackPkg.dependencies["@tanstack/react-router"]).toBe("1.168.22");
+      expect(tanstackPkg.dependencies["@tanstack/react-start"]).toBe("1.167.41");
+      expect(tanstackPkg.dependencies.nitro).toBe("^3.0.260429-beta");
+      expect(solidPkg.devDependencies["@tanstack/solid-router-devtools"]).toBe("1.166.13");
+    });
   });
 
   describe("Server Deployment", () => {
@@ -504,6 +677,52 @@ describe("Deployment Configurations", () => {
       });
 
       expectSuccess(result);
+    });
+
+    it("should support Cloudflare server deploy with Vercel web deploy", async () => {
+      const result = await createVirtual({
+        projectName: "cloudflare-server-vercel-web",
+        webDeploy: "vercel",
+        serverDeploy: "cloudflare",
+        backend: "hono",
+        runtime: "workers",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "d1",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const rootPkg = JSON.parse(files.get("package.json") ?? "{}");
+      const turboConfig = JSON.parse(files.get("turbo.json") ?? "{}");
+      const infraFile = files.get("packages/infra/alchemy.run.ts");
+      const vercelConfig = files.get("apps/web/vercel.ts");
+
+      expect(infraFile).toContain('export const server = await Worker("server"');
+      expect(vercelConfig).toContain('framework: "vite"');
+      expect(rootPkg.scripts.deploy).toBe(
+        "turbo -F @cloudflare-server-vercel-web/infra deploy && vercel deploy --target=preview",
+      );
+      expect(rootPkg.scripts["deploy:server"]).toBe(
+        "turbo -F @cloudflare-server-vercel-web/infra deploy",
+      );
+      expect(rootPkg.scripts["deploy:web"]).toBe("vercel deploy --target=preview");
+      expect(rootPkg.scripts.destroy).toBe("turbo -F @cloudflare-server-vercel-web/infra destroy");
+      expect(turboConfig.tasks.deploy).toBeDefined();
+      expect(turboConfig.tasks["deploy:prod"]).toBeDefined();
+      expect(turboConfig.tasks.destroy).toBeDefined();
     });
   });
 

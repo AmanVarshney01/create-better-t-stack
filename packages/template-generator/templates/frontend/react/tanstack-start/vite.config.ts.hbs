@@ -1,5 +1,6 @@
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import { nitro } from "nitro/vite";
 import tailwindcss from "@tailwindcss/vite";
 import viteReact from "@vitejs/plugin-react";
 
@@ -13,6 +14,7 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     tanstackStart(),
+    nitro(),
     viteReact(),
   ],
 {{#if (and (eq backend "convex") (eq auth "better-auth"))}}

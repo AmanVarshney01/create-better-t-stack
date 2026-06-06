@@ -15834,6 +15834,15 @@ export default prisma;
 {{/if}}
 {{/if}}
 `],
+  ["deploy/vercel/web/vercel.ts.hbs", `import type { VercelConfig } from "@vercel/config/v1";
+
+export const config = {
+  framework: "{{#if (includes frontend "next")}}nextjs{{else if (includes frontend "nuxt")}}nuxtjs{{else if (includes frontend "svelte")}}sveltekit{{else if (includes frontend "astro")}}astro{{else if (includes frontend "react-router")}}react-router{{else if (includes frontend "tanstack-start")}}tanstack-start{{else}}vite{{/if}}",
+  buildCommand: "{{packageManager}} run build",
+  devCommand: "{{packageManager}} run dev"{{#if (or (includes frontend "tanstack-router") (includes frontend "solid"))}},
+  outputDirectory: "dist"{{/if}}
+} satisfies VercelConfig;
+`],
   ["examples/ai/convex/packages/backend/convex/agent.ts.hbs", `import { Agent } from "@convex-dev/agent";
 import { google } from "@ai-sdk/google";
 import { components } from "./_generated/api";
@@ -22399,6 +22408,7 @@ allowBuilds:
 `],
   ["frontend/astro/_gitignore", `# build output
 dist/
+.vercel/
 
 # generated types
 .astro/
@@ -22425,12 +22435,20 @@ pnpm-debug.log*
   ["frontend/astro/astro.config.mjs.hbs", `// @ts-check
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, envField } from "astro/config";
+{{#if (eq webDeploy "vercel")}}
+import vercel from "@astrojs/vercel";
+{{else}}
 import node from "@astrojs/node";
+{{/if}}
 
 // https://astro.build/config
 export default defineConfig({
   output: "server",
+{{#if (eq webDeploy "vercel")}}
+  adapter: vercel(),
+{{else}}
   adapter: node({ mode: "standalone" }),
+{{/if}}
 {{#if (ne backend "self")}}
   env: {
     schema: {
@@ -26331,6 +26349,7 @@ declare module "*.css";
 dist
 .wrangler
 .alchemy
+.vercel
 
 # Node dependencies
 node_modules
@@ -26348,7 +26367,6 @@ logs
 .env
 .env.*
 !.env.example
-
 `],
   ["frontend/nuxt/app/app.config.ts.hbs", `export default defineAppConfig({
   ui: {
@@ -27609,7 +27627,7 @@ export default defineConfig({
         "sonner": "^2.0.7"
 	},
 	"devDependencies": {
-		"@tanstack/react-router-devtools": "^1.166.13",
+		"@tanstack/react-router-devtools": "1.166.13",
 		"@tanstack/router-plugin": "^1.167.22",
 		"@types/node": "^22.13.14",
 		"@types/react": "^19.2.15",
@@ -28045,17 +28063,18 @@ export default defineConfig({
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
     "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-query": "^5.99.0",
-    "@tanstack/react-router": "^1.168.22",
-    "@tanstack/react-start": "^1.167.41",
+    "@tanstack/react-router": "1.168.22",
+    "@tanstack/react-start": "1.167.41",
     "lucide-react": "^1.8.0",
     "next-themes": "^0.4.6",
+    "nitro": "^3.0.260429-beta",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "sonner": "^2.0.7",
     "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
-    "@tanstack/react-router-devtools": "^1.166.13",
+    "@tanstack/react-router-devtools": "1.166.13",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.15",
@@ -28603,6 +28622,7 @@ function HomeComponent() {
 `],
   ["frontend/react/tanstack-start/vite.config.ts.hbs", `import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import { nitro } from "nitro/vite";
 import tailwindcss from "@tailwindcss/vite";
 import viteReact from "@vitejs/plugin-react";
 
@@ -28616,6 +28636,7 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     tanstackStart(),
+    nitro(),
     viteReact(),
   ],
 {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
@@ -28815,7 +28836,9 @@ dist-ssr
 
 .wrangler
 .alchemy
-.dev.vars*`],
+.vercel
+.dev.vars*
+`],
   ["frontend/solid/index.html", `<!doctype html>
 <html lang="en">
   <head>
@@ -28849,6 +28872,7 @@ dist-ssr
     "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
+    "@tanstack/solid-router-devtools": "1.166.13",
     "vite": "^8.0.8",
     "vite-plugin-solid": "^2.11.12"
   }
@@ -29799,6 +29823,10 @@ export const env = createEnv({
 	},
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
+{{/if}}
+{{#if (and (eq backend "none") (includes frontend "next"))}}
+	client: {},
+	experimental__runtimeEnv: {},
 {{/if}}
 	emptyStringAsUndefined: true,
 });
@@ -31257,4 +31285,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 483;
+export const TEMPLATE_COUNT = 484;
