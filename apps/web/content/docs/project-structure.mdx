@@ -451,16 +451,6 @@ Electrobun adds an `apps/desktop` workspace with its own `package.json`, `electr
 
 Generated only if you chose the Turborepo addon.
 
-### Nx Config (nx.json)
-
-Generated only if you chose the Nx addon.
-
-### Vite+ Config
-
-Generated Vite frontends import `defineConfig` from `vite-plus` when you choose the Vite+ addon. A root `vite.config.ts` centralizes Vite+ lint, format, and staged-file checks, while root workspace scripts use `vp run` for task orchestration.
-
-When Vite+ is selected without Husky or Lefthook, generated projects also include `hooks:setup` for optional native Vite+ Git hooks. Run it if you want `vp config` to install hooks into `.vite-hooks` and use `vp staged` from `vite.config.ts`; see the [Vite+ commit hooks guide](https://viteplus.dev/guide/commit-hooks).
-
 ```json
 {
   "$schema": "https://turbo.build/schema.json",
@@ -475,6 +465,35 @@ When Vite+ is selected without Husky or Lefthook, generated projects also includ
     }
   }
 }
+```
+
+### Nx Config (nx.json)
+
+Generated only if you chose the Nx addon.
+
+### Vite+ Config
+
+Generated Vite frontends import `defineConfig` from `vite-plus` when you choose the Vite+ addon. A root `vite.config.ts` centralizes Vite+ lint, format, and staged-file checks, while root workspace scripts use `vp run` for task orchestration.
+
+When Vite+ is selected without Husky or Lefthook, generated projects also include `hooks:setup` for optional native Vite+ Git hooks. Run it if you want `vp config` to install hooks into `.vite-hooks` and use `vp staged` from `vite.config.ts`; see the [Vite+ commit hooks guide](https://viteplus.dev/guide/commit-hooks).
+
+```ts
+import { defineConfig } from "vite-plus";
+
+export default defineConfig({
+  lint: {
+    options: {
+      typeAware: false,
+      typeCheck: false,
+    },
+  },
+  fmt: {
+    sortPackageJson: true,
+  },
+  staged: {
+    "*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}": "vp check --fix",
+  },
+});
 ```
 
 ## Shared packages

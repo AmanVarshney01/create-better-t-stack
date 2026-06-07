@@ -379,6 +379,18 @@ describe("Addon Configurations", () => {
       expectError(result, "Cannot combine 'turborepo', 'nx', and 'vite-plus' addons");
     });
 
+    it("should hide task runner addons when one is already installed", () => {
+      const compatibleAddons = getCompatibleAddons(
+        ["turborepo", "nx", "vite-plus", "biome"] as Addons[],
+        ["tanstack-router"] as Frontend[],
+        ["turborepo"] as Addons[],
+      );
+
+      expect(compatibleAddons).not.toContain("nx");
+      expect(compatibleAddons).not.toContain("vite-plus");
+      expect(compatibleAddons).toContain("biome");
+    });
+
     it("should wire Vite+ addon scripts, deps, overrides, and config imports", async () => {
       const result = await runTRPCTest({
         projectName: "vite-plus-addon",
@@ -470,6 +482,39 @@ describe("Addon Configurations", () => {
       expect(lefthookConfig).not.toContain("oxlint --fix");
     });
 
+    it("should keep explicit Oxlint Git hook tasks when Vite+ is also selected", async () => {
+      const result = await runTRPCTest({
+        projectName: "vite-plus-oxlint-hooks",
+        addons: ["vite-plus", "oxlint", "lefthook", "husky"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.projectDir;
+      expect(projectDir).toBeDefined();
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir!, "package.json"), "utf8"));
+      const lefthookConfig = await readFile(join(projectDir!, "lefthook.yml"), "utf8");
+
+      expect(rootPackageJson["lint-staged"]).toEqual({
+        "*": ["oxlint", "oxfmt --write"],
+      });
+      expect(lefthookConfig).toContain("name: oxlint");
+      expect(lefthookConfig).toContain("name: oxfmt");
+      expect(lefthookConfig).not.toContain("name: vite-plus");
+    });
+
     it("should wire Vite+ addon when added later", async () => {
       const created = await runTRPCTest({
         projectName: "vite-plus-add-later",
@@ -515,6 +560,82 @@ describe("Addon Configurations", () => {
       expect(webViteConfig).toContain('import { defineConfig } from "vite-plus";');
       expect(webViteConfig).not.toContain('from "vite";');
       expect(rootViteConfig).toContain('import { defineConfig } from "vite-plus";');
+    });
+
+    it("should reject adding Vite+ to a project with an existing task runner", async () => {
+      const created = await runTRPCTest({
+        projectName: "vite-plus-add-task-runner-conflict",
+        addons: ["turborepo"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["vite-plus"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(false);
+      expect(addResult?.error).toContain(
+        "Cannot combine 'turborepo', 'nx', and 'vite-plus' addons",
+      );
+
+      const btsConfig = await readFile(join(projectDir, "bts.jsonc"), "utf8");
+      expect(btsConfig).toContain('"turborepo"');
+      expect(btsConfig).not.toContain('"vite-plus"');
+    });
+
+    it("should reject adding another task runner to a Vite+ project", async () => {
+      const created = await runTRPCTest({
+        projectName: "vite-plus-add-reverse-task-runner-conflict",
+        addons: ["vite-plus"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["nx"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(false);
+      expect(addResult?.error).toContain(
+        "Cannot combine 'turborepo', 'nx', and 'vite-plus' addons",
+      );
+
+      const btsConfig = await readFile(join(projectDir, "bts.jsonc"), "utf8");
+      expect(btsConfig).toContain('"vite-plus"');
+      expect(btsConfig).not.toContain('"nx"');
     });
 
     it("should refresh existing Git hook addons when Vite+ is added later", async () => {

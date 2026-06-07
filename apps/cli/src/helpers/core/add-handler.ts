@@ -281,7 +281,9 @@ async function addHandlerInternal(
     addonsToAdd = selectedAddons;
   }
 
-  const addonsValidationResult = validateAddonsAgainstConfig(addonsToAdd, existingConfig);
+  // Build config for addon setup
+  const updatedAddons = [...existingConfig.addons, ...addonsToAdd];
+  const addonsValidationResult = validateAddonsAgainstConfig(updatedAddons, existingConfig);
   if (addonsValidationResult.isErr()) {
     return Result.err(new CLIError({ message: addonsValidationResult.error.message }));
   }
@@ -290,8 +292,6 @@ async function addHandlerInternal(
     log.info(pc.cyan(`Adding addons: ${addonsToAdd.join(", ")}`));
   }
 
-  // Build config for addon setup
-  const updatedAddons = [...existingConfig.addons, ...addonsToAdd];
   const mergedAddonOptions = mergeAddonOptions(existingConfig.addonOptions, input.addonOptions);
   const config: ProjectConfig = {
     projectName: existingConfig.projectName,
