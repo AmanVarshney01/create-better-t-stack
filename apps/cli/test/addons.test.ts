@@ -420,7 +420,7 @@ describe("Addon Configurations", () => {
       const webViteConfig = await readFile(join(projectDir!, "apps/web/vite.config.ts"), "utf8");
 
       expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.1.24");
-      expect(rootPackageJson.devDependencies.rolldown).toBe("1.0.3");
+      expect(rootPackageJson.devDependencies.rolldown).toBe("1.1.0");
       expect(rootPackageJson.overrides).toMatchObject({
         vite: "npm:@voidzero-dev/vite-plus-core@0.1.24",
         vitest: "npm:@voidzero-dev/vite-plus-test@0.1.24",
@@ -799,7 +799,7 @@ describe("Addon Configurations", () => {
         expect(serverIndex).toContain('import { initLogger } from "evlog";');
         expect(serverIndex).toContain(backendSnippets[backend]);
         expect(serverIndex).toContain(`env: { service: "evlog-${backend}-server" }`);
-        expect(serverPackageJson).toContain('"evlog": "^2.14.1"');
+        expect(serverPackageJson).toContain('"evlog": "^2.18.1"');
       });
     }
 
@@ -875,7 +875,7 @@ describe("Addon Configurations", () => {
         }
 
         const webPackageJson = await readFile(join(projectDir, "apps/web/package.json"), "utf-8");
-        expect(webPackageJson).toContain('"evlog": "^2.14.1"');
+        expect(webPackageJson).toContain('"evlog": "^2.18.1"');
         if (webCase.frontend === "tanstack-start") {
           expect(webPackageJson).toContain('"nitro": "^3.0.260429-beta"');
         }
@@ -1360,7 +1360,7 @@ describe("Addon Configurations", () => {
 
       expect(serverIndex).toContain('import { evlog, type EvlogVariables } from "evlog/hono";');
       expect(serverIndex).toContain("app.use(evlog());");
-      expect(serverPackageJson).toContain('"evlog": "^2.14.1"');
+      expect(serverPackageJson).toContain('"evlog": "^2.18.1"');
     });
 
     it("should reject evlog when added later to a Convex project", async () => {
