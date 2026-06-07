@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+import { getFumadocsLinter } from "../src/helpers/addons/fumadocs-setup";
 import { setupOxlint } from "../src/helpers/addons/oxlint-setup";
 import { installDependencies } from "../src/helpers/core/install-dependencies";
 import { getPackageExecutionArgs } from "../src/utils/package-runner";
@@ -34,6 +35,16 @@ describe("External Command Guards", () => {
     expect(result.isOk()).toBe(true);
   });
 
+  it("should select the matching Fumadocs linter addon", () => {
+    expect(getFumadocsLinter(["oxlint"])).toBe("oxlint");
+    expect(getFumadocsLinter(["biome"])).toBe("biome");
+    expect(getFumadocsLinter(["ultracite"])).toBe("biome");
+    expect(getFumadocsLinter(["vite-plus"])).toBe("oxlint");
+    expect(getFumadocsLinter(["vite-plus", "biome"])).toBe("biome");
+    expect(getFumadocsLinter(["biome", "oxlint"])).toBe("oxlint");
+    expect(getFumadocsLinter(["none"])).toBeUndefined();
+  });
+
   it("should update package.json without running oxlint init in test mode", async () => {
     const projectDir = join(SMOKE_DIR, "oxlint-skip");
     await mkdir(projectDir, { recursive: true });
@@ -59,7 +70,7 @@ describe("External Command Guards", () => {
     const updated = await Bun.file(pkgJsonPath).json();
 
     expect(updated.scripts?.check).toBe("oxlint && oxfmt --write");
-    expect(updated.devDependencies?.oxlint).toBeDefined();
-    expect(updated.devDependencies?.oxfmt).toBeDefined();
+    expect(updated.devDependencies?.oxlint).toBe("^1.68.0");
+    expect(updated.devDependencies?.oxfmt).toBe("^0.53.0");
   });
 });

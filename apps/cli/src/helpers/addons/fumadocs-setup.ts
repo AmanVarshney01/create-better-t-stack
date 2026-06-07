@@ -24,7 +24,8 @@ type FumadocsTemplate =
 
 type FumadocsSearch = "orama" | "orama-cloud";
 type FumadocsOgImage = "next-og" | "takumi";
-type FumadocsAiChat = "openrouter" | "inkeep";
+type FumadocsAiChat = "openrouter" | "llmgateway" | "inkeep";
+type FumadocsLinter = "biome" | "oxlint";
 
 const TEMPLATES = {
   "next-mdx": {
@@ -65,6 +66,12 @@ const DEFAULT_DEV_PORT = 4000;
 
 function aiChatDisabledForTemplate(template: FumadocsTemplate): boolean {
   return template === "next-mdx-static" || template.endsWith("-spa");
+}
+
+export function getFumadocsLinter(addons: ProjectConfig["addons"]): FumadocsLinter | undefined {
+  if (addons.includes("oxlint")) return "oxlint";
+  if (addons.includes("biome") || addons.includes("ultracite")) return "biome";
+  if (addons.includes("vite-plus")) return "oxlint";
 }
 
 export async function setupFumadocs(
@@ -153,6 +160,7 @@ export async function setupFumadocs(
               options: [
                 { value: "none", label: "No" },
                 { value: "openrouter", label: "AI SDK", hint: "default to OpenRouter" },
+                { value: "llmgateway", label: "LLM Gateway" },
                 { value: "inkeep", label: "Inkeep AI", hint: "API key required" },
               ],
               initialValue: "none",
@@ -210,11 +218,8 @@ export async function setupFumadocs(
     options.push("--src");
   }
 
-  // create-fumadocs-app's --linter flag only accepts "eslint" or "biome"
-  // (oxlint exists only in the interactive prompt, not as a flag choice).
-  if (config.addons.includes("biome") || config.addons.includes("ultracite")) {
-    options.push("--linter biome");
-  }
+  const linter = getFumadocsLinter(config.addons);
+  if (linter) options.push(`--linter ${linter}`);
 
   if (search) options.push(`--search ${search}`);
   if (ogImage) options.push(`--og-image ${ogImage}`);

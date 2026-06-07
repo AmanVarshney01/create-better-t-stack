@@ -21,7 +21,7 @@ describe("Addon options", () => {
     const addonOptions = {
       wxt: { template: "react" as const, devPort: 5555 },
       opentui: { template: "react" as const },
-      fumadocs: { template: "next-mdx" as const, devPort: 4000 },
+      fumadocs: { template: "next-mdx" as const, devPort: 4000, aiChat: "llmgateway" as const },
       mcp: {
         scope: "project" as const,
         servers: ["context7"] as const,

@@ -132,7 +132,7 @@ export const FumadocsOgImageSchema = z
   .describe("Fumadocs OG image generator");
 
 export const FumadocsAiChatSchema = z
-  .enum(["openrouter", "inkeep"])
+  .enum(["openrouter", "llmgateway", "inkeep"])
   .describe("Fumadocs AI chat provider");
 
 export const InstallScopeSchema = z.enum(["project", "global"]).describe("Installation scope");
