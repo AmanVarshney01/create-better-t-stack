@@ -7,6 +7,7 @@ import fs from "fs-extra";
 import { navigableSelect } from "../../prompts/navigable";
 import { navigableGroup } from "../../prompts/navigable-group";
 import type { ProjectConfig } from "../../types";
+import { readBtsConfig } from "../../utils/bts-config";
 import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
@@ -72,6 +73,13 @@ export function getFumadocsLinter(addons: ProjectConfig["addons"]): FumadocsLint
   if (addons.includes("oxlint")) return "oxlint";
   if (addons.includes("biome") || addons.includes("ultracite")) return "biome";
   if (addons.includes("vite-plus")) return "oxlint";
+}
+
+export function getFumadocsAddonContext(
+  currentAddons: ProjectConfig["addons"],
+  persistedAddons?: ProjectConfig["addons"],
+): ProjectConfig["addons"] {
+  return Array.from(new Set([...(persistedAddons ?? []), ...currentAddons]));
 }
 
 export async function setupFumadocs(
@@ -218,7 +226,8 @@ export async function setupFumadocs(
     options.push("--src");
   }
 
-  const linter = getFumadocsLinter(config.addons);
+  const persistedConfig = await readBtsConfig(projectDir);
+  const linter = getFumadocsLinter(getFumadocsAddonContext(config.addons, persistedConfig?.addons));
   if (linter) options.push(`--linter ${linter}`);
 
   if (search) options.push(`--search ${search}`);

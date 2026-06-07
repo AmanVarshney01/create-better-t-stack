@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import { getFumadocsLinter } from "../src/helpers/addons/fumadocs-setup";
+import { getFumadocsAddonContext, getFumadocsLinter } from "../src/helpers/addons/fumadocs-setup";
 import { setupOxlint } from "../src/helpers/addons/oxlint-setup";
 import { installDependencies } from "../src/helpers/core/install-dependencies";
 import { getPackageExecutionArgs } from "../src/utils/package-runner";
@@ -43,6 +43,11 @@ describe("External Command Guards", () => {
     expect(getFumadocsLinter(["vite-plus", "biome"])).toBe("biome");
     expect(getFumadocsLinter(["biome", "oxlint"])).toBe("oxlint");
     expect(getFumadocsLinter(["none"])).toBeUndefined();
+  });
+
+  it("should include persisted addons when selecting the Fumadocs linter during add", () => {
+    expect(getFumadocsLinter(getFumadocsAddonContext(["fumadocs"], ["vite-plus"]))).toBe("oxlint");
+    expect(getFumadocsLinter(getFumadocsAddonContext(["fumadocs"], ["biome"]))).toBe("biome");
   });
 
   it("should update package.json without running oxlint init in test mode", async () => {
