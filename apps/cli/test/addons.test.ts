@@ -443,6 +443,15 @@ describe("Addon Configurations", () => {
       expect(webViteConfig).not.toContain('import { defineConfig } from "vite";');
       const rootViteConfig = await readFile(join(projectDir!, "vite.config.ts"), "utf8");
       expect(rootViteConfig).toContain('import { defineConfig } from "vite-plus";');
+      expect(rootViteConfig).toContain('"apps/web/dist/**"');
+      expect(rootViteConfig).toContain('"apps/web/.tanstack/**"');
+      expect(rootViteConfig).toContain('"apps/web/src/routeTree.gen.ts"');
+      expect(rootViteConfig).toContain('"apps/server/dist/**"');
+      expect(rootViteConfig).toContain('"packages/db/dist/**"');
+      expect(rootViteConfig).not.toContain('"apps/web/.next/**"');
+      expect(rootViteConfig).not.toContain('"apps/web/.nuxt/**"');
+      expect(rootViteConfig).not.toContain('"packages/db/prisma/generated/**"');
+      expect(rootViteConfig).not.toContain('".wrangler/**"');
       expect(rootViteConfig).toContain("typeCheck: false");
       expect(rootViteConfig).toContain('"*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}":');
       expect(rootViteConfig).toContain('"vp check --fix"');
