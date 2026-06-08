@@ -448,9 +448,11 @@ describe("Addon Configurations", () => {
       expect(rootViteConfig).toContain('"apps/web/src/routeTree.gen.ts"');
       expect(rootViteConfig).toContain('"apps/server/dist/**"');
       expect(rootViteConfig).toContain('"packages/db/dist/**"');
+      expect(rootViteConfig).toContain('"packages/db/local.db*"');
       expect(rootViteConfig).not.toContain('"apps/web/.next/**"');
       expect(rootViteConfig).not.toContain('"apps/web/.nuxt/**"');
       expect(rootViteConfig).not.toContain('"packages/db/prisma/generated/**"');
+      expect(rootViteConfig).not.toContain('"packages/db/prisma/**/*.db*"');
       expect(rootViteConfig).not.toContain('".wrangler/**"');
       expect(rootViteConfig).toContain("typeCheck: false");
       expect(rootViteConfig).toContain('"*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}":');
@@ -569,6 +571,87 @@ describe("Addon Configurations", () => {
       expect(webViteConfig).toContain('import { defineConfig } from "vite-plus";');
       expect(webViteConfig).not.toContain('from "vite";');
       expect(rootViteConfig).toContain('import { defineConfig } from "vite-plus";');
+    });
+
+    it("should wire Nx addon when added later", async () => {
+      const created = await runTRPCTest({
+        projectName: "nx-add-later",
+        addons: ["none"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["nx"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir, "package.json"), "utf8"));
+      const nxConfig = JSON.parse(await readFile(join(projectDir, "nx.json"), "utf8"));
+
+      expect(rootPackageJson.devDependencies.nx).toBeDefined();
+      expect(rootPackageJson.scripts.dev).toBe("nx run-many -t dev");
+      expect(rootPackageJson.scripts.build).toBe("nx run-many -t build");
+      expect(nxConfig.namedInputs.production).toContain("!{workspaceRoot}/apps/web/dist/**");
+      expect(nxConfig.namedInputs.production).toContain("!{workspaceRoot}/apps/server/dist/**");
+      expect(nxConfig.namedInputs.production).toContain("!{workspaceRoot}/packages/db/dist/**");
+      expect(nxConfig.namedInputs.production).toContain("!{workspaceRoot}/packages/db/local.db*");
+    });
+
+    it("should wire Turborepo addon when added later", async () => {
+      const created = await runTRPCTest({
+        projectName: "turborepo-add-later",
+        addons: ["none"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["turborepo"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir, "package.json"), "utf8"));
+      const turboConfig = JSON.parse(await readFile(join(projectDir, "turbo.json"), "utf8"));
+
+      expect(rootPackageJson.devDependencies.turbo).toBeDefined();
+      expect(rootPackageJson.scripts.dev).toBe("turbo dev");
+      expect(rootPackageJson.scripts.build).toBe("turbo build");
+      expect(turboConfig.tasks.build.dependsOn).toEqual(["^build"]);
     });
 
     it("should reject adding Vite+ to a project with an existing task runner", async () => {

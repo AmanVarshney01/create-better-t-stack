@@ -39,9 +39,11 @@ describe("Vite+ config generator", () => {
     expect(patterns).toContain("apps/web/src/routeTree.gen.ts");
     expect(patterns).toContain("apps/server/dist/**");
     expect(patterns).toContain("packages/db/dist/**");
+    expect(patterns).toContain("packages/db/local.db*");
     expect(patterns).not.toContain("apps/web/.next/**");
     expect(patterns).not.toContain("apps/web/.nuxt/**");
     expect(patterns).not.toContain("packages/db/prisma/generated/**");
+    expect(patterns).not.toContain("packages/db/prisma/**/*.db*");
     expect(patterns).not.toContain("packages/backend/convex/_generated/**");
     expect(patterns).not.toContain(".wrangler/**");
   });
@@ -105,7 +107,7 @@ describe("Vite+ config generator", () => {
 
     expect(prismaPatterns).toContain("packages/db/dist/**");
     expect(prismaPatterns).toContain("packages/db/prisma/generated/**");
-    expect(prismaPatterns).toContain("apps/server/prisma/generated/**");
+    expect(prismaPatterns).not.toContain("packages/db/prisma/**/*.db*");
     expect(prismaPatterns).not.toContain("packages/backend/convex/_generated/**");
 
     const convexPatterns = getVitePlusIgnorePatterns(
@@ -120,5 +122,36 @@ describe("Vite+ config generator", () => {
     expect(convexPatterns).not.toContain("apps/server/dist/**");
     expect(convexPatterns).not.toContain("packages/db/dist/**");
     expect(convexPatterns).not.toContain("packages/db/prisma/generated/**");
+  });
+
+  it("adds Turso local database paths only for matching SQLite stacks", () => {
+    const tursoPatterns = getVitePlusIgnorePatterns(
+      configWith({
+        dbSetup: "turso",
+      }),
+    );
+
+    expect(tursoPatterns).toContain("packages/db/local.db*");
+    expect(tursoPatterns).not.toContain("packages/db/prisma/**/*.db*");
+
+    const prismaTursoPatterns = getVitePlusIgnorePatterns(
+      configWith({
+        dbSetup: "turso",
+        orm: "prisma",
+      }),
+    );
+
+    expect(prismaTursoPatterns).toContain("packages/db/local.db*");
+    expect(prismaTursoPatterns).toContain("packages/db/prisma/**/*.db*");
+
+    const d1Patterns = getVitePlusIgnorePatterns(
+      configWith({
+        dbSetup: "d1",
+        runtime: "workers",
+      }),
+    );
+
+    expect(d1Patterns).not.toContain("packages/db/local.db*");
+    expect(d1Patterns).not.toContain("packages/db/prisma/**/*.db*");
   });
 });

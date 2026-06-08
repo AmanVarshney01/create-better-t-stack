@@ -4,7 +4,9 @@ import {
   EMBEDDED_TEMPLATES,
   processAddonTemplates,
   processAddonsDeps,
+  processNxConfig,
   processPackageConfigs,
+  processTurboConfig,
   processVitePlusConfig,
   processTemplateString,
   VirtualFileSystem,
@@ -62,6 +64,7 @@ const ADD_TEXT_FILE_PATHS = ["apps/web/vite.config.ts", "lefthook.yml"];
 
 const HOOK_ADDONS = ["husky", "lefthook"] as const satisfies readonly Addons[];
 const HOOK_LINTER_ADDONS = ["biome", "oxlint", "vite-plus"] as const satisfies readonly Addons[];
+const TASK_RUNNER_ADDONS = ["turborepo", "nx", "vite-plus"] as const satisfies readonly Addons[];
 
 function mergeAddonOptions(
   existingAddonOptions?: AddonOptions,
@@ -350,12 +353,27 @@ async function addHandlerInternal(
   // Process addon dependencies (adds deps to package.json files in VFS)
   processAddonsDeps(vfs, config);
 
+  if (addonsToAdd.includes("turborepo")) {
+    processTurboConfig(vfs, updatedConfig);
+  }
+
+  if (addonsToAdd.includes("nx")) {
+    processNxConfig(vfs, updatedConfig);
+  }
+
   if (addonsToAdd.includes("vite-plus")) {
     processVitePlusConfig(vfs, updatedConfig);
   }
 
-  if (updatedAddons.includes("vite-plus")) {
+  const hasTaskRunner = updatedAddons.some((addon) =>
+    (TASK_RUNNER_ADDONS as readonly Addons[]).includes(addon),
+  );
+
+  if (hasTaskRunner) {
     processPackageConfigs(vfs, updatedConfig);
+  }
+
+  if (updatedAddons.includes("vite-plus")) {
     updateViteConfigImportsForVitePlus(vfs);
   }
 
