@@ -10,7 +10,7 @@ import {
 } from "../src/app/(home)/new/_components/utils";
 import { DEFAULT_STACK, type StackState } from "../src/lib/constant";
 import { sanitizeAddons } from "../src/lib/sanitize-stack-addons";
-import { generateStackCommand } from "../src/lib/stack-utils";
+import { formatStackCommandForDisplay, generateStackCommand } from "../src/lib/stack-utils";
 
 function createStack(overrides: Partial<StackState> = {}): StackState {
   return {
@@ -110,6 +110,17 @@ describe("stack builder D1 compatibility", () => {
       getDisabledReason(createStack({ addons: ["turborepo"] }), "addons", "vite-plus"),
     ).toBeNull();
     expect(getDisabledReason(createStack({ addons: ["vite-plus"] }), "addons", "nx")).toBeNull();
+  });
+
+  test("renders long CLI commands with visible flag separators", () => {
+    const command = generateStackCommand(
+      createStack({ addons: ["vite-plus"], examples: ["none"] }),
+    );
+    const displayCommand = formatStackCommandForDisplay(command);
+
+    expect(command).toContain("my-better-t-app --frontend");
+    expect(displayCommand).toContain(`my-better-t-app ${"\\"}\n  --frontend`);
+    expect(displayCommand).toContain(`tanstack-router ${"\\"}\n  --backend`);
   });
 
   test("reapplies the same D1 adjustment after leaving and returning to it", () => {

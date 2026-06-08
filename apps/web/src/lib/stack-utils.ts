@@ -179,6 +179,10 @@ export function generateStackCommand(stack: StackState) {
   return `${base} ${projectName} ${flags.join(" ")}`;
 }
 
+export function formatStackCommandForDisplay(command: string) {
+  return command.replaceAll(" --", ` ${"\\"}\n  --`);
+}
+
 export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
   const origin = baseUrl || "https://better-t-stack.dev";
 
