@@ -108,6 +108,7 @@ function getSetupAddons(addonsToAdd: Addons[], updatedAddons: Addons[]): Addons[
   );
 
   if (changedHookStack) {
+    // Re-run the existing hook/linter stack so late additions rewrite hook commands together.
     for (const addon of [...HOOK_ADDONS, ...HOOK_LINTER_ADDONS]) {
       if (updatedAddons.includes(addon)) {
         setupAddons.add(addon);

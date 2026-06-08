@@ -6,6 +6,7 @@
 import { desktopWebFrontends, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
+import { dependencyVersionMap } from "../utils/add-deps";
 import { getDbScriptSupport } from "../utils/db-scripts";
 
 type PackageJson = {
@@ -27,6 +28,9 @@ type PackageManagerConfig = {
 };
 
 type DesktopWebScript = "build" | "dev" | "generate";
+type WorkspacesConfig = NonNullable<PackageJson["workspaces"]>;
+
+const VITE_PLUS_VERSION = dependencyVersionMap["vite-plus"];
 
 /**
  * Update all package.json files with proper names, scripts, and workspaces
@@ -57,18 +61,8 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   pkgJson.name = config.projectName;
   pkgJson.scripts = pkgJson.scripts || {};
 
-  // Ensure workspaces is an array
-  let workspaces: string[] = [];
-  if (Array.isArray(pkgJson.workspaces)) {
-    workspaces = pkgJson.workspaces;
-  } else if (
-    pkgJson.workspaces &&
-    typeof pkgJson.workspaces === "object" &&
-    pkgJson.workspaces.packages
-  ) {
-    workspaces = pkgJson.workspaces.packages;
-  }
-  pkgJson.workspaces = workspaces;
+  const existingWorkspaces = pkgJson.workspaces;
+  const workspaces = getWorkspacePackages(existingWorkspaces);
 
   const scripts = pkgJson.scripts;
   const { projectName, packageManager, backend, database, orm, dbSetup, addons, frontend } = config;
@@ -188,8 +182,8 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   if (hasVitePlus) {
     pkgJson.overrides = {
       ...pkgJson.overrides,
-      vite: "npm:@voidzero-dev/vite-plus-core@0.1.24",
-      vitest: "npm:@voidzero-dev/vite-plus-test@0.1.24",
+      vite: `npm:@voidzero-dev/vite-plus-core@${VITE_PLUS_VERSION}`,
+      vitest: `npm:@voidzero-dev/vite-plus-test@${VITE_PLUS_VERSION}`,
     };
   }
 
@@ -210,7 +204,39 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     }
   }
 
+  pkgJson.workspaces = getUpdatedWorkspaces(existingWorkspaces, workspaces);
   vfs.writeJson("package.json", pkgJson);
+}
+
+function getWorkspacePackages(workspaces: PackageJson["workspaces"]): string[] {
+  if (Array.isArray(workspaces)) {
+    return workspaces;
+  }
+
+  if (workspaces && typeof workspaces === "object" && workspaces.packages) {
+    return workspaces.packages;
+  }
+
+  return [];
+}
+
+function getUpdatedWorkspaces(
+  existingWorkspaces: PackageJson["workspaces"],
+  packages: string[],
+): WorkspacesConfig {
+  if (
+    existingWorkspaces &&
+    !Array.isArray(existingWorkspaces) &&
+    typeof existingWorkspaces === "object" &&
+    existingWorkspaces.catalog
+  ) {
+    return {
+      ...existingWorkspaces,
+      packages,
+    };
+  }
+
+  return packages;
 }
 
 function getPackageManagerConfig(

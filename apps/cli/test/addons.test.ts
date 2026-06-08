@@ -812,6 +812,99 @@ describe("Addon Configurations", () => {
       expect(lefthookConfig).toContain("run: bun vp staged");
     });
 
+    it("should refresh existing Git hook addons when Biome is added later", async () => {
+      const created = await runTRPCTest({
+        projectName: "biome-add-existing-hooks",
+        addons: ["lefthook", "husky"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["biome"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir, "package.json"), "utf8"));
+      const lefthookConfig = await readFile(join(projectDir, "lefthook.yml"), "utf8");
+
+      expect(rootPackageJson["lint-staged"]).toEqual({
+        "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": ["biome check --write ."],
+      });
+      expect(lefthookConfig).toContain("name: biome");
+      expect(lefthookConfig).toContain("biome check --write");
+      expect(lefthookConfig).not.toContain("name: vite-plus");
+      expect(lefthookConfig).not.toContain("name: oxlint");
+    });
+
+    it("should preserve Bun workspace catalogs when package scripts refresh on add", async () => {
+      const created = await runTRPCTest({
+        projectName: "bun-catalog-add-refresh",
+        addons: ["turborepo"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const rootPackageJsonBefore = JSON.parse(
+        await readFile(join(projectDir, "package.json"), "utf8"),
+      );
+      const catalogBefore = rootPackageJsonBefore.workspaces.catalog;
+      expect(catalogBefore["better-auth"]).toBeDefined();
+
+      const addResult = await add({
+        projectDir,
+        addons: ["biome"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJsonAfter = JSON.parse(
+        await readFile(join(projectDir, "package.json"), "utf8"),
+      );
+      const authPackageJson = JSON.parse(
+        await readFile(join(projectDir, "packages/auth/package.json"), "utf8"),
+      );
+
+      expect(Array.isArray(rootPackageJsonAfter.workspaces)).toBe(false);
+      expect(rootPackageJsonAfter.workspaces.packages).toEqual(
+        rootPackageJsonBefore.workspaces.packages,
+      );
+      expect(rootPackageJsonAfter.workspaces.catalog).toMatchObject(catalogBefore);
+      expect(authPackageJson.dependencies["better-auth"]).toBe("catalog:");
+    });
+
     it("should deduplicate addons", async () => {
       const result = await runTRPCTest({
         projectName: "duplicate-addons",

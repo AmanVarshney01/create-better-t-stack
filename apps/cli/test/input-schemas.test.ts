@@ -20,11 +20,17 @@ describe("Input schemas", () => {
   });
 
   it("rejects conflicting task-runner addon combinations", () => {
-    const result = AddInputSchema.safeParse({
-      addons: ["nx", "vite-plus"],
-    });
+    const conflictingAddonPairs = [
+      ["nx", "vite-plus"],
+      ["turborepo", "vite-plus"],
+      ["nx", "turborepo"],
+    ];
 
-    expect(result.success).toBe(false);
+    for (const addons of conflictingAddonPairs) {
+      const result = AddInputSchema.safeParse({ addons });
+
+      expect(result.success).toBe(false);
+    }
   });
 
   it("rejects unknown keys in JSON-first create input", () => {
