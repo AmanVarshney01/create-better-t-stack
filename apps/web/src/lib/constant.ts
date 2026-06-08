@@ -589,7 +589,7 @@ export const TECH_OPTIONS: Record<
       id: "vite-plus",
       name: "Vite+",
       description: "Unified Vite toolchain, task runner, linting, formatting, and optional hooks",
-      icon: "",
+      icon: `${ICON_BASE_URL}/vite-plus.svg`,
       color: "from-violet-500 to-cyan-600",
       default: false,
     },
