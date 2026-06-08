@@ -5,6 +5,7 @@ import {
   processAddonTemplates,
   processAddonsDeps,
   processPackageConfigs,
+  processVitePlusConfig,
   processTemplateString,
   VirtualFileSystem,
 } from "@better-t-stack/template-generator";
@@ -348,6 +349,10 @@ async function addHandlerInternal(
 
   // Process addon dependencies (adds deps to package.json files in VFS)
   processAddonsDeps(vfs, config);
+
+  if (addonsToAdd.includes("vite-plus")) {
+    processVitePlusConfig(vfs, updatedConfig);
+  }
 
   if (updatedAddons.includes("vite-plus")) {
     processPackageConfigs(vfs, updatedConfig);

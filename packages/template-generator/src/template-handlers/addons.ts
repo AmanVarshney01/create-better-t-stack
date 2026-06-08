@@ -13,8 +13,8 @@ export async function processAddonTemplates(
   for (const addon of config.addons) {
     if (addon === "none") continue;
 
-    // monorepo tools are handled programmatically by generators
-    if (addon === "turborepo" || addon === "nx") continue;
+    // Task runners are handled programmatically by generators.
+    if (addon === "turborepo" || addon === "nx" || addon === "vite-plus") continue;
 
     if (addon === "pwa") {
       if (config.frontend.includes("next")) {

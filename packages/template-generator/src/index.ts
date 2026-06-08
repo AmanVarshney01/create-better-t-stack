@@ -4,6 +4,7 @@ export * from "./core/template-processor";
 export * from "./generator";
 export { processAddonTemplates } from "./template-handlers/addons";
 export { processAddonsDeps } from "./processors/addons-deps";
+export { processVitePlusConfig } from "./processors/vite-plus-generator";
 export { processPackageConfigs } from "./post-process";
 export { writeBtsConfigToVfs } from "./bts-config";
 

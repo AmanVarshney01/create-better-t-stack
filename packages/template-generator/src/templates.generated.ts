@@ -311,51 +311,6 @@ export default defineConfig({
   images: ["public/logo.png"],
 });
 `],
-  ["addons/vite-plus/vite.config.ts.hbs", `import { defineConfig } from "vite-plus";
-
-export default defineConfig({
-  lint: {
-    ignorePatterns: [
-      "dist/**",
-      "build/**",
-      ".next/**",
-      ".nuxt/**",
-      ".output/**",
-      ".vinxi/**",
-      ".tanstack/**",
-      ".vercel/**",
-      ".wrangler/**",
-      "apps/web/src/routeTree.gen.ts",
-      "node_modules/**",
-    ],
-    options: {
-      typeAware: false,
-      typeCheck: false,
-    },
-  },
-  fmt: {
-    ignorePatterns: [
-      "dist/**",
-      "build/**",
-      ".next/**",
-      ".nuxt/**",
-      ".output/**",
-      ".vinxi/**",
-      ".tanstack/**",
-      ".vercel/**",
-      ".wrangler/**",
-      "apps/web/src/routeTree.gen.ts",
-      "node_modules/**",
-    ],
-    singleQuote: false,
-    semi: true,
-    sortPackageJson: true,
-  },
-  staged: {
-    "*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}": "vp check --fix",
-  },
-});
-`],
   ["api/orpc/fullstack/astro/src/pages/rpc/[...rest].ts.hbs", `import type { APIRoute } from "astro";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -31302,4 +31257,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 484;
+export const TEMPLATE_COUNT = 483;
