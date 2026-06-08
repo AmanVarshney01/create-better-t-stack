@@ -2,7 +2,7 @@ import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { DEFAULT_STACK, PRESET_TEMPLATES, type StackState, TECH_OPTIONS } from "@/lib/constant";
-import { sanitizeStackState } from "@/lib/sanitize-stack-addons";
+import { sanitizeStackState, TASK_RUNNER_ADDONS } from "@/lib/sanitize-stack-addons";
 import { useStackState } from "@/lib/stack-url-state.client";
 import { CATEGORY_ORDER, generateStackCommand, generateStackSharingUrl } from "@/lib/stack-utils";
 import type { TechCategory } from "@/lib/types";
@@ -272,13 +272,14 @@ export function useStackBuilder() {
               ? nextArray.filter((id) => id !== techId)
               : [...nextArray, techId];
 
-            if (catKey === "addons" && !isSelected) {
-              if (techId === "nx") {
-                nextArray = nextArray.filter((id) => id !== "turborepo");
-              }
-              if (techId === "turborepo") {
-                nextArray = nextArray.filter((id) => id !== "nx");
-              }
+            if (
+              catKey === "addons" &&
+              !isSelected &&
+              (TASK_RUNNER_ADDONS as readonly string[]).includes(techId)
+            ) {
+              nextArray = nextArray.filter(
+                (id) => id === techId || !(TASK_RUNNER_ADDONS as readonly string[]).includes(id),
+              );
             }
 
             if (nextArray.length > 1) {

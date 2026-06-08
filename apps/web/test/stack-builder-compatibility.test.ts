@@ -96,18 +96,20 @@ describe("stack builder D1 compatibility", () => {
   });
 
   test("keeps only the latest selected task-runner addon", () => {
+    expect(sanitizeAddons(["turborepo", "vite-plus"])).toEqual(["vite-plus"]);
+    expect(sanitizeAddons(["vite-plus", "nx"])).toEqual(["nx"]);
+    expect(sanitizeAddons(["nx", "turborepo"])).toEqual(["turborepo"]);
+
     const sanitizedAddons = sanitizeAddons(["turborepo", "vite-plus"]);
     const command = generateStackCommand(createStack({ addons: sanitizedAddons }));
 
     expect(command).toContain("--addons vite-plus");
     expect(command).not.toContain("turborepo");
 
-    const stack = createStack({
-      addons: ["vite-plus"],
-    });
-    expect(getDisabledReason(stack, "addons", "nx")).toBe(
-      "Choose Turborepo, Nx, or Vite+ as your task runner",
-    );
+    expect(
+      getDisabledReason(createStack({ addons: ["turborepo"] }), "addons", "vite-plus"),
+    ).toBeNull();
+    expect(getDisabledReason(createStack({ addons: ["vite-plus"] }), "addons", "nx")).toBeNull();
   });
 
   test("reapplies the same D1 adjustment after leaving and returning to it", () => {

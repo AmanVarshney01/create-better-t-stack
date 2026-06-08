@@ -5,6 +5,8 @@ const validNativeFrontendIds = new Set(TECH_OPTIONS.nativeFrontend.map((option) 
 const validAddonIds = new Set(["none", ...TECH_OPTIONS.addons.map((option) => option.id)]);
 const validExampleIds = new Set(["none", ...TECH_OPTIONS.examples.map((option) => option.id)]);
 
+export const TASK_RUNNER_ADDONS = ["nx", "turborepo", "vite-plus"] as const;
+
 function sanitizeSingleSelection(
   values: readonly string[] | null | undefined,
   validIds: ReadonlySet<string>,
@@ -37,7 +39,7 @@ function sanitizeMultiSelection(
 
 function resolveMonorepoAddonConflicts(addons: readonly string[]): string[] {
   const resolved: string[] = [];
-  const taskRunners = new Set(["nx", "turborepo", "vite-plus"]);
+  const taskRunners = new Set<string>(TASK_RUNNER_ADDONS);
 
   for (const addon of addons) {
     if (taskRunners.has(addon)) {
