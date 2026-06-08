@@ -7,6 +7,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { getDbScriptSupport, type DbScriptSupport } from "../utils/db-scripts";
+import { getStackGeneratedIgnorePatterns } from "../utils/generated-ignore-patterns";
 
 type NxTargetDefaults = {
   dependsOn?: string[];
@@ -27,7 +28,7 @@ export function processNxConfig(vfs: VirtualFileSystem, config: ProjectConfig): 
   vfs.writeFile("nx.json", JSON.stringify(nxConfig, null, "\t"));
 }
 
-function generateNxConfig(config: ProjectConfig): NxConfig {
+export function generateNxConfig(config: ProjectConfig): NxConfig {
   const { backend, database, dbSetup, webDeploy, serverDeploy } = config;
   const isConvex = backend === "convex";
   const dbSupport = getDbScriptSupport(config);
@@ -61,6 +62,7 @@ function generateNxConfig(config: ProjectConfig): NxConfig {
       default: ["{projectRoot}/**/*", "sharedGlobals"],
       production: [
         "default",
+        ...getNxProductionInputExclusions(config),
         "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
         "!{projectRoot}/tsconfig.spec.json",
       ],
@@ -68,6 +70,10 @@ function generateNxConfig(config: ProjectConfig): NxConfig {
     },
     targetDefaults,
   };
+}
+
+export function getNxProductionInputExclusions(config: ProjectConfig): string[] {
+  return getStackGeneratedIgnorePatterns(config).map((pattern) => `!{workspaceRoot}/${pattern}`);
 }
 
 function getConvexTargets(): Record<string, NxTargetDefaults> {

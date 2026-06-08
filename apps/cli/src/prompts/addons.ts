@@ -36,6 +36,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Nx";
       hint = "Smart monorepo orchestration and task graph";
       break;
+    case "vite-plus":
+      label = "Vite+";
+      hint = "Unified Vite toolchain and workspace task runner";
+      break;
     case "pwa":
       label = "PWA";
       hint = "Make your app installable and work offline";
@@ -105,7 +109,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 }
 
 const ADDON_GROUPS = {
-  "Monorepo & Tasks": ["turborepo", "nx"],
+  "Monorepo & Tasks": ["turborepo", "nx", "vite-plus"],
   "Code Quality": ["biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
   "Platform Extensions": ["pwa", "tauri", "electrobun", "opentui", "wxt"],
@@ -143,8 +147,10 @@ function sortAndPruneGroupedOptions(groupedOptions: Record<string, AddonOption[]
 }
 
 function validateAddonSelection(selected: Addons[] | undefined) {
-  if (selected?.includes("turborepo") && selected.includes("nx")) {
-    return "Choose either Turborepo or Nx as your monorepo tool, not both.";
+  const selectedTaskRunners =
+    selected?.filter((addon) => ["turborepo", "nx", "vite-plus"].includes(addon)) ?? [];
+  if (selectedTaskRunners.length > 1) {
+    return "Choose Turborepo, Nx, or Vite+ as your task runner, not more than one.";
   }
 }
 

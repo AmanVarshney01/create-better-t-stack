@@ -19,6 +19,7 @@ import { ValidationError } from "./errors";
 
 type ValidationResult = Result<void, ValidationError>;
 type AddonCompatibilityConfig = Pick<ProjectConfig, "frontend" | "auth" | "backend" | "runtime">;
+const TASK_RUNNER_ADDONS = ["turborepo", "nx", "vite-plus"] as const satisfies readonly Addons[];
 
 export const CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS = [
   "nuxt",
@@ -351,6 +352,15 @@ export function getCompatibleAddons(
 
     if (addon === "none") return false;
 
+    if (
+      (TASK_RUNNER_ADDONS as readonly Addons[]).includes(addon) &&
+      existingAddons.some((existingAddon) =>
+        (TASK_RUNNER_ADDONS as readonly Addons[]).includes(existingAddon),
+      )
+    ) {
+      return false;
+    }
+
     const { isCompatible } = validateAddonCompatibility(addon, frontend, auth, backend, runtime);
     return isCompatible;
   });
@@ -363,8 +373,13 @@ export function validateAddonsAgainstFrontends(
   backend?: Backend,
   runtime?: Runtime,
 ): ValidationResult {
-  if (addons.includes("turborepo") && addons.includes("nx")) {
-    return validationErr("Cannot combine 'turborepo' and 'nx' addons. Choose one monorepo tool.");
+  const selectedTaskRunners = addons.filter((addon) =>
+    (TASK_RUNNER_ADDONS as readonly Addons[]).includes(addon),
+  );
+  if (selectedTaskRunners.length > 1) {
+    return validationErr(
+      "Cannot combine 'turborepo', 'nx', and 'vite-plus' addons. Choose one task runner.",
+    );
   }
 
   for (const addon of addons) {

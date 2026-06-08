@@ -1088,12 +1088,8 @@ export const getDisabledReason = (
     if (optionId === "evlog" && !hasEvlogCompatibleBackend(currentStack.backend)) {
       return "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend";
     }
-    if (optionId === "nx" && currentStack.addons.includes("turborepo")) {
-      return "Nx and Turborepo cannot be used together";
-    }
-    if (optionId === "turborepo" && currentStack.addons.includes("nx")) {
-      return "Nx and Turborepo cannot be used together";
-    }
+    // Task runners are mutually exclusive in the CLI, but the builder lets users swap them.
+    // URL/state sanitization keeps only the latest selected runner before generating commands.
   }
 
   // ============================================

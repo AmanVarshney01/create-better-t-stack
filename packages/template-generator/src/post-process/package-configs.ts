@@ -6,6 +6,7 @@
 import { desktopWebFrontends, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
+import { dependencyVersionMap } from "../utils/add-deps";
 import { getDbScriptSupport } from "../utils/db-scripts";
 
 type PackageJson = {
@@ -27,6 +28,9 @@ type PackageManagerConfig = {
 };
 
 type DesktopWebScript = "build" | "dev" | "generate";
+type WorkspacesConfig = NonNullable<PackageJson["workspaces"]>;
+
+const VITE_PLUS_VERSION = dependencyVersionMap["vite-plus"];
 
 /**
  * Update all package.json files with proper names, scripts, and workspaces
@@ -39,6 +43,7 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   updateInfraPackageJson(vfs, config);
   updateDesktopPackageJson(vfs, config);
   renameDevScriptsForAlchemy(vfs, config);
+  updateVitePlusPackageScripts(vfs, config);
 
   if (config.backend === "convex") {
     updateConvexPackageJson(vfs, config);
@@ -56,18 +61,8 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   pkgJson.name = config.projectName;
   pkgJson.scripts = pkgJson.scripts || {};
 
-  // Ensure workspaces is an array
-  let workspaces: string[] = [];
-  if (Array.isArray(pkgJson.workspaces)) {
-    workspaces = pkgJson.workspaces;
-  } else if (
-    pkgJson.workspaces &&
-    typeof pkgJson.workspaces === "object" &&
-    pkgJson.workspaces.packages
-  ) {
-    workspaces = pkgJson.workspaces.packages;
-  }
-  pkgJson.workspaces = workspaces;
+  const existingWorkspaces = pkgJson.workspaces;
+  const workspaces = getWorkspacePackages(existingWorkspaces);
 
   const scripts = pkgJson.scripts;
   const { projectName, packageManager, backend, database, orm, dbSetup, addons, frontend } = config;
@@ -82,16 +77,32 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   const dbPackageName = `@${projectName}/db`;
   const hasTurborepo = addons.includes("turborepo");
   const hasNx = addons.includes("nx");
+  const hasVitePlus = addons.includes("vite-plus");
+  const hasVitePlusNativeHooks =
+    hasVitePlus && !addons.includes("husky") && !addons.includes("lefthook");
 
   const dbSupport = getDbScriptSupport(config);
   const needsDbScripts = dbSupport.hasDbScripts;
   const isD1Alchemy = dbSupport.isD1Alchemy;
 
-  const pmConfig = getPackageManagerConfig(packageManager, { hasTurborepo, hasNx });
+  const pmConfig = getPackageManagerConfig(packageManager, { hasTurborepo, hasNx, hasVitePlus });
 
   scripts.dev = pmConfig.dev;
   scripts.build = pmConfig.build;
   scripts["check-types"] = pmConfig.checkTypes;
+
+  if (hasVitePlus) {
+    scripts.check = "vp check && vp run -r check-types";
+    scripts.lint = "vp lint";
+    scripts.format = "vp fmt";
+    scripts.staged = "vp staged";
+
+    if (hasVitePlusNativeHooks) {
+      scripts["hooks:setup"] = "vp config";
+    } else {
+      delete scripts["hooks:setup"];
+    }
+  }
 
   if (hasNativeApp) {
     scripts["dev:native"] = pmConfig.filter("native", "dev");
@@ -168,6 +179,14 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     };
   }
 
+  if (hasVitePlus) {
+    pkgJson.overrides = {
+      ...pkgJson.overrides,
+      vite: `npm:@voidzero-dev/vite-plus-core@${VITE_PLUS_VERSION}`,
+      vitest: `npm:@voidzero-dev/vite-plus-test@${VITE_PLUS_VERSION}`,
+    };
+  }
+
   if (backend === "convex") {
     if (!workspaces.includes("packages/*")) {
       workspaces.push("packages/*");
@@ -185,12 +204,44 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     }
   }
 
+  pkgJson.workspaces = getUpdatedWorkspaces(existingWorkspaces, workspaces);
   vfs.writeJson("package.json", pkgJson);
+}
+
+function getWorkspacePackages(workspaces: PackageJson["workspaces"]): string[] {
+  if (Array.isArray(workspaces)) {
+    return workspaces;
+  }
+
+  if (workspaces && typeof workspaces === "object" && workspaces.packages) {
+    return workspaces.packages;
+  }
+
+  return [];
+}
+
+function getUpdatedWorkspaces(
+  existingWorkspaces: PackageJson["workspaces"],
+  packages: string[],
+): WorkspacesConfig {
+  if (
+    existingWorkspaces &&
+    !Array.isArray(existingWorkspaces) &&
+    typeof existingWorkspaces === "object" &&
+    existingWorkspaces.catalog
+  ) {
+    return {
+      ...existingWorkspaces,
+      packages,
+    };
+  }
+
+  return packages;
 }
 
 function getPackageManagerConfig(
   packageManager: ProjectConfig["packageManager"],
-  options: { hasTurborepo: boolean; hasNx: boolean },
+  options: { hasTurborepo: boolean; hasNx: boolean; hasVitePlus: boolean },
 ): PackageManagerConfig {
   if (options.hasTurborepo) {
     return {
@@ -207,6 +258,15 @@ function getPackageManagerConfig(
       build: "nx run-many -t build",
       checkTypes: "nx run-many -t check-types",
       filter: (workspace, script) => `nx run-many -t ${script} --projects=${workspace}`,
+    };
+  }
+
+  if (options.hasVitePlus) {
+    return {
+      dev: "vp run -r dev",
+      build: "vp run -r build",
+      checkTypes: "vp run -r check-types",
+      filter: (workspace, script) => `vp run --filter ${workspace} ${script}`,
     };
   }
 
@@ -243,13 +303,18 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
   const { packageManager, addons, frontend } = config;
   const hasTurborepo = addons.includes("turborepo");
   const hasNx = addons.includes("nx");
+  const hasVitePlus = addons.includes("vite-plus");
   const desktopBuildScript: DesktopWebScript = frontend.includes("nuxt") ? "generate" : "build";
   const webBuildCommand = getDesktopWebCommand(
     packageManager,
-    { hasTurborepo, hasNx },
+    { hasTurborepo, hasNx, hasVitePlus },
     desktopBuildScript,
   );
-  const webDevCommand = getDesktopWebCommand(packageManager, { hasTurborepo, hasNx }, "dev");
+  const webDevCommand = getDesktopWebCommand(
+    packageManager,
+    { hasTurborepo, hasNx, hasVitePlus },
+    "dev",
+  );
   const localRunCommand = getLocalRunCommand(packageManager);
 
   pkgJson.scripts = {
@@ -269,7 +334,7 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
 
 function getDesktopWebCommand(
   packageManager: ProjectConfig["packageManager"],
-  options: { hasTurborepo: boolean; hasNx: boolean },
+  options: { hasTurborepo: boolean; hasNx: boolean; hasVitePlus: boolean },
   script: DesktopWebScript,
 ): string {
   if (options.hasTurborepo) {
@@ -278,6 +343,10 @@ function getDesktopWebCommand(
 
   if (options.hasNx) {
     return `nx run-many -t ${script} --projects=web`;
+  }
+
+  if (options.hasVitePlus) {
+    return `vp run --filter web ${script}`;
   }
 
   switch (packageManager) {
@@ -457,4 +526,31 @@ function renameDevScriptsForAlchemy(vfs: VirtualFileSystem, config: ProjectConfi
       vfs.writeJson(webPkgPath, webPkg);
     }
   }
+}
+
+function updateVitePlusPackageScripts(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  if (!config.addons.includes("vite-plus")) {
+    return;
+  }
+
+  const webPkgPath = "apps/web/package.json";
+  const webPkg = vfs.readJson<PackageJson>(webPkgPath);
+  if (!webPkg?.scripts) {
+    return;
+  }
+
+  const viteScriptReplacements: Record<string, string> = {
+    vite: "vp dev",
+    "vite dev": "vp dev",
+    "vite build": "vp build",
+    "vite preview": "vp preview",
+    "vitest run": "vp test",
+    "vite build && tsc --noEmit": "vp build && tsc --noEmit",
+  };
+
+  for (const [scriptName, command] of Object.entries(webPkg.scripts)) {
+    webPkg.scripts[scriptName] = viteScriptReplacements[command] ?? command;
+  }
+
+  vfs.writeJson(webPkgPath, webPkg);
 }

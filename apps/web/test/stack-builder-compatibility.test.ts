@@ -9,7 +9,8 @@ import {
   getDisabledReason,
 } from "../src/app/(home)/new/_components/utils";
 import { DEFAULT_STACK, type StackState } from "../src/lib/constant";
-import { generateStackCommand } from "../src/lib/stack-utils";
+import { sanitizeAddons } from "../src/lib/sanitize-stack-addons";
+import { formatStackCommandForDisplay, generateStackCommand } from "../src/lib/stack-utils";
 
 function createStack(overrides: Partial<StackState> = {}): StackState {
   return {
@@ -92,6 +93,34 @@ describe("stack builder D1 compatibility", () => {
     expect(getDisabledReason(stack, "webDeploy", "none")).toBe(
       "D1 with a self fullstack backend requires Cloudflare web deployment",
     );
+  });
+
+  test("keeps only the latest selected task-runner addon", () => {
+    expect(sanitizeAddons(["turborepo", "vite-plus"])).toEqual(["vite-plus"]);
+    expect(sanitizeAddons(["vite-plus", "nx"])).toEqual(["nx"]);
+    expect(sanitizeAddons(["nx", "turborepo"])).toEqual(["turborepo"]);
+
+    const sanitizedAddons = sanitizeAddons(["turborepo", "vite-plus"]);
+    const command = generateStackCommand(createStack({ addons: sanitizedAddons }));
+
+    expect(command).toContain("--addons vite-plus");
+    expect(command).not.toContain("turborepo");
+
+    expect(
+      getDisabledReason(createStack({ addons: ["turborepo"] }), "addons", "vite-plus"),
+    ).toBeNull();
+    expect(getDisabledReason(createStack({ addons: ["vite-plus"] }), "addons", "nx")).toBeNull();
+  });
+
+  test("renders long CLI commands with visible flag separators", () => {
+    const command = generateStackCommand(
+      createStack({ addons: ["vite-plus"], examples: ["none"] }),
+    );
+    const displayCommand = formatStackCommandForDisplay(command);
+
+    expect(command).toContain("my-better-t-app --frontend");
+    expect(displayCommand).toContain(`my-better-t-app ${"\\"}\n  --frontend`);
+    expect(displayCommand).toContain(`tanstack-router ${"\\"}\n  --backend`);
   });
 
   test("reapplies the same D1 adjustment after leaving and returning to it", () => {

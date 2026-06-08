@@ -19,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { getDesktopBuildNote } from "@/lib/stack-utils";
+import { formatStackCommandForDisplay, getDesktopBuildNote } from "@/lib/stack-utils";
 import type { Sponsor } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -66,6 +66,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
   } = useStackBuilder();
   const effectiveStack = compatibilityAnalysis.adjustedStack || stack;
   const desktopBuildNote = getDesktopBuildNote(effectiveStack);
+  const displayCommand = formatStackCommandForDisplay(command);
 
   return (
     <TooltipProvider>
@@ -171,8 +172,8 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                       className="builder-focus-ring cursor-pointer rounded-lg bg-muted/20 px-2.5 py-2"
                     >
                       <div className="flex items-start gap-2">
-                        <code className="block break-all font-mono text-muted-foreground text-xs">
-                          {command}
+                        <code className="block whitespace-pre-wrap break-words font-mono text-muted-foreground text-xs">
+                          {displayCommand}
                         </code>
                       </div>
                     </div>
@@ -394,7 +395,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                       >
                         <div className="flex items-start gap-1.5">
                           <span className="mt-0.5 text-chart-4">$</span>
-                          <code className="break-all">{command}</code>
+                          <code className="whitespace-pre-wrap break-words">{displayCommand}</code>
                         </div>
                       </div>
                     </div>
