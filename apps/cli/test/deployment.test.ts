@@ -178,7 +178,7 @@ describe("Deployment Configurations", () => {
       expect(vercelConfig).toContain('import type { VercelConfig } from "@vercel/config/v1";');
       expect(vercelConfig).toContain('framework: "nextjs"');
       expect(vercelConfig).toContain("satisfies VercelConfig");
-      expect(rootPkg.scripts.deploy).toBe("vercel deploy --target=preview");
+      expect(rootPkg.scripts.deploy).toBe("vercel deploy");
       expect(rootPkg.scripts["deploy:prod"]).toBe("vercel deploy --prod");
       expect(rootPkg.scripts["deploy:link"]).toBe("vercel link --repo");
       expect(rootPkg.devDependencies.vercel).toBeDefined();
@@ -713,12 +713,12 @@ describe("Deployment Configurations", () => {
       expect(infraFile).toContain('export const server = await Worker("server"');
       expect(vercelConfig).toContain('framework: "vite"');
       expect(rootPkg.scripts.deploy).toBe(
-        "turbo -F @cloudflare-server-vercel-web/infra deploy && vercel deploy --target=preview",
+        "turbo -F @cloudflare-server-vercel-web/infra deploy && vercel deploy",
       );
       expect(rootPkg.scripts["deploy:server"]).toBe(
         "turbo -F @cloudflare-server-vercel-web/infra deploy",
       );
-      expect(rootPkg.scripts["deploy:web"]).toBe("vercel deploy --target=preview");
+      expect(rootPkg.scripts["deploy:web"]).toBe("vercel deploy");
       expect(rootPkg.scripts.destroy).toBe("turbo -F @cloudflare-server-vercel-web/infra destroy");
       expect(turboConfig.tasks.deploy).toBeDefined();
       expect(turboConfig.tasks["deploy:prod"]).toBeDefined();

@@ -168,7 +168,7 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   const hasVercelDeploy = config.webDeploy === "vercel";
   const cloudflareDeployCommand = pmConfig.filter(infraPackageName, "deploy");
   const cloudflareDestroyCommand = pmConfig.filter(infraPackageName, "destroy");
-  const vercelDeployCommand = "vercel deploy --target=preview";
+  const vercelDeployCommand = "vercel deploy";
   const vercelProdCommand = "vercel deploy --prod";
 
   if (hasCloudflareDeploy && hasVercelDeploy) {
