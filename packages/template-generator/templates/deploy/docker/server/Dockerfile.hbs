@@ -1,0 +1,29 @@
+FROM node:24-slim AS base
+{{#if (or (eq packageManager "bun") (eq runtime "bun"))}}
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+RUN npm install -g pnpm
+{{/if}}
+WORKDIR /app
+
+COPY . .
+{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm install
+{{/if}}
+
+ENV NODE_ENV=production
+RUN cd apps/server && {{packageManager}} run build
+
+EXPOSE 3000
+
+WORKDIR /app/apps/server
+{{#if (eq runtime "bun")}}
+CMD ["bun", "dist/index.mjs"]
+{{else}}
+CMD ["node", "dist/index.mjs"]
+{{/if}}

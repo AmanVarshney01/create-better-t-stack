@@ -154,11 +154,21 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     scripts["db:local"] = pmConfig.filter(dbPackageName, "db:local");
   }
 
+  const hasDockerDeployScripts = config.webDeploy === "docker" || config.serverDeploy === "docker";
   if (dbSetup === "docker") {
-    scripts["db:start"] = pmConfig.filter(dbPackageName, "db:start");
-    scripts["db:watch"] = pmConfig.filter(dbPackageName, "db:watch");
-    scripts["db:stop"] = pmConfig.filter(dbPackageName, "db:stop");
-    scripts["db:down"] = pmConfig.filter(dbPackageName, "db:down");
+    if (hasDockerDeployScripts) {
+      // The database service lives in the root docker-compose.yml; scope the
+      // dev scripts to just that service so they don't touch web/server.
+      scripts["db:start"] = `docker compose up -d ${database}`;
+      scripts["db:watch"] = `docker compose up ${database}`;
+      scripts["db:stop"] = `docker compose stop ${database}`;
+      scripts["db:down"] = `docker compose down ${database}`;
+    } else {
+      scripts["db:start"] = pmConfig.filter(dbPackageName, "db:start");
+      scripts["db:watch"] = pmConfig.filter(dbPackageName, "db:watch");
+      scripts["db:stop"] = pmConfig.filter(dbPackageName, "db:stop");
+      scripts["db:down"] = pmConfig.filter(dbPackageName, "db:down");
+    }
   }
 
   // Add deploy/destroy scripts when using alchemy (cloudflare deployment)
@@ -166,6 +176,14 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   if (config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare") {
     scripts.deploy = pmConfig.filter(infraPackageName, "deploy");
     scripts.destroy = pmConfig.filter(infraPackageName, "destroy");
+  }
+
+  // Add compose scripts when deploying web/server as Docker containers
+  if (config.webDeploy === "docker" || config.serverDeploy === "docker") {
+    scripts["docker:build"] = "docker compose build";
+    scripts["docker:up"] = "docker compose up -d --build";
+    scripts["docker:down"] = "docker compose down";
+    scripts["docker:logs"] = "docker compose logs -f";
   }
 
   // Note: packageManager version is set by CLI at runtime since it requires running the actual CLI
@@ -411,7 +429,8 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
     }
   }
 
-  if (dbSetup === "docker") {
+  const hasDockerDeploy = config.webDeploy === "docker" || config.serverDeploy === "docker";
+  if (dbSetup === "docker" && !hasDockerDeploy) {
     scripts["db:start"] = "docker compose up -d";
     scripts["db:watch"] = "docker compose up";
     scripts["db:stop"] = "docker compose stop";

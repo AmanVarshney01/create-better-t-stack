@@ -28,6 +28,7 @@ export async function getORMChoice(
   database?: Database,
   backend?: Backend,
   runtime?: Runtime,
+  previousValue?: ORM,
 ) {
   if (backend === "convex") {
     return "none";
@@ -49,7 +50,8 @@ export async function getORMChoice(
     message: "Select ORM",
     options,
     initialValue:
-      database === "mongodb" ? "prisma" : runtime === "workers" ? "drizzle" : DEFAULT_CONFIG.orm,
+      previousValue ??
+      (database === "mongodb" ? "prisma" : runtime === "workers" ? "drizzle" : DEFAULT_CONFIG.orm),
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

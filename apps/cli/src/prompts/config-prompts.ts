@@ -89,66 +89,83 @@ export async function gatherConfig(
 
   const result = await navigableGroup<PromptGroupResults>(
     {
-      frontend: () => getFrontendChoice(flags.frontend, flags.backend, flags.auth),
-      backend: ({ results }) => getBackendFrameworkChoice(flags.backend, results.frontend),
-      runtime: ({ results }) => getRuntimeChoice(flags.runtime, results.backend),
-      database: ({ results }) =>
-        getDatabaseChoice(flags.database, results.backend, results.runtime),
-      orm: ({ results }) =>
+      frontend: ({ previousAnswer }) =>
+        getFrontendChoice(flags.frontend, flags.backend, flags.auth, previousAnswer),
+      backend: ({ results, previousAnswer }) =>
+        getBackendFrameworkChoice(flags.backend, results.frontend, previousAnswer),
+      runtime: ({ results, previousAnswer }) =>
+        getRuntimeChoice(flags.runtime, results.backend, previousAnswer),
+      database: ({ results, previousAnswer }) =>
+        getDatabaseChoice(flags.database, results.backend, results.runtime, previousAnswer),
+      orm: ({ results, previousAnswer }) =>
         getORMChoice(
           flags.orm,
           results.database !== "none",
           results.database,
           results.backend,
           results.runtime,
+          previousAnswer,
         ),
-      api: ({ results }) =>
-        getApiChoice(flags.api, results.frontend, results.backend) as Promise<API>,
-      auth: ({ results }) => getAuthChoice(flags.auth, results.backend, results.frontend),
-      payments: ({ results }) =>
-        getPaymentsChoice(flags.payments, results.auth, results.backend, results.frontend),
-      addons: ({ results }) =>
+      api: ({ results, previousAnswer }) =>
+        getApiChoice(flags.api, results.frontend, results.backend, previousAnswer) as Promise<API>,
+      auth: ({ results, previousAnswer }) =>
+        getAuthChoice(flags.auth, results.backend, results.frontend, previousAnswer),
+      payments: ({ results, previousAnswer }) =>
+        getPaymentsChoice(
+          flags.payments,
+          results.auth,
+          results.backend,
+          results.frontend,
+          previousAnswer,
+        ),
+      addons: ({ results, previousAnswer }) =>
         getAddonsChoice(
           flags.addons,
           results.frontend,
           results.auth,
           results.backend,
           results.runtime,
+          previousAnswer,
         ),
-      examples: ({ results }) =>
+      examples: ({ results, previousAnswer }) =>
         getExamplesChoice(
           flags.examples,
           results.database,
           results.frontend,
           results.backend,
           results.api,
+          previousAnswer,
         ) as Promise<Examples[]>,
-      dbSetup: ({ results }) =>
+      dbSetup: ({ results, previousAnswer }) =>
         getDBSetupChoice(
           results.database ?? "none",
           flags.dbSetup,
           results.orm,
           results.backend,
           results.runtime,
+          previousAnswer,
         ),
-      webDeploy: ({ results }) =>
+      webDeploy: ({ results, previousAnswer }) =>
         getDeploymentChoice(
           flags.webDeploy,
           results.runtime,
           results.backend,
           results.frontend,
           results.dbSetup,
+          previousAnswer,
         ),
-      serverDeploy: ({ results }) =>
+      serverDeploy: ({ results, previousAnswer }) =>
         getServerDeploymentChoice(
           flags.serverDeploy,
           results.runtime,
           results.backend,
           results.webDeploy,
+          previousAnswer,
         ),
-      git: () => getGitChoice(flags.git),
-      packageManager: () => getPackageManagerChoice(flags.packageManager),
-      install: () => getinstallChoice(flags.install),
+      git: ({ previousAnswer }) => getGitChoice(flags.git, previousAnswer),
+      packageManager: ({ previousAnswer }) =>
+        getPackageManagerChoice(flags.packageManager, previousAnswer),
+      install: ({ previousAnswer }) => getinstallChoice(flags.install, previousAnswer),
     },
     {
       onCancel: () => {

@@ -12,12 +12,27 @@ import {
   setIsFirstPrompt,
 } from "./navigable";
 
+const WEB_FRONTEND_VALUES: readonly Frontend[] = [
+  "tanstack-router",
+  "react-router",
+  "next",
+  "nuxt",
+  "svelte",
+  "solid",
+  "astro",
+  "tanstack-start",
+];
+
 export async function getFrontendChoice(
   frontendOptions?: Frontend[],
   backend?: Backend,
   auth?: string,
+  previousValue?: Frontend[],
 ): Promise<Frontend[] | symbol> {
   if (frontendOptions !== undefined) return frontendOptions;
+
+  const previousWeb = previousValue?.find((f) => WEB_FRONTEND_VALUES.includes(f));
+  const previousNative = previousValue?.find((f) => f.startsWith("native-"));
 
   while (true) {
     const wasFirstPrompt = isFirstPrompt();
@@ -37,7 +52,9 @@ export async function getFrontendChoice(
         },
       ],
       required: false,
-      initialValues: ["web"],
+      initialValues: previousValue
+        ? [...(previousWeb ? ["web"] : []), ...(previousNative ? ["native"] : [])]
+        : ["web"],
     });
 
     if (isGoBack(frontendTypes)) return GO_BACK_SYMBOL;
@@ -99,7 +116,7 @@ export async function getFrontendChoice(
       const webFramework = await navigableSelect<Frontend>({
         message: "Choose web",
         options: webOptions,
-        initialValue: DEFAULT_CONFIG.frontend[0],
+        initialValue: previousWeb ?? DEFAULT_CONFIG.frontend[0],
       });
 
       if (isGoBack(webFramework)) {
@@ -136,7 +153,7 @@ export async function getFrontendChoice(
             hint: "Consistent styling for React Native",
           },
         ],
-        initialValue: "native-bare",
+        initialValue: previousNative ?? "native-bare",
       });
 
       if (isGoBack(nativeFramework)) {

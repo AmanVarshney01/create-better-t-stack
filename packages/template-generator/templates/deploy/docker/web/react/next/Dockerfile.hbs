@@ -1,0 +1,33 @@
+FROM node:24-slim AS builder
+{{#if (eq packageManager "bun")}}
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+RUN npm install -g pnpm
+{{/if}}
+WORKDIR /app
+
+COPY . .
+{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm install
+{{/if}}
+
+ENV NODE_ENV=production
+RUN cd apps/web && {{packageManager}} run build
+
+FROM node:24-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3001
+EXPOSE 3001
+
+CMD ["node", "apps/web/server.js"]

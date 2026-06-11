@@ -49,6 +49,7 @@ export async function getAuthChoice(
   auth: Auth | undefined,
   backend?: Backend,
   frontend: readonly Frontend[] = [],
+  previousValue?: Auth,
 ) {
   if (auth !== undefined) return auth;
   const availableProviders = getAvailableAuthProviders(backend, frontend);
@@ -79,9 +80,11 @@ export async function getAuthChoice(
   const response = await navigableSelect({
     message: "Select authentication provider",
     options,
-    initialValue: options.some((option) => option.value === DEFAULT_CONFIG.auth)
-      ? DEFAULT_CONFIG.auth
-      : "none",
+    initialValue:
+      previousValue ??
+      (options.some((option) => option.value === DEFAULT_CONFIG.auth)
+        ? DEFAULT_CONFIG.auth
+        : "none"),
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

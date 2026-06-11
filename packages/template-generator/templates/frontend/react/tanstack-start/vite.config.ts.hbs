@@ -1,5 +1,8 @@
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+{{#if (eq webDeploy "docker")}}
+import { nitro } from "nitro/vite";
+{{/if}}
 import tailwindcss from "@tailwindcss/vite";
 import viteReact from "@vitejs/plugin-react";
 
@@ -13,6 +16,9 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     tanstackStart(),
+{{#if (eq webDeploy "docker")}}
+    nitro(),
+{{/if}}
     viteReact(),
   ],
 {{#if (and (eq backend "convex") (eq auth "better-auth"))}}

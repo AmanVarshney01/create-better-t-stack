@@ -139,6 +139,55 @@ describe("pnpm workspace", () => {
     expect(workspace.allowBuilds).toEqual({ "msgpackr-extract": true });
   });
 
+  it("adds build approvals for Docker deploys so non-interactive installs succeed", async () => {
+    const workspace = await readPnpmWorkspace({
+      projectName: "pnpm-docker-next",
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      api: "trpc",
+      database: "postgres",
+      orm: "prisma",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["none"],
+      examples: ["none"],
+      dbSetup: "docker",
+      webDeploy: "docker",
+      serverDeploy: "none",
+    });
+
+    expect(workspace.allowBuilds).toMatchObject({
+      esbuild: true,
+      sharp: true,
+      "@prisma/engines": true,
+    });
+  });
+
+  it("approves Nuxt lifecycle-script dependencies", async () => {
+    const workspace = await readPnpmWorkspace({
+      projectName: "pnpm-nuxt-builds",
+      frontend: ["nuxt"],
+      backend: "fastify",
+      runtime: "node",
+      api: "orpc",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "docker",
+      serverDeploy: "docker",
+    });
+
+    expect(workspace.allowBuilds).toMatchObject({
+      "@parcel/watcher": true,
+      "vue-demi": true,
+    });
+  });
+
   it("does not add build approvals for stacks without lifecycle-script dependencies", async () => {
     const workspace = await readPnpmWorkspace({
       projectName: "pnpm-svelte",

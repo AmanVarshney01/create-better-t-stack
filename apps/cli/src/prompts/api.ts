@@ -10,6 +10,7 @@ export async function getApiChoice(
   Api?: API | undefined,
   frontend?: Frontend[],
   backend?: Backend,
+  previousValue?: API,
 ) {
   if (backend === "convex" || backend === "none") {
     return "none";
@@ -45,7 +46,7 @@ export async function getApiChoice(
   const apiType = await navigableSelect<API>({
     message: "Select API type",
     options: apiOptions,
-    initialValue: apiOptions[0].value,
+    initialValue: previousValue ?? apiOptions[0].value,
   });
 
   if (isCancel(apiType)) throw new UserCancelledError({ message: "Operation cancelled" });

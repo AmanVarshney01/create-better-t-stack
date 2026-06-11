@@ -3,7 +3,12 @@ import type { Backend, Database, Runtime } from "../types";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
-export async function getDatabaseChoice(database?: Database, backend?: Backend, runtime?: Runtime) {
+export async function getDatabaseChoice(
+  database?: Database,
+  backend?: Backend,
+  runtime?: Runtime,
+  previousValue?: Database,
+) {
   if (backend === "convex" || backend === "none") {
     return "none";
   }
@@ -48,7 +53,7 @@ export async function getDatabaseChoice(database?: Database, backend?: Backend, 
   const response = await navigableSelect<Database>({
     message: "Select database",
     options: databaseOptions,
-    initialValue: DEFAULT_CONFIG.database,
+    initialValue: previousValue ?? DEFAULT_CONFIG.database,
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

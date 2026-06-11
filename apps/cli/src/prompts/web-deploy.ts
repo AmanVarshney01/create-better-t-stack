@@ -24,6 +24,12 @@ function getDeploymentDisplay(deployment: WebDeploy): {
       hint: "Deploy to Cloudflare Workers using Alchemy",
     };
   }
+  if (deployment === "docker") {
+    return {
+      label: "Docker",
+      hint: "Self-host with a Dockerfile and docker-compose.yml",
+    };
+  }
   return {
     label: deployment,
     hint: `Add ${deployment} deployment`,
@@ -36,6 +42,7 @@ export async function getDeploymentChoice(
   backend?: Backend,
   frontend: Frontend[] = [],
   dbSetup?: DatabaseSetup,
+  previousValue?: WebDeploy,
 ) {
   if (deployment !== undefined) return deployment;
   if (!hasWebFrontend(frontend)) {
@@ -46,7 +53,7 @@ export async function getDeploymentChoice(
     return "cloudflare";
   }
 
-  const availableDeployments = ["cloudflare", "none"];
+  const availableDeployments = ["cloudflare", "docker", "none"];
 
   const options: DeploymentOption[] = availableDeployments.map((deploy) => {
     const { label, hint } = getDeploymentDisplay(deploy as WebDeploy);
@@ -60,7 +67,7 @@ export async function getDeploymentChoice(
   const response = await navigableSelect<WebDeploy>({
     message: "Select web deployment",
     options,
-    initialValue: DEFAULT_CONFIG.webDeploy,
+    initialValue: previousValue ?? DEFAULT_CONFIG.webDeploy,
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
@@ -73,32 +80,21 @@ export async function getDeploymentToAdd(frontend: Frontend[], existingDeploymen
     return "none";
   }
 
-  const options: DeploymentOption[] = [];
-
-  if (existingDeployment !== "cloudflare") {
-    const { label, hint } = getDeploymentDisplay("cloudflare");
-    options.push({
-      value: "cloudflare",
-      label,
-      hint,
-    });
-  }
-
+  // A project can only have one web deployment target; nothing to add.
   if (existingDeployment && existingDeployment !== "none") {
     return "none";
   }
 
-  if (options.length > 0) {
-    options.push({
-      value: "none",
-      label: "None",
-      hint: "Skip deployment setup",
-    });
-  }
+  const options: DeploymentOption[] = (["cloudflare", "docker"] as const).map((deploy) => {
+    const { label, hint } = getDeploymentDisplay(deploy);
+    return { value: deploy, label, hint };
+  });
 
-  if (options.length === 0) {
-    return "none";
-  }
+  options.push({
+    value: "none",
+    label: "None",
+    hint: "Skip deployment setup",
+  });
 
   const response = await navigableSelect<WebDeploy>({
     message: "Select web deployment",

@@ -665,7 +665,7 @@ function generateScriptsList(
   config: ProjectConfig,
   hasNative: boolean,
 ): string {
-  const { database, addons, backend, dbSetup, frontend } = config;
+  const { database, addons, backend, dbSetup, frontend, webDeploy, serverDeploy } = config;
   const isConvex = backend === "convex";
   const isBackendSelf = backend === "self";
   const hasWeb = frontend.some((f) =>
@@ -765,6 +765,12 @@ function generateScriptsList(
 - \`cd apps/docs && ${packageManagerRunCmd} build\`: Build documentation site`;
   }
 
+  if (webDeploy === "docker" || serverDeploy === "docker") {
+    scripts += `\n- \`${packageManagerRunCmd} docker:up\`: Build and start the Docker Compose stack
+- \`${packageManagerRunCmd} docker:logs\`: Tail logs from the Docker Compose stack
+- \`${packageManagerRunCmd} docker:down\`: Stop the Docker Compose stack`;
+  }
+
   return scripts;
 }
 
@@ -774,29 +780,58 @@ function generateDeploymentCommands(
   serverDeploy: ProjectConfig["serverDeploy"],
   backend: ProjectConfig["backend"],
 ): string {
-  if (webDeploy !== "cloudflare" && serverDeploy !== "cloudflare") {
+  const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const hasDocker = webDeploy === "docker" || serverDeploy === "docker";
+
+  if (!hasCloudflare && !hasDocker) {
     return "";
   }
 
-  const lines: string[] = ["## Deployment (Cloudflare via Alchemy)"];
-  const targetLabel =
-    webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || backend === "self")
-      ? "web + server"
-      : webDeploy === "cloudflare"
-        ? "web"
-        : "server";
+  const lines: string[] = ["## Deployment"];
 
-  lines.push(
-    `- Target: ${targetLabel}`,
-    `- Dev: ${packageManagerRunCmd} dev`,
-    `- Deploy: ${packageManagerRunCmd} deploy`,
-    `- Destroy: ${packageManagerRunCmd} destroy`,
-  );
+  if (hasCloudflare) {
+    const targetLabel =
+      webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || backend === "self")
+        ? "web + server"
+        : webDeploy === "cloudflare"
+          ? "web"
+          : "server";
 
-  lines.push(
-    "",
-    "For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).",
-  );
+    lines.push(
+      "",
+      "### Cloudflare via Alchemy",
+      "",
+      `- Target: ${targetLabel}`,
+      `- Dev: ${packageManagerRunCmd} dev`,
+      `- Deploy: ${packageManagerRunCmd} deploy`,
+      `- Destroy: ${packageManagerRunCmd} destroy`,
+      "",
+      "For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).",
+    );
+  }
+
+  if (hasDocker) {
+    const targetLabel =
+      webDeploy === "docker" && (serverDeploy === "docker" || backend === "self")
+        ? "web + server"
+        : webDeploy === "docker"
+          ? "web"
+          : "server";
+
+    lines.push(
+      "",
+      "### Docker Compose",
+      "",
+      `- Target: ${targetLabel}`,
+      "- Config: `docker-compose.yml` (app Dockerfiles live in `apps/*/Dockerfile`)",
+      `- Build images: ${packageManagerRunCmd} docker:build`,
+      `- Start: ${packageManagerRunCmd} docker:up`,
+      `- Logs: ${packageManagerRunCmd} docker:logs`,
+      `- Stop: ${packageManagerRunCmd} docker:down`,
+      "",
+      "Environment variables are read from each app's `.env` file (baked into web builds for public variables) and overridden in `docker-compose.yml` for container networking.",
+    );
+  }
 
   return `${lines.join("\n")}\n`;
 }

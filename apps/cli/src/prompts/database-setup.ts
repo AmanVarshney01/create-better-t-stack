@@ -8,6 +8,7 @@ export async function getDBSetupChoice(
   _orm?: ORM,
   backend?: Backend,
   runtime?: Runtime,
+  previousValue?: DatabaseSetup,
 ) {
   if (backend === "convex") {
     return "none";
@@ -103,7 +104,7 @@ export async function getDBSetupChoice(
   const response = await navigableSelect<DatabaseSetup>({
     message: `Select ${databaseType} setup option`,
     options,
-    initialValue: "none",
+    initialValue: previousValue ?? "none",
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

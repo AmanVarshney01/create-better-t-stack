@@ -9,7 +9,6 @@ import {
   GroupMultiSelectPrompt,
   MultiSelectPrompt,
   SelectPrompt,
-  TextPrompt,
   isCancel,
 } from "@clack/core";
 import pc from "picocolors";
@@ -87,7 +86,7 @@ async function runWithNavigation<T>(prompt: any): Promise<T | symbol> {
   let goBack = false;
 
   prompt.on("key", (char: string | undefined) => {
-    if (char === "b" && !ctxIsFirstPrompt()) {
+    if ((char === "b" || char === "B") && !ctxIsFirstPrompt()) {
       goBack = true;
       prompt.state = "cancel";
     }
@@ -316,54 +315,6 @@ export async function navigableConfirm(opts: NavigableConfirmOptions): Promise<b
   });
 
   return runWithNavigation(prompt) as Promise<boolean | symbol>;
-}
-
-export interface NavigableTextOptions {
-  message: string;
-  placeholder?: string;
-  defaultValue?: string;
-  initialValue?: string;
-  validate?: (value: string | undefined) => string | Error | undefined;
-}
-
-export async function navigableText(opts: NavigableTextOptions): Promise<string | symbol> {
-  const prompt = new TextPrompt({
-    validate: opts.validate,
-    placeholder: opts.placeholder,
-    defaultValue: opts.defaultValue,
-    initialValue: opts.initialValue,
-    render() {
-      const title = `${pc.gray(S_BAR)}\n${symbol(this.state)}  ${opts.message}\n`;
-      const placeholder = opts.placeholder
-        ? pc.inverse(opts.placeholder[0]) + pc.dim(opts.placeholder.slice(1))
-        : pc.inverse(pc.hidden("_"));
-      // biome-ignore lint/suspicious/noExplicitAny: TextPrompt has userInput but types don't expose it
-      const self = this as any;
-      const userInput = !self.userInput ? placeholder : self.userInputWithCursor;
-      const value = this.value ?? "";
-
-      switch (this.state) {
-        case "error": {
-          const errorText = this.error ? `  ${pc.yellow(this.error)}` : "";
-          return `${title.trim()}\n${pc.yellow(S_BAR)}  ${userInput}\n${pc.yellow(S_BAR_END)}${errorText}\n`;
-        }
-        case "submit": {
-          const valueText = value ? `  ${pc.dim(value)}` : "";
-          return `${title}${pc.gray(S_BAR)}${valueText}`;
-        }
-        case "cancel": {
-          const valueText = value ? `  ${pc.strikethrough(pc.dim(value))}` : "";
-          return `${title}${pc.gray(S_BAR)}${valueText}${value.trim() ? `\n${pc.gray(S_BAR)}` : ""}`;
-        }
-        default: {
-          const hint = `\n${pc.gray(S_BAR)}  ${getHint()}`;
-          return `${title}${pc.cyan(S_BAR)}  ${userInput}\n${pc.cyan(S_BAR_END)}${hint}\n`;
-        }
-      }
-    },
-  });
-
-  return runWithNavigation(prompt) as Promise<string | symbol>;
 }
 
 export interface GroupMultiSelectOption<T> {

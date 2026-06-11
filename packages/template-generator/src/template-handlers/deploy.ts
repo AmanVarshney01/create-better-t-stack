@@ -14,6 +14,10 @@ export async function processDeployTemplates(
     processTemplatesFromPrefix(vfs, templates, "packages/infra", "packages/infra", config);
   }
 
+  if (config.webDeploy === "docker" || config.serverDeploy === "docker") {
+    processTemplatesFromPrefix(vfs, templates, "deploy/docker/compose", "", config);
+  }
+
   if (config.webDeploy !== "none" && config.webDeploy !== "cloudflare") {
     const templateMap: Record<string, string> = {
       "tanstack-router": "react/tanstack-router",
@@ -23,6 +27,7 @@ export async function processDeployTemplates(
       next: "react/next",
       nuxt: "nuxt",
       svelte: "svelte",
+      astro: "astro",
     };
 
     for (const f of config.frontend) {

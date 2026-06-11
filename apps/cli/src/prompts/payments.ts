@@ -8,6 +8,7 @@ export async function getPaymentsChoice(
   auth?: Auth,
   backend?: Backend,
   _frontends?: Frontend[],
+  previousValue?: Payments,
 ) {
   if (payments !== undefined) return payments;
 
@@ -37,7 +38,7 @@ export async function getPaymentsChoice(
   const response = await navigableSelect<Payments>({
     message: "Select payments provider",
     options,
-    initialValue: DEFAULT_CONFIG.payments,
+    initialValue: previousValue ?? DEFAULT_CONFIG.payments,
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

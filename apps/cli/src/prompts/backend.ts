@@ -15,6 +15,7 @@ const FULLSTACK_FRONTENDS: readonly Frontend[] = [
 export async function getBackendFrameworkChoice(
   backendFramework?: Backend,
   frontends?: Frontend[],
+  previousValue?: Backend,
 ) {
   if (backendFramework !== undefined) return backendFramework;
 
@@ -75,7 +76,7 @@ export async function getBackendFrameworkChoice(
   const response = await navigableSelect<Backend>({
     message: "Select backend",
     options: backendOptions,
-    initialValue: hasFullstackFrontend ? "self" : DEFAULT_CONFIG.backend,
+    initialValue: previousValue ?? (hasFullstackFrontend ? "self" : DEFAULT_CONFIG.backend),
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

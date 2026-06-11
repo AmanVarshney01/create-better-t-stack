@@ -656,4 +656,372 @@ describe("Deployment Configurations", () => {
       expectError(result, "'--web-deploy' requires a web frontend");
     });
   });
+
+  describe("Docker Deployment", () => {
+    it("should generate a full Docker Compose stack (web + server + db)", async () => {
+      const result = await createVirtual({
+        projectName: "docker-full-stack",
+        webDeploy: "docker",
+        serverDeploy: "docker",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "docker",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml");
+      const webDockerfile = files.get("apps/web/Dockerfile");
+      const serverDockerfile = files.get("apps/server/Dockerfile");
+      const rootPkg = JSON.parse(files.get("package.json") ?? "{}");
+      const readme = files.get("README.md");
+
+      expect(files.has(".dockerignore")).toBe(true);
+      expect(files.has("apps/web/nginx.conf")).toBe(true);
+
+      // The database service is inlined in the root compose, not a separate file
+      expect(files.has("packages/db/docker-compose.yml")).toBe(false);
+      expect(compose).not.toContain("include:");
+      expect(compose).toContain("container_name: docker-full-stack-postgres");
+      expect(compose).toContain("docker-full-stack_postgres_data:");
+      expect(compose).toContain("init: true");
+      expect(compose).toContain("dockerfile: apps/web/Dockerfile");
+      expect(compose).toContain("dockerfile: apps/server/Dockerfile");
+      expect(compose).toContain('"3001:80"');
+      expect(compose).toContain('"3000:3000"');
+      expect(compose).toContain("CORS_ORIGIN: http://localhost:3001");
+      expect(compose).toContain(
+        "DATABASE_URL: postgresql://postgres:password@postgres:5432/docker-full-stack",
+      );
+      expect(compose).toContain("condition: service_healthy");
+
+      // SPA frontend builds static assets served by nginx with an SPA fallback
+      expect(webDockerfile).toContain("FROM nginx:alpine");
+      expect(files.get("apps/web/nginx.conf")).toContain("try_files $uri $uri/ /index.html");
+
+      expect(serverDockerfile).toContain('CMD ["bun", "dist/index.mjs"]');
+      expect(serverDockerfile).toContain("bun install");
+
+      expect(rootPkg.scripts["docker:up"]).toBe("docker compose up -d --build");
+      expect(rootPkg.scripts["docker:down"]).toBe("docker compose down");
+      // db scripts are scoped to the database service of the root compose
+      expect(rootPkg.scripts["db:start"]).toBe("docker compose up -d postgres");
+      expect(rootPkg.scripts["db:stop"]).toBe("docker compose stop postgres");
+      expect(readme).toContain("### Docker Compose");
+    });
+
+    it("should generate a web-only container for a fullstack self backend", async () => {
+      const result = await createVirtual({
+        projectName: "docker-self-next",
+        webDeploy: "docker",
+        serverDeploy: "none",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "prisma",
+        auth: "better-auth",
+        payments: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "docker",
+        install: false,
+        git: false,
+        packageManager: "pnpm",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml");
+      const webDockerfile = files.get("apps/web/Dockerfile");
+
+      expect(files.has("apps/server/Dockerfile")).toBe(false);
+      expect(compose).not.toContain("dockerfile: apps/server/Dockerfile");
+      expect(compose).toContain('"3001:3001"');
+      expect(compose).toContain("BETTER_AUTH_URL: http://localhost:3001");
+      expect(compose).toContain(
+        "DATABASE_URL: postgresql://postgres:password@postgres:5432/docker-self-next",
+      );
+      expect(webDockerfile).toContain("npm install -g pnpm");
+      // Next.js Docker deploys use standalone output for a minimal runtime image
+      expect(webDockerfile).toContain(".next/standalone");
+      expect(webDockerfile).toContain('CMD ["node", "apps/web/server.js"]');
+      expect(files.get("apps/web/next.config.ts")).toContain('output: "standalone"');
+    });
+
+    it("should switch Svelte to adapter-node for Docker web deploys", async () => {
+      const result = await createVirtual({
+        projectName: "docker-svelte",
+        webDeploy: "docker",
+        serverDeploy: "none",
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "none",
+        frontend: ["svelte"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "npm",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const svelteConfig = files.get("apps/web/svelte.config.js");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const webDockerfile = files.get("apps/web/Dockerfile");
+
+      expect(svelteConfig).toContain("@sveltejs/adapter-node");
+      expect(svelteConfig).not.toContain("@sveltejs/adapter-auto");
+      expect(webPkg.devDependencies["@sveltejs/adapter-node"]).toBeDefined();
+      expect(webDockerfile).toContain('CMD ["node", "build/index.js"]');
+    });
+
+    it("should add the nitro plugin for TanStack Start Docker web deploys", async () => {
+      const result = await createVirtual({
+        projectName: "docker-tanstack-start",
+        webDeploy: "docker",
+        serverDeploy: "none",
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "none",
+        frontend: ["tanstack-start"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const viteConfig = files.get("apps/web/vite.config.ts");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const webDockerfile = files.get("apps/web/Dockerfile");
+
+      expect(viteConfig).toContain('import { nitro } from "nitro/vite"');
+      expect(viteConfig).toContain("nitro(),");
+      expect(webPkg.dependencies.nitro).toBeDefined();
+      // SSR chunks require() externals at runtime, so the app runs from the workspace
+      expect(webDockerfile).toContain("WORKDIR /app/apps/web");
+      expect(webDockerfile).toContain('CMD ["node", ".output/server/index.mjs"]');
+    });
+
+    it("should serve React Router SPA builds with nginx", async () => {
+      const result = await createVirtual({
+        projectName: "docker-react-router",
+        webDeploy: "docker",
+        serverDeploy: "none",
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "none",
+        frontend: ["react-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "npm",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const webDockerfile = files.get("apps/web/Dockerfile");
+      const compose = files.get("docker-compose.yml");
+
+      // react-router scaffolds with ssr: false, so the build is a static SPA
+      expect(webDockerfile).toContain("FROM nginx:alpine");
+      expect(webDockerfile).toContain("/app/apps/web/build/client");
+      expect(files.has("apps/web/nginx.conf")).toBe(true);
+      expect(compose).toContain('"3001:80"');
+    });
+
+    it("should generate a server-only Docker setup with web on another deploy", async () => {
+      const result = await createVirtual({
+        projectName: "docker-server-only",
+        webDeploy: "none",
+        serverDeploy: "docker",
+        backend: "express",
+        runtime: "node",
+        database: "postgres",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["nuxt"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "npm",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml");
+      const serverDockerfile = files.get("apps/server/Dockerfile");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+
+      // Explicit vue 3 pin keeps npm's resolver off the vue 2 optional-peer path
+      expect(webPkg.dependencies.vue).toBeDefined();
+      expect(files.has("apps/web/Dockerfile")).toBe(false);
+      expect(compose).not.toContain("dockerfile: apps/web/Dockerfile");
+      expect(compose).toContain("dockerfile: apps/server/Dockerfile");
+      // External database: connection string comes from apps/server/.env
+      expect(compose).not.toContain("DATABASE_URL:");
+      expect(compose).not.toContain("include:");
+      expect(serverDockerfile).toContain('CMD ["node", "dist/index.mjs"]');
+    });
+
+    it("should keep Solid production builds resolvable without an API layer", async () => {
+      const result = await createVirtual({
+        projectName: "docker-solid-no-api",
+        webDeploy: "docker",
+        serverDeploy: "none",
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "none",
+        frontend: ["solid"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+
+      // __root.tsx imports the router devtools unconditionally
+      expect(webPkg.devDependencies["@tanstack/solid-router-devtools"]).toBeDefined();
+      expect(files.get("apps/web/Dockerfile")).toContain("FROM nginx:alpine");
+    });
+
+    it("should bind Fastify to all interfaces for Docker deploys", async () => {
+      const result = await createVirtual({
+        projectName: "docker-fastify-host",
+        webDeploy: "none",
+        serverDeploy: "docker",
+        backend: "fastify",
+        runtime: "node",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["nuxt"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "npm",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      expect(files.get("apps/server/src/index.ts")).toContain(
+        'fastify.listen({ port: 3000, host: "0.0.0.0" }',
+      );
+    });
+
+    it("should fail with docker server deploy + workers runtime", async () => {
+      const result = await runTRPCTest({
+        projectName: "docker-workers-fail",
+        webDeploy: "none",
+        serverDeploy: "docker",
+        backend: "hono",
+        runtime: "workers",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        expectError: true,
+      });
+
+      expectError(result, "'--server-deploy docker' is not compatible with '--runtime workers'");
+    });
+
+    it("should fail with docker server deploy + self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "docker-self-server-fail",
+        webDeploy: "none",
+        serverDeploy: "docker",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        expectError: true,
+      });
+
+      expectError(result, "'--server-deploy docker' requires a separate server backend");
+    });
+  });
 });
