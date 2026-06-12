@@ -1,6 +1,6 @@
 import type { Backend, DatabaseSetup, ORM, Runtime } from "../types";
 import { UserCancelledError } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 export async function getDBSetupChoice(
   databaseType: string,
@@ -104,7 +104,7 @@ export async function getDBSetupChoice(
   const response = await navigableSelect<DatabaseSetup>({
     message: `Select ${databaseType} setup option`,
     options,
-    initialValue: previousValue ?? "none",
+    initialValue: preferValidInitial(options, previousValue, "none"),
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

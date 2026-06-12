@@ -2,7 +2,7 @@ import { DEFAULT_CONFIG } from "../constants";
 import type { Auth, Backend, Frontend } from "../types";
 import { supportsConvexBetterAuth } from "../utils/compatibility-rules";
 import { UserCancelledError } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 export function getAvailableAuthProviders(
   backend?: Backend,
@@ -80,11 +80,11 @@ export async function getAuthChoice(
   const response = await navigableSelect({
     message: "Select authentication provider",
     options,
-    initialValue:
-      previousValue ??
-      (options.some((option) => option.value === DEFAULT_CONFIG.auth)
-        ? DEFAULT_CONFIG.auth
-        : "none"),
+    initialValue: preferValidInitial(
+      options,
+      previousValue,
+      options.some((option) => option.value === DEFAULT_CONFIG.auth) ? DEFAULT_CONFIG.auth : "none",
+    ),
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

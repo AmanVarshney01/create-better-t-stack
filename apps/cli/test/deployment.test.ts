@@ -705,9 +705,14 @@ describe("Deployment Configurations", () => {
       expect(compose).toContain('"3000:3000"');
       expect(compose).toContain("CORS_ORIGIN: http://localhost:3001");
       expect(compose).toContain(
-        "DATABASE_URL: postgresql://postgres:password@postgres:5432/docker-full-stack",
+        // biome-ignore format: compose interpolation syntax
+        "DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-password}@postgres:5432/docker-full-stack",
       );
       expect(compose).toContain("condition: service_healthy");
+      // public client values are baked via build args, not .env files in the context
+      expect(compose).toContain("VITE_SERVER_URL: http://localhost:3000");
+      expect(webDockerfile).toContain("ARG VITE_SERVER_URL");
+      expect(files.get(".dockerignore")).toContain("**/.env");
 
       // SPA frontend builds static assets served by nginx with an SPA fallback
       expect(webDockerfile).toContain("FROM nginx:alpine");
@@ -758,7 +763,8 @@ describe("Deployment Configurations", () => {
       expect(compose).toContain('"3001:3001"');
       expect(compose).toContain("BETTER_AUTH_URL: http://localhost:3001");
       expect(compose).toContain(
-        "DATABASE_URL: postgresql://postgres:password@postgres:5432/docker-self-next",
+        // biome-ignore format: compose interpolation syntax
+        "DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-password}@postgres:5432/docker-self-next",
       );
       expect(webDockerfile).toContain("npm install -g pnpm");
       // Next.js Docker deploys use standalone output for a minimal runtime image

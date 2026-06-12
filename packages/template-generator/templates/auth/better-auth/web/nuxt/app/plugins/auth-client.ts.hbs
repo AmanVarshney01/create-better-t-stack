@@ -10,7 +10,7 @@ export default defineNuxtPlugin(() => {
 
   const authClient = createAuthClient({
     {{#if (ne backend "self")}}
-    baseURL: config.public.serverUrl,
+    baseURL: (import.meta.server && config.serverUrl) || config.public.serverUrl,
     {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],

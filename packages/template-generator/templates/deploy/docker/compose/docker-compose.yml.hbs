@@ -6,6 +6,18 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+{{#if (and (not (includes frontend "nuxt")) (or (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start")))))}}
+      args:
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}}: http://localhost:3000
+{{/if}}
+{{#if (eq backend "convex")}}
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_CONVEX_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_CONVEX_URL{{else}}VITE_CONVEX_URL{{/if}}: ${CONVEX_URL:-}
+{{/if}}
+{{#if (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start")))}}
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY{{else}}VITE_CLERK_PUBLISHABLE_KEY{{/if}}: ${CLERK_PUBLISHABLE_KEY:-}
+{{/if}}
+{{/if}}
     init: true
     ports:
 {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "solid"))}}
@@ -24,13 +36,13 @@ services:
       CORS_ORIGIN: http://localhost:3001
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "postgres"))}}
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/{{projectName}}
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-password}@postgres:5432/{{projectName}}
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "mysql"))}}
-      DATABASE_URL: mysql://user:password@mysql:3306/{{projectName}}
+      DATABASE_URL: mysql://user:${MYSQL_PASSWORD:-password}@mysql:3306/{{projectName}}
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "mongodb"))}}
-      DATABASE_URL: mongodb://root:password@mongodb:27017/{{projectName}}?authSource=admin
+      DATABASE_URL: mongodb://root:${MONGO_PASSWORD:-password}@mongodb:27017/{{projectName}}?authSource=admin
 {{/if}}
 {{/if}}
 {{#if (eq dbSetup "docker")}}
@@ -46,7 +58,7 @@ services:
       NEXT_PUBLIC_SERVER_URL: http://server:3000
 {{/if}}
 {{#if (includes frontend "nuxt")}}
-      NUXT_PUBLIC_SERVER_URL: http://server:3000
+      NUXT_SERVER_URL: http://server:3000
 {{/if}}
 {{/if}}
     depends_on:
@@ -74,13 +86,13 @@ services:
       CORS_ORIGIN: http://localhost:3001
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "postgres"))}}
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/{{projectName}}
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-password}@postgres:5432/{{projectName}}
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "mysql"))}}
-      DATABASE_URL: mysql://user:password@mysql:3306/{{projectName}}
+      DATABASE_URL: mysql://user:${MYSQL_PASSWORD:-password}@mysql:3306/{{projectName}}
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "mongodb"))}}
-      DATABASE_URL: mongodb://root:password@mongodb:27017/{{projectName}}?authSource=admin
+      DATABASE_URL: mongodb://root:${MONGO_PASSWORD:-password}@mongodb:27017/{{projectName}}?authSource=admin
 {{/if}}
 {{/if}}
     healthcheck:
@@ -111,7 +123,7 @@ services:
     environment:
       POSTGRES_DB: {{projectName}}
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     ports:
       - "5432:5432"
     volumes:
@@ -128,10 +140,10 @@ services:
     image: mysql
     container_name: {{projectName}}-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
       MYSQL_DATABASE: {{projectName}}
       MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-password}
     ports:
       - "3306:3306"
     volumes:
@@ -149,7 +161,7 @@ services:
     container_name: {{projectName}}-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
       MONGO_INITDB_DATABASE: {{projectName}}
     ports:
       - "27017:27017"

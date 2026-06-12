@@ -1,7 +1,7 @@
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Runtime } from "../types";
 import { UserCancelledError } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 export async function getRuntimeChoice(
   runtime?: Runtime,
@@ -42,7 +42,7 @@ export async function getRuntimeChoice(
   const response = await navigableSelect<Runtime>({
     message: "Select runtime",
     options: runtimeOptions,
-    initialValue: previousValue ?? DEFAULT_CONFIG.runtime,
+    initialValue: preferValidInitial(runtimeOptions, previousValue, DEFAULT_CONFIG.runtime),
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

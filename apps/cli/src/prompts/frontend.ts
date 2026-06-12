@@ -9,6 +9,7 @@ import {
   isGoBack,
   navigableMultiselect,
   navigableSelect,
+  preferValidInitial,
   setIsFirstPrompt,
 } from "./navigable";
 
@@ -116,7 +117,7 @@ export async function getFrontendChoice(
       const webFramework = await navigableSelect<Frontend>({
         message: "Choose web",
         options: webOptions,
-        initialValue: previousWeb ?? DEFAULT_CONFIG.frontend[0],
+        initialValue: preferValidInitial(webOptions, previousWeb, DEFAULT_CONFIG.frontend[0]),
       });
 
       if (isGoBack(webFramework)) {

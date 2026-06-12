@@ -21,4 +21,8 @@ Dockerfile
 **/Dockerfile
 docker-compose.yml
 
-# Keep .env files: frameworks bake public variables from them at build time
+# Secrets stay out of image layers; runtime env comes from compose env_file,
+# build-time public values come from compose build args
+**/.env
+**/.env.*
+!**/.env.example

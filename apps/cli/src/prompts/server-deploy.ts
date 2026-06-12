@@ -1,7 +1,7 @@
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Runtime, ServerDeploy, WebDeploy } from "../types";
 import { UserCancelledError } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 const SERVER_APP_BACKENDS: Backend[] = ["hono", "express", "fastify", "elysia"];
 
@@ -66,7 +66,7 @@ export async function getServerDeploymentChoice(
   const response = await navigableSelect<ServerDeploy>({
     message: "Select server deployment",
     options,
-    initialValue: previousValue ?? DEFAULT_CONFIG.serverDeploy,
+    initialValue: preferValidInitial(options, previousValue, DEFAULT_CONFIG.serverDeploy),
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

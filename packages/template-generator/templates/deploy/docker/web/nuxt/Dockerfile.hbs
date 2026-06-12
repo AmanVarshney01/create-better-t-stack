@@ -6,6 +6,15 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm
 {{/if}}
 WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
 
 COPY . .
 {{#if (eq packageManager "bun")}}

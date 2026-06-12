@@ -2,7 +2,7 @@ import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, DatabaseSetup, Frontend, Runtime, WebDeploy } from "../types";
 import { WEB_FRAMEWORKS } from "../utils/compatibility";
 import { UserCancelledError } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 function hasWebFrontend(frontends: Frontend[]) {
   return frontends.some((f) => WEB_FRAMEWORKS.includes(f));
@@ -67,7 +67,7 @@ export async function getDeploymentChoice(
   const response = await navigableSelect<WebDeploy>({
     message: "Select web deployment",
     options,
-    initialValue: previousValue ?? DEFAULT_CONFIG.webDeploy,
+    initialValue: preferValidInitial(options, previousValue, DEFAULT_CONFIG.webDeploy),
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

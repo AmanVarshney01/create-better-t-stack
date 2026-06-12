@@ -36,12 +36,12 @@ for entry in "${TESTS[@]}"; do
   dir="$SCRATCH/$name"
   echo "=== [$i/${#TESTS[@]}] $name ===" | tee -a "$RESULTS"
   rm -rf "$dir"
-  cd "$SCRATCH"
+  cd "$SCRATCH" || { echo "RESULT $name: FAIL (cd scratch)" | tee -a "$RESULTS"; continue; }
   bun "$REPO/apps/cli/src/cli.ts" "$name" $flags --no-install --no-git > "/tmp/smoke-$name-scaffold.log" 2>&1
   if [ ! -f "$dir/docker-compose.yml" ]; then
     echo "RESULT $name: FAIL (scaffold - no compose)" | tee -a "$RESULTS"; continue
   fi
-  cd "$dir"
+  cd "$dir" || { echo "RESULT $name: FAIL (cd project)" | tee -a "$RESULTS"; continue; }
   sedi "s/\"3001:3001\"/\"$WEB_PORT:3001\"/; s/\"3001:80\"/\"$WEB_PORT:80\"/; s/\"3000:3000\"/\"$SRV_PORT:3000\"/; s/\"5432:5432\"/\"$DB_PORT:5432\"/; s/\"3306:3306\"/\"$DB_PORT:3306\"/; s/\"27017:27017\"/\"$DB_PORT:27017\"/" docker-compose.yml
 
   docker compose config --quiet || { echo "RESULT $name: FAIL (compose config)" | tee -a "$RESULTS"; continue; }

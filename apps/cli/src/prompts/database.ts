@@ -1,7 +1,7 @@
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Database, Runtime } from "../types";
 import { UserCancelledError } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 export async function getDatabaseChoice(
   database?: Database,
@@ -53,7 +53,7 @@ export async function getDatabaseChoice(
   const response = await navigableSelect<Database>({
     message: "Select database",
     options: databaseOptions,
-    initialValue: previousValue ?? DEFAULT_CONFIG.database,
+    initialValue: preferValidInitial(databaseOptions, previousValue, DEFAULT_CONFIG.database),
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

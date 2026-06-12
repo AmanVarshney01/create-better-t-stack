@@ -1273,7 +1273,9 @@ import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
-  const rpcUrl = \`\${config.public.serverUrl}/rpc\`;
+  const serverUrl =
+    (import.meta.server && config.serverUrl) || config.public.serverUrl;
+  const rpcUrl = \`\${serverUrl}/rpc\`;
 
   const rpcLink = new RPCLink({
     url: rpcUrl,
@@ -9519,7 +9521,7 @@ export default defineNuxtPlugin(() => {
 
   const authClient = createAuthClient({
     {{#if (ne backend "self")}}
-    baseURL: config.public.serverUrl,
+    baseURL: (import.meta.server && config.serverUrl) || config.public.serverUrl,
     {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],
@@ -15857,7 +15859,11 @@ Dockerfile
 **/Dockerfile
 docker-compose.yml
 
-# Keep .env files: frameworks bake public variables from them at build time
+# Secrets stay out of image layers; runtime env comes from compose env_file,
+# build-time public values come from compose build args
+**/.env
+**/.env.*
+!**/.env.example
 `],
   ["deploy/docker/compose/docker-compose.yml.hbs", `name: {{projectName}}
 
@@ -15867,6 +15873,18 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+{{#if (and (not (includes frontend "nuxt")) (or (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start")))))}}
+      args:
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}}: http://localhost:3000
+{{/if}}
+{{#if (eq backend "convex")}}
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_CONVEX_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_CONVEX_URL{{else}}VITE_CONVEX_URL{{/if}}: \${CONVEX_URL:-}
+{{/if}}
+{{#if (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start")))}}
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY{{else}}VITE_CLERK_PUBLISHABLE_KEY{{/if}}: \${CLERK_PUBLISHABLE_KEY:-}
+{{/if}}
+{{/if}}
     init: true
     ports:
 {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "solid"))}}
@@ -15885,13 +15903,13 @@ services:
       CORS_ORIGIN: http://localhost:3001
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "postgres"))}}
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/{{projectName}}
+      DATABASE_URL: postgresql://postgres:\${POSTGRES_PASSWORD:-password}@postgres:5432/{{projectName}}
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "mysql"))}}
-      DATABASE_URL: mysql://user:password@mysql:3306/{{projectName}}
+      DATABASE_URL: mysql://user:\${MYSQL_PASSWORD:-password}@mysql:3306/{{projectName}}
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "mongodb"))}}
-      DATABASE_URL: mongodb://root:password@mongodb:27017/{{projectName}}?authSource=admin
+      DATABASE_URL: mongodb://root:\${MONGO_PASSWORD:-password}@mongodb:27017/{{projectName}}?authSource=admin
 {{/if}}
 {{/if}}
 {{#if (eq dbSetup "docker")}}
@@ -15907,7 +15925,7 @@ services:
       NEXT_PUBLIC_SERVER_URL: http://server:3000
 {{/if}}
 {{#if (includes frontend "nuxt")}}
-      NUXT_PUBLIC_SERVER_URL: http://server:3000
+      NUXT_SERVER_URL: http://server:3000
 {{/if}}
 {{/if}}
     depends_on:
@@ -15935,13 +15953,13 @@ services:
       CORS_ORIGIN: http://localhost:3001
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "postgres"))}}
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/{{projectName}}
+      DATABASE_URL: postgresql://postgres:\${POSTGRES_PASSWORD:-password}@postgres:5432/{{projectName}}
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "mysql"))}}
-      DATABASE_URL: mysql://user:password@mysql:3306/{{projectName}}
+      DATABASE_URL: mysql://user:\${MYSQL_PASSWORD:-password}@mysql:3306/{{projectName}}
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "mongodb"))}}
-      DATABASE_URL: mongodb://root:password@mongodb:27017/{{projectName}}?authSource=admin
+      DATABASE_URL: mongodb://root:\${MONGO_PASSWORD:-password}@mongodb:27017/{{projectName}}?authSource=admin
 {{/if}}
 {{/if}}
     healthcheck:
@@ -15972,7 +15990,7 @@ services:
     environment:
       POSTGRES_DB: {{projectName}}
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: \${POSTGRES_PASSWORD:-password}
     ports:
       - "5432:5432"
     volumes:
@@ -15989,10 +16007,10 @@ services:
     image: mysql
     container_name: {{projectName}}-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD:-password}
       MYSQL_DATABASE: {{projectName}}
       MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_PASSWORD: \${MYSQL_PASSWORD:-password}
     ports:
       - "3306:3306"
     volumes:
@@ -16010,7 +16028,7 @@ services:
     container_name: {{projectName}}-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_ROOT_PASSWORD: \${MONGO_PASSWORD:-password}
       MONGO_INITDB_DATABASE: {{projectName}}
     ports:
       - "27017:27017"
@@ -16036,6 +16054,11 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm
 {{/if}}
 WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
 
 COPY . .
 {{#if (eq packageManager "bun")}}
@@ -16048,6 +16071,10 @@ RUN --mount=type=cache,target=/root/.npm npm install
 
 ENV NODE_ENV=production
 RUN cd apps/server && {{packageManager}} run build
+ENV SKIP_ENV_VALIDATION=
+{{#if (eq orm "prisma")}}
+ENV DATABASE_URL=
+{{/if}}
 
 EXPOSE 3000
 
@@ -16066,6 +16093,15 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm
 {{/if}}
 WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
 
 COPY . .
 {{#if (eq packageManager "bun")}}
@@ -16076,8 +16112,23 @@ RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
 RUN --mount=type=cache,target=/root/.npm npm install
 {{/if}}
 
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG PUBLIC_SERVER_URL
+ENV PUBLIC_SERVER_URL=\${PUBLIC_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG PUBLIC_CONVEX_URL
+ENV PUBLIC_CONVEX_URL=\${PUBLIC_CONVEX_URL}
+{{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
+ENV SKIP_ENV_VALIDATION=
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+ENV BETTER_AUTH_SECRET=
+{{/if}}
+{{#if (eq orm "prisma")}}
+ENV DATABASE_URL=
+{{/if}}
 
 ENV HOST=0.0.0.0
 ENV PORT=3001
@@ -16094,6 +16145,15 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm
 {{/if}}
 WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
 
 COPY . .
 {{#if (eq packageManager "bun")}}
@@ -16127,6 +16187,15 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm
 {{/if}}
 WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
 
 COPY . .
 {{#if (eq packageManager "bun")}}
@@ -16137,6 +16206,18 @@ RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
 RUN --mount=type=cache,target=/root/.npm npm install
 {{/if}}
 
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG NEXT_PUBLIC_SERVER_URL
+ENV NEXT_PUBLIC_SERVER_URL=\${NEXT_PUBLIC_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG NEXT_PUBLIC_CONVEX_URL
+ENV NEXT_PUBLIC_CONVEX_URL=\${NEXT_PUBLIC_CONVEX_URL}
+{{/if}}
+{{#if (eq auth "clerk")}}
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=\${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+{{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
 
@@ -16161,6 +16242,15 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm
 {{/if}}
 WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
 
 COPY . .
 {{#if (eq packageManager "bun")}}
@@ -16171,6 +16261,18 @@ RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
 RUN --mount=type=cache,target=/root/.npm npm install
 {{/if}}
 
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG VITE_SERVER_URL
+ENV VITE_SERVER_URL=\${VITE_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG VITE_CONVEX_URL
+ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
+{{/if}}
+{{#if (eq auth "clerk")}}
+ARG VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
+{{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
 
@@ -16207,6 +16309,15 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm
 {{/if}}
 WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
 
 COPY . .
 {{#if (eq packageManager "bun")}}
@@ -16217,6 +16328,18 @@ RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
 RUN --mount=type=cache,target=/root/.npm npm install
 {{/if}}
 
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG VITE_SERVER_URL
+ENV VITE_SERVER_URL=\${VITE_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG VITE_CONVEX_URL
+ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
+{{/if}}
+{{#if (eq auth "clerk")}}
+ARG VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
+{{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
 
@@ -16253,6 +16376,15 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm
 {{/if}}
 WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
 
 COPY . .
 {{#if (eq packageManager "bun")}}
@@ -16263,8 +16395,27 @@ RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
 RUN --mount=type=cache,target=/root/.npm npm install
 {{/if}}
 
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG VITE_SERVER_URL
+ENV VITE_SERVER_URL=\${VITE_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG VITE_CONVEX_URL
+ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
+{{/if}}
+{{#if (eq auth "clerk")}}
+ARG VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
+{{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
+ENV SKIP_ENV_VALIDATION=
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+ENV BETTER_AUTH_SECRET=
+{{/if}}
+{{#if (eq orm "prisma")}}
+ENV DATABASE_URL=
+{{/if}}
 
 ENV HOST=0.0.0.0
 ENV PORT=3001
@@ -16282,6 +16433,15 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm
 {{/if}}
 WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
 
 COPY . .
 {{#if (eq packageManager "bun")}}
@@ -16292,6 +16452,14 @@ RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
 RUN --mount=type=cache,target=/root/.npm npm install
 {{/if}}
 
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG VITE_SERVER_URL
+ENV VITE_SERVER_URL=\${VITE_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG VITE_CONVEX_URL
+ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
+{{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
 
@@ -16328,6 +16496,15 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm
 {{/if}}
 WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
 
 COPY . .
 {{#if (eq packageManager "bun")}}
@@ -16338,8 +16515,23 @@ RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
 RUN --mount=type=cache,target=/root/.npm npm install
 {{/if}}
 
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG PUBLIC_SERVER_URL
+ENV PUBLIC_SERVER_URL=\${PUBLIC_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG PUBLIC_CONVEX_URL
+ENV PUBLIC_CONVEX_URL=\${PUBLIC_CONVEX_URL}
+{{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
+ENV SKIP_ENV_VALIDATION=
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+ENV BETTER_AUTH_SECRET=
+{{/if}}
+{{#if (eq orm "prisma")}}
+ENV DATABASE_URL=
+{{/if}}
 
 ENV HOST=0.0.0.0
 ENV PORT=3001
@@ -27081,6 +27273,8 @@ export default defineNuxtConfig({
   },
   {{else if (and (ne backend "self") (ne backend "none"))}}
   runtimeConfig: {
+    // server-side override for SSR fetches (NUXT_SERVER_URL); falls back to the public URL
+    serverUrl: "",
     public: {
       serverUrl: process.env.NUXT_PUBLIC_SERVER_URL ?? "",
     }
@@ -30209,6 +30403,7 @@ export const env = createEnv({
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
 	runtimeEnv: process.env,
+	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });
 {{/if}}
@@ -30334,6 +30529,7 @@ export const env = createEnv({
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
 {{/if}}
+	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });
 `],

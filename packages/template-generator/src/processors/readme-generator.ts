@@ -766,7 +766,8 @@ function generateScriptsList(
   }
 
   if (webDeploy === "docker" || serverDeploy === "docker") {
-    scripts += `\n- \`${packageManagerRunCmd} docker:up\`: Build and start the Docker Compose stack
+    scripts += `\n- \`${packageManagerRunCmd} docker:build\`: Build the Docker Compose images
+- \`${packageManagerRunCmd} docker:up\`: Build and start the Docker Compose stack
 - \`${packageManagerRunCmd} docker:logs\`: Tail logs from the Docker Compose stack
 - \`${packageManagerRunCmd} docker:down\`: Stop the Docker Compose stack`;
   }

@@ -482,5 +482,14 @@ export async function navigableGroupMultiselect<T>(
   return runWithNavigation(prompt) as Promise<T[] | symbol>;
 }
 
+/** Use the remembered answer as the initial value only while it is still selectable. */
+export function preferValidInitial<T>(
+  options: ReadonlyArray<{ value: T }>,
+  previous: T | undefined,
+  fallback: T,
+): T {
+  return previous !== undefined && options.some((o) => o.value === previous) ? previous : fallback;
+}
+
 export { isCancel };
 export { isGoBack, GO_BACK_SYMBOL } from "../utils/navigation";
