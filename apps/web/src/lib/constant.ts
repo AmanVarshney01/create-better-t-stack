@@ -404,6 +404,13 @@ export const TECH_OPTIONS: Record<
       color: "from-orange-400 to-orange-600",
     },
     {
+      id: "docker",
+      name: "Docker",
+      description: "Self-host with a Dockerfile and docker-compose.yml",
+      icon: `${ICON_BASE_URL}/docker.svg`,
+      color: "from-blue-400 to-blue-600",
+    },
+    {
       id: "none",
       name: "None",
       description: "Skip deployment setup",
@@ -419,6 +426,13 @@ export const TECH_OPTIONS: Record<
       description: "Deploy to Cloudflare Workers using Alchemy",
       icon: `${ICON_BASE_URL}/workers.svg`,
       color: "from-orange-400 to-orange-600",
+    },
+    {
+      id: "docker",
+      name: "Docker",
+      description: "Self-host with a Dockerfile and docker-compose.yml",
+      icon: `${ICON_BASE_URL}/docker.svg`,
+      color: "from-blue-400 to-blue-600",
     },
     {
       id: "none",

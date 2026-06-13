@@ -1,0 +1,56 @@
+FROM node:24-slim AS base
+{{#if (eq packageManager "bun")}}
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+RUN npm install -g pnpm
+{{/if}}
+WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
+
+COPY . .
+{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm install
+{{/if}}
+
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG VITE_SERVER_URL
+ENV VITE_SERVER_URL=${VITE_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG VITE_CONVEX_URL
+ENV VITE_CONVEX_URL=${VITE_CONVEX_URL}
+{{/if}}
+{{#if (eq auth "clerk")}}
+ARG VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
+{{/if}}
+ENV NODE_ENV=production
+RUN cd apps/web && {{packageManager}} run build
+ENV SKIP_ENV_VALIDATION=
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+ENV BETTER_AUTH_SECRET=
+{{/if}}
+{{#if (eq orm "prisma")}}
+ENV DATABASE_URL=
+{{/if}}
+
+ENV HOST=0.0.0.0
+ENV PORT=3001
+EXPOSE 3001
+
+# SSR chunks require() externals at runtime; must run from the workspace
+WORKDIR /app/apps/web
+CMD ["node", ".output/server/index.mjs"]

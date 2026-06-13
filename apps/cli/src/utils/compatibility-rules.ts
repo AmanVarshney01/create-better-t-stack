@@ -306,6 +306,28 @@ export function validateServerDeployRequiresBackend(
   return Result.ok(undefined);
 }
 
+export function validateDockerServerDeploy(
+  serverDeploy: ServerDeploy | undefined,
+  backend: Backend | undefined,
+  runtime: Runtime | undefined,
+): ValidationResult {
+  if (serverDeploy !== "docker") return Result.ok(undefined);
+
+  if (backend === "convex" || backend === "self") {
+    return validationErr(
+      "'--server-deploy docker' requires a separate server backend (hono, express, fastify, elysia). For a fullstack 'self' backend, use '--web-deploy docker' instead.",
+    );
+  }
+
+  if (runtime === "workers") {
+    return validationErr(
+      "'--server-deploy docker' is not compatible with '--runtime workers'. Use '--runtime bun' or '--runtime node', or choose '--server-deploy cloudflare'.",
+    );
+  }
+
+  return Result.ok(undefined);
+}
+
 export function validateAddonCompatibility(
   addon: Addons,
   frontend: Frontend[],

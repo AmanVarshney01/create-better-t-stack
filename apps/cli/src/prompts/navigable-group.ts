@@ -25,21 +25,33 @@ export interface NavigablePromptGroupOptions<T> {
 export type NavigablePromptGroup<T> = {
   [P in keyof T]: (opts: {
     results: Prettify<Partial<PromptGroupAwaitedReturn<Omit<T, P>>>>;
+    /** The answer this prompt previously returned, when the user navigated back over it. */
+    previousAnswer?: Exclude<Awaited<T[P]>, symbol>;
   }) => undefined | Promise<T[P] | symbol | undefined>;
 };
 
 /**
  * Define a group of prompts that supports going back to previous prompts.
  * Returns a result object with all the values, or handles cancel/go-back navigation.
+ * When navigating back, the discarded answers are replayed to the prompts as
+ * `previousAnswer` so they can preselect what the user chose before.
  */
 export async function navigableGroup<T>(
   prompts: NavigablePromptGroup<T>,
   opts?: NavigablePromptGroupOptions<T>,
 ): Promise<Prettify<PromptGroupAwaitedReturn<T>>> {
   const results = {} as any;
+  const previousAnswers = {} as any;
   const promptNames = Object.keys(prompts) as (keyof T)[];
   let currentIndex = 0;
   let goingBack = false;
+
+  const stepBack = () => {
+    const prevName = promptNames[currentIndex - 1];
+    previousAnswers[prevName] = results[prevName];
+    delete results[prevName];
+    currentIndex--;
+  };
 
   while (currentIndex < promptNames.length) {
     const name = promptNames[currentIndex];
@@ -49,16 +61,14 @@ export async function navigableGroup<T>(
 
     setLastPromptShownUI(false);
 
-    const result = await prompt({ results })?.catch((e) => {
+    const result = await prompt({ results, previousAnswer: previousAnswers[name] })?.catch((e) => {
       throw e;
     });
 
     if (isGoBack(result)) {
       goingBack = true;
       if (currentIndex > 0) {
-        const prevName = promptNames[currentIndex - 1];
-        delete results[prevName];
-        currentIndex--;
+        stepBack();
         continue;
       }
       goingBack = false;
@@ -76,9 +86,7 @@ export async function navigableGroup<T>(
 
     if (goingBack && !didLastPromptShowUI()) {
       if (currentIndex > 0) {
-        const prevName = promptNames[currentIndex - 1];
-        delete results[prevName];
-        currentIndex--;
+        stepBack();
         continue;
       }
     }

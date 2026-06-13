@@ -3,7 +3,10 @@ import { UserCancelledError } from "../utils/errors";
 import { getUserPkgManager } from "../utils/get-package-manager";
 import { isCancel, navigableSelect } from "./navigable";
 
-export async function getPackageManagerChoice(packageManager?: PackageManager) {
+export async function getPackageManagerChoice(
+  packageManager?: PackageManager,
+  previousValue?: PackageManager,
+) {
   if (packageManager !== undefined) return packageManager;
 
   const detectedPackageManager = getUserPkgManager();
@@ -23,7 +26,7 @@ export async function getPackageManagerChoice(packageManager?: PackageManager) {
         hint: "All-in-one JavaScript runtime & toolkit",
       },
     ],
-    initialValue: detectedPackageManager,
+    initialValue: previousValue ?? detectedPackageManager,
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

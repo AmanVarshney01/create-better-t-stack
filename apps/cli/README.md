@@ -68,8 +68,8 @@ Options:
   --install                       Install dependencies
   --no-install                    Skip installing dependencies
   --db-setup <setup>              Database setup (turso, d1, neon, supabase, prisma-postgres, planetscale, mongodb-atlas, docker, none)
-  --web-deploy <setup>            Web deployment (cloudflare, none)
-  --server-deploy <setup>         Server deployment (cloudflare, none)
+  --web-deploy <setup>            Web deployment (cloudflare, docker, none)
+  --server-deploy <setup>         Server deployment (cloudflare, docker, none)
   --backend <framework>           Backend framework (hono, express, fastify, elysia, convex, self, none)
   --runtime <runtime>             Runtime (bun, node, workers, none)
   --api <type>                    API type (trpc, orpc, none)
@@ -221,6 +221,12 @@ Create a self-hosted fullstack project on Cloudflare with D1:
 
 ```bash
 npx create-better-t-stack --backend self --frontend next --api trpc --database sqlite --orm drizzle --db-setup d1 --web-deploy cloudflare
+```
+
+Create a self-hosted project that ships as Docker containers (web + server + database via Docker Compose):
+
+```bash
+npx create-better-t-stack --frontend tanstack-router --backend hono --runtime bun --database postgres --orm drizzle --db-setup docker --web-deploy docker --server-deploy docker
 ```
 
 Create a minimal API-only project:

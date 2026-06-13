@@ -12,6 +12,7 @@ import {
   validateExamplesCompatibility,
   validatePaymentsCompatibility,
   validateSelfBackendCompatibility,
+  validateDockerServerDeploy,
   validateServerDeployRequiresBackend,
   validateWebDeployRequiresWebFrontend,
   validateWorkersCompatibility,
@@ -499,6 +500,7 @@ export function validateFullConfig(
     yield* validateApiConstraints(config, options);
 
     yield* validateServerDeployRequiresBackend(config.serverDeploy, config.backend);
+    yield* validateDockerServerDeploy(config.serverDeploy, config.backend, config.runtime);
 
     yield* validateSelfBackendCompatibility(providedFlags, options, config);
     yield* validateWorkersCompatibility(providedFlags, options, config);

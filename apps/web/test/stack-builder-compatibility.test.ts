@@ -301,3 +301,73 @@ describe("stack builder D1 compatibility", () => {
     expect(getDisabledReason(fullstackStack, "addons", "evlog")).toBeNull();
   });
 });
+
+describe("stack builder Docker deployment compatibility", () => {
+  test("allows Docker web deploy with a web frontend", () => {
+    const stack = createStack({
+      webFrontend: ["tanstack-router"],
+      backend: "hono",
+      runtime: "bun",
+    });
+
+    expect(getDisabledReason(stack, "webDeploy", "docker")).toBeNull();
+
+    const command = generateStackCommand({
+      ...stack,
+      webDeploy: "docker",
+    });
+    expect(command).toContain("--web-deploy docker");
+  });
+
+  test("allows Docker server deploy on bun/node runtimes only", () => {
+    const bunStack = createStack({
+      backend: "hono",
+      runtime: "bun",
+    });
+    const workersStack = createStack({
+      backend: "hono",
+      runtime: "workers",
+      serverDeploy: "cloudflare",
+      database: "sqlite",
+      orm: "drizzle",
+      dbSetup: "d1",
+    });
+
+    expect(getDisabledReason(bunStack, "serverDeploy", "docker")).toBeNull();
+    expect(getDisabledReason(workersStack, "serverDeploy", "docker")).toBe(
+      "Docker server deployment requires the Bun or Node runtime",
+    );
+  });
+
+  test("switches Docker server deploy to Cloudflare when runtime becomes workers", () => {
+    const stack = createStack({
+      backend: "hono",
+      runtime: "workers",
+      serverDeploy: "docker",
+      database: "sqlite",
+      orm: "drizzle",
+      dbSetup: "d1",
+    });
+
+    const result = analyzeStackCompatibility(stack);
+
+    expect(result.adjustedStack).toMatchObject({
+      serverDeploy: "cloudflare",
+    });
+  });
+
+  test("clears Docker server deploy for backends without a server app", () => {
+    const stack = createStack({
+      webFrontend: ["next"],
+      backend: "self-next",
+      runtime: "none",
+      serverDeploy: "docker",
+    });
+
+    const result = analyzeStackCompatibility(stack);
+
+    expect(result.adjustedStack).toMatchObject({
+      serverDeploy: "none",
+    });
+  });
+});

@@ -1,7 +1,9 @@
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Runtime, ServerDeploy, WebDeploy } from "../types";
 import { UserCancelledError } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
+
+const SERVER_APP_BACKENDS: Backend[] = ["hono", "express", "fastify", "elysia"];
 
 type DeploymentOption = {
   value: ServerDeploy;
@@ -19,6 +21,12 @@ function getDeploymentDisplay(deployment: ServerDeploy): {
       hint: "Deploy to Cloudflare Workers using Alchemy",
     };
   }
+  if (deployment === "docker") {
+    return {
+      label: "Docker",
+      hint: "Self-host with a Dockerfile and docker-compose.yml",
+    };
+  }
   return {
     label: deployment,
     hint: `Add ${deployment} deployment`,
@@ -30,14 +38,11 @@ export async function getServerDeploymentChoice(
   runtime?: Runtime,
   backend?: Backend,
   _webDeploy?: WebDeploy,
+  previousValue?: ServerDeploy,
 ) {
   if (deployment !== undefined) return deployment;
 
-  if (backend === "none" || backend === "convex") {
-    return "none";
-  }
-
-  if (backend !== "hono") {
+  if (!backend || !SERVER_APP_BACKENDS.includes(backend)) {
     return "none";
   }
 
@@ -46,7 +51,27 @@ export async function getServerDeploymentChoice(
     return "cloudflare";
   }
 
-  return "none";
+  if (runtime !== "bun" && runtime !== "node") {
+    return "none";
+  }
+
+  const options: DeploymentOption[] = (["docker", "none"] as const).map((deploy) => {
+    const { label, hint } =
+      deploy === "none"
+        ? { label: "None", hint: "Skip deployment setup" }
+        : getDeploymentDisplay(deploy);
+    return { value: deploy, label, hint };
+  });
+
+  const response = await navigableSelect<ServerDeploy>({
+    message: "Select server deployment",
+    options,
+    initialValue: preferValidInitial(options, previousValue, DEFAULT_CONFIG.serverDeploy),
+  });
+
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
+
+  return response;
 }
 
 export async function getServerDeploymentToAdd(
@@ -54,25 +79,33 @@ export async function getServerDeploymentToAdd(
   existingDeployment?: ServerDeploy,
   backend?: Backend,
 ) {
-  if (backend !== "hono") {
+  if (!backend || !SERVER_APP_BACKENDS.includes(backend)) {
+    return "none";
+  }
+
+  // A project can only have one server deployment target; nothing to add.
+  if (existingDeployment && existingDeployment !== "none") {
     return "none";
   }
 
   const options: DeploymentOption[] = [];
 
   if (runtime === "workers") {
-    if (existingDeployment !== "cloudflare") {
-      const { label, hint } = getDeploymentDisplay("cloudflare");
-      options.push({
-        value: "cloudflare",
-        label,
-        hint,
-      });
-    }
+    const { label, hint } = getDeploymentDisplay("cloudflare");
+    options.push({
+      value: "cloudflare",
+      label,
+      hint,
+    });
   }
 
-  if (existingDeployment && existingDeployment !== "none") {
-    return "none";
+  if (runtime === "bun" || runtime === "node") {
+    const { label, hint } = getDeploymentDisplay("docker");
+    options.push({
+      value: "docker",
+      label,
+      hint,
+    });
   }
 
   if (options.length === 0) {

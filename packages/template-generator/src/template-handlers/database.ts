@@ -21,7 +21,10 @@ export async function processDbTemplates(
     config,
   );
 
-  if (config.dbSetup === "docker") {
+  // With a Docker deploy target, the database service lives in the root
+  // docker-compose.yml instead of a separate packages/db compose file.
+  const hasDockerDeploy = config.webDeploy === "docker" || config.serverDeploy === "docker";
+  if (config.dbSetup === "docker" && !hasDockerDeploy) {
     processTemplatesFromPrefix(
       vfs,
       templates,

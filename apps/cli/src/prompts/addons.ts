@@ -160,6 +160,7 @@ export async function getAddonsChoice(
   auth?: Auth,
   backend?: Backend,
   runtime?: Runtime,
+  previousValue?: Addons[],
 ) {
   if (addons !== undefined) return addons;
 
@@ -185,7 +186,7 @@ export async function getAddonsChoice(
 
   sortAndPruneGroupedOptions(groupedOptions);
 
-  const initialValues = DEFAULT_CONFIG.addons.filter((addonValue) =>
+  const initialValues = (previousValue ?? DEFAULT_CONFIG.addons).filter((addonValue) =>
     Object.values(groupedOptions).some((options) =>
       options.some((opt) => opt.value === addonValue),
     ),

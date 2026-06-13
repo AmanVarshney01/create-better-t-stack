@@ -151,6 +151,7 @@ export const dependencyVersionMap = {
   "@opennextjs/cloudflare": "^1.17.3",
   "nitro-cloudflare-dev": "^0.2.2",
   "@sveltejs/adapter-cloudflare": "^7.2.8",
+  "@sveltejs/adapter-node": "^5.5.4",
   "@cloudflare/workers-types": "^4.20251213.0",
   "@astrojs/cloudflare": "^13.0.1",
   "@astrojs/node": "^10.0.0-beta.9",

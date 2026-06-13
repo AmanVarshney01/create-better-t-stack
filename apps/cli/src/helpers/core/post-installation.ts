@@ -629,5 +629,17 @@ function getAlchemyDeployInstructions(
     );
   }
 
+  if (webDeploy === "docker" || serverDeploy === "docker") {
+    const dockerTargets =
+      webDeploy === "docker" && serverDeploy === "docker"
+        ? "web + server"
+        : webDeploy === "docker"
+          ? "web"
+          : "server";
+    instructions.push(
+      `${pc.bold(`Deploy ${dockerTargets} with Docker Compose:`)}\n${pc.cyan("•")} Start: ${`${runCmd} docker:up`}\n${pc.cyan("•")} Logs: ${`${runCmd} docker:logs`}\n${pc.cyan("•")} Stop: ${`${runCmd} docker:down`}\n${pc.cyan("•")} Config: docker-compose.yml`,
+    );
+  }
+
   return instructions.length ? `\n${instructions.join("\n")}` : "";
 }
