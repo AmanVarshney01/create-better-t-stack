@@ -16234,7 +16234,7 @@ EXPOSE 3001
 
 CMD ["node", "apps/web/server.js"]
 `],
-  ["deploy/docker/web/react/react-router/Dockerfile.hbs", `FROM node:24-slim AS builder
+  ["deploy/docker/web/react/react-router/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
@@ -16301,7 +16301,7 @@ CMD ["nginx", "-g", "daemon off;"]
     }
 }
 `],
-  ["deploy/docker/web/react/tanstack-router/Dockerfile.hbs", `FROM node:24-slim AS builder
+  ["deploy/docker/web/react/tanstack-router/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
@@ -16368,7 +16368,7 @@ CMD ["nginx", "-g", "daemon off;"]
     }
 }
 `],
-  ["deploy/docker/web/react/tanstack-start/Dockerfile.hbs", `FROM node:24-slim AS base
+  ["deploy/docker/web/react/tanstack-start/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
@@ -16425,7 +16425,7 @@ EXPOSE 3001
 WORKDIR /app/apps/web
 CMD ["node", ".output/server/index.mjs"]
 `],
-  ["deploy/docker/web/solid/Dockerfile.hbs", `FROM node:24-slim AS builder
+  ["deploy/docker/web/solid/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
@@ -16488,7 +16488,7 @@ CMD ["nginx", "-g", "daemon off;"]
     }
 }
 `],
-  ["deploy/docker/web/svelte/Dockerfile.hbs", `FROM node:24-slim AS base
+  ["deploy/docker/web/svelte/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}

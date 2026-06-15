@@ -713,6 +713,8 @@ describe("Deployment Configurations", () => {
       expect(compose).toContain("VITE_SERVER_URL: http://localhost:3000");
       expect(webDockerfile).toContain("ARG VITE_SERVER_URL");
       expect(files.get(".dockerignore")).toContain("**/.env");
+      expect(webDockerfile).toContain("FROM node:24-slim AS builder");
+      expect(serverDockerfile).toContain("FROM node:24-slim AS base");
 
       // SPA frontend builds static assets served by nginx with an SPA fallback
       expect(webDockerfile).toContain("FROM nginx:alpine");
@@ -843,8 +845,43 @@ describe("Deployment Configurations", () => {
       expect(viteConfig).toContain("nitro(),");
       expect(webPkg.dependencies.nitro).toBeDefined();
       // SSR chunks require() externals at runtime, so the app runs from the workspace
+      expect(webDockerfile).toContain("FROM node:24-slim AS base");
       expect(webDockerfile).toContain("WORKDIR /app/apps/web");
       expect(webDockerfile).toContain('CMD ["node", ".output/server/index.mjs"]');
+    });
+
+    it("should use the full Node 24 image for Vite+ Docker web builds", async () => {
+      const result = await createVirtual({
+        projectName: "docker-vite-plus",
+        webDeploy: "docker",
+        serverDeploy: "docker",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "prisma",
+        auth: "better-auth",
+        payments: "none",
+        api: "orpc",
+        frontend: ["tanstack-start"],
+        addons: ["vite-plus"],
+        examples: ["none"],
+        dbSetup: "docker",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const webDockerfile = files.get("apps/web/Dockerfile");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+
+      expect(webPkg.scripts.build).toBe("vp build");
+      expect(webDockerfile).toContain("FROM node:24 AS base");
+      expect(webDockerfile).not.toContain("ca-certificates");
     });
 
     it("should serve React Router SPA builds with nginx", async () => {

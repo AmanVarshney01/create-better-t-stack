@@ -1,4 +1,4 @@
-FROM node:24-slim AS base
+FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
