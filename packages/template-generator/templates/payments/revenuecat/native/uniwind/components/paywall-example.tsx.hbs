@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import { Alert, View } from "react-native";
+import { Button, Card, Spinner } from "heroui-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
 import { useRevenueCat } from "@/contexts/revenuecat-context";
@@ -45,56 +46,46 @@ export function PaywallExample() {
 
   if (isPro) {
     return (
-      <View className="gap-2 rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900">
-        <Text className="font-semibold text-lg text-neutral-900 dark:text-neutral-50">
-          You're Premium
-        </Text>
-        <Text className="text-neutral-500 text-sm">
+      <Card variant="secondary" className="mb-4 p-4">
+        <Card.Title className="mb-2">You're Premium</Card.Title>
+        <Card.Description>
           Thanks for your support — enjoy all features.
-        </Text>
-      </View>
+        </Card.Description>
+      </Card>
     );
   }
 
   return (
-    <View className="gap-3 rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900">
-      <Text className="font-semibold text-lg text-neutral-900 dark:text-neutral-50">
-        Upgrade to Premium
-      </Text>
-      <Text className="text-neutral-500 text-sm">Unlock all features.</Text>
+    <Card variant="secondary" className="mb-4 p-4">
+      <Card.Title className="mb-2">Upgrade to Premium</Card.Title>
+      <Card.Description className="mb-4">Unlock all features.</Card.Description>
 
-      {packages.length === 0 ? (
-        <Pressable
-          className="items-center rounded-xl bg-neutral-900 py-3 dark:bg-neutral-50"
-          onPress={loadPackages}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator />
-          ) : (
-            <Text className="font-semibold text-neutral-50 dark:text-neutral-900">View plans</Text>
-          )}
-        </Pressable>
-      ) : (
-        packages.map((pack) => (
-          <Pressable
-            key={pack.identifier}
-            className="items-center rounded-xl bg-neutral-900 py-3 dark:bg-neutral-50"
-            onPress={() => handlePurchase(pack)}
-            disabled={isBusy}
-          >
-            <Text className="font-semibold text-neutral-50 dark:text-neutral-900">
-              {pack.product.title} · {pack.product.priceString}
-            </Text>
-          </Pressable>
-        ))
-      )}
+      <View className="gap-3">
+        {packages.length === 0 ? (
+          <Button onPress={loadPackages} isDisabled={isLoading}>
+            {isLoading ? <Spinner size="sm" color="default" /> : <Button.Label>View plans</Button.Label>}
+          </Button>
+        ) : (
+          packages.map((pack) => (
+            <Button
+              key={pack.identifier}
+              variant="secondary"
+              onPress={() => handlePurchase(pack)}
+              isDisabled={isBusy}
+            >
+              <Button.Label>
+                {pack.product.title} · {pack.product.priceString}
+              </Button.Label>
+            </Button>
+          ))
+        )}
 
-      <Pressable className="items-center py-2" onPress={handleRestore} disabled={isBusy}>
-        <Text className="text-neutral-500 text-sm">
-          {isRestoring ? "Restoring..." : "Restore purchases"}
-        </Text>
-      </Pressable>
-    </View>
+        <Button variant="ghost" onPress={handleRestore} isDisabled={isBusy}>
+          <Button.Label>
+            {isRestoring ? "Restoring..." : "Restore purchases"}
+          </Button.Label>
+        </Button>
+      </View>
+    </Card>
   );
 }

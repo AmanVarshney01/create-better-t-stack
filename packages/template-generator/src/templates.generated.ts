@@ -5604,6 +5604,10 @@ import { NAV_THEME } from "@/lib/constants";
 import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
+{{#if (eq payments "revenuecat")}}
+import { SubscriptionStatusCard } from "@/components/subscription-status-card";
+import { PaywallExample } from "@/components/paywall-example";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
 import { queryClient, orpc } from "@/utils/orpc";
@@ -5791,6 +5795,11 @@ return (
         <SignUp />
       </>
       )}
+
+      {{#if (eq payments "revenuecat")}}
+      <SubscriptionStatusCard />
+      <PaywallExample />
+      {{/if}}
     </View>
   </ScrollView>
 </Container>
@@ -6410,6 +6419,10 @@ import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
+{{#if (eq payments "revenuecat")}}
+import { SubscriptionStatusCard } from "@/components/subscription-status-card";
+import { PaywallExample } from "@/components/paywall-example";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
 import { queryClient, orpc } from "@/utils/orpc";
@@ -6557,6 +6570,11 @@ export default function Home() {
               <SignUp />
             </>
           )}
+
+          {{#if (eq payments "revenuecat")}}
+          <SubscriptionStatusCard />
+          <PaywallExample />
+          {{/if}}
         </View>
       </ScrollView>
     </Container>
@@ -7151,6 +7169,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Card, Chip, useThemeColor } from "heroui-native";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
+{{#if (eq payments "revenuecat")}}
+import { SubscriptionStatusCard } from "@/components/subscription-status-card";
+import { PaywallExample } from "@/components/paywall-example";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
 import { queryClient, orpc } from "@/utils/orpc";
@@ -7322,6 +7344,13 @@ return (
     <SignUp />
   </>
   )}
+
+  {{#if (eq payments "revenuecat")}}
+  <View className="mt-6">
+    <SubscriptionStatusCard />
+    <PaywallExample />
+  </View>
+  {{/if}}
 </Container>
 );
 }
@@ -23889,6 +23918,10 @@ import { env } from "@{{projectName}}/env/native";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
+{{#if (eq payments "revenuecat")}}
+import { SubscriptionStatusCard } from "@/components/subscription-status-card";
+import { PaywallExample } from "@/components/paywall-example";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
@@ -24218,6 +24251,11 @@ return (
         <SignUp />
       </>
       )}
+      {{/if}}
+
+      {{#if (eq payments "revenuecat")}}
+      <SubscriptionStatusCard />
+      <PaywallExample />
       {{/if}}
     </View>
   </ScrollView>
@@ -25150,6 +25188,10 @@ import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
+{{#if (eq payments "revenuecat")}}
+import { SubscriptionStatusCard } from "@/components/subscription-status-card";
+import { PaywallExample } from "@/components/paywall-example";
+{{/if}}
 
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
@@ -25438,6 +25480,11 @@ export default function Home() {
             <SignUp />
           </>
         )}
+        {{/if}}
+
+        {{#if (eq payments "revenuecat")}}
+        <SubscriptionStatusCard />
+        <PaywallExample />
         {{/if}}
       </ScrollView>
     </Container>
@@ -26496,6 +26543,10 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { Ionicons } from "@expo/vector-icons";
 {{/unless}}
 import { Button, Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
+{{#if (eq payments "revenuecat")}}
+import { SubscriptionStatusCard } from "@/components/subscription-status-card";
+import { PaywallExample } from "@/components/paywall-example";
+{{/if}}
 
 export default function Home() {
 {{#if (eq api "orpc")}}
@@ -26751,6 +26802,13 @@ return (
     <SignUp />
   </View>
   )}
+  {{/if}}
+
+  {{#if (eq payments "revenuecat")}}
+  <View className="mt-5">
+    <SubscriptionStatusCard />
+    <PaywallExample />
+  </View>
   {{/if}}
 </Container>
 );
@@ -32046,12 +32104,17 @@ revenuecat.registerRoutes(http);
 export default http;
 `],
   ["payments/revenuecat/native/bare/components/paywall-example.tsx.hbs", `import { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
+import { NAV_THEME } from "@/lib/constants";
+import { useColorScheme } from "@/lib/use-color-scheme";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
 
 export function PaywallExample() {
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -32092,130 +32155,128 @@ export function PaywallExample() {
 
   if (isPro) {
     return (
-      <View style={styles.card}>
-        <Text style={styles.title}>You're Premium</Text>
-        <Text style={styles.muted}>Thanks for your support — enjoy all features.</Text>
+      <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Host matchContents=\\{{ vertical: true }}>
+          <Column spacing={6}>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+              You're Premium
+            </ExpoUIText>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 13 }} style=\\{{ opacity: 0.7 }}>
+              Thanks for your support — enjoy all features.
+            </ExpoUIText>
+          </Column>
+        </Host>
       </View>
     );
   }
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>Upgrade to Premium</Text>
-      <Text style={styles.muted}>Unlock all features.</Text>
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <Host style={styles.headerHost} matchContents=\\{{ vertical: true }}>
+        <Column spacing={6}>
+          <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+            Upgrade to Premium
+          </ExpoUIText>
+          <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 13 }} style=\\{{ opacity: 0.7 }}>
+            Unlock all features.
+          </ExpoUIText>
+        </Column>
+      </Host>
 
-      {packages.length === 0 ? (
-        <Pressable style={styles.button} onPress={loadPackages} disabled={isLoading}>
-          {isLoading ? (
-            <ActivityIndicator color="#fafafa" />
-          ) : (
-            <Text style={styles.buttonText}>View plans</Text>
-          )}
-        </Pressable>
+      {isLoading ? (
+        <View style={styles.loadingRow}>
+          <ActivityIndicator color={theme.text} />
+        </View>
       ) : (
-        packages.map((pack) => (
-          <Pressable
-            key={pack.identifier}
-            style={styles.button}
-            onPress={() => handlePurchase(pack)}
-            disabled={isBusy}
-          >
-            <Text style={styles.buttonText}>
-              {pack.product.title} · {pack.product.priceString}
-            </Text>
-          </Pressable>
-        ))
+        <Host style={styles.actionsHost} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            {packages.length === 0 ? (
+              <Button label="View plans" onPress={loadPackages} />
+            ) : (
+              packages.map((pack) => (
+                <Button
+                  key={pack.identifier}
+                  label={\`\${pack.product.title} · \${pack.product.priceString}\`}
+                  variant="outlined"
+                  onPress={() => handlePurchase(pack)}
+                />
+              ))
+            )}
+            <Button
+              label={isRestoring ? "Restoring..." : "Restore purchases"}
+              variant="outlined"
+              onPress={handleRestore}
+            />
+          </Column>
+        </Host>
       )}
-
-      <Pressable style={styles.secondary} onPress={handleRestore} disabled={isBusy}>
-        <Text style={styles.secondaryText}>
-          {isRestoring ? "Restoring..." : "Restore purchases"}
-        </Text>
-      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    gap: 12,
-    borderRadius: 16,
+    marginBottom: 16,
     padding: 16,
-    backgroundColor: "#f4f4f5",
+    borderWidth: 1,
+    borderRadius: 16,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#18181b",
+  headerHost: {
+    marginBottom: 12,
   },
-  muted: {
-    fontSize: 14,
-    color: "#71717a",
+  actionsHost: {
+    marginTop: 4,
   },
-  button: {
+  loadingRow: {
     alignItems: "center",
-    borderRadius: 12,
     paddingVertical: 12,
-    backgroundColor: "#18181b",
-  },
-  buttonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#fafafa",
-  },
-  secondary: {
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  secondaryText: {
-    fontSize: 14,
-    color: "#71717a",
   },
 });
 `],
-  ["payments/revenuecat/native/bare/components/subscription-status-card.tsx.hbs", `import { StyleSheet, Text, View } from "react-native";
+  ["payments/revenuecat/native/bare/components/subscription-status-card.tsx.hbs", `import { Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { StyleSheet, View } from "react-native";
 
+import { NAV_THEME } from "@/lib/constants";
+import { useColorScheme } from "@/lib/use-color-scheme";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
 
 export function SubscriptionStatusCard() {
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const { isPro, isConfigured } = useRevenueCat();
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>Subscription</Text>
-      {!isConfigured ? (
-        <Text style={styles.muted}>
-          RevenueCat is not configured yet. Add your API keys in apps/native/.env.
-        </Text>
-      ) : isPro ? (
-        <Text style={styles.pro}>You're a Premium member 🎉</Text>
-      ) : (
-        <Text style={styles.muted}>You're on the free plan.</Text>
-      )}
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <Host matchContents=\\{{ vertical: true }}>
+        <Column spacing={6}>
+          <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+            Subscription
+          </ExpoUIText>
+          {!isConfigured ? (
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 13 }} style=\\{{ opacity: 0.7 }}>
+              RevenueCat is not configured yet. Add your API keys in apps/native/.env.
+            </ExpoUIText>
+          ) : isPro ? (
+            <ExpoUIText textStyle=\\{{ color: "#16a34a", fontSize: 14, fontWeight: "500" }}>
+              You're a Premium member 🎉
+            </ExpoUIText>
+          ) : (
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 13 }} style=\\{{ opacity: 0.7 }}>
+              You're on the free plan.
+            </ExpoUIText>
+          )}
+        </Column>
+      </Host>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    gap: 8,
-    borderRadius: 16,
+    marginBottom: 16,
     padding: 16,
-    backgroundColor: "#f4f4f5",
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#18181b",
-  },
-  pro: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#16a34a",
-  },
-  muted: {
-    fontSize: 14,
-    color: "#71717a",
+    borderWidth: 1,
+    borderRadius: 16,
   },
 });
 `],
@@ -32881,7 +32942,8 @@ const styles = StyleSheet.create((theme) => ({
 }));
 `],
   ["payments/revenuecat/native/uniwind/components/paywall-example.tsx.hbs", `import { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import { Alert, View } from "react-native";
+import { Button, Card, Spinner } from "heroui-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
 import { useRevenueCat } from "@/contexts/revenuecat-context";
@@ -32927,61 +32989,52 @@ export function PaywallExample() {
 
   if (isPro) {
     return (
-      <View className="gap-2 rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900">
-        <Text className="font-semibold text-lg text-neutral-900 dark:text-neutral-50">
-          You're Premium
-        </Text>
-        <Text className="text-neutral-500 text-sm">
+      <Card variant="secondary" className="mb-4 p-4">
+        <Card.Title className="mb-2">You're Premium</Card.Title>
+        <Card.Description>
           Thanks for your support — enjoy all features.
-        </Text>
-      </View>
+        </Card.Description>
+      </Card>
     );
   }
 
   return (
-    <View className="gap-3 rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900">
-      <Text className="font-semibold text-lg text-neutral-900 dark:text-neutral-50">
-        Upgrade to Premium
-      </Text>
-      <Text className="text-neutral-500 text-sm">Unlock all features.</Text>
+    <Card variant="secondary" className="mb-4 p-4">
+      <Card.Title className="mb-2">Upgrade to Premium</Card.Title>
+      <Card.Description className="mb-4">Unlock all features.</Card.Description>
 
-      {packages.length === 0 ? (
-        <Pressable
-          className="items-center rounded-xl bg-neutral-900 py-3 dark:bg-neutral-50"
-          onPress={loadPackages}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator />
-          ) : (
-            <Text className="font-semibold text-neutral-50 dark:text-neutral-900">View plans</Text>
-          )}
-        </Pressable>
-      ) : (
-        packages.map((pack) => (
-          <Pressable
-            key={pack.identifier}
-            className="items-center rounded-xl bg-neutral-900 py-3 dark:bg-neutral-50"
-            onPress={() => handlePurchase(pack)}
-            disabled={isBusy}
-          >
-            <Text className="font-semibold text-neutral-50 dark:text-neutral-900">
-              {pack.product.title} · {pack.product.priceString}
-            </Text>
-          </Pressable>
-        ))
-      )}
+      <View className="gap-3">
+        {packages.length === 0 ? (
+          <Button onPress={loadPackages} isDisabled={isLoading}>
+            {isLoading ? <Spinner size="sm" color="default" /> : <Button.Label>View plans</Button.Label>}
+          </Button>
+        ) : (
+          packages.map((pack) => (
+            <Button
+              key={pack.identifier}
+              variant="secondary"
+              onPress={() => handlePurchase(pack)}
+              isDisabled={isBusy}
+            >
+              <Button.Label>
+                {pack.product.title} · {pack.product.priceString}
+              </Button.Label>
+            </Button>
+          ))
+        )}
 
-      <Pressable className="items-center py-2" onPress={handleRestore} disabled={isBusy}>
-        <Text className="text-neutral-500 text-sm">
-          {isRestoring ? "Restoring..." : "Restore purchases"}
-        </Text>
-      </Pressable>
-    </View>
+        <Button variant="ghost" onPress={handleRestore} isDisabled={isBusy}>
+          <Button.Label>
+            {isRestoring ? "Restoring..." : "Restore purchases"}
+          </Button.Label>
+        </Button>
+      </View>
+    </Card>
   );
 }
 `],
-  ["payments/revenuecat/native/uniwind/components/subscription-status-card.tsx.hbs", `import { Text, View } from "react-native";
+  ["payments/revenuecat/native/uniwind/components/subscription-status-card.tsx.hbs", `import { Text } from "react-native";
+import { Card } from "heroui-native";
 
 import { useRevenueCat } from "@/contexts/revenuecat-context";
 
@@ -32989,20 +33042,20 @@ export function SubscriptionStatusCard() {
   const { isPro, isConfigured } = useRevenueCat();
 
   return (
-    <View className="gap-2 rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900">
-      <Text className="font-semibold text-lg text-neutral-900 dark:text-neutral-50">
-        Subscription
-      </Text>
+    <Card variant="secondary" className="mb-4 p-4">
+      <Card.Title className="mb-2">Subscription</Card.Title>
       {!isConfigured ? (
-        <Text className="text-neutral-500 text-sm">
+        <Card.Description>
           RevenueCat is not configured yet. Add your API keys in apps/native/.env.
-        </Text>
+        </Card.Description>
       ) : isPro ? (
-        <Text className="font-medium text-base text-green-600">You're a Premium member 🎉</Text>
+        <Text className="text-success text-base font-medium">
+          You're a Premium member 🎉
+        </Text>
       ) : (
-        <Text className="text-neutral-500 text-sm">You're on the free plan.</Text>
+        <Card.Description>You're on the free plan.</Card.Description>
       )}
-    </View>
+    </Card>
   );
 }
 `]

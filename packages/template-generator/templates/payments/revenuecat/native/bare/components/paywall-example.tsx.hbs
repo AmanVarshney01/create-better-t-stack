@@ -1,10 +1,15 @@
 import { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
+import { NAV_THEME } from "@/lib/constants";
+import { useColorScheme } from "@/lib/use-color-scheme";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
 
 export function PaywallExample() {
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,83 +50,80 @@ export function PaywallExample() {
 
   if (isPro) {
     return (
-      <View style={styles.card}>
-        <Text style={styles.title}>You're Premium</Text>
-        <Text style={styles.muted}>Thanks for your support — enjoy all features.</Text>
+      <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Host matchContents=\{{ vertical: true }}>
+          <Column spacing={6}>
+            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+              You're Premium
+            </ExpoUIText>
+            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 13 }} style=\{{ opacity: 0.7 }}>
+              Thanks for your support — enjoy all features.
+            </ExpoUIText>
+          </Column>
+        </Host>
       </View>
     );
   }
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>Upgrade to Premium</Text>
-      <Text style={styles.muted}>Unlock all features.</Text>
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <Host style={styles.headerHost} matchContents=\{{ vertical: true }}>
+        <Column spacing={6}>
+          <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+            Upgrade to Premium
+          </ExpoUIText>
+          <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 13 }} style=\{{ opacity: 0.7 }}>
+            Unlock all features.
+          </ExpoUIText>
+        </Column>
+      </Host>
 
-      {packages.length === 0 ? (
-        <Pressable style={styles.button} onPress={loadPackages} disabled={isLoading}>
-          {isLoading ? (
-            <ActivityIndicator color="#fafafa" />
-          ) : (
-            <Text style={styles.buttonText}>View plans</Text>
-          )}
-        </Pressable>
+      {isLoading ? (
+        <View style={styles.loadingRow}>
+          <ActivityIndicator color={theme.text} />
+        </View>
       ) : (
-        packages.map((pack) => (
-          <Pressable
-            key={pack.identifier}
-            style={styles.button}
-            onPress={() => handlePurchase(pack)}
-            disabled={isBusy}
-          >
-            <Text style={styles.buttonText}>
-              {pack.product.title} · {pack.product.priceString}
-            </Text>
-          </Pressable>
-        ))
+        <Host style={styles.actionsHost} matchContents=\{{ vertical: true }}>
+          <Column spacing={8}>
+            {packages.length === 0 ? (
+              <Button label="View plans" onPress={loadPackages} />
+            ) : (
+              packages.map((pack) => (
+                <Button
+                  key={pack.identifier}
+                  label={`${pack.product.title} · ${pack.product.priceString}`}
+                  variant="outlined"
+                  onPress={() => handlePurchase(pack)}
+                />
+              ))
+            )}
+            <Button
+              label={isRestoring ? "Restoring..." : "Restore purchases"}
+              variant="outlined"
+              onPress={handleRestore}
+            />
+          </Column>
+        </Host>
       )}
-
-      <Pressable style={styles.secondary} onPress={handleRestore} disabled={isBusy}>
-        <Text style={styles.secondaryText}>
-          {isRestoring ? "Restoring..." : "Restore purchases"}
-        </Text>
-      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    gap: 12,
-    borderRadius: 16,
+    marginBottom: 16,
     padding: 16,
-    backgroundColor: "#f4f4f5",
+    borderWidth: 1,
+    borderRadius: 16,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#18181b",
+  headerHost: {
+    marginBottom: 12,
   },
-  muted: {
-    fontSize: 14,
-    color: "#71717a",
+  actionsHost: {
+    marginTop: 4,
   },
-  button: {
+  loadingRow: {
     alignItems: "center",
-    borderRadius: 12,
     paddingVertical: 12,
-    backgroundColor: "#18181b",
-  },
-  buttonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#fafafa",
-  },
-  secondary: {
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  secondaryText: {
-    fontSize: 14,
-    color: "#71717a",
   },
 });
