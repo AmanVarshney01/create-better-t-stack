@@ -437,7 +437,7 @@ export function validatePaymentsCompatibility(
   payments: Payments | undefined,
   auth: Auth | undefined,
   _backend: Backend | undefined,
-  _frontends: Frontend[] = [],
+  frontends: Frontend[] = [],
 ): ValidationResult {
   if (!payments || payments === "none") return Result.ok(undefined);
 
@@ -445,6 +445,15 @@ export function validatePaymentsCompatibility(
     if (!auth || auth === "none" || auth !== "better-auth") {
       return validationErr(
         "Polar payments requires Better Auth. Please use '--auth better-auth' or choose a different payments provider.",
+      );
+    }
+  }
+
+  if (payments === "revenuecat") {
+    const { native } = splitFrontends(frontends);
+    if (native.length === 0) {
+      return validationErr(
+        "RevenueCat payments requires a native frontend (native-bare, native-uniwind, or native-unistyles). Please select a native frontend or choose a different payments provider.",
       );
     }
   }

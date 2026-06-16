@@ -1,0 +1,84 @@
+import { useState } from "react";
+import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import type { PurchasesPackage } from "react-native-purchases";
+
+import { useRevenueCat } from "@/providers/RevenueCatProvider";
+
+export function PaywallExample() {
+  const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+
+  const loadPackages = async () => {
+    setIsLoading(true);
+    try {
+      setPackages(await getPackages());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePurchase = async (pack: PurchasesPackage) => {
+    setIsPurchasing(true);
+    try {
+      const success = await purchasePackage(pack);
+      Alert.alert(success ? "You're now Premium!" : "Purchase not completed");
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
+  if (isPro) {
+    return (
+      <View className="gap-2 rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900">
+        <Text className="font-semibold text-lg text-neutral-900 dark:text-neutral-50">
+          You're Premium
+        </Text>
+        <Text className="text-neutral-500 text-sm">
+          Thanks for your support — enjoy all features.
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View className="gap-3 rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900">
+      <Text className="font-semibold text-lg text-neutral-900 dark:text-neutral-50">
+        Upgrade to Premium
+      </Text>
+      <Text className="text-neutral-500 text-sm">Unlock all features.</Text>
+
+      {packages.length === 0 ? (
+        <Pressable
+          className="items-center rounded-xl bg-neutral-900 py-3 dark:bg-neutral-50"
+          onPress={loadPackages}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator />
+          ) : (
+            <Text className="font-semibold text-neutral-50 dark:text-neutral-900">View plans</Text>
+          )}
+        </Pressable>
+      ) : (
+        packages.map((pack) => (
+          <Pressable
+            key={pack.identifier}
+            className="items-center rounded-xl bg-neutral-900 py-3 dark:bg-neutral-50"
+            onPress={() => handlePurchase(pack)}
+            disabled={isPurchasing}
+          >
+            <Text className="font-semibold text-neutral-50 dark:text-neutral-900">
+              {pack.product.title} · {pack.product.priceString}
+            </Text>
+          </Pressable>
+        ))
+      )}
+
+      <Pressable className="items-center py-2" onPress={restorePurchases}>
+        <Text className="text-neutral-500 text-sm">Restore purchases</Text>
+      </Pressable>
+    </View>
+  );
+}

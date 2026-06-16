@@ -40,6 +40,9 @@ import { HeroUINativeProvider } from "heroui-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
+{{#if (eq payments "revenuecat")}}
+import { RevenueCatProvider } from "@/providers/RevenueCatProvider";
+{{/if}}
 
 {{#if (eq api "trpc")}}
   import { queryClient } from "@/utils/trpc";
@@ -88,6 +91,9 @@ function StackLayout() {
 
 export default function Layout() {
   return (
+{{#if (eq payments "revenuecat")}}
+    <RevenueCatProvider>
+{{/if}}
     {{#if (eq backend "convex")}}
       {{#if (eq auth "clerk")}}
         <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
@@ -182,5 +188,8 @@ export default function Layout() {
         {{/unless}}
       {{/if}}
     {{/if}}
+{{#if (eq payments "revenuecat")}}
+    </RevenueCatProvider>
+{{/if}}
   );
 }

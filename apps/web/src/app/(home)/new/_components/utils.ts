@@ -89,6 +89,9 @@ export const hasClerkCompatibleFrontend = (webFrontend: string[], nativeFrontend
   ) ||
   nativeFrontend.some((f) => ["native-bare", "native-uniwind", "native-unistyles"].includes(f));
 
+export const hasNativeFrontend = (nativeFrontend: string[]) =>
+  nativeFrontend.some((f) => ["native-bare", "native-uniwind", "native-unistyles"].includes(f));
+
 export const hasClerkCompatibleBackend = (backend: string) =>
   clerkSupportedBackends.includes(backend as (typeof clerkSupportedBackends)[number]);
 
@@ -609,6 +612,15 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     }
   }
 
+  if (nextStack.payments === "revenuecat" && !hasNativeFrontend(nextStack.nativeFrontend)) {
+    nextStack.payments = "none";
+    changed = true;
+    changes.push({
+      category: "payments",
+      message: "Payments set to 'None' (RevenueCat requires a native frontend)",
+    });
+  }
+
   // ============================================
   // ADDONS CONSTRAINTS
   // ============================================
@@ -1078,6 +1090,12 @@ export const getDisabledReason = (
   if (category === "payments" && optionId === "polar") {
     if (currentStack.auth !== "better-auth") {
       return "Polar requires Better Auth";
+    }
+  }
+
+  if (category === "payments" && optionId === "revenuecat") {
+    if (!hasNativeFrontend(currentStack.nativeFrontend)) {
+      return "RevenueCat requires a native frontend (Expo)";
     }
   }
 

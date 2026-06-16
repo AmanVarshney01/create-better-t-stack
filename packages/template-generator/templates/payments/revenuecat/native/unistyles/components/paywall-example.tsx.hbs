@@ -1,0 +1,112 @@
+import { useState } from "react";
+import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import type { PurchasesPackage } from "react-native-purchases";
+
+import { useRevenueCat } from "@/providers/RevenueCatProvider";
+
+export function PaywallExample() {
+  const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+
+  const loadPackages = async () => {
+    setIsLoading(true);
+    try {
+      setPackages(await getPackages());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePurchase = async (pack: PurchasesPackage) => {
+    setIsPurchasing(true);
+    try {
+      const success = await purchasePackage(pack);
+      Alert.alert(success ? "You're now Premium!" : "Purchase not completed");
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
+  if (isPro) {
+    return (
+      <View style={styles.card}>
+        <Text style={styles.title}>You're Premium</Text>
+        <Text style={styles.muted}>Thanks for your support — enjoy all features.</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.title}>Upgrade to Premium</Text>
+      <Text style={styles.muted}>Unlock all features.</Text>
+
+      {packages.length === 0 ? (
+        <Pressable style={styles.button} onPress={loadPackages} disabled={isLoading}>
+          {isLoading ? (
+            <ActivityIndicator color={styles.buttonText.color} />
+          ) : (
+            <Text style={styles.buttonText}>View plans</Text>
+          )}
+        </Pressable>
+      ) : (
+        packages.map((pack) => (
+          <Pressable
+            key={pack.identifier}
+            style={styles.button}
+            onPress={() => handlePurchase(pack)}
+            disabled={isPurchasing}
+          >
+            <Text style={styles.buttonText}>
+              {pack.product.title} · {pack.product.priceString}
+            </Text>
+          </Pressable>
+        ))
+      )}
+
+      <Pressable style={styles.secondary} onPress={restorePurchases}>
+        <Text style={styles.secondaryText}>Restore purchases</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create((theme) => ({
+  card: {
+    gap: theme.spacing.md,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.card,
+  },
+  title: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: "600",
+    color: theme.colors.foreground,
+  },
+  muted: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.mutedForeground,
+  },
+  button: {
+    alignItems: "center",
+    borderRadius: theme.borderRadius.lg,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.primary,
+  },
+  buttonText: {
+    fontSize: theme.fontSize.base,
+    fontWeight: "600",
+    color: theme.colors.primaryForeground,
+  },
+  secondary: {
+    alignItems: "center",
+    paddingVertical: theme.spacing.sm,
+  },
+  secondaryText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.mutedForeground,
+  },
+}));

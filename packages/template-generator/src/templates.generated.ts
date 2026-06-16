@@ -2293,6 +2293,9 @@ import { httpAction } from "./_generated/server";
 {{#if (eq payments "polar")}}
 import { polar } from "./polar";
 {{/if}}
+{{#if (eq payments "revenuecat")}}
+import { revenuecat } from "./revenuecat";
+{{/if}}
 
 const http = httpRouter();
 
@@ -2336,6 +2339,10 @@ authComponent.registerRoutes(http, createAuth);
 {{#if (eq payments "polar")}}
 
 polar.registerRoutes(http);
+{{/if}}
+{{#if (eq payments "revenuecat")}}
+
+revenuecat.registerRoutes(http);
 {{/if}}
 
 export default http;
@@ -13967,6 +13974,9 @@ import betterAuth from "@convex-dev/better-auth/convex.config";
 {{#if (eq payments "polar")}}
 import polar from "@convex-dev/polar/convex.config.js";
 {{/if}}
+{{#if (eq payments "revenuecat")}}
+import revenuecat from "convex-revenuecat/convex.config";
+{{/if}}
 {{#if (includes examples "ai")}}
 import agent from "@convex-dev/agent/convex.config";
 {{/if}}
@@ -13977,6 +13987,9 @@ app.use(betterAuth);
 {{/if}}
 {{#if (eq payments "polar")}}
 app.use(polar);
+{{/if}}
+{{#if (eq payments "revenuecat")}}
+app.use(revenuecat);
 {{/if}}
 {{#if (includes examples "ai")}}
 app.use(agent);
@@ -23486,6 +23499,9 @@ import { queryClient } from "@/utils/orpc";
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { StyleSheet } from "react-native";
+{{#if (eq payments "revenuecat")}}
+import { RevenueCatProvider } from "@/providers/RevenueCatProvider";
+{{/if}}
 
 const LIGHT_THEME = {
   ...DefaultTheme,
@@ -23533,6 +23549,9 @@ export default function RootLayout() {
 
   return (
     <>
+{{#if (eq payments "revenuecat")}}
+      <RevenueCatProvider>
+{{/if}}
       {{#if (eq backend "convex")}}
         {{#if (eq auth "clerk")}}
           <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
@@ -23630,6 +23649,9 @@ export default function RootLayout() {
           {{/unless}}
         {{/if}}
       {{/if}}
+{{#if (eq payments "revenuecat")}}
+      </RevenueCatProvider>
+{{/if}}
     </>
   );
 }
@@ -24700,6 +24722,9 @@ import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
 import { StatusBar } from "expo-status-bar";
+{{#if (eq payments "revenuecat")}}
+import { RevenueCatProvider } from "@/providers/RevenueCatProvider";
+{{/if}}
 
 export const unstable_settings = {
   initialRouteName: "(drawer)",
@@ -24731,6 +24756,9 @@ export default function RootLayout() {
   const { theme } = useUnistyles();
 
   return (
+{{#if (eq payments "revenuecat")}}
+    <RevenueCatProvider>
+{{/if}}
     {{#if (eq backend "convex")}}
     {{#if (eq auth "clerk")}}
     <ClerkProvider
@@ -24904,6 +24932,9 @@ export default function RootLayout() {
         {{/unless}}
       {{/if}}
     {{/if}}
+{{#if (eq payments "revenuecat")}}
+    </RevenueCatProvider>
+{{/if}}
   );
 }
 `],
@@ -26102,6 +26133,9 @@ import { HeroUINativeProvider } from "heroui-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
+{{#if (eq payments "revenuecat")}}
+import { RevenueCatProvider } from "@/providers/RevenueCatProvider";
+{{/if}}
 
 {{#if (eq api "trpc")}}
   import { queryClient } from "@/utils/trpc";
@@ -26150,6 +26184,9 @@ function StackLayout() {
 
 export default function Layout() {
   return (
+{{#if (eq payments "revenuecat")}}
+    <RevenueCatProvider>
+{{/if}}
     {{#if (eq backend "convex")}}
       {{#if (eq auth "clerk")}}
         <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
@@ -26244,6 +26281,9 @@ export default function Layout() {
         {{/unless}}
       {{/if}}
     {{/if}}
+{{#if (eq payments "revenuecat")}}
+    </RevenueCatProvider>
+{{/if}}
   );
 }
 `],
@@ -31984,7 +32024,940 @@ function SuccessPage() {
 		<p>Checkout ID: {checkout_id}</p>
 	{/if}
 </div>
+`],
+  ["payments/revenuecat/convex/backend/convex/revenuecat.ts.hbs", `import { RevenueCat } from "convex-revenuecat";
+
+import { components } from "./_generated/api";
+
+export const revenuecat = new RevenueCat(components.revenuecat, {
+  REVENUECAT_WEBHOOK_AUTH: process.env.REVENUECAT_WEBHOOK_AUTH ?? "",
+});
+
+export const { hasEntitlement, isSubscriber, getActiveSubscriptions } = revenuecat.api();
+`],
+  ["payments/revenuecat/convex/no-better-auth/convex/http.ts.hbs", `import { httpRouter } from "convex/server";
+
+import { revenuecat } from "./revenuecat";
+
+const http = httpRouter();
+
+revenuecat.registerRoutes(http);
+
+export default http;
+`],
+  ["payments/revenuecat/native/bare/components/paywall-example.tsx.hbs", `import { useState } from "react";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import type { PurchasesPackage } from "react-native-purchases";
+
+import { useRevenueCat } from "@/providers/RevenueCatProvider";
+
+export function PaywallExample() {
+  const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+
+  const loadPackages = async () => {
+    setIsLoading(true);
+    try {
+      setPackages(await getPackages());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePurchase = async (pack: PurchasesPackage) => {
+    setIsPurchasing(true);
+    try {
+      const success = await purchasePackage(pack);
+      Alert.alert(success ? "You're now Premium!" : "Purchase not completed");
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
+  if (isPro) {
+    return (
+      <View style={styles.card}>
+        <Text style={styles.title}>You're Premium</Text>
+        <Text style={styles.muted}>Thanks for your support — enjoy all features.</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.title}>Upgrade to Premium</Text>
+      <Text style={styles.muted}>Unlock all features.</Text>
+
+      {packages.length === 0 ? (
+        <Pressable style={styles.button} onPress={loadPackages} disabled={isLoading}>
+          {isLoading ? (
+            <ActivityIndicator color="#fafafa" />
+          ) : (
+            <Text style={styles.buttonText}>View plans</Text>
+          )}
+        </Pressable>
+      ) : (
+        packages.map((pack) => (
+          <Pressable
+            key={pack.identifier}
+            style={styles.button}
+            onPress={() => handlePurchase(pack)}
+            disabled={isPurchasing}
+          >
+            <Text style={styles.buttonText}>
+              {pack.product.title} · {pack.product.priceString}
+            </Text>
+          </Pressable>
+        ))
+      )}
+
+      <Pressable style={styles.secondary} onPress={restorePurchases}>
+        <Text style={styles.secondaryText}>Restore purchases</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    gap: 12,
+    borderRadius: 16,
+    padding: 16,
+    backgroundColor: "#f4f4f5",
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#18181b",
+  },
+  muted: {
+    fontSize: 14,
+    color: "#71717a",
+  },
+  button: {
+    alignItems: "center",
+    borderRadius: 12,
+    paddingVertical: 12,
+    backgroundColor: "#18181b",
+  },
+  buttonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#fafafa",
+  },
+  secondary: {
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  secondaryText: {
+    fontSize: 14,
+    color: "#71717a",
+  },
+});
+`],
+  ["payments/revenuecat/native/bare/components/subscription-status-card.tsx.hbs", `import { StyleSheet, Text, View } from "react-native";
+
+import { useRevenueCat } from "@/providers/RevenueCatProvider";
+
+export function SubscriptionStatusCard() {
+  const { isPro, isConfigured } = useRevenueCat();
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.title}>Subscription</Text>
+      {!isConfigured ? (
+        <Text style={styles.muted}>
+          RevenueCat is not configured yet. Add your API keys in apps/native/.env.
+        </Text>
+      ) : isPro ? (
+        <Text style={styles.pro}>You're a Premium member 🎉</Text>
+      ) : (
+        <Text style={styles.muted}>You're on the free plan.</Text>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    gap: 8,
+    borderRadius: 16,
+    padding: 16,
+    backgroundColor: "#f4f4f5",
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#18181b",
+  },
+  pro: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#16a34a",
+  },
+  muted: {
+    fontSize: 14,
+    color: "#71717a",
+  },
+});
+`],
+  ["payments/revenuecat/native/base/lib/revenue-cat/index.ts.hbs", `import { Platform } from "react-native";
+import Purchases, {
+  type CustomerInfo,
+  LOG_LEVEL,
+  type PurchasesOffering,
+  type PurchasesPackage,
+} from "react-native-purchases";
+
+// RevenueCat SDK utility layer. Thin wrappers around \`react-native-purchases\`.
+// These are pure functions with no React state — they talk to the SDK directly.
+// In components, prefer the \`useRevenueCat()\` / \`useIsPro()\` hooks from
+// \`@/providers/RevenueCatProvider\` instead of importing from this file.
+
+const iosApiKey = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? "";
+const androidApiKey = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? "";
+
+function normalizeEnvValue(value: string | undefined): string | undefined {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
+}
+
+const proEntitlementId =
+  normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID) ?? "pro";
+const preferredOfferingId = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_OFFERING_ID);
+
+export const PRO_ENTITLEMENT_IDS: readonly string[] = [proEntitlementId];
+
+let hasConfiguredRevenueCat = false;
+
+export type RevenueCatInitFailureReason = "unsupported_platform" | "missing_api_key";
+
+export type RevenueCatInitResult =
+  | { configured: true }
+  | { configured: false; reason: RevenueCatInitFailureReason };
+
+type RevenueCatPurchaseError = {
+  userCancelled?: boolean;
+};
+
+type CustomerInfoListener = (customerInfo: CustomerInfo) => void;
+
+type PurchasesWithRemoveListener = typeof Purchases & {
+  removeCustomerInfoUpdateListener?: (listener: CustomerInfoListener) => void;
+};
+
+export function hasProEntitlement(customerInfo: CustomerInfo | null): boolean {
+  if (!customerInfo) return false;
+
+  return PRO_ENTITLEMENT_IDS.some((id) => customerInfo.entitlements.active[id] !== undefined);
+}
+
+function hasPackages(offering: PurchasesOffering | null | undefined): offering is PurchasesOffering {
+  return !!offering && offering.availablePackages.length > 0;
+}
+
+function pickFirstOfferingWithPackages(
+  offeringsById: Record<string, PurchasesOffering>,
+): PurchasesOffering | null {
+  for (const offering of Object.values(offeringsById)) {
+    if (hasPackages(offering)) {
+      return offering;
+    }
+  }
+  return null;
+}
+
+/**
+ * One-time SDK initialization. Safe to call multiple times (no-ops after first).
+ * Only \`RevenueCatProvider\` should call this — it owns the SDK lifecycle.
+ */
+export async function configureRevenueCat(): Promise<RevenueCatInitResult> {
+  if (Platform.OS !== "ios" && Platform.OS !== "android") {
+    return { configured: false, reason: "unsupported_platform" };
+  }
+
+  if (hasConfiguredRevenueCat) {
+    return { configured: true };
+  }
+
+  const apiKey = Platform.OS === "ios" ? iosApiKey : androidApiKey;
+
+  if (!apiKey) {
+    return { configured: false, reason: "missing_api_key" };
+  }
+
+  Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.WARN : LOG_LEVEL.ERROR);
+
+  Purchases.configure({ apiKey });
+
+  hasConfiguredRevenueCat = true;
+
+  return { configured: true };
+}
+
+/**
+ * Subscribe to real-time entitlement changes. Returns an unsubscribe function.
+ * Only \`RevenueCatProvider\` should use this directly.
+ */
+export function onCustomerInfoUpdated(listener: CustomerInfoListener): () => void {
+  Purchases.addCustomerInfoUpdateListener(listener);
+
+  return () => {
+    (Purchases as PurchasesWithRemoveListener).removeCustomerInfoUpdateListener?.(listener);
+  };
+}
+
+/** Fetch latest CustomerInfo and return current pro status. */
+export async function refreshProEntitlement(): Promise<boolean> {
+  const customerInfo = await Purchases.getCustomerInfo();
+  return hasProEntitlement(customerInfo);
+}
+
+/**
+ * Identify the user in RevenueCat via \`Purchases.logIn\` so purchases follow the
+ * account across devices. Pass a stable auth user id. Returns pro status.
+ */
+export async function identifyUser(userId: string): Promise<boolean> {
+  const { customerInfo } = await Purchases.logIn(userId);
+  return hasProEntitlement(customerInfo);
+}
+
+/** Log out the current user from RevenueCat (resets to an anonymous id). */
+export async function logOutUser(): Promise<void> {
+  await Purchases.logOut();
+}
+
+/** Set user attributes for tracking in the RevenueCat dashboard. */
+export async function setUserAttributes(attributes: {
+  email?: string;
+  displayName?: string;
+}): Promise<void> {
+  if (attributes.email) {
+    await Purchases.setEmail(attributes.email);
+  }
+  if (attributes.displayName) {
+    await Purchases.setDisplayName(attributes.displayName);
+  }
+}
+
+async function getOffering(): Promise<PurchasesOffering | null> {
+  const offerings = await Purchases.getOfferings();
+
+  if (preferredOfferingId) {
+    const preferredOffering = offerings.all[preferredOfferingId];
+    if (hasPackages(preferredOffering)) {
+      return preferredOffering;
+    }
+
+    if (__DEV__) {
+      console.warn(
+        \`[RevenueCat] Offering '\${preferredOfferingId}' was configured but has no available packages; falling back to current offering.\`,
+      );
+    }
+  }
+
+  if (hasPackages(offerings.current)) {
+    return offerings.current;
+  }
+
+  const fallbackOffering = pickFirstOfferingWithPackages(offerings.all);
+  if (fallbackOffering) {
+    return fallbackOffering;
+  }
+
+  return offerings.current ?? null;
+}
+
+/** Get available subscription packages from the resolved offering. */
+export async function getPackages(): Promise<PurchasesPackage[]> {
+  const offering = await getOffering();
+  return offering?.availablePackages ?? [];
+}
+
+/** Attempt a package purchase and return the resulting pro status. */
+export async function purchaseAndCheckPro(pack: PurchasesPackage): Promise<boolean> {
+  const { customerInfo } = await Purchases.purchasePackage(pack);
+  return hasProEntitlement(customerInfo);
+}
+
+/** Restore purchases from the App Store / Play Store. */
+export async function restoreAndCheckPro(): Promise<boolean> {
+  const customerInfo = await Purchases.restorePurchases();
+  return hasProEntitlement(customerInfo);
+}
+
+/** Force-sync local store state with RevenueCat servers. Debug / recovery only. */
+export async function syncAndCheckPro(): Promise<boolean> {
+  const { customerInfo } = await Purchases.syncPurchasesForResult();
+  return hasProEntitlement(customerInfo);
+}
+
+/** Check whether an error thrown during purchase is a user cancellation. */
+export function isPurchaseCancelledError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  return (error as RevenueCatPurchaseError).userCancelled === true;
+}
+`],
+  ["payments/revenuecat/native/base/providers/RevenueCatProvider.tsx.hbs", `import type { ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { AppState } from "react-native";
+import type { PurchasesPackage } from "react-native-purchases";
+
+import {
+  configureRevenueCat,
+  getPackages as getRevenueCatPackages,
+  hasProEntitlement,
+  identifyUser as identifyRevenueCatUser,
+  isPurchaseCancelledError,
+  logOutUser as logOutRevenueCatUser,
+  onCustomerInfoUpdated,
+  purchaseAndCheckPro,
+  type RevenueCatInitFailureReason,
+  refreshProEntitlement,
+  restoreAndCheckPro,
+  setUserAttributes as setRevenueCatUserAttributes,
+  syncAndCheckPro,
+} from "@/lib/revenue-cat";
+
+type UserAttributes = {
+  email?: string;
+  displayName?: string;
+};
+
+export type RevenueCatContextValue = {
+  isPro: boolean;
+  isConfigured: boolean;
+  refreshEntitlement: () => Promise<boolean>;
+  getPackages: () => Promise<PurchasesPackage[]>;
+  purchasePackage: (pack: PurchasesPackage) => Promise<boolean>;
+  restorePurchases: () => Promise<boolean>;
+  syncPurchases: () => Promise<boolean>;
+  identifyUser: (userId: string) => Promise<boolean>;
+  logOutUser: () => Promise<void>;
+  setUserAttributes: (attributes: UserAttributes) => Promise<void>;
+};
+
+type RevenueCatProviderProps = {
+  children: ReactNode;
+};
+
+const RevenueCatContext = createContext<RevenueCatContextValue | null>(null);
+
+export function useRevenueCat(): RevenueCatContextValue {
+  const context = useContext(RevenueCatContext);
+
+  if (!context) {
+    throw new Error("useRevenueCat must be used within RevenueCatProvider");
+  }
+
+  return context;
+}
+
+export function useIsPro(): boolean {
+  const context = useContext(RevenueCatContext);
+  return context?.isPro ?? false;
+}
+
+function logInitSkip(reason: RevenueCatInitFailureReason): void {
+  if (reason === "unsupported_platform") {
+    console.warn("[RevenueCat] Initialization skipped: unsupported platform");
+    return;
+  }
+
+  console.warn(
+    "[RevenueCat] Missing API key. Add EXPO_PUBLIC_REVENUECAT_IOS_KEY and EXPO_PUBLIC_REVENUECAT_ANDROID_KEY in apps/native/.env",
+  );
+}
+
+export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
+  const [isConfigured, setIsConfigured] = useState(false);
+  const [isPro, setIsPro] = useState(false);
+
+  const refreshEntitlement = useCallback(async (): Promise<boolean> => {
+    if (!isConfigured) return false;
+    try {
+      const nextIsPro = await refreshProEntitlement();
+      setIsPro(nextIsPro);
+      return nextIsPro;
+    } catch (error) {
+      console.warn("[RevenueCat] Failed to refresh entitlement:", error);
+      return false;
+    }
+  }, [isConfigured]);
+
+  const getPackages = useCallback(async (): Promise<PurchasesPackage[]> => {
+    if (!isConfigured) return [];
+
+    try {
+      return await getRevenueCatPackages();
+    } catch (error) {
+      console.warn("[RevenueCat] Failed to fetch packages:", error);
+      return [];
+    }
+  }, [isConfigured]);
+
+  const purchasePackage = useCallback(
+    async (pack: PurchasesPackage): Promise<boolean> => {
+      if (!isConfigured) return false;
+
+      try {
+        const nextIsPro = await purchaseAndCheckPro(pack);
+        setIsPro(nextIsPro);
+        return nextIsPro;
+      } catch (error) {
+        if (isPurchaseCancelledError(error)) {
+          try {
+            const nextIsPro = await refreshProEntitlement();
+            setIsPro(nextIsPro);
+            return nextIsPro;
+          } catch (refreshError) {
+            console.warn(
+              "[RevenueCat] Failed to refresh entitlement after cancellation:",
+              refreshError,
+            );
+            return false;
+          }
+        }
+
+        console.warn("[RevenueCat] Purchase failed:", error);
+        return false;
+      }
+    },
+    [isConfigured],
+  );
+
+  const restorePurchases = useCallback(async (): Promise<boolean> => {
+    if (!isConfigured) return false;
+
+    try {
+      const nextIsPro = await restoreAndCheckPro();
+      setIsPro(nextIsPro);
+      return nextIsPro;
+    } catch (error) {
+      console.warn("[RevenueCat] Restore failed:", error);
+      return false;
+    }
+  }, [isConfigured]);
+
+  const syncPurchases = useCallback(async (): Promise<boolean> => {
+    if (!isConfigured) return false;
+
+    try {
+      const nextIsPro = await syncAndCheckPro();
+      setIsPro(nextIsPro);
+      return nextIsPro;
+    } catch (error) {
+      console.warn("[RevenueCat] Sync purchases failed:", error);
+      return false;
+    }
+  }, [isConfigured]);
+
+  const identifyUser = useCallback(
+    async (userId: string): Promise<boolean> => {
+      if (!isConfigured) return false;
+
+      try {
+        const nextIsPro = await identifyRevenueCatUser(userId);
+        setIsPro(nextIsPro);
+        return nextIsPro;
+      } catch (error) {
+        console.warn("[RevenueCat] Identify user failed:", error);
+        return false;
+      }
+    },
+    [isConfigured],
+  );
+
+  const logOutUser = useCallback(async (): Promise<void> => {
+    if (!isConfigured) return;
+
+    try {
+      await logOutRevenueCatUser();
+      setIsPro(false);
+    } catch (error) {
+      console.warn("[RevenueCat] Log out failed:", error);
+    }
+  }, [isConfigured]);
+
+  const setUserAttributes = useCallback(
+    async (attributes: UserAttributes): Promise<void> => {
+      if (!isConfigured) return;
+
+      try {
+        await setRevenueCatUserAttributes(attributes);
+      } catch (error) {
+        console.warn("[RevenueCat] Set attributes failed:", error);
+      }
+    },
+    [isConfigured],
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+    let unsubscribe = () => {};
+
+    const initialize = async () => {
+      try {
+        const result = await configureRevenueCat();
+
+        if (!isMounted) return;
+
+        if (!result.configured) {
+          setIsConfigured(false);
+          logInitSkip(result.reason);
+          return;
+        }
+
+        setIsConfigured(true);
+
+        unsubscribe = onCustomerInfoUpdated((customerInfo) => {
+          if (!isMounted) return;
+          setIsPro(hasProEntitlement(customerInfo));
+        });
+
+        const nextIsPro = await refreshProEntitlement();
+        if (isMounted) {
+          setIsPro(nextIsPro);
+        }
+      } catch (error) {
+        console.warn("[RevenueCat] Initialization failed:", error);
+      }
+    };
+
+    initialize();
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isConfigured) return;
+
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
+
+      refreshEntitlement().catch((error) => {
+        console.warn("[RevenueCat] Foreground entitlement refresh failed:", error);
+      });
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isConfigured, refreshEntitlement]);
+
+  const value = useMemo<RevenueCatContextValue>(
+    () => ({
+      isPro,
+      isConfigured,
+      refreshEntitlement,
+      getPackages,
+      purchasePackage,
+      restorePurchases,
+      syncPurchases,
+      identifyUser,
+      logOutUser,
+      setUserAttributes,
+    }),
+    [
+      isPro,
+      isConfigured,
+      refreshEntitlement,
+      getPackages,
+      purchasePackage,
+      restorePurchases,
+      syncPurchases,
+      identifyUser,
+      logOutUser,
+      setUserAttributes,
+    ],
+  );
+
+  return <RevenueCatContext.Provider value={value}>{children}</RevenueCatContext.Provider>;
+}
+`],
+  ["payments/revenuecat/native/unistyles/components/paywall-example.tsx.hbs", `import { useState } from "react";
+import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import type { PurchasesPackage } from "react-native-purchases";
+
+import { useRevenueCat } from "@/providers/RevenueCatProvider";
+
+export function PaywallExample() {
+  const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+
+  const loadPackages = async () => {
+    setIsLoading(true);
+    try {
+      setPackages(await getPackages());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePurchase = async (pack: PurchasesPackage) => {
+    setIsPurchasing(true);
+    try {
+      const success = await purchasePackage(pack);
+      Alert.alert(success ? "You're now Premium!" : "Purchase not completed");
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
+  if (isPro) {
+    return (
+      <View style={styles.card}>
+        <Text style={styles.title}>You're Premium</Text>
+        <Text style={styles.muted}>Thanks for your support — enjoy all features.</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.title}>Upgrade to Premium</Text>
+      <Text style={styles.muted}>Unlock all features.</Text>
+
+      {packages.length === 0 ? (
+        <Pressable style={styles.button} onPress={loadPackages} disabled={isLoading}>
+          {isLoading ? (
+            <ActivityIndicator color={styles.buttonText.color} />
+          ) : (
+            <Text style={styles.buttonText}>View plans</Text>
+          )}
+        </Pressable>
+      ) : (
+        packages.map((pack) => (
+          <Pressable
+            key={pack.identifier}
+            style={styles.button}
+            onPress={() => handlePurchase(pack)}
+            disabled={isPurchasing}
+          >
+            <Text style={styles.buttonText}>
+              {pack.product.title} · {pack.product.priceString}
+            </Text>
+          </Pressable>
+        ))
+      )}
+
+      <Pressable style={styles.secondary} onPress={restorePurchases}>
+        <Text style={styles.secondaryText}>Restore purchases</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create((theme) => ({
+  card: {
+    gap: theme.spacing.md,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.card,
+  },
+  title: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: "600",
+    color: theme.colors.foreground,
+  },
+  muted: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.mutedForeground,
+  },
+  button: {
+    alignItems: "center",
+    borderRadius: theme.borderRadius.lg,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.primary,
+  },
+  buttonText: {
+    fontSize: theme.fontSize.base,
+    fontWeight: "600",
+    color: theme.colors.primaryForeground,
+  },
+  secondary: {
+    alignItems: "center",
+    paddingVertical: theme.spacing.sm,
+  },
+  secondaryText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.mutedForeground,
+  },
+}));
+`],
+  ["payments/revenuecat/native/unistyles/components/subscription-status-card.tsx.hbs", `import { Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+
+import { useRevenueCat } from "@/providers/RevenueCatProvider";
+
+export function SubscriptionStatusCard() {
+  const { isPro, isConfigured } = useRevenueCat();
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.title}>Subscription</Text>
+      {!isConfigured ? (
+        <Text style={styles.muted}>
+          RevenueCat is not configured yet. Add your API keys in apps/native/.env.
+        </Text>
+      ) : isPro ? (
+        <Text style={styles.pro}>You're a Premium member 🎉</Text>
+      ) : (
+        <Text style={styles.muted}>You're on the free plan.</Text>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create((theme) => ({
+  card: {
+    gap: theme.spacing.sm,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.card,
+  },
+  title: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: "600",
+    color: theme.colors.foreground,
+  },
+  pro: {
+    fontSize: theme.fontSize.base,
+    fontWeight: "500",
+    color: theme.colors.success,
+  },
+  muted: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.mutedForeground,
+  },
+}));
+`],
+  ["payments/revenuecat/native/uniwind/components/paywall-example.tsx.hbs", `import { useState } from "react";
+import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import type { PurchasesPackage } from "react-native-purchases";
+
+import { useRevenueCat } from "@/providers/RevenueCatProvider";
+
+export function PaywallExample() {
+  const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+
+  const loadPackages = async () => {
+    setIsLoading(true);
+    try {
+      setPackages(await getPackages());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePurchase = async (pack: PurchasesPackage) => {
+    setIsPurchasing(true);
+    try {
+      const success = await purchasePackage(pack);
+      Alert.alert(success ? "You're now Premium!" : "Purchase not completed");
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
+  if (isPro) {
+    return (
+      <View className="gap-2 rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900">
+        <Text className="font-semibold text-lg text-neutral-900 dark:text-neutral-50">
+          You're Premium
+        </Text>
+        <Text className="text-neutral-500 text-sm">
+          Thanks for your support — enjoy all features.
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View className="gap-3 rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900">
+      <Text className="font-semibold text-lg text-neutral-900 dark:text-neutral-50">
+        Upgrade to Premium
+      </Text>
+      <Text className="text-neutral-500 text-sm">Unlock all features.</Text>
+
+      {packages.length === 0 ? (
+        <Pressable
+          className="items-center rounded-xl bg-neutral-900 py-3 dark:bg-neutral-50"
+          onPress={loadPackages}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator />
+          ) : (
+            <Text className="font-semibold text-neutral-50 dark:text-neutral-900">View plans</Text>
+          )}
+        </Pressable>
+      ) : (
+        packages.map((pack) => (
+          <Pressable
+            key={pack.identifier}
+            className="items-center rounded-xl bg-neutral-900 py-3 dark:bg-neutral-50"
+            onPress={() => handlePurchase(pack)}
+            disabled={isPurchasing}
+          >
+            <Text className="font-semibold text-neutral-50 dark:text-neutral-900">
+              {pack.product.title} · {pack.product.priceString}
+            </Text>
+          </Pressable>
+        ))
+      )}
+
+      <Pressable className="items-center py-2" onPress={restorePurchases}>
+        <Text className="text-neutral-500 text-sm">Restore purchases</Text>
+      </Pressable>
+    </View>
+  );
+}
+`],
+  ["payments/revenuecat/native/uniwind/components/subscription-status-card.tsx.hbs", `import { Text, View } from "react-native";
+
+import { useRevenueCat } from "@/providers/RevenueCatProvider";
+
+export function SubscriptionStatusCard() {
+  const { isPro, isConfigured } = useRevenueCat();
+
+  return (
+    <View className="gap-2 rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900">
+      <Text className="font-semibold text-lg text-neutral-900 dark:text-neutral-50">
+        Subscription
+      </Text>
+      {!isConfigured ? (
+        <Text className="text-neutral-500 text-sm">
+          RevenueCat is not configured yet. Add your API keys in apps/native/.env.
+        </Text>
+      ) : isPro ? (
+        <Text className="font-medium text-base text-green-600">You're a Premium member 🎉</Text>
+      ) : (
+        <Text className="text-neutral-500 text-sm">You're on the free plan.</Text>
+      )}
+    </View>
+  );
+}
 `]
 ]);
 
-export const TEMPLATE_COUNT = 497;
+export const TEMPLATE_COUNT = 507;

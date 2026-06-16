@@ -1,0 +1,46 @@
+import { Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+
+import { useRevenueCat } from "@/providers/RevenueCatProvider";
+
+export function SubscriptionStatusCard() {
+  const { isPro, isConfigured } = useRevenueCat();
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.title}>Subscription</Text>
+      {!isConfigured ? (
+        <Text style={styles.muted}>
+          RevenueCat is not configured yet. Add your API keys in apps/native/.env.
+        </Text>
+      ) : isPro ? (
+        <Text style={styles.pro}>You're a Premium member 🎉</Text>
+      ) : (
+        <Text style={styles.muted}>You're on the free plan.</Text>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create((theme) => ({
+  card: {
+    gap: theme.spacing.sm,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.card,
+  },
+  title: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: "600",
+    color: theme.colors.foreground,
+  },
+  pro: {
+    fontSize: theme.fontSize.base,
+    fontWeight: "500",
+    color: theme.colors.success,
+  },
+  muted: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.mutedForeground,
+  },
+}));

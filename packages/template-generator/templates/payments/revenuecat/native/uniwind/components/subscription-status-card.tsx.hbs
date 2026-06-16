@@ -1,0 +1,24 @@
+import { Text, View } from "react-native";
+
+import { useRevenueCat } from "@/providers/RevenueCatProvider";
+
+export function SubscriptionStatusCard() {
+  const { isPro, isConfigured } = useRevenueCat();
+
+  return (
+    <View className="gap-2 rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900">
+      <Text className="font-semibold text-lg text-neutral-900 dark:text-neutral-50">
+        Subscription
+      </Text>
+      {!isConfigured ? (
+        <Text className="text-neutral-500 text-sm">
+          RevenueCat is not configured yet. Add your API keys in apps/native/.env.
+        </Text>
+      ) : isPro ? (
+        <Text className="font-medium text-base text-green-600">You're a Premium member 🎉</Text>
+      ) : (
+        <Text className="text-neutral-500 text-sm">You're on the free plan.</Text>
+      )}
+    </View>
+  );
+}
