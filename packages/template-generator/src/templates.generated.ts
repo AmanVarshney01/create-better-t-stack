@@ -32030,7 +32030,7 @@ function SuccessPage() {
 import { components } from "./_generated/api";
 
 export const revenuecat = new RevenueCat(components.revenuecat, {
-  REVENUECAT_WEBHOOK_AUTH: process.env.REVENUECAT_WEBHOOK_AUTH ?? "",
+  REVENUECAT_WEBHOOK_AUTH: process.env.REVENUECAT_WEBHOOK_AUTH,
 });
 
 export const { hasEntitlement, isSubscriber, getActiveSubscriptions } = revenuecat.api();
@@ -32056,6 +32056,8 @@ export function PaywallExample() {
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const isBusy = isPurchasing || isRestoring;
 
   const loadPackages = async () => {
     setIsLoading(true);
@@ -32067,12 +32069,24 @@ export function PaywallExample() {
   };
 
   const handlePurchase = async (pack: PurchasesPackage) => {
+    if (isBusy) return;
     setIsPurchasing(true);
     try {
       const success = await purchasePackage(pack);
       Alert.alert(success ? "You're now Premium!" : "Purchase not completed");
     } finally {
       setIsPurchasing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (isBusy) return;
+    setIsRestoring(true);
+    try {
+      const success = await restorePurchases();
+      Alert.alert(success ? "Purchases restored" : "No purchases to restore");
+    } finally {
+      setIsRestoring(false);
     }
   };
 
@@ -32104,7 +32118,7 @@ export function PaywallExample() {
             key={pack.identifier}
             style={styles.button}
             onPress={() => handlePurchase(pack)}
-            disabled={isPurchasing}
+            disabled={isBusy}
           >
             <Text style={styles.buttonText}>
               {pack.product.title} · {pack.product.priceString}
@@ -32113,8 +32127,10 @@ export function PaywallExample() {
         ))
       )}
 
-      <Pressable style={styles.secondary} onPress={restorePurchases}>
-        <Text style={styles.secondaryText}>Restore purchases</Text>
+      <Pressable style={styles.secondary} onPress={handleRestore} disabled={isBusy}>
+        <Text style={styles.secondaryText}>
+          {isRestoring ? "Restoring..." : "Restore purchases"}
+        </Text>
       </Pressable>
     </View>
   );
@@ -32216,13 +32232,13 @@ import Purchases, {
 // In components, prefer the \`useRevenueCat()\` / \`useIsPro()\` hooks from
 // \`@/providers/RevenueCatProvider\` instead of importing from this file.
 
-const iosApiKey = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? "";
-const androidApiKey = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? "";
-
 function normalizeEnvValue(value: string | undefined): string | undefined {
   const normalized = value?.trim();
   return normalized ? normalized : undefined;
 }
+
+const iosApiKey = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY);
+const androidApiKey = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY);
 
 const proEntitlementId =
   normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID) ?? "pro";
@@ -32700,6 +32716,8 @@ export function PaywallExample() {
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const isBusy = isPurchasing || isRestoring;
 
   const loadPackages = async () => {
     setIsLoading(true);
@@ -32711,12 +32729,24 @@ export function PaywallExample() {
   };
 
   const handlePurchase = async (pack: PurchasesPackage) => {
+    if (isBusy) return;
     setIsPurchasing(true);
     try {
       const success = await purchasePackage(pack);
       Alert.alert(success ? "You're now Premium!" : "Purchase not completed");
     } finally {
       setIsPurchasing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (isBusy) return;
+    setIsRestoring(true);
+    try {
+      const success = await restorePurchases();
+      Alert.alert(success ? "Purchases restored" : "No purchases to restore");
+    } finally {
+      setIsRestoring(false);
     }
   };
 
@@ -32748,7 +32778,7 @@ export function PaywallExample() {
             key={pack.identifier}
             style={styles.button}
             onPress={() => handlePurchase(pack)}
-            disabled={isPurchasing}
+            disabled={isBusy}
           >
             <Text style={styles.buttonText}>
               {pack.product.title} · {pack.product.priceString}
@@ -32757,8 +32787,10 @@ export function PaywallExample() {
         ))
       )}
 
-      <Pressable style={styles.secondary} onPress={restorePurchases}>
-        <Text style={styles.secondaryText}>Restore purchases</Text>
+      <Pressable style={styles.secondary} onPress={handleRestore} disabled={isBusy}>
+        <Text style={styles.secondaryText}>
+          {isRestoring ? "Restoring..." : "Restore purchases"}
+        </Text>
       </Pressable>
     </View>
   );
@@ -32859,6 +32891,8 @@ export function PaywallExample() {
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const isBusy = isPurchasing || isRestoring;
 
   const loadPackages = async () => {
     setIsLoading(true);
@@ -32870,12 +32904,24 @@ export function PaywallExample() {
   };
 
   const handlePurchase = async (pack: PurchasesPackage) => {
+    if (isBusy) return;
     setIsPurchasing(true);
     try {
       const success = await purchasePackage(pack);
       Alert.alert(success ? "You're now Premium!" : "Purchase not completed");
     } finally {
       setIsPurchasing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (isBusy) return;
+    setIsRestoring(true);
+    try {
+      const success = await restorePurchases();
+      Alert.alert(success ? "Purchases restored" : "No purchases to restore");
+    } finally {
+      setIsRestoring(false);
     }
   };
 
@@ -32917,7 +32963,7 @@ export function PaywallExample() {
             key={pack.identifier}
             className="items-center rounded-xl bg-neutral-900 py-3 dark:bg-neutral-50"
             onPress={() => handlePurchase(pack)}
-            disabled={isPurchasing}
+            disabled={isBusy}
           >
             <Text className="font-semibold text-neutral-50 dark:text-neutral-900">
               {pack.product.title} · {pack.product.priceString}
@@ -32926,8 +32972,10 @@ export function PaywallExample() {
         ))
       )}
 
-      <Pressable className="items-center py-2" onPress={restorePurchases}>
-        <Text className="text-neutral-500 text-sm">Restore purchases</Text>
+      <Pressable className="items-center py-2" onPress={handleRestore} disabled={isBusy}>
+        <Text className="text-neutral-500 text-sm">
+          {isRestoring ? "Restoring..." : "Restore purchases"}
+        </Text>
       </Pressable>
     </View>
   );

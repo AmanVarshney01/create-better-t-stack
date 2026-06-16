@@ -11,13 +11,13 @@ import Purchases, {
 // In components, prefer the `useRevenueCat()` / `useIsPro()` hooks from
 // `@/providers/RevenueCatProvider` instead of importing from this file.
 
-const iosApiKey = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? "";
-const androidApiKey = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? "";
-
 function normalizeEnvValue(value: string | undefined): string | undefined {
   const normalized = value?.trim();
   return normalized ? normalized : undefined;
 }
+
+const iosApiKey = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY);
+const androidApiKey = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY);
 
 const proEntitlementId =
   normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID) ?? "pro";

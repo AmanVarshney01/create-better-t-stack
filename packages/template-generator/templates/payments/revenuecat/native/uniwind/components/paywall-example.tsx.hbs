@@ -9,6 +9,8 @@ export function PaywallExample() {
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const isBusy = isPurchasing || isRestoring;
 
   const loadPackages = async () => {
     setIsLoading(true);
@@ -20,12 +22,24 @@ export function PaywallExample() {
   };
 
   const handlePurchase = async (pack: PurchasesPackage) => {
+    if (isBusy) return;
     setIsPurchasing(true);
     try {
       const success = await purchasePackage(pack);
       Alert.alert(success ? "You're now Premium!" : "Purchase not completed");
     } finally {
       setIsPurchasing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (isBusy) return;
+    setIsRestoring(true);
+    try {
+      const success = await restorePurchases();
+      Alert.alert(success ? "Purchases restored" : "No purchases to restore");
+    } finally {
+      setIsRestoring(false);
     }
   };
 
@@ -67,7 +81,7 @@ export function PaywallExample() {
             key={pack.identifier}
             className="items-center rounded-xl bg-neutral-900 py-3 dark:bg-neutral-50"
             onPress={() => handlePurchase(pack)}
-            disabled={isPurchasing}
+            disabled={isBusy}
           >
             <Text className="font-semibold text-neutral-50 dark:text-neutral-900">
               {pack.product.title} · {pack.product.priceString}
@@ -76,8 +90,10 @@ export function PaywallExample() {
         ))
       )}
 
-      <Pressable className="items-center py-2" onPress={restorePurchases}>
-        <Text className="text-neutral-500 text-sm">Restore purchases</Text>
+      <Pressable className="items-center py-2" onPress={handleRestore} disabled={isBusy}>
+        <Text className="text-neutral-500 text-sm">
+          {isRestoring ? "Restoring..." : "Restore purchases"}
+        </Text>
       </Pressable>
     </View>
   );
