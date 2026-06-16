@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import type { PurchasesPackage } from "react-native-purchases";
 
-import { useRevenueCat } from "@/providers/RevenueCatProvider";
+import { useRevenueCat } from "@/contexts/revenuecat-context";
 
 export function PaywallExample() {
   const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();

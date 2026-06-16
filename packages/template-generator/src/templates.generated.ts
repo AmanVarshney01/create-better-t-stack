@@ -23500,7 +23500,7 @@ import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { StyleSheet } from "react-native";
 {{#if (eq payments "revenuecat")}}
-import { RevenueCatProvider } from "@/providers/RevenueCatProvider";
+import { RevenueCatProvider } from "@/contexts/revenuecat-context";
 {{/if}}
 
 const LIGHT_THEME = {
@@ -24723,7 +24723,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
 import { StatusBar } from "expo-status-bar";
 {{#if (eq payments "revenuecat")}}
-import { RevenueCatProvider } from "@/providers/RevenueCatProvider";
+import { RevenueCatProvider } from "@/contexts/revenuecat-context";
 {{/if}}
 
 export const unstable_settings = {
@@ -26134,7 +26134,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 {{#if (eq payments "revenuecat")}}
-import { RevenueCatProvider } from "@/providers/RevenueCatProvider";
+import { RevenueCatProvider } from "@/contexts/revenuecat-context";
 {{/if}}
 
 {{#if (eq api "trpc")}}
@@ -32049,7 +32049,7 @@ export default http;
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
-import { useRevenueCat } from "@/providers/RevenueCatProvider";
+import { useRevenueCat } from "@/contexts/revenuecat-context";
 
 export function PaywallExample() {
   const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
@@ -32175,7 +32175,7 @@ const styles = StyleSheet.create({
 `],
   ["payments/revenuecat/native/bare/components/subscription-status-card.tsx.hbs", `import { StyleSheet, Text, View } from "react-native";
 
-import { useRevenueCat } from "@/providers/RevenueCatProvider";
+import { useRevenueCat } from "@/contexts/revenuecat-context";
 
 export function SubscriptionStatusCard() {
   const { isPro, isConfigured } = useRevenueCat();
@@ -32219,205 +32219,7 @@ const styles = StyleSheet.create({
   },
 });
 `],
-  ["payments/revenuecat/native/base/lib/revenue-cat/index.ts.hbs", `import { Platform } from "react-native";
-import Purchases, {
-  type CustomerInfo,
-  LOG_LEVEL,
-  type PurchasesOffering,
-  type PurchasesPackage,
-} from "react-native-purchases";
-
-// RevenueCat SDK utility layer. Thin wrappers around \`react-native-purchases\`.
-// These are pure functions with no React state — they talk to the SDK directly.
-// In components, prefer the \`useRevenueCat()\` / \`useIsPro()\` hooks from
-// \`@/providers/RevenueCatProvider\` instead of importing from this file.
-
-function normalizeEnvValue(value: string | undefined): string | undefined {
-  const normalized = value?.trim();
-  return normalized ? normalized : undefined;
-}
-
-const iosApiKey = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY);
-const androidApiKey = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY);
-
-const proEntitlementId =
-  normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID) ?? "pro";
-const preferredOfferingId = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_OFFERING_ID);
-
-export const PRO_ENTITLEMENT_IDS: readonly string[] = [proEntitlementId];
-
-let hasConfiguredRevenueCat = false;
-
-export type RevenueCatInitFailureReason = "unsupported_platform" | "missing_api_key";
-
-export type RevenueCatInitResult =
-  | { configured: true }
-  | { configured: false; reason: RevenueCatInitFailureReason };
-
-type RevenueCatPurchaseError = {
-  userCancelled?: boolean;
-};
-
-type CustomerInfoListener = (customerInfo: CustomerInfo) => void;
-
-type PurchasesWithRemoveListener = typeof Purchases & {
-  removeCustomerInfoUpdateListener?: (listener: CustomerInfoListener) => void;
-};
-
-export function hasProEntitlement(customerInfo: CustomerInfo | null): boolean {
-  if (!customerInfo) return false;
-
-  return PRO_ENTITLEMENT_IDS.some((id) => customerInfo.entitlements.active[id] !== undefined);
-}
-
-function hasPackages(offering: PurchasesOffering | null | undefined): offering is PurchasesOffering {
-  return !!offering && offering.availablePackages.length > 0;
-}
-
-function pickFirstOfferingWithPackages(
-  offeringsById: Record<string, PurchasesOffering>,
-): PurchasesOffering | null {
-  for (const offering of Object.values(offeringsById)) {
-    if (hasPackages(offering)) {
-      return offering;
-    }
-  }
-  return null;
-}
-
-/**
- * One-time SDK initialization. Safe to call multiple times (no-ops after first).
- * Only \`RevenueCatProvider\` should call this — it owns the SDK lifecycle.
- */
-export async function configureRevenueCat(): Promise<RevenueCatInitResult> {
-  if (Platform.OS !== "ios" && Platform.OS !== "android") {
-    return { configured: false, reason: "unsupported_platform" };
-  }
-
-  if (hasConfiguredRevenueCat) {
-    return { configured: true };
-  }
-
-  const apiKey = Platform.OS === "ios" ? iosApiKey : androidApiKey;
-
-  if (!apiKey) {
-    return { configured: false, reason: "missing_api_key" };
-  }
-
-  Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.WARN : LOG_LEVEL.ERROR);
-
-  Purchases.configure({ apiKey });
-
-  hasConfiguredRevenueCat = true;
-
-  return { configured: true };
-}
-
-/**
- * Subscribe to real-time entitlement changes. Returns an unsubscribe function.
- * Only \`RevenueCatProvider\` should use this directly.
- */
-export function onCustomerInfoUpdated(listener: CustomerInfoListener): () => void {
-  Purchases.addCustomerInfoUpdateListener(listener);
-
-  return () => {
-    (Purchases as PurchasesWithRemoveListener).removeCustomerInfoUpdateListener?.(listener);
-  };
-}
-
-/** Fetch latest CustomerInfo and return current pro status. */
-export async function refreshProEntitlement(): Promise<boolean> {
-  const customerInfo = await Purchases.getCustomerInfo();
-  return hasProEntitlement(customerInfo);
-}
-
-/**
- * Identify the user in RevenueCat via \`Purchases.logIn\` so purchases follow the
- * account across devices. Pass a stable auth user id. Returns pro status.
- */
-export async function identifyUser(userId: string): Promise<boolean> {
-  const { customerInfo } = await Purchases.logIn(userId);
-  return hasProEntitlement(customerInfo);
-}
-
-/** Log out the current user from RevenueCat (resets to an anonymous id). */
-export async function logOutUser(): Promise<void> {
-  await Purchases.logOut();
-}
-
-/** Set user attributes for tracking in the RevenueCat dashboard. */
-export async function setUserAttributes(attributes: {
-  email?: string;
-  displayName?: string;
-}): Promise<void> {
-  if (attributes.email) {
-    await Purchases.setEmail(attributes.email);
-  }
-  if (attributes.displayName) {
-    await Purchases.setDisplayName(attributes.displayName);
-  }
-}
-
-async function getOffering(): Promise<PurchasesOffering | null> {
-  const offerings = await Purchases.getOfferings();
-
-  if (preferredOfferingId) {
-    const preferredOffering = offerings.all[preferredOfferingId];
-    if (hasPackages(preferredOffering)) {
-      return preferredOffering;
-    }
-
-    if (__DEV__) {
-      console.warn(
-        \`[RevenueCat] Offering '\${preferredOfferingId}' was configured but has no available packages; falling back to current offering.\`,
-      );
-    }
-  }
-
-  if (hasPackages(offerings.current)) {
-    return offerings.current;
-  }
-
-  const fallbackOffering = pickFirstOfferingWithPackages(offerings.all);
-  if (fallbackOffering) {
-    return fallbackOffering;
-  }
-
-  return offerings.current ?? null;
-}
-
-/** Get available subscription packages from the resolved offering. */
-export async function getPackages(): Promise<PurchasesPackage[]> {
-  const offering = await getOffering();
-  return offering?.availablePackages ?? [];
-}
-
-/** Attempt a package purchase and return the resulting pro status. */
-export async function purchaseAndCheckPro(pack: PurchasesPackage): Promise<boolean> {
-  const { customerInfo } = await Purchases.purchasePackage(pack);
-  return hasProEntitlement(customerInfo);
-}
-
-/** Restore purchases from the App Store / Play Store. */
-export async function restoreAndCheckPro(): Promise<boolean> {
-  const customerInfo = await Purchases.restorePurchases();
-  return hasProEntitlement(customerInfo);
-}
-
-/** Force-sync local store state with RevenueCat servers. Debug / recovery only. */
-export async function syncAndCheckPro(): Promise<boolean> {
-  const { customerInfo } = await Purchases.syncPurchasesForResult();
-  return hasProEntitlement(customerInfo);
-}
-
-/** Check whether an error thrown during purchase is a user cancellation. */
-export function isPurchaseCancelledError(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-
-  return (error as RevenueCatPurchaseError).userCancelled === true;
-}
-`],
-  ["payments/revenuecat/native/base/providers/RevenueCatProvider.tsx.hbs", `import type { ReactNode } from "react";
+  ["payments/revenuecat/native/base/contexts/revenuecat-context.tsx.hbs", `import type { ReactNode } from "react";
 import {
   createContext,
   useCallback,
@@ -32443,7 +32245,7 @@ import {
   restoreAndCheckPro,
   setUserAttributes as setRevenueCatUserAttributes,
   syncAndCheckPro,
-} from "@/lib/revenue-cat";
+} from "@/lib/revenuecat";
 
 type UserAttributes = {
   email?: string;
@@ -32704,12 +32506,210 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
   return <RevenueCatContext.Provider value={value}>{children}</RevenueCatContext.Provider>;
 }
 `],
+  ["payments/revenuecat/native/base/lib/revenuecat.ts.hbs", `import { Platform } from "react-native";
+import Purchases, {
+  type CustomerInfo,
+  LOG_LEVEL,
+  type PurchasesOffering,
+  type PurchasesPackage,
+} from "react-native-purchases";
+
+// RevenueCat SDK utility layer. Thin wrappers around \`react-native-purchases\`.
+// These are pure functions with no React state — they talk to the SDK directly.
+// In components, prefer the \`useRevenueCat()\` / \`useIsPro()\` hooks from
+// \`@/contexts/revenuecat-context\` instead of importing from this file.
+
+function normalizeEnvValue(value: string | undefined): string | undefined {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
+}
+
+const iosApiKey = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY);
+const androidApiKey = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY);
+
+const proEntitlementId =
+  normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID) ?? "pro";
+const preferredOfferingId = normalizeEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_OFFERING_ID);
+
+export const PRO_ENTITLEMENT_IDS: readonly string[] = [proEntitlementId];
+
+let hasConfiguredRevenueCat = false;
+
+export type RevenueCatInitFailureReason = "unsupported_platform" | "missing_api_key";
+
+export type RevenueCatInitResult =
+  | { configured: true }
+  | { configured: false; reason: RevenueCatInitFailureReason };
+
+type RevenueCatPurchaseError = {
+  userCancelled?: boolean;
+};
+
+type CustomerInfoListener = (customerInfo: CustomerInfo) => void;
+
+type PurchasesWithRemoveListener = typeof Purchases & {
+  removeCustomerInfoUpdateListener?: (listener: CustomerInfoListener) => void;
+};
+
+export function hasProEntitlement(customerInfo: CustomerInfo | null): boolean {
+  if (!customerInfo) return false;
+
+  return PRO_ENTITLEMENT_IDS.some((id) => customerInfo.entitlements.active[id] !== undefined);
+}
+
+function hasPackages(offering: PurchasesOffering | null | undefined): offering is PurchasesOffering {
+  return !!offering && offering.availablePackages.length > 0;
+}
+
+function pickFirstOfferingWithPackages(
+  offeringsById: Record<string, PurchasesOffering>,
+): PurchasesOffering | null {
+  for (const offering of Object.values(offeringsById)) {
+    if (hasPackages(offering)) {
+      return offering;
+    }
+  }
+  return null;
+}
+
+/**
+ * One-time SDK initialization. Safe to call multiple times (no-ops after first).
+ * Only \`RevenueCatProvider\` should call this — it owns the SDK lifecycle.
+ */
+export async function configureRevenueCat(): Promise<RevenueCatInitResult> {
+  if (Platform.OS !== "ios" && Platform.OS !== "android") {
+    return { configured: false, reason: "unsupported_platform" };
+  }
+
+  if (hasConfiguredRevenueCat) {
+    return { configured: true };
+  }
+
+  const apiKey = Platform.OS === "ios" ? iosApiKey : androidApiKey;
+
+  if (!apiKey) {
+    return { configured: false, reason: "missing_api_key" };
+  }
+
+  Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.WARN : LOG_LEVEL.ERROR);
+
+  Purchases.configure({ apiKey });
+
+  hasConfiguredRevenueCat = true;
+
+  return { configured: true };
+}
+
+/**
+ * Subscribe to real-time entitlement changes. Returns an unsubscribe function.
+ * Only \`RevenueCatProvider\` should use this directly.
+ */
+export function onCustomerInfoUpdated(listener: CustomerInfoListener): () => void {
+  Purchases.addCustomerInfoUpdateListener(listener);
+
+  return () => {
+    (Purchases as PurchasesWithRemoveListener).removeCustomerInfoUpdateListener?.(listener);
+  };
+}
+
+/** Fetch latest CustomerInfo and return current pro status. */
+export async function refreshProEntitlement(): Promise<boolean> {
+  const customerInfo = await Purchases.getCustomerInfo();
+  return hasProEntitlement(customerInfo);
+}
+
+/**
+ * Identify the user in RevenueCat via \`Purchases.logIn\` so purchases follow the
+ * account across devices. Pass a stable auth user id. Returns pro status.
+ */
+export async function identifyUser(userId: string): Promise<boolean> {
+  const { customerInfo } = await Purchases.logIn(userId);
+  return hasProEntitlement(customerInfo);
+}
+
+/** Log out the current user from RevenueCat (resets to an anonymous id). */
+export async function logOutUser(): Promise<void> {
+  await Purchases.logOut();
+}
+
+/** Set user attributes for tracking in the RevenueCat dashboard. */
+export async function setUserAttributes(attributes: {
+  email?: string;
+  displayName?: string;
+}): Promise<void> {
+  if (attributes.email) {
+    await Purchases.setEmail(attributes.email);
+  }
+  if (attributes.displayName) {
+    await Purchases.setDisplayName(attributes.displayName);
+  }
+}
+
+async function getOffering(): Promise<PurchasesOffering | null> {
+  const offerings = await Purchases.getOfferings();
+
+  if (preferredOfferingId) {
+    const preferredOffering = offerings.all[preferredOfferingId];
+    if (hasPackages(preferredOffering)) {
+      return preferredOffering;
+    }
+
+    if (__DEV__) {
+      console.warn(
+        \`[RevenueCat] Offering '\${preferredOfferingId}' was configured but has no available packages; falling back to current offering.\`,
+      );
+    }
+  }
+
+  if (hasPackages(offerings.current)) {
+    return offerings.current;
+  }
+
+  const fallbackOffering = pickFirstOfferingWithPackages(offerings.all);
+  if (fallbackOffering) {
+    return fallbackOffering;
+  }
+
+  return offerings.current ?? null;
+}
+
+/** Get available subscription packages from the resolved offering. */
+export async function getPackages(): Promise<PurchasesPackage[]> {
+  const offering = await getOffering();
+  return offering?.availablePackages ?? [];
+}
+
+/** Attempt a package purchase and return the resulting pro status. */
+export async function purchaseAndCheckPro(pack: PurchasesPackage): Promise<boolean> {
+  const { customerInfo } = await Purchases.purchasePackage(pack);
+  return hasProEntitlement(customerInfo);
+}
+
+/** Restore purchases from the App Store / Play Store. */
+export async function restoreAndCheckPro(): Promise<boolean> {
+  const customerInfo = await Purchases.restorePurchases();
+  return hasProEntitlement(customerInfo);
+}
+
+/** Force-sync local store state with RevenueCat servers. Debug / recovery only. */
+export async function syncAndCheckPro(): Promise<boolean> {
+  const { customerInfo } = await Purchases.syncPurchasesForResult();
+  return hasProEntitlement(customerInfo);
+}
+
+/** Check whether an error thrown during purchase is a user cancellation. */
+export function isPurchaseCancelledError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  return (error as RevenueCatPurchaseError).userCancelled === true;
+}
+`],
   ["payments/revenuecat/native/unistyles/components/paywall-example.tsx.hbs", `import { useState } from "react";
 import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import type { PurchasesPackage } from "react-native-purchases";
 
-import { useRevenueCat } from "@/providers/RevenueCatProvider";
+import { useRevenueCat } from "@/contexts/revenuecat-context";
 
 export function PaywallExample() {
   const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
@@ -32836,7 +32836,7 @@ const styles = StyleSheet.create((theme) => ({
   ["payments/revenuecat/native/unistyles/components/subscription-status-card.tsx.hbs", `import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
-import { useRevenueCat } from "@/providers/RevenueCatProvider";
+import { useRevenueCat } from "@/contexts/revenuecat-context";
 
 export function SubscriptionStatusCard() {
   const { isPro, isConfigured } = useRevenueCat();
@@ -32884,7 +32884,7 @@ const styles = StyleSheet.create((theme) => ({
 import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
-import { useRevenueCat } from "@/providers/RevenueCatProvider";
+import { useRevenueCat } from "@/contexts/revenuecat-context";
 
 export function PaywallExample() {
   const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
@@ -32983,7 +32983,7 @@ export function PaywallExample() {
 `],
   ["payments/revenuecat/native/uniwind/components/subscription-status-card.tsx.hbs", `import { Text, View } from "react-native";
 
-import { useRevenueCat } from "@/providers/RevenueCatProvider";
+import { useRevenueCat } from "@/contexts/revenuecat-context";
 
 export function SubscriptionStatusCard() {
   const { isPro, isConfigured } = useRevenueCat();

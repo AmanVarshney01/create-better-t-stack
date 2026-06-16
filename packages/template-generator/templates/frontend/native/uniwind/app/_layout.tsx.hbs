@@ -41,7 +41,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 {{#if (eq payments "revenuecat")}}
-import { RevenueCatProvider } from "@/providers/RevenueCatProvider";
+import { RevenueCatProvider } from "@/contexts/revenuecat-context";
 {{/if}}
 
 {{#if (eq api "trpc")}}

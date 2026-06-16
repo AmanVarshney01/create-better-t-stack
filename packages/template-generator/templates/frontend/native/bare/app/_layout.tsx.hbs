@@ -46,7 +46,7 @@ import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { StyleSheet } from "react-native";
 {{#if (eq payments "revenuecat")}}
-import { RevenueCatProvider } from "@/providers/RevenueCatProvider";
+import { RevenueCatProvider } from "@/contexts/revenuecat-context";
 {{/if}}
 
 const LIGHT_THEME = {

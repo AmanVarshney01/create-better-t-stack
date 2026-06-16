@@ -41,7 +41,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
 import { StatusBar } from "expo-status-bar";
 {{#if (eq payments "revenuecat")}}
-import { RevenueCatProvider } from "@/providers/RevenueCatProvider";
+import { RevenueCatProvider } from "@/contexts/revenuecat-context";
 {{/if}}
 
 export const unstable_settings = {

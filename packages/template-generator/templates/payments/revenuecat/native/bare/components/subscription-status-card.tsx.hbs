@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 
-import { useRevenueCat } from "@/providers/RevenueCatProvider";
+import { useRevenueCat } from "@/contexts/revenuecat-context";
 
 export function SubscriptionStatusCard() {
   const { isPro, isConfigured } = useRevenueCat();

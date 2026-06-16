@@ -9,7 +9,7 @@ import Purchases, {
 // RevenueCat SDK utility layer. Thin wrappers around `react-native-purchases`.
 // These are pure functions with no React state — they talk to the SDK directly.
 // In components, prefer the `useRevenueCat()` / `useIsPro()` hooks from
-// `@/providers/RevenueCatProvider` instead of importing from this file.
+// `@/contexts/revenuecat-context` instead of importing from this file.
 
 function normalizeEnvValue(value: string | undefined): string | undefined {
   const normalized = value?.trim();
