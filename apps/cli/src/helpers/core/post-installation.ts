@@ -615,7 +615,8 @@ function getRevenueCatInstructions(backend: Backend, packageManager: string) {
     `${pc.cyan("•")} Create a project, entitlement, and offering in ${pc.underline("https://app.revenuecat.com/")}\n` +
     `${pc.cyan("•")} Set the public SDK keys in ${pc.white("apps/native/.env")}:\n` +
     `${pc.white("   EXPO_PUBLIC_REVENUECAT_IOS_KEY=appl_your_ios_key")}\n` +
-    `${pc.white("   EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_your_android_key")}`;
+    `${pc.white("   EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_your_android_key")}\n` +
+    `${pc.white("   EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID=pro")}`;
 
   if (backend === "convex") {
     const cmd = packageManager === "npm" ? "npx" : packageManager;
