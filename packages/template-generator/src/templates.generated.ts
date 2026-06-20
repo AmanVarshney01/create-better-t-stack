@@ -23071,12 +23071,12 @@ declare module "cloudflare:workers" {
   ["extras/pnpm-workspace.yaml.hbs", `packages:
   - "apps/*"
   - "packages/*"
-{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "nuxt") (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "vite-plus") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "nuxt") (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 
 # pnpm 11 blocks dependency lifecycle scripts unless they are approved here.
 # Entries are scoped to packages this generated stack can pull in.
 allowBuilds:
-{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (includes frontend "tanstack-start"))}}
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (includes addons "vite-plus") (includes frontend "tanstack-start") (includes frontend "nuxt"))}}
   esbuild: true
 {{/if}}
 {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
@@ -23089,7 +23089,7 @@ allowBuilds:
   "@parcel/watcher": true
   vue-demi: true
 {{/if}}
-{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (includes addons "pwa"))}}
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (includes addons "pwa") (includes frontend "next"))}}
   sharp: true
 {{/if}}
 {{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}

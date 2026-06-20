@@ -97,6 +97,27 @@ describe("pnpm workspace", () => {
     });
   });
 
+  it("adds esbuild approval for Vite+ stacks", async () => {
+    const workspace = await readPnpmWorkspace({
+      projectName: "pnpm-svelte-vite-plus",
+      frontend: ["svelte"],
+      backend: "self",
+      runtime: "none",
+      api: "orpc",
+      database: "sqlite",
+      orm: "drizzle",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["evlog", "husky", "oxlint", "ultracite", "vite-plus"],
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+    });
+
+    expect(workspace.allowBuilds).toEqual({ esbuild: true });
+  });
+
   it("adds only the React UI approval when no other build-script deps are expected", async () => {
     const workspace = await readPnpmWorkspace({
       projectName: "pnpm-react-ui",
@@ -116,6 +137,55 @@ describe("pnpm workspace", () => {
     });
 
     expect(workspace.allowBuilds).toEqual({ msw: true });
+  });
+
+  it("adds build approvals for a plain Next.js frontend", async () => {
+    const workspace = await readPnpmWorkspace({
+      projectName: "pnpm-next-ui",
+      frontend: ["next"],
+      backend: "none",
+      runtime: "none",
+      api: "none",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+    });
+
+    expect(workspace.allowBuilds).toEqual({
+      msw: true,
+      sharp: true,
+    });
+  });
+
+  it("adds build approvals for a plain Nuxt frontend", async () => {
+    const workspace = await readPnpmWorkspace({
+      projectName: "pnpm-nuxt-ui",
+      frontend: ["nuxt"],
+      backend: "none",
+      runtime: "none",
+      api: "none",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+    });
+
+    expect(workspace.allowBuilds).toEqual({
+      esbuild: true,
+      "@parcel/watcher": true,
+      "vue-demi": true,
+    });
   });
 
   it("adds build approvals for native Expo stacks", async () => {
