@@ -7,7 +7,7 @@ export async function getPaymentsChoice(
   payments?: Payments,
   auth?: Auth,
   backend?: Backend,
-  _frontends?: Frontend[],
+  frontends?: Frontend[],
   previousValue?: Payments,
 ) {
   if (payments !== undefined) return payments;
@@ -17,23 +17,41 @@ export async function getPaymentsChoice(
   }
 
   const isPolarCompatible = auth === "better-auth";
+  const hasNativeFrontend = (frontends ?? []).some(
+    (frontend) =>
+      frontend === "native-bare" ||
+      frontend === "native-uniwind" ||
+      frontend === "native-unistyles",
+  );
+  const isRevenueCatCompatible = hasNativeFrontend;
 
-  if (!isPolarCompatible) {
+  if (!isPolarCompatible && !isRevenueCatCompatible) {
     return "none" as Payments;
   }
 
-  const options = [
-    {
+  const options: Array<{ value: Payments; label: string; hint: string }> = [];
+
+  if (isPolarCompatible) {
+    options.push({
       value: "polar" as Payments,
       label: "Polar",
       hint: "Turn your software into a business. 6 lines of code.",
-    },
-    {
-      value: "none" as Payments,
-      label: "None",
-      hint: "No payments integration",
-    },
-  ];
+    });
+  }
+
+  if (isRevenueCatCompatible) {
+    options.push({
+      value: "revenuecat" as Payments,
+      label: "RevenueCat",
+      hint: "In-app subscriptions and cross-platform monetization for mobile.",
+    });
+  }
+
+  options.push({
+    value: "none" as Payments,
+    label: "None",
+    hint: "No payments integration",
+  });
 
   const response = await navigableSelect<Payments>({
     message: "Select payments provider",

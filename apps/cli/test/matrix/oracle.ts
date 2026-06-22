@@ -31,6 +31,7 @@ export type MatrixRule =
   | "orm-mongodb-requires-mongoose-or-prisma"
   | "orm-requires-database"
   | "payments-polar-requires-better-auth"
+  | "payments-revenuecat-requires-native-frontend"
   | "runtime-none-requires-terminal-backend"
   | "server-deploy-requires-backend"
   | "server-deploy-requires-workers-runtime"
@@ -63,6 +64,12 @@ const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "astro",
 ] as const;
 
+const NATIVE_FRONTENDS: readonly Frontend[] = [
+  "native-bare",
+  "native-uniwind",
+  "native-unistyles",
+] as const;
+
 const CONVEX_INCOMPATIBLE_FRONTENDS: readonly Frontend[] = ["solid", "astro"] as const;
 
 const CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS: readonly Frontend[] = [
@@ -90,6 +97,10 @@ function hasFrontend(frontends: readonly Frontend[], values: readonly Frontend[]
 
 function hasWebFrontend(frontends: readonly Frontend[]) {
   return hasFrontend(frontends, WEB_FRONTENDS);
+}
+
+function hasNativeFrontend(frontends: readonly Frontend[]) {
+  return hasFrontend(frontends, NATIVE_FRONTENDS);
 }
 
 function addRule(rules: Set<MatrixRule>, condition: boolean, rule: MatrixRule) {
@@ -306,6 +317,12 @@ function validatePayments(config: ProjectConfig, rules: Set<MatrixRule>) {
     config.payments === "polar" && config.auth !== "better-auth",
     "payments-polar-requires-better-auth",
   );
+
+  addRule(
+    rules,
+    config.payments === "revenuecat" && !hasNativeFrontend(config.frontend),
+    "payments-revenuecat-requires-native-frontend",
+  );
 }
 
 function validateExamples(config: ProjectConfig, rules: Set<MatrixRule>) {
@@ -417,6 +434,9 @@ export function classifyMatrixError(message: string): MatrixRule | "unknown" {
   if (message.includes("ORM selection requires a database")) return "orm-requires-database";
   if (message.includes("Polar payments requires Better Auth")) {
     return "payments-polar-requires-better-auth";
+  }
+  if (message.includes("RevenueCat payments requires a native frontend")) {
+    return "payments-revenuecat-requires-native-frontend";
   }
   if (message.includes("'--runtime none' is only supported")) {
     return "runtime-none-requires-terminal-backend";

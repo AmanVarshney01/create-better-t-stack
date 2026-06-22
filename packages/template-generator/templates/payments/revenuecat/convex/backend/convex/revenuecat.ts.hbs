@@ -1,0 +1,9 @@
+import { RevenueCat } from "convex-revenuecat";
+
+import { components } from "./_generated/api";
+
+export const revenuecat = new RevenueCat(components.revenuecat, {
+  REVENUECAT_WEBHOOK_AUTH: process.env.REVENUECAT_WEBHOOK_AUTH,
+});
+
+export const { hasEntitlement, isSubscriber, getActiveSubscriptions } = revenuecat.api();

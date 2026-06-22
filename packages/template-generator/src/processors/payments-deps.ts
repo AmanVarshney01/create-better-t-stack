@@ -72,4 +72,27 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
       }
     }
   }
+
+  if (payments === "revenuecat") {
+    const nativePath = "apps/native/package.json";
+    const hasNativeFrontend = frontend.some((f) =>
+      ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
+    );
+
+    if (hasNativeFrontend && vfs.exists(nativePath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: nativePath,
+        dependencies: ["react-native-purchases"],
+      });
+    }
+
+    if (backend === "convex" && vfs.exists(backendPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: backendPath,
+        dependencies: ["convex-revenuecat"],
+      });
+    }
+  }
 }

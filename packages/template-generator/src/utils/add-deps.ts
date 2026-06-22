@@ -124,6 +124,7 @@ export const dependencyVersionMap = {
   "@convex-dev/react-query": "^0.1.0",
   "@convex-dev/agent": "^0.3.2",
   "@convex-dev/polar": "^0.9.1",
+  "convex-revenuecat": "^0.3.2",
   "convex-svelte": "^0.0.12",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
@@ -170,6 +171,8 @@ export const dependencyVersionMap = {
   "@polar-sh/sdk": "^0.47.1",
   "@stripe/react-stripe-js": "^4.0.2",
   "@stripe/stripe-js": "^7.9.0",
+
+  "react-native-purchases": "^9.10.5",
 
   evlog: "^2.18.1",
 } as const;

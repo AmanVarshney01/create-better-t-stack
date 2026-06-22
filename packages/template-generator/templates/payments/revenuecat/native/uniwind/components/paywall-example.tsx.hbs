@@ -1,0 +1,91 @@
+import { useState } from "react";
+import { Alert, View } from "react-native";
+import { Button, Card, Spinner } from "heroui-native";
+import type { PurchasesPackage } from "react-native-purchases";
+
+import { useRevenueCat } from "@/contexts/revenuecat-context";
+
+export function PaywallExample() {
+  const { isPro, getPackages, purchasePackage, restorePurchases } = useRevenueCat();
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const isBusy = isPurchasing || isRestoring;
+
+  const loadPackages = async () => {
+    setIsLoading(true);
+    try {
+      setPackages(await getPackages());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePurchase = async (pack: PurchasesPackage) => {
+    if (isBusy) return;
+    setIsPurchasing(true);
+    try {
+      const success = await purchasePackage(pack);
+      Alert.alert(success ? "You're now Premium!" : "Purchase not completed");
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (isBusy) return;
+    setIsRestoring(true);
+    try {
+      const success = await restorePurchases();
+      Alert.alert(success ? "Purchases restored" : "No purchases to restore");
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  if (isPro) {
+    return (
+      <Card variant="secondary" className="mb-4 p-4">
+        <Card.Title className="mb-2">You're Premium</Card.Title>
+        <Card.Description>
+          Thanks for your support — enjoy all features.
+        </Card.Description>
+      </Card>
+    );
+  }
+
+  return (
+    <Card variant="secondary" className="mb-4 p-4">
+      <Card.Title className="mb-2">Upgrade to Premium</Card.Title>
+      <Card.Description className="mb-4">Unlock all features.</Card.Description>
+
+      <View className="gap-3">
+        {packages.length === 0 ? (
+          <Button onPress={loadPackages} isDisabled={isLoading}>
+            {isLoading ? <Spinner size="sm" color="default" /> : <Button.Label>View plans</Button.Label>}
+          </Button>
+        ) : (
+          packages.map((pack) => (
+            <Button
+              key={pack.identifier}
+              variant="secondary"
+              onPress={() => handlePurchase(pack)}
+              isDisabled={isBusy}
+            >
+              <Button.Label>
+                {pack.product.title} · {pack.product.priceString}
+              </Button.Label>
+            </Button>
+          ))
+        )}
+
+        <Button variant="ghost" onPress={handleRestore} isDisabled={isBusy}>
+          <Button.Label>
+            {isRestoring ? "Restoring..." : "Restore purchases"}
+          </Button.Label>
+        </Button>
+      </View>
+    </Card>
+  );
+}

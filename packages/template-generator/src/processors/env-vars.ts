@@ -206,6 +206,7 @@ function buildNativeVars(
   frontend: string[],
   backend: ProjectConfig["backend"],
   auth: ProjectConfig["auth"],
+  payments: ProjectConfig["payments"],
 ): EnvVariable[] {
   const hasAstro = frontend.includes("astro");
   const hasSvelte = frontend.includes("svelte");
@@ -249,6 +250,26 @@ function buildNativeVars(
       value: "https://<YOUR_CONVEX_URL>",
       condition: true,
     });
+  }
+
+  if (payments === "revenuecat") {
+    vars.push(
+      {
+        key: "EXPO_PUBLIC_REVENUECAT_IOS_KEY",
+        value: "",
+        condition: true,
+      },
+      {
+        key: "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY",
+        value: "",
+        condition: true,
+      },
+      {
+        key: "EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID",
+        value: "pro",
+        condition: true,
+      },
+    );
   }
 
   return vars;
@@ -363,6 +384,15 @@ function buildConvexBackendVars(
     );
   }
 
+  if (payments === "revenuecat") {
+    vars.push({
+      key: "REVENUECAT_WEBHOOK_AUTH",
+      value: "",
+      condition: true,
+      comment: "Shared secret for RevenueCat webhook authentication (min 32 characters)",
+    });
+  }
+
   return vars;
 }
 
@@ -418,6 +448,15 @@ ${needsConvexSiteUrl ? "# npx convex env set CONVEX_SITE_URL https://<YOUR_CONVE
 # Optional: npx convex env set POLAR_SERVER production
 # Create a Polar webhook at https://<your-convex-site-url>/polar/events
 # Enable: product.created, product.updated, subscription.created, subscription.updated
+
+`;
+  }
+
+  if (payments === "revenuecat") {
+    commentBlocks += `# Set RevenueCat environment variables
+# npx convex env set REVENUECAT_WEBHOOK_AUTH your_webhook_secret_min_32_chars
+# Create a RevenueCat webhook at https://<your-convex-site-url>/webhooks/revenuecat
+# Set the webhook Authorization header to the same REVENUECAT_WEBHOOK_AUTH value
 
 `;
   }
@@ -606,7 +645,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     const nativeDir = "apps/native";
     if (vfs.directoryExists(nativeDir)) {
       const envPath = `${nativeDir}/.env`;
-      const nativeVars = buildNativeVars(frontend, backend, auth);
+      const nativeVars = buildNativeVars(frontend, backend, auth, payments);
       writeEnvFile(vfs, envPath, nativeVars);
     }
   }

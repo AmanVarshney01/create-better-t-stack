@@ -40,6 +40,9 @@ import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
 import { StatusBar } from "expo-status-bar";
+{{#if (eq payments "revenuecat")}}
+import { RevenueCatProvider } from "@/contexts/revenuecat-context";
+{{/if}}
 
 export const unstable_settings = {
   initialRouteName: "(drawer)",
@@ -71,6 +74,9 @@ export default function RootLayout() {
   const { theme } = useUnistyles();
 
   return (
+{{#if (eq payments "revenuecat")}}
+    <RevenueCatProvider>
+{{/if}}
     {{#if (eq backend "convex")}}
     {{#if (eq auth "clerk")}}
     <ClerkProvider
@@ -244,5 +250,8 @@ export default function RootLayout() {
         {{/unless}}
       {{/if}}
     {{/if}}
+{{#if (eq payments "revenuecat")}}
+    </RevenueCatProvider>
+{{/if}}
   );
 }
