@@ -23169,7 +23169,7 @@ export default defineConfig({
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^6.0.1"
+    "astro": "^7.0.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
