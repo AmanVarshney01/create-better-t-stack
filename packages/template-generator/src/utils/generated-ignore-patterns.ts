@@ -23,6 +23,7 @@ const FRONTEND_GENERATED_PATTERNS = {
     "apps/native/ios/**",
     "apps/native/android/**",
   ],
+  none: [],
 } as const satisfies Partial<Record<ProjectConfig["frontend"][number], readonly string[]>>;
 
 const SERVER_BUILD_BACKENDS = ["hono", "express", "fastify", "elysia"] as const;
