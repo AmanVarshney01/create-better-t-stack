@@ -226,6 +226,27 @@ describe("Addon Configurations", () => {
           expectError(result, "tauri addon requires one of these frontends");
         });
       }
+
+      it("should fail with Tauri + backend self", async () => {
+        const result = await runTRPCTest({
+          projectName: "tauri-self-backend-fail",
+          addons: ["tauri"],
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          api: "orpc",
+          examples: ["ai"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          expectError: true,
+        });
+
+        expectError(result, "tauri addon requires a separate backend or no backend");
+      });
     });
 
     describe("Electrobun Addon", () => {
@@ -291,6 +312,27 @@ describe("Addon Configurations", () => {
           expectError(result, "electrobun addon requires one of these frontends");
         });
       }
+
+      it("should fail with Electrobun + backend self", async () => {
+        const result = await runTRPCTest({
+          projectName: "electrobun-self-backend-fail",
+          addons: ["electrobun"],
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          api: "orpc",
+          examples: ["ai"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          expectError: true,
+        });
+
+        expectError(result, "electrobun addon requires a separate backend or no backend");
+      });
     });
   });
 

@@ -32285,11 +32285,13 @@ function AttachmentAction({
   className,
   variant,
   size = "icon-xs",
+  type = "button",
   ...props
 }: React.ComponentProps<typeof Button>) {
   return (
     <Button
       data-slot="attachment-action"
+      type={type}
       variant={variant ?? "ghost"}
       size={size}
       className={cn(className)}

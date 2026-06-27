@@ -295,7 +295,7 @@ describe("Authentication Configurations", () => {
       );
 
       expect(packageJson.workspaces.catalog["better-auth"]).toBe("~1.6.9");
-      expect(packageJson.workspaces.catalog["@convex-dev/better-auth"]).toBe("^0.12.2");
+      expect(packageJson.workspaces.catalog["@convex-dev/better-auth"]).toBe("^0.12.4");
       expect(backendPackageJson.dependencies["better-auth"]).toBe("catalog:");
       expect(webPackageJson.dependencies["better-auth"]).toBe("catalog:");
       expect(authFile).toContain("baseURL: process.env.CONVEX_SITE_URL");

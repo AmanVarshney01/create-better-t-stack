@@ -20,6 +20,7 @@ import { ValidationError } from "./errors";
 type ValidationResult = Result<void, ValidationError>;
 type AddonCompatibilityConfig = Pick<ProjectConfig, "frontend" | "auth" | "backend" | "runtime">;
 const TASK_RUNNER_ADDONS = ["turborepo", "nx", "vite-plus"] as const satisfies readonly Addons[];
+const STATIC_DESKTOP_ADDONS = ["tauri", "electrobun"] as const satisfies readonly Addons[];
 
 export const CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS = [
   "nuxt",
@@ -339,6 +340,13 @@ export function validateAddonCompatibility(
     return {
       isCompatible: false,
       reason: evlogCompatibilityMessage,
+    };
+  }
+
+  if (backend === "self" && STATIC_DESKTOP_ADDONS.includes(addon)) {
+    return {
+      isCompatible: false,
+      reason: `${addon} addon requires a separate backend or no backend because backend 'self' emits server routes that cannot be bundled as static desktop assets.`,
     };
   }
 
