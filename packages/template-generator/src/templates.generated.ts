@@ -18759,9 +18759,6 @@ export default function AIPage() {
                   </InputGroupAddon>
                 </InputGroup>
             </form>
-            <div className="px-0.5 text-center text-xs text-muted-foreground">
-              AI can make mistakes. Check important info.
-            </div>
           </div>
         </footer>
       </div>
@@ -19007,9 +19004,6 @@ export default function AIPage() {
                   </InputGroupAddon>
                 </InputGroup>
             </form>
-            <div className="px-0.5 text-center text-xs text-muted-foreground">
-              AI can make mistakes. Check important info.
-            </div>
           </div>
         </footer>
       </div>
@@ -19274,9 +19268,6 @@ export default function AI() {
                   </InputGroupAddon>
                 </InputGroup>
             </form>
-            <div className="px-0.5 text-center text-xs text-muted-foreground">
-              AI can make mistakes. Check important info.
-            </div>
           </div>
         </footer>
       </div>
@@ -19504,9 +19495,6 @@ export default function AI() {
                   </InputGroupAddon>
                 </InputGroup>
             </form>
-            <div className="px-0.5 text-center text-xs text-muted-foreground">
-              AI can make mistakes. Check important info.
-            </div>
           </div>
         </footer>
       </div>
@@ -19776,9 +19764,6 @@ function RouteComponent() {
                   </InputGroupAddon>
                 </InputGroup>
             </form>
-            <div className="px-0.5 text-center text-xs text-muted-foreground">
-              AI can make mistakes. Check important info.
-            </div>
           </div>
         </footer>
       </div>
@@ -20013,9 +19998,6 @@ function RouteComponent() {
                   </InputGroupAddon>
                 </InputGroup>
             </form>
-            <div className="px-0.5 text-center text-xs text-muted-foreground">
-              AI can make mistakes. Check important info.
-            </div>
           </div>
         </footer>
       </div>
@@ -20285,9 +20267,6 @@ function RouteComponent() {
                   </InputGroupAddon>
                 </InputGroup>
             </form>
-            <div className="px-0.5 text-center text-xs text-muted-foreground">
-              AI can make mistakes. Check important info.
-            </div>
           </div>
         </footer>
       </div>
@@ -20522,9 +20501,6 @@ function RouteComponent() {
                   </InputGroupAddon>
                 </InputGroup>
             </form>
-            <div className="px-0.5 text-center text-xs text-muted-foreground">
-              AI can make mistakes. Check important info.
-            </div>
           </div>
         </footer>
       </div>
