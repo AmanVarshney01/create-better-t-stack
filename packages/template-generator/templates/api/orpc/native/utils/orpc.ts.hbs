@@ -19,6 +19,18 @@ export const queryClient = new QueryClient({
 	}),
 });
 
+async function expoFetch(request: Request, init?: RequestInit) {
+	const { fetch } = await import("expo/fetch");
+
+	return fetch(request.url, {
+		body: await request.blob(),
+		headers: request.headers,
+		method: request.method,
+		signal: request.signal,
+		...init,
+	});
+}
+
 export const link = new RPCLink({
 {{#if (eq backend "self")}}
 {{#if (or (includes frontend "next") (includes frontend "tanstack-start"))}}
@@ -30,14 +42,13 @@ export const link = new RPCLink({
 	url: `${env.EXPO_PUBLIC_SERVER_URL}/rpc`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
-	fetch:
-		function (url, options) {
-			return fetch(url, {
-				...options,
-				// Better Auth Expo forwards the session cookie manually on native.
-				credentials: Platform.OS === "web" ? "include" : "omit",
-			});
-		},
+	fetch(request, init) {
+		return expoFetch(request, {
+			...init,
+			// Better Auth Expo forwards the session cookie manually on native.
+			credentials: Platform.OS === "web" ? "include" : "omit",
+		});
+	},
 	headers() {
 		if (Platform.OS === "web") {
 			return {};
@@ -54,6 +65,9 @@ export const link = new RPCLink({
 		const token = await getClerkAuthToken();
 		return token ? { Authorization: `Bearer ${token}` } : {};
 	},
+	fetch: expoFetch,
+{{else}}
+	fetch: expoFetch,
 {{/if}}
 });
 

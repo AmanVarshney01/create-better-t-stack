@@ -111,7 +111,7 @@ export default function AIScreen() {
               <View style={styles.messagesWrapper}>
                 {messages.map((message) => (
                   <View
-                    key={message.key}
+                    key={`${message.order}-${message.stepOrder}`}
                     style={[
                       styles.messageContainer,
                       message.role === "user"

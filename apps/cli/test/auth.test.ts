@@ -304,7 +304,7 @@ describe("Authentication Configurations", () => {
       expect(convexTsconfig).toContain('"types": ["node"]');
       expect(convexTsconfig.match(/"types": \["node"\]/g)).toHaveLength(1);
       expect(convexEnvFile).toContain(
-        "# npx convex env set CONVEX_SITE_URL https://<YOUR_CONVEX_SITE_URL>",
+        "# npx convex env set CONVEX_SITE_URL https://example.convex.site",
       );
       expect(convexEnvFile).toContain("# CONVEX_SITE_URL=");
     });

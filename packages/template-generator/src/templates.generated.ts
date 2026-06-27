@@ -695,6 +695,18 @@ export const queryClient = new QueryClient({
 	}),
 });
 
+async function expoFetch(request: Request, init?: RequestInit) {
+	const { fetch } = await import("expo/fetch");
+
+	return fetch(request.url, {
+		body: await request.blob(),
+		headers: request.headers,
+		method: request.method,
+		signal: request.signal,
+		...init,
+	});
+}
+
 export const link = new RPCLink({
 {{#if (eq backend "self")}}
 {{#if (or (includes frontend "next") (includes frontend "tanstack-start"))}}
@@ -706,14 +718,13 @@ export const link = new RPCLink({
 	url: \`\${env.EXPO_PUBLIC_SERVER_URL}/rpc\`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
-	fetch:
-		function (url, options) {
-			return fetch(url, {
-				...options,
-				// Better Auth Expo forwards the session cookie manually on native.
-				credentials: Platform.OS === "web" ? "include" : "omit",
-			});
-		},
+	fetch(request, init) {
+		return expoFetch(request, {
+			...init,
+			// Better Auth Expo forwards the session cookie manually on native.
+			credentials: Platform.OS === "web" ? "include" : "omit",
+		});
+	},
 	headers() {
 		if (Platform.OS === "web") {
 			return {};
@@ -730,6 +741,9 @@ export const link = new RPCLink({
 		const token = await getClerkAuthToken();
 		return token ? { Authorization: \`Bearer \${token}\` } : {};
 	},
+	fetch: expoFetch,
+{{else}}
+	fetch: expoFetch,
 {{/if}}
 });
 
@@ -14241,7 +14255,7 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 {{#if (includes examples "ai")}}
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, streamText, type UIMessage, wrapLanguageModel } from "ai";
+import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (eq api "trpc")}}
@@ -14388,7 +14402,9 @@ new Elysia()
 			messages: await convertToModelMessages(uiMessages),
 		});
 
-		return result.toUIMessageStreamResponse();
+		return createUIMessageStreamResponse({
+			stream: toUIMessageStream({ stream: result.stream }),
+		});
 	})
 {{/if}}
 	.get("/", () => "OK")
@@ -14414,7 +14430,7 @@ import { createContext } from "@{{projectName}}/api/context";
 import cors from "cors";
 import express from "express";
 {{#if (includes examples "ai")}}
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { pipeUIMessageStreamToResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -14535,7 +14551,10 @@ app.post("/ai", async (req, res) => {
 		model,
 		messages: await convertToModelMessages(messages),
 	});
-	result.pipeUIMessageStreamToResponse(res);
+	pipeUIMessageStreamToResponse({
+		response: res,
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 
@@ -14568,7 +14587,7 @@ import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 
 {{#if (includes examples "ai")}}
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -14748,7 +14767,9 @@ fastify.post('/ai', async function (request) {
 		messages: await convertToModelMessages(messages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 
@@ -14790,12 +14811,12 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 {{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
-import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (and (includes examples "ai") (eq runtime "workers"))}}
-import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -14925,7 +14946,9 @@ app.post("/ai", async (c) => {
 		messages: await convertToModelMessages(uiMessages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 
@@ -14945,7 +14968,9 @@ app.post("/ai", async (c) => {
 		messages: await convertToModelMessages(uiMessages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 
@@ -16619,7 +16644,7 @@ export const generateResponseAsync = internalAction({
 });
 `],
   ["examples/ai/fullstack/next/src/app/api/ai/route.ts.hbs", `import { google } from "@ai-sdk/google";
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const maxDuration = 30;
@@ -16636,12 +16661,14 @@ export async function POST(req: Request) {
 		messages: await convertToModelMessages(messages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 }
 `],
   ["examples/ai/fullstack/nuxt/server/api/ai.post.ts.hbs", `import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { google } from "@ai-sdk/google";
-import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
@@ -16657,12 +16684,14 @@ export default defineEventHandler(async (event) => {
     messages: await convertToModelMessages(uiMessages),
   });
 
-  return result.toUIMessageStreamResponse();
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
 });
 `],
   ["examples/ai/fullstack/svelte/src/routes/api/ai/+server.ts.hbs", `import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, streamText, type UIMessage, wrapLanguageModel } from "ai";
+import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, wrapLanguageModel } from "ai";
 import type { RequestHandler } from "@sveltejs/kit";
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -16677,12 +16706,14 @@ export const POST: RequestHandler = async ({ request }) => {
 		messages: await convertToModelMessages(messages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 };
 `],
   ["examples/ai/fullstack/tanstack-start/src/routes/api/ai/$.ts.hbs", `import { createFileRoute } from "@tanstack/react-router";
 import { google } from "@ai-sdk/google";
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const Route = createFileRoute("/api/ai/$")({
@@ -16701,7 +16732,9 @@ export const Route = createFileRoute("/api/ai/$")({
             messages: await convertToModelMessages(messages),
           });
 
-          return result.toUIMessageStreamResponse();
+          return createUIMessageStreamResponse({
+            stream: toUIMessageStream({ stream: result.stream }),
+          });
         } catch (error) {
           console.error("AI API error:", error);
           return new Response(
@@ -16834,7 +16867,7 @@ export default function AIScreen() {
               <View style={styles.messagesList}>
                 {messages.map((message) => (
                   <View
-                    key={message.key}
+                    key={\`\${message.order}-\${message.stepOrder}\`}
                     style={[
                       styles.messageCard,
                       {
@@ -17439,7 +17472,7 @@ export default function AIScreen() {
               <View style={styles.messagesWrapper}>
                 {messages.map((message) => (
                   <View
-                    key={message.key}
+                    key={\`\${message.order}-\${message.stepOrder}\`}
                     style={[
                       styles.messageContainer,
                       message.role === "user"
@@ -18045,7 +18078,7 @@ export default function AIScreen() {
               <View className="gap-3">
                 {messages.map((message) => (
                   <Surface
-                    key={message.key}
+                    key={\`\${message.order}-\${message.stepOrder}\`}
                     variant={message.role === "user" ? "tertiary" : "secondary"}
                     className={\`p-3 rounded-xl \${message.role === "user" ? "ml-8" : "mr-8"}\`}
                   >
@@ -18307,8 +18340,7 @@ if (Platform.OS !== "web") {
 export {};
 `],
   ["examples/ai/web/nuxt/app/pages/ai.vue.hbs", `<script setup lang="ts">
-import { Chat } from '@ai-sdk/vue'
-import type { UIMessage } from 'ai'
+import { useChat } from '@ai-sdk/vue'
 import { getTextFromMessage } from '@nuxt/ui/utils/ai'
 import { DefaultChatTransport } from 'ai'
 import { computed, ref } from 'vue'
@@ -18332,12 +18364,10 @@ const SUGGESTIONS = [
   }
 ] as const
 
-const messages: UIMessage[] = []
 const input = ref('')
 const aiApiUrl = {{#if (eq backend "self")}}'/api/ai'{{else}}\`\${useRuntimeConfig().public.serverUrl}/ai\`{{/if}}
 
-const chat = new Chat({
-  messages,
+const { messages, status, error, sendMessage, stop, regenerate } = useChat({
   transport: new DefaultChatTransport({
     api: aiApiUrl,
   }),
@@ -18346,8 +18376,8 @@ const chat = new Chat({
   }
 })
 
-const hasMessages = computed(() => chat.messages.length > 0)
-const isLoading = computed(() => chat.status === 'submitted' || chat.status === 'streaming')
+const hasMessages = computed(() => messages.value.length > 0)
+const isLoading = computed(() => status.value === 'submitted' || status.value === 'streaming')
 
 function applySuggestion(prompt: string) {
   input.value = prompt
@@ -18360,7 +18390,7 @@ async function handleSubmit(e: Event) {
 
   if (!userInput.trim()) return
 
-  chat.sendMessage({ text: userInput })
+  sendMessage({ text: userInput })
 }
 </script>
 
@@ -18401,8 +18431,8 @@ async function handleSubmit(e: Event) {
 
       <div v-else class="mx-auto flex h-full w-full max-w-3xl min-h-0 flex-col">
         <UChatMessages
-          :messages="chat.messages"
-          :status="chat.status"
+          :messages="messages"
+          :status="status"
           :assistant="{
             variant: 'outline',
             avatar: {
@@ -18433,21 +18463,21 @@ async function handleSubmit(e: Event) {
           :rows="1"
           :maxrows="8"
           :loading="isLoading"
-          :error="chat.error"
+          :error="error"
           :placeholder="hasMessages ? 'Keep the conversation going...' : 'Ask about your app, schema, auth, or deployment...'"
           @submit="handleSubmit"
         >
           <UChatPromptSubmit
             class="ms-auto"
-            :status="chat.status"
-            @stop="() => chat.stop()"
-            @reload="() => chat.regenerate()"
+            :status="status"
+            @stop="stop"
+            @reload="regenerate"
           />
         </UChatPrompt>
 
         <div class="mt-2 flex items-center justify-between gap-3 px-1 text-xs text-muted">
           <span>Press Enter to send and Shift+Enter for a new line.</span>
-          <span>\\{{ hasMessages ? \`\${chat.messages.length} messages\` : 'Ready when you are.' }}</span>
+          <span>\\{{ hasMessages ? \`\${messages.length} messages\` : 'Ready when you are.' }}</span>
         </div>
       </div>
     </div>
@@ -18555,7 +18585,7 @@ export default function AIPage() {
         ) : (
           messages.map((message) => (
             <div
-              key={message.key}
+              key={\`\${message.order}-\${message.stepOrder}\`}
               className={\`p-3 rounded-lg \${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"
@@ -18806,7 +18836,7 @@ const AI: React.FC = () => {
         ) : (
           messages.map((message) => (
             <div
-              key={message.key}
+              key={\`\${message.order}-\${message.stepOrder}\`}
               className={\`p-3 rounded-lg \${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"
@@ -19048,7 +19078,7 @@ function RouteComponent() {
         ) : (
           messages.map((message) => (
             <div
-              key={message.key}
+              key={\`\${message.order}-\${message.stepOrder}\`}
               className={\`p-3 rounded-lg \${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"
@@ -19292,7 +19322,7 @@ function RouteComponent() {
         ) : (
           messages.map((message) => (
             <div
-              key={message.key}
+              key={\`\${message.order}-\${message.stepOrder}\`}
               className={\`p-3 rounded-lg \${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"

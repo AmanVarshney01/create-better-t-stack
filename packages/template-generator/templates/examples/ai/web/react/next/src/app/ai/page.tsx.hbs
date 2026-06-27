@@ -99,7 +99,7 @@ export default function AIPage() {
         ) : (
           messages.map((message) => (
             <div
-              key={message.key}
+              key={`${message.order}-${message.stepOrder}`}
               className={`p-3 rounded-lg ${
                 message.role === "user"
                   ? "bg-primary/10 ml-8"

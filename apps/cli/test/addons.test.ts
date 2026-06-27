@@ -1372,6 +1372,8 @@ describe("Addon Configurations", () => {
       );
       expect(serverIndex).toContain('const ai = createAILogger(c.get("log"));');
       expect(serverIndex).toContain("model: ai.wrap(model)");
+      expect(serverIndex).toContain("telemetry:");
+      expect(serverIndex).not.toContain("experimental_telemetry");
       expect(serverIndex).toContain("integrations: [createEvlogIntegration(ai)]");
     });
 
@@ -1403,6 +1405,8 @@ describe("Addon Configurations", () => {
       );
       expect(serverIndex).toContain("const ai = createAILogger(req.log);");
       expect(serverIndex).toContain("model: ai.wrap(model)");
+      expect(serverIndex).toContain("telemetry:");
+      expect(serverIndex).not.toContain("experimental_telemetry");
       expect(serverIndex).toContain("integrations: [createEvlogIntegration(ai)]");
     });
 

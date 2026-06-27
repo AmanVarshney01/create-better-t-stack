@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Chat } from '@ai-sdk/vue'
-import type { UIMessage } from 'ai'
+import { useChat } from '@ai-sdk/vue'
 import { getTextFromMessage } from '@nuxt/ui/utils/ai'
 import { DefaultChatTransport } from 'ai'
 import { computed, ref } from 'vue'
@@ -24,12 +23,10 @@ const SUGGESTIONS = [
   }
 ] as const
 
-const messages: UIMessage[] = []
 const input = ref('')
 const aiApiUrl = {{#if (eq backend "self")}}'/api/ai'{{else}}`${useRuntimeConfig().public.serverUrl}/ai`{{/if}}
 
-const chat = new Chat({
-  messages,
+const { messages, status, error, sendMessage, stop, regenerate } = useChat({
   transport: new DefaultChatTransport({
     api: aiApiUrl,
   }),
@@ -38,8 +35,8 @@ const chat = new Chat({
   }
 })
 
-const hasMessages = computed(() => chat.messages.length > 0)
-const isLoading = computed(() => chat.status === 'submitted' || chat.status === 'streaming')
+const hasMessages = computed(() => messages.value.length > 0)
+const isLoading = computed(() => status.value === 'submitted' || status.value === 'streaming')
 
 function applySuggestion(prompt: string) {
   input.value = prompt
@@ -52,7 +49,7 @@ async function handleSubmit(e: Event) {
 
   if (!userInput.trim()) return
 
-  chat.sendMessage({ text: userInput })
+  sendMessage({ text: userInput })
 }
 </script>
 
@@ -93,8 +90,8 @@ async function handleSubmit(e: Event) {
 
       <div v-else class="mx-auto flex h-full w-full max-w-3xl min-h-0 flex-col">
         <UChatMessages
-          :messages="chat.messages"
-          :status="chat.status"
+          :messages="messages"
+          :status="status"
           :assistant="{
             variant: 'outline',
             avatar: {
@@ -125,21 +122,21 @@ async function handleSubmit(e: Event) {
           :rows="1"
           :maxrows="8"
           :loading="isLoading"
-          :error="chat.error"
+          :error="error"
           :placeholder="hasMessages ? 'Keep the conversation going...' : 'Ask about your app, schema, auth, or deployment...'"
           @submit="handleSubmit"
         >
           <UChatPromptSubmit
             class="ms-auto"
-            :status="chat.status"
-            @stop="() => chat.stop()"
-            @reload="() => chat.regenerate()"
+            :status="status"
+            @stop="stop"
+            @reload="regenerate"
           />
         </UChatPrompt>
 
         <div class="mt-2 flex items-center justify-between gap-3 px-1 text-xs text-muted">
           <span>Press Enter to send and Shift+Enter for a new line.</span>
-          <span>\{{ hasMessages ? `${chat.messages.length} messages` : 'Ready when you are.' }}</span>
+          <span>\{{ hasMessages ? `${messages.length} messages` : 'Ready when you are.' }}</span>
         </div>
       </div>
     </div>

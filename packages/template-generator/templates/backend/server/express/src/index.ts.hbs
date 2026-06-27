@@ -16,7 +16,7 @@ import { createContext } from "@{{projectName}}/api/context";
 import cors from "cors";
 import express from "express";
 {{#if (includes examples "ai")}}
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { pipeUIMessageStreamToResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -137,7 +137,10 @@ app.post("/ai", async (req, res) => {
 		model,
 		messages: await convertToModelMessages(messages),
 	});
-	result.pipeUIMessageStreamToResponse(res);
+	pipeUIMessageStreamToResponse({
+		response: res,
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 

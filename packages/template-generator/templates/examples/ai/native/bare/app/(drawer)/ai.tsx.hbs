@@ -115,7 +115,7 @@ export default function AIScreen() {
               <View style={styles.messagesList}>
                 {messages.map((message) => (
                   <View
-                    key={message.key}
+                    key={`${message.order}-${message.stepOrder}`}
                     style={[
                       styles.messageCard,
                       {

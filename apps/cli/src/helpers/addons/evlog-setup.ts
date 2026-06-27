@@ -142,7 +142,7 @@ function addAiSdkEvlogTelemetry(content: string, loggerExpression: string) {
     nextContent = nextContent.replace(
       /(messages:\s*await convertToModelMessages\([^)]+\),?)/,
       (match) =>
-        `${match.endsWith(",") ? match : `${match},`}\n\t\texperimental_telemetry: {\n\t\t\tisEnabled: true,\n\t\t\tintegrations: [createEvlogIntegration(ai)],\n\t\t},`,
+        `${match.endsWith(",") ? match : `${match},`}\n\t\ttelemetry: {\n\t\t\tisEnabled: true,\n\t\t\tintegrations: [createEvlogIntegration(ai)],\n\t\t},`,
     );
   }
 

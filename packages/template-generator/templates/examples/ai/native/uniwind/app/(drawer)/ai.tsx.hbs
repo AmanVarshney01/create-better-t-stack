@@ -106,7 +106,7 @@ export default function AIScreen() {
               <View className="gap-3">
                 {messages.map((message) => (
                   <Surface
-                    key={message.key}
+                    key={`${message.order}-${message.stepOrder}`}
                     variant={message.role === "user" ? "tertiary" : "secondary"}
                     className={`p-3 rounded-xl ${message.role === "user" ? "ml-8" : "mr-8"}`}
                   >

@@ -271,7 +271,7 @@ function getNativeInstructions(
       ? "4321"
       : "3001";
   const exampleUrl = isConvex
-    ? "https://<YOUR_CONVEX_URL>"
+    ? "https://example.convex.cloud"
     : isBackendSelf
       ? `http://<YOUR_LOCAL_IP>:${selfBackendPort}`
       : "http://<YOUR_LOCAL_IP>:3000";

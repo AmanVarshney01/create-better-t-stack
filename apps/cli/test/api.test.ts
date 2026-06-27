@@ -576,6 +576,38 @@ describe("API Configurations", () => {
       );
     });
 
+    it("should scaffold native oRPC with Expo fetch support", async () => {
+      const result = await createVirtual({
+        projectName: "native-orpc-expo-fetch",
+        api: "orpc",
+        frontend: ["native-bare"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+        payments: "none",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const orpcFile = files.get("apps/native/utils/orpc.ts");
+
+      expect(orpcFile).toContain('const { fetch } = await import("expo/fetch");');
+      expect(orpcFile).toContain("fetch: expoFetch");
+    });
+
     it("should scaffold TanStack Start oRPC with a request-scoped query client", async () => {
       const result = await createVirtual({
         projectName: "tanstack-start-orpc-auth-workers",
