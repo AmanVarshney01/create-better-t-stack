@@ -40,7 +40,7 @@ function generateTurboConfig(config: ProjectConfig): TurboConfig {
   const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
 
   const tasks: Record<string, TurboTask> = {
-    ...getBaseTasks(frontend),
+    ...getBaseTasks(frontend, config.addons),
     ...(isConvex ? getConvexTasks() : {}),
     ...(!isConvex && hasDatabase ? getDatabaseTasks(dbSupport) : {}),
     ...(isDocker ? getDockerTasks() : {}),
@@ -55,7 +55,7 @@ function generateTurboConfig(config: ProjectConfig): TurboConfig {
   };
 }
 
-function getBaseTasks(frontend: string[]): Record<string, TurboTask> {
+function getBaseTasks(frontend: string[], addons: string[]): Record<string, TurboTask> {
   // Build outputs per framework:
   // - Vite-based (tanstack-router, react-router, tanstack-start, solid, svelte): dist/**
   // - Next.js: .next/** excluding .next/cache/**
@@ -78,6 +78,10 @@ function getBaseTasks(frontend: string[]): Record<string, TurboTask> {
   // Astro outputs to dist/**
   if (frontend.includes("astro")) {
     buildOutputs.push(".astro/**");
+  }
+
+  if (addons.includes("electrobun")) {
+    buildOutputs.push("artifacts/**");
   }
 
   return {

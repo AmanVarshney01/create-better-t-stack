@@ -98,13 +98,13 @@ export const dependencyVersionMap = {
   "vite-plus": "0.1.24",
   rolldown: "1.1.0",
 
-  ai: "^7.0.2",
-  "@ai-sdk/google": "^4.0.0",
-  "@ai-sdk/vue": "^4.0.2",
-  "@ai-sdk/svelte": "^5.0.2",
-  "@ai-sdk/react": "^4.0.2",
+  ai: "^7.0.3",
+  "@ai-sdk/google": "^4.0.1",
+  "@ai-sdk/vue": "^4.0.3",
+  "@ai-sdk/svelte": "^5.0.3",
+  "@ai-sdk/react": "^4.0.4",
   "@ai-sdk/devtools": "^1.0.0",
-  streamdown: "^1.6.10",
+  streamdown: "^2.5.0",
   shiki: "^3.20.0",
 
   "@orpc/server": "^1.14.6",
@@ -127,7 +127,7 @@ export const dependencyVersionMap = {
   "convex-svelte": "^0.14.0",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
-  "@convex-dev/better-auth": "^0.12.2",
+  "@convex-dev/better-auth": "^0.12.4",
 
   "@tanstack/svelte-query": "^5.85.3",
   "@tanstack/svelte-query-devtools": "^5.85.3",
@@ -153,7 +153,7 @@ export const dependencyVersionMap = {
   "@sveltejs/adapter-cloudflare": "^7.2.8",
   "@sveltejs/adapter-node": "^5.5.4",
   "@cloudflare/workers-types": "^4.20260621.1",
-  "@astrojs/cloudflare": "^14.0.0",
+  "@astrojs/cloudflare": "^14.0.1",
   "@astrojs/node": "^11.0.0",
 
   alchemy: "^0.91.2",

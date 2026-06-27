@@ -113,6 +113,11 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   }
 
   if (addons.includes("electrobun")) {
+    scripts.build = getElectrobunRootBuildCommand(packageManager, {
+      hasTurborepo,
+      hasNx,
+      hasVitePlus,
+    });
     scripts["dev:desktop"] = pmConfig.filter("desktop", "dev:hmr");
     scripts["build:desktop"] = pmConfig.filter("desktop", "build:stable");
     scripts["build:desktop:canary"] = pmConfig.filter("desktop", "build:canary");
@@ -311,6 +316,33 @@ function getPackageManagerConfig(
         checkTypes: "bun run --if-present --filter '*' check-types",
         filter: (workspace, script) => `bun run --filter ${workspace} ${script}`,
       };
+  }
+}
+
+function getElectrobunRootBuildCommand(
+  packageManager: ProjectConfig["packageManager"],
+  options: { hasTurborepo: boolean; hasNx: boolean; hasVitePlus: boolean },
+): string {
+  if (options.hasTurborepo) {
+    return "turbo build --filter='!desktop' && turbo -F desktop build";
+  }
+
+  if (options.hasNx) {
+    return "nx run-many -t build --exclude=desktop && nx run-many -t build --projects=desktop";
+  }
+
+  if (options.hasVitePlus) {
+    return "vp run -r build --filter '!desktop' && vp run --filter desktop build";
+  }
+
+  switch (packageManager) {
+    case "npm":
+      return "npm run build --workspaces --if-present";
+    case "pnpm":
+      return "pnpm -r --filter '!desktop' build && pnpm --filter desktop build";
+    case "bun":
+    default:
+      return "bun run --if-present --filter '!desktop' build && bun run --filter desktop build";
   }
 }
 

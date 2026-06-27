@@ -23556,11 +23556,11 @@ export default defineConfig({
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.0.0"
+    "astro": "^7.0.3"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.18",
-    "tailwindcss": "^4.1.18"
+    "@tailwindcss/vite": "^4.3.1",
+    "tailwindcss": "^4.3.1"
   }
 }
 `],
@@ -27686,7 +27686,7 @@ export default defineNuxtConfig({
     "vue": "^3.5.38"
   },
   "devDependencies": {
-    "tailwindcss": "^4.2.1",
+    "tailwindcss": "^4.3.1",
     "@iconify-json/lucide": "^1.2.96"
   }
 }
@@ -29959,12 +29959,12 @@ dist-ssr
     "test": "vitest run"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.2.2",
+    "@tailwindcss/vite": "^4.3.1",
     "@tanstack/router-plugin": "^1.167.22",
     "@tanstack/solid-router": "^1.168.20",
     "lucide-solid": "^1.8.0",
     "solid-js": "^1.9.12",
-    "tailwindcss": "^4.2.2"
+    "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
     "@tanstack/solid-router-devtools": "^1.166.13",
@@ -30281,10 +30281,10 @@ vite.config.ts.timestamp-*
 		{{/if}}
 		"@sveltejs/kit": "^2.58.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
-		"@tailwindcss/vite": "^4.2.4",
+		"@tailwindcss/vite": "^4.3.1",
 		"svelte": "^5.55.5",
 		"svelte-check": "^4.4.6",
-		"tailwindcss": "^4.2.4",
+		"tailwindcss": "^4.3.1",
 		"vite": "^8.0.10"
 	},
 	"dependencies": {}

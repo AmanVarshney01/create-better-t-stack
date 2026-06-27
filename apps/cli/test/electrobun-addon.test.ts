@@ -47,6 +47,9 @@ describe("Electrobun addon scaffolding", () => {
     expect(rootPackageJson.scripts["dev:desktop"]).toBeDefined();
     expect(rootPackageJson.scripts["build:desktop"]).toBeDefined();
     expect(rootPackageJson.scripts["build:desktop:canary"]).toBeDefined();
+    expect(rootPackageJson.scripts.build).toBe(
+      "bun run --if-present --filter '!desktop' build && bun run --filter desktop build",
+    );
     expect(desktopPackageJson.devDependencies["@types/three"]).toBe("^0.165.0");
     expect(desktopPackageJson.scripts.start).toBeDefined();
     expect(desktopPackageJson.scripts.dev).toBeDefined();
@@ -216,12 +219,15 @@ describe("Electrobun addon scaffolding", () => {
         addons: ["turborepo", "electrobun"] as const,
         expectedRunner: "turbo -F web build",
         expectedHmr: "turbo -F web dev",
+        expectedRootBuild: "turbo build --filter='!desktop' && turbo -F desktop build",
       },
       {
         projectName: "electrobun-nx-runner-static-v2",
         addons: ["nx", "electrobun"] as const,
         expectedRunner: "nx run-many -t build --projects=web",
         expectedHmr: "nx run-many -t dev --projects=web",
+        expectedRootBuild:
+          "nx run-many -t build --exclude=desktop && nx run-many -t build --projects=desktop",
       },
     ];
 
@@ -250,10 +256,17 @@ describe("Electrobun addon scaffolding", () => {
       const desktopPackageJson = await fs.readJson(
         path.join(result.projectDir, "apps", "desktop", "package.json"),
       );
+      const rootPackageJson = await fs.readJson(path.join(result.projectDir, "package.json"));
 
       expect(desktopPackageJson.scripts.start).toContain(testCase.expectedRunner);
       expect(desktopPackageJson.scripts.hmr).toBe(testCase.expectedHmr);
       expect(desktopPackageJson.scripts["build:stable"]).toContain(testCase.expectedRunner);
+      expect(rootPackageJson.scripts.build).toBe(testCase.expectedRootBuild);
+
+      if (testCase.addons.includes("turborepo")) {
+        const turboJson = await fs.readJson(path.join(result.projectDir, "turbo.json"));
+        expect(turboJson.tasks.build.outputs).toContain("artifacts/**");
+      }
     }
   });
 });
