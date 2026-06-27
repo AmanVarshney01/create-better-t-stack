@@ -268,10 +268,10 @@ function getPackageManagerConfig(
 ): PackageManagerConfig {
   if (options.hasTurborepo) {
     return {
-      dev: "turbo dev",
-      build: "turbo build",
-      checkTypes: "turbo check-types",
-      filter: (workspace, script) => `turbo -F ${workspace} ${script}`,
+      dev: "turbo run dev",
+      build: "turbo run build",
+      checkTypes: "turbo run check-types",
+      filter: (workspace, script) => `turbo run ${script} -F ${workspace}`,
     };
   }
 
@@ -324,7 +324,7 @@ function getElectrobunRootBuildCommand(
   options: { hasTurborepo: boolean; hasNx: boolean; hasVitePlus: boolean },
 ): string {
   if (options.hasTurborepo) {
-    return "turbo build --filter='!desktop' && turbo -F desktop build";
+    return "turbo run build --filter='!desktop' && turbo run build -F desktop";
   }
 
   if (options.hasNx) {
@@ -388,7 +388,7 @@ function getDesktopWebCommand(
   script: DesktopWebScript,
 ): string {
   if (options.hasTurborepo) {
-    return `turbo -F web ${script}`;
+    return `turbo run ${script} -F web`;
   }
 
   if (options.hasNx) {

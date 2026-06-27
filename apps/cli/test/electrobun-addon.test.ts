@@ -217,9 +217,9 @@ describe("Electrobun addon scaffolding", () => {
       {
         projectName: "electrobun-turbo-runner-static-v2",
         addons: ["turborepo", "electrobun"] as const,
-        expectedRunner: "turbo -F web build",
-        expectedHmr: "turbo -F web dev",
-        expectedRootBuild: "turbo build --filter='!desktop' && turbo -F desktop build",
+        expectedRunner: "turbo run build -F web",
+        expectedHmr: "turbo run dev -F web",
+        expectedRootBuild: "turbo run build --filter='!desktop' && turbo run build -F desktop",
       },
       {
         projectName: "electrobun-nx-runner-static-v2",

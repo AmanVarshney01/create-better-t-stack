@@ -649,8 +649,8 @@ describe("Addon Configurations", () => {
       const turboConfig = JSON.parse(await readFile(join(projectDir, "turbo.json"), "utf8"));
 
       expect(rootPackageJson.devDependencies.turbo).toBeDefined();
-      expect(rootPackageJson.scripts.dev).toBe("turbo dev");
-      expect(rootPackageJson.scripts.build).toBe("turbo build");
+      expect(rootPackageJson.scripts.dev).toBe("turbo run dev");
+      expect(rootPackageJson.scripts.build).toBe("turbo run build");
       expect(turboConfig.tasks.build.dependsOn).toEqual(["^build"]);
     });
 

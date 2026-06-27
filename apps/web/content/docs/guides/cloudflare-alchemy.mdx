@@ -448,8 +448,8 @@ Better-T-Stack adds these scripts to your root `package.json`:
 {
   "scripts": {
     "dev": "...",
-    "deploy": "turbo -F @my-app/infra deploy",
-    "destroy": "turbo -F @my-app/infra destroy"
+    "deploy": "turbo run deploy -F @my-app/infra",
+    "destroy": "turbo run destroy -F @my-app/infra"
   }
 }
 ```
