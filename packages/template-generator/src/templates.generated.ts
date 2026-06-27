@@ -18740,7 +18740,7 @@ export default function AIPage() {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
   };
@@ -19061,7 +19061,7 @@ export default function AI() {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
   };
@@ -19394,7 +19394,7 @@ function RouteComponent() {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
   };
@@ -19727,7 +19727,7 @@ function RouteComponent() {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
   };

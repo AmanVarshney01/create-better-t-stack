@@ -576,36 +576,72 @@ describe("API Configurations", () => {
       );
     });
 
-    it("should scaffold native oRPC with Expo fetch support", async () => {
-      const result = await createVirtual({
-        projectName: "native-orpc-expo-fetch",
-        api: "orpc",
-        frontend: ["native-bare"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-        git: false,
-        packageManager: "bun",
-        payments: "none",
-      });
+    it("should scaffold native oRPC with Expo fetch support for each auth branch", async () => {
+      const cases = [
+        {
+          auth: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          expected: ["fetch: expoFetch"],
+        },
+        {
+          auth: "better-auth",
+          database: "sqlite",
+          orm: "drizzle",
+          expected: [
+            'import { authClient } from "@/lib/auth-client";',
+            'import { Platform } from "react-native";',
+            'credentials: Platform.OS === "web" ? "include" : "omit"',
+            "const cookies = authClient.getCookie();",
+            "return expoFetch(request, {",
+          ],
+        },
+        {
+          auth: "clerk",
+          database: "none",
+          orm: "none",
+          expected: [
+            'import { getClerkAuthToken } from "@/utils/clerk-auth";',
+            "const token = await getClerkAuthToken();",
+            "return token ? { Authorization: `Bearer ${token}` } : {};",
+            "fetch: expoFetch",
+          ],
+        },
+      ] as const;
 
-      if (result.isErr()) {
-        throw result.error;
+      for (const testCase of cases) {
+        const result = await createVirtual({
+          projectName: `native-orpc-expo-fetch-${testCase.auth}`,
+          api: "orpc",
+          frontend: ["native-bare"],
+          backend: "hono",
+          runtime: "bun",
+          database: testCase.database,
+          orm: testCase.orm,
+          auth: testCase.auth,
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+          payments: "none",
+        });
+
+        if (result.isErr()) {
+          throw result.error;
+        }
+
+        const files = collectFiles(result.value.root, result.value.root.path);
+        const orpcFile = files.get("apps/native/utils/orpc.ts");
+
+        expect(orpcFile).toContain('const { fetch } = await import("expo/fetch");');
+        for (const expected of testCase.expected) {
+          expect(orpcFile).toContain(expected);
+        }
       }
-
-      const files = collectFiles(result.value.root, result.value.root.path);
-      const orpcFile = files.get("apps/native/utils/orpc.ts");
-
-      expect(orpcFile).toContain('const { fetch } = await import("expo/fetch");');
-      expect(orpcFile).toContain("fetch: expoFetch");
     });
 
     it("should scaffold TanStack Start oRPC with a request-scoped query client", async () => {

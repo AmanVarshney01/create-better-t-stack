@@ -1407,6 +1407,74 @@ describe("Addon Configurations", () => {
       expect(serverIndex).not.toContain("createEvlogIntegration(ai)");
     });
 
+    it("should not leave orphaned evlog AI logger setup in AI routes", async () => {
+      const cases = [
+        {
+          projectName: "evlog-fastify-ai",
+          frontend: "tanstack-router",
+          backend: "fastify",
+          runtime: "node",
+          api: "orpc",
+          filePath: "apps/server/src/index.ts",
+          unexpected: ['import { useLogger } from "evlog/fastify";', "useLogger()"],
+        },
+        {
+          projectName: "evlog-svelte-self-ai",
+          frontend: "svelte",
+          backend: "self",
+          runtime: "none",
+          api: "orpc",
+          filePath: "apps/web/src/routes/api/ai/+server.ts",
+          unexpected: ["locals })", "locals.log"],
+        },
+        {
+          projectName: "evlog-tanstack-start-self-ai",
+          frontend: "tanstack-start",
+          backend: "self",
+          runtime: "none",
+          api: "orpc",
+          filePath: "apps/web/src/routes/api/ai/$.ts",
+          unexpected: [
+            'import type { RequestLogger } from "evlog";',
+            'from "nitro/context"',
+            "useRequest()",
+          ],
+        },
+      ] as const;
+
+      for (const testCase of cases) {
+        const result = await runTRPCTest({
+          projectName: testCase.projectName,
+          addons: ["evlog"],
+          frontend: [testCase.frontend],
+          backend: testCase.backend,
+          runtime: testCase.runtime,
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: testCase.api,
+          examples: ["ai"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        const projectDir = result.result?.projectDirectory;
+        if (!projectDir) throw new Error("Expected generated project directory");
+
+        const aiFile = await readFile(join(projectDir, testCase.filePath), "utf-8");
+        expect(aiFile).not.toContain('from "evlog/ai"');
+        expect(aiFile).not.toContain("createAILogger");
+        expect(aiFile).not.toContain("model: ai.wrap(model)");
+        expect(aiFile).not.toContain("createEvlogIntegration(ai)");
+        for (const unexpected of testCase.unexpected) {
+          expect(aiFile).not.toContain(unexpected);
+        }
+      }
+    });
+
     it("should wire evlog request and auth helpers for Next fullstack AI projects", async () => {
       const result = await runTRPCTest({
         projectName: "evlog-next-auth-ai",

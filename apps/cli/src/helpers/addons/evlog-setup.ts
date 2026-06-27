@@ -117,9 +117,7 @@ function getAuthExpression(config: ProjectConfig) {
   return usesCreateAuthFactory(config) ? "createAuth()" : "auth";
 }
 
-function addAiSdkEvlogTelemetry(content: string, loggerExpression: string) {
-  void loggerExpression;
-
+function removeAiSdkEvlogTelemetry(content: string) {
   return content
     .replace(
       /^import\s+\{\s*createAILogger,\s*createEvlogIntegration\s*\}\s+from\s+["']evlog\/ai["'];\n/m,
@@ -508,42 +506,31 @@ function addNextAiEvlogSetup(content: string) {
 }
 
 function addNuxtAiEvlogSetup(content: string) {
-  return addAiSdkEvlogTelemetry(content, "useLogger(event)");
+  return removeAiSdkEvlogTelemetry(content);
 }
 
 function addSvelteAiEvlogSetup(content: string) {
-  let nextContent = content.replace(
-    "export const POST: RequestHandler = async ({ request }) => {",
-    "export const POST: RequestHandler = async ({ request, locals }) => {",
-  );
-
-  return addAiSdkEvlogTelemetry(nextContent, "locals.log");
+  return removeAiSdkEvlogTelemetry(content);
 }
 
 function addTanstackStartAiEvlogSetup(content: string) {
-  let nextContent = prependMissingImports(content, [
-    'import type { RequestLogger } from "evlog";',
-    'import { useRequest } from "nitro/context";',
-  ]);
-
-  return addAiSdkEvlogTelemetry(nextContent, "useRequest().context.log as RequestLogger");
+  return removeAiSdkEvlogTelemetry(content);
 }
 
 function addBackendAiEvlogSetup(content: string, backend: EvlogBackend) {
   if (backend === "hono") {
-    return addAiSdkEvlogTelemetry(content, 'c.get("log")');
+    return removeAiSdkEvlogTelemetry(content);
   }
 
   if (backend === "express") {
-    return addAiSdkEvlogTelemetry(content, "req.log");
+    return removeAiSdkEvlogTelemetry(content);
   }
 
   if (backend === "fastify") {
-    const nextContent = addNamedImport(content, "evlog/fastify", ["useLogger"]);
-    return addAiSdkEvlogTelemetry(nextContent, "useLogger()");
+    return removeAiSdkEvlogTelemetry(content);
   }
 
-  return addAiSdkEvlogTelemetry(content, "context.log");
+  return removeAiSdkEvlogTelemetry(content);
 }
 
 function addNextBetterAuthToRoute(content: string) {
