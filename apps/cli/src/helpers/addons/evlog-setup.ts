@@ -667,7 +667,7 @@ function addAstroBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
 
 function getNextEvlogFile(serviceName: string) {
   return `import { createEvlog } from "evlog/next";
-import { createInstrumentation } from "evlog/next/instrumentation";
+import { createInstrumentation } from "evlog/next/instrumentation/create";
 
 export const { withEvlog, useLogger, log, createError } = createEvlog({
   service: "${serviceName}",

@@ -984,7 +984,7 @@ describe("Addon Configurations", () => {
         expect(serverIndex).toContain('import { initLogger } from "evlog";');
         expect(serverIndex).toContain(backendSnippets[backend]);
         expect(serverIndex).toContain(`env: { service: "evlog-${backend}-server" }`);
-        expect(serverPackageJson).toContain('"evlog": "^2.18.1"');
+        expect(serverPackageJson).toContain('"evlog": "^2.19.2"');
       });
     }
 
@@ -994,6 +994,7 @@ describe("Addon Configurations", () => {
         api: "trpc",
         files: [
           ["apps/web/src/lib/evlog.ts", "createEvlog"],
+          ["apps/web/src/lib/evlog.ts", 'from "evlog/next/instrumentation/create"'],
           ["apps/web/instrumentation.ts", "defineNodeInstrumentation"],
           ["apps/web/src/proxy.ts", "evlogMiddleware"],
           ["apps/web/src/app/api/trpc/[trpc]/route.ts", "withEvlog(handler)"],
@@ -1060,7 +1061,7 @@ describe("Addon Configurations", () => {
         }
 
         const webPackageJson = await readFile(join(projectDir, "apps/web/package.json"), "utf-8");
-        expect(webPackageJson).toContain('"evlog": "^2.18.1"');
+        expect(webPackageJson).toContain('"evlog": "^2.19.2"');
         if (webCase.frontend === "tanstack-start") {
           expect(webPackageJson).toContain('"nitro": "^3.0.260429-beta"');
         }
@@ -1549,7 +1550,7 @@ describe("Addon Configurations", () => {
 
       expect(serverIndex).toContain('import { evlog, type EvlogVariables } from "evlog/hono";');
       expect(serverIndex).toContain("app.use(evlog());");
-      expect(serverPackageJson).toContain('"evlog": "^2.18.1"');
+      expect(serverPackageJson).toContain('"evlog": "^2.19.2"');
     });
 
     it("should reject evlog when added later to a Convex project", async () => {
