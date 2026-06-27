@@ -5,18 +5,42 @@ import {
   useUIMessages,
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
-import { Loader2, Send } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import {
+  ArrowUpIcon,
+  GlobeIcon,
+  ImageIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  PaperclipIcon,
+  PlusIcon,
+  RotateCwIcon,
+  TelescopeIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
 import {
-  Marker,
-  MarkerContent,
-  MarkerIcon,
-} from "@{{projectName}}/ui/components/marker";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@{{projectName}}/ui/components/dropdown-menu";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
 import {
   Message,
   MessageContent as MessageBody,
@@ -30,6 +54,11 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
 function StreamingMessageText({
   text,
@@ -62,11 +91,12 @@ export default function AI() {
   const hasStreamingMessage = messages?.some(
     (m) => m.status === "streaming",
   );
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -86,111 +116,242 @@ export default function AI() {
     }
   };
 
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
+
+  const resetConversation = () => {
+    setInput("");
+    setThreadId(null);
+  };
+
   return (
-    <div className="grid h-full min-h-0 w-full grid-rows-[1fr_auto] overflow-hidden p-4">
-      <MessageScrollerProvider>
-        <MessageScroller>
-          <MessageScrollerViewport>
-            <MessageScrollerContent className="gap-4 pb-4">
-              {!messages || messages.length === 0 ? (
-                <MessageScrollerItem className="flex min-h-full items-center justify-center px-6">
-                  <Marker variant="separator" className="max-w-md justify-center">
-                    <MarkerContent>Ask me anything to get started!</MarkerContent>
-                  </Marker>
-                </MessageScrollerItem>
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isBusy}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {(!messages || messages.length === 0) && !isLoading ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               ) : (
-                messages.map((message) => {
-                  const isUser = message.role === "user";
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isBusy}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
 
-                  return (
-                    <MessageScrollerItem key={`${message.order}-${message.stepOrder}`}>
-                      <Message align={isUser ? "end" : "start"}>
-                        <MessageBody>
-                          <MessageHeader>
-                            {isUser ? "You" : "AI Assistant"}
-                          </MessageHeader>
-                          <Bubble
-                            align={isUser ? "end" : "start"}
-                            variant={isUser ? "default" : "secondary"}
+                        return (
+                          <MessageScrollerItem
+                            key={`${message.order}-${message.stepOrder}`}
+                            scrollAnchor={isUser}
                           >
-                            <BubbleContent>
-                              <StreamingMessageText
-                                text={(message.parts ?? [])
-                                  .map((part) => (part.type === "text" ? part.text : ""))
-                                  .join("")}
-                                isStreaming={message.status === "streaming"}
-                              />
-                            </BubbleContent>
-                          </Bubble>
-                        </MessageBody>
-                      </Message>
-                    </MessageScrollerItem>
-                  );
-                })
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    <StreamingMessageText
+                                      text={(message.parts ?? [])
+                                        .map((part) => (part.type === "text" ? part.text : ""))
+                                        .join("")}
+                                      isStreaming={message.status === "streaming"}
+                                    />
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {isLoading && !hasStreamingMessage && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
               )}
-              {isLoading && !hasStreamingMessage && (
-                <MessageScrollerItem>
-                  <Marker>
-                    <MarkerIcon>
-                      <Loader2 className="size-3.5 animate-spin" />
-                    </MarkerIcon>
-                    <MarkerContent className="shimmer">Thinking...</MarkerContent>
-                  </Marker>
-                </MessageScrollerItem>
-              )}
-              <MessageScrollerItem scrollAnchor />
-            </MessageScrollerContent>
-          </MessageScrollerViewport>
-          <MessageScrollerButton />
-        </MessageScroller>
-      </MessageScrollerProvider>
-
-      <form
-        onSubmit={handleSubmit}
-        className="flex w-full items-center gap-2 border-t pt-2"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-          disabled={isLoading}
-        />
-        <Button
-          type="submit"
-          size="icon"
-          aria-label="Send message"
-          disabled={isLoading || !input.trim()}
-        >
-          {isLoading ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Send size={18} />
-          )}
-        </Button>
-      </form>
-    </div>
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isBusy}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <InputGroupButton
+                            aria-label="Add context"
+                            type="button"
+                            size="icon-sm"
+                            variant="outline"
+                          />
+                        }
+                      >
+                        <PlusIcon />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="start"
+                        side="top"
+                        className="w-44"
+                      >
+                        <DropdownMenuItem>
+                          <PaperclipIcon />
+                          Add Photos & Files
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>
+                          <ImageIcon />
+                          Create Image
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <TelescopeIcon />
+                          Deep Research
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <GlobeIcon />
+                          Web Search
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isBusy || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isBusy ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+            <div className="px-0.5 text-center text-xs text-muted-foreground">
+              AI can make mistakes. Check important info.
+            </div>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{else}}
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { Loader2, Send } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import {
+  ArrowUpIcon,
+  GlobeIcon,
+  ImageIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  PaperclipIcon,
+  PlusIcon,
+  RotateCwIcon,
+  TelescopeIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 import { env } from "@{{projectName}}/env/web";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
 import {
-  Marker,
-  MarkerContent,
-  MarkerIcon,
-} from "@{{projectName}}/ui/components/marker";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@{{projectName}}/ui/components/dropdown-menu";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
 import {
   Message,
   MessageContent as MessageBody,
@@ -204,10 +365,15 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
 export default function AI() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: `${env.VITE_SERVER_URL}/ai`,
     }),
@@ -222,99 +388,207 @@ export default function AI() {
     setInput("");
   };
 
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
+
+  const resetConversation = () => {
+    setInput("");
+    setMessages([]);
+  };
+
   return (
-    <div className="grid h-full min-h-0 w-full grid-rows-[1fr_auto] overflow-hidden p-4">
-      <MessageScrollerProvider>
-        <MessageScroller>
-          <MessageScrollerViewport>
-            <MessageScrollerContent className="gap-4 pb-4">
-              {messages.length === 0 ? (
-                <MessageScrollerItem className="flex min-h-full items-center justify-center px-6">
-                  <Marker variant="separator" className="max-w-md justify-center">
-                    <MarkerContent>Ask me anything to get started!</MarkerContent>
-                  </Marker>
-                </MessageScrollerItem>
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isSending}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {messages.length === 0 && !isSending ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               ) : (
-                messages.map((message) => {
-                  const isUser = message.role === "user";
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isSending}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
 
-                  return (
-                    <MessageScrollerItem key={message.id}>
-                      <Message align={isUser ? "end" : "start"}>
-                        <MessageBody>
-                          <MessageHeader>
-                            {isUser ? "You" : "AI Assistant"}
-                          </MessageHeader>
-                          <Bubble
-                            align={isUser ? "end" : "start"}
-                            variant={isUser ? "default" : "secondary"}
+                        return (
+                          <MessageScrollerItem
+                            key={message.id}
+                            scrollAnchor={isUser}
                           >
-                            <BubbleContent>
-                              {message.parts?.map((part, index) => {
-                                if (part.type === "text") {
-                                  return (
-                                    <Streamdown
-                                      key={index}
-                                      isAnimating={status === "streaming" && message.role === "assistant"}
-                                    >
-                                      {part.text}
-                                    </Streamdown>
-                                  );
-                                }
-                                return null;
-                              })}
-                            </BubbleContent>
-                          </Bubble>
-                        </MessageBody>
-                      </Message>
-                    </MessageScrollerItem>
-                  );
-                })
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    {message.parts?.map((part, index) => {
+                                      if (part.type === "text") {
+                                        return (
+                                          <Streamdown
+                                            key={index}
+                                            isAnimating={status === "streaming" && message.role === "assistant"}
+                                          >
+                                            {part.text}
+                                          </Streamdown>
+                                        );
+                                      }
+                                      return null;
+                                    })}
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {status === "submitted" && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
               )}
-              {status === "submitted" && (
-                <MessageScrollerItem>
-                  <Marker>
-                    <MarkerIcon>
-                      <Loader2 className="size-3.5 animate-spin" />
-                    </MarkerIcon>
-                    <MarkerContent className="shimmer">Thinking...</MarkerContent>
-                  </Marker>
-                </MessageScrollerItem>
-              )}
-              <MessageScrollerItem scrollAnchor />
-            </MessageScrollerContent>
-          </MessageScrollerViewport>
-          <MessageScrollerButton />
-        </MessageScroller>
-      </MessageScrollerProvider>
-
-      <form
-        onSubmit={handleSubmit}
-        className="flex w-full items-center gap-2 border-t pt-2"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-        />
-        <Button
-          type="submit"
-          size="icon"
-          aria-label="Send message"
-          disabled={isSending || !input.trim()}
-        >
-          {isSending ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Send size={18} />
-          )}
-        </Button>
-      </form>
-    </div>
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isSending}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <InputGroupButton
+                            aria-label="Add context"
+                            type="button"
+                            size="icon-sm"
+                            variant="outline"
+                          />
+                        }
+                      >
+                        <PlusIcon />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="start"
+                        side="top"
+                        className="w-44"
+                      >
+                        <DropdownMenuItem>
+                          <PaperclipIcon />
+                          Add Photos & Files
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>
+                          <ImageIcon />
+                          Create Image
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <TelescopeIcon />
+                          Deep Research
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <GlobeIcon />
+                          Web Search
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isSending || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isSending ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+            <div className="px-0.5 text-center text-xs text-muted-foreground">
+              AI can make mistakes. Check important info.
+            </div>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{/if}}
