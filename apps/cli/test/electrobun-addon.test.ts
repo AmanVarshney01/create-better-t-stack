@@ -47,6 +47,7 @@ describe("Electrobun addon scaffolding", () => {
     expect(rootPackageJson.scripts["dev:desktop"]).toBeDefined();
     expect(rootPackageJson.scripts["build:desktop"]).toBeDefined();
     expect(rootPackageJson.scripts["build:desktop:canary"]).toBeDefined();
+    expect(desktopPackageJson.devDependencies["@types/three"]).toBe("^0.165.0");
     expect(desktopPackageJson.scripts.start).toBeDefined();
     expect(desktopPackageJson.scripts.dev).toBeDefined();
     expect(desktopPackageJson.scripts["dev:hmr"]).toBeDefined();
@@ -106,12 +107,16 @@ describe("Electrobun addon scaffolding", () => {
         api: "trpc",
         expectedOutputDir: 'const webBuildDir = "../web/dist/client";',
         expectedPort: "const DEV_SERVER_PORT = 3001;",
+        expectedWebConfigPath: "vite.config.ts",
+        expectedWebConfig: ["prerender", "enabled: true"],
       },
       {
         frontend: "next",
         api: "trpc",
         expectedOutputDir: 'const webBuildDir = "../web/out";',
         expectedPort: "const DEV_SERVER_PORT = 3001;",
+        expectedWebConfigPath: "next.config.ts",
+        expectedWebConfig: ['output: "export"'],
       },
       {
         frontend: "nuxt",
@@ -125,6 +130,8 @@ describe("Electrobun addon scaffolding", () => {
         api: "orpc",
         expectedOutputDir: 'const webBuildDir = "../web/build";',
         expectedPort: "const DEV_SERVER_PORT = 5173;",
+        expectedWebConfigPath: "svelte.config.js",
+        expectedWebConfig: ["@sveltejs/adapter-static", 'fallback: "index.html"'],
       },
       {
         frontend: "solid",
@@ -137,6 +144,9 @@ describe("Electrobun addon scaffolding", () => {
         api: "orpc",
         expectedOutputDir: 'const webBuildDir = "../web/dist";',
         expectedPort: "const DEV_SERVER_PORT = 4321;",
+        expectedWebConfigPath: "astro.config.mjs",
+        expectedWebConfig: ['output: "static"'],
+        unexpectedWebDependency: "@astrojs/node",
       },
     ] as const;
 
@@ -173,9 +183,25 @@ describe("Electrobun addon scaffolding", () => {
       const desktopPackageJson = await fs.readJson(
         path.join(result.projectDir, "apps", "desktop", "package.json"),
       );
+      const webPackageJson = await fs.readJson(
+        path.join(result.projectDir, "apps", "web", "package.json"),
+      );
 
       expect(desktopConfig).toContain(testCase.expectedOutputDir);
       expect(desktopEntry).toContain(testCase.expectedPort);
+      if ("expectedWebConfig" in testCase && "expectedWebConfigPath" in testCase) {
+        const webConfig = await fs.readFile(
+          path.join(result.projectDir, "apps", "web", testCase.expectedWebConfigPath),
+          "utf8",
+        );
+        for (const expectedConfig of testCase.expectedWebConfig) {
+          expect(webConfig).toContain(expectedConfig);
+        }
+      }
+      if ("unexpectedWebDependency" in testCase) {
+        expect(webPackageJson.dependencies?.[testCase.unexpectedWebDependency]).toBeUndefined();
+        expect(webPackageJson.devDependencies?.[testCase.unexpectedWebDependency]).toBeUndefined();
+      }
       if ("expectedBuildCommand" in testCase) {
         expect(desktopPackageJson.scripts.start).toContain(testCase.expectedBuildCommand);
         expect(desktopPackageJson.scripts["build:stable"]).toContain(testCase.expectedBuildCommand);

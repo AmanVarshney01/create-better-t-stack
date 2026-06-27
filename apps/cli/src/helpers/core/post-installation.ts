@@ -444,7 +444,7 @@ function getElectrobunInstructions(runCmd: string, frontend: Frontend[]) {
     "•",
   )} Build canary desktop app: ${`${runCmd} build:desktop:canary`}\n${pc.yellow(
     "NOTE:",
-  )} Electrobun wraps your web frontend in a desktop shell.\n   See: ${"https://blackboard.sh/electrobun/docs/"}${
+  )} Electrobun wraps your web frontend in a desktop shell.\n   See: ${"https://framework.blackboard.sh/electrobun/"}${
     staticBuildNote ? `\n${staticBuildNote}` : ""
   }`;
 }

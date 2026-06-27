@@ -15,7 +15,13 @@ export default defineConfig({
   },
   plugins: [
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+      {
+        prerender: {
+          enabled: true,
+        },
+      },
+{{/if}}),
 {{#if (eq webDeploy "docker")}}
     nitro(),
 {{/if}}

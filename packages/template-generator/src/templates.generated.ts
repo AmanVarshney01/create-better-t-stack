@@ -149,6 +149,7 @@ export default {
   },
   "devDependencies": {
     "@types/bun": "^1.3.14",
+    "@types/three": "^0.165.0",
     "concurrently": "^10.0.3",
     "typescript": "^6"
   }
@@ -23165,12 +23166,19 @@ pnpm-debug.log*
   ["frontend/astro/astro.config.mjs.hbs", `// @ts-check
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, envField } from "astro/config";
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+{{else}}
 import node from "@astrojs/node";
+{{/if}}
 
 // https://astro.build/config
 export default defineConfig({
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+  output: "static",
+{{else}}
   output: "server",
   adapter: node({ mode: "standalone" }),
+{{/if}}
 {{#if (ne backend "self")}}
   env: {
     schema: {
@@ -27376,7 +27384,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
 	typedRoutes: true,
 	reactCompiler: true,
-	{{#if (eq webDeploy "docker")}}
+	{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+	output: "export",
+	{{else if (eq webDeploy "docker")}}
 	output: "standalone",
 	{{/if}}
 	{{#if (includes examples "ai")}}
@@ -29364,7 +29374,13 @@ export default defineConfig({
   },
   plugins: [
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+      {
+        prerender: {
+          enabled: true,
+        },
+      },
+{{/if}}),
 {{#if (eq webDeploy "docker")}}
     nitro(),
 {{/if}}
@@ -29908,7 +29924,11 @@ vite.config.ts.timestamp-*
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
+		{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+		"@sveltejs/adapter-static": "^3.0.10",
+		{{else}}
 		"@sveltejs/adapter-auto": "^7.0.1",
+		{{/if}}
 		"@sveltejs/kit": "^2.58.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@tailwindcss/vite": "^4.2.4",
@@ -30156,7 +30176,9 @@ const TITLE_TEXT = \`
 {{/if}}
 `],
   ["frontend/svelte/static/favicon.png", `[Binary file]`],
-  ["frontend/svelte/svelte.config.js.hbs", `{{#if (eq webDeploy "cloudflare")}}
+  ["frontend/svelte/svelte.config.js.hbs", `{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+import adapter from '@sveltejs/adapter-static';
+{{else if (eq webDeploy "cloudflare")}}
 import alchemy from 'alchemy/cloudflare/sveltekit';
 {{else if (eq webDeploy "docker")}}
 import adapter from '@sveltejs/adapter-node';
@@ -30172,7 +30194,14 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
-{{#if (eq webDeploy "cloudflare")}}
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+		// adapter-static emits files Electrobun and Tauri can bundle directly.
+		adapter: adapter({
+			pages: 'build',
+			assets: 'build',
+			fallback: 'index.html'
+		})
+{{else if (eq webDeploy "cloudflare")}}
 		// Alchemy's adapter wraps SvelteKit's Cloudflare adapter for local platform.env and Worker builds.
 		adapter: alchemy()
 {{else if (eq webDeploy "docker")}}
