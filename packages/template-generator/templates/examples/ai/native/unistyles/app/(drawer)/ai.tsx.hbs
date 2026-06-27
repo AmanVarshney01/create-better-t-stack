@@ -1,3 +1,5 @@
+import "@/unistyles";
+
 {{#if (eq backend "convex")}}
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -6,7 +8,7 @@ import {
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
-import React, { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -21,6 +23,21 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
 import { Container } from "@/components/container";
 
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
+
 function MessageContent({
   text,
   isStreaming,
@@ -33,7 +50,12 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
-  return <Text style={style}>{visibleText}</Text>;
+
+  return (
+    <Text selectable style={style}>
+      {visibleText}
+    </Text>
+  );
 }
 
 export default function AIScreen() {
@@ -55,14 +77,17 @@ export default function AIScreen() {
   const hasStreamingMessage = messages?.some(
     (m) => m.status === "streaming",
   );
+  const hasMessages = Boolean(messages?.length);
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  const onSubmit = async () => {
-    const value = input.trim();
-    if (!value || isLoading) return;
+  const sendPrompt = async (prompt: string) => {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -82,6 +107,12 @@ export default function AIScreen() {
     }
   };
 
+  const onNewChat = () => {
+    if (isBusy) return;
+    setInput("");
+    setThreadId(null);
+  };
+
   return (
     <Container>
       <KeyboardAvoidingView
@@ -89,54 +120,140 @@ export default function AIScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>AI Chat</Text>
-            <Text style={styles.headerSubtitle}>
-              Chat with our AI assistant
-            </Text>
+          <View style={styles.toolbar}>
+            <View style={styles.statusGroup}>
+              <View
+                style={[
+                  styles.statusDot,
+                  isBusy ? styles.statusDotBusy : styles.statusDotIdle,
+                ]}
+              />
+              <Text style={styles.statusText}>
+                {isBusy
+                  ? "Streaming"
+                  : hasMessages
+                    ? `${messages?.length ?? 0} messages`
+                    : "Ready"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={onNewChat}
+              disabled={isBusy || (!hasMessages && !threadId)}
+              style={[
+                styles.toolbarAction,
+                (isBusy || (!hasMessages && !threadId)) &&
+                  styles.disabledAction,
+              ]}
+            >
+              <Ionicons
+                name="add"
+                size={16}
+                color={theme.colors.foreground}
+              />
+              <Text style={styles.toolbarActionText}>New</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView
             ref={scrollViewRef}
             style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {!messages || messages.length === 0 ? (
+            {!hasMessages ? (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  Ask me anything to get started!
+                <View style={styles.emptyIcon}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={28}
+                    color={theme.colors.foreground}
+                  />
+                </View>
+                <Text style={styles.emptyTitle}>Start a conversation</Text>
+                <Text selectable style={styles.emptyText}>
+                  Use a starter prompt or ask your own question.
                 </Text>
+                <View style={styles.promptList}>
+                  {starterPrompts.map((item) => (
+                    <TouchableOpacity
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                      style={[
+                        styles.promptButton,
+                        isBusy && styles.disabledAction,
+                      ]}
+                    >
+                      <Text style={styles.promptLabel}>{item.label}</Text>
+                      <Text style={styles.promptText}>{item.prompt}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             ) : (
               <View style={styles.messagesWrapper}>
-                {messages.map((message) => (
-                  <View
-                    key={`${message.order}-${message.stepOrder}`}
-                    style={[
-                      styles.messageContainer,
-                      message.role === "user"
-                        ? styles.userMessage
-                        : styles.assistantMessage,
-                    ]}
-                  >
-                    <Text style={styles.messageRole}>
-                      {message.role === "user" ? "You" : "AI Assistant"}
-                    </Text>
-                    <MessageContent
-                      text={(message.parts ?? [])
-                        .map((part) => (part.type === "text" ? part.text : ""))
-                        .join("")}
-                      isStreaming={message.status === "streaming"}
-                      style={styles.messageContent}
-                    />
-                  </View>
-                ))}
+                {messages?.map((message) => {
+                  const isUser = message.role === "user";
+                  const messageText = (message.parts ?? [])
+                    .map((part) => (part.type === "text" ? part.text : ""))
+                    .join("");
+
+                  return (
+                    <View
+                      key={`${message.order}-${message.stepOrder}`}
+                      style={[
+                        styles.messageRow,
+                        isUser ? styles.userRow : styles.assistantRow,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.messageBubble,
+                          isUser ? styles.userBubble : styles.assistantBubble,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.messageRole,
+                            isUser
+                              ? styles.userMessageText
+                              : styles.assistantMessageText,
+                          ]}
+                        >
+                          {isUser ? "You" : "AI"}
+                        </Text>
+                        <MessageContent
+                          text={messageText}
+                          isStreaming={message.status === "streaming"}
+                          style={
+                            isUser
+                              ? styles.userMessageText
+                              : styles.assistantMessageText
+                          }
+                        />
+                      </View>
+                    </View>
+                  );
+                })}
                 {isLoading && !hasStreamingMessage && (
-                  <View style={[styles.messageContainer, styles.assistantMessage]}>
-                    <Text style={styles.messageRole}>AI Assistant</Text>
-                    <View style={styles.loadingContainer}>
-                      <ActivityIndicator size="small" color={theme.colors.primary} />
-                      <Text style={styles.loadingText}>Thinking...</Text>
+                  <View style={[styles.messageRow, styles.assistantRow]}>
+                    <View style={[styles.messageBubble, styles.assistantBubble]}>
+                      <Text
+                        style={[
+                          styles.messageRole,
+                          styles.assistantMessageText,
+                        ]}
+                      >
+                        AI
+                      </Text>
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator
+                          size="small"
+                          color={theme.colors.primary}
+                        />
+                        <Text style={styles.loadingText}>Thinking...</Text>
+                      </View>
                     </View>
                   </View>
                 )}
@@ -149,31 +266,32 @@ export default function AIScreen() {
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Type your message..."
-                placeholderTextColor={theme.colors.border}
+                placeholder="Message AI..."
+                placeholderTextColor={theme.colors.mutedForeground}
                 style={styles.textInput}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
-                  onSubmit();
+                  sendPrompt(input);
                 }}
-                editable={!isLoading}
-                autoFocus={true}
+                editable={!isBusy}
+                returnKeyType="send"
+                multiline
               />
               <TouchableOpacity
-                onPress={onSubmit}
-                disabled={!input.trim() || isLoading}
+                onPress={() => sendPrompt(input)}
+                disabled={!canSend}
                 style={[
                   styles.sendButton,
-                  (!input.trim() || isLoading) && styles.sendButtonDisabled,
+                  !canSend && styles.sendButtonDisabled,
                 ]}
               >
                 <Ionicons
-                  name="send"
+                  name="arrow-up"
                   size={20}
                   color={
-                    input.trim() && !isLoading
-                      ? theme.colors.background
-                      : theme.colors.border
+                    canSend
+                      ? theme.colors.primaryForeground
+                      : theme.colors.mutedForeground
                   }
                 />
               </TouchableOpacity>
@@ -192,108 +310,218 @@ const styles = StyleSheet.create((theme) => ({
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.lg,
   },
-  header: {
-    marginBottom: theme.spacing.lg,
+  toolbar: {
+    alignItems: "center",
+    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: theme.colors.typography,
-    marginBottom: theme.spacing.sm,
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: theme.colors.typography,
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
+  statusDotBusy: {
+    backgroundColor: theme.colors.primary,
+  },
+  statusDotIdle: {
+    backgroundColor: theme.colors.border,
+  },
+  statusText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
+  },
+  toolbarAction: {
+    alignItems: "center",
+    borderColor: theme.colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: theme.spacing.xs,
+    minHeight: 32,
+    paddingHorizontal: 10,
+  },
+  toolbarActionText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "600",
+  },
+  disabledAction: {
+    opacity: 0.45,
   },
   messagesContainer: {
     flex: 1,
-    marginBottom: theme.spacing.md,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: theme.spacing.md,
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    flex: 1,
+    gap: theme.spacing.md,
+    justifyContent: "center",
+  },
+  emptyIcon: {
+    alignItems: "center",
+    borderColor: theme.colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyTitle: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "700",
+    textAlign: "center",
   },
   emptyText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 20,
     textAlign: "center",
-    color: theme.colors.typography,
-    fontSize: 18,
+  },
+  promptList: {
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+    width: "100%",
+  },
+  promptButton: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "700",
+  },
+  promptText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 18,
   },
   messagesWrapper: {
     gap: theme.spacing.md,
   },
-  messageContainer: {
-    padding: theme.spacing.md,
-    borderRadius: 8,
+  messageRow: {
+    flexDirection: "row",
   },
-  userMessage: {
-    backgroundColor: theme.colors.primary + "20",
-    marginLeft: theme.spacing.xl,
-    alignSelf: "flex-end",
+  userRow: {
+    justifyContent: "flex-end",
   },
-  assistantMessage: {
-    backgroundColor: theme.colors.background,
-    marginRight: theme.spacing.xl,
-    borderWidth: 1,
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
+  messageBubble: {
+    borderRadius: theme.borderRadius.xl,
+    maxWidth: "86%",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 10,
+  },
+  userBubble: {
+    backgroundColor: theme.colors.primary,
+    borderTopRightRadius: theme.borderRadius.sm,
+  },
+  assistantBubble: {
+    backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
+    borderTopLeftRadius: theme.borderRadius.sm,
+    borderWidth: 1,
   },
   messageRole: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: theme.spacing.sm,
-    color: theme.colors.typography,
+    fontSize: theme.fontSize.xs,
+    fontWeight: "700",
+    marginBottom: theme.spacing.xs,
+    opacity: 0.72,
   },
-  messageContent: {
-    color: theme.colors.typography,
-    lineHeight: 20,
+  userMessageText: {
+    color: theme.colors.primaryForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  assistantMessageText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
   },
   loadingContainer: {
-    flexDirection: "row",
     alignItems: "center",
+    flexDirection: "row",
     gap: theme.spacing.sm,
   },
   loadingText: {
-    color: theme.colors.typography,
-    opacity: 0.7,
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
   },
   inputSection: {
-    borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+    borderTopWidth: 1,
+    paddingBottom: theme.spacing.md,
     paddingTop: theme.spacing.md,
   },
   inputContainer: {
-    flexDirection: "row",
     alignItems: "flex-end",
+    flexDirection: "row",
     gap: theme.spacing.sm,
   },
   textInput: {
-    flex: 1,
-    borderWidth: 1,
+    backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
-    borderRadius: 8,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    color: theme.colors.typography,
-    backgroundColor: theme.colors.background,
-    fontSize: 16,
-    minHeight: 40,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    color: theme.colors.foreground,
+    flex: 1,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 20,
     maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 11,
+  },
+  placeholder: {
+    color: theme.colors.mutedForeground,
   },
   sendButton: {
-    backgroundColor: theme.colors.primary,
-    padding: theme.spacing.sm,
-    borderRadius: 8,
-    justifyContent: "center",
     alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonIcon: {
+    color: theme.colors.primaryForeground,
   },
   sendButtonDisabled: {
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+    opacity: 0.55,
+  },
+  sendButtonDisabledIcon: {
+    color: theme.colors.mutedForeground,
   },
 }));
 {{else}}
-import React, { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -302,6 +530,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -309,6 +538,21 @@ import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { Container } from "@/components/container";
 import { env } from "@{{projectName}}/env/native";
+
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
 
 const generateAPIUrl = (relativePath: string) => {
   const serverUrl = env.EXPO_PUBLIC_SERVER_URL;
@@ -324,7 +568,7 @@ const generateAPIUrl = (relativePath: string) => {
 export default function AIScreen() {
   const { theme } = useUnistyles();
   const [input, setInput] = useState("");
-  const { messages, error, sendMessage } = useChat({
+  const { messages, error, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: generateAPIUrl("/ai"),
     }),
@@ -332,31 +576,27 @@ export default function AIScreen() {
   });
 
   const scrollViewRef = useRef<ScrollView>(null);
+  const isBusy = status === "submitted" || status === "streaming";
+  const hasMessages = messages.length > 0;
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isBusy]);
 
-  const onSubmit = () => {
-    const value = input.trim();
-    if (value) {
-      sendMessage({ text: value });
-      setInput("");
-    }
+  const sendPrompt = (prompt: string) => {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
+
+    sendMessage({ text: value });
+    setInput("");
   };
 
-  if (error) {
-    return (
-      <Container>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Error: {error.message}</Text>
-          <Text style={styles.errorSubtext}>
-            Please check your connection and try again.
-          </Text>
-        </View>
-      </Container>
-    );
-  }
+  const onNewChat = () => {
+    if (isBusy) return;
+    setInput("");
+    setMessages([]);
+  };
 
   return (
     <Container>
@@ -365,96 +605,212 @@ export default function AIScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>AI Chat</Text>
-            <Text style={styles.headerSubtitle}>
-              Chat with our AI assistant
-            </Text>
+          <View style={styles.toolbar}>
+            <View style={styles.statusGroup}>
+              <View
+                style={[
+                  styles.statusDot,
+                  isBusy ? styles.statusDotBusy : styles.statusDotIdle,
+                ]}
+              />
+              <Text style={styles.statusText}>
+                {isBusy
+                  ? status === "submitted"
+                    ? "Sending"
+                    : "Streaming"
+                  : hasMessages
+                    ? `${messages.length} messages`
+                    : "Ready"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={onNewChat}
+              disabled={isBusy || !hasMessages}
+              style={[
+                styles.toolbarAction,
+                (isBusy || !hasMessages) && styles.disabledAction,
+              ]}
+            >
+              <Ionicons
+                name="add"
+                size={16}
+                color={theme.colors.foreground}
+              />
+              <Text style={styles.toolbarActionText}>New</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView
             ref={scrollViewRef}
             style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {messages.length === 0 ? (
+            {!hasMessages ? (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  Ask me anything to get started!
+                <View style={styles.emptyIcon}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={28}
+                    color={theme.colors.foreground}
+                  />
+                </View>
+                <Text style={styles.emptyTitle}>Start a conversation</Text>
+                <Text selectable style={styles.emptyText}>
+                  Use a starter prompt or ask your own question.
                 </Text>
+                <View style={styles.promptList}>
+                  {starterPrompts.map((item) => (
+                    <TouchableOpacity
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                      style={[
+                        styles.promptButton,
+                        isBusy && styles.disabledAction,
+                      ]}
+                    >
+                      <Text style={styles.promptLabel}>{item.label}</Text>
+                      <Text style={styles.promptText}>{item.prompt}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             ) : (
               <View style={styles.messagesWrapper}>
-                {messages.map((message) => (
-                  <View
-                    key={message.id}
-                    style={[
-                      styles.messageContainer,
-                      message.role === "user"
-                        ? styles.userMessage
-                        : styles.assistantMessage,
-                    ]}
-                  >
-                    <Text style={styles.messageRole}>
-                      {message.role === "user" ? "You" : "AI Assistant"}
-                    </Text>
-                    <View style={styles.messageContentWrapper}>
-                      {message.parts.map((part, i) => {
-                        if (part.type === "text") {
-                          return (
-                            <Text
-                              key={`${message.id}-${i}`}
-                              style={styles.messageContent}
-                            >
-                              {part.text}
-                            </Text>
-                          );
-                        }
-                        return (
-                          <Text
-                            key={`${message.id}-${i}`}
-                            style={styles.messageContent}
-                          >
-                            {JSON.stringify(part)}
-                          </Text>
-                        );
-                      })}
+                {messages.map((message) => {
+                  const isUser = message.role === "user";
+
+                  return (
+                    <View
+                      key={message.id}
+                      style={[
+                        styles.messageRow,
+                        isUser ? styles.userRow : styles.assistantRow,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.messageBubble,
+                          isUser ? styles.userBubble : styles.assistantBubble,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.messageRole,
+                            isUser
+                              ? styles.userMessageText
+                              : styles.assistantMessageText,
+                          ]}
+                        >
+                          {isUser ? "You" : "AI"}
+                        </Text>
+                        <View style={styles.messageContentWrapper}>
+                          {(message.parts ?? []).map((part, i) => {
+                            if (part.type === "text") {
+                              return (
+                                <Text
+                                  key={`${message.id}-${i}`}
+                                  selectable
+                                  style={
+                                    isUser
+                                      ? styles.userMessageText
+                                      : styles.assistantMessageText
+                                  }
+                                >
+                                  {part.text}
+                                </Text>
+                              );
+                            }
+                            return (
+                              <Text
+                                key={`${message.id}-${i}`}
+                                selectable
+                                style={
+                                  isUser
+                                    ? styles.userMessageText
+                                    : styles.assistantMessageText
+                                }
+                              >
+                                {JSON.stringify(part)}
+                              </Text>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+                {isBusy && (
+                  <View style={[styles.messageRow, styles.assistantRow]}>
+                    <View style={[styles.messageBubble, styles.assistantBubble]}>
+                      <Text
+                        style={[
+                          styles.messageRole,
+                          styles.assistantMessageText,
+                        ]}
+                      >
+                        AI
+                      </Text>
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator
+                          size="small"
+                          color={theme.colors.primary}
+                        />
+                        <Text style={styles.loadingText}>Thinking...</Text>
+                      </View>
                     </View>
                   </View>
-                ))}
+                )}
               </View>
             )}
           </ScrollView>
+
+          {error && (
+            <View style={styles.errorBanner}>
+              <Ionicons
+                name="alert-circle-outline"
+                size={18}
+                color={theme.colors.destructive}
+              />
+              <Text selectable style={styles.errorText}>
+                {error.message}
+              </Text>
+            </View>
+          )}
 
           <View style={styles.inputSection}>
             <View style={styles.inputContainer}>
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Type your message..."
-                placeholderTextColor={theme.colors.border}
+                placeholder="Message AI..."
+                placeholderTextColor={theme.colors.mutedForeground}
                 style={styles.textInput}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
-                  onSubmit();
+                  sendPrompt(input);
                 }}
-                autoFocus={true}
+                editable={!isBusy}
+                returnKeyType="send"
+                multiline
               />
               <TouchableOpacity
-                onPress={onSubmit}
-                disabled={!input.trim()}
+                onPress={() => sendPrompt(input)}
+                disabled={!canSend}
                 style={[
                   styles.sendButton,
-                  !input.trim() && styles.sendButtonDisabled,
+                  !canSend && styles.sendButtonDisabled,
                 ]}
               >
                 <Ionicons
-                  name="send"
+                  name="arrow-up"
                   size={20}
                   color={
-                    input.trim()
-                      ? theme.colors.background
-                      : theme.colors.border
+                    canSend
+                      ? theme.colors.primaryForeground
+                      : theme.colors.mutedForeground
                   }
                 />
               </TouchableOpacity>
@@ -473,115 +829,238 @@ const styles = StyleSheet.create((theme) => ({
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.lg,
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
+  toolbar: {
     alignItems: "center",
-    paddingHorizontal: theme.spacing.md,
+    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
   },
-  errorText: {
-    color: theme.colors.destructive,
-    textAlign: "center",
-    fontSize: 18,
-    marginBottom: theme.spacing.md,
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
   },
-  errorSubtext: {
-    color: theme.colors.typography,
-    textAlign: "center",
-    fontSize: 16,
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
   },
-  header: {
-    marginBottom: theme.spacing.lg,
+  statusDotBusy: {
+    backgroundColor: theme.colors.primary,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: theme.colors.typography,
-    marginBottom: theme.spacing.sm,
+  statusDotIdle: {
+    backgroundColor: theme.colors.border,
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: theme.colors.typography,
+  statusText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
+  },
+  toolbarAction: {
+    alignItems: "center",
+    borderColor: theme.colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: theme.spacing.xs,
+    minHeight: 32,
+    paddingHorizontal: 10,
+  },
+  toolbarActionText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "600",
+  },
+  disabledAction: {
+    opacity: 0.45,
   },
   messagesContainer: {
     flex: 1,
-    marginBottom: theme.spacing.md,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: theme.spacing.md,
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    flex: 1,
+    gap: theme.spacing.md,
+    justifyContent: "center",
+  },
+  emptyIcon: {
+    alignItems: "center",
+    borderColor: theme.colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyTitle: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "700",
+    textAlign: "center",
   },
   emptyText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 20,
     textAlign: "center",
-    color: theme.colors.typography,
-    fontSize: 18,
+  },
+  promptList: {
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+    width: "100%",
+  },
+  promptButton: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "700",
+  },
+  promptText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 18,
   },
   messagesWrapper: {
     gap: theme.spacing.md,
   },
-  messageContainer: {
-    padding: theme.spacing.md,
-    borderRadius: 8,
+  messageRow: {
+    flexDirection: "row",
   },
-  userMessage: {
-    backgroundColor: theme.colors.primary + "20",
-    marginLeft: theme.spacing.xl,
-    alignSelf: "flex-end",
+  userRow: {
+    justifyContent: "flex-end",
   },
-  assistantMessage: {
-    backgroundColor: theme.colors.background,
-    marginRight: theme.spacing.xl,
-    borderWidth: 1,
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
+  messageBubble: {
+    borderRadius: theme.borderRadius.xl,
+    maxWidth: "86%",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 10,
+  },
+  userBubble: {
+    backgroundColor: theme.colors.primary,
+    borderTopRightRadius: theme.borderRadius.sm,
+  },
+  assistantBubble: {
+    backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
+    borderTopLeftRadius: theme.borderRadius.sm,
+    borderWidth: 1,
   },
   messageRole: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: theme.spacing.sm,
-    color: theme.colors.typography,
+    fontSize: theme.fontSize.xs,
+    fontWeight: "700",
+    marginBottom: theme.spacing.xs,
+    opacity: 0.72,
   },
   messageContentWrapper: {
     gap: theme.spacing.xs,
   },
-  messageContent: {
-    color: theme.colors.typography,
-    lineHeight: 20,
+  userMessageText: {
+    color: theme.colors.primaryForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  assistantMessageText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+  },
+  loadingText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+  },
+  errorBanner: {
+    alignItems: "center",
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.destructive,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  errorIcon: {
+    color: theme.colors.destructive,
+  },
+  errorText: {
+    color: theme.colors.foreground,
+    flex: 1,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 18,
   },
   inputSection: {
-    borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+    borderTopWidth: 1,
+    paddingBottom: theme.spacing.md,
     paddingTop: theme.spacing.md,
   },
   inputContainer: {
-    flexDirection: "row",
     alignItems: "flex-end",
+    flexDirection: "row",
     gap: theme.spacing.sm,
   },
   textInput: {
-    flex: 1,
-    borderWidth: 1,
+    backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
-    borderRadius: 8,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    color: theme.colors.typography,
-    backgroundColor: theme.colors.background,
-    fontSize: 16,
-    minHeight: 40,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    color: theme.colors.foreground,
+    flex: 1,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 20,
     maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 11,
+  },
+  placeholder: {
+    color: theme.colors.mutedForeground,
   },
   sendButton: {
-    backgroundColor: theme.colors.primary,
-    padding: theme.spacing.sm,
-    borderRadius: 8,
-    justifyContent: "center",
     alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonIcon: {
+    color: theme.colors.primaryForeground,
   },
   sendButtonDisabled: {
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+    opacity: 0.55,
+  },
+  sendButtonDisabledIcon: {
+    color: theme.colors.mutedForeground,
   },
 }));
 {{/if}}
