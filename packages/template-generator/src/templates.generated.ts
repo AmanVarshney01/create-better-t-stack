@@ -18496,14 +18496,9 @@ import {
 import { useMutation } from "convex/react";
 import {
   ArrowUpIcon,
-  GlobeIcon,
-  ImageIcon,
   Loader2,
   MessageCircleDashedIcon,
-  PaperclipIcon,
-  PlusIcon,
   RotateCwIcon,
-  TelescopeIcon,
 } from "lucide-react";
 {{#if (eq webDeploy "cloudflare")}}
 import dynamic from "next/dynamic";
@@ -18526,13 +18521,6 @@ import { useState, type FormEvent, type KeyboardEvent } from "react";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@{{projectName}}/ui/components/dropdown-menu";
 import {
   Empty,
   EmptyDescription,
@@ -18754,43 +18742,6 @@ export default function AIPage() {
                     disabled={isBusy}
                   />
                   <InputGroupAddon align="block-end" className="pt-1">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={
-                          <InputGroupButton
-                            aria-label="Add context"
-                            type="button"
-                            size="icon-sm"
-                            variant="outline"
-                          />
-                        }
-                      >
-                        <PlusIcon />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        side="top"
-                        className="w-44"
-                      >
-                        <DropdownMenuItem>
-                          <PaperclipIcon />
-                          Add Photos & Files
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <ImageIcon />
-                          Create Image
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <TelescopeIcon />
-                          Deep Research
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <GlobeIcon />
-                          Web Search
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                     <InputGroupButton
                       type="submit"
                       variant="default"
@@ -18824,14 +18775,9 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import {
   ArrowUpIcon,
-  GlobeIcon,
-  ImageIcon,
   Loader2,
   MessageCircleDashedIcon,
-  PaperclipIcon,
-  PlusIcon,
   RotateCwIcon,
-  TelescopeIcon,
 } from "lucide-react";
 {{#if (eq webDeploy "cloudflare")}}
 import dynamic from "next/dynamic";
@@ -18854,13 +18800,6 @@ import { useState, type FormEvent, type KeyboardEvent } from "react";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@{{projectName}}/ui/components/dropdown-menu";
 import {
   Empty,
   EmptyDescription,
@@ -19051,43 +18990,6 @@ export default function AIPage() {
                     disabled={isSending}
                   />
                   <InputGroupAddon align="block-end" className="pt-1">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={
-                          <InputGroupButton
-                            aria-label="Add context"
-                            type="button"
-                            size="icon-sm"
-                            variant="outline"
-                          />
-                        }
-                      >
-                        <PlusIcon />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        side="top"
-                        className="w-44"
-                      >
-                        <DropdownMenuItem>
-                          <PaperclipIcon />
-                          Add Photos & Files
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <ImageIcon />
-                          Create Image
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <TelescopeIcon />
-                          Deep Research
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <GlobeIcon />
-                          Web Search
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                     <InputGroupButton
                       type="submit"
                       variant="default"
@@ -19125,27 +19027,15 @@ import {
 import { useMutation } from "convex/react";
 import {
   ArrowUpIcon,
-  GlobeIcon,
-  ImageIcon,
   Loader2,
   MessageCircleDashedIcon,
-  PaperclipIcon,
-  PlusIcon,
   RotateCwIcon,
-  TelescopeIcon,
 } from "lucide-react";
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@{{projectName}}/ui/components/dropdown-menu";
 import {
   Empty,
   EmptyDescription,
@@ -19367,43 +19257,6 @@ export default function AI() {
                     disabled={isBusy}
                   />
                   <InputGroupAddon align="block-end" className="pt-1">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={
-                          <InputGroupButton
-                            aria-label="Add context"
-                            type="button"
-                            size="icon-sm"
-                            variant="outline"
-                          />
-                        }
-                      >
-                        <PlusIcon />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        side="top"
-                        className="w-44"
-                      >
-                        <DropdownMenuItem>
-                          <PaperclipIcon />
-                          Add Photos & Files
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <ImageIcon />
-                          Create Image
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <TelescopeIcon />
-                          Deep Research
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <GlobeIcon />
-                          Web Search
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                     <InputGroupButton
                       type="submit"
                       variant="default"
@@ -19435,14 +19288,9 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import {
   ArrowUpIcon,
-  GlobeIcon,
-  ImageIcon,
   Loader2,
   MessageCircleDashedIcon,
-  PaperclipIcon,
-  PlusIcon,
   RotateCwIcon,
-  TelescopeIcon,
 } from "lucide-react";
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
@@ -19450,13 +19298,6 @@ import { env } from "@{{projectName}}/env/web";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@{{projectName}}/ui/components/dropdown-menu";
 import {
   Empty,
   EmptyDescription,
@@ -19646,43 +19487,6 @@ export default function AI() {
                     disabled={isSending}
                   />
                   <InputGroupAddon align="block-end" className="pt-1">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={
-                          <InputGroupButton
-                            aria-label="Add context"
-                            type="button"
-                            size="icon-sm"
-                            variant="outline"
-                          />
-                        }
-                      >
-                        <PlusIcon />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        side="top"
-                        className="w-44"
-                      >
-                        <DropdownMenuItem>
-                          <PaperclipIcon />
-                          Add Photos & Files
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <ImageIcon />
-                          Create Image
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <TelescopeIcon />
-                          Deep Research
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <GlobeIcon />
-                          Web Search
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                     <InputGroupButton
                       type="submit"
                       variant="default"
@@ -19721,27 +19525,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import {
   ArrowUpIcon,
-  GlobeIcon,
-  ImageIcon,
   Loader2,
   MessageCircleDashedIcon,
-  PaperclipIcon,
-  PlusIcon,
   RotateCwIcon,
-  TelescopeIcon,
 } from "lucide-react";
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@{{projectName}}/ui/components/dropdown-menu";
 import {
   Empty,
   EmptyDescription,
@@ -19967,43 +19759,6 @@ function RouteComponent() {
                     disabled={isBusy}
                   />
                   <InputGroupAddon align="block-end" className="pt-1">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={
-                          <InputGroupButton
-                            aria-label="Add context"
-                            type="button"
-                            size="icon-sm"
-                            variant="outline"
-                          />
-                        }
-                      >
-                        <PlusIcon />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        side="top"
-                        className="w-44"
-                      >
-                        <DropdownMenuItem>
-                          <PaperclipIcon />
-                          Add Photos & Files
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <ImageIcon />
-                          Create Image
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <TelescopeIcon />
-                          Deep Research
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <GlobeIcon />
-                          Web Search
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                     <InputGroupButton
                       type="submit"
                       variant="default"
@@ -20036,14 +19791,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { DefaultChatTransport } from "ai";
 import {
   ArrowUpIcon,
-  GlobeIcon,
-  ImageIcon,
   Loader2,
   MessageCircleDashedIcon,
-  PaperclipIcon,
-  PlusIcon,
   RotateCwIcon,
-  TelescopeIcon,
 } from "lucide-react";
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
@@ -20053,13 +19803,6 @@ import { env } from "@{{projectName}}/env/web";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@{{projectName}}/ui/components/dropdown-menu";
 import {
   Empty,
   EmptyDescription,
@@ -20253,43 +19996,6 @@ function RouteComponent() {
                     disabled={isSending}
                   />
                   <InputGroupAddon align="block-end" className="pt-1">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={
-                          <InputGroupButton
-                            aria-label="Add context"
-                            type="button"
-                            size="icon-sm"
-                            variant="outline"
-                          />
-                        }
-                      >
-                        <PlusIcon />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        side="top"
-                        className="w-44"
-                      >
-                        <DropdownMenuItem>
-                          <PaperclipIcon />
-                          Add Photos & Files
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <ImageIcon />
-                          Create Image
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <TelescopeIcon />
-                          Deep Research
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <GlobeIcon />
-                          Web Search
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                     <InputGroupButton
                       type="submit"
                       variant="default"
@@ -20328,27 +20034,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import {
   ArrowUpIcon,
-  GlobeIcon,
-  ImageIcon,
   Loader2,
   MessageCircleDashedIcon,
-  PaperclipIcon,
-  PlusIcon,
   RotateCwIcon,
-  TelescopeIcon,
 } from "lucide-react";
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@{{projectName}}/ui/components/dropdown-menu";
 import {
   Empty,
   EmptyDescription,
@@ -20574,43 +20268,6 @@ function RouteComponent() {
                     disabled={isBusy}
                   />
                   <InputGroupAddon align="block-end" className="pt-1">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={
-                          <InputGroupButton
-                            aria-label="Add context"
-                            type="button"
-                            size="icon-sm"
-                            variant="outline"
-                          />
-                        }
-                      >
-                        <PlusIcon />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        side="top"
-                        className="w-44"
-                      >
-                        <DropdownMenuItem>
-                          <PaperclipIcon />
-                          Add Photos & Files
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <ImageIcon />
-                          Create Image
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <TelescopeIcon />
-                          Deep Research
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <GlobeIcon />
-                          Web Search
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                     <InputGroupButton
                       type="submit"
                       variant="default"
@@ -20643,14 +20300,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { DefaultChatTransport } from "ai";
 import {
   ArrowUpIcon,
-  GlobeIcon,
-  ImageIcon,
   Loader2,
   MessageCircleDashedIcon,
-  PaperclipIcon,
-  PlusIcon,
   RotateCwIcon,
-  TelescopeIcon,
 } from "lucide-react";
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
@@ -20660,13 +20312,6 @@ import { env } from "@{{projectName}}/env/web";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@{{projectName}}/ui/components/dropdown-menu";
 import {
   Empty,
   EmptyDescription,
@@ -20860,43 +20505,6 @@ function RouteComponent() {
                     disabled={isSending}
                   />
                   <InputGroupAddon align="block-end" className="pt-1">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={
-                          <InputGroupButton
-                            aria-label="Add context"
-                            type="button"
-                            size="icon-sm"
-                            variant="outline"
-                          />
-                        }
-                      >
-                        <PlusIcon />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        side="top"
-                        className="w-44"
-                      >
-                        <DropdownMenuItem>
-                          <PaperclipIcon />
-                          Add Photos & Files
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <ImageIcon />
-                          Create Image
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <TelescopeIcon />
-                          Deep Research
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <GlobeIcon />
-                          Web Search
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                     <InputGroupButton
                       type="submit"
                       variant="default"
