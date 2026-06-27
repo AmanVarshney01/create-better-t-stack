@@ -118,35 +118,19 @@ function getAuthExpression(config: ProjectConfig) {
 }
 
 function addAiSdkEvlogTelemetry(content: string, loggerExpression: string) {
-  let nextContent = addNamedImport(content, "evlog/ai", [
-    "createAILogger",
-    "createEvlogIntegration",
-  ]);
+  void loggerExpression;
 
-  if (!nextContent.includes("const ai = createAILogger(")) {
-    nextContent = nextContent.replace(
-      /^(\s*)const model = wrapLanguageModel\({/m,
-      (_match, indent: string) =>
-        `${indent}const ai = createAILogger(${loggerExpression});\n${indent}const model = wrapLanguageModel({`,
+  return content
+    .replace(
+      /^import\s+\{\s*createAILogger,\s*createEvlogIntegration\s*\}\s+from\s+["']evlog\/ai["'];\n/m,
+      "",
+    )
+    .replace(/^\s*const ai = createAILogger\([^)]+\);\n/m, "")
+    .replace(/model:\s*ai\.wrap\(model\),/g, "model,")
+    .replace(
+      /\n\s*telemetry:\s*\{\n\s*isEnabled:\s*true,\n\s*integrations:\s*\[createEvlogIntegration\(ai\)\],\n\s*\},/g,
+      "",
     );
-  }
-
-  if (!nextContent.includes("model: ai.wrap(model)")) {
-    nextContent = nextContent.replace(
-      /(const result = streamText\({\n\s*)model,/,
-      "$1model: ai.wrap(model),",
-    );
-  }
-
-  if (!nextContent.includes("createEvlogIntegration(ai)")) {
-    nextContent = nextContent.replace(
-      /(messages:\s*await convertToModelMessages\([^)]+\),?)/,
-      (match) =>
-        `${match.endsWith(",") ? match : `${match},`}\n\t\ttelemetry: {\n\t\t\tisEnabled: true,\n\t\t\tintegrations: [createEvlogIntegration(ai)],\n\t\t},`,
-    );
-  }
-
-  return nextContent;
 }
 
 function addEvlogBetterAuthServerSetup(

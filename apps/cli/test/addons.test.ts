@@ -1335,7 +1335,7 @@ describe("Addon Configurations", () => {
       expectError(result, "Convex and backend none are not supported yet");
     });
 
-    it("should wire evlog Better Auth and AI SDK helpers for server projects", async () => {
+    it("should wire evlog Better Auth without AI SDK 7 incompatible helpers for server projects", async () => {
       const result = await runTRPCTest({
         projectName: "evlog-hono-auth-ai",
         addons: ["evlog"],
@@ -1368,17 +1368,15 @@ describe("Addon Configurations", () => {
         'await identifyUser(c.get("log"), c.req.raw.headers, c.req.path);',
       );
       expectDocsShapedEvlogAuth(serverIndex);
-      expect(serverIndex).toContain(
-        'import { createAILogger, createEvlogIntegration } from "evlog/ai";',
-      );
-      expect(serverIndex).toContain('const ai = createAILogger(c.get("log"));');
-      expect(serverIndex).toContain("model: ai.wrap(model)");
-      expect(serverIndex).toContain("telemetry:");
+      expect(serverIndex).not.toContain('from "evlog/ai"');
+      expect(serverIndex).not.toContain("createAILogger");
+      expect(serverIndex).not.toContain("model: ai.wrap(model)");
+      expect(serverIndex).not.toContain("telemetry:");
       expect(serverIndex).not.toContain("experimental_telemetry");
-      expect(serverIndex).toContain("integrations: [createEvlogIntegration(ai)]");
+      expect(serverIndex).not.toContain("createEvlogIntegration(ai)");
     });
 
-    it("should wire evlog AI SDK helpers for Express server projects", async () => {
+    it("should avoid evlog AI SDK 7 incompatible helpers for Express server projects", async () => {
       const result = await runTRPCTest({
         projectName: "evlog-express-ai",
         addons: ["evlog"],
@@ -1401,14 +1399,12 @@ describe("Addon Configurations", () => {
       if (!projectDir) throw new Error("Expected generated project directory");
 
       const serverIndex = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf-8");
-      expect(serverIndex).toContain(
-        'import { createAILogger, createEvlogIntegration } from "evlog/ai";',
-      );
-      expect(serverIndex).toContain("const ai = createAILogger(req.log);");
-      expect(serverIndex).toContain("model: ai.wrap(model)");
-      expect(serverIndex).toContain("telemetry:");
+      expect(serverIndex).not.toContain('from "evlog/ai"');
+      expect(serverIndex).not.toContain("createAILogger");
+      expect(serverIndex).not.toContain("model: ai.wrap(model)");
+      expect(serverIndex).not.toContain("telemetry:");
       expect(serverIndex).not.toContain("experimental_telemetry");
-      expect(serverIndex).toContain("integrations: [createEvlogIntegration(ai)]");
+      expect(serverIndex).not.toContain("createEvlogIntegration(ai)");
     });
 
     it("should wire evlog request and auth helpers for Next fullstack AI projects", async () => {
