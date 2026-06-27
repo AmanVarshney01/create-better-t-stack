@@ -1,23 +1,42 @@
 {{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
-  useUIMessages,
   useSmoothText,
+  useUIMessages,
 } from "@convex-dev/agent/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { Send, Loader2 } from "lucide-react";
-import { useRef, useEffect, useState, type FormEvent } from "react";
+import { Loader2, Send } from "lucide-react";
+import { useState, type FormEvent } from "react";
 import { Streamdown } from "streamdown";
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Marker,
+  MarkerContent,
+  MarkerIcon,
+} from "@{{projectName}}/ui/components/marker";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
 });
 
-function MessageContent({
+function StreamingMessageText({
   text,
   isStreaming,
 }: {
@@ -27,6 +46,7 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
+
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
@@ -34,7 +54,6 @@ function RouteComponent() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
@@ -44,10 +63,6 @@ function RouteComponent() {
     threadId ? { threadId } : "skip",
     { initialNumItems: 50, stream: true },
   );
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const hasStreamingMessage = messages?.some(
     (m) => m.status === "streaming",
@@ -77,49 +92,67 @@ function RouteComponent() {
   };
 
   return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {!messages || messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={`${message.order}-${message.stepOrder}`}
-              className={`p-3 rounded-lg ${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              <MessageContent
-                text={(message.parts ?? [])
-                  .map((part) => (part.type === "text" ? part.text : ""))
-                  .join("")}
-                isStreaming={message.status === "streaming"}
-              />
-            </div>
-          ))
-        )}
-        {isLoading && !hasStreamingMessage && (
-          <div className="p-3 rounded-lg bg-secondary/20 mr-8">
-            <p className="text-sm font-semibold mb-1">AI Assistant</p>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Thinking...</span>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+    <div className="grid h-full min-h-0 w-full grid-rows-[1fr_auto] overflow-hidden p-4">
+      <MessageScrollerProvider>
+        <MessageScroller>
+          <MessageScrollerViewport>
+            <MessageScrollerContent className="gap-4 pb-4">
+              {!messages || messages.length === 0 ? (
+                <MessageScrollerItem className="flex min-h-full items-center justify-center px-6">
+                  <Marker variant="separator" className="max-w-md justify-center">
+                    <MarkerContent>Ask me anything to get started!</MarkerContent>
+                  </Marker>
+                </MessageScrollerItem>
+              ) : (
+                messages.map((message) => {
+                  const isUser = message.role === "user";
+
+                  return (
+                    <MessageScrollerItem key={`${message.order}-${message.stepOrder}`}>
+                      <Message align={isUser ? "end" : "start"}>
+                        <MessageBody>
+                          <MessageHeader>
+                            {isUser ? "You" : "AI Assistant"}
+                          </MessageHeader>
+                          <Bubble
+                            align={isUser ? "end" : "start"}
+                            variant={isUser ? "default" : "secondary"}
+                          >
+                            <BubbleContent>
+                              <StreamingMessageText
+                                text={(message.parts ?? [])
+                                  .map((part) => (part.type === "text" ? part.text : ""))
+                                  .join("")}
+                                isStreaming={message.status === "streaming"}
+                              />
+                            </BubbleContent>
+                          </Bubble>
+                        </MessageBody>
+                      </Message>
+                    </MessageScrollerItem>
+                  );
+                })
+              )}
+              {isLoading && !hasStreamingMessage && (
+                <MessageScrollerItem>
+                  <Marker>
+                    <MarkerIcon>
+                      <Loader2 className="size-3.5 animate-spin" />
+                    </MarkerIcon>
+                    <MarkerContent className="shimmer">Thinking...</MarkerContent>
+                  </Marker>
+                </MessageScrollerItem>
+              )}
+              <MessageScrollerItem scrollAnchor />
+            </MessageScrollerContent>
+          </MessageScrollerViewport>
+          <MessageScrollerButton />
+        </MessageScroller>
+      </MessageScrollerProvider>
 
       <form
         onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
+        className="flex w-full items-center gap-2 border-t pt-2"
       >
         <Input
           name="prompt"
@@ -131,9 +164,14 @@ function RouteComponent() {
           autoFocus
           disabled={isLoading}
         />
-        <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+        <Button
+          type="submit"
+          size="icon"
+          aria-label="Send message"
+          disabled={isLoading || !input.trim()}
+        >
           {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="size-4 animate-spin" />
           ) : (
             <Send size={18} />
           )}
@@ -143,18 +181,37 @@ function RouteComponent() {
   );
 }
 {{else}}
-import { createFileRoute } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
+import { createFileRoute } from "@tanstack/react-router";
 import { DefaultChatTransport } from "ai";
-import { Send } from "lucide-react";
-import { useRef, useEffect, useState, type FormEvent } from "react";
+import { Loader2, Send } from "lucide-react";
+import { useState, type FormEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 {{/unless}}
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Marker,
+  MarkerContent,
+  MarkerIcon,
+} from "@{{projectName}}/ui/components/marker";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
@@ -167,12 +224,7 @@ function RouteComponent() {
       api: {{#if (eq backend "self")}}"/api/ai"{{else}}`${env.VITE_SERVER_URL}/ai`{{/if}},
     }),
   });
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const isSending = status === "submitted" || status === "streaming";
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -183,47 +235,74 @@ function RouteComponent() {
   };
 
   return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={`p-3 rounded-lg ${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              {message.parts?.map((part, index) => {
-                if (part.type === "text") {
+    <div className="grid h-full min-h-0 w-full grid-rows-[1fr_auto] overflow-hidden p-4">
+      <MessageScrollerProvider>
+        <MessageScroller>
+          <MessageScrollerViewport>
+            <MessageScrollerContent className="gap-4 pb-4">
+              {messages.length === 0 ? (
+                <MessageScrollerItem className="flex min-h-full items-center justify-center px-6">
+                  <Marker variant="separator" className="max-w-md justify-center">
+                    <MarkerContent>Ask me anything to get started!</MarkerContent>
+                  </Marker>
+                </MessageScrollerItem>
+              ) : (
+                messages.map((message) => {
+                  const isUser = message.role === "user";
+
                   return (
-                    <Streamdown
-                      key={index}
-                      isAnimating={status === "streaming" && message.role === "assistant"}
-                    >
-                      {part.text}
-                    </Streamdown>
+                    <MessageScrollerItem key={message.id}>
+                      <Message align={isUser ? "end" : "start"}>
+                        <MessageBody>
+                          <MessageHeader>
+                            {isUser ? "You" : "AI Assistant"}
+                          </MessageHeader>
+                          <Bubble
+                            align={isUser ? "end" : "start"}
+                            variant={isUser ? "default" : "secondary"}
+                          >
+                            <BubbleContent>
+                              {message.parts?.map((part, index) => {
+                                if (part.type === "text") {
+                                  return (
+                                    <Streamdown
+                                      key={index}
+                                      isAnimating={status === "streaming" && message.role === "assistant"}
+                                    >
+                                      {part.text}
+                                    </Streamdown>
+                                  );
+                                }
+                                return null;
+                              })}
+                            </BubbleContent>
+                          </Bubble>
+                        </MessageBody>
+                      </Message>
+                    </MessageScrollerItem>
                   );
-                }
-                return null;
-              })}
-            </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+                })
+              )}
+              {status === "submitted" && (
+                <MessageScrollerItem>
+                  <Marker>
+                    <MarkerIcon>
+                      <Loader2 className="size-3.5 animate-spin" />
+                    </MarkerIcon>
+                    <MarkerContent className="shimmer">Thinking...</MarkerContent>
+                  </Marker>
+                </MessageScrollerItem>
+              )}
+              <MessageScrollerItem scrollAnchor />
+            </MessageScrollerContent>
+          </MessageScrollerViewport>
+          <MessageScrollerButton />
+        </MessageScroller>
+      </MessageScrollerProvider>
 
       <form
         onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
+        className="flex w-full items-center gap-2 border-t pt-2"
       >
         <Input
           name="prompt"
@@ -234,8 +313,17 @@ function RouteComponent() {
           autoComplete="off"
           autoFocus
         />
-        <Button type="submit" size="icon">
-          <Send size={18} />
+        <Button
+          type="submit"
+          size="icon"
+          aria-label="Send message"
+          disabled={isSending || !input.trim()}
+        >
+          {isSending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Send size={18} />
+          )}
         </Button>
       </form>
     </div>
