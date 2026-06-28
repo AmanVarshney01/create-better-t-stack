@@ -223,7 +223,7 @@ describe("API Configurations", () => {
 
   describe("No API", () => {
     it("should work with API none + basic setup", async () => {
-      const result = await runTRPCTest({
+      const config = {
         projectName: "api-none-basic",
         api: "none",
         frontend: ["tanstack-router"],
@@ -238,13 +238,34 @@ describe("API Configurations", () => {
         webDeploy: "none",
         serverDeploy: "none",
         install: false,
-      });
+      } satisfies TestConfig;
+
+      const result = await runTRPCTest(config);
 
       expectSuccess(result);
+
+      const virtualResult = await createVirtual({
+        ...config,
+        git: false,
+        packageManager: "bun",
+        payments: "none",
+      });
+      expect(virtualResult.isOk()).toBe(true);
+      if (virtualResult.isErr()) {
+        throw virtualResult.error;
+      }
+
+      const files = collectFiles(virtualResult.value.root, virtualResult.value.root.path);
+      const envPackageJson = JSON.parse(files.get("packages/env/package.json") ?? "{}");
+      const baseTsconfig = files.get("packages/config/tsconfig.base.json");
+
+      expect(envPackageJson.devDependencies?.["@types/bun"]).toBeDefined();
+      expect(envPackageJson.devDependencies?.["@types/node"]).toBeUndefined();
+      expect(baseTsconfig).toContain('"bun"');
     });
 
     it("should work with API none + frontend only", async () => {
-      const result = await runTRPCTest({
+      const config = {
         projectName: "api-none-frontend-only",
         api: "none",
         frontend: ["tanstack-router"],
@@ -259,9 +280,29 @@ describe("API Configurations", () => {
         webDeploy: "none",
         serverDeploy: "none",
         install: false,
-      });
+      } satisfies TestConfig;
+
+      const result = await runTRPCTest(config);
 
       expectSuccess(result);
+
+      const virtualResult = await createVirtual({
+        ...config,
+        git: false,
+        packageManager: "bun",
+        payments: "none",
+      });
+      expect(virtualResult.isOk()).toBe(true);
+      if (virtualResult.isErr()) {
+        throw virtualResult.error;
+      }
+
+      const files = collectFiles(virtualResult.value.root, virtualResult.value.root.path);
+      const envPackageJson = JSON.parse(files.get("packages/env/package.json") ?? "{}");
+      const baseTsconfig = files.get("packages/config/tsconfig.base.json");
+
+      expect(envPackageJson.devDependencies?.["@types/node"]).toBeDefined();
+      expect(baseTsconfig).toContain('"node"');
     });
 
     it("should work with API none + convex", async () => {
