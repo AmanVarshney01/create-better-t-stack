@@ -35,7 +35,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   const envDep = packages.env ? { [`@${projectName}/env`]: workspaceVersion } : {};
   const uiDep = packages.ui ? { [`@${projectName}/ui`]: workspaceVersion } : {};
   const isCloudflare = serverDeploy === "cloudflare" || webDeploy === "cloudflare";
-  const runtimeDevDeps = getRuntimeDevDeps(runtime, backend);
+  const runtimeDevDeps = getRuntimeDevDeps(runtime);
   const commonDeps: AvailableDependencies[] = ["dotenv", "zod"];
   const commonDevDeps: AvailableDependencies[] = ["typescript", ...runtimeDevDeps];
 
@@ -185,11 +185,8 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   }
 }
 
-function getRuntimeDevDeps(
-  runtime: ProjectConfig["runtime"],
-  backend: ProjectConfig["backend"],
-): AvailableDependencies[] {
-  if (runtime === "none" && backend === "self") return ["@types/node"];
+function getRuntimeDevDeps(runtime: ProjectConfig["runtime"]): AvailableDependencies[] {
+  if (runtime === "none") return ["@types/node"];
   if (runtime === "node" || runtime === "workers") return ["@types/node"];
   if (runtime === "bun") return ["@types/bun"];
   return [];

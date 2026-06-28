@@ -1,4 +1,6 @@
-{{#if (eq webDeploy "cloudflare")}}
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+import adapter from '@sveltejs/adapter-static';
+{{else if (eq webDeploy "cloudflare")}}
 import alchemy from 'alchemy/cloudflare/sveltekit';
 {{else if (eq webDeploy "docker")}}
 import adapter from '@sveltejs/adapter-node';
@@ -14,7 +16,14 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
-{{#if (eq webDeploy "cloudflare")}}
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+		// adapter-static emits files Electrobun and Tauri can bundle directly.
+		adapter: adapter({
+			pages: 'build',
+			assets: 'build',
+			fallback: 'index.html'
+		})
+{{else if (eq webDeploy "cloudflare")}}
 		// Alchemy's adapter wraps SvelteKit's Cloudflare adapter for local platform.env and Worker builds.
 		adapter: alchemy()
 {{else if (eq webDeploy "docker")}}

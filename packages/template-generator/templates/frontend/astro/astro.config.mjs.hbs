@@ -1,12 +1,19 @@
 // @ts-check
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, envField } from "astro/config";
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+{{else}}
 import node from "@astrojs/node";
+{{/if}}
 
 // https://astro.build/config
 export default defineConfig({
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+  output: "static",
+{{else}}
   output: "server",
   adapter: node({ mode: "standalone" }),
+{{/if}}
 {{#if (ne backend "self")}}
   env: {
     schema: {

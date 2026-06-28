@@ -223,7 +223,7 @@ describe("API Configurations", () => {
 
   describe("No API", () => {
     it("should work with API none + basic setup", async () => {
-      const result = await runTRPCTest({
+      const config = {
         projectName: "api-none-basic",
         api: "none",
         frontend: ["tanstack-router"],
@@ -238,13 +238,34 @@ describe("API Configurations", () => {
         webDeploy: "none",
         serverDeploy: "none",
         install: false,
-      });
+      } satisfies TestConfig;
+
+      const result = await runTRPCTest(config);
 
       expectSuccess(result);
+
+      const virtualResult = await createVirtual({
+        ...config,
+        git: false,
+        packageManager: "bun",
+        payments: "none",
+      });
+      expect(virtualResult.isOk()).toBe(true);
+      if (virtualResult.isErr()) {
+        throw virtualResult.error;
+      }
+
+      const files = collectFiles(virtualResult.value.root, virtualResult.value.root.path);
+      const envPackageJson = JSON.parse(files.get("packages/env/package.json") ?? "{}");
+      const baseTsconfig = files.get("packages/config/tsconfig.base.json");
+
+      expect(envPackageJson.devDependencies?.["@types/bun"]).toBeDefined();
+      expect(envPackageJson.devDependencies?.["@types/node"]).toBeUndefined();
+      expect(baseTsconfig).toContain('"bun"');
     });
 
     it("should work with API none + frontend only", async () => {
-      const result = await runTRPCTest({
+      const config = {
         projectName: "api-none-frontend-only",
         api: "none",
         frontend: ["tanstack-router"],
@@ -259,9 +280,29 @@ describe("API Configurations", () => {
         webDeploy: "none",
         serverDeploy: "none",
         install: false,
-      });
+      } satisfies TestConfig;
+
+      const result = await runTRPCTest(config);
 
       expectSuccess(result);
+
+      const virtualResult = await createVirtual({
+        ...config,
+        git: false,
+        packageManager: "bun",
+        payments: "none",
+      });
+      expect(virtualResult.isOk()).toBe(true);
+      if (virtualResult.isErr()) {
+        throw virtualResult.error;
+      }
+
+      const files = collectFiles(virtualResult.value.root, virtualResult.value.root.path);
+      const envPackageJson = JSON.parse(files.get("packages/env/package.json") ?? "{}");
+      const baseTsconfig = files.get("packages/config/tsconfig.base.json");
+
+      expect(envPackageJson.devDependencies?.["@types/node"]).toBeDefined();
+      expect(baseTsconfig).toContain('"node"');
     });
 
     it("should work with API none + convex", async () => {
@@ -574,6 +615,74 @@ describe("API Configurations", () => {
       expect(contextFile).toContain(
         "export async function createContext(req: IncomingHttpHeaders)",
       );
+    });
+
+    it("should scaffold native oRPC with Expo fetch support for each auth branch", async () => {
+      const cases = [
+        {
+          auth: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          expected: ["fetch: expoFetch"],
+        },
+        {
+          auth: "better-auth",
+          database: "sqlite",
+          orm: "drizzle",
+          expected: [
+            'import { authClient } from "@/lib/auth-client";',
+            'import { Platform } from "react-native";',
+            'credentials: Platform.OS === "web" ? "include" : "omit"',
+            "const cookies = authClient.getCookie();",
+            "return expoFetch(request, {",
+          ],
+        },
+        {
+          auth: "clerk",
+          database: "none",
+          orm: "none",
+          expected: [
+            'import { getClerkAuthToken } from "@/utils/clerk-auth";',
+            "const token = await getClerkAuthToken();",
+            "return token ? { Authorization: `Bearer ${token}` } : {};",
+            "fetch: expoFetch",
+          ],
+        },
+      ] as const;
+
+      for (const testCase of cases) {
+        const result = await createVirtual({
+          projectName: `native-orpc-expo-fetch-${testCase.auth}`,
+          api: "orpc",
+          frontend: ["native-bare"],
+          backend: "hono",
+          runtime: "bun",
+          database: testCase.database,
+          orm: testCase.orm,
+          auth: testCase.auth,
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+          payments: "none",
+        });
+
+        if (result.isErr()) {
+          throw result.error;
+        }
+
+        const files = collectFiles(result.value.root, result.value.root.path);
+        const orpcFile = files.get("apps/native/utils/orpc.ts");
+
+        expect(orpcFile).toContain('const { fetch } = await import("expo/fetch");');
+        for (const expected of testCase.expected) {
+          expect(orpcFile).toContain(expected);
+        }
+      }
     });
 
     it("should scaffold TanStack Start oRPC with a request-scoped query client", async () => {

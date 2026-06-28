@@ -135,7 +135,7 @@ export async function displayPostInstallInstructions(
 
   const betterAuthConvexInstructions =
     isConvex && config.auth === "better-auth"
-      ? getBetterAuthConvexInstructions(hasWeb ?? false, webPort, packageManager)
+      ? getBetterAuthConvexInstructions(hasWeb ?? false, webPort, packageManager, runCmd)
       : "";
   const polarInstructions =
     config.payments === "polar" && config.auth === "better-auth"
@@ -271,7 +271,7 @@ function getNativeInstructions(
       ? "4321"
       : "3001";
   const exampleUrl = isConvex
-    ? "https://<YOUR_CONVEX_URL>"
+    ? "https://example.convex.cloud"
     : isBackendSelf
       ? `http://<YOUR_LOCAL_IP>:${selfBackendPort}`
       : "http://<YOUR_LOCAL_IP>:3000";
@@ -444,7 +444,7 @@ function getElectrobunInstructions(runCmd: string, frontend: Frontend[]) {
     "•",
   )} Build canary desktop app: ${`${runCmd} build:desktop:canary`}\n${pc.yellow(
     "NOTE:",
-  )} Electrobun wraps your web frontend in a desktop shell.\n   See: ${"https://blackboard.sh/electrobun/docs/"}${
+  )} Electrobun wraps your web frontend in a desktop shell.\n   See: ${"https://framework.blackboard.sh/electrobun/"}${
     staticBuildNote ? `\n${staticBuildNote}` : ""
   }`;
 }
@@ -576,10 +576,17 @@ function getClerkInstructions(frontend: Frontend[], backend: Backend, api: Proje
   return lines.join("\n");
 }
 
-function getBetterAuthConvexInstructions(hasWeb: boolean, webPort: string, packageManager: string) {
+function getBetterAuthConvexInstructions(
+  hasWeb: boolean,
+  webPort: string,
+  packageManager: string,
+  runCmd: string,
+) {
   const cmd = packageManager === "npm" ? "npx" : packageManager;
   return (
     `${pc.bold("Better Auth + Convex Setup:")}\n` +
+    `${pc.cyan("•")} Configure the Convex deployment before setting env vars:\n` +
+    `${pc.white(`   ${runCmd} dev:setup`)}\n` +
     `${pc.cyan("•")} Set environment variables from ${pc.white("packages/backend")}:\n` +
     `${pc.white("   cd packages/backend")}\n` +
     `${pc.white(`   ${cmd} convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)`)}\n` +

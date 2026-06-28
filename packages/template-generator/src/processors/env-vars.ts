@@ -13,6 +13,9 @@ type AddEnvVariablesOptions = {
   commentOutEmptyValues?: boolean;
 };
 
+const CONVEX_URL_PLACEHOLDER = "https://example.convex.cloud";
+const CONVEX_SITE_URL_PLACEHOLDER = "https://example.convex.site";
+
 function generateRandomString(length: number, charset: string) {
   let result = "";
   if (
@@ -143,7 +146,7 @@ function buildClientVars(
 
   const baseVar = getClientServerVar(frontend, backend);
   const envVarName = backend === "convex" ? getConvexVar(frontend) : baseVar.key;
-  const serverUrl = backend === "convex" ? "https://<YOUR_CONVEX_URL>" : baseVar.value;
+  const serverUrl = backend === "convex" ? CONVEX_URL_PLACEHOLDER : baseVar.value;
 
   const vars: EnvVariable[] = [
     {
@@ -187,13 +190,13 @@ function buildClientVars(
     if (hasNextJs) {
       vars.push({
         key: "NEXT_PUBLIC_CONVEX_SITE_URL",
-        value: "https://<YOUR_CONVEX_URL>",
+        value: CONVEX_SITE_URL_PLACEHOLDER,
         condition: true,
       });
     } else if (hasReactRouter || hasTanStackRouter || hasTanStackStart) {
       vars.push({
         key: "VITE_CONVEX_SITE_URL",
-        value: "https://<YOUR_CONVEX_URL>",
+        value: CONVEX_SITE_URL_PLACEHOLDER,
         condition: true,
       });
     }
@@ -224,7 +227,7 @@ function buildNativeVars(
 
   if (backend === "convex") {
     envVarName = "EXPO_PUBLIC_CONVEX_URL";
-    serverUrl = "https://<YOUR_CONVEX_URL>";
+    serverUrl = CONVEX_URL_PLACEHOLDER;
   }
 
   const vars: EnvVariable[] = [
@@ -246,7 +249,7 @@ function buildNativeVars(
   if (backend === "convex" && auth === "better-auth") {
     vars.push({
       key: "EXPO_PUBLIC_CONVEX_SITE_URL",
-      value: "https://<YOUR_CONVEX_URL>",
+      value: CONVEX_SITE_URL_PLACEHOLDER,
       condition: true,
     });
   }
@@ -408,7 +411,7 @@ function buildConvexCommentBlocks(
   if (auth === "better-auth") {
     commentBlocks += `# Set Convex environment variables
 # npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
-${needsConvexSiteUrl ? "# npx convex env set CONVEX_SITE_URL https://<YOUR_CONVEX_SITE_URL>\n" : ""}${hasWeb || hasNative ? `# npx convex env set SITE_URL ${defaultSiteUrl}\n` : ""}`;
+${needsConvexSiteUrl ? `# npx convex env set CONVEX_SITE_URL ${CONVEX_SITE_URL_PLACEHOLDER}\n` : ""}${hasWeb || hasNative ? `# npx convex env set SITE_URL ${defaultSiteUrl}\n` : ""}`;
   }
 
   if (payments === "polar") {

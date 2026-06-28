@@ -113,6 +113,15 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   }
 
   if (addons.includes("electrobun")) {
+    // Root `dev` stays the standard aggregate; the desktop has no `dev` script so
+    // it's skipped. Root `build` runs the non-desktop workspaces, then the desktop
+    // (which self-builds its web app, mirroring `vite build && electrobun build`) —
+    // serialized so PMs without topological ordering don't run two web builds at once.
+    scripts.build = getElectrobunRootBuildCommand(vfs, packageManager, {
+      hasTurborepo,
+      hasNx,
+      hasVitePlus,
+    });
     scripts["dev:desktop"] = pmConfig.filter("desktop", "dev:hmr");
     scripts["build:desktop"] = pmConfig.filter("desktop", "build:stable");
     scripts["build:desktop:canary"] = pmConfig.filter("desktop", "build:canary");
@@ -263,10 +272,10 @@ function getPackageManagerConfig(
 ): PackageManagerConfig {
   if (options.hasTurborepo) {
     return {
-      dev: "turbo dev",
-      build: "turbo build",
-      checkTypes: "turbo check-types",
-      filter: (workspace, script) => `turbo -F ${workspace} ${script}`,
+      dev: "turbo run dev",
+      build: "turbo run build",
+      checkTypes: "turbo run check-types",
+      filter: (workspace, script) => `turbo run ${script} -F ${workspace}`,
     };
   }
 
@@ -298,9 +307,11 @@ function getPackageManagerConfig(
       };
     case "npm":
       return {
-        dev: "npm run dev --workspaces",
-        build: "npm run build --workspaces",
-        checkTypes: "npm run check-types --workspaces",
+        // --if-present so workspaces without the script (e.g. the desktop shell
+        // has no `dev`) are skipped instead of erroring "Missing script".
+        dev: "npm run dev --workspaces --if-present",
+        build: "npm run build --workspaces --if-present",
+        checkTypes: "npm run check-types --workspaces --if-present",
         filter: (workspace, script) => `npm run ${script} --workspace ${workspace}`,
       };
     case "bun":
@@ -314,6 +325,65 @@ function getPackageManagerConfig(
   }
 }
 
+function getElectrobunRootBuildCommand(
+  vfs: VirtualFileSystem,
+  packageManager: ProjectConfig["packageManager"],
+  options: { hasTurborepo: boolean; hasNx: boolean; hasVitePlus: boolean },
+): string {
+  if (options.hasTurborepo) {
+    return "turbo run build --filter='!desktop' && turbo run build -F desktop";
+  }
+
+  if (options.hasNx) {
+    return "nx run-many -t build --exclude=desktop && nx run-many -t build --projects=desktop";
+  }
+
+  if (options.hasVitePlus) {
+    return "vp run -r build --filter '!desktop' && vp run --filter desktop build";
+  }
+
+  switch (packageManager) {
+    case "npm":
+      return [
+        ...getWorkspacePackagePathsWithScript(vfs, "build")
+          .filter((workspacePath) => workspacePath !== "apps/desktop")
+          .map((workspacePath) => `npm run build --workspace ${workspacePath} --if-present`),
+        "npm run build --workspace apps/desktop",
+      ].join(" && ");
+    case "pnpm":
+      return "pnpm -r --filter '!desktop' build && pnpm --filter desktop build";
+    case "bun":
+    default:
+      return "bun run --filter '!desktop' build && bun run --filter desktop build";
+  }
+}
+
+function getWorkspacePackagePathsWithScript(vfs: VirtualFileSystem, scriptName: string): string[] {
+  return vfs
+    .getAllFiles()
+    .filter((filePath) => filePath.endsWith("/package.json"))
+    .map((filePath) => filePath.slice(0, -"/package.json".length))
+    .filter(
+      (workspacePath) => workspacePath.startsWith("apps/") || workspacePath.startsWith("packages/"),
+    )
+    .filter((workspacePath) => {
+      const pkgJson = vfs.readJson<PackageJson>(`${workspacePath}/package.json`);
+      return Boolean(pkgJson?.scripts?.[scriptName]);
+    })
+    .sort(compareWorkspacePackagePaths);
+}
+
+function compareWorkspacePackagePaths(a: string, b: string): number {
+  const group = (workspacePath: string) => {
+    if (workspacePath === "apps/desktop") return 3;
+    if (workspacePath.startsWith("packages/")) return 0;
+    if (workspacePath === "apps/web") return 2;
+    return 1;
+  };
+
+  return group(a) - group(b) || a.localeCompare(b);
+}
+
 function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const pkgJson = vfs.readJson<PackageJson>("apps/desktop/package.json");
   if (!pkgJson) return;
@@ -322,6 +392,7 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
   const hasTurborepo = addons.includes("turborepo");
   const hasNx = addons.includes("nx");
   const hasVitePlus = addons.includes("vite-plus");
+  // Nuxt emits its static bundle via `generate`; every other frontend via `build`.
   const desktopBuildScript: DesktopWebScript = frontend.includes("nuxt") ? "generate" : "build";
   const webBuildCommand = getDesktopWebCommand(
     packageManager,
@@ -337,9 +408,13 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
 
   pkgJson.scripts = {
     ...pkgJson.scripts,
-    start: `${webBuildCommand} && electrobun dev`,
-    dev: "electrobun dev --watch",
-    "dev:hmr": `concurrently "${localRunCommand} hmr" "${localRunCommand} start"`,
+    start: "electrobun dev",
+    // No `dev` script on purpose: the root `dev` aggregate skips desktop so it
+    // never auto-launches the native window. Use `dev:desktop` (dev:hmr) instead.
+    // build* mirrors the official electrobun pattern (`vite build && electrobun
+    // build`): build the web app, then electrobun. The root build serializes this
+    // so package managers without topological ordering don't race on the web build.
+    "dev:hmr": `concurrently "${localRunCommand} hmr" "electrobun dev --watch"`,
     hmr: webDevCommand,
     build: `${webBuildCommand} && electrobun build`,
     "build:stable": `${webBuildCommand} && electrobun build --env=stable`,
@@ -356,7 +431,7 @@ function getDesktopWebCommand(
   script: DesktopWebScript,
 ): string {
   if (options.hasTurborepo) {
-    return `turbo -F web ${script}`;
+    return `turbo run ${script} -F web`;
   }
 
   if (options.hasNx) {

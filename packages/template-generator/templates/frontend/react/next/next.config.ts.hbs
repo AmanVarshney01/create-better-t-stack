@@ -7,7 +7,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
 	typedRoutes: true,
 	reactCompiler: true,
-	{{#if (eq webDeploy "docker")}}
+	{{#if (or (includes addons "tauri") (and (includes addons "electrobun") (or (ne backend "convex") (ne auth "better-auth"))))}}
+	output: "export",
+	{{else if (eq webDeploy "docker")}}
 	output: "standalone",
 	{{/if}}
 	{{#if (includes examples "ai")}}

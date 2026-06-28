@@ -28,12 +28,6 @@ export function validateProjectName(name: string): string | undefined {
 export const hasPWACompatibleFrontend = (webFrontend: string[]) =>
   webFrontend.some((f) => ["tanstack-router", "react-router", "solid", "next"].includes(f));
 
-export const hasTauriCompatibleFrontend = (webFrontend: string[]) =>
-  webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
-
-export const hasElectrobunCompatibleFrontend = (webFrontend: string[]) =>
-  webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
-
 const clerkSupportedBackends = [
   "convex",
   "hono",
@@ -94,6 +88,17 @@ export const hasClerkCompatibleBackend = (backend: string) =>
 
 const isSelfHostedFullstackBackend = (backend: string) =>
   selfHostedFullstackBackends.includes(backend as (typeof selfHostedFullstackBackends)[number]);
+
+const hasStaticDesktopCompatibleBackend = (backend: string) =>
+  !isSelfHostedFullstackBackend(backend);
+
+export const hasTauriCompatibleFrontend = (webFrontend: string[], backend = "") =>
+  hasStaticDesktopCompatibleBackend(backend) &&
+  webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
+
+export const hasElectrobunCompatibleFrontend = (webFrontend: string[], backend = "") =>
+  hasStaticDesktopCompatibleBackend(backend) &&
+  webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
 
 export const hasEvlogCompatibleBackend = (backend: string) =>
   ["hono", "express", "fastify", "elysia", ...selfHostedFullstackBackends].includes(backend);
@@ -614,8 +619,11 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // ============================================
 
   const pwaCompat = hasPWACompatibleFrontend(nextStack.webFrontend);
-  const tauriCompat = hasTauriCompatibleFrontend(nextStack.webFrontend);
-  const electrobunCompat = hasElectrobunCompatibleFrontend(nextStack.webFrontend);
+  const tauriCompat = hasTauriCompatibleFrontend(nextStack.webFrontend, nextStack.backend);
+  const electrobunCompat = hasElectrobunCompatibleFrontend(
+    nextStack.webFrontend,
+    nextStack.backend,
+  );
   const evlogCompat = hasEvlogCompatibleBackend(nextStack.backend);
 
   if (!pwaCompat && nextStack.addons.includes("pwa")) {
@@ -628,7 +636,12 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     nextStack.addons = nextStack.addons.filter((a) => a !== "tauri");
     if (nextStack.addons.length === 0) nextStack.addons = ["none"];
     changed = true;
-    changes.push({ category: "addons", message: "Tauri removed (requires compatible frontend)" });
+    changes.push({
+      category: "addons",
+      message: isSelfHostedFullstackBackend(nextStack.backend)
+        ? "Tauri removed (requires a separate backend or no backend)"
+        : "Tauri removed (requires compatible frontend)",
+    });
   }
   if (!electrobunCompat && nextStack.addons.includes("electrobun")) {
     nextStack.addons = nextStack.addons.filter((a) => a !== "electrobun");
@@ -636,7 +649,9 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     changed = true;
     changes.push({
       category: "addons",
-      message: "Electrobun removed (requires compatible frontend)",
+      message: isSelfHostedFullstackBackend(nextStack.backend)
+        ? "Electrobun removed (requires a separate backend or no backend)"
+        : "Electrobun removed (requires compatible frontend)",
     });
   }
   if (!evlogCompat && nextStack.addons.includes("evlog")) {
@@ -1088,10 +1103,22 @@ export const getDisabledReason = (
     if (optionId === "pwa" && !hasPWACompatibleFrontend(currentStack.webFrontend)) {
       return "PWA requires TanStack Router, React Router, Solid, or Next.js";
     }
-    if (optionId === "tauri" && !hasTauriCompatibleFrontend(currentStack.webFrontend)) {
+    if (
+      optionId === "tauri" &&
+      !hasTauriCompatibleFrontend(currentStack.webFrontend, currentStack.backend)
+    ) {
+      if (isSelfHostedFullstackBackend(currentStack.backend)) {
+        return "Tauri requires a separate backend or no backend";
+      }
       return "Tauri requires a web frontend";
     }
-    if (optionId === "electrobun" && !hasElectrobunCompatibleFrontend(currentStack.webFrontend)) {
+    if (
+      optionId === "electrobun" &&
+      !hasElectrobunCompatibleFrontend(currentStack.webFrontend, currentStack.backend)
+    ) {
+      if (isSelfHostedFullstackBackend(currentStack.backend)) {
+        return "Electrobun requires a separate backend or no backend";
+      }
       return "Electrobun requires a web frontend";
     }
     if (optionId === "evlog" && !hasEvlogCompatibleBackend(currentStack.backend)) {

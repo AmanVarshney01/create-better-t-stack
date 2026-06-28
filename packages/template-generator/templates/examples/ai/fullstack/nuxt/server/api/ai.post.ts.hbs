@@ -1,6 +1,6 @@
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { google } from "@ai-sdk/google";
-import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
@@ -16,5 +16,7 @@ export default defineEventHandler(async (event) => {
     messages: await convertToModelMessages(uiMessages),
   });
 
-  return result.toUIMessageStreamResponse();
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
 });

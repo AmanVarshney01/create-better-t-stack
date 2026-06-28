@@ -226,6 +226,50 @@ describe("Addon Configurations", () => {
           expectError(result, "tauri addon requires one of these frontends");
         });
       }
+
+      it("should fail with Tauri + backend self", async () => {
+        const result = await runTRPCTest({
+          projectName: "tauri-self-backend-fail",
+          addons: ["tauri"],
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          api: "orpc",
+          examples: ["ai"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          expectError: true,
+        });
+
+        expectError(result, "tauri addon requires a separate backend or no backend");
+      });
+
+      for (const frontend of ["next", "tanstack-start"] as const) {
+        it(`should fail with Tauri + Convex Better Auth + ${frontend}`, async () => {
+          const result = await runTRPCTest({
+            projectName: `tauri-convex-better-auth-${frontend}-fail`,
+            addons: ["tauri"],
+            frontend: [frontend],
+            backend: "convex",
+            runtime: "none",
+            database: "none",
+            orm: "none",
+            auth: "better-auth",
+            api: "none",
+            examples: ["ai"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            expectError: true,
+          });
+
+          expectError(result, "server auth bootstrap");
+        });
+      }
     });
 
     describe("Electrobun Addon", () => {
@@ -291,6 +335,61 @@ describe("Addon Configurations", () => {
           expectError(result, "electrobun addon requires one of these frontends");
         });
       }
+
+      it("should fail with Electrobun + backend self", async () => {
+        const result = await runTRPCTest({
+          projectName: "electrobun-self-backend-fail",
+          addons: ["electrobun"],
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          api: "orpc",
+          examples: ["ai"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          expectError: true,
+        });
+
+        expectError(result, "electrobun addon requires a separate backend or no backend");
+      });
+
+      it("should work with Electrobun + Convex Better Auth + Next.js for desktop HMR", async () => {
+        const result = await runTRPCTest({
+          projectName: "electrobun-convex-better-auth-next",
+          addons: ["turborepo", "electrobun"],
+          frontend: ["next"],
+          backend: "convex",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "better-auth",
+          api: "none",
+          examples: ["ai"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        expect(result.projectDir).toBeDefined();
+        if (!result.projectDir) return;
+
+        const rootPackageJson = JSON.parse(
+          await readFile(join(result.projectDir, "package.json"), "utf8"),
+        );
+        const nextConfig = await readFile(
+          join(result.projectDir, "apps", "web", "next.config.ts"),
+          "utf8",
+        );
+
+        expect(rootPackageJson.scripts["dev:desktop"]).toBe("turbo run dev:hmr -F desktop");
+        expect(nextConfig).not.toContain('output: "export"');
+      });
     });
   });
 
@@ -649,8 +748,8 @@ describe("Addon Configurations", () => {
       const turboConfig = JSON.parse(await readFile(join(projectDir, "turbo.json"), "utf8"));
 
       expect(rootPackageJson.devDependencies.turbo).toBeDefined();
-      expect(rootPackageJson.scripts.dev).toBe("turbo dev");
-      expect(rootPackageJson.scripts.build).toBe("turbo build");
+      expect(rootPackageJson.scripts.dev).toBe("turbo run dev");
+      expect(rootPackageJson.scripts.build).toBe("turbo run build");
       expect(turboConfig.tasks.build.dependsOn).toEqual(["^build"]);
     });
 
@@ -984,7 +1083,7 @@ describe("Addon Configurations", () => {
         expect(serverIndex).toContain('import { initLogger } from "evlog";');
         expect(serverIndex).toContain(backendSnippets[backend]);
         expect(serverIndex).toContain(`env: { service: "evlog-${backend}-server" }`);
-        expect(serverPackageJson).toContain('"evlog": "^2.18.1"');
+        expect(serverPackageJson).toContain('"evlog": "^2.19.2"');
       });
     }
 
@@ -994,6 +1093,7 @@ describe("Addon Configurations", () => {
         api: "trpc",
         files: [
           ["apps/web/src/lib/evlog.ts", "createEvlog"],
+          ["apps/web/src/lib/evlog.ts", 'from "evlog/next/instrumentation/create"'],
           ["apps/web/instrumentation.ts", "defineNodeInstrumentation"],
           ["apps/web/src/proxy.ts", "evlogMiddleware"],
           ["apps/web/src/app/api/trpc/[trpc]/route.ts", "withEvlog(handler)"],
@@ -1060,7 +1160,7 @@ describe("Addon Configurations", () => {
         }
 
         const webPackageJson = await readFile(join(projectDir, "apps/web/package.json"), "utf-8");
-        expect(webPackageJson).toContain('"evlog": "^2.18.1"');
+        expect(webPackageJson).toContain('"evlog": "^2.19.2"');
         if (webCase.frontend === "tanstack-start") {
           expect(webPackageJson).toContain('"nitro": "^3.0.260429-beta"');
         }
@@ -1334,7 +1434,7 @@ describe("Addon Configurations", () => {
       expectError(result, "Convex and backend none are not supported yet");
     });
 
-    it("should wire evlog Better Auth and AI SDK helpers for server projects", async () => {
+    it("should wire evlog Better Auth without AI SDK 7 incompatible helpers for server projects", async () => {
       const result = await runTRPCTest({
         projectName: "evlog-hono-auth-ai",
         addons: ["evlog"],
@@ -1367,15 +1467,15 @@ describe("Addon Configurations", () => {
         'await identifyUser(c.get("log"), c.req.raw.headers, c.req.path);',
       );
       expectDocsShapedEvlogAuth(serverIndex);
-      expect(serverIndex).toContain(
-        'import { createAILogger, createEvlogIntegration } from "evlog/ai";',
-      );
-      expect(serverIndex).toContain('const ai = createAILogger(c.get("log"));');
-      expect(serverIndex).toContain("model: ai.wrap(model)");
-      expect(serverIndex).toContain("integrations: [createEvlogIntegration(ai)]");
+      expect(serverIndex).not.toContain('from "evlog/ai"');
+      expect(serverIndex).not.toContain("createAILogger");
+      expect(serverIndex).not.toContain("model: ai.wrap(model)");
+      expect(serverIndex).not.toContain("telemetry:");
+      expect(serverIndex).not.toContain("experimental_telemetry");
+      expect(serverIndex).not.toContain("createEvlogIntegration(ai)");
     });
 
-    it("should wire evlog AI SDK helpers for Express server projects", async () => {
+    it("should avoid evlog AI SDK 7 incompatible helpers for Express server projects", async () => {
       const result = await runTRPCTest({
         projectName: "evlog-express-ai",
         addons: ["evlog"],
@@ -1398,12 +1498,80 @@ describe("Addon Configurations", () => {
       if (!projectDir) throw new Error("Expected generated project directory");
 
       const serverIndex = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf-8");
-      expect(serverIndex).toContain(
-        'import { createAILogger, createEvlogIntegration } from "evlog/ai";',
-      );
-      expect(serverIndex).toContain("const ai = createAILogger(req.log);");
-      expect(serverIndex).toContain("model: ai.wrap(model)");
-      expect(serverIndex).toContain("integrations: [createEvlogIntegration(ai)]");
+      expect(serverIndex).not.toContain('from "evlog/ai"');
+      expect(serverIndex).not.toContain("createAILogger");
+      expect(serverIndex).not.toContain("model: ai.wrap(model)");
+      expect(serverIndex).not.toContain("telemetry:");
+      expect(serverIndex).not.toContain("experimental_telemetry");
+      expect(serverIndex).not.toContain("createEvlogIntegration(ai)");
+    });
+
+    it("should not leave orphaned evlog AI logger setup in AI routes", async () => {
+      const cases = [
+        {
+          projectName: "evlog-fastify-ai",
+          frontend: "tanstack-router",
+          backend: "fastify",
+          runtime: "node",
+          api: "orpc",
+          filePath: "apps/server/src/index.ts",
+          unexpected: ['import { useLogger } from "evlog/fastify";', "useLogger()"],
+        },
+        {
+          projectName: "evlog-svelte-self-ai",
+          frontend: "svelte",
+          backend: "self",
+          runtime: "none",
+          api: "orpc",
+          filePath: "apps/web/src/routes/api/ai/+server.ts",
+          unexpected: ["locals })", "locals.log"],
+        },
+        {
+          projectName: "evlog-tanstack-start-self-ai",
+          frontend: "tanstack-start",
+          backend: "self",
+          runtime: "none",
+          api: "orpc",
+          filePath: "apps/web/src/routes/api/ai/$.ts",
+          unexpected: [
+            'import type { RequestLogger } from "evlog";',
+            'from "nitro/context"',
+            "useRequest()",
+          ],
+        },
+      ] as const;
+
+      for (const testCase of cases) {
+        const result = await runTRPCTest({
+          projectName: testCase.projectName,
+          addons: ["evlog"],
+          frontend: [testCase.frontend],
+          backend: testCase.backend,
+          runtime: testCase.runtime,
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: testCase.api,
+          examples: ["ai"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        const projectDir = result.result?.projectDirectory;
+        if (!projectDir) throw new Error("Expected generated project directory");
+
+        const aiFile = await readFile(join(projectDir, testCase.filePath), "utf-8");
+        expect(aiFile).not.toContain('from "evlog/ai"');
+        expect(aiFile).not.toContain("createAILogger");
+        expect(aiFile).not.toContain("model: ai.wrap(model)");
+        expect(aiFile).not.toContain("createEvlogIntegration(ai)");
+        for (const unexpected of testCase.unexpected) {
+          expect(aiFile).not.toContain(unexpected);
+        }
+      }
     });
 
     it("should wire evlog request and auth helpers for Next fullstack AI projects", async () => {
@@ -1545,7 +1713,7 @@ describe("Addon Configurations", () => {
 
       expect(serverIndex).toContain('import { evlog, type EvlogVariables } from "evlog/hono";');
       expect(serverIndex).toContain("app.use(evlog());");
-      expect(serverPackageJson).toContain('"evlog": "^2.18.1"');
+      expect(serverPackageJson).toContain('"evlog": "^2.19.2"');
     });
 
     it("should reject evlog when added later to a Convex project", async () => {

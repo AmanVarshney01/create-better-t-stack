@@ -169,6 +169,7 @@ create-better-t-stack --frontend next native-uniwind
 - Requires web frontend
 - Compatible frontends: `tanstack-router`, `react-router`, `tanstack-start`, `next`, `nuxt`, `svelte`, `solid`, `astro`
 - Desktop builds package static web output, so `tanstack-start`, `next`, `nuxt`, `svelte`, and `astro` need static/export configuration before packaging
+- Not compatible with `--backend self`, because fullstack self backends emit server routes inside `apps/web`
 - Cannot be combined with native frameworks
 
 ### Electrobun (Desktop Apps)
@@ -177,6 +178,7 @@ create-better-t-stack --frontend next native-uniwind
 - Compatible frontends: `tanstack-router`, `react-router`, `tanstack-start`, `next`, `nuxt`, `svelte`, `solid`, `astro`
 - Uses a generated `apps/desktop` shell that loads `apps/web` during development and bundles its static build output for distribution
 - Desktop builds package static web output, so `tanstack-start`, `next`, `nuxt`, `svelte`, and `astro` need static/export configuration before packaging
+- Not compatible with `--backend self`, because fullstack self backends emit server routes inside `apps/web`
 
 ### Web Deployment
 

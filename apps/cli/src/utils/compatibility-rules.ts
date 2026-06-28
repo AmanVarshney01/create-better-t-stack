@@ -20,6 +20,11 @@ import { ValidationError } from "./errors";
 type ValidationResult = Result<void, ValidationError>;
 type AddonCompatibilityConfig = Pick<ProjectConfig, "frontend" | "auth" | "backend" | "runtime">;
 const TASK_RUNNER_ADDONS = ["turborepo", "nx", "vite-plus"] as const satisfies readonly Addons[];
+const STATIC_DESKTOP_ADDONS = ["tauri", "electrobun"] as const satisfies readonly Addons[];
+const TAURI_STATIC_EXPORT_FRONTENDS = [
+  "next",
+  "tanstack-start",
+] as const satisfies readonly Frontend[];
 
 export const CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS = [
   "nuxt",
@@ -331,7 +336,7 @@ export function validateDockerServerDeploy(
 export function validateAddonCompatibility(
   addon: Addons,
   frontend: Frontend[],
-  _auth?: Auth,
+  auth?: Auth,
   backend?: Backend,
   runtime?: Runtime,
 ): { isCompatible: boolean; reason?: string } {
@@ -339,6 +344,26 @@ export function validateAddonCompatibility(
     return {
       isCompatible: false,
       reason: evlogCompatibilityMessage,
+    };
+  }
+
+  if (backend === "self" && STATIC_DESKTOP_ADDONS.includes(addon)) {
+    return {
+      isCompatible: false,
+      reason: `${addon} addon requires a separate backend or no backend because backend 'self' emits server routes that cannot be bundled as static desktop assets.`,
+    };
+  }
+
+  if (
+    addon === "tauri" &&
+    backend === "convex" &&
+    auth === "better-auth" &&
+    frontend.some((f) => TAURI_STATIC_EXPORT_FRONTENDS.includes(f))
+  ) {
+    return {
+      isCompatible: false,
+      reason:
+        "tauri addon is not compatible with Convex Better Auth on Next.js or TanStack Start because those templates use server auth bootstrap and cannot be exported as static desktop assets.",
     };
   }
 

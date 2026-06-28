@@ -293,9 +293,13 @@ describe("Authentication Configurations", () => {
         path.join(result.projectDir, "packages/backend/.env.local"),
         "utf8",
       );
+      const webEnvFile = await fs.readFile(
+        path.join(result.projectDir, "packages/env/src/web.ts"),
+        "utf8",
+      );
 
-      expect(packageJson.workspaces.catalog["better-auth"]).toBe("~1.6.9");
-      expect(packageJson.workspaces.catalog["@convex-dev/better-auth"]).toBe("^0.12.2");
+      expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.15");
+      expect(packageJson.workspaces.catalog["@convex-dev/better-auth"]).toBe("^0.12.5");
       expect(backendPackageJson.dependencies["better-auth"]).toBe("catalog:");
       expect(webPackageJson.dependencies["better-auth"]).toBe("catalog:");
       expect(authFile).toContain("baseURL: process.env.CONVEX_SITE_URL");
@@ -304,9 +308,11 @@ describe("Authentication Configurations", () => {
       expect(convexTsconfig).toContain('"types": ["node"]');
       expect(convexTsconfig.match(/"types": \["node"\]/g)).toHaveLength(1);
       expect(convexEnvFile).toContain(
-        "# npx convex env set CONVEX_SITE_URL https://<YOUR_CONVEX_SITE_URL>",
+        "# npx convex env set CONVEX_SITE_URL https://example.convex.site",
       );
       expect(convexEnvFile).toContain("# CONVEX_SITE_URL=");
+      expect(webEnvFile).toContain('convexUrlSchema("example.convex.cloud")');
+      expect(webEnvFile).toContain('convexUrlSchema("example.convex.site")');
     });
 
     it("should scaffold react-router with Convex Better Auth wiring", async () => {
@@ -582,6 +588,10 @@ describe("Authentication Configurations", () => {
           path.join(result.projectDir, "apps/native/package.json"),
           "utf8",
         );
+        const nativeEnvFile = await fs.readFile(
+          path.join(result.projectDir, "packages/env/src/native.ts"),
+          "utf8",
+        );
         const polarFile = await fs.readFile(
           path.join(result.projectDir, "packages/backend/convex/polar.ts"),
           "utf8",
@@ -613,6 +623,8 @@ describe("Authentication Configurations", () => {
         expect(httpFile).toContain('path: "/polar/success"');
         expect(httpFile).toContain("allowedNativeProtocols");
         expect(httpFile).toContain("status: 302");
+        expect(nativeEnvFile).toContain('convexUrlSchema("example.convex.cloud")');
+        expect(nativeEnvFile).toContain('convexUrlSchema("example.convex.site")');
         expect(backendPackageFile).toContain('"@convex-dev/polar"');
         expect(backendPackageFile).toContain('"@polar-sh/sdk"');
         expect(nativePackageFile).not.toContain('"@convex-dev/polar"');
@@ -757,6 +769,13 @@ describe("Authentication Configurations", () => {
 
         const result = await runTRPCTest(config);
         expectSuccess(result);
+        if (!result.projectDir) {
+          throw new Error("Expected projectDir to be defined");
+        }
+        const packageJson = JSON.parse(
+          await fs.readFile(path.join(result.projectDir, "package.json"), "utf8"),
+        );
+        expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.22");
       });
     }
   });

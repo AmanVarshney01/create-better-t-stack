@@ -1,13 +1,20 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+{{#if (eq backend "convex")}}
+const convexUrlSchema = (exampleHost: string) =>
+	z.url().refine((url) => new URL(url).hostname !== exampleHost, {
+		message: `Replace the ${exampleHost} placeholder before running the app`,
+	});
+
+{{/if}}
 export const env = createEnv({
 	clientPrefix: "EXPO_PUBLIC_",
 	client: {
 {{#if (eq backend "convex")}}
-		EXPO_PUBLIC_CONVEX_URL: z.url(),
+		EXPO_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 {{#if (eq auth "better-auth")}}
-		EXPO_PUBLIC_CONVEX_SITE_URL: z.url(),
+		EXPO_PUBLIC_CONVEX_SITE_URL: convexUrlSchema("example.convex.site"),
 {{/if}}
 {{else}}
 		EXPO_PUBLIC_SERVER_URL: z.url(),

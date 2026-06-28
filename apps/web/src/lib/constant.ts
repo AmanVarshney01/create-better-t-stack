@@ -522,7 +522,7 @@ export const TECH_OPTIONS: Record<
     {
       id: "tauri",
       name: "Tauri",
-      description: "Build native desktop apps",
+      description: "Package static web apps as native desktop apps",
       icon: `${ICON_BASE_URL}/tauri.svg`,
       color: "from-amber-500 to-amber-700",
       default: false,
@@ -530,7 +530,7 @@ export const TECH_OPTIONS: Record<
     {
       id: "electrobun",
       name: "Electrobun",
-      description: "Wrap web frontends in a lightweight desktop shell",
+      description: "Bundle static web apps in a lightweight desktop shell",
       icon: "",
       color: "from-orange-500 to-orange-700",
       default: false,
@@ -651,7 +651,7 @@ export const TECH_OPTIONS: Record<
     {
       id: "evlog",
       name: "evlog",
-      description: "Request logging with Better Auth context and AI SDK telemetry",
+      description: "Structured request logging with Better Auth context",
       icon: "",
       color: "from-sky-500 to-slate-700",
       default: false,

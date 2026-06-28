@@ -149,6 +149,7 @@ export default {
   },
   "devDependencies": {
     "@types/bun": "^1.3.14",
+    "@types/three": "^0.165.0",
     "concurrently": "^10.0.3",
     "typescript": "^6"
   }
@@ -159,7 +160,6 @@ export default {
 const DEV_SERVER_PORT = {{#if (or (includes frontend "react-router") (includes frontend "svelte"))}}5173{{else if (includes frontend "astro")}}4321{{else}}3001{{/if}};
 const DEV_SERVER_URL = \`http://localhost:\${DEV_SERVER_PORT}\`;
 
-// Check if the web dev server is running for HMR
 async function getMainViewUrl(): Promise<string> {
   const channel = await Updater.localInfo.channel();
   if (channel === "dev") {
@@ -169,7 +169,7 @@ async function getMainViewUrl(): Promise<string> {
       return DEV_SERVER_URL;
     } catch {
       console.log(
-        'Web dev server not running. Run "{{packageManager}} run dev:hmr" for HMR support.',
+        "Web dev server not running. Run dev:hmr for live reload.",
       );
     }
   }
@@ -695,6 +695,18 @@ export const queryClient = new QueryClient({
 	}),
 });
 
+async function expoFetch(request: Request, init?: RequestInit) {
+	const { fetch } = await import("expo/fetch");
+
+	return fetch(request.url, {
+		body: await request.blob(),
+		headers: request.headers,
+		method: request.method,
+		signal: request.signal,
+		...init,
+	});
+}
+
 export const link = new RPCLink({
 {{#if (eq backend "self")}}
 {{#if (or (includes frontend "next") (includes frontend "tanstack-start"))}}
@@ -706,14 +718,13 @@ export const link = new RPCLink({
 	url: \`\${env.EXPO_PUBLIC_SERVER_URL}/rpc\`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
-	fetch:
-		function (url, options) {
-			return fetch(url, {
-				...options,
-				// Better Auth Expo forwards the session cookie manually on native.
-				credentials: Platform.OS === "web" ? "include" : "omit",
-			});
-		},
+	fetch(request, init) {
+		return expoFetch(request, {
+			...init,
+			// Better Auth Expo forwards the session cookie manually on native.
+			credentials: Platform.OS === "web" ? "include" : "omit",
+		});
+	},
 	headers() {
 		if (Platform.OS === "web") {
 			return {};
@@ -730,6 +741,9 @@ export const link = new RPCLink({
 		const token = await getClerkAuthToken();
 		return token ? { Authorization: \`Bearer \${token}\` } : {};
 	},
+	fetch: expoFetch,
+{{else}}
+	fetch: expoFetch,
 {{/if}}
 });
 
@@ -14241,7 +14255,7 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 {{#if (includes examples "ai")}}
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, streamText, type UIMessage, wrapLanguageModel } from "ai";
+import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (eq api "trpc")}}
@@ -14388,7 +14402,9 @@ new Elysia()
 			messages: await convertToModelMessages(uiMessages),
 		});
 
-		return result.toUIMessageStreamResponse();
+		return createUIMessageStreamResponse({
+			stream: toUIMessageStream({ stream: result.stream }),
+		});
 	})
 {{/if}}
 	.get("/", () => "OK")
@@ -14414,7 +14430,7 @@ import { createContext } from "@{{projectName}}/api/context";
 import cors from "cors";
 import express from "express";
 {{#if (includes examples "ai")}}
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { pipeUIMessageStreamToResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -14535,7 +14551,10 @@ app.post("/ai", async (req, res) => {
 		model,
 		messages: await convertToModelMessages(messages),
 	});
-	result.pipeUIMessageStreamToResponse(res);
+	pipeUIMessageStreamToResponse({
+		response: res,
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 
@@ -14568,7 +14587,7 @@ import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 
 {{#if (includes examples "ai")}}
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -14748,7 +14767,9 @@ fastify.post('/ai', async function (request) {
 		messages: await convertToModelMessages(messages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 
@@ -14790,12 +14811,12 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 {{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
-import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (and (includes examples "ai") (eq runtime "workers"))}}
-import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -14925,7 +14946,9 @@ app.post("/ai", async (c) => {
 		messages: await convertToModelMessages(uiMessages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 
@@ -14945,7 +14968,9 @@ app.post("/ai", async (c) => {
 		messages: await convertToModelMessages(uiMessages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 
@@ -16619,7 +16644,7 @@ export const generateResponseAsync = internalAction({
 });
 `],
   ["examples/ai/fullstack/next/src/app/api/ai/route.ts.hbs", `import { google } from "@ai-sdk/google";
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const maxDuration = 30;
@@ -16636,12 +16661,14 @@ export async function POST(req: Request) {
 		messages: await convertToModelMessages(messages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 }
 `],
   ["examples/ai/fullstack/nuxt/server/api/ai.post.ts.hbs", `import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { google } from "@ai-sdk/google";
-import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
@@ -16657,12 +16684,14 @@ export default defineEventHandler(async (event) => {
     messages: await convertToModelMessages(uiMessages),
   });
 
-  return result.toUIMessageStreamResponse();
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
 });
 `],
   ["examples/ai/fullstack/svelte/src/routes/api/ai/+server.ts.hbs", `import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, streamText, type UIMessage, wrapLanguageModel } from "ai";
+import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, wrapLanguageModel } from "ai";
 import type { RequestHandler } from "@sveltejs/kit";
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -16677,12 +16706,14 @@ export const POST: RequestHandler = async ({ request }) => {
 		messages: await convertToModelMessages(messages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 };
 `],
   ["examples/ai/fullstack/tanstack-start/src/routes/api/ai/$.ts.hbs", `import { createFileRoute } from "@tanstack/react-router";
 import { google } from "@ai-sdk/google";
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const Route = createFileRoute("/api/ai/$")({
@@ -16701,7 +16732,9 @@ export const Route = createFileRoute("/api/ai/$")({
             messages: await convertToModelMessages(messages),
           });
 
-          return result.toUIMessageStreamResponse();
+          return createUIMessageStreamResponse({
+            stream: toUIMessageStream({ stream: result.stream }),
+          });
         } catch (error) {
           console.error("AI API error:", error);
           return new Response(
@@ -16742,6 +16775,21 @@ import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
+
 function MessageContent({
   text,
   isStreaming,
@@ -16754,7 +16802,12 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
-  return <Text style={[styles.messageText, { color: textColor }]}>{visibleText}</Text>;
+
+  return (
+    <Text selectable style={[styles.messageText, { color: textColor }]}>
+      {visibleText}
+    </Text>
+  );
 }
 
 export default function AIScreen() {
@@ -16777,14 +16830,17 @@ export default function AIScreen() {
   const hasStreamingMessage = messages?.some(
     (m) => m.status === "streaming",
   );
+  const hasMessages = Boolean(messages?.length);
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  async function onSubmit() {
-    const value = input.trim();
-    if (!value || isLoading) return;
+  async function sendPrompt(prompt: string) {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -16804,6 +16860,12 @@ export default function AIScreen() {
     }
   }
 
+  function onNewChat() {
+    if (isBusy) return;
+    setInput("");
+    setThreadId(null);
+  }
+
   return (
     <Container>
       <KeyboardAvoidingView
@@ -16811,119 +16873,210 @@ export default function AIScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>
-              AI Chat
-            </Text>
-            <Text style={[styles.headerSubtitle, { color: theme.text, opacity: 0.7 }]}>
-              Chat with our AI assistant
-            </Text>
+          <View style={[styles.toolbar, { borderBottomColor: theme.border }]}>
+            <View style={styles.statusGroup}>
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: isBusy ? theme.primary : theme.border },
+                ]}
+              />
+              <Text style={[styles.statusText, { color: theme.text }]}>
+                {isBusy
+                  ? "Streaming"
+                  : hasMessages
+                    ? \`\${messages?.length ?? 0} messages\`
+                    : "Ready"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={onNewChat}
+              disabled={isBusy || (!hasMessages && !threadId)}
+              style={[
+                styles.toolbarAction,
+                { borderColor: theme.border },
+                (isBusy || (!hasMessages && !threadId)) &&
+                  styles.toolbarActionDisabled,
+              ]}
+            >
+              <Ionicons name="add" size={16} color={theme.text} />
+              <Text style={[styles.toolbarActionText, { color: theme.text }]}>
+                New
+              </Text>
+            </TouchableOpacity>
           </View>
+
           <ScrollView
             ref={scrollViewRef}
             style={styles.scrollView}
+            contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {!messages || messages.length === 0 ? (
+            {!hasMessages ? (
               <View style={styles.emptyContainer}>
-                <Text style={[styles.emptyText, { color: theme.text, opacity: 0.7 }]}>
-                  Ask me anything to get started!
+                <View style={[styles.emptyIcon, { borderColor: theme.border }]}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={28}
+                    color={theme.text}
+                  />
+                </View>
+                <Text style={[styles.emptyTitle, { color: theme.text }]}>
+                  Start a conversation
                 </Text>
+                <Text
+                  style={[styles.emptyText, { color: theme.text }]}
+                  selectable
+                >
+                  Use a starter prompt or ask your own question.
+                </Text>
+                <View style={styles.promptList}>
+                  {starterPrompts.map((item) => (
+                    <TouchableOpacity
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                      style={[
+                        styles.promptButton,
+                        {
+                          backgroundColor: theme.card,
+                          borderColor: theme.border,
+                        },
+                        isBusy && styles.toolbarActionDisabled,
+                      ]}
+                    >
+                      <Text
+                        style={[styles.promptLabel, { color: theme.text }]}
+                      >
+                        {item.label}
+                      </Text>
+                      <Text
+                        style={[styles.promptText, { color: theme.text }]}
+                      >
+                        {item.prompt}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             ) : (
               <View style={styles.messagesList}>
-                {messages.map((message) => (
-                  <View
-                    key={message.key}
-                    style={[
-                      styles.messageCard,
-                      {
-                        backgroundColor: message.role === "user"
-                          ? theme.primary + "20"
-                          : theme.card,
-                        borderColor: theme.border,
-                        alignSelf: message.role === "user" ? "flex-end" : "flex-start",
-                        marginLeft: message.role === "user" ? 32 : 0,
-                        marginRight: message.role === "user" ? 0 : 32,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.messageRole, { color: theme.text }]}>
-                      {message.role === "user" ? "You" : "AI Assistant"}
-                    </Text>
-                    <MessageContent
-                      text={(message.parts ?? [])
-                        .map((part) => (part.type === "text" ? part.text : ""))
-                        .join("")}
-                      isStreaming={message.status === "streaming"}
-                      textColor={theme.text}
-                    />
-                  </View>
-                ))}
+                {messages?.map((message) => {
+                  const isUser = message.role === "user";
+                  const messageText = (message.parts ?? [])
+                    .map((part) => (part.type === "text" ? part.text : ""))
+                    .join("");
+
+	                  return (
+	                    <View
+	                      key={\`\${message.order}-\${message.stepOrder}\`}
+	                      style={[
+                        styles.messageRow,
+                        isUser ? styles.userRow : styles.assistantRow,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.messageBubble,
+                          isUser
+                            ? [
+                                styles.userBubble,
+                                { backgroundColor: theme.primary },
+                              ]
+                            : [
+                                styles.assistantBubble,
+                                {
+                                  backgroundColor: theme.card,
+                                  borderColor: theme.border,
+                                },
+                              ],
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.messageRole,
+                            { color: isUser ? "#ffffff" : theme.text },
+                          ]}
+                        >
+                          {isUser ? "You" : "AI"}
+                        </Text>
+                        <MessageContent
+                          text={messageText}
+                          isStreaming={message.status === "streaming"}
+                          textColor={isUser ? "#ffffff" : theme.text}
+                        />
+                      </View>
+                    </View>
+                  );
+                })}
                 {isLoading && !hasStreamingMessage && (
-                  <View
-                    style={[
-                      styles.messageCard,
-                      {
-                        backgroundColor: theme.card,
-                        borderColor: theme.border,
-                        alignSelf: "flex-start",
-                        marginRight: 32,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.messageRole, { color: theme.text }]}>
-                      AI Assistant
-                    </Text>
-                    <View style={styles.loadingContainer}>
-                      <ActivityIndicator size="small" color={theme.primary} />
-                      <Text style={[styles.loadingText, { color: theme.text, opacity: 0.7 }]}>
-                        Thinking...
+                  <View style={[styles.messageRow, styles.assistantRow]}>
+                    <View
+                      style={[
+                        styles.messageBubble,
+                        styles.assistantBubble,
+                        {
+                          backgroundColor: theme.card,
+                          borderColor: theme.border,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.messageRole, { color: theme.text }]}>
+                        AI
                       </Text>
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="small" color={theme.primary} />
+                        <Text style={[styles.loadingText, { color: theme.text }]}>
+                          Thinking...
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 )}
               </View>
             )}
           </ScrollView>
+
           <View style={[styles.inputContainer, { borderTopColor: theme.border }]}>
             <View style={styles.inputRow}>
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Type your message..."
-                placeholderTextColor={theme.text}
+                placeholder="Message AI..."
+                placeholderTextColor={theme.border}
                 style={[
                   styles.input,
                   {
                     color: theme.text,
                     borderColor: theme.border,
-                    backgroundColor: theme.background,
+                    backgroundColor: theme.card,
                   },
                 ]}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
-                  onSubmit();
+                  sendPrompt(input);
                 }}
-                editable={!isLoading}
-                autoFocus={true}
+                editable={!isBusy}
+                returnKeyType="send"
                 multiline
               />
               <TouchableOpacity
-                onPress={onSubmit}
-                disabled={!input.trim() || isLoading}
+                onPress={() => sendPrompt(input)}
+                disabled={!canSend}
                 style={[
                   styles.sendButton,
                   {
-                    backgroundColor: input.trim() && !isLoading ? theme.primary : theme.border,
-                    opacity: input.trim() && !isLoading ? 1 : 0.5,
+                    backgroundColor: canSend ? theme.primary : theme.card,
+                    borderColor: theme.border,
                   },
+                  !canSend && styles.sendButtonDisabled,
                 ]}
               >
                 <Ionicons
-                  name="send"
+                  name="arrow-up"
                   size={20}
-                  color="#ffffff"
+                  color={canSend ? "#ffffff" : theme.text}
                 />
               </TouchableOpacity>
             </View>
@@ -16940,79 +17093,175 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
   },
-  header: {
-    marginBottom: 16,
+  toolbar: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 12,
+    paddingTop: 8,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 4,
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
   },
-  headerSubtitle: {
-    fontSize: 14,
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
+  statusText: {
+    fontSize: 13,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
+  },
+  toolbarAction: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 4,
+    minHeight: 32,
+    paddingHorizontal: 10,
+  },
+  toolbarActionDisabled: {
+    opacity: 0.45,
+  },
+  toolbarActionText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
   scrollView: {
     flex: 1,
-    marginBottom: 16,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: 16,
   },
   emptyContainer: {
+    alignItems: "center",
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
+    gap: 12,
   },
-  emptyText: {
-    fontSize: 16,
+  emptyIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "700",
     textAlign: "center",
   },
-  messagesList: {
-    gap: 8,
-    paddingBottom: 16,
+  emptyText: {
+    fontSize: 14,
+    lineHeight: 20,
+    opacity: 0.68,
+    textAlign: "center",
   },
-  messageCard: {
+  promptList: {
+    gap: 8,
+    marginTop: 8,
+    width: "100%",
+  },
+  promptButton: {
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 12,
-    maxWidth: "80%",
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  promptText: {
+    fontSize: 13,
+    lineHeight: 18,
+    opacity: 0.68,
+  },
+  messagesList: {
+    gap: 12,
+  },
+  messageRow: {
+    flexDirection: "row",
+  },
+  userRow: {
+    justifyContent: "flex-end",
+  },
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
+  messageBubble: {
+    borderRadius: 18,
+    maxWidth: "86%",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  userBubble: {
+    borderTopRightRadius: 6,
+  },
+  assistantBubble: {
+    borderTopLeftRadius: 6,
+    borderWidth: 1,
   },
   messageRole: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: "700",
     marginBottom: 4,
+    opacity: 0.72,
   },
   messageText: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 21,
   },
   loadingContainer: {
-    flexDirection: "row",
     alignItems: "center",
+    flexDirection: "row",
     gap: 8,
   },
   loadingText: {
     fontSize: 14,
+    opacity: 0.68,
   },
   inputContainer: {
     borderTopWidth: 1,
+    paddingBottom: 12,
     paddingTop: 12,
   },
   inputRow: {
-    flexDirection: "row",
     alignItems: "flex-end",
+    flexDirection: "row",
     gap: 8,
   },
   input: {
-    flex: 1,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 8,
-    fontSize: 14,
-    minHeight: 36,
-    maxHeight: 100,
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
+    maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
   },
   sendButton: {
-    padding: 8,
-    justifyContent: "center",
     alignItems: "center",
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonDisabled: {
+    borderWidth: 1,
+    opacity: 0.55,
   },
 });
 {{else}}
@@ -17027,6 +17276,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -17034,6 +17284,21 @@ import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 import { env } from "@{{projectName}}/env/native";
+
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
 
 const generateAPIUrl = (relativePath: string) => {
   const serverUrl = env.EXPO_PUBLIC_SERVER_URL;
@@ -17050,41 +17315,33 @@ export default function AIScreen() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [input, setInput] = useState("");
-  const { messages, error, sendMessage } = useChat({
+  const { messages, error, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: generateAPIUrl("/ai"),
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
   });
   const scrollViewRef = useRef<ScrollView>(null);
+  const isBusy = status === "submitted" || status === "streaming";
+  const hasMessages = messages.length > 0;
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isBusy]);
 
-  function onSubmit() {
-    const value = input.trim();
-    if (value) {
-      sendMessage({ text: value });
-      setInput("");
-    }
+  function sendPrompt(prompt: string) {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
+
+    sendMessage({ text: value });
+    setInput("");
   }
 
-  if (error) {
-    return (
-      <Container>
-        <View style={styles.errorContainer}>
-          <View style={[styles.errorCard, { backgroundColor: theme.notification + "20", borderColor: theme.notification }]}>
-            <Text style={[styles.errorTitle, { color: theme.notification }]}>
-              Error: {error.message}
-            </Text>
-            <Text style={[styles.errorText, { color: theme.text, opacity: 0.7 }]}>
-              Please check your connection and try again.
-            </Text>
-          </View>
-        </View>
-      </Container>
-    );
+  function onNewChat() {
+    if (isBusy) return;
+    setInput("");
+    setMessages([]);
   }
 
   return (
@@ -17094,24 +17351,93 @@ export default function AIScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>
-              AI Chat
-            </Text>
-            <Text style={[styles.headerSubtitle, { color: theme.text, opacity: 0.7 }]}>
-              Chat with our AI assistant
-            </Text>
+          <View style={[styles.toolbar, { borderBottomColor: theme.border }]}>
+            <View style={styles.statusGroup}>
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: isBusy ? theme.primary : theme.border },
+                ]}
+              />
+              <Text style={[styles.statusText, { color: theme.text }]}>
+                {isBusy
+                  ? status === "submitted"
+                    ? "Sending"
+                    : "Streaming"
+                  : hasMessages
+                    ? \`\${messages.length} messages\`
+                    : "Ready"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={onNewChat}
+              disabled={isBusy || !hasMessages}
+              style={[
+                styles.toolbarAction,
+                { borderColor: theme.border },
+                (isBusy || !hasMessages) && styles.toolbarActionDisabled,
+              ]}
+            >
+              <Ionicons name="add" size={16} color={theme.text} />
+              <Text style={[styles.toolbarActionText, { color: theme.text }]}>
+                New
+              </Text>
+            </TouchableOpacity>
           </View>
+
           <ScrollView
             ref={scrollViewRef}
             style={styles.scrollView}
+            contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {messages.length === 0 ? (
+            {!hasMessages ? (
               <View style={styles.emptyContainer}>
-                <Text style={[styles.emptyText, { color: theme.text, opacity: 0.7 }]}>
-                  Ask me anything to get started!
+                <View style={[styles.emptyIcon, { borderColor: theme.border }]}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={28}
+                    color={theme.text}
+                  />
+                </View>
+                <Text style={[styles.emptyTitle, { color: theme.text }]}>
+                  Start a conversation
                 </Text>
+                <Text
+                  style={[styles.emptyText, { color: theme.text }]}
+                  selectable
+                >
+                  Use a starter prompt or ask your own question.
+                </Text>
+                <View style={styles.promptList}>
+                  {starterPrompts.map((item) => (
+                    <TouchableOpacity
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                      style={[
+                        styles.promptButton,
+                        {
+                          backgroundColor: theme.card,
+                          borderColor: theme.border,
+                        },
+                        isBusy && styles.toolbarActionDisabled,
+                      ]}
+                    >
+                      <Text
+                        style={[styles.promptLabel, { color: theme.text }]}
+                      >
+                        {item.label}
+                      </Text>
+                      <Text
+                        style={[styles.promptText, { color: theme.text }]}
+                      >
+                        {item.prompt}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             ) : (
               <View style={styles.messagesList}>
@@ -17119,82 +17445,171 @@ export default function AIScreen() {
                   <View
                     key={message.id}
                     style={[
-                      styles.messageCard,
-                      {
-                        backgroundColor: message.role === "user"
-                          ? theme.primary + "20"
-                          : theme.card,
-                        borderColor: theme.border,
-                        alignSelf: message.role === "user" ? "flex-end" : "flex-start",
-                        marginLeft: message.role === "user" ? 32 : 0,
-                        marginRight: message.role === "user" ? 0 : 32,
-                      },
+                      styles.messageRow,
+                      message.role === "user"
+                        ? styles.userRow
+                        : styles.assistantRow,
                     ]}
                   >
-                    <Text style={[styles.messageRole, { color: theme.text }]}>
-                      {message.role === "user" ? "You" : "AI Assistant"}
-                    </Text>
-                    <View style={styles.messageParts}>
-                      {message.parts.map((part, i) =>
-                        part.type === "text" ? (
-                          <Text
-                            key={\`\${message.id}-\${i}\`}
-                            style={[styles.messageText, { color: theme.text }]}
-                          >
-                            {part.text}
-                          </Text>
-                        ) : (
-                          <Text
-                            key={\`\${message.id}-\${i}\`}
-                            style={[styles.messageText, { color: theme.text }]}
-                          >
-                            {JSON.stringify(part)}
-                          </Text>
-                        )
-                      )}
+                    <View
+                      style={[
+                        styles.messageBubble,
+                        message.role === "user"
+                          ? [
+                              styles.userBubble,
+                              { backgroundColor: theme.primary },
+                            ]
+                          : [
+                              styles.assistantBubble,
+                              {
+                                backgroundColor: theme.card,
+                                borderColor: theme.border,
+                              },
+                            ],
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.messageRole,
+                          {
+                            color:
+                              message.role === "user" ? "#ffffff" : theme.text,
+                          },
+                        ]}
+                      >
+                        {message.role === "user" ? "You" : "AI"}
+                      </Text>
+                      <View style={styles.messageParts}>
+                        {(message.parts ?? []).map((part, i) =>
+                          part.type === "text" ? (
+                            <Text
+                              key={\`\${message.id}-\${i}\`}
+                              selectable
+                              style={[
+                                styles.messageText,
+                                {
+                                  color:
+                                    message.role === "user"
+                                      ? "#ffffff"
+                                      : theme.text,
+                                },
+                              ]}
+                            >
+                              {part.text}
+                            </Text>
+                          ) : (
+                            <Text
+                              key={\`\${message.id}-\${i}\`}
+                              selectable
+                              style={[
+                                styles.messageText,
+                                {
+                                  color:
+                                    message.role === "user"
+                                      ? "#ffffff"
+                                      : theme.text,
+                                },
+                              ]}
+                            >
+                              {JSON.stringify(part)}
+                            </Text>
+                          )
+                        )}
+                      </View>
                     </View>
                   </View>
                 ))}
+                {isBusy && (
+                  <View style={[styles.messageRow, styles.assistantRow]}>
+                    <View
+                      style={[
+                        styles.messageBubble,
+                        styles.assistantBubble,
+                        {
+                          backgroundColor: theme.card,
+                          borderColor: theme.border,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.messageRole, { color: theme.text }]}>
+                        AI
+                      </Text>
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="small" color={theme.primary} />
+                        <Text style={[styles.loadingText, { color: theme.text }]}>
+                          Thinking...
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
               </View>
             )}
           </ScrollView>
+
+          {error && (
+            <View
+              style={[
+                styles.errorBanner,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.notification,
+                },
+              ]}
+            >
+              <Ionicons
+                name="alert-circle-outline"
+                size={18}
+                color={theme.notification}
+              />
+              <Text
+                selectable
+                style={[styles.errorText, { color: theme.text }]}
+              >
+                {error.message}
+              </Text>
+            </View>
+          )}
+
           <View style={[styles.inputContainer, { borderTopColor: theme.border }]}>
             <View style={styles.inputRow}>
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Type your message..."
-                placeholderTextColor={theme.text}
+                placeholder="Message AI..."
+                placeholderTextColor={theme.border}
                 style={[
                   styles.input,
                   {
                     color: theme.text,
                     borderColor: theme.border,
-                    backgroundColor: theme.background,
+                    backgroundColor: theme.card,
                   },
                 ]}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
-                  onSubmit();
+                  sendPrompt(input);
                 }}
-                autoFocus={true}
+                editable={!isBusy}
+                returnKeyType="send"
                 multiline
               />
               <TouchableOpacity
-                onPress={onSubmit}
-                disabled={!input.trim()}
+                onPress={() => sendPrompt(input)}
+                disabled={!canSend}
                 style={[
                   styles.sendButton,
                   {
-                    backgroundColor: input.trim() ? theme.primary : theme.border,
-                    opacity: input.trim() ? 1 : 0.5,
+                    backgroundColor: canSend ? theme.primary : theme.card,
+                    borderColor: theme.border,
                   },
+                  !canSend && styles.sendButtonDisabled,
                 ]}
               >
                 <Ionicons
-                  name="send"
+                  name="arrow-up"
                   size={20}
-                  color="#ffffff"
+                  color={canSend ? "#ffffff" : theme.text}
                 />
               </TouchableOpacity>
             </View>
@@ -17211,94 +17626,193 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
   },
-  header: {
-    marginBottom: 16,
+  toolbar: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 12,
+    paddingTop: 8,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 4,
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
   },
-  headerSubtitle: {
-    fontSize: 14,
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
+  statusText: {
+    fontSize: 13,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
+  },
+  toolbarAction: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 4,
+    minHeight: 32,
+    paddingHorizontal: 10,
+  },
+  toolbarActionDisabled: {
+    opacity: 0.45,
+  },
+  toolbarActionText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
   scrollView: {
     flex: 1,
-    marginBottom: 16,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: 16,
   },
   emptyContainer: {
+    alignItems: "center",
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
+    gap: 12,
   },
-  emptyText: {
-    fontSize: 16,
+  emptyIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "700",
     textAlign: "center",
   },
-  messagesList: {
-    gap: 8,
-    paddingBottom: 16,
+  emptyText: {
+    fontSize: 14,
+    lineHeight: 20,
+    opacity: 0.68,
+    textAlign: "center",
   },
-  messageCard: {
+  promptList: {
+    gap: 8,
+    marginTop: 8,
+    width: "100%",
+  },
+  promptButton: {
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 12,
-    maxWidth: "80%",
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  promptText: {
+    fontSize: 13,
+    lineHeight: 18,
+    opacity: 0.68,
+  },
+  messagesList: {
+    gap: 12,
+  },
+  messageRow: {
+    flexDirection: "row",
+  },
+  userRow: {
+    justifyContent: "flex-end",
+  },
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
+  messageBubble: {
+    borderRadius: 18,
+    maxWidth: "86%",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  userBubble: {
+    borderTopRightRadius: 6,
+  },
+  assistantBubble: {
+    borderTopLeftRadius: 6,
+    borderWidth: 1,
   },
   messageRole: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: "700",
     marginBottom: 4,
+    opacity: 0.72,
   },
   messageParts: {
     gap: 4,
   },
   messageText: {
+    fontSize: 15,
+    lineHeight: 21,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  loadingText: {
     fontSize: 14,
-    lineHeight: 20,
+    opacity: 0.68,
+  },
+  errorBanner: {
+    alignItems: "center",
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
   },
   inputContainer: {
     borderTopWidth: 1,
+    paddingBottom: 12,
     paddingTop: 12,
   },
   inputRow: {
-    flexDirection: "row",
     alignItems: "flex-end",
+    flexDirection: "row",
     gap: 8,
   },
   input: {
-    flex: 1,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 8,
-    fontSize: 14,
-    minHeight: 36,
-    maxHeight: 100,
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
+    maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
   },
   sendButton: {
-    padding: 8,
-    justifyContent: "center",
     alignItems: "center",
-  },
-  errorContainer: {
-    flex: 1,
+    borderRadius: 999,
+    height: 44,
     justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
+    width: 44,
   },
-  errorCard: {
+  sendButtonDisabled: {
     borderWidth: 1,
-    padding: 16,
-  },
-  errorTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  errorText: {
-    fontSize: 14,
-    textAlign: "center",
+    opacity: 0.55,
   },
 });
 {{/if}}
@@ -17326,7 +17840,9 @@ if (Platform.OS !== "web") {
 
 export {};
 `],
-  ["examples/ai/native/unistyles/app/(drawer)/ai.tsx.hbs", `{{#if (eq backend "convex")}}
+  ["examples/ai/native/unistyles/app/(drawer)/ai.tsx.hbs", `import "@/unistyles";
+
+{{#if (eq backend "convex")}}
 import { Ionicons } from "@expo/vector-icons";
 import {
   useUIMessages,
@@ -17334,7 +17850,7 @@ import {
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
-import React, { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -17349,6 +17865,21 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
 import { Container } from "@/components/container";
 
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
+
 function MessageContent({
   text,
   isStreaming,
@@ -17361,7 +17892,12 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
-  return <Text style={style}>{visibleText}</Text>;
+
+  return (
+    <Text selectable style={style}>
+      {visibleText}
+    </Text>
+  );
 }
 
 export default function AIScreen() {
@@ -17383,14 +17919,17 @@ export default function AIScreen() {
   const hasStreamingMessage = messages?.some(
     (m) => m.status === "streaming",
   );
+  const hasMessages = Boolean(messages?.length);
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  const onSubmit = async () => {
-    const value = input.trim();
-    if (!value || isLoading) return;
+  const sendPrompt = async (prompt: string) => {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -17410,6 +17949,12 @@ export default function AIScreen() {
     }
   };
 
+  const onNewChat = () => {
+    if (isBusy) return;
+    setInput("");
+    setThreadId(null);
+  };
+
   return (
     <Container>
       <KeyboardAvoidingView
@@ -17417,54 +17962,140 @@ export default function AIScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>AI Chat</Text>
-            <Text style={styles.headerSubtitle}>
-              Chat with our AI assistant
-            </Text>
+          <View style={styles.toolbar}>
+            <View style={styles.statusGroup}>
+              <View
+                style={[
+                  styles.statusDot,
+                  isBusy ? styles.statusDotBusy : styles.statusDotIdle,
+                ]}
+              />
+              <Text style={styles.statusText}>
+                {isBusy
+                  ? "Streaming"
+                  : hasMessages
+                    ? \`\${messages?.length ?? 0} messages\`
+                    : "Ready"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={onNewChat}
+              disabled={isBusy || (!hasMessages && !threadId)}
+              style={[
+                styles.toolbarAction,
+                (isBusy || (!hasMessages && !threadId)) &&
+                  styles.disabledAction,
+              ]}
+            >
+              <Ionicons
+                name="add"
+                size={16}
+                color={theme.colors.foreground}
+              />
+              <Text style={styles.toolbarActionText}>New</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView
             ref={scrollViewRef}
             style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {!messages || messages.length === 0 ? (
+            {!hasMessages ? (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  Ask me anything to get started!
+                <View style={styles.emptyIcon}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={28}
+                    color={theme.colors.foreground}
+                  />
+                </View>
+                <Text style={styles.emptyTitle}>Start a conversation</Text>
+                <Text selectable style={styles.emptyText}>
+                  Use a starter prompt or ask your own question.
                 </Text>
+                <View style={styles.promptList}>
+                  {starterPrompts.map((item) => (
+                    <TouchableOpacity
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                      style={[
+                        styles.promptButton,
+                        isBusy && styles.disabledAction,
+                      ]}
+                    >
+                      <Text style={styles.promptLabel}>{item.label}</Text>
+                      <Text style={styles.promptText}>{item.prompt}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             ) : (
               <View style={styles.messagesWrapper}>
-                {messages.map((message) => (
-                  <View
-                    key={message.key}
-                    style={[
-                      styles.messageContainer,
-                      message.role === "user"
-                        ? styles.userMessage
-                        : styles.assistantMessage,
-                    ]}
-                  >
-                    <Text style={styles.messageRole}>
-                      {message.role === "user" ? "You" : "AI Assistant"}
-                    </Text>
-                    <MessageContent
-                      text={(message.parts ?? [])
-                        .map((part) => (part.type === "text" ? part.text : ""))
-                        .join("")}
-                      isStreaming={message.status === "streaming"}
-                      style={styles.messageContent}
-                    />
-                  </View>
-                ))}
+                {messages?.map((message) => {
+                  const isUser = message.role === "user";
+                  const messageText = (message.parts ?? [])
+                    .map((part) => (part.type === "text" ? part.text : ""))
+                    .join("");
+
+	                  return (
+	                    <View
+	                      key={\`\${message.order}-\${message.stepOrder}\`}
+	                      style={[
+                        styles.messageRow,
+                        isUser ? styles.userRow : styles.assistantRow,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.messageBubble,
+                          isUser ? styles.userBubble : styles.assistantBubble,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.messageRole,
+                            isUser
+                              ? styles.userMessageText
+                              : styles.assistantMessageText,
+                          ]}
+                        >
+                          {isUser ? "You" : "AI"}
+                        </Text>
+                        <MessageContent
+                          text={messageText}
+                          isStreaming={message.status === "streaming"}
+                          style={
+                            isUser
+                              ? styles.userMessageText
+                              : styles.assistantMessageText
+                          }
+                        />
+                      </View>
+                    </View>
+                  );
+                })}
                 {isLoading && !hasStreamingMessage && (
-                  <View style={[styles.messageContainer, styles.assistantMessage]}>
-                    <Text style={styles.messageRole}>AI Assistant</Text>
-                    <View style={styles.loadingContainer}>
-                      <ActivityIndicator size="small" color={theme.colors.primary} />
-                      <Text style={styles.loadingText}>Thinking...</Text>
+                  <View style={[styles.messageRow, styles.assistantRow]}>
+                    <View style={[styles.messageBubble, styles.assistantBubble]}>
+                      <Text
+                        style={[
+                          styles.messageRole,
+                          styles.assistantMessageText,
+                        ]}
+                      >
+                        AI
+                      </Text>
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator
+                          size="small"
+                          color={theme.colors.primary}
+                        />
+                        <Text style={styles.loadingText}>Thinking...</Text>
+                      </View>
                     </View>
                   </View>
                 )}
@@ -17477,31 +18108,32 @@ export default function AIScreen() {
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Type your message..."
-                placeholderTextColor={theme.colors.border}
+                placeholder="Message AI..."
+                placeholderTextColor={theme.colors.mutedForeground}
                 style={styles.textInput}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
-                  onSubmit();
+                  sendPrompt(input);
                 }}
-                editable={!isLoading}
-                autoFocus={true}
+                editable={!isBusy}
+                returnKeyType="send"
+                multiline
               />
               <TouchableOpacity
-                onPress={onSubmit}
-                disabled={!input.trim() || isLoading}
+                onPress={() => sendPrompt(input)}
+                disabled={!canSend}
                 style={[
                   styles.sendButton,
-                  (!input.trim() || isLoading) && styles.sendButtonDisabled,
+                  !canSend && styles.sendButtonDisabled,
                 ]}
               >
                 <Ionicons
-                  name="send"
+                  name="arrow-up"
                   size={20}
                   color={
-                    input.trim() && !isLoading
-                      ? theme.colors.background
-                      : theme.colors.border
+                    canSend
+                      ? theme.colors.primaryForeground
+                      : theme.colors.mutedForeground
                   }
                 />
               </TouchableOpacity>
@@ -17520,108 +18152,218 @@ const styles = StyleSheet.create((theme) => ({
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.lg,
   },
-  header: {
-    marginBottom: theme.spacing.lg,
+  toolbar: {
+    alignItems: "center",
+    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: theme.colors.typography,
-    marginBottom: theme.spacing.sm,
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: theme.colors.typography,
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
+  statusDotBusy: {
+    backgroundColor: theme.colors.primary,
+  },
+  statusDotIdle: {
+    backgroundColor: theme.colors.border,
+  },
+  statusText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
+  },
+  toolbarAction: {
+    alignItems: "center",
+    borderColor: theme.colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: theme.spacing.xs,
+    minHeight: 32,
+    paddingHorizontal: 10,
+  },
+  toolbarActionText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "600",
+  },
+  disabledAction: {
+    opacity: 0.45,
   },
   messagesContainer: {
     flex: 1,
-    marginBottom: theme.spacing.md,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: theme.spacing.md,
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    flex: 1,
+    gap: theme.spacing.md,
+    justifyContent: "center",
+  },
+  emptyIcon: {
+    alignItems: "center",
+    borderColor: theme.colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyTitle: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "700",
+    textAlign: "center",
   },
   emptyText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 20,
     textAlign: "center",
-    color: theme.colors.typography,
-    fontSize: 18,
+  },
+  promptList: {
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+    width: "100%",
+  },
+  promptButton: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "700",
+  },
+  promptText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 18,
   },
   messagesWrapper: {
     gap: theme.spacing.md,
   },
-  messageContainer: {
-    padding: theme.spacing.md,
-    borderRadius: 8,
+  messageRow: {
+    flexDirection: "row",
   },
-  userMessage: {
-    backgroundColor: theme.colors.primary + "20",
-    marginLeft: theme.spacing.xl,
-    alignSelf: "flex-end",
+  userRow: {
+    justifyContent: "flex-end",
   },
-  assistantMessage: {
-    backgroundColor: theme.colors.background,
-    marginRight: theme.spacing.xl,
-    borderWidth: 1,
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
+  messageBubble: {
+    borderRadius: theme.borderRadius.xl,
+    maxWidth: "86%",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 10,
+  },
+  userBubble: {
+    backgroundColor: theme.colors.primary,
+    borderTopRightRadius: theme.borderRadius.sm,
+  },
+  assistantBubble: {
+    backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
+    borderTopLeftRadius: theme.borderRadius.sm,
+    borderWidth: 1,
   },
   messageRole: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: theme.spacing.sm,
-    color: theme.colors.typography,
+    fontSize: theme.fontSize.xs,
+    fontWeight: "700",
+    marginBottom: theme.spacing.xs,
+    opacity: 0.72,
   },
-  messageContent: {
-    color: theme.colors.typography,
-    lineHeight: 20,
+  userMessageText: {
+    color: theme.colors.primaryForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  assistantMessageText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
   },
   loadingContainer: {
-    flexDirection: "row",
     alignItems: "center",
+    flexDirection: "row",
     gap: theme.spacing.sm,
   },
   loadingText: {
-    color: theme.colors.typography,
-    opacity: 0.7,
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
   },
   inputSection: {
-    borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+    borderTopWidth: 1,
+    paddingBottom: theme.spacing.md,
     paddingTop: theme.spacing.md,
   },
   inputContainer: {
-    flexDirection: "row",
     alignItems: "flex-end",
+    flexDirection: "row",
     gap: theme.spacing.sm,
   },
   textInput: {
-    flex: 1,
-    borderWidth: 1,
+    backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
-    borderRadius: 8,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    color: theme.colors.typography,
-    backgroundColor: theme.colors.background,
-    fontSize: 16,
-    minHeight: 40,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    color: theme.colors.foreground,
+    flex: 1,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 20,
     maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 11,
+  },
+  placeholder: {
+    color: theme.colors.mutedForeground,
   },
   sendButton: {
-    backgroundColor: theme.colors.primary,
-    padding: theme.spacing.sm,
-    borderRadius: 8,
-    justifyContent: "center",
     alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonIcon: {
+    color: theme.colors.primaryForeground,
   },
   sendButtonDisabled: {
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+    opacity: 0.55,
+  },
+  sendButtonDisabledIcon: {
+    color: theme.colors.mutedForeground,
   },
 }));
 {{else}}
-import React, { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -17630,6 +18372,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -17637,6 +18380,21 @@ import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { Container } from "@/components/container";
 import { env } from "@{{projectName}}/env/native";
+
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
 
 const generateAPIUrl = (relativePath: string) => {
   const serverUrl = env.EXPO_PUBLIC_SERVER_URL;
@@ -17652,7 +18410,7 @@ const generateAPIUrl = (relativePath: string) => {
 export default function AIScreen() {
   const { theme } = useUnistyles();
   const [input, setInput] = useState("");
-  const { messages, error, sendMessage } = useChat({
+  const { messages, error, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: generateAPIUrl("/ai"),
     }),
@@ -17660,31 +18418,27 @@ export default function AIScreen() {
   });
 
   const scrollViewRef = useRef<ScrollView>(null);
+  const isBusy = status === "submitted" || status === "streaming";
+  const hasMessages = messages.length > 0;
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isBusy]);
 
-  const onSubmit = () => {
-    const value = input.trim();
-    if (value) {
-      sendMessage({ text: value });
-      setInput("");
-    }
+  const sendPrompt = (prompt: string) => {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
+
+    sendMessage({ text: value });
+    setInput("");
   };
 
-  if (error) {
-    return (
-      <Container>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Error: {error.message}</Text>
-          <Text style={styles.errorSubtext}>
-            Please check your connection and try again.
-          </Text>
-        </View>
-      </Container>
-    );
-  }
+  const onNewChat = () => {
+    if (isBusy) return;
+    setInput("");
+    setMessages([]);
+  };
 
   return (
     <Container>
@@ -17693,96 +18447,212 @@ export default function AIScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>AI Chat</Text>
-            <Text style={styles.headerSubtitle}>
-              Chat with our AI assistant
-            </Text>
+          <View style={styles.toolbar}>
+            <View style={styles.statusGroup}>
+              <View
+                style={[
+                  styles.statusDot,
+                  isBusy ? styles.statusDotBusy : styles.statusDotIdle,
+                ]}
+              />
+              <Text style={styles.statusText}>
+                {isBusy
+                  ? status === "submitted"
+                    ? "Sending"
+                    : "Streaming"
+                  : hasMessages
+                    ? \`\${messages.length} messages\`
+                    : "Ready"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={onNewChat}
+              disabled={isBusy || !hasMessages}
+              style={[
+                styles.toolbarAction,
+                (isBusy || !hasMessages) && styles.disabledAction,
+              ]}
+            >
+              <Ionicons
+                name="add"
+                size={16}
+                color={theme.colors.foreground}
+              />
+              <Text style={styles.toolbarActionText}>New</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView
             ref={scrollViewRef}
             style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {messages.length === 0 ? (
+            {!hasMessages ? (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  Ask me anything to get started!
+                <View style={styles.emptyIcon}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={28}
+                    color={theme.colors.foreground}
+                  />
+                </View>
+                <Text style={styles.emptyTitle}>Start a conversation</Text>
+                <Text selectable style={styles.emptyText}>
+                  Use a starter prompt or ask your own question.
                 </Text>
+                <View style={styles.promptList}>
+                  {starterPrompts.map((item) => (
+                    <TouchableOpacity
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                      style={[
+                        styles.promptButton,
+                        isBusy && styles.disabledAction,
+                      ]}
+                    >
+                      <Text style={styles.promptLabel}>{item.label}</Text>
+                      <Text style={styles.promptText}>{item.prompt}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             ) : (
               <View style={styles.messagesWrapper}>
-                {messages.map((message) => (
-                  <View
-                    key={message.id}
-                    style={[
-                      styles.messageContainer,
-                      message.role === "user"
-                        ? styles.userMessage
-                        : styles.assistantMessage,
-                    ]}
-                  >
-                    <Text style={styles.messageRole}>
-                      {message.role === "user" ? "You" : "AI Assistant"}
-                    </Text>
-                    <View style={styles.messageContentWrapper}>
-                      {message.parts.map((part, i) => {
-                        if (part.type === "text") {
-                          return (
-                            <Text
-                              key={\`\${message.id}-\${i}\`}
-                              style={styles.messageContent}
-                            >
-                              {part.text}
-                            </Text>
-                          );
-                        }
-                        return (
-                          <Text
-                            key={\`\${message.id}-\${i}\`}
-                            style={styles.messageContent}
-                          >
-                            {JSON.stringify(part)}
-                          </Text>
-                        );
-                      })}
+                {messages.map((message) => {
+                  const isUser = message.role === "user";
+
+                  return (
+                    <View
+                      key={message.id}
+                      style={[
+                        styles.messageRow,
+                        isUser ? styles.userRow : styles.assistantRow,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.messageBubble,
+                          isUser ? styles.userBubble : styles.assistantBubble,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.messageRole,
+                            isUser
+                              ? styles.userMessageText
+                              : styles.assistantMessageText,
+                          ]}
+                        >
+                          {isUser ? "You" : "AI"}
+                        </Text>
+                        <View style={styles.messageContentWrapper}>
+                          {(message.parts ?? []).map((part, i) => {
+                            if (part.type === "text") {
+                              return (
+                                <Text
+                                  key={\`\${message.id}-\${i}\`}
+                                  selectable
+                                  style={
+                                    isUser
+                                      ? styles.userMessageText
+                                      : styles.assistantMessageText
+                                  }
+                                >
+                                  {part.text}
+                                </Text>
+                              );
+                            }
+                            return (
+                              <Text
+                                key={\`\${message.id}-\${i}\`}
+                                selectable
+                                style={
+                                  isUser
+                                    ? styles.userMessageText
+                                    : styles.assistantMessageText
+                                }
+                              >
+                                {JSON.stringify(part)}
+                              </Text>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+                {isBusy && (
+                  <View style={[styles.messageRow, styles.assistantRow]}>
+                    <View style={[styles.messageBubble, styles.assistantBubble]}>
+                      <Text
+                        style={[
+                          styles.messageRole,
+                          styles.assistantMessageText,
+                        ]}
+                      >
+                        AI
+                      </Text>
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator
+                          size="small"
+                          color={theme.colors.primary}
+                        />
+                        <Text style={styles.loadingText}>Thinking...</Text>
+                      </View>
                     </View>
                   </View>
-                ))}
+                )}
               </View>
             )}
           </ScrollView>
+
+          {error && (
+            <View style={styles.errorBanner}>
+              <Ionicons
+                name="alert-circle-outline"
+                size={18}
+                color={theme.colors.destructive}
+              />
+              <Text selectable style={styles.errorText}>
+                {error.message}
+              </Text>
+            </View>
+          )}
 
           <View style={styles.inputSection}>
             <View style={styles.inputContainer}>
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Type your message..."
-                placeholderTextColor={theme.colors.border}
+                placeholder="Message AI..."
+                placeholderTextColor={theme.colors.mutedForeground}
                 style={styles.textInput}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
-                  onSubmit();
+                  sendPrompt(input);
                 }}
-                autoFocus={true}
+                editable={!isBusy}
+                returnKeyType="send"
+                multiline
               />
               <TouchableOpacity
-                onPress={onSubmit}
-                disabled={!input.trim()}
+                onPress={() => sendPrompt(input)}
+                disabled={!canSend}
                 style={[
                   styles.sendButton,
-                  !input.trim() && styles.sendButtonDisabled,
+                  !canSend && styles.sendButtonDisabled,
                 ]}
               >
                 <Ionicons
-                  name="send"
+                  name="arrow-up"
                   size={20}
                   color={
-                    input.trim()
-                      ? theme.colors.background
-                      : theme.colors.border
+                    canSend
+                      ? theme.colors.primaryForeground
+                      : theme.colors.mutedForeground
                   }
                 />
               </TouchableOpacity>
@@ -17801,115 +18671,238 @@ const styles = StyleSheet.create((theme) => ({
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.lg,
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
+  toolbar: {
     alignItems: "center",
-    paddingHorizontal: theme.spacing.md,
+    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
   },
-  errorText: {
-    color: theme.colors.destructive,
-    textAlign: "center",
-    fontSize: 18,
-    marginBottom: theme.spacing.md,
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
   },
-  errorSubtext: {
-    color: theme.colors.typography,
-    textAlign: "center",
-    fontSize: 16,
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
   },
-  header: {
-    marginBottom: theme.spacing.lg,
+  statusDotBusy: {
+    backgroundColor: theme.colors.primary,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: theme.colors.typography,
-    marginBottom: theme.spacing.sm,
+  statusDotIdle: {
+    backgroundColor: theme.colors.border,
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: theme.colors.typography,
+  statusText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
+  },
+  toolbarAction: {
+    alignItems: "center",
+    borderColor: theme.colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: theme.spacing.xs,
+    minHeight: 32,
+    paddingHorizontal: 10,
+  },
+  toolbarActionText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "600",
+  },
+  disabledAction: {
+    opacity: 0.45,
   },
   messagesContainer: {
     flex: 1,
-    marginBottom: theme.spacing.md,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: theme.spacing.md,
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    flex: 1,
+    gap: theme.spacing.md,
+    justifyContent: "center",
+  },
+  emptyIcon: {
+    alignItems: "center",
+    borderColor: theme.colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyTitle: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "700",
+    textAlign: "center",
   },
   emptyText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 20,
     textAlign: "center",
-    color: theme.colors.typography,
-    fontSize: 18,
+  },
+  promptList: {
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+    width: "100%",
+  },
+  promptButton: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "700",
+  },
+  promptText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 18,
   },
   messagesWrapper: {
     gap: theme.spacing.md,
   },
-  messageContainer: {
-    padding: theme.spacing.md,
-    borderRadius: 8,
+  messageRow: {
+    flexDirection: "row",
   },
-  userMessage: {
-    backgroundColor: theme.colors.primary + "20",
-    marginLeft: theme.spacing.xl,
-    alignSelf: "flex-end",
+  userRow: {
+    justifyContent: "flex-end",
   },
-  assistantMessage: {
-    backgroundColor: theme.colors.background,
-    marginRight: theme.spacing.xl,
-    borderWidth: 1,
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
+  messageBubble: {
+    borderRadius: theme.borderRadius.xl,
+    maxWidth: "86%",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 10,
+  },
+  userBubble: {
+    backgroundColor: theme.colors.primary,
+    borderTopRightRadius: theme.borderRadius.sm,
+  },
+  assistantBubble: {
+    backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
+    borderTopLeftRadius: theme.borderRadius.sm,
+    borderWidth: 1,
   },
   messageRole: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: theme.spacing.sm,
-    color: theme.colors.typography,
+    fontSize: theme.fontSize.xs,
+    fontWeight: "700",
+    marginBottom: theme.spacing.xs,
+    opacity: 0.72,
   },
   messageContentWrapper: {
     gap: theme.spacing.xs,
   },
-  messageContent: {
-    color: theme.colors.typography,
-    lineHeight: 20,
+  userMessageText: {
+    color: theme.colors.primaryForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  assistantMessageText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+  },
+  loadingText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+  },
+  errorBanner: {
+    alignItems: "center",
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.destructive,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  errorIcon: {
+    color: theme.colors.destructive,
+  },
+  errorText: {
+    color: theme.colors.foreground,
+    flex: 1,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 18,
   },
   inputSection: {
-    borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+    borderTopWidth: 1,
+    paddingBottom: theme.spacing.md,
     paddingTop: theme.spacing.md,
   },
   inputContainer: {
-    flexDirection: "row",
     alignItems: "flex-end",
+    flexDirection: "row",
     gap: theme.spacing.sm,
   },
   textInput: {
-    flex: 1,
-    borderWidth: 1,
+    backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
-    borderRadius: 8,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    color: theme.colors.typography,
-    backgroundColor: theme.colors.background,
-    fontSize: 16,
-    minHeight: 40,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    color: theme.colors.foreground,
+    flex: 1,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 20,
     maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 11,
+  },
+  placeholder: {
+    color: theme.colors.mutedForeground,
   },
   sendButton: {
-    backgroundColor: theme.colors.primary,
-    padding: theme.spacing.sm,
-    borderRadius: 8,
-    justifyContent: "center",
     alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonIcon: {
+    color: theme.colors.primaryForeground,
   },
   sendButtonDisabled: {
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+    opacity: 0.55,
+  },
+  sendButtonDisabledIcon: {
+    color: theme.colors.mutedForeground,
   },
 }));
 {{/if}}
@@ -17953,9 +18946,25 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from "react-native";
 
 import { Container } from "@/components/container";
+
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
 
 function MessageContent({
   text,
@@ -17967,7 +18976,12 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
-  return <Text className="text-foreground text-sm leading-relaxed">{visibleText}</Text>;
+
+  return (
+    <Text selectable className="text-foreground text-sm leading-relaxed">
+      {visibleText}
+    </Text>
+  );
 }
 
 export default function AIScreen() {
@@ -17990,14 +19004,17 @@ export default function AIScreen() {
   const hasStreamingMessage = messages?.some(
     (m) => m.status === "streaming",
   );
+  const hasMessages = Boolean(messages?.length);
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  const onSubmit = async () => {
-    const value = input.trim();
-    if (!value || isLoading) return;
+  const sendPrompt = async (prompt: string) => {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -18017,57 +19034,140 @@ export default function AIScreen() {
     }
   };
 
+  const onNewChat = () => {
+    if (isBusy) return;
+    setInput("");
+    setThreadId(null);
+  };
+
   return (
     <Container isScrollable={false}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View className="flex-1 px-4 py-4">
-          <View className="py-4 mb-4">
-            <Text className="text-2xl font-semibold text-foreground tracking-tight">AI Chat</Text>
-            <Text className="text-muted text-sm mt-1">Chat with our AI assistant</Text>
+        <View className="flex-1 px-4">
+          <View className="flex-row items-center justify-between py-3">
+            <View className="flex-row items-center gap-2">
+              <View
+                className={\`h-2 w-2 rounded-full \${
+                  isBusy ? "bg-primary" : "bg-border"
+                }\`}
+              />
+              <Text className="text-sm font-semibold text-foreground tabular-nums">
+                {isBusy
+                  ? "Streaming"
+                  : hasMessages
+                    ? \`\${messages?.length ?? 0} messages\`
+                    : "Ready"}
+              </Text>
+            </View>
+            <Button
+              size="sm"
+              variant="secondary"
+              onPress={onNewChat}
+              isDisabled={isBusy || (!hasMessages && !threadId)}
+            >
+              <Ionicons name="add" size={16} color={foregroundColor} />
+              <Text className="text-sm font-medium text-foreground">New</Text>
+            </Button>
           </View>
+
+          <Separator className="mb-1" />
 
           <ScrollView
             ref={scrollViewRef}
-            className="flex-1 mb-4"
+            className="flex-1"
             showsVerticalScrollIndicator={false}
-            contentContainerStyle=\\{{ flexGrow: 1, paddingBottom: 8 }}
+            contentContainerStyle=\\{{ flexGrow: 1, paddingVertical: 16 }}
             keyboardShouldPersistTaps="handled"
           >
-            {!messages || messages.length === 0 ? (
-              <Surface variant="secondary" className="flex-1 justify-center items-center py-8 rounded-xl">
-                <Ionicons name="chatbubble-ellipses-outline" size={32} color={mutedColor} />
-                <Text className="text-muted text-sm mt-3">Ask me anything to get started</Text>
-              </Surface>
-            ) : (
-              <View className="gap-3">
-                {messages.map((message) => (
+            {!hasMessages ? (
+              <View className="flex-1 justify-center gap-3">
+                <View className="items-center gap-3">
                   <Surface
-                    key={message.key}
-                    variant={message.role === "user" ? "tertiary" : "secondary"}
-                    className={\`p-3 rounded-xl \${message.role === "user" ? "ml-8" : "mr-8"}\`}
+                    variant="secondary"
+                    className="h-14 w-14 items-center justify-center rounded-full"
                   >
-                    <Text className="text-xs font-medium mb-1 text-muted">
-                      {message.role === "user" ? "You" : "AI"}
-                    </Text>
-                    <MessageContent
-                      text={(message.parts ?? [])
-                        .map((part) => (part.type === "text" ? part.text : ""))
-                        .join("")}
-                      isStreaming={message.status === "streaming"}
+                    <Ionicons
+                      name="chatbubble-ellipses-outline"
+                      size={28}
+                      color={mutedColor}
                     />
                   </Surface>
+                  <Text className="text-center text-xl font-semibold text-foreground">
+                    Start a conversation
+                  </Text>
+                  <Text selectable className="text-center text-sm leading-5 text-muted">
+                    Use a starter prompt or ask your own question.
+                  </Text>
+                </View>
+                <View className="gap-2">
+                  {starterPrompts.map((item) => (
+                    <Pressable
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                    >
+                      <Surface
+                        variant="secondary"
+                        className={\`gap-1 rounded-xl p-3 \${
+                          isBusy ? "opacity-50" : ""
+                        }\`}
+                      >
+                        <Text className="text-sm font-semibold text-foreground">
+                          {item.label}
+                        </Text>
+                        <Text className="text-sm leading-5 text-muted">
+                          {item.prompt}
+                        </Text>
+                      </Surface>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            ) : (
+              <View className="gap-3">
+	                {messages?.map((message) => (
+	                  <View
+	                    key={\`\${message.order}-\${message.stepOrder}\`}
+	                    className={\`flex-row \${
+                      message.role === "user" ? "justify-end" : "justify-start"
+                    }\`}
+                  >
+                    <Surface
+                      variant={message.role === "user" ? "tertiary" : "secondary"}
+                      style=\\{{ maxWidth: "86%" }}
+                      className={\`rounded-2xl p-3 \${
+                        message.role === "user" ? "rounded-tr-md" : "rounded-tl-md"
+                      }\`}
+                    >
+                      <Text className="mb-1 text-xs font-semibold text-muted">
+                        {message.role === "user" ? "You" : "AI"}
+                      </Text>
+                      <MessageContent
+                        text={(message.parts ?? [])
+                          .map((part) => (part.type === "text" ? part.text : ""))
+                          .join("")}
+                        isStreaming={message.status === "streaming"}
+                      />
+                    </Surface>
+                  </View>
                 ))}
                 {isLoading && !hasStreamingMessage && (
-                  <Surface variant="secondary" className="p-3 mr-10 rounded-lg">
-                    <Text className="text-xs font-medium mb-1 text-muted">AI</Text>
-                    <View className="flex-row items-center gap-2">
-                      <Spinner size="sm" />
-                      <Text className="text-muted text-sm">Thinking...</Text>
-                    </View>
-                  </Surface>
+                  <View className="flex-row justify-start">
+                    <Surface
+                      variant="secondary"
+                      style=\\{{ maxWidth: "86%" }}
+                      className="rounded-2xl rounded-tl-md p-3"
+                    >
+                      <Text className="mb-1 text-xs font-semibold text-muted">AI</Text>
+                      <View className="flex-row items-center gap-2">
+                        <Spinner size="sm" />
+                        <Text className="text-sm text-muted">Thinking...</Text>
+                      </View>
+                    </Surface>
+                  </View>
                 )}
               </View>
             )}
@@ -18075,30 +19175,30 @@ export default function AIScreen() {
 
           <Separator className="mb-3" />
 
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-end gap-2 pb-4">
             <View className="flex-1">
-                <TextField>
-                  <Input
-                    value={input}
-                    onChangeText={setInput}
-                    placeholder="Type a message..."
-                    onSubmitEditing={onSubmit}
-                    editable={!isLoading}
-                    returnKeyType="send"
-                  />
-                </TextField>
-              </View>
+              <TextField>
+                <Input
+                  value={input}
+                  onChangeText={setInput}
+                  placeholder="Message AI..."
+                  onSubmitEditing={() => sendPrompt(input)}
+                  editable={!isBusy}
+                  returnKeyType="send"
+                />
+              </TextField>
+            </View>
             <Button
               isIconOnly
-              variant={input.trim() && !isLoading ? "primary" : "secondary"}
-              onPress={onSubmit}
-              isDisabled={!input.trim() || isLoading}
+              variant={canSend ? "primary" : "secondary"}
+              onPress={() => sendPrompt(input)}
+              isDisabled={!canSend}
               size="sm"
             >
               <Ionicons
                 name="arrow-up"
                 size={18}
-                color={input.trim() && !isLoading ? foregroundColor : mutedColor}
+                color={canSend ? foregroundColor : mutedColor}
               />
             </Button>
           </View>
@@ -18115,6 +19215,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -18122,6 +19223,21 @@ import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
 import { Button, Separator, FieldError, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
 import { env } from "@{{projectName}}/env/native";
+
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
 
 const generateAPIUrl = (relativePath: string) => {
   const serverUrl = env.EXPO_PUBLIC_SERVER_URL;
@@ -18136,7 +19252,7 @@ const generateAPIUrl = (relativePath: string) => {
 
 export default function AIScreen() {
   const [input, setInput] = useState("");
-  const { messages, error, sendMessage, status } = useChat({
+  const { messages, error, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: generateAPIUrl("/ai"),
     }),
@@ -18146,37 +19262,26 @@ export default function AIScreen() {
   const foregroundColor = useThemeColor("foreground");
   const mutedColor = useThemeColor("muted");
   const isBusy = status === "submitted" || status === "streaming";
+  const hasMessages = messages.length > 0;
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isBusy]);
 
-  const onSubmit = () => {
-    const value = input.trim();
-    if (value && !isBusy) {
-      sendMessage({ text: value });
-      setInput("");
-    }
+  const sendPrompt = (prompt: string) => {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
+
+    sendMessage({ text: value });
+    setInput("");
   };
 
-  if (error) {
-    return (
-      <Container isScrollable={false}>
-        <View className="flex-1 justify-center items-center px-4">
-          <Surface variant="secondary" className="p-4 rounded-lg">
-            <FieldError isInvalid>
-              <Text className="text-danger text-center font-medium mb-1">
-                {error.message}
-              </Text>
-              <Text className="text-muted text-center text-xs">
-                Please check your connection and try again.
-              </Text>
-            </FieldError>
-          </Surface>
-        </View>
-      </Container>
-    );
-  }
+  const onNewChat = () => {
+    if (isBusy) return;
+    setInput("");
+    setMessages([]);
+  };
 
   return (
     <Container isScrollable={false}>
@@ -18184,79 +19289,170 @@ export default function AIScreen() {
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View className="flex-1 px-4 py-4">
-          <View className="py-4 mb-4">
-            <Text className="text-2xl font-semibold text-foreground tracking-tight">AI Chat</Text>
-            <Text className="text-muted text-sm mt-1">Chat with our AI assistant</Text>
+        <View className="flex-1 px-4">
+          <View className="flex-row items-center justify-between py-3">
+            <View className="flex-row items-center gap-2">
+              <View
+                className={\`h-2 w-2 rounded-full \${
+                  isBusy ? "bg-primary" : "bg-border"
+                }\`}
+              />
+              <Text className="text-sm font-semibold text-foreground tabular-nums">
+                {isBusy
+                  ? status === "submitted"
+                    ? "Sending"
+                    : "Streaming"
+                  : hasMessages
+                    ? \`\${messages.length} messages\`
+                    : "Ready"}
+              </Text>
+            </View>
+            <Button
+              size="sm"
+              variant="secondary"
+              onPress={onNewChat}
+              isDisabled={isBusy || !hasMessages}
+            >
+              <Ionicons name="add" size={16} color={foregroundColor} />
+              <Text className="text-sm font-medium text-foreground">New</Text>
+            </Button>
           </View>
+
+          <Separator className="mb-1" />
 
           <ScrollView
             ref={scrollViewRef}
-            className="flex-1 mb-4"
+            className="flex-1"
             showsVerticalScrollIndicator={false}
-            contentContainerStyle=\\{{ flexGrow: 1, paddingBottom: 8 }}
+            contentContainerStyle=\\{{ flexGrow: 1, paddingVertical: 16 }}
             keyboardShouldPersistTaps="handled"
           >
-            {messages.length === 0 ? (
-              <Surface variant="secondary" className="flex-1 justify-center items-center py-8 rounded-xl">
-                <Ionicons name="chatbubble-ellipses-outline" size={32} color={mutedColor} />
-                <Text className="text-muted text-sm mt-3">Ask me anything to get started</Text>
-              </Surface>
+            {!hasMessages ? (
+              <View className="flex-1 justify-center gap-3">
+                <View className="items-center gap-3">
+                  <Surface
+                    variant="secondary"
+                    className="h-14 w-14 items-center justify-center rounded-full"
+                  >
+                    <Ionicons
+                      name="chatbubble-ellipses-outline"
+                      size={28}
+                      color={mutedColor}
+                    />
+                  </Surface>
+                  <Text className="text-center text-xl font-semibold text-foreground">
+                    Start a conversation
+                  </Text>
+                  <Text selectable className="text-center text-sm leading-5 text-muted">
+                    Use a starter prompt or ask your own question.
+                  </Text>
+                </View>
+                <View className="gap-2">
+                  {starterPrompts.map((item) => (
+                    <Pressable
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                    >
+                      <Surface
+                        variant="secondary"
+                        className={\`gap-1 rounded-xl p-3 \${
+                          isBusy ? "opacity-50" : ""
+                        }\`}
+                      >
+                        <Text className="text-sm font-semibold text-foreground">
+                          {item.label}
+                        </Text>
+                        <Text className="text-sm leading-5 text-muted">
+                          {item.prompt}
+                        </Text>
+                      </Surface>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
             ) : (
               <View className="gap-3">
                 {messages.map((message) => (
-                  <Surface
+                  <View
                     key={message.id}
-                    variant={message.role === "user" ? "tertiary" : "secondary"}
-                    className={\`p-3 rounded-xl \${message.role === "user" ? "ml-8" : "mr-8"}\`}
+                    className={\`flex-row \${
+                      message.role === "user" ? "justify-end" : "justify-start"
+                    }\`}
                   >
-                    <Text className="text-xs font-medium mb-1 text-muted">
-                      {message.role === "user" ? "You" : "AI"}
-                    </Text>
-                    <View className="gap-1">
-                      {message.parts.map((part, i) =>
-                        part.type === "text" ? (
-                          <Text
-                            key={\`\${message.id}-\${i}\`}
-                            className="text-foreground text-sm leading-relaxed"
-                          >
-                            {part.text}
-                          </Text>
-                        ) : (
-                          <Text
-                            key={\`\${message.id}-\${i}\`}
-                            className="text-foreground text-sm leading-relaxed"
-                          >
-                            {JSON.stringify(part)}
-                          </Text>
-                        )
-                      )}
-                    </View>
-                  </Surface>
+                    <Surface
+                      variant={message.role === "user" ? "tertiary" : "secondary"}
+                      style=\\{{ maxWidth: "86%" }}
+                      className={\`rounded-2xl p-3 \${
+                        message.role === "user" ? "rounded-tr-md" : "rounded-tl-md"
+                      }\`}
+                    >
+                      <Text className="mb-1 text-xs font-semibold text-muted">
+                        {message.role === "user" ? "You" : "AI"}
+                      </Text>
+                      <View className="gap-1">
+                        {(message.parts ?? []).map((part, i) =>
+                          part.type === "text" ? (
+                            <Text
+                              key={\`\${message.id}-\${i}\`}
+                              selectable
+                              className="text-sm leading-relaxed text-foreground"
+                            >
+                              {part.text}
+                            </Text>
+                          ) : (
+                            <Text
+                              key={\`\${message.id}-\${i}\`}
+                              selectable
+                              className="text-sm leading-relaxed text-foreground"
+                            >
+                              {JSON.stringify(part)}
+                            </Text>
+                          )
+                        )}
+                      </View>
+                    </Surface>
+                  </View>
                 ))}
                 {isBusy && (
-                  <Surface variant="secondary" className="p-3 mr-8 rounded-xl">
-                    <Text className="text-xs font-medium mb-1 text-muted">AI</Text>
-                    <View className="flex-row items-center gap-2">
-                      <Spinner size="sm" />
-                      <Text className="text-muted text-sm">Thinking...</Text>
-                    </View>
-                  </Surface>
+                  <View className="flex-row justify-start">
+                    <Surface
+                      variant="secondary"
+                      style=\\{{ maxWidth: "86%" }}
+                      className="rounded-2xl rounded-tl-md p-3"
+                    >
+                      <Text className="mb-1 text-xs font-semibold text-muted">AI</Text>
+                      <View className="flex-row items-center gap-2">
+                        <Spinner size="sm" />
+                        <Text className="text-sm text-muted">Thinking...</Text>
+                      </View>
+                    </Surface>
+                  </View>
                 )}
               </View>
             )}
           </ScrollView>
 
+          {error && (
+            <Surface variant="secondary" className="mb-3 rounded-xl p-3">
+              <FieldError isInvalid>
+                <Text selectable className="text-sm font-medium text-danger">
+                  {error.message}
+                </Text>
+              </FieldError>
+            </Surface>
+          )}
+
           <Separator className="mb-3" />
 
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-end gap-2 pb-4">
             <View className="flex-1">
               <TextField>
                 <Input
                   value={input}
                   onChangeText={setInput}
-                  placeholder="Type a message..."
-                  onSubmitEditing={onSubmit}
+                  placeholder="Message AI..."
+                  onSubmitEditing={() => sendPrompt(input)}
                   returnKeyType="send"
                   editable={!isBusy}
                 />
@@ -18264,15 +19460,15 @@ export default function AIScreen() {
             </View>
             <Button
               isIconOnly
-              variant={input.trim() && !isBusy ? "primary" : "secondary"}
-              onPress={onSubmit}
-              isDisabled={!input.trim() || isBusy}
+              variant={canSend ? "primary" : "secondary"}
+              onPress={() => sendPrompt(input)}
+              isDisabled={!canSend}
               size="sm"
             >
               <Ionicons
                 name="arrow-up"
                 size={18}
-                color={input.trim() && !isBusy ? foregroundColor : mutedColor}
+                color={canSend ? foregroundColor : mutedColor}
               />
             </Button>
           </View>
@@ -18307,8 +19503,7 @@ if (Platform.OS !== "web") {
 export {};
 `],
   ["examples/ai/web/nuxt/app/pages/ai.vue.hbs", `<script setup lang="ts">
-import { Chat } from '@ai-sdk/vue'
-import type { UIMessage } from 'ai'
+import { useChat } from '@ai-sdk/vue'
 import { getTextFromMessage } from '@nuxt/ui/utils/ai'
 import { DefaultChatTransport } from 'ai'
 import { computed, ref } from 'vue'
@@ -18332,12 +19527,10 @@ const SUGGESTIONS = [
   }
 ] as const
 
-const messages: UIMessage[] = []
 const input = ref('')
 const aiApiUrl = {{#if (eq backend "self")}}'/api/ai'{{else}}\`\${useRuntimeConfig().public.serverUrl}/ai\`{{/if}}
 
-const chat = new Chat({
-  messages,
+const { messages, status, error, sendMessage, stop, regenerate } = useChat({
   transport: new DefaultChatTransport({
     api: aiApiUrl,
   }),
@@ -18346,8 +19539,8 @@ const chat = new Chat({
   }
 })
 
-const hasMessages = computed(() => chat.messages.length > 0)
-const isLoading = computed(() => chat.status === 'submitted' || chat.status === 'streaming')
+const hasMessages = computed(() => messages.value.length > 0)
+const isLoading = computed(() => status.value === 'submitted' || status.value === 'streaming')
 
 function applySuggestion(prompt: string) {
   input.value = prompt
@@ -18360,7 +19553,7 @@ async function handleSubmit(e: Event) {
 
   if (!userInput.trim()) return
 
-  chat.sendMessage({ text: userInput })
+  sendMessage({ text: userInput })
 }
 </script>
 
@@ -18401,8 +19594,8 @@ async function handleSubmit(e: Event) {
 
       <div v-else class="mx-auto flex h-full w-full max-w-3xl min-h-0 flex-col">
         <UChatMessages
-          :messages="chat.messages"
-          :status="chat.status"
+          :messages="messages"
+          :status="status"
           :assistant="{
             variant: 'outline',
             avatar: {
@@ -18433,21 +19626,21 @@ async function handleSubmit(e: Event) {
           :rows="1"
           :maxrows="8"
           :loading="isLoading"
-          :error="chat.error"
+          :error="error"
           :placeholder="hasMessages ? 'Keep the conversation going...' : 'Ask about your app, schema, auth, or deployment...'"
           @submit="handleSubmit"
         >
           <UChatPromptSubmit
             class="ms-auto"
-            :status="chat.status"
-            @stop="() => chat.stop()"
-            @reload="() => chat.regenerate()"
+            :status="status"
+            @stop="stop"
+            @reload="regenerate"
           />
         </UChatPrompt>
 
         <div class="mt-2 flex items-center justify-between gap-3 px-1 text-xs text-muted">
           <span>Press Enter to send and Shift+Enter for a new line.</span>
-          <span>\\{{ hasMessages ? \`\${chat.messages.length} messages\` : 'Ready when you are.' }}</span>
+          <span>\\{{ hasMessages ? \`\${messages.length} messages\` : 'Ready when you are.' }}</span>
         </div>
       </div>
     </div>
@@ -18459,11 +19652,16 @@ async function handleSubmit(e: Event) {
 
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
-  useUIMessages,
   useSmoothText,
+  useUIMessages,
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
-import { Send, Loader2 } from "lucide-react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
 {{#if (eq webDeploy "cloudflare")}}
 import dynamic from "next/dynamic";
 
@@ -18481,12 +19679,43 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
-function MessageContent({
+function StreamingMessageText({
   text,
   isStreaming,
 }: {
@@ -18496,6 +19725,7 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
+
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
@@ -18503,7 +19733,6 @@ export default function AIPage() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
@@ -18514,18 +19743,15 @@ export default function AIPage() {
     { initialNumItems: 50, stream: true },
   );
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const hasStreamingMessage = messages?.some(
     (m) => m.status === "streaming",
   );
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -18545,70 +19771,160 @@ export default function AIPage() {
     }
   };
 
-  return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {!messages || messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.key}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              <MessageContent
-                text={(message.parts ?? [])
-                  .map((part) => (part.type === "text" ? part.text : ""))
-                  .join("")}
-                isStreaming={message.status === "streaming"}
-              />
-            </div>
-          ))
-        )}
-        {isLoading && !hasStreamingMessage && (
-          <div className="p-3 rounded-lg bg-secondary/20 mr-8">
-            <p className="text-sm font-semibold mb-1">AI Assistant</p>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Thinking...</span>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-          disabled={isLoading}
-        />
-        <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send size={18} />
-          )}
-        </Button>
-      </form>
-    </div>
+  const resetConversation = () => {
+    setInput("");
+    setThreadId(null);
+  };
+
+  return (
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isBusy}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {(!messages || messages.length === 0) && !isLoading ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isBusy}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+	                        return (
+	                          <MessageScrollerItem
+	                            key={\`\${message.order}-\${message.stepOrder}\`}
+	                            scrollAnchor={isUser}
+	                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    <StreamingMessageText
+                                      text={(message.parts ?? [])
+                                        .map((part) => (part.type === "text" ? part.text : ""))
+                                        .join("")}
+                                      isStreaming={message.status === "streaming"}
+                                    />
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {isLoading && !hasStreamingMessage && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isBusy}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isBusy || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isBusy ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{else}}
@@ -18616,7 +19932,12 @@ export default function AIPage() {
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { Send } from "lucide-react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
 {{#if (eq webDeploy "cloudflare")}}
 import dynamic from "next/dynamic";
 
@@ -18634,91 +19955,221 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 import { env } from "@{{projectName}}/env/web";
 
 export default function AIPage() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: {{#if (eq backend "self")}}"/api/ai"{{else}}\`\${env.NEXT_PUBLIC_SERVER_URL}/ai\`{{/if}},
     }),
   });
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const isSending = status === "submitted" || status === "streaming";
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
   };
 
-  return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              {message.parts?.map((part, index) => {
-                if (part.type === "text") {
-                  return (
-                    <Streamdown
-                      key={index}
-                      isAnimating={status === "streaming" && message.role === "assistant"}
-                    >
-                      {part.text}
-                    </Streamdown>
-                  );
-                }
-                return null;
-              })}
-            </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-        />
-        <Button type="submit" size="icon">
-          <Send size={18} />
-        </Button>
-      </form>
-    </div>
+  const resetConversation = () => {
+    setInput("");
+    setMessages([]);
+  };
+
+  return (
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isSending}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {messages.length === 0 && !isSending ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isSending}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+                        return (
+                          <MessageScrollerItem
+                            key={message.id}
+                            scrollAnchor={isUser}
+                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    {message.parts?.map((part, index) => {
+                                      if (part.type === "text") {
+                                        return (
+                                          <Streamdown
+                                            key={index}
+                                            isAnimating={status === "streaming" && message.role === "assistant"}
+                                          >
+                                            {part.text}
+                                          </Streamdown>
+                                        );
+                                      }
+                                      return null;
+                                    })}
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {status === "submitted" && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isSending}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isSending || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isSending ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{/if}}
@@ -18726,18 +20177,54 @@ export default function AIPage() {
   ["examples/ai/web/react/react-router/src/routes/ai.tsx.hbs", `{{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
-  useUIMessages,
   useSmoothText,
+  useUIMessages,
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
-import { Send, Loader2 } from "lucide-react";
-import React, { useRef, useEffect, useState, type FormEvent } from "react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
-function MessageContent({
+function StreamingMessageText({
   text,
   isStreaming,
 }: {
@@ -18747,14 +20234,14 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
+
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
-const AI: React.FC = () => {
+export default function AI() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
@@ -18765,18 +20252,15 @@ const AI: React.FC = () => {
     { initialNumItems: 50, stream: true },
   );
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const hasStreamingMessage = messages?.some(
     (m) => m.status === "streaming",
   );
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -18796,190 +20280,447 @@ const AI: React.FC = () => {
     }
   };
 
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
+
+  const resetConversation = () => {
+    setInput("");
+    setThreadId(null);
+  };
+
   return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {!messages || messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.key}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
               </p>
-              <MessageContent
-                text={(message.parts ?? [])
-                  .map((part) => (part.type === "text" ? part.text : ""))
-                  .join("")}
-                isStreaming={message.status === "streaming"}
-              />
             </div>
-          ))
-        )}
-        {isLoading && !hasStreamingMessage && (
-          <div className="p-3 rounded-lg bg-secondary/20 mr-8">
-            <p className="text-sm font-semibold mb-1">AI Assistant</p>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Thinking...</span>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isBusy}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
             </div>
           </div>
-        )}
-        <div ref={messagesEndRef} />
+        </header>
+        <main className="min-h-0 flex-1">
+              {(!messages || messages.length === 0) && !isLoading ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isBusy}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+	                        return (
+	                          <MessageScrollerItem
+	                            key={\`\${message.order}-\${message.stepOrder}\`}
+	                            scrollAnchor={isUser}
+	                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    <StreamingMessageText
+                                      text={(message.parts ?? [])
+                                        .map((part) => (part.type === "text" ? part.text : ""))
+                                        .join("")}
+                                      isStreaming={message.status === "streaming"}
+                                    />
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {isLoading && !hasStreamingMessage && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isBusy}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isBusy || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isBusy ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
       </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-          disabled={isLoading}
-        />
-        <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send size={18} />
-          )}
-        </Button>
-      </form>
-    </div>
+    </MessageScrollerProvider>
   );
-};
-
-export default AI;
+}
 {{else}}
-import React, { useRef, useEffect, useState, type FormEvent } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { Send } from "lucide-react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 import { env } from "@{{projectName}}/env/web";
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
-const AI: React.FC = () => {
+export default function AI() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: \`\${env.VITE_SERVER_URL}/ai\`,
     }),
   });
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const isSending = status === "submitted" || status === "streaming";
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
   };
 
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
+
+  const resetConversation = () => {
+    setInput("");
+    setMessages([]);
+  };
+
   return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
               </p>
-              {message.parts?.map((part, index) => {
-                if (part.type === "text") {
-                  return (
-                    <Streamdown
-                      key={index}
-                      isAnimating={status === "streaming" && message.role === "assistant"}
-                    >
-                      {part.text}
-                    </Streamdown>
-                  );
-                }
-                return null;
-              })}
             </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isSending}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {messages.length === 0 && !isSending ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isSending}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+                        return (
+                          <MessageScrollerItem
+                            key={message.id}
+                            scrollAnchor={isUser}
+                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    {message.parts?.map((part, index) => {
+                                      if (part.type === "text") {
+                                        return (
+                                          <Streamdown
+                                            key={index}
+                                            isAnimating={status === "streaming" && message.role === "assistant"}
+                                          >
+                                            {part.text}
+                                          </Streamdown>
+                                        );
+                                      }
+                                      return null;
+                                    })}
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {status === "submitted" && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isSending}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isSending || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isSending ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
       </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-        />
-        <Button type="submit" size="icon">
-          <Send size={18} />
-        </Button>
-      </form>
-    </div>
+    </MessageScrollerProvider>
   );
-};
-
-export default AI;
+}
 {{/if}}
 `],
   ["examples/ai/web/react/tanstack-router/src/routes/ai.tsx.hbs", `{{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
-  useUIMessages,
   useSmoothText,
+  useUIMessages,
 } from "@convex-dev/agent/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { Send, Loader2 } from "lucide-react";
-import { useRef, useEffect, useState, type FormEvent } from "react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
 });
 
-function MessageContent({
+function StreamingMessageText({
   text,
   isStreaming,
 }: {
@@ -18989,6 +20730,7 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
+
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
@@ -18996,7 +20738,6 @@ function RouteComponent() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
@@ -19007,18 +20748,15 @@ function RouteComponent() {
     { initialNumItems: 50, stream: true },
   );
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const hasStreamingMessage = messages?.some(
     (m) => m.status === "streaming",
   );
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -19038,84 +20776,211 @@ function RouteComponent() {
     }
   };
 
-  return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {!messages || messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.key}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              <MessageContent
-                text={(message.parts ?? [])
-                  .map((part) => (part.type === "text" ? part.text : ""))
-                  .join("")}
-                isStreaming={message.status === "streaming"}
-              />
-            </div>
-          ))
-        )}
-        {isLoading && !hasStreamingMessage && (
-          <div className="p-3 rounded-lg bg-secondary/20 mr-8">
-            <p className="text-sm font-semibold mb-1">AI Assistant</p>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Thinking...</span>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-          disabled={isLoading}
-        />
-        <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send size={18} />
-          )}
-        </Button>
-      </form>
-    </div>
+  const resetConversation = () => {
+    setInput("");
+    setThreadId(null);
+  };
+
+  return (
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isBusy}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {(!messages || messages.length === 0) && !isLoading ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isBusy}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+	                        return (
+	                          <MessageScrollerItem
+	                            key={\`\${message.order}-\${message.stepOrder}\`}
+	                            scrollAnchor={isUser}
+	                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    <StreamingMessageText
+                                      text={(message.parts ?? [])
+                                        .map((part) => (part.type === "text" ? part.text : ""))
+                                        .join("")}
+                                      isStreaming={message.status === "streaming"}
+                                    />
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {isLoading && !hasStreamingMessage && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isBusy}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isBusy || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isBusy ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{else}}
-import { createFileRoute } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
+import { createFileRoute } from "@tanstack/react-router";
 import { DefaultChatTransport } from "ai";
-import { Input } from "@{{projectName}}/ui/components/input";
-import { Button } from "@{{projectName}}/ui/components/button";
-import { Send } from "lucide-react";
-import { useRef, useEffect, useState, type FormEvent } from "react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 {{/unless}}
+
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
+import { Button } from "@{{projectName}}/ui/components/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
@@ -19123,83 +20988,182 @@ export const Route = createFileRoute("/ai")({
 
 function RouteComponent() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: {{#if (eq backend "self")}}"/api/ai"{{else}}\`\${env.VITE_SERVER_URL}/ai\`{{/if}},
     }),
   });
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const isSending = status === "submitted" || status === "streaming";
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
   };
 
-  return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              {message.parts?.map((part, index) => {
-                if (part.type === "text") {
-                  return (
-                    <Streamdown
-                      key={index}
-                      isAnimating={status === "streaming" && message.role === "assistant"}
-                    >
-                      {part.text}
-                    </Streamdown>
-                  );
-                }
-                return null;
-              })}
-            </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-        />
-        <Button type="submit" size="icon">
-          <Send size={18} />
-        </Button>
-      </form>
-    </div>
+  const resetConversation = () => {
+    setInput("");
+    setMessages([]);
+  };
+
+  return (
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isSending}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {messages.length === 0 && !isSending ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isSending}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+                        return (
+                          <MessageScrollerItem
+                            key={message.id}
+                            scrollAnchor={isUser}
+                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    {message.parts?.map((part, index) => {
+                                      if (part.type === "text") {
+                                        return (
+                                          <Streamdown
+                                            key={index}
+                                            isAnimating={status === "streaming" && message.role === "assistant"}
+                                          >
+                                            {part.text}
+                                          </Streamdown>
+                                        );
+                                      }
+                                      return null;
+                                    })}
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {status === "submitted" && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isSending}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isSending || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isSending ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{/if}}
@@ -19207,23 +21171,59 @@ function RouteComponent() {
   ["examples/ai/web/react/tanstack-start/src/routes/ai.tsx.hbs", `{{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
-  useUIMessages,
   useSmoothText,
+  useUIMessages,
 } from "@convex-dev/agent/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { Send, Loader2 } from "lucide-react";
-import { useRef, useEffect, useState, type FormEvent } from "react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
 });
 
-function MessageContent({
+function StreamingMessageText({
   text,
   isStreaming,
 }: {
@@ -19233,6 +21233,7 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
+
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
@@ -19240,7 +21241,6 @@ function RouteComponent() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
@@ -19251,18 +21251,15 @@ function RouteComponent() {
     { initialNumItems: 50, stream: true },
   );
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const hasStreamingMessage = messages?.some(
     (m) => m.status === "streaming",
   );
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -19282,85 +21279,211 @@ function RouteComponent() {
     }
   };
 
-  return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {!messages || messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.key}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              <MessageContent
-                text={(message.parts ?? [])
-                  .map((part) => (part.type === "text" ? part.text : ""))
-                  .join("")}
-                isStreaming={message.status === "streaming"}
-              />
-            </div>
-          ))
-        )}
-        {isLoading && !hasStreamingMessage && (
-          <div className="p-3 rounded-lg bg-secondary/20 mr-8">
-            <p className="text-sm font-semibold mb-1">AI Assistant</p>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Thinking...</span>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-          disabled={isLoading}
-        />
-        <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send size={18} />
-          )}
-        </Button>
-      </form>
-    </div>
+  const resetConversation = () => {
+    setInput("");
+    setThreadId(null);
+  };
+
+  return (
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isBusy}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {(!messages || messages.length === 0) && !isLoading ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isBusy}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+	                        return (
+	                          <MessageScrollerItem
+	                            key={\`\${message.order}-\${message.stepOrder}\`}
+	                            scrollAnchor={isUser}
+	                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    <StreamingMessageText
+                                      text={(message.parts ?? [])
+                                        .map((part) => (part.type === "text" ? part.text : ""))
+                                        .join("")}
+                                      isStreaming={message.status === "streaming"}
+                                    />
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {isLoading && !hasStreamingMessage && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isBusy}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isBusy || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isBusy ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{else}}
-import { createFileRoute } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
+import { createFileRoute } from "@tanstack/react-router";
 import { DefaultChatTransport } from "ai";
-import { Send } from "lucide-react";
-import { useRef, useEffect, useState, type FormEvent } from "react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 {{/unless}}
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
@@ -19368,83 +21491,182 @@ export const Route = createFileRoute("/ai")({
 
 function RouteComponent() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: {{#if (eq backend "self")}}"/api/ai"{{else}}\`\${env.VITE_SERVER_URL}/ai\`{{/if}},
     }),
   });
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const isSending = status === "submitted" || status === "streaming";
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
   };
 
-  return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              {message.parts?.map((part, index) => {
-                if (part.type === "text") {
-                  return (
-                    <Streamdown
-                      key={index}
-                      isAnimating={status === "streaming" && message.role === "assistant"}
-                    >
-                      {part.text}
-                    </Streamdown>
-                  );
-                }
-                return null;
-              })}
-            </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-        />
-        <Button type="submit" size="icon">
-          <Send size={18} />
-        </Button>
-      </form>
-    </div>
+  const resetConversation = () => {
+    setInput("");
+    setMessages([]);
+  };
+
+  return (
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isSending}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {messages.length === 0 && !isSending ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isSending}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+                        return (
+                          <MessageScrollerItem
+                            key={message.id}
+                            scrollAnchor={isUser}
+                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    {message.parts?.map((part, index) => {
+                                      if (part.type === "text") {
+                                        return (
+                                          <Streamdown
+                                            key={index}
+                                            isAnimating={status === "streaming" && message.role === "assistant"}
+                                          >
+                                            {part.text}
+                                          </Streamdown>
+                                        );
+                                      }
+                                      return null;
+                                    })}
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {status === "submitted" && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isSending}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isSending || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isSending ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{/if}}
@@ -23135,12 +25357,19 @@ pnpm-debug.log*
   ["frontend/astro/astro.config.mjs.hbs", `// @ts-check
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, envField } from "astro/config";
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+{{else}}
 import node from "@astrojs/node";
+{{/if}}
 
 // https://astro.build/config
 export default defineConfig({
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+  output: "static",
+{{else}}
   output: "server",
   adapter: node({ mode: "standalone" }),
+{{/if}}
 {{#if (ne backend "self")}}
   env: {
     schema: {
@@ -23169,11 +25398,11 @@ export default defineConfig({
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.0.0"
+    "astro": "^7.0.3"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.18",
-    "tailwindcss": "^4.1.18"
+    "@tailwindcss/vite": "^4.3.1",
+    "tailwindcss": "^4.3.1"
   }
 }
 `],
@@ -24658,7 +26887,8 @@ android
   }
 }
 `],
-  ["frontend/native/unistyles/app/_layout.tsx.hbs", `{{#if (includes examples "ai")}}
+  ["frontend/native/unistyles/app/_layout.tsx.hbs", `import "@/unistyles";
+{{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
 {{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
@@ -24907,7 +27137,9 @@ export default function RootLayout() {
   );
 }
 `],
-  ["frontend/native/unistyles/app/(drawer)/_layout.tsx.hbs", `import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+  ["frontend/native/unistyles/app/(drawer)/_layout.tsx.hbs", `import "@/unistyles";
+
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { useUnistyles } from "react-native-unistyles";
@@ -24995,7 +27227,9 @@ const DrawerLayout = () => {
 
 export default DrawerLayout;
 `],
-  ["frontend/native/unistyles/app/(drawer)/(tabs)/_layout.tsx.hbs", `import { Tabs } from "expo-router";
+  ["frontend/native/unistyles/app/(drawer)/(tabs)/_layout.tsx.hbs", `import "@/unistyles";
+
+import { Tabs } from "expo-router";
 import { useUnistyles } from "react-native-unistyles";
 
 import { TabBarIcon } from "@/components/tabbar-icon";
@@ -25035,7 +27269,9 @@ export default function TabLayout() {
   );
 }
 `],
-  ["frontend/native/unistyles/app/(drawer)/(tabs)/index.tsx.hbs", `import { Container } from "@/components/container";
+  ["frontend/native/unistyles/app/(drawer)/(tabs)/index.tsx.hbs", `import "@/unistyles";
+
+import { Container } from "@/components/container";
 import { ScrollView, Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
@@ -25073,7 +27309,9 @@ const styles = StyleSheet.create((theme) => ({
   },
 }));
 `],
-  ["frontend/native/unistyles/app/(drawer)/(tabs)/two.tsx.hbs", `import { Container } from "@/components/container";
+  ["frontend/native/unistyles/app/(drawer)/(tabs)/two.tsx.hbs", `import "@/unistyles";
+
+import { Container } from "@/components/container";
 import { ScrollView, Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
@@ -25111,7 +27349,9 @@ const styles = StyleSheet.create((theme) => ({
   },
 }));
 `],
-  ["frontend/native/unistyles/app/(drawer)/index.tsx.hbs", `import { ScrollView, Text, View, TouchableOpacity{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
+  ["frontend/native/unistyles/app/(drawer)/index.tsx.hbs", `import "@/unistyles";
+
+import { ScrollView, Text, View, TouchableOpacity{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
@@ -25611,7 +27851,9 @@ export default function Root({ children }: PropsWithChildren) {
   );
 }
 `],
-  ["frontend/native/unistyles/app/+not-found.tsx.hbs", `import { Link, Stack } from "expo-router";
+  ["frontend/native/unistyles/app/+not-found.tsx.hbs", `import "@/unistyles";
+
+import { Link, Stack } from "expo-router";
 import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
@@ -25677,7 +27919,9 @@ const styles = StyleSheet.create((theme) => ({
   },
 }));
 `],
-  ["frontend/native/unistyles/app/modal.tsx.hbs", `import { Container } from "@/components/container";
+  ["frontend/native/unistyles/app/modal.tsx.hbs", `import "@/unistyles";
+
+import { Container } from "@/components/container";
 import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
@@ -25743,7 +27987,9 @@ const styles = StyleSheet.create((theme) => ({
   tvLike: 4000,
 } as const;
 `],
-  ["frontend/native/unistyles/components/container.tsx.hbs", `import React from "react";
+  ["frontend/native/unistyles/components/container.tsx.hbs", `import "@/unistyles";
+
+import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
 
@@ -25759,7 +28005,9 @@ const styles = StyleSheet.create((theme, rt) => ({
   },
 }));
 `],
-  ["frontend/native/unistyles/components/header-button.tsx.hbs", `import FontAwesome from "@expo/vector-icons/FontAwesome";
+  ["frontend/native/unistyles/components/header-button.tsx.hbs", `import "@/unistyles";
+
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { forwardRef } from "react";
 import { Pressable } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
@@ -25807,8 +28055,8 @@ export const TabBarIcon = (props: {
   return <FontAwesome size={24} style=\\{{ marginBottom: -3 }} {...props} />;
 };
 `],
-  ["frontend/native/unistyles/index.js.hbs", `import 'expo-router/entry';
-import './unistyles';
+  ["frontend/native/unistyles/index.js.hbs", `import './unistyles';
+import 'expo-router/entry';
 `],
   ["frontend/native/unistyles/metro.config.js.hbs", `const { getDefaultConfig } = require("expo/metro-config");
 
@@ -26989,7 +29237,7 @@ module.exports = uniwindConfig;
     "expo-secure-store": "~56.0.4",
     "expo-status-bar": "~56.0.4",
     "expo-web-browser": "~56.0.5",
-    "heroui-native": "^1.0.3",
+    "heroui-native": "^1.0.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
@@ -27004,7 +29252,7 @@ module.exports = uniwindConfig;
     "tailwind-merge": "^3.6.0",
     "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.3.0",
-    "uniwind": "^1.7.0"
+    "uniwind": "^1.9.0"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",
@@ -27299,7 +29547,7 @@ export default defineNuxtConfig({
     "vue": "^3.5.38"
   },
   "devDependencies": {
-    "tailwindcss": "^4.2.1",
+    "tailwindcss": "^4.3.1",
     "@iconify-json/lucide": "^1.2.96"
   }
 }
@@ -27346,7 +29594,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
 	typedRoutes: true,
 	reactCompiler: true,
-	{{#if (eq webDeploy "docker")}}
+	{{#if (or (includes addons "tauri") (and (includes addons "electrobun") (or (ne backend "convex") (ne auth "better-auth"))))}}
+	output: "export",
+	{{else if (eq webDeploy "docker")}}
 	output: "standalone",
 	{{/if}}
 	{{#if (includes examples "ai")}}
@@ -27374,20 +29624,21 @@ initOpenNextCloudflareForDev();
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "lucide-react": "^0.546.0",
+    "@swc/helpers": "^0.5.23",
+    "lucide-react": "^1.21.0",
     "next": "^16.2.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "sonner": "^2.0.5",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "sonner": "^2.0.7",
     "babel-plugin-react-compiler": "^1.0.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/postcss": "^4.3.1",
     "@types/node": "^20",
-    "@types/react": "^19.2.15",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.3.1"
   }
 }
 `],
@@ -27780,21 +30031,21 @@ export function ThemeProvider({
     "@react-router/node": "^7.14.1",
     "@react-router/serve": "^7.14.1",
     "isbot": "^5.1.39",
-    "lucide-react": "^1.8.0",
+    "lucide-react": "^1.21.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "react-router": "^7.14.1",
     "sonner": "^2.0.7"
   },
   "devDependencies": {
     "@react-router/dev": "^7.14.1",
-    "@tailwindcss/vite": "^4.2.2",
+    "@tailwindcss/vite": "^4.3.1",
     "@types/node": "^20",
-    "@types/react": "^19.2.15",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "react-router-devtools": "^1.1.0",
-    "tailwindcss": "^4.2.2",
+    "tailwindcss": "^4.3.1",
     "vite": "^8.0.8",
     "vite-tsconfig-paths": "^6.1.1"
   }
@@ -28316,23 +30567,23 @@ export default defineConfig({
 	"dependencies": {
         "@hookform/resolvers": "^5.2.2",
         "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-		"@tailwindcss/vite": "^4.2.2",
+		"@tailwindcss/vite": "^4.3.1",
 		"@tanstack/react-router": "^1.168.22",
-		"lucide-react": "^1.8.0",
+		"lucide-react": "^1.21.0",
         "next-themes": "^0.4.6",
-		"react": "^19.2.6",
-		"react-dom": "^19.2.6",
+		"react": "^19.2.7",
+		"react-dom": "^19.2.7",
         "sonner": "^2.0.7"
 	},
 	"devDependencies": {
 		"@tanstack/react-router-devtools": "^1.166.13",
 		"@tanstack/router-plugin": "^1.167.22",
 		"@types/node": "^22.13.14",
-		"@types/react": "^19.2.15",
+		"@types/react": "^19.2.17",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^6.0.1",
 		"postcss": "^8.5.10",
-		"tailwindcss": "^4.2.2",
+		"tailwindcss": "^4.3.1",
 		"vite": "^8.0.8"
 	}
 }
@@ -28759,22 +31010,22 @@ export default defineConfig({
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@tailwindcss/vite": "^4.2.2",
+    "@tailwindcss/vite": "^4.3.1",
     "@tanstack/react-query": "^5.99.0",
     "@tanstack/react-router": "^1.168.22",
     "@tanstack/react-start": "^1.167.41",
-    "lucide-react": "^1.8.0",
+    "lucide-react": "^1.21.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "sonner": "^2.0.7",
-    "tailwindcss": "^4.2.2"
+    "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.166.13",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
-    "@types/react": "^19.2.15",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "jsdom": "^29.0.2",
@@ -29334,7 +31585,13 @@ export default defineConfig({
   },
   plugins: [
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({{#if (or (includes addons "tauri") (and (includes addons "electrobun") (or (ne backend "convex") (ne auth "better-auth"))))}}
+      {
+        prerender: {
+          enabled: true,
+        },
+      },
+{{/if}}),
 {{#if (eq webDeploy "docker")}}
     nitro(),
 {{/if}}
@@ -29563,12 +31820,12 @@ dist-ssr
     "test": "vitest run"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.2.2",
+    "@tailwindcss/vite": "^4.3.1",
     "@tanstack/router-plugin": "^1.167.22",
     "@tanstack/solid-router": "^1.168.20",
     "lucide-solid": "^1.8.0",
     "solid-js": "^1.9.12",
-    "tailwindcss": "^4.2.2"
+    "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
     "@tanstack/solid-router-devtools": "^1.166.13",
@@ -29878,13 +32135,17 @@ vite.config.ts.timestamp-*
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
+		{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+		"@sveltejs/adapter-static": "^3.0.10",
+		{{else}}
 		"@sveltejs/adapter-auto": "^7.0.1",
+		{{/if}}
 		"@sveltejs/kit": "^2.58.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
-		"@tailwindcss/vite": "^4.2.4",
+		"@tailwindcss/vite": "^4.3.1",
 		"svelte": "^5.55.5",
 		"svelte-check": "^4.4.6",
-		"tailwindcss": "^4.2.4",
+		"tailwindcss": "^4.3.1",
 		"vite": "^8.0.10"
 	},
 	"dependencies": {}
@@ -30126,7 +32387,9 @@ const TITLE_TEXT = \`
 {{/if}}
 `],
   ["frontend/svelte/static/favicon.png", `[Binary file]`],
-  ["frontend/svelte/svelte.config.js.hbs", `{{#if (eq webDeploy "cloudflare")}}
+  ["frontend/svelte/svelte.config.js.hbs", `{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+import adapter from '@sveltejs/adapter-static';
+{{else if (eq webDeploy "cloudflare")}}
 import alchemy from 'alchemy/cloudflare/sveltekit';
 {{else if (eq webDeploy "docker")}}
 import adapter from '@sveltejs/adapter-node';
@@ -30142,7 +32405,14 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
-{{#if (eq webDeploy "cloudflare")}}
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+		// adapter-static emits files Electrobun and Tauri can bundle directly.
+		adapter: adapter({
+			pages: 'build',
+			assets: 'build',
+			fallback: 'index.html'
+		})
+{{else if (eq webDeploy "cloudflare")}}
 		// Alchemy's adapter wraps SvelteKit's Cloudflare adapter for local platform.env and Worker builds.
 		adapter: alchemy()
 {{else if (eq webDeploy "docker")}}
@@ -30255,13 +32525,20 @@ export const env = new Proxy({} as Env, {
   ["packages/env/src/native.ts.hbs", `import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+{{#if (eq backend "convex")}}
+const convexUrlSchema = (exampleHost: string) =>
+	z.url().refine((url) => new URL(url).hostname !== exampleHost, {
+		message: \`Replace the \${exampleHost} placeholder before running the app\`,
+	});
+
+{{/if}}
 export const env = createEnv({
 	clientPrefix: "EXPO_PUBLIC_",
 	client: {
 {{#if (eq backend "convex")}}
-		EXPO_PUBLIC_CONVEX_URL: z.url(),
+		EXPO_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 {{#if (eq auth "better-auth")}}
-		EXPO_PUBLIC_CONVEX_SITE_URL: z.url(),
+		EXPO_PUBLIC_CONVEX_SITE_URL: convexUrlSchema("example.convex.site"),
 {{/if}}
 {{else}}
 		EXPO_PUBLIC_SERVER_URL: z.url(),
@@ -30419,6 +32696,13 @@ import { createEnv } from "@t3-oss/env-core";
 {{/if}}
 import { z } from "zod";
 
+{{#if (eq backend "convex")}}
+const convexUrlSchema = (exampleHost: string) =>
+	z.url().refine((url) => new URL(url).hostname !== exampleHost, {
+		message: \`Replace the \${exampleHost} placeholder before running the app\`,
+	});
+
+{{/if}}
 {{#if (includes frontend "nuxt")}}
 /**
  * Nuxt env validation - validates at build time when imported in nuxt.config.ts
@@ -30431,9 +32715,9 @@ export const env = createEnv({
 {{#if (eq backend "convex")}}
 {{#if (includes frontend "next")}}
 	client: {
-		NEXT_PUBLIC_CONVEX_URL: z.url(),
+		NEXT_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 {{#if (eq auth "better-auth")}}
-		NEXT_PUBLIC_CONVEX_SITE_URL: z.url(),
+		NEXT_PUBLIC_CONVEX_SITE_URL: convexUrlSchema("example.convex.site"),
 {{/if}}
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
@@ -30450,20 +32734,20 @@ export const env = createEnv({
 	},
 {{else if (includes frontend "nuxt")}}
 	client: {
-		NUXT_PUBLIC_CONVEX_URL: z.url(),
+		NUXT_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 	},
 {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
 	clientPrefix: "PUBLIC_",
 	client: {
-		PUBLIC_CONVEX_URL: z.url(),
+		PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 	},
 	runtimeEnv: (import.meta as any).env,
 {{else}}
 	clientPrefix: "VITE_",
 	client: {
-		VITE_CONVEX_URL: z.url(),
+		VITE_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 {{#if (eq auth "better-auth")}}
-		VITE_CONVEX_SITE_URL: z.url(),
+		VITE_CONVEX_SITE_URL: convexUrlSchema("example.convex.site"),
 {{/if}}
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
@@ -31016,22 +33300,24 @@ await app.finalize();
     "./postcss.config": "./postcss.config.mjs"
   },
   "dependencies": {
-    "@base-ui/react": "^1.0.0",
-    "shadcn": "^3.6.2",
+    "@base-ui/react": "^1.6.0",
+    "@shadcn/react": "^0.1.0",
+    "shadcn": "^4.12.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.546.0",
+    "lucide-react": "^1.21.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "sonner": "^2.0.5",
-    "tailwind-merge": "^3.3.1",
-    "tw-animate-css": "^1.3.4"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.6.0",
+    "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
-    "@types/react": "^19.2.15",
+    "@tailwindcss/postcss": "^4.3.1",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.3.1"
   },
   "scripts": {
     "check-types": "tsc --noEmit"
@@ -31044,21 +33330,362 @@ await app.finalize();
   },
 };
 `],
+  ["packages/ui/src/components/attachment.tsx.hbs", `import * as React from "react"
+import { mergeProps } from "@base-ui/react/merge-props"
+import { useRender } from "@base-ui/react/use-render"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+import { Button } from "@{{projectName}}/ui/components/button"
+
+const attachmentVariants = cva(
+  "group/attachment relative flex w-fit max-w-full min-w-0 shrink-0 flex-wrap rounded-none border bg-card text-card-foreground transition-colors focus-within:ring-1 focus-within:ring-ring/50 has-[>a,>button]:hover:bg-muted/50 data-[state=error]:border-destructive/30 data-[state=idle]:border-dashed",
+  {
+    variants: {
+      size: {
+        default:
+          "gap-2 text-xs has-data-[slot=attachment-content]:px-2 has-data-[slot=attachment-content]:py-1.5 has-data-[slot=attachment-media]:p-1.5",
+        sm: "gap-2.5 text-xs has-data-[slot=attachment-content]:px-1.5 has-data-[slot=attachment-content]:py-1 has-data-[slot=attachment-media]:p-1",
+        xs: "gap-1.5 rounded-none text-xs has-data-[slot=attachment-content]:px-1.5 has-data-[slot=attachment-content]:py-1 has-data-[slot=attachment-media]:p-1",
+      },
+      orientation: {
+        horizontal: "min-w-40 items-center",
+        vertical: "w-24 flex-col has-data-[slot=attachment-content]:w-30",
+      },
+    },
+  }
+)
+
+function Attachment({
+  className,
+  state = "done",
+  size = "default",
+  orientation = "horizontal",
+  ...props
+}: React.ComponentProps<"div"> &
+  VariantProps<typeof attachmentVariants> & {
+    state?: "idle" | "uploading" | "processing" | "error" | "done"
+  }) {
+  const resolvedOrientation = orientation ?? "horizontal"
+
+  return (
+    <div
+      data-slot="attachment"
+      data-state={state}
+      data-size={size}
+      data-orientation={resolvedOrientation}
+      className={cn(attachmentVariants({ size, orientation }), className)}
+      {...props}
+    />
+  )
+}
+
+const attachmentMediaVariants = cva(
+  "relative flex aspect-square w-10 shrink-0 items-center justify-center overflow-hidden rounded-none bg-muted text-foreground group-data-[orientation=vertical]/attachment:w-full group-data-[size=sm]/attachment:w-8 group-data-[size=xs]/attachment:w-7 group-data-[size=xs]/attachment:rounded-none group-data-[state=error]/attachment:bg-destructive/10 group-data-[state=error]/attachment:text-destructive group-data-[orientation=vertical]/attachment:*:data-[slot=spinner]:size-6! [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 group-data-[orientation=vertical]/attachment:[&_svg:not([class*='size-'])]:size-6 group-data-[size=xs]/attachment:[&_svg:not([class*='size-'])]:size-3.5",
+  {
+    variants: {
+      variant: {
+        icon: "",
+        image:
+          "opacity-60 group-data-[state=done]/attachment:opacity-100 group-data-[state=idle]/attachment:opacity-100 *:[img]:aspect-square *:[img]:w-full *:[img]:object-cover",
+      },
+    },
+    defaultVariants: {
+      variant: "icon",
+    },
+  }
+)
+
+function AttachmentMedia({
+  className,
+  variant = "icon",
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof attachmentMediaVariants>) {
+  return (
+    <div
+      data-slot="attachment-media"
+      data-variant={variant}
+      className={cn(attachmentMediaVariants({ variant }), className)}
+      {...props}
+    />
+  )
+}
+
+function AttachmentContent({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="attachment-content"
+      className={cn(
+        "max-w-full min-w-0 flex-1 leading-tight group-data-[orientation=vertical]/attachment:px-1",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AttachmentTitle({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="attachment-title"
+      className={cn(
+        "block max-w-full min-w-0 truncate font-medium group-data-[state=processing]/attachment:shimmer group-data-[state=uploading]/attachment:shimmer",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AttachmentDescription({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="attachment-description"
+      className={cn(
+        "mt-0.5 block min-w-0 truncate text-xs text-muted-foreground group-data-[state=error]/attachment:text-destructive/80",
+        "max-w-full",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AttachmentActions({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="attachment-actions"
+      className={cn(
+        "relative z-20 flex shrink-0 items-center group-data-[orientation=vertical]/attachment:absolute group-data-[orientation=vertical]/attachment:top-3 group-data-[orientation=vertical]/attachment:right-3 group-data-[orientation=vertical]/attachment:gap-1",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AttachmentAction({
+  className,
+  variant,
+  size = "icon-xs",
+  type = "button",
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  return (
+    <Button
+      data-slot="attachment-action"
+      type={type}
+      variant={variant ?? "ghost"}
+      size={size}
+      className={cn(className)}
+      {...props}
+    />
+  )
+}
+
+function AttachmentTrigger({
+  className,
+  render,
+  type,
+  ...props
+}: useRender.ComponentProps<"button">) {
+  return useRender({
+    defaultTagName: "button",
+    props: mergeProps<"button">(
+      {
+        type: render ? type : (type ?? "button"),
+        className: cn("absolute inset-0 z-10 outline-none", className),
+      },
+      props
+    ),
+    render,
+    state: {
+      slot: "attachment-trigger",
+    },
+  })
+}
+
+function AttachmentGroup({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="attachment-group"
+      className={cn(
+        "flex min-w-0 scroll-fade-x snap-x snap-mandatory scroll-px-1 scrollbar-none gap-3 overflow-x-auto overscroll-x-contain py-1 *:data-[slot=attachment]:flex-none *:data-[slot=attachment]:snap-start",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  Attachment,
+  AttachmentGroup,
+  AttachmentMedia,
+  AttachmentContent,
+  AttachmentTitle,
+  AttachmentDescription,
+  AttachmentActions,
+  AttachmentAction,
+  AttachmentTrigger,
+}
+`],
+  ["packages/ui/src/components/bubble.tsx.hbs", `import * as React from "react"
+import { mergeProps } from "@base-ui/react/merge-props"
+import { useRender } from "@base-ui/react/use-render"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function BubbleGroup({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="bubble-group"
+      className={cn("flex min-w-0 flex-col gap-2", className)}
+      {...props}
+    />
+  )
+}
+
+const bubbleVariants = cva(
+  "group/bubble relative flex w-fit max-w-[80%] min-w-0 flex-col gap-1 group-data-[align=end]/message:self-end data-[align=end]:self-end data-[variant=ghost]:max-w-full",
+  {
+    variants: {
+      variant: {
+        default:
+          "*:data-[slot=bubble-content]:bg-primary *:data-[slot=bubble-content]:text-primary-foreground [&>[data-slot=bubble-content]:is(button,a):hover]:bg-primary/80",
+        secondary:
+          "*:data-[slot=bubble-content]:bg-secondary *:data-[slot=bubble-content]:text-secondary-foreground [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]",
+        muted:
+          "*:data-[slot=bubble-content]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_5%)]",
+        tinted:
+          "*:data-[slot=bubble-content]:bg-[oklch(from_var(--primary)_0.93_calc(c*0.4)_h)] *:data-[slot=bubble-content]:text-foreground dark:*:data-[slot=bubble-content]:bg-[oklch(from_var(--primary)_0.3_calc(c*0.4)_h)] [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.88_calc(c*0.5)_h)] dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.35_calc(c*0.5)_h)]",
+        outline:
+          "*:data-[slot=bubble-content]:border-border *:data-[slot=bubble-content]:bg-background [&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:text-foreground dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-input/30",
+        ghost:
+          "border-none *:data-[slot=bubble-content]:rounded-none *:data-[slot=bubble-content]:bg-transparent *:data-[slot=bubble-content]:p-0 [&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:text-foreground dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted/50",
+        destructive:
+          "*:data-[slot=bubble-content]:bg-destructive/10 *:data-[slot=bubble-content]:text-destructive dark:*:data-[slot=bubble-content]:bg-destructive/20 [&>[data-slot=bubble-content]:is(button,a):hover]:bg-destructive/20 dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-destructive/30",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+function Bubble({
+  variant = "default",
+  align = "start",
+  className,
+  ...props
+}: React.ComponentProps<"div"> &
+  VariantProps<typeof bubbleVariants> & {
+    align?: "start" | "end"
+  }) {
+  return (
+    <div
+      data-slot="bubble"
+      data-variant={variant}
+      data-align={align}
+      className={cn(bubbleVariants({ variant }), className)}
+      {...props}
+    />
+  )
+}
+
+function BubbleContent({
+  className,
+  render,
+  ...props
+}: useRender.ComponentProps<"div">) {
+  return useRender({
+    defaultTagName: "div",
+    props: mergeProps<"div">(
+      {
+        className: cn(
+          "w-fit max-w-full min-w-0 overflow-hidden rounded-none border border-transparent px-2.5 py-2 text-xs leading-relaxed wrap-break-word group-data-[align=end]/bubble:self-end [button]:text-left [button,a]:transition-colors [button,a]:outline-none [button,a]:focus-visible:border-ring [button,a]:focus-visible:ring-1 [button,a]:focus-visible:ring-ring/50",
+          className
+        ),
+      },
+      props
+    ),
+    render,
+    state: {
+      slot: "bubble-content",
+    },
+  })
+}
+
+const bubbleReactionsVariants = cva(
+  "absolute z-10 flex w-fit shrink-0 items-center justify-center gap-1 rounded-none bg-muted px-1.5 py-0.5 text-xs ring-2 ring-card has-[button]:p-0",
+  {
+    variants: {
+      side: {
+        top: "top-0 -translate-y-3/4",
+        bottom: "bottom-0 translate-y-3/4",
+      },
+      align: {
+        start: "left-3",
+        end: "right-3",
+      },
+    },
+    defaultVariants: {
+      side: "bottom",
+      align: "end",
+    },
+  }
+)
+
+function BubbleReactions({
+  side = "bottom",
+  align = "end",
+  className,
+  ...props
+}: React.ComponentProps<"div"> & {
+  align?: "start" | "end"
+  side?: "top" | "bottom"
+}) {
+  return (
+    <div
+      data-slot="bubble-reactions"
+      data-align={align}
+      data-side={side}
+      className={cn(bubbleReactionsVariants({ side, align }), className)}
+      {...props}
+    />
+  )
+}
+
+export { BubbleGroup, Bubble, BubbleContent, BubbleReactions }
+`],
   ["packages/ui/src/components/button.tsx.hbs", `import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-none border border-transparent bg-clip-padding text-xs font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-none border border-transparent bg-clip-padding text-xs font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+        default: "bg-primary text-primary-foreground hover:bg-primary/80",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
@@ -31070,7 +33697,7 @@ const buttonVariants = cva(
           "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
         xs: "h-6 gap-1 rounded-none px-2 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 gap-1 rounded-none px-2.5 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
         icon: "size-8",
         "icon-xs": "size-6 rounded-none [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-7 rounded-none",
@@ -31115,7 +33742,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-4 overflow-hidden rounded-none bg-card py-4 text-xs/relaxed text-card-foreground ring-1 ring-foreground/10 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-2 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-none *:[img:last-child]:rounded-none",
+        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-none bg-card py-(--card-spacing) text-xs/relaxed text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-none *:[img:last-child]:rounded-none",
         className
       )}
       {...props}
@@ -31128,7 +33755,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-none px-4 group-data-[size=sm]/card:px-3 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3",
+        "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-none px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)",
         className
       )}
       {...props}
@@ -31141,7 +33768,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-title"
       className={cn(
-        "text-sm font-medium group-data-[size=sm]/card:text-sm",
+        "cn-font-heading text-sm font-medium group-data-[size=sm]/card:text-sm",
         className
       )}
       {...props}
@@ -31176,7 +33803,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      className={cn("px-4 group-data-[size=sm]/card:px-3", className)}
+      className={cn("px-(--card-spacing)", className)}
       {...props}
     />
   )
@@ -31187,7 +33814,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center rounded-none border-t p-4 group-data-[size=sm]/card:p-3",
+        "flex items-center rounded-none border-t p-(--card-spacing)",
         className
       )}
       {...props}
@@ -31278,7 +33905,7 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"
           className={cn(
-            "z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-none bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 data-closed:zoom-out-95",
+            "cn-menu-target cn-menu-translucent z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-none bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 data-closed:zoom-out-95",
             className
           )}
           {...props}
@@ -31358,7 +33985,7 @@ function DropdownMenuSubTrigger({
       {...props}
     >
       {children}
-      <ChevronRightIcon className="ml-auto" />
+      <ChevronRightIcon className="cn-rtl-flip ml-auto" />
     </MenuPrimitive.SubmenuTrigger>
   )
 }
@@ -31375,7 +34002,7 @@ function DropdownMenuSubContent({
     <DropdownMenuContent
       data-slot="dropdown-menu-sub-content"
       className={cn(
-        "w-auto min-w-[96px] rounded-none bg-popover text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+        "cn-menu-target cn-menu-translucent w-auto min-w-[96px] rounded-none bg-popover text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
         className
       )}
       align={align}
@@ -31507,6 +34134,273 @@ export {
   DropdownMenuSubContent,
 }
 `],
+  ["packages/ui/src/components/empty.tsx.hbs", `import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function Empty({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="empty"
+      className={cn(
+        "flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 rounded-none border-dashed p-6 text-center text-balance md:p-12",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function EmptyHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="empty-header"
+      className={cn("flex max-w-sm flex-col items-center gap-2", className)}
+      {...props}
+    />
+  )
+}
+
+const emptyMediaVariants = cva(
+  "mb-2 flex shrink-0 items-center justify-center [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default: "bg-transparent",
+        icon: "flex size-10 shrink-0 items-center justify-center rounded-none bg-muted text-foreground [&_svg:not([class*='size-'])]:size-5",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+function EmptyMedia({
+  className,
+  variant = "default",
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) {
+  return (
+    <div
+      data-slot="empty-icon"
+      data-variant={variant}
+      className={cn(emptyMediaVariants({ variant, className }))}
+      {...props}
+    />
+  )
+}
+
+function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="empty-title"
+      className={cn("cn-font-heading text-sm font-medium tracking-tight", className)}
+      {...props}
+    />
+  )
+}
+
+function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
+  return (
+    <div
+      data-slot="empty-description"
+      className={cn(
+        "text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="empty-content"
+      className={cn(
+        "flex w-full max-w-sm min-w-0 flex-col items-center gap-4 text-sm text-balance",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+  EmptyMedia,
+}
+`],
+  ["packages/ui/src/components/input-group.tsx.hbs", `"use client"
+
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+import { Button } from "@{{projectName}}/ui/components/button"
+import { Input } from "@{{projectName}}/ui/components/input"
+import { Textarea } from "@{{projectName}}/ui/components/textarea"
+
+function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="input-group"
+      role="group"
+      className={cn(
+        "group/input-group relative flex h-8 w-full min-w-0 items-center rounded-none border border-input bg-background shadow-xs transition-[color,box-shadow] outline-none has-[>textarea]:h-auto dark:bg-input/30",
+        "has-[>[data-align=inline-start]]:[&>input]:pl-2 has-[>[data-align=inline-end]]:[&>input]:pr-2",
+        "has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-start]]:[&>input]:pb-3",
+        "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3",
+        "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-1 has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50",
+        "has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot][aria-invalid=true]]:ring-1 has-[[data-slot][aria-invalid=true]]:ring-destructive/20 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+const inputGroupAddonVariants = cva(
+  "flex h-auto cursor-text select-none items-center justify-center gap-2 py-1.5 text-xs font-medium text-muted-foreground group-data-[disabled=true]/input-group:opacity-50 [&>kbd]:rounded-none [&>svg:not([class*='size-'])]:size-4",
+  {
+    variants: {
+      align: {
+        "inline-start":
+          "order-first pl-2 has-[>button]:ml-[-0.3rem] has-[>kbd]:ml-[-0.15rem]",
+        "inline-end":
+          "order-last pr-2 has-[>button]:mr-[-0.3rem] has-[>kbd]:mr-[-0.15rem]",
+        "block-start":
+          "order-first w-full justify-start px-2.5 pt-2 group-has-[>input]/input-group:pt-2 [.border-b]:pb-2",
+        "block-end":
+          "order-last w-full justify-start px-2.5 pb-2 group-has-[>input]/input-group:pb-2 [.border-t]:pt-2",
+      },
+    },
+    defaultVariants: {
+      align: "inline-start",
+    },
+  }
+)
+
+function InputGroupAddon({
+  className,
+  align = "inline-start",
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
+  return (
+    <div
+      role="group"
+      data-slot="input-group-addon"
+      data-align={align}
+      className={cn(inputGroupAddonVariants({ align }), className)}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("button")) {
+          return
+        }
+        e.currentTarget.parentElement
+          ?.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea")
+          ?.focus()
+      }}
+      {...props}
+    />
+  )
+}
+
+const inputGroupButtonVariants = cva(
+  "flex items-center gap-2 text-xs shadow-none",
+  {
+    variants: {
+      size: {
+        xs: "h-6 gap-1 rounded-none px-1.5 [&>svg:not([class*='size-'])]:size-3.5",
+        sm: "h-7 gap-1 rounded-none px-2",
+        "icon-xs": "size-6 rounded-none p-0 has-[>svg]:p-0",
+        "icon-sm": "size-7 rounded-none p-0 has-[>svg]:p-0",
+      },
+    },
+    defaultVariants: {
+      size: "xs",
+    },
+  }
+)
+
+function InputGroupButton({
+  className,
+  type = "button",
+  variant = "ghost",
+  size = "xs",
+  ...props
+}: Omit<React.ComponentProps<typeof Button>, "size" | "type"> &
+  VariantProps<typeof inputGroupButtonVariants> & {
+    type?: "button" | "submit" | "reset"
+  }) {
+  return (
+    <Button
+      type={type}
+      data-size={size}
+      variant={variant}
+      className={cn(inputGroupButtonVariants({ size }), className)}
+      {...props}
+    />
+  )
+}
+
+function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      className={cn(
+        "flex items-center gap-2 text-xs text-muted-foreground [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function InputGroupInput({
+  className,
+  ...props
+}: React.ComponentProps<"input">) {
+  return (
+    <Input
+      data-slot="input-group-control"
+      className={cn(
+        "flex-1 rounded-none border-0 bg-transparent shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function InputGroupTextarea({
+  className,
+  ...props
+}: React.ComponentProps<"textarea">) {
+  return (
+    <Textarea
+      data-slot="input-group-control"
+      className={cn(
+        "flex-1 resize-none rounded-none border-0 bg-transparent py-2 shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupText,
+  InputGroupInput,
+  InputGroupTextarea,
+}
+`],
   ["packages/ui/src/components/input.tsx.hbs", `import * as React from "react"
 import { Input as InputPrimitive } from "@base-ui/react/input"
 
@@ -31528,7 +34422,9 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
 
 export { Input }
 `],
-  ["packages/ui/src/components/label.tsx.hbs", `import * as React from "react"
+  ["packages/ui/src/components/label.tsx.hbs", `"use client"
+
+import * as React from "react"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
@@ -31546,6 +34442,305 @@ function Label({ className, ...props }: React.ComponentProps<"label">) {
 }
 
 export { Label }
+`],
+  ["packages/ui/src/components/marker.tsx.hbs", `import * as React from "react"
+import { mergeProps } from "@base-ui/react/merge-props"
+import { useRender } from "@base-ui/react/use-render"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+const markerVariants = cva(
+  "group/marker relative flex min-h-4 w-full items-center gap-2 text-left text-xs text-muted-foreground [&_svg:not([class*='size-'])]:size-3.5 [a]:underline [a]:underline-offset-3 [a]:hover:text-foreground",
+  {
+    variants: {
+      variant: {
+        default: "",
+        separator:
+          "before:mr-1 before:h-px before:min-w-0 before:flex-1 before:bg-border after:ml-1 after:h-px after:min-w-0 after:flex-1 after:bg-border",
+        border: "border-b border-border pb-2",
+      },
+    },
+  }
+)
+
+function Marker({
+  className,
+  variant = "default",
+  render,
+  ...props
+}: useRender.ComponentProps<"div"> & VariantProps<typeof markerVariants>) {
+  return useRender({
+    defaultTagName: "div",
+    props: mergeProps<"div">(
+      {
+        className: cn(markerVariants({ variant, className })),
+      },
+      props
+    ),
+    render,
+    state: {
+      slot: "marker",
+      variant,
+    },
+  })
+}
+
+function MarkerIcon({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="marker-icon"
+      aria-hidden="true"
+      className={cn(
+        "size-3.5 shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MarkerContent({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="marker-content"
+      className={cn(
+        "min-w-0 wrap-break-word group-data-[variant=separator]/marker:flex-none group-data-[variant=separator]/marker:text-center *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Marker, MarkerIcon, MarkerContent, markerVariants }
+`],
+  ["packages/ui/src/components/message-scroller.tsx.hbs", `"use client"
+
+import * as React from "react"
+import {
+  MessageScroller as MessageScrollerPrimitive,
+  useMessageScroller,
+  useMessageScrollerScrollable,
+  useMessageScrollerVisibility,
+} from "@shadcn/react/message-scroller"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+import { Button } from "@{{projectName}}/ui/components/button"
+import { ArrowDownIcon } from "lucide-react"
+
+function MessageScrollerProvider(
+  props: React.ComponentProps<typeof MessageScrollerPrimitive.Provider>
+) {
+  return <MessageScrollerPrimitive.Provider {...props} />
+}
+
+function MessageScroller({
+  className,
+  ...props
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Root>) {
+  return (
+    <MessageScrollerPrimitive.Root
+      data-slot="message-scroller"
+      className={cn(
+        "cn-message-scroller group/message-scroller relative flex size-full min-h-0 flex-col overflow-hidden",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageScrollerViewport({
+  className,
+  ...props
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Viewport>) {
+  return (
+    <MessageScrollerPrimitive.Viewport
+      data-slot="message-scroller-viewport"
+      className={cn(
+        "cn-message-scroller-viewport size-full min-h-0 min-w-0 scroll-fade-b scrollbar-thin scrollbar-gutter-stable overflow-y-auto overscroll-contain contain-content data-autoscrolling:scrollbar-none",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageScrollerContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Content>) {
+  return (
+    <MessageScrollerPrimitive.Content
+      data-slot="message-scroller-content"
+      className={cn(
+        "cn-message-scroller-content flex h-max min-h-full flex-col gap-6",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageScrollerItem({
+  className,
+  scrollAnchor = false,
+  ...props
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Item>) {
+  return (
+    <MessageScrollerPrimitive.Item
+      data-slot="message-scroller-item"
+      scrollAnchor={scrollAnchor}
+      className={cn(
+        "cn-message-scroller-item min-w-0 shrink-0 [contain-intrinsic-size:auto_10rem] [content-visibility:auto]",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageScrollerButton({
+  direction = "end",
+  className,
+  children,
+  render,
+  variant = "secondary",
+  size = "icon-sm",
+  ...props
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Button> &
+  Pick<React.ComponentProps<typeof Button>, "variant" | "size">) {
+  return (
+    <MessageScrollerPrimitive.Button
+      data-slot="message-scroller-button"
+      data-direction={direction}
+      data-variant={variant}
+      data-size={size}
+      direction={direction}
+      className={cn(
+        "cn-message-scroller-button absolute inset-s-1/2 -translate-x-1/2 border-border bg-background text-foreground transition-[translate,scale,opacity] duration-200 hover:bg-muted hover:text-foreground data-[active=false]:pointer-events-none data-[active=false]:scale-95 data-[active=false]:opacity-0 data-[active=false]:duration-400 data-[active=false]:ease-[cubic-bezier(0.7,0,0.84,0)] data-[active=true]:translate-y-0 data-[active=true]:scale-100 data-[active=true]:opacity-100 data-[active=true]:ease-[cubic-bezier(0.23,1,0.32,1)] data-[direction=end]:bottom-4 data-[direction=end]:data-[active=false]:translate-y-full data-[direction=start]:top-4 data-[direction=start]:data-[active=false]:-translate-y-full rtl:translate-x-1/2 data-[direction=start]:[&_svg]:rotate-180",
+        className
+      )}
+      render={render ?? <Button variant={variant} size={size} />}
+      {...props}
+    >
+      {children ?? (
+        <>
+          <ArrowDownIcon />
+          <span className="sr-only">
+            {direction === "end" ? "Scroll to end" : "Scroll to start"}
+          </span>
+        </>
+      )}
+    </MessageScrollerPrimitive.Button>
+  )
+}
+
+export {
+  MessageScrollerProvider,
+  MessageScroller,
+  MessageScrollerViewport,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerButton,
+  useMessageScroller,
+  useMessageScrollerScrollable,
+  useMessageScrollerVisibility,
+}
+`],
+  ["packages/ui/src/components/message.tsx.hbs", `import * as React from "react"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function MessageGroup({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="message-group"
+      className={cn("flex min-w-0 flex-col gap-1.5", className)}
+      {...props}
+    />
+  )
+}
+
+function Message({
+  className,
+  align = "start",
+  ...props
+}: React.ComponentProps<"div"> & { align?: "start" | "end" }) {
+  return (
+    <div
+      data-slot="message"
+      data-align={align}
+      className={cn(
+        "group/message relative flex w-full min-w-0 gap-1.5 text-xs data-[align=end]:flex-row-reverse",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageAvatar({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="message-avatar"
+      className={cn(
+        "flex w-fit min-w-8 shrink-0 items-center justify-center self-end overflow-hidden rounded-full bg-muted group-has-data-[slot=message-footer]/message:-translate-y-8",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="message-content"
+      className={cn(
+        "flex w-full min-w-0 flex-col gap-2 wrap-break-word group-data-[align=end]/message:*:data-slot:self-end",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="message-header"
+      className={cn(
+        "flex max-w-full min-w-0 items-center px-2.5 text-xs font-medium text-muted-foreground group-has-data-[variant=ghost]/message:px-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="message-footer"
+      className={cn(
+        "flex max-w-full min-w-0 items-center px-2.5 text-xs font-medium text-muted-foreground group-has-data-[variant=ghost]/message:px-0 group-data-[align=end]/message:justify-end",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  MessageGroup,
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageFooter,
+  MessageHeader,
+}
 `],
   ["packages/ui/src/components/skeleton.tsx.hbs", `import { cn } from "@{{projectName}}/ui/lib/utils"
 
@@ -31565,7 +34760,8 @@ export { Skeleton }
 
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
-import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
+
+import { CircleCheckIcon, InfoIcon, Loader2Icon, OctagonXIcon, TriangleAlertIcon } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
@@ -31610,6 +34806,92 @@ const Toaster = ({ ...props }: ToasterProps) => {
 }
 
 export { Toaster }
+`],
+  ["packages/ui/src/components/textarea.tsx.hbs", `import * as React from "react"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
+  return (
+    <textarea
+      data-slot="textarea"
+      className={cn(
+        "flex field-sizing-content min-h-16 w-full resize-none rounded-none border border-input bg-transparent px-2.5 py-2 text-xs transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 md:text-xs dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Textarea }
+`],
+  ["packages/ui/src/components/tooltip.tsx.hbs", `"use client"
+
+import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function TooltipProvider({
+  delay = 0,
+  ...props
+}: TooltipPrimitive.Provider.Props) {
+  return (
+    <TooltipPrimitive.Provider
+      data-slot="tooltip-provider"
+      delay={delay}
+      {...props}
+    />
+  )
+}
+
+function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
+  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+}
+
+function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
+  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+}
+
+function TooltipContent({
+  className,
+  side = "top",
+  sideOffset = 4,
+  align = "center",
+  alignOffset = 0,
+  children,
+  ...props
+}: TooltipPrimitive.Popup.Props &
+  Pick<
+    TooltipPrimitive.Positioner.Props,
+    "align" | "alignOffset" | "side" | "sideOffset"
+  >) {
+  return (
+    <TooltipPrimitive.Portal>
+      <TooltipPrimitive.Positioner
+        align={align}
+        alignOffset={alignOffset}
+        side={side}
+        sideOffset={sideOffset}
+        className="isolate z-50"
+      >
+        <TooltipPrimitive.Popup
+          data-slot="tooltip-content"
+          className={cn(
+            "z-50 inline-flex w-fit max-w-xs origin-(--transform-origin) items-center gap-1.5 rounded-none bg-foreground px-3 py-1.5 text-xs text-background has-data-[slot=kbd]:pr-1.5 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            className
+          )}
+          {...props}
+        >
+          {children}
+          <TooltipPrimitive.Arrow className="z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-none bg-foreground fill-foreground data-[side=bottom]:top-1 data-[side=inline-end]:top-1/2! data-[side=inline-end]:-left-1 data-[side=inline-end]:-translate-y-1/2 data-[side=inline-start]:top-1/2! data-[side=inline-start]:-right-1 data-[side=inline-start]:-translate-y-1/2 data-[side=left]:top-1/2! data-[side=left]:-right-1 data-[side=left]:-translate-y-1/2 data-[side=right]:top-1/2! data-[side=right]:-left-1 data-[side=right]:-translate-y-1/2 data-[side=top]:-bottom-2.5" />
+        </TooltipPrimitive.Popup>
+      </TooltipPrimitive.Positioner>
+    </TooltipPrimitive.Portal>
+  )
+}
+
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
 `],
   ["packages/ui/src/hooks/.gitkeep", ``],
   ["packages/ui/src/lib/utils.ts.hbs", `import { clsx, type ClassValue } from "clsx";
@@ -31987,4 +35269,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 497;
+export const TEMPLATE_COUNT = 506;
