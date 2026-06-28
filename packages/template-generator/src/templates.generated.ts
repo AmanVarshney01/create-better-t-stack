@@ -106,6 +106,7 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 
 const webBuildDir =
   "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "nuxt")}}../web/.output/public{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}";
+const isDevCommand = process.argv.includes("dev");
 
 export default {
   app: {
@@ -120,9 +121,13 @@ export default {
     bun: {
       entrypoint: "src/bun/index.ts",
     },
-    copy: {
-      [webBuildDir]: "views/mainview",
-    },
+    ...(isDevCommand
+      ? {}
+      : {
+          copy: {
+            [webBuildDir]: "views/mainview",
+          },
+        }),
     watchIgnore: [\`\${webBuildDir}/**\`],
     mac: {
       bundleCEF: true,
@@ -160,19 +165,11 @@ export default {
 const DEV_SERVER_PORT = {{#if (or (includes frontend "react-router") (includes frontend "svelte"))}}5173{{else if (includes frontend "astro")}}4321{{else}}3001{{/if}};
 const DEV_SERVER_URL = \`http://localhost:\${DEV_SERVER_PORT}\`;
 
-// Check if the web dev server is running for HMR
 async function getMainViewUrl(): Promise<string> {
   const channel = await Updater.localInfo.channel();
   if (channel === "dev") {
-    try {
-      await fetch(DEV_SERVER_URL, { method: "HEAD" });
-      console.log(\`HMR enabled: Using web dev server at \${DEV_SERVER_URL}\`);
-      return DEV_SERVER_URL;
-    } catch {
-      console.log(
-        'Web dev server not running. Run "{{packageManager}} run dev:hmr" for HMR support.',
-      );
-    }
+    console.log(\`HMR enabled: Using web dev server at \${DEV_SERVER_URL}\`);
+    return DEV_SERVER_URL;
   }
 
   return "views://mainview/index.html";
@@ -29595,7 +29592,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
 	typedRoutes: true,
 	reactCompiler: true,
-	{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+	{{#if (or (includes addons "tauri") (and (includes addons "electrobun") (or (ne backend "convex") (ne auth "better-auth"))))}}
 	output: "export",
 	{{else if (eq webDeploy "docker")}}
 	output: "standalone",
@@ -31586,7 +31583,7 @@ export default defineConfig({
   },
   plugins: [
     tailwindcss(),
-    tanstackStart({{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+    tanstackStart({{#if (or (includes addons "tauri") (and (includes addons "electrobun") (or (ne backend "convex") (ne auth "better-auth"))))}}
       {
         prerender: {
           enabled: true,

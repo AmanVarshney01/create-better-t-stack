@@ -357,28 +357,39 @@ describe("Addon Configurations", () => {
         expectError(result, "electrobun addon requires a separate backend or no backend");
       });
 
-      for (const frontend of ["next", "tanstack-start"] as const) {
-        it(`should fail with Electrobun + Convex Better Auth + ${frontend}`, async () => {
-          const result = await runTRPCTest({
-            projectName: `electrobun-convex-better-auth-${frontend}-fail`,
-            addons: ["electrobun"],
-            frontend: [frontend],
-            backend: "convex",
-            runtime: "none",
-            database: "none",
-            orm: "none",
-            auth: "better-auth",
-            api: "none",
-            examples: ["ai"],
-            dbSetup: "none",
-            webDeploy: "none",
-            serverDeploy: "none",
-            expectError: true,
-          });
-
-          expectError(result, "server auth bootstrap");
+      it("should work with Electrobun + Convex Better Auth + Next.js for desktop HMR", async () => {
+        const result = await runTRPCTest({
+          projectName: "electrobun-convex-better-auth-next",
+          addons: ["turborepo", "electrobun"],
+          frontend: ["next"],
+          backend: "convex",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "better-auth",
+          api: "none",
+          examples: ["ai"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
         });
-      }
+
+        expectSuccess(result);
+        expect(result.projectDir).toBeDefined();
+        if (!result.projectDir) return;
+
+        const rootPackageJson = JSON.parse(
+          await readFile(join(result.projectDir, "package.json"), "utf8"),
+        );
+        const nextConfig = await readFile(
+          join(result.projectDir, "apps", "web", "next.config.ts"),
+          "utf8",
+        );
+
+        expect(rootPackageJson.scripts["dev:desktop"]).toBe("turbo run dev:hmr -F desktop");
+        expect(nextConfig).not.toContain('output: "export"');
+      });
     });
   });
 

@@ -433,9 +433,9 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
 
   pkgJson.scripts = {
     ...pkgJson.scripts,
-    start: `${webBuildCommand} && electrobun dev`,
+    start: "electrobun dev",
     dev: "electrobun dev --watch",
-    "dev:hmr": `concurrently "${localRunCommand} hmr" "${localRunCommand} start"`,
+    "dev:hmr": `concurrently "${localRunCommand} hmr" "${localRunCommand} dev"`,
     hmr: webDevCommand,
     build: `${webBuildCommand} && electrobun build`,
     "build:stable": `${webBuildCommand} && electrobun build --env=stable`,

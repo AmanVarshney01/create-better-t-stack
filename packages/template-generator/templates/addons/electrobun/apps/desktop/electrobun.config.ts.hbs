@@ -2,6 +2,7 @@ import type { ElectrobunConfig } from "electrobun";
 
 const webBuildDir =
   "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "nuxt")}}../web/.output/public{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}";
+const isDevCommand = process.argv.includes("dev");
 
 export default {
   app: {
@@ -16,9 +17,13 @@ export default {
     bun: {
       entrypoint: "src/bun/index.ts",
     },
-    copy: {
-      [webBuildDir]: "views/mainview",
-    },
+    ...(isDevCommand
+      ? {}
+      : {
+          copy: {
+            [webBuildDir]: "views/mainview",
+          },
+        }),
     watchIgnore: [`${webBuildDir}/**`],
     mac: {
       bundleCEF: true,

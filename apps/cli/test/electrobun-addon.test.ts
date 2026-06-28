@@ -58,14 +58,19 @@ describe("Electrobun addon scaffolding", () => {
     expect(desktopPackageJson.scripts.hmr).toContain("bun run --filter web dev");
     expect(desktopPackageJson.scripts["build:stable"]).toContain("--env=stable");
     expect(desktopPackageJson.scripts["build:canary"]).toContain("--env=canary");
-    expect(desktopPackageJson.scripts.start).toContain("bun run --filter web build");
+    expect(desktopPackageJson.scripts.start).toBe("electrobun dev");
+    expect(desktopPackageJson.scripts["dev:hmr"]).toContain('"bun run hmr"');
+    expect(desktopPackageJson.scripts["dev:hmr"]).toContain('"bun run dev"');
     expect(desktopConfig).toContain('const webBuildDir = "../web/dist";');
+    expect(desktopConfig).toContain('const isDevCommand = process.argv.includes("dev");');
     expect(desktopConfig).toContain('[webBuildDir]: "views/mainview"');
     expect(desktopConfig).toContain("watchIgnore: [`${webBuildDir}/**`]");
     expect(desktopConfig).toContain("bundleCEF: true");
     expect(desktopConfig).toContain('defaultRenderer: "cef"');
     expect(desktopEntry).toContain("const DEV_SERVER_PORT = 3001;");
-    expect(desktopConfig).not.toContain("views/fallback");
+    expect(desktopEntry).toContain("return DEV_SERVER_URL;");
+    expect(desktopEntry).not.toContain("HMR_RETRY_COUNT");
+    expect(desktopEntry).not.toContain("fetch(DEV_SERVER_URL");
     expect(fallbackHtmlExists).toBe(false);
   });
 
@@ -207,7 +212,6 @@ describe("Electrobun addon scaffolding", () => {
         expect(webPackageJson.devDependencies?.[testCase.unexpectedWebDependency]).toBeUndefined();
       }
       if ("expectedBuildCommand" in testCase) {
-        expect(desktopPackageJson.scripts.start).toContain(testCase.expectedBuildCommand);
         expect(desktopPackageJson.scripts["build:stable"]).toContain(testCase.expectedBuildCommand);
       }
     }
@@ -292,8 +296,9 @@ describe("Electrobun addon scaffolding", () => {
       );
       const rootPackageJson = await fs.readJson(path.join(result.projectDir, "package.json"));
 
-      expect(desktopPackageJson.scripts.start).toContain(testCase.expectedRunner);
+      expect(desktopPackageJson.scripts.start).toBe("electrobun dev");
       expect(desktopPackageJson.scripts.hmr).toBe(testCase.expectedHmr);
+      expect(desktopPackageJson.scripts.build).toContain(testCase.expectedRunner);
       expect(desktopPackageJson.scripts["build:stable"]).toContain(testCase.expectedRunner);
       if ("expectedRootDev" in testCase) {
         expect(rootPackageJson.scripts.dev).toBe(testCase.expectedRootDev);
