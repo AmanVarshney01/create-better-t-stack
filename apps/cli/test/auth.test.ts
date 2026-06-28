@@ -298,8 +298,8 @@ describe("Authentication Configurations", () => {
         "utf8",
       );
 
-      expect(packageJson.workspaces.catalog["better-auth"]).toBe("~1.6.9");
-      expect(packageJson.workspaces.catalog["@convex-dev/better-auth"]).toBe("^0.12.4");
+      expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.15");
+      expect(packageJson.workspaces.catalog["@convex-dev/better-auth"]).toBe("^0.12.5");
       expect(backendPackageJson.dependencies["better-auth"]).toBe("catalog:");
       expect(webPackageJson.dependencies["better-auth"]).toBe("catalog:");
       expect(authFile).toContain("baseURL: process.env.CONVEX_SITE_URL");
@@ -769,6 +769,13 @@ describe("Authentication Configurations", () => {
 
         const result = await runTRPCTest(config);
         expectSuccess(result);
+        if (!result.projectDir) {
+          throw new Error("Expected projectDir to be defined");
+        }
+        const packageJson = JSON.parse(
+          await fs.readFile(path.join(result.projectDir, "package.json"), "utf8"),
+        );
+        expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.22");
       });
     }
   });

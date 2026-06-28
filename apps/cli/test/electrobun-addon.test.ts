@@ -47,6 +47,7 @@ describe("Electrobun addon scaffolding", () => {
     expect(rootPackageJson.scripts["dev:desktop"]).toBeDefined();
     expect(rootPackageJson.scripts["build:desktop"]).toBeDefined();
     expect(rootPackageJson.scripts["build:desktop:canary"]).toBeDefined();
+    expect(rootPackageJson.scripts.dev).toBe("bun run --if-present --filter '!desktop' dev");
     expect(rootPackageJson.scripts.build).toBe(
       "bun run --if-present --filter '!desktop' build && bun run --filter desktop build",
     );
@@ -219,6 +220,7 @@ describe("Electrobun addon scaffolding", () => {
         addons: ["turborepo", "electrobun"] as const,
         expectedRunner: "turbo run build -F web",
         expectedHmr: "turbo run dev -F web",
+        expectedRootDev: "turbo run dev --filter='!desktop'",
         expectedRootBuild: "turbo run build --filter='!desktop' && turbo run build -F desktop",
       },
       {
@@ -226,6 +228,7 @@ describe("Electrobun addon scaffolding", () => {
         addons: ["nx", "electrobun"] as const,
         expectedRunner: "nx run-many -t build --projects=web",
         expectedHmr: "nx run-many -t dev --projects=web",
+        expectedRootDev: "nx run-many -t dev --exclude=desktop",
         expectedRootBuild:
           "nx run-many -t build --exclude=desktop && nx run-many -t build --projects=desktop",
       },
@@ -234,6 +237,7 @@ describe("Electrobun addon scaffolding", () => {
         addons: ["vite-plus", "electrobun"] as const,
         expectedRunner: "vp run --filter web build",
         expectedHmr: "vp run --filter web dev",
+        expectedRootDev: "vp run -r dev --filter '!desktop'",
         expectedRootBuild: "vp run -r build --filter '!desktop' && vp run --filter desktop build",
       },
       {
@@ -242,6 +246,7 @@ describe("Electrobun addon scaffolding", () => {
         packageManager: "pnpm" as const,
         expectedRunner: "pnpm -w --filter web build",
         expectedHmr: "pnpm -w --filter web dev",
+        expectedRootDev: "pnpm -r --filter '!desktop' dev",
         expectedRootBuild: "pnpm -r --filter '!desktop' build && pnpm --filter desktop build",
       },
       {
@@ -290,6 +295,9 @@ describe("Electrobun addon scaffolding", () => {
       expect(desktopPackageJson.scripts.start).toContain(testCase.expectedRunner);
       expect(desktopPackageJson.scripts.hmr).toBe(testCase.expectedHmr);
       expect(desktopPackageJson.scripts["build:stable"]).toContain(testCase.expectedRunner);
+      if ("expectedRootDev" in testCase) {
+        expect(rootPackageJson.scripts.dev).toBe(testCase.expectedRootDev);
+      }
       if ("expectedRootBuild" in testCase) {
         expect(rootPackageJson.scripts.build).toBe(testCase.expectedRootBuild);
       }

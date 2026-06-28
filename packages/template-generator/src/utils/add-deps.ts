@@ -14,8 +14,8 @@ type PackageJson = {
 export const dependencyVersionMap = {
   typescript: "^6",
 
-  "better-auth": "1.6.11",
-  "@better-auth/expo": "1.6.11",
+  "better-auth": "1.6.22",
+  "@better-auth/expo": "1.6.22",
 
   "@clerk/backend": "^3.2.1",
   "@clerk/express": "^2.0.5",
@@ -127,7 +127,7 @@ export const dependencyVersionMap = {
   "convex-svelte": "^0.14.0",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
-  "@convex-dev/better-auth": "^0.12.4",
+  "@convex-dev/better-auth": "^0.12.5",
 
   "@tanstack/svelte-query": "^5.85.3",
   "@tanstack/svelte-query-devtools": "^5.85.3",

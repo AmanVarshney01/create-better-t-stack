@@ -113,6 +113,11 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   }
 
   if (addons.includes("electrobun")) {
+    scripts.dev = getElectrobunRootDevCommand(packageManager, {
+      hasTurborepo,
+      hasNx,
+      hasVitePlus,
+    });
     scripts.build = getElectrobunRootBuildCommand(vfs, packageManager, {
       hasTurborepo,
       hasNx,
@@ -316,6 +321,33 @@ function getPackageManagerConfig(
         checkTypes: "bun run --if-present --filter '*' check-types",
         filter: (workspace, script) => `bun run --filter ${workspace} ${script}`,
       };
+  }
+}
+
+function getElectrobunRootDevCommand(
+  packageManager: ProjectConfig["packageManager"],
+  options: { hasTurborepo: boolean; hasNx: boolean; hasVitePlus: boolean },
+): string {
+  if (options.hasTurborepo) {
+    return "turbo run dev --filter='!desktop'";
+  }
+
+  if (options.hasNx) {
+    return "nx run-many -t dev --exclude=desktop";
+  }
+
+  if (options.hasVitePlus) {
+    return "vp run -r dev --filter '!desktop'";
+  }
+
+  switch (packageManager) {
+    case "npm":
+      return "npm run dev --workspaces";
+    case "pnpm":
+      return "pnpm -r --filter '!desktop' dev";
+    case "bun":
+    default:
+      return "bun run --if-present --filter '!desktop' dev";
   }
 }
 

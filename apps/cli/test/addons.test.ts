@@ -247,6 +247,29 @@ describe("Addon Configurations", () => {
 
         expectError(result, "tauri addon requires a separate backend or no backend");
       });
+
+      for (const frontend of ["next", "tanstack-start"] as const) {
+        it(`should fail with Tauri + Convex Better Auth + ${frontend}`, async () => {
+          const result = await runTRPCTest({
+            projectName: `tauri-convex-better-auth-${frontend}-fail`,
+            addons: ["tauri"],
+            frontend: [frontend],
+            backend: "convex",
+            runtime: "none",
+            database: "none",
+            orm: "none",
+            auth: "better-auth",
+            api: "none",
+            examples: ["ai"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            expectError: true,
+          });
+
+          expectError(result, "server auth bootstrap");
+        });
+      }
     });
 
     describe("Electrobun Addon", () => {
@@ -333,6 +356,29 @@ describe("Addon Configurations", () => {
 
         expectError(result, "electrobun addon requires a separate backend or no backend");
       });
+
+      for (const frontend of ["next", "tanstack-start"] as const) {
+        it(`should fail with Electrobun + Convex Better Auth + ${frontend}`, async () => {
+          const result = await runTRPCTest({
+            projectName: `electrobun-convex-better-auth-${frontend}-fail`,
+            addons: ["electrobun"],
+            frontend: [frontend],
+            backend: "convex",
+            runtime: "none",
+            database: "none",
+            orm: "none",
+            auth: "better-auth",
+            api: "none",
+            examples: ["ai"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            expectError: true,
+          });
+
+          expectError(result, "server auth bootstrap");
+        });
+      }
     });
   });
 
