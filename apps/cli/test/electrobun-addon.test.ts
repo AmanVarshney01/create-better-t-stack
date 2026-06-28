@@ -229,6 +229,34 @@ describe("Electrobun addon scaffolding", () => {
         expectedRootBuild:
           "nx run-many -t build --exclude=desktop && nx run-many -t build --projects=desktop",
       },
+      {
+        projectName: "electrobun-vite-plus-runner-static-v2",
+        addons: ["vite-plus", "electrobun"] as const,
+        expectedRunner: "vp run --filter web build",
+        expectedHmr: "vp run --filter web dev",
+        expectedRootBuild: "vp run -r build --filter '!desktop' && vp run --filter desktop build",
+      },
+      {
+        projectName: "electrobun-pnpm-runner-static-v2",
+        addons: ["electrobun"] as const,
+        packageManager: "pnpm" as const,
+        expectedRunner: "pnpm -w --filter web build",
+        expectedHmr: "pnpm -w --filter web dev",
+        expectedRootBuild: "pnpm -r --filter '!desktop' build && pnpm --filter desktop build",
+      },
+      {
+        projectName: "electrobun-npm-runner-static-v2",
+        addons: ["electrobun"] as const,
+        packageManager: "npm" as const,
+        expectedRunner: "npm run build --workspace web",
+        expectedHmr: "npm run dev --workspace web",
+        expectedRootBuildIncludes: [
+          "npm run build --workspace apps/server --if-present",
+          "npm run build --workspace apps/web --if-present",
+          "npm run build --workspace apps/desktop",
+        ],
+        unexpectedRootBuild: "npm run build --workspaces",
+      },
     ];
 
     for (const testCase of cases) {
@@ -246,6 +274,7 @@ describe("Electrobun addon scaffolding", () => {
         dbSetup: "none",
         webDeploy: "none",
         serverDeploy: "none",
+        packageManager: "packageManager" in testCase ? testCase.packageManager : "bun",
         install: false,
       });
 
@@ -261,7 +290,20 @@ describe("Electrobun addon scaffolding", () => {
       expect(desktopPackageJson.scripts.start).toContain(testCase.expectedRunner);
       expect(desktopPackageJson.scripts.hmr).toBe(testCase.expectedHmr);
       expect(desktopPackageJson.scripts["build:stable"]).toContain(testCase.expectedRunner);
-      expect(rootPackageJson.scripts.build).toBe(testCase.expectedRootBuild);
+      if ("expectedRootBuild" in testCase) {
+        expect(rootPackageJson.scripts.build).toBe(testCase.expectedRootBuild);
+      }
+      if ("expectedRootBuildIncludes" in testCase) {
+        for (const expectedCommand of testCase.expectedRootBuildIncludes) {
+          expect(rootPackageJson.scripts.build).toContain(expectedCommand);
+        }
+        expect(rootPackageJson.scripts.build.indexOf("apps/desktop")).toBeGreaterThan(
+          rootPackageJson.scripts.build.indexOf("apps/web"),
+        );
+      }
+      if ("unexpectedRootBuild" in testCase) {
+        expect(rootPackageJson.scripts.build).not.toContain(testCase.unexpectedRootBuild);
+      }
 
       if (testCase.addons.includes("turborepo")) {
         const turboJson = await fs.readJson(path.join(result.projectDir, "turbo.json"));

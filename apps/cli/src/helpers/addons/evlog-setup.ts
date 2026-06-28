@@ -486,7 +486,6 @@ function addNextAiEvlogSetup(content: string) {
     }
   }
 
-  // Keep AI routes on request-level evlog logging until stream-level telemetry is stable.
   return nextContent;
 }
 

@@ -113,7 +113,7 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   }
 
   if (addons.includes("electrobun")) {
-    scripts.build = getElectrobunRootBuildCommand(packageManager, {
+    scripts.build = getElectrobunRootBuildCommand(vfs, packageManager, {
       hasTurborepo,
       hasNx,
       hasVitePlus,
@@ -320,6 +320,7 @@ function getPackageManagerConfig(
 }
 
 function getElectrobunRootBuildCommand(
+  vfs: VirtualFileSystem,
   packageManager: ProjectConfig["packageManager"],
   options: { hasTurborepo: boolean; hasNx: boolean; hasVitePlus: boolean },
 ): string {
@@ -337,13 +338,44 @@ function getElectrobunRootBuildCommand(
 
   switch (packageManager) {
     case "npm":
-      return "npm run build --workspaces --if-present";
+      return [
+        ...getWorkspacePackagePathsWithScript(vfs, "build")
+          .filter((workspacePath) => workspacePath !== "apps/desktop")
+          .map((workspacePath) => `npm run build --workspace ${workspacePath} --if-present`),
+        "npm run build --workspace apps/desktop",
+      ].join(" && ");
     case "pnpm":
       return "pnpm -r --filter '!desktop' build && pnpm --filter desktop build";
     case "bun":
     default:
       return "bun run --if-present --filter '!desktop' build && bun run --filter desktop build";
   }
+}
+
+function getWorkspacePackagePathsWithScript(vfs: VirtualFileSystem, scriptName: string): string[] {
+  return vfs
+    .getAllFiles()
+    .filter((filePath) => filePath.endsWith("/package.json"))
+    .map((filePath) => filePath.slice(0, -"/package.json".length))
+    .filter(
+      (workspacePath) => workspacePath.startsWith("apps/") || workspacePath.startsWith("packages/"),
+    )
+    .filter((workspacePath) => {
+      const pkgJson = vfs.readJson<PackageJson>(`${workspacePath}/package.json`);
+      return Boolean(pkgJson?.scripts?.[scriptName]);
+    })
+    .sort(compareWorkspacePackagePaths);
+}
+
+function compareWorkspacePackagePaths(a: string, b: string): number {
+  const group = (workspacePath: string) => {
+    if (workspacePath === "apps/desktop") return 3;
+    if (workspacePath.startsWith("packages/")) return 0;
+    if (workspacePath === "apps/web") return 2;
+    return 1;
+  };
+
+  return group(a) - group(b) || a.localeCompare(b);
 }
 
 function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
