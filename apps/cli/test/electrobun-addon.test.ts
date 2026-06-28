@@ -316,6 +316,12 @@ describe("Electrobun addon scaffolding", () => {
       if (testCase.addons.includes("turborepo")) {
         const turboJson = await fs.readJson(path.join(result.projectDir, "turbo.json"));
         expect(turboJson.tasks.build.outputs).toContain("artifacts/**");
+        expect(turboJson.tasks["dev:hmr"]).toEqual({
+          cache: false,
+          persistent: true,
+        });
+        expect(turboJson.tasks["build:stable"].outputs).toContain("artifacts/**");
+        expect(turboJson.tasks["build:canary"].outputs).toContain("artifacts/**");
       }
     }
   });

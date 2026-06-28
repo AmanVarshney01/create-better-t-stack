@@ -41,6 +41,7 @@ function generateTurboConfig(config: ProjectConfig): TurboConfig {
 
   const tasks: Record<string, TurboTask> = {
     ...getBaseTasks(frontend, config.addons),
+    ...(config.addons.includes("electrobun") ? getElectrobunTasks() : {}),
     ...(isConvex ? getConvexTasks() : {}),
     ...(!isConvex && hasDatabase ? getDatabaseTasks(dbSupport) : {}),
     ...(isDocker ? getDockerTasks() : {}),
@@ -99,6 +100,25 @@ function getBaseTasks(frontend: string[], addons: string[]): Record<string, Turb
     dev: {
       cache: false,
       persistent: true,
+    },
+  };
+}
+
+function getElectrobunTasks(): Record<string, TurboTask> {
+  return {
+    "dev:hmr": {
+      cache: false,
+      persistent: true,
+    },
+    "build:stable": {
+      dependsOn: ["^build"],
+      inputs: ["$TURBO_DEFAULT$", ".env*"],
+      outputs: ["artifacts/**", "build/**"],
+    },
+    "build:canary": {
+      dependsOn: ["^build"],
+      inputs: ["$TURBO_DEFAULT$", ".env*"],
+      outputs: ["artifacts/**", "build/**"],
     },
   };
 }
