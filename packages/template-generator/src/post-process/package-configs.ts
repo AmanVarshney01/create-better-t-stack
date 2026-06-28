@@ -113,11 +113,10 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   }
 
   if (addons.includes("electrobun")) {
-    scripts.dev = getElectrobunRootDevCommand(packageManager, {
-      hasTurborepo,
-      hasNx,
-      hasVitePlus,
-    });
+    // Root `dev` stays the standard aggregate; the desktop has no `dev` script so
+    // it's skipped. Root `build` runs the non-desktop workspaces, then the desktop
+    // (which self-builds its web app, mirroring `vite build && electrobun build`) —
+    // serialized so PMs without topological ordering don't run two web builds at once.
     scripts.build = getElectrobunRootBuildCommand(vfs, packageManager, {
       hasTurborepo,
       hasNx,
@@ -308,46 +307,21 @@ function getPackageManagerConfig(
       };
     case "npm":
       return {
-        dev: "npm run dev --workspaces",
-        build: "npm run build --workspaces",
-        checkTypes: "npm run check-types --workspaces",
+        // --if-present so workspaces without the script (e.g. the desktop shell
+        // has no `dev`) are skipped instead of erroring "Missing script".
+        dev: "npm run dev --workspaces --if-present",
+        build: "npm run build --workspaces --if-present",
+        checkTypes: "npm run check-types --workspaces --if-present",
         filter: (workspace, script) => `npm run ${script} --workspace ${workspace}`,
       };
     case "bun":
     default:
       return {
-        dev: "bun run --if-present --filter '*' dev",
-        build: "bun run --if-present --filter '*' build",
-        checkTypes: "bun run --if-present --filter '*' check-types",
+        dev: "bun run --filter '*' dev",
+        build: "bun run --filter '*' build",
+        checkTypes: "bun run --filter '*' check-types",
         filter: (workspace, script) => `bun run --filter ${workspace} ${script}`,
       };
-  }
-}
-
-function getElectrobunRootDevCommand(
-  packageManager: ProjectConfig["packageManager"],
-  options: { hasTurborepo: boolean; hasNx: boolean; hasVitePlus: boolean },
-): string {
-  if (options.hasTurborepo) {
-    return "turbo run dev --filter='!desktop'";
-  }
-
-  if (options.hasNx) {
-    return "nx run-many -t dev --exclude=desktop";
-  }
-
-  if (options.hasVitePlus) {
-    return "vp run -r dev --filter '!desktop'";
-  }
-
-  switch (packageManager) {
-    case "npm":
-      return "npm run dev --workspaces";
-    case "pnpm":
-      return "pnpm -r --filter '!desktop' dev";
-    case "bun":
-    default:
-      return "bun run --if-present --filter '!desktop' dev";
   }
 }
 
@@ -380,7 +354,7 @@ function getElectrobunRootBuildCommand(
       return "pnpm -r --filter '!desktop' build && pnpm --filter desktop build";
     case "bun":
     default:
-      return "bun run --if-present --filter '!desktop' build && bun run --filter desktop build";
+      return "bun run --filter '!desktop' build && bun run --filter desktop build";
   }
 }
 
@@ -418,6 +392,7 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
   const hasTurborepo = addons.includes("turborepo");
   const hasNx = addons.includes("nx");
   const hasVitePlus = addons.includes("vite-plus");
+  // Nuxt emits its static bundle via `generate`; every other frontend via `build`.
   const desktopBuildScript: DesktopWebScript = frontend.includes("nuxt") ? "generate" : "build";
   const webBuildCommand = getDesktopWebCommand(
     packageManager,
@@ -434,8 +409,12 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
   pkgJson.scripts = {
     ...pkgJson.scripts,
     start: "electrobun dev",
-    dev: "electrobun dev --watch",
-    "dev:hmr": `concurrently "${localRunCommand} hmr" "${localRunCommand} dev"`,
+    // No `dev` script on purpose: the root `dev` aggregate skips desktop so it
+    // never auto-launches the native window. Use `dev:desktop` (dev:hmr) instead.
+    // build* mirrors the official electrobun pattern (`vite build && electrobun
+    // build`): build the web app, then electrobun. The root build serializes this
+    // so package managers without topological ordering don't race on the web build.
+    "dev:hmr": `concurrently "${localRunCommand} hmr" "electrobun dev --watch"`,
     hmr: webDevCommand,
     build: `${webBuildCommand} && electrobun build`,
     "build:stable": `${webBuildCommand} && electrobun build --env=stable`,

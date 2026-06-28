@@ -47,20 +47,22 @@ describe("Electrobun addon scaffolding", () => {
     expect(rootPackageJson.scripts["dev:desktop"]).toBeDefined();
     expect(rootPackageJson.scripts["build:desktop"]).toBeDefined();
     expect(rootPackageJson.scripts["build:desktop:canary"]).toBeDefined();
-    expect(rootPackageJson.scripts.dev).toBe("bun run --if-present --filter '!desktop' dev");
+    // Root dev is the plain aggregate; the desktop has no dev script so it is skipped.
+    expect(rootPackageJson.scripts.dev).toBe("bun run --filter '*' dev");
     expect(rootPackageJson.scripts.build).toBe(
-      "bun run --if-present --filter '!desktop' build && bun run --filter desktop build",
+      "bun run --filter '!desktop' build && bun run --filter desktop build",
     );
     expect(desktopPackageJson.devDependencies["@types/three"]).toBe("^0.165.0");
     expect(desktopPackageJson.scripts.start).toBeDefined();
-    expect(desktopPackageJson.scripts.dev).toBeDefined();
+    // The desktop intentionally has no `dev` script (root dev must skip it).
+    expect(desktopPackageJson.scripts.dev).toBeUndefined();
     expect(desktopPackageJson.scripts["dev:hmr"]).toBeDefined();
     expect(desktopPackageJson.scripts.hmr).toContain("bun run --filter web dev");
     expect(desktopPackageJson.scripts["build:stable"]).toContain("--env=stable");
     expect(desktopPackageJson.scripts["build:canary"]).toContain("--env=canary");
     expect(desktopPackageJson.scripts.start).toBe("electrobun dev");
     expect(desktopPackageJson.scripts["dev:hmr"]).toContain('"bun run hmr"');
-    expect(desktopPackageJson.scripts["dev:hmr"]).toContain('"bun run dev"');
+    expect(desktopPackageJson.scripts["dev:hmr"]).toContain('"electrobun dev --watch"');
     expect(desktopConfig).toContain('const webBuildDir = "../web/dist";');
     expect(desktopConfig).not.toContain("isDevCommand");
     expect(desktopConfig).toContain('[webBuildDir]: "views/mainview"');
@@ -224,7 +226,7 @@ describe("Electrobun addon scaffolding", () => {
         addons: ["turborepo", "electrobun"] as const,
         expectedRunner: "turbo run build -F web",
         expectedHmr: "turbo run dev -F web",
-        expectedRootDev: "turbo run dev --filter='!desktop'",
+        expectedRootDev: "turbo run dev",
         expectedRootBuild: "turbo run build --filter='!desktop' && turbo run build -F desktop",
       },
       {
@@ -232,7 +234,7 @@ describe("Electrobun addon scaffolding", () => {
         addons: ["nx", "electrobun"] as const,
         expectedRunner: "nx run-many -t build --projects=web",
         expectedHmr: "nx run-many -t dev --projects=web",
-        expectedRootDev: "nx run-many -t dev --exclude=desktop",
+        expectedRootDev: "nx run-many -t dev",
         expectedRootBuild:
           "nx run-many -t build --exclude=desktop && nx run-many -t build --projects=desktop",
       },
@@ -241,7 +243,7 @@ describe("Electrobun addon scaffolding", () => {
         addons: ["vite-plus", "electrobun"] as const,
         expectedRunner: "vp run --filter web build",
         expectedHmr: "vp run --filter web dev",
-        expectedRootDev: "vp run -r dev --filter '!desktop'",
+        expectedRootDev: "vp run -r dev",
         expectedRootBuild: "vp run -r build --filter '!desktop' && vp run --filter desktop build",
       },
       {
@@ -250,7 +252,7 @@ describe("Electrobun addon scaffolding", () => {
         packageManager: "pnpm" as const,
         expectedRunner: "pnpm -w --filter web build",
         expectedHmr: "pnpm -w --filter web dev",
-        expectedRootDev: "pnpm -r --filter '!desktop' dev",
+        expectedRootDev: "pnpm -r dev",
         expectedRootBuild: "pnpm -r --filter '!desktop' build && pnpm --filter desktop build",
       },
       {
@@ -259,6 +261,7 @@ describe("Electrobun addon scaffolding", () => {
         packageManager: "npm" as const,
         expectedRunner: "npm run build --workspace web",
         expectedHmr: "npm run dev --workspace web",
+        expectedRootDev: "npm run dev --workspaces --if-present",
         expectedRootBuildIncludes: [
           "npm run build --workspace apps/server --if-present",
           "npm run build --workspace apps/web --if-present",
@@ -298,6 +301,7 @@ describe("Electrobun addon scaffolding", () => {
 
       expect(desktopPackageJson.scripts.start).toBe("electrobun dev");
       expect(desktopPackageJson.scripts.hmr).toBe(testCase.expectedHmr);
+      // The desktop self-builds its web app, then electrobun (official pattern).
       expect(desktopPackageJson.scripts.build).toContain(testCase.expectedRunner);
       expect(desktopPackageJson.scripts["build:stable"]).toContain(testCase.expectedRunner);
       if ("expectedRootDev" in testCase) {
