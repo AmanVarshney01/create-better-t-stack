@@ -117,20 +117,6 @@ function getAuthExpression(config: ProjectConfig) {
   return usesCreateAuthFactory(config) ? "createAuth()" : "auth";
 }
 
-function removeAiSdkEvlogTelemetry(content: string) {
-  return content
-    .replace(
-      /^import\s+\{\s*createAILogger,\s*createEvlogIntegration\s*\}\s+from\s+["']evlog\/ai["'];\n/m,
-      "",
-    )
-    .replace(/^\s*const ai = createAILogger\([^)]+\);\n/m, "")
-    .replace(/model:\s*ai\.wrap\(model\),/g, "model,")
-    .replace(
-      /\n\s*telemetry:\s*\{\n\s*isEnabled:\s*true,\n\s*integrations:\s*\[createEvlogIntegration\(ai\)\],\n\s*\},/g,
-      "",
-    );
-}
-
 function addEvlogBetterAuthServerSetup(
   content: string,
   backend: EvlogBackend,
@@ -500,37 +486,8 @@ function addNextAiEvlogSetup(content: string) {
     }
   }
 
-  // Next emits the evlog route event when the streaming Response is returned.
-  // AI SDK stream telemetry arrives later, so wiring createAILogger here drops `ai`.
+  // Keep AI routes on request-level evlog logging until stream-level telemetry is stable.
   return nextContent;
-}
-
-function addNuxtAiEvlogSetup(content: string) {
-  return removeAiSdkEvlogTelemetry(content);
-}
-
-function addSvelteAiEvlogSetup(content: string) {
-  return removeAiSdkEvlogTelemetry(content);
-}
-
-function addTanstackStartAiEvlogSetup(content: string) {
-  return removeAiSdkEvlogTelemetry(content);
-}
-
-function addBackendAiEvlogSetup(content: string, backend: EvlogBackend) {
-  if (backend === "hono") {
-    return removeAiSdkEvlogTelemetry(content);
-  }
-
-  if (backend === "express") {
-    return removeAiSdkEvlogTelemetry(content);
-  }
-
-  if (backend === "fastify") {
-    return removeAiSdkEvlogTelemetry(content);
-  }
-
-  return removeAiSdkEvlogTelemetry(content);
 }
 
 function addNextBetterAuthToRoute(content: string) {
@@ -898,10 +855,6 @@ async function setupNuxtEvlog(config: ProjectConfig, serviceName: string) {
       await writeFileIfChanged(authMiddlewarePath, getNuxtEvlogAuthMiddlewareFile(config));
     }
   }
-
-  if (config.examples.includes("ai")) {
-    await updateFileIfExists(path.join(webDir, "server/api/ai.post.ts"), addNuxtAiEvlogSetup);
-  }
 }
 
 async function setupSvelteEvlog(config: ProjectConfig, serviceName: string) {
@@ -930,13 +883,6 @@ export const { handle, handleError } = createEvlogHooks();
       addSvelteBetterAuthEvlogSetup(content, config),
     );
   }
-
-  if (config.examples.includes("ai")) {
-    await updateFileIfExists(
-      path.join(webDir, "src/routes/api/ai/+server.ts"),
-      addSvelteAiEvlogSetup,
-    );
-  }
 }
 
 async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: string) {
@@ -955,13 +901,6 @@ async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: strin
     if (!(await fs.pathExists(authPluginPath))) {
       await writeFileIfChanged(authPluginPath, getNitroEvlogAuthPluginFile(config));
     }
-  }
-
-  if (config.examples.includes("ai")) {
-    await updateFileIfExists(
-      path.join(webDir, "src/routes/api/ai/$.ts"),
-      addTanstackStartAiEvlogSetup,
-    );
   }
 }
 
@@ -1028,10 +967,6 @@ export async function setupEvlog(config: ProjectConfig): Promise<Result<void, Ad
               config.backend,
               getAuthExpression(config),
             );
-          }
-
-          if (config.examples.includes("ai")) {
-            nextContent = addBackendAiEvlogSetup(nextContent, config.backend);
           }
 
           if (nextContent !== content) {
