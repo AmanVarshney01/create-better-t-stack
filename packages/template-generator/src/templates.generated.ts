@@ -16969,10 +16969,10 @@ export default function AIScreen() {
                     .map((part) => (part.type === "text" ? part.text : ""))
                     .join("");
 
-                  return (
-                    <View
-                      key={\`\${message.order}-\${message.stepOrder}\`}
-                      style={[
+	                  return (
+	                    <View
+	                      key={message.key}
+	                      style={[
                         styles.messageRow,
                         isUser ? styles.userRow : styles.assistantRow,
                       ]}
@@ -18042,10 +18042,10 @@ export default function AIScreen() {
                     .map((part) => (part.type === "text" ? part.text : ""))
                     .join("");
 
-                  return (
-                    <View
-                      key={\`\${message.order}-\${message.stepOrder}\`}
-                      style={[
+	                  return (
+	                    <View
+	                      key={message.key}
+	                      style={[
                         styles.messageRow,
                         isUser ? styles.userRow : styles.assistantRow,
                       ]}
@@ -19129,10 +19129,10 @@ export default function AIScreen() {
               </View>
             ) : (
               <View className="gap-3">
-                {messages?.map((message) => (
-                  <View
-                    key={\`\${message.order}-\${message.stepOrder}\`}
-                    className={\`flex-row \${
+	                {messages?.map((message) => (
+	                  <View
+	                    key={message.key}
+	                    className={\`flex-row \${
                       message.role === "user" ? "justify-end" : "justify-start"
                     }\`}
                   >
@@ -19839,11 +19839,11 @@ export default function AIPage() {
                       {messages.map((message) => {
                         const isUser = message.role === "user";
 
-                        return (
-                          <MessageScrollerItem
-                            key={\`\${message.order}-\${message.stepOrder}\`}
-                            scrollAnchor={isUser}
-                          >
+	                        return (
+	                          <MessageScrollerItem
+	                            key={message.key}
+	                            scrollAnchor={isUser}
+	                          >
                             <Message align={isUser ? "end" : "start"}>
                               <MessageBody>
                                 <MessageHeader>
@@ -20348,11 +20348,11 @@ export default function AI() {
                       {messages.map((message) => {
                         const isUser = message.role === "user";
 
-                        return (
-                          <MessageScrollerItem
-                            key={\`\${message.order}-\${message.stepOrder}\`}
-                            scrollAnchor={isUser}
-                          >
+	                        return (
+	                          <MessageScrollerItem
+	                            key={message.key}
+	                            scrollAnchor={isUser}
+	                          >
                             <Message align={isUser ? "end" : "start"}>
                               <MessageBody>
                                 <MessageHeader>
@@ -20844,11 +20844,11 @@ function RouteComponent() {
                       {messages.map((message) => {
                         const isUser = message.role === "user";
 
-                        return (
-                          <MessageScrollerItem
-                            key={\`\${message.order}-\${message.stepOrder}\`}
-                            scrollAnchor={isUser}
-                          >
+	                        return (
+	                          <MessageScrollerItem
+	                            key={message.key}
+	                            scrollAnchor={isUser}
+	                          >
                             <Message align={isUser ? "end" : "start"}>
                               <MessageBody>
                                 <MessageHeader>
@@ -21347,11 +21347,11 @@ function RouteComponent() {
                       {messages.map((message) => {
                         const isUser = message.role === "user";
 
-                        return (
-                          <MessageScrollerItem
-                            key={\`\${message.order}-\${message.stepOrder}\`}
-                            scrollAnchor={isUser}
-                          >
+	                        return (
+	                          <MessageScrollerItem
+	                            key={message.key}
+	                            scrollAnchor={isUser}
+	                          >
                             <Message align={isUser ? "end" : "start"}>
                               <MessageBody>
                                 <MessageHeader>
@@ -32526,13 +32526,20 @@ export const env = new Proxy({} as Env, {
   ["packages/env/src/native.ts.hbs", `import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+{{#if (eq backend "convex")}}
+const convexUrlSchema = (exampleHost: string) =>
+	z.url().refine((url) => new URL(url).hostname !== exampleHost, {
+		message: \`Replace the \${exampleHost} placeholder before running the app\`,
+	});
+
+{{/if}}
 export const env = createEnv({
 	clientPrefix: "EXPO_PUBLIC_",
 	client: {
 {{#if (eq backend "convex")}}
-		EXPO_PUBLIC_CONVEX_URL: z.url(),
+		EXPO_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 {{#if (eq auth "better-auth")}}
-		EXPO_PUBLIC_CONVEX_SITE_URL: z.url(),
+		EXPO_PUBLIC_CONVEX_SITE_URL: convexUrlSchema("example.convex.site"),
 {{/if}}
 {{else}}
 		EXPO_PUBLIC_SERVER_URL: z.url(),
@@ -32690,6 +32697,13 @@ import { createEnv } from "@t3-oss/env-core";
 {{/if}}
 import { z } from "zod";
 
+{{#if (eq backend "convex")}}
+const convexUrlSchema = (exampleHost: string) =>
+	z.url().refine((url) => new URL(url).hostname !== exampleHost, {
+		message: \`Replace the \${exampleHost} placeholder before running the app\`,
+	});
+
+{{/if}}
 {{#if (includes frontend "nuxt")}}
 /**
  * Nuxt env validation - validates at build time when imported in nuxt.config.ts
@@ -32702,9 +32716,9 @@ export const env = createEnv({
 {{#if (eq backend "convex")}}
 {{#if (includes frontend "next")}}
 	client: {
-		NEXT_PUBLIC_CONVEX_URL: z.url(),
+		NEXT_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 {{#if (eq auth "better-auth")}}
-		NEXT_PUBLIC_CONVEX_SITE_URL: z.url(),
+		NEXT_PUBLIC_CONVEX_SITE_URL: convexUrlSchema("example.convex.site"),
 {{/if}}
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
@@ -32721,20 +32735,20 @@ export const env = createEnv({
 	},
 {{else if (includes frontend "nuxt")}}
 	client: {
-		NUXT_PUBLIC_CONVEX_URL: z.url(),
+		NUXT_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 	},
 {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
 	clientPrefix: "PUBLIC_",
 	client: {
-		PUBLIC_CONVEX_URL: z.url(),
+		PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 	},
 	runtimeEnv: (import.meta as any).env,
 {{else}}
 	clientPrefix: "VITE_",
 	client: {
-		VITE_CONVEX_URL: z.url(),
+		VITE_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 {{#if (eq auth "better-auth")}}
-		VITE_CONVEX_SITE_URL: z.url(),
+		VITE_CONVEX_SITE_URL: convexUrlSchema("example.convex.site"),
 {{/if}}
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),

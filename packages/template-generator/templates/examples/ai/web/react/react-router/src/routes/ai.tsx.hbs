@@ -171,11 +171,11 @@ export default function AI() {
                       {messages.map((message) => {
                         const isUser = message.role === "user";
 
-                        return (
-                          <MessageScrollerItem
-                            key={`${message.order}-${message.stepOrder}`}
-                            scrollAnchor={isUser}
-                          >
+	                        return (
+	                          <MessageScrollerItem
+	                            key={message.key}
+	                            scrollAnchor={isUser}
+	                          >
                             <Message align={isUser ? "end" : "start"}>
                               <MessageBody>
                                 <MessageHeader>

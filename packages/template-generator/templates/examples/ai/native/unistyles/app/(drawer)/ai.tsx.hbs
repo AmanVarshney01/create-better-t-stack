@@ -199,10 +199,10 @@ export default function AIScreen() {
                     .map((part) => (part.type === "text" ? part.text : ""))
                     .join("");
 
-                  return (
-                    <View
-                      key={`${message.order}-${message.stepOrder}`}
-                      style={[
+	                  return (
+	                    <View
+	                      key={message.key}
+	                      style={[
                         styles.messageRow,
                         isUser ? styles.userRow : styles.assistantRow,
                       ]}
