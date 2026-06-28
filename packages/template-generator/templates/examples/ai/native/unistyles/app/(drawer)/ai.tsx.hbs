@@ -201,7 +201,7 @@ export default function AIScreen() {
 
 	                  return (
 	                    <View
-	                      key={message.key}
+	                      key={`${message.order}-${message.stepOrder}`}
 	                      style={[
                         styles.messageRow,
                         isUser ? styles.userRow : styles.assistantRow,

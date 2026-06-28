@@ -198,7 +198,7 @@ export default function AIScreen() {
               <View className="gap-3">
 	                {messages?.map((message) => (
 	                  <View
-	                    key={message.key}
+	                    key={`${message.order}-${message.stepOrder}`}
 	                    className={`flex-row ${
                       message.role === "user" ? "justify-end" : "justify-start"
                     }`}

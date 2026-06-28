@@ -6,8 +6,15 @@ const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
 async function getMainViewUrl(): Promise<string> {
   const channel = await Updater.localInfo.channel();
   if (channel === "dev") {
-    console.log(`HMR enabled: Using web dev server at ${DEV_SERVER_URL}`);
-    return DEV_SERVER_URL;
+    try {
+      await fetch(DEV_SERVER_URL, { method: "HEAD" });
+      console.log(`HMR enabled: Using web dev server at ${DEV_SERVER_URL}`);
+      return DEV_SERVER_URL;
+    } catch {
+      console.log(
+        "Web dev server not running. Run dev:hmr for live reload.",
+      );
+    }
   }
 
   return "views://mainview/index.html";

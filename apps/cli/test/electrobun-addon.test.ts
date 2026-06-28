@@ -62,7 +62,7 @@ describe("Electrobun addon scaffolding", () => {
     expect(desktopPackageJson.scripts["dev:hmr"]).toContain('"bun run hmr"');
     expect(desktopPackageJson.scripts["dev:hmr"]).toContain('"bun run dev"');
     expect(desktopConfig).toContain('const webBuildDir = "../web/dist";');
-    expect(desktopConfig).toContain('const isDevCommand = process.argv.includes("dev");');
+    expect(desktopConfig).not.toContain("isDevCommand");
     expect(desktopConfig).toContain('[webBuildDir]: "views/mainview"');
     expect(desktopConfig).toContain("watchIgnore: [`${webBuildDir}/**`]");
     expect(desktopConfig).toContain("bundleCEF: true");
@@ -70,7 +70,7 @@ describe("Electrobun addon scaffolding", () => {
     expect(desktopEntry).toContain("const DEV_SERVER_PORT = 3001;");
     expect(desktopEntry).toContain("return DEV_SERVER_URL;");
     expect(desktopEntry).not.toContain("HMR_RETRY_COUNT");
-    expect(desktopEntry).not.toContain("fetch(DEV_SERVER_URL");
+    expect(desktopEntry).toContain("fetch(DEV_SERVER_URL");
     expect(fallbackHtmlExists).toBe(false);
   });
 

@@ -173,7 +173,7 @@ export default function AI() {
 
 	                        return (
 	                          <MessageScrollerItem
-	                            key={message.key}
+	                            key={`${message.order}-${message.stepOrder}`}
 	                            scrollAnchor={isUser}
 	                          >
                             <Message align={isUser ? "end" : "start"}>

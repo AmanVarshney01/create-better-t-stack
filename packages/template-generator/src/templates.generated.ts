@@ -106,7 +106,6 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 
 const webBuildDir =
   "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "nuxt")}}../web/.output/public{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}";
-const isDevCommand = process.argv.includes("dev");
 
 export default {
   app: {
@@ -121,13 +120,9 @@ export default {
     bun: {
       entrypoint: "src/bun/index.ts",
     },
-    ...(isDevCommand
-      ? {}
-      : {
-          copy: {
-            [webBuildDir]: "views/mainview",
-          },
-        }),
+    copy: {
+      [webBuildDir]: "views/mainview",
+    },
     watchIgnore: [\`\${webBuildDir}/**\`],
     mac: {
       bundleCEF: true,
@@ -168,8 +163,15 @@ const DEV_SERVER_URL = \`http://localhost:\${DEV_SERVER_PORT}\`;
 async function getMainViewUrl(): Promise<string> {
   const channel = await Updater.localInfo.channel();
   if (channel === "dev") {
-    console.log(\`HMR enabled: Using web dev server at \${DEV_SERVER_URL}\`);
-    return DEV_SERVER_URL;
+    try {
+      await fetch(DEV_SERVER_URL, { method: "HEAD" });
+      console.log(\`HMR enabled: Using web dev server at \${DEV_SERVER_URL}\`);
+      return DEV_SERVER_URL;
+    } catch {
+      console.log(
+        "Web dev server not running. Run dev:hmr for live reload.",
+      );
+    }
   }
 
   return "views://mainview/index.html";
@@ -16968,7 +16970,7 @@ export default function AIScreen() {
 
 	                  return (
 	                    <View
-	                      key={message.key}
+	                      key={\`\${message.order}-\${message.stepOrder}\`}
 	                      style={[
                         styles.messageRow,
                         isUser ? styles.userRow : styles.assistantRow,
@@ -18041,7 +18043,7 @@ export default function AIScreen() {
 
 	                  return (
 	                    <View
-	                      key={message.key}
+	                      key={\`\${message.order}-\${message.stepOrder}\`}
 	                      style={[
                         styles.messageRow,
                         isUser ? styles.userRow : styles.assistantRow,
@@ -19128,7 +19130,7 @@ export default function AIScreen() {
               <View className="gap-3">
 	                {messages?.map((message) => (
 	                  <View
-	                    key={message.key}
+	                    key={\`\${message.order}-\${message.stepOrder}\`}
 	                    className={\`flex-row \${
                       message.role === "user" ? "justify-end" : "justify-start"
                     }\`}
@@ -19838,7 +19840,7 @@ export default function AIPage() {
 
 	                        return (
 	                          <MessageScrollerItem
-	                            key={message.key}
+	                            key={\`\${message.order}-\${message.stepOrder}\`}
 	                            scrollAnchor={isUser}
 	                          >
                             <Message align={isUser ? "end" : "start"}>
@@ -20347,7 +20349,7 @@ export default function AI() {
 
 	                        return (
 	                          <MessageScrollerItem
-	                            key={message.key}
+	                            key={\`\${message.order}-\${message.stepOrder}\`}
 	                            scrollAnchor={isUser}
 	                          >
                             <Message align={isUser ? "end" : "start"}>
@@ -20843,7 +20845,7 @@ function RouteComponent() {
 
 	                        return (
 	                          <MessageScrollerItem
-	                            key={message.key}
+	                            key={\`\${message.order}-\${message.stepOrder}\`}
 	                            scrollAnchor={isUser}
 	                          >
                             <Message align={isUser ? "end" : "start"}>
@@ -21346,7 +21348,7 @@ function RouteComponent() {
 
 	                        return (
 	                          <MessageScrollerItem
-	                            key={message.key}
+	                            key={\`\${message.order}-\${message.stepOrder}\`}
 	                            scrollAnchor={isUser}
 	                          >
                             <Message align={isUser ? "end" : "start"}>
