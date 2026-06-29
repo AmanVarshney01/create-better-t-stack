@@ -35,10 +35,10 @@ Add the marketplace and install via Codex's plugins screen, or point Codex at th
 
 ### Just the MCP server (any MCP client)
 
-The CLI can wire the server into Codex (and Cursor, VS Code, Gemini CLI, etc.) for you:
+Wire the server into Codex (and Cursor, VS Code, Gemini CLI, etc.) with `add-mcp`:
 
 ```bash
-npx create-better-t-stack@latest add --addons mcp
+npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"
 ```
 
 …and choose `codex` (or your client) when prompted. Or add it to `~/.codex/config.toml` manually:

@@ -196,10 +196,18 @@ Then ask for a project in chat, or use the shortcuts:
 
 Add the same marketplace from the Codex plugins screen and install **Better-T-Stack**, then ask for a project in chat.
 
-Prefer just the tools without the plugin? Wire the MCP server into Codex:
+Prefer just the tools without the plugin? Wire the MCP server into Codex with `add-mcp`:
 
 ```bash
-npx create-better-t-stack@latest add --addons mcp   # choose "codex"
+npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"   # choose "codex"
+```
+
+Or add it to `~/.codex/config.toml` directly:
+
+```toml
+[mcp_servers.better-t-stack]
+command = "npx"
+args = ["-y", "create-better-t-stack@latest", "mcp"]
 ```
 
 ### opencode
@@ -207,14 +215,14 @@ npx create-better-t-stack@latest add --addons mcp   # choose "codex"
 Add the MCP server, then ask for a project in chat:
 
 ```bash
-npx create-better-t-stack@latest add --addons mcp   # choose "opencode"
+npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"   # choose "opencode"
 ```
 
 ### Other agents
 
 Any other agent works too, because Better-T-Stack is a CLI underneath:
 
-- **MCP-capable agents** (Cursor, VS Code, Gemini CLI, Zed, and more) — run `npx create-better-t-stack@latest add --addons mcp` and pick your agent.
+- **MCP-capable agents** (Cursor, VS Code, Gemini CLI, Zed, and more) — wire the server with `npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"` and pick your agent.
 - **CLI-first agents** like [pi](https://pi.dev) — just ask it to scaffold with Better-T-Stack and it runs the `create-better-t-stack` CLI directly.
 
 ## Structured Addon Options
