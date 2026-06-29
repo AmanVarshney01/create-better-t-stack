@@ -212,11 +212,28 @@ args = ["-y", "create-better-t-stack@latest", "mcp"]
 
 ### opencode
 
-Add the MCP server, then ask for a project in chat:
+opencode has no plugin marketplace, but it supports the MCP server natively. Add it interactively:
 
 ```bash
-npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"   # choose "opencode"
+opencode mcp add
 ```
+
+…and enter name `better-t-stack`, type `local`, command `npx -y create-better-t-stack@latest mcp`. Or add it to `opencode.json` directly:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "better-t-stack": {
+      "type": "local",
+      "command": ["npx", "-y", "create-better-t-stack@latest", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+The two skills use the same `SKILL.md` format opencode reads — drop `scaffold-project` and `add-to-project` into `~/.config/opencode/skills/` (or `.opencode/skills/`) for the same proactive scaffolding.
 
 ### Other agents
 
