@@ -1,0 +1,33 @@
+{
+  "name": "better-t-stack",
+  "version": "3.35.0",
+  "description": "Let your AI scaffold and extend projects with Better-T-Stack. Bundles the create-better-t-stack MCP server plus skills, commands, and an agent so the assistant plans a valid stack and generates it instead of hand-rolling boilerplate.",
+  "author": {
+    "name": "Aman Varshney",
+    "url": "https://github.com/AmanVarshney01"
+  },
+  "homepage": "https://better-t-stack.dev",
+  "repository": "https://github.com/AmanVarshney01/create-better-t-stack",
+  "license": "MIT",
+  "keywords": [
+    "better-t-stack",
+    "create-better-t-stack",
+    "scaffold",
+    "starter",
+    "boilerplate",
+    "typescript",
+    "fullstack",
+    "monorepo",
+    "turborepo",
+    "nx",
+    "nextjs",
+    "react",
+    "hono",
+    "trpc",
+    "better-auth",
+    "drizzle",
+    "tanstack",
+    "ai-agent",
+    "mcp"
+  ]
+}

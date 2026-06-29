@@ -11,6 +11,11 @@ const TEMPLATE_GENERATOR_PACKAGE_JSON_PATH = join(
   process.cwd(),
   "packages/template-generator/package.json",
 );
+// Plugin manifests track the CLI version so the installable plugin stays in lockstep with the tool it wraps.
+const PLUGIN_MANIFEST_PATHS = [
+  join(process.cwd(), "plugin/.claude-plugin/plugin.json"),
+  join(process.cwd(), "plugin/.codex-plugin/plugin.json"),
+];
 const PREVIEW_LABEL = "preview";
 
 async function main(): Promise<void> {
@@ -124,9 +129,16 @@ async function main(): Promise<void> {
     `${JSON.stringify(templateGeneratorPackageJson, null, 2)}\n`,
   );
 
+  // Keep the installable plugin manifests in sync with the CLI version.
+  for (const manifestPath of PLUGIN_MANIFEST_PATHS) {
+    const pluginManifest = JSON.parse(await readFile(manifestPath, "utf-8"));
+    pluginManifest.version = newVersion;
+    await writeFile(manifestPath, `${JSON.stringify(pluginManifest, null, 2)}\n`);
+  }
+
   await $`bun install`;
   await $`bun run build:cli`;
-  await $`git add apps/cli/package.json packages/create-bts/package.json packages/types/package.json packages/template-generator/package.json bun.lock`;
+  await $`git add apps/cli/package.json packages/create-bts/package.json packages/types/package.json packages/template-generator/package.json plugin/.claude-plugin/plugin.json plugin/.codex-plugin/plugin.json bun.lock`;
   await $`git commit -m "chore(release): ${newVersion}"`;
 
   // Push the release branch
@@ -145,6 +157,7 @@ This PR bumps the version to \`${newVersion}\`.
 - Updated \`create-bts\` to v${newVersion}
 - Updated \`@better-t-stack/types\` to v${newVersion}
 - Updated \`@better-t-stack/template-generator\` to v${newVersion}
+- Updated the agent plugin manifests (Claude Code + Codex) to v${newVersion}
 
 ### Preview Release
 A preview release will be published automatically and posted as a PR comment.

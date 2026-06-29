@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "better-t-stack": {
+      "command": "npx",
+      "args": ["-y", "create-better-t-stack@latest", "mcp"],
+      "note": "Official Better-T-Stack MCP server (stdio). Exposes bts_get_stack_guidance, bts_get_schema, bts_plan_project, bts_create_project, bts_plan_addons, and bts_add_addons. Runs via npx; no API key or auth required."
+    }
+  }
+}
