@@ -174,6 +174,49 @@ npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"
 
 For Bun projects, the generated config uses the equivalent `bunx create-better-t-stack@latest mcp` server command inside `add-mcp`. That means MCP-capable agents inside the generated project can talk back to Better-T-Stack without any extra global install, alongside other recommended docs, framework, and database MCP servers.
 
+## Use it inside your AI agent
+
+Install the Better-T-Stack plugin and your assistant will scaffold and extend projects for you — just ask in plain English, like _"create a fullstack app with Next, Hono, Postgres and Better Auth"_, and it builds a valid stack instead of hand-writing boilerplate.
+
+### Claude Code
+
+Add the marketplace and install the plugin:
+
+```bash
+/plugin marketplace add AmanVarshney01/create-better-t-stack
+/plugin install better-t-stack@better-t-stack
+```
+
+Then ask for a project in chat, or use the shortcuts:
+
+- `/better-t-stack:new <description>` — scaffold a new project
+- `/better-t-stack:add <addons>` — add addons to an existing one
+
+### Codex
+
+Add the same marketplace from the Codex plugins screen and install **Better-T-Stack**, then ask for a project in chat.
+
+Prefer just the tools without the plugin? Wire the MCP server into Codex:
+
+```bash
+npx create-better-t-stack@latest add --addons mcp   # choose "codex"
+```
+
+### opencode
+
+Add the MCP server, then ask for a project in chat:
+
+```bash
+npx create-better-t-stack@latest add --addons mcp   # choose "opencode"
+```
+
+### Other agents
+
+Any other agent works too, because Better-T-Stack is a CLI underneath:
+
+- **MCP-capable agents** (Cursor, VS Code, Gemini CLI, Zed, and more) — run `npx create-better-t-stack@latest add --addons mcp` and pick your agent.
+- **CLI-first agents** like [pi](https://pi.dev) — just ask it to scaffold with Better-T-Stack and it runs the `create-better-t-stack` CLI directly.
+
 ## Structured Addon Options
 
 Prompt-driven addons can be configured up front through `addonOptions`.

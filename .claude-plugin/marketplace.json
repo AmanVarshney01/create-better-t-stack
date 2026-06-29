@@ -1,0 +1,37 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "better-t-stack",
+  "description": "Better-T-Stack plugin marketplace — scaffold end-to-end type-safe TypeScript projects with AI",
+  "owner": {
+    "name": "Aman Varshney",
+    "url": "https://github.com/AmanVarshney01"
+  },
+  "plugins": [
+    {
+      "name": "better-t-stack",
+      "source": "./plugin",
+      "description": "Let your AI scaffold and extend projects with Better-T-Stack. Bundles the create-better-t-stack MCP server plus skills, commands, and an agent so the assistant plans a valid stack and generates it instead of hand-rolling boilerplate.",
+      "author": {
+        "name": "Aman Varshney",
+        "url": "https://github.com/AmanVarshney01"
+      },
+      "homepage": "https://better-t-stack.dev",
+      "repository": "https://github.com/AmanVarshney01/create-better-t-stack",
+      "license": "MIT",
+      "category": "development",
+      "keywords": [
+        "better-t-stack",
+        "scaffold",
+        "typescript",
+        "fullstack",
+        "monorepo",
+        "trpc",
+        "better-auth",
+        "drizzle",
+        "prisma",
+        "tanstack",
+        "mcp"
+      ]
+    }
+  ]
+}

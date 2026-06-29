@@ -1,0 +1,43 @@
+{
+  "name": "better-t-stack",
+  "version": "0.1.0",
+  "description": "Let your AI scaffold and extend projects with Better-T-Stack. Bundles the create-better-t-stack MCP server plus skills so the assistant plans a valid stack and generates it instead of hand-rolling boilerplate.",
+  "author": {
+    "name": "Aman Varshney",
+    "url": "https://github.com/AmanVarshney01"
+  },
+  "homepage": "https://better-t-stack.dev",
+  "repository": "https://github.com/AmanVarshney01/create-better-t-stack",
+  "license": "MIT",
+  "keywords": [
+    "better-t-stack",
+    "scaffold",
+    "typescript",
+    "fullstack",
+    "monorepo",
+    "trpc",
+    "better-auth",
+    "drizzle",
+    "tanstack",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Better-T-Stack",
+    "shortDescription": "Scaffold end-to-end type-safe TypeScript projects",
+    "longDescription": "Bring Better-T-Stack into Codex with skills that plan a valid stack and generate it through the official create-better-t-stack MCP server, plus an add-addons workflow for existing projects. Covers frontends (Next, TanStack, Nuxt, Svelte, Solid, Astro, React Native), backends (Hono, Express, Fastify, Elysia, Convex), databases and ORMs, auth, payments, deployment, and DB provisioning (Neon, Prisma Postgres, Supabase, Turso, PlanetScale, MongoDB Atlas, Cloudflare D1, Docker).",
+    "developerName": "Aman Varshney",
+    "category": "Coding",
+    "capabilities": ["Interactive", "Write", "MCP"],
+    "websiteURL": "https://better-t-stack.dev",
+    "brandColor": "#8839EF",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/icon.svg",
+    "defaultPrompt": [
+      "Create a fullstack app with Next, Hono, Postgres + Drizzle, and Better Auth",
+      "Scaffold a TanStack Start project with a Neon database",
+      "Add PWA, Biome, and Turborepo to my Better-T-Stack project"
+    ]
+  }
+}

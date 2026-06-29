@@ -180,6 +180,18 @@ create-better-t-stack --frontend next native-uniwind
 - Desktop builds package static web output, so `tanstack-start`, `next`, `nuxt`, `svelte`, and `astro` need static/export configuration before packaging
 - Not compatible with `--backend self`, because fullstack self backends emit server routes inside `apps/web`
 
+### Task Runners
+
+- `nx`, `turborepo`, and `vite-plus` are mutually exclusive — only one can be selected per project
+
+```bash
+# ❌ Invalid - two task runners
+create-better-t-stack --addons turborepo nx
+
+# ✅ Valid - a single task runner
+create-better-t-stack --addons turborepo
+```
+
 ### Web Deployment
 
 - `--web-deploy cloudflare` requires a web frontend
