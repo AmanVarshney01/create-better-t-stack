@@ -29,7 +29,5 @@
     "tanstack",
     "ai-agent",
     "mcp"
-  ],
-  "commands": ["./commands/new.md", "./commands/add.md"],
-  "agents": ["./agents/stack-architect.md"]
+  ]
 }
