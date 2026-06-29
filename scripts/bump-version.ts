@@ -11,6 +11,10 @@ const TEMPLATE_GENERATOR_PACKAGE_JSON_PATH = join(
   process.cwd(),
   "packages/template-generator/package.json",
 );
+const OPENCODE_PLUGIN_PACKAGE_JSON_PATH = join(
+  process.cwd(),
+  "packages/opencode-plugin/package.json",
+);
 // Plugin manifests track the CLI version so the installable plugin stays in lockstep with the tool it wraps.
 const PLUGIN_MANIFEST_PATHS = [
   join(process.cwd(), "plugin/.claude-plugin/plugin.json"),
@@ -129,6 +133,18 @@ async function main(): Promise<void> {
     `${JSON.stringify(templateGeneratorPackageJson, null, 2)}\n`,
   );
 
+  // Update opencode plugin package version and its bts dependency versions
+  const opencodePluginPackageJson = JSON.parse(
+    await readFile(OPENCODE_PLUGIN_PACKAGE_JSON_PATH, "utf-8"),
+  );
+  opencodePluginPackageJson.version = newVersion;
+  opencodePluginPackageJson.dependencies["create-better-t-stack"] = `^${newVersion}`;
+  opencodePluginPackageJson.dependencies["@better-t-stack/types"] = `^${newVersion}`;
+  await writeFile(
+    OPENCODE_PLUGIN_PACKAGE_JSON_PATH,
+    `${JSON.stringify(opencodePluginPackageJson, null, 2)}\n`,
+  );
+
   // Keep the installable plugin manifests in sync with the CLI version.
   for (const manifestPath of PLUGIN_MANIFEST_PATHS) {
     const pluginManifest = JSON.parse(await readFile(manifestPath, "utf-8"));
@@ -138,7 +154,7 @@ async function main(): Promise<void> {
 
   await $`bun install`;
   await $`bun run build:cli`;
-  await $`git add apps/cli/package.json packages/create-bts/package.json packages/types/package.json packages/template-generator/package.json plugin/.claude-plugin/plugin.json plugin/.codex-plugin/plugin.json bun.lock`;
+  await $`git add apps/cli/package.json packages/create-bts/package.json packages/types/package.json packages/template-generator/package.json packages/opencode-plugin/package.json plugin/.claude-plugin/plugin.json plugin/.codex-plugin/plugin.json bun.lock`;
   await $`git commit -m "chore(release): ${newVersion}"`;
 
   // Push the release branch
@@ -157,6 +173,7 @@ This PR bumps the version to \`${newVersion}\`.
 - Updated \`create-bts\` to v${newVersion}
 - Updated \`@better-t-stack/types\` to v${newVersion}
 - Updated \`@better-t-stack/template-generator\` to v${newVersion}
+- Updated \`@better-t-stack/opencode\` to v${newVersion}
 - Updated the agent plugin manifests (Claude Code + Codex) to v${newVersion}
 
 ### Preview Release

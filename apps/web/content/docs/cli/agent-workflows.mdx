@@ -212,7 +212,20 @@ args = ["-y", "create-better-t-stack@latest", "mcp"]
 
 ### opencode
 
-opencode has no plugin marketplace, but it supports the MCP server natively. Add it interactively:
+The fastest path is the native opencode plugin, [`@better-t-stack/opencode`](https://www.npmjs.com/package/@better-t-stack/opencode). Add one line to `opencode.json` (or `~/.config/opencode/opencode.json`):
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["@better-t-stack/opencode"]
+}
+```
+
+opencode installs it on startup. It registers the `bts_*` tools natively **and** makes the agent Better-T-Stack aware — inside a project (with a `bts.jsonc`) it surfaces the stack and steers toward `bts_add_addons`; elsewhere it points at the scaffold tools. Then just ask for a project in chat.
+
+#### MCP server (alternative)
+
+opencode also supports the MCP server directly. Add it interactively:
 
 ```bash
 opencode mcp add

@@ -279,6 +279,12 @@ export function createBtsCli(): ReturnType<typeof createCli> {
 // Re-export Result type from better-result for programmatic API consumers
 export { Result } from "better-result";
 
+// Re-export stack guidance so non-MCP integrations (e.g. the opencode plugin) share one source
+export { getStackGuidance } from "./stack-guidance";
+
+// Re-export the bts.jsonc reader so integrations can detect/inspect existing projects
+export { readBtsConfig } from "./utils/bts-config";
+
 /**
  * Error types that can be returned from create/createVirtual
  */

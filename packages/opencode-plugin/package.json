@@ -1,0 +1,51 @@
+{
+  "name": "@better-t-stack/opencode",
+  "version": "3.35.0",
+  "description": "OpenCode plugin that scaffolds and extends projects with Better-T-Stack",
+  "keywords": [
+    "ai-agent",
+    "better-t-stack",
+    "opencode",
+    "opencode-plugin",
+    "scaffold",
+    "typescript"
+  ],
+  "homepage": "https://better-t-stack.dev",
+  "license": "MIT",
+  "author": "Aman Varshney",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
+    "directory": "packages/opencode-plugin"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "check-types": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "@better-t-stack/types": "^3.35.0",
+    "create-better-t-stack": "^3.35.0"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "1.14.48",
+    "tsdown": "^0.22.0",
+    "typescript": "^6.0.3"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1"
+  }
+}
