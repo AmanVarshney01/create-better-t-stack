@@ -11,7 +11,7 @@ Add tooling/features to the current Better-T-Stack project using the Better-T-St
 
 ## Steps
 
-1. **Confirm** the working directory is a Better-T-Stack project (look for `bts.jsonc` / `better-t-stack.jsonc`).
+1. **Confirm** the working directory is a Better-T-Stack project (look for `bts.jsonc`).
 2. **Determine the addon set** from the arguments above. Use `bts_get_schema` for nested addon options when needed.
 3. **Plan with `bts_plan_addons`** (dry run) and review the changes. Surface any conflicts (e.g. `nx`/`turborepo`/`vite-plus` are mutually exclusive).
 4. **Apply with `bts_add_addons`** once confirmed.

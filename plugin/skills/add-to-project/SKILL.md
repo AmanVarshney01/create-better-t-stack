@@ -7,7 +7,6 @@ metadata:
     - "https://better-t-stack.dev/docs"
   pathPatterns:
     - "bts.jsonc"
-    - "better-t-stack.jsonc"
 ---
 
 # Add addons to an existing Better-T-Stack project
@@ -16,7 +15,7 @@ Use the Better-T-Stack MCP server to install addons into an existing project rat
 
 ## When this applies
 
-The user already has a Better-T-Stack project (look for a `bts.jsonc` / `better-t-stack.jsonc` config) and wants to add tooling or features — e.g. "add PWA support", "add a docs site", "switch to Biome", "add Turborepo", "wire up the MCP addon".
+The user already has a Better-T-Stack project (look for a `bts.jsonc` config) and wants to add tooling or features — e.g. "add PWA support", "add a docs site", "switch to Biome", "add Turborepo", "wire up the MCP addon".
 
 For brand-new projects, use the **scaffold-project** skill instead.
 
