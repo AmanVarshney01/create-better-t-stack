@@ -53,6 +53,7 @@ Use `bts_get_schema` for the authoritative, version-current list. As of this wri
 
 ## Rules
 
+- When you ask the user to choose a value (auth, database, ORM, API, etc.), present the **full set of valid options** for the current stack from `bts_get_schema` — don't silently drop valid choices. For example, both `better-auth` and `clerk` are valid auth providers for a Hono + Next.js app, so offer both (plus "none").
 - Always `bts_plan_project` before `bts_create_project`.
 - Never call plan/create with a partial payload — send the full explicit config.
 - `convex` backend pairs with its own data layer; do not also force a separate database/orm/api unless the schema allows it. When unsure, check `bts_get_schema`.
