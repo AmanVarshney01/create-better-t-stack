@@ -41,6 +41,18 @@ npm create better-t-stack@latest --yes
 npm create better-t-stack@latest builder
 ```
 
+### AI agent (plugin)
+
+Let your AI assistant build the stack for you. Install the Better-T-Stack plugin, then describe what you want in plain English — it plans a valid stack and scaffolds it for you.
+
+```bash
+# Claude Code
+/plugin marketplace add AmanVarshney01/create-better-t-stack
+/plugin install better-t-stack@better-t-stack
+```
+
+Then ask: _"create a fullstack app with Next, Hono, Postgres and Better Auth"_. Also works in Codex, opencode, and any MCP-capable agent — see [Use it inside your AI agent](/docs/cli/agent-workflows#use-it-inside-your-ai-agent).
+
 ## Common Setups
 
 ### Default Stack
@@ -103,6 +115,9 @@ See the full list in the [CLI Reference](/docs/cli). Key flags:
 <Cards>
   <Card href="/docs/cli" title="CLI (per-command)">
     Flags, usage, and examples for each command
+  </Card>
+  <Card href="/docs/cli/agent-workflows#use-it-inside-your-ai-agent" title="AI agent plugin">
+    Scaffold from Claude Code, Codex, opencode, and other MCP agents
   </Card>
   <Card href="/docs/project-structure" title="Project Structure">
     See how web/server/native and Convex layouts are generated
