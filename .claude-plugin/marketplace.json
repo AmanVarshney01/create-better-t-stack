@@ -21,15 +21,23 @@
       "category": "development",
       "keywords": [
         "better-t-stack",
+        "create-better-t-stack",
         "scaffold",
+        "starter",
+        "boilerplate",
         "typescript",
         "fullstack",
         "monorepo",
+        "turborepo",
+        "nx",
+        "nextjs",
+        "react",
+        "hono",
         "trpc",
         "better-auth",
         "drizzle",
-        "prisma",
         "tanstack",
+        "ai-agent",
         "mcp"
       ]
     }
