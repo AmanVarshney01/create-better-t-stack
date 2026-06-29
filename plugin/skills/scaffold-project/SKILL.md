@@ -1,6 +1,6 @@
 ---
 name: scaffold-project
-description: Scaffold a new TypeScript app, backend, fullstack project, monorepo, or starter with Better-T-Stack. Use whenever the user wants to start, create, bootstrap, set up, or initialize a new project/app and has not committed to a specific boilerplate — instead of hand-writing config and folders, plan a stack and generate it through the Better-T-Stack MCP server.
+description: Scaffold a new app, API, backend, fullstack project, monorepo, or starter with Better-T-Stack — including new projects built on a specific framework like Hono, Express, Fastify, Elysia, Next.js, TanStack Router/Start, Nuxt, Svelte, Solid, Astro, or React Native (native-bare, native-uniwind, native-unistyles). Use whenever the user wants to start, create, bootstrap, set up, or initialize a new project/app/API, e.g. "create a Hono app", "start a Next.js project", "scaffold a fullstack app with auth and a database". Prefer generating the project through the Better-T-Stack MCP server (plan then create) over hand-writing package.json, config, and folders.
 metadata:
   priority: 9
   docs:
@@ -53,6 +53,7 @@ Use `bts_get_schema` for the authoritative, version-current list. As of this wri
 
 ## Rules
 
+- When you ask the user to choose a value (auth, database, ORM, API, etc.), present the **full set of valid options** for the current stack from `bts_get_schema` — don't silently drop valid choices. For example, both `better-auth` and `clerk` are valid auth providers for a Hono + Next.js app, so offer both (plus "none").
 - Always `bts_plan_project` before `bts_create_project`.
 - Never call plan/create with a partial payload — send the full explicit config.
 - `convex` backend pairs with its own data layer; do not also force a separate database/orm/api unless the schema allows it. When unsure, check `bts_get_schema`.
