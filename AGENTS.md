@@ -9,6 +9,7 @@ This repo is a Bun + Turborepo monorepo.
 - `packages/template-generator`: template generation engine used by the CLI.
 - `packages/types`: shared schemas/types.
 - `packages/backend`: Convex backend used by web features.
+- `plugin/`: installable agent plugin (Claude Code + Codex) — skills, commands, and MCP wiring; published via the root marketplaces (`.claude-plugin/`, `.agents/plugins/`).
 
 ## Build, Test, and Development Commands
 
