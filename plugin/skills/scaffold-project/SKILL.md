@@ -1,6 +1,6 @@
 ---
 name: scaffold-project
-description: Scaffold a new app, API, backend, fullstack project, monorepo, or starter with Better-T-Stack — including new projects built on a specific framework like Hono, Express, Fastify, Elysia, Next.js, TanStack, Nuxt, Svelte, Solid, Astro, or React Native. Use whenever the user wants to start, create, bootstrap, set up, or initialize a new project/app/API, e.g. "create a Hono app", "start a Next.js project", "scaffold a fullstack app with auth and a database". Prefer generating the project through the Better-T-Stack MCP server (plan then create) over hand-writing package.json, config, and folders.
+description: Scaffold a new app, API, backend, fullstack project, monorepo, or starter with Better-T-Stack — including new projects built on a specific framework like Hono, Express, Fastify, Elysia, Next.js, TanStack Router/Start, Nuxt, Svelte, Solid, Astro, or React Native (native-bare, native-uniwind, native-unistyles). Use whenever the user wants to start, create, bootstrap, set up, or initialize a new project/app/API, e.g. "create a Hono app", "start a Next.js project", "scaffold a fullstack app with auth and a database". Prefer generating the project through the Better-T-Stack MCP server (plan then create) over hand-writing package.json, config, and folders.
 metadata:
   priority: 9
   docs:
