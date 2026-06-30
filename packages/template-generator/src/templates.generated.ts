@@ -14349,6 +14349,7 @@ new Elysia()
 		}
 		return status(405)
 	})
+	.mount(auth.handler)
 {{/if}}
 {{#if (eq api "orpc")}}
 	.all(
