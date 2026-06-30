@@ -33,12 +33,16 @@ async function authenticateClerkRequest(request: Request): Promise<ClerkContextA
 {{#if (and (eq backend 'self') (includes frontend "next"))}}
 import type { NextRequest } from "next/server";
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
+{{/if}}
 
-export async function createContext(req: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
 	});
 	return {
@@ -61,12 +65,16 @@ export async function createContext(req: NextRequest){{#if (eq auth "clerk")}}: 
 
 {{else if (and (eq backend 'self') (includes frontend "tanstack-start"))}}
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
+{{/if}}
 
-export async function createContext({ req }: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
 	});
 	return {
@@ -90,16 +98,20 @@ export async function createContext({ req }: { req: Request }){{#if (eq auth "cl
 {{else if (eq backend 'hono')}}
 import type { Context as HonoContext } from "hono";
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 {{/if}}
 
 export type CreateContextOptions = {
 	context: HonoContext;
 };
 
-export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: context.req.raw.headers,
 	});
 	return {
@@ -130,7 +142,7 @@ export type CreateContextOptions = {
 	context: ElysiaContext;
 };
 
-export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
@@ -162,7 +174,7 @@ import { auth } from "@{{projectName}}/auth";
 import { getAuth } from "@clerk/express";
 {{/if}}
 
-export async function createContext(opts: CreateExpressContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateExpressContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
@@ -210,6 +222,7 @@ export async function createContext({ req }: CreateFastifyContextOptions){{#if (
 		session: null,
 	};
 {{else}}
+	void req;
 	return {
 		auth: null,
 		session: null,

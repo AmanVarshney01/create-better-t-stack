@@ -12,12 +12,12 @@ export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfi
   const webPkgPath = "apps/web/package.json";
 
   if (!vfs.exists(dbPkgPath)) return;
-  const webExists = vfs.exists(webPkgPath);
+  const webNeedsDbRuntime = backend === "self" && vfs.exists(webPkgPath);
 
   if (orm === "prisma") {
-    processPrismaDeps(vfs, config, dbPkgPath, webPkgPath, webExists);
+    processPrismaDeps(vfs, config, dbPkgPath, webPkgPath, webNeedsDbRuntime);
   } else if (orm === "drizzle") {
-    processDrizzleDeps(vfs, config, dbPkgPath, webPkgPath, webExists);
+    processDrizzleDeps(vfs, config, dbPkgPath, webPkgPath, webNeedsDbRuntime);
   } else if (orm === "mongoose") {
     addPackageDependency({ vfs, packagePath: dbPkgPath, dependencies: ["mongoose"] });
   }
@@ -33,17 +33,18 @@ function processPrismaDeps(
   const { database, dbSetup } = config;
 
   if (database === "mongodb") {
+    // Intentional: Prisma ORM v7 does not support MongoDB yet, so MongoDB stays on v6.
     addPackageDependency({
       vfs,
       packagePath: dbPkgPath,
-      customDependencies: { "@prisma/client": "6.19.0" },
-      customDevDependencies: { prisma: "6.19.0" },
+      customDependencies: { "@prisma/client": "6.19.3" },
+      customDevDependencies: { prisma: "6.19.3" },
     });
     if (webExists) {
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        customDependencies: { "@prisma/client": "6.19.0" },
+        customDependencies: { "@prisma/client": "6.19.3" },
       });
     }
     return;

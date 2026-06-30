@@ -25,8 +25,8 @@ export default function AnalyticsPage({
   connectionStatus: "online" | "connecting" | "reconnecting" | "offline";
 }) {
   return (
-    <div className="mx-auto min-h-svh bg-fd-background">
-      <div className="container mx-auto space-y-10 px-4 py-8 pt-16">
+    <main className="container mx-auto min-h-svh">
+      <div className="mx-auto flex flex-col gap-8 px-4 pt-12">
         <AnalyticsHeader
           lastUpdated={data.lastUpdated}
           liveTotal={data.totalProjects}
@@ -50,6 +50,6 @@ export default function AnalyticsPage({
         </div>
       </div>
       <Footer />
-    </div>
+    </main>
   );
 }

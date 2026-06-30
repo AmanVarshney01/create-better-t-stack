@@ -2,24 +2,42 @@ import { PrismaClient } from "../prisma/generated/client";
 
 {{#if (eq dbSetup "d1")}}
 import { PrismaD1 } from "@prisma/adapter-d1";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 
-const adapter = new PrismaD1(env.DB);
-const prisma = new PrismaClient({ adapter });
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const adapter = new PrismaD1(env.DB);
+	return new PrismaClient({ adapter });
+}
 
+{{#if (and (ne runtime "workers") (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+const prisma = createPrismaClient();
 export default prisma;
+{{/if}}
 {{else}}
 import { PrismaLibSql } from "@prisma/adapter-libsql";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
-
-const adapter = new PrismaLibSql({
-	url: env.DATABASE_URL,
-{{#if (eq dbSetup "turso")}}
-	authToken: env.DATABASE_AUTH_TOKEN || "",
 {{/if}}
-});
 
-const prisma = new PrismaClient({ adapter });
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const adapter = new PrismaLibSql({
+		url: env.DATABASE_URL,
+{{#if (eq dbSetup "turso")}}
+		authToken: env.DATABASE_AUTH_TOKEN || "",
+{{/if}}
+	});
 
+	return new PrismaClient({ adapter });
+}
+
+{{#if (and (ne runtime "workers") (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+const prisma = createPrismaClient();
 export default prisma;
+{{/if}}
 {{/if}}

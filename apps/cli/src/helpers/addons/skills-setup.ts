@@ -1,8 +1,9 @@
-import { isCancel, multiselect, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
 
+import { navigableMultiselect, navigableSelect } from "../../prompts/navigable";
+import { navigableGroup } from "../../prompts/navigable-group";
 import type { AddonOptions, ProjectConfig } from "../../types";
 import { readBtsConfig } from "../../utils/bts-config";
 import { isSilent } from "../../utils/context";
@@ -82,6 +83,9 @@ const SKILL_SOURCES = {
   },
   "haydenbleasel/ultracite": {
     label: "Ultracite",
+  },
+  "https://www.evlog.dev": {
+    label: "evlog",
   },
 } satisfies Record<string, SkillSource>;
 
@@ -213,6 +217,10 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
     sources.push("haydenbleasel/ultracite");
   }
 
+  if (addons.includes("evlog")) {
+    sources.push("https://www.evlog.dev");
+  }
+
   return sources;
 }
 
@@ -275,7 +283,6 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
       "building-native-ui",
       "native-data-fetching",
       "expo-deployment",
-      "upgrading-expo",
       "expo-cicd-workflows",
     ];
     if (config.frontend.includes("native-uniwind")) {
@@ -310,6 +317,7 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
   ],
   "msmps/opentui-skill": () => ["opentui"],
   "haydenbleasel/ultracite": () => ["ultracite"],
+  "https://www.evlog.dev": () => ["review-logging-patterns", "analyze-logs"],
 };
 
 function getCuratedSkillNamesForSourceKey(sourceKey: SourceKey, config: ProjectConfig): string[] {
@@ -364,92 +372,92 @@ export async function setupSkills(
     return Result.ok(undefined);
   }
 
-  let scope = skillsOptions?.scope;
-
-  if (!scope) {
-    if (isSilent()) {
-      scope = DEFAULT_SCOPE;
-    } else {
-      const selectedScope = await select<InstallScope>({
-        message: "Where should skills be installed?",
-        options: [
-          {
-            value: "project",
-            label: "Project",
-            hint: "Writes to project config files (recommended for teams)",
-          },
-          {
-            value: "global",
-            label: "Global",
-            hint: "Writes to user-level config files (personal machine)",
-          },
-        ],
-        initialValue: DEFAULT_SCOPE,
-      });
-
-      if (isCancel(selectedScope)) {
-        return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
-      }
-
-      scope = selectedScope;
-    }
-  }
-
-  // Select all skills by default
+  const configuredScope = skillsOptions?.scope;
+  const configuredSelections = skillsOptions?.selections;
+  const configuredAgents = skillsOptions?.agents;
   const allSkillValues = skillOptions.map((opt) => opt.value);
 
-  const configuredSelections = skillsOptions?.selections;
+  let scope: InstallScope;
   let selectedSkills: string[];
+  let selectedAgents: SkillAgent[];
 
-  if (configuredSelections !== undefined) {
-    selectedSkills = configuredSelections.flatMap((selection) =>
-      selection.skills.map((skill) => `${selection.source}::${skill}`),
-    );
-  } else if (isSilent()) {
-    selectedSkills = allSkillValues;
+  if (isSilent()) {
+    scope = configuredScope ?? DEFAULT_SCOPE;
+    selectedSkills =
+      configuredSelections !== undefined
+        ? configuredSelections.flatMap((selection) =>
+            selection.skills.map((skill) => `${selection.source}::${skill}`),
+          )
+        : allSkillValues;
+    if (selectedSkills.length === 0) return Result.ok(undefined);
+    selectedAgents = configuredAgents ? [...configuredAgents] : [...DEFAULT_AGENTS];
+    if (selectedAgents.length === 0) return Result.ok(undefined);
   } else {
-    const promptedSkills = await multiselect({
-      message: "Select skills to install",
-      options: skillOptions,
-      required: false,
-      initialValues: allSkillValues,
+    const results = await navigableGroup<{
+      scope: InstallScope;
+      skills: string[];
+      agents: SkillAgent[];
+    }>({
+      scope: async () => {
+        if (configuredScope !== undefined) return configuredScope;
+        return navigableSelect<InstallScope>({
+          message: "Where should skills be installed?",
+          options: [
+            {
+              value: "project",
+              label: "Project",
+              hint: "Writes to project config files (recommended for teams)",
+            },
+            {
+              value: "global",
+              label: "Global",
+              hint: "Writes to user-level config files (personal machine)",
+            },
+          ],
+          initialValue: DEFAULT_SCOPE,
+        });
+      },
+      skills: async () => {
+        if (configuredSelections !== undefined) {
+          return configuredSelections.flatMap((selection) =>
+            selection.skills.map((skill) => `${selection.source}::${skill}`),
+          );
+        }
+        return navigableMultiselect<string>({
+          message: "Select skills to install",
+          options: skillOptions,
+          required: false,
+          initialValues: allSkillValues,
+        });
+      },
+      agents: async ({ results: r }) => {
+        const pickedSkills = r.skills as string[] | undefined;
+        if (pickedSkills !== undefined && pickedSkills.length === 0) return [];
+        if (configuredAgents !== undefined) return [...configuredAgents];
+        return navigableMultiselect<SkillAgent>({
+          message: "Select agents to install skills to",
+          options: AVAILABLE_AGENTS,
+          required: false,
+          initialValues: [...DEFAULT_AGENTS],
+        });
+      },
     });
 
-    if (isCancel(promptedSkills)) {
+    if (
+      results.scope === undefined ||
+      results.skills === undefined ||
+      results.agents === undefined
+    ) {
       return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
     }
 
-    selectedSkills = promptedSkills as string[];
-  }
+    scope = results.scope;
+    selectedSkills = results.skills as string[];
+    selectedAgents = results.agents as SkillAgent[];
 
-  if (selectedSkills.length === 0) {
-    return Result.ok(undefined);
-  }
-
-  const configuredAgents = skillsOptions?.agents;
-  let selectedAgents: SkillAgent[] = configuredAgents ? [...configuredAgents] : [];
-
-  if (selectedAgents.length === 0 && configuredAgents === undefined) {
-    if (isSilent()) {
-      selectedAgents = [...DEFAULT_AGENTS];
-    } else {
-      const promptedAgents = await multiselect({
-        message: "Select agents to install skills to",
-        options: AVAILABLE_AGENTS,
-        required: false,
-        initialValues: [...DEFAULT_AGENTS],
-      });
-
-      if (isCancel(promptedAgents)) {
-        return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
-      }
-
-      selectedAgents = [...promptedAgents] as SkillAgent[];
+    if (selectedSkills.length === 0 || selectedAgents.length === 0) {
+      return Result.ok(undefined);
     }
-  }
-
-  if (selectedAgents.length === 0) {
-    return Result.ok(undefined);
   }
 
   // Group skills by source

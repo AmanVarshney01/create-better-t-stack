@@ -9,7 +9,6 @@ export async function processPaymentsTemplates(
   config: ProjectConfig,
 ): Promise<void> {
   if (!config.payments || config.payments === "none") return;
-  if (config.backend === "convex") return;
 
   const hasReactWeb = config.frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
@@ -18,7 +17,16 @@ export async function processPaymentsTemplates(
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
 
-  if (config.backend !== "none") {
+  if (config.backend === "convex") {
+    processTemplatesFromPrefix(
+      vfs,
+      templates,
+      `payments/${config.payments}/convex/backend`,
+      "packages/backend",
+      config,
+    );
+    return;
+  } else if (config.backend !== "none") {
     processTemplatesFromPrefix(
       vfs,
       templates,

@@ -11,6 +11,7 @@ import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
 import type { CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
+import { validateAddonsAgainstFrontends } from "../../utils/compatibility-rules";
 import { isSilent, runWithContextAsync } from "../../utils/context";
 import { displayConfig } from "../../utils/display-config";
 import {
@@ -345,6 +346,19 @@ async function createProjectHandlerInternal(
         ...config,
         dbSetupOptions: effectiveDbSetupOptions,
       };
+    }
+
+    if (!input.yolo) {
+      const addonsValidationResult = validateAddonsAgainstFrontends(
+        config.addons,
+        config.frontend,
+        config.auth,
+        config.backend,
+        config.runtime,
+      );
+      if (addonsValidationResult.isErr()) {
+        return Result.err(new CLIError({ message: addonsValidationResult.error.message }));
+      }
     }
 
     const reproducibleCommand = generateReproducibleCommand(config);

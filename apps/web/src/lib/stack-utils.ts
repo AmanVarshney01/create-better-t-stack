@@ -34,6 +34,14 @@ const staticDesktopFrontendNames = {
   astro: "Astro",
 } as const;
 
+const selfHostedFullstackBackends = [
+  "self-next",
+  "self-tanstack-start",
+  "self-nuxt",
+  "self-svelte",
+  "self-astro",
+] as const;
+
 export function generateStackSummary(stack: StackState) {
   const selectedTechs = CATEGORY_ORDER.flatMap((category) => {
     const options = TECH_OPTIONS[category];
@@ -60,7 +68,7 @@ export function generateStackSummary(stack: StackState) {
   return selectedTechs.length > 0 ? selectedTechs.join(" • ") : "Custom stack";
 }
 
-export function getDesktopBuildNote(stack: Pick<StackState, "addons" | "webFrontend">) {
+export function getDesktopBuildNote(stack: Pick<StackState, "addons" | "backend" | "webFrontend">) {
   const selectedDesktopAddons = stack.addons.filter(
     (addon): addon is keyof typeof desktopAddonNames => addon in desktopAddonNames,
   );
@@ -82,6 +90,14 @@ export function getDesktopBuildNote(stack: Pick<StackState, "addons" | "webFront
     selectedDesktopAddons.length === 2
       ? "Tauri and Electrobun desktop builds"
       : `${desktopAddonNames[selectedDesktopAddons[0]]} desktop builds`;
+
+  if (
+    selfHostedFullstackBackends.includes(
+      stack.backend as (typeof selfHostedFullstackBackends)[number],
+    )
+  ) {
+    return `${addonLabel} package static web assets and require a separate backend or no backend. Fullstack self backends emit server routes inside the web app, so they cannot be bundled for desktop packaging.`;
+  }
 
   return `${addonLabel} package static web assets. ${staticDesktopFrontendNames[staticFrontend]} needs a static/export build configuration before desktop packaging will work.`;
 }
@@ -114,6 +130,7 @@ export function generateStackCommand(stack: StackState) {
       backend === "self-next" ||
       backend === "self-tanstack-start" ||
       backend === "self-nuxt" ||
+      backend === "self-svelte" ||
       backend === "self-astro"
     ) {
       return "self";
@@ -154,6 +171,7 @@ export function generateStackCommand(stack: StackState) {
                 "husky",
                 "turborepo",
                 "nx",
+                "vite-plus",
                 "ultracite",
                 "fumadocs",
                 "oxlint",
@@ -161,6 +179,7 @@ export function generateStackCommand(stack: StackState) {
                 "wxt",
                 "skills",
                 "mcp",
+                "evlog",
               ].includes(addon),
             )
             .join(" ") || "none"
@@ -174,6 +193,10 @@ export function generateStackCommand(stack: StackState) {
   }
 
   return `${base} ${projectName} ${flags.join(" ")}`;
+}
+
+export function formatStackCommandForDisplay(command: string) {
+  return command.replaceAll(" --", ` ${"\\"}\n  --`);
 }
 
 export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {

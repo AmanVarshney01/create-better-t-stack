@@ -1,5 +1,5 @@
 import type { ProjectConfig } from "@better-t-stack/types";
-import { Project, SyntaxKind } from "ts-morph";
+import { Node, Project, SyntaxKind } from "ts-morph";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
@@ -68,10 +68,14 @@ export function processAuthPlugins(vfs: VirtualFileSystem, config: ProjectConfig
     }
   });
 
-  // Add plugins to betterAuth config
+  // Add plugins to the generated betterAuth config, regardless of whether the
+  // file exports a singleton `auth` or wraps the config in `createAuth()`.
   const betterAuthCall = sourceFile
-    .getVariableDeclaration("auth")
-    ?.getInitializerIfKind(SyntaxKind.CallExpression);
+    .getDescendantsOfKind(SyntaxKind.CallExpression)
+    .find((callExpression) => {
+      const expression = callExpression.getExpression();
+      return Node.isIdentifier(expression) && expression.getText() === "betterAuth";
+    });
 
   if (betterAuthCall) {
     const configObject = betterAuthCall

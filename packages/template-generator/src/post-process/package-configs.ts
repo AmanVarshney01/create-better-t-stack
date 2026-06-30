@@ -6,6 +6,7 @@
 import { desktopWebFrontends, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
+import { dependencyVersionMap } from "../utils/add-deps";
 import { getDbScriptSupport } from "../utils/db-scripts";
 
 type PackageJson = {
@@ -27,6 +28,9 @@ type PackageManagerConfig = {
 };
 
 type DesktopWebScript = "build" | "dev" | "generate";
+type WorkspacesConfig = NonNullable<PackageJson["workspaces"]>;
+
+const VITE_PLUS_VERSION = dependencyVersionMap["vite-plus"];
 
 /**
  * Update all package.json files with proper names, scripts, and workspaces
@@ -39,6 +43,7 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   updateInfraPackageJson(vfs, config);
   updateDesktopPackageJson(vfs, config);
   renameDevScriptsForAlchemy(vfs, config);
+  updateVitePlusPackageScripts(vfs, config);
 
   if (config.backend === "convex") {
     updateConvexPackageJson(vfs, config);
@@ -56,18 +61,8 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   pkgJson.name = config.projectName;
   pkgJson.scripts = pkgJson.scripts || {};
 
-  // Ensure workspaces is an array
-  let workspaces: string[] = [];
-  if (Array.isArray(pkgJson.workspaces)) {
-    workspaces = pkgJson.workspaces;
-  } else if (
-    pkgJson.workspaces &&
-    typeof pkgJson.workspaces === "object" &&
-    pkgJson.workspaces.packages
-  ) {
-    workspaces = pkgJson.workspaces.packages;
-  }
-  pkgJson.workspaces = workspaces;
+  const existingWorkspaces = pkgJson.workspaces;
+  const workspaces = getWorkspacePackages(existingWorkspaces);
 
   const scripts = pkgJson.scripts;
   const { projectName, packageManager, backend, database, orm, dbSetup, addons, frontend } = config;
@@ -82,16 +77,32 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   const dbPackageName = `@${projectName}/db`;
   const hasTurborepo = addons.includes("turborepo");
   const hasNx = addons.includes("nx");
+  const hasVitePlus = addons.includes("vite-plus");
+  const hasVitePlusNativeHooks =
+    hasVitePlus && !addons.includes("husky") && !addons.includes("lefthook");
 
   const dbSupport = getDbScriptSupport(config);
   const needsDbScripts = dbSupport.hasDbScripts;
   const isD1Alchemy = dbSupport.isD1Alchemy;
 
-  const pmConfig = getPackageManagerConfig(packageManager, { hasTurborepo, hasNx });
+  const pmConfig = getPackageManagerConfig(packageManager, { hasTurborepo, hasNx, hasVitePlus });
 
   scripts.dev = pmConfig.dev;
   scripts.build = pmConfig.build;
   scripts["check-types"] = pmConfig.checkTypes;
+
+  if (hasVitePlus) {
+    scripts.check = "vp check && vp run -r check-types";
+    scripts.lint = "vp lint";
+    scripts.format = "vp fmt";
+    scripts.staged = "vp staged";
+
+    if (hasVitePlusNativeHooks) {
+      scripts["hooks:setup"] = "vp config";
+    } else {
+      delete scripts["hooks:setup"];
+    }
+  }
 
   if (hasNativeApp) {
     scripts["dev:native"] = pmConfig.filter("native", "dev");
@@ -102,6 +113,15 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   }
 
   if (addons.includes("electrobun")) {
+    // Root `dev` stays the standard aggregate; the desktop has no `dev` script so
+    // it's skipped. Root `build` runs the non-desktop workspaces, then the desktop
+    // (which self-builds its web app, mirroring `vite build && electrobun build`) —
+    // serialized so PMs without topological ordering don't run two web builds at once.
+    scripts.build = getElectrobunRootBuildCommand(vfs, packageManager, {
+      hasTurborepo,
+      hasNx,
+      hasVitePlus,
+    });
     scripts["dev:desktop"] = pmConfig.filter("desktop", "dev:hmr");
     scripts["build:desktop"] = pmConfig.filter("desktop", "build:stable");
     scripts["build:desktop:canary"] = pmConfig.filter("desktop", "build:canary");
@@ -120,7 +140,9 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   }
 
   if (needsDbScripts) {
-    scripts["db:push"] = pmConfig.filter(dbPackageName, "db:push");
+    if (dbSupport.hasDbPush) {
+      scripts["db:push"] = pmConfig.filter(dbPackageName, "db:push");
+    }
 
     if (!isD1Alchemy) {
       scripts["db:studio"] = pmConfig.filter(dbPackageName, "db:studio");
@@ -141,11 +163,21 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     scripts["db:local"] = pmConfig.filter(dbPackageName, "db:local");
   }
 
+  const hasDockerDeployScripts = config.webDeploy === "docker" || config.serverDeploy === "docker";
   if (dbSetup === "docker") {
-    scripts["db:start"] = pmConfig.filter(dbPackageName, "db:start");
-    scripts["db:watch"] = pmConfig.filter(dbPackageName, "db:watch");
-    scripts["db:stop"] = pmConfig.filter(dbPackageName, "db:stop");
-    scripts["db:down"] = pmConfig.filter(dbPackageName, "db:down");
+    if (hasDockerDeployScripts) {
+      // The database service lives in the root docker-compose.yml; scope the
+      // dev scripts to just that service so they don't touch web/server.
+      scripts["db:start"] = `docker compose up -d ${database}`;
+      scripts["db:watch"] = `docker compose up ${database}`;
+      scripts["db:stop"] = `docker compose stop ${database}`;
+      scripts["db:down"] = `docker compose down ${database}`;
+    } else {
+      scripts["db:start"] = pmConfig.filter(dbPackageName, "db:start");
+      scripts["db:watch"] = pmConfig.filter(dbPackageName, "db:watch");
+      scripts["db:stop"] = pmConfig.filter(dbPackageName, "db:stop");
+      scripts["db:down"] = pmConfig.filter(dbPackageName, "db:down");
+    }
   }
 
   // Add deploy/destroy scripts when using alchemy (cloudflare deployment)
@@ -155,14 +187,30 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     scripts.destroy = pmConfig.filter(infraPackageName, "destroy");
   }
 
+  // Add compose scripts when deploying web/server as Docker containers
+  if (config.webDeploy === "docker" || config.serverDeploy === "docker") {
+    scripts["docker:build"] = "docker compose build";
+    scripts["docker:up"] = "docker compose up -d --build";
+    scripts["docker:down"] = "docker compose down";
+    scripts["docker:logs"] = "docker compose logs -f";
+  }
+
   // Note: packageManager version is set by CLI at runtime since it requires running the actual CLI
   // For preview purposes, we just show the configured package manager
   pkgJson.packageManager = `${packageManager}@latest`;
 
   if (config.api === "orpc" && config.frontend.includes("nuxt")) {
     pkgJson.overrides = {
-      ...(pkgJson.overrides || {}),
+      ...pkgJson.overrides,
       "@vue/devtools-api": "^8.0.7",
+    };
+  }
+
+  if (hasVitePlus) {
+    pkgJson.overrides = {
+      ...pkgJson.overrides,
+      vite: `npm:@voidzero-dev/vite-plus-core@${VITE_PLUS_VERSION}`,
+      vitest: `npm:@voidzero-dev/vite-plus-test@${VITE_PLUS_VERSION}`,
     };
   }
 
@@ -183,19 +231,51 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     }
   }
 
+  pkgJson.workspaces = getUpdatedWorkspaces(existingWorkspaces, workspaces);
   vfs.writeJson("package.json", pkgJson);
+}
+
+function getWorkspacePackages(workspaces: PackageJson["workspaces"]): string[] {
+  if (Array.isArray(workspaces)) {
+    return workspaces;
+  }
+
+  if (workspaces && typeof workspaces === "object" && workspaces.packages) {
+    return workspaces.packages;
+  }
+
+  return [];
+}
+
+function getUpdatedWorkspaces(
+  existingWorkspaces: PackageJson["workspaces"],
+  packages: string[],
+): WorkspacesConfig {
+  if (
+    existingWorkspaces &&
+    !Array.isArray(existingWorkspaces) &&
+    typeof existingWorkspaces === "object" &&
+    existingWorkspaces.catalog
+  ) {
+    return {
+      ...existingWorkspaces,
+      packages,
+    };
+  }
+
+  return packages;
 }
 
 function getPackageManagerConfig(
   packageManager: ProjectConfig["packageManager"],
-  options: { hasTurborepo: boolean; hasNx: boolean },
+  options: { hasTurborepo: boolean; hasNx: boolean; hasVitePlus: boolean },
 ): PackageManagerConfig {
   if (options.hasTurborepo) {
     return {
-      dev: "turbo dev",
-      build: "turbo build",
-      checkTypes: "turbo check-types",
-      filter: (workspace, script) => `turbo -F ${workspace} ${script}`,
+      dev: "turbo run dev",
+      build: "turbo run build",
+      checkTypes: "turbo run check-types",
+      filter: (workspace, script) => `turbo run ${script} -F ${workspace}`,
     };
   }
 
@@ -205,6 +285,15 @@ function getPackageManagerConfig(
       build: "nx run-many -t build",
       checkTypes: "nx run-many -t check-types",
       filter: (workspace, script) => `nx run-many -t ${script} --projects=${workspace}`,
+    };
+  }
+
+  if (options.hasVitePlus) {
+    return {
+      dev: "vp run -r dev",
+      build: "vp run -r build",
+      checkTypes: "vp run -r check-types",
+      filter: (workspace, script) => `vp run --filter ${workspace} ${script}`,
     };
   }
 
@@ -218,9 +307,11 @@ function getPackageManagerConfig(
       };
     case "npm":
       return {
-        dev: "npm run dev --workspaces",
-        build: "npm run build --workspaces",
-        checkTypes: "npm run check-types --workspaces",
+        // --if-present so workspaces without the script (e.g. the desktop shell
+        // has no `dev`) are skipped instead of erroring "Missing script".
+        dev: "npm run dev --workspaces --if-present",
+        build: "npm run build --workspaces --if-present",
+        checkTypes: "npm run check-types --workspaces --if-present",
         filter: (workspace, script) => `npm run ${script} --workspace ${workspace}`,
       };
     case "bun":
@@ -234,6 +325,65 @@ function getPackageManagerConfig(
   }
 }
 
+function getElectrobunRootBuildCommand(
+  vfs: VirtualFileSystem,
+  packageManager: ProjectConfig["packageManager"],
+  options: { hasTurborepo: boolean; hasNx: boolean; hasVitePlus: boolean },
+): string {
+  if (options.hasTurborepo) {
+    return "turbo run build --filter='!desktop' && turbo run build -F desktop";
+  }
+
+  if (options.hasNx) {
+    return "nx run-many -t build --exclude=desktop && nx run-many -t build --projects=desktop";
+  }
+
+  if (options.hasVitePlus) {
+    return "vp run -r build --filter '!desktop' && vp run --filter desktop build";
+  }
+
+  switch (packageManager) {
+    case "npm":
+      return [
+        ...getWorkspacePackagePathsWithScript(vfs, "build")
+          .filter((workspacePath) => workspacePath !== "apps/desktop")
+          .map((workspacePath) => `npm run build --workspace ${workspacePath} --if-present`),
+        "npm run build --workspace apps/desktop",
+      ].join(" && ");
+    case "pnpm":
+      return "pnpm -r --filter '!desktop' build && pnpm --filter desktop build";
+    case "bun":
+    default:
+      return "bun run --filter '!desktop' build && bun run --filter desktop build";
+  }
+}
+
+function getWorkspacePackagePathsWithScript(vfs: VirtualFileSystem, scriptName: string): string[] {
+  return vfs
+    .getAllFiles()
+    .filter((filePath) => filePath.endsWith("/package.json"))
+    .map((filePath) => filePath.slice(0, -"/package.json".length))
+    .filter(
+      (workspacePath) => workspacePath.startsWith("apps/") || workspacePath.startsWith("packages/"),
+    )
+    .filter((workspacePath) => {
+      const pkgJson = vfs.readJson<PackageJson>(`${workspacePath}/package.json`);
+      return Boolean(pkgJson?.scripts?.[scriptName]);
+    })
+    .sort(compareWorkspacePackagePaths);
+}
+
+function compareWorkspacePackagePaths(a: string, b: string): number {
+  const group = (workspacePath: string) => {
+    if (workspacePath === "apps/desktop") return 3;
+    if (workspacePath.startsWith("packages/")) return 0;
+    if (workspacePath === "apps/web") return 2;
+    return 1;
+  };
+
+  return group(a) - group(b) || a.localeCompare(b);
+}
+
 function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const pkgJson = vfs.readJson<PackageJson>("apps/desktop/package.json");
   if (!pkgJson) return;
@@ -241,20 +391,30 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
   const { packageManager, addons, frontend } = config;
   const hasTurborepo = addons.includes("turborepo");
   const hasNx = addons.includes("nx");
+  const hasVitePlus = addons.includes("vite-plus");
+  // Nuxt emits its static bundle via `generate`; every other frontend via `build`.
   const desktopBuildScript: DesktopWebScript = frontend.includes("nuxt") ? "generate" : "build";
   const webBuildCommand = getDesktopWebCommand(
     packageManager,
-    { hasTurborepo, hasNx },
+    { hasTurborepo, hasNx, hasVitePlus },
     desktopBuildScript,
   );
-  const webDevCommand = getDesktopWebCommand(packageManager, { hasTurborepo, hasNx }, "dev");
+  const webDevCommand = getDesktopWebCommand(
+    packageManager,
+    { hasTurborepo, hasNx, hasVitePlus },
+    "dev",
+  );
   const localRunCommand = getLocalRunCommand(packageManager);
 
   pkgJson.scripts = {
     ...pkgJson.scripts,
-    start: `${webBuildCommand} && electrobun dev`,
-    dev: "electrobun dev --watch",
-    "dev:hmr": `concurrently "${localRunCommand} hmr" "${localRunCommand} start"`,
+    start: "electrobun dev",
+    // No `dev` script on purpose: the root `dev` aggregate skips desktop so it
+    // never auto-launches the native window. Use `dev:desktop` (dev:hmr) instead.
+    // build* mirrors the official electrobun pattern (`vite build && electrobun
+    // build`): build the web app, then electrobun. The root build serializes this
+    // so package managers without topological ordering don't race on the web build.
+    "dev:hmr": `concurrently "${localRunCommand} hmr" "electrobun dev --watch"`,
     hmr: webDevCommand,
     build: `${webBuildCommand} && electrobun build`,
     "build:stable": `${webBuildCommand} && electrobun build --env=stable`,
@@ -267,15 +427,19 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
 
 function getDesktopWebCommand(
   packageManager: ProjectConfig["packageManager"],
-  options: { hasTurborepo: boolean; hasNx: boolean },
+  options: { hasTurborepo: boolean; hasNx: boolean; hasVitePlus: boolean },
   script: DesktopWebScript,
 ): string {
   if (options.hasTurborepo) {
-    return `turbo -F web ${script}`;
+    return `turbo run ${script} -F web`;
   }
 
   if (options.hasNx) {
     return `nx run-many -t ${script} --projects=web`;
+  }
+
+  if (options.hasVitePlus) {
+    return `vp run --filter web ${script}`;
   }
 
   switch (packageManager) {
@@ -310,7 +474,8 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
 
   const scripts = pkgJson.scripts;
   const { database, orm, dbSetup } = config;
-  const { isD1Alchemy } = getDbScriptSupport(config);
+  const dbSupport = getDbScriptSupport(config);
+  const { isD1Alchemy } = dbSupport;
 
   if (database !== "none") {
     if (database === "sqlite" && dbSetup !== "d1") {
@@ -318,7 +483,9 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
     }
 
     if (orm === "prisma") {
-      scripts["db:push"] = "prisma db push";
+      if (dbSupport.hasDbPush) {
+        scripts["db:push"] = "prisma db push";
+      }
       scripts["db:generate"] = "prisma generate";
       scripts["db:migrate"] = "prisma migrate dev";
       scripts.postinstall ??= "prisma generate";
@@ -326,7 +493,9 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
         scripts["db:studio"] = "prisma studio";
       }
     } else if (orm === "drizzle") {
-      scripts["db:push"] = "drizzle-kit push";
+      if (dbSupport.hasDbPush) {
+        scripts["db:push"] = "drizzle-kit push";
+      }
       scripts["db:generate"] = "drizzle-kit generate";
       if (!isD1Alchemy) {
         scripts["db:studio"] = "drizzle-kit studio";
@@ -335,7 +504,8 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
     }
   }
 
-  if (dbSetup === "docker") {
+  const hasDockerDeploy = config.webDeploy === "docker" || config.serverDeploy === "docker";
+  if (dbSetup === "docker" && !hasDockerDeploy) {
     scripts["db:start"] = "docker compose up -d";
     scripts["db:watch"] = "docker compose up";
     scripts["db:stop"] = "docker compose stop";
@@ -450,4 +620,31 @@ function renameDevScriptsForAlchemy(vfs: VirtualFileSystem, config: ProjectConfi
       vfs.writeJson(webPkgPath, webPkg);
     }
   }
+}
+
+function updateVitePlusPackageScripts(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  if (!config.addons.includes("vite-plus")) {
+    return;
+  }
+
+  const webPkgPath = "apps/web/package.json";
+  const webPkg = vfs.readJson<PackageJson>(webPkgPath);
+  if (!webPkg?.scripts) {
+    return;
+  }
+
+  const viteScriptReplacements: Record<string, string> = {
+    vite: "vp dev",
+    "vite dev": "vp dev",
+    "vite build": "vp build",
+    "vite preview": "vp preview",
+    "vitest run": "vp test",
+    "vite build && tsc --noEmit": "vp build && tsc --noEmit",
+  };
+
+  for (const [scriptName, command] of Object.entries(webPkg.scripts)) {
+    webPkg.scripts[scriptName] = viteScriptReplacements[command] ?? command;
+  }
+
+  vfs.writeJson(webPkgPath, webPkg);
 }

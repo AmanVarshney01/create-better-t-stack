@@ -209,7 +209,6 @@ function buildFromPrecomputed(
   const cliVersionDistribution = versionWithShare(
     recordToDistribution(stats.cliVersion)
       .filter((item) => item.name !== "unknown")
-      .slice(0, 10)
       .map((item) => ({
         version: item.name,
         count: item.value,

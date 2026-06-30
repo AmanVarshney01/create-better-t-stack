@@ -66,11 +66,14 @@ export async function displayPostInstallInstructions(
   const cdCmd = `cd ${relativePath}`;
   const hasHusky = addons?.includes("husky");
   const hasLefthook = addons?.includes("lefthook");
+  const hasVitePlus = addons?.includes("vite-plus");
+  const hasVitePlusNativeHooks = hasVitePlus && !hasHusky && !hasLefthook;
   const hasGitHooksOrLinting =
     addons?.includes("husky") ||
     addons?.includes("biome") ||
     addons?.includes("lefthook") ||
-    addons?.includes("oxlint");
+    addons?.includes("oxlint") ||
+    hasVitePlus;
 
   const databaseInstructions =
     !isConvex && database !== "none"
@@ -80,6 +83,7 @@ export async function displayPostInstallInstructions(
           runCmd,
           runtime,
           dbSetup,
+          webDeploy,
           serverDeploy,
           backend,
         )
@@ -91,6 +95,9 @@ export async function displayPostInstallInstructions(
     : "";
   const huskyInstructions = hasHusky ? getHuskyInstructions(runCmd) : "";
   const lefthookInstructions = hasLefthook ? getLefthookInstructions(packageManager) : "";
+  const vitePlusNativeHooksInstructions = hasVitePlusNativeHooks
+    ? getVitePlusNativeHooksInstructions(runCmd)
+    : "";
   const lintingInstructions = hasGitHooksOrLinting ? getLintingInstructions(runCmd) : "";
   const nativeInstructions =
     (frontend?.includes("native-bare") ||
@@ -106,10 +113,6 @@ export async function displayPostInstallInstructions(
     : "";
   const clerkInstructions =
     config.auth === "clerk" ? getClerkInstructions(frontend || [], backend, api) : "";
-  const polarInstructions =
-    config.payments === "polar" && config.auth === "better-auth"
-      ? getPolarInstructions(backend)
-      : "";
   const alchemyDeployInstructions = getAlchemyDeployInstructions(
     runCmd,
     webDeploy,
@@ -126,11 +129,16 @@ export async function displayPostInstallInstructions(
   const hasReactRouter = frontend?.includes("react-router");
   const hasSvelte = frontend?.includes("svelte");
   const hasAstro = frontend?.includes("astro");
+  // TanStack Router/Start, Next, Nuxt and Solid all dev on 3001; only React Router and SvelteKit use Vite's default 5173.
   const webPort = hasReactRouter || hasSvelte ? "5173" : hasAstro ? "4321" : "3001";
 
   const betterAuthConvexInstructions =
     isConvex && config.auth === "better-auth"
-      ? getBetterAuthConvexInstructions(hasWeb ?? false, webPort, packageManager)
+      ? getBetterAuthConvexInstructions(hasWeb ?? false, webPort, packageManager, runCmd)
+      : "";
+  const polarInstructions =
+    config.payments === "polar" && config.auth === "better-auth"
+      ? getPolarInstructions(backend, packageManager)
       : "";
 
   const bunWebNativeWarning =
@@ -200,7 +208,9 @@ export async function displayPostInstallInstructions(
     }
 
     if (isBackendSelf && api === "orpc") {
-      output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:${webPort}/api/rpc/api-reference\n`;
+      const rpcPath =
+        frontend?.includes("next") || frontend?.includes("tanstack-start") ? "/api/rpc" : "/rpc";
+      output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:${webPort}${rpcPath}/api-reference\n`;
     }
 
     if (addons?.includes("starlight")) {
@@ -218,6 +228,7 @@ export async function displayPostInstallInstructions(
   if (electrobunInstructions) output += `\n${electrobunInstructions.trim()}\n`;
   if (huskyInstructions) output += `\n${huskyInstructions.trim()}\n`;
   if (lefthookInstructions) output += `\n${lefthookInstructions.trim()}\n`;
+  if (vitePlusNativeHooksInstructions) output += `\n${vitePlusNativeHooksInstructions.trim()}\n`;
   if (lintingInstructions) output += `\n${lintingInstructions.trim()}\n`;
   if (pwaInstructions) output += `\n${pwaInstructions.trim()}\n`;
   if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
@@ -253,10 +264,15 @@ function getNativeInstructions(
   runCmd: string,
 ) {
   const envVar = isConvex ? "EXPO_PUBLIC_CONVEX_URL" : "EXPO_PUBLIC_SERVER_URL";
+  const selfBackendPort = frontend.includes("svelte")
+    ? "5173"
+    : frontend.includes("astro")
+      ? "4321"
+      : "3001";
   const exampleUrl = isConvex
-    ? "https://<YOUR_CONVEX_URL>"
+    ? "https://example.convex.cloud"
     : isBackendSelf
-      ? "http://<YOUR_LOCAL_IP>:3001"
+      ? `http://<YOUR_LOCAL_IP>:${selfBackendPort}`
       : "http://<YOUR_LOCAL_IP>:3000";
   const envFileName = ".env";
   const ipNote = isConvex
@@ -291,7 +307,7 @@ function getHuskyInstructions(runCmd: string) {
 function getLintingInstructions(runCmd: string) {
   return `${pc.bold("Linting and formatting:")}\n${pc.cyan(
     "•",
-  )} Format and lint fix: ${`${runCmd} check`}\n`;
+  )} Run checks: ${`${runCmd} check`}\n`;
 }
 
 function getLefthookInstructions(packageManager: string) {
@@ -301,16 +317,28 @@ function getLefthookInstructions(packageManager: string) {
   )} Install hooks: ${cmd} lefthook install\n`;
 }
 
+function getVitePlusNativeHooksInstructions(runCmd: string) {
+  return `${pc.bold("Vite+ native Git hooks:")}\n${pc.cyan(
+    "•",
+  )} Optional hook setup: ${`${runCmd} hooks:setup`}\n${pc.dim(
+    "   (runs vp config; hooks install into .vite-hooks and use vp staged)",
+  )}\n`;
+}
+
 async function getDatabaseInstructions(
   database: Database,
   orm: ORM,
   runCmd: string,
   _runtime: Runtime,
   dbSetup: DatabaseSetup,
+  webDeploy: WebDeploy,
   serverDeploy: ServerDeploy,
-  _backend: Backend,
+  backend: Backend,
 ) {
   const instructions: string[] = [];
+  const isD1Alchemy =
+    dbSetup === "d1" &&
+    (serverDeploy === "cloudflare" || (backend === "self" && webDeploy === "cloudflare"));
 
   if (dbSetup === "docker") {
     const dockerStatus = await getDockerStatus(database);
@@ -321,7 +349,7 @@ async function getDatabaseInstructions(
     }
   }
 
-  if (dbSetup === "d1" && serverDeploy === "cloudflare") {
+  if (isD1Alchemy) {
     if (orm === "drizzle") {
       instructions.push(`${pc.cyan("•")} Generate migrations: ${`${runCmd} db:generate`}`);
     } else if (orm === "prisma") {
@@ -362,21 +390,21 @@ async function getDatabaseInstructions(
     if (dbSetup === "docker") {
       instructions.push(`${pc.cyan("•")} Start docker container: ${`${runCmd} db:start`}`);
     }
-    if (!(dbSetup === "d1" && serverDeploy === "cloudflare")) {
+    if (!isD1Alchemy) {
       instructions.push(`${pc.cyan("•")} Generate Prisma Client: ${`${runCmd} db:generate`}`);
       instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
     }
-    if (!(dbSetup === "d1" && serverDeploy === "cloudflare")) {
+    if (!isD1Alchemy) {
       instructions.push(`${pc.cyan("•")} Database UI: ${`${runCmd} db:studio`}`);
     }
   } else if (orm === "drizzle") {
     if (dbSetup === "docker") {
       instructions.push(`${pc.cyan("•")} Start docker container: ${`${runCmd} db:start`}`);
     }
-    if (dbSetup !== "d1") {
+    if (!isD1Alchemy) {
       instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
     }
-    if (!(dbSetup === "d1" && serverDeploy === "cloudflare")) {
+    if (!isD1Alchemy) {
       instructions.push(`${pc.cyan("•")} Database UI: ${`${runCmd} db:studio`}`);
     }
   } else if (orm === "mongoose") {
@@ -415,7 +443,7 @@ function getElectrobunInstructions(runCmd: string, frontend: Frontend[]) {
     "•",
   )} Build canary desktop app: ${`${runCmd} build:desktop:canary`}\n${pc.yellow(
     "NOTE:",
-  )} Electrobun wraps your web frontend in a desktop shell.\n   See: ${"https://blackboard.sh/electrobun/docs/"}${
+  )} Electrobun wraps your web frontend in a desktop shell.\n   See: ${"https://framework.blackboard.sh/electrobun/"}${
     staticBuildNote ? `\n${staticBuildNote}` : ""
   }`;
 }
@@ -547,10 +575,17 @@ function getClerkInstructions(frontend: Frontend[], backend: Backend, api: Proje
   return lines.join("\n");
 }
 
-function getBetterAuthConvexInstructions(hasWeb: boolean, webPort: string, packageManager: string) {
+function getBetterAuthConvexInstructions(
+  hasWeb: boolean,
+  webPort: string,
+  packageManager: string,
+  runCmd: string,
+) {
   const cmd = packageManager === "npm" ? "npx" : packageManager;
   return (
     `${pc.bold("Better Auth + Convex Setup:")}\n` +
+    `${pc.cyan("•")} Configure the Convex deployment before setting env vars:\n` +
+    `${pc.white(`   ${runCmd} dev:setup`)}\n` +
     `${pc.cyan("•")} Set environment variables from ${pc.white("packages/backend")}:\n` +
     `${pc.white("   cd packages/backend")}\n` +
     `${pc.white(`   ${cmd} convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)`)}\n` +
@@ -558,7 +593,21 @@ function getBetterAuthConvexInstructions(hasWeb: boolean, webPort: string, packa
   );
 }
 
-function getPolarInstructions(backend: Backend) {
+function getPolarInstructions(backend: Backend, packageManager: string) {
+  if (backend === "convex") {
+    const cmd = packageManager === "npm" ? "npx" : packageManager;
+    return (
+      `${pc.bold("Polar Payments Setup:")}\n` +
+      `${pc.cyan("•")} Create a Polar organization token, webhook secret, and product in ${pc.underline("https://sandbox.polar.sh/")}\n` +
+      `${pc.cyan("•")} Set the Convex env vars from ${pc.white("packages/backend")}:\n` +
+      `${pc.white("   cd packages/backend")}\n` +
+      `${pc.white(`   ${cmd} convex env set POLAR_ORGANIZATION_TOKEN your_polar_token`)}\n` +
+      `${pc.white(`   ${cmd} convex env set POLAR_WEBHOOK_SECRET your_polar_webhook_secret`)}\n` +
+      `${pc.white(`   Optional: ${cmd} convex env set POLAR_SERVER production`)}\n` +
+      `${pc.cyan("•")} Configure a Polar webhook to ${pc.white("https://<your-convex-site-url>/polar/events")}`
+    );
+  }
+
   const envPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
   return `${pc.bold("Polar Payments Setup:")}\n${pc.cyan("•")} Get access token & product ID from ${pc.underline("https://sandbox.polar.sh/")}\n${pc.cyan("•")} Set POLAR_ACCESS_TOKEN in ${envPath}`;
 }
@@ -572,17 +621,29 @@ function getAlchemyDeployInstructions(
   const instructions: string[] = [];
   const isBackendSelf = backend === "self";
 
-  if (webDeploy === "cloudflare" && serverDeploy !== "cloudflare") {
+  if (webDeploy === "cloudflare" && serverDeploy !== "cloudflare" && !isBackendSelf) {
     instructions.push(
-      `${pc.bold("Deploy web with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`cd apps/web && ${runCmd} alchemy dev`}\n${pc.cyan("•")} Deploy: ${`cd apps/web && ${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`cd apps/web && ${runCmd} destroy`}`,
+      `${pc.bold("Deploy web with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
     );
   } else if (serverDeploy === "cloudflare" && webDeploy !== "cloudflare" && !isBackendSelf) {
     instructions.push(
-      `${pc.bold("Deploy server with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`cd apps/server && ${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`cd apps/server && ${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`cd apps/server && ${runCmd} destroy`}`,
+      `${pc.bold("Deploy server with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
     );
   } else if (webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || isBackendSelf)) {
     instructions.push(
       `${pc.bold("Deploy with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
+    );
+  }
+
+  if (webDeploy === "docker" || serverDeploy === "docker") {
+    const dockerTargets =
+      webDeploy === "docker" && serverDeploy === "docker"
+        ? "web + server"
+        : webDeploy === "docker"
+          ? "web"
+          : "server";
+    instructions.push(
+      `${pc.bold(`Deploy ${dockerTargets} with Docker Compose:`)}\n${pc.cyan("•")} Start: ${`${runCmd} docker:up`}\n${pc.cyan("•")} Logs: ${`${runCmd} docker:logs`}\n${pc.cyan("•")} Stop: ${`${runCmd} docker:down`}\n${pc.cyan("•")} Config: docker-compose.yml`,
     );
   }
 

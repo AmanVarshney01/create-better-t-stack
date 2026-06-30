@@ -125,6 +125,16 @@ create-better-t-stack schema --name dbSetupOptions
 
 This is the best way for scripts and agents to discover the current input contract at runtime.
 
+## `mcp`
+
+Start the Better-T-Stack MCP server over stdio. It is launched by an MCP client (Claude Code, Codex, Cursor, opencode, and others), not run directly.
+
+```bash
+create-better-t-stack mcp
+```
+
+It exposes tools for planning and creating projects (`bts_plan_project`, `bts_create_project`) and managing addons (`bts_plan_addons`, `bts_add_addons`), plus schema and guidance helpers. See [Agent Workflows](/docs/cli/agent-workflows#use-it-inside-your-ai-agent) for setup and the full tool list.
+
 ## `sponsors`
 
 Displays Better-T-Stack sponsors.

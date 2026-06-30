@@ -239,6 +239,13 @@ export const TECH_OPTIONS: Record<
       color: "from-green-400 to-green-700",
     },
     {
+      id: "self-svelte",
+      name: "Fullstack SvelteKit",
+      description: "Use SvelteKit's built-in server routes",
+      icon: `${ICON_BASE_URL}/svelte.svg`,
+      color: "from-orange-500 to-orange-700",
+    },
+    {
       id: "self-astro",
       name: "Fullstack Astro",
       description: "Use Astro's built-in API routes",
@@ -397,6 +404,13 @@ export const TECH_OPTIONS: Record<
       color: "from-orange-400 to-orange-600",
     },
     {
+      id: "docker",
+      name: "Docker",
+      description: "Self-host with a Dockerfile and docker-compose.yml",
+      icon: `${ICON_BASE_URL}/docker.svg`,
+      color: "from-blue-400 to-blue-600",
+    },
+    {
       id: "none",
       name: "None",
       description: "Skip deployment setup",
@@ -412,6 +426,13 @@ export const TECH_OPTIONS: Record<
       description: "Deploy to Cloudflare Workers using Alchemy",
       icon: `${ICON_BASE_URL}/workers.svg`,
       color: "from-orange-400 to-orange-600",
+    },
+    {
+      id: "docker",
+      name: "Docker",
+      description: "Self-host with a Dockerfile and docker-compose.yml",
+      icon: `${ICON_BASE_URL}/docker.svg`,
+      color: "from-blue-400 to-blue-600",
     },
     {
       id: "none",
@@ -510,7 +531,7 @@ export const TECH_OPTIONS: Record<
     {
       id: "tauri",
       name: "Tauri",
-      description: "Build native desktop apps",
+      description: "Package static web apps as native desktop apps",
       icon: `${ICON_BASE_URL}/tauri.svg`,
       color: "from-amber-500 to-amber-700",
       default: false,
@@ -518,7 +539,7 @@ export const TECH_OPTIONS: Record<
     {
       id: "electrobun",
       name: "Electrobun",
-      description: "Wrap web frontends in a lightweight desktop shell",
+      description: "Bundle static web apps in a lightweight desktop shell",
       icon: "",
       color: "from-orange-500 to-orange-700",
       default: false,
@@ -588,6 +609,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "vite-plus",
+      name: "Vite+",
+      description: "Unified Vite toolchain, task runner, linting, formatting, and optional hooks",
+      icon: `${ICON_BASE_URL}/vite-plus.svg`,
+      color: "from-violet-500 to-cyan-600",
+      default: false,
+    },
+    {
       id: "ultracite",
       name: "Ultracite",
       description: "Biome preset with AI integration",
@@ -626,6 +655,14 @@ export const TECH_OPTIONS: Record<
       description: "Install MCP servers for your agents/editors",
       icon: "",
       color: "from-emerald-500 to-emerald-700",
+      default: false,
+    },
+    {
+      id: "evlog",
+      name: "evlog",
+      description: "Structured request logging with Better Auth context",
+      icon: "",
+      color: "from-sky-500 to-slate-700",
       default: false,
     },
   ],

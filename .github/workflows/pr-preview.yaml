@@ -20,17 +20,18 @@ jobs:
     if: github.event.label.name == 'preview'
     steps:
       - name: Checkout PR Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: package.json
           check-latest: true
           registry-url: https://registry.npmjs.org
+          package-manager-cache: false
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2

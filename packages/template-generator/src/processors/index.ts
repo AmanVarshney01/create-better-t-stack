@@ -20,6 +20,7 @@ import { processPwaPlugins } from "./pwa-plugins";
 import { processReadme } from "./readme-generator";
 import { processRuntimeDeps } from "./runtime-deps";
 import { processTurboConfig } from "./turbo-generator";
+import { processVitePlusConfig } from "./vite-plus-generator";
 import { processWorkspaceDeps } from "./workspace-deps";
 
 export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfig): void {
@@ -38,6 +39,7 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
   processExamplesDeps(vfs, config);
   processTurboConfig(vfs, config);
   processNxConfig(vfs, config);
+  processVitePlusConfig(vfs, config);
 }
 
 export {
@@ -56,6 +58,7 @@ export {
   processReadme,
   processRuntimeDeps,
   processTurboConfig,
+  processVitePlusConfig,
   processWorkspaceDeps,
   processAuthPlugins,
   processAlchemyPlugins,

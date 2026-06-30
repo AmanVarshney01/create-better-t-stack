@@ -8,9 +8,30 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
 
   const isCloudflareWeb = webDeploy === "cloudflare";
   const isCloudflareServer = serverDeploy === "cloudflare";
+  const isDockerWeb = webDeploy === "docker";
   const isBackendSelf = backend === "self";
 
-  if (!isCloudflareWeb && !isCloudflareServer) return;
+  if (!isCloudflareWeb && !isCloudflareServer && !isDockerWeb) return;
+
+  if (isDockerWeb) {
+    const webPkgPath = "apps/web/package.json";
+    if (vfs.exists(webPkgPath)) {
+      if (frontend.includes("svelte")) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPkgPath,
+          devDependencies: ["@sveltejs/adapter-node"],
+        });
+      } else if (frontend.includes("tanstack-start")) {
+        // Same section as the evlog addon so the two never duplicate nitro
+        addPackageDependency({
+          vfs,
+          packagePath: webPkgPath,
+          dependencies: ["nitro"],
+        });
+      }
+    }
+  }
 
   if (isCloudflareWeb || isCloudflareServer) {
     addPackageDependency({
@@ -64,7 +85,13 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: ["alchemy", "@astrojs/cloudflare", "@cloudflare/workers-types"],
+        dependencies: ["@astrojs/node"],
+        devDependencies: [
+          "alchemy",
+          "@astrojs/cloudflare",
+          "wrangler",
+          "@cloudflare/workers-types",
+        ],
       });
     } else if (
       frontend.includes("tanstack-router") ||

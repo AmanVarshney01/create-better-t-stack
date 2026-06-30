@@ -19,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { getDesktopBuildNote } from "@/lib/stack-utils";
+import { formatStackCommandForDisplay, getDesktopBuildNote } from "@/lib/stack-utils";
 import type { Sponsor } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -64,7 +64,9 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
     stack,
     viewMode,
   } = useStackBuilder();
-  const desktopBuildNote = getDesktopBuildNote(stack);
+  const effectiveStack = compatibilityAnalysis.adjustedStack || stack;
+  const desktopBuildNote = getDesktopBuildNote(effectiveStack);
+  const displayCommand = formatStackCommandForDisplay(command);
 
   return (
     <TooltipProvider>
@@ -170,8 +172,8 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                       className="builder-focus-ring cursor-pointer rounded-lg bg-muted/20 px-2.5 py-2"
                     >
                       <div className="flex items-start gap-2">
-                        <code className="block break-all font-mono text-muted-foreground text-xs">
-                          {command}
+                        <code className="block whitespace-pre-wrap break-words font-mono text-muted-foreground text-xs">
+                          {displayCommand}
                         </code>
                       </div>
                     </div>
@@ -235,7 +237,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                 />
 
                 <div className="mt-2 grid grid-cols-3 gap-1.5">
-                  <ShareButton stackUrl={getStackUrl()} stackState={stack} />
+                  <ShareButton stackUrl={getStackUrl()} stackState={effectiveStack} />
                   <PresetDropdown onApplyPreset={applyPreset} />
                   <DropdownMenu>
                     <DropdownMenuTrigger
@@ -315,7 +317,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
               </div>
             ) : (
               <PreviewPanel
-                stack={stack}
+                stack={effectiveStack}
                 selectedFilePath={selectedFile}
                 onSelectFile={setSelectedFile}
               />
@@ -393,7 +395,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                       >
                         <div className="flex items-start gap-1.5">
                           <span className="mt-0.5 text-chart-4">$</span>
-                          <code className="break-all">{command}</code>
+                          <code className="whitespace-pre-wrap break-words">{displayCommand}</code>
                         </div>
                       </div>
                     </div>
@@ -432,7 +434,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                   />
 
                   <div className="mt-2 grid grid-cols-3 gap-1.5">
-                    <ShareButton stackUrl={getStackUrl()} stackState={stack} />
+                    <ShareButton stackUrl={getStackUrl()} stackState={effectiveStack} />
                     <PresetDropdown onApplyPreset={applyPreset} />
                     <DropdownMenu>
                       <DropdownMenuTrigger
@@ -459,7 +461,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
 
           {mobileTab === "preview" && (
             <PreviewPanel
-              stack={stack}
+              stack={effectiveStack}
               selectedFilePath={selectedFile}
               onSelectFile={setSelectedFile}
             />

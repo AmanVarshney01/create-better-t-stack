@@ -43,21 +43,24 @@ export const AddonsSchema = z
     "mcp",
     "turborepo",
     "nx",
+    "vite-plus",
     "fumadocs",
     "ultracite",
     "oxlint",
     "opentui",
     "wxt",
     "skills",
+    "evlog",
     "none",
   ])
   .describe("Additional addons");
 
 const AddonsListSchema = z.array(AddonsSchema).superRefine((addons, ctx) => {
-  if (addons.includes("nx") && addons.includes("turborepo")) {
+  const taskRunners = addons.filter((addon) => ["nx", "turborepo", "vite-plus"].includes(addon));
+  if (taskRunners.length > 1) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "`nx` and `turborepo` cannot be used together",
+      message: "`nx`, `turborepo`, and `vite-plus` cannot be used together",
     });
   }
 });
@@ -90,9 +93,11 @@ export const AuthSchema = z
 
 export const PaymentsSchema = z.enum(["polar", "dodo", "none"]).describe("Payments provider");
 
-export const WebDeploySchema = z.enum(["cloudflare", "none"]).describe("Web deployment");
+export const WebDeploySchema = z.enum(["cloudflare", "docker", "none"]).describe("Web deployment");
 
-export const ServerDeploySchema = z.enum(["cloudflare", "none"]).describe("Server deployment");
+export const ServerDeploySchema = z
+  .enum(["cloudflare", "docker", "none"])
+  .describe("Server deployment");
 
 export const DirectoryConflictSchema = z
   .enum(["merge", "overwrite", "increment", "error"])
@@ -119,6 +124,18 @@ export const FumadocsTemplateSchema = z
     "tanstack-start-spa",
   ])
   .describe("Fumadocs template");
+
+export const FumadocsSearchSchema = z
+  .enum(["orama", "orama-cloud"])
+  .describe("Fumadocs search solution");
+
+export const FumadocsOgImageSchema = z
+  .enum(["next-og", "takumi"])
+  .describe("Fumadocs OG image generator");
+
+export const FumadocsAiChatSchema = z
+  .enum(["openrouter", "llmgateway", "inkeep"])
+  .describe("Fumadocs AI chat provider");
 
 export const InstallScopeSchema = z.enum(["project", "global"]).describe("Installation scope");
 
@@ -186,6 +203,7 @@ export const SkillsSourceSchema = z
     "waynesutton/convexskills",
     "msmps/opentui-skill",
     "haydenbleasel/ultracite",
+    "https://www.evlog.dev",
   ])
   .describe("Skill source repository");
 
@@ -229,14 +247,41 @@ export const UltraciteLinterSchema = z
   .describe("Ultracite linter");
 
 export const UltraciteEditorSchema = z
-  .enum(["vscode", "cursor", "windsurf", "antigravity", "kiro", "trae", "void", "zed"])
+  .enum([
+    "vscode",
+    "cursor",
+    "windsurf",
+    "codebuddy",
+    "antigravity",
+    "bob",
+    "kiro",
+    "trae",
+    "void",
+    "zed",
+  ])
   .describe("Ultracite editor integration");
 
 export const UltraciteAgentSchema = z
   .enum([
+    "universal",
     "claude",
     "codex",
     "jules",
+    "replit",
+    "devin",
+    "lovable",
+    "zencoder",
+    "ona",
+    "openclaw",
+    "continue",
+    "snowflake-cortex",
+    "deepagents",
+    "qoder",
+    "kimi-cli",
+    "mcpjam",
+    "mux",
+    "pi",
+    "adal",
     "copilot",
     "cline",
     "amp",
@@ -246,6 +291,7 @@ export const UltraciteAgentSchema = z
     "gemini",
     "junie",
     "augmentcode",
+    "bob",
     "kilo-code",
     "goose",
     "roo-code",
@@ -263,7 +309,7 @@ export const UltraciteAgentSchema = z
   .describe("Ultracite agent integration");
 
 export const UltraciteHookSchema = z
-  .enum(["cursor", "windsurf", "claude"])
+  .enum(["cursor", "windsurf", "codebuddy", "claude", "copilot"])
   .describe("Ultracite hook integration");
 
 export const DbSetupModeSchema = z.enum(["manual", "auto"]).describe("Database setup mode");
@@ -285,6 +331,9 @@ export const AddonOptionsSchema = z
       .strictObject({
         template: FumadocsTemplateSchema,
         devPort: z.number().int().min(1).max(65535).optional().describe("Fumadocs dev server port"),
+        search: FumadocsSearchSchema.optional().describe("Fumadocs search solution"),
+        ogImage: FumadocsOgImageSchema.optional().describe("Fumadocs OG image generator"),
+        aiChat: FumadocsAiChatSchema.optional().describe("Fumadocs AI chat provider"),
       })
       .optional()
       .describe("Options for the Fumadocs addon"),

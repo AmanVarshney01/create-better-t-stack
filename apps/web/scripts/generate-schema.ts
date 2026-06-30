@@ -3,10 +3,9 @@ import { writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { BetterTStackConfigFileSchema } from "@better-t-stack/types";
-import { z } from "zod";
+import { getBetterTStackConfigFileJsonSchema } from "@better-t-stack/types/json-schema";
 
-const schema = z.toJSONSchema(BetterTStackConfigFileSchema, { target: "draft-7" });
+const schema = getBetterTStackConfigFileJsonSchema();
 const tempPath = join(tmpdir(), "bts-schema.json");
 
 writeFileSync(tempPath, JSON.stringify(schema, null, 2));

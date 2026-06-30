@@ -1,4 +1,3 @@
-import { formatRgb, interpolate } from "culori";
 import { format } from "date-fns";
 
 import type {
@@ -15,6 +14,8 @@ const compactNumberFormatter = new Intl.NumberFormat("en", {
   maximumFractionDigits: 1,
 });
 
+const countFormatter = new Intl.NumberFormat("en");
+
 const percentFormatter = new Intl.NumberFormat("en", {
   style: "percent",
   maximumFractionDigits: 0,
@@ -27,15 +28,12 @@ const precisePercentFormatter = new Intl.NumberFormat("en", {
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
-export type PlotMargins = {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-};
-
 export function formatCompactNumber(value: number): string {
   return compactNumberFormatter.format(value);
+}
+
+export function formatCount(value: number): string {
+  return countFormatter.format(value);
 }
 
 export function formatPercent(value: number, precise = value > 0 && value < 0.1): string {
@@ -193,8 +191,8 @@ export function buildComboMatrix({
   total,
   xFromLabel,
   yFromLabel,
-  xLimit = 5,
-  yLimit = 5,
+  xLimit,
+  yLimit,
 }: MatrixOptions): ComboMatrix {
   const pairs = distribution
     .map((item) => ({
@@ -214,15 +212,16 @@ export function buildComboMatrix({
     counts.set(`${pair.x}:::${pair.y}`, (counts.get(`${pair.x}:::${pair.y}`) || 0) + pair.count);
   }
 
-  const xDomain = Array.from(xTotals.entries())
+  const rankedXDomain = Array.from(xTotals.entries())
     .sort((a, b) => b[1] - a[1])
-    .slice(0, xLimit)
     .map(([name]) => name);
 
-  const yDomain = Array.from(yTotals.entries())
+  const rankedYDomain = Array.from(yTotals.entries())
     .sort((a, b) => b[1] - a[1])
-    .slice(0, yLimit)
     .map(([name]) => name);
+
+  const xDomain = typeof xLimit === "number" ? rankedXDomain.slice(0, xLimit) : rankedXDomain;
+  const yDomain = typeof yLimit === "number" ? rankedYDomain.slice(0, yLimit) : rankedYDomain;
 
   const data = yDomain.flatMap((y) =>
     xDomain.map((x) => {
@@ -254,25 +253,4 @@ export function getTrendTone(deltaPercentage: number | null): "up" | "down" | "f
   if (deltaPercentage > 0.02) return "up";
   if (deltaPercentage < -0.02) return "down";
   return "flat";
-}
-
-export function interpolateColor(start: string, end: string, ratio: number): string {
-  const mixer = interpolate([start, end]);
-  return formatRgb(mixer(Math.min(1, Math.max(0, ratio)))) || end;
-}
-
-export function isCompactPlot(width: number): boolean {
-  return width < 480;
-}
-
-export function resolvePlotMargins(
-  width: number,
-  desktop: PlotMargins,
-  compact: PlotMargins,
-): PlotMargins {
-  return isCompactPlot(width) ? compact : desktop;
-}
-
-export function getPlotFontSize(width: number): string {
-  return isCompactPlot(width) ? "11px" : "12px";
 }

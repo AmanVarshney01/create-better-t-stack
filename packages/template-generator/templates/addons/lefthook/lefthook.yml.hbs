@@ -16,6 +16,10 @@ pre-commit:
     - name: oxfmt
       run: {{packageManager}} oxfmt --write {staged_files}
       stage_fixed: true
+{{else if (includes addons "vite-plus")}}
+    - name: vite-plus
+      run: {{packageManager}} vp staged
+      stage_fixed: true
 {{else}}
     # Add your pre-commit commands here
     # Example:

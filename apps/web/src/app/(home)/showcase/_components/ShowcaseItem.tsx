@@ -1,8 +1,9 @@
 "use client";
 
-import { ExternalLink, File, Github, Monitor } from "lucide-react";
+import { ExternalLink, File, Monitor } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { FaGithub } from "react-icons/fa6";
 
 export interface ShowcaseItemProps {
   title: string;
@@ -94,7 +95,7 @@ export default function ShowcaseItem({
               rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-md bg-muted/30 px-3 py-2 text-muted-foreground text-sm transition-colors hover:bg-muted/45 hover:text-foreground"
             >
-              <Github className="h-3 w-3" />
+              <FaGithub className="h-3 w-3" />
               <span>VIEW_SOURCE.GIT</span>
               <ExternalLink className="ml-auto h-3 w-3" />
             </Link>

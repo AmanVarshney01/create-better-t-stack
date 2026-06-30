@@ -27,18 +27,29 @@ import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 {{/if}}
 
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error, query) => {
-			toast.error(`Error: ${error.message}`, {
-				action: {
-					label: "retry",
-					onClick: query.invalidate,
-				},
-			});
-		},
-	}),
-});
+export function createQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error, query) => {
+				toast.error(`Error: ${error.message}`, {
+					action: {
+						label: "retry",
+						onClick: () => {
+							query.invalidate();
+						},
+					},
+				});
+			},
+		}),
+{{#if (includes frontend "tanstack-start")}}
+		defaultOptions: { queries: { staleTime: 60 * 1000 } },
+{{/if}}
+	});
+}
+
+{{#unless (includes frontend "tanstack-start")}}
+export const queryClient = createQueryClient();
+{{/unless}}
 
 {{#if (and (includes frontend "tanstack-start") (eq backend "self"))}}
 const getORPCClient = createIsomorphicFn()

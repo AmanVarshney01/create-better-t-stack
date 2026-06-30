@@ -196,7 +196,7 @@ async function createTursoDatabase(
   });
 
   if (createResult.isErr()) {
-    return createResult;
+    return Result.err(createResult.error);
   }
 
   s.start("Retrieving database connection details...");
@@ -424,7 +424,7 @@ export async function setupTurso(
     } else {
       const groupResult = await selectTursoGroup();
       if (groupResult.isErr()) {
-        return groupResult;
+        return Result.err(groupResult.error);
       }
       selectedGroup = groupResult.value;
     }

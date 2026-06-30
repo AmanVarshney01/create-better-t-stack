@@ -1,6 +1,6 @@
 import { createAuthClient } from "better-auth/client";
 {{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth";
+import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 {{#if (eq payments "dodo")}}
 import { dodopaymentsClient } from "@dodopayments/better-auth";

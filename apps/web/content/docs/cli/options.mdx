@@ -160,7 +160,7 @@ Database hosting/setup provider:
 
 - `none`: Manual setup
 - `turso`: Turso (SQLite)
-- `d1`: Cloudflare D1 (SQLite)
+- `d1`: Cloudflare D1 (SQLite; requires either Cloudflare Workers server deployment or `backend self` with Cloudflare web deployment)
 - `neon`: Neon (PostgreSQL)
 - `supabase`: Supabase (PostgreSQL)
 - `prisma-postgres`: Prisma Postgres
@@ -275,6 +275,7 @@ create-better-t-stack --auth none
 
 - `better-auth` requires a backend framework (cannot be `none`)
 - if you choose a database, you should also choose an ORM
+- with `--backend convex`, `better-auth` supports `react-router`, `tanstack-router`, `tanstack-start`, `next`, and native Expo frontends
 - `clerk` requires a compatible frontend
 - Supported Clerk backends: `convex`, `hono`, `express`, `fastify`, `elysia`, and `self` with Next.js or TanStack Start
 - Authentication is automatically set to `none` when using `--backend none`
@@ -304,8 +305,8 @@ Additional features to include:
 
 - `none`: No addons
 - `pwa`: Progressive Web App support
-- `tauri`: Desktop app support
-- `electrobun`: Lightweight desktop shell for web frontends
+- `tauri`: Desktop app support for static web output (not compatible with `--backend self`)
+- `electrobun`: Lightweight desktop shell for static web output (not compatible with `--backend self`)
 - `starlight`: Starlight documentation site
 - `fumadocs`: Fumadocs documentation site
 - `biome`: Biome linting and formatting
@@ -313,12 +314,14 @@ Additional features to include:
 - `husky`: Git hooks with Husky
 - `turborepo`: Turborepo monorepo setup
 - `nx`: Nx monorepo setup
+- `vite-plus`: Vite+ unified toolchain, workspace task runner, linting, formatting, and optional native Git hooks
 - `ultracite`: Ultracite configuration
 - `oxlint`: Oxlint + Oxfmt (linting & formatting)
 - `mcp`: Install MCP servers, including Better T Stack itself, with add-mcp
 - `opentui`: OpenTUI components
 - `wxt`: WXT browser extension framework
 - `skills`: Install AI agent skills for coding assistants (Cursor, Claude Code, GitHub Copilot, etc.)
+- `evlog`: Structured request logging for Hono, Express, Fastify, Elysia, or fullstack web backends
 
 ```bash
 create-better-t-stack --addons pwa biome husky
@@ -346,9 +349,10 @@ Web deployment configuration:
 
 - `none`: No deployment setup
 - `cloudflare`: Cloudflare Workers deployment (via Alchemy infrastructure as code)
+- `docker`: Self-hosted deployment with a Dockerfile and a root `docker-compose.yml`
 
 ```bash
-create-better-t-stack --web-deploy cloudflare
+create-better-t-stack --web-deploy docker
 ```
 
 **Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Deploying to Cloudflare with Alchemy Guide](/docs/guides/cloudflare-alchemy) for details.
@@ -372,9 +376,10 @@ Server deployment configuration:
 
 - `none`: No deployment setup
 - `cloudflare`: Cloudflare Workers deployment (when runtime is workers, via Alchemy infrastructure as code)
+- `docker`: Self-hosted deployment with a Dockerfile and a root `docker-compose.yml` (requires the bun or node runtime)
 
 ```bash
-create-better-t-stack --server-deploy cloudflare
+create-better-t-stack --server-deploy docker
 ```
 
 **Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Deploying to Cloudflare with Alchemy Guide](/docs/guides/cloudflare-alchemy) for details.

@@ -1,5 +1,13 @@
 import { DEFAULT_CONFIG } from "../constants";
-import { type Addons, AddonsSchema, type Auth, type Frontend } from "../types";
+import {
+  type Addons,
+  AddonsSchema,
+  type Auth,
+  type Backend,
+  type Frontend,
+  type ProjectConfig,
+  type Runtime,
+} from "../types";
 import { getCompatibleAddons, validateAddonCompatibility } from "../utils/compatibility-rules";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableGroupMultiselect } from "./navigable";
@@ -9,6 +17,11 @@ type AddonOption = {
   label: string;
   hint: string;
 };
+
+type AddonProjectConfig = Pick<
+  ProjectConfig,
+  "frontend" | "addons" | "auth" | "backend" | "runtime"
+>;
 
 function getAddonDisplay(addon: Addons): { label: string; hint: string } {
   let label: string;
@@ -22,6 +35,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
     case "nx":
       label = "Nx";
       hint = "Smart monorepo orchestration and task graph";
+      break;
+    case "vite-plus":
+      label = "Vite+";
+      hint = "Unified Vite toolchain and workspace task runner";
       break;
     case "pwa":
       label = "PWA";
@@ -79,6 +96,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "MCP";
       hint = "Install MCP servers, including Better T Stack, via add-mcp";
       break;
+    case "evlog":
+      label = "evlog";
+      hint = "Request logging with Better Auth context and AI SDK telemetry";
+      break;
     default:
       label = addon;
       hint = `Add ${addon}`;
@@ -88,10 +109,11 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 }
 
 const ADDON_GROUPS = {
-  "Monorepo & Tasks": ["turborepo", "nx"],
+  "Monorepo & Tasks": ["turborepo", "nx", "vite-plus"],
   "Code Quality": ["biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
   "Platform Extensions": ["pwa", "tauri", "electrobun", "opentui", "wxt"],
+  Observability: ["evlog"],
   "AI & Agent Tools": ["skills", "mcp"],
 };
 
@@ -125,12 +147,21 @@ function sortAndPruneGroupedOptions(groupedOptions: Record<string, AddonOption[]
 }
 
 function validateAddonSelection(selected: Addons[] | undefined) {
-  if (selected?.includes("turborepo") && selected.includes("nx")) {
-    return "Choose either Turborepo or Nx as your monorepo tool, not both.";
+  const selectedTaskRunners =
+    selected?.filter((addon) => ["turborepo", "nx", "vite-plus"].includes(addon)) ?? [];
+  if (selectedTaskRunners.length > 1) {
+    return "Choose Turborepo, Nx, or Vite+ as your task runner, not more than one.";
   }
 }
 
-export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {
+export async function getAddonsChoice(
+  addons?: Addons[],
+  frontends?: Frontend[],
+  auth?: Auth,
+  backend?: Backend,
+  runtime?: Runtime,
+  previousValue?: Addons[],
+) {
   if (addons !== undefined) return addons;
 
   const allAddons = AddonsSchema.options.filter((addon) => addon !== "none");
@@ -139,7 +170,13 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
   const frontendsArray = frontends || [];
 
   for (const addon of allAddons) {
-    const { isCompatible } = validateAddonCompatibility(addon, frontendsArray, auth);
+    const { isCompatible } = validateAddonCompatibility(
+      addon,
+      frontendsArray,
+      auth,
+      backend,
+      runtime,
+    );
     if (!isCompatible) continue;
 
     const { label, hint } = getAddonDisplay(addon);
@@ -149,7 +186,7 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
 
   sortAndPruneGroupedOptions(groupedOptions);
 
-  const initialValues = DEFAULT_CONFIG.addons.filter((addonValue) =>
+  const initialValues = (previousValue ?? DEFAULT_CONFIG.addons).filter((addonValue) =>
     Object.values(groupedOptions).some((options) =>
       options.some((opt) => opt.value === addonValue),
     ),
@@ -168,20 +205,18 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
   return response;
 }
 
-export async function getAddonsToAdd(
-  frontend: Frontend[],
-  existingAddons: Addons[] = [],
-  auth?: Auth,
-) {
+export async function getAddonsToAdd(config: AddonProjectConfig) {
   const groupedOptions = createGroupedOptions();
 
-  const frontendArray = frontend || [];
+  const frontendArray = config.frontend || [];
 
   const compatibleAddons = getCompatibleAddons(
     AddonsSchema.options.filter((addon) => addon !== "none"),
     frontendArray,
-    existingAddons,
-    auth,
+    config.addons,
+    config.auth,
+    config.backend,
+    config.runtime,
   );
 
   for (const addon of compatibleAddons) {

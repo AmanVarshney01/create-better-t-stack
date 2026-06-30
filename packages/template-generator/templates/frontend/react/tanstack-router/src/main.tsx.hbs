@@ -53,6 +53,7 @@ function ClerkApiAuthBridge() {
 const router = createRouter({
   routeTree,
   defaultPreload: "intent",
+  scrollRestoration: true,
   defaultPendingComponent: () => <Loader />,
   {{#if (eq api "orpc")}}
   context: { orpc, queryClient },

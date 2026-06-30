@@ -26,6 +26,10 @@ import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
 
+{{#unless (eq backend "convex")}}
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+{{/unless}}
+
 export const Route = createFileRoute("/todos")({
   component: TodosRoute,
 });
@@ -105,11 +109,11 @@ function TodosRoute() {
     }
   };
 
-  const handleToggleTodo = (id: number, completed: boolean) => {
+  const handleToggleTodo = (id: TodoId, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: number) => {
+  const handleDeleteTodo = (id: TodoId) => {
     deleteMutation.mutate({ id });
   };
   {{/if}}

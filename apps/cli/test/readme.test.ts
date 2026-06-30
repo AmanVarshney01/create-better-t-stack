@@ -1,28 +1,7 @@
 import { describe, expect, it } from "bun:test";
 
 import { createVirtual } from "../src/index";
-
-function collectFiles(
-  node:
-    | { type: "file"; path: string; content: string }
-    | { type: "directory"; path: string; children: unknown[] },
-  rootPath: string,
-  files = new Map<string, string>(),
-) {
-  if (node.type === "file") {
-    const relativePath = node.path.startsWith(`${rootPath}/`)
-      ? node.path.slice(rootPath.length + 1)
-      : node.path;
-    files.set(relativePath, node.content);
-    return files;
-  }
-
-  for (const child of node.children as Parameters<typeof collectFiles>[0][]) {
-    collectFiles(child, rootPath, files);
-  }
-
-  return files;
-}
+import { collectFiles } from "./setup";
 
 async function generateReadme(config: Parameters<typeof createVirtual>[0]): Promise<string> {
   const result = await createVirtual({
@@ -101,5 +80,24 @@ describe("README generation", () => {
     );
     expect(readme).not.toContain("Open [http://localhost:3001]");
     expect(readme).not.toContain("web/         # Frontend application");
+  });
+
+  it("documents optional native Vite+ hooks when no hook addon is selected", async () => {
+    const readme = await generateReadme({
+      addons: ["vite-plus"],
+    });
+
+    expect(readme).toContain("Optional native Vite+ hooks");
+    expect(readme).toContain("`bun run hooks:setup`");
+    expect(readme).toContain("https://viteplus.dev/guide/commit-hooks");
+  });
+
+  it("keeps Vite+ native hook docs out when Husky handles hooks", async () => {
+    const readme = await generateReadme({
+      addons: ["vite-plus", "husky"],
+    });
+
+    expect(readme).not.toContain("Optional native Vite+ hooks");
+    expect(readme).toContain("Initialize hooks: `bun run prepare`");
   });
 });

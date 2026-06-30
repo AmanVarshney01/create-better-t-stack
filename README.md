@@ -3,6 +3,7 @@
 A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations
 
 <br />
+
 <a href="https://vercel.com/oss">
   <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
 </a>
@@ -10,7 +11,7 @@ A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with 
 ## Sponsors
 
 <p align="center">
-<img src="https://sponsors.amanv.dev/sponsors.png" alt="Sponsors">
+<img src="https://sponsors.better-t-stack.dev/sponsors.png" alt="Sponsors">
 </p>
 
 ![demo](https://github.com/user-attachments/assets/12fd4d67-8494-462a-8124-76670798308a)
@@ -35,6 +36,17 @@ pnpm create better-t-stack@latest
 npx create-better-t-stack@latest
 ```
 
+## Claude Code plugin
+
+Want your AI assistant to scaffold and extend projects with Better-T-Stack? Install the plugin and it will plan a valid stack and generate it through the bundled MCP server instead of hand-rolling boilerplate.
+
+```bash
+/plugin marketplace add AmanVarshney01/create-better-t-stack
+/plugin install better-t-stack@better-t-stack
+```
+
+Then ask: _"create a fullstack app with Next, Hono, Postgres and Better Auth"_, or run `/better-t-stack:new <description>`. See [`plugin/`](plugin) and the [Agent Workflows docs](https://better-t-stack.dev/docs/cli/agent-workflows#claude-code-plugin).
+
 ## Features
 
 - Frontend: React (TanStack Router, React Router, TanStack Start), Next.js, Nuxt, Svelte, Solid, Astro, React Native (Bare, NativeWind, Unistyles), or none
@@ -57,6 +69,7 @@ This repository is organized as a monorepo containing:
 
 - **CLI**: [`apps/cli`](apps/cli) - The scaffolding CLI tool
 - **Documentation**: [`apps/web`](apps/web) - Official website and documentation
+- **Plugin**: [`plugin`](plugin) - Claude Code plugin (MCP server + skills + commands + agent)
 
 ## Documentation
 

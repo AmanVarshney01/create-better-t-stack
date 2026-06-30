@@ -10,7 +10,10 @@ export type DbScriptSupport = {
 };
 
 export function getDbScriptSupport(config: ProjectConfig): DbScriptSupport {
-  const isD1Alchemy = config.dbSetup === "d1" && config.serverDeploy === "cloudflare";
+  const isD1Alchemy =
+    config.dbSetup === "d1" &&
+    (config.serverDeploy === "cloudflare" ||
+      (config.backend === "self" && config.webDeploy === "cloudflare"));
   const hasDbScripts =
     config.backend !== "convex" &&
     config.backend !== "none" &&
@@ -29,12 +32,13 @@ export function getDbScriptSupport(config: ProjectConfig): DbScriptSupport {
     };
   }
 
+  const hasDbPush = !isD1Alchemy;
   const hasDbMigrate = config.orm === "prisma" || (config.orm === "drizzle" && !isD1Alchemy);
   const hasDbStudio = !isD1Alchemy;
 
   return {
     hasDbScripts: true,
-    hasDbPush: true,
+    hasDbPush,
     hasDbGenerate: true,
     hasDbMigrate,
     hasDbStudio,

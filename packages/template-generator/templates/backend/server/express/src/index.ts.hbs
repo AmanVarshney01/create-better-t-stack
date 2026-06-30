@@ -11,14 +11,12 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/node";
 import { onError } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
-{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 import { createContext } from "@{{projectName}}/api/context";
-{{/if}}
 {{/if}}
 import cors from "cors";
 import express from "express";
 {{#if (includes examples "ai")}}
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { pipeUIMessageStreamToResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -53,6 +51,31 @@ app.use(clerkMiddleware());
 app.all("/api/auth{/*path}", toNodeHandler(auth));
 {{/if}}
 
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+app.get("/polar/success", (req, res) => {
+	const requestUrl = new URL(req.url, env.BETTER_AUTH_URL);
+	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+	let redirectUrl: URL;
+	try {
+		redirectUrl = new URL(returnUrl);
+	} catch {
+		res.status(400).send("Invalid return URL");
+		return;
+	}
+
+	if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+		res.status(400).send("Invalid return URL");
+		return;
+	}
+
+	res.redirect(302, redirectUrl.toString());
+});
+
+{{/if}}
 {{#if (eq api "trpc")}}
 app.use(
 	"/trpc",
@@ -87,21 +110,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 app.use(async (req, res, next) => {
 	const rpcResult = await rpcHandler.handle(req, res, {
 		prefix: "/rpc",
-{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 		context: await createContext({ req }),
-{{else}}
-		context: {},
-{{/if}}
 	});
 	if (rpcResult.matched) return;
 
 	const apiResult = await apiHandler.handle(req, res, {
 		prefix: "/api-reference",
-{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 		context: await createContext({ req }),
-{{else}}
-		context: {},
-{{/if}}
 	});
 	if (apiResult.matched) return;
 
@@ -122,7 +137,10 @@ app.post("/ai", async (req, res) => {
 		model,
 		messages: await convertToModelMessages(messages),
 	});
-	result.pipeUIMessageStreamToResponse(res);
+	pipeUIMessageStreamToResponse({
+		response: res,
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 

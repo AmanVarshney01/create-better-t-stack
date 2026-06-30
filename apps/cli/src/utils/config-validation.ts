@@ -2,13 +2,17 @@ import { Result } from "better-result";
 
 import type { CLIInput, Database, DatabaseSetup, ProjectConfig, Runtime } from "../types";
 import {
+  CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS,
+  CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS,
   ensureSingleWebAndNative,
   isWebFrontend,
+  supportsConvexBetterAuth,
   validateAddonsAgainstFrontends,
   validateApiFrontendCompatibility,
   validateExamplesCompatibility,
   validatePaymentsCompatibility,
   validateSelfBackendCompatibility,
+  validateDockerServerDeploy,
   validateServerDeployRequiresBackend,
   validateWebDeployRequiresWebFrontend,
   validateWorkersCompatibility,
@@ -21,53 +25,86 @@ function validationErr(message: string): ValidationResult {
   return Result.err(new ValidationError({ message }));
 }
 
-export function validateDatabaseOrmAuth(
-  cfg: Partial<ProjectConfig>,
-  flags?: Set<string>,
-): ValidationResult {
-  const db = cfg.database;
-  const orm = cfg.orm;
-  const has = (k: string) => (flags ? flags.has(k) : true);
+function hasResolvedWorkersD1Target(config: Partial<ProjectConfig>) {
+  return (
+    config.backend === "hono" &&
+    config.runtime === "workers" &&
+    config.serverDeploy === "cloudflare"
+  );
+}
 
-  if (has("orm") && has("database") && orm === "mongoose" && db !== "mongodb") {
+function hasResolvedSelfCloudflareD1Target(config: Partial<ProjectConfig>) {
+  return (
+    config.backend === "self" && config.runtime === "none" && config.webDeploy === "cloudflare"
+  );
+}
+
+function canResolveWorkersD1Target(config: Partial<ProjectConfig>) {
+  return (
+    (config.backend === undefined || config.backend === "hono") &&
+    (config.runtime === undefined || config.runtime === "workers") &&
+    (config.serverDeploy === undefined || config.serverDeploy === "cloudflare")
+  );
+}
+
+function canResolveSelfCloudflareD1Target(config: Partial<ProjectConfig>) {
+  return (
+    (config.backend === undefined || config.backend === "self") &&
+    (config.runtime === undefined || config.runtime === "none") &&
+    (config.webDeploy === undefined || config.webDeploy === "cloudflare")
+  );
+}
+
+/**
+ * Pure ORM + database compatibility check. Used by the flag-path
+ * validator below and by the orm prompt directly (for flag+prompt
+ * combos where one value came from a flag and the other from a
+ * prompt).
+ */
+export function validateOrmDatabaseCompat(
+  orm: ProjectConfig["orm"] | undefined,
+  database: ProjectConfig["database"] | undefined,
+): ValidationResult {
+  if (orm === "mongoose" && database && database !== "mongodb") {
     return validationErr(
       "Mongoose ORM requires MongoDB database. Please use '--database mongodb' or choose a different ORM.",
     );
   }
 
-  if (has("orm") && has("database") && orm === "drizzle" && db === "mongodb") {
+  if (orm === "drizzle" && database === "mongodb") {
     return validationErr(
       "Drizzle ORM does not support MongoDB. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
     );
   }
 
-  if (
-    has("database") &&
-    has("orm") &&
-    db === "mongodb" &&
-    orm &&
-    orm !== "mongoose" &&
-    orm !== "prisma" &&
-    orm !== "none"
-  ) {
+  if (database === "mongodb" && orm && orm !== "mongoose" && orm !== "prisma" && orm !== "none") {
     return validationErr(
       "MongoDB database requires Mongoose or Prisma ORM. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
     );
   }
 
-  if (has("database") && has("orm") && db && db !== "none" && orm === "none") {
+  if (database && database !== "none" && orm === "none") {
     return validationErr(
       "Database selection requires an ORM. Please choose '--orm drizzle', '--orm prisma', or '--orm mongoose'.",
     );
   }
 
-  if (has("orm") && has("database") && orm && orm !== "none" && db === "none") {
+  if (orm && orm !== "none" && database === "none") {
     return validationErr(
       "ORM selection requires a database. Please choose a database or set '--orm none'.",
     );
   }
 
   return Result.ok(undefined);
+}
+
+export function validateDatabaseOrmAuth(
+  cfg: Partial<ProjectConfig>,
+  flags?: Set<string>,
+): ValidationResult {
+  const has = (k: string) => (flags ? flags.has(k) : true);
+  if (!has("orm") || !has("database")) return Result.ok(undefined);
+  return validateOrmDatabaseCompat(cfg.orm, cfg.database);
 }
 
 export function validateDatabaseSetup(
@@ -123,8 +160,7 @@ export function validateDatabaseSetup(
     },
     d1: {
       database: "sqlite",
-      runtime: "workers",
-      errorMessage: "Cloudflare D1 setup requires SQLite database and Cloudflare Workers runtime.",
+      errorMessage: "Cloudflare D1 setup requires SQLite database.",
     },
     docker: {
       errorMessage:
@@ -148,6 +184,24 @@ export function validateDatabaseSetup(
 
     if (validation.runtime && runtime !== validation.runtime) {
       return validationErr(validation.errorMessage);
+    }
+
+    if (dbSetup === "d1") {
+      const isWorkersTarget = hasResolvedWorkersD1Target(config);
+      const isSelfCloudflareTarget = hasResolvedSelfCloudflareD1Target(config);
+      const canResolveWorkersTarget = canResolveWorkersD1Target(config);
+      const canResolveSelfCloudflareTarget = canResolveSelfCloudflareD1Target(config);
+
+      if (
+        !isWorkersTarget &&
+        !isSelfCloudflareTarget &&
+        !canResolveWorkersTarget &&
+        !canResolveSelfCloudflareTarget
+      ) {
+        return validationErr(
+          "Cloudflare D1 setup requires SQLite database and either Cloudflare Workers runtime with server deployment or backend 'self' with Cloudflare web deployment.",
+        );
+      }
     }
 
     if (dbSetup === "docker") {
@@ -216,19 +270,27 @@ export function validateConvexConstraints(
   }
 
   if (has("auth") && config.auth === "better-auth") {
-    const supportedFrontends = [
-      "tanstack-router",
-      "tanstack-start",
-      "next",
-      "native-bare",
-      "native-uniwind",
-      "native-unistyles",
-    ];
-    const hasSupportedFrontend = config.frontend?.some((f) => supportedFrontends.includes(f));
+    const incompatibleFrontends =
+      config.frontend?.filter((f) =>
+        CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS.includes(
+          f as (typeof CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS)[number],
+        ),
+      ) ?? [];
+    const hasSupportedFrontend = supportsConvexBetterAuth(config.frontend);
+
+    if (incompatibleFrontends.length > 0) {
+      return validationErr(
+        `Better Auth with '--backend convex' is not compatible with the following frontends: ${incompatibleFrontends.join(
+          ", ",
+        )}. Please use a React-based web frontend (next, tanstack-start, tanstack-router, react-router), a supported native frontend, or choose a different auth provider.`,
+      );
+    }
 
     if (!hasSupportedFrontend) {
       return validationErr(
-        "Better-Auth with Convex backend requires a supported frontend (TanStack Router, TanStack Start, Next.js, or Native).",
+        `Better Auth with '--backend convex' requires a supported frontend (${CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS.join(
+          ", ",
+        )}).`,
       );
     }
   }
@@ -438,6 +500,7 @@ export function validateFullConfig(
     yield* validateApiConstraints(config, options);
 
     yield* validateServerDeployRequiresBackend(config.serverDeploy, config.backend);
+    yield* validateDockerServerDeploy(config.serverDeploy, config.backend, config.runtime);
 
     yield* validateSelfBackendCompatibility(providedFlags, options, config);
     yield* validateWorkersCompatibility(providedFlags, options, config);
@@ -459,7 +522,13 @@ export function validateFullConfig(
     }
 
     if (config.addons && config.addons.length > 0) {
-      yield* validateAddonsAgainstFrontends(config.addons, config.frontend, config.auth);
+      yield* validateAddonsAgainstFrontends(
+        config.addons,
+        config.frontend,
+        config.auth,
+        config.backend,
+        config.runtime,
+      );
       config.addons = [...new Set(config.addons)];
     }
 
@@ -500,7 +569,13 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
     );
 
     if (config.addons && config.addons.length > 0) {
-      yield* validateAddonsAgainstFrontends(config.addons, config.frontend, config.auth);
+      yield* validateAddonsAgainstFrontends(
+        config.addons,
+        config.frontend,
+        config.auth,
+        config.backend,
+        config.runtime,
+      );
     }
 
     yield* validateExamplesCompatibility(

@@ -1,14 +1,14 @@
 import { DEFAULT_CONFIG } from "../constants";
 import type { Auth, Backend, Frontend, Payments } from "../types";
-import { splitFrontends } from "../utils/compatibility-rules";
 import { UserCancelledError } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 export async function getPaymentsChoice(
   payments?: Payments,
   auth?: Auth,
   backend?: Backend,
-  frontends?: Frontend[],
+  _frontends?: Frontend[],
+  previousValue?: Payments,
 ) {
   if (payments !== undefined) return payments;
 
@@ -16,10 +16,7 @@ export async function getPaymentsChoice(
     return "none" as Payments;
   }
 
-  const isProviderCompatible =
-    auth === "better-auth" &&
-    backend !== "convex" &&
-    (frontends?.length === 0 || splitFrontends(frontends).web.length > 0);
+  const isProviderCompatible = auth === "better-auth";
 
   if (!isProviderCompatible) {
     return "none" as Payments;
@@ -46,7 +43,7 @@ export async function getPaymentsChoice(
   const response = await navigableSelect<Payments>({
     message: "Select payments provider",
     options,
-    initialValue: DEFAULT_CONFIG.payments,
+    initialValue: preferValidInitial(options, previousValue, DEFAULT_CONFIG.payments),
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

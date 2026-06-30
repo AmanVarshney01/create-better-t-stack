@@ -10,9 +10,13 @@ import { DatabaseSetupError } from "../../utils/errors";
 export async function setupCloudflareD1(
   config: ProjectConfig,
 ): Promise<Result<void, DatabaseSetupError>> {
-  const { projectDir, serverDeploy, orm, backend } = config;
+  const { projectDir, serverDeploy, webDeploy, orm, backend } = config;
 
-  if (!(serverDeploy === "cloudflare" && orm === "prisma")) {
+  const isCloudflareD1Target =
+    orm === "prisma" &&
+    (serverDeploy === "cloudflare" || (backend === "self" && webDeploy === "cloudflare"));
+
+  if (!isCloudflareD1Target) {
     return Result.ok(undefined);
   }
 

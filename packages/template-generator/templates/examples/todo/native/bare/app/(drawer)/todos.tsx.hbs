@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 {{else}}
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -63,7 +63,7 @@ export default function TodosScreen() {
   }
 
   const isLoading = !todos;
-  const completedCount = todos?.filter((t) => t.completed).length || 0;
+  const completedCount = todos?.filter((t: Doc<"todos">) => t.completed).length || 0;
   const totalCount = todos?.length || 0;
   {{else}}
     {{#if (eq api "orpc")}}
@@ -272,7 +272,7 @@ export default function TodosScreen() {
 
         {todos && todos.length > 0 && (
           <View style={styles.todosList}>
-            {todos.map((todo) => (
+            {todos.map((todo: Doc<"todos">) => (
               <View
                 key={todo._id}
                 style={[
@@ -462,9 +462,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   addButton: {
-    padding: 12,
-    justifyContent: "center",
+    width: 48,
+    height: 48,
     alignItems: "center",
+    justifyContent: "center",
   },
   centerContainer: {
     alignItems: "center",
@@ -502,20 +503,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   todoTextContainer: {
     flex: 1,
   },
   todoText: {
     fontSize: 16,
   },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   deleteButton: {
-    padding: 8,
+    padding: 4,
   },
 });

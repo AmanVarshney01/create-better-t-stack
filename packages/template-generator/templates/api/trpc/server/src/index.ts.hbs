@@ -1,4 +1,4 @@
-import { initTRPC, TRPCError } from "@trpc/server";
+import { initTRPC{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}, TRPCError{{/if}} } from "@trpc/server";
 import type { Context } from "./context";
 
 export const t = initTRPC.context<Context>().create();

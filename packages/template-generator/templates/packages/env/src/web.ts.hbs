@@ -9,6 +9,13 @@ import { createEnv } from "@t3-oss/env-core";
 {{/if}}
 import { z } from "zod";
 
+{{#if (eq backend "convex")}}
+const convexUrlSchema = (exampleHost: string) =>
+	z.url().refine((url) => new URL(url).hostname !== exampleHost, {
+		message: `Replace the ${exampleHost} placeholder before running the app`,
+	});
+
+{{/if}}
 {{#if (includes frontend "nuxt")}}
 /**
  * Nuxt env validation - validates at build time when imported in nuxt.config.ts
@@ -21,9 +28,9 @@ export const env = createEnv({
 {{#if (eq backend "convex")}}
 {{#if (includes frontend "next")}}
 	client: {
-		NEXT_PUBLIC_CONVEX_URL: z.url(),
+		NEXT_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 {{#if (eq auth "better-auth")}}
-		NEXT_PUBLIC_CONVEX_SITE_URL: z.url(),
+		NEXT_PUBLIC_CONVEX_SITE_URL: convexUrlSchema("example.convex.site"),
 {{/if}}
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
@@ -40,20 +47,20 @@ export const env = createEnv({
 	},
 {{else if (includes frontend "nuxt")}}
 	client: {
-		NUXT_PUBLIC_CONVEX_URL: z.url(),
+		NUXT_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 	},
 {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
 	clientPrefix: "PUBLIC_",
 	client: {
-		PUBLIC_CONVEX_URL: z.url(),
+		PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 	},
 	runtimeEnv: (import.meta as any).env,
 {{else}}
 	clientPrefix: "VITE_",
 	client: {
-		VITE_CONVEX_URL: z.url(),
+		VITE_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 {{#if (eq auth "better-auth")}}
-		VITE_CONVEX_SITE_URL: z.url(),
+		VITE_CONVEX_SITE_URL: convexUrlSchema("example.convex.site"),
 {{/if}}
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
@@ -119,5 +126,6 @@ export const env = createEnv({
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
 {{/if}}
+	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });

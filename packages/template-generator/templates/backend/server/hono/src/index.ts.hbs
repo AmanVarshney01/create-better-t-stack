@@ -14,18 +14,22 @@ import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 {{/if}}
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 {{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
-import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (and (includes examples "ai") (eq runtime "workers"))}}
-import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -48,9 +52,41 @@ app.use(
 );
 
 {{#if (eq auth "better-auth")}}
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+app.on(
+	["POST", "GET"],
+	"/api/auth/*",
+	(c) =>
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+		createAuth().handler(c.req.raw)
+{{else}}
+		auth.handler(c.req.raw)
+{{/if}}
+);
 {{/if}}
 
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+app.get("/polar/success", (c) => {
+	const requestUrl = new URL(c.req.url);
+	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+	let redirectUrl: URL;
+	try {
+		redirectUrl = new URL(returnUrl);
+	} catch {
+		return c.text("Invalid return URL", 400);
+	}
+
+	if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+		return c.text("Invalid return URL", 400);
+	}
+
+	return c.redirect(redirectUrl.toString(), 302);
+});
+
+{{/if}}
 {{#if (eq api "orpc")}}
 export const apiHandler = new OpenAPIHandler(appRouter, {
 	plugins: [
@@ -123,7 +159,9 @@ app.post("/ai", async (c) => {
 		messages: await convertToModelMessages(uiMessages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 
@@ -143,7 +181,9 @@ app.post("/ai", async (c) => {
 		messages: await convertToModelMessages(uiMessages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 

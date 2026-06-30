@@ -37,6 +37,8 @@
 			onSubmit: validationSchema,
 		},
 	}));
+
+	type SubmitState = Pick<typeof form.state, 'canSubmit' | 'isSubmitting'>;
 </script>
 
 <div class="mx-auto mt-10 w-full max-w-md p-6">
@@ -125,8 +127,8 @@
 			{/snippet}
 		</form.Field>
 
-		<form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
-			{#snippet children(state)}
+		<form.Subscribe selector={(state: typeof form.state): SubmitState => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+			{#snippet children(state: SubmitState)}
 				<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>
 					{state.isSubmitting ? 'Submitting...' : 'Sign Up'}
 				</button>

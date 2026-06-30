@@ -32,6 +32,10 @@ const ToolResponseSchema = z.object({
   error: z.string().optional(),
 });
 
+const SchemaToolInputSchema = z.object({
+  name: SchemaNameSchema.optional().describe("Schema name to inspect. Defaults to all."),
+});
+
 const McpCreateProjectInputSchema = CreateInputSchema.safeExtend({
   projectName: z.string().describe("Project name or relative path"),
   frontend: z
@@ -60,6 +64,12 @@ const McpCreateProjectInputSchema = CreateInputSchema.safeExtend({
 }).describe(
   "Explicit Better T Stack project configuration for MCP use. Provide the full stack config instead of relying on inferred defaults.",
 );
+
+type SchemaToolInput = {
+  name?: SchemaName;
+};
+type McpCreateProjectInput = z.infer<typeof McpCreateProjectInputSchema>;
+type McpAddInput = z.infer<typeof AddInputSchema>;
 
 function formatToolSuccess(data: unknown) {
   return {
@@ -186,7 +196,6 @@ export function createBtsMcpServer() {
       title: "Get Better T Stack MCP Guidance",
       description:
         "Read MCP-specific guidance for choosing valid Better T Stack configurations. Use this before planning when user intent is ambiguous. This explains the full explicit config required by MCP project creation, plus important field semantics and ambiguity rules.",
-      inputSchema: z.object({}),
       outputSchema: ToolResponseSchema,
       annotations: {
         title: "Get Better T Stack MCP Guidance",
@@ -211,9 +220,7 @@ export function createBtsMcpServer() {
       title: "Get Better T Stack Schemas",
       description:
         "Inspect Better T Stack CLI and input schemas so agents can plan valid create/add requests. Use this together with bts_get_stack_guidance before creating a project if any part of the request is ambiguous.",
-      inputSchema: z.object({
-        name: SchemaNameSchema.optional().describe("Schema name to inspect. Defaults to all."),
-      }),
+      inputSchema: SchemaToolInputSchema,
       outputSchema: ToolResponseSchema,
       annotations: {
         title: "Get Better T Stack Schemas",
@@ -223,7 +230,7 @@ export function createBtsMcpServer() {
         openWorldHint: false,
       },
     },
-    async ({ name }) => {
+    async ({ name }: SchemaToolInput) => {
       try {
         return formatToolSuccess(getSchemaResult((name ?? "all") as SchemaName));
       } catch (error) {
@@ -248,7 +255,7 @@ export function createBtsMcpServer() {
         openWorldHint: false,
       },
     },
-    async (input) => {
+    async (input: McpCreateProjectInput) => {
       try {
         const result = await create(input.projectName, {
           ...input,
@@ -291,7 +298,7 @@ export function createBtsMcpServer() {
         ...getProjectToolAnnotations(),
       },
     },
-    async (input) => {
+    async (input: McpCreateProjectInput) => {
       try {
         if (input.install) {
           return formatToolError(getMcpInstallTimeoutMessage(input.packageManager));
@@ -329,7 +336,7 @@ export function createBtsMcpServer() {
         openWorldHint: false,
       },
     },
-    async (input) => {
+    async (input: McpAddInput) => {
       try {
         const result = await add({
           ...input,
@@ -362,7 +369,7 @@ export function createBtsMcpServer() {
         openWorldHint: true,
       },
     },
-    async (input) => {
+    async (input: McpAddInput) => {
       try {
         const result = await add(input);
 

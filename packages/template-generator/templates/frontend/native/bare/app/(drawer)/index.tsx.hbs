@@ -1,4 +1,10 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { {{#if (or (eq auth "clerk") (eq auth "better-auth"))}}Button, {{/if}}Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { View, ScrollView, StyleSheet{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
+{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
+{{/if}}
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
@@ -11,17 +17,17 @@ import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 {{/if}}
 {{#if (and (eq backend "convex") (eq auth "clerk"))}}
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (ne backend "convex") (eq auth "clerk"))}}
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { useAuth, useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-import { useConvexAuth, useQuery } from "convex/react";
+import { {{#if (eq payments "polar")}}useAction, {{/if}}useConvexAuth, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { SignIn } from "@/components/sign-in";
@@ -51,17 +57,72 @@ const { user } = useUser();
 const healthCheck = useQuery(api.healthCheck.get);
 const { isAuthenticated } = useConvexAuth();
 const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
+{{#if (eq payments "polar")}}
+const products = useQuery(api.polar.listAllProducts);
+const subscription = useQuery(api.polar.getCurrentSubscription);
+const generateCheckoutLink = useAction(api.polar.generateCheckoutLink);
+const generateCustomerPortalUrl = useAction(api.polar.generateCustomerPortalUrl);
+const recurringProduct = products?.find((product) => product.isRecurring);
+
+const openPolarLink = async (url: string, returnUrl: string) => {
+	await WebBrowser.openAuthSessionAsync(url, returnUrl);
+};
+
+const getPolarReturnUrl = (returnUrl: string) => {
+	const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+	url.searchParams.set("returnUrl", returnUrl);
+	return url.toString();
+};
+
+const handlePolarCheckout = async () => {
+	try {
+		if (!recurringProduct) {
+			Alert.alert("Checkout unavailable", "No recurring Polar product is available yet.");
+			return;
+		}
+
+		const returnUrl = Linking.createURL("/");
+		const polarReturnUrl = getPolarReturnUrl(returnUrl);
+		const { url } = await generateCheckoutLink({
+			productIds: [recurringProduct.id],
+			origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+			successUrl: polarReturnUrl,
+		});
+
+		await openPolarLink(url, returnUrl);
+	} catch {
+		Alert.alert("Checkout failed", "Unable to open Polar checkout. Please try again.");
+	}
+};
+
+const handlePolarPortal = async () => {
+	try {
+		const returnUrl = Linking.createURL("/");
+		const { url } = await generateCustomerPortalUrl({
+			returnUrl: getPolarReturnUrl(returnUrl),
+		});
+
+		await openPolarLink(url, returnUrl);
+	} catch {
+		Alert.alert("Portal unavailable", "Unable to open the customer portal. Please try again.");
+	}
+};
+{{/if}}
 {{else if (eq backend "convex")}}
 const healthCheck = useQuery(api.healthCheck.get);
 {{/if}}
 
 return (
 <Container>
-  <ScrollView style={styles.scrollView}>
+  <ScrollView style={styles.scrollView} contentInsetAdjustmentBehavior="never">
     <View style={styles.content}>
-      <Text style={[styles.title, { color: theme.text }]}>
-        BETTER T STACK
-      </Text>
+      <Host style={styles.titleHost}>
+        <ExpoUIText
+          textStyle=\{{ color: theme.text, fontSize: 24, fontWeight: "bold", textAlign: "center" }}
+        >
+          BETTER T STACK
+        </ExpoUIText>
+      </Host>
 
       {{#unless (and (eq backend "convex") (eq auth "better-auth"))}}
       <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -69,16 +130,25 @@ return (
         <View style={styles.statusRow}>
           <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#f59e0b" }]} />
           <View style={styles.statusContent}>
-            <Text style={[styles.statusTitle, { color: theme.text }]}>
-              Convex
-            </Text>
-            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-              {healthCheck === undefined
-              ? "Checking..."
-              : healthCheck === "OK"
-              ? "Connected to API"
-              : "API Disconnected"}
-            </Text>
+            <Host matchContents=\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\{{ color: theme.text, fontSize: 14, fontWeight: "bold" }}
+                >
+                  Convex
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\{{ color: theme.text, fontSize: 12 }}
+                  style=\{{ opacity: 0.7 }}
+                >
+                  {healthCheck === undefined
+                  ? "Checking..."
+                  : healthCheck === "OK"
+                  ? "Connected to API"
+                  : "API Disconnected"}
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
         </View>
         {{else}}
@@ -86,16 +156,25 @@ return (
         <View style={styles.statusRow}>
           <View style={[styles.statusIndicator, { backgroundColor: healthCheck.data ? "#10b981" : "#f59e0b" }]} />
           <View style={styles.statusContent}>
-            <Text style={[styles.statusTitle, { color: theme.text }]}>
-              {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}}
-            </Text>
-            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-              {healthCheck.isLoading
-              ? "Checking connection..."
-              : healthCheck.data
-              ? "All systems operational"
-              : "Service unavailable"}
-            </Text>
+            <Host matchContents=\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\{{ color: theme.text, fontSize: 14, fontWeight: "bold" }}
+                >
+                  {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}}
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\{{ color: theme.text, fontSize: 12 }}
+                  style=\{{ opacity: 0.7 }}
+                >
+                  {healthCheck.isLoading
+                  ? "Checking connection..."
+                  : healthCheck.data
+                  ? "All systems operational"
+                  : "Service unavailable"}
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
         </View>
         {{/unless}}
@@ -105,85 +184,154 @@ return (
 
       {{#if (and (eq backend "convex") (eq auth "clerk"))}}
       <Authenticated>
-        <Text style=\{{ color: theme.text }}>Hello {user?.emailAddresses[0].emailAddress}</Text>
-        <Text style=\{{ color: theme.text }}>Private Data: {privateData?.message}</Text>
+        <Host style={styles.authHost} matchContents=\{{ vertical: true }}>
+          <Column spacing={6}>
+            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 14 }}>
+              {`Hello ${user?.emailAddresses[0].emailAddress ?? ""}`}
+            </ExpoUIText>
+            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 14 }}>
+              {`Private Data: ${privateData?.message ?? ""}`}
+            </ExpoUIText>
+          </Column>
+        </Host>
         <SignOutButton />
       </Authenticated>
       <Unauthenticated>
-        <Link href="/(auth)/sign-in">
-        <Text style=\{{ color: theme.primary }}>Sign in</Text>
-        </Link>
-        <Link href="/(auth)/sign-up">
-        <Text style=\{{ color: theme.primary }}>Sign up</Text>
-        </Link>
+        <Host style={styles.authActionsHost} matchContents=\{{ vertical: true }}>
+          <Column spacing={8}>
+            <Button
+              label="Sign in"
+              variant="outlined"
+              onPress={() => router.push("/(auth)/sign-in")}
+            />
+            <Button
+              label="Sign up"
+              onPress={() => router.push("/(auth)/sign-up")}
+            />
+          </Column>
+        </Host>
       </Unauthenticated>
       <AuthLoading>
-        <Text style=\{{ color: theme.text }}>Loading...</Text>
+        <Host matchContents=\{{ vertical: true }}>
+          <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 14 }}>
+            Loading...
+          </ExpoUIText>
+        </Host>
       </AuthLoading>
       {{/if}}
 
       {{#if (and (ne backend "convex") (eq auth "clerk"))}}
       {!isLoaded ? (
-      <Text style=\{{ color: theme.text }}>Loading...</Text>
+      <Host matchContents=\{{ vertical: true }}>
+        <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 14 }}>
+          Loading...
+        </ExpoUIText>
+      </Host>
       ) : isSignedIn ? (
       <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.userHeader}>
-          <Text style={[styles.userText, { color: theme.text }]}>
-            Welcome, <Text style={styles.userName}>{user?.fullName ?? user?.firstName ?? "there"}</Text>
-          </Text>
-        </View>
-        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
-          {user?.emailAddresses[0]?.emailAddress}
-        </Text>
+        <Host style={styles.userHeader} matchContents=\{{ vertical: true }}>
+          <Column spacing={8}>
+            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 16 }}>
+              {`Welcome, ${user?.fullName ?? user?.firstName ?? "there"}`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\{{ color: theme.text, fontSize: 14 }}
+              style=\{{ opacity: 0.7 }}
+            >
+              {user?.emailAddresses[0]?.emailAddress ?? ""}
+            </ExpoUIText>
+          </Column>
+        </Host>
         <SignOutButton />
       </View>
       ) : (
       <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Link href="/(auth)/sign-in">
-          <Text style=\{{ color: theme.primary }}>Sign in</Text>
-        </Link>
-        <Link href="/(auth)/sign-up">
-          <Text style=\{{ color: theme.primary }}>Sign up</Text>
-        </Link>
+        <Host style={styles.authActionsHost} matchContents=\{{ vertical: true }}>
+          <Column spacing={8}>
+            <Button
+              label="Sign in"
+              variant="outlined"
+              onPress={() => router.push("/(auth)/sign-in")}
+            />
+            <Button
+              label="Sign up"
+              onPress={() => router.push("/(auth)/sign-up")}
+            />
+          </Column>
+        </Host>
       </View>
       )}
       {{/if}}
 
       {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+      <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Host style={styles.statusCardTitleHost} matchContents=\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}
+          >
+            API Status
+          </ExpoUIText>
+        </Host>
+        <View style={styles.statusRow}>
+          <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#f59e0b" }]} />
+          <View style={styles.statusContent}>
+            <Host matchContents=\{{ vertical: true }}>
+              <ExpoUIText
+                textStyle=\{{ color: theme.text, fontSize: 12 }}
+                style=\{{ opacity: 0.7 }}
+              >
+                {healthCheck === undefined
+                ? "Checking..."
+                : healthCheck === "OK"
+                ? "Connected to API"
+                : "API Disconnected"}
+              </ExpoUIText>
+            </Host>
+          </View>
+        </View>
+      </View>
+
       {user ? (
       <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.userHeader}>
-          <Text style={[styles.userText, { color: theme.text }]}>
-            Welcome, <Text style={styles.userName}>{user.name}</Text>
-          </Text>
-        </View>
-        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
-          {user.email}
-        </Text>
-        <TouchableOpacity style={[styles.signOutButton, { backgroundColor: theme.notification }]} onPress={()=> {
-          authClient.signOut();
-          }}
-          >
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+        <Host style={styles.userHeader} matchContents>
+          <Column spacing={6}>
+            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+              {`Welcome, ${user.name}`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\{{ color: theme.text, fontSize: 14 }}
+              style=\{{ opacity: 0.7 }}
+            >
+              {user.email}
+            </ExpoUIText>
+          </Column>
+        </Host>
+        <Host matchContents=\{{ vertical: true }}>
+          <Button
+            label="Sign Out"
+            variant="outlined"
+            onPress={() => {
+              authClient.signOut();
+            }}
+          />
+        </Host>
+        {{#if (eq payments "polar")}}
+        <Host style={styles.paymentActions} matchContents=\{{ vertical: true }}>
+          <Column spacing={8}>
+            {subscription ? (
+            <Button
+              label="Manage Subscription"
+              variant="outlined"
+              onPress={handlePolarPortal}
+            />
+            ) : (
+            <Button label="Upgrade to Pro" onPress={handlePolarCheckout} />
+            )}
+          </Column>
+        </Host>
+        {{/if}}
       </View>
-      ) : null}
-      <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.statusCardTitle, { color: theme.text }]}>
-          API Status
-        </Text>
-        <View style={styles.statusRow}>
-          <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#ef4444" }]} />
-          <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-            {healthCheck === undefined
-            ? "Checking..."
-            : healthCheck === "OK"
-            ? "Connected to API"
-            : "API Disconnected"}
-          </Text>
-        </View>
-      </View>
-      {!user && (
+      ) : (
       <>
         <SignIn />
         <SignUp />
@@ -201,12 +349,14 @@ scrollView: {
 flex: 1,
 },
 content: {
-padding: 16,
+paddingHorizontal: 20,
+paddingTop: 28,
+paddingBottom: 32,
 },
-title: {
-fontSize: 24,
-fontWeight: "bold",
-marginBottom: 16,
+titleHost: {
+alignSelf: "stretch",
+height: 34,
+marginBottom: 24,
 },
 card: {
 padding: 16,
@@ -219,50 +369,38 @@ alignItems: "center",
 gap: 8,
 },
 statusIndicator: {
-height: 8,
-width: 8,
+height: 10,
+width: 10,
+borderRadius: 999,
 },
 statusContent: {
 flex: 1,
-},
-statusTitle: {
-fontSize: 14,
-fontWeight: "bold",
-},
-statusText: {
-fontSize: 12,
 },
 userCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
 userHeader: {
 marginBottom: 8,
 },
-userText: {
-fontSize: 16,
+paymentActions: {
+marginTop: 12,
 },
-userName: {
-fontWeight: "bold",
-},
-userEmail: {
-fontSize: 14,
+authHost: {
 marginBottom: 12,
 },
-signOutButton: {
-padding: 12,
-},
-signOutText: {
-color: "#ffffff",
+authActionsHost: {
+marginTop: 4,
 },
 statusCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
-statusCardTitle: {
+statusCardTitleHost: {
 marginBottom: 8,
-fontWeight: "bold",
 },
 });

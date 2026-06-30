@@ -50,6 +50,53 @@ const db = await D1Database("database", {
 });
 {{/if}}
 
+{{#if (eq serverDeploy "cloudflare")}}
+export const server = await Worker("server", {
+  cwd: "../../apps/server",
+  entrypoint: "src/index.ts",
+  compatibility: "node",
+  url: true,
+  bindings: {
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    {{/if}}
+    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
+    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
+    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
+    {{/if}}
+    {{/if}}
+    {{#if (includes examples "ai")}}
+    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
+    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
+    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    {{/if}}
+    {{/if}}
+  },
+  dev: {
+		port: 3000,
+	},
+});
+{{/if}}
+
 {{#if (eq webDeploy "cloudflare")}}
 {{#if (includes frontend "next")}}
 export const web = await Nextjs("web", {
@@ -61,7 +108,11 @@ export const web = await Nextjs("web", {
     NEXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NEXT_PUBLIC_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    NEXT_PUBLIC_SERVER_URL: server.url!,
+    {{else}}
     NEXT_PUBLIC_SERVER_URL: alchemy.env.NEXT_PUBLIC_SERVER_URL!,
+    {{/if}}
     {{/if}}
     {{#if (eq dbSetup "d1")}}
     DB: db,
@@ -120,7 +171,11 @@ export const web = await Nuxt("web", {
     NUXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NUXT_PUBLIC_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    NUXT_PUBLIC_SERVER_URL: server.url!,
+    {{else}}
     NUXT_PUBLIC_SERVER_URL: alchemy.env.NUXT_PUBLIC_SERVER_URL!,
+    {{/if}}
     {{/if}}
     {{#if (eq backend "self")}}
     {{#if (eq dbSetup "d1")}}
@@ -176,9 +231,45 @@ export const web = await SvelteKit("web", {
     PUBLIC_CONVEX_SITE_URL: alchemy.env.PUBLIC_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    PUBLIC_SERVER_URL: server.url!,
+    {{else}}
     PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
     {{/if}}
-  }
+    {{/if}}
+    {{#if (eq backend "self")}}
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    {{/if}}
+    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    {{/if}}
+    {{#if (and (includes examples "ai") (ne backend "convex"))}}
+    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
+    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
+    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    {{/if}}
+    {{/if}}
+    {{/if}}
+  },
+  dev: {
+    domain: "localhost:5173",
+  },
 });
 {{else if (includes frontend "tanstack-start")}}
 export const web = await TanStackStart("web", {
@@ -190,7 +281,11 @@ export const web = await TanStackStart("web", {
     VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    VITE_SERVER_URL: server.url!,
+    {{else}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
     {{/if}}
     {{#if (eq dbSetup "d1")}}
     DB: db,
@@ -245,7 +340,11 @@ export const web = await Vite("web", {
     VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    VITE_SERVER_URL: server.url!,
+    {{else}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
     {{/if}}
   }
 });
@@ -259,7 +358,11 @@ export const web = await ReactRouter("web", {
     VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    VITE_SERVER_URL: server.url!,
+    {{else}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
     {{/if}}
   }
 });
@@ -274,7 +377,11 @@ export const web = await Vite("web", {
     VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
     {{/if}}
     {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    VITE_SERVER_URL: server.url!,
+    {{else}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
     {{/if}}
   }
 });
@@ -288,7 +395,11 @@ export const web = await Astro("web", {
   {{/if}}
   bindings: {
     {{#if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    PUBLIC_SERVER_URL: server.url!,
+    {{else}}
     PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
+    {{/if}}
     {{/if}}
     {{#if (eq backend "self")}}
     {{#if (eq dbSetup "d1")}}
@@ -324,52 +435,6 @@ export const web = await Astro("web", {
   }
 });
 {{/if}}
-{{/if}}
-
-{{#if (eq serverDeploy "cloudflare")}}
-export const server = await Worker("server", {
-  cwd: "../../apps/server",
-  entrypoint: "src/index.ts",
-  compatibility: "node",
-  bindings: {
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{#if (eq auth "clerk")}}
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
-    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
-    {{/if}}
-    {{/if}}
-    {{#if (includes examples "ai")}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-  },
-  dev: {
-		port: 3000,
-	},
-});
 {{/if}}
 
 {{#if (and (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}

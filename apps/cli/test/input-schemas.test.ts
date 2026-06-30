@@ -6,6 +6,7 @@ import {
   CLIInputSchema,
   CreateInputSchema,
 } from "../../../packages/types/src/schemas";
+import { getSchemaResult, SchemaNameSchema } from "../src/index";
 
 describe("Input schemas", () => {
   it("rejects conflicting manualDb and dbSetupOptions.mode inputs", () => {
@@ -18,12 +19,18 @@ describe("Input schemas", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects conflicting nx and turborepo addon combinations", () => {
-    const result = AddInputSchema.safeParse({
-      addons: ["nx", "turborepo"],
-    });
+  it("rejects conflicting task-runner addon combinations", () => {
+    const conflictingAddonPairs = [
+      ["nx", "vite-plus"],
+      ["turborepo", "vite-plus"],
+      ["nx", "turborepo"],
+    ];
 
-    expect(result.success).toBe(false);
+    for (const addons of conflictingAddonPairs) {
+      const result = AddInputSchema.safeParse({ addons });
+
+      expect(result.success).toBe(false);
+    }
   });
 
   it("rejects unknown keys in JSON-first create input", () => {
@@ -86,6 +93,24 @@ describe("Input schemas", () => {
     expect(result.success).toBe(false);
   });
 
+  it("accepts the evlog agent skills source in addon options", () => {
+    const result = CreateInputSchema.safeParse({
+      projectName: "app",
+      addonOptions: {
+        skills: {
+          selections: [
+            {
+              source: "https://www.evlog.dev",
+              skills: ["review-logging-patterns", "analyze-logs"],
+            },
+          ],
+        },
+      },
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("allows CLI input parsing on top of the refined create schema", () => {
     const result = CLIInputSchema.safeParse({
       projectDirectory: ".",
@@ -100,5 +125,14 @@ describe("Input schemas", () => {
     const module = await import("../src/mcp");
 
     expect(typeof module.createBtsMcpServer).toBe("function");
+  });
+
+  it("exposes the Better T Stack config file JSON schema by name", () => {
+    const schemaName = SchemaNameSchema.safeParse("betterTStackConfigFile");
+
+    expect(schemaName.success).toBe(true);
+    expect(getSchemaResult("betterTStackConfigFile")).toMatchObject({
+      type: "object",
+    });
   });
 });

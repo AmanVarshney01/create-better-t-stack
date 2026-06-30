@@ -1,6 +1,6 @@
 import type { Backend, DatabaseSetup, ORM, Runtime } from "../types";
 import { UserCancelledError } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 export async function getDBSetupChoice(
   databaseType: string,
@@ -8,6 +8,7 @@ export async function getDBSetupChoice(
   _orm?: ORM,
   backend?: Backend,
   runtime?: Runtime,
+  previousValue?: DatabaseSetup,
 ) {
   if (backend === "convex") {
     return "none";
@@ -28,7 +29,7 @@ export async function getDBSetupChoice(
         label: "Turso",
         hint: "SQLite for Production. Powered by libSQL",
       },
-      ...(runtime === "workers"
+      ...(runtime === "workers" || backend === "self"
         ? [
             {
               value: "d1" as const,
@@ -103,7 +104,7 @@ export async function getDBSetupChoice(
   const response = await navigableSelect<DatabaseSetup>({
     message: `Select ${databaseType} setup option`,
     options,
-    initialValue: "none",
+    initialValue: preferValidInitial(options, previousValue, "none"),
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

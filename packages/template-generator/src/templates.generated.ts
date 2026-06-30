@@ -145,12 +145,13 @@ export default {
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "electrobun": "^1.15.1"
+    "electrobun": "^1.18.1"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.4",
-    "concurrently": "^9.1.0",
-    "typescript": "^5"
+    "@types/bun": "^1.3.14",
+    "@types/three": "^0.165.0",
+    "concurrently": "^10.0.3",
+    "typescript": "^6"
   }
 }
 `],
@@ -159,7 +160,6 @@ export default {
 const DEV_SERVER_PORT = {{#if (or (includes frontend "react-router") (includes frontend "svelte"))}}5173{{else if (includes frontend "astro")}}4321{{else}}3001{{/if}};
 const DEV_SERVER_URL = \`http://localhost:\${DEV_SERVER_PORT}\`;
 
-// Check if the web dev server is running for HMR
 async function getMainViewUrl(): Promise<string> {
   const channel = await Updater.localInfo.channel();
   if (channel === "dev") {
@@ -169,7 +169,7 @@ async function getMainViewUrl(): Promise<string> {
       return DEV_SERVER_URL;
     } catch {
       console.log(
-        'Web dev server not running. Run "{{packageManager}} run dev:hmr" for HMR support.',
+        "Web dev server not running. Run dev:hmr for live reload.",
       );
     }
   }
@@ -200,7 +200,6 @@ console.log("Electrobun desktop shell started.");
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -227,6 +226,10 @@ pre-commit:
       stage_fixed: true
     - name: oxfmt
       run: {{packageManager}} oxfmt --write {staged_files}
+      stage_fixed: true
+{{else if (includes addons "vite-plus")}}
+    - name: vite-plus
+      run: {{packageManager}} vp staged
       stage_fixed: true
 {{else}}
     # Add your pre-commit commands here
@@ -309,6 +312,9 @@ export default defineConfig({
 });
 `],
   ["api/orpc/fullstack/astro/src/pages/rpc/[...rest].ts.hbs", `import type { APIRoute } from "astro";
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/fetch";
 import { onError } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
@@ -322,17 +328,37 @@ const handler = new RPCHandler(appRouter, {
   ],
 });
 
+const apiHandler = new OpenAPIHandler(appRouter, {
+  plugins: [
+    new OpenAPIReferencePlugin({
+      schemaConverters: [new ZodToJsonSchemaConverter()],
+    }),
+  ],
+  interceptors: [
+    onError((error) => {
+      console.error(error);
+    }),
+  ],
+});
+
 export const prerender = false;
 
 export const ALL: APIRoute = async ({ request }) => {
   const context = await createContext({ headers: request.headers });
 
-  const { response } = await handler.handle(request, {
+  const rpcResult = await handler.handle(request, {
     prefix: "/rpc",
     context,
   });
+  if (rpcResult.response) return rpcResult.response;
 
-  return response ?? new Response("Not found", { status: 404 });
+  const apiResult = await apiHandler.handle(request, {
+    prefix: "/rpc/api-reference",
+    context,
+  });
+  if (apiResult.response) return apiResult.response;
+
+  return new Response("Not found", { status: 404 });
 };
 `],
   ["api/orpc/fullstack/next/src/app/api/rpc/[[...rest]]/route.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
@@ -491,6 +517,105 @@ export default defineEventHandler(async (event) => {
 `],
   ["api/orpc/fullstack/nuxt/server/routes/rpc/index.ts.hbs", `export { default } from "./[...]";
 `],
+  ["api/orpc/fullstack/svelte/src/lib/orpc.server.ts.hbs", `import { getRequestEvent } from "$app/server";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter, type AppRouterClient } from "@{{projectName}}/api/routers/index";
+{{#if (eq webDeploy "cloudflare")}}
+import { env as localEnv } from "@{{projectName}}/env/server";
+{{/if}}
+import { createRouterClient } from "@orpc/server";
+
+if (typeof window !== "undefined") {
+	throw new Error("This file should only be imported on the server.");
+}
+
+const serverClient: AppRouterClient = createRouterClient(appRouter, {
+	context: async () => {
+		const event = getRequestEvent();
+{{#if (eq webDeploy "cloudflare")}}
+		const env = event.platform?.env ?? localEnv;
+
+{{/if}}
+		return createContext({
+			headers: event.request.headers,
+{{#if (eq webDeploy "cloudflare")}}
+			env,
+{{/if}}
+		});
+	},
+});
+
+// oRPC's SvelteKit SSR setup loads this from hooks.server.ts so $lib/orpc can
+// reuse the in-process server client during SSR and fall back to HTTP in the browser.
+globalThis.$client = serverClient;
+`],
+  ["api/orpc/fullstack/svelte/src/routes/rpc/[...rest]/+server.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+{{#if (eq webDeploy "cloudflare")}}
+import { env as localEnv } from "@{{projectName}}/env/server";
+{{/if}}
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { onError } from "@orpc/server";
+import { RPCHandler } from "@orpc/server/fetch";
+import type { RequestHandler } from "@sveltejs/kit";
+
+const rpcHandler = new RPCHandler(appRouter, {
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+const apiHandler = new OpenAPIHandler(appRouter, {
+	plugins: [
+		new OpenAPIReferencePlugin({
+			schemaConverters: [new ZodToJsonSchemaConverter()],
+		}),
+	],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
+{{#if (eq webDeploy "cloudflare")}}
+	const env = platform?.env ?? localEnv;
+
+{{/if}}
+	const context = await createContext({
+		headers: request.headers,
+{{#if (eq webDeploy "cloudflare")}}
+		env,
+{{/if}}
+	});
+
+	const rpcResult = await rpcHandler.handle(request, {
+		prefix: "/rpc",
+		context,
+	});
+	if (rpcResult.response) return rpcResult.response;
+
+	const apiResult = await apiHandler.handle(request, {
+		prefix: "/rpc/api-reference",
+		context,
+	});
+	if (apiResult.response) return apiResult.response;
+
+	return new Response("Not found", { status: 404 });
+};
+
+export const HEAD = handle;
+export const GET = handle;
+export const POST = handle;
+export const PUT = handle;
+export const PATCH = handle;
+export const DELETE = handle;
+`],
   ["api/orpc/fullstack/tanstack-start/src/routes/api/rpc/$.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
@@ -570,6 +695,18 @@ export const queryClient = new QueryClient({
 	}),
 });
 
+async function expoFetch(request: Request, init?: RequestInit) {
+	const { fetch } = await import("expo/fetch");
+
+	return fetch(request.url, {
+		body: await request.blob(),
+		headers: request.headers,
+		method: request.method,
+		signal: request.signal,
+		...init,
+	});
+}
+
 export const link = new RPCLink({
 {{#if (eq backend "self")}}
 {{#if (or (includes frontend "next") (includes frontend "tanstack-start"))}}
@@ -581,14 +718,13 @@ export const link = new RPCLink({
 	url: \`\${env.EXPO_PUBLIC_SERVER_URL}/rpc\`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
-	fetch:
-		function (url, options) {
-			return fetch(url, {
-				...options,
-				// Better Auth Expo forwards the session cookie manually on native.
-				credentials: Platform.OS === "web" ? "include" : "omit",
-			});
-		},
+	fetch(request, init) {
+		return expoFetch(request, {
+			...init,
+			// Better Auth Expo forwards the session cookie manually on native.
+			credentials: Platform.OS === "web" ? "include" : "omit",
+		});
+	},
 	headers() {
 		if (Platform.OS === "web") {
 			return {};
@@ -605,6 +741,9 @@ export const link = new RPCLink({
 		const token = await getClerkAuthToken();
 		return token ? { Authorization: \`Bearer \${token}\` } : {};
 	},
+	fetch: expoFetch,
+{{else}}
+	fetch: expoFetch,
 {{/if}}
 });
 
@@ -678,6 +817,8 @@ function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContex
 {{/if}}
 
 {{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+{{else}}
 import { createClerkClient } from "@clerk/backend";
 import { env } from "@{{projectName}}/env/server";
 
@@ -693,16 +834,21 @@ async function authenticateClerkRequest(request: Request): Promise<ClerkContextA
 	return toClerkContextAuth(requestState.toAuth());
 }
 {{/if}}
+{{/if}}
 
 {{#if (and (eq backend 'self') (includes frontend "next"))}}
 import type { NextRequest } from "next/server";
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
+{{/if}}
 
-export async function createContext(req: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
 	});
 	return {
@@ -725,12 +871,16 @@ export async function createContext(req: NextRequest){{#if (eq auth "clerk")}}: 
 
 {{else if (and (eq backend 'self') (includes frontend "tanstack-start"))}}
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
+{{/if}}
 
-export async function createContext({ req }: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
 	});
 	return {
@@ -753,16 +903,20 @@ export async function createContext({ req }: { req: Request }){{#if (eq auth "cl
 
 {{else if (and (eq backend 'self') (includes frontend "nuxt"))}}
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 {{/if}}
 
 export type CreateContextOptions = {
 	headers: Headers;
 };
 
-export async function createContext({ headers }: CreateContextOptions) {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({ headers });
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
 		auth: null,
 		session,
@@ -775,18 +929,62 @@ export async function createContext({ headers }: CreateContextOptions) {
 {{/if}}
 }
 
+{{else if (and (eq backend 'self') (includes frontend "svelte"))}}
+{{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{/if}}
+{{#if (eq webDeploy "cloudflare")}}
+import type {} from "@{{projectName}}/env/server";
+{{/if}}
+
+export type CreateContextOptions = {
+	headers: Headers;
+{{#if (eq webDeploy "cloudflare")}}
+	env: Env;
+{{/if}}
+};
+
+export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env: _env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions) {
+{{#if (eq auth "better-auth")}}
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth({{#if (eq webDeploy "cloudflare")}}env{{/if}}){{else}}auth{{/if}}.api.getSession({ headers });
+	return {
+		auth: null,
+		session,
+{{#if (eq webDeploy "cloudflare")}}
+		env,
+{{/if}}
+	};
+{{else}}
+	return {
+		auth: null,
+		session: null,
+{{#if (eq webDeploy "cloudflare")}}
+		env,
+{{/if}}
+	};
+{{/if}}
+}
+
 {{else if (and (eq backend 'self') (includes frontend "astro"))}}
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 {{/if}}
 
 export type CreateContextOptions = {
 	headers: Headers;
 };
 
-export async function createContext({ headers }: CreateContextOptions) {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({ headers });
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
 		auth: null,
 		session,
@@ -802,16 +1000,20 @@ export async function createContext({ headers }: CreateContextOptions) {
 {{else if (eq backend 'hono')}}
 import type { Context as HonoContext } from "hono";
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 {{/if}}
 
 export type CreateContextOptions = {
 	context: HonoContext;
 };
 
-export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: context.req.raw.headers,
 	});
 	return {
@@ -842,7 +1044,7 @@ export type CreateContextOptions = {
 	context: ElysiaContext;
 };
 
-export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
@@ -878,7 +1080,7 @@ interface CreateContextOptions {
 	req: Request;
 }
 
-export async function createContext(opts: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
@@ -928,6 +1130,7 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 		session: null,
 	};
 {{else}}
+	void req;
 	return {
 		auth: null,
 		session: null,
@@ -946,7 +1149,7 @@ export async function createContext() {
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
 `],
-  ["api/orpc/server/src/index.ts.hbs", `import { ORPCError, os } from "@orpc/server";
+  ["api/orpc/server/src/index.ts.hbs", `import { {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}ORPCError, {{/if}}os } from "@orpc/server";
 import type { Context } from "./context";
 
 export const o = os.$context<Context>();
@@ -1084,7 +1287,9 @@ import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
-  const rpcUrl = \`\${config.public.serverUrl}/rpc\`;
+  const serverUrl =
+    (import.meta.server && config.serverUrl) || config.public.serverUrl;
+  const rpcUrl = \`\${serverUrl}/rpc\`;
 
   const rpcLink = new RPCLink({
     url: rpcUrl,
@@ -1188,18 +1393,29 @@ import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 {{/if}}
 
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error, query) => {
-			toast.error(\`Error: \${error.message}\`, {
-				action: {
-					label: "retry",
-					onClick: query.invalidate,
-				},
-			});
-		},
-	}),
-});
+export function createQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error, query) => {
+				toast.error(\`Error: \${error.message}\`, {
+					action: {
+						label: "retry",
+						onClick: () => {
+							query.invalidate();
+						},
+					},
+				});
+			},
+		}),
+{{#if (includes frontend "tanstack-start")}}
+		defaultOptions: { queries: { staleTime: 60 * 1000 } },
+{{/if}}
+	});
+}
+
+{{#unless (includes frontend "tanstack-start")}}
+export const queryClient = createQueryClient();
+{{/unless}}
 
 {{#if (and (includes frontend "tanstack-start") (eq backend "self"))}}
 const getORPCClient = createIsomorphicFn()
@@ -1335,7 +1551,9 @@ export const client: AppRouterClient = createORPCClient(link);
 
 export const orpc = createTanstackQueryUtils(client);
 `],
-  ["api/orpc/web/svelte/src/lib/orpc.ts.hbs", `import { PUBLIC_SERVER_URL } from "$env/static/public";
+  ["api/orpc/web/svelte/src/lib/orpc.ts.hbs", `{{#unless (eq backend "self")}}
+import { PUBLIC_SERVER_URL } from "$env/static/public";
+{{/unless}}
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
@@ -1351,7 +1569,17 @@ export const queryClient = new QueryClient({
 });
 
 export const link = new RPCLink({
+	{{#if (eq backend "self")}}
+	url: () => {
+		if (typeof window === "undefined") {
+			throw new Error("This link is not allowed on the server side.");
+		}
+
+		return \`\${window.location.origin}/rpc\`;
+	},
+	{{else}}
 	url: \`\${PUBLIC_SERVER_URL}/rpc\`,
+	{{/if}}
 	{{#if (eq auth "better-auth")}}
 	fetch(url, options) {
 		return fetch(url, {
@@ -1362,7 +1590,11 @@ export const link = new RPCLink({
 	{{/if}}
 });
 
+{{#if (eq backend "self")}}
+export const client: AppRouterClient = globalThis.$client ?? createORPCClient(link);
+{{else}}
 export const client: AppRouterClient = createORPCClient(link);
+{{/if}}
 
 export const orpc = createTanstackQueryUtils(client);
 `],
@@ -1545,12 +1777,16 @@ async function authenticateClerkRequest(request: Request): Promise<ClerkContextA
 {{#if (and (eq backend 'self') (includes frontend "next"))}}
 import type { NextRequest } from "next/server";
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
+{{/if}}
 
-export async function createContext(req: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
 	});
 	return {
@@ -1573,12 +1809,16 @@ export async function createContext(req: NextRequest){{#if (eq auth "clerk")}}: 
 
 {{else if (and (eq backend 'self') (includes frontend "tanstack-start"))}}
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
+{{/if}}
 
-export async function createContext({ req }: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
 	});
 	return {
@@ -1602,16 +1842,20 @@ export async function createContext({ req }: { req: Request }){{#if (eq auth "cl
 {{else if (eq backend 'hono')}}
 import type { Context as HonoContext } from "hono";
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 {{/if}}
 
 export type CreateContextOptions = {
 	context: HonoContext;
 };
 
-export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: context.req.raw.headers,
 	});
 	return {
@@ -1642,7 +1886,7 @@ export type CreateContextOptions = {
 	context: ElysiaContext;
 };
 
-export async function createContext({ context }: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
@@ -1674,7 +1918,7 @@ import { auth } from "@{{projectName}}/auth";
 import { getAuth } from "@clerk/express";
 {{/if}}
 
-export async function createContext(opts: CreateExpressContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateExpressContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
@@ -1722,6 +1966,7 @@ export async function createContext({ req }: CreateFastifyContextOptions){{#if (
 		session: null,
 	};
 {{else}}
+	void req;
 	return {
 		auth: null,
 		session: null,
@@ -1740,7 +1985,7 @@ export async function createContext() {
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
 `],
-  ["api/trpc/server/src/index.ts.hbs", `import { initTRPC, TRPCError } from "@trpc/server";
+  ["api/trpc/server/src/index.ts.hbs", `import { initTRPC{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}, TRPCError{{/if}} } from "@trpc/server";
 import type { Context } from "./context";
 
 export const t = initTRPC.context<Context>().create();
@@ -1870,7 +2115,9 @@ export const queryClient = new QueryClient({
 			toast.error(error.message, {
 				action: {
 					label: "retry",
-					onClick: query.invalidate,
+					onClick: () => {
+						query.invalidate();
+					},
 				},
 			});
 		},
@@ -1940,7 +2187,9 @@ export const queryClient = new QueryClient({
 			toast.error(error.message, {
 				action: {
 					label: "retry",
-					onClick: query.invalidate,
+					onClick: () => {
+						query.invalidate();
+					},
 				},
 			});
 		},
@@ -2008,11 +2257,14 @@ export const authComponent = createClient<DataModel>(components.betterAuth);
 
 function createAuth(ctx: GenericCtx<DataModel>) {
   return betterAuth({
+    {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router"))}}
+    baseURL: process.env.CONVEX_SITE_URL,
+    {{/if}}
     {{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
     baseURL: siteUrl,
     {{/if}}
     {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-    trustedOrigins: [siteUrl, nativeAppUrl, ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**", "exp://192.168.*.*:*/**"] : [])],
+    trustedOrigins: [siteUrl, nativeAppUrl, "exp://"],
     {{else if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
     trustedOrigins: [siteUrl],
     {{else if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
@@ -2049,13 +2301,55 @@ export const getCurrentUser = query({
 `],
   ["auth/better-auth/convex/backend/convex/http.ts.hbs", `import { httpRouter } from "convex/server";
 import { authComponent, createAuth } from "./auth";
+{{#if (and (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+import { httpAction } from "./_generated/server";
+{{/if}}
+{{#if (eq payments "polar")}}
+import { polar } from "./polar";
+{{/if}}
 
 const http = httpRouter();
 
+{{#if (and (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = process.env.NATIVE_APP_URL || "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+http.route({
+  path: "/polar/success",
+  method: "GET",
+  handler: httpAction(async (_ctx, request) => {
+    const requestUrl = new URL(request.url);
+    const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+    let redirectUrl: URL;
+    try {
+      redirectUrl = new URL(returnUrl);
+    } catch {
+      return new Response("Invalid return URL", { status: 400 });
+    }
+
+    if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+      return new Response("Invalid return URL", { status: 400 });
+    }
+
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: redirectUrl.toString(),
+      },
+    });
+  }),
+});
+
+{{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 authComponent.registerRoutes(http, createAuth, { cors: true });
 {{else}}
 authComponent.registerRoutes(http, createAuth);
+{{/if}}
+{{#if (eq payments "polar")}}
+
+polar.registerRoutes(http);
 {{/if}}
 
 export default http;
@@ -3377,6 +3671,10 @@ export const { GET, POST } = handler;
 import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import UserMenu from "@/components/user-menu";
+{{#if (eq payments "polar")}}
+import { CheckoutLink, CustomerPortalLink } from "@convex-dev/polar/react";
+import { buttonVariants } from "@{{projectName}}/ui/components/button";
+{{/if}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
     Authenticated,
@@ -3386,18 +3684,58 @@ import {
 } from "convex/react";
 import { useState } from "react";
 
+function DashboardContent() {
+    const privateData = useQuery(api.privateData.get);
+    {{#if (eq payments "polar")}}
+    const products = useQuery(api.polar.listAllProducts);
+    const subscription = useQuery(api.polar.getCurrentSubscription);
+
+    const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring);
+    const hasActiveSubscription = Boolean(subscription);
+    {{/if}}
+
+    return (
+        <div>
+            <h1>Dashboard</h1>
+            <p>privateData: {privateData?.message}</p>
+            {{#if (eq payments "polar")}}
+            <p>Plan: {hasActiveSubscription ? "Active" : "Free"}</p>
+            {subscription === undefined ? (
+                <p>Loading subscription options...</p>
+            ) : hasActiveSubscription ? (
+                <CustomerPortalLink
+                    polarApi={api.polar}
+                    className={buttonVariants({ variant: "outline" })}
+                >
+                    Manage Subscription
+                </CustomerPortalLink>
+            ) : products === undefined ? (
+                <p>Loading subscription options...</p>
+            ) : product ? (
+                <CheckoutLink
+                    polarApi={api.polar}
+                    productIds={[product.id]}
+                    embed={false}
+                    className={buttonVariants({ variant: "default" })}
+                >
+                    Upgrade
+                </CheckoutLink>
+            ) : (
+                <p>No recurring plans available.</p>
+            )}
+            {{/if}}
+            <UserMenu />
+        </div>
+    );
+}
+
 export default function DashboardPage() {
     const [showSignIn, setShowSignIn] = useState(false);
-    const privateData = useQuery(api.privateData.get);
 
     return (
         <>
             <Authenticated>
-                <div>
-                    <h1>Dashboard</h1>
-                    <p>privateData: {privateData?.message}</p>
-                    <UserMenu />
-                </div>
+                <DashboardContent />
             </Authenticated>
             <Unauthenticated>
                 {showSignIn ? (
@@ -3770,6 +4108,439 @@ export const {
 	convexSiteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
 });
 `],
+  ["auth/better-auth/convex/web/react/react-router/src/components/sign-in-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+import { useForm } from "@tanstack/react-form";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
+import z from "zod";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
+
+export default function SignInForm({
+  onSwitchToSignUp,
+}: {
+  onSwitchToSignUp: () => void;
+}) {
+  const navigate = useNavigate();
+
+  const form = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    onSubmit: async ({ value }) => {
+      await authClient.signIn.email(
+        {
+          email: value.email,
+          password: value.password,
+        },
+        {
+          onSuccess: () => {
+            navigate("/dashboard");
+            toast.success("Sign in successful");
+          },
+          onError: (error) => {
+            toast.error(error.error.message || error.error.statusText);
+          },
+        },
+      );
+    },
+    validators: {
+      onSubmit: z.object({
+        email: z.email("Invalid email address"),
+        password: z.string().min(8, "Password must be at least 8 characters"),
+      }),
+    },
+  });
+
+  return (
+    <div className="mx-auto mt-10 w-full max-w-md p-6">
+      <h1 className="mb-6 text-center text-3xl font-bold">Welcome Back</h1>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          form.handleSubmit();
+        }}
+        className="space-y-4"
+      >
+        <div>
+          <form.Field name="email">
+            {(field) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Email</Label>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  type="email"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
+                    {error?.message}
+                  </p>
+                ))}
+              </div>
+            )}
+          </form.Field>
+        </div>
+
+        <div>
+          <form.Field name="password">
+            {(field) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Password</Label>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  type="password"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
+                    {error?.message}
+                  </p>
+                ))}
+              </div>
+            )}
+          </form.Field>
+        </div>
+
+        <form.Subscribe
+          selector={(state) => ({
+            canSubmit: state.canSubmit,
+            isSubmitting: state.isSubmitting,
+          })}
+        >
+          {({ canSubmit, isSubmitting }) => (
+            <Button type="submit" className="w-full" disabled={!canSubmit || isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Sign In"}
+            </Button>
+          )}
+        </form.Subscribe>
+      </form>
+
+      <div className="mt-4 text-center">
+        <Button
+          variant="link"
+          onClick={onSwitchToSignUp}
+          className="text-indigo-600 hover:text-indigo-800"
+        >
+          Need an account? Sign Up
+        </Button>
+      </div>
+    </div>
+  );
+}
+`],
+  ["auth/better-auth/convex/web/react/react-router/src/components/sign-up-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+import { useForm } from "@tanstack/react-form";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
+import z from "zod";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
+
+export default function SignUpForm({
+  onSwitchToSignIn,
+}: {
+  onSwitchToSignIn: () => void;
+}) {
+  const navigate = useNavigate();
+
+  const form = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+      name: "",
+    },
+    onSubmit: async ({ value }) => {
+      await authClient.signUp.email(
+        {
+          email: value.email,
+          password: value.password,
+          name: value.name,
+        },
+        {
+          onSuccess: () => {
+            navigate("/dashboard");
+            toast.success("Sign up successful");
+          },
+          onError: (error) => {
+            toast.error(error.error.message || error.error.statusText);
+          },
+        },
+      );
+    },
+    validators: {
+      onSubmit: z.object({
+        name: z.string().min(2, "Name must be at least 2 characters"),
+        email: z.email("Invalid email address"),
+        password: z.string().min(8, "Password must be at least 8 characters"),
+      }),
+    },
+  });
+
+  return (
+    <div className="mx-auto mt-10 w-full max-w-md p-6">
+      <h1 className="mb-6 text-center text-3xl font-bold">Create Account</h1>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          form.handleSubmit();
+        }}
+        className="space-y-4"
+      >
+        <div>
+          <form.Field name="name">
+            {(field) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Name</Label>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
+                    {error?.message}
+                  </p>
+                ))}
+              </div>
+            )}
+          </form.Field>
+        </div>
+
+        <div>
+          <form.Field name="email">
+            {(field) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Email</Label>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  type="email"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
+                    {error?.message}
+                  </p>
+                ))}
+              </div>
+            )}
+          </form.Field>
+        </div>
+
+        <div>
+          <form.Field name="password">
+            {(field) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Password</Label>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  type="password"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+                {field.state.meta.errors.map((error, index) => (
+                  <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
+                    {error?.message}
+                  </p>
+                ))}
+              </div>
+            )}
+          </form.Field>
+        </div>
+
+        <form.Subscribe
+          selector={(state) => ({
+            canSubmit: state.canSubmit,
+            isSubmitting: state.isSubmitting,
+          })}
+        >
+          {({ canSubmit, isSubmitting }) => (
+            <Button type="submit" className="w-full" disabled={!canSubmit || isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Sign Up"}
+            </Button>
+          )}
+        </form.Subscribe>
+      </form>
+
+      <div className="mt-4 text-center">
+        <Button
+          variant="link"
+          onClick={onSwitchToSignIn}
+          className="text-indigo-600 hover:text-indigo-800"
+        >
+          Already have an account? Sign In
+        </Button>
+      </div>
+    </div>
+  );
+}
+`],
+  ["auth/better-auth/convex/web/react/react-router/src/components/user-menu.tsx.hbs", `import { useNavigate } from "react-router";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@{{projectName}}/ui/components/dropdown-menu";
+import { authClient } from "@/lib/auth-client";
+import { useQuery } from "convex/react";
+import { api } from "@{{projectName}}/backend/convex/_generated/api";
+
+import { Button } from "@{{projectName}}/ui/components/button";
+
+export default function UserMenu() {
+  const navigate = useNavigate();
+  const user = useQuery(api.auth.getCurrentUser);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="outline" />}>
+        {user?.name}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="bg-card">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>{user?.email}</DropdownMenuItem>
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => {
+              authClient.signOut({
+                fetchOptions: {
+                  onSuccess: () => {
+                    navigate("/dashboard");
+                  },
+                },
+              });
+            }}
+          >
+            Sign Out
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+`],
+  ["auth/better-auth/convex/web/react/react-router/src/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/react";
+import {
+  convexClient,
+  crossDomainClient,
+} from "@convex-dev/better-auth/client/plugins";
+import { env } from "@{{projectName}}/env/web";
+
+export const authClient = createAuthClient({
+  baseURL: env.VITE_CONVEX_SITE_URL,
+  plugins: [convexClient(), crossDomainClient()],
+});
+`],
+  ["auth/better-auth/convex/web/react/react-router/src/routes/dashboard.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
+import SignUpForm from "@/components/sign-up-form";
+import UserMenu from "@/components/user-menu";
+{{#if (eq payments "polar")}}
+import { CheckoutLink, CustomerPortalLink } from "@convex-dev/polar/react";
+import { buttonVariants } from "@{{projectName}}/ui/components/button";
+{{/if}}
+import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import {
+  Authenticated,
+  AuthLoading,
+  Unauthenticated,
+  useQuery,
+} from "convex/react";
+import { useState } from "react";
+
+function PrivateDashboardContent() {
+  const privateData = useQuery(api.privateData.get);
+  {{#if (eq payments "polar")}}
+  const products = useQuery(api.polar.listAllProducts);
+  const subscription = useQuery(api.polar.getCurrentSubscription);
+
+  const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring);
+  const hasActiveSubscription = Boolean(subscription);
+  {{/if}}
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>privateData: {privateData?.message}</p>
+      {{#if (eq payments "polar")}}
+      <p>Plan: {hasActiveSubscription ? "Active" : "Free"}</p>
+      {subscription === undefined ? (
+        <p>Loading subscription options...</p>
+      ) : hasActiveSubscription ? (
+        <CustomerPortalLink
+          polarApi={api.polar}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          Manage Subscription
+        </CustomerPortalLink>
+      ) : products === undefined ? (
+        <p>Loading subscription options...</p>
+      ) : product ? (
+        <CheckoutLink
+          polarApi={api.polar}
+          productIds={[product.id]}
+          embed={false}
+          className={buttonVariants({ variant: "default" })}
+        >
+          Upgrade
+        </CheckoutLink>
+      ) : (
+        <p>No recurring plans available.</p>
+      )}
+      {{/if}}
+      <UserMenu />
+    </div>
+  );
+}
+
+export default function Dashboard() {
+  const [showSignIn, setShowSignIn] = useState(false);
+
+  return (
+    <>
+      <Authenticated>
+        <PrivateDashboardContent />
+      </Authenticated>
+      <Unauthenticated>
+        {showSignIn ? (
+          <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
+        ) : (
+          <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
+        )}
+      </Unauthenticated>
+      <AuthLoading>
+        <div>Loading...</div>
+      </AuthLoading>
+    </>
+  );
+}
+`],
   ["auth/better-auth/convex/web/react/tanstack-router/src/components/sign-in-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
@@ -3845,8 +4616,8 @@ export default function SignInForm({
                                     onBlur={field.handleBlur}
                                     onChange={(e) => field.handleChange(e.target.value)}
                                 />
-                                {field.state.meta.errors.map((error) => (
-                                    <p key={error?.message} className="text-red-500">
+                                {field.state.meta.errors.map((error, index) => (
+                                    <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                                         {error?.message}
                                     </p>
                                 ))}
@@ -3868,8 +4639,8 @@ export default function SignInForm({
                                     onBlur={field.handleBlur}
                                     onChange={(e) => field.handleChange(e.target.value)}
                                 />
-                                {field.state.meta.errors.map((error) => (
-                                    <p key={error?.message} className="text-red-500">
+                                {field.state.meta.errors.map((error, index) => (
+                                    <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                                         {error?.message}
                                     </p>
                                 ))}
@@ -3981,8 +4752,8 @@ export default function SignUpForm({
                                     onBlur={field.handleBlur}
                                     onChange={(e) => field.handleChange(e.target.value)}
                                 />
-                                {field.state.meta.errors.map((error) => (
-                                    <p key={error?.message} className="text-red-500">
+                                {field.state.meta.errors.map((error, index) => (
+                                    <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                                         {error?.message}
                                     </p>
                                 ))}
@@ -4004,8 +4775,8 @@ export default function SignUpForm({
                                     onBlur={field.handleBlur}
                                     onChange={(e) => field.handleChange(e.target.value)}
                                 />
-                                {field.state.meta.errors.map((error) => (
-                                    <p key={error?.message} className="text-red-500">
+                                {field.state.meta.errors.map((error, index) => (
+                                    <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                                         {error?.message}
                                     </p>
                                 ))}
@@ -4027,8 +4798,8 @@ export default function SignUpForm({
                                     onBlur={field.handleBlur}
                                     onChange={(e) => field.handleChange(e.target.value)}
                                 />
-                                {field.state.meta.errors.map((error) => (
-                                    <p key={error?.message} className="text-red-500">
+                                {field.state.meta.errors.map((error, index) => (
+                                    <p key={\`\${field.name}-error-\${index}\`} className="text-red-500">
                                         {error?.message}
                                     </p>
                                 ))}
@@ -4125,38 +4896,84 @@ import { env } from "@{{projectName}}/env/web";
 
 export const authClient = createAuthClient({
 	baseURL: env.VITE_CONVEX_SITE_URL,
-	plugins: [crossDomainClient(), convexClient()],
+	plugins: [convexClient(), crossDomainClient()],
 });
 `],
-  ["auth/better-auth/convex/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
-import SignUpForm from "@/components/sign-up-form";
-import UserMenu from "@/components/user-menu";
+  ["auth/better-auth/convex/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `import UserMenu from "@/components/user-menu";
+{{#if (eq payments "polar")}}
+import { CheckoutLink, CustomerPortalLink } from "@convex-dev/polar/react";
+import { buttonVariants } from "@{{projectName}}/ui/components/button";
+{{/if}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Authenticated,
-  AuthLoading,
-  Unauthenticated,
-  useQuery,
-} from "convex/react";
-import { useState } from "react";
+import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/dashboard")({
-  component: RouteComponent,
+export const Route = createFileRoute("/_auth/dashboard")({
+  component: DashboardContent,
 });
 
-function RouteComponent() {
-  const [showSignIn, setShowSignIn] = useState(false);
+function DashboardContent() {
   const privateData = useQuery(api.privateData.get);
+  {{#if (eq payments "polar")}}
+  const products = useQuery(api.polar.listAllProducts);
+  const subscription = useQuery(api.polar.getCurrentSubscription);
+
+  const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring);
+  const hasActiveSubscription = Boolean(subscription);
+  {{/if}}
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>privateData: {privateData?.message}</p>
+      {{#if (eq payments "polar")}}
+      <p>Plan: {hasActiveSubscription ? "Active" : "Free"}</p>
+      {subscription === undefined ? (
+        <p>Loading subscription options...</p>
+      ) : hasActiveSubscription ? (
+        <CustomerPortalLink
+          polarApi={api.polar}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          Manage Subscription
+        </CustomerPortalLink>
+      ) : products === undefined ? (
+        <p>Loading subscription options...</p>
+      ) : product ? (
+        <CheckoutLink
+          polarApi={api.polar}
+          productIds={[product.id]}
+          embed={false}
+          className={buttonVariants({ variant: "default" })}
+        >
+          Upgrade
+        </CheckoutLink>
+      ) : (
+        <p>No recurring plans available.</p>
+      )}
+      {{/if}}
+      <UserMenu />
+    </div>
+  );
+}
+`],
+  ["auth/better-auth/convex/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
+import SignUpForm from "@/components/sign-up-form";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+import { useState } from "react";
+
+export const Route = createFileRoute("/_auth")({
+  component: AuthLayout,
+});
+
+function AuthLayout() {
+  const [showSignIn, setShowSignIn] = useState(false);
 
   return (
     <>
       <Authenticated>
-        <div>
-          <h1>Dashboard</h1>
-          <p>privateData: {privateData?.message}</p>
-          <UserMenu />
-        </div>
+        <Outlet />
       </Authenticated>
       <Unauthenticated>
         {showSignIn ? (
@@ -4533,47 +5350,81 @@ export const {
 	convexSiteUrl: env.VITE_CONVEX_SITE_URL,
 });
 `],
-  ["auth/better-auth/convex/web/react/tanstack-start/src/routes/api/auth/$.ts.hbs", `import { createFileRoute } from "@tanstack/react-router";
-import { handler } from "@/lib/auth-server";
-
-export const Route = createFileRoute("/api/auth/$")({
-  server: {
-    handlers: {
-      GET: ({ request }) => handler(request),
-      POST: ({ request }) => handler(request),
-    },
-  },
-});
-`],
-  ["auth/better-auth/convex/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
-import SignUpForm from "@/components/sign-up-form";
-import UserMenu from "@/components/user-menu";
+  ["auth/better-auth/convex/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `import UserMenu from "@/components/user-menu";
+{{#if (eq payments "polar")}}
+import { CheckoutLink, CustomerPortalLink } from "@convex-dev/polar/react";
+import { buttonVariants } from "@{{projectName}}/ui/components/button";
+{{/if}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Authenticated,
-  AuthLoading,
-  Unauthenticated,
-  useQuery,
-} from "convex/react";
-import { useState } from "react";
+import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/dashboard")({
-  component: RouteComponent,
+export const Route = createFileRoute("/_auth/dashboard")({
+  component: DashboardContent,
 });
 
-function RouteComponent() {
-  const [showSignIn, setShowSignIn] = useState(false);
+function DashboardContent() {
   const privateData = useQuery(api.privateData.get);
+  {{#if (eq payments "polar")}}
+  const products = useQuery(api.polar.listAllProducts);
+  const subscription = useQuery(api.polar.getCurrentSubscription);
+
+  const product = products?.find((product: { isRecurring?: boolean }) => product.isRecurring);
+  const hasActiveSubscription = Boolean(subscription);
+  {{/if}}
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>privateData: {privateData?.message}</p>
+      {{#if (eq payments "polar")}}
+      <p>Plan: {hasActiveSubscription ? "Active" : "Free"}</p>
+      {subscription === undefined ? (
+        <p>Loading subscription options...</p>
+      ) : hasActiveSubscription ? (
+        <CustomerPortalLink
+          polarApi={api.polar}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          Manage Subscription
+        </CustomerPortalLink>
+      ) : products === undefined ? (
+        <p>Loading subscription options...</p>
+      ) : product ? (
+        <CheckoutLink
+          polarApi={api.polar}
+          productIds={[product.id]}
+          embed={false}
+          className={buttonVariants({ variant: "default" })}
+        >
+          Upgrade
+        </CheckoutLink>
+      ) : (
+        <p>No recurring plans available.</p>
+      )}
+      {{/if}}
+      <UserMenu />
+    </div>
+  );
+}
+`],
+  ["auth/better-auth/convex/web/react/tanstack-start/src/routes/_auth/route.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
+import SignUpForm from "@/components/sign-up-form";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+import { useState } from "react";
+
+export const Route = createFileRoute("/_auth")({
+  component: AuthLayout,
+});
+
+function AuthLayout() {
+  const [showSignIn, setShowSignIn] = useState(false);
 
   return (
     <>
       <Authenticated>
-        <div>
-          <h1>Dashboard</h1>
-          <p>privateData: {privateData?.message}</p>
-          <UserMenu />
-        </div>
+        <Outlet />
       </Authenticated>
       <Unauthenticated>
         {showSignIn ? (
@@ -4589,6 +5440,18 @@ function RouteComponent() {
   );
 }
 `],
+  ["auth/better-auth/convex/web/react/tanstack-start/src/routes/api/auth/$.ts.hbs", `import { createFileRoute } from "@tanstack/react-router";
+import { handler } from "@/lib/auth-server";
+
+export const Route = createFileRoute("/api/auth/$")({
+  server: {
+    handlers: {
+      GET: ({ request }) => handler(request),
+      POST: ({ request }) => handler(request),
+    },
+  },
+});
+`],
   ["auth/better-auth/fullstack/astro/src/env.d.ts.hbs", `/// <reference path="../.astro/types.d.ts" />
 
 declare namespace App {
@@ -4598,10 +5461,17 @@ declare namespace App {
   }
 }
 `],
-  ["auth/better-auth/fullstack/astro/src/middleware.ts.hbs", `import { auth } from "@{{projectName}}/auth";
+  ["auth/better-auth/fullstack/astro/src/middleware.ts.hbs", `{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
 import { defineMiddleware } from "astro:middleware";
 
 export const onRequest = defineMiddleware(async (context, next) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+  const auth = createAuth();
+{{/if}}
   const isAuthed = await auth.api.getSession({
     headers: context.request.headers,
   });
@@ -4617,45 +5487,128 @@ export const onRequest = defineMiddleware(async (context, next) => {
   return next();
 });
 `],
-  ["auth/better-auth/fullstack/astro/src/pages/api/auth/[...all].ts.hbs", `import { auth } from "@{{projectName}}/auth";
+  ["auth/better-auth/fullstack/astro/src/pages/api/auth/[...all].ts.hbs", `{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
 import type { APIRoute } from "astro";
 
 export const ALL: APIRoute = async (ctx) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+  const auth = createAuth();
+{{/if}}
   return auth.handler(ctx.request);
 };
 `],
-  ["auth/better-auth/fullstack/next/src/app/api/auth/[...all]/route.ts.hbs", `import { auth } from "@{{projectName}}/auth";
+  ["auth/better-auth/fullstack/next/src/app/api/auth/[...all]/route.ts.hbs", `{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
 import { toNextJsHandler } from "better-auth/next-js";
 
-export const { GET, POST } = toNextJsHandler(auth.handler);
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+export async function GET(request: Request) {
+	return toNextJsHandler(createAuth()).GET(request);
+}
+
+export async function POST(request: Request) {
+	return toNextJsHandler(createAuth()).POST(request);
+}
+{{else}}
+export const { GET, POST } = toNextJsHandler(auth);
+{{/if}}
 `],
-  ["auth/better-auth/fullstack/nuxt/server/api/auth/[...all].ts.hbs", `import { auth } from "@{{projectName}}/auth";
+  ["auth/better-auth/fullstack/nuxt/server/api/auth/[...all].ts.hbs", `{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
 
 export default defineEventHandler((event) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+  const auth = createAuth();
+{{/if}}
   return auth.handler(toWebRequest(event));
 });
 `],
-  ["auth/better-auth/fullstack/tanstack-start/src/routes/api/auth/$.ts.hbs", `import { auth } from '@{{projectName}}/auth'
+  ["auth/better-auth/fullstack/svelte/src/hooks.server.ts.hbs", `{{#if (eq api "orpc")}}
+import "./lib/orpc.server";
+{{/if}}
+import { building } from "$app/environment";
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+import { env as localEnv } from "@{{projectName}}/env/server";
+{{/if}}
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import { svelteKitHandler } from "better-auth/svelte-kit";
+import type { Handle } from "@sveltejs/kit";
+
+export const handle: Handle = async ({ event, resolve }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+	if (building) {
+		return resolve(event);
+	}
+
+	const authEnv = event.platform?.env ?? localEnv;
+	const authInstance = createAuth(authEnv);
+{{else}}
+	const authInstance = createAuth();
+{{/if}}
+{{else}}
+	const authInstance = auth;
+{{/if}}
+
+	return svelteKitHandler({
+		event,
+		resolve,
+		auth: authInstance,
+		building,
+	});
+};
+`],
+  ["auth/better-auth/fullstack/tanstack-start/src/routes/api/auth/$.ts.hbs", `{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from '@{{projectName}}/auth'
+{{else}}
+import { auth } from '@{{projectName}}/auth'
+{{/if}}
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/api/auth/$')({
   server: {
     handlers: {
       GET: ({ request }) => {
+        {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+        const auth = createAuth()
+        {{/if}}
         return auth.handler(request)
       },
       POST: ({ request }) => {
+        {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+        const auth = createAuth()
+        {{/if}}
         return auth.handler(request)
       },
     },
   },
 })
 `],
-  ["auth/better-auth/native/bare/app/(drawer)/index.tsx.hbs", `import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+  ["auth/better-auth/native/bare/app/(drawer)/index.tsx.hbs", `import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { View, ScrollView, StyleSheet{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
+{{#if (eq payments "polar")}}
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
+{{/if}}
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
-import { authClient } from "@/lib/auth-client";
+import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
 {{#if (eq api "orpc")}}
@@ -4683,70 +5636,158 @@ const isConnected = healthCheck?.data === "OK";
 const isLoading = healthCheck?.isLoading;
 {{/if}}
 const { data: session } = authClient.useSession();
+{{#if (eq payments "polar")}}
+
+const openPolarLink = async (url: string, returnUrl: string) => {
+	await WebBrowser.openAuthSessionAsync(url, returnUrl);
+};
+
+const getPolarReturnUrl = (returnUrl: string) => {
+	const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+	url.searchParams.set("returnUrl", returnUrl);
+	return url.toString();
+};
+
+const handlePolarCheckout = async () => {
+	const returnUrl = Linking.createURL("/");
+	const polarReturnUrl = getPolarReturnUrl(returnUrl);
+	const { data, error } = await polarNativeClient.checkout({
+		slug: "pro",
+		redirect: false,
+		successUrl: polarReturnUrl,
+		returnUrl: polarReturnUrl,
+	});
+
+	if (error || !data?.url) {
+		Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
+		return;
+	}
+
+	await openPolarLink(data.url, returnUrl);
+};
+
+const handlePolarPortal = async () => {
+	const returnUrl = Linking.createURL("/");
+	const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
+
+	if (error || !data?.url) {
+		Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");
+		return;
+	}
+
+	await openPolarLink(data.url, returnUrl);
+};
+{{/if}}
 
 return (
 <Container>
-  <ScrollView style={styles.scrollView}>
+  <ScrollView style={styles.scrollView} contentInsetAdjustmentBehavior="never">
     <View style={styles.content}>
-      <Text style={[styles.title, { color: theme.text }]}>
-        BETTER T STACK
-      </Text>
+      <Host style={styles.titleHost}>
+        <ExpoUIText
+          textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold", textAlign: "center" }}
+        >
+          BETTER T STACK
+        </ExpoUIText>
+      </Host>
 
       {session?.user ? (
       <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.userHeader}>
-          <Text style={[styles.userText, { color: theme.text }]}>
-            Welcome, <Text style={styles.userName}>{session.user.name}</Text>
-          </Text>
-        </View>
-        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
-          {session.user.email}
-        </Text>
-        <TouchableOpacity style={[styles.signOutButton, { backgroundColor: theme.notification }]} onPress={()=> {
-          authClient.signOut();
-          {{#if (eq api "orpc")}}
-          queryClient.invalidateQueries();
-          {{/if}}
-          {{#if (eq api "trpc")}}
-          queryClient.invalidateQueries();
-          {{/if}}
-          }}
-          >
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+        <Host style={styles.userHeader} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 16 }}>
+              {\`Welcome, \${session.user.name}\`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 14 }}
+              style=\\{{ opacity: 0.7 }}
+            >
+              {session.user.email}
+            </ExpoUIText>
+          </Column>
+        </Host>
+        <Host matchContents=\\{{ vertical: true }}>
+          <Button
+            label="Sign Out"
+            variant="outlined"
+            onPress={() => {
+              authClient.signOut();
+              {{#if (eq api "orpc")}}
+              queryClient.invalidateQueries();
+              {{/if}}
+              {{#if (eq api "trpc")}}
+              queryClient.invalidateQueries();
+              {{/if}}
+            }}
+          />
+        </Host>
+        {{#if (eq payments "polar")}}
+        <Host style={styles.paymentActions} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            <Button label="Upgrade to Pro" onPress={handlePolarCheckout} />
+            <Button
+              label="Manage Subscription"
+              variant="outlined"
+              onPress={handlePolarPortal}
+            />
+          </Column>
+        </Host>
+        {{/if}}
       </View>
       ) : null}
 
       {{#unless (eq api "none")}}
       <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.cardTitle, { color: theme.text }]}>
-          System Status
-        </Text>
+        <Host style={styles.cardTitleHost} matchContents=\\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}
+          >
+            System Status
+          </ExpoUIText>
+        </Host>
         <View style={styles.statusRow}>
           <View style={[styles.statusIndicator, { backgroundColor: isConnected ? "#10b981" : "#ef4444" }]} />
           <View style={styles.statusContent}>
-            <Text style={[styles.statusTitle, { color: theme.text }]}>
-              {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}} Backend
-            </Text>
-            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-              {isLoading
-              ? "Checking connection..."
-              : isConnected
-              ? "Connected to API"
-              : "API Disconnected"}
-            </Text>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14, fontWeight: "bold" }}
+                >
+                  {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}} Backend
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 12 }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  {isLoading
+                  ? "Checking connection..."
+                  : isConnected
+                  ? "Connected to API"
+                  : "API Disconnected"}
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
         </View>
       </View>
 
       <View style={[styles.privateDataCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.cardTitle, { color: theme.text }]}>
-          Private Data
-        </Text>
+        <Host style={styles.cardTitleHost} matchContents=\\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}
+          >
+            Private Data
+          </ExpoUIText>
+        </Host>
         {privateData && (
-        <Text style={[styles.privateDataText, { color: theme.text, opacity: 0.7 }]}>
-          {privateData.data?.message}
-        </Text>
+        <Host matchContents=\\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 14 }}
+            style=\\{{ opacity: 0.7 }}
+          >
+            {privateData.data?.message ?? ""}
+          </ExpoUIText>
+        </Host>
         )}
       </View>
       {{/unless}}
@@ -4768,45 +5809,34 @@ scrollView: {
 flex: 1,
 },
 content: {
-padding: 16,
+paddingHorizontal: 20,
+paddingTop: 28,
+paddingBottom: 32,
 },
-title: {
-fontSize: 24,
-fontWeight: "bold",
-marginBottom: 16,
+titleHost: {
+alignSelf: "stretch",
+height: 34,
+marginBottom: 24,
 },
 userCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
 userHeader: {
 marginBottom: 8,
 },
-userText: {
-fontSize: 16,
-},
-userName: {
-fontWeight: "bold",
-},
-userEmail: {
-fontSize: 14,
-marginBottom: 12,
-},
-signOutButton: {
-padding: 12,
-},
-signOutText: {
-color: "#ffffff",
+paymentActions: {
+marginTop: 12,
 },
 statusCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
-cardTitle: {
-fontSize: 16,
-fontWeight: "bold",
+cardTitleHost: {
 marginBottom: 12,
 },
 statusRow: {
@@ -4821,22 +5851,14 @@ width: 8,
 statusContent: {
 flex: 1,
 },
-statusTitle: {
-fontSize: 14,
-fontWeight: "bold",
-},
-statusText: {
-fontSize: 12,
-},
 privateDataCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
-privateDataText: {
-fontSize: 14,
-},
-});`],
+});
+`],
   ["auth/better-auth/native/bare/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
@@ -5355,9 +6377,41 @@ export const authClient = createAuthClient({
 		}),
 	],
 });
+{{#if (eq payments "polar")}}
+
+type PolarLinkResponse = {
+	url: string;
+	redirect: boolean;
+};
+
+type PolarClientResponse<T> = Promise<{
+	data: T | null;
+	error: { message?: string } | null;
+}>;
+
+type PolarNativeClient = typeof authClient & {
+	checkout: (data: {
+		slug?: string;
+		products?: string[] | string;
+		redirect?: boolean;
+		successUrl?: string;
+		returnUrl?: string;
+	}) => PolarClientResponse<PolarLinkResponse>;
+	customer: {
+		portal: (data?: { redirect?: boolean }) => PolarClientResponse<PolarLinkResponse>;
+	};
+};
+
+export const polarNativeClient = authClient as PolarNativeClient;
+{{/if}}
 `],
-  ["auth/better-auth/native/unistyles/app/(drawer)/index.tsx.hbs", `import { authClient } from "@/lib/auth-client";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+  ["auth/better-auth/native/unistyles/app/(drawer)/index.tsx.hbs", `import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
+import { ScrollView, Text, TouchableOpacity, View{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
+{{#if (eq payments "polar")}}
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
+{{/if}}
 import { StyleSheet } from "react-native-unistyles";
 
 import { Container } from "@/components/container";
@@ -5382,6 +6436,48 @@ export default function Home() {
     const privateData = useQuery(trpc.privateData.queryOptions());
     {{/if}}
   const { data: session } = authClient.useSession();
+  {{#if (eq payments "polar")}}
+
+  const openPolarLink = async (url: string, returnUrl: string) => {
+    await WebBrowser.openAuthSessionAsync(url, returnUrl);
+  };
+
+  const getPolarReturnUrl = (returnUrl: string) => {
+    const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+    url.searchParams.set("returnUrl", returnUrl);
+    return url.toString();
+  };
+
+  const handlePolarCheckout = async () => {
+    const returnUrl = Linking.createURL("/");
+    const polarReturnUrl = getPolarReturnUrl(returnUrl);
+    const { data, error } = await polarNativeClient.checkout({
+      slug: "pro",
+      redirect: false,
+      successUrl: polarReturnUrl,
+      returnUrl: polarReturnUrl,
+    });
+
+    if (error || !data?.url) {
+      Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
+      return;
+    }
+
+    await openPolarLink(data.url, returnUrl);
+  };
+
+  const handlePolarPortal = async () => {
+    const returnUrl = Linking.createURL("/");
+    const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
+
+    if (error || !data?.url) {
+      Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");
+      return;
+    }
+
+    await openPolarLink(data.url, returnUrl);
+  };
+  {{/if}}
 
   return (
     <Container>
@@ -5412,6 +6508,22 @@ export default function Home() {
               >
                 <Text style={styles.signOutButtonText}>Sign Out</Text>
               </TouchableOpacity>
+              {{#if (eq payments "polar")}}
+              <View style={styles.paymentActions}>
+                <TouchableOpacity
+                  style={styles.polarPrimaryButton}
+                  onPress={handlePolarCheckout}
+                >
+                  <Text style={styles.polarPrimaryButtonText}>Upgrade to Pro</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.polarSecondaryButton}
+                  onPress={handlePolarPortal}
+                >
+                  <Text style={styles.polarSecondaryButtonText}>Manage Subscription</Text>
+                </TouchableOpacity>
+              </View>
+              {{/if}}
             </View>
           ) : null}
           {{#unless (eq api "none")}}
@@ -5502,6 +6614,32 @@ const styles = StyleSheet.create((theme) => ({
     alignSelf: "flex-start",
   },
   signOutButtonText: {
+    fontWeight: "500",
+  },
+  paymentActions: {
+    marginTop: 12,
+    gap: 8,
+    alignItems: "flex-start",
+  },
+  polarPrimaryButton: {
+    backgroundColor: theme?.colors?.primary,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+  },
+  polarPrimaryButtonText: {
+    color: theme?.colors?.primaryForeground,
+    fontWeight: "500",
+  },
+  polarSecondaryButton: {
+    borderWidth: 1,
+    borderColor: theme?.colors?.border,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+  },
+  polarSecondaryButtonText: {
+    color: theme?.colors?.typography,
     fontWeight: "500",
   },
   apiStatusCard: {
@@ -6008,9 +7146,14 @@ const styles = StyleSheet.create((theme) => ({
   },
 }));
 `],
-  ["auth/better-auth/native/uniwind/app/(drawer)/index.tsx.hbs", `import { Text, View, Pressable } from "react-native";
+  ["auth/better-auth/native/uniwind/app/(drawer)/index.tsx.hbs", `import { Text, View, Pressable{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
+{{#if (eq payments "polar")}}
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
+{{/if}}
 import { Container } from "@/components/container";
-import { authClient } from "@/lib/auth-client";
+import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
 import { Ionicons } from "@expo/vector-icons";
 import { Card, Chip, useThemeColor } from "heroui-native";
 import { SignIn } from "@/components/sign-in";
@@ -6038,6 +7181,48 @@ const isConnected = healthCheck?.data === "OK";
 const isLoading = healthCheck?.isLoading;
 {{/if}}
 const { data: session } = authClient.useSession();
+{{#if (eq payments "polar")}}
+
+const openPolarLink = async (url: string, returnUrl: string) => {
+  await WebBrowser.openAuthSessionAsync(url, returnUrl);
+};
+
+const getPolarReturnUrl = (returnUrl: string) => {
+  const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+  url.searchParams.set("returnUrl", returnUrl);
+  return url.toString();
+};
+
+const handlePolarCheckout = async () => {
+  const returnUrl = Linking.createURL("/");
+  const polarReturnUrl = getPolarReturnUrl(returnUrl);
+  const { data, error } = await polarNativeClient.checkout({
+    slug: "pro",
+    redirect: false,
+    successUrl: polarReturnUrl,
+    returnUrl: polarReturnUrl,
+  });
+
+  if (error || !data?.url) {
+    Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
+    return;
+  }
+
+  await openPolarLink(data.url, returnUrl);
+};
+
+const handlePolarPortal = async () => {
+  const returnUrl = Linking.createURL("/");
+  const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
+
+  if (error || !data?.url) {
+    Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");
+    return;
+  }
+
+  await openPolarLink(data.url, returnUrl);
+};
+{{/if}}
 
 const mutedColor = useThemeColor("muted");
 const successColor = useThemeColor("success");
@@ -6072,6 +7257,22 @@ return (
       >
       <Text className="text-foreground font-medium">Sign Out</Text>
     </Pressable>
+    {{#if (eq payments "polar")}}
+    <View className="mt-4 gap-3">
+      <Pressable
+        className="bg-primary py-3 px-4 rounded-lg self-start active:opacity-70"
+        onPress={handlePolarCheckout}
+      >
+        <Text className="text-foreground font-medium">Upgrade to Pro</Text>
+      </Pressable>
+      <Pressable
+        className="border border-border py-3 px-4 rounded-lg self-start active:opacity-70"
+        onPress={handlePolarPortal}
+      >
+        <Text className="text-foreground font-medium">Manage Subscription</Text>
+      </Pressable>
+    </View>
+    {{/if}}
   </Card>
   ) : null}
 
@@ -6130,7 +7331,8 @@ return (
   )}
 </Container>
 );
-}`],
+}
+`],
   ["auth/better-auth/native/uniwind/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
@@ -6559,203 +7761,165 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   ["auth/better-auth/server/base/src/index.ts.hbs", `{{#if (eq orm "prisma")}}
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { createPolarClient } from "./lib/payments";
+{{else}}
 import { polarClient } from "./lib/payments";
 {{/if}}
-{{#if (eq payments "dodo")}}
-import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
-import { dodoPaymentsClient } from "./lib/payments";
 {{/if}}
-import prisma from "@{{projectName}}/db";
+import { createPrismaClient } from "@{{projectName}}/db";
 
-export const auth = betterAuth({
-	database: prismaAdapter(prisma, {
+export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env{{/if}});
+
+	return betterAuth({
+		database: prismaAdapter(prisma, {
 {{#if (eq database "postgres")}}provider: "postgresql",{{/if}}
 {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
 {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
 {{#if (eq database "mongodb")}}provider: "mongodb",{{/if}}
-	}),
+		}),
 
-	trustedOrigins: [
-		env.CORS_ORIGIN,
+		trustedOrigins: [
+			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"{{projectName}}://",
-		...(env.NODE_ENV === "development"
-			? [
-				"exp://",
-				"exp://**",
-				"exp://192.168.*.*:*/**",
-				"http://localhost:8081",
-			]
-			: []),
+			"{{projectName}}://",
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
-	],
-	emailAndPassword: {
-		enabled: true,
-	},
-	secret: env.BETTER_AUTH_SECRET,
-	baseURL: env.BETTER_AUTH_URL,
-{{#if (ne backend "self")}}
-	advanced: {
-		defaultCookieAttributes: {
-			sameSite: "none",
-			secure: true,
-			httpOnly: true,
+		],
+		emailAndPassword: {
+			enabled: true,
 		},
-	},
+		secret: env.BETTER_AUTH_SECRET,
+		baseURL: env.BETTER_AUTH_URL,
+{{#if (ne backend "self")}}
+		advanced: {
+			defaultCookieAttributes: {
+				sameSite: "none",
+				secure: true,
+				httpOnly: true,
+			},
+		},
 {{/if}}
-	plugins: [
+		plugins: [
 {{#if (eq payments "polar")}}
-		polar({
-			client: polarClient,
-			createCustomerOnSignUp: true,
-			enableCustomerPortal: true,
-			use: [
-				checkout({
-					products: [
-						{
-							productId: "your-product-id",
-							slug: "pro",
-						},
-					],
-					successUrl: env.POLAR_SUCCESS_URL,
-					authenticatedUsersOnly: true,
-				}),
-				portal(),
-			],
-		}),
+			polar({
+				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
+				createCustomerOnSignUp: true,
+				enableCustomerPortal: true,
+				use: [
+					checkout({
+						products: [
+							{
+								productId: "your-product-id",
+								slug: "pro",
+							},
+						],
+						successUrl: env.POLAR_SUCCESS_URL,
+						authenticatedUsersOnly: true,
+					}),
+					portal(),
+				],
+			}),
 {{/if}}
-{{#if (eq payments "dodo")}}
-		dodopayments({
-			client: dodoPaymentsClient,
-			createCustomerOnSignUp: true,
-			use: [
-				checkout({
-					products: [
-						{
-							productId: "your-product-id",
-							slug: "pro",
-						},
-					],
-					successUrl: "/payment/success",
-					authenticatedUsersOnly: true,
-				}),
-				portal(),
-				webhooks({
-					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
-					onPayload: async (payload) => {
-						console.log("Received webhook:", payload.event_type);
-					},
-				}),
-			],
-		}),
+		],
+	});
+}
+
+{{#if (and (ne runtime "workers") (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+export const auth = createAuth();
 {{/if}}
-	],
-});
 {{/if}}
 
 {{#if (eq orm "drizzle")}}
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { createPolarClient } from "./lib/payments";
+{{else}}
 import { polarClient } from "./lib/payments";
 {{/if}}
-{{#if (eq payments "dodo")}}
-import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
-import { dodoPaymentsClient } from "./lib/payments";
 {{/if}}
-import { db } from "@{{projectName}}/db";
+import { createDb } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
 
-export const auth = betterAuth({
-	database: drizzleAdapter(db, {
+export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env{{/if}});
+
+	return betterAuth({
+		database: drizzleAdapter(db, {
 {{#if (eq database "postgres")}}provider: "pg",{{/if}}
 {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
 {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
-		schema: schema,
-	}),
-	trustedOrigins: [
-		env.CORS_ORIGIN,
+			schema: schema,
+		}),
+		trustedOrigins: [
+			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"{{projectName}}://",
-		...(env.NODE_ENV === "development"
-			? [
-				"exp://",
-				"exp://**",
-				"exp://192.168.*.*:*/**",
-				"http://localhost:8081",
-			]
-			: []),
+			"{{projectName}}://",
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
-	],
-	emailAndPassword: {
-		enabled: true,
-	},
-	secret: env.BETTER_AUTH_SECRET,
-	baseURL: env.BETTER_AUTH_URL,
-{{#if (ne backend "self")}}
-	advanced: {
-		defaultCookieAttributes: {
-			sameSite: "none",
-			secure: true,
-			httpOnly: true,
+		],
+		emailAndPassword: {
+			enabled: true,
 		},
-	},
+		secret: env.BETTER_AUTH_SECRET,
+		baseURL: env.BETTER_AUTH_URL,
+{{#if (ne backend "self")}}
+		advanced: {
+			defaultCookieAttributes: {
+				sameSite: "none",
+				secure: true,
+				httpOnly: true,
+			},
+		},
 {{/if}}
-	plugins: [
+		plugins: [
 {{#if (eq payments "polar")}}
-		polar({
-			client: polarClient,
-			createCustomerOnSignUp: true,
-			enableCustomerPortal: true,
-			use: [
-				checkout({
-					products: [
-						{
-							productId: "your-product-id",
-							slug: "pro",
-						},
-					],
-					successUrl: env.POLAR_SUCCESS_URL,
-					authenticatedUsersOnly: true,
-				}),
-				portal(),
-			],
-		}),
+			polar({
+				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
+				createCustomerOnSignUp: true,
+				enableCustomerPortal: true,
+				use: [
+					checkout({
+						products: [
+							{
+								productId: "your-product-id",
+								slug: "pro",
+							},
+						],
+						successUrl: env.POLAR_SUCCESS_URL,
+						authenticatedUsersOnly: true,
+					}),
+					portal(),
+				],
+			}),
 {{/if}}
-{{#if (eq payments "dodo")}}
-		dodopayments({
-			client: dodoPaymentsClient,
-			createCustomerOnSignUp: true,
-			use: [
-				checkout({
-					products: [
-						{
-							productId: "your-product-id",
-							slug: "pro",
-						},
-					],
-					successUrl: "/payment/success",
-					authenticatedUsersOnly: true,
-				}),
-				portal(),
-				webhooks({
-					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
-					onPayload: async (payload) => {
-						console.log("Received webhook:", payload.event_type);
-					},
-				}),
-			],
-		}),
+		],
+	});
+}
+
+{{#if (and (ne runtime "workers") (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+export const auth = createAuth();
 {{/if}}
-	],
-});
 {{/if}}
 
 {{#if (eq runtime "workers")}}
@@ -6766,294 +7930,223 @@ import { env } from "@{{projectName}}/env/server";
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
 {{/if}}
-{{#if (eq payments "dodo")}}
-import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
-import { dodoPaymentsClient } from "./lib/payments";
-{{/if}}
-import { db } from "@{{projectName}}/db";
+import { createDb } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
 
-export const auth = betterAuth({
-	database: drizzleAdapter(db, {
+export function createAuth() {
+	const db = createDb();
+
+	return betterAuth({
+		database: drizzleAdapter(db, {
 {{#if (eq database "postgres")}}provider: "pg",{{/if}}
 {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
 {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
-		schema: schema,
-	}),
-	trustedOrigins: [
-		env.CORS_ORIGIN,
+			schema: schema,
+		}),
+		trustedOrigins: [
+			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"{{projectName}}://",
-		...(env.NODE_ENV === "development"
-			? [
-				"exp://",
-				"exp://**",
-				"exp://192.168.*.*:*/**",
-				"http://localhost:8081",
-			]
-			: []),
+			"{{projectName}}://",
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
-	],
-	emailAndPassword: {
-		enabled: true,
-	},
-	// uncomment cookieCache setting when ready to deploy to Cloudflare using *.workers.dev domains
-	// session: {
-	//   cookieCache: {
-	//     enabled: true,
-	//     maxAge: 60,
-	//   },
-	// },
-	secret: env.BETTER_AUTH_SECRET,
-	baseURL: env.BETTER_AUTH_URL,
-	advanced: {
-		defaultCookieAttributes: {
-			sameSite: "none",
-			secure: true,
-			httpOnly: true,
+		],
+		emailAndPassword: {
+			enabled: true,
 		},
-		// uncomment crossSubDomainCookies setting when ready to deploy and replace <your-workers-subdomain> with your actual workers subdomain
-		// https://developers.cloudflare.com/workers/wrangler/configuration/#workersdev
-		// crossSubDomainCookies: {
-		//   enabled: true,
-		//   domain: "<your-workers-subdomain>",
+		// uncomment cookieCache setting when ready to deploy to Cloudflare using *.workers.dev domains
+		// session: {
+		//   cookieCache: {
+		//     enabled: true,
+		//     maxAge: 60,
+		//   },
 		// },
-	},
-{{#if (or (eq payments "polar") (eq payments "dodo"))}}
-	plugins: [
+		secret: env.BETTER_AUTH_SECRET,
+		baseURL: env.BETTER_AUTH_URL,
+		advanced: {
+			defaultCookieAttributes: {
+				sameSite: "none",
+				secure: true,
+				httpOnly: true,
+			},
+			// uncomment crossSubDomainCookies setting when ready to deploy and replace <your-workers-subdomain> with your actual workers subdomain
+			// https://developers.cloudflare.com/workers/wrangler/configuration/#workersdev
+			// crossSubDomainCookies: {
+			//   enabled: true,
+			//   domain: "<your-workers-subdomain>",
+			// },
+		},
 {{#if (eq payments "polar")}}
-		polar({
-			client: polarClient,
-			createCustomerOnSignUp: true,
-			enableCustomerPortal: true,
-			use: [
-				checkout({
-					products: [
-						{
-							productId: "your-product-id",
-							slug: "pro",
-						},
-					],
-					successUrl: env.POLAR_SUCCESS_URL,
-					authenticatedUsersOnly: true,
-				}),
-				portal(),
-			],
-		}),
+		plugins: [
+			polar({
+				client: polarClient,
+				createCustomerOnSignUp: true,
+				enableCustomerPortal: true,
+				use: [
+					checkout({
+						products: [
+							{
+								productId: "your-product-id",
+								slug: "pro",
+							},
+						],
+						successUrl: env.POLAR_SUCCESS_URL,
+						authenticatedUsersOnly: true,
+					}),
+					portal(),
+				],
+			}),
+		],
 {{/if}}
-{{#if (eq payments "dodo")}}
-		dodopayments({
-			client: dodoPaymentsClient,
-			createCustomerOnSignUp: true,
-			use: [
-				checkout({
-					products: [
-						{
-							productId: "your-product-id",
-							slug: "pro",
-						},
-					],
-					successUrl: "/payment/success",
-					authenticatedUsersOnly: true,
-				}),
-				portal(),
-				webhooks({
-					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
-					onPayload: async (payload) => {
-						console.log("Received webhook:", payload.event_type);
-					},
-				}),
-			],
-		}),
-{{/if}}
-	],
-{{/if}}
-});
+	});
+}
 {{/if}}
 {{/if}}
 
 {{#if (eq orm "mongoose")}}
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { createPolarClient } from "./lib/payments";
+{{else}}
 import { polarClient } from "./lib/payments";
+{{/if}}
 {{/if}}
 import { client } from "@{{projectName}}/db";
 
-export const auth = betterAuth({
-	database: mongodbAdapter(client),
-	trustedOrigins: [
-		env.CORS_ORIGIN,
+export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	return betterAuth({
+		database: mongodbAdapter(client),
+		trustedOrigins: [
+			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"{{projectName}}://",
-		...(env.NODE_ENV === "development"
-			? [
-				"exp://",
-				"exp://**",
-				"exp://192.168.*.*:*/**",
-				"http://localhost:8081",
-			]
-			: []),
+			"{{projectName}}://",
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
-	],
-	emailAndPassword: {
-		enabled: true,
-	},
-	secret: env.BETTER_AUTH_SECRET,
-	baseURL: env.BETTER_AUTH_URL,
-{{#if (ne backend "self")}}
-	advanced: {
-		defaultCookieAttributes: {
-			sameSite: "none",
-			secure: true,
-			httpOnly: true,
+		],
+		emailAndPassword: {
+			enabled: true,
 		},
-	},
+		secret: env.BETTER_AUTH_SECRET,
+		baseURL: env.BETTER_AUTH_URL,
+{{#if (ne backend "self")}}
+		advanced: {
+			defaultCookieAttributes: {
+				sameSite: "none",
+				secure: true,
+				httpOnly: true,
+			},
+		},
 {{/if}}
-{{#if (or (eq payments "polar") (eq payments "dodo"))}}
-	plugins: [
 {{#if (eq payments "polar")}}
-		polar({
-			client: polarClient,
-			createCustomerOnSignUp: true,
-			enableCustomerPortal: true,
-			use: [
-				checkout({
-					products: [
-						{
-							productId: "your-product-id",
-							slug: "pro",
-						},
-					],
-					successUrl: env.POLAR_SUCCESS_URL,
-					authenticatedUsersOnly: true,
-				}),
-				portal(),
-			],
-		}),
+		plugins: [
+			polar({
+				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
+				createCustomerOnSignUp: true,
+				enableCustomerPortal: true,
+				use: [
+					checkout({
+						products: [
+							{
+								productId: "your-product-id",
+								slug: "pro",
+							},
+						],
+						successUrl: env.POLAR_SUCCESS_URL,
+						authenticatedUsersOnly: true,
+					}),
+					portal(),
+				],
+			}),
+		],
 {{/if}}
-{{#if (eq payments "dodo")}}
-		dodopayments({
-			client: dodoPaymentsClient,
-			createCustomerOnSignUp: true,
-			use: [
-				checkout({
-					products: [
-						{
-							productId: "your-product-id",
-							slug: "pro",
-						},
-					],
-					successUrl: "/payment/success",
-					authenticatedUsersOnly: true,
-				}),
-				portal(),
-				webhooks({
-					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
-					onPayload: async (payload) => {
-						console.log("Received webhook:", payload.event_type);
-					},
-				}),
-			],
-		}),
+	});
+}
+
+{{#if (and (ne runtime "workers") (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+export const auth = createAuth();
 {{/if}}
-	],
-{{/if}}
-});
 {{/if}}
 
 {{#if (eq orm "none")}}
 import { betterAuth } from "better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import { createPolarClient } from "./lib/payments";
+{{else}}
 import { polarClient } from "./lib/payments";
 {{/if}}
+{{/if}}
 
 
-export const auth = betterAuth({
-	database: "", // Invalid configuration
-	trustedOrigins: [
-		env.CORS_ORIGIN,
+export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	return betterAuth({
+		database: "", // Invalid configuration
+		trustedOrigins: [
+			env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"{{projectName}}://",
-		...(env.NODE_ENV === "development"
-			? [
-				"exp://",
-				"exp://**",
-				"exp://192.168.*.*:*/**",
-				"http://localhost:8081",
-			]
-			: []),
+			"{{projectName}}://",
+			"exp://",
+			"http://localhost:8081",
 {{/if}}
-	],
-	emailAndPassword: {
-		enabled: true,
-	},
-	secret: env.BETTER_AUTH_SECRET,
-	baseURL: env.BETTER_AUTH_URL,
-{{#if (ne backend "self")}}
-	advanced: {
-		defaultCookieAttributes: {
-			sameSite: "none",
-			secure: true,
-			httpOnly: true,
+		],
+		emailAndPassword: {
+			enabled: true,
 		},
-	},
+		secret: env.BETTER_AUTH_SECRET,
+		baseURL: env.BETTER_AUTH_URL,
+{{#if (ne backend "self")}}
+		advanced: {
+			defaultCookieAttributes: {
+				sameSite: "none",
+				secure: true,
+				httpOnly: true,
+			},
+		},
 {{/if}}
-{{#if (or (eq payments "polar") (eq payments "dodo"))}}
-	plugins: [
 {{#if (eq payments "polar")}}
-		polar({
-			client: polarClient,
-			createCustomerOnSignUp: true,
-			enableCustomerPortal: true,
-			use: [
-				checkout({
-					products: [
-						{
-							productId: "your-product-id",
-							slug: "pro",
-						},
-					],
-					successUrl: env.POLAR_SUCCESS_URL,
-					authenticatedUsersOnly: true,
-				}),
-				portal(),
-			],
-		}),
+		plugins: [
+			polar({
+				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
+				createCustomerOnSignUp: true,
+				enableCustomerPortal: true,
+				use: [
+					checkout({
+						products: [
+							{
+								productId: "your-product-id",
+								slug: "pro",
+							},
+						],
+						successUrl: env.POLAR_SUCCESS_URL,
+						authenticatedUsersOnly: true,
+					}),
+					portal(),
+				],
+			}),
+		],
 {{/if}}
-{{#if (eq payments "dodo")}}
-		dodopayments({
-			client: dodoPaymentsClient,
-			createCustomerOnSignUp: true,
-			use: [
-				checkout({
-					products: [
-						{
-							productId: "your-product-id",
-							slug: "pro",
-						},
-					],
-					successUrl: "/payment/success",
-					authenticatedUsersOnly: true,
-				}),
-				portal(),
-				webhooks({
-					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
-					onPayload: async (payload) => {
-						console.log("Received webhook:", payload.event_type);
-					},
-				}),
-			],
-		}),
+	});
+}
+
+{{#if (and (ne runtime "workers") (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+export const auth = createAuth();
 {{/if}}
-	],
-{{/if}}
-});
 {{/if}}
 `],
   ["auth/better-auth/server/base/tsconfig.json.hbs", `{
@@ -7372,40 +8465,42 @@ export const accountRelations = relations(account, ({ one }) => ({
   ["auth/better-auth/server/db/mongoose/mongodb/src/models/auth.model.ts.hbs", `import mongoose from 'mongoose';
 
 const { Schema, model } = mongoose;
+const { ObjectId } = Schema.Types;
 
 const userSchema = new Schema(
     {
-        _id: { type: String },
+        _id: { type: ObjectId, auto: true },
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
-        emailVerified: { type: Boolean, required: true },
+        emailVerified: { type: Boolean, required: true, default: false },
         image: { type: String },
-        createdAt: { type: Date, required: true },
-        updatedAt: { type: Date, required: true },
+        createdAt: { type: Date, required: true, default: Date.now },
+        updatedAt: { type: Date, required: true, default: Date.now },
     },
     { collection: 'user' }
 );
 
 const sessionSchema = new Schema(
     {
-        _id: { type: String },
+        _id: { type: ObjectId, auto: true },
         expiresAt: { type: Date, required: true },
         token: { type: String, required: true, unique: true },
-        createdAt: { type: Date, required: true },
-        updatedAt: { type: Date, required: true },
+        createdAt: { type: Date, required: true, default: Date.now },
+        updatedAt: { type: Date, required: true, default: Date.now },
         ipAddress: { type: String },
         userAgent: { type: String },
-        userId: { type: String, ref: 'User', required: true },
+        userId: { type: ObjectId, ref: 'User', required: true },
     },
     { collection: 'session' }
 );
+sessionSchema.index({ userId: 1 });
 
 const accountSchema = new Schema(
     {
-        _id: { type: String },
+        _id: { type: ObjectId, auto: true },
         accountId: { type: String, required: true },
         providerId: { type: String, required: true },
-        userId: { type: String, ref: 'User', required: true },
+        userId: { type: ObjectId, ref: 'User', required: true },
         accessToken: { type: String },
         refreshToken: { type: String },
         idToken: { type: String },
@@ -7413,23 +8508,25 @@ const accountSchema = new Schema(
         refreshTokenExpiresAt: { type: Date },
         scope: { type: String },
         password: { type: String },
-        createdAt: { type: Date, required: true },
-        updatedAt: { type: Date, required: true },
+        createdAt: { type: Date, required: true, default: Date.now },
+        updatedAt: { type: Date, required: true, default: Date.now },
     },
     { collection: 'account' }
 );
+accountSchema.index({ userId: 1 });
 
 const verificationSchema = new Schema(
     {
-        _id: { type: String },
+        _id: { type: ObjectId, auto: true },
         identifier: { type: String, required: true },
         value: { type: String, required: true },
         expiresAt: { type: Date, required: true },
-        createdAt: { type: Date },
-        updatedAt: { type: Date },
+        createdAt: { type: Date, required: true, default: Date.now },
+        updatedAt: { type: Date, required: true, default: Date.now },
     },
     { collection: 'verification' }
 );
+verificationSchema.index({ identifier: 1 });
 
 const User = model('User', userSchema);
 const Session = model('Session', sessionSchema);
@@ -7892,10 +8989,7 @@ import { authClient } from "../lib/auth-client";
 `],
   ["auth/better-auth/web/astro/src/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/client";
 {{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth";
-{{/if}}
-{{#if (eq payments "dodo")}}
-import { dodopaymentsClient } from "@dodopayments/better-auth";
+import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 {{#if (ne backend "self")}}
 import { PUBLIC_SERVER_URL } from "astro:env/client";
@@ -7905,15 +8999,8 @@ export const authClient = createAuthClient({
 {{#if (ne backend "self")}}
   baseURL: PUBLIC_SERVER_URL,
 {{/if}}
-{{#if (or (eq payments "polar") (eq payments "dodo"))}}
-  plugins: [
 {{#if (eq payments "polar")}}
-    polarClient(),
-{{/if}}
-{{#if (eq payments "dodo")}}
-    dodopaymentsClient(),
-{{/if}}
-  ],
+  plugins: [polarClient()],
 {{/if}}
 });
 `],
@@ -7945,7 +9032,7 @@ import Layout from "../layouts/Layout.astro";
           </div>
           {{/if}}
 
-          {{#if (or (eq payments "polar") (eq payments "dodo"))}}
+          {{#if (eq payments "polar")}}
           <div class="rounded-lg bg-neutral-800/50 p-4">
             <p class="text-sm text-neutral-400 mb-2">Subscription</p>
             <div id="subscription-info" class="space-y-2">
@@ -8034,46 +9121,6 @@ import Layout from "../layouts/Layout.astro";
           \`;
           document.getElementById("upgrade-button")?.addEventListener("click", async () => {
             await authClient.checkout({ slug: "pro" });
-          });
-        }
-      } catch (e) {
-        console.error("Failed to load subscription info", e);
-      }
-      {{else if (eq payments "dodo")}}
-      try {
-        const customerState = await authClient.dodopayments.customer.subscriptions.list({
-          query: {
-            limit: 10,
-            page: 1,
-            active: true
-          }
-        });
-        const subscriptionInfo = document.getElementById("subscription-info")!;
-        if (customerState?.data?.items?.length > 0) {
-          subscriptionInfo.innerHTML = \`
-            <p class="text-white">Plan: <span class="text-green-400">Pro</span></p>
-            <button
-              id="manage-subscription"
-              class="mt-2 rounded px-3 py-1.5 text-sm bg-neutral-700 hover:bg-neutral-600 text-white transition-colors"
-            >
-              Manage Subscription
-            </button>
-          \`;
-          document.getElementById("manage-subscription")?.addEventListener("click", async () => {
-            await authClient.dodopayments.customer.portal();
-          });
-        } else {
-          subscriptionInfo.innerHTML = \`
-            <p class="text-white">Plan: <span class="text-neutral-400">Free</span></p>
-            <button
-              id="upgrade-button"
-              class="mt-2 rounded px-3 py-1.5 text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
-            >
-              Upgrade to Pro
-            </button>
-          \`;
-          document.getElementById("upgrade-button")?.addEventListener("click", async () => {
-            await authClient.dodopayments.checkoutSession({ slug: "pro" });
           });
         }
       } catch (e) {
@@ -8363,8 +9410,6 @@ const session = $authClient.useSession()
 
 {{#if (eq payments "polar")}}
 const customerState = ref<any>(null)
-{{else if (eq payments "dodo")}}
-const customerState = ref<{ data?: { items?: unknown[] } } | null>(null)
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -8383,24 +9428,7 @@ onMounted(async () => {
 })
 
 const hasProSubscription = computed(() => 
-  customerState.value?.activeSubscriptions?.length! > 0
-)
-{{else if (eq payments "dodo")}}
-onMounted(async () => {
-  if (session.value?.data) {
-    const data = await $authClient.dodopayments.customer.subscriptions.list({
-      query: {
-        limit: 10,
-        page: 1,
-        active: true
-      }
-    })
-    customerState.value = data
-  }
-})
-
-const hasProSubscription = computed(() => 
-  (customerState.value?.data?.items?.length ?? 0) > 0
+  (customerState.value?.activeSubscriptions?.length ?? 0) > 0
 )
 {{/if}}
 </script>
@@ -8462,32 +9490,6 @@ const hasProSubscription = computed(() =>
           </UButton>
         </div>
       </UCard>
-      {{else if (eq payments "dodo")}}
-      <UCard>
-        <template #header>
-          <div class="font-medium">Subscription</div>
-        </template>
-
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <UIcon :name="hasProSubscription ? 'i-lucide-crown' : 'i-lucide-user'" :class="hasProSubscription ? 'text-warning' : 'text-muted'" />
-            <span>Plan: \\{{ hasProSubscription ? "Pro" : "Free" }}</span>
-          </div>
-          <UButton 
-            v-if="hasProSubscription"
-            variant="outline"
-            @click="() => { $authClient.dodopayments.customer.portal() }"
-          >
-            Manage Subscription
-          </UButton>
-          <UButton 
-            v-else
-            @click="() => { $authClient.dodopayments.checkoutSession({ slug: 'pro' }) }"
-          >
-            Upgrade to Pro
-          </UButton>
-        </div>
-      </UCard>
       {{/if}}
     </div>
   </UContainer>
@@ -8523,26 +9525,20 @@ watchEffect(() => {
 `],
   ["auth/better-auth/web/nuxt/app/plugins/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/vue";
 {{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth";
-{{/if}}
-{{#if (eq payments "dodo")}}
-import { dodopaymentsClient } from "@dodopayments/better-auth";
+import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
 export default defineNuxtPlugin(() => {
+  {{#if (ne backend "self")}}
   const config = useRuntimeConfig();
+  {{/if}}
 
   const authClient = createAuthClient({
-    baseURL: config.public.serverUrl,
-    {{#if (or (eq payments "polar") (eq payments "dodo"))}}
-    plugins: [
-      {{#if (eq payments "polar")}}
-      polarClient(),
-      {{/if}}
-      {{#if (eq payments "dodo")}}
-      dodopaymentsClient(),
-      {{/if}}
-    ],
+    {{#if (ne backend "self")}}
+    baseURL: (import.meta.server && config.serverUrl) || config.public.serverUrl,
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    plugins: [polarClient()],
     {{/if}}
   });
 
@@ -8555,10 +9551,7 @@ export default defineNuxtPlugin(() => {
 `],
   ["auth/better-auth/web/react/base/src/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/react";
 {{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth";
-{{/if}}
-{{#if (eq payments "dodo")}}
-import { dodopaymentsClient } from "@dodopayments/better-auth";
+import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
@@ -8568,20 +9561,13 @@ export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
 	baseURL: env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}},
 {{/unless}}
-{{#if (or (eq payments "polar") (eq payments "dodo"))}}
-	plugins: [
 {{#if (eq payments "polar")}}
-		polarClient(),
-{{/if}}
-{{#if (eq payments "dodo")}}
-		dodopaymentsClient(),
-{{/if}}
-	]
+	plugins: [polarClient()]
 {{/if}}
 });
 `],
   ["auth/better-auth/web/react/next/src/app/dashboard/dashboard.tsx.hbs", `"use client";
-{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -8595,16 +9581,14 @@ import { trpc } from "@/utils/trpc";
 {{/if}}
 
 export default function Dashboard({
-{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+	{{#if (eq payments "polar")}}
 	customerState,
-{{/if}}
+	{{/if}}
 	session
 }: {
-{{#if (eq payments "polar")}}
+	{{#if (eq payments "polar")}}
 	customerState: ReturnType<typeof authClient.customer.state>;
-{{else if (eq payments "dodo")}}
-	customerState: { data?: { items?: unknown[] } };
-{{/if}}
+	{{/if}}
 	session: typeof authClient.$Infer.Session;
 }) {
 	{{#if (eq api "orpc")}}
@@ -8614,13 +9598,9 @@ export default function Dashboard({
 	const privateData = useQuery(trpc.privateData.queryOptions());
 	{{/if}}
 
-{{#if (eq payments "polar")}}
-	const hasProSubscription = customerState?.activeSubscriptions?.length! > 0;
-	console.log("Active subscriptions:", customerState?.activeSubscriptions);
-{{else if (eq payments "dodo")}}
-	const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0;
-	console.log("Active subscriptions:", customerState?.data?.items);
-{{/if}}
+	{{#if (eq payments "polar")}}
+	const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
+	{{/if}}
 
 	return (
 		<>
@@ -8630,24 +9610,18 @@ export default function Dashboard({
 			{{#if (eq api "trpc")}}
 			<p>API: {privateData.data?.message}</p>
 			{{/if}}
-{{#if (or (eq payments "polar") (eq payments "dodo"))}}
-		<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
-		{hasProSubscription ? (
-			<Button onClick={async () => await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}()}>
-				Manage Subscription
-			</Button>
-		) : (
-			<Button
-				onClick={async () =>
-					await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({
-						slug: "pro",
-					})
-				}
-			>
-				Upgrade to Pro
-			</Button>
-		)}
-{{/if}}
+			{{#if (eq payments "polar")}}
+			<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
+			{hasProSubscription ? (
+				<Button onClick={async () => await authClient.customer.portal()}>
+					Manage Subscription
+				</Button>
+			) : (
+				<Button onClick={async () => await authClient.checkout({ slug: "pro" })}>
+					Upgrade to Pro
+				</Button>
+			)}
+			{{/if}}
 		</>
 	);
 }
@@ -8656,13 +9630,19 @@ export default function Dashboard({
 import Dashboard from "./dashboard";
 import { headers } from "next/headers";
 {{#if (eq backend "self")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
+{{/if}}
+{{#if (or (ne backend "self") (eq payments "polar"))}}
 import { authClient } from "@/lib/auth-client";
+{{/if}}
 
 export default async function DashboardPage() {
 	{{#if (eq backend "self")}}
-	const session = await auth.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: await headers(),
 	});
 	{{else}}
@@ -8678,30 +9658,19 @@ export default async function DashboardPage() {
 		redirect("/login");
 	}
 
-{{#if (eq payments "polar")}}
+	{{#if (eq payments "polar")}}
 	const { data: customerState } = await authClient.customer.state({
 		fetchOptions: {
 			headers: await headers(),
 		},
 	});
-{{else if (eq payments "dodo")}}
-	const customerState = await authClient.dodopayments.customer.subscriptions.list({
-		query: {
-			limit: 10,
-			page: 1,
-			active: true,
-		},
-		fetchOptions: {
-			headers: await headers(),
-		},
-	});
-{{/if}}
+	{{/if}}
 
 	return (
 		<div>
 			<h1>Dashboard</h1>
 			<p>Welcome {session.user.name}</p>
-			<Dashboard session={session} {{#if (or (eq payments "polar") (eq payments "dodo"))}}customerState={customerState}{{/if}} />
+			<Dashboard session={session} {{#if (eq payments "polar")}}customerState={customerState}{{/if}} />
 		</div>
 	);
 }
@@ -9442,7 +10411,7 @@ export default function UserMenu() {
   );
 }
 `],
-  ["auth/better-auth/web/react/react-router/src/routes/dashboard.tsx.hbs", `{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+  ["auth/better-auth/web/react/react-router/src/routes/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -9452,7 +10421,7 @@ import { orpc } from "@/utils/orpc";
 {{#if (eq api "trpc")}}
 import { trpc } from "@/utils/trpc";
 {{/if}}
-{{#if ( or (eq api "orpc") (eq api "trpc"))}}
+{{#if (or (eq api "orpc") (eq api "trpc"))}}
 import { useQuery } from "@tanstack/react-query";
 {{/if}}
 import { useEffect, useState } from "react";
@@ -9461,9 +10430,9 @@ import { useNavigate } from "react-router";
 export default function Dashboard() {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
-{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+  {{#if (eq payments "polar")}}
   const [customerState, setCustomerState] = useState<any>(null);
-{{/if}}
+  {{/if}}
 
   {{#if (eq api "orpc")}}
   const privateData = useQuery(orpc.privateData.queryOptions());
@@ -9478,7 +10447,7 @@ export default function Dashboard() {
     }
   }, [session, isPending, navigate]);
 
-{{#if (eq payments "polar")}}
+  {{#if (eq payments "polar")}}
   useEffect(() => {
     async function fetchCustomerState() {
       if (session) {
@@ -9489,62 +10458,35 @@ export default function Dashboard() {
 
     fetchCustomerState();
   }, [session]);
-{{else if (eq payments "dodo")}}
-  useEffect(() => {
-    async function fetchCustomerState() {
-      if (session) {
-        const data = await authClient.dodopayments.customer.subscriptions.list({
-          query: {
-            limit: 10,
-            page: 1,
-            active: true,
-          },
-        });
-        setCustomerState(data);
-      }
-    }
-
-    fetchCustomerState();
-  }, [session]);
-{{/if}}
+  {{/if}}
 
   if (isPending) {
     return <div>Loading...</div>;
   }
 
-{{#if (eq payments "polar")}}
-  const hasProSubscription = customerState?.activeSubscriptions?.length! > 0;
-  console.log("Active subscriptions:", customerState?.activeSubscriptions);
-{{else if (eq payments "dodo")}}
-  const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0;
-  console.log("Active subscriptions:", customerState?.data?.items);
-{{/if}}
+  {{#if (eq payments "polar")}}
+  const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
+  {{/if}}
 
   return (
     <div>
       <h1>Dashboard</h1>
       <p>Welcome {session?.user.name}</p>
-      {{#if ( or (eq api "orpc") (eq api "trpc"))}}
+      {{#if (or (eq api "orpc") (eq api "trpc"))}}
       <p>API: {privateData.data?.message}</p>
       {{/if}}
-{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+      {{#if (eq payments "polar")}}
       <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
       {hasProSubscription ? (
-        <Button onClick={async () => await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}()}>
+        <Button onClick={async () => await authClient.customer.portal()}>
           Manage Subscription
         </Button>
       ) : (
-        <Button
-          onClick={async () =>
-            await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({
-              slug: "pro",
-            })
-          }
-        >
+        <Button onClick={async () => await authClient.checkout({ slug: "pro" })}>
           Upgrade to Pro
         </Button>
       )}
-{{/if}}
+      {{/if}}
     </div>
   );
 }
@@ -9924,51 +10866,27 @@ export default function UserMenu() {
   );
 }
 `],
-  ["auth/better-auth/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+  ["auth/better-auth/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
-{{/if}}
 import { authClient } from "@/lib/auth-client";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { trpc } from "@/utils/trpc";
 {{/if}}
-{{#if ( or (eq api "orpc") (eq api "trpc"))}}
+{{#if (or (eq api "orpc") (eq api "trpc"))}}
 import { useQuery } from "@tanstack/react-query";
 {{/if}}
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
-	beforeLoad: async () => {
-		const session = await authClient.getSession();
-		if (!session.data) {
-			redirect({
-				to: "/login",
-				throw: true
-			});
-		}
-		{{#if (eq payments "polar")}}
-		const {data: customerState} = await authClient.customer.state()
-		return { session, customerState };
-		{{else if (eq payments "dodo")}}
-		const customerState = await authClient.dodopayments.customer.subscriptions.list({
-			query: {
-				limit: 10,
-				page: 1,
-				active: true,
-			}
-		})
-		return { session, customerState };
-		{{else}}
-		return { session };
-		{{/if}}
-	}
 });
 
 function RouteComponent() {
-	const { session{{#if (or (eq payments "polar") (eq payments "dodo"))}}, customerState{{/if}} } = Route.useRouteContext();
+	const { session{{#if (eq payments "polar")}}, customerState{{/if}} } = Route.useRouteContext();
 
 	{{#if (eq api "orpc")}}
 	const privateData = useQuery(orpc.privateData.queryOptions());
@@ -9978,40 +10896,55 @@ function RouteComponent() {
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
-	const hasProSubscription = customerState?.activeSubscriptions?.length! > 0
-    console.log("Active subscriptions:", customerState?.activeSubscriptions)
-	{{else if (eq payments "dodo")}}
-	const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0
-    console.log("Active subscriptions:", customerState?.data?.items)
+	const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
 		<div>
 			<h1>Dashboard</h1>
 			<p>Welcome {session.data?.user.name}</p>
-			{{#if ( or (eq api "orpc") (eq api "trpc"))}}
+			{{#if (or (eq api "orpc") (eq api "trpc"))}}
 			<p>API: {privateData.data?.message}</p>
 			{{/if}}
-			{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+			{{#if (eq payments "polar")}}
 			<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
 			{hasProSubscription ? (
-				<Button onClick={async () => await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}()}>
+				<Button onClick={async () => await authClient.customer.portal()}>
 					Manage Subscription
 				</Button>
 			) : (
-				<Button
-					onClick={async () =>
-						await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({
-							slug: "pro",
-						})
-					}
-				>
+				<Button onClick={async () => await authClient.checkout({ slug: "pro" })}>
 					Upgrade to Pro
 				</Button>
 			)}
 			{{/if}}
 		</div>
 	);
+}
+`],
+  ["auth/better-auth/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+	beforeLoad: async () => {
+		const session = await authClient.getSession();
+		if (!session.data) {
+			throw redirect({
+				to: "/login",
+			});
+		}
+		{{#if (eq payments "polar")}}
+		const { data: customerState } = await authClient.customer.state();
+		return { session, customerState };
+		{{else}}
+		return { session };
+		{{/if}}
+	},
+});
+
+function AuthLayout() {
+	return <Outlet />;
 }
 `],
   ["auth/better-auth/web/react/tanstack-router/src/routes/login.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
@@ -10401,12 +11334,16 @@ export const getUser = createServerFn({ method: "GET" }).middleware([authMiddlew
     return context.session
 })`],
   ["auth/better-auth/web/react/tanstack-start/src/middleware/auth.ts.hbs", `{{#if (eq backend "self")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 import { createMiddleware } from "@tanstack/react-start";
 
 
 export const authMiddleware = createMiddleware().server(async ({ next, request }) => {
-    const session = await auth.api.getSession({
+    const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
         headers: request.headers,
     })
     return next({
@@ -10432,11 +11369,9 @@ export const authMiddleware = createMiddleware().server(
 );
 {{/if}}
 `],
-  ["auth/better-auth/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `import { getUser } from "@/functions/get-user";
-{{#if (or (eq payments "polar") (eq payments "dodo")) }}
+  ["auth/better-auth/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq payments "polar") }}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
-import { getPayment } from "@/functions/get-payment";
 {{/if}}
 {{#if (eq api "trpc") }}
 import { useTRPC } from "@/utils/trpc";
@@ -10446,30 +11381,14 @@ import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/react-query";
 {{/if}}
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
   component: RouteComponent,
-  beforeLoad: async () => {
-    const session = await getUser();
-    {{#if (or (eq payments "polar") (eq payments "dodo")) }}
-    const customerState = await getPayment();
-    return { session, customerState };
-    {{else}}
-    return { session };
-    {{/if}}
-  },
-  loader: async ({ context }) => {
-    if (!context.session) {
-      throw redirect({
-        to: "/login",
-      });
-    }
-  },
 });
 
 function RouteComponent() {
-  const { session{{#if (or (eq payments "polar") (eq payments "dodo")) }}, customerState{{/if}} } = Route.useRouteContext();
+  const { session{{#if (eq payments "polar") }}, customerState{{/if}} } = Route.useRouteContext();
 
   {{#if (eq api "trpc") }}
   const trpc = useTRPC();
@@ -10481,27 +11400,27 @@ function RouteComponent() {
 
   {{#if (eq payments "polar") }}
   const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
-  // For debugging: console.log("Active subscriptions:", customerState?.activeSubscriptions);
-  {{else if (eq payments "dodo") }}
-  const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0;
-  // For debugging: console.log("Active subscriptions:", customerState?.data?.items);
   {{/if}}
 
   return (
     <div>
       <h1>Dashboard</h1>
+      {{#if (eq backend "self")}}
       <p>Welcome {session?.user.name}</p>
+      {{else}}
+      <p>Welcome {session.data?.user.name}</p>
+      {{/if}}
       {{#if (eq api "trpc") }}
       <p>API: {privateData.data?.message}</p>
       {{else if (eq api "orpc") }}
       <p>API: {privateData.data?.message}</p>
       {{/if}}
-      {{#if (or (eq payments "polar") (eq payments "dodo")) }}
+      {{#if (eq payments "polar") }}
       <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
       {hasProSubscription ? (
         <Button
           onClick={async function handlePortal() {
-            await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}();
+            await authClient.customer.portal();
           }}
         >
           Manage Subscription
@@ -10509,7 +11428,7 @@ function RouteComponent() {
       ) : (
         <Button
           onClick={async function handleUpgrade() {
-            await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({ slug: "pro" });
+            await authClient.checkout({ slug: "pro" });
           }}
         >
           Upgrade to Pro
@@ -10518,6 +11437,65 @@ function RouteComponent() {
       {{/if}}
     </div>
   );
+}
+`],
+  ["auth/better-auth/web/react/tanstack-start/src/routes/_auth/route.tsx.hbs", `{{#if (eq backend "self")}}
+import { getUser } from "@/functions/get-user";
+{{else}}
+import { authClient } from "@/lib/auth-client";
+{{/if}}
+{{#if (and (eq backend "self") (eq payments "polar"))}}
+import { getPayment } from "@/functions/get-payment";
+{{/if}}
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_auth")({
+  {{#unless (eq backend "self")}}
+  ssr: false,
+  {{/unless}}
+  component: AuthLayout,
+  beforeLoad: async () => {
+    {{#if (eq backend "self")}}
+    const session = await getUser();
+    if (!session) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+    {{#if (eq payments "polar") }}
+    const customerState = await getPayment();
+    return { session, customerState };
+    {{else}}
+    return { session };
+    {{/if}}
+    {{else}}
+    const session = await authClient.getSession();
+    if (!session.data) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+    {{#if (eq payments "polar") }}
+    const { data: customerState } = await authClient.customer.state();
+    return { session, customerState };
+    {{else}}
+    return { session };
+    {{/if}}
+    {{/if}}
+  },
+  {{#if (eq backend "self")}}
+  loader: async ({ context }) => {
+    if (!context.session) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+  },
+  {{/if}}
+});
+
+function AuthLayout() {
+  return <Outlet />;
 }
 `],
   ["auth/better-auth/web/react/tanstack-start/src/routes/login.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
@@ -10871,24 +11849,14 @@ export default function UserMenu() {
 `],
   ["auth/better-auth/web/solid/src/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/solid";
 {{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth";
-{{/if}}
-{{#if (eq payments "dodo")}}
-import { dodopaymentsClient } from "@dodopayments/better-auth";
+import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 import { env } from "@{{projectName}}/env/web";
 
 export const authClient = createAuthClient({
 	baseURL: env.VITE_SERVER_URL,
-{{#if (or (eq payments "polar") (eq payments "dodo"))}}
-	plugins: [
 {{#if (eq payments "polar")}}
-		polarClient(),
-{{/if}}
-{{#if (eq payments "dodo")}}
-		dodopaymentsClient(),
-{{/if}}
-	]
+	plugins: [polarClient()]
 {{/if}}
 });
 `],
@@ -10912,15 +11880,6 @@ export const Route = createFileRoute("/dashboard")({
 		{{#if (eq payments "polar")}}
 		const { data: customerState } = await authClient.customer.state();
 		return { session, customerState };
-		{{else if (eq payments "dodo")}}
-		const customerState = await authClient.dodopayments.customer.subscriptions.list({
-			query: {
-				limit: 10,
-				page: 1,
-				active: true,
-			}
-		});
-		return { session, customerState };
 		{{else}}
 		return { session };
 		{{/if}}
@@ -10931,7 +11890,7 @@ function RouteComponent() {
 	const context = Route.useRouteContext();
 
 	const session = context().session;
-	{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+	{{#if (eq payments "polar")}}
 	const customerState = context().customerState;
 	{{/if}}
 
@@ -10941,10 +11900,7 @@ function RouteComponent() {
 
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
-		customerState?.activeSubscriptions?.length! > 0;
-	{{else if (eq payments "dodo")}}
-	const hasProSubscription = () =>
-		(customerState?.data?.items?.length ?? 0) > 0;
+		(customerState?.activeSubscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
@@ -10963,21 +11919,6 @@ function RouteComponent() {
 			) : (
 				<button
 					onClick={async () => await authClient.checkout({ slug: "pro" })}
-				>
-					Upgrade to Pro
-				</button>
-			)}
-			{{else if (eq payments "dodo")}}
-			<p>Plan: {hasProSubscription() ? "Pro" : "Free"}</p>
-			{hasProSubscription() ? (
-				<button onClick={async () => await authClient.dodopayments.customer.portal()}>
-					Manage Subscription
-				</button>
-			) : (
-				<button
-					onClick={async () =>
-						await authClient.dodopayments.checkoutSession({ slug: "pro" })
-					}
 				>
 					Upgrade to Pro
 				</button>
@@ -11042,6 +11983,8 @@ function RouteComponent() {
 			onSubmit: validationSchema,
 		},
 	}));
+
+	type SubmitState = Pick<typeof form.state, 'canSubmit' | 'isSubmitting'>;
 </script>
 
 <div class="mx-auto mt-10 w-full max-w-md p-6">
@@ -11105,8 +12048,8 @@ function RouteComponent() {
 			{/snippet}
 		</form.Field>
 
-		<form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
-			{#snippet children(state)}
+		<form.Subscribe selector={(state: typeof form.state): SubmitState => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+			{#snippet children(state: SubmitState)}
 				<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>
 					{state.isSubmitting ? 'Submitting...' : 'Sign In'}
 				</button>
@@ -11160,6 +12103,8 @@ function RouteComponent() {
 			onSubmit: validationSchema,
 		},
 	}));
+
+	type SubmitState = Pick<typeof form.state, 'canSubmit' | 'isSubmitting'>;
 </script>
 
 <div class="mx-auto mt-10 w-full max-w-md p-6">
@@ -11248,8 +12193,8 @@ function RouteComponent() {
 			{/snippet}
 		</form.Field>
 
-		<form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
-			{#snippet children(state)}
+		<form.Subscribe selector={(state: typeof form.state): SubmitState => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+			{#snippet children(state: SubmitState)}
 				<button type="submit" class="w-full" disabled={!state.canSubmit || state.isSubmitting}>
 					{state.isSubmitting ? 'Submitting...' : 'Sign Up'}
 				</button>
@@ -11317,26 +12262,20 @@ function RouteComponent() {
 	{/if}
 </div>
 `],
-  ["auth/better-auth/web/svelte/src/lib/auth-client.ts.hbs", `import { PUBLIC_SERVER_URL } from "$env/static/public";
+  ["auth/better-auth/web/svelte/src/lib/auth-client.ts.hbs", `{{#unless (eq backend "self")}}
+import { PUBLIC_SERVER_URL } from "$env/static/public";
+{{/unless}}
 import { createAuthClient } from "better-auth/svelte";
 {{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth";
-{{/if}}
-{{#if (eq payments "dodo")}}
-import { dodopaymentsClient } from "@dodopayments/better-auth";
+import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
 export const authClient = createAuthClient({
+{{#unless (eq backend "self")}}
 	baseURL: PUBLIC_SERVER_URL,
-{{#if (or (eq payments "polar") (eq payments "dodo"))}}
-	plugins: [
+{{/unless}}
 {{#if (eq payments "polar")}}
-		polarClient(),
-{{/if}}
-{{#if (eq payments "dodo")}}
-		dodopaymentsClient(),
-{{/if}}
-	]
+	plugins: [polarClient()]
 {{/if}}
 });
 `],
@@ -11347,11 +12286,9 @@ export const authClient = createAuthClient({
 	import { orpc } from '$lib/orpc';
 	import { createQuery } from '@tanstack/svelte-query';
 	{{/if}}
-{{#if (eq payments "polar")}}
-let customerState = $state<{ activeSubscriptions?: unknown[] } | null>(null);
-{{else if (eq payments "dodo")}}
-let customerState = $state<{ data?: { items?: unknown[] } } | null>(null);
-{{/if}}
+	{{#if (eq payments "polar")}}
+	let customerState = $state<{ activeSubscriptions?: unknown[] } | null>(null);
+	{{/if}}
 
 	const sessionQuery = authClient.useSession();
 
@@ -11365,7 +12302,7 @@ let customerState = $state<{ data?: { items?: unknown[] } } | null>(null);
 		}
 	});
 
-{{#if (eq payments "polar")}}
+	{{#if (eq payments "polar")}}
 	$effect(() => {
 		if ($sessionQuery.data) {
 			authClient.customer.state().then(({ data }) => {
@@ -11373,23 +12310,7 @@ let customerState = $state<{ data?: { items?: unknown[] } } | null>(null);
 			});
 		}
 	});
-{{else if (eq payments "dodo")}}
-	$effect(() => {
-		if ($sessionQuery.data) {
-			authClient.dodopayments.customer.subscriptions
-				.list({
-					query: {
-						limit: 10,
-						page: 1,
-						active: true,
-					},
-				})
-				.then((data) => {
-					customerState = data;
-				});
-		}
-	});
-{{/if}}
+	{{/if}}
 </script>
 
 {#if $sessionQuery.isPending}
@@ -11403,7 +12324,7 @@ let customerState = $state<{ data?: { items?: unknown[] } } | null>(null);
 		{{#if (eq api "orpc")}}
 		<p>API: {$privateDataQuery.data?.message}</p>
 		{{/if}}
-{{#if (eq payments "polar")}}
+		{{#if (eq payments "polar")}}
 		<p>Plan: {customerState?.activeSubscriptions?.length > 0 ? "Pro" : "Free"}</p>
 		{#if customerState?.activeSubscriptions?.length > 0}
 			<button onclick={async () => await authClient.customer.portal()}>
@@ -11414,18 +12335,7 @@ let customerState = $state<{ data?: { items?: unknown[] } } | null>(null);
 				Upgrade to Pro
 			</button>
 		{/if}
-{{else if (eq payments "dodo")}}
-		<p>Plan: {customerState?.data?.items?.length ? "Pro" : "Free"}</p>
-		{#if customerState?.data?.items?.length}
-			<button onclick={async () => await authClient.dodopayments.customer.portal()}>
-				Manage Subscription
-			</button>
-		{:else}
-			<button onclick={async () => await authClient.dodopayments.checkoutSession({ slug: "pro" })}>
-				Upgrade to Pro
-			</button>
-		{/if}
-{{/if}}
+		{{/if}}
 	</div>
 {/if}
 `],
@@ -12061,33 +12971,42 @@ export default function Dashboard() {
 	);
 }
 `],
-  ["auth/clerk/convex/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/react";
+  ["auth/clerk/convex/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `import { UserButton, useUser } from "@clerk/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-	Authenticated,
-	AuthLoading,
-	Unauthenticated,
-	useQuery,
-} from "convex/react";
+import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const privateData = useQuery(api.privateData.get);
-	const user = useUser()
+	const user = useUser();
 
+	return (
+		<div>
+			<h1>Dashboard</h1>
+			<p>Welcome {user.user?.fullName}</p>
+			<p>privateData: {privateData?.message}</p>
+			<UserButton />
+		</div>
+	);
+}
+`],
+  ["auth/clerk/convex/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import { SignInButton } from "@clerk/react";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
+
+function AuthLayout() {
 	return (
 		<>
 			<Authenticated>
-				<div>
-					<h1>Dashboard</h1>
-					<p>Welcome {user.user?.fullName}</p>
-					<p>privateData: {privateData?.message}</p>
-					<UserButton />
-				</div>
+				<Outlet />
 			</Authenticated>
 			<Unauthenticated>
 				<SignInButton />
@@ -12099,17 +13018,12 @@ function RouteComponent() {
 	);
 }
 `],
-  ["auth/clerk/convex/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/tanstack-react-start";
+  ["auth/clerk/convex/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `import { UserButton, useUser } from "@clerk/tanstack-react-start";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-	Authenticated,
-	AuthLoading,
-	Unauthenticated,
-	useQuery,
-} from "convex/react";
+import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
 });
 
@@ -12118,14 +13032,28 @@ function RouteComponent() {
 	const user = useUser();
 
 	return (
+		<div>
+			<h1>Dashboard</h1>
+			<p>Welcome {user.user?.fullName}</p>
+			<p>privateData: {privateData?.message}</p>
+			<UserButton />
+		</div>
+	);
+}
+`],
+  ["auth/clerk/convex/web/react/tanstack-start/src/routes/_auth/route.tsx.hbs", `import { SignInButton } from "@clerk/tanstack-react-start";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
+
+function AuthLayout() {
+	return (
 		<>
 			<Authenticated>
-				<div>
-					<h1>Dashboard</h1>
-					<p>Welcome {user.user?.fullName}</p>
-					<p>privateData: {privateData?.message}</p>
-					<UserButton />
-				</div>
+				<Outlet />
 			</Authenticated>
 			<Unauthenticated>
 				<SignInButton />
@@ -12807,7 +13735,7 @@ export default function Dashboard() {
   );
 }
 `],
-  ["auth/clerk/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `{{#if (eq api "orpc")}}
+  ["auth/clerk/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
 {{/if}}
@@ -12815,10 +13743,10 @@ import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 {{/if}}
-import { SignInButton, UserButton, useUser } from "@clerk/react";
+import { UserButton, useUser } from "@clerk/react";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
 });
 
@@ -12845,18 +13773,6 @@ function RouteComponent() {
 	});
 	{{/if}}
 
-	if (!user.isLoaded) {
-		return <div className="p-6">Loading...</div>;
-	}
-
-	if (!user.user) {
-		return (
-			<div className="p-6">
-				<SignInButton />
-			</div>
-		);
-	}
-
 	return (
 		<div className="space-y-4 p-6">
 			<h1 className="text-2xl font-semibold">Dashboard</h1>
@@ -12869,7 +13785,32 @@ function RouteComponent() {
 	);
 }
 `],
-  ["auth/clerk/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `{{#if (eq api "trpc")}}
+  ["auth/clerk/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import { SignInButton, useUser } from "@clerk/react";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
+
+function AuthLayout() {
+	const user = useUser();
+
+	if (!user.isLoaded) {
+		return <div className="p-6">Loading...</div>;
+	}
+
+	if (!user.user) {
+		return (
+			<div className="p-6">
+				<SignInButton />
+			</div>
+		);
+	}
+
+	return <Outlet />;
+}
+`],
+  ["auth/clerk/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq api "trpc")}}
 import { useTRPC } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -12877,10 +13818,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
 {{/if}}
-import { SignInButton, UserButton, useUser } from "@clerk/tanstack-react-start";
+import { UserButton, useUser } from "@clerk/tanstack-react-start";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
 });
 
@@ -12908,6 +13849,28 @@ function RouteComponent() {
 	});
 	{{/if}}
 
+	return (
+		<div className="space-y-4 p-6">
+			<h1 className="text-2xl font-semibold">Dashboard</h1>
+			<p>Welcome {displayName}</p>
+			{{#if (or (eq api "orpc") (eq api "trpc"))}}
+			<p>API: {privateData.data?.message}</p>
+			{{/if}}
+			<UserButton />
+		</div>
+	);
+}
+`],
+  ["auth/clerk/web/react/tanstack-start/src/routes/_auth/route.tsx.hbs", `import { SignInButton, useUser } from "@clerk/tanstack-react-start";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
+
+function AuthLayout() {
+	const user = useUser();
+
 	if (!user.isLoaded) {
 		return <div className="p-6">Loading...</div>;
 	}
@@ -12920,16 +13883,7 @@ function RouteComponent() {
 		);
 	}
 
-	return (
-		<div className="space-y-4 p-6">
-			<h1 className="text-2xl font-semibold">Dashboard</h1>
-			<p>Welcome {displayName}</p>
-			{{#if (or (eq api "orpc") (eq api "trpc"))}}
-			<p>API: {privateData.data?.message}</p>
-			{{/if}}
-			<UserButton />
-		</div>
-	);
+	return <Outlet />;
 }
 `],
   ["auth/clerk/web/react/tanstack-start/src/start.ts.hbs", `import { clerkMiddleware } from '@clerk/tanstack-react-start/server'
@@ -12944,9 +13898,88 @@ export const startInstance = createStart(() => {
   ["backend/convex/packages/backend/_gitignore", `
 .env.local
 `],
+  ["backend/convex/packages/backend/convex/_generated/api.d.ts", `/* eslint-disable */
+export declare const api: any;
+export declare const internal: any;
+export declare const components: any;
+`],
+  ["backend/convex/packages/backend/convex/_generated/api.js", `/* eslint-disable */
+import { anyApi, componentsGeneric } from "convex/server";
+
+export const api = anyApi;
+export const internal = anyApi;
+export const components = componentsGeneric();
+`],
+  ["backend/convex/packages/backend/convex/_generated/dataModel.d.ts", `/* eslint-disable */
+import type {
+  DataModelFromSchemaDefinition,
+  DocumentByName,
+  SystemTableNames,
+  TableNamesInDataModel,
+} from "convex/server";
+import type { GenericId } from "convex/values";
+
+import schema from "../schema.js";
+
+export type DataModel = DataModelFromSchemaDefinition<typeof schema>;
+export type TableNames = TableNamesInDataModel<DataModel>;
+export type Doc<TableName extends TableNames> = DocumentByName<DataModel, TableName>;
+export type Id<TableName extends TableNames | SystemTableNames> = GenericId<TableName>;
+`],
+  ["backend/convex/packages/backend/convex/_generated/server.d.ts", `/* eslint-disable */
+import type {
+  ActionBuilder,
+  GenericActionCtx,
+  GenericDatabaseReader,
+  GenericDatabaseWriter,
+  GenericMutationCtx,
+  GenericQueryCtx,
+  HttpActionBuilder,
+  MutationBuilder,
+  QueryBuilder,
+} from "convex/server";
+
+import type { DataModel } from "./dataModel.js";
+
+export declare const query: QueryBuilder<DataModel, "public">;
+export declare const internalQuery: QueryBuilder<DataModel, "internal">;
+export declare const mutation: MutationBuilder<DataModel, "public">;
+export declare const internalMutation: MutationBuilder<DataModel, "internal">;
+export declare const action: ActionBuilder<DataModel, "public">;
+export declare const internalAction: ActionBuilder<DataModel, "internal">;
+export declare const httpAction: HttpActionBuilder;
+
+export type QueryCtx = GenericQueryCtx<DataModel>;
+export type MutationCtx = GenericMutationCtx<DataModel>;
+export type ActionCtx = GenericActionCtx<DataModel>;
+export type DatabaseReader = GenericDatabaseReader<DataModel>;
+export type DatabaseWriter = GenericDatabaseWriter<DataModel>;
+`],
+  ["backend/convex/packages/backend/convex/_generated/server.js", `/* eslint-disable */
+import {
+  actionGeneric,
+  httpActionGeneric,
+  internalActionGeneric,
+  internalMutationGeneric,
+  internalQueryGeneric,
+  mutationGeneric,
+  queryGeneric,
+} from "convex/server";
+
+export const query = queryGeneric;
+export const internalQuery = internalQueryGeneric;
+export const mutation = mutationGeneric;
+export const internalMutation = internalMutationGeneric;
+export const action = actionGeneric;
+export const internalAction = internalActionGeneric;
+export const httpAction = httpActionGeneric;
+`],
   ["backend/convex/packages/backend/convex/convex.config.ts.hbs", `import { defineApp } from "convex/server";
 {{#if (eq auth "better-auth")}}
 import betterAuth from "@convex-dev/better-auth/convex.config";
+{{/if}}
+{{#if (eq payments "polar")}}
+import polar from "@convex-dev/polar/convex.config.js";
 {{/if}}
 {{#if (includes examples "ai")}}
 import agent from "@convex-dev/agent/convex.config";
@@ -12955,6 +13988,9 @@ import agent from "@convex-dev/agent/convex.config";
 const app = defineApp();
 {{#if (eq auth "better-auth")}}
 app.use(betterAuth);
+{{/if}}
+{{#if (eq payments "polar")}}
+app.use(polar);
 {{/if}}
 {{#if (includes examples "ai")}}
 app.use(agent);
@@ -13084,6 +14120,7 @@ export default defineSchema({
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
+    "types": ["node"],
 
     /* These compiler options are required by Convex */
     "target": "ESNext",
@@ -13192,8 +14229,7 @@ next-env.d.ts
   "compilerOptions": {
     "composite": true,
 		"outDir": "dist",
-		"baseUrl": ".",
-    "paths": {
+		"paths": {
       "@/*": ["./src/*"]
     },
     "jsx": "react-jsx"{{#if (eq backend "hono")}},
@@ -13219,7 +14255,7 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 {{#if (includes examples "ai")}}
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, streamText, wrapLanguageModel } from "ai";
+import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (eq api "trpc")}}
@@ -13263,9 +14299,9 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 {{/if}}
 
 {{#if (eq runtime "node")}}
-const app = new Elysia({ adapter: node() })
+new Elysia({ adapter: node() })
 {{else}}
-const app = new Elysia()
+new Elysia()
 {{/if}}
 	.use(
 		cors({
@@ -13279,6 +14315,32 @@ const app = new Elysia()
 {{/if}}
 		}),
 	)
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+	.get("/polar/success", ({ request, status }) => {
+		const nativeAppUrl = "{{projectName}}://";
+		const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+		const requestUrl = new URL(request.url);
+		const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+		let redirectUrl: URL;
+		try {
+			redirectUrl = new URL(returnUrl);
+		} catch {
+			return status(400, "Invalid return URL");
+		}
+
+		if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+			return status(400, "Invalid return URL");
+		}
+
+		return new Response(null, {
+			status: 302,
+			headers: {
+				Location: redirectUrl.toString(),
+			},
+		});
+	})
+{{/if}}
 {{#if (eq auth "better-auth")}}
 	.all("/api/auth/*", async (context) => {
 		const { request, status } = context;
@@ -13329,7 +14391,7 @@ const app = new Elysia()
 {{/if}}
 {{#if (includes examples "ai")}}
 	.post("/ai", async (context) => {
-		const body = await context.request.json();
+		const body = (await context.request.json()) as { messages?: UIMessage[] };
 		const uiMessages = body.messages || [];
 		const model = wrapLanguageModel({
 			model: google("gemini-2.5-flash"),
@@ -13337,10 +14399,12 @@ const app = new Elysia()
 		});
 		const result = streamText({
 			model,
-			messages: await convertToModelMessages(uiMessages)
+			messages: await convertToModelMessages(uiMessages),
 		});
 
-		return result.toUIMessageStreamResponse();
+		return createUIMessageStreamResponse({
+			stream: toUIMessageStream({ stream: result.stream }),
+		});
 	})
 {{/if}}
 	.get("/", () => "OK")
@@ -13361,14 +14425,12 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/node";
 import { onError } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
-{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 import { createContext } from "@{{projectName}}/api/context";
-{{/if}}
 {{/if}}
 import cors from "cors";
 import express from "express";
 {{#if (includes examples "ai")}}
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { pipeUIMessageStreamToResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -13403,6 +14465,31 @@ app.use(clerkMiddleware());
 app.all("/api/auth{/*path}", toNodeHandler(auth));
 {{/if}}
 
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+app.get("/polar/success", (req, res) => {
+	const requestUrl = new URL(req.url, env.BETTER_AUTH_URL);
+	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+	let redirectUrl: URL;
+	try {
+		redirectUrl = new URL(returnUrl);
+	} catch {
+		res.status(400).send("Invalid return URL");
+		return;
+	}
+
+	if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+		res.status(400).send("Invalid return URL");
+		return;
+	}
+
+	res.redirect(302, redirectUrl.toString());
+});
+
+{{/if}}
 {{#if (eq api "trpc")}}
 app.use(
 	"/trpc",
@@ -13437,21 +14524,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 app.use(async (req, res, next) => {
 	const rpcResult = await rpcHandler.handle(req, res, {
 		prefix: "/rpc",
-{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 		context: await createContext({ req }),
-{{else}}
-		context: {},
-{{/if}}
 	});
 	if (rpcResult.matched) return;
 
 	const apiResult = await apiHandler.handle(req, res, {
 		prefix: "/api-reference",
-{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 		context: await createContext({ req }),
-{{else}}
-		context: {},
-{{/if}}
 	});
 	if (apiResult.matched) return;
 
@@ -13472,7 +14551,10 @@ app.post("/ai", async (req, res) => {
 		model,
 		messages: await convertToModelMessages(messages),
 	});
-	result.pipeUIMessageStreamToResponse(res);
+	pipeUIMessageStreamToResponse({
+		response: res,
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 
@@ -13505,7 +14587,7 @@ import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 
 {{#if (includes examples "ai")}}
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -13562,9 +14644,37 @@ const fastify = Fastify({
 
 fastify.register(fastifyCors, baseCorsConfig);
 {{#if (eq auth "clerk")}}
-fastify.register(clerkPlugin);
+fastify.register(clerkPlugin, {
+	publishableKey: env.CLERK_PUBLISHABLE_KEY,
+	secretKey: env.CLERK_SECRET_KEY,
+});
 {{/if}}
 
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+fastify.get("/polar/success", async (request, reply) => {
+	const requestUrl = new URL(request.url, env.BETTER_AUTH_URL);
+	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+	let redirectUrl: URL;
+	try {
+		redirectUrl = new URL(returnUrl);
+	} catch {
+		reply.status(400).send("Invalid return URL");
+		return;
+	}
+
+	if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+		reply.status(400).send("Invalid return URL");
+		return;
+	}
+
+	reply.status(302).header("Location", redirectUrl.toString()).send();
+});
+
+{{/if}}
 {{#if (eq api "orpc")}}
 fastify.register(async (rpcApp) => {
 	// Fully utilize oRPC features by letting oRPC parse the request body.
@@ -13657,7 +14767,9 @@ fastify.post('/ai', async function (request) {
 		messages: await convertToModelMessages(messages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 
@@ -13665,7 +14777,7 @@ fastify.get('/', async () => {
 	return 'OK';
 });
 
-fastify.listen({ port: 3000 }, (err) => {
+fastify.listen({ port: 3000{{#if (eq serverDeploy "docker")}}, host: "0.0.0.0"{{/if}} }, (err) => {
 	if (err) {
 		fastify.log.error(err);
 		process.exit(1);
@@ -13689,18 +14801,22 @@ import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 {{/if}}
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 {{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
-import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (and (includes examples "ai") (eq runtime "workers"))}}
-import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -13723,9 +14839,41 @@ app.use(
 );
 
 {{#if (eq auth "better-auth")}}
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+app.on(
+	["POST", "GET"],
+	"/api/auth/*",
+	(c) =>
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+		createAuth().handler(c.req.raw)
+{{else}}
+		auth.handler(c.req.raw)
+{{/if}}
+);
 {{/if}}
 
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+app.get("/polar/success", (c) => {
+	const requestUrl = new URL(c.req.url);
+	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+	let redirectUrl: URL;
+	try {
+		redirectUrl = new URL(returnUrl);
+	} catch {
+		return c.text("Invalid return URL", 400);
+	}
+
+	if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+		return c.text("Invalid return URL", 400);
+	}
+
+	return c.redirect(redirectUrl.toString(), 302);
+});
+
+{{/if}}
 {{#if (eq api "orpc")}}
 export const apiHandler = new OpenAPIHandler(appRouter, {
 	plugins: [
@@ -13798,7 +14946,9 @@ app.post("/ai", async (c) => {
 		messages: await convertToModelMessages(uiMessages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 
@@ -13818,7 +14968,9 @@ app.post("/ai", async (c) => {
 		messages: await convertToModelMessages(uiMessages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 });
 {{/if}}
 
@@ -13856,6 +15008,9 @@ node_modules
 dist
 build
 *.tsbuildinfo
+
+# Generated files
+apps/web/src/routeTree.gen.ts
 
 # Environment variables
 .env
@@ -14072,29 +15227,41 @@ export default defineConfig({
 });
 `],
   ["db/drizzle/mysql/src/index.ts.hbs", `{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 import * as schema from "./schema";
 
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 
-export const db = drizzle({
-	connection: {
-		host: env.DATABASE_HOST,
-		username: env.DATABASE_USERNAME,
-		password: env.DATABASE_PASSWORD,
-	},
-	schema,
-});
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	return drizzle({
+		connection: {
+			host: env.DATABASE_HOST,
+			username: env.DATABASE_USERNAME,
+			password: env.DATABASE_PASSWORD,
+		},
+		schema,
+	});
+}
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 
-export const db = drizzle({
-	connection: {
-		uri: env.DATABASE_URL,
-	},
-	schema,
-});
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	return drizzle({
+		connection: {
+			uri: env.DATABASE_URL,
+		},
+		schema,
+	});
+}
+{{/if}}
+
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+export const db = createDb();
 {{/if}}
 {{/if}}
 
@@ -14105,24 +15272,28 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 import { env } from "@{{projectName}}/env/server";
 
-export const db = drizzle({
-	connection: {
-		host: env.DATABASE_HOST,
-		username: env.DATABASE_USERNAME,
-		password: env.DATABASE_PASSWORD,
-	},
-	schema,
-});
+export function createDb() {
+	return drizzle({
+		connection: {
+			host: env.DATABASE_HOST,
+			username: env.DATABASE_USERNAME,
+			password: env.DATABASE_PASSWORD,
+		},
+		schema,
+	});
+}
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 import { env } from "@{{projectName}}/env/server";
 
-export const db = drizzle({
-	connection: {
-		uri: env.DATABASE_URL,
-	},
-	schema,
-});
+export function createDb() {
+	return drizzle({
+		connection: {
+			uri: env.DATABASE_URL,
+		},
+		schema,
+	});
+}
 {{/if}}
 {{/if}}
 `],
@@ -14147,19 +15318,43 @@ export default defineConfig({
 });
 `],
   ["db/drizzle/postgres/src/index.ts.hbs", `{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 import * as schema from "./schema";
 
 {{#if (eq dbSetup "neon")}}
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 
-const sql = neon(env.DATABASE_URL);
-export const db = drizzle(sql, { schema });
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const sql = neon(env.DATABASE_URL);
+	return drizzle(sql, { schema });
+}
 {{else}}
 import { drizzle } from "drizzle-orm/node-postgres";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+import { Pool } from "pg";
+{{/if}}
 
-export const db = drizzle(env.DATABASE_URL, { schema });
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+	const pool = new Pool({
+		connectionString: env.DATABASE_URL,
+		maxUses: 1,
+	});
+
+	return drizzle({ client: pool, schema });
+{{else}}
+	return drizzle(env.DATABASE_URL, { schema });
+{{/if}}
+}
+{{/if}}
+
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+export const db = createDb();
 {{/if}}
 {{/if}}
 
@@ -14171,15 +15366,26 @@ import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { env } from "@{{projectName}}/env/server";
 
-const sql = neon(env.DATABASE_URL || "");
-export const db = drizzle(sql, { schema });
+export function createDb() {
+	const sql = neon(env.DATABASE_URL || "");
+	return drizzle(sql, { schema });
+}
 {{else}}
 import { drizzle } from "drizzle-orm/node-postgres";
 import { env } from "@{{projectName}}/env/server";
+import { Pool } from "pg";
 
-export const db = drizzle(env.DATABASE_URL || "", { schema });
+export function createDb() {
+	const pool = new Pool({
+		connectionString: env.DATABASE_URL || "",
+		maxUses: 1,
+	});
+
+	return drizzle({ client: pool, schema });
+}
 {{/if}}
-{{/if}}`],
+{{/if}}
+`],
   ["db/drizzle/sqlite/drizzle.config.ts.hbs", `import { defineConfig } from "drizzle-kit";
 import dotenv from "dotenv";
 
@@ -14209,54 +15415,67 @@ export default defineConfig({
   {{/if}}
 });
 `],
-  ["db/drizzle/sqlite/src/index.ts.hbs", `{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-import { env } from "@{{projectName}}/env/server";
+  ["db/drizzle/sqlite/src/index.ts.hbs", `{{#if (eq dbSetup "d1")}}
 import * as schema from "./schema";
-import { drizzle } from "drizzle-orm/libsql";
-import { createClient } from "@libsql/client";
-
-const client = createClient({
-	url: env.DATABASE_URL,
-{{#if (eq dbSetup "turso")}}
-	authToken: env.DATABASE_AUTH_TOKEN,
-{{/if}}
-});
-
-export const db = drizzle({ client, schema });
-{{/if}}
-
-{{#if (eq runtime "workers")}}
-import * as schema from "./schema";
-
-{{#if (eq dbSetup "d1")}}
 import { drizzle } from "drizzle-orm/d1";
-import { env } from "@{{projectName}}/env/server";
-
-export const db = drizzle(env.DB, { schema });
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
 {{else}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	return drizzle(env.DB, { schema });
+}
+{{else if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+import * as schema from "./schema";
+import { drizzle } from "drizzle-orm/libsql";
+import { createClient } from "@libsql/client";
+
+export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const client = createClient({
+		url: env.DATABASE_URL,
+{{#if (eq dbSetup "turso")}}
+		authToken: env.DATABASE_AUTH_TOKEN,
+{{/if}}
+	});
+
+	return drizzle({ client, schema });
+}
+
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+export const db = createDb();
+{{/if}}
+{{else if (eq runtime "workers")}}
+import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
 import { env } from "@{{projectName}}/env/server";
 import { createClient } from "@libsql/client";
 
-const client = createClient({
-	url: env.DATABASE_URL || "",
+export function createDb() {
+	const client = createClient({
+		url: env.DATABASE_URL || "",
 {{#if (eq dbSetup "turso")}}
-	authToken: env.DATABASE_AUTH_TOKEN,
+		authToken: env.DATABASE_AUTH_TOKEN,
 {{/if}}
-});
+	});
 
-export const db = drizzle({ client, schema });
-{{/if}}
+	return drizzle({ client, schema });
+}
 {{/if}}
 `],
+  ["db/drizzle/sqlite/src/migrations/.gitkeep", ``],
   ["db/mongoose/mongodb/src/index.ts.hbs", `import mongoose from "mongoose";
 import { env } from "@{{projectName}}/env/server";
 
-await mongoose.connect(env.DATABASE_URL).catch((error) => {
-	console.log("Error connecting to database:", error);
-});
+await mongoose.connect(env.DATABASE_URL);
 
-const client = mongoose.connection.getClient().db("myDB");
+const client = mongoose.connection.getClient().db();
 
 export { client };
 `],
@@ -14354,54 +15573,68 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+export function createPrismaClient() {
+	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
+	return new PrismaClient({ adapter });
+}
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-const databaseUrl: string = env.DATABASE_URL;
-const url: URL = new URL(databaseUrl);
-const connectionConfig = {
-	host: url.hostname,
-	port: parseInt(url.port || "3306"),
-	user: url.username,
-	password: url.password,
-	database: url.pathname.slice(1),
-};
+export function createPrismaClient() {
+	const databaseUrl: string = env.DATABASE_URL;
+	const url: URL = new URL(databaseUrl);
+	const connectionConfig = {
+		host: url.hostname,
+		port: parseInt(url.port || "3306"),
+		user: url.username,
+		password: url.password,
+		database: url.pathname.slice(1),
+	};
 
-const adapter = new PrismaMariaDb(connectionConfig);
-const prisma = new PrismaClient({ adapter });
+	const adapter = new PrismaMariaDb(connectionConfig);
+	return new PrismaClient({ adapter });
+}
 {{/if}}
-
-export default prisma;
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
+	return new PrismaClient({ adapter });
+}
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-const databaseUrl: string = env.DATABASE_URL;
-const url: URL = new URL(databaseUrl);
-const connectionConfig = {
-	host: url.hostname,
-	port: parseInt(url.port || "3306"),
-	user: url.username,
-	password: url.password,
-	database: url.pathname.slice(1),
-};
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const databaseUrl: string = env.DATABASE_URL;
+	const url: URL = new URL(databaseUrl);
+	const connectionConfig = {
+		host: url.hostname,
+		port: parseInt(url.port || "3306"),
+		user: url.username,
+		password: url.password,
+		database: url.pathname.slice(1),
+	};
 
-const adapter = new PrismaMariaDb(connectionConfig);
-const prisma = new PrismaClient({ adapter });
+	const adapter = new PrismaMariaDb(connectionConfig);
+	return new PrismaClient({ adapter });
+}
 {{/if}}
 
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+const prisma = createPrismaClient();
 export default prisma;
-{{/if}}`],
+{{/if}}
+{{/if}}
+`],
   ["db/prisma/postgres/prisma.config.ts.hbs", `import path from "node:path";
 import { defineConfig, env } from 'prisma/config'
 import dotenv from 'dotenv'
@@ -14455,61 +15688,90 @@ import { neonConfig } from "@neondatabase/serverless";
 
 neonConfig.poolQueryViaFetch = true;
 
-const prisma = new PrismaClient({
-	adapter: new PrismaNeon({
-		connectionString: env.DATABASE_URL,
-	}),
-});
+export function createPrismaClient() {
+	return new PrismaClient({
+		adapter: new PrismaNeon({
+			connectionString: env.DATABASE_URL,
+		}),
+	});
+}
 
 {{else if (eq dbSetup "prisma-postgres")}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({
-	connectionString: env.DATABASE_URL,
-});
+export function createPrismaClient() {
+	const adapter = new PrismaPg({
+		connectionString: env.DATABASE_URL,
+		maxUses: 1,
+	});
 
-const prisma = new PrismaClient({ adapter });
+	return new PrismaClient({ adapter });
+}
 
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+export function createPrismaClient() {
+	const adapter = new PrismaPg({
+		connectionString: env.DATABASE_URL,
+		maxUses: 1,
+	});
+	return new PrismaClient({ adapter });
+}
 
 {{/if}}
-
-export default prisma;
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
 
-const adapter = new PrismaNeon({
-	connectionString: env.DATABASE_URL,
-});
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const adapter = new PrismaNeon({
+		connectionString: env.DATABASE_URL,
+	});
 
-const prisma = new PrismaClient({ adapter });
+	return new PrismaClient({ adapter });
+}
 
 {{else if (eq dbSetup "prisma-postgres")}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({
-	connectionString: env.DATABASE_URL,
-});
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const adapter = new PrismaPg({
+		connectionString: env.DATABASE_URL,
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+		maxUses: 1,
+{{/if}}
+	});
 
-const prisma = new PrismaClient({ adapter });
+	return new PrismaClient({ adapter });
+}
 
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const adapter = new PrismaPg({
+		connectionString: env.DATABASE_URL,
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+		maxUses: 1,
+{{/if}}
+	});
+	return new PrismaClient({ adapter });
+}
 
 {{/if}}
-
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+const prisma = createPrismaClient();
 export default prisma;
-{{/if}}`],
+{{/if}}
+{{/if}}
+`],
   ["db/prisma/sqlite/prisma.config.ts.hbs", `import path from "node:path";
 import { defineConfig, env } from "prisma/config";
 import dotenv from "dotenv";
@@ -14535,6 +15797,7 @@ export default defineConfig({
     {{/if}}
   },
 });`],
+  ["db/prisma/sqlite/prisma/migrations/.gitkeep", ``],
   ["db/prisma/sqlite/prisma/schema/schema.prisma.hbs", `generator client {
   provider = "prisma-client"
   output   = "../generated"
@@ -14558,27 +15821,750 @@ datasource db {
 
 {{#if (eq dbSetup "d1")}}
 import { PrismaD1 } from "@prisma/adapter-d1";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 
-const adapter = new PrismaD1(env.DB);
-const prisma = new PrismaClient({ adapter });
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const adapter = new PrismaD1(env.DB);
+	return new PrismaClient({ adapter });
+}
 
+{{#if (and (ne runtime "workers") (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+const prisma = createPrismaClient();
 export default prisma;
+{{/if}}
 {{else}}
 import { PrismaLibSql } from "@prisma/adapter-libsql";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
-
-const adapter = new PrismaLibSql({
-	url: env.DATABASE_URL,
-{{#if (eq dbSetup "turso")}}
-	authToken: env.DATABASE_AUTH_TOKEN || "",
 {{/if}}
-});
 
-const prisma = new PrismaClient({ adapter });
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	const adapter = new PrismaLibSql({
+		url: env.DATABASE_URL,
+{{#if (eq dbSetup "turso")}}
+		authToken: env.DATABASE_AUTH_TOKEN || "",
+{{/if}}
+	});
 
+	return new PrismaClient({ adapter });
+}
+
+{{#if (and (ne runtime "workers") (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+const prisma = createPrismaClient();
 export default prisma;
-{{/if}}`],
+{{/if}}
+{{/if}}
+`],
+  ["deploy/docker/compose/_dockerignore", `**/node_modules
+.git
+
+**/dist
+**/build
+**/.next
+**/.nuxt
+**/.output
+**/.svelte-kit
+**/.astro
+**/.turbo
+.turbo
+
+**/.wrangler
+**/.alchemy
+**/.expo
+**/.vercel
+*.log
+
+Dockerfile
+**/Dockerfile
+docker-compose.yml
+
+# Secrets stay out of image layers; runtime env comes from compose env_file,
+# build-time public values come from compose build args
+**/.env
+**/.env.*
+!**/.env.example
+`],
+  ["deploy/docker/compose/docker-compose.yml.hbs", `name: {{projectName}}
+
+services:
+{{#if (eq webDeploy "docker")}}
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+{{#if (and (not (includes frontend "nuxt")) (or (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start")))))}}
+      args:
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}}: http://localhost:3000
+{{/if}}
+{{#if (eq backend "convex")}}
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_CONVEX_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_CONVEX_URL{{else}}VITE_CONVEX_URL{{/if}}: \${CONVEX_URL:-}
+{{/if}}
+{{#if (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start")))}}
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY{{else}}VITE_CLERK_PUBLISHABLE_KEY{{/if}}: \${CLERK_PUBLISHABLE_KEY:-}
+{{/if}}
+{{/if}}
+    init: true
+    ports:
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "solid"))}}
+      - "3001:80"
+{{else}}
+      - "3001:3001"
+{{/if}}
+    env_file:
+      - path: apps/web/.env
+        required: false
+{{#if (eq backend "self")}}
+{{#if (or (eq dbSetup "docker") (eq auth "better-auth"))}}
+    environment:
+{{#if (eq auth "better-auth")}}
+      BETTER_AUTH_URL: http://localhost:3001
+      CORS_ORIGIN: http://localhost:3001
+{{/if}}
+{{#if (and (eq dbSetup "docker") (eq database "postgres"))}}
+      DATABASE_URL: postgresql://postgres:\${POSTGRES_PASSWORD:-password}@postgres:5432/{{projectName}}
+{{/if}}
+{{#if (and (eq dbSetup "docker") (eq database "mysql"))}}
+      DATABASE_URL: mysql://user:\${MYSQL_PASSWORD:-password}@mysql:3306/{{projectName}}
+{{/if}}
+{{#if (and (eq dbSetup "docker") (eq database "mongodb"))}}
+      DATABASE_URL: mongodb://root:\${MONGO_PASSWORD:-password}@mongodb:27017/{{projectName}}?authSource=admin
+{{/if}}
+{{/if}}
+{{#if (eq dbSetup "docker")}}
+    depends_on:
+      {{database}}:
+        condition: service_healthy
+{{/if}}
+{{else}}
+{{#if (eq serverDeploy "docker")}}
+{{#if (or (includes frontend "next") (includes frontend "nuxt"))}}
+    environment:
+{{#if (includes frontend "next")}}
+      NEXT_PUBLIC_SERVER_URL: http://server:3000
+{{/if}}
+{{#if (includes frontend "nuxt")}}
+      NUXT_SERVER_URL: http://server:3000
+{{/if}}
+{{/if}}
+    depends_on:
+      server:
+        condition: service_healthy
+{{/if}}
+{{/if}}
+    restart: unless-stopped
+
+{{/if}}
+{{#if (and (eq serverDeploy "docker") (ne backend "self"))}}
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    init: true
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: apps/server/.env
+        required: false
+{{#if (or (eq webDeploy "docker") (eq dbSetup "docker"))}}
+    environment:
+{{#if (eq webDeploy "docker")}}
+      CORS_ORIGIN: http://localhost:3001
+{{/if}}
+{{#if (and (eq dbSetup "docker") (eq database "postgres"))}}
+      DATABASE_URL: postgresql://postgres:\${POSTGRES_PASSWORD:-password}@postgres:5432/{{projectName}}
+{{/if}}
+{{#if (and (eq dbSetup "docker") (eq database "mysql"))}}
+      DATABASE_URL: mysql://user:\${MYSQL_PASSWORD:-password}@mysql:3306/{{projectName}}
+{{/if}}
+{{#if (and (eq dbSetup "docker") (eq database "mongodb"))}}
+      DATABASE_URL: mongodb://root:\${MONGO_PASSWORD:-password}@mongodb:27017/{{projectName}}?authSource=admin
+{{/if}}
+{{/if}}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+{{#if (eq dbSetup "docker")}}
+    depends_on:
+      {{database}}:
+        condition: service_healthy
+{{/if}}
+    restart: unless-stopped
+
+{{/if}}
+{{#if (eq dbSetup "docker")}}
+{{#if (eq database "postgres")}}
+  postgres:
+    image: postgres
+    container_name: {{projectName}}-postgres
+    environment:
+      POSTGRES_DB: {{projectName}}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: \${POSTGRES_PASSWORD:-password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - {{projectName}}_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+{{/if}}
+{{#if (eq database "mysql")}}
+  mysql:
+    image: mysql
+    container_name: {{projectName}}-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD:-password}
+      MYSQL_DATABASE: {{projectName}}
+      MYSQL_USER: user
+      MYSQL_PASSWORD: \${MYSQL_PASSWORD:-password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - {{projectName}}_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+{{/if}}
+{{#if (eq database "mongodb")}}
+  mongodb:
+    image: mongo
+    container_name: {{projectName}}-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: \${MONGO_PASSWORD:-password}
+      MONGO_INITDB_DATABASE: {{projectName}}
+    ports:
+      - "27017:27017"
+    volumes:
+      - {{projectName}}_mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+{{/if}}
+
+volumes:
+  {{projectName}}_{{database}}_data:
+{{/if}}
+`],
+  ["deploy/docker/server/Dockerfile.hbs", `FROM node:24-slim AS base
+{{#if (or (eq packageManager "bun") (eq runtime "bun"))}}
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+RUN npm install -g pnpm
+{{/if}}
+WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
+
+COPY . .
+{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm install
+{{/if}}
+
+ENV NODE_ENV=production
+RUN cd apps/server && {{packageManager}} run build
+ENV SKIP_ENV_VALIDATION=
+{{#if (eq orm "prisma")}}
+ENV DATABASE_URL=
+{{/if}}
+
+EXPOSE 3000
+
+WORKDIR /app/apps/server
+{{#if (eq runtime "bun")}}
+CMD ["bun", "dist/index.mjs"]
+{{else}}
+CMD ["node", "dist/index.mjs"]
+{{/if}}
+`],
+  ["deploy/docker/web/astro/Dockerfile.hbs", `FROM node:24-slim AS base
+{{#if (eq packageManager "bun")}}
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+RUN npm install -g pnpm
+{{/if}}
+WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
+
+COPY . .
+{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm install
+{{/if}}
+
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG PUBLIC_SERVER_URL
+ENV PUBLIC_SERVER_URL=\${PUBLIC_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG PUBLIC_CONVEX_URL
+ENV PUBLIC_CONVEX_URL=\${PUBLIC_CONVEX_URL}
+{{/if}}
+ENV NODE_ENV=production
+RUN cd apps/web && {{packageManager}} run build
+ENV SKIP_ENV_VALIDATION=
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+ENV BETTER_AUTH_SECRET=
+{{/if}}
+{{#if (eq orm "prisma")}}
+ENV DATABASE_URL=
+{{/if}}
+
+ENV HOST=0.0.0.0
+ENV PORT=3001
+EXPOSE 3001
+
+WORKDIR /app/apps/web
+CMD ["node", "dist/server/entry.mjs"]
+`],
+  ["deploy/docker/web/nuxt/Dockerfile.hbs", `FROM node:24-slim AS builder
+{{#if (eq packageManager "bun")}}
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+RUN npm install -g pnpm
+{{/if}}
+WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
+
+COPY . .
+{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm install
+{{/if}}
+
+ENV NODE_ENV=production
+RUN cd apps/web && {{packageManager}} run build
+
+FROM node:24-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=builder /app/apps/web/.output ./
+
+ENV HOST=0.0.0.0
+ENV PORT=3001
+EXPOSE 3001
+
+CMD ["node", "server/index.mjs"]
+`],
+  ["deploy/docker/web/react/next/Dockerfile.hbs", `FROM node:24-slim AS builder
+{{#if (eq packageManager "bun")}}
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+RUN npm install -g pnpm
+{{/if}}
+WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
+
+COPY . .
+{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm install
+{{/if}}
+
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG NEXT_PUBLIC_SERVER_URL
+ENV NEXT_PUBLIC_SERVER_URL=\${NEXT_PUBLIC_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG NEXT_PUBLIC_CONVEX_URL
+ENV NEXT_PUBLIC_CONVEX_URL=\${NEXT_PUBLIC_CONVEX_URL}
+{{/if}}
+{{#if (eq auth "clerk")}}
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=\${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+{{/if}}
+ENV NODE_ENV=production
+RUN cd apps/web && {{packageManager}} run build
+
+FROM node:24-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3001
+EXPOSE 3001
+
+CMD ["node", "apps/web/server.js"]
+`],
+  ["deploy/docker/web/react/react-router/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+{{#if (eq packageManager "bun")}}
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+RUN npm install -g pnpm
+{{/if}}
+WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
+
+COPY . .
+{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm install
+{{/if}}
+
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG VITE_SERVER_URL
+ENV VITE_SERVER_URL=\${VITE_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG VITE_CONVEX_URL
+ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
+{{/if}}
+{{#if (eq auth "clerk")}}
+ARG VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
+{{/if}}
+ENV NODE_ENV=production
+RUN cd apps/web && {{packageManager}} run build
+
+FROM nginx:alpine AS runner
+COPY --from=builder /app/apps/web/build/client /usr/share/nginx/html
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+`],
+  ["deploy/docker/web/react/react-router/nginx.conf", `server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript image/svg+xml;
+
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    # SPA fallback
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+`],
+  ["deploy/docker/web/react/tanstack-router/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+{{#if (eq packageManager "bun")}}
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+RUN npm install -g pnpm
+{{/if}}
+WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
+
+COPY . .
+{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm install
+{{/if}}
+
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG VITE_SERVER_URL
+ENV VITE_SERVER_URL=\${VITE_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG VITE_CONVEX_URL
+ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
+{{/if}}
+{{#if (eq auth "clerk")}}
+ARG VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
+{{/if}}
+ENV NODE_ENV=production
+RUN cd apps/web && {{packageManager}} run build
+
+FROM nginx:alpine AS runner
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+`],
+  ["deploy/docker/web/react/tanstack-router/nginx.conf", `server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript image/svg+xml;
+
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    # SPA fallback
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+`],
+  ["deploy/docker/web/react/tanstack-start/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
+{{#if (eq packageManager "bun")}}
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+RUN npm install -g pnpm
+{{/if}}
+WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
+
+COPY . .
+{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm install
+{{/if}}
+
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG VITE_SERVER_URL
+ENV VITE_SERVER_URL=\${VITE_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG VITE_CONVEX_URL
+ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
+{{/if}}
+{{#if (eq auth "clerk")}}
+ARG VITE_CLERK_PUBLISHABLE_KEY
+ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
+{{/if}}
+ENV NODE_ENV=production
+RUN cd apps/web && {{packageManager}} run build
+ENV SKIP_ENV_VALIDATION=
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+ENV BETTER_AUTH_SECRET=
+{{/if}}
+{{#if (eq orm "prisma")}}
+ENV DATABASE_URL=
+{{/if}}
+
+ENV HOST=0.0.0.0
+ENV PORT=3001
+EXPOSE 3001
+
+# SSR chunks require() externals at runtime; must run from the workspace
+WORKDIR /app/apps/web
+CMD ["node", ".output/server/index.mjs"]
+`],
+  ["deploy/docker/web/solid/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+{{#if (eq packageManager "bun")}}
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+RUN npm install -g pnpm
+{{/if}}
+WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
+
+COPY . .
+{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm install
+{{/if}}
+
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG VITE_SERVER_URL
+ENV VITE_SERVER_URL=\${VITE_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG VITE_CONVEX_URL
+ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
+{{/if}}
+ENV NODE_ENV=production
+RUN cd apps/web && {{packageManager}} run build
+
+FROM nginx:alpine AS runner
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+`],
+  ["deploy/docker/web/solid/nginx.conf", `server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript image/svg+xml;
+
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    # SPA fallback
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+`],
+  ["deploy/docker/web/svelte/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
+{{#if (eq packageManager "bun")}}
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+RUN npm install -g pnpm
+{{/if}}
+WORKDIR /app
+ENV SKIP_ENV_VALIDATION=1
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+# the build evaluates the auth config; the real secret comes from compose at runtime
+ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
+{{/if}}
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
+
+COPY . .
+{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm install
+{{/if}}
+
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG PUBLIC_SERVER_URL
+ENV PUBLIC_SERVER_URL=\${PUBLIC_SERVER_URL}
+{{/if}}
+{{#if (eq backend "convex")}}
+ARG PUBLIC_CONVEX_URL
+ENV PUBLIC_CONVEX_URL=\${PUBLIC_CONVEX_URL}
+{{/if}}
+ENV NODE_ENV=production
+RUN cd apps/web && {{packageManager}} run build
+ENV SKIP_ENV_VALIDATION=
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+ENV BETTER_AUTH_SECRET=
+{{/if}}
+{{#if (eq orm "prisma")}}
+ENV DATABASE_URL=
+{{/if}}
+
+ENV HOST=0.0.0.0
+ENV PORT=3001
+EXPOSE 3001
+
+WORKDIR /app/apps/web
+CMD ["node", "build/index.js"]
+`],
   ["examples/ai/convex/packages/backend/convex/agent.ts.hbs", `import { Agent } from "@convex-dev/agent";
 import { google } from "@ai-sdk/google";
 import { components } from "./_generated/api";
@@ -14658,7 +16644,7 @@ export const generateResponseAsync = internalAction({
 });
 `],
   ["examples/ai/fullstack/next/src/app/api/ai/route.ts.hbs", `import { google } from "@ai-sdk/google";
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const maxDuration = 30;
@@ -14675,12 +16661,14 @@ export async function POST(req: Request) {
 		messages: await convertToModelMessages(messages),
 	});
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
 }
 `],
   ["examples/ai/fullstack/nuxt/server/api/ai.post.ts.hbs", `import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { google } from "@ai-sdk/google";
-import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
@@ -14696,12 +16684,36 @@ export default defineEventHandler(async (event) => {
     messages: await convertToModelMessages(uiMessages),
   });
 
-  return result.toUIMessageStreamResponse();
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
 });
+`],
+  ["examples/ai/fullstack/svelte/src/routes/api/ai/+server.ts.hbs", `import { devToolsMiddleware } from "@ai-sdk/devtools";
+import { google } from "@ai-sdk/google";
+import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, wrapLanguageModel } from "ai";
+import type { RequestHandler } from "@sveltejs/kit";
+
+export const POST: RequestHandler = async ({ request }) => {
+	const { messages }: { messages: UIMessage[] } = await request.json();
+
+	const model = wrapLanguageModel({
+		model: google("gemini-2.5-flash"),
+		middleware: devToolsMiddleware(),
+	});
+	const result = streamText({
+		model,
+		messages: await convertToModelMessages(messages),
+	});
+
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
+};
 `],
   ["examples/ai/fullstack/tanstack-start/src/routes/api/ai/$.ts.hbs", `import { createFileRoute } from "@tanstack/react-router";
 import { google } from "@ai-sdk/google";
-import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const Route = createFileRoute("/api/ai/$")({
@@ -14720,7 +16732,9 @@ export const Route = createFileRoute("/api/ai/$")({
             messages: await convertToModelMessages(messages),
           });
 
-          return result.toUIMessageStreamResponse();
+          return createUIMessageStreamResponse({
+            stream: toUIMessageStream({ stream: result.stream }),
+          });
         } catch (error) {
           console.error("AI API error:", error);
           return new Response(
@@ -14741,7 +16755,6 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
@@ -14762,6 +16775,21 @@ import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
+
 function MessageContent({
   text,
   isStreaming,
@@ -14774,7 +16802,12 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
-  return <Text style={[styles.messageText, { color: textColor }]}>{visibleText}</Text>;
+
+  return (
+    <Text selectable style={[styles.messageText, { color: textColor }]}>
+      {visibleText}
+    </Text>
+  );
 }
 
 export default function AIScreen() {
@@ -14795,16 +16828,19 @@ export default function AIScreen() {
   );
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
+  const hasMessages = Boolean(messages?.length);
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  async function onSubmit() {
-    const value = input.trim();
-    if (!value || isLoading) return;
+  async function sendPrompt(prompt: string) {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -14824,6 +16860,12 @@ export default function AIScreen() {
     }
   }
 
+  function onNewChat() {
+    if (isBusy) return;
+    setInput("");
+    setThreadId(null);
+  }
+
   return (
     <Container>
       <KeyboardAvoidingView
@@ -14831,117 +16873,210 @@ export default function AIScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>
-              AI Chat
-            </Text>
-            <Text style={[styles.headerSubtitle, { color: theme.text, opacity: 0.7 }]}>
-              Chat with our AI assistant
-            </Text>
+          <View style={[styles.toolbar, { borderBottomColor: theme.border }]}>
+            <View style={styles.statusGroup}>
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: isBusy ? theme.primary : theme.border },
+                ]}
+              />
+              <Text style={[styles.statusText, { color: theme.text }]}>
+                {isBusy
+                  ? "Streaming"
+                  : hasMessages
+                    ? \`\${messages?.length ?? 0} messages\`
+                    : "Ready"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={onNewChat}
+              disabled={isBusy || (!hasMessages && !threadId)}
+              style={[
+                styles.toolbarAction,
+                { borderColor: theme.border },
+                (isBusy || (!hasMessages && !threadId)) &&
+                  styles.toolbarActionDisabled,
+              ]}
+            >
+              <Ionicons name="add" size={16} color={theme.text} />
+              <Text style={[styles.toolbarActionText, { color: theme.text }]}>
+                New
+              </Text>
+            </TouchableOpacity>
           </View>
+
           <ScrollView
             ref={scrollViewRef}
             style={styles.scrollView}
+            contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {!messages || messages.length === 0 ? (
+            {!hasMessages ? (
               <View style={styles.emptyContainer}>
-                <Text style={[styles.emptyText, { color: theme.text, opacity: 0.7 }]}>
-                  Ask me anything to get started!
+                <View style={[styles.emptyIcon, { borderColor: theme.border }]}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={28}
+                    color={theme.text}
+                  />
+                </View>
+                <Text style={[styles.emptyTitle, { color: theme.text }]}>
+                  Start a conversation
                 </Text>
+                <Text
+                  style={[styles.emptyText, { color: theme.text }]}
+                  selectable
+                >
+                  Use a starter prompt or ask your own question.
+                </Text>
+                <View style={styles.promptList}>
+                  {starterPrompts.map((item) => (
+                    <TouchableOpacity
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                      style={[
+                        styles.promptButton,
+                        {
+                          backgroundColor: theme.card,
+                          borderColor: theme.border,
+                        },
+                        isBusy && styles.toolbarActionDisabled,
+                      ]}
+                    >
+                      <Text
+                        style={[styles.promptLabel, { color: theme.text }]}
+                      >
+                        {item.label}
+                      </Text>
+                      <Text
+                        style={[styles.promptText, { color: theme.text }]}
+                      >
+                        {item.prompt}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             ) : (
               <View style={styles.messagesList}>
-                {messages.map((message: UIMessage) => (
-                  <View
-                    key={message.key}
-                    style={[
-                      styles.messageCard,
-                      {
-                        backgroundColor: message.role === "user"
-                          ? theme.primary + "20"
-                          : theme.card,
-                        borderColor: theme.border,
-                        alignSelf: message.role === "user" ? "flex-end" : "flex-start",
-                        marginLeft: message.role === "user" ? 32 : 0,
-                        marginRight: message.role === "user" ? 0 : 32,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.messageRole, { color: theme.text }]}>
-                      {message.role === "user" ? "You" : "AI Assistant"}
-                    </Text>
-                    <MessageContent
-                      text={message.text ?? ""}
-                      isStreaming={message.status === "streaming"}
-                      textColor={theme.text}
-                    />
-                  </View>
-                ))}
+                {messages?.map((message) => {
+                  const isUser = message.role === "user";
+                  const messageText = (message.parts ?? [])
+                    .map((part) => (part.type === "text" ? part.text : ""))
+                    .join("");
+
+	                  return (
+	                    <View
+	                      key={\`\${message.order}-\${message.stepOrder}\`}
+	                      style={[
+                        styles.messageRow,
+                        isUser ? styles.userRow : styles.assistantRow,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.messageBubble,
+                          isUser
+                            ? [
+                                styles.userBubble,
+                                { backgroundColor: theme.primary },
+                              ]
+                            : [
+                                styles.assistantBubble,
+                                {
+                                  backgroundColor: theme.card,
+                                  borderColor: theme.border,
+                                },
+                              ],
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.messageRole,
+                            { color: isUser ? "#ffffff" : theme.text },
+                          ]}
+                        >
+                          {isUser ? "You" : "AI"}
+                        </Text>
+                        <MessageContent
+                          text={messageText}
+                          isStreaming={message.status === "streaming"}
+                          textColor={isUser ? "#ffffff" : theme.text}
+                        />
+                      </View>
+                    </View>
+                  );
+                })}
                 {isLoading && !hasStreamingMessage && (
-                  <View
-                    style={[
-                      styles.messageCard,
-                      {
-                        backgroundColor: theme.card,
-                        borderColor: theme.border,
-                        alignSelf: "flex-start",
-                        marginRight: 32,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.messageRole, { color: theme.text }]}>
-                      AI Assistant
-                    </Text>
-                    <View style={styles.loadingContainer}>
-                      <ActivityIndicator size="small" color={theme.primary} />
-                      <Text style={[styles.loadingText, { color: theme.text, opacity: 0.7 }]}>
-                        Thinking...
+                  <View style={[styles.messageRow, styles.assistantRow]}>
+                    <View
+                      style={[
+                        styles.messageBubble,
+                        styles.assistantBubble,
+                        {
+                          backgroundColor: theme.card,
+                          borderColor: theme.border,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.messageRole, { color: theme.text }]}>
+                        AI
                       </Text>
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="small" color={theme.primary} />
+                        <Text style={[styles.loadingText, { color: theme.text }]}>
+                          Thinking...
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 )}
               </View>
             )}
           </ScrollView>
+
           <View style={[styles.inputContainer, { borderTopColor: theme.border }]}>
             <View style={styles.inputRow}>
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Type your message..."
-                placeholderTextColor={theme.text}
+                placeholder="Message AI..."
+                placeholderTextColor={theme.border}
                 style={[
                   styles.input,
                   {
                     color: theme.text,
                     borderColor: theme.border,
-                    backgroundColor: theme.background,
+                    backgroundColor: theme.card,
                   },
                 ]}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
-                  onSubmit();
+                  sendPrompt(input);
                 }}
-                editable={!isLoading}
-                autoFocus={true}
+                editable={!isBusy}
+                returnKeyType="send"
                 multiline
               />
               <TouchableOpacity
-                onPress={onSubmit}
-                disabled={!input.trim() || isLoading}
+                onPress={() => sendPrompt(input)}
+                disabled={!canSend}
                 style={[
                   styles.sendButton,
                   {
-                    backgroundColor: input.trim() && !isLoading ? theme.primary : theme.border,
-                    opacity: input.trim() && !isLoading ? 1 : 0.5,
+                    backgroundColor: canSend ? theme.primary : theme.card,
+                    borderColor: theme.border,
                   },
+                  !canSend && styles.sendButtonDisabled,
                 ]}
               >
                 <Ionicons
-                  name="send"
+                  name="arrow-up"
                   size={20}
-                  color="#ffffff"
+                  color={canSend ? "#ffffff" : theme.text}
                 />
               </TouchableOpacity>
             </View>
@@ -14958,83 +17093,180 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
   },
-  header: {
-    marginBottom: 16,
+  toolbar: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 12,
+    paddingTop: 8,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 4,
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
   },
-  headerSubtitle: {
-    fontSize: 14,
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
+  statusText: {
+    fontSize: 13,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
+  },
+  toolbarAction: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 4,
+    minHeight: 32,
+    paddingHorizontal: 10,
+  },
+  toolbarActionDisabled: {
+    opacity: 0.45,
+  },
+  toolbarActionText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
   scrollView: {
     flex: 1,
-    marginBottom: 16,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: 16,
   },
   emptyContainer: {
+    alignItems: "center",
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
+    gap: 12,
   },
-  emptyText: {
-    fontSize: 16,
+  emptyIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "700",
     textAlign: "center",
   },
-  messagesList: {
-    gap: 8,
-    paddingBottom: 16,
+  emptyText: {
+    fontSize: 14,
+    lineHeight: 20,
+    opacity: 0.68,
+    textAlign: "center",
   },
-  messageCard: {
+  promptList: {
+    gap: 8,
+    marginTop: 8,
+    width: "100%",
+  },
+  promptButton: {
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 12,
-    maxWidth: "80%",
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  promptText: {
+    fontSize: 13,
+    lineHeight: 18,
+    opacity: 0.68,
+  },
+  messagesList: {
+    gap: 12,
+  },
+  messageRow: {
+    flexDirection: "row",
+  },
+  userRow: {
+    justifyContent: "flex-end",
+  },
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
+  messageBubble: {
+    borderRadius: 18,
+    maxWidth: "86%",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  userBubble: {
+    borderTopRightRadius: 6,
+  },
+  assistantBubble: {
+    borderTopLeftRadius: 6,
+    borderWidth: 1,
   },
   messageRole: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: "700",
     marginBottom: 4,
+    opacity: 0.72,
   },
   messageText: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 21,
   },
   loadingContainer: {
-    flexDirection: "row",
     alignItems: "center",
+    flexDirection: "row",
     gap: 8,
   },
   loadingText: {
     fontSize: 14,
+    opacity: 0.68,
   },
   inputContainer: {
     borderTopWidth: 1,
+    paddingBottom: 12,
     paddingTop: 12,
   },
   inputRow: {
-    flexDirection: "row",
     alignItems: "flex-end",
+    flexDirection: "row",
     gap: 8,
   },
   input: {
-    flex: 1,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 8,
-    fontSize: 14,
-    minHeight: 36,
-    maxHeight: 100,
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
+    maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
   },
   sendButton: {
-    padding: 8,
-    justifyContent: "center",
     alignItems: "center",
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonDisabled: {
+    borderWidth: 1,
+    opacity: 0.55,
   },
 });
 {{else}}
 import { useRef, useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
   View,
   Text,
@@ -15044,15 +17276,29 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { fetch as expoFetch } from "expo/fetch";
-import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 import { env } from "@{{projectName}}/env/native";
+
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
 
 const generateAPIUrl = (relativePath: string) => {
   const serverUrl = env.EXPO_PUBLIC_SERVER_URL;
@@ -15069,42 +17315,33 @@ export default function AIScreen() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [input, setInput] = useState("");
-  const { messages, error, sendMessage } = useChat({
+  const { messages, error, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
-      fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/ai"),
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
   });
   const scrollViewRef = useRef<ScrollView>(null);
+  const isBusy = status === "submitted" || status === "streaming";
+  const hasMessages = messages.length > 0;
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isBusy]);
 
-  function onSubmit() {
-    const value = input.trim();
-    if (value) {
-      sendMessage({ text: value });
-      setInput("");
-    }
+  function sendPrompt(prompt: string) {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
+
+    sendMessage({ text: value });
+    setInput("");
   }
 
-  if (error) {
-    return (
-      <Container>
-        <View style={styles.errorContainer}>
-          <View style={[styles.errorCard, { backgroundColor: theme.notification + "20", borderColor: theme.notification }]}>
-            <Text style={[styles.errorTitle, { color: theme.notification }]}>
-              Error: {error.message}
-            </Text>
-            <Text style={[styles.errorText, { color: theme.text, opacity: 0.7 }]}>
-              Please check your connection and try again.
-            </Text>
-          </View>
-        </View>
-      </Container>
-    );
+  function onNewChat() {
+    if (isBusy) return;
+    setInput("");
+    setMessages([]);
   }
 
   return (
@@ -15114,24 +17351,93 @@ export default function AIScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={[styles.headerTitle, { color: theme.text }]}>
-              AI Chat
-            </Text>
-            <Text style={[styles.headerSubtitle, { color: theme.text, opacity: 0.7 }]}>
-              Chat with our AI assistant
-            </Text>
+          <View style={[styles.toolbar, { borderBottomColor: theme.border }]}>
+            <View style={styles.statusGroup}>
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: isBusy ? theme.primary : theme.border },
+                ]}
+              />
+              <Text style={[styles.statusText, { color: theme.text }]}>
+                {isBusy
+                  ? status === "submitted"
+                    ? "Sending"
+                    : "Streaming"
+                  : hasMessages
+                    ? \`\${messages.length} messages\`
+                    : "Ready"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={onNewChat}
+              disabled={isBusy || !hasMessages}
+              style={[
+                styles.toolbarAction,
+                { borderColor: theme.border },
+                (isBusy || !hasMessages) && styles.toolbarActionDisabled,
+              ]}
+            >
+              <Ionicons name="add" size={16} color={theme.text} />
+              <Text style={[styles.toolbarActionText, { color: theme.text }]}>
+                New
+              </Text>
+            </TouchableOpacity>
           </View>
+
           <ScrollView
             ref={scrollViewRef}
             style={styles.scrollView}
+            contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {messages.length === 0 ? (
+            {!hasMessages ? (
               <View style={styles.emptyContainer}>
-                <Text style={[styles.emptyText, { color: theme.text, opacity: 0.7 }]}>
-                  Ask me anything to get started!
+                <View style={[styles.emptyIcon, { borderColor: theme.border }]}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={28}
+                    color={theme.text}
+                  />
+                </View>
+                <Text style={[styles.emptyTitle, { color: theme.text }]}>
+                  Start a conversation
                 </Text>
+                <Text
+                  style={[styles.emptyText, { color: theme.text }]}
+                  selectable
+                >
+                  Use a starter prompt or ask your own question.
+                </Text>
+                <View style={styles.promptList}>
+                  {starterPrompts.map((item) => (
+                    <TouchableOpacity
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                      style={[
+                        styles.promptButton,
+                        {
+                          backgroundColor: theme.card,
+                          borderColor: theme.border,
+                        },
+                        isBusy && styles.toolbarActionDisabled,
+                      ]}
+                    >
+                      <Text
+                        style={[styles.promptLabel, { color: theme.text }]}
+                      >
+                        {item.label}
+                      </Text>
+                      <Text
+                        style={[styles.promptText, { color: theme.text }]}
+                      >
+                        {item.prompt}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             ) : (
               <View style={styles.messagesList}>
@@ -15139,82 +17445,171 @@ export default function AIScreen() {
                   <View
                     key={message.id}
                     style={[
-                      styles.messageCard,
-                      {
-                        backgroundColor: message.role === "user"
-                          ? theme.primary + "20"
-                          : theme.card,
-                        borderColor: theme.border,
-                        alignSelf: message.role === "user" ? "flex-end" : "flex-start",
-                        marginLeft: message.role === "user" ? 32 : 0,
-                        marginRight: message.role === "user" ? 0 : 32,
-                      },
+                      styles.messageRow,
+                      message.role === "user"
+                        ? styles.userRow
+                        : styles.assistantRow,
                     ]}
                   >
-                    <Text style={[styles.messageRole, { color: theme.text }]}>
-                      {message.role === "user" ? "You" : "AI Assistant"}
-                    </Text>
-                    <View style={styles.messageParts}>
-                      {message.parts.map((part, i) =>
-                        part.type === "text" ? (
-                          <Text
-                            key={\`\${message.id}-\${i}\`}
-                            style={[styles.messageText, { color: theme.text }]}
-                          >
-                            {part.text}
-                          </Text>
-                        ) : (
-                          <Text
-                            key={\`\${message.id}-\${i}\`}
-                            style={[styles.messageText, { color: theme.text }]}
-                          >
-                            {JSON.stringify(part)}
-                          </Text>
-                        )
-                      )}
+                    <View
+                      style={[
+                        styles.messageBubble,
+                        message.role === "user"
+                          ? [
+                              styles.userBubble,
+                              { backgroundColor: theme.primary },
+                            ]
+                          : [
+                              styles.assistantBubble,
+                              {
+                                backgroundColor: theme.card,
+                                borderColor: theme.border,
+                              },
+                            ],
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.messageRole,
+                          {
+                            color:
+                              message.role === "user" ? "#ffffff" : theme.text,
+                          },
+                        ]}
+                      >
+                        {message.role === "user" ? "You" : "AI"}
+                      </Text>
+                      <View style={styles.messageParts}>
+                        {(message.parts ?? []).map((part, i) =>
+                          part.type === "text" ? (
+                            <Text
+                              key={\`\${message.id}-\${i}\`}
+                              selectable
+                              style={[
+                                styles.messageText,
+                                {
+                                  color:
+                                    message.role === "user"
+                                      ? "#ffffff"
+                                      : theme.text,
+                                },
+                              ]}
+                            >
+                              {part.text}
+                            </Text>
+                          ) : (
+                            <Text
+                              key={\`\${message.id}-\${i}\`}
+                              selectable
+                              style={[
+                                styles.messageText,
+                                {
+                                  color:
+                                    message.role === "user"
+                                      ? "#ffffff"
+                                      : theme.text,
+                                },
+                              ]}
+                            >
+                              {JSON.stringify(part)}
+                            </Text>
+                          )
+                        )}
+                      </View>
                     </View>
                   </View>
                 ))}
+                {isBusy && (
+                  <View style={[styles.messageRow, styles.assistantRow]}>
+                    <View
+                      style={[
+                        styles.messageBubble,
+                        styles.assistantBubble,
+                        {
+                          backgroundColor: theme.card,
+                          borderColor: theme.border,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.messageRole, { color: theme.text }]}>
+                        AI
+                      </Text>
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="small" color={theme.primary} />
+                        <Text style={[styles.loadingText, { color: theme.text }]}>
+                          Thinking...
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
               </View>
             )}
           </ScrollView>
+
+          {error && (
+            <View
+              style={[
+                styles.errorBanner,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.notification,
+                },
+              ]}
+            >
+              <Ionicons
+                name="alert-circle-outline"
+                size={18}
+                color={theme.notification}
+              />
+              <Text
+                selectable
+                style={[styles.errorText, { color: theme.text }]}
+              >
+                {error.message}
+              </Text>
+            </View>
+          )}
+
           <View style={[styles.inputContainer, { borderTopColor: theme.border }]}>
             <View style={styles.inputRow}>
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Type your message..."
-                placeholderTextColor={theme.text}
+                placeholder="Message AI..."
+                placeholderTextColor={theme.border}
                 style={[
                   styles.input,
                   {
                     color: theme.text,
                     borderColor: theme.border,
-                    backgroundColor: theme.background,
+                    backgroundColor: theme.card,
                   },
                 ]}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
-                  onSubmit();
+                  sendPrompt(input);
                 }}
-                autoFocus={true}
+                editable={!isBusy}
+                returnKeyType="send"
                 multiline
               />
               <TouchableOpacity
-                onPress={onSubmit}
-                disabled={!input.trim()}
+                onPress={() => sendPrompt(input)}
+                disabled={!canSend}
                 style={[
                   styles.sendButton,
                   {
-                    backgroundColor: input.trim() ? theme.primary : theme.border,
-                    opacity: input.trim() ? 1 : 0.5,
+                    backgroundColor: canSend ? theme.primary : theme.card,
+                    borderColor: theme.border,
                   },
+                  !canSend && styles.sendButtonDisabled,
                 ]}
               >
                 <Ionicons
-                  name="send"
+                  name="arrow-up"
                   size={20}
-                  color="#ffffff"
+                  color={canSend ? "#ffffff" : theme.text}
                 />
               </TouchableOpacity>
             </View>
@@ -15231,94 +17626,193 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
   },
-  header: {
-    marginBottom: 16,
+  toolbar: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 12,
+    paddingTop: 8,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 4,
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
   },
-  headerSubtitle: {
-    fontSize: 14,
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
+  statusText: {
+    fontSize: 13,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
+  },
+  toolbarAction: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 4,
+    minHeight: 32,
+    paddingHorizontal: 10,
+  },
+  toolbarActionDisabled: {
+    opacity: 0.45,
+  },
+  toolbarActionText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
   scrollView: {
     flex: 1,
-    marginBottom: 16,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: 16,
   },
   emptyContainer: {
+    alignItems: "center",
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
+    gap: 12,
   },
-  emptyText: {
-    fontSize: 16,
+  emptyIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "700",
     textAlign: "center",
   },
-  messagesList: {
-    gap: 8,
-    paddingBottom: 16,
+  emptyText: {
+    fontSize: 14,
+    lineHeight: 20,
+    opacity: 0.68,
+    textAlign: "center",
   },
-  messageCard: {
+  promptList: {
+    gap: 8,
+    marginTop: 8,
+    width: "100%",
+  },
+  promptButton: {
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 12,
-    maxWidth: "80%",
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  promptText: {
+    fontSize: 13,
+    lineHeight: 18,
+    opacity: 0.68,
+  },
+  messagesList: {
+    gap: 12,
+  },
+  messageRow: {
+    flexDirection: "row",
+  },
+  userRow: {
+    justifyContent: "flex-end",
+  },
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
+  messageBubble: {
+    borderRadius: 18,
+    maxWidth: "86%",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  userBubble: {
+    borderTopRightRadius: 6,
+  },
+  assistantBubble: {
+    borderTopLeftRadius: 6,
+    borderWidth: 1,
   },
   messageRole: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: "700",
     marginBottom: 4,
+    opacity: 0.72,
   },
   messageParts: {
     gap: 4,
   },
   messageText: {
+    fontSize: 15,
+    lineHeight: 21,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  loadingText: {
     fontSize: 14,
-    lineHeight: 20,
+    opacity: 0.68,
+  },
+  errorBanner: {
+    alignItems: "center",
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
   },
   inputContainer: {
     borderTopWidth: 1,
+    paddingBottom: 12,
     paddingTop: 12,
   },
   inputRow: {
-    flexDirection: "row",
     alignItems: "flex-end",
+    flexDirection: "row",
     gap: 8,
   },
   input: {
-    flex: 1,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 8,
-    fontSize: 14,
-    minHeight: 36,
-    maxHeight: 100,
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
+    maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
   },
   sendButton: {
-    padding: 8,
-    justifyContent: "center",
     alignItems: "center",
-  },
-  errorContainer: {
-    flex: 1,
+    borderRadius: 999,
+    height: 44,
     justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
+    width: 44,
   },
-  errorCard: {
+  sendButtonDisabled: {
     borderWidth: 1,
-    padding: 16,
-  },
-  errorTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  errorText: {
-    fontSize: 14,
-    textAlign: "center",
+    opacity: 0.55,
   },
 });
 {{/if}}
@@ -15346,16 +17840,17 @@ if (Platform.OS !== "web") {
 
 export {};
 `],
-  ["examples/ai/native/unistyles/app/(drawer)/ai.tsx.hbs", `{{#if (eq backend "convex")}}
+  ["examples/ai/native/unistyles/app/(drawer)/ai.tsx.hbs", `import "@/unistyles";
+
+{{#if (eq backend "convex")}}
 import { Ionicons } from "@expo/vector-icons";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
-import React, { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -15370,6 +17865,21 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
 import { Container } from "@/components/container";
 
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
+
 function MessageContent({
   text,
   isStreaming,
@@ -15382,7 +17892,12 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
-  return <Text style={style}>{visibleText}</Text>;
+
+  return (
+    <Text selectable style={style}>
+      {visibleText}
+    </Text>
+  );
 }
 
 export default function AIScreen() {
@@ -15402,16 +17917,19 @@ export default function AIScreen() {
   );
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
+  const hasMessages = Boolean(messages?.length);
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  const onSubmit = async () => {
-    const value = input.trim();
-    if (!value || isLoading) return;
+  const sendPrompt = async (prompt: string) => {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -15431,6 +17949,12 @@ export default function AIScreen() {
     }
   };
 
+  const onNewChat = () => {
+    if (isBusy) return;
+    setInput("");
+    setThreadId(null);
+  };
+
   return (
     <Container>
       <KeyboardAvoidingView
@@ -15438,52 +17962,140 @@ export default function AIScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>AI Chat</Text>
-            <Text style={styles.headerSubtitle}>
-              Chat with our AI assistant
-            </Text>
+          <View style={styles.toolbar}>
+            <View style={styles.statusGroup}>
+              <View
+                style={[
+                  styles.statusDot,
+                  isBusy ? styles.statusDotBusy : styles.statusDotIdle,
+                ]}
+              />
+              <Text style={styles.statusText}>
+                {isBusy
+                  ? "Streaming"
+                  : hasMessages
+                    ? \`\${messages?.length ?? 0} messages\`
+                    : "Ready"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={onNewChat}
+              disabled={isBusy || (!hasMessages && !threadId)}
+              style={[
+                styles.toolbarAction,
+                (isBusy || (!hasMessages && !threadId)) &&
+                  styles.disabledAction,
+              ]}
+            >
+              <Ionicons
+                name="add"
+                size={16}
+                color={theme.colors.foreground}
+              />
+              <Text style={styles.toolbarActionText}>New</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView
             ref={scrollViewRef}
             style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {!messages || messages.length === 0 ? (
+            {!hasMessages ? (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  Ask me anything to get started!
+                <View style={styles.emptyIcon}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={28}
+                    color={theme.colors.foreground}
+                  />
+                </View>
+                <Text style={styles.emptyTitle}>Start a conversation</Text>
+                <Text selectable style={styles.emptyText}>
+                  Use a starter prompt or ask your own question.
                 </Text>
+                <View style={styles.promptList}>
+                  {starterPrompts.map((item) => (
+                    <TouchableOpacity
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                      style={[
+                        styles.promptButton,
+                        isBusy && styles.disabledAction,
+                      ]}
+                    >
+                      <Text style={styles.promptLabel}>{item.label}</Text>
+                      <Text style={styles.promptText}>{item.prompt}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             ) : (
               <View style={styles.messagesWrapper}>
-                {messages.map((message: UIMessage) => (
-                  <View
-                    key={message.key}
-                    style={[
-                      styles.messageContainer,
-                      message.role === "user"
-                        ? styles.userMessage
-                        : styles.assistantMessage,
-                    ]}
-                  >
-                    <Text style={styles.messageRole}>
-                      {message.role === "user" ? "You" : "AI Assistant"}
-                    </Text>
-                    <MessageContent
-                      text={message.text ?? ""}
-                      isStreaming={message.status === "streaming"}
-                      style={styles.messageContent}
-                    />
-                  </View>
-                ))}
+                {messages?.map((message) => {
+                  const isUser = message.role === "user";
+                  const messageText = (message.parts ?? [])
+                    .map((part) => (part.type === "text" ? part.text : ""))
+                    .join("");
+
+	                  return (
+	                    <View
+	                      key={\`\${message.order}-\${message.stepOrder}\`}
+	                      style={[
+                        styles.messageRow,
+                        isUser ? styles.userRow : styles.assistantRow,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.messageBubble,
+                          isUser ? styles.userBubble : styles.assistantBubble,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.messageRole,
+                            isUser
+                              ? styles.userMessageText
+                              : styles.assistantMessageText,
+                          ]}
+                        >
+                          {isUser ? "You" : "AI"}
+                        </Text>
+                        <MessageContent
+                          text={messageText}
+                          isStreaming={message.status === "streaming"}
+                          style={
+                            isUser
+                              ? styles.userMessageText
+                              : styles.assistantMessageText
+                          }
+                        />
+                      </View>
+                    </View>
+                  );
+                })}
                 {isLoading && !hasStreamingMessage && (
-                  <View style={[styles.messageContainer, styles.assistantMessage]}>
-                    <Text style={styles.messageRole}>AI Assistant</Text>
-                    <View style={styles.loadingContainer}>
-                      <ActivityIndicator size="small" color={theme.colors.primary} />
-                      <Text style={styles.loadingText}>Thinking...</Text>
+                  <View style={[styles.messageRow, styles.assistantRow]}>
+                    <View style={[styles.messageBubble, styles.assistantBubble]}>
+                      <Text
+                        style={[
+                          styles.messageRole,
+                          styles.assistantMessageText,
+                        ]}
+                      >
+                        AI
+                      </Text>
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator
+                          size="small"
+                          color={theme.colors.primary}
+                        />
+                        <Text style={styles.loadingText}>Thinking...</Text>
+                      </View>
                     </View>
                   </View>
                 )}
@@ -15496,31 +18108,32 @@ export default function AIScreen() {
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Type your message..."
-                placeholderTextColor={theme.colors.border}
+                placeholder="Message AI..."
+                placeholderTextColor={theme.colors.mutedForeground}
                 style={styles.textInput}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
-                  onSubmit();
+                  sendPrompt(input);
                 }}
-                editable={!isLoading}
-                autoFocus={true}
+                editable={!isBusy}
+                returnKeyType="send"
+                multiline
               />
               <TouchableOpacity
-                onPress={onSubmit}
-                disabled={!input.trim() || isLoading}
+                onPress={() => sendPrompt(input)}
+                disabled={!canSend}
                 style={[
                   styles.sendButton,
-                  (!input.trim() || isLoading) && styles.sendButtonDisabled,
+                  !canSend && styles.sendButtonDisabled,
                 ]}
               >
                 <Ionicons
-                  name="send"
+                  name="arrow-up"
                   size={20}
                   color={
-                    input.trim() && !isLoading
-                      ? theme.colors.background
-                      : theme.colors.border
+                    canSend
+                      ? theme.colors.primaryForeground
+                      : theme.colors.mutedForeground
                   }
                 />
               </TouchableOpacity>
@@ -15539,108 +18152,218 @@ const styles = StyleSheet.create((theme) => ({
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.lg,
   },
-  header: {
-    marginBottom: theme.spacing.lg,
+  toolbar: {
+    alignItems: "center",
+    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: theme.colors.typography,
-    marginBottom: theme.spacing.sm,
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: theme.colors.typography,
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
+  statusDotBusy: {
+    backgroundColor: theme.colors.primary,
+  },
+  statusDotIdle: {
+    backgroundColor: theme.colors.border,
+  },
+  statusText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
+  },
+  toolbarAction: {
+    alignItems: "center",
+    borderColor: theme.colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: theme.spacing.xs,
+    minHeight: 32,
+    paddingHorizontal: 10,
+  },
+  toolbarActionText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "600",
+  },
+  disabledAction: {
+    opacity: 0.45,
   },
   messagesContainer: {
     flex: 1,
-    marginBottom: theme.spacing.md,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: theme.spacing.md,
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    flex: 1,
+    gap: theme.spacing.md,
+    justifyContent: "center",
+  },
+  emptyIcon: {
+    alignItems: "center",
+    borderColor: theme.colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyTitle: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "700",
+    textAlign: "center",
   },
   emptyText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 20,
     textAlign: "center",
-    color: theme.colors.typography,
-    fontSize: 18,
+  },
+  promptList: {
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+    width: "100%",
+  },
+  promptButton: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "700",
+  },
+  promptText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 18,
   },
   messagesWrapper: {
     gap: theme.spacing.md,
   },
-  messageContainer: {
-    padding: theme.spacing.md,
-    borderRadius: 8,
+  messageRow: {
+    flexDirection: "row",
   },
-  userMessage: {
-    backgroundColor: theme.colors.primary + "20",
-    marginLeft: theme.spacing.xl,
-    alignSelf: "flex-end",
+  userRow: {
+    justifyContent: "flex-end",
   },
-  assistantMessage: {
-    backgroundColor: theme.colors.background,
-    marginRight: theme.spacing.xl,
-    borderWidth: 1,
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
+  messageBubble: {
+    borderRadius: theme.borderRadius.xl,
+    maxWidth: "86%",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 10,
+  },
+  userBubble: {
+    backgroundColor: theme.colors.primary,
+    borderTopRightRadius: theme.borderRadius.sm,
+  },
+  assistantBubble: {
+    backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
+    borderTopLeftRadius: theme.borderRadius.sm,
+    borderWidth: 1,
   },
   messageRole: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: theme.spacing.sm,
-    color: theme.colors.typography,
+    fontSize: theme.fontSize.xs,
+    fontWeight: "700",
+    marginBottom: theme.spacing.xs,
+    opacity: 0.72,
   },
-  messageContent: {
-    color: theme.colors.typography,
-    lineHeight: 20,
+  userMessageText: {
+    color: theme.colors.primaryForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  assistantMessageText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
   },
   loadingContainer: {
-    flexDirection: "row",
     alignItems: "center",
+    flexDirection: "row",
     gap: theme.spacing.sm,
   },
   loadingText: {
-    color: theme.colors.typography,
-    opacity: 0.7,
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
   },
   inputSection: {
-    borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+    borderTopWidth: 1,
+    paddingBottom: theme.spacing.md,
     paddingTop: theme.spacing.md,
   },
   inputContainer: {
-    flexDirection: "row",
     alignItems: "flex-end",
+    flexDirection: "row",
     gap: theme.spacing.sm,
   },
   textInput: {
-    flex: 1,
-    borderWidth: 1,
+    backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
-    borderRadius: 8,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    color: theme.colors.typography,
-    backgroundColor: theme.colors.background,
-    fontSize: 16,
-    minHeight: 40,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    color: theme.colors.foreground,
+    flex: 1,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 20,
     maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 11,
+  },
+  placeholder: {
+    color: theme.colors.mutedForeground,
   },
   sendButton: {
-    backgroundColor: theme.colors.primary,
-    padding: theme.spacing.sm,
-    borderRadius: 8,
-    justifyContent: "center",
     alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonIcon: {
+    color: theme.colors.primaryForeground,
   },
   sendButtonDisabled: {
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+    opacity: 0.55,
+  },
+  sendButtonDisabledIcon: {
+    color: theme.colors.mutedForeground,
   },
 }));
 {{else}}
-import React, { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -15649,14 +18372,29 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { fetch as expoFetch } from "expo/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { Container } from "@/components/container";
 import { env } from "@{{projectName}}/env/native";
+
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
 
 const generateAPIUrl = (relativePath: string) => {
   const serverUrl = env.EXPO_PUBLIC_SERVER_URL;
@@ -15672,40 +18410,35 @@ const generateAPIUrl = (relativePath: string) => {
 export default function AIScreen() {
   const { theme } = useUnistyles();
   const [input, setInput] = useState("");
-  const { messages, error, sendMessage } = useChat({
+  const { messages, error, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
-      fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/ai"),
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
   });
 
   const scrollViewRef = useRef<ScrollView>(null);
+  const isBusy = status === "submitted" || status === "streaming";
+  const hasMessages = messages.length > 0;
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isBusy]);
 
-  const onSubmit = () => {
-    const value = input.trim();
-    if (value) {
-      sendMessage({ text: value });
-      setInput("");
-    }
+  const sendPrompt = (prompt: string) => {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
+
+    sendMessage({ text: value });
+    setInput("");
   };
 
-  if (error) {
-    return (
-      <Container>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Error: {error.message}</Text>
-          <Text style={styles.errorSubtext}>
-            Please check your connection and try again.
-          </Text>
-        </View>
-      </Container>
-    );
-  }
+  const onNewChat = () => {
+    if (isBusy) return;
+    setInput("");
+    setMessages([]);
+  };
 
   return (
     <Container>
@@ -15714,96 +18447,212 @@ export default function AIScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>AI Chat</Text>
-            <Text style={styles.headerSubtitle}>
-              Chat with our AI assistant
-            </Text>
+          <View style={styles.toolbar}>
+            <View style={styles.statusGroup}>
+              <View
+                style={[
+                  styles.statusDot,
+                  isBusy ? styles.statusDotBusy : styles.statusDotIdle,
+                ]}
+              />
+              <Text style={styles.statusText}>
+                {isBusy
+                  ? status === "submitted"
+                    ? "Sending"
+                    : "Streaming"
+                  : hasMessages
+                    ? \`\${messages.length} messages\`
+                    : "Ready"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={onNewChat}
+              disabled={isBusy || !hasMessages}
+              style={[
+                styles.toolbarAction,
+                (isBusy || !hasMessages) && styles.disabledAction,
+              ]}
+            >
+              <Ionicons
+                name="add"
+                size={16}
+                color={theme.colors.foreground}
+              />
+              <Text style={styles.toolbarActionText}>New</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView
             ref={scrollViewRef}
             style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {messages.length === 0 ? (
+            {!hasMessages ? (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  Ask me anything to get started!
+                <View style={styles.emptyIcon}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={28}
+                    color={theme.colors.foreground}
+                  />
+                </View>
+                <Text style={styles.emptyTitle}>Start a conversation</Text>
+                <Text selectable style={styles.emptyText}>
+                  Use a starter prompt or ask your own question.
                 </Text>
+                <View style={styles.promptList}>
+                  {starterPrompts.map((item) => (
+                    <TouchableOpacity
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                      style={[
+                        styles.promptButton,
+                        isBusy && styles.disabledAction,
+                      ]}
+                    >
+                      <Text style={styles.promptLabel}>{item.label}</Text>
+                      <Text style={styles.promptText}>{item.prompt}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             ) : (
               <View style={styles.messagesWrapper}>
-                {messages.map((message) => (
-                  <View
-                    key={message.id}
-                    style={[
-                      styles.messageContainer,
-                      message.role === "user"
-                        ? styles.userMessage
-                        : styles.assistantMessage,
-                    ]}
-                  >
-                    <Text style={styles.messageRole}>
-                      {message.role === "user" ? "You" : "AI Assistant"}
-                    </Text>
-                    <View style={styles.messageContentWrapper}>
-                      {message.parts.map((part, i) => {
-                        if (part.type === "text") {
-                          return (
-                            <Text
-                              key={\`\${message.id}-\${i}\`}
-                              style={styles.messageContent}
-                            >
-                              {part.text}
-                            </Text>
-                          );
-                        }
-                        return (
-                          <Text
-                            key={\`\${message.id}-\${i}\`}
-                            style={styles.messageContent}
-                          >
-                            {JSON.stringify(part)}
-                          </Text>
-                        );
-                      })}
+                {messages.map((message) => {
+                  const isUser = message.role === "user";
+
+                  return (
+                    <View
+                      key={message.id}
+                      style={[
+                        styles.messageRow,
+                        isUser ? styles.userRow : styles.assistantRow,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.messageBubble,
+                          isUser ? styles.userBubble : styles.assistantBubble,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.messageRole,
+                            isUser
+                              ? styles.userMessageText
+                              : styles.assistantMessageText,
+                          ]}
+                        >
+                          {isUser ? "You" : "AI"}
+                        </Text>
+                        <View style={styles.messageContentWrapper}>
+                          {(message.parts ?? []).map((part, i) => {
+                            if (part.type === "text") {
+                              return (
+                                <Text
+                                  key={\`\${message.id}-\${i}\`}
+                                  selectable
+                                  style={
+                                    isUser
+                                      ? styles.userMessageText
+                                      : styles.assistantMessageText
+                                  }
+                                >
+                                  {part.text}
+                                </Text>
+                              );
+                            }
+                            return (
+                              <Text
+                                key={\`\${message.id}-\${i}\`}
+                                selectable
+                                style={
+                                  isUser
+                                    ? styles.userMessageText
+                                    : styles.assistantMessageText
+                                }
+                              >
+                                {JSON.stringify(part)}
+                              </Text>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+                {isBusy && (
+                  <View style={[styles.messageRow, styles.assistantRow]}>
+                    <View style={[styles.messageBubble, styles.assistantBubble]}>
+                      <Text
+                        style={[
+                          styles.messageRole,
+                          styles.assistantMessageText,
+                        ]}
+                      >
+                        AI
+                      </Text>
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator
+                          size="small"
+                          color={theme.colors.primary}
+                        />
+                        <Text style={styles.loadingText}>Thinking...</Text>
+                      </View>
                     </View>
                   </View>
-                ))}
+                )}
               </View>
             )}
           </ScrollView>
+
+          {error && (
+            <View style={styles.errorBanner}>
+              <Ionicons
+                name="alert-circle-outline"
+                size={18}
+                color={theme.colors.destructive}
+              />
+              <Text selectable style={styles.errorText}>
+                {error.message}
+              </Text>
+            </View>
+          )}
 
           <View style={styles.inputSection}>
             <View style={styles.inputContainer}>
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Type your message..."
-                placeholderTextColor={theme.colors.border}
+                placeholder="Message AI..."
+                placeholderTextColor={theme.colors.mutedForeground}
                 style={styles.textInput}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
-                  onSubmit();
+                  sendPrompt(input);
                 }}
-                autoFocus={true}
+                editable={!isBusy}
+                returnKeyType="send"
+                multiline
               />
               <TouchableOpacity
-                onPress={onSubmit}
-                disabled={!input.trim()}
+                onPress={() => sendPrompt(input)}
+                disabled={!canSend}
                 style={[
                   styles.sendButton,
-                  !input.trim() && styles.sendButtonDisabled,
+                  !canSend && styles.sendButtonDisabled,
                 ]}
               >
                 <Ionicons
-                  name="send"
+                  name="arrow-up"
                   size={20}
                   color={
-                    input.trim()
-                      ? theme.colors.background
-                      : theme.colors.border
+                    canSend
+                      ? theme.colors.primaryForeground
+                      : theme.colors.mutedForeground
                   }
                 />
               </TouchableOpacity>
@@ -15822,115 +18671,238 @@ const styles = StyleSheet.create((theme) => ({
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.lg,
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
+  toolbar: {
     alignItems: "center",
-    paddingHorizontal: theme.spacing.md,
+    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
   },
-  errorText: {
-    color: theme.colors.destructive,
-    textAlign: "center",
-    fontSize: 18,
-    marginBottom: theme.spacing.md,
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
   },
-  errorSubtext: {
-    color: theme.colors.typography,
-    textAlign: "center",
-    fontSize: 16,
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
   },
-  header: {
-    marginBottom: theme.spacing.lg,
+  statusDotBusy: {
+    backgroundColor: theme.colors.primary,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: theme.colors.typography,
-    marginBottom: theme.spacing.sm,
+  statusDotIdle: {
+    backgroundColor: theme.colors.border,
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: theme.colors.typography,
+  statusText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
+  },
+  toolbarAction: {
+    alignItems: "center",
+    borderColor: theme.colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: theme.spacing.xs,
+    minHeight: 32,
+    paddingHorizontal: 10,
+  },
+  toolbarActionText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "600",
+  },
+  disabledAction: {
+    opacity: 0.45,
   },
   messagesContainer: {
     flex: 1,
-    marginBottom: theme.spacing.md,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: theme.spacing.md,
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    flex: 1,
+    gap: theme.spacing.md,
+    justifyContent: "center",
+  },
+  emptyIcon: {
+    alignItems: "center",
+    borderColor: theme.colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyTitle: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "700",
+    textAlign: "center",
   },
   emptyText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 20,
     textAlign: "center",
-    color: theme.colors.typography,
-    fontSize: 18,
+  },
+  promptList: {
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+    width: "100%",
+  },
+  promptButton: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "700",
+  },
+  promptText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 18,
   },
   messagesWrapper: {
     gap: theme.spacing.md,
   },
-  messageContainer: {
-    padding: theme.spacing.md,
-    borderRadius: 8,
+  messageRow: {
+    flexDirection: "row",
   },
-  userMessage: {
-    backgroundColor: theme.colors.primary + "20",
-    marginLeft: theme.spacing.xl,
-    alignSelf: "flex-end",
+  userRow: {
+    justifyContent: "flex-end",
   },
-  assistantMessage: {
-    backgroundColor: theme.colors.background,
-    marginRight: theme.spacing.xl,
-    borderWidth: 1,
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
+  messageBubble: {
+    borderRadius: theme.borderRadius.xl,
+    maxWidth: "86%",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 10,
+  },
+  userBubble: {
+    backgroundColor: theme.colors.primary,
+    borderTopRightRadius: theme.borderRadius.sm,
+  },
+  assistantBubble: {
+    backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
+    borderTopLeftRadius: theme.borderRadius.sm,
+    borderWidth: 1,
   },
   messageRole: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: theme.spacing.sm,
-    color: theme.colors.typography,
+    fontSize: theme.fontSize.xs,
+    fontWeight: "700",
+    marginBottom: theme.spacing.xs,
+    opacity: 0.72,
   },
   messageContentWrapper: {
     gap: theme.spacing.xs,
   },
-  messageContent: {
-    color: theme.colors.typography,
-    lineHeight: 20,
+  userMessageText: {
+    color: theme.colors.primaryForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  assistantMessageText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+  },
+  loadingText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+  },
+  errorBanner: {
+    alignItems: "center",
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.destructive,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  errorIcon: {
+    color: theme.colors.destructive,
+  },
+  errorText: {
+    color: theme.colors.foreground,
+    flex: 1,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 18,
   },
   inputSection: {
-    borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+    borderTopWidth: 1,
+    paddingBottom: theme.spacing.md,
     paddingTop: theme.spacing.md,
   },
   inputContainer: {
-    flexDirection: "row",
     alignItems: "flex-end",
+    flexDirection: "row",
     gap: theme.spacing.sm,
   },
   textInput: {
-    flex: 1,
-    borderWidth: 1,
+    backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
-    borderRadius: 8,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    color: theme.colors.typography,
-    backgroundColor: theme.colors.background,
-    fontSize: 16,
-    minHeight: 40,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    color: theme.colors.foreground,
+    flex: 1,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 20,
     maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 11,
+  },
+  placeholder: {
+    color: theme.colors.mutedForeground,
   },
   sendButton: {
-    backgroundColor: theme.colors.primary,
-    padding: theme.spacing.sm,
-    borderRadius: 8,
-    justifyContent: "center",
     alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonIcon: {
+    color: theme.colors.primaryForeground,
   },
   sendButtonDisabled: {
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+    opacity: 0.55,
+  },
+  sendButtonDisabledIcon: {
+    color: theme.colors.mutedForeground,
   },
 }));
 {{/if}}
@@ -15963,7 +18935,6 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   useUIMessages,
   useSmoothText,
-  type UIMessage,
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
@@ -15975,9 +18946,25 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from "react-native";
 
 import { Container } from "@/components/container";
+
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
 
 function MessageContent({
   text,
@@ -15989,7 +18976,12 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
-  return <Text className="text-foreground text-sm leading-relaxed">{visibleText}</Text>;
+
+  return (
+    <Text selectable className="text-foreground text-sm leading-relaxed">
+      {visibleText}
+    </Text>
+  );
 }
 
 export default function AIScreen() {
@@ -16010,16 +19002,19 @@ export default function AIScreen() {
   );
 
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
+  const hasMessages = Boolean(messages?.length);
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  const onSubmit = async () => {
-    const value = input.trim();
-    if (!value || isLoading) return;
+  const sendPrompt = async (prompt: string) => {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -16039,55 +19034,140 @@ export default function AIScreen() {
     }
   };
 
+  const onNewChat = () => {
+    if (isBusy) return;
+    setInput("");
+    setThreadId(null);
+  };
+
   return (
     <Container isScrollable={false}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View className="flex-1 px-4 py-4">
-          <View className="py-4 mb-4">
-            <Text className="text-2xl font-semibold text-foreground tracking-tight">AI Chat</Text>
-            <Text className="text-muted text-sm mt-1">Chat with our AI assistant</Text>
+        <View className="flex-1 px-4">
+          <View className="flex-row items-center justify-between py-3">
+            <View className="flex-row items-center gap-2">
+              <View
+                className={\`h-2 w-2 rounded-full \${
+                  isBusy ? "bg-primary" : "bg-border"
+                }\`}
+              />
+              <Text className="text-sm font-semibold text-foreground tabular-nums">
+                {isBusy
+                  ? "Streaming"
+                  : hasMessages
+                    ? \`\${messages?.length ?? 0} messages\`
+                    : "Ready"}
+              </Text>
+            </View>
+            <Button
+              size="sm"
+              variant="secondary"
+              onPress={onNewChat}
+              isDisabled={isBusy || (!hasMessages && !threadId)}
+            >
+              <Ionicons name="add" size={16} color={foregroundColor} />
+              <Text className="text-sm font-medium text-foreground">New</Text>
+            </Button>
           </View>
+
+          <Separator className="mb-1" />
 
           <ScrollView
             ref={scrollViewRef}
-            className="flex-1 mb-4"
+            className="flex-1"
             showsVerticalScrollIndicator={false}
-            contentContainerStyle=\\{{ flexGrow: 1, paddingBottom: 8 }}
+            contentContainerStyle=\\{{ flexGrow: 1, paddingVertical: 16 }}
             keyboardShouldPersistTaps="handled"
           >
-            {!messages || messages.length === 0 ? (
-              <Surface variant="secondary" className="flex-1 justify-center items-center py-8 rounded-xl">
-                <Ionicons name="chatbubble-ellipses-outline" size={32} color={mutedColor} />
-                <Text className="text-muted text-sm mt-3">Ask me anything to get started</Text>
-              </Surface>
-            ) : (
-              <View className="gap-3">
-                {messages.map((message: UIMessage) => (
+            {!hasMessages ? (
+              <View className="flex-1 justify-center gap-3">
+                <View className="items-center gap-3">
                   <Surface
-                    key={message.key}
-                    variant={message.role === "user" ? "tertiary" : "secondary"}
-                    className={\`p-3 rounded-xl \${message.role === "user" ? "ml-8" : "mr-8"}\`}
+                    variant="secondary"
+                    className="h-14 w-14 items-center justify-center rounded-full"
                   >
-                    <Text className="text-xs font-medium mb-1 text-muted">
-                      {message.role === "user" ? "You" : "AI"}
-                    </Text>
-                    <MessageContent
-                      text={message.text ?? ""}
-                      isStreaming={message.status === "streaming"}
+                    <Ionicons
+                      name="chatbubble-ellipses-outline"
+                      size={28}
+                      color={mutedColor}
                     />
                   </Surface>
+                  <Text className="text-center text-xl font-semibold text-foreground">
+                    Start a conversation
+                  </Text>
+                  <Text selectable className="text-center text-sm leading-5 text-muted">
+                    Use a starter prompt or ask your own question.
+                  </Text>
+                </View>
+                <View className="gap-2">
+                  {starterPrompts.map((item) => (
+                    <Pressable
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                    >
+                      <Surface
+                        variant="secondary"
+                        className={\`gap-1 rounded-xl p-3 \${
+                          isBusy ? "opacity-50" : ""
+                        }\`}
+                      >
+                        <Text className="text-sm font-semibold text-foreground">
+                          {item.label}
+                        </Text>
+                        <Text className="text-sm leading-5 text-muted">
+                          {item.prompt}
+                        </Text>
+                      </Surface>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            ) : (
+              <View className="gap-3">
+	                {messages?.map((message) => (
+	                  <View
+	                    key={\`\${message.order}-\${message.stepOrder}\`}
+	                    className={\`flex-row \${
+                      message.role === "user" ? "justify-end" : "justify-start"
+                    }\`}
+                  >
+                    <Surface
+                      variant={message.role === "user" ? "tertiary" : "secondary"}
+                      style=\\{{ maxWidth: "86%" }}
+                      className={\`rounded-2xl p-3 \${
+                        message.role === "user" ? "rounded-tr-md" : "rounded-tl-md"
+                      }\`}
+                    >
+                      <Text className="mb-1 text-xs font-semibold text-muted">
+                        {message.role === "user" ? "You" : "AI"}
+                      </Text>
+                      <MessageContent
+                        text={(message.parts ?? [])
+                          .map((part) => (part.type === "text" ? part.text : ""))
+                          .join("")}
+                        isStreaming={message.status === "streaming"}
+                      />
+                    </Surface>
+                  </View>
                 ))}
                 {isLoading && !hasStreamingMessage && (
-                  <Surface variant="secondary" className="p-3 mr-10 rounded-lg">
-                    <Text className="text-xs font-medium mb-1 text-muted">AI</Text>
-                    <View className="flex-row items-center gap-2">
-                      <Spinner size="sm" />
-                      <Text className="text-muted text-sm">Thinking...</Text>
-                    </View>
-                  </Surface>
+                  <View className="flex-row justify-start">
+                    <Surface
+                      variant="secondary"
+                      style=\\{{ maxWidth: "86%" }}
+                      className="rounded-2xl rounded-tl-md p-3"
+                    >
+                      <Text className="mb-1 text-xs font-semibold text-muted">AI</Text>
+                      <View className="flex-row items-center gap-2">
+                        <Spinner size="sm" />
+                        <Text className="text-sm text-muted">Thinking...</Text>
+                      </View>
+                    </Surface>
+                  </View>
                 )}
               </View>
             )}
@@ -16095,30 +19175,30 @@ export default function AIScreen() {
 
           <Separator className="mb-3" />
 
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-end gap-2 pb-4">
             <View className="flex-1">
-                <TextField>
-                  <Input
-                    value={input}
-                    onChangeText={setInput}
-                    placeholder="Type a message..."
-                    onSubmitEditing={onSubmit}
-                    editable={!isLoading}
-                    returnKeyType="send"
-                  />
-                </TextField>
-              </View>
+              <TextField>
+                <Input
+                  value={input}
+                  onChangeText={setInput}
+                  placeholder="Message AI..."
+                  onSubmitEditing={() => sendPrompt(input)}
+                  editable={!isBusy}
+                  returnKeyType="send"
+                />
+              </TextField>
+            </View>
             <Button
               isIconOnly
-              variant={input.trim() && !isLoading ? "primary" : "secondary"}
-              onPress={onSubmit}
-              isDisabled={!input.trim() || isLoading}
+              variant={canSend ? "primary" : "secondary"}
+              onPress={() => sendPrompt(input)}
+              isDisabled={!canSend}
               size="sm"
             >
               <Ionicons
                 name="arrow-up"
                 size={18}
-                color={input.trim() && !isLoading ? foregroundColor : mutedColor}
+                color={canSend ? foregroundColor : mutedColor}
               />
             </Button>
           </View>
@@ -16135,14 +19215,29 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { fetch as expoFetch } from "expo/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
 import { Button, Separator, FieldError, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
 import { env } from "@{{projectName}}/env/native";
+
+const starterPrompts = [
+  {
+    label: "Plan a feature",
+    prompt: "Help me plan the first version of a habit tracking feature.",
+  },
+  {
+    label: "Draft an API",
+    prompt: "Sketch a clean API contract for projects, tasks, and comments.",
+  },
+  {
+    label: "Debug an issue",
+    prompt: "Walk me through debugging a slow mobile screen.",
+  },
+];
 
 const generateAPIUrl = (relativePath: string) => {
   const serverUrl = env.EXPO_PUBLIC_SERVER_URL;
@@ -16157,9 +19252,8 @@ const generateAPIUrl = (relativePath: string) => {
 
 export default function AIScreen() {
   const [input, setInput] = useState("");
-  const { messages, error, sendMessage, status } = useChat({
+  const { messages, error, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
-      fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/ai"),
     }),
     onError: (error) => console.error(error, "AI Chat Error"),
@@ -16168,37 +19262,26 @@ export default function AIScreen() {
   const foregroundColor = useThemeColor("foreground");
   const mutedColor = useThemeColor("muted");
   const isBusy = status === "submitted" || status === "streaming";
+  const hasMessages = messages.length > 0;
+  const canSend = Boolean(input.trim()) && !isBusy;
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isBusy]);
 
-  const onSubmit = () => {
-    const value = input.trim();
-    if (value && !isBusy) {
-      sendMessage({ text: value });
-      setInput("");
-    }
+  const sendPrompt = (prompt: string) => {
+    const value = prompt.trim();
+    if (!value || isBusy) return;
+
+    sendMessage({ text: value });
+    setInput("");
   };
 
-  if (error) {
-    return (
-      <Container isScrollable={false}>
-        <View className="flex-1 justify-center items-center px-4">
-          <Surface variant="secondary" className="p-4 rounded-lg">
-            <FieldError isInvalid>
-              <Text className="text-danger text-center font-medium mb-1">
-                {error.message}
-              </Text>
-              <Text className="text-muted text-center text-xs">
-                Please check your connection and try again.
-              </Text>
-            </FieldError>
-          </Surface>
-        </View>
-      </Container>
-    );
-  }
+  const onNewChat = () => {
+    if (isBusy) return;
+    setInput("");
+    setMessages([]);
+  };
 
   return (
     <Container isScrollable={false}>
@@ -16206,79 +19289,170 @@ export default function AIScreen() {
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View className="flex-1 px-4 py-4">
-          <View className="py-4 mb-4">
-            <Text className="text-2xl font-semibold text-foreground tracking-tight">AI Chat</Text>
-            <Text className="text-muted text-sm mt-1">Chat with our AI assistant</Text>
+        <View className="flex-1 px-4">
+          <View className="flex-row items-center justify-between py-3">
+            <View className="flex-row items-center gap-2">
+              <View
+                className={\`h-2 w-2 rounded-full \${
+                  isBusy ? "bg-primary" : "bg-border"
+                }\`}
+              />
+              <Text className="text-sm font-semibold text-foreground tabular-nums">
+                {isBusy
+                  ? status === "submitted"
+                    ? "Sending"
+                    : "Streaming"
+                  : hasMessages
+                    ? \`\${messages.length} messages\`
+                    : "Ready"}
+              </Text>
+            </View>
+            <Button
+              size="sm"
+              variant="secondary"
+              onPress={onNewChat}
+              isDisabled={isBusy || !hasMessages}
+            >
+              <Ionicons name="add" size={16} color={foregroundColor} />
+              <Text className="text-sm font-medium text-foreground">New</Text>
+            </Button>
           </View>
+
+          <Separator className="mb-1" />
 
           <ScrollView
             ref={scrollViewRef}
-            className="flex-1 mb-4"
+            className="flex-1"
             showsVerticalScrollIndicator={false}
-            contentContainerStyle=\\{{ flexGrow: 1, paddingBottom: 8 }}
+            contentContainerStyle=\\{{ flexGrow: 1, paddingVertical: 16 }}
             keyboardShouldPersistTaps="handled"
           >
-            {messages.length === 0 ? (
-              <Surface variant="secondary" className="flex-1 justify-center items-center py-8 rounded-xl">
-                <Ionicons name="chatbubble-ellipses-outline" size={32} color={mutedColor} />
-                <Text className="text-muted text-sm mt-3">Ask me anything to get started</Text>
-              </Surface>
+            {!hasMessages ? (
+              <View className="flex-1 justify-center gap-3">
+                <View className="items-center gap-3">
+                  <Surface
+                    variant="secondary"
+                    className="h-14 w-14 items-center justify-center rounded-full"
+                  >
+                    <Ionicons
+                      name="chatbubble-ellipses-outline"
+                      size={28}
+                      color={mutedColor}
+                    />
+                  </Surface>
+                  <Text className="text-center text-xl font-semibold text-foreground">
+                    Start a conversation
+                  </Text>
+                  <Text selectable className="text-center text-sm leading-5 text-muted">
+                    Use a starter prompt or ask your own question.
+                  </Text>
+                </View>
+                <View className="gap-2">
+                  {starterPrompts.map((item) => (
+                    <Pressable
+                      key={item.label}
+                      onPress={() => sendPrompt(item.prompt)}
+                      disabled={isBusy}
+                    >
+                      <Surface
+                        variant="secondary"
+                        className={\`gap-1 rounded-xl p-3 \${
+                          isBusy ? "opacity-50" : ""
+                        }\`}
+                      >
+                        <Text className="text-sm font-semibold text-foreground">
+                          {item.label}
+                        </Text>
+                        <Text className="text-sm leading-5 text-muted">
+                          {item.prompt}
+                        </Text>
+                      </Surface>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
             ) : (
               <View className="gap-3">
                 {messages.map((message) => (
-                  <Surface
+                  <View
                     key={message.id}
-                    variant={message.role === "user" ? "tertiary" : "secondary"}
-                    className={\`p-3 rounded-xl \${message.role === "user" ? "ml-8" : "mr-8"}\`}
+                    className={\`flex-row \${
+                      message.role === "user" ? "justify-end" : "justify-start"
+                    }\`}
                   >
-                    <Text className="text-xs font-medium mb-1 text-muted">
-                      {message.role === "user" ? "You" : "AI"}
-                    </Text>
-                    <View className="gap-1">
-                      {message.parts.map((part, i) =>
-                        part.type === "text" ? (
-                          <Text
-                            key={\`\${message.id}-\${i}\`}
-                            className="text-foreground text-sm leading-relaxed"
-                          >
-                            {part.text}
-                          </Text>
-                        ) : (
-                          <Text
-                            key={\`\${message.id}-\${i}\`}
-                            className="text-foreground text-sm leading-relaxed"
-                          >
-                            {JSON.stringify(part)}
-                          </Text>
-                        )
-                      )}
-                    </View>
-                  </Surface>
+                    <Surface
+                      variant={message.role === "user" ? "tertiary" : "secondary"}
+                      style=\\{{ maxWidth: "86%" }}
+                      className={\`rounded-2xl p-3 \${
+                        message.role === "user" ? "rounded-tr-md" : "rounded-tl-md"
+                      }\`}
+                    >
+                      <Text className="mb-1 text-xs font-semibold text-muted">
+                        {message.role === "user" ? "You" : "AI"}
+                      </Text>
+                      <View className="gap-1">
+                        {(message.parts ?? []).map((part, i) =>
+                          part.type === "text" ? (
+                            <Text
+                              key={\`\${message.id}-\${i}\`}
+                              selectable
+                              className="text-sm leading-relaxed text-foreground"
+                            >
+                              {part.text}
+                            </Text>
+                          ) : (
+                            <Text
+                              key={\`\${message.id}-\${i}\`}
+                              selectable
+                              className="text-sm leading-relaxed text-foreground"
+                            >
+                              {JSON.stringify(part)}
+                            </Text>
+                          )
+                        )}
+                      </View>
+                    </Surface>
+                  </View>
                 ))}
                 {isBusy && (
-                  <Surface variant="secondary" className="p-3 mr-8 rounded-xl">
-                    <Text className="text-xs font-medium mb-1 text-muted">AI</Text>
-                    <View className="flex-row items-center gap-2">
-                      <Spinner size="sm" />
-                      <Text className="text-muted text-sm">Thinking...</Text>
-                    </View>
-                  </Surface>
+                  <View className="flex-row justify-start">
+                    <Surface
+                      variant="secondary"
+                      style=\\{{ maxWidth: "86%" }}
+                      className="rounded-2xl rounded-tl-md p-3"
+                    >
+                      <Text className="mb-1 text-xs font-semibold text-muted">AI</Text>
+                      <View className="flex-row items-center gap-2">
+                        <Spinner size="sm" />
+                        <Text className="text-sm text-muted">Thinking...</Text>
+                      </View>
+                    </Surface>
+                  </View>
                 )}
               </View>
             )}
           </ScrollView>
 
+          {error && (
+            <Surface variant="secondary" className="mb-3 rounded-xl p-3">
+              <FieldError isInvalid>
+                <Text selectable className="text-sm font-medium text-danger">
+                  {error.message}
+                </Text>
+              </FieldError>
+            </Surface>
+          )}
+
           <Separator className="mb-3" />
 
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-end gap-2 pb-4">
             <View className="flex-1">
               <TextField>
                 <Input
                   value={input}
                   onChangeText={setInput}
-                  placeholder="Type a message..."
-                  onSubmitEditing={onSubmit}
+                  placeholder="Message AI..."
+                  onSubmitEditing={() => sendPrompt(input)}
                   returnKeyType="send"
                   editable={!isBusy}
                 />
@@ -16286,15 +19460,15 @@ export default function AIScreen() {
             </View>
             <Button
               isIconOnly
-              variant={input.trim() && !isBusy ? "primary" : "secondary"}
-              onPress={onSubmit}
-              isDisabled={!input.trim() || isBusy}
+              variant={canSend ? "primary" : "secondary"}
+              onPress={() => sendPrompt(input)}
+              isDisabled={!canSend}
               size="sm"
             >
               <Ionicons
                 name="arrow-up"
                 size={18}
-                color={input.trim() && !isBusy ? foregroundColor : mutedColor}
+                color={canSend ? foregroundColor : mutedColor}
               />
             </Button>
           </View>
@@ -16329,8 +19503,7 @@ if (Platform.OS !== "web") {
 export {};
 `],
   ["examples/ai/web/nuxt/app/pages/ai.vue.hbs", `<script setup lang="ts">
-import { Chat } from '@ai-sdk/vue'
-import type { UIMessage } from 'ai'
+import { useChat } from '@ai-sdk/vue'
 import { getTextFromMessage } from '@nuxt/ui/utils/ai'
 import { DefaultChatTransport } from 'ai'
 import { computed, ref } from 'vue'
@@ -16354,12 +19527,10 @@ const SUGGESTIONS = [
   }
 ] as const
 
-const messages: UIMessage[] = []
 const input = ref('')
 const aiApiUrl = {{#if (eq backend "self")}}'/api/ai'{{else}}\`\${useRuntimeConfig().public.serverUrl}/ai\`{{/if}}
 
-const chat = new Chat({
-  messages,
+const { messages, status, error, sendMessage, stop, regenerate } = useChat({
   transport: new DefaultChatTransport({
     api: aiApiUrl,
   }),
@@ -16368,8 +19539,8 @@ const chat = new Chat({
   }
 })
 
-const hasMessages = computed(() => chat.messages.length > 0)
-const isLoading = computed(() => chat.status === 'submitted' || chat.status === 'streaming')
+const hasMessages = computed(() => messages.value.length > 0)
+const isLoading = computed(() => status.value === 'submitted' || status.value === 'streaming')
 
 function applySuggestion(prompt: string) {
   input.value = prompt
@@ -16382,7 +19553,7 @@ async function handleSubmit(e: Event) {
 
   if (!userInput.trim()) return
 
-  chat.sendMessage({ text: userInput })
+  sendMessage({ text: userInput })
 }
 </script>
 
@@ -16423,8 +19594,8 @@ async function handleSubmit(e: Event) {
 
       <div v-else class="mx-auto flex h-full w-full max-w-3xl min-h-0 flex-col">
         <UChatMessages
-          :messages="chat.messages"
-          :status="chat.status"
+          :messages="messages"
+          :status="status"
           :assistant="{
             variant: 'outline',
             avatar: {
@@ -16455,21 +19626,21 @@ async function handleSubmit(e: Event) {
           :rows="1"
           :maxrows="8"
           :loading="isLoading"
-          :error="chat.error"
+          :error="error"
           :placeholder="hasMessages ? 'Keep the conversation going...' : 'Ask about your app, schema, auth, or deployment...'"
           @submit="handleSubmit"
         >
           <UChatPromptSubmit
             class="ms-auto"
-            :status="chat.status"
-            @stop="() => chat.stop()"
-            @reload="() => chat.regenerate()"
+            :status="status"
+            @stop="stop"
+            @reload="regenerate"
           />
         </UChatPrompt>
 
         <div class="mt-2 flex items-center justify-between gap-3 px-1 text-xs text-muted">
           <span>Press Enter to send and Shift+Enter for a new line.</span>
-          <span>\\{{ hasMessages ? \`\${chat.messages.length} messages\` : 'Ready when you are.' }}</span>
+          <span>\\{{ hasMessages ? \`\${messages.length} messages\` : 'Ready when you are.' }}</span>
         </div>
       </div>
     </div>
@@ -16481,12 +19652,16 @@ async function handleSubmit(e: Event) {
 
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
-  useUIMessages,
   useSmoothText,
-  type UIMessage,
+  useUIMessages,
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
-import { Send, Loader2 } from "lucide-react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
 {{#if (eq webDeploy "cloudflare")}}
 import dynamic from "next/dynamic";
 
@@ -16504,12 +19679,43 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
-function MessageContent({
+function StreamingMessageText({
   text,
   isStreaming,
 }: {
@@ -16519,6 +19725,7 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
+
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
@@ -16526,7 +19733,6 @@ export default function AIPage() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
@@ -16537,18 +19743,15 @@ export default function AIPage() {
     { initialNumItems: 50, stream: true },
   );
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -16568,68 +19771,160 @@ export default function AIPage() {
     }
   };
 
-  return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {!messages || messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message: UIMessage) => (
-            <div
-              key={message.key}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              <MessageContent
-                text={message.text ?? ""}
-                isStreaming={message.status === "streaming"}
-              />
-            </div>
-          ))
-        )}
-        {isLoading && !hasStreamingMessage && (
-          <div className="p-3 rounded-lg bg-secondary/20 mr-8">
-            <p className="text-sm font-semibold mb-1">AI Assistant</p>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Thinking...</span>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-          disabled={isLoading}
-        />
-        <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send size={18} />
-          )}
-        </Button>
-      </form>
-    </div>
+  const resetConversation = () => {
+    setInput("");
+    setThreadId(null);
+  };
+
+  return (
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isBusy}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {(!messages || messages.length === 0) && !isLoading ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isBusy}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+	                        return (
+	                          <MessageScrollerItem
+	                            key={\`\${message.order}-\${message.stepOrder}\`}
+	                            scrollAnchor={isUser}
+	                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    <StreamingMessageText
+                                      text={(message.parts ?? [])
+                                        .map((part) => (part.type === "text" ? part.text : ""))
+                                        .join("")}
+                                      isStreaming={message.status === "streaming"}
+                                    />
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {isLoading && !hasStreamingMessage && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isBusy}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isBusy || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isBusy ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{else}}
@@ -16637,7 +19932,12 @@ export default function AIPage() {
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { Send } from "lucide-react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
 {{#if (eq webDeploy "cloudflare")}}
 import dynamic from "next/dynamic";
 
@@ -16655,91 +19955,221 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 import { env } from "@{{projectName}}/env/web";
 
 export default function AIPage() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: {{#if (eq backend "self")}}"/api/ai"{{else}}\`\${env.NEXT_PUBLIC_SERVER_URL}/ai\`{{/if}},
     }),
   });
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const isSending = status === "submitted" || status === "streaming";
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
   };
 
-  return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              {message.parts?.map((part, index) => {
-                if (part.type === "text") {
-                  return (
-                    <Streamdown
-                      key={index}
-                      isAnimating={status === "streaming" && message.role === "assistant"}
-                    >
-                      {part.text}
-                    </Streamdown>
-                  );
-                }
-                return null;
-              })}
-            </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-        />
-        <Button type="submit" size="icon">
-          <Send size={18} />
-        </Button>
-      </form>
-    </div>
+  const resetConversation = () => {
+    setInput("");
+    setMessages([]);
+  };
+
+  return (
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isSending}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {messages.length === 0 && !isSending ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isSending}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+                        return (
+                          <MessageScrollerItem
+                            key={message.id}
+                            scrollAnchor={isUser}
+                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    {message.parts?.map((part, index) => {
+                                      if (part.type === "text") {
+                                        return (
+                                          <Streamdown
+                                            key={index}
+                                            isAnimating={status === "streaming" && message.role === "assistant"}
+                                          >
+                                            {part.text}
+                                          </Streamdown>
+                                        );
+                                      }
+                                      return null;
+                                    })}
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {status === "submitted" && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isSending}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isSending || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isSending ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{/if}}
@@ -16747,19 +20177,54 @@ export default function AIPage() {
   ["examples/ai/web/react/react-router/src/routes/ai.tsx.hbs", `{{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
-  useUIMessages,
   useSmoothText,
-  type UIMessage,
+  useUIMessages,
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
-import { Send, Loader2 } from "lucide-react";
-import React, { useRef, useEffect, useState, type FormEvent } from "react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
-function MessageContent({
+function StreamingMessageText({
   text,
   isStreaming,
 }: {
@@ -16769,14 +20234,14 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
+
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
-const AI: React.FC = () => {
+export default function AI() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
@@ -16787,18 +20252,15 @@ const AI: React.FC = () => {
     { initialNumItems: 50, stream: true },
   );
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -16818,189 +20280,447 @@ const AI: React.FC = () => {
     }
   };
 
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
+
+  const resetConversation = () => {
+    setInput("");
+    setThreadId(null);
+  };
+
   return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {!messages || messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message: UIMessage) => (
-            <div
-              key={message.key}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
               </p>
-              <MessageContent
-                text={message.text ?? ""}
-                isStreaming={message.status === "streaming"}
-              />
             </div>
-          ))
-        )}
-        {isLoading && !hasStreamingMessage && (
-          <div className="p-3 rounded-lg bg-secondary/20 mr-8">
-            <p className="text-sm font-semibold mb-1">AI Assistant</p>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Thinking...</span>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isBusy}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
             </div>
           </div>
-        )}
-        <div ref={messagesEndRef} />
+        </header>
+        <main className="min-h-0 flex-1">
+              {(!messages || messages.length === 0) && !isLoading ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isBusy}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+	                        return (
+	                          <MessageScrollerItem
+	                            key={\`\${message.order}-\${message.stepOrder}\`}
+	                            scrollAnchor={isUser}
+	                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    <StreamingMessageText
+                                      text={(message.parts ?? [])
+                                        .map((part) => (part.type === "text" ? part.text : ""))
+                                        .join("")}
+                                      isStreaming={message.status === "streaming"}
+                                    />
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {isLoading && !hasStreamingMessage && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isBusy}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isBusy || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isBusy ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
       </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-          disabled={isLoading}
-        />
-        <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send size={18} />
-          )}
-        </Button>
-      </form>
-    </div>
+    </MessageScrollerProvider>
   );
-};
-
-export default AI;
+}
 {{else}}
-import React, { useRef, useEffect, useState, type FormEvent } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { Send } from "lucide-react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 import { env } from "@{{projectName}}/env/web";
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
-const AI: React.FC = () => {
+export default function AI() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: \`\${env.VITE_SERVER_URL}/ai\`,
     }),
   });
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const isSending = status === "submitted" || status === "streaming";
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
   };
 
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
+
+  const resetConversation = () => {
+    setInput("");
+    setMessages([]);
+  };
+
   return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
               </p>
-              {message.parts?.map((part, index) => {
-                if (part.type === "text") {
-                  return (
-                    <Streamdown
-                      key={index}
-                      isAnimating={status === "streaming" && message.role === "assistant"}
-                    >
-                      {part.text}
-                    </Streamdown>
-                  );
-                }
-                return null;
-              })}
             </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isSending}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {messages.length === 0 && !isSending ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isSending}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+                        return (
+                          <MessageScrollerItem
+                            key={message.id}
+                            scrollAnchor={isUser}
+                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    {message.parts?.map((part, index) => {
+                                      if (part.type === "text") {
+                                        return (
+                                          <Streamdown
+                                            key={index}
+                                            isAnimating={status === "streaming" && message.role === "assistant"}
+                                          >
+                                            {part.text}
+                                          </Streamdown>
+                                        );
+                                      }
+                                      return null;
+                                    })}
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {status === "submitted" && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isSending}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isSending || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isSending ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
       </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-        />
-        <Button type="submit" size="icon">
-          <Send size={18} />
-        </Button>
-      </form>
-    </div>
+    </MessageScrollerProvider>
   );
-};
-
-export default AI;
+}
 {{/if}}
 `],
   ["examples/ai/web/react/tanstack-router/src/routes/ai.tsx.hbs", `{{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
-  useUIMessages,
   useSmoothText,
-  type UIMessage,
+  useUIMessages,
 } from "@convex-dev/agent/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { Send, Loader2 } from "lucide-react";
-import { useRef, useEffect, useState, type FormEvent } from "react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
 });
 
-function MessageContent({
+function StreamingMessageText({
   text,
   isStreaming,
 }: {
@@ -17010,6 +20730,7 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
+
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
@@ -17017,7 +20738,6 @@ function RouteComponent() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
@@ -17028,18 +20748,15 @@ function RouteComponent() {
     { initialNumItems: 50, stream: true },
   );
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -17059,82 +20776,211 @@ function RouteComponent() {
     }
   };
 
-  return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {!messages || messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message: UIMessage) => (
-            <div
-              key={message.key}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              <MessageContent
-                text={message.text ?? ""}
-                isStreaming={message.status === "streaming"}
-              />
-            </div>
-          ))
-        )}
-        {isLoading && !hasStreamingMessage && (
-          <div className="p-3 rounded-lg bg-secondary/20 mr-8">
-            <p className="text-sm font-semibold mb-1">AI Assistant</p>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Thinking...</span>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-          disabled={isLoading}
-        />
-        <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send size={18} />
-          )}
-        </Button>
-      </form>
-    </div>
+  const resetConversation = () => {
+    setInput("");
+    setThreadId(null);
+  };
+
+  return (
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isBusy}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {(!messages || messages.length === 0) && !isLoading ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isBusy}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+	                        return (
+	                          <MessageScrollerItem
+	                            key={\`\${message.order}-\${message.stepOrder}\`}
+	                            scrollAnchor={isUser}
+	                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    <StreamingMessageText
+                                      text={(message.parts ?? [])
+                                        .map((part) => (part.type === "text" ? part.text : ""))
+                                        .join("")}
+                                      isStreaming={message.status === "streaming"}
+                                    />
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {isLoading && !hasStreamingMessage && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isBusy}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isBusy || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isBusy ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{else}}
-import { createFileRoute } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
+import { createFileRoute } from "@tanstack/react-router";
 import { DefaultChatTransport } from "ai";
-import { Input } from "@{{projectName}}/ui/components/input";
-import { Button } from "@{{projectName}}/ui/components/button";
-import { Send } from "lucide-react";
-import { useRef, useEffect, useState, type FormEvent } from "react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 {{/unless}}
+
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
+import { Button } from "@{{projectName}}/ui/components/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
@@ -17142,83 +20988,182 @@ export const Route = createFileRoute("/ai")({
 
 function RouteComponent() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: {{#if (eq backend "self")}}"/api/ai"{{else}}\`\${env.VITE_SERVER_URL}/ai\`{{/if}},
     }),
   });
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const isSending = status === "submitted" || status === "streaming";
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
   };
 
-  return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              {message.parts?.map((part, index) => {
-                if (part.type === "text") {
-                  return (
-                    <Streamdown
-                      key={index}
-                      isAnimating={status === "streaming" && message.role === "assistant"}
-                    >
-                      {part.text}
-                    </Streamdown>
-                  );
-                }
-                return null;
-              })}
-            </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-        />
-        <Button type="submit" size="icon">
-          <Send size={18} />
-        </Button>
-      </form>
-    </div>
+  const resetConversation = () => {
+    setInput("");
+    setMessages([]);
+  };
+
+  return (
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isSending}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {messages.length === 0 && !isSending ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isSending}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+                        return (
+                          <MessageScrollerItem
+                            key={message.id}
+                            scrollAnchor={isUser}
+                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    {message.parts?.map((part, index) => {
+                                      if (part.type === "text") {
+                                        return (
+                                          <Streamdown
+                                            key={index}
+                                            isAnimating={status === "streaming" && message.role === "assistant"}
+                                          >
+                                            {part.text}
+                                          </Streamdown>
+                                        );
+                                      }
+                                      return null;
+                                    })}
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {status === "submitted" && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isSending}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isSending || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isSending ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{/if}}
@@ -17226,24 +21171,59 @@ function RouteComponent() {
   ["examples/ai/web/react/tanstack-start/src/routes/ai.tsx.hbs", `{{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
-  useUIMessages,
   useSmoothText,
-  type UIMessage,
+  useUIMessages,
 } from "@convex-dev/agent/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { Send, Loader2 } from "lucide-react";
-import { useRef, useEffect, useState, type FormEvent } from "react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
 });
 
-function MessageContent({
+function StreamingMessageText({
   text,
   isStreaming,
 }: {
@@ -17253,6 +21233,7 @@ function MessageContent({
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
+
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
@@ -17260,7 +21241,6 @@ function RouteComponent() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const createThread = useMutation(api.chat.createNewThread);
   const sendMessage = useMutation(api.chat.sendMessage);
@@ -17271,18 +21251,15 @@ function RouteComponent() {
     { initialNumItems: 50, stream: true },
   );
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const hasStreamingMessage = messages?.some(
-    (m: UIMessage) => m.status === "streaming",
+    (m) => m.status === "streaming",
   );
+  const isBusy = isLoading || Boolean(hasStreamingMessage);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isBusy) return;
 
     setIsLoading(true);
     setInput("");
@@ -17302,83 +21279,211 @@ function RouteComponent() {
     }
   };
 
-  return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {!messages || messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message: UIMessage) => (
-            <div
-              key={message.key}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              <MessageContent
-                text={message.text ?? ""}
-                isStreaming={message.status === "streaming"}
-              />
-            </div>
-          ))
-        )}
-        {isLoading && !hasStreamingMessage && (
-          <div className="p-3 rounded-lg bg-secondary/20 mr-8">
-            <p className="text-sm font-semibold mb-1">AI Assistant</p>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Thinking...</span>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-          disabled={isLoading}
-        />
-        <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send size={18} />
-          )}
-        </Button>
-      </form>
-    </div>
+  const resetConversation = () => {
+    setInput("");
+    setThreadId(null);
+  };
+
+  return (
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isBusy}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {(!messages || messages.length === 0) && !isLoading ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isBusy}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+	                        return (
+	                          <MessageScrollerItem
+	                            key={\`\${message.order}-\${message.stepOrder}\`}
+	                            scrollAnchor={isUser}
+	                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    <StreamingMessageText
+                                      text={(message.parts ?? [])
+                                        .map((part) => (part.type === "text" ? part.text : ""))
+                                        .join("")}
+                                      isStreaming={message.status === "streaming"}
+                                    />
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {isLoading && !hasStreamingMessage && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isBusy}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isBusy || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isBusy ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{else}}
-import { createFileRoute } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
+import { createFileRoute } from "@tanstack/react-router";
 import { DefaultChatTransport } from "ai";
-import { Send } from "lucide-react";
-import { useRef, useEffect, useState, type FormEvent } from "react";
+import {
+  ArrowUpIcon,
+  Loader2,
+  MessageCircleDashedIcon,
+  RotateCwIcon,
+} from "lucide-react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 {{/unless}}
 
+import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
-import { Input } from "@{{projectName}}/ui/components/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@{{projectName}}/ui/components/empty";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@{{projectName}}/ui/components/input-group";
+import {
+  Message,
+  MessageContent as MessageBody,
+  MessageHeader,
+} from "@{{projectName}}/ui/components/message";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@{{projectName}}/ui/components/message-scroller";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@{{projectName}}/ui/components/tooltip";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
@@ -17386,96 +21491,201 @@ export const Route = createFileRoute("/ai")({
 
 function RouteComponent() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: {{#if (eq backend "self")}}"/api/ai"{{else}}\`\${env.VITE_SERVER_URL}/ai\`{{/if}},
     }),
   });
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const isSending = status === "submitted" || status === "streaming";
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
   };
 
-  return (
-    <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
-      <div className="overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground mt-8">
-            Ask me anything to get started!
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={\`p-3 rounded-lg \${
-                message.role === "user"
-                  ? "bg-primary/10 ml-8"
-                  : "bg-secondary/20 mr-8"
-              }\`}
-            >
-              <p className="text-sm font-semibold mb-1">
-                {message.role === "user" ? "You" : "AI Assistant"}
-              </p>
-              {message.parts?.map((part, index) => {
-                if (part.type === "text") {
-                  return (
-                    <Streamdown
-                      key={index}
-                      isAnimating={status === "streaming" && message.role === "assistant"}
-                    >
-                      {part.text}
-                    </Streamdown>
-                  );
-                }
-                return null;
-              })}
-            </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex items-center space-x-2 pt-2 border-t"
-      >
-        <Input
-          name="prompt"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          autoComplete="off"
-          autoFocus
-        />
-        <Button type="submit" size="icon">
-          <Send size={18} />
-        </Button>
-      </form>
-    </div>
+  const resetConversation = () => {
+    setInput("");
+    setMessages([]);
+  };
+
+  return (
+    <MessageScrollerProvider>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <header className="shrink-0 border-b px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-sm font-medium">New Chat</h1>
+              <p className="text-xs/relaxed text-muted-foreground">
+                How can I help you today?
+              </p>
+            </div>
+            <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Reset conversation"
+                        onClick={resetConversation}
+                        disabled={isSending}
+                      />
+                    }
+                  >
+                    <RotateCwIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>Reset</TooltipContent>
+                </Tooltip>
+            </div>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1">
+              {messages.length === 0 && !isSending ? (
+                <Empty className="mx-auto h-full max-w-3xl px-4">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MessageCircleDashedIcon />
+                    </EmptyMedia>
+                    <EmptyTitle>Morning, {{projectName}}!</EmptyTitle>
+                    <EmptyDescription>
+                      What are we working on today?
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <MessageScroller>
+                  <MessageScrollerViewport>
+                    <MessageScrollerContent
+                      aria-busy={isSending}
+                      className="mx-auto w-full max-w-3xl px-4 py-6"
+                    >
+                      {messages.map((message) => {
+                        const isUser = message.role === "user";
+
+                        return (
+                          <MessageScrollerItem
+                            key={message.id}
+                            scrollAnchor={isUser}
+                          >
+                            <Message align={isUser ? "end" : "start"}>
+                              <MessageBody>
+                                <MessageHeader>
+                                  {isUser ? "You" : "AI Assistant"}
+                                </MessageHeader>
+                                <Bubble
+                                  align={isUser ? "end" : "start"}
+                                  variant={isUser ? "default" : "secondary"}
+                                >
+                                  <BubbleContent>
+                                    {message.parts?.map((part, index) => {
+                                      if (part.type === "text") {
+                                        return (
+                                          <Streamdown
+                                            key={index}
+                                            isAnimating={status === "streaming" && message.role === "assistant"}
+                                          >
+                                            {part.text}
+                                          </Streamdown>
+                                        );
+                                      }
+                                      return null;
+                                    })}
+                                  </BubbleContent>
+                                </Bubble>
+                              </MessageBody>
+                            </Message>
+                          </MessageScrollerItem>
+                        );
+                      })}
+                      {status === "submitted" && (
+                        <MessageScrollerItem>
+                          <Message align="start">
+                            <MessageBody>
+                              <Bubble variant="secondary">
+                                <BubbleContent className="flex items-center gap-2">
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span className="shimmer">Thinking...</span>
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageBody>
+                          </Message>
+                        </MessageScrollerItem>
+                      )}
+                      <MessageScrollerItem scrollAnchor />
+                    </MessageScrollerContent>
+                  </MessageScrollerViewport>
+                  <MessageScrollerButton />
+                </MessageScroller>
+              )}
+        </main>
+        <footer className="shrink-0 border-t px-4 py-3">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <form onSubmit={handleSubmit} className="w-full">
+                <InputGroup>
+                  <InputGroupTextarea
+                    name="prompt"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    placeholder="Type your message..."
+                    className="max-h-32 min-h-14"
+                    rows={1}
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isSending}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={isSending || !input.trim()}
+                      className="ml-auto"
+                    >
+                      {isSending ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+            </form>
+          </div>
+        </footer>
+      </div>
+    </MessageScrollerProvider>
   );
 }
 {{/if}}
 `],
   ["examples/ai/web/svelte/src/routes/ai/+page.svelte.hbs", `<script lang="ts">
+	{{#unless (eq backend "self")}}
 	import { PUBLIC_SERVER_URL } from "$env/static/public";
+	{{/unless}}
 	import { Chat } from "@ai-sdk/svelte";
 	import { DefaultChatTransport } from "ai";
 
 	let input = $state("");
 	const chat = new Chat({
 		transport: new DefaultChatTransport({
+			{{#if (eq backend "self")}}
+			api: "/api/ai",
+			{{else}}
 			api: \`\${PUBLIC_SERVER_URL}/ai\`,
+			{{/if}}
 		}),
 	});
 
@@ -17632,7 +21842,7 @@ import { Ionicons } from "@expo/vector-icons";
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 {{else}}
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -17682,7 +21892,7 @@ export default function TodosScreen() {
   }
 
   const isLoading = !todos;
-  const completedCount = todos?.filter((t) => t.completed).length || 0;
+  const completedCount = todos?.filter((t: Doc<"todos">) => t.completed).length || 0;
   const totalCount = todos?.length || 0;
   {{else}}
     {{#if (eq api "orpc")}}
@@ -17891,7 +22101,7 @@ export default function TodosScreen() {
 
         {todos && todos.length > 0 && (
           <View style={styles.todosList}>
-            {todos.map((todo) => (
+            {todos.map((todo: Doc<"todos">) => (
               <View
                 key={todo._id}
                 style={[
@@ -18081,9 +22291,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   addButton: {
-    padding: 12,
-    justifyContent: "center",
+    width: 48,
+    height: 48,
     alignItems: "center",
+    justifyContent: "center",
   },
   centerContainer: {
     alignItems: "center",
@@ -18121,23 +22332,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   todoTextContainer: {
     flex: 1,
   },
   todoText: {
     fontSize: 16,
   },
-  deleteButton: {
-    padding: 8,
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
-});`],
+  deleteButton: {
+    padding: 4,
+  },
+});
+`],
   ["examples/todo/native/unistyles/app/(drawer)/todos.tsx.hbs", `import { useState } from "react";
 import {
   View,
@@ -18154,7 +22366,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 {{else}}
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -18322,7 +22534,7 @@ export default function TodosScreen() {
           {todos && todos.length === 0 && !isLoading && (
             <Text style={styles.emptyText}>No todos yet. Add one!</Text>
           )}
-          {todos?.map((todo) => (
+          {todos?.map((todo: Doc<"todos">) => (
             <View key={todo._id} style={styles.todoItem}>
               <TouchableOpacity
                 onPress={() => handleToggleTodo(todo._id, todo.completed)}
@@ -18485,7 +22697,7 @@ import { Ionicons } from "@expo/vector-icons";
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 {{else}}
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
@@ -18576,7 +22788,7 @@ export default function TodosScreen() {
     };
 
     const isLoading = !todos;
-    const completedCount = todos?.filter((t) => t.completed).length || 0;
+    const completedCount = todos?.filter((t: Doc<"todos">) => t.completed).length || 0;
     const totalCount = todos?.length || 0;
   {{else}}
     const handleAddTodo = () => {
@@ -18688,7 +22900,7 @@ export default function TodosScreen() {
 
           {todos && todos.length > 0 && (
             <View className="gap-2">
-              {todos.map((todo) => (
+              {todos.map((todo: Doc<"todos">) => (
                 <Surface key={todo._id} variant="secondary" className="p-3 rounded-lg">
                   <View className="flex-row items-center gap-3">
                     <Checkbox
@@ -18760,22 +22972,33 @@ export default function TodosScreen() {
       </ScrollView>
     </Container>
   );
-}`],
+}
+`],
   ["examples/todo/server/drizzle/base/src/routers/todo.ts.hbs", `{{#if (eq api "orpc")}}
 import { eq } from "drizzle-orm";
 import z from "zod";
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createDb } from "@{{projectName}}/db";
+{{else}}
 import { db } from "@{{projectName}}/db";
+{{/if}}
 import { todo } from "@{{projectName}}/db/schema/todo";
 import { publicProcedure } from "../index";
 
 export const todoRouter = {
-  getAll: publicProcedure.handler(async () => {
+  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+    const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
     return await db.select().from(todo);
   }),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .handler(async ({ input }) => {
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
       return await db
         .insert(todo)
         .values({
@@ -18785,7 +23008,10 @@ export const todoRouter = {
 
   toggle: publicProcedure
     .input(z.object({ id: z.number(), completed: z.boolean() }))
-    .handler(async ({ input }) => {
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
       return await db
         .update(todo)
         .set({ completed: input.completed })
@@ -18794,7 +23020,10 @@ export const todoRouter = {
 
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
-    .handler(async ({ input }) => {
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
       return await db.delete(todo).where(eq(todo.id, input.id));
     }),
 };
@@ -18805,16 +23034,26 @@ import z from "zod";
 import { router, publicProcedure } from "../index";
 import { todo } from "@{{projectName}}/db/schema/todo";
 import { eq } from "drizzle-orm";
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createDb } from "@{{projectName}}/db";
+{{else}}
 import { db } from "@{{projectName}}/db";
+{{/if}}
 
 export const todoRouter = router({
   getAll: publicProcedure.query(async () => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+    const db = createDb();
+{{/if}}
     return await db.select().from(todo);
   }),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
     .mutation(async ({ input }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const db = createDb();
+{{/if}}
       return await db.insert(todo).values({
         text: input.text,
       });
@@ -18823,6 +23062,9 @@ export const todoRouter = router({
   toggle: publicProcedure
     .input(z.object({ id: z.number(), completed: z.boolean() }))
     .mutation(async ({ input }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const db = createDb();
+{{/if}}
       return await db
         .update(todo)
         .set({ completed: input.completed })
@@ -18832,6 +23074,9 @@ export const todoRouter = router({
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const db = createDb();
+{{/if}}
       return await db.delete(todo).where(eq(todo.id, input.id));
     }),
 });
@@ -18863,19 +23108,22 @@ export const todo = sqliteTable("todo", {
 `],
   ["examples/todo/server/mongoose/base/src/routers/todo.ts.hbs", `{{#if (eq api "orpc")}}
 import z from "zod";
+import "@{{projectName}}/db";
 import { publicProcedure } from "../index";
 import { Todo } from "@{{projectName}}/db/models/todo.model";
 
 export const todoRouter = {
     getAll: publicProcedure.handler(async () => {
-        return await Todo.find().lean();
+        const todos = await Todo.find().lean();
+        return todos.map((todo) => ({ ...todo, id: todo.id }));
     }),
 
     create: publicProcedure
         .input(z.object({ text: z.string().min(1) }))
         .handler(async ({ input }) => {
             const newTodo = await Todo.create({ text: input.text });
-            return newTodo.toObject();
+            const todo = newTodo.toObject();
+            return { ...todo, id: todo.id };
     }),
 
     toggle: publicProcedure
@@ -18897,19 +23145,22 @@ export const todoRouter = {
 
 {{#if (eq api "trpc")}}
 import z from "zod";
+import "@{{projectName}}/db";
 import { router, publicProcedure } from "../index";
 import { Todo } from "@{{projectName}}/db/models/todo.model";
 
 export const todoRouter = router({
     getAll: publicProcedure.query(async () => {
-        return await Todo.find().lean();
+        const todos = await Todo.find().lean();
+        return todos.map((todo) => ({ ...todo, id: todo.id }));
     }),
 
     create: publicProcedure
         .input(z.object({ text: z.string().min(1) }))
         .mutation(async ({ input }) => {
             const newTodo = await Todo.create({ text: input.text });
-        return newTodo.toObject();
+        const todo = newTodo.toObject();
+        return { ...todo, id: todo.id };
     }),
 
     toggle: publicProcedure
@@ -18934,8 +23185,9 @@ const { Schema, model } = mongoose;
 
 const todoSchema = new Schema({
   id: {
-    type: mongoose.Schema.Types.ObjectId,
-    auto: true,
+    type: String,
+    required: true,
+    default: () => new mongoose.Types.ObjectId().toString(),
   },
   text: {
     type: String,
@@ -18946,7 +23198,8 @@ const todoSchema = new Schema({
     default: false,
   },
 }, {
-  collection: 'todo'
+  collection: 'todo',
+  id: false,
 });
 
 const Todo = model('Todo', todoSchema);
@@ -18955,11 +23208,18 @@ export { Todo };
 `],
   ["examples/todo/server/prisma/base/src/routers/todo.ts.hbs", `{{#if (eq api "orpc")}}
 import z from "zod";
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createPrismaClient } from "@{{projectName}}/db";
+{{else}}
 import prisma from "@{{projectName}}/db";
+{{/if}}
 import { publicProcedure } from "../index";
 
 export const todoRouter = {
-  getAll: publicProcedure.handler(async () => {
+  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+    const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
     return await prisma.todo.findMany({
       orderBy: {
         id: "asc",
@@ -18969,7 +23229,10 @@ export const todoRouter = {
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .handler(async ({ input }) => {
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
       return await prisma.todo.create({
         data: {
           text: input.text,
@@ -18983,7 +23246,10 @@ export const todoRouter = {
     {{else}}
     .input(z.object({ id: z.number(), completed: z.boolean() }))
     {{/if}}
-    .handler(async ({ input }) => {
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
       return await prisma.todo.update({
         where: { id: input.id },
         data: { completed: input.completed },
@@ -18996,7 +23262,10 @@ export const todoRouter = {
     {{else}}
     .input(z.object({ id: z.number() }))
     {{/if}}
-    .handler(async ({ input }) => {
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
       return await prisma.todo.delete({
         where: { id: input.id },
       });
@@ -19007,11 +23276,18 @@ export const todoRouter = {
 {{#if (eq api "trpc")}}
 import { TRPCError } from "@trpc/server";
 import z from "zod";
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createPrismaClient } from "@{{projectName}}/db";
+{{else}}
 import prisma from "@{{projectName}}/db";
+{{/if}}
 import { publicProcedure, router } from "../index";
 
 export const todoRouter = router({
   getAll: publicProcedure.query(async () => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+    const prisma = createPrismaClient();
+{{/if}}
     return await prisma.todo.findMany({
       orderBy: {
         id: "asc"
@@ -19022,6 +23298,9 @@ export const todoRouter = router({
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
     .mutation(async ({ input }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const prisma = createPrismaClient();
+{{/if}}
       return await prisma.todo.create({
         data: {
           text: input.text,
@@ -19036,6 +23315,9 @@ export const todoRouter = router({
     .input(z.object({ id: z.number(), completed: z.boolean() }))
     {{/if}}
     .mutation(async ({ input }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const prisma = createPrismaClient();
+{{/if}}
       try {
         return await prisma.todo.update({
           where: { id: input.id },
@@ -19056,6 +23338,9 @@ export const todoRouter = router({
     .input(z.object({ id: z.number() }))
     {{/if}}
     .mutation(async ({ input }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const prisma = createPrismaClient();
+{{/if}}
       try {
         return await prisma.todo.delete({
           where: { id: input.id },
@@ -19522,6 +23807,9 @@ import { trpc } from "@/utils/trpc";
   {{/if}}
 {{/if}}
 
+{{#unless (eq backend "convex")}}
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+{{/unless}}
 
 export default function TodosPage() {
   const [newTodoText, setNewTodoText] = useState("");
@@ -19598,11 +23886,11 @@ export default function TodosPage() {
     }
   };
 
-  const handleToggleTodo = (id: number, completed: boolean) => {
+  const handleToggleTodo = (id: TodoId, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: number) => {
+  const handleDeleteTodo = (id: TodoId) => {
     deleteMutation.mutate({ id });
   };
   {{/if}}
@@ -19766,6 +24054,10 @@ import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
 
+{{#unless (eq backend "convex")}}
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+{{/unless}}
+
 export default function Todos() {
   const [newTodoText, setNewTodoText] = useState("");
 
@@ -19841,11 +24133,11 @@ export default function Todos() {
     }
   };
 
-  const handleToggleTodo = (id: number, completed: boolean) => {
+  const handleToggleTodo = (id: TodoId, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: number) => {
+  const handleDeleteTodo = (id: TodoId) => {
     deleteMutation.mutate({ id });
   };
   {{/if}}
@@ -20010,6 +24302,10 @@ import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
 
+{{#unless (eq backend "convex")}}
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+{{/unless}}
+
 export const Route = createFileRoute("/todos")({
   component: TodosRoute,
 });
@@ -20089,11 +24385,11 @@ function TodosRoute() {
     }
   };
 
-  const handleToggleTodo = (id: number, completed: boolean) => {
+  const handleToggleTodo = (id: TodoId, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: number) => {
+  const handleDeleteTodo = (id: TodoId) => {
     deleteMutation.mutate({ id });
   };
   {{/if}}
@@ -20264,6 +24560,10 @@ import { orpc } from "@/utils/orpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
 
+{{#unless (eq backend "convex")}}
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+{{/unless}}
+
 export const Route = createFileRoute("/todos")({
   component: TodosRoute,
 });
@@ -20365,11 +24665,11 @@ function TodosRoute() {
     }
   };
 
-  const handleToggleTodo = (id: number, completed: boolean) => {
+  const handleToggleTodo = (id: TodoId, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: number) => {
+  const handleDeleteTodo = (id: TodoId) => {
     deleteMutation.mutate({ id });
   };
   {{/if}}
@@ -20960,11 +25260,15 @@ shamefully-hoist=true
 strict-peer-dependencies=false
 {{/if}}`],
   ["extras/bunfig.toml.hbs", `[install]
-{{#if (or (includes frontend "nuxt"))}}
-linker = "hoisted" # having issues with Nuxt when linker is isolated
+{{#if (includes frontend "nuxt")}}
+linker = "hoisted" # Nuxt needs hoisting for its dependency resolver
 {{else}}
 linker = "isolated"
-{{/if}}`],
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+peer = false # Expo native projects declare SDK peers explicitly; this keeps Bun isolated installs deduped for native modules
+{{/if}}
+{{/if}}
+`],
   ["extras/env.d.ts.hbs", `{{#if (eq serverDeploy "cloudflare")}}
 import { type server } from "@{{projectName}}/infra/alchemy.run";
 {{else}}
@@ -20986,9 +25290,44 @@ declare module "cloudflare:workers" {
   }
 }
 `],
-  ["extras/pnpm-workspace.yaml", `packages:
+  ["extras/pnpm-workspace.yaml.hbs", `packages:
   - "apps/*"
   - "packages/*"
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "vite-plus") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "nuxt") (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+
+# pnpm 11 blocks dependency lifecycle scripts unless they are approved here.
+# Entries are scoped to packages this generated stack can pull in.
+allowBuilds:
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (includes addons "vite-plus") (includes frontend "tanstack-start") (includes frontend "nuxt"))}}
+  esbuild: true
+{{/if}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
+  msw: true
+{{/if}}
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+  msgpackr-extract: true
+{{/if}}
+{{#if (includes frontend "nuxt")}}
+  "@parcel/watcher": true
+  vue-demi: true
+{{/if}}
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (includes addons "pwa") (includes frontend "next"))}}
+  sharp: true
+{{/if}}
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
+  workerd: true
+{{/if}}
+{{#if (eq orm "prisma")}}
+  "@prisma/engines": true
+  prisma: true
+{{/if}}
+{{#if (includes addons "lefthook")}}
+  lefthook: true
+{{/if}}
+{{#if (includes addons "nx")}}
+  nx: true
+{{/if}}
+{{/if}}
 `],
   ["frontend/astro/_gitignore", `# build output
 dist/
@@ -21018,12 +25357,19 @@ pnpm-debug.log*
   ["frontend/astro/astro.config.mjs.hbs", `// @ts-check
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, envField } from "astro/config";
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+{{else}}
 import node from "@astrojs/node";
+{{/if}}
 
 // https://astro.build/config
 export default defineConfig({
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+  output: "static",
+{{else}}
   output: "server",
   adapter: node({ mode: "standalone" }),
+{{/if}}
 {{#if (ne backend "self")}}
   env: {
     schema: {
@@ -21052,11 +25398,11 @@ export default defineConfig({
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^6.0.1"
+    "astro": "^7.0.3"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.18",
-    "tailwindcss": "^4.1.18"
+    "@tailwindcss/vite": "^4.3.1",
+    "tailwindcss": "^4.3.1"
   }
 }
 `],
@@ -21357,12 +25703,7 @@ import { env } from "@{{projectName}}/env/native";
 {{/if}}
 
 import { Stack } from "expo-router";
-import {
-  DarkTheme,
-  DefaultTheme,
-  type Theme,
-  ThemeProvider,
-} from "@react-navigation/native";
+import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 {{#if (eq api "trpc")}}
@@ -21375,11 +25716,11 @@ import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { StyleSheet } from "react-native";
 
-const LIGHT_THEME: Theme = {
+const LIGHT_THEME = {
   ...DefaultTheme,
   colors: NAV_THEME.light,
 };
-const DARK_THEME: Theme = {
+const DARK_THEME = {
   ...DarkTheme,
   colors: NAV_THEME.dark,
 };
@@ -21656,7 +25997,8 @@ export default function TabLayout() {
 
 `],
   ["frontend/native/bare/app/(drawer)/(tabs)/index.tsx.hbs", `import { Container } from "@/components/container";
-import { ScrollView, Text, View, StyleSheet } from "react-native";
+import { Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { ScrollView, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
@@ -21668,12 +26010,21 @@ export default function TabOne() {
     <Container>
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
-          <Text style={[styles.title, { color: theme.text }]}>
-            Tab One
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.text, opacity: 0.7 }]}>
-            Explore the first section of your app
-          </Text>
+          <Host matchContents=\\{{ vertical: true }}>
+            <Column spacing={8}>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
+              >
+                Tab One
+              </ExpoUIText>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                style=\\{{ opacity: 0.7 }}
+              >
+                Explore the first section of your app
+              </ExpoUIText>
+            </Column>
+          </Host>
         </View>
       </ScrollView>
     </Container>
@@ -21688,19 +26039,11 @@ const styles = StyleSheet.create({
   content: {
     paddingVertical: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-  },
 });
-
 `],
   ["frontend/native/bare/app/(drawer)/(tabs)/two.tsx.hbs", `import { Container } from "@/components/container";
-import { ScrollView, Text, View, StyleSheet } from "react-native";
+import { Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { ScrollView, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
@@ -21712,12 +26055,21 @@ export default function TabTwo() {
     <Container>
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
-          <Text style={[styles.title, { color: theme.text }]}>
-            Tab Two
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.text, opacity: 0.7 }]}>
-            Discover more features and content
-          </Text>
+          <Host matchContents=\\{{ vertical: true }}>
+            <Column spacing={8}>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
+              >
+                Tab Two
+              </ExpoUIText>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 16 }}
+                style=\\{{ opacity: 0.7 }}
+              >
+                Discover more features and content
+              </ExpoUIText>
+            </Column>
+          </Host>
         </View>
       </ScrollView>
     </Container>
@@ -21732,18 +26084,15 @@ const styles = StyleSheet.create({
   content: {
     paddingVertical: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-  },
 });
-
 `],
-  ["frontend/native/bare/app/(drawer)/index.tsx.hbs", `import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+  ["frontend/native/bare/app/(drawer)/index.tsx.hbs", `import { {{#if (or (eq auth "clerk") (eq auth "better-auth"))}}Button, {{/if}}Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { View, ScrollView, StyleSheet{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
+{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
+{{/if}}
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
@@ -21756,17 +26105,17 @@ import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 {{/if}}
 {{#if (and (eq backend "convex") (eq auth "clerk"))}}
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (ne backend "convex") (eq auth "clerk"))}}
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { useAuth, useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-import { useConvexAuth, useQuery } from "convex/react";
+import { {{#if (eq payments "polar")}}useAction, {{/if}}useConvexAuth, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { SignIn } from "@/components/sign-in";
@@ -21796,17 +26145,72 @@ const { user } = useUser();
 const healthCheck = useQuery(api.healthCheck.get);
 const { isAuthenticated } = useConvexAuth();
 const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
+{{#if (eq payments "polar")}}
+const products = useQuery(api.polar.listAllProducts);
+const subscription = useQuery(api.polar.getCurrentSubscription);
+const generateCheckoutLink = useAction(api.polar.generateCheckoutLink);
+const generateCustomerPortalUrl = useAction(api.polar.generateCustomerPortalUrl);
+const recurringProduct = products?.find((product) => product.isRecurring);
+
+const openPolarLink = async (url: string, returnUrl: string) => {
+	await WebBrowser.openAuthSessionAsync(url, returnUrl);
+};
+
+const getPolarReturnUrl = (returnUrl: string) => {
+	const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+	url.searchParams.set("returnUrl", returnUrl);
+	return url.toString();
+};
+
+const handlePolarCheckout = async () => {
+	try {
+		if (!recurringProduct) {
+			Alert.alert("Checkout unavailable", "No recurring Polar product is available yet.");
+			return;
+		}
+
+		const returnUrl = Linking.createURL("/");
+		const polarReturnUrl = getPolarReturnUrl(returnUrl);
+		const { url } = await generateCheckoutLink({
+			productIds: [recurringProduct.id],
+			origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+			successUrl: polarReturnUrl,
+		});
+
+		await openPolarLink(url, returnUrl);
+	} catch {
+		Alert.alert("Checkout failed", "Unable to open Polar checkout. Please try again.");
+	}
+};
+
+const handlePolarPortal = async () => {
+	try {
+		const returnUrl = Linking.createURL("/");
+		const { url } = await generateCustomerPortalUrl({
+			returnUrl: getPolarReturnUrl(returnUrl),
+		});
+
+		await openPolarLink(url, returnUrl);
+	} catch {
+		Alert.alert("Portal unavailable", "Unable to open the customer portal. Please try again.");
+	}
+};
+{{/if}}
 {{else if (eq backend "convex")}}
 const healthCheck = useQuery(api.healthCheck.get);
 {{/if}}
 
 return (
 <Container>
-  <ScrollView style={styles.scrollView}>
+  <ScrollView style={styles.scrollView} contentInsetAdjustmentBehavior="never">
     <View style={styles.content}>
-      <Text style={[styles.title, { color: theme.text }]}>
-        BETTER T STACK
-      </Text>
+      <Host style={styles.titleHost}>
+        <ExpoUIText
+          textStyle=\\{{ color: theme.text, fontSize: 24, fontWeight: "bold", textAlign: "center" }}
+        >
+          BETTER T STACK
+        </ExpoUIText>
+      </Host>
 
       {{#unless (and (eq backend "convex") (eq auth "better-auth"))}}
       <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -21814,16 +26218,25 @@ return (
         <View style={styles.statusRow}>
           <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#f59e0b" }]} />
           <View style={styles.statusContent}>
-            <Text style={[styles.statusTitle, { color: theme.text }]}>
-              Convex
-            </Text>
-            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-              {healthCheck === undefined
-              ? "Checking..."
-              : healthCheck === "OK"
-              ? "Connected to API"
-              : "API Disconnected"}
-            </Text>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14, fontWeight: "bold" }}
+                >
+                  Convex
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 12 }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  {healthCheck === undefined
+                  ? "Checking..."
+                  : healthCheck === "OK"
+                  ? "Connected to API"
+                  : "API Disconnected"}
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
         </View>
         {{else}}
@@ -21831,16 +26244,25 @@ return (
         <View style={styles.statusRow}>
           <View style={[styles.statusIndicator, { backgroundColor: healthCheck.data ? "#10b981" : "#f59e0b" }]} />
           <View style={styles.statusContent}>
-            <Text style={[styles.statusTitle, { color: theme.text }]}>
-              {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}}
-            </Text>
-            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-              {healthCheck.isLoading
-              ? "Checking connection..."
-              : healthCheck.data
-              ? "All systems operational"
-              : "Service unavailable"}
-            </Text>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={4}>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14, fontWeight: "bold" }}
+                >
+                  {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}}
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 12 }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  {healthCheck.isLoading
+                  ? "Checking connection..."
+                  : healthCheck.data
+                  ? "All systems operational"
+                  : "Service unavailable"}
+                </ExpoUIText>
+              </Column>
+            </Host>
           </View>
         </View>
         {{/unless}}
@@ -21850,85 +26272,154 @@ return (
 
       {{#if (and (eq backend "convex") (eq auth "clerk"))}}
       <Authenticated>
-        <Text style=\\{{ color: theme.text }}>Hello {user?.emailAddresses[0].emailAddress}</Text>
-        <Text style=\\{{ color: theme.text }}>Private Data: {privateData?.message}</Text>
+        <Host style={styles.authHost} matchContents=\\{{ vertical: true }}>
+          <Column spacing={6}>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 14 }}>
+              {\`Hello \${user?.emailAddresses[0].emailAddress ?? ""}\`}
+            </ExpoUIText>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 14 }}>
+              {\`Private Data: \${privateData?.message ?? ""}\`}
+            </ExpoUIText>
+          </Column>
+        </Host>
         <SignOutButton />
       </Authenticated>
       <Unauthenticated>
-        <Link href="/(auth)/sign-in">
-        <Text style=\\{{ color: theme.primary }}>Sign in</Text>
-        </Link>
-        <Link href="/(auth)/sign-up">
-        <Text style=\\{{ color: theme.primary }}>Sign up</Text>
-        </Link>
+        <Host style={styles.authActionsHost} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            <Button
+              label="Sign in"
+              variant="outlined"
+              onPress={() => router.push("/(auth)/sign-in")}
+            />
+            <Button
+              label="Sign up"
+              onPress={() => router.push("/(auth)/sign-up")}
+            />
+          </Column>
+        </Host>
       </Unauthenticated>
       <AuthLoading>
-        <Text style=\\{{ color: theme.text }}>Loading...</Text>
+        <Host matchContents=\\{{ vertical: true }}>
+          <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 14 }}>
+            Loading...
+          </ExpoUIText>
+        </Host>
       </AuthLoading>
       {{/if}}
 
       {{#if (and (ne backend "convex") (eq auth "clerk"))}}
       {!isLoaded ? (
-      <Text style=\\{{ color: theme.text }}>Loading...</Text>
+      <Host matchContents=\\{{ vertical: true }}>
+        <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 14 }}>
+          Loading...
+        </ExpoUIText>
+      </Host>
       ) : isSignedIn ? (
       <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.userHeader}>
-          <Text style={[styles.userText, { color: theme.text }]}>
-            Welcome, <Text style={styles.userName}>{user?.fullName ?? user?.firstName ?? "there"}</Text>
-          </Text>
-        </View>
-        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
-          {user?.emailAddresses[0]?.emailAddress}
-        </Text>
+        <Host style={styles.userHeader} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 16 }}>
+              {\`Welcome, \${user?.fullName ?? user?.firstName ?? "there"}\`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 14 }}
+              style=\\{{ opacity: 0.7 }}
+            >
+              {user?.emailAddresses[0]?.emailAddress ?? ""}
+            </ExpoUIText>
+          </Column>
+        </Host>
         <SignOutButton />
       </View>
       ) : (
       <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Link href="/(auth)/sign-in">
-          <Text style=\\{{ color: theme.primary }}>Sign in</Text>
-        </Link>
-        <Link href="/(auth)/sign-up">
-          <Text style=\\{{ color: theme.primary }}>Sign up</Text>
-        </Link>
+        <Host style={styles.authActionsHost} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            <Button
+              label="Sign in"
+              variant="outlined"
+              onPress={() => router.push("/(auth)/sign-in")}
+            />
+            <Button
+              label="Sign up"
+              onPress={() => router.push("/(auth)/sign-up")}
+            />
+          </Column>
+        </Host>
       </View>
       )}
       {{/if}}
 
       {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+      <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Host style={styles.statusCardTitleHost} matchContents=\\{{ vertical: true }}>
+          <ExpoUIText
+            textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}
+          >
+            API Status
+          </ExpoUIText>
+        </Host>
+        <View style={styles.statusRow}>
+          <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#f59e0b" }]} />
+          <View style={styles.statusContent}>
+            <Host matchContents=\\{{ vertical: true }}>
+              <ExpoUIText
+                textStyle=\\{{ color: theme.text, fontSize: 12 }}
+                style=\\{{ opacity: 0.7 }}
+              >
+                {healthCheck === undefined
+                ? "Checking..."
+                : healthCheck === "OK"
+                ? "Connected to API"
+                : "API Disconnected"}
+              </ExpoUIText>
+            </Host>
+          </View>
+        </View>
+      </View>
+
       {user ? (
       <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={styles.userHeader}>
-          <Text style={[styles.userText, { color: theme.text }]}>
-            Welcome, <Text style={styles.userName}>{user.name}</Text>
-          </Text>
-        </View>
-        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
-          {user.email}
-        </Text>
-        <TouchableOpacity style={[styles.signOutButton, { backgroundColor: theme.notification }]} onPress={()=> {
-          authClient.signOut();
-          }}
-          >
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+        <Host style={styles.userHeader} matchContents>
+          <Column spacing={6}>
+            <ExpoUIText textStyle=\\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+              {\`Welcome, \${user.name}\`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 14 }}
+              style=\\{{ opacity: 0.7 }}
+            >
+              {user.email}
+            </ExpoUIText>
+          </Column>
+        </Host>
+        <Host matchContents=\\{{ vertical: true }}>
+          <Button
+            label="Sign Out"
+            variant="outlined"
+            onPress={() => {
+              authClient.signOut();
+            }}
+          />
+        </Host>
+        {{#if (eq payments "polar")}}
+        <Host style={styles.paymentActions} matchContents=\\{{ vertical: true }}>
+          <Column spacing={8}>
+            {subscription ? (
+            <Button
+              label="Manage Subscription"
+              variant="outlined"
+              onPress={handlePolarPortal}
+            />
+            ) : (
+            <Button label="Upgrade to Pro" onPress={handlePolarCheckout} />
+            )}
+          </Column>
+        </Host>
+        {{/if}}
       </View>
-      ) : null}
-      <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.statusCardTitle, { color: theme.text }]}>
-          API Status
-        </Text>
-        <View style={styles.statusRow}>
-          <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#ef4444" }]} />
-          <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
-            {healthCheck === undefined
-            ? "Checking..."
-            : healthCheck === "OK"
-            ? "Connected to API"
-            : "API Disconnected"}
-          </Text>
-        </View>
-      </View>
-      {!user && (
+      ) : (
       <>
         <SignIn />
         <SignUp />
@@ -21946,12 +26437,14 @@ scrollView: {
 flex: 1,
 },
 content: {
-padding: 16,
+paddingHorizontal: 20,
+paddingTop: 28,
+paddingBottom: 32,
 },
-title: {
-fontSize: 24,
-fontWeight: "bold",
-marginBottom: 16,
+titleHost: {
+alignSelf: "stretch",
+height: 34,
+marginBottom: 24,
 },
 card: {
 padding: 16,
@@ -21964,56 +26457,45 @@ alignItems: "center",
 gap: 8,
 },
 statusIndicator: {
-height: 8,
-width: 8,
+height: 10,
+width: 10,
+borderRadius: 999,
 },
 statusContent: {
 flex: 1,
-},
-statusTitle: {
-fontSize: 14,
-fontWeight: "bold",
-},
-statusText: {
-fontSize: 12,
 },
 userCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
 userHeader: {
 marginBottom: 8,
 },
-userText: {
-fontSize: 16,
+paymentActions: {
+marginTop: 12,
 },
-userName: {
-fontWeight: "bold",
-},
-userEmail: {
-fontSize: 14,
+authHost: {
 marginBottom: 12,
 },
-signOutButton: {
-padding: 12,
-},
-signOutText: {
-color: "#ffffff",
+authActionsHost: {
+marginTop: 4,
 },
 statusCard: {
 marginBottom: 16,
 padding: 16,
 borderWidth: 1,
+borderRadius: 16,
 },
-statusCardTitle: {
+statusCardTitleHost: {
 marginBottom: 8,
-fontWeight: "bold",
 },
 });
 `],
   ["frontend/native/bare/app/+not-found.tsx.hbs", `import { Container } from "@/components/container";
-import { Link, Stack } from "expo-router";
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { Stack, router } from "expo-router";
 import { Text, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
@@ -22029,17 +26511,26 @@ export default function NotFoundScreen() {
         <View style={styles.container}>
           <View style={styles.content}>
             <Text style={styles.emoji}>🤔</Text>
-            <Text style={[styles.title, { color: theme.text }]}>
-              Page Not Found
-            </Text>
-            <Text style={[styles.subtitle, { color: theme.text, opacity: 0.7 }]}>
-              Sorry, the page you're looking for doesn't exist.
-            </Text>
-            <Link href="/" asChild>
-              <Text style={[styles.link, { color: theme.primary, backgroundColor: \`\${theme.primary}1a\` }]}>
-                Go to Home
-              </Text>
-            </Link>
+            <Host matchContents=\\{{ vertical: true }}>
+              <Column spacing={12} alignment="center">
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 20, fontWeight: "bold", textAlign: "center" }}
+                >
+                  Page Not Found
+                </ExpoUIText>
+                <ExpoUIText
+                  textStyle=\\{{ color: theme.text, fontSize: 14, textAlign: "center" }}
+                  style=\\{{ opacity: 0.7 }}
+                >
+                  Sorry, the page you're looking for doesn't exist.
+                </ExpoUIText>
+                <Button
+                  label="Go to Home"
+                  variant="outlined"
+                  onPress={() => router.replace("/")}
+                />
+              </Column>
+            </Host>
           </View>
         </View>
       </Container>
@@ -22061,25 +26552,11 @@ const styles = StyleSheet.create({
     fontSize: 48,
     marginBottom: 16,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  link: {
-    padding: 12,
-  },
 });
-
 `],
   ["frontend/native/bare/app/modal.tsx.hbs", `import { Container } from "@/components/container";
-import { Text, View, StyleSheet } from "react-native";
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
@@ -22090,9 +26567,22 @@ export default function Modal() {
   return (
     <Container>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>Modal</Text>
-        </View>
+        <Host style={styles.expoUiHost}>
+          <Column spacing={12} alignment="center">
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 20, fontWeight: "bold" }}
+            >
+              Modal
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\\{{ color: theme.text, fontSize: 14, textAlign: "center" }}
+              style=\\{{ opacity: 0.7 }}
+            >
+              Built with Expo UI universal components
+            </ExpoUIText>
+            <Button label="Native control" onPress={() => null} />
+          </Column>
+        </Host>
       </View>
     </Container>
   );
@@ -22103,15 +26593,11 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  header: {
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
+  expoUiHost: {
+    alignSelf: "stretch",
+    padding: 16,
   },
 });
-
 `],
   ["frontend/native/bare/components/container.tsx.hbs", `import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22126,7 +26612,10 @@ export function Container({ children }: { children: React.ReactNode }) {
     : NAV_THEME.light.background;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+    <SafeAreaView
+      edges={["left", "right", "bottom"]}
+      style={[styles.container, { backgroundColor }]}
+    >
       {children}
     </SafeAreaView>
   );
@@ -22137,7 +26626,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-
 `],
   ["frontend/native/bare/components/header-button.tsx.hbs", `import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { forwardRef } from "react";
@@ -22189,13 +26677,14 @@ const styles = StyleSheet.create({
 `],
   ["frontend/native/bare/components/tabbar-icon.tsx.hbs", `import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+type FontAwesomeProps = React.ComponentProps<typeof FontAwesome>;
+
 export const TabBarIcon = (props: {
-  name: React.ComponentProps<typeof FontAwesome>["name"];
-  color: string;
+  name: FontAwesomeProps["name"];
+  color: FontAwesomeProps["color"];
 }) => {
   return <FontAwesome size={24} style=\\{{ marginBottom: -3 }} {...props} />;
 };
-
 `],
   ["frontend/native/bare/lib/constants.ts.hbs", `export const NAV_THEME = {
   light: {
@@ -22242,6 +26731,16 @@ export function useColorScheme() {
 const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
+// Alchemy writes runtime state here; block it to avoid Metro refresh loops.
+const blockList = config.resolver.blockList ?? [];
+const blockListPatterns = Array.isArray(blockList) ? blockList : [blockList];
+
+config.resolver.blockList = [
+	...blockListPatterns,
+	/[/\\\\]packages[/\\\\]infra[/\\\\]\\.alchemy(?:[/\\\\]|$)/,
+];
+{{/if}}
 
 module.exports = config;
 `],
@@ -22257,40 +26756,39 @@ module.exports = config;
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/vector-icons": "^15.0.2",
-    "@react-navigation/bottom-tabs": "^7.2.0",
-    "@react-navigation/drawer": "^7.1.1",
-    "@react-navigation/native": "^7.0.14",
-    "@tanstack/react-query": "^5.85.5",
+    "@expo/ui": "~56.0.12",
+    "@expo/vector-icons": "^15.1.1",
+    "@tanstack/react-query": "^5.99.2",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
-		"expo": "^55.0.0",
-    "expo-constants": "~55.0.7",
-    "expo-crypto": "~55.0.8",
-    "expo-font": "~55.0.4",
-    "expo-linking": "~55.0.7",
-    "expo-network": "~55.0.8",
-    "expo-router": "~55.0.2",
-    "expo-secure-store": "~55.0.8",
-    "expo-splash-screen": "~55.0.9",
-    "expo-status-bar": "~55.0.4",
-    "expo-system-ui": "~55.0.9",
-    "expo-web-browser": "~55.0.9",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-native": "0.83.2",
-    "react-native-gesture-handler": "~2.30.0",
-    "react-native-reanimated": "4.2.1",
-    "react-native-safe-area-context": "~5.6.0",
-    "react-native-screens": "~4.23.0",
-    "react-native-web": "^0.21.0",
-    "react-native-worklets": "0.7.2"
+    "expo": "~56.0.3",
+    "expo-constants": "~56.0.14",
+    "expo-crypto": "~56.0.3",
+    "expo-font": "~56.0.5",
+    "expo-linking": "~56.0.11",
+    "expo-network": "~56.0.4",
+    "expo-router": "~56.2.5",
+    "expo-secure-store": "~56.0.4",
+    "expo-splash-screen": "~56.0.9",
+    "expo-status-bar": "~56.0.4",
+    "expo-system-ui": "~56.0.5",
+    "expo-web-browser": "~56.0.5",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2",
+    "react-native-web": "~0.21.0",
+    "react-native-worklets": "0.8.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.26.10",
-    "@types/react": "~19.2.10"
+    "@babel/core": "^7.29.0",
+    "@types/react": "~19.2.14",
+    "typescript": "^6"
   },
   "private": true
 }
@@ -22389,7 +26887,8 @@ android
   }
 }
 `],
-  ["frontend/native/unistyles/app/_layout.tsx.hbs", `{{#if (includes examples "ai")}}
+  ["frontend/native/unistyles/app/_layout.tsx.hbs", `import "@/unistyles";
+{{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
 {{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
@@ -22638,7 +27137,9 @@ export default function RootLayout() {
   );
 }
 `],
-  ["frontend/native/unistyles/app/(drawer)/_layout.tsx.hbs", `import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+  ["frontend/native/unistyles/app/(drawer)/_layout.tsx.hbs", `import "@/unistyles";
+
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { useUnistyles } from "react-native-unistyles";
@@ -22726,7 +27227,9 @@ const DrawerLayout = () => {
 
 export default DrawerLayout;
 `],
-  ["frontend/native/unistyles/app/(drawer)/(tabs)/_layout.tsx.hbs", `import { Tabs } from "expo-router";
+  ["frontend/native/unistyles/app/(drawer)/(tabs)/_layout.tsx.hbs", `import "@/unistyles";
+
+import { Tabs } from "expo-router";
 import { useUnistyles } from "react-native-unistyles";
 
 import { TabBarIcon } from "@/components/tabbar-icon";
@@ -22766,7 +27269,9 @@ export default function TabLayout() {
   );
 }
 `],
-  ["frontend/native/unistyles/app/(drawer)/(tabs)/index.tsx.hbs", `import { Container } from "@/components/container";
+  ["frontend/native/unistyles/app/(drawer)/(tabs)/index.tsx.hbs", `import "@/unistyles";
+
+import { Container } from "@/components/container";
 import { ScrollView, Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
@@ -22804,7 +27309,9 @@ const styles = StyleSheet.create((theme) => ({
   },
 }));
 `],
-  ["frontend/native/unistyles/app/(drawer)/(tabs)/two.tsx.hbs", `import { Container } from "@/components/container";
+  ["frontend/native/unistyles/app/(drawer)/(tabs)/two.tsx.hbs", `import "@/unistyles";
+
+import { Container } from "@/components/container";
 import { ScrollView, Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
@@ -22842,7 +27349,14 @@ const styles = StyleSheet.create((theme) => ({
   },
 }));
 `],
-  ["frontend/native/unistyles/app/(drawer)/index.tsx.hbs", `import { ScrollView, Text, View, TouchableOpacity } from "react-native";
+  ["frontend/native/unistyles/app/(drawer)/index.tsx.hbs", `import "@/unistyles";
+
+import { ScrollView, Text, View, TouchableOpacity{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
+{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
+{{/if}}
 import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
 
@@ -22865,7 +27379,7 @@ import { Link } from "expo-router";
 import { useAuth, useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-import { useConvexAuth, useQuery } from "convex/react";
+import { {{#if (eq payments "polar")}}useAction, {{/if}}useConvexAuth, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { SignIn } from "@/components/sign-in";
@@ -22893,6 +27407,57 @@ export default function Home() {
   const healthCheck = useQuery(api.healthCheck.get);
   const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
+  {{#if (eq payments "polar")}}
+  const products = useQuery(api.polar.listAllProducts);
+  const subscription = useQuery(api.polar.getCurrentSubscription);
+  const generateCheckoutLink = useAction(api.polar.generateCheckoutLink);
+  const generateCustomerPortalUrl = useAction(api.polar.generateCustomerPortalUrl);
+  const recurringProduct = products?.find((product) => product.isRecurring);
+
+  const openPolarLink = async (url: string, returnUrl: string) => {
+    await WebBrowser.openAuthSessionAsync(url, returnUrl);
+  };
+
+  const getPolarReturnUrl = (returnUrl: string) => {
+    const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+    url.searchParams.set("returnUrl", returnUrl);
+    return url.toString();
+  };
+
+  const handlePolarCheckout = async () => {
+    try {
+      if (!recurringProduct) {
+        Alert.alert("Checkout unavailable", "No recurring Polar product is available yet.");
+        return;
+      }
+
+      const returnUrl = Linking.createURL("/");
+      const polarReturnUrl = getPolarReturnUrl(returnUrl);
+      const { url } = await generateCheckoutLink({
+        productIds: [recurringProduct.id],
+        origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+        successUrl: polarReturnUrl,
+      });
+
+      await openPolarLink(url, returnUrl);
+    } catch {
+      Alert.alert("Checkout failed", "Unable to open Polar checkout. Please try again.");
+    }
+  };
+
+  const handlePolarPortal = async () => {
+    try {
+      const returnUrl = Linking.createURL("/");
+      const { url } = await generateCustomerPortalUrl({
+        returnUrl: getPolarReturnUrl(returnUrl),
+      });
+
+      await openPolarLink(url, returnUrl);
+    } catch {
+      Alert.alert("Portal unavailable", "Unable to open the customer portal. Please try again.");
+    }
+  };
+  {{/if}}
   {{else if (eq backend "convex")}}
   const healthCheck = useQuery(api.healthCheck.get);
   {{/if}}
@@ -23035,6 +27600,25 @@ export default function Home() {
             >
               <Text style={styles.signOutText}>Sign Out</Text>
             </TouchableOpacity>
+            {{#if (eq payments "polar")}}
+            <View style={styles.paymentActions}>
+              {subscription ? (
+                <TouchableOpacity
+                  style={styles.polarSecondaryButton}
+                  onPress={handlePolarPortal}
+                >
+                  <Text style={styles.polarSecondaryButtonText}>Manage Subscription</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.polarPrimaryButton}
+                  onPress={handlePolarCheckout}
+                >
+                  <Text style={styles.polarPrimaryButtonText}>Upgrade to Pro</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {{/if}}
           </View>
         ) : null}
         <View style={styles.apiStatusCard}>
@@ -23187,6 +27771,31 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.destructiveForeground,
     fontWeight: "500",
   },
+  paymentActions: {
+    marginTop: theme.spacing.sm,
+    alignItems: "flex-start",
+  },
+  polarPrimaryButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+  },
+  polarPrimaryButtonText: {
+    color: theme.colors.primaryForeground,
+    fontWeight: "500",
+  },
+  polarSecondaryButton: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+  },
+  polarSecondaryButtonText: {
+    color: theme.colors.foreground,
+    fontWeight: "500",
+  },
   apiStatusCard: {
     marginBottom: theme.spacing.md,
     borderRadius: theme.borderRadius.lg,
@@ -23242,7 +27851,9 @@ export default function Root({ children }: PropsWithChildren) {
   );
 }
 `],
-  ["frontend/native/unistyles/app/+not-found.tsx.hbs", `import { Link, Stack } from "expo-router";
+  ["frontend/native/unistyles/app/+not-found.tsx.hbs", `import "@/unistyles";
+
+import { Link, Stack } from "expo-router";
 import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
@@ -23308,7 +27919,9 @@ const styles = StyleSheet.create((theme) => ({
   },
 }));
 `],
-  ["frontend/native/unistyles/app/modal.tsx.hbs", `import { Container } from "@/components/container";
+  ["frontend/native/unistyles/app/modal.tsx.hbs", `import "@/unistyles";
+
+import { Container } from "@/components/container";
 import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
@@ -23374,7 +27987,9 @@ const styles = StyleSheet.create((theme) => ({
   tvLike: 4000,
 } as const;
 `],
-  ["frontend/native/unistyles/components/container.tsx.hbs", `import React from "react";
+  ["frontend/native/unistyles/components/container.tsx.hbs", `import "@/unistyles";
+
+import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
 
@@ -23390,7 +28005,9 @@ const styles = StyleSheet.create((theme, rt) => ({
   },
 }));
 `],
-  ["frontend/native/unistyles/components/header-button.tsx.hbs", `import FontAwesome from "@expo/vector-icons/FontAwesome";
+  ["frontend/native/unistyles/components/header-button.tsx.hbs", `import "@/unistyles";
+
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { forwardRef } from "react";
 import { Pressable } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
@@ -23429,19 +28046,31 @@ const styles = StyleSheet.create((theme) => ({
 `],
   ["frontend/native/unistyles/components/tabbar-icon.tsx.hbs", `import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+type FontAwesomeProps = React.ComponentProps<typeof FontAwesome>;
+
 export const TabBarIcon = (props: {
-  name: React.ComponentProps<typeof FontAwesome>["name"];
-  color: string;
+  name: FontAwesomeProps["name"];
+  color: FontAwesomeProps["color"];
 }) => {
   return <FontAwesome size={24} style=\\{{ marginBottom: -3 }} {...props} />;
 };
 `],
-  ["frontend/native/unistyles/index.js.hbs", `import 'expo-router/entry';
-import './unistyles';
+  ["frontend/native/unistyles/index.js.hbs", `import './unistyles';
+import 'expo-router/entry';
 `],
   ["frontend/native/unistyles/metro.config.js.hbs", `const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
+// Alchemy writes runtime state here; block it to avoid Metro refresh loops.
+const blockList = config.resolver.blockList ?? [];
+const blockListPatterns = Array.isArray(blockList) ? blockList : [blockList];
+
+config.resolver.blockList = [
+	...blockListPatterns,
+	/[/\\\\]packages[/\\\\]infra[/\\\\]\\.alchemy(?:[/\\\\]|$)/,
+];
+{{/if}}
 
 module.exports = config;
 `],
@@ -23457,45 +28086,43 @@ module.exports = config;
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/vector-icons": "^15.0.3",
-    "@react-navigation/bottom-tabs": "^7.4.0",
-    "@react-navigation/drawer": "^7.5.0",
-    "@react-navigation/native": "^7.1.8",
+    "@expo/vector-icons": "^15.1.1",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
-    "babel-preset-expo": "~55.0.8",
-    "expo": "^55.0.0",
-    "expo-constants": "~55.0.7",
-    "expo-crypto": "~55.0.8",
-    "expo-dev-client": "~55.0.9",
-    "expo-font": "~55.0.4",
-    "expo-linking": "~55.0.7",
-    "expo-network": "~55.0.8",
-    "expo-router": "~55.0.2",
-    "expo-secure-store": "~55.0.8",
-    "expo-splash-screen": "~55.0.9",
-		"expo-status-bar": "~55.0.4",
-    "expo-system-ui": "~55.0.9",
-    "expo-web-browser": "~55.0.9",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-native": "0.83.2",
-		"react-native-edge-to-edge": "^1.7.0",
-    "react-native-gesture-handler": "~2.30.0",
-		"react-native-nitro-modules": "^0.33.2",
-    "react-native-reanimated": "4.2.1",
-    "react-native-safe-area-context": "~5.6.0",
-    "react-native-screens": "~4.23.0",
-		"react-native-unistyles": "^3.0.22",
-    "react-native-web": "^0.21.2",
-    "react-native-worklets": "0.7.2"
+    "babel-preset-expo": "~56.0.0",
+    "expo": "~56.0.3",
+    "expo-constants": "~56.0.14",
+    "expo-crypto": "~56.0.3",
+    "expo-dev-client": "~56.0.14",
+    "expo-font": "~56.0.5",
+    "expo-linking": "~56.0.11",
+    "expo-network": "~56.0.4",
+    "expo-router": "~56.2.5",
+    "expo-secure-store": "~56.0.4",
+    "expo-splash-screen": "~56.0.9",
+    "expo-status-bar": "~56.0.4",
+    "expo-system-ui": "~56.0.5",
+    "expo-web-browser": "~56.0.5",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-edge-to-edge": "^1.8.1",
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-nitro-modules": "^0.35.7",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2",
+    "react-native-unistyles": "^3.2.4",
+    "react-native-web": "~0.21.0",
+    "react-native-worklets": "0.8.3"
   },
   "devDependencies": {
-    "ajv": "^8.17.1",
-    "@babel/core": "^7.28.0",
-    "@types/react": "~19.2.10"
+    "ajv": "^8.20.0",
+    "@babel/core": "^7.29.0",
+    "@types/react": "~19.2.14",
+    "typescript": "^6"
   }
 }
 `],
@@ -23604,9 +28231,8 @@ export const darkTheme = {
   "compilerOptions": {
     "strict": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["./*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
@@ -23989,7 +28615,7 @@ export default function TabLayout() {
 				name="index"
 				options=\\{{
 					title: "Home",
-					tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+					tabBarIcon: ({ color, size }) => (
 						<Ionicons name="home" size={size} color={color} />
 					),
 				}}
@@ -23998,7 +28624,7 @@ export default function TabLayout() {
 				name="two"
 				options=\\{{
 					title: "Explore",
-					tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+					tabBarIcon: ({ color, size }) => (
 						<Ionicons name="compass" size={size} color={color} />
 					),
 				}}
@@ -24039,7 +28665,12 @@ export default function TabTwo() {
 	);
 }
 `],
-  ["frontend/native/uniwind/app/(drawer)/index.tsx.hbs", `import { Text, View } from "react-native";
+  ["frontend/native/uniwind/app/(drawer)/index.tsx.hbs", `import { Text, View{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
+{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
+{{/if}}
 import { Container } from "@/components/container";
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
@@ -24060,7 +28691,7 @@ import { Link } from "expo-router";
 import { useAuth, useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-import { useConvexAuth, useQuery } from "convex/react";
+import { {{#if (eq payments "polar")}}useAction, {{/if}}useConvexAuth, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { SignIn } from "@/components/sign-in";
@@ -24092,6 +28723,57 @@ const { user } = useUser();
 const healthCheck = useQuery(api.healthCheck.get);
 const { isAuthenticated } = useConvexAuth();
 const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
+{{#if (eq payments "polar")}}
+const products = useQuery(api.polar.listAllProducts);
+const subscription = useQuery(api.polar.getCurrentSubscription);
+const generateCheckoutLink = useAction(api.polar.generateCheckoutLink);
+const generateCustomerPortalUrl = useAction(api.polar.generateCustomerPortalUrl);
+const recurringProduct = products?.find((product) => product.isRecurring);
+
+const openPolarLink = async (url: string, returnUrl: string) => {
+  await WebBrowser.openAuthSessionAsync(url, returnUrl);
+};
+
+const getPolarReturnUrl = (returnUrl: string) => {
+  const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+  url.searchParams.set("returnUrl", returnUrl);
+  return url.toString();
+};
+
+const handlePolarCheckout = async () => {
+  try {
+    if (!recurringProduct) {
+      Alert.alert("Checkout unavailable", "No recurring Polar product is available yet.");
+      return;
+    }
+
+    const returnUrl = Linking.createURL("/");
+    const polarReturnUrl = getPolarReturnUrl(returnUrl);
+    const { url } = await generateCheckoutLink({
+      productIds: [recurringProduct.id],
+      origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+      successUrl: polarReturnUrl,
+    });
+
+    await openPolarLink(url, returnUrl);
+  } catch {
+    Alert.alert("Checkout failed", "Unable to open Polar checkout. Please try again.");
+  }
+};
+
+const handlePolarPortal = async () => {
+  try {
+    const returnUrl = Linking.createURL("/");
+    const { url } = await generateCustomerPortalUrl({
+      returnUrl: getPolarReturnUrl(returnUrl),
+    });
+
+    await openPolarLink(url, returnUrl);
+  } catch {
+    Alert.alert("Portal unavailable", "Unable to open the customer portal. Please try again.");
+  }
+};
+{{/if}}
 {{else if (eq backend "convex")}}
 const healthCheck = useQuery(api.healthCheck.get);
 {{/if}}
@@ -24243,6 +28925,19 @@ return (
         Sign Out
       </Button>
     </View>
+    {{#if (eq payments "polar")}}
+    <View className="mt-4 gap-3">
+      {subscription ? (
+      <Button variant="secondary" onPress={handlePolarPortal}>
+        Manage Subscription
+      </Button>
+      ) : (
+      <Button onPress={handlePolarCheckout}>
+        Upgrade to Pro
+      </Button>
+      )}
+    </View>
+    {{/if}}
   </Surface>
   ) : null}
   <Surface variant="secondary" className="p-4 rounded-xl">
@@ -24493,6 +29188,16 @@ const { wrapWithReanimatedMetroConfig } = require("react-native-reanimated/metro
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
+// Alchemy writes runtime state here; block it to avoid Metro refresh loops.
+const blockList = config.resolver.blockList ?? [];
+const blockListPatterns = Array.isArray(blockList) ? blockList : [blockList];
+
+config.resolver.blockList = [
+	...blockListPatterns,
+	/[/\\\\]packages[/\\\\]infra[/\\\\]\\.alchemy(?:[/\\\\]|$)/,
+];
+{{/if}}
 
 const uniwindConfig = withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
   cssEntryFile: "./global.css",
@@ -24515,45 +29220,44 @@ module.exports = uniwindConfig;
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~55.0.6",
-    "@expo/vector-icons": "^15.0.3",
-    "@gorhom/bottom-sheet": "^5",
-    "@react-navigation/drawer": "^7.3.9",
-    "@react-navigation/elements": "^2.8.1",
+    "@expo/metro-runtime": "~56.0.11",
+    "@expo/vector-icons": "^15.1.1",
+    "@gorhom/bottom-sheet": "^5.2.14",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
-    "expo": "^55.0.0",
-    "expo-constants": "~55.0.7",
-    "expo-font": "~55.0.4",
-    "expo-haptics": "~55.0.8",
-    "expo-linking": "~55.0.7",
-    "expo-network": "~55.0.8",
-    "expo-router": "~55.0.2",
-    "expo-secure-store": "~55.0.8",
-    "expo-status-bar": "~55.0.4",
-    "expo-web-browser": "~55.0.9",
-    "heroui-native": "^1.0.0-rc.3",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-native": "0.83.2",
-    "react-native-gesture-handler": "~2.30.0",
-    "react-native-keyboard-controller": "1.20.7",
-    "react-native-reanimated": "4.2.1",
-    "react-native-safe-area-context": "~5.6.0",
-    "react-native-screens": "~4.23.0",
-    "react-native-svg": "15.15.3",
-    "react-native-web": "^0.21.0",
-    "react-native-worklets": "0.7.2",
-    "tailwind-merge": "^3.4.0",
+    "expo": "~56.0.3",
+    "expo-constants": "~56.0.14",
+    "expo-font": "~56.0.5",
+    "expo-haptics": "~56.0.3",
+    "expo-linking": "~56.0.11",
+    "expo-network": "~56.0.4",
+    "expo-router": "~56.2.5",
+    "expo-secure-store": "~56.0.4",
+    "expo-status-bar": "~56.0.4",
+    "expo-web-browser": "~56.0.5",
+    "heroui-native": "^1.0.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-keyboard-controller": "1.21.6",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2",
+    "react-native-svg": "15.15.4",
+    "react-native-web": "~0.21.0",
+    "react-native-worklets": "0.8.3",
+    "tailwind-merge": "^3.6.0",
     "tailwind-variants": "^3.2.2",
-    "tailwindcss": "^4.1.18",
-    "uniwind": "^1.4.0"
+    "tailwindcss": "^4.3.0",
+    "uniwind": "^1.9.0"
   },
   "devDependencies": {
-    "@types/node": "^24.10.0",
-    "@types/react": "~19.2.10"
+    "@types/node": "^25.9.1",
+    "@types/react": "~19.2.14",
+    "typescript": "^6"
   }
 }
 `],
@@ -24561,17 +29265,20 @@ module.exports = uniwindConfig;
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
   ]
 }`],
   ["frontend/native/uniwind/uniwind-env.d.ts", `/// <reference types="uniwind/types" />
+
+declare module "*.css";
 `],
   ["frontend/nuxt/_gitignore", `# Nuxt dev/build outputs
 .output
@@ -24814,8 +29521,10 @@ export default defineNuxtConfig({
   },
   {{else if (and (ne backend "self") (ne backend "none"))}}
   runtimeConfig: {
+    // server-side override for SSR fetches (NUXT_SERVER_URL); falls back to the public URL
+    serverUrl: "",
     public: {
-      serverUrl: process.env.NUXT_PUBLIC_SERVER_URL,
+      serverUrl: process.env.NUXT_PUBLIC_SERVER_URL ?? "",
     }
   },
   {{/if}}
@@ -24834,10 +29543,11 @@ export default defineNuxtConfig({
   },
   "dependencies": {
     "@nuxt/ui": "^4.5.1",
-    "nuxt": "^4.4.2"
+    "nuxt": "^4.4.4",
+    "vue": "^3.5.38"
   },
   "devDependencies": {
-    "tailwindcss": "^4.2.1",
+    "tailwindcss": "^4.3.1",
     "@iconify-json/lucide": "^1.2.96"
   }
 }
@@ -24884,10 +29594,15 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
 	typedRoutes: true,
 	reactCompiler: true,
+	{{#if (or (includes addons "tauri") (and (includes addons "electrobun") (or (ne backend "convex") (ne auth "better-auth"))))}}
+	output: "export",
+	{{else if (eq webDeploy "docker")}}
+	output: "standalone",
+	{{/if}}
 	{{#if (includes examples "ai")}}
 	transpilePackages: ["shiki"],
 	{{/if}}
-	{{#if (eq dbSetup "turso")}}
+	{{#if (and (eq backend "self") (eq dbSetup "turso"))}}
 	serverExternalPackages: ["libsql", "@libsql/client"],
 	{{/if}}
 };
@@ -24909,21 +29624,21 @@ initOpenNextCloudflareForDev();
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "lucide-react": "^0.546.0",
+    "@swc/helpers": "^0.5.23",
+    "lucide-react": "^1.21.0",
     "next": "^16.2.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "sonner": "^2.0.5",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "sonner": "^2.0.7",
     "babel-plugin-react-compiler": "^1.0.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/postcss": "^4.3.1",
     "@types/node": "^20",
-    "@types/react": "^19.2.10",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.1.18",
-    "typescript": "^5"
+    "tailwindcss": "^4.3.1"
   }
 }
 `],
@@ -25261,7 +29976,6 @@ export function ThemeProvider({
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "baseUrl": ".",
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -25313,28 +30027,27 @@ export function ThemeProvider({
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@react-router/fs-routes": "^7.10.1",
-    "@react-router/node": "^7.10.1",
-    "@react-router/serve": "^7.10.1",
-    "isbot": "^5.1.28",
-    "lucide-react": "^0.546.0",
+    "@react-router/fs-routes": "^7.14.1",
+    "@react-router/node": "^7.14.1",
+    "@react-router/serve": "^7.14.1",
+    "isbot": "^5.1.39",
+    "lucide-react": "^1.21.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "react-router": "^7.10.1",
-    "sonner": "^2.0.5"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router": "^7.14.1",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
-    "@react-router/dev": "^7.10.1",
-    "@tailwindcss/vite": "^4.1.18",
+    "@react-router/dev": "^7.14.1",
+    "@tailwindcss/vite": "^4.3.1",
     "@types/node": "^20",
-    "@types/react": "^19.2.10",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "react-router-devtools": "^1.1.0",
-    "tailwindcss": "^4.1.18",
-    "typescript": "^5.8.3",
-    "vite": "^7.2.7",
-    "vite-tsconfig-paths": "^5.1.4"
+    "tailwindcss": "^4.3.1",
+    "vite": "^8.0.8",
+    "vite-tsconfig-paths": "^6.1.1"
   }
 }
 `],
@@ -25418,6 +30131,9 @@ import { ConvexReactClient } from "convex/react";
 import { env } from "@{{projectName}}/env/web";
   {{#if (eq auth "clerk")}}
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+  {{else if (eq auth "better-auth")}}
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+import { authClient } from "@/lib/auth-client";
   {{else}}
 import { ConvexProvider } from "convex/react";
   {{/if}}
@@ -25487,6 +30203,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 {{#if (eq backend "convex")}}
 {{#if (eq auth "clerk")}}
 export default function App({ loaderData }: Route.ComponentProps) {
+{{else if (eq auth "better-auth")}}
+export default function App() {
 {{else}}
 export default function App() {
 {{/if}}
@@ -25509,6 +30227,23 @@ export default function App() {
         </ThemeProvider>
       </ConvexProviderWithClerk>
     </ClerkProvider>
+  );
+  {{else if (eq auth "better-auth")}}
+  return (
+    <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        disableTransitionOnChange
+        storageKey="vite-ui-theme"
+      >
+        <div className="grid grid-rows-[auto_1fr] h-svh">
+          <Header />
+          <Outlet />
+        </div>
+        <Toaster richColors />
+      </ThemeProvider>
+    </ConvexBetterAuthProvider>
   );
   {{else}}
   return (
@@ -25777,7 +30512,6 @@ export default function Home() {
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "rootDirs": [".", "./.react-router/types"],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
@@ -25793,7 +30527,7 @@ export default function Home() {
 `],
   ["frontend/react/react-router/vite.config.ts.hbs", `import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vite";
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
@@ -25802,7 +30536,8 @@ export default defineConfig({
     reactRouter(),
     tsconfigPaths(),
   ],
-});`],
+});
+`],
   ["frontend/react/tanstack-router/index.html.hbs", `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -25830,26 +30565,26 @@ export default defineConfig({
 		"check-types": "vite build && tsc --noEmit"
 	},
 	"dependencies": {
-        "@hookform/resolvers": "^5.1.1",
+        "@hookform/resolvers": "^5.2.2",
         "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-		"@tailwindcss/vite": "^4.1.18",
-		"@tanstack/react-router": "^1.141.1",
-		"lucide-react": "^0.546.0",
+		"@tailwindcss/vite": "^4.3.1",
+		"@tanstack/react-router": "^1.168.22",
+		"lucide-react": "^1.21.0",
         "next-themes": "^0.4.6",
-		"react": "^19.2.3",
-		"react-dom": "^19.2.3",
-        "sonner": "^2.0.5"
+		"react": "^19.2.7",
+		"react-dom": "^19.2.7",
+        "sonner": "^2.0.7"
 	},
 	"devDependencies": {
-		"@tanstack/react-router-devtools": "^1.141.1",
-		"@tanstack/router-plugin": "^1.141.1",
+		"@tanstack/react-router-devtools": "^1.166.13",
+		"@tanstack/router-plugin": "^1.167.22",
 		"@types/node": "^22.13.14",
-		"@types/react": "^19.2.10",
+		"@types/react": "^19.2.17",
 		"@types/react-dom": "^19.2.3",
-		"@vitejs/plugin-react": "^4.3.4",
-		"postcss": "^8.5.3",
-		"tailwindcss": "^4.1.18",
-		"vite": "^6.2.2"
+		"@vitejs/plugin-react": "^6.0.1",
+		"postcss": "^8.5.10",
+		"tailwindcss": "^4.3.1",
+		"vite": "^8.0.8"
 	}
 }
 `],
@@ -25950,6 +30685,7 @@ function ClerkApiAuthBridge() {
 const router = createRouter({
   routeTree,
   defaultPreload: "intent",
+  scrollRestoration: true,
   defaultPendingComponent: () => <Loader />,
   {{#if (eq api "orpc")}}
   context: { orpc, queryClient },
@@ -26231,11 +30967,9 @@ function HomeComponent() {
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "types": ["vite/client"],
     "rootDirs": ["."],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
@@ -26246,24 +30980,25 @@ function HomeComponent() {
   ["frontend/react/tanstack-router/vite.config.ts.hbs", `import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
-import path from "node:path";
-import { defineConfig } from "vite";
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    tanstackRouter({}),
-    react(),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
   server: {
     port: 3001,
   },
-});`],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [
+    tailwindcss(),
+    tanstackRouter({
+      target: "react",
+      autoCodeSplitting: true,
+    }),
+    react(),
+  ],
+});
+`],
   ["frontend/react/tanstack-start/package.json.hbs", `{
   "name": "web",
   "private": true,
@@ -26275,30 +31010,27 @@ export default defineConfig({
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@tailwindcss/vite": "^4.1.18",
-    "@tanstack/react-query": "^5.80.6",
-    "@tanstack/react-router": "^1.141.1",
-    "@tanstack/react-router-with-query": "^1.130.17",
-    "@tanstack/react-start": "^1.141.1",
-    "@tanstack/router-plugin": "^1.141.1",
-    "lucide-react": "^0.546.0",
+    "@tailwindcss/vite": "^4.3.1",
+    "@tanstack/react-query": "^5.99.0",
+    "@tanstack/react-router": "^1.168.22",
+    "@tanstack/react-start": "^1.167.41",
+    "lucide-react": "^1.21.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "sonner": "^2.0.5",
-    "tailwindcss": "^4.1.18",
-    "vite-tsconfig-paths": "^5.1.4"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "sonner": "^2.0.7",
+    "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
-    "@tanstack/react-router-devtools": "^1.141.1",
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/react": "^16.2.0",
-    "@types/react": "^19.2.10",
+    "@tanstack/react-router-devtools": "^1.166.13",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.0.4",
-    "jsdom": "^26.0.0",
-    "vite": "^7.0.2",
-    "web-vitals": "^5.0.3"
+    "@vitejs/plugin-react": "^6.0.1",
+    "jsdom": "^29.0.2",
+    "vite": "^8.0.8",
+    "web-vitals": "^5.2.0"
   }
 }
 `],
@@ -26313,15 +31045,14 @@ import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query
 import { ConvexQueryClient } from "@convex-dev/react-query";
 import { routeTree } from "./routeTree.gen";
 import Loader from "./components/loader";
-import "./index.css";
 import { env } from "@{{projectName}}/env/web";
 {{else}}
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import Loader from "./components/loader";
-import "./index.css";
 import { routeTree } from "./routeTree.gen";
 {{#if (eq api "trpc")}}
-import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { toast } from "sonner";
@@ -26334,8 +31065,8 @@ import { env } from "@{{projectName}}/env/web";
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 {{else if (eq api "orpc")}}
-import { QueryClientProvider } from "@tanstack/react-query";
-import { orpc, queryClient } from "./utils/orpc";
+import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
+import { createQueryClient, orpc } from "./utils/orpc";
 {{/if}}
 {{/if}}
 
@@ -26375,19 +31106,23 @@ export function getRouter() {
 }
 {{else}}
 {{#if (eq api "trpc")}}
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error, query) => {
-			toast.error(error.message, {
-				action: {
-					label: "retry",
-					onClick: query.invalidate,
-				},
-			});
-		},
-	}),
-	defaultOptions: { queries: { staleTime: 60 * 1000 } },
-});
+function createQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error, query) => {
+				toast.error(error.message, {
+					action: {
+						label: "retry",
+						onClick: () => {
+							query.invalidate();
+						},
+					},
+				});
+			},
+		}),
+		defaultOptions: { queries: { staleTime: 60 * 1000 } },
+	});
+}
 
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [
@@ -26410,15 +31145,20 @@ const trpcClient = createTRPCClient<AppRouter>({
 		}),
 	],
 });
-
-const trpc = createTRPCOptionsProxy({
-	client: trpcClient,
-	queryClient: queryClient,
-});
 {{else if (eq api "orpc")}}
 {{/if}}
 
 export const getRouter = () => {
+{{#if (eq api "trpc")}}
+	const queryClient = createQueryClient();
+	const trpc = createTRPCOptionsProxy({
+		client: trpcClient,
+		queryClient,
+	});
+{{else if (eq api "orpc")}}
+	const queryClient = createQueryClient();
+{{/if}}
+
 	const router = createTanStackRouter({
 		routeTree,
 		scrollRestoration: true,
@@ -26434,22 +31174,20 @@ export const getRouter = () => {
 		defaultNotFoundComponent: () => <div>Not Found</div>,
 {{#if (eq api "trpc")}}
 		Wrap: ({ children }) => (
-			<QueryClientProvider client={queryClient}>
-				<TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-					{children}
-				</TRPCProvider>
-			</QueryClientProvider>
-		),
-{{else if (eq api "orpc")}}
-		Wrap: ({ children }) => (
-			<QueryClientProvider client={queryClient}>
+			<TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
 				{children}
-			</QueryClientProvider>
+			</TRPCProvider>
 		),
-{{else}}
-		Wrap: ({ children }) => <>{children}</>,
 {{/if}}
 	});
+{{#if (or (eq api "trpc") (eq api "orpc"))}}
+
+	setupRouterSsrQueryIntegration({
+		router,
+		queryClient,
+	});
+{{/if}}
+
 	return router;
 };
 {{/if}}
@@ -26814,7 +31552,6 @@ function HomeComponent() {
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
     "noEmit": true,
 
     /* Linting */
@@ -26824,7 +31561,6 @@ function HomeComponent() {
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
@@ -26832,22 +31568,35 @@ function HomeComponent() {
   }
 }
 `],
-  ["frontend/react/tanstack-start/vite.config.ts.hbs", `import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
+  ["frontend/react/tanstack-start/vite.config.ts.hbs", `import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+{{#if (eq webDeploy "docker")}}
+import { nitro } from "nitro/vite";
+{{/if}}
 import tailwindcss from "@tailwindcss/vite";
 import viteReact from "@vitejs/plugin-react";
 
 export default defineConfig({
-  plugins: [
-    tsconfigPaths(),
-    tailwindcss(),
-    tanstackStart(),
-    viteReact(),
-  ],
   server: {
     port: 3001,
   },
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [
+    tailwindcss(),
+    tanstackStart({{#if (or (includes addons "tauri") (and (includes addons "electrobun") (or (ne backend "convex") (ne auth "better-auth"))))}}
+      {
+        prerender: {
+          enabled: true,
+        },
+      },
+{{/if}}),
+{{#if (eq webDeploy "docker")}}
+    nitro(),
+{{/if}}
+    viteReact(),
+  ],
 {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
   ssr: {
     noExternal: ["@convex-dev/better-auth"],
@@ -27071,16 +31820,17 @@ dist-ssr
     "test": "vitest run"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.1.13",
-    "@tanstack/router-plugin": "^1.131.44",
-    "@tanstack/solid-router": "^1.131.44",
-    "lucide-solid": "^0.544.0",
-    "solid-js": "^1.9.9",
-    "tailwindcss": "^4.1.13"
+    "@tailwindcss/vite": "^4.3.1",
+    "@tanstack/router-plugin": "^1.167.22",
+    "@tanstack/solid-router": "^1.168.20",
+    "lucide-solid": "^1.8.0",
+    "solid-js": "^1.9.12",
+    "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
-    "vite": "^7.1.5",
-    "vite-plugin-solid": "^2.11.8"
+    "@tanstack/solid-router-devtools": "^1.166.13",
+    "vite": "^8.0.8",
+    "vite-plugin-solid": "^2.11.12"
   }
 }
 `],
@@ -27316,14 +32066,13 @@ body {
     "noUncheckedSideEffectImports": true,
 
     "rootDirs": ["."],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
   }
 }
 `],
-  ["frontend/solid/vite.config.ts.hbs", `import { defineConfig } from "vite";
+  ["frontend/solid/vite.config.ts.hbs", `import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import solidPlugin from "vite-plugin-solid";
 import tailwindcss from "@tailwindcss/vite";
@@ -27343,7 +32092,8 @@ export default defineConfig({
   server: {
     port: 3001,
   },
-});`],
+});
+`],
   ["frontend/svelte/_gitignore", `node_modules
 
 # Output
@@ -27385,14 +32135,18 @@ vite.config.ts.timestamp-*
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-auto": "^6.1.0",
-		"@sveltejs/kit": "^2.31.1",
-		"@sveltejs/vite-plugin-svelte": "^6.1.2",
-		"@tailwindcss/vite": "^4.1.12",
-		"svelte": "^5.38.1",
-		"svelte-check": "^4.3.1",
-		"tailwindcss": "^4.1.12",
-		"vite": "^7.1.2"
+		{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+		"@sveltejs/adapter-static": "^3.0.10",
+		{{else}}
+		"@sveltejs/adapter-auto": "^7.0.1",
+		{{/if}}
+		"@sveltejs/kit": "^2.58.0",
+		"@sveltejs/vite-plugin-svelte": "^7.0.0",
+		"@tailwindcss/vite": "^4.3.1",
+		"svelte": "^5.55.5",
+		"svelte-check": "^4.4.6",
+		"tailwindcss": "^4.3.1",
+		"vite": "^8.0.10"
 	},
 	"dependencies": {}
 }
@@ -27403,16 +32157,36 @@ body {
   @apply bg-neutral-950 text-neutral-100;
 }
 `],
-  ["frontend/svelte/src/app.d.ts", `// See https://svelte.dev/docs/kit/types#app.d.ts
+  ["frontend/svelte/src/app.d.ts.hbs", `{{#if (eq webDeploy "cloudflare")}}
+/// <reference path="../../../packages/env/env.d.ts" />
+{{/if}}
+{{#if (and (eq backend "self") (eq api "orpc"))}}
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+
+{{/if}}
+// See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
-  namespace App {
-    // interface Error {}
-    // interface Locals {}
-    // interface PageData {}
-    // interface PageState {}
-    // interface Platform {}
-  }
+{{#if (and (eq backend "self") (eq api "orpc"))}}
+	var $client: AppRouterClient | undefined;
+
+{{/if}}
+	namespace App {
+		// interface Error {}
+		// interface Locals {}
+		// interface PageData {}
+		// interface PageState {}
+{{#if (eq webDeploy "cloudflare")}}
+		interface Platform {
+			env: Env;
+			ctx: ExecutionContext;
+			caches: CacheStorage;
+			cf: IncomingRequestCfProperties;
+		}
+{{else}}
+		// interface Platform {}
+{{/if}}
+	}
 }
 
 export {};
@@ -27435,32 +32209,22 @@ export {};
     {{#if (eq auth "better-auth")}}
 	import UserMenu from './UserMenu.svelte';
     {{/if}}
-    const links = [
-        { to: "/", label: "Home" },
-        {{#if (eq auth "better-auth")}}
-        { to: "/dashboard", label: "Dashboard" },
-        {{/if}}
-        {{#if (includes examples "todo")}}
-        { to: "/todos", label: "Todos" },
-        {{/if}}
-        {{#if (includes examples "ai")}}
-        { to: "/ai", label: "AI Chat" },
-        {{/if}}
-    ];
 
 </script>
 
 <div>
 	<div class="flex flex-row items-center justify-between px-4 py-2 md:px-6">
 		<nav class="flex gap-4 text-lg">
-			{#each links as link (link.to)}
-				<a
-					href={link.to}
-					class="hover:text-neutral-400 transition-colors"
-				>
-					{link.label}
-				</a>
-			{/each}
+			<a href="/" class="hover:text-neutral-400 transition-colors">Home</a>
+		    {{#if (eq auth "better-auth")}}
+			<a href="/dashboard" class="hover:text-neutral-400 transition-colors">Dashboard</a>
+		    {{/if}}
+		    {{#if (includes examples "todo")}}
+			<a href="/todos" class="hover:text-neutral-400 transition-colors">Todos</a>
+		    {{/if}}
+		    {{#if (includes examples "ai")}}
+			<a href="/ai" class="hover:text-neutral-400 transition-colors">AI Chat</a>
+		    {{/if}}
 		</nav>
 		<div class="flex items-center gap-2">
 		    {{#if (eq auth "better-auth")}}
@@ -27623,7 +32387,15 @@ const TITLE_TEXT = \`
 {{/if}}
 `],
   ["frontend/svelte/static/favicon.png", `[Binary file]`],
-  ["frontend/svelte/svelte.config.js.hbs", `import adapter from '@sveltejs/adapter-auto';
+  ["frontend/svelte/svelte.config.js.hbs", `{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+import adapter from '@sveltejs/adapter-static';
+{{else if (eq webDeploy "cloudflare")}}
+import alchemy from 'alchemy/cloudflare/sveltekit';
+{{else if (eq webDeploy "docker")}}
+import adapter from '@sveltejs/adapter-node';
+{{else}}
+import adapter from '@sveltejs/adapter-auto';
+{{/if}}
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -27633,10 +32405,25 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+		// adapter-static emits files Electrobun and Tauri can bundle directly.
+		adapter: adapter({
+			pages: 'build',
+			assets: 'build',
+			fallback: 'index.html'
+		})
+{{else if (eq webDeploy "cloudflare")}}
+		// Alchemy's adapter wraps SvelteKit's Cloudflare adapter for local platform.env and Worker builds.
+		adapter: alchemy()
+{{else if (eq webDeploy "docker")}}
+		// adapter-node builds a standalone Node server (run with \`node build/index.js\`).
+		adapter: adapter()
+{{else}}
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
 		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
 		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
 		adapter: adapter()
+{{/if}}
 	}
 };
 
@@ -27653,7 +32440,8 @@ export default config;
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"moduleResolution": "bundler"
+		"moduleResolution": "bundler"{{#if (eq webDeploy "cloudflare")}},
+			"types": ["@cloudflare/workers-types"]{{/if}}
 	}
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
 	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
@@ -27664,7 +32452,7 @@ export default config;
 `],
   ["frontend/svelte/vite.config.ts.hbs", `import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
-import { defineConfig } from "vite";
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
@@ -27716,16 +32504,41 @@ export default defineConfig({
 	"type": "module",
 	"exports": {}
 }`],
+  ["packages/env/src/cloudflare-local.ts.hbs", `import { config } from "dotenv";
+import { fileURLToPath } from "node:url";
+
+config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
+config();
+
+const runtimeEnv = typeof process === "undefined" ? {} : process.env;
+
+export const env = new Proxy({} as Env, {
+	get(_target, prop) {
+		if (typeof prop !== "string") {
+			return undefined;
+		}
+
+		return runtimeEnv[prop];
+	},
+});
+`],
   ["packages/env/src/native.ts.hbs", `import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+{{#if (eq backend "convex")}}
+const convexUrlSchema = (exampleHost: string) =>
+	z.url().refine((url) => new URL(url).hostname !== exampleHost, {
+		message: \`Replace the \${exampleHost} placeholder before running the app\`,
+	});
+
+{{/if}}
 export const env = createEnv({
 	clientPrefix: "EXPO_PUBLIC_",
 	client: {
 {{#if (eq backend "convex")}}
-		EXPO_PUBLIC_CONVEX_URL: z.url(),
+		EXPO_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 {{#if (eq auth "better-auth")}}
-		EXPO_PUBLIC_CONVEX_SITE_URL: z.url(),
+		EXPO_PUBLIC_CONVEX_SITE_URL: convexUrlSchema("example.convex.site"),
 {{/if}}
 {{else}}
 		EXPO_PUBLIC_SERVER_URL: z.url(),
@@ -27738,7 +32551,94 @@ export const env = createEnv({
 	emptyStringAsUndefined: true,
 });
 `],
-  ["packages/env/src/server.ts.hbs", `{{#if (or (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+  ["packages/env/src/server.ts.hbs", `{{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+/// <reference types="@cloudflare/workers-types" />
+/// <reference path="../env.d.ts" />
+// For Cloudflare Workers, env is accessed via cloudflare:workers module
+// Types are defined in env.d.ts based on your alchemy.run.ts bindings
+export { env } from "cloudflare:workers";
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "next"))}}
+/// <reference path="../env.d.ts" />
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+
+function getNodeEnvValue(key: string) {
+	if (key === "DB") {
+		return undefined;
+	}
+
+	return process.env[key];
+}
+
+function getCloudflareEnvSync() {
+	try {
+		return getCloudflareContext().env as Env;
+	} catch {
+		return undefined;
+	}
+}
+
+type EnvValue = Env[keyof Env];
+
+function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefined) {
+	return new Proxy({} as Env, {
+		get(_target, prop) {
+			if (typeof prop !== "string") {
+				return undefined;
+			}
+
+			return getValue(prop as keyof Env & string);
+		},
+	});
+}
+
+function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
+	const nodeValue = getNodeEnvValue(key);
+	if (nodeValue !== undefined) {
+		return nodeValue as EnvValue;
+	}
+
+	return getCloudflareEnvSync()?.[key as keyof Env];
+}
+
+// Next.js local dev runs in Node.js, where env vars are exposed on process.env.
+// In the Cloudflare runtime, fall back to OpenNext's Cloudflare context bindings.
+// For static routes (ISR/SSG), use getEnvAsync() so OpenNext can resolve bindings
+// with the async Cloudflare context API.
+export async function getEnvAsync() {
+	const cloudflareEnv = (await getCloudflareContext({ async: true })).env as Env;
+
+	return createEnvProxy((key) => {
+		const nodeValue = getNodeEnvValue(key);
+		if (nodeValue !== undefined) {
+			return nodeValue;
+		}
+
+		return cloudflareEnv[key as keyof Env];
+	});
+}
+
+export const env = createEnvProxy(resolveEnvValue);
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+/// <reference path="../env.d.ts" />
+import { config } from "dotenv";
+import { fileURLToPath } from "node:url";
+
+config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
+config();
+
+const runtimeEnv = typeof process === "undefined" ? {} : process.env;
+
+export const env = new Proxy({} as Env, {
+	get(_target, prop) {
+		if (typeof prop !== "string") {
+			return undefined;
+		}
+
+		return runtimeEnv[prop];
+	},
+});
+{{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+/// <reference types="@cloudflare/workers-types" />
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
@@ -27776,15 +32676,11 @@ export const env = createEnv({
 		POLAR_ACCESS_TOKEN: z.string().min(1),
 		POLAR_SUCCESS_URL: z.url(),
 {{/if}}
-{{#if (eq payments "dodo")}}
-		DODO_PAYMENTS_API_KEY: z.string().min(1),
-		DODO_PAYMENTS_WEBHOOK_SECRET: z.string().min(1),
-		DODO_PAYMENTS_ENVIRONMENT: z.enum(["test_mode", "live_mode"]),
-{{/if}}
 		CORS_ORIGIN: z.url(),
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
 	runtimeEnv: process.env,
+	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });
 {{/if}}
@@ -27800,6 +32696,13 @@ import { createEnv } from "@t3-oss/env-core";
 {{/if}}
 import { z } from "zod";
 
+{{#if (eq backend "convex")}}
+const convexUrlSchema = (exampleHost: string) =>
+	z.url().refine((url) => new URL(url).hostname !== exampleHost, {
+		message: \`Replace the \${exampleHost} placeholder before running the app\`,
+	});
+
+{{/if}}
 {{#if (includes frontend "nuxt")}}
 /**
  * Nuxt env validation - validates at build time when imported in nuxt.config.ts
@@ -27812,9 +32715,9 @@ export const env = createEnv({
 {{#if (eq backend "convex")}}
 {{#if (includes frontend "next")}}
 	client: {
-		NEXT_PUBLIC_CONVEX_URL: z.url(),
+		NEXT_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 {{#if (eq auth "better-auth")}}
-		NEXT_PUBLIC_CONVEX_SITE_URL: z.url(),
+		NEXT_PUBLIC_CONVEX_SITE_URL: convexUrlSchema("example.convex.site"),
 {{/if}}
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
@@ -27831,20 +32734,20 @@ export const env = createEnv({
 	},
 {{else if (includes frontend "nuxt")}}
 	client: {
-		NUXT_PUBLIC_CONVEX_URL: z.url(),
+		NUXT_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 	},
 {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
 	clientPrefix: "PUBLIC_",
 	client: {
-		PUBLIC_CONVEX_URL: z.url(),
+		PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 	},
 	runtimeEnv: (import.meta as any).env,
 {{else}}
 	clientPrefix: "VITE_",
 	client: {
-		VITE_CONVEX_URL: z.url(),
+		VITE_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 {{#if (eq auth "better-auth")}}
-		VITE_CONVEX_SITE_URL: z.url(),
+		VITE_CONVEX_SITE_URL: convexUrlSchema("example.convex.site"),
 {{/if}}
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
@@ -27910,6 +32813,7 @@ export const env = createEnv({
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
 {{/if}}
+	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });
 `],
@@ -27969,287 +32873,12 @@ const db = await D1Database("database", {
 });
 {{/if}}
 
-{{#if (eq webDeploy "cloudflare")}}
-{{#if (includes frontend "next")}}
-export const web = await Nextjs("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    NEXT_PUBLIC_CONVEX_URL: alchemy.env.NEXT_PUBLIC_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    NEXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NEXT_PUBLIC_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    NEXT_PUBLIC_SERVER_URL: alchemy.env.NEXT_PUBLIC_SERVER_URL!,
-    {{/if}}
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    {{#if (ne backend "convex")}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq auth "clerk")}}
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
-    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
-    {{/if}}
-    {{/if}}
-    {{#if (and (includes examples "ai") (ne backend "convex"))}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq payments "dodo")}}
-    DODO_PAYMENTS_API_KEY: alchemy.secret.env.DODO_PAYMENTS_API_KEY!,
-    DODO_PAYMENTS_WEBHOOK_SECRET: alchemy.secret.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
-    DODO_PAYMENTS_ENVIRONMENT: alchemy.env.DODO_PAYMENTS_ENVIRONMENT!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-  },
-  dev: {
-    env: {
-      PORT: "3001",
-    },
-  },
-});
-{{else if (includes frontend "nuxt")}}
-export const web = await Nuxt("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    NUXT_PUBLIC_CONVEX_URL: alchemy.env.NUXT_PUBLIC_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    NUXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NUXT_PUBLIC_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    NUXT_PUBLIC_SERVER_URL: alchemy.env.NUXT_PUBLIC_SERVER_URL!,
-    {{/if}}
-    {{#if (eq backend "self")}}
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    {{#if (ne backend "convex")}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq auth "clerk")}}
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
-    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
-    {{/if}}
-    {{/if}}
-    {{#if (and (includes examples "ai") (ne backend "convex"))}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq payments "dodo")}}
-    DODO_PAYMENTS_API_KEY: alchemy.secret.env.DODO_PAYMENTS_API_KEY!,
-    DODO_PAYMENTS_WEBHOOK_SECRET: alchemy.secret.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
-    DODO_PAYMENTS_ENVIRONMENT: alchemy.env.DODO_PAYMENTS_ENVIRONMENT!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-    {{/if}}
-  }
-});
-{{else if (includes frontend "svelte")}}
-export const web = await SvelteKit("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    PUBLIC_CONVEX_URL: alchemy.env.PUBLIC_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    PUBLIC_CONVEX_SITE_URL: alchemy.env.PUBLIC_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
-    {{/if}}
-  }
-});
-{{else if (includes frontend "tanstack-start")}}
-export const web = await TanStackStart("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
-    {{/if}}
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    {{#if (ne backend "convex")}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq auth "clerk")}}
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
-    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
-    {{/if}}
-    {{/if}}
-    {{#if (and (includes examples "ai") (ne backend "convex"))}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq payments "dodo")}}
-    DODO_PAYMENTS_API_KEY: alchemy.secret.env.DODO_PAYMENTS_API_KEY!,
-    DODO_PAYMENTS_WEBHOOK_SECRET: alchemy.secret.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
-    DODO_PAYMENTS_ENVIRONMENT: alchemy.env.DODO_PAYMENTS_ENVIRONMENT!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-  }
-});
-{{else if (includes frontend "tanstack-router")}}
-export const web = await Vite("web", {
-  cwd: "../../apps/web",
-  assets: "dist",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
-    {{/if}}
-  }
-});
-{{else if (includes frontend "react-router")}}
-export const web = await ReactRouter("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
-    {{/if}}
-  }
-});
-{{else if (includes frontend "solid")}}
-export const web = await Vite("web", {
-  cwd: "../../apps/web",
-  assets: "dist",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
-    {{/if}}
-  }
-});
-{{else if (includes frontend "astro")}}
-export const web = await Astro("web", {
-  cwd: "../../apps/web",
-  entrypoint: "dist/server/entry.mjs",
-  assets: "dist/client",
-  {{#if (eq backend "self")}}
-  compatibility: "node",
-  {{/if}}
-  bindings: {
-    {{#if (ne backend "self")}}
-    PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
-    {{/if}}
-    {{#if (eq backend "self")}}
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq payments "dodo")}}
-    DODO_PAYMENTS_API_KEY: alchemy.secret.env.DODO_PAYMENTS_API_KEY!,
-    DODO_PAYMENTS_WEBHOOK_SECRET: alchemy.secret.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
-    DODO_PAYMENTS_ENVIRONMENT: alchemy.env.DODO_PAYMENTS_ENVIRONMENT!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-    {{/if}}
-  }
-});
-{{/if}}
-{{/if}}
-
 {{#if (eq serverDeploy "cloudflare")}}
 export const server = await Worker("server", {
   cwd: "../../apps/server",
   entrypoint: "src/index.ts",
   compatibility: "node",
+  url: true,
   bindings: {
     {{#if (eq dbSetup "d1")}}
     DB: db,
@@ -28289,6 +32918,326 @@ export const server = await Worker("server", {
 		port: 3000,
 	},
 });
+{{/if}}
+
+{{#if (eq webDeploy "cloudflare")}}
+{{#if (includes frontend "next")}}
+export const web = await Nextjs("web", {
+  cwd: "../../apps/web",
+  bindings: {
+    {{#if (eq backend "convex")}}
+    NEXT_PUBLIC_CONVEX_URL: alchemy.env.NEXT_PUBLIC_CONVEX_URL!,
+    {{#if (eq auth "better-auth")}}
+    NEXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NEXT_PUBLIC_CONVEX_SITE_URL!,
+    {{/if}}
+    {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    NEXT_PUBLIC_SERVER_URL: server.url!,
+    {{else}}
+    NEXT_PUBLIC_SERVER_URL: alchemy.env.NEXT_PUBLIC_SERVER_URL!,
+    {{/if}}
+    {{/if}}
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    {{/if}}
+    {{#if (ne backend "convex")}}
+    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    {{/if}}
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
+    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
+    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
+    {{/if}}
+    {{/if}}
+    {{#if (and (includes examples "ai") (ne backend "convex"))}}
+    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
+    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
+    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    {{/if}}
+    {{/if}}
+  },
+  dev: {
+    env: {
+      PORT: "3001",
+    },
+  },
+});
+{{else if (includes frontend "nuxt")}}
+export const web = await Nuxt("web", {
+  cwd: "../../apps/web",
+  bindings: {
+    {{#if (eq backend "convex")}}
+    NUXT_PUBLIC_CONVEX_URL: alchemy.env.NUXT_PUBLIC_CONVEX_URL!,
+    {{#if (eq auth "better-auth")}}
+    NUXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NUXT_PUBLIC_CONVEX_SITE_URL!,
+    {{/if}}
+    {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    NUXT_PUBLIC_SERVER_URL: server.url!,
+    {{else}}
+    NUXT_PUBLIC_SERVER_URL: alchemy.env.NUXT_PUBLIC_SERVER_URL!,
+    {{/if}}
+    {{/if}}
+    {{#if (eq backend "self")}}
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    {{/if}}
+    {{#if (ne backend "convex")}}
+    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    {{/if}}
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
+    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
+    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
+    {{/if}}
+    {{/if}}
+    {{#if (and (includes examples "ai") (ne backend "convex"))}}
+    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
+    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
+    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    {{/if}}
+    {{/if}}
+    {{/if}}
+  }
+});
+{{else if (includes frontend "svelte")}}
+export const web = await SvelteKit("web", {
+  cwd: "../../apps/web",
+  bindings: {
+    {{#if (eq backend "convex")}}
+    PUBLIC_CONVEX_URL: alchemy.env.PUBLIC_CONVEX_URL!,
+    {{#if (eq auth "better-auth")}}
+    PUBLIC_CONVEX_SITE_URL: alchemy.env.PUBLIC_CONVEX_SITE_URL!,
+    {{/if}}
+    {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    PUBLIC_SERVER_URL: server.url!,
+    {{else}}
+    PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
+    {{/if}}
+    {{/if}}
+    {{#if (eq backend "self")}}
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    {{/if}}
+    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    {{/if}}
+    {{#if (and (includes examples "ai") (ne backend "convex"))}}
+    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
+    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
+    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    {{/if}}
+    {{/if}}
+    {{/if}}
+  },
+  dev: {
+    domain: "localhost:5173",
+  },
+});
+{{else if (includes frontend "tanstack-start")}}
+export const web = await TanStackStart("web", {
+  cwd: "../../apps/web",
+  bindings: {
+    {{#if (eq backend "convex")}}
+    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
+    {{#if (eq auth "better-auth")}}
+    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
+    {{/if}}
+    {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    VITE_SERVER_URL: server.url!,
+    {{else}}
+    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
+    {{/if}}
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    {{/if}}
+    {{#if (ne backend "convex")}}
+    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    {{/if}}
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
+    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
+    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
+    {{/if}}
+    {{/if}}
+    {{#if (and (includes examples "ai") (ne backend "convex"))}}
+    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
+    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
+    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    {{/if}}
+    {{/if}}
+  }
+});
+{{else if (includes frontend "tanstack-router")}}
+export const web = await Vite("web", {
+  cwd: "../../apps/web",
+  assets: "dist",
+  bindings: {
+    {{#if (eq backend "convex")}}
+    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
+    {{#if (eq auth "better-auth")}}
+    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
+    {{/if}}
+    {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    VITE_SERVER_URL: server.url!,
+    {{else}}
+    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
+    {{/if}}
+  }
+});
+{{else if (includes frontend "react-router")}}
+export const web = await ReactRouter("web", {
+  cwd: "../../apps/web",
+  bindings: {
+    {{#if (eq backend "convex")}}
+    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
+    {{#if (eq auth "better-auth")}}
+    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
+    {{/if}}
+    {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    VITE_SERVER_URL: server.url!,
+    {{else}}
+    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
+    {{/if}}
+  }
+});
+{{else if (includes frontend "solid")}}
+export const web = await Vite("web", {
+  cwd: "../../apps/web",
+  assets: "dist",
+  bindings: {
+    {{#if (eq backend "convex")}}
+    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
+    {{#if (eq auth "better-auth")}}
+    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
+    {{/if}}
+    {{else if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    VITE_SERVER_URL: server.url!,
+    {{else}}
+    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
+    {{/if}}
+  }
+});
+{{else if (includes frontend "astro")}}
+export const web = await Astro("web", {
+  cwd: "../../apps/web",
+  entrypoint: "dist/server/entry.mjs",
+  assets: "dist/client",
+  {{#if (eq backend "self")}}
+  compatibility: "node",
+  {{/if}}
+  bindings: {
+    {{#if (ne backend "self")}}
+    {{#if (eq serverDeploy "cloudflare")}}
+    PUBLIC_SERVER_URL: server.url!,
+    {{else}}
+    PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
+    {{/if}}
+    {{/if}}
+    {{#if (eq backend "self")}}
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    {{/if}}
+    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
+    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
+    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    {{/if}}
+    {{/if}}
+    {{/if}}
+  }
+});
+{{/if}}
 {{/if}}
 
 {{#if (and (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
@@ -28351,23 +33300,24 @@ await app.finalize();
     "./postcss.config": "./postcss.config.mjs"
   },
   "dependencies": {
-    "@base-ui/react": "^1.0.0",
-    "shadcn": "^3.6.2",
+    "@base-ui/react": "^1.6.0",
+    "@shadcn/react": "^0.1.0",
+    "shadcn": "^4.12.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.546.0",
+    "lucide-react": "^1.21.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "sonner": "^2.0.5",
-    "tailwind-merge": "^3.3.1",
-    "tw-animate-css": "^1.3.4"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.6.0",
+    "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
-    "@types/react": "^19.2.10",
+    "@tailwindcss/postcss": "^4.3.1",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3"
+    "tailwindcss": "^4.3.1"
   },
   "scripts": {
     "check-types": "tsc --noEmit"
@@ -28380,21 +33330,362 @@ await app.finalize();
   },
 };
 `],
+  ["packages/ui/src/components/attachment.tsx.hbs", `import * as React from "react"
+import { mergeProps } from "@base-ui/react/merge-props"
+import { useRender } from "@base-ui/react/use-render"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+import { Button } from "@{{projectName}}/ui/components/button"
+
+const attachmentVariants = cva(
+  "group/attachment relative flex w-fit max-w-full min-w-0 shrink-0 flex-wrap rounded-none border bg-card text-card-foreground transition-colors focus-within:ring-1 focus-within:ring-ring/50 has-[>a,>button]:hover:bg-muted/50 data-[state=error]:border-destructive/30 data-[state=idle]:border-dashed",
+  {
+    variants: {
+      size: {
+        default:
+          "gap-2 text-xs has-data-[slot=attachment-content]:px-2 has-data-[slot=attachment-content]:py-1.5 has-data-[slot=attachment-media]:p-1.5",
+        sm: "gap-2.5 text-xs has-data-[slot=attachment-content]:px-1.5 has-data-[slot=attachment-content]:py-1 has-data-[slot=attachment-media]:p-1",
+        xs: "gap-1.5 rounded-none text-xs has-data-[slot=attachment-content]:px-1.5 has-data-[slot=attachment-content]:py-1 has-data-[slot=attachment-media]:p-1",
+      },
+      orientation: {
+        horizontal: "min-w-40 items-center",
+        vertical: "w-24 flex-col has-data-[slot=attachment-content]:w-30",
+      },
+    },
+  }
+)
+
+function Attachment({
+  className,
+  state = "done",
+  size = "default",
+  orientation = "horizontal",
+  ...props
+}: React.ComponentProps<"div"> &
+  VariantProps<typeof attachmentVariants> & {
+    state?: "idle" | "uploading" | "processing" | "error" | "done"
+  }) {
+  const resolvedOrientation = orientation ?? "horizontal"
+
+  return (
+    <div
+      data-slot="attachment"
+      data-state={state}
+      data-size={size}
+      data-orientation={resolvedOrientation}
+      className={cn(attachmentVariants({ size, orientation }), className)}
+      {...props}
+    />
+  )
+}
+
+const attachmentMediaVariants = cva(
+  "relative flex aspect-square w-10 shrink-0 items-center justify-center overflow-hidden rounded-none bg-muted text-foreground group-data-[orientation=vertical]/attachment:w-full group-data-[size=sm]/attachment:w-8 group-data-[size=xs]/attachment:w-7 group-data-[size=xs]/attachment:rounded-none group-data-[state=error]/attachment:bg-destructive/10 group-data-[state=error]/attachment:text-destructive group-data-[orientation=vertical]/attachment:*:data-[slot=spinner]:size-6! [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 group-data-[orientation=vertical]/attachment:[&_svg:not([class*='size-'])]:size-6 group-data-[size=xs]/attachment:[&_svg:not([class*='size-'])]:size-3.5",
+  {
+    variants: {
+      variant: {
+        icon: "",
+        image:
+          "opacity-60 group-data-[state=done]/attachment:opacity-100 group-data-[state=idle]/attachment:opacity-100 *:[img]:aspect-square *:[img]:w-full *:[img]:object-cover",
+      },
+    },
+    defaultVariants: {
+      variant: "icon",
+    },
+  }
+)
+
+function AttachmentMedia({
+  className,
+  variant = "icon",
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof attachmentMediaVariants>) {
+  return (
+    <div
+      data-slot="attachment-media"
+      data-variant={variant}
+      className={cn(attachmentMediaVariants({ variant }), className)}
+      {...props}
+    />
+  )
+}
+
+function AttachmentContent({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="attachment-content"
+      className={cn(
+        "max-w-full min-w-0 flex-1 leading-tight group-data-[orientation=vertical]/attachment:px-1",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AttachmentTitle({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="attachment-title"
+      className={cn(
+        "block max-w-full min-w-0 truncate font-medium group-data-[state=processing]/attachment:shimmer group-data-[state=uploading]/attachment:shimmer",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AttachmentDescription({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="attachment-description"
+      className={cn(
+        "mt-0.5 block min-w-0 truncate text-xs text-muted-foreground group-data-[state=error]/attachment:text-destructive/80",
+        "max-w-full",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AttachmentActions({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="attachment-actions"
+      className={cn(
+        "relative z-20 flex shrink-0 items-center group-data-[orientation=vertical]/attachment:absolute group-data-[orientation=vertical]/attachment:top-3 group-data-[orientation=vertical]/attachment:right-3 group-data-[orientation=vertical]/attachment:gap-1",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AttachmentAction({
+  className,
+  variant,
+  size = "icon-xs",
+  type = "button",
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  return (
+    <Button
+      data-slot="attachment-action"
+      type={type}
+      variant={variant ?? "ghost"}
+      size={size}
+      className={cn(className)}
+      {...props}
+    />
+  )
+}
+
+function AttachmentTrigger({
+  className,
+  render,
+  type,
+  ...props
+}: useRender.ComponentProps<"button">) {
+  return useRender({
+    defaultTagName: "button",
+    props: mergeProps<"button">(
+      {
+        type: render ? type : (type ?? "button"),
+        className: cn("absolute inset-0 z-10 outline-none", className),
+      },
+      props
+    ),
+    render,
+    state: {
+      slot: "attachment-trigger",
+    },
+  })
+}
+
+function AttachmentGroup({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="attachment-group"
+      className={cn(
+        "flex min-w-0 scroll-fade-x snap-x snap-mandatory scroll-px-1 scrollbar-none gap-3 overflow-x-auto overscroll-x-contain py-1 *:data-[slot=attachment]:flex-none *:data-[slot=attachment]:snap-start",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  Attachment,
+  AttachmentGroup,
+  AttachmentMedia,
+  AttachmentContent,
+  AttachmentTitle,
+  AttachmentDescription,
+  AttachmentActions,
+  AttachmentAction,
+  AttachmentTrigger,
+}
+`],
+  ["packages/ui/src/components/bubble.tsx.hbs", `import * as React from "react"
+import { mergeProps } from "@base-ui/react/merge-props"
+import { useRender } from "@base-ui/react/use-render"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function BubbleGroup({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="bubble-group"
+      className={cn("flex min-w-0 flex-col gap-2", className)}
+      {...props}
+    />
+  )
+}
+
+const bubbleVariants = cva(
+  "group/bubble relative flex w-fit max-w-[80%] min-w-0 flex-col gap-1 group-data-[align=end]/message:self-end data-[align=end]:self-end data-[variant=ghost]:max-w-full",
+  {
+    variants: {
+      variant: {
+        default:
+          "*:data-[slot=bubble-content]:bg-primary *:data-[slot=bubble-content]:text-primary-foreground [&>[data-slot=bubble-content]:is(button,a):hover]:bg-primary/80",
+        secondary:
+          "*:data-[slot=bubble-content]:bg-secondary *:data-[slot=bubble-content]:text-secondary-foreground [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]",
+        muted:
+          "*:data-[slot=bubble-content]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_5%)]",
+        tinted:
+          "*:data-[slot=bubble-content]:bg-[oklch(from_var(--primary)_0.93_calc(c*0.4)_h)] *:data-[slot=bubble-content]:text-foreground dark:*:data-[slot=bubble-content]:bg-[oklch(from_var(--primary)_0.3_calc(c*0.4)_h)] [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.88_calc(c*0.5)_h)] dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.35_calc(c*0.5)_h)]",
+        outline:
+          "*:data-[slot=bubble-content]:border-border *:data-[slot=bubble-content]:bg-background [&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:text-foreground dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-input/30",
+        ghost:
+          "border-none *:data-[slot=bubble-content]:rounded-none *:data-[slot=bubble-content]:bg-transparent *:data-[slot=bubble-content]:p-0 [&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:text-foreground dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted/50",
+        destructive:
+          "*:data-[slot=bubble-content]:bg-destructive/10 *:data-[slot=bubble-content]:text-destructive dark:*:data-[slot=bubble-content]:bg-destructive/20 [&>[data-slot=bubble-content]:is(button,a):hover]:bg-destructive/20 dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-destructive/30",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+function Bubble({
+  variant = "default",
+  align = "start",
+  className,
+  ...props
+}: React.ComponentProps<"div"> &
+  VariantProps<typeof bubbleVariants> & {
+    align?: "start" | "end"
+  }) {
+  return (
+    <div
+      data-slot="bubble"
+      data-variant={variant}
+      data-align={align}
+      className={cn(bubbleVariants({ variant }), className)}
+      {...props}
+    />
+  )
+}
+
+function BubbleContent({
+  className,
+  render,
+  ...props
+}: useRender.ComponentProps<"div">) {
+  return useRender({
+    defaultTagName: "div",
+    props: mergeProps<"div">(
+      {
+        className: cn(
+          "w-fit max-w-full min-w-0 overflow-hidden rounded-none border border-transparent px-2.5 py-2 text-xs leading-relaxed wrap-break-word group-data-[align=end]/bubble:self-end [button]:text-left [button,a]:transition-colors [button,a]:outline-none [button,a]:focus-visible:border-ring [button,a]:focus-visible:ring-1 [button,a]:focus-visible:ring-ring/50",
+          className
+        ),
+      },
+      props
+    ),
+    render,
+    state: {
+      slot: "bubble-content",
+    },
+  })
+}
+
+const bubbleReactionsVariants = cva(
+  "absolute z-10 flex w-fit shrink-0 items-center justify-center gap-1 rounded-none bg-muted px-1.5 py-0.5 text-xs ring-2 ring-card has-[button]:p-0",
+  {
+    variants: {
+      side: {
+        top: "top-0 -translate-y-3/4",
+        bottom: "bottom-0 translate-y-3/4",
+      },
+      align: {
+        start: "left-3",
+        end: "right-3",
+      },
+    },
+    defaultVariants: {
+      side: "bottom",
+      align: "end",
+    },
+  }
+)
+
+function BubbleReactions({
+  side = "bottom",
+  align = "end",
+  className,
+  ...props
+}: React.ComponentProps<"div"> & {
+  align?: "start" | "end"
+  side?: "top" | "bottom"
+}) {
+  return (
+    <div
+      data-slot="bubble-reactions"
+      data-align={align}
+      data-side={side}
+      className={cn(bubbleReactionsVariants({ side, align }), className)}
+      {...props}
+    />
+  )
+}
+
+export { BubbleGroup, Bubble, BubbleContent, BubbleReactions }
+`],
   ["packages/ui/src/components/button.tsx.hbs", `import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-none border border-transparent bg-clip-padding text-xs font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-none border border-transparent bg-clip-padding text-xs font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+        default: "bg-primary text-primary-foreground hover:bg-primary/80",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
@@ -28406,7 +33697,7 @@ const buttonVariants = cva(
           "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
         xs: "h-6 gap-1 rounded-none px-2 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 gap-1 rounded-none px-2.5 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
         icon: "size-8",
         "icon-xs": "size-6 rounded-none [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-7 rounded-none",
@@ -28451,7 +33742,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-4 overflow-hidden rounded-none bg-card py-4 text-xs/relaxed text-card-foreground ring-1 ring-foreground/10 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-2 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-none *:[img:last-child]:rounded-none",
+        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-none bg-card py-(--card-spacing) text-xs/relaxed text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-none *:[img:last-child]:rounded-none",
         className
       )}
       {...props}
@@ -28464,7 +33755,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-none px-4 group-data-[size=sm]/card:px-3 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3",
+        "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-none px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)",
         className
       )}
       {...props}
@@ -28477,7 +33768,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-title"
       className={cn(
-        "text-sm font-medium group-data-[size=sm]/card:text-sm",
+        "cn-font-heading text-sm font-medium group-data-[size=sm]/card:text-sm",
         className
       )}
       {...props}
@@ -28512,7 +33803,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      className={cn("px-4 group-data-[size=sm]/card:px-3", className)}
+      className={cn("px-(--card-spacing)", className)}
       {...props}
     />
   )
@@ -28523,7 +33814,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center rounded-none border-t p-4 group-data-[size=sm]/card:p-3",
+        "flex items-center rounded-none border-t p-(--card-spacing)",
         className
       )}
       {...props}
@@ -28614,7 +33905,7 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"
           className={cn(
-            "z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-none bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 data-closed:zoom-out-95",
+            "cn-menu-target cn-menu-translucent z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-none bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 data-closed:zoom-out-95",
             className
           )}
           {...props}
@@ -28694,7 +33985,7 @@ function DropdownMenuSubTrigger({
       {...props}
     >
       {children}
-      <ChevronRightIcon className="ml-auto" />
+      <ChevronRightIcon className="cn-rtl-flip ml-auto" />
     </MenuPrimitive.SubmenuTrigger>
   )
 }
@@ -28711,7 +34002,7 @@ function DropdownMenuSubContent({
     <DropdownMenuContent
       data-slot="dropdown-menu-sub-content"
       className={cn(
-        "w-auto min-w-[96px] rounded-none bg-popover text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+        "cn-menu-target cn-menu-translucent w-auto min-w-[96px] rounded-none bg-popover text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
         className
       )}
       align={align}
@@ -28843,6 +34134,273 @@ export {
   DropdownMenuSubContent,
 }
 `],
+  ["packages/ui/src/components/empty.tsx.hbs", `import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function Empty({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="empty"
+      className={cn(
+        "flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 rounded-none border-dashed p-6 text-center text-balance md:p-12",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function EmptyHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="empty-header"
+      className={cn("flex max-w-sm flex-col items-center gap-2", className)}
+      {...props}
+    />
+  )
+}
+
+const emptyMediaVariants = cva(
+  "mb-2 flex shrink-0 items-center justify-center [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default: "bg-transparent",
+        icon: "flex size-10 shrink-0 items-center justify-center rounded-none bg-muted text-foreground [&_svg:not([class*='size-'])]:size-5",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+function EmptyMedia({
+  className,
+  variant = "default",
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) {
+  return (
+    <div
+      data-slot="empty-icon"
+      data-variant={variant}
+      className={cn(emptyMediaVariants({ variant, className }))}
+      {...props}
+    />
+  )
+}
+
+function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="empty-title"
+      className={cn("cn-font-heading text-sm font-medium tracking-tight", className)}
+      {...props}
+    />
+  )
+}
+
+function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
+  return (
+    <div
+      data-slot="empty-description"
+      className={cn(
+        "text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="empty-content"
+      className={cn(
+        "flex w-full max-w-sm min-w-0 flex-col items-center gap-4 text-sm text-balance",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+  EmptyMedia,
+}
+`],
+  ["packages/ui/src/components/input-group.tsx.hbs", `"use client"
+
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+import { Button } from "@{{projectName}}/ui/components/button"
+import { Input } from "@{{projectName}}/ui/components/input"
+import { Textarea } from "@{{projectName}}/ui/components/textarea"
+
+function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="input-group"
+      role="group"
+      className={cn(
+        "group/input-group relative flex h-8 w-full min-w-0 items-center rounded-none border border-input bg-background shadow-xs transition-[color,box-shadow] outline-none has-[>textarea]:h-auto dark:bg-input/30",
+        "has-[>[data-align=inline-start]]:[&>input]:pl-2 has-[>[data-align=inline-end]]:[&>input]:pr-2",
+        "has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-start]]:[&>input]:pb-3",
+        "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3",
+        "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-1 has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50",
+        "has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot][aria-invalid=true]]:ring-1 has-[[data-slot][aria-invalid=true]]:ring-destructive/20 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+const inputGroupAddonVariants = cva(
+  "flex h-auto cursor-text select-none items-center justify-center gap-2 py-1.5 text-xs font-medium text-muted-foreground group-data-[disabled=true]/input-group:opacity-50 [&>kbd]:rounded-none [&>svg:not([class*='size-'])]:size-4",
+  {
+    variants: {
+      align: {
+        "inline-start":
+          "order-first pl-2 has-[>button]:ml-[-0.3rem] has-[>kbd]:ml-[-0.15rem]",
+        "inline-end":
+          "order-last pr-2 has-[>button]:mr-[-0.3rem] has-[>kbd]:mr-[-0.15rem]",
+        "block-start":
+          "order-first w-full justify-start px-2.5 pt-2 group-has-[>input]/input-group:pt-2 [.border-b]:pb-2",
+        "block-end":
+          "order-last w-full justify-start px-2.5 pb-2 group-has-[>input]/input-group:pb-2 [.border-t]:pt-2",
+      },
+    },
+    defaultVariants: {
+      align: "inline-start",
+    },
+  }
+)
+
+function InputGroupAddon({
+  className,
+  align = "inline-start",
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
+  return (
+    <div
+      role="group"
+      data-slot="input-group-addon"
+      data-align={align}
+      className={cn(inputGroupAddonVariants({ align }), className)}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("button")) {
+          return
+        }
+        e.currentTarget.parentElement
+          ?.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea")
+          ?.focus()
+      }}
+      {...props}
+    />
+  )
+}
+
+const inputGroupButtonVariants = cva(
+  "flex items-center gap-2 text-xs shadow-none",
+  {
+    variants: {
+      size: {
+        xs: "h-6 gap-1 rounded-none px-1.5 [&>svg:not([class*='size-'])]:size-3.5",
+        sm: "h-7 gap-1 rounded-none px-2",
+        "icon-xs": "size-6 rounded-none p-0 has-[>svg]:p-0",
+        "icon-sm": "size-7 rounded-none p-0 has-[>svg]:p-0",
+      },
+    },
+    defaultVariants: {
+      size: "xs",
+    },
+  }
+)
+
+function InputGroupButton({
+  className,
+  type = "button",
+  variant = "ghost",
+  size = "xs",
+  ...props
+}: Omit<React.ComponentProps<typeof Button>, "size" | "type"> &
+  VariantProps<typeof inputGroupButtonVariants> & {
+    type?: "button" | "submit" | "reset"
+  }) {
+  return (
+    <Button
+      type={type}
+      data-size={size}
+      variant={variant}
+      className={cn(inputGroupButtonVariants({ size }), className)}
+      {...props}
+    />
+  )
+}
+
+function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      className={cn(
+        "flex items-center gap-2 text-xs text-muted-foreground [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function InputGroupInput({
+  className,
+  ...props
+}: React.ComponentProps<"input">) {
+  return (
+    <Input
+      data-slot="input-group-control"
+      className={cn(
+        "flex-1 rounded-none border-0 bg-transparent shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function InputGroupTextarea({
+  className,
+  ...props
+}: React.ComponentProps<"textarea">) {
+  return (
+    <Textarea
+      data-slot="input-group-control"
+      className={cn(
+        "flex-1 resize-none rounded-none border-0 bg-transparent py-2 shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupText,
+  InputGroupInput,
+  InputGroupTextarea,
+}
+`],
   ["packages/ui/src/components/input.tsx.hbs", `import * as React from "react"
 import { Input as InputPrimitive } from "@base-ui/react/input"
 
@@ -28864,7 +34422,9 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
 
 export { Input }
 `],
-  ["packages/ui/src/components/label.tsx.hbs", `import * as React from "react"
+  ["packages/ui/src/components/label.tsx.hbs", `"use client"
+
+import * as React from "react"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
@@ -28882,6 +34442,305 @@ function Label({ className, ...props }: React.ComponentProps<"label">) {
 }
 
 export { Label }
+`],
+  ["packages/ui/src/components/marker.tsx.hbs", `import * as React from "react"
+import { mergeProps } from "@base-ui/react/merge-props"
+import { useRender } from "@base-ui/react/use-render"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+const markerVariants = cva(
+  "group/marker relative flex min-h-4 w-full items-center gap-2 text-left text-xs text-muted-foreground [&_svg:not([class*='size-'])]:size-3.5 [a]:underline [a]:underline-offset-3 [a]:hover:text-foreground",
+  {
+    variants: {
+      variant: {
+        default: "",
+        separator:
+          "before:mr-1 before:h-px before:min-w-0 before:flex-1 before:bg-border after:ml-1 after:h-px after:min-w-0 after:flex-1 after:bg-border",
+        border: "border-b border-border pb-2",
+      },
+    },
+  }
+)
+
+function Marker({
+  className,
+  variant = "default",
+  render,
+  ...props
+}: useRender.ComponentProps<"div"> & VariantProps<typeof markerVariants>) {
+  return useRender({
+    defaultTagName: "div",
+    props: mergeProps<"div">(
+      {
+        className: cn(markerVariants({ variant, className })),
+      },
+      props
+    ),
+    render,
+    state: {
+      slot: "marker",
+      variant,
+    },
+  })
+}
+
+function MarkerIcon({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="marker-icon"
+      aria-hidden="true"
+      className={cn(
+        "size-3.5 shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MarkerContent({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="marker-content"
+      className={cn(
+        "min-w-0 wrap-break-word group-data-[variant=separator]/marker:flex-none group-data-[variant=separator]/marker:text-center *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Marker, MarkerIcon, MarkerContent, markerVariants }
+`],
+  ["packages/ui/src/components/message-scroller.tsx.hbs", `"use client"
+
+import * as React from "react"
+import {
+  MessageScroller as MessageScrollerPrimitive,
+  useMessageScroller,
+  useMessageScrollerScrollable,
+  useMessageScrollerVisibility,
+} from "@shadcn/react/message-scroller"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+import { Button } from "@{{projectName}}/ui/components/button"
+import { ArrowDownIcon } from "lucide-react"
+
+function MessageScrollerProvider(
+  props: React.ComponentProps<typeof MessageScrollerPrimitive.Provider>
+) {
+  return <MessageScrollerPrimitive.Provider {...props} />
+}
+
+function MessageScroller({
+  className,
+  ...props
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Root>) {
+  return (
+    <MessageScrollerPrimitive.Root
+      data-slot="message-scroller"
+      className={cn(
+        "cn-message-scroller group/message-scroller relative flex size-full min-h-0 flex-col overflow-hidden",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageScrollerViewport({
+  className,
+  ...props
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Viewport>) {
+  return (
+    <MessageScrollerPrimitive.Viewport
+      data-slot="message-scroller-viewport"
+      className={cn(
+        "cn-message-scroller-viewport size-full min-h-0 min-w-0 scroll-fade-b scrollbar-thin scrollbar-gutter-stable overflow-y-auto overscroll-contain contain-content data-autoscrolling:scrollbar-none",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageScrollerContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Content>) {
+  return (
+    <MessageScrollerPrimitive.Content
+      data-slot="message-scroller-content"
+      className={cn(
+        "cn-message-scroller-content flex h-max min-h-full flex-col gap-6",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageScrollerItem({
+  className,
+  scrollAnchor = false,
+  ...props
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Item>) {
+  return (
+    <MessageScrollerPrimitive.Item
+      data-slot="message-scroller-item"
+      scrollAnchor={scrollAnchor}
+      className={cn(
+        "cn-message-scroller-item min-w-0 shrink-0 [contain-intrinsic-size:auto_10rem] [content-visibility:auto]",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageScrollerButton({
+  direction = "end",
+  className,
+  children,
+  render,
+  variant = "secondary",
+  size = "icon-sm",
+  ...props
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Button> &
+  Pick<React.ComponentProps<typeof Button>, "variant" | "size">) {
+  return (
+    <MessageScrollerPrimitive.Button
+      data-slot="message-scroller-button"
+      data-direction={direction}
+      data-variant={variant}
+      data-size={size}
+      direction={direction}
+      className={cn(
+        "cn-message-scroller-button absolute inset-s-1/2 -translate-x-1/2 border-border bg-background text-foreground transition-[translate,scale,opacity] duration-200 hover:bg-muted hover:text-foreground data-[active=false]:pointer-events-none data-[active=false]:scale-95 data-[active=false]:opacity-0 data-[active=false]:duration-400 data-[active=false]:ease-[cubic-bezier(0.7,0,0.84,0)] data-[active=true]:translate-y-0 data-[active=true]:scale-100 data-[active=true]:opacity-100 data-[active=true]:ease-[cubic-bezier(0.23,1,0.32,1)] data-[direction=end]:bottom-4 data-[direction=end]:data-[active=false]:translate-y-full data-[direction=start]:top-4 data-[direction=start]:data-[active=false]:-translate-y-full rtl:translate-x-1/2 data-[direction=start]:[&_svg]:rotate-180",
+        className
+      )}
+      render={render ?? <Button variant={variant} size={size} />}
+      {...props}
+    >
+      {children ?? (
+        <>
+          <ArrowDownIcon />
+          <span className="sr-only">
+            {direction === "end" ? "Scroll to end" : "Scroll to start"}
+          </span>
+        </>
+      )}
+    </MessageScrollerPrimitive.Button>
+  )
+}
+
+export {
+  MessageScrollerProvider,
+  MessageScroller,
+  MessageScrollerViewport,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerButton,
+  useMessageScroller,
+  useMessageScrollerScrollable,
+  useMessageScrollerVisibility,
+}
+`],
+  ["packages/ui/src/components/message.tsx.hbs", `import * as React from "react"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function MessageGroup({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="message-group"
+      className={cn("flex min-w-0 flex-col gap-1.5", className)}
+      {...props}
+    />
+  )
+}
+
+function Message({
+  className,
+  align = "start",
+  ...props
+}: React.ComponentProps<"div"> & { align?: "start" | "end" }) {
+  return (
+    <div
+      data-slot="message"
+      data-align={align}
+      className={cn(
+        "group/message relative flex w-full min-w-0 gap-1.5 text-xs data-[align=end]:flex-row-reverse",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageAvatar({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="message-avatar"
+      className={cn(
+        "flex w-fit min-w-8 shrink-0 items-center justify-center self-end overflow-hidden rounded-full bg-muted group-has-data-[slot=message-footer]/message:-translate-y-8",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="message-content"
+      className={cn(
+        "flex w-full min-w-0 flex-col gap-2 wrap-break-word group-data-[align=end]/message:*:data-slot:self-end",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="message-header"
+      className={cn(
+        "flex max-w-full min-w-0 items-center px-2.5 text-xs font-medium text-muted-foreground group-has-data-[variant=ghost]/message:px-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function MessageFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="message-footer"
+      className={cn(
+        "flex max-w-full min-w-0 items-center px-2.5 text-xs font-medium text-muted-foreground group-has-data-[variant=ghost]/message:px-0 group-data-[align=end]/message:justify-end",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  MessageGroup,
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageFooter,
+  MessageHeader,
+}
 `],
   ["packages/ui/src/components/skeleton.tsx.hbs", `import { cn } from "@{{projectName}}/ui/lib/utils"
 
@@ -28901,7 +34760,8 @@ export { Skeleton }
 
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
-import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
+
+import { CircleCheckIcon, InfoIcon, Loader2Icon, OctagonXIcon, TriangleAlertIcon } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
@@ -28946,6 +34806,92 @@ const Toaster = ({ ...props }: ToasterProps) => {
 }
 
 export { Toaster }
+`],
+  ["packages/ui/src/components/textarea.tsx.hbs", `import * as React from "react"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
+  return (
+    <textarea
+      data-slot="textarea"
+      className={cn(
+        "flex field-sizing-content min-h-16 w-full resize-none rounded-none border border-input bg-transparent px-2.5 py-2 text-xs transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 md:text-xs dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Textarea }
+`],
+  ["packages/ui/src/components/tooltip.tsx.hbs", `"use client"
+
+import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function TooltipProvider({
+  delay = 0,
+  ...props
+}: TooltipPrimitive.Provider.Props) {
+  return (
+    <TooltipPrimitive.Provider
+      data-slot="tooltip-provider"
+      delay={delay}
+      {...props}
+    />
+  )
+}
+
+function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
+  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+}
+
+function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
+  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+}
+
+function TooltipContent({
+  className,
+  side = "top",
+  sideOffset = 4,
+  align = "center",
+  alignOffset = 0,
+  children,
+  ...props
+}: TooltipPrimitive.Popup.Props &
+  Pick<
+    TooltipPrimitive.Positioner.Props,
+    "align" | "alignOffset" | "side" | "sideOffset"
+  >) {
+  return (
+    <TooltipPrimitive.Portal>
+      <TooltipPrimitive.Positioner
+        align={align}
+        alignOffset={alignOffset}
+        side={side}
+        sideOffset={sideOffset}
+        className="isolate z-50"
+      >
+        <TooltipPrimitive.Popup
+          data-slot="tooltip-content"
+          className={cn(
+            "z-50 inline-flex w-fit max-w-xs origin-(--transform-origin) items-center gap-1.5 rounded-none bg-foreground px-3 py-1.5 text-xs text-background has-data-[slot=kbd]:pr-1.5 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            className
+          )}
+          {...props}
+        >
+          {children}
+          <TooltipPrimitive.Arrow className="z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-none bg-foreground fill-foreground data-[side=bottom]:top-1 data-[side=inline-end]:top-1/2! data-[side=inline-end]:-left-1 data-[side=inline-end]:-translate-y-1/2 data-[side=inline-start]:top-1/2! data-[side=inline-start]:-right-1 data-[side=inline-start]:-translate-y-1/2 data-[side=left]:top-1/2! data-[side=left]:-right-1 data-[side=left]:-translate-y-1/2 data-[side=right]:top-1/2! data-[side=right]:-left-1 data-[side=right]:-translate-y-1/2 data-[side=top]:-bottom-2.5" />
+        </TooltipPrimitive.Popup>
+      </TooltipPrimitive.Positioner>
+    </TooltipPrimitive.Portal>
+  )
+}
+
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
 `],
   ["packages/ui/src/hooks/.gitkeep", ``],
   ["packages/ui/src/lib/utils.ts.hbs", `import { clsx, type ClassValue } from "clsx";
@@ -29089,9 +35035,9 @@ export function cn(...inputs: ClassValue[]) {
   ["packages/ui/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": [],
     "paths": {
       "@{{projectName}}/ui/*": ["./src/*"]
     }
@@ -29100,301 +35046,91 @@ export function cn(...inputs: ClassValue[]) {
   "exclude": ["node_modules"]
 }
 `],
-  ["payments/dodo/server/base/src/lib/payments.ts.hbs", `import DodoPayments from "dodopayments";
-import { env } from "@{{projectName}}/env/server";
+  ["payments/polar/convex/backend/convex/polar.ts.hbs", `import { Polar } from "@convex-dev/polar";
 
-export const dodoPaymentsClient = new DodoPayments({
-	bearerToken: env.DODO_PAYMENTS_API_KEY,
-	environment: env.DODO_PAYMENTS_ENVIRONMENT,
-});
-`],
-  ["payments/dodo/web/astro/src/pages/payment/success.astro.hbs", `---
-import Layout from "../../layouts/Layout.astro";
----
+import { api, components } from "./_generated/api";
+import type { DataModel } from "./_generated/dataModel";
+import { action, query } from "./_generated/server";
 
-<Layout title="Payment Success - {{projectName}}">
-  <div id="success-content" class="hidden">
-    <main class="mx-auto max-w-4xl px-4 py-8">
-      <div class="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8">
-        <h1 class="text-3xl font-bold text-white mb-4">Payment Successful!</h1>
-        <p id="checkout-id" class="text-neutral-300"></p>
-      </div>
-    </main>
-  </div>
+type CurrentSubscription = Awaited<ReturnType<Polar<DataModel>["getCurrentSubscription"]>>;
 
-  <div id="loading" class="flex h-[calc(100vh-4rem)] items-center justify-center">
-    <p class="text-neutral-400">Loading...</p>
-  </div>
+export const polar: Polar<DataModel> = new Polar<DataModel>(components.polar, {
+  getUserInfo: async (ctx) => {
+    const user = await ctx.runQuery(api.auth.getCurrentUser);
 
-  <div id="redirect" class="hidden flex h-[calc(100vh-4rem)] items-center justify-center">
-    <p class="text-neutral-400">Redirecting to login...</p>
-  </div>
-</Layout>
-
-<script>
-  import { authClient } from "../../lib/auth-client";
-
-  const successContent = document.getElementById("success-content")!;
-  const loading = document.getElementById("loading")!;
-  const redirect = document.getElementById("redirect")!;
-  const checkoutId = document.getElementById("checkout-id")!;
-
-  async function init() {
-    try {
-      const { data: session } = await authClient.getSession();
-
-      if (!session?.user) {
-        loading.classList.add("hidden");
-        redirect.classList.remove("hidden");
-        window.location.href = "/login";
-        return;
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      const checkout_id = params.get("checkout_id");
-      checkoutId.textContent = checkout_id ? \`Checkout ID: \${checkout_id}\` : "";
-
-      loading.classList.add("hidden");
-      successContent.classList.remove("hidden");
-    } catch (error) {
-      loading.classList.add("hidden");
-      redirect.classList.remove("hidden");
-      window.location.href = "/login";
+    if (!user) {
+      throw new Error("Not authenticated");
     }
-  }
 
-  init();
-</script>
-`],
-  ["payments/dodo/web/nuxt/app/pages/payment/success.vue.hbs", `<script setup lang="ts">
-const route = useRoute()
-const checkout_id = route.query.checkout_id as string
+    if (!user.email) {
+      throw new Error("Authenticated user is missing an email address");
+    }
 
-definePageMeta({
-  middleware: ['auth']
-})
-</script>
-
-<template>
-  <div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">Payment Successful!</h1>
-    <p v-if="checkout_id">Checkout ID: \\{{ checkout_id }}</p>
-  </div>
-</template>
-`],
-  ["payments/dodo/web/react/next/src/app/payment/success/page.tsx.hbs", `import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-{{#if (eq backend "self")}}
-import { auth } from "@{{projectName}}/auth";
-{{/if}}
-import { authClient } from "@/lib/auth-client";
-
-export default async function SuccessPage({
-	searchParams,
-}: {
-	searchParams: Promise<{ checkout_id: string }>
-}) {
-	{{#if (eq backend "self")}}
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
-	{{else}}
-	const session = await authClient.getSession({
-		fetchOptions: {
-			headers: await headers(),
-			throw: true
-		}
-	});
-	{{/if}}
-
-	if (!session?.user) {
-		redirect("/login");
-	}
-
-	const params = await searchParams;
-	const checkout_id = params.checkout_id;
-
-	return (
-		<div className="px-4 py-8">
-			<h1>Payment Successful!</h1>
-			{checkout_id && <p>Checkout ID: {checkout_id}</p>}
-		</div>
-	);
-}
-`],
-  ["payments/dodo/web/react/react-router/src/routes/payment-success.tsx.hbs", `import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router";
-
-import { authClient } from "@/lib/auth-client";
-
-export default function PaymentSuccessPage() {
-	const [searchParams] = useSearchParams();
-	const navigate = useNavigate();
-	const checkout_id = searchParams.get("checkout_id");
-
-	useEffect(() => {
-		let active = true;
-		async function loadSession() {
-			const session = await authClient.getSession();
-			if (active && !session.data) {
-				navigate("/login", { replace: true });
-			}
-		}
-
-		loadSession();
-		return () => {
-			active = false;
-		};
-	}, [navigate]);
-
-	return (
-		<div className="container mx-auto px-4 py-8">
-			<h1>Payment Successful!</h1>
-			{checkout_id && <p>Checkout ID: {checkout_id}</p>}
-		</div>
-	);
-}
-`],
-  ["payments/dodo/web/react/tanstack-router/src/routes/payment/success.tsx.hbs", `import { createFileRoute, redirect } from "@tanstack/react-router";
-import { authClient } from "@/lib/auth-client";
-
-export const Route = createFileRoute("/payment/success")({
-	component: SuccessPage,
-	validateSearch: (search) => ({
-		checkout_id: search.checkout_id as string,
-	}),
-	beforeLoad: async () => {
-		const session = await authClient.getSession();
-		if (!session.data) {
-			redirect({
-				to: "/login",
-				throw: true,
-			});
-		}
-		return { session };
-	},
+    return {
+      userId: user._id,
+      email: user.email,
+    };
+  },
 });
 
-function SuccessPage() {
-	const { checkout_id } = Route.useSearch();
+export const {
+  changeCurrentSubscription,
+  cancelCurrentSubscription,
+  getConfiguredProducts,
+  listAllProducts,
+  listAllSubscriptions,
+  generateCheckoutLink,
+  generateCustomerPortalUrl,
+} = polar.api();
 
-	return (
-		<div className="container mx-auto px-4 py-8">
-			<h1>Payment Successful!</h1>
-			{checkout_id && <p>Checkout ID: {checkout_id}</p>}
-		</div>
-	);
-}
-`],
-  ["payments/dodo/web/react/tanstack-start/src/functions/get-payment.ts.hbs", `import { authClient } from "@/lib/auth-client";
-import { authMiddleware } from "@/middleware/auth";
-import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeaders } from "@tanstack/react-start/server";
+export const getCurrentSubscription = query({
+  args: {},
+  handler: async (ctx): Promise<CurrentSubscription | null> => {
+    const user = await ctx.runQuery(api.auth.getCurrentUser);
 
-export const getPayment = createServerFn({ method: "GET" })
-	.middleware([authMiddleware])
-	.handler(async () => {
-		const { data: customerState } = await authClient.dodopayments.customer.state({
-			fetchOptions: {
-				headers: getRequestHeaders(),
-			},
-		});
-		return customerState;
-	});
-`],
-  ["payments/dodo/web/react/tanstack-start/src/routes/payment/success.tsx.hbs", `import { createFileRoute, useSearch } from "@tanstack/react-router";
-import { getUser } from "@/functions/get-user";
+    if (!user) {
+      return null;
+    }
 
-export const Route = createFileRoute("/payment/success")({
-	component: SuccessPage,
-	validateSearch: (search) => ({
-		checkout_id: search.checkout_id as string,
-	}),
-	beforeLoad: async () => {
-		const session = await getUser();
-		return { session };
-	},
+    return await polar.getCurrentSubscription(ctx, {
+      userId: user._id,
+    });
+  },
 });
 
-function SuccessPage() {
-	const { checkout_id } = useSearch({ from: "/payment/success" });
+export const syncProducts = action({
+  args: {},
+  handler: async (ctx): Promise<void> => {
+    const user = await ctx.runQuery(api.auth.getCurrentUser);
 
-	return (
-		<div className="container mx-auto px-4 py-8">
-			<h1>Payment Successful!</h1>
-			{checkout_id && <p>Checkout ID: {checkout_id}</p>}
-		</div>
-	);
-}
-`],
-  ["payments/dodo/web/solid/src/routes/payment/success.tsx.hbs", `import { createFileRoute, redirect } from "@tanstack/solid-router";
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
 
-import { authClient } from "@/lib/auth-client";
-
-export const Route = createFileRoute("/payment/success")({
-	component: SuccessPage,
-	validateSearch: (search) => ({
-		checkout_id: search.checkout_id as string,
-	}),
-	beforeLoad: async () => {
-		const session = await authClient.getSession();
-		if (!session.data) {
-			redirect({
-				to: "/login",
-				throw: true,
-			});
-		}
-		return { session };
-	},
+    await polar.syncProducts(ctx);
+  },
 });
-
-function SuccessPage() {
-	const { checkout_id } = Route.useSearch();
-
-	return (
-		<div class="container mx-auto px-4 py-8">
-			<h1>Payment Successful!</h1>
-			{checkout_id && <p>Checkout ID: {checkout_id}</p>}
-		</div>
-	);
-}
-`],
-  ["payments/dodo/web/svelte/src/routes/payment/success/+page.svelte.hbs", `<script lang="ts">
-	import { goto } from "$app/navigation";
-	import { page } from "$app/state";
-	import { authClient } from "$lib/auth-client";
-
-	const checkout_id = $derived(page.url.searchParams.get("checkout_id"));
-
-	const sessionQuery = authClient.useSession();
-
-	$effect(() => {
-		if (!$sessionQuery.isPending && !$sessionQuery.data) {
-			goto("/login");
-		}
-	});
-</script>
-
-{#if $sessionQuery.isPending}
-	<div>Loading...</div>
-{:else if !$sessionQuery.data}
-	<div>Redirecting to login...</div>
-{:else}
-	<div class="container mx-auto px-4 py-8">
-		<h1>Payment Successful!</h1>
-		{#if checkout_id}
-			<p>Checkout ID: {checkout_id}</p>
-		{/if}
-	</div>
-{/if}
 `],
   ["payments/polar/server/base/src/lib/payments.ts.hbs", `import { Polar } from "@polar-sh/sdk";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
 import { env } from "@{{projectName}}/env/server";
+{{/if}}
 
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+export function createPolarClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	return new Polar({
+		accessToken: env.POLAR_ACCESS_TOKEN,
+		server: "sandbox",
+	});
+}
+{{else}}
 export const polarClient = new Polar({
 	accessToken: env.POLAR_ACCESS_TOKEN,
 	server: "sandbox",
 });
+{{/if}}
 `],
   ["payments/polar/web/nuxt/app/pages/success.vue.hbs", `<script setup lang="ts">
 const route = useRoute()
@@ -29533,4 +35269,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 457;
+export const TEMPLATE_COUNT = 506;

@@ -160,6 +160,7 @@ function generateReadmeContent(options: ProjectConfig): string {
     frontend = ["tanstack-router"],
     backend = "hono",
     api = "trpc",
+    dbSetup,
     webDeploy,
     serverDeploy,
   } = options;
@@ -173,6 +174,7 @@ function generateReadmeContent(options: ProjectConfig): string {
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
   const packageManagerRunCmd = `${packageManager} run`;
+  // TanStack Router/Start, Next, Nuxt and Solid all dev on 3001; only React Router and SvelteKit use Vite's default 5173.
   const webPort = hasReactRouter || hasSvelte ? "5173" : hasAstro ? "4321" : "3001";
 
   const stackDescription = generateStackDescription(frontend, backend, api, isConvex);
@@ -185,7 +187,7 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 
 ## Features
 
-${generateFeaturesList(database, auth, addons, orm, runtime, frontend, backend, api)}
+${generateFeaturesList(database, auth, addons, orm, runtime, frontend, backend, api, dbSetup)}
 
 ## Getting Started
 
@@ -242,7 +244,7 @@ ${
     ? "\n## PWA Support with React Router v7\n\nThere is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809\n"
     : ""
 }
-${generateDeploymentCommands(packageManagerRunCmd, webDeploy, serverDeploy)}
+${generateDeploymentCommands(packageManagerRunCmd, webDeploy, serverDeploy, backend)}
 ${generateGitHooksSection(packageManagerRunCmd, addons)}
 
 ## Project Structure
@@ -449,6 +451,7 @@ function generateFeaturesList(
   frontend: ProjectConfig["frontend"],
   backend: ProjectConfig["backend"],
   api: ProjectConfig["api"],
+  dbSetup: ProjectConfig["dbSetup"],
 ): string {
   const isConvex = backend === "convex";
   const hasNative = hasNativeFrontend(frontend);
@@ -523,7 +526,7 @@ function generateFeaturesList(
       mongoose: "Mongoose",
     };
     const dbNames: Record<string, string> = {
-      sqlite: "SQLite/Turso",
+      sqlite: dbSetup === "d1" ? "Cloudflare D1" : "SQLite/Turso",
       postgres: "PostgreSQL",
       mysql: "MySQL",
       mongodb: "MongoDB",
@@ -549,6 +552,8 @@ function generateFeaturesList(
     starlight: "- **Starlight** - Documentation site with Astro",
     turborepo: "- **Turborepo** - Optimized monorepo build system",
     nx: "- **Nx** - Smart monorepo task orchestration and caching",
+    "vite-plus":
+      "- **Vite+** - Unified Vite toolchain, workspace task runner, linting, and formatting",
   };
 
   for (const addon of addons) {
@@ -574,8 +579,40 @@ function generateDatabaseSetup(config: ProjectConfig, packageManagerRunCmd: stri
   };
   const ormDesc = orm === "none" ? "" : ` with ${ormLabels[orm] || orm}`;
   const dbSupport = getDbScriptSupport(config);
+  const isD1Alchemy = dbSupport.isD1Alchemy;
 
   let setup = "## Database Setup\n\n";
+
+  if (isD1Alchemy) {
+    const steps: string[] = [];
+
+    if (dbSupport.hasDbGenerate) {
+      steps.push(
+        `${steps.length + 1}. ${
+          orm === "prisma" ? "Generate the Prisma client" : "Generate migration files"
+        }:
+\`\`\`bash
+${packageManagerRunCmd} db:generate
+\`\`\``,
+      );
+    }
+
+    if (dbSupport.hasDbMigrate) {
+      steps.push(`${steps.length + 1}. Create and apply Prisma migrations locally:
+\`\`\`bash
+${packageManagerRunCmd} db:migrate
+\`\`\``);
+    }
+
+    return `${setup}This project uses Cloudflare D1 (SQLite)${ormDesc}.
+
+Runtime database access uses the Cloudflare \`DB\` binding from \`packages/infra/alchemy.run.ts\`. If a local \`DATABASE_URL\` is present, it is only for database tooling.
+
+Alchemy provisions the D1 database and applies migrations during \`dev\` and \`deploy\`.
+
+${steps.join("\n\n")}
+`;
+  }
 
   const dbDescriptions: Record<string, string> = {
     sqlite: `This project uses SQLite${ormDesc}.
@@ -627,7 +664,7 @@ function generateScriptsList(
   config: ProjectConfig,
   hasNative: boolean,
 ): string {
-  const { database, addons, backend, dbSetup, frontend } = config;
+  const { database, addons, backend, dbSetup, frontend, webDeploy, serverDeploy } = config;
   const isConvex = backend === "convex";
   const isBackendSelf = backend === "self";
   const hasWeb = frontend.some((f) =>
@@ -664,7 +701,9 @@ function generateScriptsList(
   }
 
   if (dbSupport.hasDbScripts) {
-    scripts += `\n- \`${packageManagerRunCmd} db:push\`: Push schema changes to database`;
+    if (dbSupport.hasDbPush) {
+      scripts += `\n- \`${packageManagerRunCmd} db:push\`: Push schema changes to database`;
+    }
     if (dbSupport.hasDbGenerate) {
       scripts += `\n- \`${packageManagerRunCmd} db:generate\`: Generate database client/types`;
     }
@@ -680,11 +719,20 @@ function generateScriptsList(
     scripts += `\n- \`${packageManagerRunCmd} db:local\`: Start the local SQLite database`;
   }
 
-  if (addons.includes("biome")) {
-    scripts += `\n- \`${packageManagerRunCmd} check\`: Run Biome formatting and linting`;
-  }
+  if (addons.includes("vite-plus")) {
+    const hasVitePlusNativeHooks = !addons.includes("husky") && !addons.includes("lefthook");
 
-  if (addons.includes("oxlint")) {
+    scripts += `\n- \`${packageManagerRunCmd} check\`: Run Vite+ format/lint checks and workspace TypeScript checks
+- \`${packageManagerRunCmd} lint\`: Run Vite+ lint checks
+- \`${packageManagerRunCmd} format\`: Run Vite+ formatting
+- \`${packageManagerRunCmd} staged\`: Run Vite+ checks against staged files`;
+
+    if (hasVitePlusNativeHooks) {
+      scripts += `\n- \`${packageManagerRunCmd} hooks:setup\`: Install Vite+ native Git hooks with \`vp config\``;
+    }
+  } else if (addons.includes("biome")) {
+    scripts += `\n- \`${packageManagerRunCmd} check\`: Run Biome formatting and linting`;
+  } else if (addons.includes("oxlint")) {
     scripts += `\n- \`${packageManagerRunCmd} check\`: Run Oxlint and Oxfmt`;
   }
 
@@ -716,6 +764,13 @@ function generateScriptsList(
 - \`cd apps/docs && ${packageManagerRunCmd} build\`: Build documentation site`;
   }
 
+  if (webDeploy === "docker" || serverDeploy === "docker") {
+    scripts += `\n- \`${packageManagerRunCmd} docker:build\`: Build the Docker Compose images
+- \`${packageManagerRunCmd} docker:up\`: Build and start the Docker Compose stack
+- \`${packageManagerRunCmd} docker:logs\`: Tail logs from the Docker Compose stack
+- \`${packageManagerRunCmd} docker:down\`: Stop the Docker Compose stack`;
+  }
+
   return scripts;
 }
 
@@ -723,41 +778,60 @@ function generateDeploymentCommands(
   packageManagerRunCmd: string,
   webDeploy: ProjectConfig["webDeploy"],
   serverDeploy: ProjectConfig["serverDeploy"],
+  backend: ProjectConfig["backend"],
 ): string {
-  if (webDeploy !== "cloudflare" && serverDeploy !== "cloudflare") {
+  const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const hasDocker = webDeploy === "docker" || serverDeploy === "docker";
+
+  if (!hasCloudflare && !hasDocker) {
     return "";
   }
 
-  const lines: string[] = ["## Deployment (Cloudflare via Alchemy)"];
+  const lines: string[] = ["## Deployment"];
 
-  if (webDeploy === "cloudflare" && serverDeploy !== "cloudflare") {
-    lines.push(
-      `- Dev: cd apps/web && ${packageManagerRunCmd} alchemy dev`,
-      `- Deploy: cd apps/web && ${packageManagerRunCmd} deploy`,
-      `- Destroy: cd apps/web && ${packageManagerRunCmd} destroy`,
-    );
-  }
+  if (hasCloudflare) {
+    const targetLabel =
+      webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || backend === "self")
+        ? "web + server"
+        : webDeploy === "cloudflare"
+          ? "web"
+          : "server";
 
-  if (serverDeploy === "cloudflare" && webDeploy !== "cloudflare") {
     lines.push(
-      `- Dev: cd apps/server && ${packageManagerRunCmd} dev`,
-      `- Deploy: cd apps/server && ${packageManagerRunCmd} deploy`,
-      `- Destroy: cd apps/server && ${packageManagerRunCmd} destroy`,
-    );
-  }
-
-  if (webDeploy === "cloudflare" && serverDeploy === "cloudflare") {
-    lines.push(
+      "",
+      "### Cloudflare via Alchemy",
+      "",
+      `- Target: ${targetLabel}`,
       `- Dev: ${packageManagerRunCmd} dev`,
       `- Deploy: ${packageManagerRunCmd} deploy`,
       `- Destroy: ${packageManagerRunCmd} destroy`,
+      "",
+      "For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).",
     );
   }
 
-  lines.push(
-    "",
-    "For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).",
-  );
+  if (hasDocker) {
+    const targetLabel =
+      webDeploy === "docker" && (serverDeploy === "docker" || backend === "self")
+        ? "web + server"
+        : webDeploy === "docker"
+          ? "web"
+          : "server";
+
+    lines.push(
+      "",
+      "### Docker Compose",
+      "",
+      `- Target: ${targetLabel}`,
+      "- Config: `docker-compose.yml` (app Dockerfiles live in `apps/*/Dockerfile`)",
+      `- Build images: ${packageManagerRunCmd} docker:build`,
+      `- Start: ${packageManagerRunCmd} docker:up`,
+      `- Logs: ${packageManagerRunCmd} docker:logs`,
+      `- Stop: ${packageManagerRunCmd} docker:down`,
+      "",
+      "Environment variables are read from each app's `.env` file (baked into web builds for public variables) and overridden in `docker-compose.yml` for container networking.",
+    );
+  }
 
   return `${lines.join("\n")}\n`;
 }
@@ -767,7 +841,10 @@ function generateGitHooksSection(
   addons: ProjectConfig["addons"],
 ): string {
   const hasHusky = addons.includes("husky");
-  const hasLinting = addons.includes("biome") || addons.includes("oxlint");
+  const hasLefthook = addons.includes("lefthook");
+  const hasVitePlus = addons.includes("vite-plus");
+  const hasVitePlusNativeHooks = hasVitePlus && !hasHusky && !hasLefthook;
+  const hasLinting = addons.includes("biome") || addons.includes("oxlint") || hasVitePlus;
 
   if (!hasHusky && !hasLinting) {
     return "";
@@ -779,8 +856,15 @@ function generateGitHooksSection(
     lines.push(`- Initialize hooks: \`${packageManagerRunCmd} prepare\``);
   }
 
+  if (hasVitePlusNativeHooks) {
+    lines.push(
+      `- Optional native Vite+ hooks: \`${packageManagerRunCmd} hooks:setup\``,
+      "- Docs: [Vite+ commit hooks](https://viteplus.dev/guide/commit-hooks)",
+    );
+  }
+
   if (hasLinting) {
-    lines.push(`- Format and lint fix: \`${packageManagerRunCmd} check\``);
+    lines.push(`- Run checks: \`${packageManagerRunCmd} check\``);
   }
 
   return `${lines.join("\n")}\n\n`;

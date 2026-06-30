@@ -6,6 +6,7 @@ Handlebars.registerHelper("eq", (a, b) => a === b);
 Handlebars.registerHelper("ne", (a, b) => a !== b);
 Handlebars.registerHelper("and", (...args) => args.slice(0, -1).every(Boolean));
 Handlebars.registerHelper("or", (...args) => args.slice(0, -1).some(Boolean));
+Handlebars.registerHelper("not", (a) => !a);
 Handlebars.registerHelper("includes", (arr, val) => Array.isArray(arr) && arr.includes(val));
 
 export function processTemplateString(content: string, context: ProjectConfig): string {
@@ -22,6 +23,7 @@ export function transformFilename(filename: string): string {
   const basename = result.split("/").pop() || result;
   if (basename === "_gitignore") result = result.replace(/_gitignore$/, ".gitignore");
   else if (basename === "_npmrc") result = result.replace(/_npmrc$/, ".npmrc");
+  else if (basename === "_dockerignore") result = result.replace(/_dockerignore$/, ".dockerignore");
 
   return result;
 }

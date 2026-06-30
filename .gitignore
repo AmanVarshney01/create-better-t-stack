@@ -46,3 +46,4 @@ templates-binary
 
 # opensrc - source code for packages
 opensrc/
+.scratch-docker-smoke/

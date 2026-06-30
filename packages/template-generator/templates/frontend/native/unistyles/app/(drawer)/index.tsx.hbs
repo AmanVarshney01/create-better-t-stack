@@ -1,4 +1,11 @@
-import { ScrollView, Text, View, TouchableOpacity } from "react-native";
+import "@/unistyles";
+
+import { ScrollView, Text, View, TouchableOpacity{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
+{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import { env } from "@{{projectName}}/env/native";
+{{/if}}
 import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
 
@@ -21,7 +28,7 @@ import { Link } from "expo-router";
 import { useAuth, useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-import { useConvexAuth, useQuery } from "convex/react";
+import { {{#if (eq payments "polar")}}useAction, {{/if}}useConvexAuth, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { SignIn } from "@/components/sign-in";
@@ -49,6 +56,57 @@ export default function Home() {
   const healthCheck = useQuery(api.healthCheck.get);
   const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
+  {{#if (eq payments "polar")}}
+  const products = useQuery(api.polar.listAllProducts);
+  const subscription = useQuery(api.polar.getCurrentSubscription);
+  const generateCheckoutLink = useAction(api.polar.generateCheckoutLink);
+  const generateCustomerPortalUrl = useAction(api.polar.generateCustomerPortalUrl);
+  const recurringProduct = products?.find((product) => product.isRecurring);
+
+  const openPolarLink = async (url: string, returnUrl: string) => {
+    await WebBrowser.openAuthSessionAsync(url, returnUrl);
+  };
+
+  const getPolarReturnUrl = (returnUrl: string) => {
+    const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+    url.searchParams.set("returnUrl", returnUrl);
+    return url.toString();
+  };
+
+  const handlePolarCheckout = async () => {
+    try {
+      if (!recurringProduct) {
+        Alert.alert("Checkout unavailable", "No recurring Polar product is available yet.");
+        return;
+      }
+
+      const returnUrl = Linking.createURL("/");
+      const polarReturnUrl = getPolarReturnUrl(returnUrl);
+      const { url } = await generateCheckoutLink({
+        productIds: [recurringProduct.id],
+        origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+        successUrl: polarReturnUrl,
+      });
+
+      await openPolarLink(url, returnUrl);
+    } catch {
+      Alert.alert("Checkout failed", "Unable to open Polar checkout. Please try again.");
+    }
+  };
+
+  const handlePolarPortal = async () => {
+    try {
+      const returnUrl = Linking.createURL("/");
+      const { url } = await generateCustomerPortalUrl({
+        returnUrl: getPolarReturnUrl(returnUrl),
+      });
+
+      await openPolarLink(url, returnUrl);
+    } catch {
+      Alert.alert("Portal unavailable", "Unable to open the customer portal. Please try again.");
+    }
+  };
+  {{/if}}
   {{else if (eq backend "convex")}}
   const healthCheck = useQuery(api.healthCheck.get);
   {{/if}}
@@ -191,6 +249,25 @@ export default function Home() {
             >
               <Text style={styles.signOutText}>Sign Out</Text>
             </TouchableOpacity>
+            {{#if (eq payments "polar")}}
+            <View style={styles.paymentActions}>
+              {subscription ? (
+                <TouchableOpacity
+                  style={styles.polarSecondaryButton}
+                  onPress={handlePolarPortal}
+                >
+                  <Text style={styles.polarSecondaryButtonText}>Manage Subscription</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.polarPrimaryButton}
+                  onPress={handlePolarCheckout}
+                >
+                  <Text style={styles.polarPrimaryButtonText}>Upgrade to Pro</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {{/if}}
           </View>
         ) : null}
         <View style={styles.apiStatusCard}>
@@ -341,6 +418,31 @@ const styles = StyleSheet.create((theme) => ({
   },
   signOutText: {
     color: theme.colors.destructiveForeground,
+    fontWeight: "500",
+  },
+  paymentActions: {
+    marginTop: theme.spacing.sm,
+    alignItems: "flex-start",
+  },
+  polarPrimaryButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+  },
+  polarPrimaryButtonText: {
+    color: theme.colors.primaryForeground,
+    fontWeight: "500",
+  },
+  polarSecondaryButton: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+  },
+  polarSecondaryButtonText: {
+    color: theme.colors.foreground,
     fontWeight: "500",
   },
   apiStatusCard: {

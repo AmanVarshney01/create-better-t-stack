@@ -28,12 +28,6 @@ export function validateProjectName(name: string): string | undefined {
 export const hasPWACompatibleFrontend = (webFrontend: string[]) =>
   webFrontend.some((f) => ["tanstack-router", "react-router", "solid", "next"].includes(f));
 
-export const hasTauriCompatibleFrontend = (webFrontend: string[]) =>
-  webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
-
-export const hasElectrobunCompatibleFrontend = (webFrontend: string[]) =>
-  webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
-
 const clerkSupportedBackends = [
   "convex",
   "hono",
@@ -44,10 +38,44 @@ const clerkSupportedBackends = [
   "self-tanstack-start",
 ] as const;
 
+const selfHostedFullstackBackends = [
+  "self-next",
+  "self-tanstack-start",
+  "self-nuxt",
+  "self-svelte",
+  "self-astro",
+] as const;
+
 const clerkBackendRequirementMessage =
   "Clerk requires Convex, Hono, Express, Fastify, Elysia, or Next.js/TanStack Start fullstack backend";
 const clerkFrontendRequirementMessage =
   "Clerk requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
+const convexBetterAuthSupportedWebFrontends = [
+  "react-router",
+  "tanstack-router",
+  "tanstack-start",
+  "next",
+] as const;
+const convexBetterAuthSupportedNativeFrontends = [
+  "native-bare",
+  "native-uniwind",
+  "native-unistyles",
+] as const;
+
+const hasConvexBetterAuthCompatibleFrontend = (webFrontend: string[], nativeFrontend: string[]) =>
+  webFrontend.some((f) =>
+    convexBetterAuthSupportedWebFrontends.includes(
+      f as (typeof convexBetterAuthSupportedWebFrontends)[number],
+    ),
+  ) ||
+  nativeFrontend.some((f) =>
+    convexBetterAuthSupportedNativeFrontends.includes(
+      f as (typeof convexBetterAuthSupportedNativeFrontends)[number],
+    ),
+  );
+
+const convexBetterAuthFrontendRequirementMessage =
+  "Better-Auth with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
 
 export const hasClerkCompatibleFrontend = (webFrontend: string[], nativeFrontend: string[]) =>
   webFrontend.some((f) =>
@@ -57,6 +85,23 @@ export const hasClerkCompatibleFrontend = (webFrontend: string[], nativeFrontend
 
 export const hasClerkCompatibleBackend = (backend: string) =>
   clerkSupportedBackends.includes(backend as (typeof clerkSupportedBackends)[number]);
+
+const isSelfHostedFullstackBackend = (backend: string) =>
+  selfHostedFullstackBackends.includes(backend as (typeof selfHostedFullstackBackends)[number]);
+
+const hasStaticDesktopCompatibleBackend = (backend: string) =>
+  !isSelfHostedFullstackBackend(backend);
+
+export const hasTauriCompatibleFrontend = (webFrontend: string[], backend = "") =>
+  hasStaticDesktopCompatibleBackend(backend) &&
+  webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
+
+export const hasElectrobunCompatibleFrontend = (webFrontend: string[], backend = "") =>
+  hasStaticDesktopCompatibleBackend(backend) &&
+  webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
+
+export const hasEvlogCompatibleBackend = (backend: string) =>
+  ["hono", "express", "fastify", "elysia", ...selfHostedFullstackBackends].includes(backend);
 
 export const getCategoryDisplayName = (categoryKey: string): string => {
   const result = categoryKey.replace(/([A-Z])/g, " $1");
@@ -157,14 +202,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     }
 
     if (nextStack.auth === "better-auth") {
-      const hasBetterAuthCompatible =
-        nextStack.webFrontend.some((f) =>
-          ["tanstack-router", "tanstack-start", "next"].includes(f),
-        ) ||
-        nextStack.nativeFrontend.some((f) =>
-          ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
-        );
-      if (!hasBetterAuthCompatible) {
+      if (!hasConvexBetterAuthCompatibleFrontend(nextStack.webFrontend, nextStack.nativeFrontend)) {
         nextStack.auth = "none";
         changed = true;
         changes.push({
@@ -212,12 +250,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   }
 
   // Self (fullstack) backend constraints
-  if (
-    nextStack.backend === "self-next" ||
-    nextStack.backend === "self-tanstack-start" ||
-    nextStack.backend === "self-nuxt" ||
-    nextStack.backend === "self-astro"
-  ) {
+  if (isSelfHostedFullstackBackend(nextStack.backend)) {
     // Fullstack uses frontend's API routes, no separate runtime needed
     if (nextStack.runtime !== "none") {
       nextStack.runtime = "none";
@@ -264,6 +297,14 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         message: "Frontend set to 'Nuxt' (required for Nuxt fullstack)",
       });
     }
+    if (nextStack.backend === "self-svelte" && !nextStack.webFrontend.includes("svelte")) {
+      nextStack.webFrontend = ["svelte"];
+      changed = true;
+      changes.push({
+        category: "backend",
+        message: "Frontend set to 'SvelteKit' (required for SvelteKit fullstack)",
+      });
+    }
     if (nextStack.backend === "self-astro" && !nextStack.webFrontend.includes("astro")) {
       nextStack.webFrontend = ["astro"];
       changed = true;
@@ -307,15 +348,12 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     });
   }
 
-  // Runtime "none" only for convex, self-next, self-tanstack-start, self-nuxt, self-astro
+  // Runtime "none" only for Convex, no backend, or self-hosted fullstack backends.
   if (
     nextStack.runtime === "none" &&
     nextStack.backend !== "convex" &&
     nextStack.backend !== "none" &&
-    nextStack.backend !== "self-next" &&
-    nextStack.backend !== "self-tanstack-start" &&
-    nextStack.backend !== "self-nuxt" &&
-    nextStack.backend !== "self-astro"
+    !isSelfHostedFullstackBackend(nextStack.backend)
   ) {
     nextStack.runtime = DEFAULT_STACK.runtime;
     changed = true;
@@ -427,14 +465,33 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
           message: "Database set to 'SQLite' (required for D1)",
         });
       }
-      if (nextStack.runtime !== "workers") {
-        nextStack.runtime = "workers";
-        nextStack.backend = "hono";
-        changed = true;
-        changes.push({
-          category: "dbSetup",
-          message: "Runtime set to 'Workers' with 'Hono' (required for D1)",
-        });
+      if (isSelfHostedFullstackBackend(nextStack.backend)) {
+        if (nextStack.webDeploy !== "cloudflare") {
+          nextStack.webDeploy = "cloudflare";
+          changed = true;
+          changes.push({
+            category: "dbSetup",
+            message: "Web deploy set to 'Cloudflare' (required for D1 with fullstack backend)",
+          });
+        }
+      } else {
+        if (nextStack.runtime !== "workers" || nextStack.backend !== "hono") {
+          nextStack.runtime = "workers";
+          nextStack.backend = "hono";
+          changed = true;
+          changes.push({
+            category: "dbSetup",
+            message: "Runtime set to 'Workers' with 'Hono' (required for D1)",
+          });
+        }
+        if (nextStack.serverDeploy !== "cloudflare") {
+          nextStack.serverDeploy = "cloudflare";
+          changed = true;
+          changes.push({
+            category: "dbSetup",
+            message: "Server deploy set to 'Cloudflare' (required for D1 with Workers)",
+          });
+        }
       }
     }
     if (nextStack.dbSetup === "neon" && nextStack.database !== "postgres") {
@@ -556,23 +613,6 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         message: `Payments set to 'None' (${providerLabel} requires Better Auth)`,
       });
     }
-    if (nextStack.backend === "convex") {
-      nextStack.payments = "none";
-      changed = true;
-      changes.push({
-        category: "payments",
-        message: `Payments set to 'None' (${providerLabel} incompatible with Convex)`,
-      });
-    }
-    const hasWebFrontend = nextStack.webFrontend.some((f) => f !== "none");
-    if (!hasWebFrontend) {
-      nextStack.payments = "none";
-      changed = true;
-      changes.push({
-        category: "payments",
-        message: `Payments set to 'None' (${providerLabel} requires web frontend)`,
-      });
-    }
   }
 
   // ============================================
@@ -580,8 +620,12 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // ============================================
 
   const pwaCompat = hasPWACompatibleFrontend(nextStack.webFrontend);
-  const tauriCompat = hasTauriCompatibleFrontend(nextStack.webFrontend);
-  const electrobunCompat = hasElectrobunCompatibleFrontend(nextStack.webFrontend);
+  const tauriCompat = hasTauriCompatibleFrontend(nextStack.webFrontend, nextStack.backend);
+  const electrobunCompat = hasElectrobunCompatibleFrontend(
+    nextStack.webFrontend,
+    nextStack.backend,
+  );
+  const evlogCompat = hasEvlogCompatibleBackend(nextStack.backend);
 
   if (!pwaCompat && nextStack.addons.includes("pwa")) {
     nextStack.addons = nextStack.addons.filter((a) => a !== "pwa");
@@ -593,7 +637,12 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     nextStack.addons = nextStack.addons.filter((a) => a !== "tauri");
     if (nextStack.addons.length === 0) nextStack.addons = ["none"];
     changed = true;
-    changes.push({ category: "addons", message: "Tauri removed (requires compatible frontend)" });
+    changes.push({
+      category: "addons",
+      message: isSelfHostedFullstackBackend(nextStack.backend)
+        ? "Tauri removed (requires a separate backend or no backend)"
+        : "Tauri removed (requires compatible frontend)",
+    });
   }
   if (!electrobunCompat && nextStack.addons.includes("electrobun")) {
     nextStack.addons = nextStack.addons.filter((a) => a !== "electrobun");
@@ -601,7 +650,18 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     changed = true;
     changes.push({
       category: "addons",
-      message: "Electrobun removed (requires compatible frontend)",
+      message: isSelfHostedFullstackBackend(nextStack.backend)
+        ? "Electrobun removed (requires a separate backend or no backend)"
+        : "Electrobun removed (requires compatible frontend)",
+    });
+  }
+  if (!evlogCompat && nextStack.addons.includes("evlog")) {
+    nextStack.addons = nextStack.addons.filter((a) => a !== "evlog");
+    if (nextStack.addons.length === 0) nextStack.addons = ["none"];
+    changed = true;
+    changes.push({
+      category: "addons",
+      message: "evlog removed (requires a server or fullstack backend)",
     });
   }
 
@@ -623,14 +683,14 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
   // AI example constraints
   if (nextStack.examples.includes("ai")) {
-    // Solid frontend is incompatible with AI example
-    if (nextStack.webFrontend.includes("solid")) {
+    // Solid and Astro frontends are incompatible with the AI example
+    if (nextStack.webFrontend.includes("solid") || nextStack.webFrontend.includes("astro")) {
       nextStack.examples = nextStack.examples.filter((e) => e !== "ai");
       if (nextStack.examples.length === 0) nextStack.examples = ["none"];
       changed = true;
       changes.push({
         category: "examples",
-        message: "AI removed (not compatible with Solid frontend)",
+        message: "AI removed (not compatible with Solid or Astro frontend)",
       });
     }
     // Convex AI only supports React-based frontends (not Svelte/Nuxt)
@@ -673,11 +733,19 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     }
   }
 
+  if (nextStack.serverDeploy === "docker" && nextStack.runtime === "workers") {
+    nextStack.serverDeploy = "cloudflare";
+    changed = true;
+    changes.push({
+      category: "serverDeploy",
+      message: "Server deploy set to 'Cloudflare' (Workers runtime deploys via Cloudflare)",
+    });
+  }
+
   if (
     nextStack.serverDeploy !== "none" &&
-    ["none", "convex", "self-next", "self-tanstack-start", "self-nuxt", "self-astro"].includes(
-      nextStack.backend,
-    )
+    (["none", "convex"].includes(nextStack.backend) ||
+      isSelfHostedFullstackBackend(nextStack.backend))
   ) {
     nextStack.serverDeploy = "none";
     changed = true;
@@ -730,15 +798,13 @@ export const getDisabledReason = (
       return "Convex has its own deployment";
     }
     if (category === "auth" && optionId === "better-auth") {
-      const compatible =
-        currentStack.webFrontend.some((f) =>
-          ["tanstack-router", "tanstack-start", "next"].includes(f),
-        ) ||
-        currentStack.nativeFrontend.some((f) =>
-          ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
-        );
-      if (!compatible) {
-        return "Better-Auth with Convex requires TanStack Router, TanStack Start, Next.js, or React Native";
+      if (
+        !hasConvexBetterAuthCompatibleFrontend(
+          currentStack.webFrontend,
+          currentStack.nativeFrontend,
+        )
+      ) {
+        return convexBetterAuthFrontendRequirementMessage;
       }
     }
     if (category === "webFrontend" && (optionId === "solid" || optionId === "astro")) {
@@ -754,9 +820,6 @@ export const getDisabledReason = (
         );
         return `Convex AI example only supports React-based frontends (not ${frontendName})`;
       }
-    }
-    if (category === "payments" && (optionId === "polar" || optionId === "dodo")) {
-      return `${optionId === "polar" ? "Polar" : "Dodo"} is not compatible with Convex`;
     }
   }
 
@@ -823,6 +886,21 @@ export const getDisabledReason = (
     }
   }
 
+  if (currentStack.backend === "self-svelte") {
+    if (category === "runtime" && optionId !== "none") {
+      return "SvelteKit fullstack uses built-in server routes";
+    }
+    if (category === "webFrontend" && optionId !== "svelte") {
+      return "SvelteKit fullstack requires SvelteKit frontend";
+    }
+    if (category === "serverDeploy" && optionId !== "none") {
+      return "Fullstack uses frontend deployment";
+    }
+    if (category === "api" && optionId === "trpc") {
+      return "tRPC is not compatible with SvelteKit (use oRPC)";
+    }
+  }
+
   if (currentStack.backend === "self-tanstack-start") {
     if (category === "runtime" && optionId !== "none") {
       return "TanStack Start fullstack uses built-in API routes";
@@ -866,6 +944,9 @@ export const getDisabledReason = (
     if (optionId === "self-nuxt" && !currentStack.webFrontend.includes("nuxt")) {
       return "Requires Nuxt frontend";
     }
+    if (optionId === "self-svelte" && !currentStack.webFrontend.includes("svelte")) {
+      return "Requires SvelteKit frontend";
+    }
     if (optionId === "self-astro" && !currentStack.webFrontend.includes("astro")) {
       return "Requires Astro frontend";
     }
@@ -890,15 +971,11 @@ export const getDisabledReason = (
       return "Workers requires Hono backend";
     }
     if (optionId === "none") {
-      const allowedBackends = [
-        "convex",
-        "none",
-        "self-next",
-        "self-tanstack-start",
-        "self-nuxt",
-        "self-astro",
-      ];
-      if (!allowedBackends.includes(currentStack.backend)) {
+      if (
+        currentStack.backend !== "convex" &&
+        currentStack.backend !== "none" &&
+        !isSelfHostedFullstackBackend(currentStack.backend)
+      ) {
         return "Runtime 'None' only for Convex or fullstack backends";
       }
     }
@@ -950,7 +1027,12 @@ export const getDisabledReason = (
     }
     if (optionId === "d1") {
       if (currentStack.database !== "sqlite") return "D1 requires SQLite";
-      if (currentStack.runtime !== "workers") return "D1 requires Workers runtime";
+      if (
+        currentStack.runtime !== "workers" &&
+        !isSelfHostedFullstackBackend(currentStack.backend)
+      ) {
+        return "D1 requires Cloudflare Workers runtime or a self fullstack backend";
+      }
     }
     if (optionId === "neon" && currentStack.database !== "postgres") {
       return "Neon requires PostgreSQL";
@@ -1014,9 +1096,6 @@ export const getDisabledReason = (
     if (currentStack.auth !== "better-auth") {
       return `${providerLabel} requires Better Auth`;
     }
-    if (!currentStack.webFrontend.some((f) => f !== "none")) {
-      return `${providerLabel} requires a web frontend`;
-    }
   }
 
   // ============================================
@@ -1026,18 +1105,29 @@ export const getDisabledReason = (
     if (optionId === "pwa" && !hasPWACompatibleFrontend(currentStack.webFrontend)) {
       return "PWA requires TanStack Router, React Router, Solid, or Next.js";
     }
-    if (optionId === "tauri" && !hasTauriCompatibleFrontend(currentStack.webFrontend)) {
+    if (
+      optionId === "tauri" &&
+      !hasTauriCompatibleFrontend(currentStack.webFrontend, currentStack.backend)
+    ) {
+      if (isSelfHostedFullstackBackend(currentStack.backend)) {
+        return "Tauri requires a separate backend or no backend";
+      }
       return "Tauri requires a web frontend";
     }
-    if (optionId === "electrobun" && !hasElectrobunCompatibleFrontend(currentStack.webFrontend)) {
+    if (
+      optionId === "electrobun" &&
+      !hasElectrobunCompatibleFrontend(currentStack.webFrontend, currentStack.backend)
+    ) {
+      if (isSelfHostedFullstackBackend(currentStack.backend)) {
+        return "Electrobun requires a separate backend or no backend";
+      }
       return "Electrobun requires a web frontend";
     }
-    if (optionId === "nx" && currentStack.addons.includes("turborepo")) {
-      return "Nx and Turborepo cannot be used together";
+    if (optionId === "evlog" && !hasEvlogCompatibleBackend(currentStack.backend)) {
+      return "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend";
     }
-    if (optionId === "turborepo" && currentStack.addons.includes("nx")) {
-      return "Nx and Turborepo cannot be used together";
-    }
+    // Task runners are mutually exclusive in the CLI, but the builder lets users swap them.
+    // URL/state sanitization keeps only the latest selected runner before generating commands.
   }
 
   // ============================================
@@ -1053,8 +1143,11 @@ export const getDisabledReason = (
       }
     }
     if (optionId === "ai") {
-      if (currentStack.webFrontend.includes("solid")) {
-        return "AI example not compatible with Solid frontend";
+      if (
+        currentStack.webFrontend.includes("solid") ||
+        currentStack.webFrontend.includes("astro")
+      ) {
+        return "AI example not compatible with Solid or Astro frontend";
       }
       if (currentStack.backend === "convex") {
         const hasIncompatibleFrontend = currentStack.webFrontend.some((f) =>
@@ -1077,21 +1170,29 @@ export const getDisabledReason = (
     }
   }
 
+  if (
+    category === "webDeploy" &&
+    currentStack.dbSetup === "d1" &&
+    isSelfHostedFullstackBackend(currentStack.backend) &&
+    optionId !== "cloudflare"
+  ) {
+    return "D1 with a self fullstack backend requires Cloudflare web deployment";
+  }
+
   if (category === "serverDeploy") {
     if (optionId === "cloudflare") {
       if (currentStack.runtime !== "workers") return "Cloudflare requires Workers runtime";
       if (currentStack.backend !== "hono") return "Cloudflare requires Hono backend";
     }
+    if (optionId === "docker" && currentStack.runtime === "workers") {
+      return "Docker server deployment requires the Bun or Node runtime";
+    }
     if (optionId !== "none") {
-      const noServerDeploy = [
-        "none",
-        "convex",
-        "self-next",
-        "self-tanstack-start",
-        "self-nuxt",
-        "self-astro",
-      ];
-      if (noServerDeploy.includes(currentStack.backend)) {
+      if (
+        currentStack.backend === "none" ||
+        currentStack.backend === "convex" ||
+        isSelfHostedFullstackBackend(currentStack.backend)
+      ) {
         return "Server deployment not needed for this backend";
       }
     }

@@ -59,6 +59,7 @@ export const ADDON_COMPATIBILITY = {
   lefthook: [],
   turborepo: [],
   nx: [],
+  "vite-plus": [],
   starlight: [],
   ultracite: [],
   mcp: [],
@@ -67,5 +68,6 @@ export const ADDON_COMPATIBILITY = {
   opentui: [],
   wxt: [],
   skills: [],
+  evlog: [],
   none: [],
 } as const;

@@ -32,13 +32,11 @@ export default function Dashboard({
 	const privateData = useQuery(trpc.privateData.queryOptions());
 	{{/if}}
 
-{{#if (eq payments "polar")}}
-	const hasProSubscription = customerState?.activeSubscriptions?.length! > 0;
-	console.log("Active subscriptions:", customerState?.activeSubscriptions);
-{{else if (eq payments "dodo")}}
+	{{#if (eq payments "polar")}}
+	const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
+	{{else if (eq payments "dodo")}}
 	const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0;
-	console.log("Active subscriptions:", customerState?.data?.items);
-{{/if}}
+	{{/if}}
 
 	return (
 		<>

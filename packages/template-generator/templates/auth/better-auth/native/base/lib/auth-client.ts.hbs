@@ -14,3 +14,30 @@ export const authClient = createAuthClient({
 		}),
 	],
 });
+{{#if (eq payments "polar")}}
+
+type PolarLinkResponse = {
+	url: string;
+	redirect: boolean;
+};
+
+type PolarClientResponse<T> = Promise<{
+	data: T | null;
+	error: { message?: string } | null;
+}>;
+
+type PolarNativeClient = typeof authClient & {
+	checkout: (data: {
+		slug?: string;
+		products?: string[] | string;
+		redirect?: boolean;
+		successUrl?: string;
+		returnUrl?: string;
+	}) => PolarClientResponse<PolarLinkResponse>;
+	customer: {
+		portal: (data?: { redirect?: boolean }) => PolarClientResponse<PolarLinkResponse>;
+	};
+};
+
+export const polarNativeClient = authClient as PolarNativeClient;
+{{/if}}

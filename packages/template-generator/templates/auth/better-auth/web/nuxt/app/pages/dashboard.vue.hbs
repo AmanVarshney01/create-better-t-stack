@@ -33,7 +33,7 @@ onMounted(async () => {
 })
 
 const hasProSubscription = computed(() => 
-  customerState.value?.activeSubscriptions?.length! > 0
+  (customerState.value?.activeSubscriptions?.length ?? 0) > 0
 )
 {{else if (eq payments "dodo")}}
 onMounted(async () => {

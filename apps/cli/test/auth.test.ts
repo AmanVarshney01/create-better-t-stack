@@ -78,6 +78,147 @@ describe("Authentication Configurations", () => {
       });
 
       expectSuccess(result);
+      expect(result.projectDir).toBeDefined();
+      const projectDir = result.projectDir as string;
+      const authPackageJson = await fs.readJson(
+        path.join(projectDir, "packages/auth/package.json"),
+      );
+      expect(authPackageJson.dependencies.mongodb).toBe("^7.2.0");
+
+      const dbIndex = await fs.readFile(path.join(projectDir, "packages/db/src/index.ts"), "utf8");
+      expect(dbIndex).toContain("await mongoose.connect(env.DATABASE_URL);");
+      expect(dbIndex).toContain("mongoose.connection.getClient().db()");
+      expect(dbIndex).not.toContain(".catch(");
+      expect(dbIndex).not.toContain("myDB");
+
+      const todosRoute = await fs.readFile(
+        path.join(projectDir, "apps/web/src/routes/todos.tsx"),
+        "utf8",
+      );
+      expect(todosRoute).toContain("type TodoId = string");
+      expect(todosRoute).toContain("const handleToggleTodo = (id: TodoId");
+      expect(todosRoute).toContain("const handleDeleteTodo = (id: TodoId");
+
+      const todoRouter = await fs.readFile(
+        path.join(projectDir, "packages/api/src/routers/todo.ts"),
+        "utf8",
+      );
+      expect(todoRouter).toContain('import "@better-auth-mongodb/db";');
+      expect(todoRouter).toContain("id: todo.id");
+
+      const authModels = await fs.readFile(
+        path.join(projectDir, "packages/db/src/models/auth.model.ts"),
+        "utf8",
+      );
+      expect(authModels).toContain("const { ObjectId } = Schema.Types");
+      expect(authModels).toContain("_id: { type: ObjectId, auto: true }");
+      expect(authModels).toContain('userId: { type: ObjectId, ref: "User", required: true }');
+      expect(authModels).toContain("sessionSchema.index({ userId: 1 })");
+      expect(authModels).toContain("verificationSchema.index({ identifier: 1 })");
+    });
+
+    it("should add nextCookies plugin for Next.js self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "better-auth-next-self-plugins",
+        auth: "better-auth",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const authFile = await fs.readFile(
+        path.join(result.projectDir, "packages/auth/src/index.ts"),
+        "utf8",
+      );
+
+      expect(authFile).toContain('import { nextCookies } from "better-auth/next-js";');
+      expect(authFile).toContain("nextCookies()");
+    });
+
+    it("should add tanstackStartCookies plugin for TanStack Start self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "better-auth-tanstack-start-self-plugins",
+        auth: "better-auth",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["tanstack-start"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const authFile = await fs.readFile(
+        path.join(result.projectDir, "packages/auth/src/index.ts"),
+        "utf8",
+      );
+
+      expect(authFile).toContain(
+        'import { tanstackStartCookies } from "better-auth/tanstack-start";',
+      );
+      expect(authFile).toContain("tanstackStartCookies()");
+    });
+
+    it("should guard TanStack Start self dashboard before loading Polar payment state", async () => {
+      const result = await runTRPCTest({
+        projectName: "better-auth-tanstack-start-self-polar-guard",
+        auth: "better-auth",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "orpc",
+        frontend: ["tanstack-start"],
+        payments: "polar",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const authRouteFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/routes/_auth/route.tsx"),
+        "utf8",
+      );
+
+      expect(authRouteFile).toContain('createFileRoute("/_auth")');
+      const guardIndex = authRouteFile.indexOf("if (!session)");
+      const paymentIndex = authRouteFile.indexOf("const customerState = await getPayment();");
+
+      expect(guardIndex).toBeGreaterThanOrEqual(0);
+      expect(paymentIndex).toBeGreaterThanOrEqual(0);
+      expect(guardIndex).toBeLessThan(paymentIndex);
     });
 
     it("should fail with better-auth + no database (non-convex)", async () => {
@@ -121,7 +262,472 @@ describe("Authentication Configurations", () => {
       });
 
       expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const packageJson = await fs.readJson(path.join(result.projectDir, "package.json"));
+      const backendPackageJson = await fs.readJson(
+        path.join(result.projectDir, "packages/backend/package.json"),
+      );
+      const webPackageJson = await fs.readJson(
+        path.join(result.projectDir, "apps/web/package.json"),
+      );
+      const authFile = await fs.readFile(
+        path.join(result.projectDir, "packages/backend/convex/auth.ts"),
+        "utf8",
+      );
+      const httpFile = await fs.readFile(
+        path.join(result.projectDir, "packages/backend/convex/http.ts"),
+        "utf8",
+      );
+      const authClientFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/lib/auth-client.ts"),
+        "utf8",
+      );
+      const convexTsconfig = await fs.readFile(
+        path.join(result.projectDir, "packages/backend/convex/tsconfig.json"),
+        "utf8",
+      );
+      const convexEnvFile = await fs.readFile(
+        path.join(result.projectDir, "packages/backend/.env.local"),
+        "utf8",
+      );
+      const webEnvFile = await fs.readFile(
+        path.join(result.projectDir, "packages/env/src/web.ts"),
+        "utf8",
+      );
+
+      expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.15");
+      expect(packageJson.workspaces.catalog["@convex-dev/better-auth"]).toBe("^0.12.5");
+      expect(backendPackageJson.dependencies["better-auth"]).toBe("catalog:");
+      expect(webPackageJson.dependencies["better-auth"]).toBe("catalog:");
+      expect(authFile).toContain("baseURL: process.env.CONVEX_SITE_URL");
+      expect(httpFile).toContain("authComponent.registerRoutes(http, createAuth, { cors: true })");
+      expect(authClientFile).toContain("plugins: [convexClient(), crossDomainClient()]");
+      expect(convexTsconfig).toContain('"types": ["node"]');
+      expect(convexTsconfig.match(/"types": \["node"\]/g)).toHaveLength(1);
+      expect(convexEnvFile).toContain(
+        "# npx convex env set CONVEX_SITE_URL https://example.convex.site",
+      );
+      expect(convexEnvFile).toContain("# CONVEX_SITE_URL=");
+      expect(webEnvFile).toContain('convexUrlSchema("example.convex.cloud")');
+      expect(webEnvFile).toContain('convexUrlSchema("example.convex.site")');
     });
+
+    it("should scaffold react-router with Convex Better Auth wiring", async () => {
+      const result = await runTRPCTest({
+        projectName: "better-auth-convex-react-router",
+        auth: "better-auth",
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        api: "none",
+        frontend: ["react-router"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const rootFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/root.tsx"),
+        "utf8",
+      );
+      const authClientFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/lib/auth-client.ts"),
+        "utf8",
+      );
+      const dashboardFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/routes/dashboard.tsx"),
+        "utf8",
+      );
+
+      expect(rootFile).toContain("ConvexBetterAuthProvider");
+      expect(rootFile).toContain('import { authClient } from "@/lib/auth-client";');
+      expect(authClientFile).toContain("convexClient(), crossDomainClient()");
+      expect(dashboardFile).toContain("Authenticated");
+      expect(dashboardFile).toContain("Unauthenticated");
+    });
+
+    const convexPolarFrontends = [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+    ] as const;
+
+    for (const frontend of convexPolarFrontends) {
+      it(`should scaffold Convex Better Auth with Polar payments for ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `better-auth-convex-polar-${frontend}`,
+          auth: "better-auth",
+          payments: "polar",
+          backend: "convex",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          frontend: [frontend],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        if (!result.projectDir) {
+          throw new Error("Expected projectDir to be defined");
+        }
+
+        const dashboardPath =
+          frontend === "next"
+            ? "apps/web/src/app/dashboard/page.tsx"
+            : frontend === "tanstack-router" || frontend === "tanstack-start"
+              ? "apps/web/src/routes/_auth/dashboard.tsx"
+              : "apps/web/src/routes/dashboard.tsx";
+        const convexConfigFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/convex/convex.config.ts"),
+          "utf8",
+        );
+        const httpFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/convex/http.ts"),
+          "utf8",
+        );
+        const polarFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/convex/polar.ts"),
+          "utf8",
+        );
+        const dashboardFile = await fs.readFile(
+          path.join(result.projectDir, dashboardPath),
+          "utf8",
+        );
+        const authRouteFile =
+          frontend === "tanstack-router" || frontend === "tanstack-start"
+            ? await fs.readFile(
+                path.join(result.projectDir, "apps/web/src/routes/_auth/route.tsx"),
+                "utf8",
+              )
+            : "";
+        const backendPackageFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/package.json"),
+          "utf8",
+        );
+        const webPackageFile = await fs.readFile(
+          path.join(result.projectDir, "apps/web/package.json"),
+          "utf8",
+        );
+        const convexEnvFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/.env.local"),
+          "utf8",
+        );
+
+        expect(convexConfigFile).toContain(
+          'import polar from "@convex-dev/polar/convex.config.js";',
+        );
+        expect(convexConfigFile).toContain("app.use(polar);");
+        expect(httpFile).toContain('import { polar } from "./polar";');
+        expect(httpFile).toContain("polar.registerRoutes(http);");
+        expect(polarFile).toContain('import { Polar } from "@convex-dev/polar";');
+        expect(polarFile).toContain("getUserInfo");
+        expect(polarFile).toContain("syncProducts");
+        if (frontend === "tanstack-router" || frontend === "tanstack-start") {
+          expect(authRouteFile).toContain('createFileRoute("/_auth")');
+          expect(authRouteFile).toContain("Authenticated");
+          expect(authRouteFile).toContain("Unauthenticated");
+        }
+        expect(dashboardFile).toContain('from "@convex-dev/polar/react";');
+        expect(dashboardFile).toContain("api.polar.listAllProducts");
+        expect(dashboardFile).toContain("api.polar.getCurrentSubscription");
+        expect(dashboardFile).not.toContain("products === undefined || subscription === undefined");
+        expect(dashboardFile).toContain(") : hasActiveSubscription ? (");
+        expect(dashboardFile).toContain(") : product ? (");
+        expect(dashboardFile.indexOf(") : hasActiveSubscription ? (")).toBeLessThan(
+          dashboardFile.indexOf(") : product ? ("),
+        );
+        expect(backendPackageFile).toContain('"@convex-dev/polar"');
+        expect(backendPackageFile).toContain('"@polar-sh/sdk"');
+        expect(webPackageFile).toContain('"@convex-dev/polar"');
+        expect(webPackageFile).toContain('"@polar-sh/checkout"');
+        expect(webPackageFile).toContain('"@stripe/react-stripe-js"');
+        expect(webPackageFile).toContain('"@stripe/stripe-js"');
+        expect(webPackageFile).not.toContain('"@polar-sh/better-auth"');
+        expect(convexEnvFile).toContain("# npx convex env set POLAR_ORGANIZATION_TOKEN");
+        expect(convexEnvFile).toContain("POLAR_SERVER=sandbox");
+        expect(
+          await fs.pathExists(path.join(result.projectDir, "apps/web/src/routes/success.tsx")),
+        ).toBe(false);
+        expect(
+          await fs.pathExists(
+            path.join(result.projectDir, "apps/web/src/functions/get-payment.ts"),
+          ),
+        ).toBe(false);
+      });
+    }
+
+    const nativePolarFrontends = ["native-bare", "native-uniwind", "native-unistyles"] as const;
+
+    for (const frontend of nativePolarFrontends) {
+      it(`should scaffold native-only Better Auth with Polar payments for ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `better-auth-native-polar-${frontend}`,
+          auth: "better-auth",
+          payments: "polar",
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          api: "trpc",
+          frontend: [frontend],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        if (!result.projectDir) {
+          throw new Error("Expected projectDir to be defined");
+        }
+
+        const nativeIndexFile = await fs.readFile(
+          path.join(result.projectDir, "apps/native/app/(drawer)/index.tsx"),
+          "utf8",
+        );
+        const nativeAuthClientFile = await fs.readFile(
+          path.join(result.projectDir, "apps/native/lib/auth-client.ts"),
+          "utf8",
+        );
+        const authPackageFile = await fs.readFile(
+          path.join(result.projectDir, "packages/auth/package.json"),
+          "utf8",
+        );
+        const nativePackageFile = await fs.readFile(
+          path.join(result.projectDir, "apps/native/package.json"),
+          "utf8",
+        );
+        const serverIndexFile = await fs.readFile(
+          path.join(result.projectDir, "apps/server/src/index.ts"),
+          "utf8",
+        );
+        const serverEnvFile = await fs.readFile(
+          path.join(result.projectDir, "apps/server/.env"),
+          "utf8",
+        );
+
+        expect(nativeIndexFile).toContain("polarNativeClient.checkout");
+        expect(nativeIndexFile).toContain("polarNativeClient.customer.portal");
+        expect(nativeIndexFile).toContain("WebBrowser.openAuthSessionAsync");
+        expect(nativeIndexFile).toContain('new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL)');
+        expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
+        expect(nativeIndexFile).toContain("returnUrl: polarReturnUrl");
+        expect(nativeIndexFile).not.toContain("successUrl: returnUrl");
+        expect(nativeIndexFile).toContain("Upgrade to Pro");
+        expect(nativeIndexFile).toContain("Manage Subscription");
+        if (frontend === "native-bare") {
+          expect(nativeIndexFile).toContain('contentInsetAdjustmentBehavior="never"');
+          expect(nativeIndexFile).toContain("<Host style={styles.titleHost}>");
+          expect(nativeIndexFile).toContain('textAlign: "center"');
+          expect(nativeIndexFile).toContain("height: 34");
+        }
+        expect(nativeAuthClientFile).toContain("export const polarNativeClient");
+        expect(authPackageFile).toContain('"@polar-sh/better-auth"');
+        expect(authPackageFile).toContain('"@polar-sh/sdk"');
+        expect(nativePackageFile).not.toContain('"@polar-sh/better-auth"');
+        expect(serverIndexFile).toContain('"/polar/success"');
+        expect(serverIndexFile).toContain("allowedNativeProtocols");
+        expect(serverIndexFile).toContain("302");
+        expect(serverEnvFile).toContain("POLAR_SUCCESS_URL=http://localhost:3000/polar/success");
+      });
+
+      it(`should scaffold native-only Convex Better Auth with Polar payments for ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `better-auth-convex-native-polar-${frontend}`,
+          auth: "better-auth",
+          payments: "polar",
+          backend: "convex",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          frontend: [frontend],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        if (!result.projectDir) {
+          throw new Error("Expected projectDir to be defined");
+        }
+
+        const nativeIndexFile = await fs.readFile(
+          path.join(result.projectDir, "apps/native/app/(drawer)/index.tsx"),
+          "utf8",
+        );
+        const backendPackageFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/package.json"),
+          "utf8",
+        );
+        const nativePackageFile = await fs.readFile(
+          path.join(result.projectDir, "apps/native/package.json"),
+          "utf8",
+        );
+        const nativeEnvFile = await fs.readFile(
+          path.join(result.projectDir, "packages/env/src/native.ts"),
+          "utf8",
+        );
+        const polarFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/convex/polar.ts"),
+          "utf8",
+        );
+        const httpFile = await fs.readFile(
+          path.join(result.projectDir, "packages/backend/convex/http.ts"),
+          "utf8",
+        );
+
+        expect(nativeIndexFile).toContain("api.polar.generateCheckoutLink");
+        expect(nativeIndexFile).toContain("api.polar.generateCustomerPortalUrl");
+        expect(nativeIndexFile).toContain("WebBrowser.openAuthSessionAsync");
+        expect(nativeIndexFile).toContain(
+          'new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL)',
+        );
+        expect(nativeIndexFile).toContain("origin: env.EXPO_PUBLIC_CONVEX_SITE_URL");
+        expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
+        expect(nativeIndexFile).toContain("returnUrl: getPolarReturnUrl(returnUrl)");
+        expect(nativeIndexFile).not.toContain("successUrl: returnUrl");
+        expect(nativeIndexFile).toContain("Upgrade to Pro");
+        expect(nativeIndexFile).toContain("Manage Subscription");
+        if (frontend === "native-bare") {
+          expect(nativeIndexFile).toContain('contentInsetAdjustmentBehavior="never"');
+          expect(nativeIndexFile).toContain("<Host style={styles.titleHost}>");
+          expect(nativeIndexFile).toContain('textAlign: "center"');
+          expect(nativeIndexFile).toContain("height: 34");
+        }
+        expect(polarFile).toContain("generateCheckoutLink");
+        expect(httpFile).toContain('path: "/polar/success"');
+        expect(httpFile).toContain("allowedNativeProtocols");
+        expect(httpFile).toContain("status: 302");
+        expect(nativeEnvFile).toContain('convexUrlSchema("example.convex.cloud")');
+        expect(nativeEnvFile).toContain('convexUrlSchema("example.convex.site")');
+        expect(backendPackageFile).toContain('"@convex-dev/polar"');
+        expect(backendPackageFile).toContain('"@polar-sh/sdk"');
+        expect(nativePackageFile).not.toContain('"@convex-dev/polar"');
+        expect(nativePackageFile).not.toContain('"@polar-sh/checkout"');
+      });
+    }
+
+    const standardPolarBackends = [
+      { backend: "hono", runtime: "bun", serverDeploy: "none" },
+      { backend: "hono", runtime: "node", serverDeploy: "none" },
+      { backend: "hono", runtime: "workers", serverDeploy: "cloudflare" },
+      { backend: "express", runtime: "bun", serverDeploy: "none" },
+      { backend: "express", runtime: "node", serverDeploy: "none" },
+      { backend: "fastify", runtime: "bun", serverDeploy: "none" },
+      { backend: "fastify", runtime: "node", serverDeploy: "none" },
+      { backend: "elysia", runtime: "bun", serverDeploy: "none" },
+    ] as const;
+
+    it("should scaffold native-only Better Auth with Polar payments for every standard server backend", async () => {
+      for (const { backend, runtime, serverDeploy } of standardPolarBackends) {
+        const result = await runTRPCTest({
+          projectName: `better-auth-native-polar-${backend}-${runtime}`,
+          auth: "better-auth",
+          payments: "polar",
+          backend,
+          runtime,
+          database: "sqlite",
+          orm: "drizzle",
+          api: "trpc",
+          frontend: ["native-bare"],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy,
+          install: false,
+        });
+
+        expectSuccess(result);
+        if (!result.projectDir) {
+          throw new Error("Expected projectDir to be defined");
+        }
+
+        const authFile = await fs.readFile(
+          path.join(result.projectDir, "packages/auth/src/index.ts"),
+          "utf8",
+        );
+        const authPackageFile = await fs.readFile(
+          path.join(result.projectDir, "packages/auth/package.json"),
+          "utf8",
+        );
+        const nativeIndexFile = await fs.readFile(
+          path.join(result.projectDir, "apps/native/app/(drawer)/index.tsx"),
+          "utf8",
+        );
+        const serverIndexFile = await fs.readFile(
+          path.join(result.projectDir, "apps/server/src/index.ts"),
+          "utf8",
+        );
+        const serverEnvFile = await fs.readFile(
+          path.join(result.projectDir, "apps/server/.env"),
+          "utf8",
+        );
+
+        expect(authFile).toContain('from "@polar-sh/better-auth"');
+        expect(authFile).toContain("polar({");
+        expect(authFile).toContain("checkout({");
+        expect(authFile).toContain("portal()");
+        expect(authPackageFile).toContain('"@polar-sh/better-auth"');
+        expect(authPackageFile).toContain('"@polar-sh/sdk"');
+        expect(nativeIndexFile).toContain("polarNativeClient.checkout");
+        expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
+        expect(nativeIndexFile).toContain("returnUrl: polarReturnUrl");
+        expect(serverIndexFile).toContain('"/polar/success"');
+        expect(serverIndexFile).toContain("allowedNativeProtocols");
+        expect(serverEnvFile).toContain("POLAR_SUCCESS_URL=http://localhost:3000/polar/success");
+      }
+    });
+
+    const convexUnsupportedFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
+    for (const frontend of convexUnsupportedFrontends) {
+      it(`should fail with Convex Better Auth + ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `better-auth-convex-${frontend}-fail`,
+          auth: "better-auth",
+          backend: "convex",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          frontend: [frontend],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+          expectError: true,
+        });
+
+        expectError(result, "Better Auth with '--backend convex' is not compatible");
+      });
+    }
 
     const compatibleFrontends = [
       "tanstack-router",
@@ -163,6 +769,13 @@ describe("Authentication Configurations", () => {
 
         const result = await runTRPCTest(config);
         expectSuccess(result);
+        if (!result.projectDir) {
+          throw new Error("Expected projectDir to be defined");
+        }
+        const packageJson = JSON.parse(
+          await fs.readFile(path.join(result.projectDir, "package.json"), "utf8"),
+        );
+        expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.22");
       });
     }
   });
@@ -320,13 +933,20 @@ describe("Authentication Configurations", () => {
         path.join(result.projectDir, "apps/web/src/start.ts"),
         "utf8",
       );
+      const authRouteFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/routes/_auth/route.tsx"),
+        "utf8",
+      );
       const dashboardFile = await fs.readFile(
-        path.join(result.projectDir, "apps/web/src/routes/dashboard.tsx"),
+        path.join(result.projectDir, "apps/web/src/routes/_auth/dashboard.tsx"),
         "utf8",
       );
 
       expect(startFile).not.toContain('/env/server"');
       expect(startFile).not.toContain("env.CLERK_SECRET_KEY");
+      expect(authRouteFile).toContain('createFileRoute("/_auth")');
+      expect(authRouteFile).toContain("SignInButton");
+      expect(dashboardFile).toContain('createFileRoute("/_auth/dashboard")');
       expect(dashboardFile).not.toContain("SignedIn");
       expect(dashboardFile).not.toContain("SignedOut");
       expect(dashboardFile).toContain("useUser");

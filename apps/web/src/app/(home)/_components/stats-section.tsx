@@ -3,18 +3,25 @@ import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { useNpmDownloadCounter } from "@erquhart/convex-oss-stats/react";
 import NumberFlow, { continuous } from "@number-flow/react";
 import { useQuery } from "convex/react";
-import { BarChart3, Github, Package, Star, Terminal, TrendingUp, Users } from "lucide-react";
+import { BarChart3, Package, Star, Terminal, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
+import { FaGithub } from "react-icons/fa6";
+
+type NpmPackageStats = NonNullable<Parameters<typeof useNpmDownloadCounter>[0]>;
+type GithubRepoStats = {
+  starCount: number;
+  contributorCount: number;
+};
 
 export default function StatsSection() {
   const stats = useQuery(api.analytics.getStats, {});
   const dailyStats = useQuery(api.analytics.getDailyStats, { days: 30 });
   const githubRepo = useQuery(api.stats.getGithubRepo, {
     name: "AmanVarshney01/create-better-t-stack",
-  });
+  }) as GithubRepoStats | null | undefined;
   const npmPackages = useQuery(api.stats.getNpmPackages, {
     names: ["create-better-t-stack"],
-  });
+  }) as NpmPackageStats | null | undefined;
 
   const liveNpmDownloadCount = useNpmDownloadCounter(npmPackages);
 
@@ -89,7 +96,7 @@ export default function StatsSection() {
       >
         <div className="group cursor-pointer rounded-2xl bg-fd-background/75 p-4 transition-colors hover:bg-muted/10">
           <div className="mb-3 flex items-center gap-2">
-            <Github className="h-4 w-4 text-primary" />
+            <FaGithub className="h-4 w-4 text-primary" />
             <span className="font-bold font-mono text-lg sm:text-xl">GITHUB_REPO.GIT</span>
           </div>
 

@@ -10,6 +10,7 @@ export async function getExamplesChoice(
   frontends?: Frontend[],
   backend?: Backend,
   api?: API,
+  previousValue?: Examples[],
 ) {
   if (examples !== undefined) return examples;
 
@@ -42,7 +43,9 @@ export async function getExamplesChoice(
     message: "Include examples",
     options: options,
     required: false,
-    initialValues: DEFAULT_CONFIG.examples?.filter((ex) => options.some((o) => o.value === ex)),
+    initialValues: (previousValue ?? DEFAULT_CONFIG.examples)?.filter((ex) =>
+      options.some((o) => o.value === ex),
+    ),
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

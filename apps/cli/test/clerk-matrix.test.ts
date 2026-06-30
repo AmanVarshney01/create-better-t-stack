@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 
 import { createVirtual } from "../src/index";
 import { validateConfigCompatibility } from "../src/validation";
+import { collectFiles } from "./setup";
 
 const standardBackends = [
   { backend: "hono", runtime: "bun" },
@@ -43,28 +44,6 @@ function buildFrontendCombos(
   return combos;
 }
 
-function collectFiles(
-  node:
-    | { type: "file"; path: string; content: string }
-    | { type: "directory"; path: string; children: unknown[] },
-  rootPath: string,
-  files = new Map<string, string>(),
-) {
-  if (node.type === "file") {
-    const relativePath = node.path.startsWith(`${rootPath}/`)
-      ? node.path.slice(rootPath.length + 1)
-      : node.path;
-    files.set(relativePath, node.content);
-    return files;
-  }
-
-  for (const child of node.children as Parameters<typeof collectFiles>[0][]) {
-    collectFiles(child, rootPath, files);
-  }
-
-  return files;
-}
-
 function expectedContextImport(backend: string) {
   if (backend === "express") return "@clerk/express";
   if (backend === "fastify") return "@clerk/fastify";
@@ -84,7 +63,7 @@ function needsServerClerkPublishableKey(backend: string, api: string) {
 }
 
 describe("Clerk matrix", () => {
-  it("should generate every supported Clerk combination", { timeout: 30_000 }, async () => {
+  it("should generate every supported Clerk combination", async () => {
     const standardFrontendCombos = buildFrontendCombos(standardWeb);
     const selfFrontendCombos = buildFrontendCombos(selfWeb, { requireWeb: true });
 
@@ -285,7 +264,13 @@ describe("Clerk matrix", () => {
       }
 
       if (combo.frontend.includes("tanstack-router")) {
-        const dashboard = files.get("apps/web/src/routes/dashboard.tsx");
+        const authRoute = files.get("apps/web/src/routes/_auth/route.tsx");
+        const dashboard = files.get("apps/web/src/routes/_auth/dashboard.tsx");
+        if (!authRoute) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing TanStack Router auth layout route`,
+          );
+        }
         if (!dashboard) {
           failures.push(
             `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing TanStack Router dashboard route`,
@@ -306,7 +291,13 @@ describe("Clerk matrix", () => {
       }
 
       if (combo.frontend.includes("tanstack-start")) {
-        const dashboard = files.get("apps/web/src/routes/dashboard.tsx");
+        const authRoute = files.get("apps/web/src/routes/_auth/route.tsx");
+        const dashboard = files.get("apps/web/src/routes/_auth/dashboard.tsx");
+        if (!authRoute) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing TanStack Start auth layout route`,
+          );
+        }
         if (!dashboard) {
           failures.push(
             `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing TanStack Start dashboard route`,
@@ -409,5 +400,5 @@ describe("Clerk matrix", () => {
 
     expect(combos).toHaveLength(499);
     expect(failures).toEqual([]);
-  });
+  }, 30_000);
 });
