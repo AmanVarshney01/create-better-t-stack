@@ -190,7 +190,7 @@ function getAllMcpServers(config: ProjectConfig): McpServerDef[] {
       key: "dodo",
       label: "Dodo Payments",
       name: "dodo",
-      target: "https://docs.dodopayments.com/mcp",
+      target: "https://mcp.dodopayments.com/sse",
     },
   ];
 }
