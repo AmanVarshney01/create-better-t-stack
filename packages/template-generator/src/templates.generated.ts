@@ -25293,19 +25293,13 @@ declare module "cloudflare:workers" {
   ["extras/pnpm-workspace.yaml.hbs", `packages:
   - "apps/*"
   - "packages/*"
-{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "vite-plus") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "nuxt") (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "next") (includes frontend "nuxt"))}}
 
 # pnpm 11 blocks dependency lifecycle scripts unless they are approved here.
 # Entries are scoped to packages this generated stack can pull in.
 allowBuilds:
-{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (includes addons "vite-plus") (includes frontend "tanstack-start") (includes frontend "nuxt"))}}
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "nuxt"))}}
   esbuild: true
-{{/if}}
-{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next"))}}
-  msw: true
-{{/if}}
-{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-  msgpackr-extract: true
 {{/if}}
 {{#if (includes frontend "nuxt")}}
   "@parcel/watcher": true
@@ -26756,39 +26750,38 @@ module.exports = config;
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/ui": "~56.0.12",
+    "@expo/ui": "~57.0.1",
     "@expo/vector-icons": "^15.1.1",
-    "@tanstack/react-query": "^5.99.2",
+    "@tanstack/react-query": "^5.101.2",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
-    "@ungap/structured-clone": "^1.3.0",
+    "@ungap/structured-clone": "^1.3.2",
     {{/if}}
-    "expo": "~56.0.3",
-    "expo-constants": "~56.0.14",
-    "expo-crypto": "~56.0.3",
-    "expo-font": "~56.0.5",
-    "expo-linking": "~56.0.11",
-    "expo-network": "~56.0.4",
-    "expo-router": "~56.2.5",
-    "expo-secure-store": "~56.0.4",
-    "expo-splash-screen": "~56.0.9",
-    "expo-status-bar": "~56.0.4",
-    "expo-system-ui": "~56.0.5",
-    "expo-web-browser": "~56.0.5",
+    "expo": "~57.0.1",
+    "expo-constants": "~57.0.2",
+    "expo-crypto": "~57.0.0",
+    "expo-font": "~57.0.0",
+    "expo-linking": "~57.0.1",
+    "expo-network": "~57.0.0",
+    "expo-router": "~57.0.2",
+    "expo-secure-store": "~57.0.0",
+    "expo-splash-screen": "~57.0.1",
+    "expo-status-bar": "~57.0.0",
+    "expo-system-ui": "~57.0.0",
+    "expo-web-browser": "~57.0.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.85.3",
-    "react-native-gesture-handler": "~2.31.1",
-    "react-native-reanimated": "4.3.1",
+    "react-native": "0.86.0",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-reanimated": "4.5.0",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.8.3"
+    "react-native-worklets": "0.10.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.0",
-    "@types/react": "~19.2.14",
-    "typescript": "^6"
+    "@types/react": "~19.2.17",
+    "typescript": "~6.0.3"
   },
   "private": true
 }
@@ -28089,40 +28082,39 @@ module.exports = config;
     "@expo/vector-icons": "^15.1.1",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
-    "@ungap/structured-clone": "^1.3.0",
+    "@ungap/structured-clone": "^1.3.2",
     {{/if}}
-    "babel-preset-expo": "~56.0.0",
-    "expo": "~56.0.3",
-    "expo-constants": "~56.0.14",
-    "expo-crypto": "~56.0.3",
-    "expo-dev-client": "~56.0.14",
-    "expo-font": "~56.0.5",
-    "expo-linking": "~56.0.11",
-    "expo-network": "~56.0.4",
-    "expo-router": "~56.2.5",
-    "expo-secure-store": "~56.0.4",
-    "expo-splash-screen": "~56.0.9",
-    "expo-status-bar": "~56.0.4",
-    "expo-system-ui": "~56.0.5",
-    "expo-web-browser": "~56.0.5",
+    "babel-preset-expo": "~57.0.1",
+    "expo": "~57.0.1",
+    "expo-constants": "~57.0.2",
+    "expo-crypto": "~57.0.0",
+    "expo-dev-client": "~57.0.3",
+    "expo-font": "~57.0.0",
+    "expo-linking": "~57.0.1",
+    "expo-network": "~57.0.0",
+    "expo-router": "~57.0.2",
+    "expo-secure-store": "~57.0.0",
+    "expo-splash-screen": "~57.0.1",
+    "expo-status-bar": "~57.0.0",
+    "expo-system-ui": "~57.0.0",
+    "expo-web-browser": "~57.0.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.85.3",
-    "react-native-edge-to-edge": "^1.8.1",
-    "react-native-gesture-handler": "~2.31.1",
-    "react-native-nitro-modules": "^0.35.7",
-    "react-native-reanimated": "4.3.1",
+    "react-native": "0.86.0",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-nitro-modules": "0.36.1",
+    "react-native-reanimated": "4.5.0",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",
-    "react-native-unistyles": "^3.2.4",
+    "react-native-unistyles": "^3.2.5",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.8.3"
+    "react-native-worklets": "0.10.0"
   },
   "devDependencies": {
     "ajv": "^8.20.0",
-    "@babel/core": "^7.29.0",
-    "@types/react": "~19.2.14",
-    "typescript": "^6"
+    "@babel/core": "^7.29.7",
+    "@types/react": "~19.2.17",
+    "typescript": "~6.0.3"
   }
 }
 `],
@@ -29220,44 +29212,44 @@ module.exports = uniwindConfig;
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~56.0.11",
+    "@expo/metro-runtime": "~57.0.2",
     "@expo/vector-icons": "^15.1.1",
     "@gorhom/bottom-sheet": "^5.2.14",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
-    "@ungap/structured-clone": "^1.3.0",
+    "@ungap/structured-clone": "^1.3.2",
     {{/if}}
-    "expo": "~56.0.3",
-    "expo-constants": "~56.0.14",
-    "expo-font": "~56.0.5",
-    "expo-haptics": "~56.0.3",
-    "expo-linking": "~56.0.11",
-    "expo-network": "~56.0.4",
-    "expo-router": "~56.2.5",
-    "expo-secure-store": "~56.0.4",
-    "expo-status-bar": "~56.0.4",
-    "expo-web-browser": "~56.0.5",
+    "expo": "~57.0.1",
+    "expo-constants": "~57.0.2",
+    "expo-font": "~57.0.0",
+    "expo-haptics": "~57.0.0",
+    "expo-linking": "~57.0.1",
+    "expo-network": "~57.0.0",
+    "expo-router": "~57.0.2",
+    "expo-secure-store": "~57.0.0",
+    "expo-status-bar": "~57.0.0",
+    "expo-web-browser": "~57.0.0",
     "heroui-native": "^1.0.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.85.3",
-    "react-native-gesture-handler": "~2.31.1",
-    "react-native-keyboard-controller": "1.21.6",
-    "react-native-reanimated": "4.3.1",
+    "react-native": "0.86.0",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-keyboard-controller": "1.21.9",
+    "react-native-reanimated": "4.5.0",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",
     "react-native-svg": "15.15.4",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.8.3",
+    "react-native-worklets": "0.10.0",
     "tailwind-merge": "^3.6.0",
     "tailwind-variants": "^3.2.2",
-    "tailwindcss": "^4.3.0",
+    "tailwindcss": "^4.3.2",
     "uniwind": "^1.9.0"
   },
   "devDependencies": {
-    "@types/node": "^25.9.1",
-    "@types/react": "~19.2.14",
-    "typescript": "^6"
+    "@types/node": "^26.0.1",
+    "@types/react": "~19.2.17",
+    "typescript": "~6.0.3"
   }
 }
 `],
