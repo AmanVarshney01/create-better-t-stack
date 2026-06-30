@@ -6,7 +6,12 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 export const getPayment = createServerFn({ method: "GET" })
 	.middleware([authMiddleware])
 	.handler(async () => {
-		const { data: customerState } = await authClient.dodopayments.customer.state({
+		const { data: customerState } = await authClient.dodopayments.customer.subscriptions.list({
+			query: {
+				limit: 10,
+				page: 1,
+				active: true,
+			},
 			fetchOptions: {
 				headers: getRequestHeaders(),
 			},
