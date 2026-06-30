@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 {{#if (eq backend "self")}}
 import { auth } from "@{{projectName}}/auth";
-{{/if}}
+{{else}}
 import { authClient } from "@/lib/auth-client";
+{{/if}}
 
 export default async function SuccessPage({
 	searchParams,
