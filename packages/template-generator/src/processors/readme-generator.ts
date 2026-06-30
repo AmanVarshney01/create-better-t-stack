@@ -167,7 +167,6 @@ function generateReadmeContent(options: ProjectConfig): string {
 
   const isConvex = backend === "convex";
   const hasReactRouter = frontend.includes("react-router");
-  const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasNative = hasNativeFrontend(frontend);
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
@@ -175,8 +174,8 @@ function generateReadmeContent(options: ProjectConfig): string {
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
   const packageManagerRunCmd = `${packageManager} run`;
-  const webPort =
-    hasReactRouter || hasTanStackRouter || hasSvelte ? "5173" : hasAstro ? "4321" : "3001";
+  // TanStack Router/Start, Next, Nuxt and Solid all dev on 3001; only React Router and SvelteKit use Vite's default 5173.
+  const webPort = hasReactRouter || hasSvelte ? "5173" : hasAstro ? "4321" : "3001";
 
   const stackDescription = generateStackDescription(frontend, backend, api, isConvex);
 

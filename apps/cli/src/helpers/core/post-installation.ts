@@ -127,11 +127,10 @@ export async function displayPostInstallInstructions(
     frontend?.includes("native-unistyles");
 
   const hasReactRouter = frontend?.includes("react-router");
-  const hasTanStackRouter = frontend?.includes("tanstack-router");
   const hasSvelte = frontend?.includes("svelte");
   const hasAstro = frontend?.includes("astro");
-  const webPort =
-    hasReactRouter || hasTanStackRouter || hasSvelte ? "5173" : hasAstro ? "4321" : "3001";
+  // TanStack Router/Start, Next, Nuxt and Solid all dev on 3001; only React Router and SvelteKit use Vite's default 5173.
+  const webPort = hasReactRouter || hasSvelte ? "5173" : hasAstro ? "4321" : "3001";
 
   const betterAuthConvexInstructions =
     isConvex && config.auth === "better-auth"
