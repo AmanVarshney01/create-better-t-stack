@@ -12,16 +12,9 @@ import type { AggregatedAnalyticsData } from "./types";
 
 export default function AnalyticsPage({
   data,
-  legacy,
   connectionStatus,
 }: {
   data: AggregatedAnalyticsData;
-  legacy: {
-    total: number;
-    avgPerDay: number;
-    lastUpdatedIso: string;
-    source: string;
-  };
   connectionStatus: "online" | "connecting" | "reconnecting" | "offline";
 }) {
   return (
@@ -31,7 +24,6 @@ export default function AnalyticsPage({
           lastUpdated={data.lastUpdated}
           liveTotal={data.totalProjects}
           trackingDays={data.momentum.trackingDays}
-          legacy={legacy}
           connectionStatus={connectionStatus}
         />
 

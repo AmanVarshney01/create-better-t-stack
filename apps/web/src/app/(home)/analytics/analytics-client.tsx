@@ -374,12 +374,5 @@ export function AnalyticsClient({
 
   const data = stats ? buildFromPrecomputed(stats, dailyStats, monthlyStats) : emptyData;
 
-  const legacy = {
-    total: 55434,
-    avgPerDay: 326.1,
-    lastUpdatedIso: "2025-11-13T10:10:00.000Z",
-    source: "Legacy analytics (pre-Convex)",
-  };
-
-  return <AnalyticsPage data={data} legacy={legacy} connectionStatus={connectionStatus} />;
+  return <AnalyticsPage data={data} connectionStatus={connectionStatus} />;
 }

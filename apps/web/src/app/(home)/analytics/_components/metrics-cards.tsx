@@ -3,8 +3,6 @@
 import NumberFlow from "@number-flow/react";
 import { AreaChart, Flame, Gauge, Radar, Sparkles, Sunrise } from "lucide-react";
 
-import { EvilAreaChart } from "@/components/evilcharts/charts/area-chart";
-import { EvilBarChart } from "@/components/evilcharts/charts/bar-chart";
 import { cn } from "@/lib/utils";
 
 import {
@@ -14,7 +12,7 @@ import {
   getTrendTone,
   shortenLabel,
 } from "./analytics-helpers";
-import { multiSeriesConfig, seriesConfig } from "./evil-chart-utils";
+import { CategoryBarChart, TrendAreaChart } from "./bklit-charts";
 import type { AggregatedAnalyticsData } from "./types";
 
 function MetricTile({
@@ -65,7 +63,7 @@ export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
           },
         ]
   ).map((point) => ({
-    day: formatDateLabel(point.date),
+    date: point.dateValue,
     projects: point.count,
     average: Number(point.rollingAverage.toFixed(2)),
   }));
@@ -88,13 +86,6 @@ export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
     { window: "Last 7 days", projects: data.momentum.last7Days },
     { window: "Previous 7 days", projects: data.momentum.previous7Days },
   ];
-
-  const trendConfig = multiSeriesConfig([
-    { key: "projects", label: "Projects", tone: "blue" },
-    { key: "average", label: "7 day average", tone: "teal" },
-  ]);
-  const leadingChoicesConfig = seriesConfig("setups", "Tracked setups", "violet");
-  const momentumComparisonConfig = seriesConfig("projects", "Projects", "amber");
 
   return (
     <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)] xl:items-start">
@@ -138,28 +129,13 @@ export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
               </div>
             </div>
 
-            <EvilAreaChart
-              className="h-[310px] min-w-0 w-full p-1"
-              xDataKey="day"
-              yDataKey="projects"
+            <TrendAreaChart
               data={sparklineData}
-              chartConfig={trendConfig}
-              curveType="monotone"
-              areaVariant="gradient"
-              strokeVariant="animated-dashed"
-              activeDotVariant="colored-border"
-              dotVariant="border"
-              legendVariant="horizontal-bar"
-              tooltipVariant="frosted-glass"
-              tooltipRoundness="md"
-              backgroundVariant="grid"
-              xAxisProps={{
-                interval: "preserveStartEnd",
-                tickFormatter: (value) => String(value),
-              }}
-              yAxisProps={{
-                tickFormatter: (value) => formatCompactNumber(Number(value)),
-              }}
+              height={310}
+              series={[
+                { key: "projects", label: "Projects" },
+                { key: "average", label: "7 day average", line: true },
+              ]}
             />
           </div>
         </section>
@@ -235,24 +211,16 @@ export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
               The top selected option in each major category, shown by tracked setup count.
             </p>
           </div>
-          <EvilBarChart
-            className="mt-3 h-[290px] min-w-0 w-full p-1"
-            data={leadingChoices}
-            xDataKey="choice"
-            yDataKey="setups"
-            chartConfig={leadingChoicesConfig}
-            layout="horizontal"
-            barVariant="default"
-            barRadius={5}
-            hideLegend
-            enableHoverHighlight
-            tooltipVariant="frosted-glass"
-            tooltipRoundness="md"
-            backgroundVariant="grid"
-            xAxisProps={{
-              tickFormatter: (value) => formatCompactNumber(Number(value)),
-            }}
-          />
+          <div className="mt-3">
+            <CategoryBarChart
+              data={leadingChoices}
+              xKey="choice"
+              orientation="horizontal"
+              height={290}
+              labelWidth={140}
+              series={[{ key: "setups", label: "Tracked setups" }]}
+            />
+          </div>
         </section>
 
         <section className="min-w-0 overflow-hidden rounded border border-border bg-fd-background p-4 sm:p-5">
@@ -262,23 +230,14 @@ export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
               Recent project starts compared with the previous 7 day window.
             </p>
           </div>
-          <EvilBarChart
-            className="mt-3 h-[220px] min-w-0 w-full p-1"
-            data={momentumComparison}
-            xDataKey="window"
-            yDataKey="projects"
-            chartConfig={momentumComparisonConfig}
-            barVariant="default"
-            barRadius={5}
-            hideLegend
-            enableHoverHighlight
-            tooltipVariant="frosted-glass"
-            tooltipRoundness="md"
-            backgroundVariant="grid"
-            yAxisProps={{
-              tickFormatter: (value) => formatCompactNumber(Number(value)),
-            }}
-          />
+          <div className="mt-3">
+            <CategoryBarChart
+              data={momentumComparison}
+              xKey="window"
+              height={220}
+              series={[{ key: "projects", label: "Projects" }]}
+            />
+          </div>
         </section>
       </div>
     </div>

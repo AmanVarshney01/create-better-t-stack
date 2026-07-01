@@ -26,7 +26,6 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
           data={data.stackCombinationDistribution}
           colorKey="chart1"
           maxItems={10}
-          chartClassName="min-h-[420px]"
         />
         <PreferenceChartCard
           title="Database and ORM pairings"
@@ -34,7 +33,6 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
           data={data.databaseORMCombinationDistribution}
           colorKey="chart4"
           maxItems={10}
-          chartClassName="min-h-[420px]"
         />
       </div>
 
@@ -59,7 +57,6 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
           description="How often each database was selected."
           data={data.databaseDistribution}
           colorKey="chart4"
-          chartClassName="min-h-[320px]"
         />
         <PreferenceChartCard
           title="ORM"

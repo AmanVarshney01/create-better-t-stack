@@ -1,11 +1,10 @@
 "use client";
 
-import { EvilBarChart } from "@/components/evilcharts/charts/bar-chart";
 import { cn } from "@/lib/utils";
 
-import { formatCompactNumber, formatCount, formatPercent } from "./analytics-helpers";
+import { formatCount, formatPercent } from "./analytics-helpers";
+import { CategoryBarChart } from "./bklit-charts";
 import { ChartCard } from "./chart-card";
-import { seriesConfig } from "./evil-chart-utils";
 import { PreferenceChartCard } from "./preference-chart-card";
 import { SectionHeader } from "./section-header";
 import type { AggregatedAnalyticsData, ShareDistributionItem } from "./types";
@@ -26,9 +25,7 @@ function SplitMeterCard({
   const chartData = data.map((item) => ({
     label: item.name,
     value: item.value,
-    share: item.share,
   }));
-  const chartConfig = seriesConfig("value", "Tracked setups", "teal");
 
   return (
     <ChartCard title={title} description={description}>
@@ -49,22 +46,13 @@ function SplitMeterCard({
             <div className="mt-1 text-muted-foreground text-xs">{formatPercent(noShare)}</div>
           </div>
         </div>
-        <EvilBarChart
-          className="h-[210px] w-full p-1"
+        <CategoryBarChart
           data={chartData}
-          xDataKey="label"
-          yDataKey="value"
-          chartConfig={chartConfig}
-          layout="horizontal"
-          barVariant="default"
-          barRadius={5}
-          hideLegend
-          tooltipVariant="frosted-glass"
-          tooltipRoundness="md"
-          backgroundVariant="dots"
-          xAxisProps={{
-            tickFormatter: (value) => formatCompactNumber(Number(value)),
-          }}
+          xKey="label"
+          orientation="horizontal"
+          height={210}
+          labelWidth={52}
+          series={[{ key: "value", label: "Tracked setups", color: "var(--chart-2)" }]}
         />
       </div>
     </ChartCard>
@@ -106,8 +94,6 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
           description="How often each database setup option was selected."
           data={data.dbSetupDistribution}
           colorKey="chart4"
-          className="xl:min-h-full"
-          chartClassName="min-h-[290px]"
         />
         <PreferenceChartCard
           title="Package manager"
@@ -186,7 +172,6 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
           data={nodeVersionPreferences}
           colorKey="chart5"
           layout="vertical"
-          chartClassName="min-h-[280px]"
         />
 
         {data.examplesDistribution.length > 0 ? (
@@ -196,7 +181,6 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
             data={data.examplesDistribution}
             colorKey="chart4"
             layout="vertical"
-            chartClassName="min-h-[280px]"
           />
         ) : null}
       </div>
@@ -208,7 +192,6 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
           data={data.addonsDistribution}
           colorKey="chart1"
           columnCount={2}
-          chartClassName="min-h-[280px]"
         />
       ) : null}
 
@@ -219,8 +202,7 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
           data={cliVersionPreferences}
           colorKey="chart4"
           columnCount={4}
-          columnGridClassName="xl:grid-cols-2"
-          chartClassName="min-h-[300px]"
+          columnGridClassName="grid-cols-1 sm:grid-cols-2 xl:grid-cols-4"
         />
       ) : null}
     </div>
