@@ -31,3 +31,11 @@ export const getSponsorUrl = (sponsor: Sponsor): string => {
 export const formatSponsorUrl = (url: string): string => {
   return url?.replace(/^https?:\/\//, "")?.replace(/\/$/, "");
 };
+
+// Text shown for a sponsor's website link. Uses websiteLabel when provided
+// (so the display can differ from the actual link, e.g. a redirect URL),
+// otherwise falls back to the formatted website/GitHub URL.
+export const getSponsorUrlLabel = (sponsor: Sponsor): string => {
+  const label = sponsor.websiteLabel?.trim();
+  return label || formatSponsorUrl(getSponsorUrl(sponsor));
+};
