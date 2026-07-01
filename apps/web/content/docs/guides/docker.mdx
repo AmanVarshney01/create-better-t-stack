@@ -1,0 +1,153 @@
+---
+title: Deploying with Docker Compose
+description: Learn how to self-host your Better-T-Stack app with the generated Dockerfiles and docker-compose.yml
+author:
+  name: Aman Varshney
+  url: https://github.com/AmanVarshney01
+date: Jul 2, 2026
+---
+
+## Overview
+
+This guide explains how Better-T-Stack packages your applications for self-hosting with [Docker Compose](https://docs.docker.com/compose/). You'll learn:
+
+- What gets generated and how the compose stack is wired
+- How to build, run, and monitor the containers
+- How environment variables flow between builds, containers, and the compose file
+- How the optional Docker database service works
+- What to change when moving from local containers to a real host
+
+## What Gets Generated
+
+Choosing `docker` as a deploy target generates:
+
+<Files>
+  <Folder name="my-app" defaultOpen>
+    <File name="docker-compose.yml" />
+    <File name=".dockerignore" />
+    <Folder name="apps" defaultOpen>
+      <Folder name="web">
+        <File name="Dockerfile" />
+        <File name="nginx.conf" />
+      </Folder>
+      <Folder name="server">
+        <File name="Dockerfile" />
+      </Folder>
+    </Folder>
+  </Folder>
+</Files>
+
+- **`docker-compose.yml`** at the repo root defines the `web`, `server`, and (optionally) database services with health checks and startup ordering.
+- **`apps/*/Dockerfile`** are multi-stage builds that install the whole monorepo workspace, build one app, and ship a minimal runtime image.
+- **`nginx.conf`** is generated for static SPA frontends (TanStack Router, React Router, SolidJS), which are served by nginx instead of a Node server.
+
+## Enabling Docker Deployment
+
+**Combined deployment (web + server + database):**
+
+```npm
+npm create better-t-stack@latest my-app \
+  --frontend tanstack-router \
+  --backend hono \
+  --runtime bun \
+  --database postgres \
+  --db-setup docker \
+  --web-deploy docker \
+  --server-deploy docker
+```
+
+**Web-only (fullstack `self` backend):**
+
+```npm
+npm create better-t-stack@latest my-app \
+  --frontend next \
+  --backend self \
+  --web-deploy docker
+```
+
+**Server-only:**
+
+```npm
+npm create better-t-stack@latest my-app \
+  --frontend none \
+  --backend fastify \
+  --runtime node \
+  --server-deploy docker
+```
+
+Server deployment requires the `bun` or `node` runtime. Adding `--db-setup docker` puts a Postgres, MySQL, or MongoDB container in the same compose file with a named volume and health check.
+
+## Running the Stack
+
+```bash
+bun docker:build   # docker compose build
+bun docker:up      # docker compose up -d --build
+bun docker:logs    # docker compose logs -f
+bun docker:down    # docker compose down
+```
+
+After `docker:up`:
+
+| Service  | URL                                 | Notes                                              |
+| -------- | ----------------------------------- | -------------------------------------------------- |
+| web      | `http://localhost:3001`             | nginx (SPA frontends) or the framework's server    |
+| server   | `http://localhost:3000`             | health-checked; web waits for it to become healthy |
+| database | `localhost:5432` / `3306` / `27017` | only with `--db-setup docker`                      |
+
+Startup ordering is handled with `depends_on` + `condition: service_healthy`: the database must pass its health check before the server starts, and the server must pass its `fetch('http://localhost:3000/')` health check before the web container starts.
+
+With `--db-setup docker` you also get scoped database scripts for local development without the full stack:
+
+```bash
+bun db:start   # docker compose up -d postgres   (just the database, detached)
+bun db:watch   # docker compose up postgres      (with logs in the foreground)
+```
+
+## How the Images Build
+
+Each Dockerfile is a multi-stage build with the monorepo root as build context:
+
+1. A base stage installs the workspace with your package manager (with a mounted dependency cache, so rebuilds are fast).
+2. The app is built with `SKIP_ENV_VALIDATION=1`, so t3-env doesn't require real secrets at image-build time. Prisma projects get a placeholder `DATABASE_URL` for `prisma generate`; the real value arrives at runtime from compose.
+3. A slim runtime stage copies only the built output. SPA frontends are copied into an nginx image; SSR frontends and servers run on `node:24-slim` (with the Bun binary added when needed).
+
+## Environment Variables
+
+Three rules cover everything:
+
+1. **Public web variables are baked at build time.** Values like `VITE_SERVER_URL` are compose **build args** — they're inlined into the client bundle when the image builds. The generated default is `http://localhost:3000` (the published server port). Changing them requires an image rebuild, not just a restart.
+2. **Runtime variables come from each app's `.env` file.** The compose file loads `apps/web/.env` and `apps/server/.env` via `env_file` (marked optional, so missing files don't break startup).
+3. **Compose overrides handle container networking.** Inside the Docker network, containers reach each other by service name, not `localhost` — so compose sets values like `DATABASE_URL: postgresql://postgres:...@postgres:5432/my-app` and `CORS_ORIGIN: http://localhost:3001` in the `environment:` block, which wins over `env_file`. Your local `.env` files stay pointed at localhost for non-Docker development.
+
+Database passwords default to `password` and can be overridden with compose variables (`POSTGRES_PASSWORD`, `MYSQL_PASSWORD`, `MONGO_PASSWORD`) — set them in a root `.env` file or export them before `docker:up`.
+
+## Moving to a Real Host
+
+The generated compose file is production-shaped (multi-stage images, health checks, `restart: unless-stopped`, named volumes), but a few things are sized for localhost:
+
+- **Put a reverse proxy in front.** Terminate TLS with Caddy, Traefik, or nginx and route your domain to the web container; stop publishing the server and database ports publicly once the proxy handles routing.
+- **Update baked URLs for your domain.** Rebuild the web image with the public server URL build arg set to your real API origin, and set `CORS_ORIGIN` / `BETTER_AUTH_URL` on the server to your real web origin.
+- **Set real secrets.** Replace the default database password and put production values in the server's environment (compose `environment:`, an `.env` file on the host, or your orchestrator's secret store).
+- **Back up the database volume.** Data lives in a named Docker volume (`<project>_postgres_data` etc.); `docker compose down -v` deletes it.
+
+## Troubleshooting
+
+### Port already in use
+
+The stack publishes 3001 (web), 3000 (server), and the database port. Stop whatever is bound to them, or edit the `ports:` mappings in `docker-compose.yml`.
+
+### Changed a public env var but the web app didn't pick it up
+
+Public variables are build args baked into the client bundle. Rebuild the image: `bun docker:up` (it passes `--build`) or `bun docker:build` first.
+
+### Server can't reach the database with a localhost URL
+
+Inside compose, the database host is the service name (`postgres`, `mysql`, `mongodb`), not `localhost`. Use the compose-provided `DATABASE_URL` (already set in the `environment:` block) instead of the one in `apps/server/.env`.
+
+### Web container never starts
+
+It waits for the server health check. Check `bun docker:logs` — if the server is crash-looping (usually missing env vars or a bad `DATABASE_URL`), the web container stays in `waiting` state.
+
+### CORS errors in the browser
+
+The compose file sets `CORS_ORIGIN: http://localhost:3001` when the web service is present. If you access the app from a different host or port, update that value to match the origin you're actually using and restart.
