@@ -1,0 +1,28 @@
+<script lang="ts">
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
+	import { authClient } from "$lib/auth-client";
+
+	const checkout_id = $derived(page.url.searchParams.get("checkout_id"));
+
+	const sessionQuery = authClient.useSession();
+
+	$effect(() => {
+		if (!$sessionQuery.isPending && !$sessionQuery.data) {
+			goto("/login");
+		}
+	});
+</script>
+
+{#if $sessionQuery.isPending}
+	<div>Loading...</div>
+{:else if !$sessionQuery.data}
+	<div>Redirecting to login...</div>
+{:else}
+	<div class="container mx-auto px-4 py-8">
+		<h1>Payment Successful!</h1>
+		{#if checkout_id}
+			<p>Checkout ID: {checkout_id}</p>
+		{/if}
+	</div>
+{/if}

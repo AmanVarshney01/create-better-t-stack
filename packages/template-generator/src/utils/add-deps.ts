@@ -168,6 +168,8 @@ export const dependencyVersionMap = {
   "@polar-sh/better-auth": "^1.8.4",
   "@polar-sh/checkout": "^0.2.1",
   "@polar-sh/sdk": "^0.47.1",
+  "@dodopayments/better-auth": "^1.4.3",
+  dodopayments: "^2.23.2",
   "@stripe/react-stripe-js": "^4.0.2",
   "@stripe/stripe-js": "^7.9.0",
 

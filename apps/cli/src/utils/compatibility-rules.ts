@@ -466,10 +466,11 @@ export function validatePaymentsCompatibility(
 ): ValidationResult {
   if (!payments || payments === "none") return Result.ok(undefined);
 
-  if (payments === "polar") {
+  if (payments === "polar" || payments === "dodo") {
+    const providerLabel = payments === "polar" ? "Polar" : "Dodo";
     if (!auth || auth === "none" || auth !== "better-auth") {
       return validationErr(
-        "Polar payments requires Better Auth. Please use '--auth better-auth' or choose a different payments provider.",
+        `${providerLabel} payments requires Better Auth. Please use '--auth better-auth' or choose a different payments provider.`,
       );
     }
   }

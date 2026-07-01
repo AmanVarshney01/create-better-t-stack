@@ -97,6 +97,12 @@ describe("Addon setup regressions", () => {
     expect(betterTStackServer?.target).toBe("bunx create-better-t-stack@latest mcp");
   });
 
+  it("recommends the Dodo MCP server when Dodo payments are selected", () => {
+    const servers = getRecommendedMcpServers(createProjectConfig({ payments: "dodo" }), "project");
+
+    expect(servers.some((server) => server.key === "dodo")).toBe(true);
+  });
+
   it("preserves explicit empty MCP selections in silent mode", async () => {
     const projectDir = path.join(SMOKE_DIR, "mcp-explicit-empty");
     await fs.remove(projectDir);

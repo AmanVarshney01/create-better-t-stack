@@ -1,4 +1,4 @@
-{{#if (eq payments "polar") }}
+{{#if (or (eq payments "polar") (eq payments "dodo")) }}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
 {{/if}}
@@ -14,10 +14,33 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/dashboard")({
   component: RouteComponent,
+  beforeLoad: async () => {
+    const session = await authClient.getSession();
+    if (!session.data) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+    {{#if (eq payments "polar")}}
+    const {data: customerState} = await authClient.customer.state()
+    return { session, customerState };
+    {{else if (eq payments "dodo")}}
+    const customerState = await authClient.dodopayments.customer.subscriptions.list({
+      query: {
+        limit: 10,
+        page: 1,
+        active: true,
+      }
+    })
+    return { session, customerState };
+    {{else}}
+    return { session };
+    {{/if}}
+  },
 });
 
 function RouteComponent() {
-  const { session{{#if (eq payments "polar") }}, customerState{{/if}} } = Route.useRouteContext();
+  const { session{{#if (or (eq payments "polar") (eq payments "dodo")) }}, customerState{{/if}} } = Route.useRouteContext();
 
   {{#if (eq api "trpc") }}
   const trpc = useTRPC();
@@ -29,6 +52,8 @@ function RouteComponent() {
 
   {{#if (eq payments "polar") }}
   const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
+  {{else if (eq payments "dodo") }}
+  const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0;
   {{/if}}
 
   return (
@@ -44,12 +69,12 @@ function RouteComponent() {
       {{else if (eq api "orpc") }}
       <p>API: {privateData.data?.message}</p>
       {{/if}}
-      {{#if (eq payments "polar") }}
+      {{#if (or (eq payments "polar") (eq payments "dodo")) }}
       <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
       {hasProSubscription ? (
         <Button
           onClick={async function handlePortal() {
-            await authClient.customer.portal();
+            await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}();
           }}
         >
           Manage Subscription
@@ -57,7 +82,7 @@ function RouteComponent() {
       ) : (
         <Button
           onClick={async function handleUpgrade() {
-            await authClient.checkout({ slug: "pro" });
+            await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({ slug: "pro" });
           }}
         >
           Upgrade to Pro
