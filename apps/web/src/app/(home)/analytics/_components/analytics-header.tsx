@@ -14,19 +14,8 @@ const utcDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
 });
 
-const utcDateFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-  timeZone: "UTC",
-});
-
 function formatUtcDateTime(value: string) {
   return `${utcDateTimeFormatter.format(new Date(value))} UTC`;
-}
-
-function formatUtcDate(value: string) {
-  return utcDateFormatter.format(new Date(value));
 }
 
 function HeaderStat({
@@ -53,22 +42,14 @@ export function AnalyticsHeader({
   lastUpdated,
   liveTotal,
   trackingDays,
-  legacy,
   connectionStatus,
 }: {
   lastUpdated: string | null;
   liveTotal: number;
   trackingDays: number;
-  legacy: {
-    total: number;
-    avgPerDay: number;
-    lastUpdatedIso: string;
-    source: string;
-  };
   connectionStatus: "online" | "connecting" | "reconnecting" | "offline";
 }) {
   const formattedDate = lastUpdated ? formatUtcDateTime(lastUpdated) : null;
-  const legacyDate = formatUtcDate(legacy.lastUpdatedIso);
   const statusMeta = {
     online: {
       label: "Streaming",
@@ -112,7 +93,7 @@ export function AnalyticsHeader({
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2">
         <HeaderStat
           label="Live projects"
           value={formatCompactNumber(liveTotal)}
@@ -123,35 +104,17 @@ export function AnalyticsHeader({
           value={trackingDays}
           detail="Calendar days represented in the live telemetry dataset."
         />
-        <HeaderStat
-          label="Archive total"
-          value={formatCompactNumber(legacy.total)}
-          detail={`Historical creations from the pre-Convex archive through ${legacyDate}.`}
-        />
-        <HeaderStat
-          label="Archive pace"
-          value={legacy.avgPerDay.toFixed(1)}
-          detail="Average project creations per day in the historical snapshot."
-        />
       </div>
 
       <div className="rounded border border-border bg-fd-background p-4">
-        <div className="grid gap-3 text-sm md:grid-cols-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <div className="flex items-center gap-2">
             <DatabaseZap className="h-4 w-4 text-primary" />
             <span className="font-mono text-xs text-muted-foreground uppercase">Telemetry</span>
           </div>
-          <div className="flex items-center justify-between gap-3 md:block">
+          <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Latest event</span>
-            <div className="font-medium md:mt-1">{formattedDate ?? "Waiting"}</div>
-          </div>
-          <div className="flex items-center justify-between gap-3 md:block">
-            <span className="text-muted-foreground">Archive snapshot</span>
-            <div className="font-medium md:mt-1">{legacyDate}</div>
-          </div>
-          <div className="flex items-center justify-between gap-3 md:block">
-            <span className="text-muted-foreground">Source</span>
-            <div className="font-medium md:mt-1">{legacy.source}</div>
+            <span className="font-medium">{formattedDate ?? "Waiting"}</span>
           </div>
         </div>
       </div>

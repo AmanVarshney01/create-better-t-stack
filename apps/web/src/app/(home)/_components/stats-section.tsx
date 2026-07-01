@@ -13,9 +13,19 @@ type GithubRepoStats = {
   contributorCount: number;
 };
 
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function getDaySpan(firstDate: string | null, lastDate: string | null): number {
+  if (!firstDate || !lastDate) return 0;
+  const start = Date.parse(`${firstDate}T00:00:00Z`);
+  const end = Date.parse(`${lastDate}T00:00:00Z`);
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return 0;
+  return Math.floor((end - start) / MILLISECONDS_PER_DAY) + 1;
+}
+
 export default function StatsSection() {
   const stats = useQuery(api.analytics.getStats, {});
-  const dailyStats = useQuery(api.analytics.getDailyStats, { days: 30 });
+  const monthlyStats = useQuery(api.analytics.getMonthlyStats, {});
   const githubRepo = useQuery(api.stats.getGithubRepo, {
     name: "AmanVarshney01/create-better-t-stack",
   }) as GithubRepoStats | null | undefined;
@@ -26,8 +36,8 @@ export default function StatsSection() {
   const liveNpmDownloadCount = useNpmDownloadCounter(npmPackages);
 
   const totalProjects = stats?.totalProjects ?? 0;
-  const avgProjectsPerDay =
-    dailyStats && dailyStats.length > 0 ? (totalProjects / dailyStats.length).toFixed(2) : "0";
+  const trackingDays = getDaySpan(monthlyStats?.firstDate ?? null, monthlyStats?.lastDate ?? null);
+  const avgProjectsPerDay = trackingDays > 0 ? (totalProjects / trackingDays).toFixed(1) : "0";
   const lastUpdated = stats?.lastEventTime
     ? new Date(stats.lastEventTime).toLocaleDateString("en-US", {
         month: "short",

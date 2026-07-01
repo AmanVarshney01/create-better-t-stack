@@ -1,16 +1,10 @@
 "use client";
 
-import { EvilBarChart } from "@/components/evilcharts/charts/bar-chart";
 import { cn } from "@/lib/utils";
 
-import {
-  buildCompactCategoryLabels,
-  formatCompactNumber,
-  formatCount,
-  formatPercent,
-} from "./analytics-helpers";
+import { buildCompactCategoryLabels, formatCount, formatPercent } from "./analytics-helpers";
+import { CategoryBarChart } from "./bklit-charts";
 import { ChartCard } from "./chart-card";
-import { getTone, seriesConfig } from "./evil-chart-utils";
 import type { ShareDistributionItem } from "./types";
 
 function chunkItems<T>(items: T[], chunkCount: number) {
@@ -37,12 +31,12 @@ type PreferenceChartCardProps = {
   columnGridClassName?: string;
 };
 
-const colorToneOffset = {
-  chart1: 0,
-  chart2: 1,
-  chart3: 2,
-  chart4: 3,
-  chart5: 4,
+const colorByKey: Record<NonNullable<PreferenceChartCardProps["colorKey"]>, string> = {
+  chart1: "var(--chart-1)",
+  chart2: "var(--chart-2)",
+  chart3: "var(--chart-3)",
+  chart4: "var(--chart-4)",
+  chart5: "var(--chart-5)",
 };
 
 export function PreferenceChartCard({
@@ -59,7 +53,10 @@ export function PreferenceChartCard({
 }: PreferenceChartCardProps) {
   const ranking = typeof maxItems === "number" ? data.slice(0, maxItems) : data;
   const chunks = columnCount > 1 ? chunkItems(ranking, columnCount) : [ranking];
-  const toneOffset = colorToneOffset[colorKey];
+  const color = colorByKey[colorKey];
+  const labelWidth = columnCount >= 3 ? 70 : columnCount === 2 ? 96 : 120;
+  const compactLabelLength =
+    layout === "horizontal" ? (columnCount >= 3 ? 11 : columnCount === 2 ? 16 : 22) : 12;
 
   return (
     <ChartCard
@@ -83,51 +80,30 @@ export function PreferenceChartCard({
       {chunks.map((chunk, index) => {
         const labels = buildCompactCategoryLabels(
           chunk.map((item) => item.name),
-          layout === "horizontal" ? 22 : 12,
+          compactLabelLength,
         );
         const chartData = chunk.map((item, itemIndex) => ({
           label: labels[itemIndex] ?? item.name,
           value: item.value,
-          share: item.share,
           fullName: item.name,
           formatted: `${formatCount(item.value)} (${formatPercent(item.share)})`,
         }));
-        const tone = getTone(toneOffset + index);
-        const chartConfig = seriesConfig("value", "Tracked setups", tone);
         const height =
           layout === "horizontal"
             ? Math.max(240, chartData.length * 38 + 84)
             : Math.max(260, chartData.length * 18 + 240);
 
         return (
-          <div
-            key={`${title}-${index}`}
-            className={cn("min-h-[220px] min-w-0 overflow-hidden", chartClassName)}
-            style={{ height }}
-          >
-            <EvilBarChart
-              className="h-full min-w-0 w-full p-1"
+          <div key={`${title}-${index}`} className={cn("min-w-0 overflow-hidden", chartClassName)}>
+            <CategoryBarChart
               data={chartData}
-              chartConfig={chartConfig}
-              xDataKey="label"
-              yDataKey="value"
-              layout={layout === "horizontal" ? "horizontal" : "vertical"}
-              barVariant="default"
-              barRadius={5}
-              enableHoverHighlight
-              glowingBars={["value"]}
-              hideLegend
-              tooltipVariant="frosted-glass"
-              tooltipRoundness="md"
-              backgroundVariant={layout === "horizontal" ? "dots" : "grid"}
-              xAxisProps={{
-                tickFormatter: (value) =>
-                  layout === "horizontal" ? formatCompactNumber(Number(value)) : String(value),
-              }}
-              yAxisProps={{
-                tickFormatter: (value) =>
-                  layout === "horizontal" ? String(value) : formatCompactNumber(Number(value)),
-              }}
+              xKey="label"
+              orientation={layout}
+              height={height}
+              labelWidth={labelWidth}
+              series={[{ key: "value", label: "Tracked setups", color }]}
+              tooltipLabelKey="fullName"
+              tooltipValueKey="formatted"
             />
           </div>
         );
