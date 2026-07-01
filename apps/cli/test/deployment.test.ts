@@ -441,7 +441,10 @@ describe("Deployment Configurations", () => {
       expect(files.get("scripts/sync-vercel-env.ts")).toContain('"NEXT_PUBLIC_SERVER_URL", "/api"');
       expect(files.get("scripts/sync-vercel-env.ts")).toContain('"CORS_ORIGIN"');
       expect(files.get("scripts/sync-vercel-env.ts")).toContain("LOCAL_VERCEL_BIN");
-      expect(files.get("scripts/sync-vercel-env.ts")).toContain("firstFlagIndex");
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain("passthroughArgs");
+      // Preview syncs must be non-interactive so the piped-stdin value does not
+      // collide with Vercel's interactive "Git branch?" prompt.
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain('"--non-interactive"');
       expect(files.get("scripts/sync-vercel-env.ts")).toContain('import dotenv from "dotenv"');
       expect(files.get("scripts/sync-vercel-env.ts")).toContain("dotenv.parse");
       expect(files.get("scripts/sync-vercel-env.ts")).toContain("new Map<string, string>");
@@ -458,6 +461,7 @@ describe("Deployment Configurations", () => {
         "env:vercel:production": "tsx scripts/sync-vercel-env.ts production",
         "deploy:vercel": "vercel deploy",
         "deploy:vercel:prod": "vercel deploy --prod",
+        "deploy:vercel:check": "vercel deploy --dry",
         deploy: "vercel deploy",
       });
       expect(files.get("packages/env/src/web.ts")).toContain("const serverUrlSchema = z.union");
@@ -506,6 +510,8 @@ describe("Deployment Configurations", () => {
       expect(orpcClient).toContain("function getServerUrl(url: string)");
       expect(orpcClient).toContain("window.location.origin");
       expect(orpcClient).toContain("VERCEL_PROJECT_PRODUCTION_URL");
+      // Preview/branch SSR must resolve the current deployment, not production.
+      expect(orpcClient).toContain('VERCEL_ENV === "production"');
       expect(orpcClient).toContain("url: `${getServerUrl(env.VITE_SERVER_URL)}/rpc`");
     });
 
@@ -576,7 +582,83 @@ describe("Deployment Configurations", () => {
 
       expect(serverEntry).toContain("const app = new Elysia()");
       expect(serverEntry).toContain("export default app;");
-      expect(serverEntry).not.toContain(".listen(");
+      // Bun does not auto-serve Elysia's default export, so a guarded local
+      // listen must remain (skipped on Vercel via process.env.VERCEL).
+      expect(serverEntry).toContain("if (!process.env.VERCEL)");
+      expect(serverEntry).toContain("app.listen(3000");
+    });
+
+    it("should guard the local Elysia listen for node-runtime Vercel deploys", async () => {
+      const result = await createVirtual({
+        projectName: "elysia-node-vercel",
+        webDeploy: "none",
+        serverDeploy: "vercel",
+        backend: "elysia",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const serverEntry = files.get("apps/server/src/index.ts");
+
+      // node has no default-export auto-serve, so it must still listen locally
+      // while exporting the app for Vercel functions.
+      expect(serverEntry).toContain("export default app;");
+      expect(serverEntry).toContain("if (!process.env.VERCEL)");
+      expect(serverEntry).toContain("app.listen(3000");
+    });
+
+    it("should use the Vercel adapter for Astro web deploys", async () => {
+      const result = await createVirtual({
+        projectName: "astro-vercel",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["astro"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const astroConfig = files.get("apps/web/astro.config.mjs") ?? "";
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}") as {
+        dependencies?: Record<string, string>;
+      };
+
+      expect(astroConfig).toContain('import vercel from "@astrojs/vercel"');
+      expect(astroConfig).toContain("adapter: vercel()");
+      expect(astroConfig).not.toContain("@astrojs/node");
+      expect(webPkg.dependencies).toHaveProperty("@astrojs/vercel");
+      expect(webPkg.dependencies).not.toHaveProperty("@astrojs/node");
     });
 
     it("should wire Cloudflare web deploys to the generated server Worker URL", async () => {

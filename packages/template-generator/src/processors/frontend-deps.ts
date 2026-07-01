@@ -10,7 +10,8 @@ export function processFrontendDeps(vfs: VirtualFileSystem, config: ProjectConfi
     !frontend.includes("astro") ||
     addons.includes("electrobun") ||
     addons.includes("tauri") ||
-    webDeploy === "cloudflare"
+    webDeploy === "cloudflare" ||
+    webDeploy === "vercel"
   ) {
     return;
   }

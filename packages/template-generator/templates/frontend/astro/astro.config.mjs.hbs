@@ -2,6 +2,8 @@
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, envField } from "astro/config";
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+{{else if (eq webDeploy "vercel")}}
+import vercel from "@astrojs/vercel";
 {{else}}
 import node from "@astrojs/node";
 {{/if}}
@@ -10,6 +12,9 @@ import node from "@astrojs/node";
 export default defineConfig({
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
   output: "static",
+{{else if (eq webDeploy "vercel")}}
+  output: "server",
+  adapter: vercel(),
 {{else}}
   output: "server",
   adapter: node({ mode: "standalone" }),

@@ -196,6 +196,7 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     scripts["env:vercel:production"] = "tsx scripts/sync-vercel-env.ts production";
     scripts["deploy:vercel"] = "vercel deploy";
     scripts["deploy:vercel:prod"] = "vercel deploy --prod";
+    scripts["deploy:vercel:check"] = "vercel deploy --dry";
 
     if (!hasCloudflareDeploy) {
       scripts.deploy = "vercel deploy";
