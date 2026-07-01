@@ -94,8 +94,6 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
           description="How often each database setup option was selected."
           data={data.dbSetupDistribution}
           colorKey="chart4"
-          className="xl:min-h-full"
-          chartClassName="min-h-[290px]"
         />
         <PreferenceChartCard
           title="Package manager"
@@ -174,7 +172,6 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
           data={nodeVersionPreferences}
           colorKey="chart5"
           layout="vertical"
-          chartClassName="min-h-[280px]"
         />
 
         {data.examplesDistribution.length > 0 ? (
@@ -184,7 +181,6 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
             data={data.examplesDistribution}
             colorKey="chart4"
             layout="vertical"
-            chartClassName="min-h-[280px]"
           />
         ) : null}
       </div>
@@ -196,7 +192,6 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
           data={data.addonsDistribution}
           colorKey="chart1"
           columnCount={2}
-          chartClassName="min-h-[280px]"
         />
       ) : null}
 
@@ -207,8 +202,7 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
           data={cliVersionPreferences}
           colorKey="chart4"
           columnCount={4}
-          columnGridClassName="xl:grid-cols-2"
-          chartClassName="min-h-[300px]"
+          columnGridClassName="grid-cols-1 sm:grid-cols-2 xl:grid-cols-4"
         />
       ) : null}
     </div>

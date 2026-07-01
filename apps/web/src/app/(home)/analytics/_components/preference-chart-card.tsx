@@ -90,8 +90,8 @@ export function PreferenceChartCard({
         }));
         const height =
           layout === "horizontal"
-            ? Math.max(240, chartData.length * 38 + 84)
-            : Math.max(260, chartData.length * 18 + 240);
+            ? Math.max(180, chartData.length * 30 + 48)
+            : Math.max(240, chartData.length * 18 + 220);
 
         return (
           <div key={`${title}-${index}`} className={cn("min-w-0 overflow-hidden", chartClassName)}>
