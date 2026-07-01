@@ -31,6 +31,10 @@ export type Sponsor = {
   githubId: string;
   avatarUrl: string;
   websiteUrl?: string | null;
+  // Optional display text for the website link. When set, show this label
+  // instead of the URL while still linking to websiteUrl (e.g. show
+  // "CodeRabbit.ai" but link to a redirect URL).
+  websiteLabel?: string | null;
   githubUrl: string;
   tierName: string;
   totalProcessedAmount: number;

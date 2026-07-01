@@ -1,16 +1,13 @@
 "use client";
 
-import { EvilAreaChart } from "@/components/evilcharts/charts/area-chart";
-import { EvilBarChart } from "@/components/evilcharts/charts/bar-chart";
-
 import {
   formatCompactNumber,
   formatDateLabel,
   formatHourLabel,
   formatMonthLabel,
 } from "./analytics-helpers";
+import { CategoryBarChart, TrendAreaChart } from "./bklit-charts";
 import { ChartCard } from "./chart-card";
-import { multiSeriesConfig, seriesConfig } from "./evil-chart-utils";
 import { SectionHeader } from "./section-header";
 import type { AggregatedAnalyticsData } from "./types";
 
@@ -20,7 +17,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
     ? `${formatHourLabel(data.momentum.busiestHour.hour)} UTC`
     : "n/a";
   const dailyData = data.timeSeries.map((point) => ({
-    day: formatDateLabel(point.date),
+    date: point.dateValue,
     projects: point.count,
     average: Number(point.rollingAverage.toFixed(2)),
   }));
@@ -31,19 +28,11 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
   const weekdayData = data.weekdayDistribution.map((point) => ({
     weekday: point.shortLabel,
     average: Number(point.averageDailyProjects.toFixed(2)),
-    total: point.count,
   }));
   const hourlyData = data.hourlyDistribution.map((point) => ({
     hour: point.label,
     projects: point.count,
   }));
-  const dailyConfig = multiSeriesConfig([
-    { key: "projects", label: "Daily starts", tone: "blue" },
-    { key: "average", label: "7 day average", tone: "teal" },
-  ]);
-  const monthlyConfig = seriesConfig("projects", "Monthly starts", "rose");
-  const weekdayConfig = seriesConfig("average", "Average starts", "amber");
-  const hourlyConfig = seriesConfig("projects", "Project starts", "violet");
 
   return (
     <div className="space-y-6">
@@ -76,25 +65,13 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
             </>
           }
         >
-          <EvilAreaChart
-            className="h-[340px] w-full p-1"
-            xDataKey="day"
-            yDataKey="projects"
+          <TrendAreaChart
             data={dailyData}
-            chartConfig={dailyConfig}
-            curveType="monotone"
-            areaVariant="gradient"
-            strokeVariant="animated-dashed"
-            dotVariant="border"
-            activeDotVariant="colored-border"
-            legendVariant="horizontal-bar"
-            tooltipVariant="frosted-glass"
-            tooltipRoundness="md"
-            backgroundVariant="grid"
-            xAxisProps={{ interval: "preserveStartEnd" }}
-            yAxisProps={{
-              tickFormatter: (value) => formatCompactNumber(Number(value)),
-            }}
+            height={340}
+            series={[
+              { key: "projects", label: "Daily starts" },
+              { key: "average", label: "7 day average", line: true },
+            ]}
           />
         </ChartCard>
 
@@ -108,24 +85,11 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
             </>
           }
         >
-          <EvilBarChart
-            className="h-[340px] w-full p-1"
-            xDataKey="month"
-            yDataKey="projects"
+          <CategoryBarChart
             data={monthlyData}
-            chartConfig={monthlyConfig}
-            barVariant="default"
-            barRadius={5}
-            enableBufferBar
-            glowingBars={["projects"]}
-            hideLegend
-            tooltipVariant="frosted-glass"
-            tooltipRoundness="md"
-            backgroundVariant="diagonal-lines"
-            xAxisProps={{ interval: "preserveStartEnd" }}
-            yAxisProps={{
-              tickFormatter: (value) => formatCompactNumber(Number(value)),
-            }}
+            xKey="month"
+            height={340}
+            series={[{ key: "projects", label: "Monthly starts" }]}
           />
         </ChartCard>
       </div>
@@ -141,22 +105,11 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
             </>
           }
         >
-          <EvilBarChart
-            className="h-[260px] w-full p-1"
-            xDataKey="weekday"
-            yDataKey="average"
+          <CategoryBarChart
             data={weekdayData}
-            chartConfig={weekdayConfig}
-            barVariant="default"
-            barRadius={5}
-            enableHoverHighlight
-            hideLegend
-            tooltipVariant="frosted-glass"
-            tooltipRoundness="md"
-            backgroundVariant="tiny-checkers"
-            yAxisProps={{
-              tickFormatter: (value) => formatCompactNumber(Number(value)),
-            }}
+            xKey="weekday"
+            height={260}
+            series={[{ key: "average", label: "Average starts" }]}
           />
         </ChartCard>
 
@@ -174,26 +127,12 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
             </>
           }
         >
-          <EvilBarChart
-            className="h-[260px] w-full p-1"
-            xDataKey="hour"
-            yDataKey="projects"
+          <CategoryBarChart
             data={hourlyData}
-            chartConfig={hourlyConfig}
-            barVariant="default"
-            barRadius={4}
-            enableHoverHighlight
-            hideLegend
-            tooltipVariant="frosted-glass"
-            tooltipRoundness="md"
-            backgroundVariant="dots"
-            xAxisProps={{
-              interval: 1,
-              tickFormatter: (value) => String(value),
-            }}
-            yAxisProps={{
-              tickFormatter: (value) => formatCompactNumber(Number(value)),
-            }}
+            xKey="hour"
+            height={260}
+            maxLabels={12}
+            series={[{ key: "projects", label: "Project starts" }]}
           />
         </ChartCard>
       </div>

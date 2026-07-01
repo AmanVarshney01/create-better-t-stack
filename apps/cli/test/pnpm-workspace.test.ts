@@ -42,7 +42,6 @@ describe("pnpm workspace", () => {
 
     expect(workspace.allowBuilds).toMatchObject({
       esbuild: true,
-      msw: true,
       sharp: true,
       workerd: true,
     });
@@ -118,7 +117,28 @@ describe("pnpm workspace", () => {
     expect(workspace.allowBuilds).toEqual({ esbuild: true });
   });
 
-  it("adds only the React UI approval when no other build-script deps are expected", async () => {
+  it("adds esbuild approval for Turborepo stacks", async () => {
+    const workspace = await readPnpmWorkspace({
+      projectName: "pnpm-turborepo",
+      frontend: ["tanstack-router"],
+      backend: "hono",
+      runtime: "bun",
+      api: "trpc",
+      database: "sqlite",
+      orm: "drizzle",
+      auth: "none",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+    });
+
+    expect(workspace.allowBuilds).toEqual({ esbuild: true });
+  });
+
+  it("does not add build approvals for TanStack Router without lifecycle-script dependencies", async () => {
     const workspace = await readPnpmWorkspace({
       projectName: "pnpm-react-ui",
       frontend: ["tanstack-router"],
@@ -136,7 +156,28 @@ describe("pnpm workspace", () => {
       serverDeploy: "none",
     });
 
-    expect(workspace.allowBuilds).toEqual({ msw: true });
+    expect(workspace.allowBuilds).toBeUndefined();
+  });
+
+  it("adds esbuild approval for a plain React Router frontend", async () => {
+    const workspace = await readPnpmWorkspace({
+      projectName: "pnpm-react-router-ui",
+      frontend: ["react-router"],
+      backend: "none",
+      runtime: "none",
+      api: "none",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+    });
+
+    expect(workspace.allowBuilds).toEqual({ esbuild: true });
   });
 
   it("adds build approvals for a plain Next.js frontend", async () => {
@@ -158,7 +199,6 @@ describe("pnpm workspace", () => {
     });
 
     expect(workspace.allowBuilds).toEqual({
-      msw: true,
       sharp: true,
     });
   });
@@ -188,7 +228,7 @@ describe("pnpm workspace", () => {
     });
   });
 
-  it("adds build approvals for native Expo stacks", async () => {
+  it("does not add build approvals for native Expo stacks without lifecycle-script dependencies", async () => {
     const workspace = await readPnpmWorkspace({
       projectName: "pnpm-native-expo",
       frontend: ["native-bare"],
@@ -206,7 +246,7 @@ describe("pnpm workspace", () => {
       serverDeploy: "none",
     });
 
-    expect(workspace.allowBuilds).toEqual({ "msgpackr-extract": true });
+    expect(workspace.allowBuilds).toBeUndefined();
   });
 
   it("adds build approvals for Docker deploys so non-interactive installs succeed", async () => {
