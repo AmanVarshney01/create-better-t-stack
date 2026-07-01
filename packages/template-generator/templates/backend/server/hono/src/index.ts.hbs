@@ -194,15 +194,23 @@ app.get("/", (c) => {
 {{#if (eq runtime "node")}}
 import { serve } from "@hono/node-server";
 
-serve(
-	{
-		fetch: app.fetch,
-		port: 3000,
-	},
-	(info) => {
-		console.log(`Server is running on http://localhost:${info.port}`);
-	}
-);
+{{#if (eq serverDeploy "vercel")}}
+export default app;
+
+if (!process.env.VERCEL) {
+{{/if}}
+	serve(
+		{
+			fetch: app.fetch,
+			port: 3000,
+		},
+		(info) => {
+			console.log(`Server is running on http://localhost:${info.port}`);
+		}
+	);
+{{#if (eq serverDeploy "vercel")}}
+}
+{{/if}}
 {{else}}
 {{#if (eq runtime "bun")}}
 export default app;

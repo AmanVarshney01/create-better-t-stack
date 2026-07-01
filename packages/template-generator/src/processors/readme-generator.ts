@@ -771,6 +771,15 @@ function generateScriptsList(
 - \`${packageManagerRunCmd} docker:down\`: Stop the Docker Compose stack`;
   }
 
+  if (webDeploy === "vercel" || serverDeploy === "vercel") {
+    scripts += `\n- \`${packageManagerRunCmd} dev:vercel\`: Run the Vercel Services dev environment locally
+- \`${packageManagerRunCmd} env:vercel:preview\`: Sync local env files to the Vercel preview environment
+- \`${packageManagerRunCmd} env:vercel:production\`: Sync local env files to the Vercel production environment
+- \`${packageManagerRunCmd} deploy:vercel\`: Create a Vercel preview deployment
+- \`${packageManagerRunCmd} deploy:vercel:prod\`: Deploy to Vercel production
+- \`${packageManagerRunCmd} deploy:vercel:check\`: Dry-run a deploy to preview framework detection and included files without uploading`;
+  }
+
   return scripts;
 }
 
@@ -782,8 +791,9 @@ function generateDeploymentCommands(
 ): string {
   const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
   const hasDocker = webDeploy === "docker" || serverDeploy === "docker";
+  const hasVercel = webDeploy === "vercel" || serverDeploy === "vercel";
 
-  if (!hasCloudflare && !hasDocker) {
+  if (!hasCloudflare && !hasDocker && !hasVercel) {
     return "";
   }
 
@@ -830,6 +840,45 @@ function generateDeploymentCommands(
       `- Stop: ${packageManagerRunCmd} docker:down`,
       "",
       "Environment variables are read from each app's `.env` file (baked into web builds for public variables) and overridden in `docker-compose.yml` for container networking.",
+      "",
+      "For more details, see the guide on [Deploying with Docker Compose](https://www.better-t-stack.dev/docs/guides/docker).",
+    );
+  }
+
+  if (hasVercel) {
+    const targetLabel =
+      webDeploy === "vercel" && (serverDeploy === "vercel" || backend === "self")
+        ? "web + server"
+        : webDeploy === "vercel"
+          ? "web"
+          : "server";
+
+    lines.push(
+      "",
+      "### Vercel Services",
+      "",
+      `- Target: ${targetLabel}`,
+      "- Config: `vercel.json`",
+      "- Link the project first: `vercel link`",
+      `- Local Vercel dev: ${packageManagerRunCmd} dev:vercel`,
+      `- Sync preview env: ${packageManagerRunCmd} env:vercel:preview`,
+      `- Sync production env: ${packageManagerRunCmd} env:vercel:production`,
+      `- Dry-run check (no upload): ${packageManagerRunCmd} deploy:vercel:check`,
+      `- Preview deploy: ${packageManagerRunCmd} deploy:vercel`,
+      `- Production deploy: ${packageManagerRunCmd} deploy:vercel:prod`,
+    );
+
+    if (webDeploy === "vercel" && serverDeploy === "vercel" && backend !== "self") {
+      lines.push(
+        "- Web requests under `/api/*` route to the server service and are rewritten before reaching the backend.",
+      );
+    }
+
+    lines.push(
+      "Vercel Services share project environment variables, but deploys do not upload local `.env` files automatically. Link the project with `vercel link`, then run the env sync command before your first deploy (otherwise the deployment starts with no env vars), or pass one-off envs with `vercel deploy -e KEY=value`.",
+      `Pass Vercel CLI flags to the env sync command directly, for example: \`${packageManagerRunCmd} env:vercel:production --scope your-team\`.`,
+      "",
+      "For more details, see the guide on [Deploying to Vercel](https://www.better-t-stack.dev/docs/guides/vercel).",
     );
   }
 

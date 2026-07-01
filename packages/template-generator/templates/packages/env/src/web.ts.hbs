@@ -9,6 +9,13 @@ import { createEnv } from "@t3-oss/env-core";
 {{/if}}
 import { z } from "zod";
 
+{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+const serverUrlSchema = z.union([
+	z.url(),
+	z.string().regex(/^\/(?!\/)/, "Use an absolute URL or a same-origin path like /api"),
+]);
+
+{{/if}}
 {{#if (eq backend "convex")}}
 const convexUrlSchema = (exampleHost: string) =>
 	z.url().refine((url) => new URL(url).hostname !== exampleHost, {
@@ -94,7 +101,7 @@ export const env = createEnv({
 {{else if (ne backend "none")}}
 {{#if (includes frontend "next")}}
 	client: {
-		NEXT_PUBLIC_SERVER_URL: z.url(),
+		NEXT_PUBLIC_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
@@ -107,18 +114,18 @@ export const env = createEnv({
 	},
 {{else if (includes frontend "nuxt")}}
 	client: {
-		NUXT_PUBLIC_SERVER_URL: z.url(),
+		NUXT_PUBLIC_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 	},
 {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
 	clientPrefix: "PUBLIC_",
 	client: {
-		PUBLIC_SERVER_URL: z.url(),
+		PUBLIC_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 	},
 	runtimeEnv: (import.meta as any).env,
 {{else}}
 	clientPrefix: "VITE_",
 	client: {
-		VITE_SERVER_URL: z.url(),
+		VITE_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}

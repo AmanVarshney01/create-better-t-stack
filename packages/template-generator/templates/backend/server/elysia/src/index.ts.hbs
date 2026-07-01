@@ -49,11 +49,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 });
 {{/if}}
 
-{{#if (eq runtime "node")}}
-new Elysia({ adapter: node() })
-{{else}}
-new Elysia()
-{{/if}}
+const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
 	.use(
 		cors({
 			origin: env.CORS_ORIGIN,
@@ -159,6 +155,19 @@ new Elysia()
 	})
 {{/if}}
 	.get("/", () => "OK")
+{{#if (eq serverDeploy "vercel")}};
+
+export default app;
+
+// Elysia's default export is not auto-served by Bun or Node, so start a local
+// server outside Vercel while still exporting the app for Vercel functions.
+if (!process.env.VERCEL) {
+	app.listen(3000, () => {
+		console.log("Server is running on http://localhost:3000");
+	});
+}
+{{else}}
 	.listen(3000, () => {
 		console.log("Server is running on http://localhost:3000");
 	});
+{{/if}}

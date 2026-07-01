@@ -27,6 +27,12 @@ function getDeploymentDisplay(deployment: ServerDeploy): {
       hint: "Self-host with a Dockerfile and docker-compose.yml",
     };
   }
+  if (deployment === "vercel") {
+    return {
+      label: "Vercel",
+      hint: "Deploy to Vercel with Services",
+    };
+  }
   return {
     label: deployment,
     hint: `Add ${deployment} deployment`,
@@ -55,7 +61,7 @@ export async function getServerDeploymentChoice(
     return "none";
   }
 
-  const options: DeploymentOption[] = (["docker", "none"] as const).map((deploy) => {
+  const options: DeploymentOption[] = (["docker", "vercel", "none"] as const).map((deploy) => {
     const { label, hint } =
       deploy === "none"
         ? { label: "None", hint: "Skip deployment setup" }
@@ -100,12 +106,14 @@ export async function getServerDeploymentToAdd(
   }
 
   if (runtime === "bun" || runtime === "node") {
-    const { label, hint } = getDeploymentDisplay("docker");
-    options.push({
-      value: "docker",
-      label,
-      hint,
-    });
+    for (const deploy of ["docker", "vercel"] as const) {
+      const { label, hint } = getDeploymentDisplay(deploy);
+      options.push({
+        value: deploy,
+        label,
+        hint,
+      });
+    }
   }
 
   if (options.length === 0) {

@@ -79,5 +79,9 @@ export function getStackGeneratedIgnorePatterns(config: ProjectConfig): string[]
     }
   }
 
+  if (config.webDeploy === "vercel" || config.serverDeploy === "vercel") {
+    patterns.add(".vercel/**");
+  }
+
   return [...patterns];
 }

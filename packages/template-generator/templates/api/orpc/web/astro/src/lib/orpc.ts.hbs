@@ -10,8 +10,34 @@ export const link = new RPCLink({
 {{else}}
 import { PUBLIC_SERVER_URL } from "astro:env/client";
 
+function getServerUrl(url: string) {
+  const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+  if (!normalized.startsWith("/")) {
+    return normalized;
+  }
+
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}${normalized}`;
+  }
+
+  const processEnv = (globalThis as {
+    process?: { env?: Record<string, string | undefined> };
+  }).process?.env;
+  const vercelUrl =
+    processEnv?.VERCEL_ENV === "production"
+      ? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
+      : (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
+  if (vercelUrl) {
+    const origin = vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`;
+    return `${origin}${normalized}`;
+  }
+
+  return `http://localhost:3000${normalized}`;
+}
+
 export const link = new RPCLink({
-  url: `${PUBLIC_SERVER_URL}/rpc`,
+  url: `${getServerUrl(PUBLIC_SERVER_URL)}/rpc`,
 {{#if (eq auth "better-auth")}}
   fetch(url, options) {
     return fetch(url, {

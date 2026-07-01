@@ -4,14 +4,44 @@ import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency } from "../utils/add-deps";
 
 export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { webDeploy, serverDeploy, frontend, backend } = config;
+  const { webDeploy, serverDeploy, frontend, backend, addons } = config;
 
   const isCloudflareWeb = webDeploy === "cloudflare";
   const isCloudflareServer = serverDeploy === "cloudflare";
   const isDockerWeb = webDeploy === "docker";
+  const isVercelWeb = webDeploy === "vercel";
+  const isVercelServer = serverDeploy === "vercel";
   const isBackendSelf = backend === "self";
 
-  if (!isCloudflareWeb && !isCloudflareServer && !isDockerWeb) return;
+  if (!isCloudflareWeb && !isCloudflareServer && !isDockerWeb && !isVercelWeb && !isVercelServer) {
+    return;
+  }
+
+  if (isVercelWeb || isVercelServer) {
+    addPackageDependency({
+      vfs,
+      packagePath: "package.json",
+      devDependencies: ["@types/node", "dotenv", "tsx", "vercel"],
+    });
+  }
+
+  if (
+    isVercelWeb &&
+    frontend.includes("astro") &&
+    !addons.includes("electrobun") &&
+    !addons.includes("tauri")
+  ) {
+    // Astro needs the Vercel adapter for SSR; the default @astrojs/node
+    // standalone output is not served by Vercel's astro framework preset.
+    const webPkgPath = "apps/web/package.json";
+    if (vfs.exists(webPkgPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        dependencies: ["@astrojs/vercel"],
+      });
+    }
+  }
 
   if (isDockerWeb) {
     const webPkgPath = "apps/web/package.json";

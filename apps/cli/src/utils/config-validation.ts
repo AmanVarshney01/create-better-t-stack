@@ -14,6 +14,7 @@ import {
   validateSelfBackendCompatibility,
   validateDockerServerDeploy,
   validateServerDeployRequiresBackend,
+  validateVercelServerDeploy,
   validateWebDeployRequiresWebFrontend,
   validateWorkersCompatibility,
 } from "./compatibility-rules";
@@ -501,6 +502,7 @@ export function validateFullConfig(
 
     yield* validateServerDeployRequiresBackend(config.serverDeploy, config.backend);
     yield* validateDockerServerDeploy(config.serverDeploy, config.backend, config.runtime);
+    yield* validateVercelServerDeploy(config.serverDeploy, config.backend, config.runtime);
 
     yield* validateSelfBackendCompatibility(providedFlags, options, config);
     yield* validateWorkersCompatibility(providedFlags, options, config);
