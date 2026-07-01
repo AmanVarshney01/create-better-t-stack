@@ -68,8 +68,8 @@ Options:
   --install                       Install dependencies
   --no-install                    Skip installing dependencies
   --db-setup <setup>              Database setup (turso, d1, neon, supabase, prisma-postgres, planetscale, mongodb-atlas, docker, none)
-  --web-deploy <setup>            Web deployment (cloudflare, docker, none)
-  --server-deploy <setup>         Server deployment (cloudflare, docker, none)
+  --web-deploy <setup>            Web deployment (cloudflare, docker, vercel, none)
+  --server-deploy <setup>         Server deployment (cloudflare, docker, vercel, none)
   --backend <framework>           Backend framework (hono, express, fastify, elysia, convex, self, none)
   --runtime <runtime>             Runtime (bun, node, workers, none)
   --api <type>                    API type (trpc, orpc, none)

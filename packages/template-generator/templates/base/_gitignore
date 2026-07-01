@@ -42,6 +42,7 @@ lerna-debug.log*
 
 # Better-T-Stack
 .alchemy
+.vercel
 
 # Testing
 coverage

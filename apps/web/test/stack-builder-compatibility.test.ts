@@ -371,3 +371,73 @@ describe("stack builder Docker deployment compatibility", () => {
     });
   });
 });
+
+describe("stack builder Vercel deployment compatibility", () => {
+  test("allows Vercel web deploy with a web frontend", () => {
+    const stack = createStack({
+      webFrontend: ["tanstack-router"],
+      backend: "hono",
+      runtime: "bun",
+    });
+
+    expect(getDisabledReason(stack, "webDeploy", "vercel")).toBeNull();
+
+    const command = generateStackCommand({
+      ...stack,
+      webDeploy: "vercel",
+    });
+    expect(command).toContain("--web-deploy vercel");
+  });
+
+  test("allows Vercel server deploy on bun/node runtimes only", () => {
+    const bunStack = createStack({
+      backend: "hono",
+      runtime: "bun",
+    });
+    const workersStack = createStack({
+      backend: "hono",
+      runtime: "workers",
+      serverDeploy: "cloudflare",
+      database: "sqlite",
+      orm: "drizzle",
+      dbSetup: "d1",
+    });
+
+    expect(getDisabledReason(bunStack, "serverDeploy", "vercel")).toBeNull();
+    expect(getDisabledReason(workersStack, "serverDeploy", "vercel")).toBe(
+      "Vercel server deployment requires the Bun or Node runtime",
+    );
+  });
+
+  test("switches Vercel server deploy to Cloudflare when runtime becomes workers", () => {
+    const stack = createStack({
+      backend: "hono",
+      runtime: "workers",
+      serverDeploy: "vercel",
+      database: "sqlite",
+      orm: "drizzle",
+      dbSetup: "d1",
+    });
+
+    const result = analyzeStackCompatibility(stack);
+
+    expect(result.adjustedStack).toMatchObject({
+      serverDeploy: "cloudflare",
+    });
+  });
+
+  test("clears Vercel server deploy for backends without a server app", () => {
+    const stack = createStack({
+      webFrontend: ["next"],
+      backend: "self-next",
+      runtime: "none",
+      serverDeploy: "vercel",
+    });
+
+    const result = analyzeStackCompatibility(stack);
+
+    expect(result.adjustedStack).toMatchObject({
+      serverDeploy: "none",
+    });
+  });
+});

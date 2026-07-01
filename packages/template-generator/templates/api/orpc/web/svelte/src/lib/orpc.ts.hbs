@@ -15,6 +15,31 @@ export const queryClient = new QueryClient({
 	}),
 });
 
+{{#unless (eq backend "self")}}
+function getServerUrl(url: string) {
+	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+	if (!normalized.startsWith("/")) {
+		return normalized;
+	}
+
+	if (typeof window !== "undefined") {
+		return `${window.location.origin}${normalized}`;
+	}
+
+	const processEnv = (globalThis as {
+		process?: { env?: Record<string, string | undefined> };
+	}).process?.env;
+	const vercelUrl = processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL;
+	if (vercelUrl) {
+		const origin = vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`;
+		return `${origin}${normalized}`;
+	}
+
+	return `http://localhost:3000${normalized}`;
+}
+
+{{/unless}}
 export const link = new RPCLink({
 	{{#if (eq backend "self")}}
 	url: () => {
@@ -25,7 +50,7 @@ export const link = new RPCLink({
 		return `${window.location.origin}/rpc`;
 	},
 	{{else}}
-	url: `${PUBLIC_SERVER_URL}/rpc`,
+	url: `${getServerUrl(PUBLIC_SERVER_URL)}/rpc`,
 	{{/if}}
 	{{#if (eq auth "better-auth")}}
 	fetch(url, options) {

@@ -9,9 +9,21 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
   const isCloudflareWeb = webDeploy === "cloudflare";
   const isCloudflareServer = serverDeploy === "cloudflare";
   const isDockerWeb = webDeploy === "docker";
+  const isVercelWeb = webDeploy === "vercel";
+  const isVercelServer = serverDeploy === "vercel";
   const isBackendSelf = backend === "self";
 
-  if (!isCloudflareWeb && !isCloudflareServer && !isDockerWeb) return;
+  if (!isCloudflareWeb && !isCloudflareServer && !isDockerWeb && !isVercelWeb && !isVercelServer) {
+    return;
+  }
+
+  if (isVercelWeb || isVercelServer) {
+    addPackageDependency({
+      vfs,
+      packagePath: "package.json",
+      devDependencies: ["@types/node", "dotenv", "tsx", "vercel"],
+    });
+  }
 
   if (isDockerWeb) {
     const webPkgPath = "apps/web/package.json";
