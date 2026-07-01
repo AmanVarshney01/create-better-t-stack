@@ -840,6 +840,8 @@ function generateDeploymentCommands(
       `- Stop: ${packageManagerRunCmd} docker:down`,
       "",
       "Environment variables are read from each app's `.env` file (baked into web builds for public variables) and overridden in `docker-compose.yml` for container networking.",
+      "",
+      "For more details, see the guide on [Deploying with Docker Compose](https://www.better-t-stack.dev/docs/guides/docker).",
     );
   }
 
@@ -875,6 +877,8 @@ function generateDeploymentCommands(
     lines.push(
       "Vercel Services share project environment variables, but deploys do not upload local `.env` files automatically. Link the project with `vercel link`, then run the env sync command before your first deploy (otherwise the deployment starts with no env vars), or pass one-off envs with `vercel deploy -e KEY=value`.",
       `Pass Vercel CLI flags to the env sync command directly, for example: \`${packageManagerRunCmd} env:vercel:production --scope your-team\`.`,
+      "",
+      "For more details, see the guide on [Deploying to Vercel](https://www.better-t-stack.dev/docs/guides/vercel).",
     );
   }
 
