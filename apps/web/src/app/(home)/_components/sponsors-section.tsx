@@ -5,8 +5,8 @@ import { useState } from "react";
 import { FaGithub } from "react-icons/fa6";
 
 import {
-  formatSponsorUrl,
   getSponsorUrl,
+  getSponsorUrlLabel,
   isLifetimeSpecialSponsor,
   shouldShowLifetimeTotal,
 } from "@/lib/sponsor-utils";
@@ -130,7 +130,7 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
                                   className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
                                 >
                                   <Globe className="size-3" />
-                                  <span className="truncate">{formatSponsorUrl(sponsorUrl)}</span>
+                                  <span className="truncate">{getSponsorUrlLabel(entry)}</span>
                                 </a>
                               )}
                             </div>
@@ -211,7 +211,7 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
                                   className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
                                 >
                                   <Globe className="size-3" />
-                                  <span className="truncate">{formatSponsorUrl(sponsorUrl)}</span>
+                                  <span className="truncate">{getSponsorUrlLabel(entry)}</span>
                                 </a>
                               )}
                             </div>
@@ -325,7 +325,7 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
                                     className="group flex items-center gap-2 text-muted-foreground/70 text-xs transition-colors hover:text-muted-foreground"
                                   >
                                     <Globe className="size-3" />
-                                    <span className="truncate">{formatSponsorUrl(sponsorUrl)}</span>
+                                    <span className="truncate">{getSponsorUrlLabel(entry)}</span>
                                   </a>
                                 )}
                               </div>
