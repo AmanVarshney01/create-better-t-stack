@@ -157,6 +157,7 @@ export const dependencyVersionMap = {
   "@astrojs/node": "^11.0.0",
 
   alchemy: "^0.91.2",
+  vercel: "^54.18.6",
 
   dotenv: "^17.2.2",
   tsdown: "^0.21.9",

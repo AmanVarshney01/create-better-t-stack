@@ -1,0 +1,46 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+{{#if (and (eq serverDeploy "vercel") (eq runtime "bun"))}}
+  "bunVersion": "1.x",
+{{/if}}
+  "services": {
+{{#if (eq webDeploy "vercel")}}
+    "web": {
+      "root": "apps/web",
+      "framework": {{#if (includes frontend "next")}}"nextjs"{{else if (includes frontend "nuxt")}}"nuxtjs"{{else if (includes frontend "svelte")}}"sveltekit"{{else if (includes frontend "astro")}}"astro"{{else if (includes frontend "react-router")}}"react-router"{{else if (includes frontend "tanstack-start")}}"tanstack-start"{{else}}"vite"{{/if}},
+      "installCommand": "cd ../.. && {{packageManager}} install"{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}},
+      "buildCommand": "{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL=/api {{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SERVER_URL=/api {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL=/api {{else}}VITE_SERVER_URL=/api {{/if}}{{packageManager}} run build"{{/if}}
+    }{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}},{{/if}}
+{{/if}}
+{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}}
+    "server": {
+      "root": "apps/server",
+      "framework": "{{backend}}",
+      "entrypoint": "src/index.ts",
+      "installCommand": "cd ../.. && {{packageManager}} install"{{#if (eq webDeploy "vercel")}},
+      "routes": [
+        {
+          "src": "/api/(.*)",
+          "transforms": [
+            {
+              "type": "request.path",
+              "op": "set",
+              "args": "/$1"
+            }
+          ]
+        }
+      ]{{/if}}
+    }
+{{/if}}
+  },
+  "rewrites": [
+{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self"))}}
+    { "source": "/api/(.*)", "destination": { "service": "server" } },
+    { "source": "/(.*)", "destination": { "service": "web" } }
+{{else if (eq webDeploy "vercel")}}
+    { "source": "/(.*)", "destination": { "service": "web" } }
+{{else if (and (eq serverDeploy "vercel") (ne backend "self"))}}
+    { "source": "/(.*)", "destination": { "service": "server" } }
+{{/if}}
+  ]
+}

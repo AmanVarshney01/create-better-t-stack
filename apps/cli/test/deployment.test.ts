@@ -316,6 +316,27 @@ describe("Deployment Configurations", () => {
 
       expectError(result, "Cloudflare Workers runtime requires a server deployment");
     });
+
+    it("should fail with workers runtime + vercel server deploy", async () => {
+      const result = await runTRPCTest({
+        projectName: "workers-vercel-server-deploy-fail",
+        runtime: "workers",
+        serverDeploy: "vercel",
+        backend: "hono",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "'--server-deploy vercel' is not compatible with '--runtime workers'");
+    });
   });
 
   describe("Combined Web and Server Deployment", () => {
@@ -338,6 +359,224 @@ describe("Deployment Configurations", () => {
       });
 
       expectSuccess(result);
+    });
+
+    it("should generate Vercel Services for combined web and server deploys", async () => {
+      const result = await createVirtual({
+        projectName: "next-hono-vercel",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const vercelJson = files.get("vercel.json") ?? "{}";
+      const vercelConfig = JSON.parse(vercelJson) as {
+        bunVersion?: string;
+        services?: Record<
+          string,
+          {
+            root?: string;
+            framework?: string;
+            entrypoint?: string;
+            buildCommand?: string;
+            routes?: Array<Record<string, unknown>>;
+          }
+        >;
+        rewrites?: Array<{
+          source?: string;
+          destination?: string | { service?: string };
+        }>;
+      };
+      const packageJson = JSON.parse(files.get("package.json") ?? "{}") as {
+        scripts?: Record<string, string>;
+        devDependencies?: Record<string, string>;
+      };
+
+      expect(files.has("vercel.json")).toBe(true);
+      expect(files.has("vercel.ts")).toBe(false);
+      expect(vercelConfig.bunVersion).toBe("1.x");
+      expect(vercelConfig.services?.web).toMatchObject({
+        root: "apps/web",
+        framework: "nextjs",
+        buildCommand: "NEXT_PUBLIC_SERVER_URL=/api bun run build",
+      });
+      expect(vercelConfig.services?.server).toMatchObject({
+        root: "apps/server",
+        framework: "hono",
+        entrypoint: "src/index.ts",
+      });
+      expect(vercelConfig.services?.server?.routes?.[0]).toMatchObject({
+        src: "/api/(.*)",
+        transforms: [{ type: "request.path", op: "set", args: "/$1" }],
+      });
+      expect(vercelConfig.rewrites).toEqual([
+        { source: "/api/(.*)", destination: { service: "server" } },
+        { source: "/(.*)", destination: { service: "web" } },
+      ]);
+      expect(files.has("scripts/sync-vercel-env.ts")).toBe(true);
+      expect(files.has("scripts/sync-vercel-env.mjs")).toBe(false);
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain(
+        'const DEFAULT_ENVIRONMENT = "preview";',
+      );
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain('"apps/web/.env"');
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain('"apps/server/.env"');
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain('"NEXT_PUBLIC_SERVER_URL", "/api"');
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain('"CORS_ORIGIN"');
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain("LOCAL_VERCEL_BIN");
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain("firstFlagIndex");
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain('import dotenv from "dotenv"');
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain("dotenv.parse");
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain("new Map<string, string>");
+      expect(files.get("scripts/sync-vercel-env.ts")).not.toContain("function parseEnvFile");
+
+      expect(packageJson.devDependencies).not.toHaveProperty("@vercel/config");
+      expect(packageJson.devDependencies).toHaveProperty("@types/node");
+      expect(packageJson.devDependencies).toHaveProperty("dotenv");
+      expect(packageJson.devDependencies).toHaveProperty("tsx");
+      expect(packageJson.devDependencies).toHaveProperty("vercel");
+      expect(packageJson.scripts).toMatchObject({
+        "dev:vercel": "vercel dev -L",
+        "env:vercel:preview": "tsx scripts/sync-vercel-env.ts preview",
+        "env:vercel:production": "tsx scripts/sync-vercel-env.ts production",
+        "deploy:vercel": "vercel deploy",
+        "deploy:vercel:prod": "vercel deploy --prod",
+        deploy: "vercel deploy",
+      });
+      expect(files.get("packages/env/src/web.ts")).toContain("const serverUrlSchema = z.union");
+      expect(files.get("packages/env/src/server.ts")).toContain("function getVercelOrigin()");
+      expect(files.get("README.md")).toContain("### Vercel Services");
+      expect(files.get("README.md")).toContain("Sync preview env");
+      expect(files.get("README.md")).toContain("Config: `vercel.json`");
+      expect(files.get("README.md")).toContain("env:vercel:production --scope your-team");
+    });
+
+    it("should normalize relative Vercel oRPC URLs before creating RPC links", async () => {
+      const result = await createVirtual({
+        projectName: "orpc-vercel-url",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+        backend: "express",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const vercelConfig = JSON.parse(files.get("vercel.json") ?? "{}") as {
+        services?: Record<string, { buildCommand?: string }>;
+      };
+      const orpcClient = files.get("apps/web/src/utils/orpc.ts") ?? "";
+
+      expect(vercelConfig.services?.web?.buildCommand).toBe("VITE_SERVER_URL=/api bun run build");
+      expect(files.get("packages/env/src/web.ts")).toContain(
+        "Use an absolute URL or a same-origin path like /api",
+      );
+      expect(orpcClient).toContain("function getServerUrl(url: string)");
+      expect(orpcClient).toContain("window.location.origin");
+      expect(orpcClient).toContain("VERCEL_PROJECT_PRODUCTION_URL");
+      expect(orpcClient).toContain("url: `${getServerUrl(env.VITE_SERVER_URL)}/rpc`");
+    });
+
+    it("should generate Vercel web-only config for self fullstack backends", async () => {
+      const result = await createVirtual({
+        projectName: "next-self-vercel",
+        webDeploy: "vercel",
+        serverDeploy: "none",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "pnpm",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const vercelConfig = JSON.parse(files.get("vercel.json") ?? "{}") as {
+        services?: Record<string, { root?: string }>;
+        rewrites?: Array<{ source?: string; destination?: string | { service?: string } }>;
+      };
+
+      expect(files.has("vercel.ts")).toBe(false);
+      expect(vercelConfig.services?.web).toMatchObject({ root: "apps/web" });
+      expect(vercelConfig.services?.server).toBeUndefined();
+      expect(vercelConfig.rewrites).toEqual([{ source: "/(.*)", destination: { service: "web" } }]);
+    });
+
+    it("should export Elysia apps for Vercel server deployments", async () => {
+      const result = await createVirtual({
+        projectName: "elysia-vercel",
+        webDeploy: "none",
+        serverDeploy: "vercel",
+        backend: "elysia",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const serverEntry = files.get("apps/server/src/index.ts");
+
+      expect(serverEntry).toContain("const app = new Elysia()");
+      expect(serverEntry).toContain("export default app;");
+      expect(serverEntry).not.toContain(".listen(");
     });
 
     it("should wire Cloudflare web deploys to the generated server Worker URL", async () => {

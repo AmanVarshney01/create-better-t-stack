@@ -182,9 +182,24 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
 
   // Add deploy/destroy scripts when using alchemy (cloudflare deployment)
   const infraPackageName = `@${projectName}/infra`;
-  if (config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare") {
+  const hasCloudflareDeploy =
+    config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare";
+  const hasVercelDeploy = config.webDeploy === "vercel" || config.serverDeploy === "vercel";
+  if (hasCloudflareDeploy) {
     scripts.deploy = pmConfig.filter(infraPackageName, "deploy");
     scripts.destroy = pmConfig.filter(infraPackageName, "destroy");
+  }
+
+  if (hasVercelDeploy) {
+    scripts["dev:vercel"] = "vercel dev -L";
+    scripts["env:vercel:preview"] = "tsx scripts/sync-vercel-env.ts preview";
+    scripts["env:vercel:production"] = "tsx scripts/sync-vercel-env.ts production";
+    scripts["deploy:vercel"] = "vercel deploy";
+    scripts["deploy:vercel:prod"] = "vercel deploy --prod";
+
+    if (!hasCloudflareDeploy) {
+      scripts.deploy = "vercel deploy";
+    }
   }
 
   // Add compose scripts when deploying web/server as Docker containers

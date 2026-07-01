@@ -18,7 +18,15 @@ export async function processDeployTemplates(
     processTemplatesFromPrefix(vfs, templates, "deploy/docker/compose", "", config);
   }
 
-  if (config.webDeploy !== "none" && config.webDeploy !== "cloudflare") {
+  if (config.webDeploy === "vercel" || config.serverDeploy === "vercel") {
+    processTemplatesFromPrefix(vfs, templates, "deploy/vercel", "", config);
+  }
+
+  if (
+    config.webDeploy !== "none" &&
+    config.webDeploy !== "cloudflare" &&
+    config.webDeploy !== "vercel"
+  ) {
     const templateMap: Record<string, string> = {
       "tanstack-router": "react/tanstack-router",
       "tanstack-start": "react/tanstack-start",
@@ -43,7 +51,12 @@ export async function processDeployTemplates(
     }
   }
 
-  if (config.serverDeploy !== "none" && config.serverDeploy !== "cloudflare" && !isBackendSelf) {
+  if (
+    config.serverDeploy !== "none" &&
+    config.serverDeploy !== "cloudflare" &&
+    config.serverDeploy !== "vercel" &&
+    !isBackendSelf
+  ) {
     processTemplatesFromPrefix(
       vfs,
       templates,

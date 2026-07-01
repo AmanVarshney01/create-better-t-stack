@@ -95,6 +95,22 @@ import "dotenv/config";
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+{{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}
+function getVercelOrigin() {
+	const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+	if (!vercelUrl) return undefined;
+	return vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`;
+}
+
+const runtimeEnv = {
+	...process.env,
+{{#if (eq auth "better-auth")}}
+	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? getVercelOrigin(),
+{{/if}}
+	CORS_ORIGIN: process.env.CORS_ORIGIN ?? getVercelOrigin(),
+};
+
+{{/if}}
 export const env = createEnv({
 	server: {
 {{#if (ne database "none")}}
@@ -126,7 +142,7 @@ export const env = createEnv({
 		CORS_ORIGIN: z.url(),
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
-	runtimeEnv: process.env,
+	runtimeEnv: {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}runtimeEnv{{else}}process.env{{/if}},
 	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });

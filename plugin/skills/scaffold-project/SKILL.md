@@ -48,7 +48,7 @@ Use `bts_get_schema` for the authoritative, version-current list. As of this wri
 - **examples**: `todo`, `ai`, `none`
 - **packageManager**: `npm`, `pnpm`, `bun`
 - **dbSetup**: `turso`, `neon`, `prisma-postgres`, `planetscale`, `mongodb-atlas`, `supabase`, `d1`, `docker`, `none`
-- **webDeploy** / **serverDeploy**: `cloudflare`, `docker`, `none`
+- **webDeploy** / **serverDeploy**: `cloudflare`, `docker`, `vercel`, `none`
 - **directoryConflict**: `merge`, `overwrite`, `increment`, `error`
 
 ## Rules

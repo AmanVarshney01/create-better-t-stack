@@ -1264,8 +1264,31 @@ export const link = new RPCLink({
 {{else}}
 import { PUBLIC_SERVER_URL } from "astro:env/client";
 
+function getServerUrl(url: string) {
+  const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+  if (!normalized.startsWith("/")) {
+    return normalized;
+  }
+
+  if (typeof window !== "undefined") {
+    return \`\${window.location.origin}\${normalized}\`;
+  }
+
+  const processEnv = (globalThis as {
+    process?: { env?: Record<string, string | undefined> };
+  }).process?.env;
+  const vercelUrl = processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL;
+  if (vercelUrl) {
+    const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+    return \`\${origin}\${normalized}\`;
+  }
+
+  return \`http://localhost:3000\${normalized}\`;
+}
+
 export const link = new RPCLink({
-  url: \`\${PUBLIC_SERVER_URL}/rpc\`,
+  url: \`\${getServerUrl(PUBLIC_SERVER_URL)}/rpc\`,
 {{#if (eq auth "better-auth")}}
   fetch(url, options) {
     return fetch(url, {
@@ -1285,11 +1308,25 @@ import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
+function getServerUrl(url: string) {
+  const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+  if (!normalized.startsWith("/")) {
+    return normalized;
+  }
+
+  if (import.meta.server) {
+    return \`\${useRequestURL().origin}\${normalized}\`;
+  }
+
+  return \`\${window.location.origin}\${normalized}\`;
+}
+
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
   const serverUrl =
     (import.meta.server && config.serverUrl) || config.public.serverUrl;
-  const rpcUrl = \`\${serverUrl}/rpc\`;
+  const rpcUrl = \`\${getServerUrl(serverUrl)}/rpc\`;
 
   const rpcLink = new RPCLink({
     url: rpcUrl,
@@ -1417,6 +1454,31 @@ export function createQueryClient() {
 export const queryClient = createQueryClient();
 {{/unless}}
 
+{{#unless (eq backend "self")}}
+function getServerUrl(url: string) {
+	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+	if (!normalized.startsWith("/")) {
+		return normalized;
+	}
+
+	if (typeof window !== "undefined") {
+		return \`\${window.location.origin}\${normalized}\`;
+	}
+
+	const processEnv = (globalThis as {
+		process?: { env?: Record<string, string | undefined> };
+	}).process?.env;
+	const vercelUrl = processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL;
+	if (vercelUrl) {
+		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+		return \`\${origin}\${normalized}\`;
+	}
+
+	return \`http://localhost:3000\${normalized}\`;
+}
+
+{{/unless}}
 {{#if (and (includes frontend "tanstack-start") (eq backend "self"))}}
 const getORPCClient = createIsomorphicFn()
 	.server(() =>
@@ -1445,7 +1507,7 @@ const getORPCClient = createIsomorphicFn()
 export const client: RouterClient<typeof appRouter> = getORPCClient();
 {{else if (includes frontend "tanstack-start")}}
 const link = new RPCLink({
-	url: \`\${env.VITE_SERVER_URL}/rpc\`,
+	url: \`\${getServerUrl(env.VITE_SERVER_URL)}/rpc\`,
 {{#if (eq auth "clerk")}}
 	headers: async () => {
 		const token = await getClerkAuthToken();
@@ -1472,9 +1534,9 @@ export const link = new RPCLink({
 {{#if (and (eq backend "self") (includes frontend "next"))}}
 	url: \`\${typeof window !== "undefined" ? window.location.origin : "http://localhost:3001"}/api/rpc\`,
 {{else if (includes frontend "next")}}
-	url: \`\${env.NEXT_PUBLIC_SERVER_URL}/rpc\`,
+	url: \`\${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/rpc\`,
 {{else}}
-	url: \`\${env.VITE_SERVER_URL}/rpc\`,
+	url: \`\${getServerUrl(env.VITE_SERVER_URL)}/rpc\`,
 {{/if}}
 {{#if (eq auth "clerk")}}
 	headers: async () => {
@@ -1535,8 +1597,31 @@ export const queryClient = new QueryClient({
 	}),
 });
 
+function getServerUrl(url: string) {
+	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+	if (!normalized.startsWith("/")) {
+		return normalized;
+	}
+
+	if (typeof window !== "undefined") {
+		return \`\${window.location.origin}\${normalized}\`;
+	}
+
+	const processEnv = (globalThis as {
+		process?: { env?: Record<string, string | undefined> };
+	}).process?.env;
+	const vercelUrl = processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL;
+	if (vercelUrl) {
+		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+		return \`\${origin}\${normalized}\`;
+	}
+
+	return \`http://localhost:3000\${normalized}\`;
+}
+
 export const link = new RPCLink({
-	url: \`\${env.VITE_SERVER_URL}/rpc\`,
+	url: \`\${getServerUrl(env.VITE_SERVER_URL)}/rpc\`,
 {{#if (eq auth "better-auth")}}
 	fetch(url, options) {
 		return fetch(url, {
@@ -1568,6 +1653,31 @@ export const queryClient = new QueryClient({
 	}),
 });
 
+{{#unless (eq backend "self")}}
+function getServerUrl(url: string) {
+	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+	if (!normalized.startsWith("/")) {
+		return normalized;
+	}
+
+	if (typeof window !== "undefined") {
+		return \`\${window.location.origin}\${normalized}\`;
+	}
+
+	const processEnv = (globalThis as {
+		process?: { env?: Record<string, string | undefined> };
+	}).process?.env;
+	const vercelUrl = processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL;
+	if (vercelUrl) {
+		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+		return \`\${origin}\${normalized}\`;
+	}
+
+	return \`http://localhost:3000\${normalized}\`;
+}
+
+{{/unless}}
 export const link = new RPCLink({
 	{{#if (eq backend "self")}}
 	url: () => {
@@ -1578,7 +1688,7 @@ export const link = new RPCLink({
 		return \`\${window.location.origin}/rpc\`;
 	},
 	{{else}}
-	url: \`\${PUBLIC_SERVER_URL}/rpc\`,
+	url: \`\${getServerUrl(PUBLIC_SERVER_URL)}/rpc\`,
 	{{/if}}
 	{{#if (eq auth "better-auth")}}
 	fetch(url, options) {
@@ -14298,11 +14408,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 });
 {{/if}}
 
-{{#if (eq runtime "node")}}
-new Elysia({ adapter: node() })
-{{else}}
-new Elysia()
-{{/if}}
+const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
 	.use(
 		cors({
 			origin: env.CORS_ORIGIN,
@@ -14408,9 +14514,14 @@ new Elysia()
 	})
 {{/if}}
 	.get("/", () => "OK")
+{{#if (eq serverDeploy "vercel")}};
+
+export default app;
+{{else}}
 	.listen(3000, () => {
 		console.log("Server is running on http://localhost:3000");
 	});
+{{/if}}
 `],
   ["backend/server/express/src/index.ts.hbs", `import { env } from "@{{projectName}}/env/server";
 {{#if (eq api "trpc")}}
@@ -14981,15 +15092,23 @@ app.get("/", (c) => {
 {{#if (eq runtime "node")}}
 import { serve } from "@hono/node-server";
 
-serve(
-	{
-		fetch: app.fetch,
-		port: 3000,
-	},
-	(info) => {
-		console.log(\`Server is running on http://localhost:\${info.port}\`);
-	}
-);
+{{#if (eq serverDeploy "vercel")}}
+export default app;
+
+if (!process.env.VERCEL) {
+{{/if}}
+	serve(
+		{
+			fetch: app.fetch,
+			port: 3000,
+		},
+		(info) => {
+			console.log(\`Server is running on http://localhost:\${info.port}\`);
+		}
+	);
+{{#if (eq serverDeploy "vercel")}}
+}
+{{/if}}
 {{else}}
 {{#if (eq runtime "bun")}}
 export default app;
@@ -15043,6 +15162,7 @@ lerna-debug.log*
 
 # Better-T-Stack
 .alchemy
+.vercel
 
 # Testing
 coverage
@@ -16564,6 +16684,152 @@ EXPOSE 3001
 
 WORKDIR /app/apps/web
 CMD ["node", "build/index.js"]
+`],
+  ["deploy/vercel/scripts/sync-vercel-env.ts.hbs", `import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import dotenv from "dotenv";
+
+const DEFAULT_ENVIRONMENT = "preview";
+const VALID_ENVIRONMENTS = new Set(["development", "preview", "production"]);
+const VERCEL_BIN = process.platform === "win32" ? "vercel.cmd" : "vercel";
+const LOCAL_VERCEL_BIN = join(process.cwd(), "node_modules", ".bin", VERCEL_BIN);
+const VERCEL_COMMAND = existsSync(LOCAL_VERCEL_BIN) ? LOCAL_VERCEL_BIN : VERCEL_BIN;
+const DEFAULT_FILES = [
+{{#if (eq webDeploy "vercel")}}
+	"apps/web/.env",
+{{/if}}
+{{#if (and (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+	"apps/server/.env",
+{{/if}}
+];
+const SKIP_KEYS = new Set([
+{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+	"BETTER_AUTH_URL",
+	"CORS_ORIGIN",
+	"NODE_ENV",
+{{/if}}
+]);
+const OVERRIDE_KEYS = new Map([
+{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+	["NEXT_PUBLIC_SERVER_URL", "/api"],
+	["NUXT_PUBLIC_SERVER_URL", "/api"],
+	["PUBLIC_SERVER_URL", "/api"],
+	["VITE_SERVER_URL", "/api"],
+{{/if}}
+]);
+
+const args = process.argv.slice(2);
+const separatorIndex = args.indexOf("--");
+const scriptArgs = separatorIndex === -1 ? args : args.slice(0, separatorIndex);
+const forwardedArgs = separatorIndex === -1 ? [] : args.slice(separatorIndex + 1);
+
+const environment =
+	scriptArgs[0] && VALID_ENVIRONMENTS.has(scriptArgs[0]) ? scriptArgs[0] : DEFAULT_ENVIRONMENT;
+const remainingArgs = scriptArgs.slice(VALID_ENVIRONMENTS.has(scriptArgs[0] ?? "") ? 1 : 0);
+const firstFlagIndex = remainingArgs.findIndex((arg) => arg.startsWith("-"));
+const files = firstFlagIndex === -1 ? remainingArgs : remainingArgs.slice(0, firstFlagIndex);
+const vercelArgs = [
+	...(firstFlagIndex === -1 ? [] : remainingArgs.slice(firstFlagIndex)),
+	...forwardedArgs,
+];
+const envFiles = files.length > 0 ? files : DEFAULT_FILES;
+
+if (envFiles.length === 0) {
+	console.log("No env files configured for this Vercel stack.");
+	process.exit(0);
+}
+
+const env = new Map<string, string>();
+
+for (const file of envFiles) {
+	if (!existsSync(file)) {
+		console.warn(\`Skipping missing env file: \${file}\`);
+		continue;
+	}
+
+	for (const [key, value] of Object.entries(dotenv.parse(readFileSync(file, "utf8")))) {
+		if (SKIP_KEYS.has(key)) continue;
+		env.set(key, OVERRIDE_KEYS.get(key) ?? value);
+	}
+}
+
+if (env.size === 0) {
+	console.log("No Vercel env vars found to sync.");
+	process.exit(0);
+}
+
+console.log(\`Syncing \${env.size} env var(s) to Vercel \${environment}.\`);
+for (const [key, value] of env.entries()) {
+	const result = spawnSync(
+		VERCEL_COMMAND,
+		["env", "add", key, environment, "--force", "--yes", ...vercelArgs],
+		{
+			input: \`\${value}\\n\`,
+			stdio: ["pipe", "inherit", "inherit"],
+			encoding: "utf8",
+		},
+	);
+
+	if (result.error) {
+		console.error(\`Failed to sync \${key}: \${result.error.message}\`);
+		process.exit(1);
+	}
+
+	if (result.status !== 0) {
+		console.error(\`Failed to sync \${key}\`);
+		process.exit(result.status ?? 1);
+	}
+}
+
+console.log("Vercel env sync complete. Redeploy for changes to take effect.");
+`],
+  ["deploy/vercel/vercel.json.hbs", `{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+{{#if (and (eq serverDeploy "vercel") (eq runtime "bun"))}}
+  "bunVersion": "1.x",
+{{/if}}
+  "services": {
+{{#if (eq webDeploy "vercel")}}
+    "web": {
+      "root": "apps/web",
+      "framework": {{#if (includes frontend "next")}}"nextjs"{{else if (includes frontend "nuxt")}}"nuxtjs"{{else if (includes frontend "svelte")}}"sveltekit"{{else if (includes frontend "astro")}}"astro"{{else if (includes frontend "react-router")}}"react-router"{{else if (includes frontend "tanstack-start")}}"tanstack-start"{{else}}"vite"{{/if}},
+      "installCommand": "cd ../.. && {{packageManager}} install"{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}},
+      "buildCommand": "{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL=/api {{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SERVER_URL=/api {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL=/api {{else}}VITE_SERVER_URL=/api {{/if}}{{packageManager}} run build"{{/if}}
+    }{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}},{{/if}}
+{{/if}}
+{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}}
+    "server": {
+      "root": "apps/server",
+      "framework": "{{backend}}",
+      "entrypoint": "src/index.ts",
+      "installCommand": "cd ../.. && {{packageManager}} install"{{#if (eq webDeploy "vercel")}},
+      "routes": [
+        {
+          "src": "/api/(.*)",
+          "transforms": [
+            {
+              "type": "request.path",
+              "op": "set",
+              "args": "/$1"
+            }
+          ]
+        }
+      ]{{/if}}
+    }
+{{/if}}
+  },
+  "rewrites": [
+{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self"))}}
+    { "source": "/api/(.*)", "destination": { "service": "server" } },
+    { "source": "/(.*)", "destination": { "service": "web" } }
+{{else if (eq webDeploy "vercel")}}
+    { "source": "/(.*)", "destination": { "service": "web" } }
+{{else if (and (eq serverDeploy "vercel") (ne backend "self"))}}
+    { "source": "/(.*)", "destination": { "service": "server" } }
+{{/if}}
+  ]
+}
 `],
   ["examples/ai/convex/packages/backend/convex/agent.ts.hbs", `import { Agent } from "@convex-dev/agent";
 import { google } from "@ai-sdk/google";
@@ -25293,19 +25559,19 @@ declare module "cloudflare:workers" {
   ["extras/pnpm-workspace.yaml.hbs", `packages:
   - "apps/*"
   - "packages/*"
-{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "next") (includes frontend "nuxt"))}}
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (eq webDeploy "vercel") (eq serverDeploy "vercel") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "next") (includes frontend "nuxt"))}}
 
 # pnpm 11 blocks dependency lifecycle scripts unless they are approved here.
 # Entries are scoped to packages this generated stack can pull in.
 allowBuilds:
-{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "nuxt"))}}
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (eq webDeploy "vercel") (eq serverDeploy "vercel") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "nuxt"))}}
   esbuild: true
 {{/if}}
 {{#if (includes frontend "nuxt")}}
   "@parcel/watcher": true
   vue-demi: true
 {{/if}}
-{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (includes addons "pwa") (includes frontend "next"))}}
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq webDeploy "vercel") (includes addons "pwa") (includes frontend "next"))}}
   sharp: true
 {{/if}}
 {{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
@@ -32640,6 +32906,22 @@ import "dotenv/config";
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+{{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}
+function getVercelOrigin() {
+	const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+	if (!vercelUrl) return undefined;
+	return vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+}
+
+const runtimeEnv = {
+	...process.env,
+{{#if (eq auth "better-auth")}}
+	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? getVercelOrigin(),
+{{/if}}
+	CORS_ORIGIN: process.env.CORS_ORIGIN ?? getVercelOrigin(),
+};
+
+{{/if}}
 export const env = createEnv({
 	server: {
 {{#if (ne database "none")}}
@@ -32671,7 +32953,7 @@ export const env = createEnv({
 		CORS_ORIGIN: z.url(),
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
-	runtimeEnv: process.env,
+	runtimeEnv: {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}runtimeEnv{{else}}process.env{{/if}},
 	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });
@@ -32688,6 +32970,13 @@ import { createEnv } from "@t3-oss/env-core";
 {{/if}}
 import { z } from "zod";
 
+{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+const serverUrlSchema = z.union([
+	z.url(),
+	z.string().regex(/^\\/(?!\\/)/, "Use an absolute URL or a same-origin path like /api"),
+]);
+
+{{/if}}
 {{#if (eq backend "convex")}}
 const convexUrlSchema = (exampleHost: string) =>
 	z.url().refine((url) => new URL(url).hostname !== exampleHost, {
@@ -32773,7 +33062,7 @@ export const env = createEnv({
 {{else if (ne backend "none")}}
 {{#if (includes frontend "next")}}
 	client: {
-		NEXT_PUBLIC_SERVER_URL: z.url(),
+		NEXT_PUBLIC_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
@@ -32786,18 +33075,18 @@ export const env = createEnv({
 	},
 {{else if (includes frontend "nuxt")}}
 	client: {
-		NUXT_PUBLIC_SERVER_URL: z.url(),
+		NUXT_PUBLIC_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 	},
 {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
 	clientPrefix: "PUBLIC_",
 	client: {
-		PUBLIC_SERVER_URL: z.url(),
+		PUBLIC_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 	},
 	runtimeEnv: (import.meta as any).env,
 {{else}}
 	clientPrefix: "VITE_",
 	client: {
-		VITE_SERVER_URL: z.url(),
+		VITE_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
@@ -35261,4 +35550,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 506;
+export const TEMPLATE_COUNT = 508;

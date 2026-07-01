@@ -49,11 +49,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 });
 {{/if}}
 
-{{#if (eq runtime "node")}}
-new Elysia({ adapter: node() })
-{{else}}
-new Elysia()
-{{/if}}
+const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
 	.use(
 		cors({
 			origin: env.CORS_ORIGIN,
@@ -159,6 +155,11 @@ new Elysia()
 	})
 {{/if}}
 	.get("/", () => "OK")
+{{#if (eq serverDeploy "vercel")}};
+
+export default app;
+{{else}}
 	.listen(3000, () => {
 		console.log("Server is running on http://localhost:3000");
 	});
+{{/if}}

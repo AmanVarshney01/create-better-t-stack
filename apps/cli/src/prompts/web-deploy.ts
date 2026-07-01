@@ -30,6 +30,12 @@ function getDeploymentDisplay(deployment: WebDeploy): {
       hint: "Self-host with a Dockerfile and docker-compose.yml",
     };
   }
+  if (deployment === "vercel") {
+    return {
+      label: "Vercel",
+      hint: "Deploy to Vercel with Services",
+    };
+  }
   return {
     label: deployment,
     hint: `Add ${deployment} deployment`,
@@ -53,7 +59,7 @@ export async function getDeploymentChoice(
     return "cloudflare";
   }
 
-  const availableDeployments = ["cloudflare", "docker", "none"];
+  const availableDeployments = ["cloudflare", "docker", "vercel", "none"];
 
   const options: DeploymentOption[] = availableDeployments.map((deploy) => {
     const { label, hint } = getDeploymentDisplay(deploy as WebDeploy);
@@ -85,10 +91,12 @@ export async function getDeploymentToAdd(frontend: Frontend[], existingDeploymen
     return "none";
   }
 
-  const options: DeploymentOption[] = (["cloudflare", "docker"] as const).map((deploy) => {
-    const { label, hint } = getDeploymentDisplay(deploy);
-    return { value: deploy, label, hint };
-  });
+  const options: DeploymentOption[] = (["cloudflare", "docker", "vercel"] as const).map(
+    (deploy) => {
+      const { label, hint } = getDeploymentDisplay(deploy);
+      return { value: deploy, label, hint };
+    },
+  );
 
   options.push({
     value: "none",
