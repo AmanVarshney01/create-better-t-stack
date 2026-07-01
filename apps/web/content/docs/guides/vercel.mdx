@@ -227,6 +227,12 @@ Synced variables are stored as Sensitive and cannot be read back. They still wor
 
 With a server-only deployment your web app lives on a different domain, so the runtime-derived `CORS_ORIGIN` (the server's own origin) is wrong. Set `CORS_ORIGIN` to your web app's URL in `apps/server/.env` and re-sync.
 
+### SSR RPC calls return 401 on preview deployments
+
+Browser-side RPC always works — it calls the same origin the page was served from. But **server-side** RPC (SSR frameworks like Next.js or TanStack Start) reconstructs an absolute URL from `VERCEL_URL`, which routes through the public deployment URL. With [Deployment Protection](https://vercel.com/docs/deployment-protection) enabled (Standard Protection is Vercel's default), preview deployment URLs require authentication, so those server-to-server fetches get a 401. Production is unaffected — the production domain is not protected.
+
+Workarounds: set a [Protection Bypass for Automation](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation) secret and send it from server-side fetches, relax protection for previews in the project settings, or avoid server-side RPC on preview deployments. [Service bindings](https://vercel.com/docs/services/bindings) (private service-to-service URLs) are the long-term fix and are on the roadmap for this template.
+
 ### The browser calls `/api` but gets the web app's 404
 
 Check that `vercel.json` still contains both rewrites in order — `/api/(.*)` to the server service must come before the catch-all. The dry-run (`bun deploy:vercel:check`) shows what Vercel detected.
