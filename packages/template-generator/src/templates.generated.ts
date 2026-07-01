@@ -1278,7 +1278,10 @@ function getServerUrl(url: string) {
   const processEnv = (globalThis as {
     process?: { env?: Record<string, string | undefined> };
   }).process?.env;
-  const vercelUrl = processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL;
+  const vercelUrl =
+    processEnv?.VERCEL_ENV === "production"
+      ? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
+      : (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
   if (vercelUrl) {
     const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
     return \`\${origin}\${normalized}\`;
@@ -1469,7 +1472,10 @@ function getServerUrl(url: string) {
 	const processEnv = (globalThis as {
 		process?: { env?: Record<string, string | undefined> };
 	}).process?.env;
-	const vercelUrl = processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL;
+	const vercelUrl =
+		processEnv?.VERCEL_ENV === "production"
+			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
+			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
 	if (vercelUrl) {
 		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
 		return \`\${origin}\${normalized}\`;
@@ -1611,7 +1617,10 @@ function getServerUrl(url: string) {
 	const processEnv = (globalThis as {
 		process?: { env?: Record<string, string | undefined> };
 	}).process?.env;
-	const vercelUrl = processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL;
+	const vercelUrl =
+		processEnv?.VERCEL_ENV === "production"
+			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
+			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
 	if (vercelUrl) {
 		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
 		return \`\${origin}\${normalized}\`;
@@ -1668,7 +1677,10 @@ function getServerUrl(url: string) {
 	const processEnv = (globalThis as {
 		process?: { env?: Record<string, string | undefined> };
 	}).process?.env;
-	const vercelUrl = processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL;
+	const vercelUrl =
+		processEnv?.VERCEL_ENV === "production"
+			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
+			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
 	if (vercelUrl) {
 		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
 		return \`\${origin}\${normalized}\`;
@@ -14517,6 +14529,14 @@ const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}ne
 {{#if (eq serverDeploy "vercel")}};
 
 export default app;
+
+// Elysia's default export is not auto-served by Bun or Node, so start a local
+// server outside Vercel while still exporting the app for Vercel functions.
+if (!process.env.VERCEL) {
+	app.listen(3000, () => {
+		console.log("Server is running on http://localhost:3000");
+	});
+}
 {{else}}
 	.listen(3000, () => {
 		console.log("Server is running on http://localhost:3000");
@@ -16727,12 +16747,19 @@ const forwardedArgs = separatorIndex === -1 ? [] : args.slice(separatorIndex + 1
 const environment =
 	scriptArgs[0] && VALID_ENVIRONMENTS.has(scriptArgs[0]) ? scriptArgs[0] : DEFAULT_ENVIRONMENT;
 const remainingArgs = scriptArgs.slice(VALID_ENVIRONMENTS.has(scriptArgs[0] ?? "") ? 1 : 0);
-const firstFlagIndex = remainingArgs.findIndex((arg) => arg.startsWith("-"));
-const files = firstFlagIndex === -1 ? remainingArgs : remainingArgs.slice(0, firstFlagIndex);
-const vercelArgs = [
-	...(firstFlagIndex === -1 ? [] : remainingArgs.slice(firstFlagIndex)),
-	...forwardedArgs,
-];
+// Split remaining args into env-file paths and passthrough Vercel CLI flags.
+// A bare token counts as a file only when it exists on disk, so flags and their
+// values (e.g. \`--scope my-team\`) forward correctly regardless of argument order.
+const files: string[] = [];
+const passthroughArgs: string[] = [];
+for (const arg of remainingArgs) {
+	if (!arg.startsWith("-") && existsSync(arg)) {
+		files.push(arg);
+	} else {
+		passthroughArgs.push(arg);
+	}
+}
+const vercelArgs = [...passthroughArgs, ...forwardedArgs];
 const envFiles = files.length > 0 ? files : DEFAULT_FILES;
 
 if (envFiles.length === 0) {
@@ -16763,7 +16790,7 @@ console.log(\`Syncing \${env.size} env var(s) to Vercel \${environment}.\`);
 for (const [key, value] of env.entries()) {
 	const result = spawnSync(
 		VERCEL_COMMAND,
-		["env", "add", key, environment, "--force", "--yes", ...vercelArgs],
+		["env", "add", key, environment, "--force", "--yes", "--non-interactive", ...vercelArgs],
 		{
 			input: \`\${value}\\n\`,
 			stdio: ["pipe", "inherit", "inherit"],
@@ -25618,6 +25645,8 @@ pnpm-debug.log*
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, envField } from "astro/config";
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+{{else if (eq webDeploy "vercel")}}
+import vercel from "@astrojs/vercel";
 {{else}}
 import node from "@astrojs/node";
 {{/if}}
@@ -25626,6 +25655,9 @@ import node from "@astrojs/node";
 export default defineConfig({
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
   output: "static",
+{{else if (eq webDeploy "vercel")}}
+  output: "server",
+  adapter: vercel(),
 {{else}}
   output: "server",
   adapter: node({ mode: "standalone" }),
@@ -32908,7 +32940,10 @@ import { z } from "zod";
 
 {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}
 function getVercelOrigin() {
-	const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+	const vercelUrl =
+		process.env.VERCEL_ENV === "production"
+			? (process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL)
+			: (process.env.VERCEL_URL ?? process.env.VERCEL_PROJECT_PRODUCTION_URL);
 	if (!vercelUrl) return undefined;
 	return vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
 }

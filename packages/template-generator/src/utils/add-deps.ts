@@ -155,6 +155,7 @@ export const dependencyVersionMap = {
   "@cloudflare/workers-types": "^4.20260621.1",
   "@astrojs/cloudflare": "^14.0.1",
   "@astrojs/node": "^11.0.0",
+  "@astrojs/vercel": "^11.0.1",
 
   alchemy: "^0.91.2",
   vercel: "^54.18.6",

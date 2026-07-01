@@ -97,7 +97,10 @@ import { z } from "zod";
 
 {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}
 function getVercelOrigin() {
-	const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+	const vercelUrl =
+		process.env.VERCEL_ENV === "production"
+			? (process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL)
+			: (process.env.VERCEL_URL ?? process.env.VERCEL_PROJECT_PRODUCTION_URL);
 	if (!vercelUrl) return undefined;
 	return vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`;
 }

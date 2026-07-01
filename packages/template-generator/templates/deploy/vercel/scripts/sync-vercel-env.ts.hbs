@@ -40,12 +40,19 @@ const forwardedArgs = separatorIndex === -1 ? [] : args.slice(separatorIndex + 1
 const environment =
 	scriptArgs[0] && VALID_ENVIRONMENTS.has(scriptArgs[0]) ? scriptArgs[0] : DEFAULT_ENVIRONMENT;
 const remainingArgs = scriptArgs.slice(VALID_ENVIRONMENTS.has(scriptArgs[0] ?? "") ? 1 : 0);
-const firstFlagIndex = remainingArgs.findIndex((arg) => arg.startsWith("-"));
-const files = firstFlagIndex === -1 ? remainingArgs : remainingArgs.slice(0, firstFlagIndex);
-const vercelArgs = [
-	...(firstFlagIndex === -1 ? [] : remainingArgs.slice(firstFlagIndex)),
-	...forwardedArgs,
-];
+// Split remaining args into env-file paths and passthrough Vercel CLI flags.
+// A bare token counts as a file only when it exists on disk, so flags and their
+// values (e.g. `--scope my-team`) forward correctly regardless of argument order.
+const files: string[] = [];
+const passthroughArgs: string[] = [];
+for (const arg of remainingArgs) {
+	if (!arg.startsWith("-") && existsSync(arg)) {
+		files.push(arg);
+	} else {
+		passthroughArgs.push(arg);
+	}
+}
+const vercelArgs = [...passthroughArgs, ...forwardedArgs];
 const envFiles = files.length > 0 ? files : DEFAULT_FILES;
 
 if (envFiles.length === 0) {
@@ -76,7 +83,7 @@ console.log(`Syncing ${env.size} env var(s) to Vercel ${environment}.`);
 for (const [key, value] of env.entries()) {
 	const result = spawnSync(
 		VERCEL_COMMAND,
-		["env", "add", key, environment, "--force", "--yes", ...vercelArgs],
+		["env", "add", key, environment, "--force", "--yes", "--non-interactive", ...vercelArgs],
 		{
 			input: `${value}\n`,
 			stdio: ["pipe", "inherit", "inherit"],

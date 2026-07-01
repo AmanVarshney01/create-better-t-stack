@@ -776,7 +776,8 @@ function generateScriptsList(
 - \`${packageManagerRunCmd} env:vercel:preview\`: Sync local env files to the Vercel preview environment
 - \`${packageManagerRunCmd} env:vercel:production\`: Sync local env files to the Vercel production environment
 - \`${packageManagerRunCmd} deploy:vercel\`: Create a Vercel preview deployment
-- \`${packageManagerRunCmd} deploy:vercel:prod\`: Deploy to Vercel production`;
+- \`${packageManagerRunCmd} deploy:vercel:prod\`: Deploy to Vercel production
+- \`${packageManagerRunCmd} deploy:vercel:check\`: Dry-run a deploy to preview framework detection and included files without uploading`;
   }
 
   return scripts;
@@ -856,9 +857,11 @@ function generateDeploymentCommands(
       "",
       `- Target: ${targetLabel}`,
       "- Config: `vercel.json`",
+      "- Link the project first: `vercel link`",
       `- Local Vercel dev: ${packageManagerRunCmd} dev:vercel`,
       `- Sync preview env: ${packageManagerRunCmd} env:vercel:preview`,
       `- Sync production env: ${packageManagerRunCmd} env:vercel:production`,
+      `- Dry-run check (no upload): ${packageManagerRunCmd} deploy:vercel:check`,
       `- Preview deploy: ${packageManagerRunCmd} deploy:vercel`,
       `- Production deploy: ${packageManagerRunCmd} deploy:vercel:prod`,
     );
@@ -870,7 +873,7 @@ function generateDeploymentCommands(
     }
 
     lines.push(
-      "Vercel Services share project environment variables, but deploys do not upload local `.env` files automatically. Run the env sync command after linking the project, or pass one-off envs with `vercel deploy -e KEY=value`.",
+      "Vercel Services share project environment variables, but deploys do not upload local `.env` files automatically. Link the project with `vercel link`, then run the env sync command before your first deploy (otherwise the deployment starts with no env vars), or pass one-off envs with `vercel deploy -e KEY=value`.",
       `Pass Vercel CLI flags to the env sync command directly, for example: \`${packageManagerRunCmd} env:vercel:production --scope your-team\`.`,
     );
   }
