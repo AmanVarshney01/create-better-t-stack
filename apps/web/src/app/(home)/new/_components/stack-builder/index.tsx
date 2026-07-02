@@ -6,16 +6,10 @@ import {
   ChevronDown,
   ClipboardCopy,
   FolderTree,
-  Settings,
   Terminal,
 } from "lucide-react";
-import { startTransition } from "react";
+import { startTransition, useState } from "react";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,11 +18,9 @@ import type { Sponsor } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 import { ActionButtons } from "../action-buttons";
-import { PresetDropdown } from "../preset-dropdown";
 import { PreviewPanel } from "../preview-panel";
-import { ShareButton } from "../share-button";
 import { SpecialSponsorsPanel } from "../special-sponsors-panel";
-import { YoloToggle } from "../yolo-toggle";
+import { CategoryNav, scrollToCategorySection } from "./category-nav";
 import { SelectedStackBadges } from "./selected-stack-badges";
 import { TechCategories } from "./tech-categories";
 import { useStackBuilder } from "./use-stack-builder";
@@ -40,6 +32,7 @@ type StackBuilderProps = {
 export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
   const {
     applyPreset,
+    categoryProgress,
     command,
     compatibilityAnalysis,
     copied,
@@ -67,6 +60,23 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
   const effectiveStack = compatibilityAnalysis.adjustedStack || stack;
   const desktopBuildNote = getDesktopBuildNote(effectiveStack);
   const displayCommand = formatStackCommandForDisplay(command);
+  const [commandExpanded, setCommandExpanded] = useState(false);
+  const isCommandMultiline = displayCommand !== command;
+
+  const actionButtons = (
+    <ActionButtons
+      onReset={resetStack}
+      onRandom={getRandomStack}
+      onSave={saveCurrentStack}
+      onLoad={loadSavedStack}
+      hasSavedStack={!!lastSavedStack}
+      onApplyPreset={applyPreset}
+      stackUrl={getStackUrl()}
+      stackState={effectiveStack}
+      yolo={stack.yolo === "true"}
+      onYoloToggle={(yolo) => setStack({ yolo })}
+    />
+  );
 
   return (
     <TooltipProvider>
@@ -100,9 +110,14 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
               </button>
             </div>
           </div>
+          {mobileTab === "build" && (
+            <div className="mt-2">
+              <CategoryNav progress={categoryProgress} idPrefix="section-mobile" />
+            </div>
+          )}
         </div>
 
-        <div className="hidden h-full flex-1 grid-cols-[24rem_minmax(0,1fr)] overflow-hidden border-border sm:grid">
+        <div className="hidden h-full flex-1 grid-cols-[19rem_minmax(0,1fr)] overflow-hidden border-border sm:grid lg:grid-cols-[24rem_minmax(0,1fr)]">
           <aside className="flex min-h-0 flex-col overflow-hidden border-border/50 border-r bg-fd-background">
             <ScrollArea className="min-h-0 flex-1">
               <div className="p-2">
@@ -119,6 +134,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                           setStack({ projectName: event.target.value });
                         }}
                         aria-invalid={!!projectNameError}
+                        aria-describedby={projectNameError ? "project-name-error" : undefined}
                         className={cn(
                           "builder-focus-ring w-full rounded-lg px-2.5 py-1.5 font-mono text-sm focus:outline-none",
                           projectNameError
@@ -128,7 +144,9 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                         placeholder="my-better-t-app"
                       />
                       {projectNameError && (
-                        <p className="mt-1 text-destructive text-xs">{projectNameError}</p>
+                        <p id="project-name-error" className="mt-1 text-destructive text-xs">
+                          {projectNameError}
+                        </p>
                       )}
                     </label>
                   </section>
@@ -138,24 +156,42 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                       <p className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
                         CLI Command
                       </p>
-                      <button
-                        type="button"
-                        onClick={copyToClipboard}
-                        className={cn(
-                          "builder-focus-ring flex items-center gap-1 rounded-md px-2 py-1 font-mono text-[11px] uppercase transition-colors",
-                          copied
-                            ? "bg-primary/14 text-primary"
-                            : "bg-muted/20 text-muted-foreground hover:bg-muted/35 hover:text-foreground",
+                      <div className="flex items-center gap-1">
+                        {isCommandMultiline && (
+                          <button
+                            type="button"
+                            onClick={() => setCommandExpanded((prev) => !prev)}
+                            className="builder-focus-ring flex items-center gap-1 rounded-md bg-muted/20 px-2 py-1 font-mono text-[11px] text-muted-foreground uppercase transition-colors hover:bg-muted/35 hover:text-foreground"
+                            title={commandExpanded ? "Collapse command" : "Show full command"}
+                          >
+                            <ChevronDown
+                              className={cn(
+                                "h-3 w-3 shrink-0 transition-transform",
+                                commandExpanded && "rotate-180",
+                              )}
+                            />
+                            {commandExpanded ? "Less" : "Flags"}
+                          </button>
                         )}
-                        title={copied ? "Copied!" : "Copy command"}
-                      >
-                        {copied ? (
-                          <Check className="h-3 w-3 shrink-0" />
-                        ) : (
-                          <ClipboardCopy className="h-3 w-3 shrink-0" />
-                        )}
-                        {copied ? "Copied" : "Copy"}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={copyToClipboard}
+                          className={cn(
+                            "builder-focus-ring flex items-center gap-1 rounded-md px-2 py-1 font-mono text-[11px] uppercase transition-colors",
+                            copied
+                              ? "bg-primary/14 text-primary"
+                              : "bg-muted/20 text-muted-foreground hover:bg-muted/35 hover:text-foreground",
+                          )}
+                          title={copied ? "Copied!" : "Copy command"}
+                        >
+                          {copied ? (
+                            <Check className="h-3 w-3 shrink-0" />
+                          ) : (
+                            <ClipboardCopy className="h-3 w-3 shrink-0" />
+                          )}
+                          {copied ? "Copied" : "Copy"}
+                        </button>
+                      </div>
                     </div>
                     <div
                       role="button"
@@ -171,11 +207,14 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                       title="Click to copy command"
                       className="builder-focus-ring cursor-pointer rounded-lg bg-muted/20 px-2.5 py-2"
                     >
-                      <div className="flex items-start gap-2">
-                        <code className="block whitespace-pre-wrap break-words font-mono text-muted-foreground text-xs">
-                          {displayCommand}
-                        </code>
-                      </div>
+                      <code
+                        className={cn(
+                          "block font-mono text-muted-foreground text-xs",
+                          commandExpanded ? "whitespace-pre-wrap break-words" : "truncate",
+                        )}
+                      >
+                        {commandExpanded ? displayCommand : command}
+                      </code>
                     </div>
                   </section>
 
@@ -188,7 +227,18 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                         {selectedCount} picks
                       </span>
                     </div>
-                    <SelectedStackBadges stack={stack} onRemove={removeSelectedTech} />
+                    <SelectedStackBadges
+                      stack={stack}
+                      onRemove={removeSelectedTech}
+                      onJump={(category) => {
+                        if (viewMode !== "command") {
+                          startTransition(() => {
+                            setViewMode("command");
+                          });
+                        }
+                        scrollToCategorySection("section", category);
+                      }}
+                    />
                   </section>
 
                   {compatibilityAnalysis.changes.length > 0 && (
@@ -228,42 +278,14 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
               <div className="rounded-2xl bg-fd-background/80 p-2">
                 <SpecialSponsorsPanel sponsors={specialSponsors} />
                 {specialSponsors.length > 0 ? <div className="my-2 h-px bg-border/25" /> : null}
-                <ActionButtons
-                  onReset={resetStack}
-                  onRandom={getRandomStack}
-                  onSave={saveCurrentStack}
-                  onLoad={loadSavedStack}
-                  hasSavedStack={!!lastSavedStack}
-                />
-
-                <div className="mt-2 grid grid-cols-3 gap-1.5">
-                  <ShareButton stackUrl={getStackUrl()} stackState={effectiveStack} />
-                  <PresetDropdown onApplyPreset={applyPreset} />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      render={
-                        <button
-                          type="button"
-                          className="builder-focus-ring flex items-center justify-center gap-1.5 rounded-md bg-muted/20 px-2 py-1.5 font-mono font-medium text-muted-foreground text-xs transition-colors hover:bg-muted/35 hover:text-foreground"
-                        />
-                      }
-                    >
-                      <Settings className="h-3 w-3" />
-                      <span className="sr-only">Settings</span>
-                      <ChevronDown className="h-3 w-3" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-64 bg-fd-background">
-                      <YoloToggle stack={stack} onToggle={(yolo) => setStack({ yolo })} />
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                {actionButtons}
               </div>
             </div>
           </aside>
 
           <section className="flex min-h-0 flex-col overflow-hidden">
-            <div className="sticky top-0 z-10 flex items-center gap-2 border-border border-b bg-fd-background px-3 py-2">
-              <div className="flex items-center gap-1 rounded-md bg-muted/20 p-1">
+            <div className="sticky top-0 z-10 flex flex-col gap-2 border-border border-b bg-fd-background px-3 py-2">
+              <div className="flex w-fit items-center gap-1 rounded-md bg-muted/20 p-1">
                 <button
                   type="button"
                   onClick={() => {
@@ -299,10 +321,13 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                   Preview
                 </button>
               </div>
+              {viewMode === "command" && (
+                <CategoryNav progress={categoryProgress} idPrefix="section" />
+              )}
             </div>
 
             {viewMode === "command" ? (
-              <div ref={scrollAreaRef} className="h-full">
+              <div ref={scrollAreaRef} className="min-h-0 flex-1">
                 <ScrollArea className="h-full overflow-hidden scroll-smooth">
                   <main className="p-2 sm:p-4">
                     <TechCategories
@@ -342,6 +367,9 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                           setStack({ projectName: event.target.value });
                         }}
                         aria-invalid={!!projectNameError}
+                        aria-describedby={
+                          projectNameError ? "project-name-error-mobile" : undefined
+                        }
                         className={cn(
                           "builder-focus-ring w-full rounded-lg border bg-background/75 px-2.5 py-1.5 font-mono text-sm focus:outline-none",
                           projectNameError
@@ -351,7 +379,9 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                         placeholder="my-better-t-app"
                       />
                       {projectNameError && (
-                        <p className="mt-1 text-destructive text-xs">{projectNameError}</p>
+                        <p id="project-name-error-mobile" className="mt-1 text-destructive text-xs">
+                          {projectNameError}
+                        </p>
                       )}
                     </label>
 
@@ -360,21 +390,39 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                         <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide">
                           CLI Command
                         </span>
-                        <span
-                          className={cn(
-                            "flex items-center gap-1 rounded-md px-2 py-1 font-mono text-[11px] uppercase",
-                            copied
-                              ? "bg-primary/14 text-primary"
-                              : "bg-muted/20 text-muted-foreground",
+                        <div className="flex items-center gap-1">
+                          {isCommandMultiline && (
+                            <button
+                              type="button"
+                              onClick={() => setCommandExpanded((prev) => !prev)}
+                              className="builder-focus-ring flex items-center gap-1 rounded-md bg-muted/20 px-2 py-1 font-mono text-[11px] text-muted-foreground uppercase"
+                              title={commandExpanded ? "Collapse command" : "Show full command"}
+                            >
+                              <ChevronDown
+                                className={cn(
+                                  "h-3 w-3 shrink-0 transition-transform",
+                                  commandExpanded && "rotate-180",
+                                )}
+                              />
+                              {commandExpanded ? "Less" : "Flags"}
+                            </button>
                           )}
-                        >
-                          {copied ? (
-                            <Check className="h-3 w-3 shrink-0" />
-                          ) : (
-                            <ClipboardCopy className="h-3 w-3 shrink-0" />
-                          )}
-                          {copied ? "Copied" : "Tap to copy"}
-                        </span>
+                          <span
+                            className={cn(
+                              "flex items-center gap-1 rounded-md px-2 py-1 font-mono text-[11px] uppercase",
+                              copied
+                                ? "bg-primary/14 text-primary"
+                                : "bg-muted/20 text-muted-foreground",
+                            )}
+                          >
+                            {copied ? (
+                              <Check className="h-3 w-3 shrink-0" />
+                            ) : (
+                              <ClipboardCopy className="h-3 w-3 shrink-0" />
+                            )}
+                            {copied ? "Copied" : "Tap to copy"}
+                          </span>
+                        </div>
                       </div>
                       <div
                         role="button"
@@ -393,9 +441,16 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                         aria-label="Copy command"
                         title="Click to copy command"
                       >
-                        <div className="flex items-start gap-1.5">
+                        <div className="flex min-w-0 items-start gap-1.5">
                           <span className="mt-0.5 text-chart-4">$</span>
-                          <code className="whitespace-pre-wrap break-words">{displayCommand}</code>
+                          <code
+                            className={cn(
+                              "min-w-0 flex-1",
+                              commandExpanded ? "whitespace-pre-wrap break-words" : "truncate",
+                            )}
+                          >
+                            {commandExpanded ? displayCommand : command}
+                          </code>
                         </div>
                       </div>
                     </div>
@@ -425,35 +480,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                 <div className="rounded-xl bg-fd-background/80 p-2">
                   <SpecialSponsorsPanel sponsors={specialSponsors} compact />
                   {specialSponsors.length > 0 ? <div className="my-2 h-px bg-border/25" /> : null}
-                  <ActionButtons
-                    onReset={resetStack}
-                    onRandom={getRandomStack}
-                    onSave={saveCurrentStack}
-                    onLoad={loadSavedStack}
-                    hasSavedStack={!!lastSavedStack}
-                  />
-
-                  <div className="mt-2 grid grid-cols-3 gap-1.5">
-                    <ShareButton stackUrl={getStackUrl()} stackState={effectiveStack} />
-                    <PresetDropdown onApplyPreset={applyPreset} />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={
-                          <button
-                            type="button"
-                            className="builder-focus-ring flex items-center justify-center gap-1.5 rounded-md bg-muted/20 px-2 py-1.5 font-mono font-medium text-muted-foreground text-xs transition-colors hover:bg-muted/35 hover:text-foreground"
-                          />
-                        }
-                      >
-                        <Settings className="h-3 w-3" />
-                        <span className="sr-only">Settings</span>
-                        <ChevronDown className="h-3 w-3" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-64 bg-fd-background">
-                        <YoloToggle stack={stack} onToggle={(yolo) => setStack({ yolo })} />
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                  {actionButtons}
                 </div>
               </div>
             </div>

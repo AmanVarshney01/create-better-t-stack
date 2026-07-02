@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
 });
 
-const ogImage = "https://r2.better-t-stack.dev/og.png";
+const ogImage = "https://better-t-stack.dev/og/site/home.png";
 
 export const metadata: Metadata = {
   title: "Better-T-Stack",

@@ -103,6 +103,18 @@ export const hasElectrobunCompatibleFrontend = (webFrontend: string[], backend =
 export const hasEvlogCompatibleBackend = (backend: string) =>
   ["hono", "express", "fastify", "elysia", ...selfHostedFullstackBackends].includes(backend);
 
+// Mirrors the CLI rule: Tauri static exports can't bundle Convex Better Auth on these frontends
+const tauriStaticExportFrontends = ["next", "tanstack-start"] as const;
+
+export const isTauriBlockedByConvexBetterAuth = (
+  webFrontend: string[],
+  backend: string,
+  auth: string,
+) =>
+  backend === "convex" &&
+  auth === "better-auth" &&
+  webFrontend.some((f) => (tauriStaticExportFrontends as readonly string[]).includes(f));
+
 export const getCategoryDisplayName = (categoryKey: string): string => {
   const result = categoryKey.replace(/([A-Z])/g, " $1");
   return result.charAt(0).toUpperCase() + result.slice(1);
@@ -643,6 +655,18 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         : "Tauri removed (requires compatible frontend)",
     });
   }
+  if (
+    nextStack.addons.includes("tauri") &&
+    isTauriBlockedByConvexBetterAuth(nextStack.webFrontend, nextStack.backend, nextStack.auth)
+  ) {
+    nextStack.addons = nextStack.addons.filter((a) => a !== "tauri");
+    if (nextStack.addons.length === 0) nextStack.addons = ["none"];
+    changed = true;
+    changes.push({
+      category: "addons",
+      message: "Tauri removed (not compatible with Convex Better Auth on Next.js/TanStack Start)",
+    });
+  }
   if (!electrobunCompat && nextStack.addons.includes("electrobun")) {
     nextStack.addons = nextStack.addons.filter((a) => a !== "electrobun");
     if (nextStack.addons.length === 0) nextStack.addons = ["none"];
@@ -1111,6 +1135,16 @@ export const getDisabledReason = (
         return "Tauri requires a separate backend or no backend";
       }
       return "Tauri requires a web frontend";
+    }
+    if (
+      optionId === "tauri" &&
+      isTauriBlockedByConvexBetterAuth(
+        currentStack.webFrontend,
+        currentStack.backend,
+        currentStack.auth,
+      )
+    ) {
+      return "Tauri isn't compatible with Convex Better Auth on Next.js or TanStack Start";
     }
     if (
       optionId === "electrobun" &&

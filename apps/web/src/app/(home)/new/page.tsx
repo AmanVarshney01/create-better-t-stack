@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     url: "https://better-t-stack.dev/new",
     images: [
       {
-        url: "https://r2.better-t-stack.dev/og.png",
+        url: "https://better-t-stack.dev/og/site/new.png",
         width: 1200,
         height: 630,
         alt: "Better-T-Stack Stack Builder",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Stack Builder - Better-T-Stack",
     description: "Interactive Ui to roll your own stack",
-    images: ["https://r2.better-t-stack.dev/og.png"],
+    images: ["https://better-t-stack.dev/og/site/new.png"],
   },
 };
 

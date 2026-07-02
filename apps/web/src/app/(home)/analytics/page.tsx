@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     url: "https://better-t-stack.dev/analytics",
     images: [
       {
-        url: "https://r2.better-t-stack.dev/og.png",
+        url: "https://better-t-stack.dev/og/site/analytics.png",
         width: 1200,
         height: 630,
         alt: "Better-T-Stack Convex Analytics",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Analytics - Better-T-Stack",
     description: "Convex-backed project creation analytics for Better-T-Stack.",
-    images: ["https://r2.better-t-stack.dev/og.png"],
+    images: ["https://better-t-stack.dev/og/site/analytics.png"],
   },
 };
 
