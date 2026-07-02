@@ -601,19 +601,28 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
   }
 
   // --- Root .env for docker compose build args ---
-  // compose ${VAR} interpolation only reads the root .env, not the per-app env_file
+  // compose ${VAR} interpolation only reads the root .env, not the per-app env_file,
+  // so mirror the same variable names users fill in apps/web/.env
   if (webDeploy === "docker" && hasWebFrontend) {
     const hasClerkBuildArgFrontend =
       hasNextJs || hasReactRouter || hasTanStackRouter || hasTanStackStart;
+    const convexBuildArg = hasNextJs
+      ? "NEXT_PUBLIC_CONVEX_URL"
+      : hasSvelte || hasAstro
+        ? "PUBLIC_CONVEX_URL"
+        : "VITE_CONVEX_URL";
+    const clerkBuildArg = hasNextJs
+      ? "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
+      : "VITE_CLERK_PUBLISHABLE_KEY";
     const rootComposeVars: EnvVariable[] = [
       {
-        key: "CONVEX_URL",
+        key: convexBuildArg,
         value: CONVEX_URL_PLACEHOLDER,
         condition: backend === "convex" && !hasNuxt,
         comment: "Baked into the web image at docker compose build time",
       },
       {
-        key: "CLERK_PUBLISHABLE_KEY",
+        key: clerkBuildArg,
         value: "",
         condition: auth === "clerk" && hasClerkBuildArgFrontend,
         comment: "Baked into the web image at docker compose build time",
