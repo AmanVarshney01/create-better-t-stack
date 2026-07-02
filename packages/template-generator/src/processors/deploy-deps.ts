@@ -18,10 +18,11 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
   }
 
   if (isVercelWeb || isVercelServer) {
+    // dotenv is already a root dependency via workspace-deps
     addPackageDependency({
       vfs,
       packagePath: "package.json",
-      devDependencies: ["@types/node", "dotenv", "tsx", "vercel"],
+      devDependencies: ["@types/node", "tsx", "vercel"],
     });
   }
 

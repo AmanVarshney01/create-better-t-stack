@@ -217,12 +217,14 @@ export function addPackageDependency(options: AddDepsOptions): void {
         );
       }
       pkgJson.dependencies[dep] = version;
+      // A package must not appear in both sections; runtime wins
+      delete pkgJson.devDependencies[dep];
     }
   }
 
   // Add dev dependencies
   for (const dep of devDependencies) {
-    if (!pkgJson.devDependencies[dep]) {
+    if (!pkgJson.devDependencies[dep] && !pkgJson.dependencies[dep]) {
       const version = dependencyVersionMap[dep as AvailableDependencies];
       if (!version) {
         throw new Error(

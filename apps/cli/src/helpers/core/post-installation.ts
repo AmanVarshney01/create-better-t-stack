@@ -647,5 +647,17 @@ function getAlchemyDeployInstructions(
     );
   }
 
+  if (webDeploy === "vercel" || serverDeploy === "vercel") {
+    const vercelTargets =
+      webDeploy === "vercel" && (serverDeploy === "vercel" || isBackendSelf)
+        ? "web + server"
+        : webDeploy === "vercel"
+          ? "web"
+          : "server";
+    instructions.push(
+      `${pc.bold(`Deploy ${vercelTargets} with Vercel Services:`)}\n${pc.cyan("•")} Link project: npx vercel link\n${pc.cyan("•")} Sync env (before first deploy): ${`${runCmd} env:vercel:production`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy:vercel:prod`}\n${pc.cyan("•")} Guide: https://www.better-t-stack.dev/docs/guides/vercel`,
+    );
+  }
+
   return instructions.length ? `\n${instructions.join("\n")}` : "";
 }

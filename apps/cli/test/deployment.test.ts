@@ -452,9 +452,11 @@ describe("Deployment Configurations", () => {
 
       expect(packageJson.devDependencies).not.toHaveProperty("@vercel/config");
       expect(packageJson.devDependencies).toHaveProperty("@types/node");
-      expect(packageJson.devDependencies).toHaveProperty("dotenv");
       expect(packageJson.devDependencies).toHaveProperty("tsx");
       expect(packageJson.devDependencies).toHaveProperty("vercel");
+      // dotenv comes from workspace-deps as a regular dependency; it must not
+      // be duplicated into devDependencies (bun warns on cross-section dupes)
+      expect(packageJson.devDependencies).not.toHaveProperty("dotenv");
       expect(packageJson.scripts).toMatchObject({
         "dev:vercel": "vercel dev -L",
         "env:vercel:preview": "tsx scripts/sync-vercel-env.ts preview",
