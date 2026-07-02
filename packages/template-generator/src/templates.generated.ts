@@ -2226,6 +2226,32 @@ import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { toast } from 'sonner';
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
+
+function getServerUrl(url: string) {
+	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+	if (!normalized.startsWith("/")) {
+		return normalized;
+	}
+
+	if (typeof window !== "undefined") {
+		return \`\${window.location.origin}\${normalized}\`;
+	}
+
+	const processEnv = (globalThis as {
+		process?: { env?: Record<string, string | undefined> };
+	}).process?.env;
+	const vercelUrl =
+		processEnv?.VERCEL_ENV === "production"
+			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
+			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
+	if (vercelUrl) {
+		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+		return \`\${origin}\${normalized}\`;
+	}
+
+	return \`http://localhost:3000\${normalized}\`;
+}
 {{/unless}}
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
@@ -2252,7 +2278,7 @@ const trpcClient = createTRPCClient<AppRouter>({
 {{#if (eq backend "self")}}
 			url: "/api/trpc",
 {{else}}
-			url: \`\${env.NEXT_PUBLIC_SERVER_URL}/trpc\`,
+			url: \`\${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/trpc\`,
 {{/if}}
 {{#if (eq auth "clerk")}}
 			headers: async () => {
@@ -2303,6 +2329,32 @@ import { env } from "@{{projectName}}/env/web";
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 
+function getServerUrl(url: string) {
+	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+	if (!normalized.startsWith("/")) {
+		return normalized;
+	}
+
+	if (typeof window !== "undefined") {
+		return \`\${window.location.origin}\${normalized}\`;
+	}
+
+	const processEnv = (globalThis as {
+		process?: { env?: Record<string, string | undefined> };
+	}).process?.env;
+	const vercelUrl =
+		processEnv?.VERCEL_ENV === "production"
+			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
+			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
+	if (vercelUrl) {
+		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+		return \`\${origin}\${normalized}\`;
+	}
+
+	return \`http://localhost:3000\${normalized}\`;
+}
+
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
 		onError: (error, query) => {
@@ -2321,7 +2373,7 @@ export const queryClient = new QueryClient({
 export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: \`\${env.VITE_SERVER_URL}/trpc\`,
+			url: \`\${getServerUrl(env.VITE_SERVER_URL)}/trpc\`,
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();
@@ -9117,9 +9169,37 @@ import { polarClient } from "@polar-sh/better-auth/client";
 import { PUBLIC_SERVER_URL } from "astro:env/client";
 {{/if}}
 
+{{#if (ne backend "self")}}
+function getServerUrl(url: string) {
+  const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+  if (!normalized.startsWith("/")) {
+    return normalized;
+  }
+
+  if (typeof window !== "undefined") {
+    return \`\${window.location.origin}\${normalized}\`;
+  }
+
+  const processEnv = (globalThis as {
+    process?: { env?: Record<string, string | undefined> };
+  }).process?.env;
+  const vercelUrl =
+    processEnv?.VERCEL_ENV === "production"
+      ? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
+      : (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
+  if (vercelUrl) {
+    const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+    return \`\${origin}\${normalized}\`;
+  }
+
+  return \`http://localhost:3000\${normalized}\`;
+}
+
+{{/if}}
 export const authClient = createAuthClient({
 {{#if (ne backend "self")}}
-  baseURL: PUBLIC_SERVER_URL,
+  baseURL: getServerUrl(PUBLIC_SERVER_URL),
 {{/if}}
 {{#if (eq payments "polar")}}
   plugins: [polarClient()],
@@ -9677,11 +9757,37 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
+
+function getServerUrl(url: string) {
+	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+	if (!normalized.startsWith("/")) {
+		return normalized;
+	}
+
+	if (typeof window !== "undefined") {
+		return \`\${window.location.origin}\${normalized}\`;
+	}
+
+	const processEnv = (globalThis as {
+		process?: { env?: Record<string, string | undefined> };
+	}).process?.env;
+	const vercelUrl =
+		processEnv?.VERCEL_ENV === "production"
+			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
+			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
+	if (vercelUrl) {
+		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+		return \`\${origin}\${normalized}\`;
+	}
+
+	return \`http://localhost:3000\${normalized}\`;
+}
 {{/unless}}
 
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	baseURL: env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}},
+	baseURL: getServerUrl(env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}}),
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
@@ -11975,8 +12081,34 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 import { env } from "@{{projectName}}/env/web";
 
+function getServerUrl(url: string) {
+	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+	if (!normalized.startsWith("/")) {
+		return normalized;
+	}
+
+	if (typeof window !== "undefined") {
+		return \`\${window.location.origin}\${normalized}\`;
+	}
+
+	const processEnv = (globalThis as {
+		process?: { env?: Record<string, string | undefined> };
+	}).process?.env;
+	const vercelUrl =
+		processEnv?.VERCEL_ENV === "production"
+			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
+			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
+	if (vercelUrl) {
+		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+		return \`\${origin}\${normalized}\`;
+	}
+
+	return \`http://localhost:3000\${normalized}\`;
+}
+
 export const authClient = createAuthClient({
-	baseURL: env.VITE_SERVER_URL,
+	baseURL: getServerUrl(env.VITE_SERVER_URL),
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
 {{/if}}
@@ -12392,9 +12524,37 @@ import { createAuthClient } from "better-auth/svelte";
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
+{{#unless (eq backend "self")}}
+function getServerUrl(url: string) {
+	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+	if (!normalized.startsWith("/")) {
+		return normalized;
+	}
+
+	if (typeof window !== "undefined") {
+		return \`\${window.location.origin}\${normalized}\`;
+	}
+
+	const processEnv = (globalThis as {
+		process?: { env?: Record<string, string | undefined> };
+	}).process?.env;
+	const vercelUrl =
+		processEnv?.VERCEL_ENV === "production"
+			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
+			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
+	if (vercelUrl) {
+		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+		return \`\${origin}\${normalized}\`;
+	}
+
+	return \`http://localhost:3000\${normalized}\`;
+}
+
+{{/unless}}
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	baseURL: PUBLIC_SERVER_URL,
+	baseURL: getServerUrl(PUBLIC_SERVER_URL),
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
@@ -16707,14 +16867,11 @@ CMD ["node", "build/index.js"]
 `],
   ["deploy/vercel/scripts/sync-vercel-env.ts.hbs", `import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import dotenv from "dotenv";
 
 const DEFAULT_ENVIRONMENT = "preview";
 const VALID_ENVIRONMENTS = new Set(["development", "preview", "production"]);
-const VERCEL_BIN = process.platform === "win32" ? "vercel.cmd" : "vercel";
-const LOCAL_VERCEL_BIN = join(process.cwd(), "node_modules", ".bin", VERCEL_BIN);
-const VERCEL_COMMAND = existsSync(LOCAL_VERCEL_BIN) ? LOCAL_VERCEL_BIN : VERCEL_BIN;
+const VERCEL_COMMAND = [{{#if (eq packageManager "npm")}}"npx", "vercel"{{else if (eq packageManager "pnpm")}}"pnpm", "exec", "vercel"{{else}}"bunx", "vercel"{{/if}}];
 const DEFAULT_FILES = [
 {{#if (eq webDeploy "vercel")}}
 	"apps/web/.env",
@@ -16789,12 +16946,24 @@ if (env.size === 0) {
 console.log(\`Syncing \${env.size} env var(s) to Vercel \${environment}.\`);
 for (const [key, value] of env.entries()) {
 	const result = spawnSync(
-		VERCEL_COMMAND,
-		["env", "add", key, environment, "--force", "--yes", "--non-interactive", ...vercelArgs],
+		VERCEL_COMMAND[0],
+		[
+			...VERCEL_COMMAND.slice(1),
+			"env",
+			"add",
+			key,
+			environment,
+			"--force",
+			"--yes",
+			"--non-interactive",
+			...vercelArgs,
+		],
 		{
 			input: \`\${value}\\n\`,
 			stdio: ["pipe", "inherit", "inherit"],
 			encoding: "utf8",
+			// Windows resolves bunx/npx/pnpm via .cmd shims, which need a shell
+			shell: process.platform === "win32",
 		},
 	);
 
@@ -31396,6 +31565,34 @@ export function getRouter() {
 }
 {{else}}
 {{#if (eq api "trpc")}}
+{{#unless (eq backend "self")}}
+function getServerUrl(url: string) {
+	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+	if (!normalized.startsWith("/")) {
+		return normalized;
+	}
+
+	if (typeof window !== "undefined") {
+		return \`\${window.location.origin}\${normalized}\`;
+	}
+
+	const processEnv = (globalThis as {
+		process?: { env?: Record<string, string | undefined> };
+	}).process?.env;
+	const vercelUrl =
+		processEnv?.VERCEL_ENV === "production"
+			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
+			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
+	if (vercelUrl) {
+		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+		return \`\${origin}\${normalized}\`;
+	}
+
+	return \`http://localhost:3000\${normalized}\`;
+}
+
+{{/unless}}
 function createQueryClient() {
 	return new QueryClient({
 		queryCache: new QueryCache({
@@ -31417,7 +31614,7 @@ function createQueryClient() {
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: {{#if (eq backend "self")}}"/api/trpc"{{else}}\`\${env.VITE_SERVER_URL}/trpc\`{{/if}},
+			url: {{#if (eq backend "self")}}"/api/trpc"{{else}}\`\${getServerUrl(env.VITE_SERVER_URL)}/trpc\`{{/if}},
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();

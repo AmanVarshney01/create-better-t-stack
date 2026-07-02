@@ -16,7 +16,7 @@ mkdir -p "$SCRATCH"
 # (hono node, elysia bun/node); hono bun auto-serves and express/fastify rely on
 # Vercel's zero-config listen interception, so they always bind locally.
 TESTS=(
-"tsr-hono-bun-combined|--frontend tanstack-router --backend hono --runtime bun --database sqlite --orm drizzle --db-setup none --web-deploy vercel --server-deploy vercel --api orpc --auth none --payments none --addons none --examples none --package-manager bun|vite|bun|0"
+"tsr-hono-bun-combined|--frontend tanstack-router --backend hono --runtime bun --database sqlite --orm drizzle --db-setup none --web-deploy vercel --server-deploy vercel --api trpc --auth better-auth --payments none --addons none --examples none --package-manager bun|vite|bun|0"
 "next-hono-node-combined|--frontend next --backend hono --runtime node --database none --orm none --db-setup none --web-deploy vercel --server-deploy vercel --api trpc --auth none --payments none --addons none --examples none --package-manager bun|next|node|1"
 "next-self-web-only|--frontend next --backend self --runtime none --database none --orm none --db-setup none --web-deploy vercel --server-deploy none --api orpc --auth none --payments none --addons none --examples none --package-manager bun|next|none|0"
 "astro-elysia-bun-combined|--frontend astro --backend elysia --runtime bun --database none --orm none --db-setup none --web-deploy vercel --server-deploy vercel --api orpc --auth none --payments none --addons none --examples none --package-manager bun|astro|bun|1"
