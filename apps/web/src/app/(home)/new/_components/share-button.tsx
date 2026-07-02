@@ -15,7 +15,7 @@ export function ShareButton({ stackUrl, stackState }: ShareButtonProps) {
     <ShareDialog stackUrl={stackUrl} stackState={stackState}>
       <button
         type="button"
-        className="builder-focus-ring flex flex-1 items-center justify-center gap-1.5 rounded-md bg-muted/20 px-2 py-1.5 font-mono font-medium text-muted-foreground text-xs transition-colors hover:bg-muted/35 hover:text-foreground"
+        className="builder-focus-ring flex flex-1 items-center justify-center gap-1.5 rounded-md bg-primary/15 px-2 py-1.5 font-mono font-medium text-primary text-xs transition-colors hover:bg-primary/22"
         title="Share your stack"
       >
         <Share2 className="h-3 w-3" />

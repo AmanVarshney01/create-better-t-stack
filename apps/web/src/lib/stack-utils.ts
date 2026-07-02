@@ -42,6 +42,42 @@ const selfHostedFullstackBackends = [
   "self-astro",
 ] as const;
 
+export function formatProjectName(name: string | null | undefined) {
+  return (name || "my-better-t-app").replace(/\s+/g, "-");
+}
+
+export type SelectedTech = {
+  category: keyof typeof TECH_OPTIONS;
+  id: string;
+  name: string;
+  icon: string;
+};
+
+export function getSelectedTechs(stack: StackState): SelectedTech[] {
+  const selected: SelectedTech[] = [];
+  for (const category of CATEGORY_ORDER) {
+    const options = TECH_OPTIONS[category];
+    const value = stack[category as keyof StackState];
+    if (!options || value === undefined) continue;
+
+    const ids = Array.isArray(value) ? value : [value];
+    for (const id of ids) {
+      if (
+        id === "none" ||
+        id === "false" ||
+        (["git", "install", "auth"].includes(category) && id === "true")
+      ) {
+        continue;
+      }
+      const tech = options.find((opt) => opt.id === id);
+      if (tech) {
+        selected.push({ category, id: tech.id, name: tech.name, icon: tech.icon });
+      }
+    }
+  }
+  return selected;
+}
+
 export function generateStackSummary(stack: StackState) {
   const selectedTechs = CATEGORY_ORDER.flatMap((category) => {
     const options = TECH_OPTIONS[category];
@@ -201,7 +237,11 @@ export function formatStackCommandForDisplay(command: string) {
 
 export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
   const origin = baseUrl || "https://better-t-stack.dev";
+  const searchString = serializeStackToSearchString(stack);
+  return `${origin}/new${searchString ? `?${searchString}` : ""}`;
+}
 
+function serializeStackToSearchString(stack: StackState) {
   const stackParams = new URLSearchParams();
   Object.entries(stackUrlKeys).forEach(([stackKey, urlKey]) => {
     const value = stack[stackKey as keyof StackState];
@@ -209,24 +249,18 @@ export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
       stackParams.set(urlKey as string, Array.isArray(value) ? value.join(",") : String(value));
     }
   });
-
-  const searchString = stackParams.toString();
-  return `${origin}/new${searchString ? `?${searchString}` : ""}`;
+  return stackParams.toString();
 }
 
 export function generateStackSharingUrl(stack: StackState, baseUrl?: string) {
   const origin = baseUrl || "https://better-t-stack.dev";
-
-  const stackParams = new URLSearchParams();
-  Object.entries(stackUrlKeys).forEach(([stackKey, urlKey]) => {
-    const value = stack[stackKey as keyof StackState];
-    if (value !== undefined) {
-      stackParams.set(urlKey as string, Array.isArray(value) ? value.join(",") : String(value));
-    }
-  });
-
-  const searchString = stackParams.toString();
+  const searchString = serializeStackToSearchString(stack);
   return `${origin}/stack${searchString ? `?${searchString}` : ""}`;
+}
+
+export function generateStackOgImageUrl(stack: StackState, baseUrl = "") {
+  const searchString = serializeStackToSearchString(stack);
+  return `${baseUrl}/og/stack${searchString ? `?${searchString}` : ""}`;
 }
 
 export { CATEGORY_ORDER };

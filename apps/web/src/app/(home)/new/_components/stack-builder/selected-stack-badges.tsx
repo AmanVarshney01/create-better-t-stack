@@ -13,120 +13,82 @@ import { getCategoryDisplayName } from "../utils";
 type SelectedStackBadgesProps = {
   stack: StackState;
   onRemove?: (category: TechCategory, techId: string) => void;
+  onJump?: (category: TechCategory) => void;
 };
 
-export function SelectedStackBadges({ stack, onRemove }: SelectedStackBadgesProps) {
-  const groupedSelections = CATEGORY_ORDER.map((category) => {
-    const categoryKey = category as keyof StackState;
-    const options = TECH_OPTIONS[category as keyof typeof TECH_OPTIONS];
-    const selectedValue = stack[categoryKey];
+export function SelectedStackBadges({ stack, onRemove, onJump }: SelectedStackBadgesProps) {
+  const selections = CATEGORY_ORDER.flatMap((category) => {
+    const options = TECH_OPTIONS[category];
+    const selectedValue = stack[category as keyof StackState];
+    if (!options || selectedValue === undefined) return [];
 
-    if (!options) {
-      return null;
-    }
+    const ids = Array.isArray(selectedValue) ? selectedValue : [selectedValue];
+    return ids
+      .filter(
+        (id) =>
+          id !== "none" &&
+          id !== "false" &&
+          !(["git", "install", "auth"].includes(category) && id === "true"),
+      )
+      .flatMap((id) => {
+        const tech = options.find((opt) => opt.id === id);
+        return tech ? [{ category: category as TechCategory, tech }] : [];
+      });
+  });
 
-    if (Array.isArray(selectedValue)) {
-      const selectedTechs = selectedValue
-        .filter((id) => id !== "none")
-        .map((id) => options.find((opt) => opt.id === id))
-        .filter(Boolean);
-
-      if (selectedTechs.length === 0) {
-        return null;
-      }
-
-      return {
-        category: category as TechCategory,
-        label: getCategoryDisplayName(category),
-        techs: selectedTechs,
-      };
-    }
-
-    const tech = options.find((opt) => opt.id === selectedValue);
-    if (
-      !tech ||
-      tech.id === "none" ||
-      tech.id === "false" ||
-      ((category === "git" || category === "install" || category === "auth") && tech.id === "true")
-    ) {
-      return null;
-    }
-
-    return {
-      category: category as TechCategory,
-      label: getCategoryDisplayName(category),
-      techs: [tech],
-    };
-  }).filter(Boolean);
-
-  if (groupedSelections.length === 0) {
+  if (selections.length === 0) {
     return <p className="font-mono text-muted-foreground text-xs">No selections yet</p>;
   }
 
   return (
-    <div className="space-y-2">
-      {groupedSelections.map((group) => {
-        if (!group) {
-          return null;
-        }
+    <div className="flex flex-wrap gap-1.5">
+      {selections.map(({ category, tech }) => {
+        const categoryLabel = getCategoryDisplayName(category);
+        const chipContent = (
+          <>
+            {tech.icon !== "" && (
+              <TechIcon
+                icon={tech.icon}
+                name={tech.name}
+                className={cn("h-3 w-3", tech.className)}
+              />
+            )}
+            {tech.name}
+          </>
+        );
 
         return (
-          <div key={group.category} className="space-y-1">
-            <p className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
-              {group.label}
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {group.techs.map((tech) => {
-                if (!tech) {
-                  return null;
-                }
-
-                const canRemove = typeof onRemove === "function";
-                const chipClasses = cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs",
-                  getBadgeColors(group.category),
-                  canRemove && "builder-focus-ring cursor-pointer pr-1 hover:brightness-95",
-                );
-
-                if (!canRemove) {
-                  return (
-                    <span key={`${group.category}-${tech.id}`} className={chipClasses}>
-                      {tech.icon !== "" && (
-                        <TechIcon
-                          icon={tech.icon}
-                          name={tech.name}
-                          className={cn("h-3 w-3", tech.className)}
-                        />
-                      )}
-                      {tech.name}
-                    </span>
-                  );
-                }
-
-                return (
-                  <button
-                    key={`${group.category}-${tech.id}`}
-                    type="button"
-                    className={chipClasses}
-                    onClick={() => onRemove(group.category, tech.id)}
-                    aria-label={`Remove ${tech.name} from ${group.label}`}
-                  >
-                    {tech.icon !== "" && (
-                      <TechIcon
-                        icon={tech.icon}
-                        name={tech.name}
-                        className={cn("h-3 w-3", tech.className)}
-                      />
-                    )}
-                    {tech.name}
-                    <span className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10">
-                      <X className="h-2.5 w-2.5" />
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <span
+            key={`${category}-${tech.id}`}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full pl-2 text-xs",
+              getBadgeColors(category),
+              onRemove ? "pr-1" : "pr-2",
+            )}
+          >
+            {onJump ? (
+              <button
+                type="button"
+                onClick={() => onJump(category)}
+                title={`Go to ${categoryLabel}`}
+                className="builder-focus-ring flex items-center gap-1.5 py-0.5"
+              >
+                {chipContent}
+              </button>
+            ) : (
+              <span className="flex items-center gap-1.5 py-0.5">{chipContent}</span>
+            )}
+            {onRemove && (
+              <button
+                type="button"
+                onClick={() => onRemove(category, tech.id)}
+                aria-label={`Remove ${tech.name} from ${categoryLabel}`}
+                className="builder-focus-ring rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10"
+              >
+                <X className="h-2.5 w-2.5" />
+              </button>
+            )}
+          </span>
         );
       })}
     </div>

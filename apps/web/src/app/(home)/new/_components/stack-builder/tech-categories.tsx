@@ -207,7 +207,7 @@ export function TechCategories({
           </section>
         );
       })}
-      <div className="h-10" />
+      <div className="h-24" />
     </>
   );
 }

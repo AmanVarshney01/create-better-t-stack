@@ -7,14 +7,14 @@ import { toast } from "sonner";
 
 import { ShareDialog } from "@/components/ui/share-dialog";
 import { TechBadge } from "@/components/ui/tech-badge";
-import { type StackState, TECH_OPTIONS } from "@/lib/constant";
 import type { LoadedStackState } from "@/lib/stack-url-state";
 import {
-  CATEGORY_ORDER,
+  formatProjectName,
   generateStackCommand,
   generateStackSharingUrl,
   generateStackSummary,
   generateStackUrlFromState,
+  getSelectedTechs,
 } from "@/lib/stack-utils";
 
 type StackDisplayProps = {
@@ -36,62 +36,19 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
   const stack = stackState;
   const stackSummary = generateStackSummary(stack);
 
-  const command = generateStackCommand(stackState);
+  const command = generateStackCommand({
+    ...stackState,
+    projectName: formatProjectName(stackState.projectName),
+  });
 
-  const techBadges = (() => {
-    const badges: React.ReactNode[] = [];
-    for (const category of CATEGORY_ORDER) {
-      const categoryKey = category as keyof StackState;
-      const options = TECH_OPTIONS[category as keyof typeof TECH_OPTIONS];
-      const selectedValue = stack[categoryKey];
-
-      if (!options) continue;
-
-      if (Array.isArray(selectedValue)) {
-        if (
-          selectedValue.length === 0 ||
-          (selectedValue.length === 1 && selectedValue[0] === "none")
-        ) {
-          continue;
-        }
-
-        for (const id of selectedValue) {
-          if (id === "none") continue;
-          const tech = options.find((opt) => opt.id === id);
-          if (tech) {
-            badges.push(
-              <TechBadge
-                key={`${category}-${tech.id}`}
-                icon={tech.icon}
-                name={tech.name}
-                category={category}
-              />,
-            );
-          }
-        }
-      } else {
-        const tech = options.find((opt) => opt.id === selectedValue);
-        if (
-          !tech ||
-          tech.id === "none" ||
-          tech.id === "false" ||
-          ((category === "git" || category === "install" || category === "auth") &&
-            tech.id === "true")
-        ) {
-          continue;
-        }
-        badges.push(
-          <TechBadge
-            key={`${category}-${tech.id}`}
-            icon={tech.icon}
-            name={tech.name}
-            category={category}
-          />,
-        );
-      }
-    }
-    return badges;
-  })();
+  const techBadges = getSelectedTechs(stack).map((tech) => (
+    <TechBadge
+      key={`${tech.category}-${tech.id}`}
+      icon={tech.icon}
+      name={tech.name}
+      category={tech.category}
+    />
+  ));
 
   const copyCommand = async () => {
     try {

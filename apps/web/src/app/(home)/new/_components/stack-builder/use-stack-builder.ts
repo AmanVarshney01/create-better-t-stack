@@ -4,14 +4,19 @@ import { toast } from "sonner";
 import { DEFAULT_STACK, PRESET_TEMPLATES, type StackState, TECH_OPTIONS } from "@/lib/constant";
 import { sanitizeStackState, TASK_RUNNER_ADDONS } from "@/lib/sanitize-stack-addons";
 import { useStackState } from "@/lib/stack-url-state.client";
-import { CATEGORY_ORDER, generateStackCommand, generateStackSharingUrl } from "@/lib/stack-utils";
+import {
+  CATEGORY_ORDER,
+  formatProjectName,
+  generateStackCommand,
+  generateStackSharingUrl,
+} from "@/lib/stack-utils";
 import type { TechCategory } from "@/lib/types";
 
 import { analyzeStackCompatibility, isOptionCompatible, validateProjectName } from "../utils";
 
 export type MobileTab = "build" | "preview";
 
-type CategoryProgressItem = {
+export type CategoryProgressItem = {
   category: TechCategory;
   selected: number;
   total: number;
@@ -20,15 +25,10 @@ type CategoryProgressItem = {
 
 const CATEGORY_LIST = CATEGORY_ORDER as TechCategory[];
 
-function formatProjectName(name: string) {
-  return name.replace(/\s+/g, "-");
-}
-
 function withFormattedProjectName(stack: StackState) {
-  const projectName = stack.projectName || "my-better-t-app";
   return {
     ...stack,
-    projectName: formatProjectName(projectName),
+    projectName: formatProjectName(stack.projectName),
   };
 }
 
@@ -386,6 +386,7 @@ export function useStackBuilder() {
 
   return {
     applyPreset,
+    categoryProgress,
     command,
     compatibilityAnalysis,
     copied,
