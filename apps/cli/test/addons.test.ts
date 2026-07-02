@@ -518,12 +518,12 @@ describe("Addon Configurations", () => {
       );
       const webViteConfig = await readFile(join(projectDir!, "apps/web/vite.config.ts"), "utf8");
 
-      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.1.24");
-      expect(rootPackageJson.devDependencies.rolldown).toBe("1.1.0");
+      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.2.2");
+      expect(rootPackageJson.devDependencies.rolldown).toBe("1.1.4");
       expect(rootPackageJson.overrides).toMatchObject({
-        vite: "npm:@voidzero-dev/vite-plus-core@0.1.24",
-        vitest: "npm:@voidzero-dev/vite-plus-test@0.1.24",
+        vite: "npm:@voidzero-dev/vite-plus-core@0.2.2",
       });
+      expect(rootPackageJson.overrides.vitest).toBeUndefined();
       expect(rootPackageJson.scripts.dev).toBe("vp run -r dev");
       expect(rootPackageJson.scripts.build).toBe("vp run -r build");
       expect(rootPackageJson.scripts["check-types"]).toBe("vp run -r check-types");
@@ -662,7 +662,7 @@ describe("Addon Configurations", () => {
       const webViteConfig = await readFile(join(projectDir, "apps/web/vite.config.ts"), "utf8");
       const rootViteConfig = await readFile(join(projectDir, "vite.config.ts"), "utf8");
 
-      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.1.24");
+      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.2.2");
       expect(rootPackageJson.scripts.dev).toBe("vp run -r dev");
       expect(rootPackageJson.scripts.staged).toBe("vp staged");
       expect(rootPackageJson.scripts["hooks:setup"]).toBe("vp config");
@@ -1162,7 +1162,7 @@ describe("Addon Configurations", () => {
         const webPackageJson = await readFile(join(projectDir, "apps/web/package.json"), "utf-8");
         expect(webPackageJson).toContain('"evlog": "^2.19.2"');
         if (webCase.frontend === "tanstack-start") {
-          expect(webPackageJson).toContain('"nitro": "^3.0.260429-beta"');
+          expect(webPackageJson).toContain('"nitro": "^3.0.260610-beta"');
         }
       });
     }

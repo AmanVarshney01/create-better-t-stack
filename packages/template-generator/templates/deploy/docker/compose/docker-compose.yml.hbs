@@ -66,6 +66,22 @@ services:
         condition: service_healthy
 {{/if}}
 {{/if}}
+    healthcheck:
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "solid"))}}
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+{{else}}
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3001/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+{{/if}}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
 {{/if}}
@@ -118,7 +134,7 @@ services:
 {{#if (eq dbSetup "docker")}}
 {{#if (eq database "postgres")}}
   postgres:
-    image: postgres
+    image: postgres:18
     container_name: {{projectName}}-postgres
     environment:
       POSTGRES_DB: {{projectName}}
@@ -137,7 +153,7 @@ services:
 {{/if}}
 {{#if (eq database "mysql")}}
   mysql:
-    image: mysql
+    image: mysql:8.4
     container_name: {{projectName}}-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
@@ -157,7 +173,7 @@ services:
 {{/if}}
 {{#if (eq database "mongodb")}}
   mongodb:
-    image: mongo
+    image: mongo:8
     container_name: {{projectName}}-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root

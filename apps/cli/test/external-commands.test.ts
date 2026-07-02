@@ -75,7 +75,7 @@ describe("External Command Guards", () => {
     const updated = await Bun.file(pkgJsonPath).json();
 
     expect(updated.scripts?.check).toBe("oxlint && oxfmt --write");
-    expect(updated.devDependencies?.oxlint).toBe("^1.68.0");
-    expect(updated.devDependencies?.oxfmt).toBe("^0.53.0");
+    expect(updated.devDependencies?.oxlint).toBe("^1.72.0");
+    expect(updated.devDependencies?.oxfmt).toBe("^0.57.0");
   });
 });

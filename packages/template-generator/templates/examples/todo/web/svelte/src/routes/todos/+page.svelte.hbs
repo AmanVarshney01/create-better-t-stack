@@ -169,12 +169,12 @@
 	let newTodoText = $state('');
 
 	{{#if (eq api "orpc")}}
-	const todosQuery = createQuery(orpc.todo.getAll.queryOptions());
+	const todosQuery = createQuery(() => orpc.todo.getAll.queryOptions());
 
-	const addMutation = createMutation(
+	const addMutation = createMutation(() =>
 		orpc.todo.create.mutationOptions({
 			onSuccess: () => {
-				$todosQuery.refetch();
+				todosQuery.refetch();
 				newTodoText = '';
 			},
 			onError: (error) => {
@@ -183,10 +183,10 @@
 		})
 	);
 
-	const toggleMutation = createMutation(
+	const toggleMutation = createMutation(() =>
 		orpc.todo.toggle.mutationOptions({
 			onSuccess: () => {
-				$todosQuery.refetch();
+				todosQuery.refetch();
 			},
 			onError: (error) => {
 				console.error('Failed to toggle todo:', error?.message ?? error);
@@ -194,10 +194,10 @@
 		})
 	);
 
-	const deleteMutation = createMutation(
+	const deleteMutation = createMutation(() =>
 		orpc.todo.delete.mutationOptions({
 			onSuccess: () => {
-				$todosQuery.refetch();
+				todosQuery.refetch();
 			},
 			onError: (error) => {
 				console.error('Failed to delete todo:', error?.message ?? error);
@@ -210,22 +210,22 @@
 		event.preventDefault();
 		const text = newTodoText.trim();
 		if (text) {
-			$addMutation.mutate({ text });
+			addMutation.mutate({ text });
 		}
 	}
 
 	function handleToggleTodo(id: number, completed: boolean) {
-		$toggleMutation.mutate({ id, completed: !completed });
+		toggleMutation.mutate({ id, completed: !completed });
 	}
 
 	function handleDeleteTodo(id: number) {
-		$deleteMutation.mutate({ id });
+		deleteMutation.mutate({ id });
 	}
 
-	const isAdding = $derived($addMutation.isPending);
+	const isAdding = $derived(addMutation.isPending);
 	const canAdd = $derived(!isAdding && newTodoText.trim().length > 0);
-	const isLoadingTodos = $derived($todosQuery.isLoading);
-	const todos = $derived($todosQuery.data ?? []);
+	const isLoadingTodos = $derived(todosQuery.isLoading);
+	const todos = $derived(todosQuery.data ?? []);
 	const hasTodos = $derived(todos.length > 0);
 
 </script>
@@ -257,8 +257,8 @@
 	{:else}
 		<ul class="space-y-1">
 			{#each todos as todo (todo.id)}
-				{@const isToggling = $toggleMutation.isPending && $toggleMutation.variables?.id === todo.id}
-				{@const isDeleting = $deleteMutation.isPending && $deleteMutation.variables?.id === todo.id}
+				{@const isToggling = toggleMutation.isPending && toggleMutation.variables?.id === todo.id}
+				{@const isDeleting = deleteMutation.isPending && deleteMutation.variables?.id === todo.id}
 				{@const isDisabled = isToggling || isDeleting}
 				<li
 					class="flex items-center justify-between p-2 "
@@ -293,24 +293,24 @@
 		</ul>
 	{/if}
 
-	{#if $todosQuery.isError}
+	{#if todosQuery.isError}
 		<p class="mt-4 text-red-500">
-			Error loading: {$todosQuery.error?.message ?? 'Unknown error'}
+			Error loading: {todosQuery.error?.message ?? 'Unknown error'}
 		</p>
 	{/if}
-	{#if $addMutation.isError}
+	{#if addMutation.isError}
 		<p class="mt-4 text-red-500">
-			Error adding: {$addMutation.error?.message ?? 'Unknown error'}
+			Error adding: {addMutation.error?.message ?? 'Unknown error'}
 		</p>
 	{/if}
-	{#if $toggleMutation.isError}
+	{#if toggleMutation.isError}
 		<p class="mt-4 text-red-500">
-			Error updating: {$toggleMutation.error?.message ?? 'Unknown error'}
+			Error updating: {toggleMutation.error?.message ?? 'Unknown error'}
 		</p>
 	{/if}
-	{#if $deleteMutation.isError}
+	{#if deleteMutation.isError}
 		<p class="mt-4 text-red-500">
-			Error deleting: {$deleteMutation.error?.message ?? 'Unknown error'}
+			Error deleting: {deleteMutation.error?.message ?? 'Unknown error'}
 		</p>
 	{/if}
 </div>

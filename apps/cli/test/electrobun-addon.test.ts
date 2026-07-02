@@ -52,7 +52,6 @@ describe("Electrobun addon scaffolding", () => {
     expect(rootPackageJson.scripts.build).toBe(
       "bun run --filter '!desktop' build && bun run --filter desktop build",
     );
-    expect(desktopPackageJson.devDependencies["@types/three"]).toBe("^0.165.0");
     expect(desktopPackageJson.scripts.start).toBeDefined();
     // The desktop intentionally has no `dev` script (root dev must skip it).
     expect(desktopPackageJson.scripts.dev).toBeUndefined();

@@ -600,6 +600,30 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     }
   }
 
+  // --- Root .env for docker compose build args ---
+  // compose ${VAR} interpolation only reads the root .env, not the per-app env_file
+  if (webDeploy === "docker" && hasWebFrontend) {
+    const hasClerkBuildArgFrontend =
+      hasNextJs || hasReactRouter || hasTanStackRouter || hasTanStackStart;
+    const rootComposeVars: EnvVariable[] = [
+      {
+        key: "CONVEX_URL",
+        value: CONVEX_URL_PLACEHOLDER,
+        condition: backend === "convex" && !hasNuxt,
+        comment: "Baked into the web image at docker compose build time",
+      },
+      {
+        key: "CLERK_PUBLISHABLE_KEY",
+        value: "",
+        condition: auth === "clerk" && hasClerkBuildArgFrontend,
+        comment: "Baked into the web image at docker compose build time",
+      },
+    ];
+    if (rootComposeVars.some((v) => v.condition)) {
+      writeEnvFile(vfs, ".env", rootComposeVars);
+    }
+  }
+
   // --- Native App .env ---
   if (
     frontend.includes("native-bare") ||
