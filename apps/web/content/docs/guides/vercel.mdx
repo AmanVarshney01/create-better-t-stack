@@ -172,7 +172,7 @@ The generated `scripts/sync-vercel-env.ts` parses your `.env` files and pushes e
 bun env:vercel:production --scope your-team
 ```
 
-In combined web + server deployments the sync is not a blind copy:
+When the app that owns these keys runs on Vercel (combined web + server deployments, or a fullstack `self` backend), the sync is not a blind copy:
 
 | Key                                                                                           | Behavior             | Why                                                            |
 | --------------------------------------------------------------------------------------------- | -------------------- | -------------------------------------------------------------- |

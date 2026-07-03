@@ -55,6 +55,7 @@ export function transformFilename(filename: string): string {
   if (basename === "_gitignore") result = result.replace(/_gitignore$/, ".gitignore");
   else if (basename === "_npmrc") result = result.replace(/_npmrc$/, ".npmrc");
   else if (basename === "_dockerignore") result = result.replace(/_dockerignore$/, ".dockerignore");
+  else if (basename === "_vercelignore") result = result.replace(/_vercelignore$/, ".vercelignore");
 
   return result;
 }

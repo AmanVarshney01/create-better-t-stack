@@ -14,7 +14,7 @@ const DEFAULT_FILES = [
 {{/if}}
 ];
 const SKIP_KEYS = new Set([
-{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+{{#if (or (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex")) (and (eq webDeploy "vercel") (eq backend "self")))}}
 	"BETTER_AUTH_URL",
 	"CORS_ORIGIN",
 	"NODE_ENV",

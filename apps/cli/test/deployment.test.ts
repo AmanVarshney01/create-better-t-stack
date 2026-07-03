@@ -412,6 +412,9 @@ describe("Deployment Configurations", () => {
 
       expect(files.has("vercel.json")).toBe(true);
       expect(files.has("vercel.ts")).toBe(false);
+      // Without this, no-git deploys upload local .env files and frameworks
+      // like Next.js load the localhost values at runtime
+      expect(files.get(".vercelignore")).toContain("**/.env");
       expect(vercelConfig.bunVersion).toBe("1.x");
       expect(vercelConfig.services?.web).toMatchObject({
         root: "apps/web",
@@ -571,6 +574,11 @@ describe("Deployment Configurations", () => {
       expect(vercelConfig.services?.web).toMatchObject({ root: "apps/web" });
       expect(vercelConfig.services?.server).toBeUndefined();
       expect(vercelConfig.rewrites).toEqual([{ source: "/(.*)", destination: { service: "web" } }]);
+      // self fullstack apps run ON Vercel, so origin-dependent keys must be
+      // skipped and derived at runtime — synced localhost values break auth
+      const syncScript = files.get("scripts/sync-vercel-env.ts") ?? "";
+      expect(syncScript).toContain('"BETTER_AUTH_URL"');
+      expect(syncScript).toContain('"CORS_ORIGIN"');
     });
 
     it("should export Elysia apps for Vercel server deployments", async () => {

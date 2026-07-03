@@ -16633,6 +16633,17 @@ EXPOSE 3001
 WORKDIR /app/apps/web
 CMD ["node", "build/index.js"]
 `],
+  ["deploy/vercel/_vercelignore", `# Local env files must never ship in deployments: Vercel project env vars are
+# the source of truth (bun env:vercel:*), and frameworks like Next.js would
+# otherwise load these localhost values at runtime.
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+local.db
+local.db-*
+`],
   ["deploy/vercel/scripts/sync-vercel-env.ts.hbs", `import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import dotenv from "dotenv";
@@ -16649,7 +16660,7 @@ const DEFAULT_FILES = [
 {{/if}}
 ];
 const SKIP_KEYS = new Set([
-{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+{{#if (or (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex")) (and (eq webDeploy "vercel") (eq backend "self")))}}
 	"BETTER_AUTH_URL",
 	"CORS_ORIGIN",
 	"NODE_ENV",
@@ -35527,4 +35538,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 508;
+export const TEMPLATE_COUNT = 509;
