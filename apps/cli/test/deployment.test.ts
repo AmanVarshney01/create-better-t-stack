@@ -463,15 +463,15 @@ describe("Deployment Configurations", () => {
       // be duplicated into devDependencies (bun warns on cross-section dupes)
       expect(packageJson.devDependencies).not.toHaveProperty("dotenv");
       expect(packageJson.scripts).toMatchObject({
-        "link:vercel": "vercel link",
+        "deploy:setup": "vercel link",
         "dev:vercel": "vercel dev -L",
-        "env:vercel:preview": "tsx scripts/sync-vercel-env.ts preview",
-        "env:vercel:production": "tsx scripts/sync-vercel-env.ts production",
-        "deploy:vercel": "vercel deploy",
-        "deploy:vercel:prod": "vercel deploy --prod",
-        "deploy:vercel:check": "vercel deploy --dry",
+        "env:preview": "tsx scripts/sync-vercel-env.ts preview",
+        "env:production": "tsx scripts/sync-vercel-env.ts production",
         deploy: "vercel deploy",
+        "deploy:prod": "vercel deploy --prod",
+        "deploy:check": "vercel deploy --dry",
       });
+      expect(packageJson.scripts).not.toHaveProperty("deploy:vercel");
       expect(files.get("packages/env/src/web.ts")).toContain("const serverUrlSchema = z.union");
       expect(files.get("packages/env/src/server.ts")).toContain("function getVercelOrigin()");
       // Server-side better-auth must build public callback URLs through the
@@ -491,7 +491,7 @@ describe("Deployment Configurations", () => {
       expect(files.get("README.md")).toContain("### Vercel Services");
       expect(files.get("README.md")).toContain("Sync preview env");
       expect(files.get("README.md")).toContain("Config: `vercel.json`");
-      expect(files.get("README.md")).toContain("env:vercel:production --scope your-team");
+      expect(files.get("README.md")).toContain("env:production --scope your-team");
       expect(files.get("README.md")).toContain("https://www.better-t-stack.dev/docs/guides/vercel");
     });
 

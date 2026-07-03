@@ -128,15 +128,15 @@ cd my-app
 bunx vercel login
 
 # 2. Link the repo to a Vercel project (creates .vercel/project.json)
-bun link:vercel
+bun deploy:setup
 
 # 3. (Optional) Dry-run: preview framework detection and files without uploading
-bun deploy:vercel:check
+bun deploy:check
 
 # 4. Sync envs for the environment you deploy to, then deploy.
 #    Preview and production are separate env stores on Vercel.
-bun env:vercel:preview && bun deploy:vercel            # preview
-bun env:vercel:production && bun deploy:vercel:prod    # production
+bun env:preview && bun deploy            # preview
+bun env:production && bun deploy:prod    # production
 ```
 
 <Callout type="warn">
@@ -161,14 +161,14 @@ Nothing changes from a standard Better-T-Stack app: `apps/web/.env` holds public
 ### 2. Syncing to Vercel
 
 ```bash
-bun env:vercel:preview      # sync to the preview environment
-bun env:vercel:production   # sync to the production environment
+bun env:preview      # sync to the preview environment
+bun env:production   # sync to the production environment
 ```
 
 The generated `scripts/sync-vercel-env.ts` parses your `.env` files and pushes each key with the Vercel CLI. Because web and server are services in **one project, they share one environment store** — a single sync covers both. Extra CLI flags pass straight through:
 
 ```bash
-bun env:vercel:production --scope your-team
+bun env:production --scope your-team
 ```
 
 When the app that owns these keys runs on Vercel (combined web + server deployments, or a fullstack `self` backend), the sync is not a blind copy:
@@ -196,24 +196,30 @@ After changing envs, re-run the sync **and redeploy** — environment changes on
 `bun dev` remains your primary loop — native hot reload, no Vercel involvement. Two Vercel-specific commands complement it:
 
 - `bun dev:vercel` runs `vercel dev` for validating rewrites, route transforms, and env parity against the platform's routing layer. It is slower than `bun dev`; use it as a checking tool, not a daily driver.
-- `bun deploy:vercel:check` runs `vercel deploy --dry` — it prints the detected framework presets and the exact files a deployment would include, without uploading anything. Useful before a first deploy or after changing `vercel.json`.
+- `bun deploy:check` runs `vercel deploy --dry` — it prints the detected framework presets and the exact files a deployment would include, without uploading anything. Useful before a first deploy or after changing `vercel.json`.
 
 ## Command Reference
 
-| Command                     | What it does                                          |
-| --------------------------- | ----------------------------------------------------- |
-| `bun dev:vercel`            | Run the Vercel Services dev environment locally       |
-| `bun env:vercel:preview`    | Sync local `.env` files to the preview environment    |
-| `bun env:vercel:production` | Sync local `.env` files to the production environment |
-| `bun deploy:vercel:check`   | Dry-run a deploy (no upload)                          |
-| `bun deploy:vercel`         | Create a preview deployment                           |
-| `bun deploy:vercel:prod`    | Deploy to production                                  |
+| Command              | What it does                                          |
+| -------------------- | ----------------------------------------------------- |
+| `bun dev:vercel`     | Run the Vercel Services dev environment locally       |
+| `bun env:preview`    | Sync local `.env` files to the preview environment    |
+| `bun env:production` | Sync local `.env` files to the production environment |
+| `bun deploy:check`   | Dry-run a deploy (no upload)                          |
+| `bun deploy`         | Create a preview deployment                           |
+| `bun deploy:prod`    | Deploy to production                                  |
+
+<Callout type="info">
+  If a project combines Vercel with Cloudflare (which owns the bare `deploy` script via Alchemy),
+  these scripts are generated with a `:vercel` suffix instead: `link:vercel`, `env:vercel:preview`,
+  `env:vercel:production`, `deploy:vercel`, `deploy:vercel:prod`, `deploy:vercel:check`.
+</Callout>
 
 ## Troubleshooting
 
 ### "Environment variable X is undefined" after deploying
 
-You deployed before syncing envs. Run `bun env:vercel:production` (or `:preview`), then redeploy.
+You deployed before syncing envs. Run `bun env:production` (or `:preview`), then redeploy.
 
 ### `vercel link --yes` fails with "Provide --team or --scope"
 
@@ -235,7 +241,7 @@ Workarounds: set a [Protection Bypass for Automation](https://vercel.com/docs/de
 
 ### The browser calls `/api` but gets the web app's 404
 
-Check that `vercel.json` still contains both rewrites in order — `/api/(.*)` to the server service must come before the catch-all. The dry-run (`bun deploy:vercel:check`) shows what Vercel detected.
+Check that `vercel.json` still contains both rewrites in order — `/api/(.*)` to the server service must come before the catch-all. The dry-run (`bun deploy:check`) shows what Vercel detected.
 
 ### Changed an env var but the app still sees the old value
 

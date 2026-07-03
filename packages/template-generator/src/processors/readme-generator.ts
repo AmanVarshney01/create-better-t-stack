@@ -772,13 +772,14 @@ function generateScriptsList(
   }
 
   if (webDeploy === "vercel" || serverDeploy === "vercel") {
-    scripts += `\n- \`${packageManagerRunCmd} link:vercel\`: Link this repo to a Vercel project (first-time setup)
+    const v = getVercelScriptNames(webDeploy, serverDeploy);
+    scripts += `\n- \`${packageManagerRunCmd} ${v.setup}\`: Link this repo to a Vercel project (first-time setup)
 - \`${packageManagerRunCmd} dev:vercel\`: Run the Vercel Services dev environment locally
-- \`${packageManagerRunCmd} env:vercel:preview\`: Sync local env files to the Vercel preview environment
-- \`${packageManagerRunCmd} env:vercel:production\`: Sync local env files to the Vercel production environment
-- \`${packageManagerRunCmd} deploy:vercel\`: Create a Vercel preview deployment
-- \`${packageManagerRunCmd} deploy:vercel:prod\`: Deploy to Vercel production
-- \`${packageManagerRunCmd} deploy:vercel:check\`: Dry-run a deploy to preview framework detection and included files without uploading`;
+- \`${packageManagerRunCmd} ${v.envPreview}\`: Sync local env files to the Vercel preview environment
+- \`${packageManagerRunCmd} ${v.envProduction}\`: Sync local env files to the Vercel production environment
+- \`${packageManagerRunCmd} ${v.deploy}\`: Create a Vercel preview deployment
+- \`${packageManagerRunCmd} ${v.deployProd}\`: Deploy to Vercel production
+- \`${packageManagerRunCmd} ${v.deployCheck}\`: Dry-run a deploy to preview framework detection and included files without uploading`;
   }
 
   return scripts;
@@ -847,6 +848,7 @@ function generateDeploymentCommands(
   }
 
   if (hasVercel) {
+    const vercelNames = getVercelScriptNames(webDeploy, serverDeploy);
     const targetLabel =
       webDeploy === "vercel" && (serverDeploy === "vercel" || backend === "self")
         ? "web + server"
@@ -860,13 +862,13 @@ function generateDeploymentCommands(
       "",
       `- Target: ${targetLabel}`,
       "- Config: `vercel.json`",
-      `- Link the project first: ${packageManagerRunCmd} link:vercel`,
+      `- Link the project first: ${packageManagerRunCmd} ${vercelNames.setup}`,
       `- Local Vercel dev: ${packageManagerRunCmd} dev:vercel`,
-      `- Sync preview env: ${packageManagerRunCmd} env:vercel:preview`,
-      `- Sync production env: ${packageManagerRunCmd} env:vercel:production`,
-      `- Dry-run check (no upload): ${packageManagerRunCmd} deploy:vercel:check`,
-      `- Preview deploy: ${packageManagerRunCmd} deploy:vercel`,
-      `- Production deploy: ${packageManagerRunCmd} deploy:vercel:prod`,
+      `- Sync preview env: ${packageManagerRunCmd} ${vercelNames.envPreview}`,
+      `- Sync production env: ${packageManagerRunCmd} ${vercelNames.envProduction}`,
+      `- Dry-run check (no upload): ${packageManagerRunCmd} ${vercelNames.deployCheck}`,
+      `- Preview deploy: ${packageManagerRunCmd} ${vercelNames.deploy}`,
+      `- Production deploy: ${packageManagerRunCmd} ${vercelNames.deployProd}`,
     );
 
     if (webDeploy === "vercel" && serverDeploy === "vercel" && backend !== "self") {
@@ -877,7 +879,7 @@ function generateDeploymentCommands(
 
     lines.push(
       "Vercel Services share project environment variables, but deploys do not upload local `.env` files automatically. Link the project with `vercel link`, then run the env sync command before your first deploy (otherwise the deployment starts with no env vars), or pass one-off envs with `vercel deploy -e KEY=value`.",
-      `Pass Vercel CLI flags to the env sync command directly, for example: \`${packageManagerRunCmd} env:vercel:production --scope your-team\`.`,
+      `Pass Vercel CLI flags to the env sync command directly, for example: \`${packageManagerRunCmd} ${vercelNames.envProduction} --scope your-team\`.`,
       "",
       "For more details, see the guide on [Deploying to Vercel](https://www.better-t-stack.dev/docs/guides/vercel).",
     );
@@ -918,4 +920,28 @@ function generateGitHooksSection(
   }
 
   return `${lines.join("\n")}\n\n`;
+}
+
+function getVercelScriptNames(
+  webDeploy: ProjectConfig["webDeploy"] | undefined,
+  serverDeploy: ProjectConfig["serverDeploy"] | undefined,
+) {
+  const mixedWithCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  return mixedWithCloudflare
+    ? {
+        setup: "link:vercel",
+        envPreview: "env:vercel:preview",
+        envProduction: "env:vercel:production",
+        deploy: "deploy:vercel",
+        deployProd: "deploy:vercel:prod",
+        deployCheck: "deploy:vercel:check",
+      }
+    : {
+        setup: "deploy:setup",
+        envPreview: "env:preview",
+        envProduction: "env:production",
+        deploy: "deploy",
+        deployProd: "deploy:prod",
+        deployCheck: "deploy:check",
+      };
 }
