@@ -5,12 +5,22 @@ import { createAuthClient } from "better-auth/svelte";
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopaymentsClient } from "@dodopayments/better-auth";
+{{/if}}
 
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
 	baseURL: PUBLIC_SERVER_URL,
 {{/unless}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
+	plugins: [
 {{#if (eq payments "polar")}}
-	plugins: [polarClient()]
+		polarClient(),
+{{/if}}
+{{#if (eq payments "dodo")}}
+		dodopaymentsClient(),
+{{/if}}
+	],
 {{/if}}
 });

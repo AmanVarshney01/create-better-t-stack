@@ -1,0 +1,32 @@
+import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router";
+
+import { authClient } from "@/lib/auth-client";
+
+export default function PaymentSuccessPage() {
+	const [searchParams] = useSearchParams();
+	const navigate = useNavigate();
+	const checkout_id = searchParams.get("checkout_id");
+
+	useEffect(() => {
+		let active = true;
+		async function loadSession() {
+			const session = await authClient.getSession();
+			if (active && !session.data) {
+				navigate("/login", { replace: true });
+			}
+		}
+
+		loadSession();
+		return () => {
+			active = false;
+		};
+	}, [navigate]);
+
+	return (
+		<div className="container mx-auto px-4 py-8">
+			<h1>Payment Successful!</h1>
+			{checkout_id && <p>Checkout ID: {checkout_id}</p>}
+		</div>
+	);
+}

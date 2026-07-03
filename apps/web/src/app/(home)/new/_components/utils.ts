@@ -615,13 +615,14 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // PAYMENTS CONSTRAINTS
   // ============================================
 
-  if (nextStack.payments === "polar") {
+  if (nextStack.payments === "polar" || nextStack.payments === "dodo") {
+    const providerLabel = nextStack.payments === "polar" ? "Polar" : "Dodo";
     if (nextStack.auth !== "better-auth") {
       nextStack.payments = "none";
       changed = true;
       changes.push({
         category: "payments",
-        message: "Payments set to 'None' (Polar requires Better Auth)",
+        message: `Payments set to 'None' (${providerLabel} requires Better Auth)`,
       });
     }
   }
@@ -1114,9 +1115,10 @@ export const getDisabledReason = (
   // ============================================
   // PAYMENTS CONSTRAINTS
   // ============================================
-  if (category === "payments" && optionId === "polar") {
+  if (category === "payments" && (optionId === "polar" || optionId === "dodo")) {
+    const providerLabel = optionId === "polar" ? "Polar" : "Dodo";
     if (currentStack.auth !== "better-auth") {
-      return "Polar requires Better Auth";
+      return `${providerLabel} requires Better Auth`;
     }
   }
 

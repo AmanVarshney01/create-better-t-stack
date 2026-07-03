@@ -16,9 +16,9 @@ export async function getPaymentsChoice(
     return "none" as Payments;
   }
 
-  const isPolarCompatible = auth === "better-auth";
+  const isProviderCompatible = auth === "better-auth";
 
-  if (!isPolarCompatible) {
+  if (!isProviderCompatible) {
     return "none" as Payments;
   }
 
@@ -27,6 +27,11 @@ export async function getPaymentsChoice(
       value: "polar" as Payments,
       label: "Polar",
       hint: "Turn your software into a business. 6 lines of code.",
+    },
+    {
+      value: "dodo" as Payments,
+      label: "Dodo Payments",
+      hint: "Payments, billing, and distribution. One integration.",
     },
     {
       value: "none" as Payments,
