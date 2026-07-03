@@ -16643,6 +16643,7 @@ CMD ["node", "build/index.js"]
 !**/.env.example
 local.db
 local.db-*
+.alchemy/
 `],
   ["deploy/vercel/scripts/sync-vercel-env.ts.hbs", `import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";

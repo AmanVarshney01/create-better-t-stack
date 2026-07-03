@@ -8,3 +8,4 @@
 !**/.env.example
 local.db
 local.db-*
+.alchemy/
