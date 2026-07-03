@@ -9199,7 +9199,9 @@ function getServerUrl(url: string) {
 {{/if}}
 export const authClient = createAuthClient({
 {{#if (ne backend "self")}}
-  baseURL: getServerUrl(PUBLIC_SERVER_URL),
+  // Append the auth path explicitly: better-auth only auto-appends /api/auth
+  // when the baseURL has no path, which breaks same-origin /api deploys
+  baseURL: \`\${getServerUrl(PUBLIC_SERVER_URL)}/api/auth\`,
 {{/if}}
 {{#if (eq payments "polar")}}
   plugins: [polarClient()],
@@ -9787,7 +9789,9 @@ function getServerUrl(url: string) {
 
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	baseURL: getServerUrl(env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}}),
+	// Append the auth path explicitly: better-auth only auto-appends /api/auth
+	// when the baseURL has no path, which breaks same-origin /api deploys
+	baseURL: \`\${getServerUrl(env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})}/api/auth\`,
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
@@ -12108,7 +12112,9 @@ function getServerUrl(url: string) {
 }
 
 export const authClient = createAuthClient({
-	baseURL: getServerUrl(env.VITE_SERVER_URL),
+	// Append the auth path explicitly: better-auth only auto-appends /api/auth
+	// when the baseURL has no path, which breaks same-origin /api deploys
+	baseURL: \`\${getServerUrl(env.VITE_SERVER_URL)}/api/auth\`,
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
 {{/if}}
@@ -12554,7 +12560,9 @@ function getServerUrl(url: string) {
 {{/unless}}
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	baseURL: getServerUrl(PUBLIC_SERVER_URL),
+	// Append the auth path explicitly: better-auth only auto-appends /api/auth
+	// when the baseURL has no path, which breaks same-origin /api deploys
+	baseURL: \`\${getServerUrl(PUBLIC_SERVER_URL)}/api/auth\`,
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]

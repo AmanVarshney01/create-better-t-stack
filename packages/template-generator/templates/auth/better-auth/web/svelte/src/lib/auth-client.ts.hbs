@@ -36,7 +36,9 @@ function getServerUrl(url: string) {
 {{/unless}}
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	baseURL: getServerUrl(PUBLIC_SERVER_URL),
+	// Append the auth path explicitly: better-auth only auto-appends /api/auth
+	// when the baseURL has no path, which breaks same-origin /api deploys
+	baseURL: `${getServerUrl(PUBLIC_SERVER_URL)}/api/auth`,
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]

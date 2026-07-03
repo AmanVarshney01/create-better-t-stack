@@ -474,7 +474,11 @@ describe("Deployment Configurations", () => {
       // both reject relative URLs (BetterAuthError / SSR fetch failure)
       const authClient = files.get("apps/web/src/lib/auth-client.ts") ?? "";
       expect(authClient).toContain("function getServerUrl(url: string)");
-      expect(authClient).toContain("baseURL: getServerUrl(env.NEXT_PUBLIC_SERVER_URL)");
+      // The /api/auth suffix is required: better-auth uses a baseURL with a
+      // path as-is, so the origin-only shortcut breaks same-origin deploys
+      expect(authClient).toContain(
+        "baseURL: `${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/api/auth`",
+      );
       const trpcClient = files.get("apps/web/src/utils/trpc.ts") ?? "";
       expect(trpcClient).toContain("url: `${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/trpc`");
       expect(files.get("README.md")).toContain("### Vercel Services");
