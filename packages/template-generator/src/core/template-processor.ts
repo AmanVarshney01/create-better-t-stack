@@ -9,6 +9,37 @@ Handlebars.registerHelper("or", (...args) => args.slice(0, -1).some(Boolean));
 Handlebars.registerHelper("not", (a) => !a);
 Handlebars.registerHelper("includes", (arr, val) => Array.isArray(arr) && arr.includes(val));
 
+// Shared across every web client template (oRPC/tRPC/better-auth) so the
+// same-origin URL normalization for Vercel deploys has one source of truth.
+const getServerUrlSource = `function getServerUrl(url: string) {
+	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+	if (!normalized.startsWith("/")) {
+		return normalized;
+	}
+
+	if (typeof window !== "undefined") {
+		return \`\${window.location.origin}\${normalized}\`;
+	}
+
+	const processEnv = (globalThis as {
+		process?: { env?: Record<string, string | undefined> };
+	}).process?.env;
+	const vercelUrl =
+		processEnv?.VERCEL_ENV === "production"
+			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
+			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
+	if (vercelUrl) {
+		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+		return \`\${origin}\${normalized}\`;
+	}
+
+	return \`http://localhost:3000\${normalized}\`;
+}`;
+
+Handlebars.registerPartial("getServerUrl", getServerUrlSource);
+Handlebars.registerPartial("getServerUrlSpaces", getServerUrlSource.replaceAll("\t", "  "));
+
 export function processTemplateString(content: string, context: ProjectConfig): string {
   return Handlebars.compile(content)(context);
 }

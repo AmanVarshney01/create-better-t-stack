@@ -1264,31 +1264,7 @@ export const link = new RPCLink({
 {{else}}
 import { PUBLIC_SERVER_URL } from "astro:env/client";
 
-function getServerUrl(url: string) {
-  const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
-
-  if (!normalized.startsWith("/")) {
-    return normalized;
-  }
-
-  if (typeof window !== "undefined") {
-    return \`\${window.location.origin}\${normalized}\`;
-  }
-
-  const processEnv = (globalThis as {
-    process?: { env?: Record<string, string | undefined> };
-  }).process?.env;
-  const vercelUrl =
-    processEnv?.VERCEL_ENV === "production"
-      ? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
-      : (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
-  if (vercelUrl) {
-    const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
-    return \`\${origin}\${normalized}\`;
-  }
-
-  return \`http://localhost:3000\${normalized}\`;
-}
+{{> getServerUrlSpaces}}
 
 export const link = new RPCLink({
   url: \`\${getServerUrl(PUBLIC_SERVER_URL)}/rpc\`,
@@ -1458,31 +1434,7 @@ export const queryClient = createQueryClient();
 {{/unless}}
 
 {{#unless (eq backend "self")}}
-function getServerUrl(url: string) {
-	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
-
-	if (!normalized.startsWith("/")) {
-		return normalized;
-	}
-
-	if (typeof window !== "undefined") {
-		return \`\${window.location.origin}\${normalized}\`;
-	}
-
-	const processEnv = (globalThis as {
-		process?: { env?: Record<string, string | undefined> };
-	}).process?.env;
-	const vercelUrl =
-		processEnv?.VERCEL_ENV === "production"
-			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
-			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
-	if (vercelUrl) {
-		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
-		return \`\${origin}\${normalized}\`;
-	}
-
-	return \`http://localhost:3000\${normalized}\`;
-}
+{{> getServerUrl}}
 
 {{/unless}}
 {{#if (and (includes frontend "tanstack-start") (eq backend "self"))}}
@@ -1603,31 +1555,7 @@ export const queryClient = new QueryClient({
 	}),
 });
 
-function getServerUrl(url: string) {
-	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
-
-	if (!normalized.startsWith("/")) {
-		return normalized;
-	}
-
-	if (typeof window !== "undefined") {
-		return \`\${window.location.origin}\${normalized}\`;
-	}
-
-	const processEnv = (globalThis as {
-		process?: { env?: Record<string, string | undefined> };
-	}).process?.env;
-	const vercelUrl =
-		processEnv?.VERCEL_ENV === "production"
-			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
-			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
-	if (vercelUrl) {
-		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
-		return \`\${origin}\${normalized}\`;
-	}
-
-	return \`http://localhost:3000\${normalized}\`;
-}
+{{> getServerUrl}}
 
 export const link = new RPCLink({
 	url: \`\${getServerUrl(env.VITE_SERVER_URL)}/rpc\`,
@@ -1663,31 +1591,7 @@ export const queryClient = new QueryClient({
 });
 
 {{#unless (eq backend "self")}}
-function getServerUrl(url: string) {
-	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
-
-	if (!normalized.startsWith("/")) {
-		return normalized;
-	}
-
-	if (typeof window !== "undefined") {
-		return \`\${window.location.origin}\${normalized}\`;
-	}
-
-	const processEnv = (globalThis as {
-		process?: { env?: Record<string, string | undefined> };
-	}).process?.env;
-	const vercelUrl =
-		processEnv?.VERCEL_ENV === "production"
-			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
-			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
-	if (vercelUrl) {
-		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
-		return \`\${origin}\${normalized}\`;
-	}
-
-	return \`http://localhost:3000\${normalized}\`;
-}
+{{> getServerUrl}}
 
 {{/unless}}
 export const link = new RPCLink({
@@ -2227,31 +2131,7 @@ import { toast } from 'sonner';
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 
-function getServerUrl(url: string) {
-	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
-
-	if (!normalized.startsWith("/")) {
-		return normalized;
-	}
-
-	if (typeof window !== "undefined") {
-		return \`\${window.location.origin}\${normalized}\`;
-	}
-
-	const processEnv = (globalThis as {
-		process?: { env?: Record<string, string | undefined> };
-	}).process?.env;
-	const vercelUrl =
-		processEnv?.VERCEL_ENV === "production"
-			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
-			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
-	if (vercelUrl) {
-		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
-		return \`\${origin}\${normalized}\`;
-	}
-
-	return \`http://localhost:3000\${normalized}\`;
-}
+{{> getServerUrl}}
 {{/unless}}
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
@@ -2329,31 +2209,7 @@ import { env } from "@{{projectName}}/env/web";
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 
-function getServerUrl(url: string) {
-	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
-
-	if (!normalized.startsWith("/")) {
-		return normalized;
-	}
-
-	if (typeof window !== "undefined") {
-		return \`\${window.location.origin}\${normalized}\`;
-	}
-
-	const processEnv = (globalThis as {
-		process?: { env?: Record<string, string | undefined> };
-	}).process?.env;
-	const vercelUrl =
-		processEnv?.VERCEL_ENV === "production"
-			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
-			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
-	if (vercelUrl) {
-		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
-		return \`\${origin}\${normalized}\`;
-	}
-
-	return \`http://localhost:3000\${normalized}\`;
-}
+{{> getServerUrl}}
 
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
@@ -9170,31 +9026,7 @@ import { PUBLIC_SERVER_URL } from "astro:env/client";
 {{/if}}
 
 {{#if (ne backend "self")}}
-function getServerUrl(url: string) {
-  const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
-
-  if (!normalized.startsWith("/")) {
-    return normalized;
-  }
-
-  if (typeof window !== "undefined") {
-    return \`\${window.location.origin}\${normalized}\`;
-  }
-
-  const processEnv = (globalThis as {
-    process?: { env?: Record<string, string | undefined> };
-  }).process?.env;
-  const vercelUrl =
-    processEnv?.VERCEL_ENV === "production"
-      ? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
-      : (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
-  if (vercelUrl) {
-    const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
-    return \`\${origin}\${normalized}\`;
-  }
-
-  return \`http://localhost:3000\${normalized}\`;
-}
+{{> getServerUrlSpaces}}
 
 {{/if}}
 export const authClient = createAuthClient({
@@ -9760,31 +9592,7 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 
-function getServerUrl(url: string) {
-	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
-
-	if (!normalized.startsWith("/")) {
-		return normalized;
-	}
-
-	if (typeof window !== "undefined") {
-		return \`\${window.location.origin}\${normalized}\`;
-	}
-
-	const processEnv = (globalThis as {
-		process?: { env?: Record<string, string | undefined> };
-	}).process?.env;
-	const vercelUrl =
-		processEnv?.VERCEL_ENV === "production"
-			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
-			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
-	if (vercelUrl) {
-		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
-		return \`\${origin}\${normalized}\`;
-	}
-
-	return \`http://localhost:3000\${normalized}\`;
-}
+{{> getServerUrl}}
 {{/unless}}
 
 export const authClient = createAuthClient({
@@ -12085,31 +11893,7 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 import { env } from "@{{projectName}}/env/web";
 
-function getServerUrl(url: string) {
-	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
-
-	if (!normalized.startsWith("/")) {
-		return normalized;
-	}
-
-	if (typeof window !== "undefined") {
-		return \`\${window.location.origin}\${normalized}\`;
-	}
-
-	const processEnv = (globalThis as {
-		process?: { env?: Record<string, string | undefined> };
-	}).process?.env;
-	const vercelUrl =
-		processEnv?.VERCEL_ENV === "production"
-			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
-			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
-	if (vercelUrl) {
-		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
-		return \`\${origin}\${normalized}\`;
-	}
-
-	return \`http://localhost:3000\${normalized}\`;
-}
+{{> getServerUrl}}
 
 export const authClient = createAuthClient({
 	// Append the auth path explicitly: better-auth only auto-appends /api/auth
@@ -12531,31 +12315,7 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
 {{#unless (eq backend "self")}}
-function getServerUrl(url: string) {
-	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
-
-	if (!normalized.startsWith("/")) {
-		return normalized;
-	}
-
-	if (typeof window !== "undefined") {
-		return \`\${window.location.origin}\${normalized}\`;
-	}
-
-	const processEnv = (globalThis as {
-		process?: { env?: Record<string, string | undefined> };
-	}).process?.env;
-	const vercelUrl =
-		processEnv?.VERCEL_ENV === "production"
-			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
-			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
-	if (vercelUrl) {
-		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
-		return \`\${origin}\${normalized}\`;
-	}
-
-	return \`http://localhost:3000\${normalized}\`;
-}
+{{> getServerUrl}}
 
 {{/unless}}
 export const authClient = createAuthClient({
@@ -31574,31 +31334,7 @@ export function getRouter() {
 {{else}}
 {{#if (eq api "trpc")}}
 {{#unless (eq backend "self")}}
-function getServerUrl(url: string) {
-	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
-
-	if (!normalized.startsWith("/")) {
-		return normalized;
-	}
-
-	if (typeof window !== "undefined") {
-		return \`\${window.location.origin}\${normalized}\`;
-	}
-
-	const processEnv = (globalThis as {
-		process?: { env?: Record<string, string | undefined> };
-	}).process?.env;
-	const vercelUrl =
-		processEnv?.VERCEL_ENV === "production"
-			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
-			: (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
-	if (vercelUrl) {
-		const origin = vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
-		return \`\${origin}\${normalized}\`;
-	}
-
-	return \`http://localhost:3000\${normalized}\`;
-}
+{{> getServerUrl}}
 
 {{/unless}}
 function createQueryClient() {
