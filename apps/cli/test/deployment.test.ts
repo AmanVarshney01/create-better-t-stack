@@ -474,6 +474,9 @@ describe("Deployment Configurations", () => {
       });
       expect(files.get("packages/env/src/web.ts")).toContain("const serverUrlSchema = z.union");
       expect(files.get("packages/env/src/server.ts")).toContain("function getVercelOrigin()");
+      // Server-side better-auth must build public callback URLs through the
+      // /api rewrite prefix, not the bare origin
+      expect(files.get("packages/env/src/server.ts")).toContain("/api/api/auth");
       // better-auth and tRPC clients must normalize the same-origin /api path;
       // both reject relative URLs (BetterAuthError / SSR fetch failure)
       const authClient = files.get("apps/web/src/lib/auth-client.ts") ?? "";

@@ -105,12 +105,20 @@ function getVercelOrigin() {
 	return vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`;
 }
 
+const vercelOrigin = getVercelOrigin();
+
 const runtimeEnv = {
 	...process.env,
 {{#if (eq auth "better-auth")}}
-	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? getVercelOrigin(),
+{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self"))}}
+	// Full public auth base: the /api rewrite prefix plus the server's /api/auth
+	// mount, so better-auth builds callback/redirect URLs that survive the rewrite
+	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? (vercelOrigin ? `${vercelOrigin}/api/api/auth` : undefined),
+{{else}}
+	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? vercelOrigin,
 {{/if}}
-	CORS_ORIGIN: process.env.CORS_ORIGIN ?? getVercelOrigin(),
+{{/if}}
+	CORS_ORIGIN: process.env.CORS_ORIGIN ?? vercelOrigin,
 };
 
 {{/if}}
