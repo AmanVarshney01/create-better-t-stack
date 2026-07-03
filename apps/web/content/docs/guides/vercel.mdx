@@ -210,9 +210,9 @@ After changing envs, re-run the sync **and redeploy** — environment changes on
 | `bun deploy:prod`    | Deploy to production                                  |
 
 <Callout type="info">
-  If a project combines Vercel with Cloudflare (which owns the bare `deploy` script via Alchemy),
-  these scripts are generated with a `:vercel` suffix instead: `link:vercel`, `env:vercel:preview`,
-  `env:vercel:production`, `deploy:vercel`, `deploy:vercel:prod`, `deploy:vercel:check`.
+  If a project deploys web and server to different platforms (Vercel + Cloudflare), the deploy
+  scripts are named by target instead: `deploy:web` / `deploy:web:prod` for one side and
+  `deploy:server` for the other. Setup, env sync, and dry-run scripts keep the same names.
 </Callout>
 
 ## Troubleshooting

@@ -623,12 +623,14 @@ function getAlchemyDeployInstructions(
   const isBackendSelf = backend === "self";
 
   if (webDeploy === "cloudflare" && serverDeploy !== "cloudflare" && !isBackendSelf) {
+    const cfDeploy = serverDeploy === "vercel" ? "deploy:web" : "deploy";
     instructions.push(
-      `${pc.bold("Deploy web with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
+      `${pc.bold("Deploy web with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${cfDeploy}`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
     );
   } else if (serverDeploy === "cloudflare" && webDeploy !== "cloudflare" && !isBackendSelf) {
+    const cfDeploy = webDeploy === "vercel" ? "deploy:server" : "deploy";
     instructions.push(
-      `${pc.bold("Deploy server with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
+      `${pc.bold("Deploy server with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${cfDeploy}`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
     );
   } else if (webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || isBackendSelf)) {
     instructions.push(
@@ -650,9 +652,13 @@ function getAlchemyDeployInstructions(
 
   if (webDeploy === "vercel" || serverDeploy === "vercel") {
     const mixedWithCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
-    const vercelSetupScript = mixedWithCloudflare ? "link:vercel" : "deploy:setup";
-    const vercelEnvScript = mixedWithCloudflare ? "env:vercel:production" : "env:production";
-    const vercelDeployScript = mixedWithCloudflare ? "deploy:vercel:prod" : "deploy:prod";
+    const vercelSetupScript = "deploy:setup";
+    const vercelEnvScript = "env:production";
+    const vercelDeployScript = mixedWithCloudflare
+      ? webDeploy === "vercel"
+        ? "deploy:web:prod"
+        : "deploy:server:prod"
+      : "deploy:prod";
     const vercelTargets =
       webDeploy === "vercel" && (serverDeploy === "vercel" || isBackendSelf)
         ? "web + server"

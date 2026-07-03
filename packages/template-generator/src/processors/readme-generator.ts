@@ -808,6 +808,11 @@ function generateDeploymentCommands(
         : webDeploy === "cloudflare"
           ? "web"
           : "server";
+    const cfDeployScript = hasVercel
+      ? webDeploy === "cloudflare"
+        ? "deploy:web"
+        : "deploy:server"
+      : "deploy";
 
     lines.push(
       "",
@@ -815,7 +820,7 @@ function generateDeploymentCommands(
       "",
       `- Target: ${targetLabel}`,
       `- Dev: ${packageManagerRunCmd} dev`,
-      `- Deploy: ${packageManagerRunCmd} deploy`,
+      `- Deploy: ${packageManagerRunCmd} ${cfDeployScript}`,
       `- Destroy: ${packageManagerRunCmd} destroy`,
       "",
       "For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).",
@@ -926,22 +931,15 @@ function getVercelScriptNames(
   webDeploy: ProjectConfig["webDeploy"] | undefined,
   serverDeploy: ProjectConfig["serverDeploy"] | undefined,
 ) {
-  const mixedWithCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
-  return mixedWithCloudflare
-    ? {
-        setup: "link:vercel",
-        envPreview: "env:vercel:preview",
-        envProduction: "env:vercel:production",
-        deploy: "deploy:vercel",
-        deployProd: "deploy:vercel:prod",
-        deployCheck: "deploy:vercel:check",
-      }
-    : {
-        setup: "deploy:setup",
-        envPreview: "env:preview",
-        envProduction: "env:production",
-        deploy: "deploy",
-        deployProd: "deploy:prod",
-        deployCheck: "deploy:check",
-      };
+  const mixedCloud = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const target = webDeploy === "vercel" ? "web" : "server";
+  const deploy = mixedCloud ? `deploy:${target}` : "deploy";
+  return {
+    setup: "deploy:setup",
+    envPreview: "env:preview",
+    envProduction: "env:production",
+    deploy,
+    deployProd: `${deploy}:prod`,
+    deployCheck: "deploy:check",
+  };
 }

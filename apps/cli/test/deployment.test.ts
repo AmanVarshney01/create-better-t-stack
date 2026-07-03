@@ -495,6 +495,46 @@ describe("Deployment Configurations", () => {
       expect(files.get("README.md")).toContain("https://www.better-t-stack.dev/docs/guides/vercel");
     });
 
+    it("should name deploy scripts by target for mixed Vercel + Cloudflare deploys", async () => {
+      const result = await createVirtual({
+        projectName: "mixed-vercel-cf",
+        webDeploy: "vercel",
+        serverDeploy: "cloudflare",
+        backend: "hono",
+        runtime: "workers",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "d1",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const pkg = JSON.parse(files.get("package.json") ?? "{}") as {
+        scripts?: Record<string, string>;
+      };
+
+      // Different platforms per target: scripts are named by what they deploy
+      expect(pkg.scripts?.["deploy:web"]).toBe("vercel deploy");
+      expect(pkg.scripts?.["deploy:web:prod"]).toBe("vercel deploy --prod");
+      expect(pkg.scripts?.["deploy:server"]).toContain("deploy");
+      expect(pkg.scripts?.destroy).toContain("destroy");
+      expect(pkg.scripts).not.toHaveProperty("deploy");
+      expect(pkg.scripts?.["deploy:setup"]).toBe("vercel link");
+      expect(pkg.scripts?.["env:production"]).toBe("tsx scripts/sync-vercel-env.ts production");
+    });
+
     it("should normalize relative Vercel oRPC URLs before creating RPC links", async () => {
       const result = await createVirtual({
         projectName: "orpc-vercel-url",

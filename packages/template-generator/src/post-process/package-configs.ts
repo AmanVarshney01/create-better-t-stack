@@ -185,38 +185,29 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   const hasCloudflareDeploy =
     config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare";
   const hasVercelDeploy = config.webDeploy === "vercel" || config.serverDeploy === "vercel";
+  // When web and server deploy to different cloud platforms, deploy scripts
+  // are named by target (deploy:web / deploy:server); otherwise plain deploy
+  const isMixedCloud = hasCloudflareDeploy && hasVercelDeploy;
   if (hasCloudflareDeploy) {
-    scripts.deploy = pmConfig.filter(infraPackageName, "deploy");
+    const cfDeployScript = isMixedCloud
+      ? config.webDeploy === "cloudflare"
+        ? "deploy:web"
+        : "deploy:server"
+      : "deploy";
+    scripts[cfDeployScript] = pmConfig.filter(infraPackageName, "deploy");
     scripts.destroy = pmConfig.filter(infraPackageName, "destroy");
   }
 
   if (hasVercelDeploy) {
-    // Plain names when Vercel is the only cloud target; :vercel-suffixed when
-    // mixed with Cloudflare, which owns the bare deploy/destroy via Alchemy
-    const vercelScriptNames = hasCloudflareDeploy
-      ? {
-          setup: "link:vercel",
-          envPreview: "env:vercel:preview",
-          envProduction: "env:vercel:production",
-          deploy: "deploy:vercel",
-          deployProd: "deploy:vercel:prod",
-          deployCheck: "deploy:vercel:check",
-        }
-      : {
-          setup: "deploy:setup",
-          envPreview: "env:preview",
-          envProduction: "env:production",
-          deploy: "deploy",
-          deployProd: "deploy:prod",
-          deployCheck: "deploy:check",
-        };
-    scripts[vercelScriptNames.setup] = "vercel link";
+    const vercelTarget = config.webDeploy === "vercel" ? "web" : "server";
+    const vercelDeploy = isMixedCloud ? `deploy:${vercelTarget}` : "deploy";
+    scripts["deploy:setup"] = "vercel link";
     scripts["dev:vercel"] = "vercel dev -L";
-    scripts[vercelScriptNames.envPreview] = "tsx scripts/sync-vercel-env.ts preview";
-    scripts[vercelScriptNames.envProduction] = "tsx scripts/sync-vercel-env.ts production";
-    scripts[vercelScriptNames.deploy] = "vercel deploy";
-    scripts[vercelScriptNames.deployProd] = "vercel deploy --prod";
-    scripts[vercelScriptNames.deployCheck] = "vercel deploy --dry";
+    scripts["env:preview"] = "tsx scripts/sync-vercel-env.ts preview";
+    scripts["env:production"] = "tsx scripts/sync-vercel-env.ts production";
+    scripts[vercelDeploy] = "vercel deploy";
+    scripts[`${vercelDeploy}:prod`] = "vercel deploy --prod";
+    scripts["deploy:check"] = "vercel deploy --dry";
   }
 
   // Add compose scripts when deploying web/server as Docker containers
