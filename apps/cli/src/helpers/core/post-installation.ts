@@ -231,11 +231,12 @@ export async function displayPostInstallInstructions(
   if (vitePlusNativeHooksInstructions) output += `\n${vitePlusNativeHooksInstructions.trim()}\n`;
   if (lintingInstructions) output += `\n${lintingInstructions.trim()}\n`;
   if (pwaInstructions) output += `\n${pwaInstructions.trim()}\n`;
-  if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
   if (starlightInstructions) output += `\n${starlightInstructions.trim()}\n`;
   if (clerkInstructions) output += `\n${clerkInstructions.trim()}\n`;
   if (betterAuthConvexInstructions) output += `\n${betterAuthConvexInstructions.trim()}\n`;
   if (polarInstructions) output += `\n${polarInstructions.trim()}\n`;
+  // Deploy steps come last so env sync happens after auth/payment keys exist
+  if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
 
   if (noOrmWarning) output += `\n${noOrmWarning.trim()}\n`;
   if (bunWebNativeWarning) output += `\n${bunWebNativeWarning.trim()}\n`;
@@ -655,7 +656,7 @@ function getAlchemyDeployInstructions(
           ? "web"
           : "server";
     instructions.push(
-      `${pc.bold(`Deploy ${vercelTargets} with Vercel Services:`)}\n${pc.cyan("•")} Link project: npx vercel link\n${pc.cyan("•")} Sync env (before first deploy): ${`${runCmd} env:vercel:production`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy:vercel:prod`}\n${pc.cyan("•")} Guide: https://www.better-t-stack.dev/docs/guides/vercel`,
+      `${pc.bold(`Deploy ${vercelTargets} with Vercel Services:`)}\n${pc.cyan("•")} Link project: ${`${runCmd} link:vercel`}\n${pc.cyan("•")} Sync env (before first deploy): ${`${runCmd} env:vercel:production`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy:vercel:prod`}\n${pc.cyan("•")} Guide: https://www.better-t-stack.dev/docs/guides/vercel`,
     );
   }
 

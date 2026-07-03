@@ -16722,6 +16722,16 @@ if (env.size === 0) {
 	process.exit(0);
 }
 
+const LOCAL_VALUE_PATTERN = /localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0|^file:/i;
+const localKeys = [...env.entries()]
+	.filter(([, value]) => LOCAL_VALUE_PATTERN.test(value))
+	.map(([key]) => key);
+if (localKeys.length > 0) {
+	console.warn(
+		\`Warning: \${localKeys.join(", ")} look\${localKeys.length === 1 ? "s" : ""} like local-only value(s). Update them in your .env file(s) and re-run this sync if your deployed app should not point at local endpoints.\`,
+	);
+}
+
 console.log(\`Syncing \${env.size} env var(s) to Vercel \${environment}.\`);
 for (const [key, value] of env.entries()) {
 	const result = spawnSync(

@@ -772,7 +772,8 @@ function generateScriptsList(
   }
 
   if (webDeploy === "vercel" || serverDeploy === "vercel") {
-    scripts += `\n- \`${packageManagerRunCmd} dev:vercel\`: Run the Vercel Services dev environment locally
+    scripts += `\n- \`${packageManagerRunCmd} link:vercel\`: Link this repo to a Vercel project (first-time setup)
+- \`${packageManagerRunCmd} dev:vercel\`: Run the Vercel Services dev environment locally
 - \`${packageManagerRunCmd} env:vercel:preview\`: Sync local env files to the Vercel preview environment
 - \`${packageManagerRunCmd} env:vercel:production\`: Sync local env files to the Vercel production environment
 - \`${packageManagerRunCmd} deploy:vercel\`: Create a Vercel preview deployment
@@ -859,7 +860,7 @@ function generateDeploymentCommands(
       "",
       `- Target: ${targetLabel}`,
       "- Config: `vercel.json`",
-      "- Link the project first: `vercel link`",
+      `- Link the project first: ${packageManagerRunCmd} link:vercel`,
       `- Local Vercel dev: ${packageManagerRunCmd} dev:vercel`,
       `- Sync preview env: ${packageManagerRunCmd} env:vercel:preview`,
       `- Sync production env: ${packageManagerRunCmd} env:vercel:production`,

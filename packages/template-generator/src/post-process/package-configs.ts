@@ -191,6 +191,7 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   }
 
   if (hasVercelDeploy) {
+    scripts["link:vercel"] = "vercel link";
     scripts["dev:vercel"] = "vercel dev -L";
     scripts["env:vercel:preview"] = "tsx scripts/sync-vercel-env.ts preview";
     scripts["env:vercel:production"] = "tsx scripts/sync-vercel-env.ts production";

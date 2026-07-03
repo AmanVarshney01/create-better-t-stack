@@ -128,22 +128,21 @@ cd my-app
 bunx vercel login
 
 # 2. Link the repo to a Vercel project (creates .vercel/project.json)
-bunx vercel link --yes
+bun link:vercel
 
-# 3. Sync your env vars to Vercel — deploys never upload local .env files
-bun env:vercel:production
-
-# 4. (Optional) Dry-run: preview framework detection and files without uploading
+# 3. (Optional) Dry-run: preview framework detection and files without uploading
 bun deploy:vercel:check
 
-# 5. Deploy
-bun deploy:vercel        # preview deployment
-bun deploy:vercel:prod   # production deployment
+# 4. Sync envs for the environment you deploy to, then deploy.
+#    Preview and production are separate env stores on Vercel.
+bun env:vercel:preview && bun deploy:vercel            # preview
+bun env:vercel:production && bun deploy:vercel:prod    # production
 ```
 
 <Callout type="warn">
-  Sync your environment variables **before** the first deploy. Vercel never uploads local `.env`
-  files, so a deploy without synced envs will fail environment validation at runtime.
+  Sync your environment variables **before** the first deploy to each environment — preview and
+  production are separate stores. Vercel never uploads local `.env` files, so a deploy without
+  synced envs fails environment validation at runtime.
 </Callout>
 
 <Callout type="info">

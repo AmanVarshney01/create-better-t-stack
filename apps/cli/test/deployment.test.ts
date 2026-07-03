@@ -463,6 +463,7 @@ describe("Deployment Configurations", () => {
       // be duplicated into devDependencies (bun warns on cross-section dupes)
       expect(packageJson.devDependencies).not.toHaveProperty("dotenv");
       expect(packageJson.scripts).toMatchObject({
+        "link:vercel": "vercel link",
         "dev:vercel": "vercel dev -L",
         "env:vercel:preview": "tsx scripts/sync-vercel-env.ts preview",
         "env:vercel:production": "tsx scripts/sync-vercel-env.ts production",
