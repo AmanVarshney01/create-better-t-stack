@@ -520,6 +520,11 @@ describe("Deployment Configurations", () => {
       const orpcClient = files.get("apps/web/src/utils/orpc.ts") ?? "";
 
       expect(vercelConfig.services?.web?.buildCommand).toBe("VITE_SERVER_URL=/api bun run build");
+      // SPA frontends on the plain vite preset need an in-service fallback,
+      // otherwise deep links like /login 404 in production
+      expect(
+        (vercelConfig.services?.web as { rewrites?: unknown[] } | undefined)?.rewrites,
+      ).toEqual([{ source: "/(.*)", destination: "/index.html" }]);
       expect(files.get("packages/env/src/web.ts")).toContain(
         "Use an absolute URL or a same-origin path like /api",
       );

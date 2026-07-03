@@ -72,7 +72,8 @@ The generated `vercel.json` defines your services and routing. A combined web + 
       "root": "apps/web",
       "framework": "vite",
       "installCommand": "cd ../.. && bun install",
-      "buildCommand": "VITE_SERVER_URL=/api bun run build"
+      "buildCommand": "VITE_SERVER_URL=/api bun run build",
+      "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
     },
     "server": {
       "root": "apps/server",
