@@ -111,9 +111,9 @@ const runtimeEnv = {
 	...process.env,
 {{#if (eq auth "better-auth")}}
 {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self"))}}
-	// Full public auth base: the /api rewrite prefix plus the server's /api/auth
-	// mount, so better-auth builds callback/redirect URLs that survive the rewrite
-	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? (vercelOrigin ? `${vercelOrigin}/api/api/auth` : undefined),
+		// Public auth base: /api/auth bypasses the rewrite's path strip, so the
+	// same URL works for incoming matching and generated callbacks
+	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? (vercelOrigin ? `${vercelOrigin}/api/auth` : undefined),
 {{else}}
 	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? vercelOrigin,
 {{/if}}

@@ -82,7 +82,7 @@ The generated `vercel.json` defines your services and routing. A combined web + 
       "installCommand": "cd ../.. && bun install",
       "routes": [
         {
-          "src": "/api/(.*)",
+          "src": "/api/((?!auth(?:/|$)).*)",
           "transforms": [{ "type": "request.path", "op": "set", "args": "/$1" }]
         }
       ]
@@ -98,7 +98,7 @@ The generated `vercel.json` defines your services and routing. A combined web + 
 How the pieces fit together:
 
 - **Rewrites** send `/api/*` to the server service and everything else to the web service. Order matters — the more specific rule wins.
-- **The route transform** strips the `/api` prefix before the request reaches your backend, so a browser call to `/api/rpc/healthCheck` arrives at the server as `/rpc/healthCheck` — exactly where your tRPC/oRPC handlers are mounted. Your backend code needs no Vercel-specific paths.
+- **The route transform** strips the `/api` prefix before the request reaches your backend, so a browser call to `/api/rpc/healthCheck` arrives at the server as `/rpc/healthCheck` — exactly where your tRPC/oRPC handlers are mounted. Better-auth routes are the one exception: `/api/auth/*` passes through unstripped, because better-auth requires its public URL path to match the server-side mount exactly. Your backend code needs no Vercel-specific paths.
 - **The web buildCommand** inlines your public server URL as `/api`, so the client calls the same domain it was served from. The generated oRPC/tRPC clients normalize this relative path to an absolute URL at runtime (browsers use `window.location.origin`; SSR uses the deployment's own URL).
 - **installCommand** runs the package manager from the monorepo root so workspace dependencies resolve.
 

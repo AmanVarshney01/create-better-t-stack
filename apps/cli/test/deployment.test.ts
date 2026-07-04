@@ -427,7 +427,7 @@ describe("Deployment Configurations", () => {
         entrypoint: "src/index.ts",
       });
       expect(vercelConfig.services?.server?.routes?.[0]).toMatchObject({
-        src: "/api/(.*)",
+        src: "/api/((?!auth(?:/|$)).*)",
         transforms: [{ type: "request.path", op: "set", args: "/$1" }],
       });
       expect(vercelConfig.rewrites).toEqual([
@@ -476,7 +476,7 @@ describe("Deployment Configurations", () => {
       expect(files.get("packages/env/src/server.ts")).toContain("function getVercelOrigin()");
       // Server-side better-auth must build public callback URLs through the
       // /api rewrite prefix, not the bare origin
-      expect(files.get("packages/env/src/server.ts")).toContain("/api/api/auth");
+      expect(files.get("packages/env/src/server.ts")).toContain("${vercelOrigin}/api/auth");
       // better-auth and tRPC clients must normalize the same-origin /api path;
       // both reject relative URLs (BetterAuthError / SSR fetch failure)
       const authClient = files.get("apps/web/src/lib/auth-client.ts") ?? "";
@@ -484,7 +484,7 @@ describe("Deployment Configurations", () => {
       // The /api/auth suffix is required: better-auth uses a baseURL with a
       // path as-is, so the origin-only shortcut breaks same-origin deploys
       expect(authClient).toContain(
-        "baseURL: `${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/api/auth`",
+        'baseURL: new URL("/api/auth", getServerUrl(env.NEXT_PUBLIC_SERVER_URL)).toString()',
       );
       const trpcClient = files.get("apps/web/src/utils/trpc.ts") ?? "";
       expect(trpcClient).toContain("url: `${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/trpc`");
@@ -694,6 +694,44 @@ describe("Deployment Configurations", () => {
       expect(serverEntry).toContain("export default app;");
       expect(serverEntry).toContain("if (!process.env.VERCEL)");
       expect(serverEntry).toContain("app.listen(3000");
+    });
+
+    it("should wire nitro into TanStack Start Vercel web deploys", async () => {
+      const result = await createVirtual({
+        projectName: "start-vercel",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+        backend: "fastify",
+        runtime: "bun",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["tanstack-start"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const viteConfig = files.get("apps/web/vite.config.ts") ?? "";
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}") as {
+        dependencies?: Record<string, string>;
+      };
+
+      // Without nitro the Start build is a plain node server Vercel cannot serve
+      expect(viteConfig).toContain('import { nitro } from "nitro/vite"');
+      expect(viteConfig).toContain("nitro(),");
+      expect(viteConfig).toContain("noExternal: true");
+      expect(webPkg.dependencies).toHaveProperty("nitro");
     });
 
     it("should use the Vercel adapter for Astro web deploys", async () => {

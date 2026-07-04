@@ -10,9 +10,9 @@ import { env } from "@{{projectName}}/env/web";
 
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	// Append the auth path explicitly: better-auth only auto-appends /api/auth
-	// when the baseURL has no path, which breaks same-origin /api deploys
-	baseURL: `${getServerUrl(env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})}/api/auth`,
+	// better-auth derives its route-matching base from this URL's path, so the
+	// public auth path must equal the server-side mount (/api/auth everywhere)
+		baseURL: new URL("/api/auth", getServerUrl(env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})).toString(),
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]

@@ -26,6 +26,15 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     });
   }
 
+  if (isVercelWeb && frontend.includes("tanstack-start")) {
+    // Nitro emits Vercel's Build Output API; without it the Start build is a
+    // plain node server the platform cannot serve
+    const webPkgPath = "apps/web/package.json";
+    if (vfs.exists(webPkgPath)) {
+      addPackageDependency({ vfs, packagePath: webPkgPath, dependencies: ["nitro"] });
+    }
+  }
+
   if (
     isVercelWeb &&
     frontend.includes("astro") &&

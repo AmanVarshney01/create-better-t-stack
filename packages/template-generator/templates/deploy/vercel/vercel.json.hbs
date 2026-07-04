@@ -21,7 +21,7 @@
       "installCommand": "cd ../.. && {{packageManager}} install"{{#if (eq webDeploy "vercel")}},
       "routes": [
         {
-          "src": "/api/(.*)",
+          "src": "/api/((?!auth(?:/|$)).*)",
           "transforms": [
             {
               "type": "request.path",

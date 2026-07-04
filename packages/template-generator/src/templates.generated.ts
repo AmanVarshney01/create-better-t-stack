@@ -9030,9 +9030,9 @@ import { PUBLIC_SERVER_URL } from "astro:env/client";
 {{/if}}
 export const authClient = createAuthClient({
 {{#if (ne backend "self")}}
-  // Append the auth path explicitly: better-auth only auto-appends /api/auth
-  // when the baseURL has no path, which breaks same-origin /api deploys
-  baseURL: \`\${getServerUrl(PUBLIC_SERVER_URL)}/api/auth\`,
+  // better-auth derives its route-matching base from this URL's path, so the
+	// public auth path must equal the server-side mount (/api/auth everywhere)
+	  baseURL: new URL("/api/auth", getServerUrl(PUBLIC_SERVER_URL)).toString(),
 {{/if}}
 {{#if (eq payments "polar")}}
   plugins: [polarClient()],
@@ -9596,9 +9596,9 @@ import { env } from "@{{projectName}}/env/web";
 
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	// Append the auth path explicitly: better-auth only auto-appends /api/auth
-	// when the baseURL has no path, which breaks same-origin /api deploys
-	baseURL: \`\${getServerUrl(env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})}/api/auth\`,
+	// better-auth derives its route-matching base from this URL's path, so the
+	// public auth path must equal the server-side mount (/api/auth everywhere)
+		baseURL: new URL("/api/auth", getServerUrl(env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})).toString(),
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
@@ -11895,9 +11895,9 @@ import { env } from "@{{projectName}}/env/web";
 {{> getServerUrl}}
 
 export const authClient = createAuthClient({
-	// Append the auth path explicitly: better-auth only auto-appends /api/auth
-	// when the baseURL has no path, which breaks same-origin /api deploys
-	baseURL: \`\${getServerUrl(env.VITE_SERVER_URL)}/api/auth\`,
+	// better-auth derives its route-matching base from this URL's path, so the
+	// public auth path must equal the server-side mount (/api/auth everywhere)
+		baseURL: new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(),
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
 {{/if}}
@@ -12319,9 +12319,9 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{/unless}}
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	// Append the auth path explicitly: better-auth only auto-appends /api/auth
-	// when the baseURL has no path, which breaks same-origin /api deploys
-	baseURL: \`\${getServerUrl(PUBLIC_SERVER_URL)}/api/auth\`,
+	// better-auth derives its route-matching base from this URL's path, so the
+	// public auth path must equal the server-side mount (/api/auth everywhere)
+		baseURL: new URL("/api/auth", getServerUrl(PUBLIC_SERVER_URL)).toString(),
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
@@ -16811,7 +16811,7 @@ console.log("Vercel env sync complete. Redeploy for changes to take effect.");
       "installCommand": "cd ../.. && {{packageManager}} install"{{#if (eq webDeploy "vercel")}},
       "routes": [
         {
-          "src": "/api/(.*)",
+          "src": "/api/((?!auth(?:/|$)).*)",
           "transforms": [
             {
               "type": "request.path",
@@ -31839,7 +31839,7 @@ function HomeComponent() {
 `],
   ["frontend/react/tanstack-start/vite.config.ts.hbs", `import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-{{#if (eq webDeploy "docker")}}
+{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel"))}}
 import { nitro } from "nitro/vite";
 {{/if}}
 import tailwindcss from "@tailwindcss/vite";
@@ -31861,12 +31861,17 @@ export default defineConfig({
         },
       },
 {{/if}}),
-{{#if (eq webDeploy "docker")}}
+{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel"))}}
     nitro(),
 {{/if}}
     viteReact(),
   ],
-{{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+{{#if (eq webDeploy "vercel")}}
+  // Bundle all SSR deps: Vercel functions have no node_modules at runtime
+  ssr: {
+    noExternal: true,
+  },
+{{else if (and (eq backend "convex") (eq auth "better-auth"))}}
   ssr: {
     noExternal: ["@convex-dev/better-auth"],
   },
@@ -32933,9 +32938,9 @@ const runtimeEnv = {
 	...process.env,
 {{#if (eq auth "better-auth")}}
 {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self"))}}
-	// Full public auth base: the /api rewrite prefix plus the server's /api/auth
-	// mount, so better-auth builds callback/redirect URLs that survive the rewrite
-	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? (vercelOrigin ? \`\${vercelOrigin}/api/api/auth\` : undefined),
+		// Public auth base: /api/auth bypasses the rewrite's path strip, so the
+	// same URL works for incoming matching and generated callbacks
+	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? (vercelOrigin ? \`\${vercelOrigin}/api/auth\` : undefined),
 {{else}}
 	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? vercelOrigin,
 {{/if}}
