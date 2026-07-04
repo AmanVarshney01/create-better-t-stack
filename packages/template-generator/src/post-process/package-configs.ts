@@ -232,8 +232,8 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   if (hasVitePlus) {
     pkgJson.overrides = {
       ...pkgJson.overrides,
+      // vite-plus 0.2+ bundles vitest directly; @voidzero-dev/vite-plus-test is discontinued
       vite: `npm:@voidzero-dev/vite-plus-core@${VITE_PLUS_VERSION}`,
-      vitest: `npm:@voidzero-dev/vite-plus-test@${VITE_PLUS_VERSION}`,
     };
   }
 

@@ -2,7 +2,7 @@ name: {{projectName}}
 
 services:
   mongodb:
-    image: mongo
+    image: mongo:8
     container_name: {{projectName}}-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root

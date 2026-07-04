@@ -149,7 +149,6 @@ export default {
   },
   "devDependencies": {
     "@types/bun": "^1.3.14",
-    "@types/three": "^0.165.0",
     "concurrently": "^10.0.3",
     "typescript": "^6"
   }
@@ -12343,7 +12342,7 @@ export const authClient = createAuthClient({
 	const sessionQuery = authClient.useSession();
 
 	{{#if (eq api "orpc")}}
-	const privateDataQuery = createQuery(orpc.privateData.queryOptions());
+	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions());
 	{{/if}}
 
 	$effect(() => {
@@ -12372,7 +12371,7 @@ export const authClient = createAuthClient({
 		<h1>Dashboard</h1>
 		<p>Welcome {$sessionQuery.data.user.name}</p>
 		{{#if (eq api "orpc")}}
-		<p>API: {$privateDataQuery.data?.message}</p>
+		<p>API: {privateDataQuery.data?.message}</p>
 		{{/if}}
 		{{#if (eq payments "polar")}}
 		<p>Plan: {customerState?.activeSubscriptions?.length > 0 ? "Pro" : "Free"}</p>
@@ -15141,7 +15140,7 @@ temp
 
 services:
   mongodb:
-    image: mongo
+    image: mongo:8
     container_name: {{projectName}}-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
@@ -15164,7 +15163,7 @@ volumes:
 
 services:
   mysql:
-    image: mysql
+    image: mysql:8.4
     container_name: {{projectName}}-mysql
     environment:
       MYSQL_ROOT_PASSWORD: password
@@ -15188,7 +15187,7 @@ volumes:
 
 services:
   postgres:
-    image: postgres
+    image: postgres:18
     container_name: {{projectName}}-postgres
     environment:
       POSTGRES_DB: {{projectName}}
@@ -15972,10 +15971,10 @@ services:
         {{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}}: http://localhost:3000
 {{/if}}
 {{#if (eq backend "convex")}}
-        {{#if (includes frontend "next")}}NEXT_PUBLIC_CONVEX_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_CONVEX_URL{{else}}VITE_CONVEX_URL{{/if}}: \${CONVEX_URL:-}
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_CONVEX_URL: \${NEXT_PUBLIC_CONVEX_URL:-}{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_CONVEX_URL: \${PUBLIC_CONVEX_URL:-}{{else}}VITE_CONVEX_URL: \${VITE_CONVEX_URL:-}{{/if}}
 {{/if}}
 {{#if (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start")))}}
-        {{#if (includes frontend "next")}}NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY{{else}}VITE_CLERK_PUBLISHABLE_KEY{{/if}}: \${CLERK_PUBLISHABLE_KEY:-}
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: \${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}{{else}}VITE_CLERK_PUBLISHABLE_KEY: \${VITE_CLERK_PUBLISHABLE_KEY:-}{{/if}}
 {{/if}}
 {{/if}}
     init: true
@@ -16026,6 +16025,22 @@ services:
         condition: service_healthy
 {{/if}}
 {{/if}}
+    healthcheck:
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "solid"))}}
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+{{else}}
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3001/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+{{/if}}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
 {{/if}}
@@ -16078,7 +16093,7 @@ services:
 {{#if (eq dbSetup "docker")}}
 {{#if (eq database "postgres")}}
   postgres:
-    image: postgres
+    image: postgres:18
     container_name: {{projectName}}-postgres
     environment:
       POSTGRES_DB: {{projectName}}
@@ -16097,7 +16112,7 @@ services:
 {{/if}}
 {{#if (eq database "mysql")}}
   mysql:
-    image: mysql
+    image: mysql:8.4
     container_name: {{projectName}}-mysql
     environment:
       MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD:-password}
@@ -16117,7 +16132,7 @@ services:
 {{/if}}
 {{#if (eq database "mongodb")}}
   mongodb:
-    image: mongo
+    image: mongo:8
     container_name: {{projectName}}-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
@@ -16144,7 +16159,7 @@ volumes:
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm
+RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
 ENV SKIP_ENV_VALIDATION=1
@@ -16183,7 +16198,7 @@ CMD ["node", "dist/index.mjs"]
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm
+RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
 ENV SKIP_ENV_VALIDATION=1
@@ -16235,7 +16250,7 @@ CMD ["node", "dist/server/entry.mjs"]
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm
+RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
 ENV SKIP_ENV_VALIDATION=1
@@ -16277,7 +16292,7 @@ CMD ["node", "server/index.mjs"]
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm
+RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
 ENV SKIP_ENV_VALIDATION=1
@@ -16313,6 +16328,8 @@ ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=\${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
 {{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
+# standalone output excludes public/; ensure it exists so the runner copy never fails
+RUN mkdir -p apps/web/public
 
 FROM node:24-slim AS runner
 WORKDIR /app
@@ -16320,6 +16337,7 @@ ENV NODE_ENV=production
 
 COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
 
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3001
@@ -16332,7 +16350,7 @@ CMD ["node", "apps/web/server.js"]
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm
+RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
 ENV SKIP_ENV_VALIDATION=1
@@ -16399,7 +16417,7 @@ CMD ["nginx", "-g", "daemon off;"]
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm
+RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
 ENV SKIP_ENV_VALIDATION=1
@@ -16466,7 +16484,7 @@ CMD ["nginx", "-g", "daemon off;"]
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm
+RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
 ENV SKIP_ENV_VALIDATION=1
@@ -16523,7 +16541,7 @@ CMD ["node", ".output/server/index.mjs"]
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm
+RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
 ENV SKIP_ENV_VALIDATION=1
@@ -16586,7 +16604,7 @@ CMD ["nginx", "-g", "daemon off;"]
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
-RUN npm install -g pnpm
+RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
 ENV SKIP_ENV_VALIDATION=1
@@ -25360,12 +25378,12 @@ function TodosRoute() {
 	let newTodoText = $state('');
 
 	{{#if (eq api "orpc")}}
-	const todosQuery = createQuery(orpc.todo.getAll.queryOptions());
+	const todosQuery = createQuery(() => orpc.todo.getAll.queryOptions());
 
-	const addMutation = createMutation(
+	const addMutation = createMutation(() =>
 		orpc.todo.create.mutationOptions({
 			onSuccess: () => {
-				$todosQuery.refetch();
+				todosQuery.refetch();
 				newTodoText = '';
 			},
 			onError: (error) => {
@@ -25374,10 +25392,10 @@ function TodosRoute() {
 		})
 	);
 
-	const toggleMutation = createMutation(
+	const toggleMutation = createMutation(() =>
 		orpc.todo.toggle.mutationOptions({
 			onSuccess: () => {
-				$todosQuery.refetch();
+				todosQuery.refetch();
 			},
 			onError: (error) => {
 				console.error('Failed to toggle todo:', error?.message ?? error);
@@ -25385,10 +25403,10 @@ function TodosRoute() {
 		})
 	);
 
-	const deleteMutation = createMutation(
+	const deleteMutation = createMutation(() =>
 		orpc.todo.delete.mutationOptions({
 			onSuccess: () => {
-				$todosQuery.refetch();
+				todosQuery.refetch();
 			},
 			onError: (error) => {
 				console.error('Failed to delete todo:', error?.message ?? error);
@@ -25401,22 +25419,22 @@ function TodosRoute() {
 		event.preventDefault();
 		const text = newTodoText.trim();
 		if (text) {
-			$addMutation.mutate({ text });
+			addMutation.mutate({ text });
 		}
 	}
 
 	function handleToggleTodo(id: number, completed: boolean) {
-		$toggleMutation.mutate({ id, completed: !completed });
+		toggleMutation.mutate({ id, completed: !completed });
 	}
 
 	function handleDeleteTodo(id: number) {
-		$deleteMutation.mutate({ id });
+		deleteMutation.mutate({ id });
 	}
 
-	const isAdding = $derived($addMutation.isPending);
+	const isAdding = $derived(addMutation.isPending);
 	const canAdd = $derived(!isAdding && newTodoText.trim().length > 0);
-	const isLoadingTodos = $derived($todosQuery.isLoading);
-	const todos = $derived($todosQuery.data ?? []);
+	const isLoadingTodos = $derived(todosQuery.isLoading);
+	const todos = $derived(todosQuery.data ?? []);
 	const hasTodos = $derived(todos.length > 0);
 
 </script>
@@ -25448,8 +25466,8 @@ function TodosRoute() {
 	{:else}
 		<ul class="space-y-1">
 			{#each todos as todo (todo.id)}
-				{@const isToggling = $toggleMutation.isPending && $toggleMutation.variables?.id === todo.id}
-				{@const isDeleting = $deleteMutation.isPending && $deleteMutation.variables?.id === todo.id}
+				{@const isToggling = toggleMutation.isPending && toggleMutation.variables?.id === todo.id}
+				{@const isDeleting = deleteMutation.isPending && deleteMutation.variables?.id === todo.id}
 				{@const isDisabled = isToggling || isDeleting}
 				<li
 					class="flex items-center justify-between p-2 "
@@ -25484,24 +25502,24 @@ function TodosRoute() {
 		</ul>
 	{/if}
 
-	{#if $todosQuery.isError}
+	{#if todosQuery.isError}
 		<p class="mt-4 text-red-500">
-			Error loading: {$todosQuery.error?.message ?? 'Unknown error'}
+			Error loading: {todosQuery.error?.message ?? 'Unknown error'}
 		</p>
 	{/if}
-	{#if $addMutation.isError}
+	{#if addMutation.isError}
 		<p class="mt-4 text-red-500">
-			Error adding: {$addMutation.error?.message ?? 'Unknown error'}
+			Error adding: {addMutation.error?.message ?? 'Unknown error'}
 		</p>
 	{/if}
-	{#if $toggleMutation.isError}
+	{#if toggleMutation.isError}
 		<p class="mt-4 text-red-500">
-			Error updating: {$toggleMutation.error?.message ?? 'Unknown error'}
+			Error updating: {toggleMutation.error?.message ?? 'Unknown error'}
 		</p>
 	{/if}
-	{#if $deleteMutation.isError}
+	{#if deleteMutation.isError}
 		<p class="mt-4 text-red-500">
-			Error deleting: {$deleteMutation.error?.message ?? 'Unknown error'}
+			Error deleting: {deleteMutation.error?.message ?? 'Unknown error'}
 		</p>
 	{/if}
 </div>
@@ -25650,11 +25668,11 @@ export default defineConfig({
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.0.3"
+    "astro": "^7.0.5"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.1",
-    "tailwindcss": "^4.3.1"
+    "@tailwindcss/vite": "^4.3.2",
+    "tailwindcss": "^4.3.2"
   }
 }
 `],
@@ -29487,7 +29505,7 @@ module.exports = uniwindConfig;
     "expo-secure-store": "~57.0.0",
     "expo-status-bar": "~57.0.0",
     "expo-web-browser": "~57.0.0",
-    "heroui-native": "^1.0.4",
+    "heroui-native": "^1.0.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.0",
@@ -29502,7 +29520,7 @@ module.exports = uniwindConfig;
     "tailwind-merge": "^3.6.0",
     "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.3.2",
-    "uniwind": "^1.9.0"
+    "uniwind": "^1.10.0"
   },
   "devDependencies": {
     "@types/node": "^26.0.1",
@@ -29792,13 +29810,13 @@ export default defineNuxtConfig({
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@nuxt/ui": "^4.5.1",
-    "nuxt": "^4.4.4",
-    "vue": "^3.5.38"
+    "@nuxt/ui": "^4.9.0",
+    "nuxt": "^4.4.8",
+    "vue": "^3.5.39"
   },
   "devDependencies": {
-    "tailwindcss": "^4.3.1",
-    "@iconify-json/lucide": "^1.2.96"
+    "tailwindcss": "^4.3.2",
+    "@iconify-json/lucide": "^1.2.115"
   }
 }
 `],
@@ -29875,7 +29893,7 @@ initOpenNextCloudflareForDev();
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
     "@swc/helpers": "^0.5.23",
-    "lucide-react": "^1.21.0",
+    "lucide-react": "^1.23.0",
     "next": "^16.2.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.7",
@@ -29884,11 +29902,11 @@ initOpenNextCloudflareForDev();
     "babel-plugin-react-compiler": "^1.0.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.1",
+    "@tailwindcss/postcss": "^4.3.2",
     "@types/node": "^20",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.3.1"
+    "tailwindcss": "^4.3.2"
   }
 }
 `],
@@ -30277,26 +30295,26 @@ export function ThemeProvider({
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@react-router/fs-routes": "^7.14.1",
-    "@react-router/node": "^7.14.1",
-    "@react-router/serve": "^7.14.1",
-    "isbot": "^5.1.39",
-    "lucide-react": "^1.21.0",
+    "@react-router/fs-routes": "^8.1.0",
+    "@react-router/node": "^8.1.0",
+    "@react-router/serve": "^8.1.0",
+    "isbot": "^5.1.44",
+    "lucide-react": "^1.23.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-router": "^7.14.1",
+    "react-router": "^8.1.0",
     "sonner": "^2.0.7"
   },
   "devDependencies": {
-    "@react-router/dev": "^7.14.1",
-    "@tailwindcss/vite": "^4.3.1",
-    "@types/node": "^20",
+    "@react-router/dev": "^8.1.0",
+    "@tailwindcss/vite": "^4.3.2",
+    "@types/node": "^22.13.14",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "react-router-devtools": "^1.1.0",
-    "tailwindcss": "^4.3.1",
-    "vite": "^8.0.8",
+    "react-router-devtools": "^6.2.1",
+    "tailwindcss": "^4.3.2",
+    "vite": "^7.3.6",
     "vite-tsconfig-paths": "^6.1.1"
   }
 }
@@ -30307,9 +30325,6 @@ export function ThemeProvider({
 export default {
   ssr: false,
   appDirectory: "src",
-  future: {
-    v8_middleware: true,
-  },
 } satisfies Config;
 `],
   ["frontend/react/react-router/src/components/mode-toggle.tsx.hbs", `import { Moon, Sun } from "lucide-react";
@@ -30815,26 +30830,26 @@ export default defineConfig({
 		"check-types": "vite build && tsc --noEmit"
 	},
 	"dependencies": {
-        "@hookform/resolvers": "^5.2.2",
+        "@hookform/resolvers": "^5.4.0",
         "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-		"@tailwindcss/vite": "^4.3.1",
-		"@tanstack/react-router": "^1.168.22",
-		"lucide-react": "^1.21.0",
+		"@tailwindcss/vite": "^4.3.2",
+		"@tanstack/react-router": "^1.170.17",
+		"lucide-react": "^1.23.0",
         "next-themes": "^0.4.6",
 		"react": "^19.2.7",
 		"react-dom": "^19.2.7",
         "sonner": "^2.0.7"
 	},
 	"devDependencies": {
-		"@tanstack/react-router-devtools": "^1.166.13",
-		"@tanstack/router-plugin": "^1.167.22",
+		"@tanstack/react-router-devtools": "^1.167.0",
+		"@tanstack/router-plugin": "^1.168.19",
 		"@types/node": "^22.13.14",
 		"@types/react": "^19.2.17",
 		"@types/react-dom": "^19.2.3",
-		"@vitejs/plugin-react": "^6.0.1",
-		"postcss": "^8.5.10",
-		"tailwindcss": "^4.3.1",
-		"vite": "^8.0.8"
+		"@vitejs/plugin-react": "^6.0.3",
+		"postcss": "^8.5.16",
+		"tailwindcss": "^4.3.2",
+		"vite": "^8.1.3"
 	}
 }
 `],
@@ -31260,27 +31275,27 @@ export default defineConfig({
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@tailwindcss/vite": "^4.3.1",
-    "@tanstack/react-query": "^5.99.0",
-    "@tanstack/react-router": "^1.168.22",
-    "@tanstack/react-start": "^1.167.41",
-    "lucide-react": "^1.21.0",
+    "@tailwindcss/vite": "^4.3.2",
+    "@tanstack/react-query": "^5.101.2",
+    "@tanstack/react-router": "^1.170.17",
+    "@tanstack/react-start": "^1.168.27",
+    "lucide-react": "^1.23.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "sonner": "^2.0.7",
-    "tailwindcss": "^4.3.1"
+    "tailwindcss": "^4.3.2"
   },
   "devDependencies": {
-    "@tanstack/react-router-devtools": "^1.166.13",
+    "@tanstack/react-router-devtools": "^1.167.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "jsdom": "^29.0.2",
-    "vite": "^8.0.8",
-    "web-vitals": "^5.2.0"
+    "@vitejs/plugin-react": "^6.0.3",
+    "jsdom": "^29.1.1",
+    "vite": "^8.1.3",
+    "web-vitals": "^5.3.0"
   }
 }
 `],
@@ -32074,16 +32089,16 @@ dist-ssr
     "test": "vitest run"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.3.1",
-    "@tanstack/router-plugin": "^1.167.22",
-    "@tanstack/solid-router": "^1.168.20",
-    "lucide-solid": "^1.8.0",
-    "solid-js": "^1.9.12",
-    "tailwindcss": "^4.3.1"
+    "@tailwindcss/vite": "^4.3.2",
+    "@tanstack/router-plugin": "^1.168.19",
+    "@tanstack/solid-router": "^1.170.17",
+    "lucide-solid": "^1.23.0",
+    "solid-js": "^1.9.14",
+    "tailwindcss": "^4.3.2"
   },
   "devDependencies": {
-    "@tanstack/solid-router-devtools": "^1.166.13",
-    "vite": "^8.0.8",
+    "@tanstack/solid-router-devtools": "^1.167.0",
+    "vite": "^8.1.3",
     "vite-plugin-solid": "^2.11.12"
   }
 }
@@ -32394,13 +32409,13 @@ vite.config.ts.timestamp-*
 		{{else}}
 		"@sveltejs/adapter-auto": "^7.0.1",
 		{{/if}}
-		"@sveltejs/kit": "^2.58.0",
-		"@sveltejs/vite-plugin-svelte": "^7.0.0",
-		"@tailwindcss/vite": "^4.3.1",
-		"svelte": "^5.55.5",
-		"svelte-check": "^4.4.6",
-		"tailwindcss": "^4.3.1",
-		"vite": "^8.0.10"
+		"@sveltejs/kit": "^2.69.0",
+		"@sveltejs/vite-plugin-svelte": "^7.1.2",
+		"@tailwindcss/vite": "^4.3.2",
+		"svelte": "^5.56.4",
+		"svelte-check": "^4.7.1",
+		"tailwindcss": "^4.3.2",
+		"vite": "^8.1.3"
 	},
 	"dependencies": {}
 }
@@ -32596,7 +32611,7 @@ const TITLE_TEXT = \`
 {{#if (eq api "orpc")}}
 import { orpc } from "$lib/orpc";
 import { createQuery } from "@tanstack/svelte-query";
-const healthCheck = createQuery(orpc.healthCheck.queryOptions());
+const healthCheck = createQuery(() => orpc.healthCheck.queryOptions());
 {{/if}}
 
 const TITLE_TEXT = \`
@@ -32624,12 +32639,12 @@ const TITLE_TEXT = \`
 			<h2 class="mb-2 font-medium">API Status</h2>
 			<div class="flex items-center gap-2">
 				<div
-					class={\`h-2 w-2 rounded-full \${$healthCheck.data ? "bg-green-500" : "bg-red-500"}\`}
+					class={\`h-2 w-2 rounded-full \${healthCheck.data ? "bg-green-500" : "bg-red-500"}\`}
 				></div>
 				<span class="text-muted-foreground text-sm">
-					{$healthCheck.isLoading
+					{healthCheck.isLoading
 						? "Checking..."
-						: $healthCheck.data
+						: healthCheck.data
 							? "Connected"
 							: "Disconnected"}
 				</span>
@@ -33589,11 +33604,11 @@ await app.finalize();
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
-    "@shadcn/react": "^0.1.0",
+    "@shadcn/react": "^0.2.0",
     "shadcn": "^4.12.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.21.0",
+    "lucide-react": "^1.23.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -33602,10 +33617,10 @@ await app.finalize();
     "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.1",
+    "@tailwindcss/postcss": "^4.3.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.3.1"
+    "tailwindcss": "^4.3.2"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

@@ -2,7 +2,7 @@ name: {{projectName}}
 
 services:
   postgres:
-    image: postgres
+    image: postgres:18
     container_name: {{projectName}}-postgres
     environment:
       POSTGRES_DB: {{projectName}}

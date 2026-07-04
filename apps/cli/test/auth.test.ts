@@ -83,7 +83,7 @@ describe("Authentication Configurations", () => {
       const authPackageJson = await fs.readJson(
         path.join(projectDir, "packages/auth/package.json"),
       );
-      expect(authPackageJson.dependencies.mongodb).toBe("^7.2.0");
+      expect(authPackageJson.dependencies.mongodb).toBe("^7.4.0");
 
       const dbIndex = await fs.readFile(path.join(projectDir, "packages/db/src/index.ts"), "utf8");
       expect(dbIndex).toContain("await mongoose.connect(env.DATABASE_URL);");
@@ -775,7 +775,7 @@ describe("Authentication Configurations", () => {
         const packageJson = JSON.parse(
           await fs.readFile(path.join(result.projectDir, "package.json"), "utf8"),
         );
-        expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.22");
+        expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.23");
       });
     }
   });
@@ -989,7 +989,7 @@ describe("Authentication Configurations", () => {
         "utf8",
       );
 
-      expect(nativePackageFile).toContain('"@clerk/expo": "^3.1.3"');
+      expect(nativePackageFile).toContain('"@clerk/expo": "^3.6.5"');
 
       expect(signInFile).not.toContain("setActive");
       expect(signInFile).not.toContain("signIn.create");

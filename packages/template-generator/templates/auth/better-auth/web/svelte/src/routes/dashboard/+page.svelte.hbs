@@ -12,7 +12,7 @@
 	const sessionQuery = authClient.useSession();
 
 	{{#if (eq api "orpc")}}
-	const privateDataQuery = createQuery(orpc.privateData.queryOptions());
+	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions());
 	{{/if}}
 
 	$effect(() => {
@@ -41,7 +41,7 @@
 		<h1>Dashboard</h1>
 		<p>Welcome {$sessionQuery.data.user.name}</p>
 		{{#if (eq api "orpc")}}
-		<p>API: {$privateDataQuery.data?.message}</p>
+		<p>API: {privateDataQuery.data?.message}</p>
 		{{/if}}
 		{{#if (eq payments "polar")}}
 		<p>Plan: {customerState?.activeSubscriptions?.length > 0 ? "Pro" : "Free"}</p>

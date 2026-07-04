@@ -47,7 +47,7 @@ const TITLE_TEXT = `
 {{#if (eq api "orpc")}}
 import { orpc } from "$lib/orpc";
 import { createQuery } from "@tanstack/svelte-query";
-const healthCheck = createQuery(orpc.healthCheck.queryOptions());
+const healthCheck = createQuery(() => orpc.healthCheck.queryOptions());
 {{/if}}
 
 const TITLE_TEXT = `
@@ -75,12 +75,12 @@ const TITLE_TEXT = `
 			<h2 class="mb-2 font-medium">API Status</h2>
 			<div class="flex items-center gap-2">
 				<div
-					class={`h-2 w-2 rounded-full ${$healthCheck.data ? "bg-green-500" : "bg-red-500"}`}
+					class={`h-2 w-2 rounded-full ${healthCheck.data ? "bg-green-500" : "bg-red-500"}`}
 				></div>
 				<span class="text-muted-foreground text-sm">
-					{$healthCheck.isLoading
+					{healthCheck.isLoading
 						? "Checking..."
-						: $healthCheck.data
+						: healthCheck.data
 							? "Connected"
 							: "Disconnected"}
 				</span>

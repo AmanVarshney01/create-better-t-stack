@@ -355,6 +355,41 @@ export function validateVercelServerDeploy(
   return Result.ok(undefined);
 }
 
+// Frontends whose docker image needs server output, which desktop addons replace with a static export
+const DOCKER_SERVER_OUTPUT_FRONTENDS = [
+  "next",
+  "svelte",
+  "astro",
+] as const satisfies readonly Frontend[];
+
+export function validateDockerWebDeployDesktopAddons(
+  webDeploy: WebDeploy | undefined,
+  addons: Addons[] | undefined,
+  frontend: Frontend[] | undefined,
+  backend: Backend | undefined,
+  auth: Auth | undefined,
+): ValidationResult {
+  if (webDeploy !== "docker" || !addons || !frontend) return Result.ok(undefined);
+
+  const desktopAddons = addons.filter((addon) => STATIC_DESKTOP_ADDONS.includes(addon));
+  if (desktopAddons.length === 0) return Result.ok(undefined);
+
+  const affected = frontend.find((f) => DOCKER_SERVER_OUTPUT_FRONTENDS.includes(f));
+  if (!affected) return Result.ok(undefined);
+
+  // next + electrobun keeps standalone output when Convex Better Auth forces server bootstrap
+  const keepsServerOutput =
+    affected === "next" &&
+    !desktopAddons.includes("tauri") &&
+    backend === "convex" &&
+    auth === "better-auth";
+  if (keepsServerOutput) return Result.ok(undefined);
+
+  return validationErr(
+    `'--web-deploy docker' is not compatible with the ${desktopAddons.join(", ")} addon on '${affected}' because desktop addons switch the web build to a static export, which the docker image cannot serve. Remove the addon or use a static-serving frontend (tanstack-router, react-router, solid).`,
+  );
+}
+
 export function validateAddonCompatibility(
   addon: Addons,
   frontend: Frontend[],
