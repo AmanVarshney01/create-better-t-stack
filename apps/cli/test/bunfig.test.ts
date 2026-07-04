@@ -14,7 +14,7 @@ async function readBunfig(config: TestConfig) {
 
   expectSuccess(result);
 
-  return readFile(path.join(result.projectDir!, "bunfig.toml"), "utf8");
+  return readFile(path.join(result.projectDir!, "bunfig.toml"), "utf8").catch(() => null);
 }
 
 describe("bunfig", () => {
@@ -36,11 +36,11 @@ describe("bunfig", () => {
       serverDeploy: "none",
     });
 
-    expect(content).toContain('linker = "isolated"');
     expect(content).toContain("peer = false");
+    expect(content).not.toContain("linker");
   });
 
-  it("keeps Nuxt hoisted for its resolver", async () => {
+  it("emits no bunfig for non-native stacks (isolated is Bun's default)", async () => {
     const content = await readBunfig({
       projectName: "bunfig-nuxt",
       frontend: ["nuxt"],
@@ -58,7 +58,6 @@ describe("bunfig", () => {
       serverDeploy: "none",
     });
 
-    expect(content).toContain('linker = "hoisted"');
-    expect(content).not.toContain("peer = false");
+    expect(content).toBeNull();
   });
 });

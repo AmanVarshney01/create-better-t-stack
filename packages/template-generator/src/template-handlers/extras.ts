@@ -23,7 +23,9 @@ export async function processExtrasTemplates(
     );
   }
 
-  if (config.packageManager === "bun") {
+  // Isolated installs are Bun's workspace default now; bunfig only remains
+  // for native combos that need peer auto-install disabled
+  if (config.packageManager === "bun" && hasNative) {
     processSingleTemplate(vfs, templates, "extras/bunfig.toml", "bunfig.toml", config);
   }
 

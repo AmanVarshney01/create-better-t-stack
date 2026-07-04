@@ -696,7 +696,7 @@ describe("Deployment Configurations", () => {
       expect(serverEntry).toContain("app.listen(3000");
     });
 
-    it("should use the isolated bun linker for nuxt Vercel deploys", async () => {
+    it("should not emit a bunfig for nuxt Vercel deploys (isolated is default)", async () => {
       const result = await createVirtual({
         projectName: "nuxt-vercel-linker",
         webDeploy: "vercel",
@@ -722,9 +722,9 @@ describe("Deployment Configurations", () => {
       }
 
       const files = collectFiles(result.value.root, result.value.root.path);
-      // Vercel's bun tracer misses dynamically-required files in hoisted layouts
-      expect(files.get("bunfig.toml")).toContain('linker = "isolated"');
-      expect(files.get("bunfig.toml")).not.toContain('linker = "hoisted"');
+      // Vercel's bun tracer misses dynamically-required files in hoisted
+      // layouts; Bun's default isolated linker maps the store wholesale
+      expect(files.has("bunfig.toml")).toBe(false);
     });
 
     it("should serve React Router Vercel deploys as a static SPA", async () => {
