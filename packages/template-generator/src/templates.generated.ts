@@ -30305,6 +30305,9 @@ export function ThemeProvider({
   ["frontend/react/react-router/react-router.config.ts.hbs", `import type { Config } from "@react-router/dev/config";
 
 export default {
+{{#if (and (eq webDeploy "vercel") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+  // Adopt vercelPreset() once @vercel/react-router supports RR8 (vercel/vercel#16730)
+{{/if}}
 {{#if (or (includes addons "tauri") (includes addons "electrobun"))}}
   // Desktop addons package static web assets; SSR output cannot be bundled
   ssr: false,
@@ -32658,6 +32661,8 @@ import adapter from '@sveltejs/adapter-static';
 import alchemy from 'alchemy/cloudflare/sveltekit';
 {{else if (eq webDeploy "docker")}}
 import adapter from '@sveltejs/adapter-node';
+{{else if (eq webDeploy "vercel")}}
+import adapter from '@sveltejs/adapter-vercel';
 {{else}}
 import adapter from '@sveltejs/adapter-auto';
 {{/if}}
@@ -32682,6 +32687,8 @@ const config = {
 		adapter: alchemy()
 {{else if (eq webDeploy "docker")}}
 		// adapter-node builds a standalone Node server (run with \`node build/index.js\`).
+		adapter: adapter()
+{{else if (eq webDeploy "vercel")}}
 		adapter: adapter()
 {{else}}
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.

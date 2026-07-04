@@ -729,7 +729,7 @@ describe("Deployment Configurations", () => {
 
     it("should use the react-router preset for SSR React Router Vercel deploys", async () => {
       const result = await createVirtual({
-        projectName: "rr-vercel-spa",
+        projectName: "rr-vercel-ssr",
         webDeploy: "vercel",
         serverDeploy: "vercel",
         backend: "hono",
@@ -767,6 +767,41 @@ describe("Deployment Configurations", () => {
       expect(files.get("apps/web/react-router.config.ts")).not.toContain("ssr: false");
       // Vercel functions have no node_modules; deps must be bundled into the server build
       expect(files.get("apps/web/vite.config.ts")).toContain("noExternal: true");
+    });
+
+    it("should use the explicit Vercel adapter for SvelteKit Vercel deploys", async () => {
+      const result = await createVirtual({
+        projectName: "svelte-vercel",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+        backend: "hono",
+        runtime: "bun",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["svelte"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const svelteConfig = files.get("apps/web/svelte.config.js");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+
+      // Vercel docs recommend the explicit adapter over adapter-auto
+      expect(svelteConfig).toContain("@sveltejs/adapter-vercel");
+      expect(svelteConfig).not.toContain("@sveltejs/adapter-auto");
+      expect(webPkg.devDependencies["@sveltejs/adapter-vercel"]).toBeDefined();
     });
 
     it("should wire nitro into TanStack Start Vercel web deploys", async () => {

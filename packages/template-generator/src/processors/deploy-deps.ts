@@ -53,6 +53,23 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     }
   }
 
+  if (
+    isVercelWeb &&
+    frontend.includes("svelte") &&
+    !addons.includes("electrobun") &&
+    !addons.includes("tauri")
+  ) {
+    // Vercel docs recommend the explicit adapter over adapter-auto resolving it at build time
+    const webPkgPath = "apps/web/package.json";
+    if (vfs.exists(webPkgPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        devDependencies: ["@sveltejs/adapter-vercel"],
+      });
+    }
+  }
+
   if (isDockerWeb) {
     const webPkgPath = "apps/web/package.json";
     if (vfs.exists(webPkgPath)) {
