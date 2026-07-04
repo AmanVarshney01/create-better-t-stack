@@ -1,0 +1,9 @@
+import type { Config } from "@react-router/dev/config";
+
+export default {
+{{#if (or (includes addons "tauri") (includes addons "electrobun"))}}
+  // Desktop addons package static web assets; SSR output cannot be bundled
+  ssr: false,
+{{/if}}
+  appDirectory: "src",
+} satisfies Config;

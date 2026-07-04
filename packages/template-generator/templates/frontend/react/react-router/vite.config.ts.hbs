@@ -9,4 +9,10 @@ export default defineConfig({
     reactRouter(),
     tsconfigPaths(),
   ],
+{{#if (and (eq webDeploy "vercel") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+  ssr: {
+    // Vercel functions have no node_modules; bundle all deps into the server build
+    noExternal: true,
+  },
+{{/if}}
 });

@@ -7,10 +7,10 @@
 {{#if (eq webDeploy "vercel")}}
     "web": {
       "root": "apps/web",
-      "framework": {{#if (includes frontend "next")}}"nextjs"{{else if (includes frontend "nuxt")}}"nuxtjs"{{else if (includes frontend "svelte")}}"sveltekit"{{else if (includes frontend "astro")}}"astro"{{else if (includes frontend "tanstack-start")}}"tanstack-start"{{else}}"vite"{{/if}},
+      "framework": {{#if (includes frontend "next")}}"nextjs"{{else if (includes frontend "nuxt")}}"nuxtjs"{{else if (includes frontend "svelte")}}"sveltekit"{{else if (includes frontend "astro")}}"astro"{{else if (includes frontend "tanstack-start")}}"tanstack-start"{{else if (and (includes frontend "react-router") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}"react-router"{{else}}"vite"{{/if}},
       "installCommand": "cd ../.. && {{packageManager}} install"{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}},
-      "buildCommand": "{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL=/api {{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SERVER_URL=/api {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL=/api {{else}}VITE_SERVER_URL=/api {{/if}}{{packageManager}} run build"{{/if}}{{#if (includes frontend "react-router")}},
-      "outputDirectory": "build/client"{{/if}}{{#if (or (includes frontend "tanstack-router") (includes frontend "solid") (includes frontend "react-router"))}},
+      "buildCommand": "{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL=/api {{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SERVER_URL=/api {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL=/api {{else}}VITE_SERVER_URL=/api {{/if}}{{packageManager}} run build"{{/if}}{{#if (and (includes frontend "react-router") (or (includes addons "tauri") (includes addons "electrobun")))}},
+      "outputDirectory": "build/client"{{/if}}{{#if (or (includes frontend "tanstack-router") (includes frontend "solid") (and (includes frontend "react-router") (or (includes addons "tauri") (includes addons "electrobun"))))}},
       "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]{{/if}}
     }{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}},{{/if}}
 {{/if}}

@@ -15986,7 +15986,7 @@ services:
 {{/if}}
     init: true
     ports:
-{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "solid"))}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "solid"))}}
       - "3001:80"
 {{else}}
       - "3001:3001"
@@ -16033,7 +16033,7 @@ services:
 {{/if}}
 {{/if}}
     healthcheck:
-{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "solid"))}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "solid"))}}
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
 {{else}}
       test:
@@ -16394,30 +16394,14 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
 
-FROM nginx:alpine AS runner
-COPY --from=builder /app/apps/web/build/client /usr/share/nginx/html
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-`],
-  ["deploy/docker/web/react/react-router/nginx.conf", `server {
-    listen 80;
-    server_name _;
-    root /usr/share/nginx/html;
-    index index.html;
-
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript image/svg+xml;
-
-    location /assets/ {
-        add_header Cache-Control "public, max-age=31536000, immutable";
-    }
-
-    # SPA fallback
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-}
+FROM node:24-slim AS runner
+WORKDIR /app
+COPY --from=builder /app .
+ENV NODE_ENV=production
+ENV PORT=3001
+ENV HOST=0.0.0.0
+EXPOSE 3001
+CMD ["sh", "-c", "cd apps/web && npm run start"]
 `],
   ["deploy/docker/web/react/tanstack-router/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (eq packageManager "bun")}}
@@ -16804,10 +16788,10 @@ console.log("Vercel env sync complete. Redeploy for changes to take effect.");
 {{#if (eq webDeploy "vercel")}}
     "web": {
       "root": "apps/web",
-      "framework": {{#if (includes frontend "next")}}"nextjs"{{else if (includes frontend "nuxt")}}"nuxtjs"{{else if (includes frontend "svelte")}}"sveltekit"{{else if (includes frontend "astro")}}"astro"{{else if (includes frontend "tanstack-start")}}"tanstack-start"{{else}}"vite"{{/if}},
+      "framework": {{#if (includes frontend "next")}}"nextjs"{{else if (includes frontend "nuxt")}}"nuxtjs"{{else if (includes frontend "svelte")}}"sveltekit"{{else if (includes frontend "astro")}}"astro"{{else if (includes frontend "tanstack-start")}}"tanstack-start"{{else if (and (includes frontend "react-router") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}"react-router"{{else}}"vite"{{/if}},
       "installCommand": "cd ../.. && {{packageManager}} install"{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}},
-      "buildCommand": "{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL=/api {{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SERVER_URL=/api {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL=/api {{else}}VITE_SERVER_URL=/api {{/if}}{{packageManager}} run build"{{/if}}{{#if (includes frontend "react-router")}},
-      "outputDirectory": "build/client"{{/if}}{{#if (or (includes frontend "tanstack-router") (includes frontend "solid") (includes frontend "react-router"))}},
+      "buildCommand": "{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL=/api {{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SERVER_URL=/api {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL=/api {{else}}VITE_SERVER_URL=/api {{/if}}{{packageManager}} run build"{{/if}}{{#if (and (includes frontend "react-router") (or (includes addons "tauri") (includes addons "electrobun")))}},
+      "outputDirectory": "build/client"{{/if}}{{#if (or (includes frontend "tanstack-router") (includes frontend "solid") (and (includes frontend "react-router") (or (includes addons "tauri") (includes addons "electrobun"))))}},
       "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]{{/if}}
     }{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}},{{/if}}
 {{/if}}
@@ -30318,10 +30302,13 @@ export function ThemeProvider({
 }
 `],
   ["frontend/react/react-router/public/favicon.ico", `[Binary file]`],
-  ["frontend/react/react-router/react-router.config.ts", `import type { Config } from "@react-router/dev/config";
+  ["frontend/react/react-router/react-router.config.ts.hbs", `import type { Config } from "@react-router/dev/config";
 
 export default {
+{{#if (or (includes addons "tauri") (includes addons "electrobun"))}}
+  // Desktop addons package static web assets; SSR output cannot be bundled
   ssr: false,
+{{/if}}
   appDirectory: "src",
 } satisfies Config;
 `],
@@ -30799,6 +30786,12 @@ export default defineConfig({
     reactRouter(),
     tsconfigPaths(),
   ],
+{{#if (and (eq webDeploy "vercel") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+  ssr: {
+    // Vercel functions have no node_modules; bundle all deps into the server build
+    noExternal: true,
+  },
+{{/if}}
 });
 `],
   ["frontend/react/tanstack-router/index.html.hbs", `<!DOCTYPE html>
@@ -35575,4 +35568,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 509;
+export const TEMPLATE_COUNT = 508;

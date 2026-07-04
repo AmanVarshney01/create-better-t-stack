@@ -39,7 +39,7 @@ Choosing `docker` as a deploy target generates:
 
 - **`docker-compose.yml`** at the repo root defines the `web`, `server`, and (optionally) database services with health checks and startup ordering.
 - **`apps/*/Dockerfile`** are multi-stage builds that install the whole monorepo workspace, build one app, and ship a minimal runtime image.
-- **`nginx.conf`** is generated for static SPA frontends (TanStack Router, React Router, SolidJS), which are served by nginx instead of a Node server.
+- **`nginx.conf`** is generated for static SPA frontends (TanStack Router, SolidJS), which are served by nginx instead of a Node server.
 
 ## Enabling Docker Deployment
 

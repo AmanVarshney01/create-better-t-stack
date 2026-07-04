@@ -17,6 +17,7 @@ mkdir -p "$SCRATCH"
 # Vercel's zero-config listen interception, so they always bind locally.
 TESTS=(
 "tsr-hono-bun-combined|--frontend tanstack-router --backend hono --runtime bun --database sqlite --orm drizzle --db-setup none --web-deploy vercel --server-deploy vercel --api trpc --auth better-auth --payments none --addons none --examples none --package-manager bun|vite|bun|0"
+"rr-hono-bun-combined|--frontend react-router --backend hono --runtime bun --database none --orm none --db-setup none --web-deploy vercel --server-deploy vercel --api orpc --auth none --payments none --addons none --examples none --package-manager bun|rrssr|bun|0"
 "next-hono-node-combined|--frontend next --backend hono --runtime node --database none --orm none --db-setup none --web-deploy vercel --server-deploy vercel --api trpc --auth none --payments none --addons none --examples none --package-manager bun|next|node|1"
 "next-self-web-only|--frontend next --backend self --runtime none --database none --orm none --db-setup none --web-deploy vercel --server-deploy none --api orpc --auth none --payments none --addons none --examples none --package-manager bun|next|none|0"
 "astro-elysia-bun-combined|--frontend astro --backend elysia --runtime bun --database none --orm none --db-setup none --web-deploy vercel --server-deploy vercel --api orpc --auth none --payments none --addons none --examples none --package-manager bun|astro|bun|1"
@@ -78,6 +79,7 @@ for entry in "${TESTS[@]}"; do
     (cd apps/web && bash -c "$build_cmd") > "/tmp/vercel-smoke-$name-webbuild.log" 2>&1 || fail="$fail web-build"
     case "$web_kind" in
       vite)  [ -f apps/web/dist/index.html ] || fail="$fail web-output" ;;
+      rrssr) { [ -d apps/web/build/client ] && [ -f apps/web/build/server/index.js ]; } || fail="$fail web-output(build/server)" ;;
       next)  [ -d apps/web/.next ] || fail="$fail web-output" ;;
       astro) [ -f apps/web/.vercel/output/config.json ] || fail="$fail web-output(.vercel/output)" ;;
     esac

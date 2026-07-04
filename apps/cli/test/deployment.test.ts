@@ -727,7 +727,7 @@ describe("Deployment Configurations", () => {
       expect(files.has("bunfig.toml")).toBe(false);
     });
 
-    it("should serve React Router Vercel deploys as a static SPA", async () => {
+    it("should use the react-router preset for SSR React Router Vercel deploys", async () => {
       const result = await createVirtual({
         projectName: "rr-vercel-spa",
         webDeploy: "vercel",
@@ -759,11 +759,14 @@ describe("Deployment Configurations", () => {
         }
       ).services?.web;
 
-      // ssr:false SPA: the react-router preset routes through a server function
-      // that crashes, so it deploys as a plain vite static app instead
-      expect(web?.framework).toBe("vite");
-      expect(web?.outputDirectory).toBe("build/client");
-      expect(web?.rewrites).toEqual([{ source: "/(.*)", destination: "/index.html" }]);
+      // SSR is the default: the react-router preset serves the server build,
+      // so no static outputDirectory or SPA fallback is generated
+      expect(web?.framework).toBe("react-router");
+      expect(web?.outputDirectory).toBeUndefined();
+      expect(web?.rewrites).toBeUndefined();
+      expect(files.get("apps/web/react-router.config.ts")).not.toContain("ssr: false");
+      // Vercel functions have no node_modules; deps must be bundled into the server build
+      expect(files.get("apps/web/vite.config.ts")).toContain("noExternal: true");
     });
 
     it("should wire nitro into TanStack Start Vercel web deploys", async () => {
@@ -1387,7 +1390,7 @@ describe("Deployment Configurations", () => {
       expect(webDockerfile).not.toContain("ca-certificates");
     });
 
-    it("should serve React Router SPA builds with nginx", async () => {
+    it("should serve React Router SSR builds with a node runner", async () => {
       const result = await createVirtual({
         projectName: "docker-react-router",
         webDeploy: "docker",
@@ -1416,11 +1419,12 @@ describe("Deployment Configurations", () => {
       const webDockerfile = files.get("apps/web/Dockerfile");
       const compose = files.get("docker-compose.yml");
 
-      // react-router scaffolds with ssr: false, so the build is a static SPA
-      expect(webDockerfile).toContain("FROM nginx:alpine");
-      expect(webDockerfile).toContain("/app/apps/web/build/client");
-      expect(files.has("apps/web/nginx.conf")).toBe(true);
-      expect(compose).toContain('"3001:80"');
+      // react-router scaffolds SSR-first, so the container runs the server build
+      expect(webDockerfile).not.toContain("FROM nginx:alpine");
+      expect(webDockerfile).toContain("FROM node:24-slim AS runner");
+      expect(webDockerfile).toContain('CMD ["sh", "-c", "cd apps/web && npm run start"]');
+      expect(files.has("apps/web/nginx.conf")).toBe(false);
+      expect(compose).toContain('"3001:3001"');
     });
 
     it("should generate a server-only Docker setup with web on another deploy", async () => {
