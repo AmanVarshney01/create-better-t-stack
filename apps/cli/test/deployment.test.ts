@@ -696,6 +696,37 @@ describe("Deployment Configurations", () => {
       expect(serverEntry).toContain("app.listen(3000");
     });
 
+    it("should use the isolated bun linker for nuxt Vercel deploys", async () => {
+      const result = await createVirtual({
+        projectName: "nuxt-vercel-linker",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+        backend: "hono",
+        runtime: "bun",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["nuxt"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      // Vercel's bun tracer misses dynamically-required files in hoisted layouts
+      expect(files.get("bunfig.toml")).toContain('linker = "isolated"');
+      expect(files.get("bunfig.toml")).not.toContain('linker = "hoisted"');
+    });
+
     it("should serve React Router Vercel deploys as a static SPA", async () => {
       const result = await createVirtual({
         projectName: "rr-vercel-spa",

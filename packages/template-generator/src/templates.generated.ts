@@ -25539,9 +25539,12 @@ shamefully-hoist=true
 strict-peer-dependencies=false
 {{/if}}`],
   ["extras/bunfig.toml.hbs", `[install]
-{{#if (includes frontend "nuxt")}}
+{{#if (and (includes frontend "nuxt") (ne webDeploy "vercel") (ne serverDeploy "vercel"))}}
 linker = "hoisted" # Nuxt needs hoisting for its dependency resolver
 {{else}}
+{{#if (includes frontend "nuxt")}}
+# Vercel's bun dependency tracer misses files in hoisted layouts; nuxt dev/build verified working isolated
+{{/if}}
 linker = "isolated"
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 peer = false # Expo native projects declare SDK peers explicitly; this keeps Bun isolated installs deduped for native modules
