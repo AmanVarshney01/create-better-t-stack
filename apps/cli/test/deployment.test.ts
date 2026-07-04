@@ -696,6 +696,45 @@ describe("Deployment Configurations", () => {
       expect(serverEntry).toContain("app.listen(3000");
     });
 
+    it("should serve React Router Vercel deploys as a static SPA", async () => {
+      const result = await createVirtual({
+        projectName: "rr-vercel-spa",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+        backend: "hono",
+        runtime: "bun",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["react-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const web = (
+        JSON.parse(files.get("vercel.json") ?? "{}") as {
+          services?: Record<string, Record<string, unknown>>;
+        }
+      ).services?.web;
+
+      // ssr:false SPA: the react-router preset routes through a server function
+      // that crashes, so it deploys as a plain vite static app instead
+      expect(web?.framework).toBe("vite");
+      expect(web?.outputDirectory).toBe("build/client");
+      expect(web?.rewrites).toEqual([{ source: "/(.*)", destination: "/index.html" }]);
+    });
+
     it("should wire nitro into TanStack Start Vercel web deploys", async () => {
       const result = await createVirtual({
         projectName: "start-vercel",

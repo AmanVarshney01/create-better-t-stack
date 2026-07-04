@@ -1258,7 +1258,8 @@ import { RPCLink } from "@orpc/client/fetch";
 
 {{#if (eq backend "self")}}
 export const link = new RPCLink({
-  url: \`\${window.location.origin}/rpc\`,
+  // Lazy: this module is imported during SSR where window does not exist
+  url: () => \`\${window.location.origin}/rpc\`,
 });
 {{else}}
 import { PUBLIC_SERVER_URL } from "astro:env/client";
@@ -9566,11 +9567,17 @@ import { polarClient } from "@polar-sh/better-auth/client";
 export default defineNuxtPlugin(() => {
   {{#if (ne backend "self")}}
   const config = useRuntimeConfig();
+  const rawServerUrl = (import.meta.server && config.serverUrl) || config.public.serverUrl;
+  // Same-origin paths like /api need an absolute base, and better-auth derives
+  // its route matching from this URL's path, so it must be exactly /api/auth
+  const serverOrigin = rawServerUrl.startsWith("/")
+    ? (import.meta.server ? useRequestURL() : window.location).origin + rawServerUrl
+    : rawServerUrl;
   {{/if}}
 
   const authClient = createAuthClient({
     {{#if (ne backend "self")}}
-    baseURL: (import.meta.server && config.serverUrl) || config.public.serverUrl,
+    baseURL: new URL("/api/auth", serverOrigin).toString(),
     {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],
@@ -16797,9 +16804,10 @@ console.log("Vercel env sync complete. Redeploy for changes to take effect.");
 {{#if (eq webDeploy "vercel")}}
     "web": {
       "root": "apps/web",
-      "framework": {{#if (includes frontend "next")}}"nextjs"{{else if (includes frontend "nuxt")}}"nuxtjs"{{else if (includes frontend "svelte")}}"sveltekit"{{else if (includes frontend "astro")}}"astro"{{else if (includes frontend "react-router")}}"react-router"{{else if (includes frontend "tanstack-start")}}"tanstack-start"{{else}}"vite"{{/if}},
+      "framework": {{#if (includes frontend "next")}}"nextjs"{{else if (includes frontend "nuxt")}}"nuxtjs"{{else if (includes frontend "svelte")}}"sveltekit"{{else if (includes frontend "astro")}}"astro"{{else if (includes frontend "tanstack-start")}}"tanstack-start"{{else}}"vite"{{/if}},
       "installCommand": "cd ../.. && {{packageManager}} install"{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}},
-      "buildCommand": "{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL=/api {{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SERVER_URL=/api {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL=/api {{else}}VITE_SERVER_URL=/api {{/if}}{{packageManager}} run build"{{/if}}{{#if (or (includes frontend "tanstack-router") (includes frontend "solid"))}},
+      "buildCommand": "{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL=/api {{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SERVER_URL=/api {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL=/api {{else}}VITE_SERVER_URL=/api {{/if}}{{packageManager}} run build"{{/if}}{{#if (includes frontend "react-router")}},
+      "outputDirectory": "build/client"{{/if}}{{#if (or (includes frontend "tanstack-router") (includes frontend "solid") (includes frontend "react-router"))}},
       "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]{{/if}}
     }{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}},{{/if}}
 {{/if}}
@@ -25796,9 +25804,6 @@ const { title = "{{projectName}}" } = Astro.props;
 `],
   ["frontend/astro/src/pages/index.astro.hbs", `---
 import Layout from "../layouts/Layout.astro";
-{{#if (eq api "orpc")}}
-import { orpc } from "../lib/orpc";
-{{/if}}
 
 const TITLE_TEXT = \`
  ██████╗ ███████╗████████╗████████╗███████╗██████╗

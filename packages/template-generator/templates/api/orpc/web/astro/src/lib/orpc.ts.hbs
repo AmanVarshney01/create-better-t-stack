@@ -5,7 +5,8 @@ import { RPCLink } from "@orpc/client/fetch";
 
 {{#if (eq backend "self")}}
 export const link = new RPCLink({
-  url: `${window.location.origin}/rpc`,
+  // Lazy: this module is imported during SSR where window does not exist
+  url: () => `${window.location.origin}/rpc`,
 });
 {{else}}
 import { PUBLIC_SERVER_URL } from "astro:env/client";
