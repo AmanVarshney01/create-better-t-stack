@@ -13,6 +13,7 @@ import {
   validatePaymentsCompatibility,
   validateSelfBackendCompatibility,
   validateDockerServerDeploy,
+  validateDockerWebDeployDesktopAddons,
   validateServerDeployRequiresBackend,
   validateWebDeployRequiresWebFrontend,
   validateWorkersCompatibility,
@@ -501,6 +502,13 @@ export function validateFullConfig(
 
     yield* validateServerDeployRequiresBackend(config.serverDeploy, config.backend);
     yield* validateDockerServerDeploy(config.serverDeploy, config.backend, config.runtime);
+    yield* validateDockerWebDeployDesktopAddons(
+      config.webDeploy,
+      config.addons,
+      config.frontend,
+      config.backend,
+      config.auth,
+    );
 
     yield* validateSelfBackendCompatibility(providedFlags, options, config);
     yield* validateWorkersCompatibility(providedFlags, options, config);
