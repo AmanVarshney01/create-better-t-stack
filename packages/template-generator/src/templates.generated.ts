@@ -30056,7 +30056,7 @@ export function ThemeProvider({
     "@types/react-dom": "^19.2.3",
     "react-router-devtools": "^6.2.1",
     "tailwindcss": "^4.3.2",
-    "vite": "^8.1.3",
+    "vite": "^7.3.6",
     "vite-tsconfig-paths": "^6.1.1"
   }
 }

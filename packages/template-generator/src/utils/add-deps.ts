@@ -167,9 +167,9 @@ export const dependencyVersionMap = {
 
   "@polar-sh/better-auth": "^1.8.4",
   "@polar-sh/checkout": "^0.4.0",
-  "@polar-sh/sdk": "^0.48.1",
-  "@stripe/react-stripe-js": "^6.7.0",
-  "@stripe/stripe-js": "^9.9.0",
+  "@polar-sh/sdk": "^0.47.1",
+  "@stripe/react-stripe-js": "^5.6.1",
+  "@stripe/stripe-js": "^8.11.0",
 
   evlog: "^2.19.2",
 } as const;
