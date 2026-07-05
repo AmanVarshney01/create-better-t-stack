@@ -1,6 +1,6 @@
 {
   "name": "@better-t-stack/types",
-  "version": "3.35.3",
+  "version": "3.36.0",
   "description": "TypeScript types and schemas for create-better-t-stack CLI",
   "keywords": [
     "better-t-stack",
