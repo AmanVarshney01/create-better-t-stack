@@ -1,6 +1,6 @@
 {
   "name": "better-t-stack",
-  "version": "3.36.1",
+  "version": "3.36.2",
   "description": "Let your AI scaffold and extend projects with Better-T-Stack. Bundles the create-better-t-stack MCP server plus skills so the assistant plans a valid stack and generates it instead of hand-rolling boilerplate.",
   "author": {
     "name": "Aman Varshney",
