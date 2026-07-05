@@ -12,7 +12,11 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
+		{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+		"@sveltejs/adapter-static": "^3.0.10",
+		{{else}}
 		"@sveltejs/adapter-auto": "^7.0.1",
+		{{/if}}
 		"@sveltejs/kit": "^2.69.0",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@tailwindcss/vite": "^4.3.2",

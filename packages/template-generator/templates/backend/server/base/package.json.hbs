@@ -8,5 +8,10 @@
 		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server"
 	},
 	"dependencies": {},
+	{{#if (eq dbSetup 'supabase')}}
+	"trustedDependencies": [
+        "supabase"
+    ],
+    {{/if}}
 	"devDependencies": {}
 }

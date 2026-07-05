@@ -8,7 +8,7 @@
     "dev": "vite dev"
   },
   "dependencies": {
-    "@{{projectName}}/ui": "workspace:*",
+    "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
     "@tailwindcss/vite": "^4.3.2",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-router": "^1.170.17",

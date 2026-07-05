@@ -22,9 +22,15 @@
     "paths": {
       "@/*": ["./src/*"],
       "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
-    }
+    }{{#if (or (eq serverDeploy "cloudflare") (eq webDeploy "cloudflare"))}},
+    "types": [
+      "@cloudflare/workers-types"
+    ]{{/if}}
   },
   "include": [
+    {{#if (eq serverDeploy "cloudflare")}}
+    "../server/env.d.ts",
+    {{/if}}
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",

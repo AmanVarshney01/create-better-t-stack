@@ -8,7 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "@{{projectName}}/ui": "workspace:*",
+    "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
     "@swc/helpers": "^0.5.23",
     "lucide-react": "^1.23.0",
     "next": "^16.2.0",

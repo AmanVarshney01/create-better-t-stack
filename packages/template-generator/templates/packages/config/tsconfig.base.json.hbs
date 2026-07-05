@@ -17,6 +17,17 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["node"]
+    "types": [
+      {{#if (eq runtime "node")}}
+        "node"
+      {{else if (eq runtime "bun")}}
+        "bun"
+      {{else if (eq runtime "workers")}}
+        "node"
+      {{else}}
+        "node"
+      {{/if}}{{#if (or (eq serverDeploy "cloudflare") (eq webDeploy "cloudflare"))}},
+      "@cloudflare/workers-types"{{/if}}
+    ]
   }
 }

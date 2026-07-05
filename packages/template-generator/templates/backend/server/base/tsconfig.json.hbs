@@ -6,6 +6,7 @@
 		"paths": {
       "@/*": ["./src/*"]
     },
-    "jsx": "react-jsx"
+    "jsx": "react-jsx"{{#if (eq backend "hono")}},
+    "jsxImportSource": "hono/jsx"{{/if}}
   }
 }
