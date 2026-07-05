@@ -117,6 +117,18 @@ How the pieces fit together:
 
 Astro projects automatically use the [`@astrojs/vercel`](https://docs.astro.build/en/guides/integrations-guide/vercel/) adapter instead of the Node standalone adapter.
 
+### Choosing a region
+
+Functions deploy to Washington, D.C. (`iad1`) by default. If your database lives elsewhere, every query pays a cross-region round trip — an SSR page making a few queries can spend hundreds of milliseconds on network alone. Set the region where your database lives (static assets are served from Vercel's CDN close to users either way):
+
+```json
+{
+  "regions": ["sin1"]
+}
+```
+
+`regions` is top-level in `vercel.json` and applies to all services. Common IDs: `iad1` (Washington), `sfo1` (San Francisco), `fra1` (Frankfurt), `sin1` (Singapore), `bom1` (Mumbai), `syd1` (Sydney) — [full list](https://vercel.com/docs/regions#region-list). Pick the same region you chose during database setup (Neon, Prisma Postgres, Turso, etc.).
+
 ## Deploying
 
 The full flow from a fresh scaffold to production:
