@@ -211,6 +211,11 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
       if (hasNative) {
         addPackageDependency({ vfs, packagePath: authPath, dependencies: ["@better-auth/expo"] });
       }
+      if (hasNative && config.packageManager === "bun") {
+        // Native scaffolds set bunfig peer=false for Expo, so @better-auth/core's
+        // jose peer never installs and resolution falls back to a stale jose@5
+        addPackageDependency({ vfs, packagePath: authPath, dependencies: ["jose"] });
+      }
     }
 
     if (hasWebFrontend && webExists) {

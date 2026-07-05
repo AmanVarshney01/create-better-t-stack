@@ -152,6 +152,7 @@ export const dependencyVersionMap = {
   "nitro-cloudflare-dev": "^0.2.2",
   "@sveltejs/adapter-cloudflare": "^7.2.9",
   "@sveltejs/adapter-node": "^5.5.7",
+  jose: "^6.2.3",
   "@sveltejs/adapter-vercel": "^6.3.4",
   "@cloudflare/workers-types": "^4.20260702.1",
   "@astrojs/cloudflare": "^14.1.0",
