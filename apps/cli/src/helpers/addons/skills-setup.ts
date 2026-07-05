@@ -142,11 +142,19 @@ function hasNativeFrontend(frontend: ProjectConfig["frontend"]): boolean {
 
 function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
   const sources: SourceKey[] = [];
-  const { frontend, backend, dbSetup, auth, examples, addons, orm } = config;
+  const { frontend, backend, dbSetup, auth, examples, addons, orm, webDeploy, serverDeploy } =
+    config;
 
   if (hasReactBasedFrontend(frontend)) {
     sources.push("vercel-labs/agent-skills");
     sources.push("shadcn/ui");
+  }
+
+  if (
+    (webDeploy === "vercel" || serverDeploy === "vercel") &&
+    !sources.includes("vercel-labs/agent-skills")
+  ) {
+    sources.push("vercel-labs/agent-skills");
   }
 
   if (frontend.includes("next")) {
@@ -226,13 +234,19 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
 
 const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => string[]> = {
   "vercel-labs/agent-skills": (config) => {
-    const skills = [
-      "web-design-guidelines",
-      "vercel-composition-patterns",
-      "vercel-react-best-practices",
-    ];
+    const skills: string[] = [];
+    if (hasReactBasedFrontend(config.frontend)) {
+      skills.push(
+        "web-design-guidelines",
+        "vercel-composition-patterns",
+        "vercel-react-best-practices",
+      );
+    }
     if (hasNativeFrontend(config.frontend)) {
       skills.push("vercel-react-native-skills");
+    }
+    if (config.webDeploy === "vercel" || config.serverDeploy === "vercel") {
+      skills.push("deploy-to-vercel");
     }
     return skills;
   },
