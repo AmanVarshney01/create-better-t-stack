@@ -4,6 +4,7 @@ import {
   EMBEDDED_TEMPLATES,
   processAddonTemplates,
   processAddonsDeps,
+  processJsonConfigs,
   processNxConfig,
   processPackageConfigs,
   processTurboConfig,
@@ -373,6 +374,9 @@ async function addHandlerInternal(
   if (hasTaskRunner) {
     processPackageConfigs(vfs, updatedConfig);
   }
+
+  // Config-dependent JSON edits (biome overrides, workspace protocol, ...)
+  processJsonConfigs(vfs, updatedConfig);
 
   if (updatedAddons.includes("vite-plus")) {
     updateViteConfigImportsForVitePlus(vfs);

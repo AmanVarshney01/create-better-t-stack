@@ -7,7 +7,7 @@ export { processAddonsDeps } from "./processors/addons-deps";
 export { processNxConfig } from "./processors/nx-generator";
 export { processTurboConfig } from "./processors/turbo-generator";
 export { processVitePlusConfig } from "./processors/vite-plus-generator";
-export { processPackageConfigs } from "./post-process";
+export { processJsonConfigs, processPackageConfigs, processVercelConfig } from "./post-process";
 export { writeBtsConfigToVfs } from "./bts-config";
 
 export { EMBEDDED_TEMPLATES, TEMPLATE_COUNT } from "./templates.generated";

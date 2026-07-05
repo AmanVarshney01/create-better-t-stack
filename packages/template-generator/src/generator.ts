@@ -2,7 +2,12 @@ import { Result } from "better-result";
 
 import { writeBtsConfigToVfs } from "./bts-config";
 import { VirtualFileSystem } from "./core/virtual-fs";
-import { processCatalogs, processPackageConfigs } from "./post-process";
+import {
+  processCatalogs,
+  processJsonConfigs,
+  processPackageConfigs,
+  processVercelConfig,
+} from "./post-process";
 import {
   processDependencies,
   processReadme,
@@ -85,6 +90,8 @@ export async function generate(
       processAlchemyPlugins(vfs, config);
       processPwaPlugins(vfs, config);
       processCatalogs(vfs, config);
+      processJsonConfigs(vfs, config);
+      processVercelConfig(vfs, config);
       processReadme(vfs, config);
 
       // Write bts.jsonc config file

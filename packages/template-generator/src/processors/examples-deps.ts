@@ -94,6 +94,15 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
   }
 
   if (nativeExists && hasReactNative) {
+    // Polyfills the AI SDK needs in React Native (web streams + structuredClone)
+    addPackageDependency({
+      vfs,
+      packagePath: nativePkgPath,
+      customDependencies: {
+        "@stardazed/streams-text-encoding": "^1.0.2",
+        "@ungap/structured-clone": "^1.3.2",
+      },
+    });
     if (backend === "convex") {
       addPackageDependency({
         vfs,

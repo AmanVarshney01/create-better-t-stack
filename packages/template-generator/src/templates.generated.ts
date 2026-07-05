@@ -78,26 +78,6 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 			"tailwindDirectives": true
 		}
 	}
-	{{#if (or (includes frontend "svelte") (includes frontend "nuxt"))}}
-	,
-	"overrides": [
-		{
-			"includes": ["**/*.svelte", "**/*.vue"],
-			"linter": {
-				"rules": {
-					"style": {
-						"useConst": "off",
-						"useImportType": "off"
-					},
-					"correctness": {
-						"noUnusedVariables": "off",
-						"noUnusedImports": "off"
-					}
-				}
-			}
-		}
-	]
-	{{/if}}
 }
 `],
   ["addons/electrobun/apps/desktop/.gitignore", `artifacts
@@ -14272,11 +14252,6 @@ next-env.d.ts
 		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server"
 	},
 	"dependencies": {},
-	{{#if (eq dbSetup 'supabase')}}
-	"trustedDependencies": [
-        "supabase"
-    ],
-    {{/if}}
 	"devDependencies": {}
 }
 `],
@@ -14288,8 +14263,7 @@ next-env.d.ts
 		"paths": {
       "@/*": ["./src/*"]
     },
-    "jsx": "react-jsx"{{#if (eq backend "hono")}},
-    "jsxImportSource": "hono/jsx"{{/if}}
+    "jsx": "react-jsx"
   }
 }
 `],
@@ -16778,55 +16752,6 @@ for (const [key, value] of env.entries()) {
 }
 
 console.log("Vercel env sync complete. Redeploy for changes to take effect.");
-`],
-  ["deploy/vercel/vercel.json.hbs", `{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-{{#if (and (eq serverDeploy "vercel") (eq runtime "bun"))}}
-  "bunVersion": "1.x",
-{{/if}}
-  "services": {
-{{#if (eq webDeploy "vercel")}}
-    "web": {
-      "root": "apps/web",
-      "framework": {{#if (includes frontend "next")}}"nextjs"{{else if (includes frontend "nuxt")}}"nuxtjs"{{else if (includes frontend "svelte")}}"sveltekit"{{else if (includes frontend "astro")}}"astro"{{else if (includes frontend "tanstack-start")}}"tanstack-start"{{else if (and (includes frontend "react-router") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}"react-router"{{else}}"vite"{{/if}},
-      "installCommand": "cd ../.. && {{packageManager}} install"{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}},
-      "buildCommand": "{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL=/api {{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SERVER_URL=/api {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL=/api {{else}}VITE_SERVER_URL=/api {{/if}}{{packageManager}} run build"{{/if}}{{#if (and (includes frontend "react-router") (or (includes addons "tauri") (includes addons "electrobun")))}},
-      "outputDirectory": "build/client"{{/if}}{{#if (or (includes frontend "tanstack-router") (includes frontend "solid") (and (includes frontend "react-router") (or (includes addons "tauri") (includes addons "electrobun"))))}},
-      "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]{{/if}}
-    }{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}},{{/if}}
-{{/if}}
-{{#if (and (eq serverDeploy "vercel") (ne backend "self"))}}
-    "server": {
-      "root": "apps/server",
-      "framework": "{{backend}}",
-      "entrypoint": "src/index.ts",
-      "installCommand": "cd ../.. && {{packageManager}} install"{{#if (eq webDeploy "vercel")}},
-      "routes": [
-        {
-          "src": "/api/((?!auth(?:/|$)).*)",
-          "transforms": [
-            {
-              "type": "request.path",
-              "op": "set",
-              "args": "/$1"
-            }
-          ]
-        }
-      ]{{/if}}
-    }
-{{/if}}
-  },
-  "rewrites": [
-{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self"))}}
-    { "source": "/api/(.*)", "destination": { "service": "server" } },
-    { "source": "/(.*)", "destination": { "service": "web" } }
-{{else if (eq webDeploy "vercel")}}
-    { "source": "/(.*)", "destination": { "service": "web" } }
-{{else if (and (eq serverDeploy "vercel") (ne backend "self"))}}
-    { "source": "/(.*)", "destination": { "service": "server" } }
-{{/if}}
-  ]
-}
 `],
   ["examples/ai/convex/packages/backend/convex/agent.ts.hbs", `import { Agent } from "@convex-dev/agent";
 import { google } from "@ai-sdk/google";
@@ -27011,10 +26936,6 @@ module.exports = config;
     "@expo/ui": "~57.0.1",
     "@expo/vector-icons": "^15.1.1",
     "@tanstack/react-query": "^5.101.2",
-    {{#if (includes examples "ai")}}
-    "@stardazed/streams-text-encoding": "^1.0.2",
-    "@ungap/structured-clone": "^1.3.2",
-    {{/if}}
     "expo": "~57.0.1",
     "expo-constants": "~57.0.2",
     "expo-crypto": "~57.0.0",
@@ -28338,10 +28259,6 @@ module.exports = config;
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
-    {{#if (includes examples "ai")}}
-    "@stardazed/streams-text-encoding": "^1.0.2",
-    "@ungap/structured-clone": "^1.3.2",
-    {{/if}}
     "babel-preset-expo": "~57.0.1",
     "expo": "~57.0.1",
     "expo-constants": "~57.0.2",
@@ -29473,10 +29390,6 @@ module.exports = uniwindConfig;
     "@expo/metro-runtime": "~57.0.2",
     "@expo/vector-icons": "^15.1.1",
     "@gorhom/bottom-sheet": "^5.2.14",
-    {{#if (includes examples "ai")}}
-    "@stardazed/streams-text-encoding": "^1.0.2",
-    "@ungap/structured-clone": "^1.3.2",
-    {{/if}}
     "expo": "~57.0.1",
     "expo-constants": "~57.0.2",
     "expo-font": "~57.0.0",
@@ -29873,7 +29786,7 @@ initOpenNextCloudflareForDev();
     "start": "next start"
   },
   "dependencies": {
-    "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
+    "@{{projectName}}/ui": "workspace:*",
     "@swc/helpers": "^0.5.23",
     "lucide-react": "^1.23.0",
     "next": "^16.2.0",
@@ -30245,15 +30158,9 @@ export function ThemeProvider({
     "paths": {
       "@/*": ["./src/*"],
       "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
-    }{{#if (or (eq serverDeploy "cloudflare") (eq webDeploy "cloudflare"))}},
-    "types": [
-      "@cloudflare/workers-types"
-    ]{{/if}}
+    }
   },
   "include": [
-    {{#if (eq serverDeploy "cloudflare")}}
-    "../server/env.d.ts",
-    {{/if}}
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
@@ -30276,7 +30183,7 @@ export function ThemeProvider({
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
-    "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
+    "@{{projectName}}/ui": "workspace:*",
     "@react-router/fs-routes": "^8.1.0",
     "@react-router/node": "^8.1.0",
     "@react-router/serve": "^8.1.0",
@@ -30825,7 +30732,7 @@ export default defineConfig({
 	},
 	"dependencies": {
         "@hookform/resolvers": "^5.4.0",
-        "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
+        "@{{projectName}}/ui": "workspace:*",
 		"@tailwindcss/vite": "^4.3.2",
 		"@tanstack/react-router": "^1.170.17",
 		"lucide-react": "^1.23.0",
@@ -31268,7 +31175,7 @@ export default defineConfig({
     "dev": "vite dev"
   },
   "dependencies": {
-    "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
+    "@{{projectName}}/ui": "workspace:*",
     "@tailwindcss/vite": "^4.3.2",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-router": "^1.170.17",
@@ -31936,7 +31843,7 @@ dev-dist
   ["frontend/react/web-base/components.json.hbs", `{
   "$schema": "https://ui.shadcn.com/schema.json",
   "style": "base-lyra",
-  "rsc": {{#if (includes frontend "next")}}true{{else}}false{{/if}},
+  "rsc": false,
   "tsx": true,
   "tailwind": {
     "config": "",
@@ -32403,11 +32310,7 @@ vite.config.ts.timestamp-*
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
-		{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
-		"@sveltejs/adapter-static": "^3.0.10",
-		{{else}}
 		"@sveltejs/adapter-auto": "^7.0.1",
-		{{/if}}
 		"@sveltejs/kit": "^2.69.0",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@tailwindcss/vite": "^4.3.2",
@@ -32755,18 +32658,7 @@ export default defineConfig({
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": [
-      {{#if (eq runtime "node")}}
-        "node"
-      {{else if (eq runtime "bun")}}
-        "bun"
-      {{else if (eq runtime "workers")}}
-        "node"
-      {{else}}
-        "node"
-      {{/if}}{{#if (or (eq serverDeploy "cloudflare") (eq webDeploy "cloudflare"))}},
-      "@cloudflare/workers-types"{{/if}}
-    ]
+    "types": ["node"]
   }
 }`],
   ["packages/env/package.json.hbs", `{
@@ -33571,7 +33463,7 @@ await app.finalize();
   ["packages/ui/components.json.hbs", `{
   "$schema": "https://ui.shadcn.com/schema.json",
   "style": "base-lyra",
-  "rsc": {{#if (includes frontend "next")}}true{{else}}false{{/if}},
+  "rsc": false,
   "tsx": true,
   "tailwind": {
     "config": "",
@@ -35575,4 +35467,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 508;
+export const TEMPLATE_COUNT = 507;
