@@ -1258,13 +1258,16 @@ import { RPCLink } from "@orpc/client/fetch";
 
 {{#if (eq backend "self")}}
 export const link = new RPCLink({
-  url: \`\${window.location.origin}/rpc\`,
+  // Lazy: this module is imported during SSR where window does not exist
+  url: () => \`\${window.location.origin}/rpc\`,
 });
 {{else}}
 import { PUBLIC_SERVER_URL } from "astro:env/client";
 
+{{> getServerUrlSpaces}}
+
 export const link = new RPCLink({
-  url: \`\${PUBLIC_SERVER_URL}/rpc\`,
+  url: \`\${getServerUrl(PUBLIC_SERVER_URL)}/rpc\`,
 {{#if (eq auth "better-auth")}}
   fetch(url, options) {
     return fetch(url, {
@@ -1284,11 +1287,25 @@ import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
+function getServerUrl(url: string) {
+  const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
+
+  if (!normalized.startsWith("/")) {
+    return normalized;
+  }
+
+  if (import.meta.server) {
+    return \`\${useRequestURL().origin}\${normalized}\`;
+  }
+
+  return \`\${window.location.origin}\${normalized}\`;
+}
+
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
   const serverUrl =
     (import.meta.server && config.serverUrl) || config.public.serverUrl;
-  const rpcUrl = \`\${serverUrl}/rpc\`;
+  const rpcUrl = \`\${getServerUrl(serverUrl)}/rpc\`;
 
   const rpcLink = new RPCLink({
     url: rpcUrl,
@@ -1416,6 +1433,10 @@ export function createQueryClient() {
 export const queryClient = createQueryClient();
 {{/unless}}
 
+{{#unless (eq backend "self")}}
+{{> getServerUrl}}
+
+{{/unless}}
 {{#if (and (includes frontend "tanstack-start") (eq backend "self"))}}
 const getORPCClient = createIsomorphicFn()
 	.server(() =>
@@ -1444,7 +1465,7 @@ const getORPCClient = createIsomorphicFn()
 export const client: RouterClient<typeof appRouter> = getORPCClient();
 {{else if (includes frontend "tanstack-start")}}
 const link = new RPCLink({
-	url: \`\${env.VITE_SERVER_URL}/rpc\`,
+	url: \`\${getServerUrl(env.VITE_SERVER_URL)}/rpc\`,
 {{#if (eq auth "clerk")}}
 	headers: async () => {
 		const token = await getClerkAuthToken();
@@ -1471,9 +1492,9 @@ export const link = new RPCLink({
 {{#if (and (eq backend "self") (includes frontend "next"))}}
 	url: \`\${typeof window !== "undefined" ? window.location.origin : "http://localhost:3001"}/api/rpc\`,
 {{else if (includes frontend "next")}}
-	url: \`\${env.NEXT_PUBLIC_SERVER_URL}/rpc\`,
+	url: \`\${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/rpc\`,
 {{else}}
-	url: \`\${env.VITE_SERVER_URL}/rpc\`,
+	url: \`\${getServerUrl(env.VITE_SERVER_URL)}/rpc\`,
 {{/if}}
 {{#if (eq auth "clerk")}}
 	headers: async () => {
@@ -1534,8 +1555,10 @@ export const queryClient = new QueryClient({
 	}),
 });
 
+{{> getServerUrl}}
+
 export const link = new RPCLink({
-	url: \`\${env.VITE_SERVER_URL}/rpc\`,
+	url: \`\${getServerUrl(env.VITE_SERVER_URL)}/rpc\`,
 {{#if (eq auth "better-auth")}}
 	fetch(url, options) {
 		return fetch(url, {
@@ -1567,6 +1590,10 @@ export const queryClient = new QueryClient({
 	}),
 });
 
+{{#unless (eq backend "self")}}
+{{> getServerUrl}}
+
+{{/unless}}
 export const link = new RPCLink({
 	{{#if (eq backend "self")}}
 	url: () => {
@@ -1577,7 +1604,7 @@ export const link = new RPCLink({
 		return \`\${window.location.origin}/rpc\`;
 	},
 	{{else}}
-	url: \`\${PUBLIC_SERVER_URL}/rpc\`,
+	url: \`\${getServerUrl(PUBLIC_SERVER_URL)}/rpc\`,
 	{{/if}}
 	{{#if (eq auth "better-auth")}}
 	fetch(url, options) {
@@ -2103,6 +2130,8 @@ import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { toast } from 'sonner';
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
+
+{{> getServerUrl}}
 {{/unless}}
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
@@ -2129,7 +2158,7 @@ const trpcClient = createTRPCClient<AppRouter>({
 {{#if (eq backend "self")}}
 			url: "/api/trpc",
 {{else}}
-			url: \`\${env.NEXT_PUBLIC_SERVER_URL}/trpc\`,
+			url: \`\${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/trpc\`,
 {{/if}}
 {{#if (eq auth "clerk")}}
 			headers: async () => {
@@ -2180,6 +2209,8 @@ import { env } from "@{{projectName}}/env/web";
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 
+{{> getServerUrl}}
+
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
 		onError: (error, query) => {
@@ -2198,7 +2229,7 @@ export const queryClient = new QueryClient({
 export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: \`\${env.VITE_SERVER_URL}/trpc\`,
+			url: \`\${getServerUrl(env.VITE_SERVER_URL)}/trpc\`,
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();
@@ -8994,9 +9025,15 @@ import { polarClient } from "@polar-sh/better-auth/client";
 import { PUBLIC_SERVER_URL } from "astro:env/client";
 {{/if}}
 
+{{#if (ne backend "self")}}
+{{> getServerUrlSpaces}}
+
+{{/if}}
 export const authClient = createAuthClient({
 {{#if (ne backend "self")}}
-  baseURL: PUBLIC_SERVER_URL,
+  // better-auth derives its route-matching base from this URL's path, so the
+	// public auth path must equal the server-side mount (/api/auth everywhere)
+	  baseURL: new URL("/api/auth", getServerUrl(PUBLIC_SERVER_URL)).toString(),
 {{/if}}
 {{#if (eq payments "polar")}}
   plugins: [polarClient()],
@@ -9530,11 +9567,17 @@ import { polarClient } from "@polar-sh/better-auth/client";
 export default defineNuxtPlugin(() => {
   {{#if (ne backend "self")}}
   const config = useRuntimeConfig();
+  const rawServerUrl = (import.meta.server && config.serverUrl) || config.public.serverUrl;
+  // Same-origin paths like /api need an absolute base, and better-auth derives
+  // its route matching from this URL's path, so it must be exactly /api/auth
+  const serverOrigin = rawServerUrl.startsWith("/")
+    ? (import.meta.server ? useRequestURL() : window.location).origin + rawServerUrl
+    : rawServerUrl;
   {{/if}}
 
   const authClient = createAuthClient({
     {{#if (ne backend "self")}}
-    baseURL: (import.meta.server && config.serverUrl) || config.public.serverUrl,
+    baseURL: new URL("/api/auth", serverOrigin).toString(),
     {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],
@@ -9554,11 +9597,15 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
+
+{{> getServerUrl}}
 {{/unless}}
 
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	baseURL: env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}},
+	// better-auth derives its route-matching base from this URL's path, so the
+	// public auth path must equal the server-side mount (/api/auth everywhere)
+		baseURL: new URL("/api/auth", getServerUrl(env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})).toString(),
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
@@ -11852,8 +11899,12 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 import { env } from "@{{projectName}}/env/web";
 
+{{> getServerUrl}}
+
 export const authClient = createAuthClient({
-	baseURL: env.VITE_SERVER_URL,
+	// better-auth derives its route-matching base from this URL's path, so the
+	// public auth path must equal the server-side mount (/api/auth everywhere)
+		baseURL: new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(),
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
 {{/if}}
@@ -12269,9 +12320,15 @@ import { createAuthClient } from "better-auth/svelte";
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
+{{#unless (eq backend "self")}}
+{{> getServerUrl}}
+
+{{/unless}}
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	baseURL: PUBLIC_SERVER_URL,
+	// better-auth derives its route-matching base from this URL's path, so the
+	// public auth path must equal the server-side mount (/api/auth everywhere)
+		baseURL: new URL("/api/auth", getServerUrl(PUBLIC_SERVER_URL)).toString(),
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
@@ -14297,11 +14354,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 });
 {{/if}}
 
-{{#if (eq runtime "node")}}
-new Elysia({ adapter: node() })
-{{else}}
-new Elysia()
-{{/if}}
+const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
 	.use(
 		cors({
 			origin: env.CORS_ORIGIN,
@@ -14407,9 +14460,22 @@ new Elysia()
 	})
 {{/if}}
 	.get("/", () => "OK")
+{{#if (eq serverDeploy "vercel")}};
+
+export default app;
+
+// Elysia's default export is not auto-served by Bun or Node, so start a local
+// server outside Vercel while still exporting the app for Vercel functions.
+if (!process.env.VERCEL) {
+	app.listen(3000, () => {
+		console.log("Server is running on http://localhost:3000");
+	});
+}
+{{else}}
 	.listen(3000, () => {
 		console.log("Server is running on http://localhost:3000");
 	});
+{{/if}}
 `],
   ["backend/server/express/src/index.ts.hbs", `import { env } from "@{{projectName}}/env/server";
 {{#if (eq api "trpc")}}
@@ -14980,15 +15046,23 @@ app.get("/", (c) => {
 {{#if (eq runtime "node")}}
 import { serve } from "@hono/node-server";
 
-serve(
-	{
-		fetch: app.fetch,
-		port: 3000,
-	},
-	(info) => {
-		console.log(\`Server is running on http://localhost:\${info.port}\`);
-	}
-);
+{{#if (eq serverDeploy "vercel")}}
+export default app;
+
+if (!process.env.VERCEL) {
+{{/if}}
+	serve(
+		{
+			fetch: app.fetch,
+			port: 3000,
+		},
+		(info) => {
+			console.log(\`Server is running on http://localhost:\${info.port}\`);
+		}
+	);
+{{#if (eq serverDeploy "vercel")}}
+}
+{{/if}}
 {{else}}
 {{#if (eq runtime "bun")}}
 export default app;
@@ -15042,6 +15116,7 @@ lerna-debug.log*
 
 # Better-T-Stack
 .alchemy
+.vercel
 
 # Testing
 coverage
@@ -15911,7 +15986,7 @@ services:
 {{/if}}
     init: true
     ports:
-{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "solid"))}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "solid"))}}
       - "3001:80"
 {{else}}
       - "3001:3001"
@@ -15958,7 +16033,7 @@ services:
 {{/if}}
 {{/if}}
     healthcheck:
-{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "solid"))}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "solid"))}}
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
 {{else}}
       test:
@@ -16319,30 +16394,14 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
 
-FROM nginx:alpine AS runner
-COPY --from=builder /app/apps/web/build/client /usr/share/nginx/html
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-`],
-  ["deploy/docker/web/react/react-router/nginx.conf", `server {
-    listen 80;
-    server_name _;
-    root /usr/share/nginx/html;
-    index index.html;
-
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript image/svg+xml;
-
-    location /assets/ {
-        add_header Cache-Control "public, max-age=31536000, immutable";
-    }
-
-    # SPA fallback
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-}
+FROM node:24-slim AS runner
+WORKDIR /app
+COPY --from=builder /app .
+ENV NODE_ENV=production
+ENV PORT=3001
+ENV HOST=0.0.0.0
+EXPOSE 3001
+CMD ["sh", "-c", "cd apps/web && npm run start"]
 `],
   ["deploy/docker/web/react/tanstack-router/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (eq packageManager "bun")}}
@@ -16582,6 +16641,143 @@ EXPOSE 3001
 
 WORKDIR /app/apps/web
 CMD ["node", "build/index.js"]
+`],
+  ["deploy/vercel/_vercelignore", `# Local env files must never ship in deployments: Vercel project env vars are
+# the source of truth (bun env:vercel:*), and frameworks like Next.js would
+# otherwise load these localhost values at runtime.
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+local.db
+local.db-*
+.alchemy/
+`],
+  ["deploy/vercel/scripts/sync-vercel-env.ts.hbs", `import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import dotenv from "dotenv";
+
+const DEFAULT_ENVIRONMENT = "preview";
+const VALID_ENVIRONMENTS = new Set(["development", "preview", "production"]);
+const VERCEL_COMMAND = [{{#if (eq packageManager "npm")}}"npx", "vercel"{{else if (eq packageManager "pnpm")}}"pnpm", "exec", "vercel"{{else}}"bunx", "vercel"{{/if}}] as const;
+const DEFAULT_FILES = [
+{{#if (eq webDeploy "vercel")}}
+	"apps/web/.env",
+{{/if}}
+{{#if (and (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+	"apps/server/.env",
+{{/if}}
+];
+const SKIP_KEYS = new Set([
+{{#if (or (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex")) (and (eq webDeploy "vercel") (eq backend "self")))}}
+	"BETTER_AUTH_URL",
+	"CORS_ORIGIN",
+	"NODE_ENV",
+{{/if}}
+]);
+const OVERRIDE_KEYS = new Map([
+{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+	["NEXT_PUBLIC_SERVER_URL", "/api"],
+	["NUXT_PUBLIC_SERVER_URL", "/api"],
+	["PUBLIC_SERVER_URL", "/api"],
+	["VITE_SERVER_URL", "/api"],
+{{/if}}
+]);
+
+const args = process.argv.slice(2);
+const separatorIndex = args.indexOf("--");
+const scriptArgs = separatorIndex === -1 ? args : args.slice(0, separatorIndex);
+const forwardedArgs = separatorIndex === -1 ? [] : args.slice(separatorIndex + 1);
+
+const environment =
+	scriptArgs[0] && VALID_ENVIRONMENTS.has(scriptArgs[0]) ? scriptArgs[0] : DEFAULT_ENVIRONMENT;
+const remainingArgs = scriptArgs.slice(VALID_ENVIRONMENTS.has(scriptArgs[0] ?? "") ? 1 : 0);
+// Split remaining args into env-file paths and passthrough Vercel CLI flags.
+// A bare token counts as a file only when it exists on disk, so flags and their
+// values (e.g. \`--scope my-team\`) forward correctly regardless of argument order.
+const files: string[] = [];
+const passthroughArgs: string[] = [];
+for (const arg of remainingArgs) {
+	if (!arg.startsWith("-") && existsSync(arg)) {
+		files.push(arg);
+	} else {
+		passthroughArgs.push(arg);
+	}
+}
+const vercelArgs = [...passthroughArgs, ...forwardedArgs];
+const envFiles = files.length > 0 ? files : DEFAULT_FILES;
+
+if (envFiles.length === 0) {
+	console.log("No env files configured for this Vercel stack.");
+	process.exit(0);
+}
+
+const env = new Map<string, string>();
+
+for (const file of envFiles) {
+	if (!existsSync(file)) {
+		console.warn(\`Skipping missing env file: \${file}\`);
+		continue;
+	}
+
+	for (const [key, value] of Object.entries(dotenv.parse(readFileSync(file, "utf8")))) {
+		if (SKIP_KEYS.has(key)) continue;
+		env.set(key, OVERRIDE_KEYS.get(key) ?? value);
+	}
+}
+
+if (env.size === 0) {
+	console.log("No Vercel env vars found to sync.");
+	process.exit(0);
+}
+
+const LOCAL_VALUE_PATTERN = /localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0|^file:/i;
+const localKeys = [...env.entries()]
+	.filter(([, value]) => LOCAL_VALUE_PATTERN.test(value))
+	.map(([key]) => key);
+if (localKeys.length > 0) {
+	console.warn(
+		\`Warning: \${localKeys.join(", ")} look\${localKeys.length === 1 ? "s" : ""} like local-only value(s). Update them in your .env file(s) and re-run this sync if your deployed app should not point at local endpoints.\`,
+	);
+}
+
+console.log(\`Syncing \${env.size} env var(s) to Vercel \${environment}.\`);
+for (const [key, value] of env.entries()) {
+	const result = spawnSync(
+		VERCEL_COMMAND[0],
+		[
+			...VERCEL_COMMAND.slice(1),
+			"env",
+			"add",
+			key,
+			environment,
+			"--force",
+			"--yes",
+			"--non-interactive",
+			...vercelArgs,
+		],
+		{
+			input: \`\${value}\\n\`,
+			stdio: ["pipe", "inherit", "inherit"],
+			encoding: "utf8",
+			// Windows resolves bunx/npx/pnpm via .cmd shims, which need a shell
+			shell: process.platform === "win32",
+		},
+	);
+
+	if (result.error) {
+		console.error(\`Failed to sync \${key}: \${result.error.message}\`);
+		process.exit(1);
+	}
+
+	if (result.status !== 0) {
+		console.error(\`Failed to sync \${key}\`);
+		process.exit(result.status ?? 1);
+	}
+}
+
+console.log("Vercel env sync complete. Redeploy for changes to take effect.");
 `],
   ["examples/ai/convex/packages/backend/convex/agent.ts.hbs", `import { Agent } from "@convex-dev/agent";
 import { google } from "@ai-sdk/google";
@@ -25278,14 +25474,7 @@ shamefully-hoist=true
 strict-peer-dependencies=false
 {{/if}}`],
   ["extras/bunfig.toml.hbs", `[install]
-{{#if (includes frontend "nuxt")}}
-linker = "hoisted" # Nuxt needs hoisting for its dependency resolver
-{{else}}
-linker = "isolated"
-{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 peer = false # Expo native projects declare SDK peers explicitly; this keeps Bun isolated installs deduped for native modules
-{{/if}}
-{{/if}}
 `],
   ["extras/env.d.ts.hbs", `{{#if (eq serverDeploy "cloudflare")}}
 import { type server } from "@{{projectName}}/infra/alchemy.run";
@@ -25311,19 +25500,19 @@ declare module "cloudflare:workers" {
   ["extras/pnpm-workspace.yaml.hbs", `packages:
   - "apps/*"
   - "packages/*"
-{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "next") (includes frontend "nuxt"))}}
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (eq webDeploy "vercel") (eq serverDeploy "vercel") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "next") (includes frontend "nuxt"))}}
 
 # pnpm 11 blocks dependency lifecycle scripts unless they are approved here.
 # Entries are scoped to packages this generated stack can pull in.
 allowBuilds:
-{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "nuxt"))}}
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq serverDeploy "docker") (eq webDeploy "vercel") (eq serverDeploy "vercel") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "nuxt"))}}
   esbuild: true
 {{/if}}
 {{#if (includes frontend "nuxt")}}
   "@parcel/watcher": true
   vue-demi: true
 {{/if}}
-{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (includes addons "pwa") (includes frontend "next"))}}
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq webDeploy "vercel") (includes addons "pwa") (includes frontend "next"))}}
   sharp: true
 {{/if}}
 {{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
@@ -25370,6 +25559,8 @@ pnpm-debug.log*
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, envField } from "astro/config";
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+{{else if (eq webDeploy "vercel")}}
+import vercel from "@astrojs/vercel";
 {{else}}
 import node from "@astrojs/node";
 {{/if}}
@@ -25378,6 +25569,9 @@ import node from "@astrojs/node";
 export default defineConfig({
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
   output: "static",
+{{else if (eq webDeploy "vercel")}}
+  output: "server",
+  adapter: vercel(),
 {{else}}
   output: "server",
   adapter: node({ mode: "standalone" }),
@@ -25538,9 +25732,6 @@ const { title = "{{projectName}}" } = Astro.props;
 `],
   ["frontend/astro/src/pages/index.astro.hbs", `---
 import Layout from "../layouts/Layout.astro";
-{{#if (eq api "orpc")}}
-import { orpc } from "../lib/orpc";
-{{/if}}
 
 const TITLE_TEXT = \`
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -30062,10 +30253,16 @@ export function ThemeProvider({
 }
 `],
   ["frontend/react/react-router/public/favicon.ico", `[Binary file]`],
-  ["frontend/react/react-router/react-router.config.ts", `import type { Config } from "@react-router/dev/config";
+  ["frontend/react/react-router/react-router.config.ts.hbs", `import type { Config } from "@react-router/dev/config";
 
 export default {
+{{#if (and (eq webDeploy "vercel") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+  // Adopt vercelPreset() once @vercel/react-router supports RR8 (vercel/vercel#16730)
+{{/if}}
+{{#if (or (includes addons "tauri") (includes addons "electrobun"))}}
+  // Desktop addons package static web assets; SSR output cannot be bundled
   ssr: false,
+{{/if}}
   appDirectory: "src",
 } satisfies Config;
 `],
@@ -30543,6 +30740,12 @@ export default defineConfig({
     reactRouter(),
     tsconfigPaths(),
   ],
+{{#if (and (eq webDeploy "vercel") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+  ssr: {
+    // Vercel functions have no node_modules; bundle all deps into the server build
+    noExternal: true,
+  },
+{{/if}}
 });
 `],
   ["frontend/react/tanstack-router/index.html.hbs", `<!DOCTYPE html>
@@ -31113,6 +31316,10 @@ export function getRouter() {
 }
 {{else}}
 {{#if (eq api "trpc")}}
+{{#unless (eq backend "self")}}
+{{> getServerUrl}}
+
+{{/unless}}
 function createQueryClient() {
 	return new QueryClient({
 		queryCache: new QueryCache({
@@ -31134,7 +31341,7 @@ function createQueryClient() {
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: {{#if (eq backend "self")}}"/api/trpc"{{else}}\`\${env.VITE_SERVER_URL}/trpc\`{{/if}},
+			url: {{#if (eq backend "self")}}"/api/trpc"{{else}}\`\${getServerUrl(env.VITE_SERVER_URL)}/trpc\`{{/if}},
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();
@@ -31577,7 +31784,7 @@ function HomeComponent() {
 `],
   ["frontend/react/tanstack-start/vite.config.ts.hbs", `import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-{{#if (eq webDeploy "docker")}}
+{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel"))}}
 import { nitro } from "nitro/vite";
 {{/if}}
 import tailwindcss from "@tailwindcss/vite";
@@ -31599,12 +31806,17 @@ export default defineConfig({
         },
       },
 {{/if}}),
-{{#if (eq webDeploy "docker")}}
+{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel"))}}
     nitro(),
 {{/if}}
     viteReact(),
   ],
-{{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+{{#if (eq webDeploy "vercel")}}
+  // Bundle all SSR deps: Vercel functions have no node_modules at runtime
+  ssr: {
+    noExternal: true,
+  },
+{{else if (and (eq backend "convex") (eq auth "better-auth"))}}
   ssr: {
     noExternal: ["@convex-dev/better-auth"],
   },
@@ -32400,6 +32612,8 @@ import adapter from '@sveltejs/adapter-static';
 import alchemy from 'alchemy/cloudflare/sveltekit';
 {{else if (eq webDeploy "docker")}}
 import adapter from '@sveltejs/adapter-node';
+{{else if (eq webDeploy "vercel")}}
+import adapter from '@sveltejs/adapter-vercel';
 {{else}}
 import adapter from '@sveltejs/adapter-auto';
 {{/if}}
@@ -32424,6 +32638,8 @@ const config = {
 		adapter: alchemy()
 {{else if (eq webDeploy "docker")}}
 		// adapter-node builds a standalone Node server (run with \`node build/index.js\`).
+		adapter: adapter()
+{{else if (eq webDeploy "vercel")}}
 		adapter: adapter()
 {{else}}
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
@@ -32655,6 +32871,33 @@ import "dotenv/config";
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+{{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}
+function getVercelOrigin() {
+	const vercelUrl =
+		process.env.VERCEL_ENV === "production"
+			? (process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL)
+			: (process.env.VERCEL_URL ?? process.env.VERCEL_PROJECT_PRODUCTION_URL);
+	if (!vercelUrl) return undefined;
+	return vercelUrl.startsWith("http") ? vercelUrl : \`https://\${vercelUrl}\`;
+}
+
+const vercelOrigin = getVercelOrigin();
+
+const runtimeEnv = {
+	...process.env,
+{{#if (eq auth "better-auth")}}
+{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self"))}}
+		// Public auth base: /api/auth bypasses the rewrite's path strip, so the
+	// same URL works for incoming matching and generated callbacks
+	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? (vercelOrigin ? \`\${vercelOrigin}/api/auth\` : undefined),
+{{else}}
+	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? vercelOrigin,
+{{/if}}
+{{/if}}
+	CORS_ORIGIN: process.env.CORS_ORIGIN ?? vercelOrigin,
+};
+
+{{/if}}
 export const env = createEnv({
 	server: {
 {{#if (ne database "none")}}
@@ -32686,7 +32929,7 @@ export const env = createEnv({
 		CORS_ORIGIN: z.url(),
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
-	runtimeEnv: process.env,
+	runtimeEnv: {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}runtimeEnv{{else}}process.env{{/if}},
 	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });
@@ -32703,6 +32946,13 @@ import { createEnv } from "@t3-oss/env-core";
 {{/if}}
 import { z } from "zod";
 
+{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+const serverUrlSchema = z.union([
+	z.url(),
+	z.string().regex(/^\\/(?!\\/)/, "Use an absolute URL or a same-origin path like /api"),
+]);
+
+{{/if}}
 {{#if (eq backend "convex")}}
 const convexUrlSchema = (exampleHost: string) =>
 	z.url().refine((url) => new URL(url).hostname !== exampleHost, {
@@ -32788,7 +33038,7 @@ export const env = createEnv({
 {{else if (ne backend "none")}}
 {{#if (includes frontend "next")}}
 	client: {
-		NEXT_PUBLIC_SERVER_URL: z.url(),
+		NEXT_PUBLIC_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
@@ -32801,18 +33051,18 @@ export const env = createEnv({
 	},
 {{else if (includes frontend "nuxt")}}
 	client: {
-		NUXT_PUBLIC_SERVER_URL: z.url(),
+		NUXT_PUBLIC_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 	},
 {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
 	clientPrefix: "PUBLIC_",
 	client: {
-		PUBLIC_SERVER_URL: z.url(),
+		PUBLIC_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 	},
 	runtimeEnv: (import.meta as any).env,
 {{else}}
 	clientPrefix: "VITE_",
 	client: {
-		VITE_SERVER_URL: z.url(),
+		VITE_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
@@ -35276,4 +35526,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 506;
+export const TEMPLATE_COUNT = 507;

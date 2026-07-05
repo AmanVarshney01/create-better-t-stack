@@ -6,6 +6,8 @@ import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { toast } from 'sonner';
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
+
+{{> getServerUrl}}
 {{/unless}}
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
@@ -32,7 +34,7 @@ const trpcClient = createTRPCClient<AppRouter>({
 {{#if (eq backend "self")}}
 			url: "/api/trpc",
 {{else}}
-			url: `${env.NEXT_PUBLIC_SERVER_URL}/trpc`,
+			url: `${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/trpc`,
 {{/if}}
 {{#if (eq auth "clerk")}}
 			headers: async () => {
@@ -83,6 +85,8 @@ import { env } from "@{{projectName}}/env/web";
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 
+{{> getServerUrl}}
+
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
 		onError: (error, query) => {
@@ -101,7 +105,7 @@ export const queryClient = new QueryClient({
 export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: `${env.VITE_SERVER_URL}/trpc`,
+			url: `${getServerUrl(env.VITE_SERVER_URL)}/trpc`,
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();

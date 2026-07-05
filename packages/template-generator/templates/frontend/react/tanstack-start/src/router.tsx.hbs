@@ -66,6 +66,10 @@ export function getRouter() {
 }
 {{else}}
 {{#if (eq api "trpc")}}
+{{#unless (eq backend "self")}}
+{{> getServerUrl}}
+
+{{/unless}}
 function createQueryClient() {
 	return new QueryClient({
 		queryCache: new QueryCache({
@@ -87,7 +91,7 @@ function createQueryClient() {
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: {{#if (eq backend "self")}}"/api/trpc"{{else}}`${env.VITE_SERVER_URL}/trpc`{{/if}},
+			url: {{#if (eq backend "self")}}"/api/trpc"{{else}}`${getServerUrl(env.VITE_SERVER_URL)}/trpc`{{/if}},
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();

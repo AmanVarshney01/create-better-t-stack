@@ -15,6 +15,10 @@ export const queryClient = new QueryClient({
 	}),
 });
 
+{{#unless (eq backend "self")}}
+{{> getServerUrl}}
+
+{{/unless}}
 export const link = new RPCLink({
 	{{#if (eq backend "self")}}
 	url: () => {
@@ -25,7 +29,7 @@ export const link = new RPCLink({
 		return `${window.location.origin}/rpc`;
 	},
 	{{else}}
-	url: `${PUBLIC_SERVER_URL}/rpc`,
+	url: `${getServerUrl(PUBLIC_SERVER_URL)}/rpc`,
 	{{/if}}
 	{{#if (eq auth "better-auth")}}
 	fetch(url, options) {

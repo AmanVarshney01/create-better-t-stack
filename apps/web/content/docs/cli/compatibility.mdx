@@ -194,8 +194,14 @@ create-better-t-stack --addons turborepo
 
 ### Web Deployment
 
-- `--web-deploy cloudflare` requires a web frontend
+- `--web-deploy cloudflare`, `--web-deploy docker`, and `--web-deploy vercel` require a web frontend
 - Cannot be used with native-only projects
+
+### Server Deployment
+
+- `--server-deploy cloudflare` requires `--runtime workers` with `--backend hono`
+- `--server-deploy docker` and `--server-deploy vercel` require `--runtime bun` or `--runtime node`
+- `--server-deploy` is not used for `--backend self`, because fullstack backends deploy with the web app
 
 ## Authentication Requirements
 

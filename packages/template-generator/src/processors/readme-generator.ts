@@ -771,6 +771,17 @@ function generateScriptsList(
 - \`${packageManagerRunCmd} docker:down\`: Stop the Docker Compose stack`;
   }
 
+  if (webDeploy === "vercel" || serverDeploy === "vercel") {
+    const v = getVercelScriptNames(webDeploy, serverDeploy);
+    scripts += `\n- \`${packageManagerRunCmd} ${v.setup}\`: Link this repo to a Vercel project (first-time setup)
+- \`${packageManagerRunCmd} dev:vercel\`: Run the Vercel Services dev environment locally
+- \`${packageManagerRunCmd} ${v.envPreview}\`: Sync local env files to the Vercel preview environment
+- \`${packageManagerRunCmd} ${v.envProduction}\`: Sync local env files to the Vercel production environment
+- \`${packageManagerRunCmd} ${v.deploy}\`: Create a Vercel preview deployment
+- \`${packageManagerRunCmd} ${v.deployProd}\`: Deploy to Vercel production
+- \`${packageManagerRunCmd} ${v.deployCheck}\`: Dry-run a deploy to preview framework detection and included files without uploading`;
+  }
+
   return scripts;
 }
 
@@ -782,8 +793,9 @@ function generateDeploymentCommands(
 ): string {
   const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
   const hasDocker = webDeploy === "docker" || serverDeploy === "docker";
+  const hasVercel = webDeploy === "vercel" || serverDeploy === "vercel";
 
-  if (!hasCloudflare && !hasDocker) {
+  if (!hasCloudflare && !hasDocker && !hasVercel) {
     return "";
   }
 
@@ -796,6 +808,11 @@ function generateDeploymentCommands(
         : webDeploy === "cloudflare"
           ? "web"
           : "server";
+    const cfDeployScript = hasVercel
+      ? webDeploy === "cloudflare"
+        ? "deploy:web"
+        : "deploy:server"
+      : "deploy";
 
     lines.push(
       "",
@@ -803,7 +820,7 @@ function generateDeploymentCommands(
       "",
       `- Target: ${targetLabel}`,
       `- Dev: ${packageManagerRunCmd} dev`,
-      `- Deploy: ${packageManagerRunCmd} deploy`,
+      `- Deploy: ${packageManagerRunCmd} ${cfDeployScript}`,
       `- Destroy: ${packageManagerRunCmd} destroy`,
       "",
       "For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).",
@@ -830,6 +847,46 @@ function generateDeploymentCommands(
       `- Stop: ${packageManagerRunCmd} docker:down`,
       "",
       "Environment variables are read from each app's `.env` file (baked into web builds for public variables) and overridden in `docker-compose.yml` for container networking.",
+      "",
+      "For more details, see the guide on [Deploying with Docker Compose](https://www.better-t-stack.dev/docs/guides/docker).",
+    );
+  }
+
+  if (hasVercel) {
+    const vercelNames = getVercelScriptNames(webDeploy, serverDeploy);
+    const targetLabel =
+      webDeploy === "vercel" && (serverDeploy === "vercel" || backend === "self")
+        ? "web + server"
+        : webDeploy === "vercel"
+          ? "web"
+          : "server";
+
+    lines.push(
+      "",
+      "### Vercel Services",
+      "",
+      `- Target: ${targetLabel}`,
+      "- Config: `vercel.json`",
+      `- Link the project first: ${packageManagerRunCmd} ${vercelNames.setup}`,
+      `- Local Vercel dev: ${packageManagerRunCmd} dev:vercel`,
+      `- Sync preview env: ${packageManagerRunCmd} ${vercelNames.envPreview}`,
+      `- Sync production env: ${packageManagerRunCmd} ${vercelNames.envProduction}`,
+      `- Dry-run check (no upload): ${packageManagerRunCmd} ${vercelNames.deployCheck}`,
+      `- Preview deploy: ${packageManagerRunCmd} ${vercelNames.deploy}`,
+      `- Production deploy: ${packageManagerRunCmd} ${vercelNames.deployProd}`,
+    );
+
+    if (webDeploy === "vercel" && serverDeploy === "vercel" && backend !== "self") {
+      lines.push(
+        "- Web requests under `/api/*` route to the server service and are rewritten before reaching the backend.",
+      );
+    }
+
+    lines.push(
+      "Vercel Services share project environment variables, but deploys do not upload local `.env` files automatically. Link the project with `vercel link`, then run the env sync command before your first deploy (otherwise the deployment starts with no env vars), or pass one-off envs with `vercel deploy -e KEY=value`.",
+      `Pass Vercel CLI flags to the env sync command directly, for example: \`${packageManagerRunCmd} ${vercelNames.envProduction} --scope your-team\`.`,
+      "",
+      "For more details, see the guide on [Deploying to Vercel](https://www.better-t-stack.dev/docs/guides/vercel).",
     );
   }
 
@@ -868,4 +925,21 @@ function generateGitHooksSection(
   }
 
   return `${lines.join("\n")}\n\n`;
+}
+
+function getVercelScriptNames(
+  webDeploy: ProjectConfig["webDeploy"] | undefined,
+  serverDeploy: ProjectConfig["serverDeploy"] | undefined,
+) {
+  const mixedCloud = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const target = webDeploy === "vercel" ? "web" : "server";
+  const deploy = mixedCloud ? `deploy:${target}` : "deploy";
+  return {
+    setup: "deploy:setup",
+    envPreview: "env:preview",
+    envProduction: "env:production",
+    deploy,
+    deployProd: `${deploy}:prod`,
+    deployCheck: "deploy:check",
+  };
 }

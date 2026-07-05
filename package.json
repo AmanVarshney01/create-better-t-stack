@@ -45,7 +45,8 @@
     "deploy:web": "turbo run deploy --filter=web",
     "generate": "turbo run generate-schema --filter=web",
     "deploy": "turbo run deploy --filter=web",
-    "smoke:docker": "bash scripts/docker-smoke.sh"
+    "smoke:docker": "bash scripts/docker-smoke.sh",
+    "smoke:vercel": "bash scripts/vercel-smoke.sh"
   },
   "dependencies": {
     "@clack/prompts": "^1.5.1"

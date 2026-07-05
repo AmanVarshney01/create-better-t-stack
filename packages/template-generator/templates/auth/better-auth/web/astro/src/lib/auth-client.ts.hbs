@@ -6,9 +6,15 @@ import { polarClient } from "@polar-sh/better-auth/client";
 import { PUBLIC_SERVER_URL } from "astro:env/client";
 {{/if}}
 
+{{#if (ne backend "self")}}
+{{> getServerUrlSpaces}}
+
+{{/if}}
 export const authClient = createAuthClient({
 {{#if (ne backend "self")}}
-  baseURL: PUBLIC_SERVER_URL,
+  // better-auth derives its route-matching base from this URL's path, so the
+	// public auth path must equal the server-side mount (/api/auth everywhere)
+	  baseURL: new URL("/api/auth", getServerUrl(PUBLIC_SERVER_URL)).toString(),
 {{/if}}
 {{#if (eq payments "polar")}}
   plugins: [polarClient()],

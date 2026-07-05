@@ -182,9 +182,32 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
 
   // Add deploy/destroy scripts when using alchemy (cloudflare deployment)
   const infraPackageName = `@${projectName}/infra`;
-  if (config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare") {
-    scripts.deploy = pmConfig.filter(infraPackageName, "deploy");
+  const hasCloudflareDeploy =
+    config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare";
+  const hasVercelDeploy = config.webDeploy === "vercel" || config.serverDeploy === "vercel";
+  // When web and server deploy to different cloud platforms, deploy scripts
+  // are named by target (deploy:web / deploy:server); otherwise plain deploy
+  const isMixedCloud = hasCloudflareDeploy && hasVercelDeploy;
+  if (hasCloudflareDeploy) {
+    const cfDeployScript = isMixedCloud
+      ? config.webDeploy === "cloudflare"
+        ? "deploy:web"
+        : "deploy:server"
+      : "deploy";
+    scripts[cfDeployScript] = pmConfig.filter(infraPackageName, "deploy");
     scripts.destroy = pmConfig.filter(infraPackageName, "destroy");
+  }
+
+  if (hasVercelDeploy) {
+    const vercelTarget = config.webDeploy === "vercel" ? "web" : "server";
+    const vercelDeploy = isMixedCloud ? `deploy:${vercelTarget}` : "deploy";
+    scripts["deploy:setup"] = "vercel link";
+    scripts["dev:vercel"] = "vercel dev -L";
+    scripts["env:preview"] = "tsx scripts/sync-vercel-env.ts preview";
+    scripts["env:production"] = "tsx scripts/sync-vercel-env.ts production";
+    scripts[vercelDeploy] = "vercel deploy";
+    scripts[`${vercelDeploy}:prod`] = "vercel deploy --prod";
+    scripts["deploy:check"] = "vercel deploy --dry";
   }
 
   // Add compose scripts when deploying web/server as Docker containers

@@ -6,9 +6,15 @@ import { createAuthClient } from "better-auth/svelte";
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
+{{#unless (eq backend "self")}}
+{{> getServerUrl}}
+
+{{/unless}}
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	baseURL: PUBLIC_SERVER_URL,
+	// better-auth derives its route-matching base from this URL's path, so the
+	// public auth path must equal the server-side mount (/api/auth everywhere)
+		baseURL: new URL("/api/auth", getServerUrl(PUBLIC_SERVER_URL)).toString(),
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]

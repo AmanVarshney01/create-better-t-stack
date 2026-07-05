@@ -765,6 +765,15 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     });
   }
 
+  if (nextStack.serverDeploy === "vercel" && nextStack.runtime === "workers") {
+    nextStack.serverDeploy = "cloudflare";
+    changed = true;
+    changes.push({
+      category: "serverDeploy",
+      message: "Server deploy set to 'Cloudflare' (Workers runtime deploys via Cloudflare)",
+    });
+  }
+
   if (
     nextStack.serverDeploy !== "none" &&
     (["none", "convex"].includes(nextStack.backend) ||
@@ -1218,6 +1227,9 @@ export const getDisabledReason = (
     }
     if (optionId === "docker" && currentStack.runtime === "workers") {
       return "Docker server deployment requires the Bun or Node runtime";
+    }
+    if (optionId === "vercel" && currentStack.runtime === "workers") {
+      return "Vercel server deployment requires the Bun or Node runtime";
     }
     if (optionId !== "none") {
       if (

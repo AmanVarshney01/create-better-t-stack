@@ -15,6 +15,7 @@ import {
   validateDockerServerDeploy,
   validateDockerWebDeployDesktopAddons,
   validateServerDeployRequiresBackend,
+  validateVercelServerDeploy,
   validateWebDeployRequiresWebFrontend,
   validateWorkersCompatibility,
 } from "./compatibility-rules";
@@ -502,6 +503,7 @@ export function validateFullConfig(
 
     yield* validateServerDeployRequiresBackend(config.serverDeploy, config.backend);
     yield* validateDockerServerDeploy(config.serverDeploy, config.backend, config.runtime);
+    yield* validateVercelServerDeploy(config.serverDeploy, config.backend, config.runtime);
     yield* validateDockerWebDeployDesktopAddons(
       config.webDeploy,
       config.addons,

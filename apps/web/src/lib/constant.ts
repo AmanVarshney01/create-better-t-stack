@@ -411,6 +411,13 @@ export const TECH_OPTIONS: Record<
       color: "from-blue-400 to-blue-600",
     },
     {
+      id: "vercel",
+      name: "Vercel",
+      description: "Deploy to Vercel with Services",
+      icon: `${ICON_BASE_URL}/vercel.svg`,
+      color: "from-gray-700 to-black",
+    },
+    {
       id: "none",
       name: "None",
       description: "Skip deployment setup",
@@ -433,6 +440,13 @@ export const TECH_OPTIONS: Record<
       description: "Self-host with a Dockerfile and docker-compose.yml",
       icon: `${ICON_BASE_URL}/docker.svg`,
       color: "from-blue-400 to-blue-600",
+    },
+    {
+      id: "vercel",
+      name: "Vercel",
+      description: "Deploy to Vercel with Services",
+      icon: `${ICON_BASE_URL}/vercel.svg`,
+      color: "from-gray-700 to-black",
     },
     {
       id: "none",

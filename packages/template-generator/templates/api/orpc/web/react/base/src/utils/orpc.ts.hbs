@@ -51,6 +51,10 @@ export function createQueryClient() {
 export const queryClient = createQueryClient();
 {{/unless}}
 
+{{#unless (eq backend "self")}}
+{{> getServerUrl}}
+
+{{/unless}}
 {{#if (and (includes frontend "tanstack-start") (eq backend "self"))}}
 const getORPCClient = createIsomorphicFn()
 	.server(() =>
@@ -79,7 +83,7 @@ const getORPCClient = createIsomorphicFn()
 export const client: RouterClient<typeof appRouter> = getORPCClient();
 {{else if (includes frontend "tanstack-start")}}
 const link = new RPCLink({
-	url: `${env.VITE_SERVER_URL}/rpc`,
+	url: `${getServerUrl(env.VITE_SERVER_URL)}/rpc`,
 {{#if (eq auth "clerk")}}
 	headers: async () => {
 		const token = await getClerkAuthToken();
@@ -106,9 +110,9 @@ export const link = new RPCLink({
 {{#if (and (eq backend "self") (includes frontend "next"))}}
 	url: `${typeof window !== "undefined" ? window.location.origin : "http://localhost:3001"}/api/rpc`,
 {{else if (includes frontend "next")}}
-	url: `${env.NEXT_PUBLIC_SERVER_URL}/rpc`,
+	url: `${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/rpc`,
 {{else}}
-	url: `${env.VITE_SERVER_URL}/rpc`,
+	url: `${getServerUrl(env.VITE_SERVER_URL)}/rpc`,
 {{/if}}
 {{#if (eq auth "clerk")}}
 	headers: async () => {

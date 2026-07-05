@@ -95,6 +95,33 @@ import "dotenv/config";
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+{{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}
+function getVercelOrigin() {
+	const vercelUrl =
+		process.env.VERCEL_ENV === "production"
+			? (process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL)
+			: (process.env.VERCEL_URL ?? process.env.VERCEL_PROJECT_PRODUCTION_URL);
+	if (!vercelUrl) return undefined;
+	return vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`;
+}
+
+const vercelOrigin = getVercelOrigin();
+
+const runtimeEnv = {
+	...process.env,
+{{#if (eq auth "better-auth")}}
+{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self"))}}
+		// Public auth base: /api/auth bypasses the rewrite's path strip, so the
+	// same URL works for incoming matching and generated callbacks
+	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? (vercelOrigin ? `${vercelOrigin}/api/auth` : undefined),
+{{else}}
+	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? vercelOrigin,
+{{/if}}
+{{/if}}
+	CORS_ORIGIN: process.env.CORS_ORIGIN ?? vercelOrigin,
+};
+
+{{/if}}
 export const env = createEnv({
 	server: {
 {{#if (ne database "none")}}
@@ -126,7 +153,7 @@ export const env = createEnv({
 		CORS_ORIGIN: z.url(),
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
-	runtimeEnv: process.env,
+	runtimeEnv: {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}runtimeEnv{{else}}process.env{{/if}},
 	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });

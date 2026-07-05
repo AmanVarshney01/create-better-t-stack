@@ -1,0 +1,124 @@
+import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import dotenv from "dotenv";
+
+const DEFAULT_ENVIRONMENT = "preview";
+const VALID_ENVIRONMENTS = new Set(["development", "preview", "production"]);
+const VERCEL_COMMAND = [{{#if (eq packageManager "npm")}}"npx", "vercel"{{else if (eq packageManager "pnpm")}}"pnpm", "exec", "vercel"{{else}}"bunx", "vercel"{{/if}}] as const;
+const DEFAULT_FILES = [
+{{#if (eq webDeploy "vercel")}}
+	"apps/web/.env",
+{{/if}}
+{{#if (and (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+	"apps/server/.env",
+{{/if}}
+];
+const SKIP_KEYS = new Set([
+{{#if (or (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex")) (and (eq webDeploy "vercel") (eq backend "self")))}}
+	"BETTER_AUTH_URL",
+	"CORS_ORIGIN",
+	"NODE_ENV",
+{{/if}}
+]);
+const OVERRIDE_KEYS = new Map([
+{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+	["NEXT_PUBLIC_SERVER_URL", "/api"],
+	["NUXT_PUBLIC_SERVER_URL", "/api"],
+	["PUBLIC_SERVER_URL", "/api"],
+	["VITE_SERVER_URL", "/api"],
+{{/if}}
+]);
+
+const args = process.argv.slice(2);
+const separatorIndex = args.indexOf("--");
+const scriptArgs = separatorIndex === -1 ? args : args.slice(0, separatorIndex);
+const forwardedArgs = separatorIndex === -1 ? [] : args.slice(separatorIndex + 1);
+
+const environment =
+	scriptArgs[0] && VALID_ENVIRONMENTS.has(scriptArgs[0]) ? scriptArgs[0] : DEFAULT_ENVIRONMENT;
+const remainingArgs = scriptArgs.slice(VALID_ENVIRONMENTS.has(scriptArgs[0] ?? "") ? 1 : 0);
+// Split remaining args into env-file paths and passthrough Vercel CLI flags.
+// A bare token counts as a file only when it exists on disk, so flags and their
+// values (e.g. `--scope my-team`) forward correctly regardless of argument order.
+const files: string[] = [];
+const passthroughArgs: string[] = [];
+for (const arg of remainingArgs) {
+	if (!arg.startsWith("-") && existsSync(arg)) {
+		files.push(arg);
+	} else {
+		passthroughArgs.push(arg);
+	}
+}
+const vercelArgs = [...passthroughArgs, ...forwardedArgs];
+const envFiles = files.length > 0 ? files : DEFAULT_FILES;
+
+if (envFiles.length === 0) {
+	console.log("No env files configured for this Vercel stack.");
+	process.exit(0);
+}
+
+const env = new Map<string, string>();
+
+for (const file of envFiles) {
+	if (!existsSync(file)) {
+		console.warn(`Skipping missing env file: ${file}`);
+		continue;
+	}
+
+	for (const [key, value] of Object.entries(dotenv.parse(readFileSync(file, "utf8")))) {
+		if (SKIP_KEYS.has(key)) continue;
+		env.set(key, OVERRIDE_KEYS.get(key) ?? value);
+	}
+}
+
+if (env.size === 0) {
+	console.log("No Vercel env vars found to sync.");
+	process.exit(0);
+}
+
+const LOCAL_VALUE_PATTERN = /localhost|127\.0\.0\.1|0\.0\.0\.0|^file:/i;
+const localKeys = [...env.entries()]
+	.filter(([, value]) => LOCAL_VALUE_PATTERN.test(value))
+	.map(([key]) => key);
+if (localKeys.length > 0) {
+	console.warn(
+		`Warning: ${localKeys.join(", ")} look${localKeys.length === 1 ? "s" : ""} like local-only value(s). Update them in your .env file(s) and re-run this sync if your deployed app should not point at local endpoints.`,
+	);
+}
+
+console.log(`Syncing ${env.size} env var(s) to Vercel ${environment}.`);
+for (const [key, value] of env.entries()) {
+	const result = spawnSync(
+		VERCEL_COMMAND[0],
+		[
+			...VERCEL_COMMAND.slice(1),
+			"env",
+			"add",
+			key,
+			environment,
+			"--force",
+			"--yes",
+			"--non-interactive",
+			...vercelArgs,
+		],
+		{
+			input: `${value}\n`,
+			stdio: ["pipe", "inherit", "inherit"],
+			encoding: "utf8",
+			// Windows resolves bunx/npx/pnpm via .cmd shims, which need a shell
+			shell: process.platform === "win32",
+		},
+	);
+
+	if (result.error) {
+		console.error(`Failed to sync ${key}: ${result.error.message}`);
+		process.exit(1);
+	}
+
+	if (result.status !== 0) {
+		console.error(`Failed to sync ${key}`);
+		process.exit(result.status ?? 1);
+	}
+}
+
+console.log("Vercel env sync complete. Redeploy for changes to take effect.");

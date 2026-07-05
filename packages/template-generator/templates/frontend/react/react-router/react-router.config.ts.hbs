@@ -1,0 +1,12 @@
+import type { Config } from "@react-router/dev/config";
+
+export default {
+{{#if (and (eq webDeploy "vercel") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+  // Adopt vercelPreset() once @vercel/react-router supports RR8 (vercel/vercel#16730)
+{{/if}}
+{{#if (or (includes addons "tauri") (includes addons "electrobun"))}}
+  // Desktop addons package static web assets; SSR output cannot be bundled
+  ssr: false,
+{{/if}}
+  appDirectory: "src",
+} satisfies Config;

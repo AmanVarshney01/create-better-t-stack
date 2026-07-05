@@ -231,11 +231,12 @@ export async function displayPostInstallInstructions(
   if (vitePlusNativeHooksInstructions) output += `\n${vitePlusNativeHooksInstructions.trim()}\n`;
   if (lintingInstructions) output += `\n${lintingInstructions.trim()}\n`;
   if (pwaInstructions) output += `\n${pwaInstructions.trim()}\n`;
-  if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
   if (starlightInstructions) output += `\n${starlightInstructions.trim()}\n`;
   if (clerkInstructions) output += `\n${clerkInstructions.trim()}\n`;
   if (betterAuthConvexInstructions) output += `\n${betterAuthConvexInstructions.trim()}\n`;
   if (polarInstructions) output += `\n${polarInstructions.trim()}\n`;
+  // Deploy steps come last so env sync happens after auth/payment keys exist
+  if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
 
   if (noOrmWarning) output += `\n${noOrmWarning.trim()}\n`;
   if (bunWebNativeWarning) output += `\n${bunWebNativeWarning.trim()}\n`;
@@ -622,12 +623,14 @@ function getAlchemyDeployInstructions(
   const isBackendSelf = backend === "self";
 
   if (webDeploy === "cloudflare" && serverDeploy !== "cloudflare" && !isBackendSelf) {
+    const cfDeploy = serverDeploy === "vercel" ? "deploy:web" : "deploy";
     instructions.push(
-      `${pc.bold("Deploy web with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
+      `${pc.bold("Deploy web with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${cfDeploy}`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
     );
   } else if (serverDeploy === "cloudflare" && webDeploy !== "cloudflare" && !isBackendSelf) {
+    const cfDeploy = webDeploy === "vercel" ? "deploy:server" : "deploy";
     instructions.push(
-      `${pc.bold("Deploy server with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
+      `${pc.bold("Deploy server with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${cfDeploy}`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
     );
   } else if (webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || isBackendSelf)) {
     instructions.push(
@@ -644,6 +647,26 @@ function getAlchemyDeployInstructions(
           : "server";
     instructions.push(
       `${pc.bold(`Deploy ${dockerTargets} with Docker Compose:`)}\n${pc.cyan("•")} Start: ${`${runCmd} docker:up`}\n${pc.cyan("•")} Logs: ${`${runCmd} docker:logs`}\n${pc.cyan("•")} Stop: ${`${runCmd} docker:down`}\n${pc.cyan("•")} Config: docker-compose.yml`,
+    );
+  }
+
+  if (webDeploy === "vercel" || serverDeploy === "vercel") {
+    const mixedWithCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+    const vercelSetupScript = "deploy:setup";
+    const vercelEnvScript = "env:production";
+    const vercelDeployScript = mixedWithCloudflare
+      ? webDeploy === "vercel"
+        ? "deploy:web:prod"
+        : "deploy:server:prod"
+      : "deploy:prod";
+    const vercelTargets =
+      webDeploy === "vercel" && (serverDeploy === "vercel" || isBackendSelf)
+        ? "web + server"
+        : webDeploy === "vercel"
+          ? "web"
+          : "server";
+    instructions.push(
+      `${pc.bold(`Deploy ${vercelTargets} with Vercel Services:`)}\n${pc.cyan("•")} Link project: ${`${runCmd} ${vercelSetupScript}`}\n${pc.cyan("•")} Sync env (before first deploy): ${`${runCmd} ${vercelEnvScript}`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${vercelDeployScript}`}\n${pc.cyan("•")} Guide: https://www.better-t-stack.dev/docs/guides/vercel`,
     );
   }
 

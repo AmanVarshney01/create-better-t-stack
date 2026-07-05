@@ -333,11 +333,34 @@ export function validateDockerServerDeploy(
   return Result.ok(undefined);
 }
 
+export function validateVercelServerDeploy(
+  serverDeploy: ServerDeploy | undefined,
+  backend: Backend | undefined,
+  runtime: Runtime | undefined,
+): ValidationResult {
+  if (serverDeploy !== "vercel") return Result.ok(undefined);
+
+  if (backend === "convex" || backend === "self") {
+    return validationErr(
+      "'--server-deploy vercel' requires a separate server backend (hono, express, fastify, elysia). For a fullstack 'self' backend, use '--web-deploy vercel' instead.",
+    );
+  }
+
+  if (runtime === "workers") {
+    return validationErr(
+      "'--server-deploy vercel' is not compatible with '--runtime workers'. Use '--runtime bun' or '--runtime node', or choose '--server-deploy cloudflare'.",
+    );
+  }
+
+  return Result.ok(undefined);
+}
+
 // Frontends whose docker image needs server output, which desktop addons replace with a static export
 const DOCKER_SERVER_OUTPUT_FRONTENDS = [
   "next",
   "svelte",
   "astro",
+  "react-router",
 ] as const satisfies readonly Frontend[];
 
 export function validateDockerWebDeployDesktopAddons(
@@ -364,7 +387,7 @@ export function validateDockerWebDeployDesktopAddons(
   if (keepsServerOutput) return Result.ok(undefined);
 
   return validationErr(
-    `'--web-deploy docker' is not compatible with the ${desktopAddons.join(", ")} addon on '${affected}' because desktop addons switch the web build to a static export, which the docker image cannot serve. Remove the addon or use a static-serving frontend (tanstack-router, react-router, solid).`,
+    `'--web-deploy docker' is not compatible with the ${desktopAddons.join(", ")} addon on '${affected}' because desktop addons switch the web build to a static export, which the docker image cannot serve. Remove the addon or use a static-serving frontend (tanstack-router, solid).`,
   );
 }
 
@@ -379,6 +402,17 @@ export function validateAddonCompatibility(
     return {
       isCompatible: false,
       reason: evlogCompatibilityMessage,
+    };
+  }
+
+  if (
+    STATIC_DESKTOP_ADDONS.includes(addon) &&
+    auth === "clerk" &&
+    frontend.includes("react-router")
+  ) {
+    return {
+      isCompatible: false,
+      reason: `${addon} addon forces React Router into a static export, but Clerk on React Router requires SSR middleware. Remove the addon or use a different auth/frontend.`,
     };
   }
 

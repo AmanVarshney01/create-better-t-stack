@@ -4,6 +4,8 @@ import adapter from '@sveltejs/adapter-static';
 import alchemy from 'alchemy/cloudflare/sveltekit';
 {{else if (eq webDeploy "docker")}}
 import adapter from '@sveltejs/adapter-node';
+{{else if (eq webDeploy "vercel")}}
+import adapter from '@sveltejs/adapter-vercel';
 {{else}}
 import adapter from '@sveltejs/adapter-auto';
 {{/if}}
@@ -28,6 +30,8 @@ const config = {
 		adapter: alchemy()
 {{else if (eq webDeploy "docker")}}
 		// adapter-node builds a standalone Node server (run with `node build/index.js`).
+		adapter: adapter()
+{{else if (eq webDeploy "vercel")}}
 		adapter: adapter()
 {{else}}
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.

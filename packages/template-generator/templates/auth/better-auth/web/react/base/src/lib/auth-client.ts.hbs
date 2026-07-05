@@ -4,11 +4,15 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
+
+{{> getServerUrl}}
 {{/unless}}
 
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	baseURL: env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}},
+	// better-auth derives its route-matching base from this URL's path, so the
+	// public auth path must equal the server-side mount (/api/auth everywhere)
+		baseURL: new URL("/api/auth", getServerUrl(env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})).toString(),
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]

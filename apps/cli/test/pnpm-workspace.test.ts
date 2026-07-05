@@ -274,6 +274,30 @@ describe("pnpm workspace", () => {
     });
   });
 
+  it("adds build approvals for Vercel deploys so non-interactive installs succeed", async () => {
+    const workspace = await readPnpmWorkspace({
+      projectName: "pnpm-vercel-svelte",
+      frontend: ["svelte"],
+      backend: "self",
+      runtime: "none",
+      api: "orpc",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "vercel",
+      serverDeploy: "none",
+    });
+
+    expect(workspace.allowBuilds).toMatchObject({
+      esbuild: true,
+      sharp: true,
+    });
+  });
+
   it("approves Nuxt lifecycle-script dependencies", async () => {
     const workspace = await readPnpmWorkspace({
       projectName: "pnpm-nuxt-builds",

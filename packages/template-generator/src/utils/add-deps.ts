@@ -152,11 +152,14 @@ export const dependencyVersionMap = {
   "nitro-cloudflare-dev": "^0.2.2",
   "@sveltejs/adapter-cloudflare": "^7.2.9",
   "@sveltejs/adapter-node": "^5.5.7",
+  "@sveltejs/adapter-vercel": "^6.3.4",
   "@cloudflare/workers-types": "^4.20260702.1",
   "@astrojs/cloudflare": "^14.1.0",
   "@astrojs/node": "^11.0.1",
+  "@astrojs/vercel": "^11.0.1",
 
   alchemy: "^0.93.12",
+  vercel: "^54.18.6",
 
   dotenv: "^17.4.2",
   tsdown: "^0.22.3",
@@ -215,12 +218,14 @@ export function addPackageDependency(options: AddDepsOptions): void {
         );
       }
       pkgJson.dependencies[dep] = version;
+      // A package must not appear in both sections; runtime wins
+      delete pkgJson.devDependencies[dep];
     }
   }
 
   // Add dev dependencies
   for (const dep of devDependencies) {
-    if (!pkgJson.devDependencies[dep]) {
+    if (!pkgJson.devDependencies[dep] && !pkgJson.dependencies[dep]) {
       const version = dependencyVersionMap[dep as AvailableDependencies];
       if (!version) {
         throw new Error(

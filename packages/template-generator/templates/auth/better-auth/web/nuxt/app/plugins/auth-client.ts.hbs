@@ -6,11 +6,17 @@ import { polarClient } from "@polar-sh/better-auth/client";
 export default defineNuxtPlugin(() => {
   {{#if (ne backend "self")}}
   const config = useRuntimeConfig();
+  const rawServerUrl = (import.meta.server && config.serverUrl) || config.public.serverUrl;
+  // Same-origin paths like /api need an absolute base, and better-auth derives
+  // its route matching from this URL's path, so it must be exactly /api/auth
+  const serverOrigin = rawServerUrl.startsWith("/")
+    ? (import.meta.server ? useRequestURL() : window.location).origin + rawServerUrl
+    : rawServerUrl;
   {{/if}}
 
   const authClient = createAuthClient({
     {{#if (ne backend "self")}}
-    baseURL: (import.meta.server && config.serverUrl) || config.public.serverUrl,
+    baseURL: new URL("/api/auth", serverOrigin).toString(),
     {{/if}}
     {{#if (eq payments "polar")}}
     plugins: [polarClient()],
