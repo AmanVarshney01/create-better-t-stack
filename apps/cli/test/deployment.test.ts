@@ -625,6 +625,42 @@ describe("Deployment Configurations", () => {
       expect(syncScript).toContain('"CORS_ORIGIN"');
     });
 
+    it("should skip origin-derived envs for server-only Vercel deploys", async () => {
+      const result = await createVirtual({
+        projectName: "native-hono-vercel",
+        webDeploy: "none",
+        serverDeploy: "vercel",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "trpc",
+        frontend: ["native-bare"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const syncScript = files.get("scripts/sync-vercel-env.ts") ?? "";
+
+      // BETTER_AUTH_URL always derives from the deployment's own origin, and
+      // Vercel manages NODE_ENV — pushing local values breaks production auth
+      expect(syncScript).toContain('"BETTER_AUTH_URL"');
+      expect(syncScript).toContain('"NODE_ENV"');
+      // CORS_ORIGIN must sync: with the web app on another host it is not derivable
+      expect(syncScript).not.toContain('"CORS_ORIGIN"');
+    });
+
     it("should export Elysia apps for Vercel server deployments", async () => {
       const result = await createVirtual({
         projectName: "elysia-vercel",
@@ -694,37 +730,6 @@ describe("Deployment Configurations", () => {
       expect(serverEntry).toContain("export default app;");
       expect(serverEntry).toContain("if (!process.env.VERCEL)");
       expect(serverEntry).toContain("app.listen(3000");
-    });
-
-    it("should not emit a bunfig for nuxt Vercel deploys (isolated is default)", async () => {
-      const result = await createVirtual({
-        projectName: "nuxt-vercel-linker",
-        webDeploy: "vercel",
-        serverDeploy: "vercel",
-        backend: "hono",
-        runtime: "bun",
-        database: "none",
-        orm: "none",
-        auth: "none",
-        payments: "none",
-        api: "orpc",
-        frontend: ["nuxt"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        install: false,
-        git: false,
-        packageManager: "bun",
-      });
-
-      if (result.isErr()) {
-        throw result.error;
-      }
-
-      const files = collectFiles(result.value.root, result.value.root.path);
-      // Vercel's bun tracer misses dynamically-required files in hoisted
-      // layouts; Bun's default isolated linker maps the store wholesale
-      expect(files.has("bunfig.toml")).toBe(false);
     });
 
     it("should use the react-router preset for SSR React Router Vercel deploys", async () => {

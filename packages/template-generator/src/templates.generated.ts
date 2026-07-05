@@ -16674,6 +16674,11 @@ const SKIP_KEYS = new Set([
 	"BETTER_AUTH_URL",
 	"CORS_ORIGIN",
 	"NODE_ENV",
+{{else if (and (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+	// BETTER_AUTH_URL derives from the deployment's own origin at runtime;
+	// CORS_ORIGIN stays synced because the web app (if any) lives on another host
+	"BETTER_AUTH_URL",
+	"NODE_ENV",
 {{/if}}
 ]);
 const OVERRIDE_KEYS = new Map([
@@ -25473,9 +25478,6 @@ function TodosRoute() {
 shamefully-hoist=true
 strict-peer-dependencies=false
 {{/if}}`],
-  ["extras/bunfig.toml.hbs", `[install]
-peer = false # Expo native projects declare SDK peers explicitly; this keeps Bun isolated installs deduped for native modules
-`],
   ["extras/env.d.ts.hbs", `{{#if (eq serverDeploy "cloudflare")}}
 import { type server } from "@{{projectName}}/infra/alchemy.run";
 {{else}}
@@ -35526,4 +35528,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 507;
+export const TEMPLATE_COUNT = 506;

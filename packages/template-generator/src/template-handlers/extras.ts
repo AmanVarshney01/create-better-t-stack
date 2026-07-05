@@ -23,12 +23,6 @@ export async function processExtrasTemplates(
     );
   }
 
-  // Isolated installs are Bun's workspace default now; bunfig only remains
-  // for native combos that need peer auto-install disabled
-  if (config.packageManager === "bun" && hasNative) {
-    processSingleTemplate(vfs, templates, "extras/bunfig.toml", "bunfig.toml", config);
-  }
-
   if (config.packageManager === "pnpm" && (hasNative || hasNuxt)) {
     processSingleTemplate(vfs, templates, "extras/_npmrc", ".npmrc", config);
   }
