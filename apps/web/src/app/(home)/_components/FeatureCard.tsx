@@ -39,7 +39,8 @@ function TechIcon({ icon, name, className }: { icon: string; name: string; class
     (icon.includes("drizzle") ||
       icon.includes("prisma") ||
       icon.includes("express") ||
-      icon.includes("astro"))
+      icon.includes("astro") ||
+      icon.includes("vercel"))
   ) {
     iconSrc = icon.replace(".svg", "-light.svg");
   }

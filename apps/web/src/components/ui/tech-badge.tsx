@@ -66,7 +66,8 @@ function TechIcon({ icon, name, className }: { icon: string; name: string; class
       icon.includes("planetscale") ||
       icon.includes("nx") ||
       icon.includes("polar") ||
-      icon.includes("astro"))
+      icon.includes("astro") ||
+      icon.includes("vercel"))
   ) {
     iconSrc = icon.replace(".svg", "-light.svg");
   }

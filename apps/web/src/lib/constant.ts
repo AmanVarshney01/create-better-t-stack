@@ -416,7 +416,6 @@ export const TECH_OPTIONS: Record<
       description: "Deploy to Vercel with Services",
       icon: `${ICON_BASE_URL}/vercel.svg`,
       color: "from-gray-700 to-black",
-      className: "invert-0 dark:invert",
     },
     {
       id: "none",
@@ -448,7 +447,6 @@ export const TECH_OPTIONS: Record<
       description: "Deploy to Vercel with Services",
       icon: `${ICON_BASE_URL}/vercel.svg`,
       color: "from-gray-700 to-black",
-      className: "invert-0 dark:invert",
     },
     {
       id: "none",
