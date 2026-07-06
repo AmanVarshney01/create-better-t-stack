@@ -14,7 +14,7 @@ A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with 
 <img src="https://sponsors.better-t-stack.dev/sponsors.png" alt="Sponsors">
 </p>
 
-![demo](https://github.com/user-attachments/assets/87b541ea-9d4d-4734-b383-00784b0b43ff)
+https://github.com/user-attachments/assets/87b541ea-9d4d-4734-b383-00784b0b43ff
 
 ## Philosophy
 
