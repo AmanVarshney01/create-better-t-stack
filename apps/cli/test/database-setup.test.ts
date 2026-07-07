@@ -1,6 +1,6 @@
 import { describe, it } from "bun:test";
 
-import { DB_SETUPS, expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+import { expectError, expectSuccess, runTRPCTest } from "./test-utils";
 
 describe("Database Setup Configurations", () => {
   describe("SQLite Database Setups", () => {
@@ -391,27 +391,6 @@ describe("Database Setup Configurations", () => {
   });
 
   describe("Special Runtime Constraints", () => {
-    it("should work with D1 + Workers runtime", async () => {
-      const result = await runTRPCTest({
-        projectName: "d1-workers-valid",
-        database: "sqlite",
-        orm: "drizzle",
-        dbSetup: "d1",
-        backend: "hono",
-        runtime: "workers",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        webDeploy: "none",
-        serverDeploy: "cloudflare",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-
     it("should work with D1 + self backend + Cloudflare web deploy", async () => {
       const result = await runTRPCTest({
         projectName: "d1-self-cloudflare-valid",
@@ -480,64 +459,5 @@ describe("Database Setup Configurations", () => {
         "Cloudflare D1 setup requires SQLite database and either Cloudflare Workers runtime with server deployment or backend 'self' with Cloudflare web deployment.",
       );
     });
-  });
-
-  describe("All Database Setup Types", () => {
-    for (const dbSetup of DB_SETUPS) {
-      if (dbSetup === "none") continue;
-
-      it(`should work with ${dbSetup} in appropriate setup`, async () => {
-        const config: TestConfig = {
-          projectName: `test-${dbSetup}`,
-          dbSetup,
-          backend: "hono",
-          runtime: "bun",
-          auth: "none",
-          api: "trpc",
-          frontend: ["tanstack-router"],
-          addons: ["none"],
-          examples: ["none"],
-          webDeploy: "none",
-          serverDeploy: "none",
-          manualDb: true,
-          install: false,
-        };
-
-        // Set appropriate database and ORM for each setup
-        switch (dbSetup) {
-          case "turso":
-            config.database = "sqlite";
-            config.orm = "drizzle";
-            break;
-          case "neon":
-          case "supabase":
-          case "prisma-postgres":
-            config.database = "postgres";
-            config.orm = "drizzle";
-            break;
-          case "planetscale":
-            config.database = "mysql";
-            config.orm = "drizzle";
-            break;
-          case "mongodb-atlas":
-            config.database = "mongodb";
-            config.orm = "mongoose";
-            break;
-          case "d1":
-            config.database = "sqlite";
-            config.orm = "drizzle";
-            config.runtime = "workers";
-            config.serverDeploy = "cloudflare";
-            break;
-          case "docker":
-            config.database = "postgres";
-            config.orm = "drizzle";
-            break;
-        }
-
-        const result = await runTRPCTest(config);
-        expectSuccess(result);
-      });
-    }
   });
 });

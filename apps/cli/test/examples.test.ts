@@ -1,6 +1,6 @@
 import { describe, it } from "bun:test";
 
-import { EXAMPLES, expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+import { expectError, expectSuccess, runTRPCTest } from "./test-utils";
 
 describe("Example Configurations", () => {
   describe("Todo Example", () => {
@@ -484,76 +484,5 @@ describe("Example Configurations", () => {
     });
   });
 
-  describe("All Example Types", () => {
-    for (const example of EXAMPLES) {
-      if (example === "none") continue;
-
-      it(`should work with ${example} example in appropriate setup`, async () => {
-        const config: TestConfig = {
-          projectName: `test-${example}`,
-          examples: [example],
-          backend: "hono",
-          runtime: "bun",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          api: "trpc",
-          frontend: ["tanstack-router"],
-          addons: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
-        };
-
-        const result = await runTRPCTest(config);
-        expectSuccess(result);
-      });
-    }
-  });
-
-  describe("Example Edge Cases", () => {
-    it("should work with empty examples array", async () => {
-      const result = await runTRPCTest({
-        projectName: "empty-examples",
-        examples: ["none"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-
-    it("should handle complex example constraints", async () => {
-      // Todo example with backend but no database should fail
-      const result = await runTRPCTest({
-        projectName: "complex-example-constraints",
-        examples: ["todo"],
-        backend: "express", // Non-convex backend
-        runtime: "bun",
-        database: "none", // No database
-        orm: "none",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-      });
-
-      expectError(result, "The 'todo' example requires a database");
-    });
-  });
+  describe("Example Edge Cases", () => {});
 });

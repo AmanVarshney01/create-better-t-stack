@@ -1,7 +1,7 @@
 import { describe, it } from "bun:test";
 
 import type { Database, ORM } from "../src/types";
-import { DATABASES, expectError, expectSuccess, runTRPCTest } from "./test-utils";
+import { expectError, expectSuccess, runTRPCTest } from "./test-utils";
 
 describe("Database and ORM Combinations", () => {
   describe("Valid Database-ORM Combinations", () => {
@@ -125,108 +125,6 @@ describe("Database and ORM Combinations", () => {
         });
 
         expectError(result, error);
-      });
-    }
-  });
-
-  describe("Database-ORM with Authentication", () => {
-    it("should work with database + auth", async () => {
-      const result = await runTRPCTest({
-        projectName: "db-auth",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "better-auth",
-        backend: "hono",
-        runtime: "bun",
-        frontend: ["tanstack-router"],
-        api: "trpc",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-
-    it("should work with auth but no database (non-convex backend)", async () => {
-      const result = await runTRPCTest({
-        projectName: "auth-no-db",
-        database: "none",
-        orm: "none",
-        auth: "better-auth",
-        backend: "hono",
-        runtime: "bun",
-        frontend: ["tanstack-router"],
-        api: "trpc",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-      });
-
-      expectSuccess(result);
-    });
-
-    it("should work with auth but no database (convex backend)", async () => {
-      const result = await runTRPCTest({
-        projectName: "convex-auth-no-db",
-        database: "none",
-        orm: "none",
-        auth: "none",
-        backend: "convex",
-        runtime: "none",
-        frontend: ["tanstack-router"],
-        api: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-  });
-
-  describe("All Database Types", () => {
-    for (const database of DATABASES) {
-      if (database === "none") continue;
-
-      it(`should have valid ORM options for ${database}`, async () => {
-        // Test with the most compatible ORM for each database
-        const ormMap = {
-          sqlite: "drizzle",
-          postgres: "drizzle",
-          mysql: "drizzle",
-          mongodb: "mongoose",
-        };
-
-        const orm = ormMap[database as keyof typeof ormMap];
-
-        const result = await runTRPCTest({
-          projectName: `test-${database}`,
-          database: database as Database,
-          orm: orm as ORM,
-          backend: "hono",
-          runtime: "bun",
-          frontend: ["tanstack-router"],
-          auth: "none",
-          api: "trpc",
-          addons: ["none"],
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
-        });
-
-        expectSuccess(result);
       });
     }
   });

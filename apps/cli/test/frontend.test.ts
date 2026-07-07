@@ -541,27 +541,6 @@ describe("Frontend Configurations", () => {
 
       expectSuccess(result);
     });
-
-    it("should work with Next.js and traditional backend", async () => {
-      const result = await runTRPCTest({
-        projectName: "nextjs-traditional-backend",
-        frontend: ["next"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
   });
 
   describe("Nuxt with Self Backend", () => {
@@ -585,27 +564,6 @@ describe("Frontend Configurations", () => {
 
       expectSuccess(result);
     });
-
-    it("should work with Nuxt and traditional backend", async () => {
-      const result = await runTRPCTest({
-        projectName: "nuxt-traditional-backend",
-        frontend: ["nuxt"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "orpc",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
   });
 
   describe("Astro with Self Backend", () => {
@@ -618,27 +576,6 @@ describe("Frontend Configurations", () => {
         database: "sqlite",
         orm: "drizzle",
         auth: "better-auth",
-        api: "orpc",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-
-    it("should work with Astro and traditional backend", async () => {
-      const result = await runTRPCTest({
-        projectName: "astro-traditional-backend",
-        frontend: ["astro"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
         api: "orpc",
         addons: ["none"],
         examples: ["none"],

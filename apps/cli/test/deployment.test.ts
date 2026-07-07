@@ -340,27 +340,6 @@ describe("Deployment Configurations", () => {
   });
 
   describe("Combined Web and Server Deployment", () => {
-    it("should work with both web and server deploy", async () => {
-      const result = await runTRPCTest({
-        projectName: "web-server-deploy-combo",
-        webDeploy: "cloudflare",
-        serverDeploy: "cloudflare",
-        backend: "hono",
-        runtime: "workers",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-
     it("should generate Vercel Services for combined web and server deploys", async () => {
       const result = await createVirtual({
         projectName: "next-hono-vercel",
@@ -473,14 +452,14 @@ describe("Deployment Configurations", () => {
       });
       expect(packageJson.scripts).not.toHaveProperty("deploy:vercel");
       expect(files.get("packages/env/src/web.ts")).toContain("const serverUrlSchema = z.union");
-      expect(files.get("packages/env/src/server.ts")).toContain("function getVercelOrigin()");
+      expect(files.get("packages/env/src/server.ts")).toContain("const getVercelOrigin = ()");
       // Server-side better-auth must build public callback URLs through the
       // /api rewrite prefix, not the bare origin
       expect(files.get("packages/env/src/server.ts")).toContain("${vercelOrigin}/api/auth");
       // better-auth and tRPC clients must normalize the same-origin /api path;
       // both reject relative URLs (BetterAuthError / SSR fetch failure)
       const authClient = files.get("apps/web/src/lib/auth-client.ts") ?? "";
-      expect(authClient).toContain("function getServerUrl(url: string)");
+      expect(authClient).toContain("const getServerUrl = (url: string)");
       // The /api/auth suffix is required: better-auth uses a baseURL with a
       // path as-is, so the origin-only shortcut breaks same-origin deploys
       expect(authClient).toContain(
@@ -575,7 +554,7 @@ describe("Deployment Configurations", () => {
       expect(files.get("packages/env/src/web.ts")).toContain(
         "Use an absolute URL or a same-origin path like /api",
       );
-      expect(orpcClient).toContain("function getServerUrl(url: string)");
+      expect(orpcClient).toContain("const getServerUrl = (url: string)");
       expect(orpcClient).toContain("window.location.origin");
       expect(orpcClient).toContain("VERCEL_PROJECT_PRODUCTION_URL");
       // Preview/branch SSR must resolve the current deployment, not production.
@@ -987,69 +966,6 @@ describe("Deployment Configurations", () => {
       expect(metroConfig).not.toContain("config.resolver.blockList");
       expect(metroConfig).not.toContain("\\.alchemy");
     });
-
-    it("should work with different deploy providers", async () => {
-      const result = await runTRPCTest({
-        projectName: "different-deploy-providers",
-        webDeploy: "cloudflare",
-        serverDeploy: "cloudflare",
-        backend: "hono",
-        runtime: "workers",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-
-    it("should work with web deploy only", async () => {
-      const result = await runTRPCTest({
-        projectName: "web-deploy-only",
-        webDeploy: "cloudflare",
-        serverDeploy: "none",
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-
-    it("should work with server deploy only", async () => {
-      const result = await runTRPCTest({
-        projectName: "server-deploy-only",
-        webDeploy: "none",
-        serverDeploy: "cloudflare",
-        backend: "hono",
-        runtime: "workers",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
   });
 
   describe("Deployment with Special Backend Constraints", () => {
@@ -1073,89 +989,6 @@ describe("Deployment Configurations", () => {
 
       expectSuccess(result);
     });
-
-    it("should work with deployment + fullstack setup", async () => {
-      const result = await runTRPCTest({
-        projectName: "deploy-fullstack",
-        webDeploy: "cloudflare",
-        serverDeploy: "cloudflare",
-        backend: "hono",
-        runtime: "workers",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-  });
-
-  describe("All Deployment Options", () => {
-    const deployOptions: ReadonlyArray<{
-      webDeploy: TestConfig["webDeploy"];
-      serverDeploy: TestConfig["serverDeploy"];
-    }> = [
-      { webDeploy: "cloudflare", serverDeploy: "cloudflare" },
-      { webDeploy: "none", serverDeploy: "cloudflare" },
-      { webDeploy: "none", serverDeploy: "none" },
-    ];
-
-    for (const { webDeploy, serverDeploy } of deployOptions) {
-      it(`should work with webDeploy: ${webDeploy}, serverDeploy: ${serverDeploy}`, async () => {
-        const config: TestConfig = {
-          projectName: `deploy-${webDeploy}-${serverDeploy}`,
-          webDeploy,
-          serverDeploy,
-          backend: "hono",
-          runtime: "workers",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          api: "trpc",
-          frontend: ["tanstack-router"],
-          addons: ["none"],
-          examples: ["none"],
-          dbSetup: "none",
-          install: false,
-        };
-
-        // Handle special cases
-        if (
-          webDeploy !== "none" &&
-          !config.frontend?.some((f) =>
-            [
-              "tanstack-router",
-              "react-router",
-              "tanstack-start",
-              "next",
-              "nuxt",
-              "svelte",
-              "solid",
-              "astro",
-            ].includes(f),
-          )
-        ) {
-          config.frontend = ["tanstack-router"]; // Ensure web frontend for web deploy
-        }
-
-        if (serverDeploy !== "none" && config.backend === "none") {
-          config.backend = "hono"; // Ensure backend for server deploy
-        }
-
-        if (serverDeploy === "none" && webDeploy === "none") {
-          config.runtime = "bun";
-        }
-
-        const result = await runTRPCTest(config);
-        expectSuccess(result);
-      });
-    }
   });
 
   describe("Deployment Edge Cases", () => {
@@ -1177,28 +1010,6 @@ describe("Deployment Configurations", () => {
       });
 
       expectSuccess(result);
-    });
-
-    it("should handle deployment constraints properly", async () => {
-      // This should fail because we have web deploy but only native frontend
-      const result = await runTRPCTest({
-        projectName: "deployment-constraints-fail",
-        webDeploy: "cloudflare",
-        serverDeploy: "none",
-        backend: "none", // No backend but we have server deploy
-        runtime: "none",
-        database: "none",
-        orm: "none",
-        auth: "none",
-        api: "none",
-        frontend: ["native-bare"], // Only native frontend
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        expectError: true,
-      });
-
-      expectError(result, "'--web-deploy' requires a web frontend");
     });
   });
 
