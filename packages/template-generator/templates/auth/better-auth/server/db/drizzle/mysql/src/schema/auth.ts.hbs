@@ -9,12 +9,12 @@ import {
 } from "drizzle-orm/mysql-core";
 
 export const user = mysqlTable("user", {
-  id: varchar("id", { length: 36 }).primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
+  id: varchar("id", { length: 36 }).primaryKey(),
   image: text("image"),
-  createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
   updatedAt: timestamp("updated_at", { fsp: 3 })
     .defaultNow()
     .$onUpdate(() => new Date())
@@ -67,23 +67,22 @@ export const account = mysqlTable(
 export const verification = mysqlTable(
   "verification",
   {
+    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+    expiresAt: timestamp("expires_at", { fsp: 3 }).notNull(),
     id: varchar("id", { length: 36 }).primaryKey(),
     identifier: varchar("identifier", { length: 255 }).notNull(),
-    value: text("value").notNull(),
-    expiresAt: timestamp("expires_at", { fsp: 3 }).notNull(),
-    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
-  },
+  
+    value: text("value").notNull(),},
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
 export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
   accounts: many(account),
-}));
+  sessions: many(session),}));
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {

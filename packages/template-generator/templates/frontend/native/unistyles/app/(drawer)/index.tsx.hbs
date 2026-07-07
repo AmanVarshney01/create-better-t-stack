@@ -1,4 +1,5 @@
 /* oxlint-disable no-use-before-define */
+
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
 import type { ReactNode } from "react";
 {{/if}}
@@ -87,10 +88,9 @@ const Home = () => {
       const returnUrl = Linking.createURL("/");
       const polarReturnUrl = getPolarReturnUrl(returnUrl);
       const { url } = await generateCheckoutLink({
-        productIds: [recurringProduct.id],
         origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
-        successUrl: polarReturnUrl,
-      });
+        productIds: [recurringProduct.id],
+        successUrl: polarReturnUrl,});
 
       await openPolarLink(url, returnUrl);
     } catch {
@@ -327,166 +327,143 @@ if (!isLoaded) {
 export default Home;
 
 const styles = StyleSheet.create((theme) => ({
+  apiStatusCard: {
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    marginBottom: theme.spacing.md,
+    padding: theme.spacing.md,},
+  apiStatusRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.xs,},
+  apiStatusText: {
+    color: theme.colors.mutedForeground,
+  },
+  apiStatusTitle: {
+    color: theme.colors.foreground,
+    fontWeight: "500",
+    marginBottom: theme.spacing.sm,},
   container: {
     paddingHorizontal: theme.spacing.md,
   },
   heroSection: {
     paddingVertical: theme.spacing.xl,
   },
+  heroSubtitle: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.lg,
+    lineHeight: 28,},
   heroTitle: {
+    color: theme.colors.foreground,
     fontSize: theme.fontSize["4xl"],
     fontWeight: "bold",
-    color: theme.colors.foreground,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,},
+  paymentActions: {
+    alignItems: "flex-start",
+    marginTop: theme.spacing.sm,},
+  polarPrimaryButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,},
+  polarPrimaryButtonText: {
+    color: theme.colors.primaryForeground,
+    fontWeight: "500",
   },
-  heroSubtitle: {
-    fontSize: theme.fontSize.lg,
-    color: theme.colors.mutedForeground,
-    lineHeight: 28,
-  },
-  statusCard: {
-    backgroundColor: theme.colors.card,
-    borderWidth: 1,
+  polarSecondaryButton: {
     borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,},
+  polarSecondaryButtonText: {
+    color: theme.colors.foreground,
+    fontWeight: "500",
   },
-  statusHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: theme.spacing.md,
-  },
-  statusTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: "600",
-    color: theme.colors.cardForeground,
+  signOutButton: {
+    alignSelf: "flex-start",
+    backgroundColor: theme.colors.destructive,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,},
+  signOutText: {
+    color: theme.colors.destructiveForeground,
+    fontWeight: "500",
   },
   statusBadge: {
     backgroundColor: theme.colors.secondary,
-    paddingHorizontal: theme.spacing.sm + 4,
-    paddingVertical: theme.spacing.xs,
     borderRadius: 9999,
-  },
+    paddingHorizontal: theme.spacing.sm + 4,
+    paddingVertical: theme.spacing.xs,},
   statusBadgeText: {
-    fontSize: theme.fontSize.xs,
-    fontWeight: "500",
     color: theme.colors.secondaryForeground,
+    fontSize: theme.fontSize.xs,
+    fontWeight: "500",},
+  statusCard: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    elevation: 2,
+    marginBottom: theme.spacing.lg,
+    padding: theme.spacing.lg,
+    shadowColor: "#000",
+    shadowOffset: { height: 1 , width: 0},
+    shadowOpacity: 0.05,
+    shadowRadius: 3,},
+  statusContent: {
+    flex: 1,
   },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm + 4,
-  },
+  statusDescription: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.xs,},
   statusDot: {
-    height: 12,
-    width: 12,
     borderRadius: 6,
-  },
+    height: 12,
+    width: 12,},
   statusDotSuccess: {
     backgroundColor: theme.colors.success,
   },
   statusDotWarning: {
     backgroundColor: "#F59E0B",
   },
-  statusContent: {
-    flex: 1,
-  },
-  statusLabel: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: "500",
-    color: theme.colors.cardForeground,
-  },
-  statusDescription: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.mutedForeground,
-  },
-  userCard: {
-    backgroundColor: theme.colors.card,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-  },
-  userHeader: {
+  statusHeader: {
+    alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
+    marginBottom: theme.spacing.md,},
+  statusLabel: {
+    color: theme.colors.cardForeground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "500",},
+  statusRow: {
     alignItems: "center",
-    marginBottom: theme.spacing.xs,
-  },
-  userWelcome: {
-    fontSize: theme.fontSize.base,
-    color: theme.colors.foreground,
-  },
+    flexDirection: "row",
+    gap: theme.spacing.sm + 4,},
+  statusTitle: {
+    color: theme.colors.cardForeground,
+    fontSize: theme.fontSize.lg,
+    fontWeight: "600",},
+  userCard: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    marginBottom: theme.spacing.md,
+    padding: theme.spacing.md,},
+  userEmail: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    marginBottom: theme.spacing.md,},
+  userHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: theme.spacing.xs,},
   userName: {
     fontWeight: "500",
   },
-  userEmail: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.mutedForeground,
-    marginBottom: theme.spacing.md,
-  },
-  signOutButton: {
-    backgroundColor: theme.colors.destructive,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    alignSelf: "flex-start",
-  },
-  signOutText: {
-    color: theme.colors.destructiveForeground,
-    fontWeight: "500",
-  },
-  paymentActions: {
-    marginTop: theme.spacing.sm,
-    alignItems: "flex-start",
-  },
-  polarPrimaryButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-  },
-  polarPrimaryButtonText: {
-    color: theme.colors.primaryForeground,
-    fontWeight: "500",
-  },
-  polarSecondaryButton: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-  },
-  polarSecondaryButtonText: {
+  userWelcome: {
     color: theme.colors.foreground,
-    fontWeight: "500",
-  },
-  apiStatusCard: {
-    marginBottom: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    padding: theme.spacing.md,
-  },
-  apiStatusTitle: {
-    marginBottom: theme.spacing.sm,
-    fontWeight: "500",
-    color: theme.colors.foreground,
-  },
-  apiStatusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.xs,
-  },
-  apiStatusText: {
-    color: theme.colors.mutedForeground,
-  },
-}));
+    fontSize: theme.fontSize.base,},}));

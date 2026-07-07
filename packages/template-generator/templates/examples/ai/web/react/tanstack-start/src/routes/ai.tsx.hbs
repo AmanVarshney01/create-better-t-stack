@@ -1,4 +1,5 @@
 /* oxlint-disable react-doctor/no-array-index-as-key */
+
 {{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
@@ -13,7 +14,8 @@ import {
   MessageCircleDashedIcon,
   RotateCwIcon,
 } from "lucide-react";
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
@@ -105,7 +107,7 @@ const RouteComponent = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ threadId: currentThreadId, prompt: text });
+      await sendMessage({ prompt: text , threadId: currentThreadId});
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -276,7 +278,8 @@ import {
   MessageCircleDashedIcon,
   RotateCwIcon,
 } from "lucide-react";
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";

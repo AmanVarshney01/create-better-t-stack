@@ -1,4 +1,5 @@
 /* oxlint-disable react-doctor/no-barrel-import, sonarjs/no-wildcard-import */
+
 {{#if (eq dbSetup "d1")}}
 import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/d1";
@@ -8,9 +9,7 @@ import type {} from "@{{projectName}}/env/server";
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
-export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
-	return drizzle(env.DB, { schema });
-}
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => drizzle(env.DB, { schema })
 {{else if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 import type {} from "@{{projectName}}/env/server";

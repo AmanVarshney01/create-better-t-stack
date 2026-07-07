@@ -109,10 +109,9 @@ const webBuildDir =
 
 export default {
   app: {
-    name: "{{projectName}}",
     identifier: "dev.bettertstack.{{projectName}}.desktop",
-    version: "0.0.1",
-  },
+    name: "{{projectName}}",
+    version: "0.0.1",},
   runtime: {
     exitOnLastWindowClosed: true,
   },
@@ -123,20 +122,19 @@ export default {
     copy: {
       [webBuildDir]: "views/mainview",
     },
-    watchIgnore: [\`\${webBuildDir}/**\`],
-    mac: {
-      bundleCEF: true,
-      defaultRenderer: "cef",
-    },
     linux: {
       bundleCEF: true,
       defaultRenderer: "cef",
     },
-    win: {
+    mac: {
       bundleCEF: true,
       defaultRenderer: "cef",
     },
-  },
+    watchIgnore: [\`\${webBuildDir}/**\`],
+    win: {
+      bundleCEF: true,
+      defaultRenderer: "cef",
+    },},
 } satisfies ElectrobunConfig;
 `],
   ["addons/electrobun/apps/desktop/package.json.hbs", `{
@@ -183,11 +181,10 @@ export const mainWindow = new BrowserWindow({
   title: "{{projectName}}",
   url,
   frame: {
-    width: 1280,
     height: 820,
+    width: 1280,
     x: 120,
-    y: 120,
-  },
+    y: 120,},
 });
 
 console.log("Electrobun desktop shell started.");
@@ -277,27 +274,24 @@ pre-commit:
 
 const manifest = (): MetadataRoute.Manifest => {
 	return {
-		name: "{{projectName}}",
-		short_name: "{{projectName}}",
+		background_color: "#ffffff",
 		description:
 			"my pwa app",
-		start_url: "/new",
 		display: "standalone",
-		background_color: "#ffffff",
-		theme_color: "#000000",
 		icons: [
 			{
-				src: "/favicon/web-app-manifest-192x192.png",
 				sizes: "192x192",
-				type: "image/png",
-			},
+				src: "/favicon/web-app-manifest-192x192.png",
+				type: "image/png",},
 			{
-				src: "/favicon/web-app-manifest-512x512.png",
 				sizes: "512x512",
-				type: "image/png",
-			},
+				src: "/favicon/web-app-manifest-512x512.png",
+				type: "image/png",},
 		],
-	};
+		name: "{{projectName}}",
+		short_name: "{{projectName}}",
+		start_url: "/new",
+		theme_color: "#000000",};
 };
 
 export default manifest;
@@ -397,15 +391,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 const handleRequest = async (req: NextRequest) => {
 	const rpcResult = await rpcHandler.handle(req, {
-		prefix: "/api/rpc",
 		context: await createContext(req),
-	});
+		prefix: "/api/rpc",});
 	if (rpcResult.response) return rpcResult.response;
 
 	const apiResult = await apiHandler.handle(req, {
-		prefix: "/api/rpc/api-reference",
 		context: await createContext(req),
-	});
+		prefix: "/api/rpc/api-reference",});
 	if (apiResult.response) return apiResult.response;
 
 	return new Response("Not found", { status: 404 });
@@ -622,6 +614,7 @@ export const PATCH = handle;
 export const DELETE = handle;
 `],
   ["api/orpc/fullstack/tanstack-start/src/routes/api/rpc/$.ts.hbs", `/* oxlint-disable github/filenames-match-regex, promise/prefer-await-to-callbacks */
+
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
@@ -654,15 +647,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 const handle = async ({ request }: { request: Request }) => {
 	const rpcResult = await rpcHandler.handle(request, {
-		prefix: "/api/rpc",
 		context: await createContext({ req: request }),
-	});
+		prefix: "/api/rpc",});
 	if (rpcResult.response) return rpcResult.response;
 
 	const apiResult = await apiHandler.handle(request, {
-		prefix: "/api/rpc/api-reference",
 		context: await createContext({ req: request }),
-	});
+		prefix: "/api/rpc/api-reference",});
 	if (apiResult.response) return apiResult.response;
 
 	return new Response("Not found", { status: 404 });
@@ -671,13 +662,12 @@ const handle = async ({ request }: { request: Request }) => {
 export const Route = createFileRoute('/api/rpc/$')({
   server: {
     handlers: {
-      HEAD: handle,
-      GET: handle,
-      POST: handle,
-      PUT: handle,
-      PATCH: handle,
       DELETE: handle,
-    },
+      GET: handle,
+      HEAD: handle,
+      PATCH: handle,
+      POST: handle,
+      PUT: handle,},
   },
 })`],
   ["api/orpc/native/utils/orpc.ts.hbs", `import { createORPCClient } from "@orpc/client";
@@ -849,27 +839,24 @@ import { env } from "@{{projectName}}/env/server";
 {{/unless}}
 {{/if}}
 {{#if (eq auth "clerk")}}
-type ClerkContextAuth = {
+interface ClerkContextAuth {
 	userId: string | null;
-};
+}
 
-type ClerkRequestContext = {
+interface ClerkRequestContext {
 	auth: ClerkContextAuth | null;
 	session: null;
-};
-
-const toClerkContextAuth = (auth: { userId: string | null } | null): ClerkContextAuth | null => {
-	return auth ? { userId: auth.userId } : null;
 }
+
+const toClerkContextAuth = (auth: { userId: string | null } | null): ClerkContextAuth | null => auth ? { userId: auth.userId } : null
 {{/if}}
 
 {{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 {{else}}
 const clerkClient = createClerkClient({
-	secretKey: env.CLERK_SECRET_KEY,
 	publishableKey: env.CLERK_PUBLISHABLE_KEY,
-});
+	secretKey: env.CLERK_SECRET_KEY,});
 
 const authenticateClerkRequest = async (request: Request): Promise<ClerkContextAuth | null> => {
 	const requestState = await clerkClient.authenticateRequest(request, {
@@ -932,9 +919,9 @@ export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if
 
 {{else if (and (eq backend 'self') (includes frontend "nuxt"))}}
 
-export type CreateContextOptions = {
+export interface CreateContextOptions {
 	headers: Headers;
-};
+}
 
 export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) => {
 {{#if (eq auth "better-auth")}}
@@ -983,9 +970,9 @@ export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if
 
 {{else if (and (eq backend 'self') (includes frontend "astro"))}}
 
-export type CreateContextOptions = {
+export interface CreateContextOptions {
 	headers: Headers;
-};
+}
 
 export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) => {
 {{#if (eq auth "better-auth")}}
@@ -1004,9 +991,9 @@ export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if
 
 {{else if (eq backend 'hono')}}
 
-export type CreateContextOptions = {
+export interface CreateContextOptions {
 	context: HonoContext;
-};
+}
 
 export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} => {
 {{#if (eq auth "better-auth")}}
@@ -1033,9 +1020,9 @@ export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if
 
 {{else if (eq backend 'elysia')}}
 
-export type CreateContextOptions = {
+export interface CreateContextOptions {
 	context: ElysiaContext;
-};
+}
 
 export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} => {
 {{#if (eq auth "better-auth")}}
@@ -1116,12 +1103,10 @@ export const createContext = {{#unless (eq auth "none")}}async {{/unless}}(req: 
 }
 
 {{else}}
-export const createContext = () => {
-	return {
+export const createContext = () => ({
 		auth: null,
 		session: null,
-	};
-}
+	})
 {{/if}}
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
@@ -1167,9 +1152,7 @@ import { todoRouter } from "./todo";
 {{/if}}
 
 export const appRouter = {
-  healthCheck: publicProcedure.handler(() => {
-    return "OK";
-  }),
+  healthCheck: publicProcedure.handler(() => "OK"),
   {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
   privateData: protectedProcedure.handler(({ context }) => {
     return {
@@ -1198,16 +1181,12 @@ import { todoRouter } from "./todo";
 {{/if}}
 
 export const appRouter = router({
-  healthCheck: publicProcedure.query(() => {
-    return "OK";
-  }),
+  healthCheck: publicProcedure.query(() => "OK"),
   {{#if (eq auth "better-auth")}}
-  privateData: protectedProcedure.query(({ ctx }) => {
-    return {
+  privateData: protectedProcedure.query(({ ctx }) => ({
       message: "This is private",
       user: ctx.session.user,
-    };
-  }),
+    })),
   {{/if}}
   {{#if (includes examples "todo")}}
   todo: todoRouter,
@@ -1335,9 +1314,8 @@ export default defineNuxtPlugin((nuxt) => {
       onError: (error) => {
         console.log(error)
         toast.add({
-          title: 'Error',
           description: error?.message || 'An unexpected error occurred.',
-        })
+          title: 'Error',})
       },
     }),
   })
@@ -1458,9 +1436,7 @@ const link = new RPCLink({
 {{/if}}
 });
 
-const getORPCClient = () => {
-	return createORPCClient(link) as RouterClient<AppRouter>;
-};
+const getORPCClient = () => createORPCClient(link) as RouterClient<AppRouter>;
 
 export const client: RouterClient<AppRouter> = getORPCClient();
 {{else}}
@@ -1615,6 +1591,7 @@ const handler = (req: NextRequest) =>
 export { handler as GET, handler as POST };
 `],
   ["api/trpc/fullstack/tanstack-start/src/routes/api/trpc/$.ts.hbs", `/* oxlint-disable github/filenames-match-regex */
+
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import { appRouter } from '@{{projectName}}/api/routers/index'
 import { createContext } from '@{{projectName}}/api/context'
@@ -1781,25 +1758,22 @@ import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
 {{#if (eq auth "clerk")}}
-type ClerkContextAuth = {
+interface ClerkContextAuth {
 	userId: string | null;
-};
+}
 
-type ClerkRequestContext = {
+interface ClerkRequestContext {
 	auth: ClerkContextAuth | null;
 	session: null;
-};
-
-const toClerkContextAuth = (auth: { userId: string | null } | null): ClerkContextAuth | null => {
-	return auth ? { userId: auth.userId } : null;
 }
+
+const toClerkContextAuth = (auth: { userId: string | null } | null): ClerkContextAuth | null => auth ? { userId: auth.userId } : null
 {{/if}}
 
 {{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
 const clerkClient = createClerkClient({
-	secretKey: env.CLERK_SECRET_KEY,
 	publishableKey: env.CLERK_PUBLISHABLE_KEY,
-});
+	secretKey: env.CLERK_SECRET_KEY,});
 
 const authenticateClerkRequest = async (request: Request): Promise<ClerkContextAuth | null> => {
 	const requestState = await clerkClient.authenticateRequest(request, {
@@ -1862,9 +1836,9 @@ export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if
 
 {{else if (eq backend 'hono')}}
 
-export type CreateContextOptions = {
+export interface CreateContextOptions {
 	context: HonoContext;
-};
+}
 
 export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} => {
 {{#if (eq auth "better-auth")}}
@@ -1891,9 +1865,9 @@ export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if
 
 {{else if (eq backend 'elysia')}}
 
-export type CreateContextOptions = {
+export interface CreateContextOptions {
 	context: ElysiaContext;
-};
+}
 
 export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} => {
 {{#if (eq auth "better-auth")}}
@@ -1970,12 +1944,10 @@ export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({ req
 }
 
 {{else}}
-export const createContext = () => {
-	return {
+export const createContext = () => ({
 		auth: null,
 		session: null,
-	};
-}
+	})
 {{/if}}
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
@@ -1985,7 +1957,7 @@ import type { Context } from "./context";
 
 export const t = initTRPC.context<Context>().create();
 
-export const router = t.router;
+export const { router } = t;
 
 export const publicProcedure = t.procedure;
 
@@ -1994,18 +1966,16 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   {{#if (eq auth "better-auth")}}
   if (!ctx.session) {
     throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "Authentication required",
       cause: "No session",
-    });
+      code: "UNAUTHORIZED",
+      message: "Authentication required",});
   }
   {{else}}
   if (!ctx.auth?.userId) {
     throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "Authentication required",
       cause: "No Clerk userId",
-    });
+      code: "UNAUTHORIZED",
+      message: "Authentication required",});
   }
   {{/if}}
   return next({
@@ -2029,16 +1999,12 @@ import { todoRouter } from "./todo";
 {{/if}}
 
 export const appRouter = {
-  healthCheck: publicProcedure.handler(() => {
-    return "OK";
-  }),
+  healthCheck: publicProcedure.handler(() => "OK"),
   {{#if (eq auth "better-auth")}}
-  privateData: protectedProcedure.handler(({ context }) => {
-    return {
+  privateData: protectedProcedure.handler(({ context }) => ({
       message: "This is private",
       user: context.session?.user,
-    };
-  }),
+    })),
   {{/if}}
   {{#if (includes examples "todo")}}
   todo: todoRouter,
@@ -2056,9 +2022,7 @@ import { todoRouter } from "./todo";
 {{/if}}
 
 export const appRouter = router({
-  healthCheck: publicProcedure.query(() => {
-    return "OK";
-  }),
+  healthCheck: publicProcedure.query(() => "OK"),
   {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
   privateData: protectedProcedure.query(({ ctx }) => {
     return {
@@ -2230,7 +2194,8 @@ export default {
   providers: [getAuthConfigProvider()],
 } satisfies AuthConfig;
 `],
-  ["auth/better-auth/convex/backend/convex/auth.ts.hbs", `import { createClient, type GenericCtx } from "@convex-dev/better-auth";
+  ["auth/better-auth/convex/backend/convex/auth.ts.hbs", `import { createClient } from "@convex-dev/better-auth";
+import type { GenericCtx } from "@convex-dev/better-auth";
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
 {{else}}
@@ -2293,9 +2258,7 @@ export { createAuth };
 
 export const getCurrentUser = query({
   args: {},
-  handler: async (ctx) => {
-    return await authComponent.safeGetAuthUser(ctx);
-  },
+  handler: async (ctx) => await authComponent.safeGetAuthUser(ctx),
 });
 `],
   ["auth/better-auth/convex/backend/convex/http.ts.hbs", `import { httpRouter } from "convex/server";
@@ -2314,8 +2277,6 @@ const nativeAppUrl = process.env.NATIVE_APP_URL || "{{projectName}}://";
 const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 
 http.route({
-  path: "/polar/success",
-  method: "GET",
   handler: httpAction(async (_ctx, request) => {
     const requestUrl = new URL(request.url);
     const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
@@ -2332,13 +2293,14 @@ http.route({
     }
 
     return new Response(null, {
-      status: 302,
       headers: {
         Location: redirectUrl.toString(),
       },
-    });
+      status: 302,});
   }),
-});
+
+  method: "GET",
+  path: "/polar/success",});
 
 {{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
@@ -2372,6 +2334,7 @@ export const get = query({
 });
 `],
   ["auth/better-auth/convex/native/bare/components/sign-in.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
@@ -2400,7 +2363,9 @@ const signInSchema = z.object({
 });
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -2436,9 +2401,6 @@ const SignIn = () => {
       email: "",
       password: "",
     },
-    validators: {
-      onSubmit: signInSchema,
-    },
     onSubmit: async ({ value, formApi }) => {
       await authClient.signIn.email(
         {
@@ -2456,7 +2418,10 @@ const SignIn = () => {
         },
       );
     },
-  });
+  
+    validators: {
+      onSubmit: signInSchema,
+    },});
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -2485,10 +2450,9 @@ const SignIn = () => {
                     style={[
                       styles.input,
                       {
-                        color: theme.text,
-                        borderColor: theme.border,
                         backgroundColor: theme.background,
-                      },
+                        borderColor: theme.border,
+                        color: theme.text,},
                     ]}
                     placeholder="Email"
                     placeholderTextColor={theme.text}
@@ -2512,10 +2476,9 @@ const SignIn = () => {
                     style={[
                       styles.input,
                       {
-                        color: theme.text,
-                        borderColor: theme.border,
                         backgroundColor: theme.background,
-                      },
+                        borderColor: theme.border,
+                        color: theme.text,},
                     ]}
                     placeholder="Password"
                     placeholderTextColor={theme.text}
@@ -2559,16 +2522,18 @@ const SignIn = () => {
 }
 
 const styles = StyleSheet.create({
+  button: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,},
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 16,
+  },
   card: {
-    marginTop: 16,
-    padding: 16,
     borderWidth: 1,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
-  },
+    marginTop: 16,
+    padding: 16,},
   errorContainer: {
     marginBottom: 12,
     padding: 8,
@@ -2578,24 +2543,19 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    padding: 12,
     fontSize: 16,
     marginBottom: 12,
-  },
-  button: {
-    padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-  },
-});
+    padding: 12,},
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },});
 
 export { SignIn };
 `],
   ["auth/better-auth/convex/native/bare/components/sign-up.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
@@ -2612,24 +2572,25 @@ import { useColorScheme } from "@/lib/use-color-scheme";
 import z from "zod";
 
 const signUpSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .min(2, "Name must be at least 2 characters"),
   email: z
     .string()
     .trim()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
   password: z
     .string()
     .min(1, "Password is required")
-    .min(8, "Use at least 8 characters"),
-});
+    .min(8, "Use at least 8 characters"),});
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -2662,13 +2623,9 @@ const SignUp = () => {
 
   const form = useForm({
     defaultValues: {
-      name: "",
       email: "",
-      password: "",
-    },
-    validators: {
-      onSubmit: signUpSchema,
-    },
+      name: "",
+      password: "",},
     onSubmit: async ({ value, formApi }) => {
       await authClient.signUp.email(
         {
@@ -2687,7 +2644,10 @@ const SignUp = () => {
         },
       );
     },
-  });
+  
+    validators: {
+      onSubmit: signUpSchema,
+    },});
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -2716,10 +2676,9 @@ const SignUp = () => {
                     style={[
                       styles.input,
                       {
-                        color: theme.text,
-                        borderColor: theme.border,
                         backgroundColor: theme.background,
-                      },
+                        borderColor: theme.border,
+                        color: theme.text,},
                     ]}
                     placeholder="Name"
                     placeholderTextColor={theme.text}
@@ -2741,10 +2700,9 @@ const SignUp = () => {
                     style={[
                       styles.input,
                       {
-                        color: theme.text,
-                        borderColor: theme.border,
                         backgroundColor: theme.background,
-                      },
+                        borderColor: theme.border,
+                        color: theme.text,},
                     ]}
                     placeholder="Email"
                     placeholderTextColor={theme.text}
@@ -2768,10 +2726,9 @@ const SignUp = () => {
                     style={[
                       styles.input,
                       {
-                        color: theme.text,
-                        borderColor: theme.border,
                         backgroundColor: theme.background,
-                      },
+                        borderColor: theme.border,
+                        color: theme.text,},
                     ]}
                     placeholder="Password"
                     placeholderTextColor={theme.text}
@@ -2815,16 +2772,18 @@ const SignUp = () => {
 }
 
 const styles = StyleSheet.create({
+  button: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,},
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 16,
+  },
   card: {
-    marginTop: 16,
-    padding: 16,
     borderWidth: 1,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
-  },
+    marginTop: 16,
+    padding: 16,},
   errorContainer: {
     marginBottom: 12,
     padding: 8,
@@ -2834,20 +2793,14 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    padding: 12,
     fontSize: 16,
     marginBottom: 12,
-  },
-  button: {
-    padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-  },
-});
+    padding: 12,},
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },});
 
 export { SignUp };
 `],
@@ -2868,13 +2821,13 @@ export const authClient = createAuthClient({
 			? crossDomainClient()
 			: expoClient({
 				scheme: Constants.expoConfig?.scheme as string,
-				storagePrefix: Constants.expoConfig?.scheme as string,
 				storage: SecureStore,
-			}),
+				storagePrefix: Constants.expoConfig?.scheme as string,}),
 	],
 });
 `],
   ["auth/better-auth/convex/native/unistyles/components/sign-in.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
@@ -2901,7 +2854,9 @@ const signInSchema = z.object({
 });
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -2935,9 +2890,6 @@ export const SignIn = () => {
       email: "",
       password: "",
     },
-    validators: {
-      onSubmit: signInSchema,
-    },
     onSubmit: async ({ value, formApi }) => {
       await authClient.signIn.email(
         {
@@ -2955,7 +2907,10 @@ export const SignIn = () => {
         },
       );
     },
-  });
+  
+    validators: {
+      onSubmit: signInSchema,
+    },});
 
   return (
     <View style={styles.container}>
@@ -3036,50 +2991,45 @@ export const SignIn = () => {
 }
 
 const styles = StyleSheet.create((theme) => ({
+  button: {
+    alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 6,
+    flexDirection: "row",
+    justifyContent: "center",
+    padding: 16,},
+  buttonText: {
+    fontWeight: "500",
+  },
   container: {
-    marginTop: 24,
-    padding: 16,
+    borderColor: theme.colors.border,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: theme.colors.typography,
-    marginBottom: 16,
-  },
+    marginTop: 24,
+    padding: 16,},
   errorContainer: {
-    marginBottom: 16,
-    padding: 12,
     borderRadius: 6,
-  },
+    marginBottom: 16,
+    padding: 12,},
   errorText: {
     color: theme.colors.destructive,
     fontSize: 14,
   },
   input: {
-    marginBottom: 12,
-    padding: 16,
-    borderRadius: 6,
-    color: theme.colors.typography,
-    borderWidth: 1,
     borderColor: theme.colors.border,
-  },
-  button: {
-    backgroundColor: theme.colors.primary,
-    padding: 16,
     borderRadius: 6,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: {
-    fontWeight: "500",
-  },
-}));
+    borderWidth: 1,
+    color: theme.colors.typography,
+    marginBottom: 12,
+    padding: 16,},
+  title: {
+    color: theme.colors.typography,
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 16,},}));
 `],
   ["auth/better-auth/convex/native/unistyles/components/sign-up.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
@@ -3094,24 +3044,25 @@ import { StyleSheet } from "react-native-unistyles";
 import z from "zod";
 
 const signUpSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .min(2, "Name must be at least 2 characters"),
   email: z
     .string()
     .trim()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
   password: z
     .string()
     .min(1, "Password is required")
-    .min(8, "Use at least 8 characters"),
-});
+    .min(8, "Use at least 8 characters"),});
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -3142,13 +3093,9 @@ export const SignUp = () => {
 
   const form = useForm({
     defaultValues: {
-      name: "",
       email: "",
-      password: "",
-    },
-    validators: {
-      onSubmit: signUpSchema,
-    },
+      name: "",
+      password: "",},
     onSubmit: async ({ value, formApi }) => {
       await authClient.signUp.email(
         {
@@ -3167,7 +3114,10 @@ export const SignUp = () => {
         },
       );
     },
-  });
+  
+    validators: {
+      onSubmit: signUpSchema,
+    },});
 
   return (
     <View style={styles.container}>
@@ -3265,56 +3215,49 @@ export const SignUp = () => {
 }
 
 const styles = StyleSheet.create((theme) => ({
+  button: {
+    alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 6,
+    flexDirection: "row",
+    justifyContent: "center",
+    padding: 16,},
+  buttonText: {
+    fontWeight: "500",
+  },
   container: {
-    marginTop: 24,
-    padding: 16,
+    borderColor: theme.colors.border,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: theme.colors.typography,
-    marginBottom: 16,
-  },
+    marginTop: 24,
+    padding: 16,},
   errorContainer: {
-    marginBottom: 16,
-    padding: 12,
     borderRadius: 6,
-  },
+    marginBottom: 16,
+    padding: 12,},
   errorText: {
     color: theme.colors.destructive,
     fontSize: 14,
   },
   input: {
+    borderColor: theme.colors.border,
+    borderRadius: 6,
+    borderWidth: 1,
+    color: theme.colors.typography,
     marginBottom: 12,
-    padding: 16,
-    borderRadius: 6,
-    color: theme.colors.typography,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
+    padding: 16,},
   inputLast: {
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 6,
-    color: theme.colors.typography,
-    borderWidth: 1,
     borderColor: theme.colors.border,
-  },
-  button: {
-    backgroundColor: theme.colors.primary,
-    padding: 16,
     borderRadius: 6,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: {
-    fontWeight: "500",
-  },
-}));
+    borderWidth: 1,
+    color: theme.colors.typography,
+    marginBottom: 16,
+    padding: 16,},
+  title: {
+    color: theme.colors.typography,
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 16,},}));
 `],
   ["auth/better-auth/convex/native/uniwind/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
@@ -3336,7 +3279,9 @@ const signInSchema = z.object({
 });
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -3371,9 +3316,6 @@ export const SignIn = () => {
       email: "",
       password: "",
     },
-    validators: {
-      onSubmit: signInSchema,
-    },
     onSubmit: async ({ value, formApi }) => {
       await authClient.signIn.email(
         {
@@ -3383,21 +3325,22 @@ export const SignIn = () => {
         {
           onError(error) {
             toast.show({
-              variant: "danger",
               label: error.error?.message || "Failed to sign in",
-            });
+              variant: "danger",});
           },
           onSuccess() {
             formApi.reset();
             toast.show({
-              variant: "success",
               label: "Signed in successfully",
-            });
+              variant: "success",});
           },
         },
       );
     },
-  });
+  
+    validators: {
+      onSubmit: signInSchema,
+    },});
 
   return (
     <Surface variant="secondary" className="p-4 rounded-lg">
@@ -3482,24 +3425,25 @@ import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast
 import z from "zod";
 
 const signUpSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .min(2, "Name must be at least 2 characters"),
   email: z
     .string()
     .trim()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
   password: z
     .string()
     .min(1, "Password is required")
-    .min(8, "Use at least 8 characters"),
-});
+    .min(8, "Use at least 8 characters"),});
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -3532,13 +3476,9 @@ export const SignUp = () => {
 
   const form = useForm({
     defaultValues: {
-      name: "",
       email: "",
-      password: "",
-    },
-    validators: {
-      onSubmit: signUpSchema,
-    },
+      name: "",
+      password: "",},
     onSubmit: async ({ value, formApi }) => {
       await authClient.signUp.email(
         {
@@ -3549,21 +3489,22 @@ export const SignUp = () => {
         {
           onError(error) {
             toast.show({
-              variant: "danger",
               label: error.error?.message || "Failed to sign up",
-            });
+              variant: "danger",});
           },
           onSuccess() {
             formApi.reset();
             toast.show({
-              variant: "success",
               label: "Account created successfully",
-            });
+              variant: "success",});
           },
         },
       );
     },
-  });
+  
+    validators: {
+      onSubmit: signUpSchema,
+    },});
 
   return (
     <Surface variant="secondary" className="p-4 rounded-lg">
@@ -3758,6 +3699,7 @@ const DashboardPage = () => {
 export default DashboardPage;
 `],
   ["auth/better-auth/convex/web/react/next/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
@@ -3891,6 +3833,7 @@ const SignInForm = ({
 export default SignInForm;
 `],
   ["auth/better-auth/convex/web/react/next/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
@@ -3910,16 +3853,14 @@ const SignUpForm = ({
 	const form = useForm({
 		defaultValues: {
 			email: "",
-			password: "",
 			name: "",
-		},
+			password: "",},
 		onSubmit: async ({ value }) => {
 			await authClient.signUp.email(
 				{
 					email: value.email,
-					password: value.password,
 					name: value.name,
-				},
+					password: value.password,},
 				{
 					onSuccess: () => {
 						router.push("/dashboard");
@@ -3933,10 +3874,9 @@ const SignUpForm = ({
 		},
 		validators: {
 			onSubmit: z.object({
-				name: z.string().min(2, "Name must be at least 2 characters"),
 				email: z.email("Invalid email address"),
-				password: z.string().min(8, "Password must be at least 8 characters"),
-			}),
+				name: z.string().min(2, "Name must be at least 2 characters"),
+				password: z.string().min(8, "Password must be at least 8 characters"),}),
 		},
 	});
 
@@ -4118,11 +4058,11 @@ export const {
 	fetchAuthMutation,
 	fetchAuthAction,
 } = convexBetterAuthNextJs({
-	convexUrl: env.NEXT_PUBLIC_CONVEX_URL,
 	convexSiteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
-});
+	convexUrl: env.NEXT_PUBLIC_CONVEX_URL,});
 `],
   ["auth/better-auth/convex/web/react/react-router/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "react-router";
@@ -4257,6 +4197,7 @@ const SignInForm = ({
 export default SignInForm;
 `],
   ["auth/better-auth/convex/web/react/react-router/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "react-router";
@@ -4276,16 +4217,14 @@ const SignUpForm = ({
   const form = useForm({
     defaultValues: {
       email: "",
-      password: "",
       name: "",
-    },
+      password: "",},
     onSubmit: async ({ value }) => {
       await authClient.signUp.email(
         {
           email: value.email,
-          password: value.password,
           name: value.name,
-        },
+          password: value.password,},
         {
           onSuccess: () => {
             navigate("/dashboard");
@@ -4299,10 +4238,9 @@ const SignUpForm = ({
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(2, "Name must be at least 2 characters"),
         email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-      }),
+        name: z.string().min(2, "Name must be at least 2 characters"),
+        password: z.string().min(8, "Password must be at least 8 characters"),}),
     },
   });
 
@@ -4566,6 +4504,7 @@ const Dashboard = () => {
 export default Dashboard;
 `],
   ["auth/better-auth/convex/web/react/tanstack-router/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
@@ -4703,6 +4642,7 @@ const SignInForm = ({
 export default SignInForm;
 `],
   ["auth/better-auth/convex/web/react/tanstack-router/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
@@ -4724,16 +4664,14 @@ const SignUpForm = ({
     const form = useForm({
         defaultValues: {
             email: "",
-            password: "",
             name: "",
-        },
+            password: "",},
         onSubmit: async ({ value }) => {
             await authClient.signUp.email(
                 {
                     email: value.email,
-                    password: value.password,
                     name: value.name,
-                },
+                    password: value.password,},
                 {
                     onSuccess: () => {
                         navigate({
@@ -4749,10 +4687,9 @@ const SignUpForm = ({
         },
         validators: {
             onSubmit: z.object({
-                name: z.string().min(2, "Name must be at least 2 characters"),
                 email: z.email("Invalid email address"),
-                password: z.string().min(8, "Password must be at least 8 characters"),
-            }),
+                name: z.string().min(2, "Name must be at least 2 characters"),
+                password: z.string().min(8, "Password must be at least 8 characters"),}),
         },
     });
 
@@ -5024,6 +4961,7 @@ export const Route = createFileRoute("/_auth")({
 });
 `],
   ["auth/better-auth/convex/web/react/tanstack-start/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
@@ -5161,6 +5099,7 @@ const SignInForm = ({
 export default SignInForm;
 `],
   ["auth/better-auth/convex/web/react/tanstack-start/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
@@ -5182,16 +5121,14 @@ const SignUpForm = ({
     const form = useForm({
         defaultValues: {
             email: "",
-            password: "",
             name: "",
-        },
+            password: "",},
         onSubmit: async ({ value }) => {
             await authClient.signUp.email(
                 {
                     email: value.email,
-                    password: value.password,
                     name: value.name,
-                },
+                    password: value.password,},
                 {
                     onSuccess: () => {
                         navigate({
@@ -5207,10 +5144,9 @@ const SignUpForm = ({
         },
         validators: {
             onSubmit: z.object({
-                name: z.string().min(2, "Name must be at least 2 characters"),
                 email: z.email("Invalid email address"),
-                password: z.string().min(8, "Password must be at least 8 characters"),
-            }),
+                name: z.string().min(2, "Name must be at least 2 characters"),
+                password: z.string().min(8, "Password must be at least 8 characters"),}),
         },
     });
 
@@ -5388,9 +5324,8 @@ export const {
 	fetchAuthMutation,
 	fetchAuthAction,
 } = convexBetterAuthReactStart({
-	convexUrl: env.VITE_CONVEX_URL,
 	convexSiteUrl: env.VITE_CONVEX_SITE_URL,
-});
+	convexUrl: env.VITE_CONVEX_URL,});
 `],
   ["auth/better-auth/convex/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `import UserMenu from "@/components/user-menu";
 {{#if (eq payments "polar")}}
@@ -5485,16 +5420,17 @@ export const Route = createFileRoute("/_auth")({
 });
 `],
   ["auth/better-auth/convex/web/react/tanstack-start/src/routes/api/auth/$.ts.hbs", `/* oxlint-disable github/filenames-match-regex, sonarjs/function-name */
+
 import { createFileRoute } from "@tanstack/react-router";
 import { handler } from "@/lib/auth-server";
 
 export const Route = createFileRoute("/api/auth/$")({
   server: {
-    handlers: {
-      GET: ({ request }) => handler(request),
       POST: ({ request }) => handler(request),
     },
-  },
+  
+    handlers: {
+      GET: ({ request }) => handler(request),},
 });
 `],
   ["auth/better-auth/fullstack/astro/src/env.d.ts.hbs", `/// <reference path="../.astro/types.d.ts" />
@@ -5554,13 +5490,9 @@ import { auth } from "@{{projectName}}/auth";
 import { toNextJsHandler } from "better-auth/next-js";
 
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-export const GET = async (request: Request) => {
-	return toNextJsHandler(createAuth()).GET(request);
-}
+export const GET = async (request: Request) => toNextJsHandler(createAuth()).GET(request)
 
-export const POST = async (request: Request) => {
-	return toNextJsHandler(createAuth()).POST(request);
-}
+export const POST = async (request: Request) => toNextJsHandler(createAuth()).POST(request)
 {{else}}
 export const { GET, POST } = toNextJsHandler(auth);
 {{/if}}
@@ -5618,6 +5550,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 };
 `],
   ["auth/better-auth/fullstack/tanstack-start/src/routes/api/auth/$.ts.hbs", `/* oxlint-disable github/filenames-match-regex, sonarjs/function-name */
+
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 import { createAuth } from '@{{projectName}}/auth'
 {{else}}
@@ -5645,6 +5578,7 @@ export const Route = createFileRoute('/api/auth/$')({
 })
 `],
   ["auth/better-auth/native/bare/app/(drawer)/index.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { View, ScrollView, StyleSheet{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
 {{#if (eq payments "polar")}}
@@ -5699,11 +5633,10 @@ const handlePolarCheckout = async () => {
 	const returnUrl = Linking.createURL("/");
 	const polarReturnUrl = getPolarReturnUrl(returnUrl);
 	const { data, error } = await polarNativeClient.checkout({
-		slug: "pro",
 		redirect: false,
-		successUrl: polarReturnUrl,
 		returnUrl: polarReturnUrl,
-	});
+		slug: "pro",
+		successUrl: polarReturnUrl,});
 
 	if (error || !data?.url) {
 		Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
@@ -5854,61 +5787,56 @@ return (
 export default Home;
 
 const styles = StyleSheet.create({
+cardTitleHost: {
+marginBottom: 12,
+},
+content: {
+paddingBottom: 32,
+paddingHorizontal: 20,
+paddingTop: 28,},
+paymentActions: {
+marginTop: 12,
+},
+privateDataCard: {
+borderRadius: 16,
+borderWidth: 1,
+marginBottom: 16,
+padding: 16,},
 scrollView: {
 flex: 1,
 },
-content: {
-paddingHorizontal: 20,
-paddingTop: 28,
-paddingBottom: 32,
+statusCard: {
+borderRadius: 16,
+borderWidth: 1,
+marginBottom: 16,
+padding: 16,},
+statusContent: {
+flex: 1,
 },
+statusIndicator: {
+height: 8,
+width: 8,
+},
+statusRow: {
+alignItems: "center",
+flexDirection: "row",
+gap: 8,},
 titleHost: {
 alignSelf: "stretch",
 height: 34,
 marginBottom: 24,
 },
 userCard: {
-marginBottom: 16,
-padding: 16,
-borderWidth: 1,
 borderRadius: 16,
-},
+borderWidth: 1,
+marginBottom: 16,
+padding: 16,},
 userHeader: {
 marginBottom: 8,
-},
-paymentActions: {
-marginTop: 12,
-},
-statusCard: {
-marginBottom: 16,
-padding: 16,
-borderWidth: 1,
-borderRadius: 16,
-},
-cardTitleHost: {
-marginBottom: 12,
-},
-statusRow: {
-flexDirection: "row",
-alignItems: "center",
-gap: 8,
-},
-statusIndicator: {
-height: 8,
-width: 8,
-},
-statusContent: {
-flex: 1,
-},
-privateDataCard: {
-marginBottom: 16,
-padding: 16,
-borderWidth: 1,
-borderRadius: 16,
-},
-});
+},});
 `],
   ["auth/better-auth/native/bare/components/sign-in.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
@@ -5943,7 +5871,9 @@ const signInSchema = z.object({
 });
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -6034,10 +5964,9 @@ const SignIn = () => {
                     style={[
                       styles.input,
                       {
-                        color: theme.text,
-                        borderColor: theme.border,
                         backgroundColor: theme.background,
-                      },
+                        borderColor: theme.border,
+                        color: theme.text,},
                     ]}
                     placeholder="Email"
                     placeholderTextColor={theme.text}
@@ -6061,10 +5990,9 @@ const SignIn = () => {
                     style={[
                       styles.input,
                       {
-                        color: theme.text,
-                        borderColor: theme.border,
                         backgroundColor: theme.background,
-                      },
+                        borderColor: theme.border,
+                        color: theme.text,},
                     ]}
                     placeholder="Password"
                     placeholderTextColor={theme.text}
@@ -6108,16 +6036,18 @@ const SignIn = () => {
 }
 
 const styles = StyleSheet.create({
+  button: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,},
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 16,
+  },
   card: {
-    marginTop: 16,
-    padding: 16,
     borderWidth: 1,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
-  },
+    marginTop: 16,
+    padding: 16,},
   errorContainer: {
     marginBottom: 12,
     padding: 8,
@@ -6127,24 +6057,19 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    padding: 12,
     fontSize: 16,
     marginBottom: 12,
-  },
-  button: {
-    padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-  },
-});
+    padding: 12,},
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },});
 
 export { SignIn };
 `],
   ["auth/better-auth/native/bare/components/sign-up.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
@@ -6167,24 +6092,25 @@ import { useColorScheme } from "@/lib/use-color-scheme";
 import z from "zod";
 
 const signUpSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .min(2, "Name must be at least 2 characters"),
   email: z
     .string()
     .trim()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
   password: z
     .string()
     .min(1, "Password is required")
-    .min(8, "Use at least 8 characters"),
-});
+    .min(8, "Use at least 8 characters"),});
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -6217,10 +6143,9 @@ const SignUp = () => {
 
   const form = useForm({
     defaultValues: {
-      name: "",
       email: "",
-      password: "",
-    },
+      name: "",
+      password: "",},
     validators: {
       onSubmit: signUpSchema,
     },
@@ -6277,10 +6202,9 @@ const SignUp = () => {
                     style={[
                       styles.input,
                       {
-                        color: theme.text,
-                        borderColor: theme.border,
                         backgroundColor: theme.background,
-                      },
+                        borderColor: theme.border,
+                        color: theme.text,},
                     ]}
                     placeholder="Name"
                     placeholderTextColor={theme.text}
@@ -6302,10 +6226,9 @@ const SignUp = () => {
                     style={[
                       styles.input,
                       {
-                        color: theme.text,
-                        borderColor: theme.border,
                         backgroundColor: theme.background,
-                      },
+                        borderColor: theme.border,
+                        color: theme.text,},
                     ]}
                     placeholder="Email"
                     placeholderTextColor={theme.text}
@@ -6329,10 +6252,9 @@ const SignUp = () => {
                     style={[
                       styles.input,
                       {
-                        color: theme.text,
-                        borderColor: theme.border,
                         backgroundColor: theme.background,
-                      },
+                        borderColor: theme.border,
+                        color: theme.text,},
                     ]}
                     placeholder="Password"
                     placeholderTextColor={theme.text}
@@ -6376,16 +6298,18 @@ const SignUp = () => {
 }
 
 const styles = StyleSheet.create({
+  button: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,},
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 16,
+  },
   card: {
-    marginTop: 16,
-    padding: 16,
     borderWidth: 1,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
-  },
+    marginTop: 16,
+    padding: 16,},
   errorContainer: {
     marginBottom: 12,
     padding: 8,
@@ -6395,20 +6319,14 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    padding: 12,
     fontSize: 16,
     marginBottom: 12,
-  },
-  button: {
-    padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-  },
-});
+    padding: 12,},
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },});
 
 export { SignUp };
 `],
@@ -6424,17 +6342,16 @@ export const authClient = createAuthClient({
 	plugins: [
 		expoClient({
 			scheme: Constants.expoConfig?.scheme as string,
-			storagePrefix: Constants.expoConfig?.scheme as string,
 			storage: SecureStore,
-		}),
+			storagePrefix: Constants.expoConfig?.scheme as string,}),
 	],
 });
 {{#if (eq payments "polar")}}
 
-type PolarLinkResponse = {
+interface PolarLinkResponse {
 	url: string;
 	redirect: boolean;
-};
+}
 
 type PolarClientResponse<T> = Promise<{
 	data: T | null;
@@ -6458,6 +6375,7 @@ export const polarNativeClient = authClient as PolarNativeClient;
 {{/if}}
 `],
   ["auth/better-auth/native/unistyles/app/(drawer)/index.tsx.hbs", `/* oxlint-disable no-use-before-define, complexity */
+
 import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
 import { ScrollView, Text, TouchableOpacity, View{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
 {{#if (eq payments "polar")}}
@@ -6496,11 +6414,10 @@ const handlePolarCheckout = async () => {
   const returnUrl = createURL("/");
   const polarReturnUrl = getPolarReturnUrl(returnUrl);
   const { data, error } = await polarNativeClient.checkout({
-    slug: "pro",
     redirect: false,
-    successUrl: polarReturnUrl,
     returnUrl: polarReturnUrl,
-  });
+    slug: "pro",
+    successUrl: polarReturnUrl,});
 
   if (error || !data?.url) {
     Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
@@ -6633,8 +6550,24 @@ const Home = () => {
 export default Home;
 
 const styles = StyleSheet.create((theme) => ({
-  pageContainer: {
-    paddingHorizontal: 8,
+  apiStatusCard: {
+    borderColor: theme?.colors?.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 24,
+    padding: 16,},
+  apiStatusRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,},
+  cardTitle: {
+    color: theme?.colors?.typography,
+    fontWeight: "500",
+    marginBottom: 12,},
+  emailText: {
+    color: theme?.colors?.typography,
+    fontSize: 14,
+    marginBottom: 16,
   },
   headerTitle: {
     color: theme?.colors?.typography,
@@ -6642,109 +6575,81 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "bold",
     marginBottom: 16,
   },
-  sessionInfoCard: {
-    marginBottom: 24,
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme?.colors?.border,
-  },
-  sessionUserRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  welcomeText: {
-    color: theme?.colors?.typography,
-    fontSize: 16,
-  },
-  userNameText: {
-    fontWeight: "500",
+  mutedText: {
     color: theme?.colors?.typography,
   },
-  emailText: {
-    color: theme?.colors?.typography,
-    fontSize: 14,
-    marginBottom: 16,
-  },
-  signOutButton: {
-    backgroundColor: theme?.colors?.destructive,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    alignSelf: "flex-start",
-  },
-  signOutButtonText: {
-    fontWeight: "500",
+  pageContainer: {
+    paddingHorizontal: 8,
   },
   paymentActions: {
-    marginTop: 12,
-    gap: 8,
     alignItems: "flex-start",
-  },
+    gap: 8,
+    marginTop: 12,},
   polarPrimaryButton: {
     backgroundColor: theme?.colors?.primary,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
     borderRadius: 6,
-  },
+    paddingHorizontal: 16,
+    paddingVertical: 8,},
   polarPrimaryButtonText: {
     color: theme?.colors?.primaryForeground,
     fontWeight: "500",
   },
   polarSecondaryButton: {
-    borderWidth: 1,
     borderColor: theme?.colors?.border,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
     borderRadius: 6,
-  },
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 8,},
   polarSecondaryButtonText: {
     color: theme?.colors?.typography,
     fontWeight: "500",
   },
-  apiStatusCard: {
-    marginBottom: 24,
+  privateDataCard: {
+    borderColor: theme?.colors?.border,
     borderRadius: 8,
     borderWidth: 1,
+    marginBottom: 24,
+    padding: 16,},
+  sessionInfoCard: {
     borderColor: theme?.colors?.border,
-    padding: 16,
-  },
-  cardTitle: {
-    marginBottom: 12,
-    fontWeight: "500",
-    color: theme?.colors?.typography,
-  },
-  apiStatusRow: {
-    flexDirection: "row",
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 24,
+    padding: 16,},
+  sessionUserRow: {
     alignItems: "center",
-    gap: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,},
+  signOutButton: {
+    alignSelf: "flex-start",
+    backgroundColor: theme?.colors?.destructive,
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,},
+  signOutButtonText: {
+    fontWeight: "500",
   },
   statusIndicatorDot: {
-    height: 12,
-    width: 12,
     borderRadius: 9999,
-  },
+    height: 12,
+    width: 12,},
   statusIndicatorGreen: {
     backgroundColor: theme.colors.success,
   },
   statusIndicatorRed: {
     backgroundColor: theme.colors.destructive,
   },
-  mutedText: {
+  userNameText: {
     color: theme?.colors?.typography,
-  },
-  privateDataCard: {
-    marginBottom: 24,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme?.colors?.border,
-    padding: 16,
-  },
-}));
+    fontWeight: "500",},
+  welcomeText: {
+    color: theme?.colors?.typography,
+    fontSize: 16,
+  },}));
 `],
   ["auth/better-auth/native/unistyles/components/sign-in.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
@@ -6777,7 +6682,9 @@ const signInSchema = z.object({
 });
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -6918,50 +6825,45 @@ export const SignIn = () => {
 }
 
 const styles = StyleSheet.create((theme) => ({
+  button: {
+    alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 6,
+    flexDirection: "row",
+    justifyContent: "center",
+    padding: 16,},
+  buttonText: {
+    fontWeight: "500",
+  },
   container: {
-    marginTop: 24,
-    padding: 16,
+    borderColor: theme.colors.border,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: theme.colors.typography,
-    marginBottom: 16,
-  },
+    marginTop: 24,
+    padding: 16,},
   errorContainer: {
-    marginBottom: 16,
-    padding: 12,
     borderRadius: 6,
-  },
+    marginBottom: 16,
+    padding: 12,},
   errorText: {
     color: theme.colors.destructive,
     fontSize: 14,
   },
   input: {
-    marginBottom: 12,
-    padding: 16,
-    borderRadius: 6,
-    color: theme.colors.typography,
-    borderWidth: 1,
     borderColor: theme.colors.border,
-  },
-  button: {
-    backgroundColor: theme.colors.primary,
-    padding: 16,
     borderRadius: 6,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: {
-    fontWeight: "500",
-  },
-}));
+    borderWidth: 1,
+    color: theme.colors.typography,
+    marginBottom: 12,
+    padding: 16,},
+  title: {
+    color: theme.colors.typography,
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 16,},}));
 `],
   ["auth/better-auth/native/unistyles/components/sign-up.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
@@ -6982,24 +6884,25 @@ import { StyleSheet } from "react-native-unistyles";
 import z from "zod";
 
 const signUpSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .min(2, "Name must be at least 2 characters"),
   email: z
     .string()
     .trim()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
   password: z
     .string()
     .min(1, "Password is required")
-    .min(8, "Use at least 8 characters"),
-});
+    .min(8, "Use at least 8 characters"),});
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -7030,10 +6933,9 @@ export const SignUp = () => {
 
   const form = useForm({
     defaultValues: {
-      name: "",
       email: "",
-      password: "",
-    },
+      name: "",
+      password: "",},
     validators: {
       onSubmit: signUpSchema,
     },
@@ -7159,56 +7061,49 @@ export const SignUp = () => {
 }
 
 const styles = StyleSheet.create((theme) => ({
+  button: {
+    alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 6,
+    flexDirection: "row",
+    justifyContent: "center",
+    padding: 16,},
+  buttonText: {
+    fontWeight: "500",
+  },
   container: {
-    marginTop: 24,
-    padding: 16,
+    borderColor: theme.colors.border,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: theme.colors.typography,
-    marginBottom: 16,
-  },
+    marginTop: 24,
+    padding: 16,},
   errorContainer: {
-    marginBottom: 16,
-    padding: 12,
     borderRadius: 6,
-  },
+    marginBottom: 16,
+    padding: 12,},
   errorText: {
     color: theme.colors.destructive,
     fontSize: 14,
   },
   input: {
+    borderColor: theme.colors.border,
+    borderRadius: 6,
+    borderWidth: 1,
+    color: theme.colors.typography,
     marginBottom: 12,
-    padding: 16,
-    borderRadius: 6,
-    color: theme.colors.typography,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
+    padding: 16,},
   inputLast: {
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 6,
-    color: theme.colors.typography,
-    borderWidth: 1,
     borderColor: theme.colors.border,
-  },
-  button: {
-    backgroundColor: theme.colors.primary,
-    padding: 16,
     borderRadius: 6,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: {
-    fontWeight: "500",
-  },
-}));
+    borderWidth: 1,
+    color: theme.colors.typography,
+    marginBottom: 16,
+    padding: 16,},
+  title: {
+    color: theme.colors.typography,
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 16,},}));
 `],
   ["auth/better-auth/native/uniwind/app/(drawer)/index.tsx.hbs", `import { Text, View, Pressable{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
 {{#if (eq payments "polar")}}
@@ -7261,11 +7156,10 @@ const handlePolarCheckout = async () => {
   const returnUrl = Linking.createURL("/");
   const polarReturnUrl = getPolarReturnUrl(returnUrl);
   const { data, error } = await polarNativeClient.checkout({
-    slug: "pro",
     redirect: false,
-    successUrl: polarReturnUrl,
     returnUrl: polarReturnUrl,
-  });
+    slug: "pro",
+    successUrl: polarReturnUrl,});
 
   if (error || !data?.url) {
     Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
@@ -7425,7 +7319,9 @@ const signInSchema = z.object({
 });
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -7472,16 +7368,14 @@ const SignIn = () => {
         {
           onError(error) {
             toast.show({
-              variant: "danger",
               label: error.error?.message || "Failed to sign in",
-            });
+              variant: "danger",});
           },
           onSuccess() {
             formApi.reset();
             toast.show({
-              variant: "success",
               label: "Signed in successfully",
-            });
+              variant: "success",});
             {{#if (eq api "orpc")}}
             queryClient.refetchQueries();
             {{/if}}
@@ -7585,24 +7479,25 @@ import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast
 import z from "zod";
 
 const signUpSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .min(2, "Name must be at least 2 characters"),
   email: z
     .string()
     .trim()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
   password: z
     .string()
     .min(1, "Password is required")
-    .min(8, "Use at least 8 characters"),
-});
+    .min(8, "Use at least 8 characters"),});
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -7635,10 +7530,9 @@ export const SignUp = () => {
 
   const form = useForm({
     defaultValues: {
-      name: "",
       email: "",
-      password: "",
-    },
+      name: "",
+      password: "",},
     validators: {
       onSubmit: signUpSchema,
     },
@@ -7652,16 +7546,14 @@ export const SignUp = () => {
         {
           onError(error) {
             toast.show({
-              variant: "danger",
               label: error.error?.message || "Failed to sign up",
-            });
+              variant: "danger",});
           },
           onSuccess() {
             formApi.reset();
             toast.show({
-              variant: "success",
               label: "Account created successfully",
-            });
+              variant: "success",});
             {{#if (eq api "orpc")}}
             queryClient.refetchQueries();
             {{/if}}
@@ -7825,6 +7717,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   "devDependencies": {}
 }`],
   ["auth/better-auth/server/base/src/index.ts.hbs", `/* oxlint-disable sonarjs/no-wildcard-import */
+
 {{#if (eq orm "prisma")}}
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
@@ -7870,10 +7763,9 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 {{#if (ne backend "self")}}
 		advanced: {
 			defaultCookieAttributes: {
-				sameSite: "none",
-				secure: true,
 				httpOnly: true,
-			},
+				sameSite: "none",
+				secure: true,},
 		},
 {{/if}}
 		plugins: [
@@ -7953,10 +7845,9 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 {{#if (ne backend "self")}}
 		advanced: {
 			defaultCookieAttributes: {
-				sameSite: "none",
-				secure: true,
 				httpOnly: true,
-			},
+				sameSite: "none",
+				secure: true,},
 		},
 {{/if}}
 		plugins: [
@@ -8033,10 +7924,9 @@ export const createAuth = () => {
 		baseURL: env.BETTER_AUTH_URL,
 		advanced: {
 			defaultCookieAttributes: {
-				sameSite: "none",
-				secure: true,
 				httpOnly: true,
-			},
+				sameSite: "none",
+				secure: true,},
 			// uncomment crossSubDomainCookies setting when ready to deploy and replace <your-workers-subdomain> with your actual workers subdomain
 			// https://developers.cloudflare.com/workers/wrangler/configuration/#workersdev
 			// crossSubDomainCookies: {
@@ -8108,10 +7998,9 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 {{#if (ne backend "self")}}
 		advanced: {
 			defaultCookieAttributes: {
-				sameSite: "none",
-				secure: true,
 				httpOnly: true,
-			},
+				sameSite: "none",
+				secure: true,},
 		},
 {{/if}}
 {{#if (eq payments "polar")}}
@@ -8180,10 +8069,9 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 {{#if (ne backend "self")}}
 		advanced: {
 			defaultCookieAttributes: {
-				sameSite: "none",
-				secure: true,
 				httpOnly: true,
-			},
+				sameSite: "none",
+				secure: true,},
 		},
 {{/if}}
 {{#if (eq payments "polar")}}
@@ -8237,12 +8125,12 @@ import {
 } from "drizzle-orm/mysql-core";
 
 export const user = mysqlTable("user", {
-  id: varchar("id", { length: 36 }).primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
+  id: varchar("id", { length: 36 }).primaryKey(),
   image: text("image"),
-  createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
   updatedAt: timestamp("updated_at", { fsp: 3 })
     .defaultNow()
     .$onUpdate(() => new Date())
@@ -8295,23 +8183,22 @@ export const account = mysqlTable(
 export const verification = mysqlTable(
   "verification",
   {
+    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+    expiresAt: timestamp("expires_at", { fsp: 3 }).notNull(),
     id: varchar("id", { length: 36 }).primaryKey(),
     identifier: varchar("identifier", { length: 255 }).notNull(),
-    value: text("value").notNull(),
-    expiresAt: timestamp("expires_at", { fsp: 3 }).notNull(),
-    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
-  },
+  
+    value: text("value").notNull(),},
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
 export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
   accounts: many(account),
-}));
+  sessions: many(session),}));
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {
@@ -8331,12 +8218,12 @@ export const accountRelations = relations(account, ({ one }) => ({
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
+  id: text("id").primaryKey(),
   image: text("image"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  name: text("name").notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => new Date())
@@ -8346,10 +8233,10 @@ export const user = pgTable("user", {
 export const session = pgTable(
   "session",
   {
-    id: text("id").primaryKey(),
-    expiresAt: timestamp("expires_at").notNull(),
-    token: text("token").notNull().unique(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    id: text("id").primaryKey(),
+    token: text("token").notNull().unique(),
     updatedAt: timestamp("updated_at")
       .$onUpdate(() => new Date())
       .notNull(),
@@ -8389,23 +8276,22 @@ export const account = pgTable(
 export const verification = pgTable(
   "verification",
   {
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
     id: text("id").primaryKey(),
     identifier: text("identifier").notNull(),
-    value: text("value").notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
-  },
+  
+    value: text("value").notNull(),},
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
 export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
   accounts: many(account),
-}));
+  sessions: many(session),}));
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {
@@ -8425,16 +8311,16 @@ export const accountRelations = relations(account, ({ one }) => ({
 import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
 
 export const user = sqliteTable("user", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .default(sql\`(cast(unixepoch('subsecond') * 1000 as integer))\`)
+    .notNull(),
   email: text("email").notNull().unique(),
   emailVerified: integer("email_verified", { mode: "boolean" })
     .default(false)
     .notNull(),
+  id: text("id").primaryKey(),
   image: text("image"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
-    .default(sql\`(cast(unixepoch('subsecond') * 1000 as integer))\`)
-    .notNull(),
+  name: text("name").notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" })
     .default(sql\`(cast(unixepoch('subsecond') * 1000 as integer))\`)
     .$onUpdate(() => new Date())
@@ -8444,12 +8330,12 @@ export const user = sqliteTable("user", {
 export const session = sqliteTable(
   "session",
   {
-    id: text("id").primaryKey(),
-    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
-    token: text("token").notNull().unique(),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .default(sql\`(cast(unixepoch('subsecond') * 1000 as integer))\`)
       .notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    id: text("id").primaryKey(),
+    token: text("token").notNull().unique(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" })
       .$onUpdate(() => new Date())
       .notNull(),
@@ -8495,25 +8381,24 @@ export const account = sqliteTable(
 export const verification = sqliteTable(
   "verification",
   {
-    id: text("id").primaryKey(),
-    identifier: text("identifier").notNull(),
-    value: text("value").notNull(),
-    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .default(sql\`(cast(unixepoch('subsecond') * 1000 as integer))\`)
       .notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" })
       .default(sql\`(cast(unixepoch('subsecond') * 1000 as integer))\`)
       .$onUpdate(() => new Date())
       .notNull(),
-  },
+  
+    value: text("value").notNull(),},
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
 export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
   accounts: many(account),
-}));
+  sessions: many(session),}));
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {
@@ -8536,61 +8421,57 @@ const { ObjectId } = Schema.Types;
 
 const userSchema = new Schema(
     {
-        _id: { type: ObjectId, auto: true },
-        name: { type: String, required: true },
-        email: { type: String, required: true, unique: true },
-        emailVerified: { type: Boolean, required: true, default: false },
+        _id: { auto: true , type: ObjectId},
+        createdAt: { default: Date.now , required: true, type: Date},
+        email: { required: true, type: String, unique: true },
+        emailVerified: { default: false , required: true, type: Boolean},
         image: { type: String },
-        createdAt: { type: Date, required: true, default: Date.now },
-        updatedAt: { type: Date, required: true, default: Date.now },
-    },
+        name: { required: true , type: String},
+        updatedAt: { default: Date.now , required: true, type: Date},},
     { collection: 'user' }
 );
 
 const sessionSchema = new Schema(
     {
-        _id: { type: ObjectId, auto: true },
-        expiresAt: { type: Date, required: true },
-        token: { type: String, required: true, unique: true },
-        createdAt: { type: Date, required: true, default: Date.now },
-        updatedAt: { type: Date, required: true, default: Date.now },
+        _id: { auto: true , type: ObjectId},
+        createdAt: { default: Date.now , required: true, type: Date},
+        expiresAt: { required: true , type: Date},
         ipAddress: { type: String },
+        token: { required: true, type: String, unique: true },
+        updatedAt: { default: Date.now , required: true, type: Date},
         userAgent: { type: String },
-        userId: { type: ObjectId, ref: 'User', required: true },
-    },
+        userId: { ref: 'User', required: true , type: ObjectId},},
     { collection: 'session' }
 );
 sessionSchema.index({ userId: 1 });
 
 const accountSchema = new Schema(
     {
-        _id: { type: ObjectId, auto: true },
-        accountId: { type: String, required: true },
-        providerId: { type: String, required: true },
-        userId: { type: ObjectId, ref: 'User', required: true },
+        _id: { auto: true , type: ObjectId},
         accessToken: { type: String },
-        refreshToken: { type: String },
-        idToken: { type: String },
         accessTokenExpiresAt: { type: Date },
+        accountId: { required: true , type: String},
+        createdAt: { default: Date.now , required: true, type: Date},
+        idToken: { type: String },
+        password: { type: String },
+        providerId: { required: true , type: String},
+        refreshToken: { type: String },
         refreshTokenExpiresAt: { type: Date },
         scope: { type: String },
-        password: { type: String },
-        createdAt: { type: Date, required: true, default: Date.now },
-        updatedAt: { type: Date, required: true, default: Date.now },
-    },
+        updatedAt: { default: Date.now , required: true, type: Date},
+        userId: { ref: 'User', required: true , type: ObjectId},},
     { collection: 'account' }
 );
 accountSchema.index({ userId: 1 });
 
 const verificationSchema = new Schema(
     {
-        _id: { type: ObjectId, auto: true },
-        identifier: { type: String, required: true },
-        value: { type: String, required: true },
-        expiresAt: { type: Date, required: true },
-        createdAt: { type: Date, required: true, default: Date.now },
-        updatedAt: { type: Date, required: true, default: Date.now },
-    },
+        _id: { auto: true , type: ObjectId},
+        createdAt: { default: Date.now , required: true, type: Date},
+        expiresAt: { required: true , type: Date},
+        identifier: { required: true , type: String},
+        updatedAt: { default: Date.now , required: true, type: Date},
+        value: { required: true , type: String},},
     { collection: 'verification' }
 );
 verificationSchema.index({ identifier: 1 });
@@ -8908,10 +8789,10 @@ import { authClient } from "../lib/auth-client";
 <script>
   import { authClient } from "../lib/auth-client";
 
-  const form = document.getElementById("signin-form") as HTMLFormElement;
-  const emailInput = document.getElementById("email") as HTMLInputElement;
-  const passwordInput = document.getElementById("password") as HTMLInputElement;
-  const formError = document.getElementById("form-error") as HTMLParagraphElement;
+  const form = document.querySelector("#signin-form") as HTMLFormElement;
+  const emailInput = document.querySelector("#email") as HTMLInputElement;
+  const passwordInput = document.querySelector("#password") as HTMLInputElement;
+  const formError = document.querySelector("#form-error") as HTMLParagraphElement;
   const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
 
   form.addEventListener("submit", async (e) => {
@@ -9013,11 +8894,11 @@ import { authClient } from "../lib/auth-client";
 <script>
   import { authClient } from "../lib/auth-client";
 
-  const form = document.getElementById("signup-form") as HTMLFormElement;
-  const nameInput = document.getElementById("name") as HTMLInputElement;
-  const emailInput = document.getElementById("email") as HTMLInputElement;
-  const passwordInput = document.getElementById("password") as HTMLInputElement;
-  const formError = document.getElementById("form-error") as HTMLParagraphElement;
+  const form = document.querySelector("#signup-form") as HTMLFormElement;
+  const nameInput = document.querySelector("#name") as HTMLInputElement;
+  const emailInput = document.querySelector("#email") as HTMLInputElement;
+  const passwordInput = document.querySelector("#password") as HTMLInputElement;
+  const formError = document.querySelector("#form-error") as HTMLParagraphElement;
   const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
 
   form.addEventListener("submit", async (e) => {
@@ -9133,13 +9014,13 @@ import Layout from "../layouts/layout.astro";
   import { orpc } from "../lib/orpc";
   {{/if}}
 
-  const dashboardContent = document.getElementById("dashboard-content")!;
-  const loading = document.getElementById("loading")!;
-  const redirect = document.getElementById("redirect")!;
-  const userName = document.getElementById("user-name")!;
-  const userEmail = document.getElementById("user-email")!;
+  const dashboardContent = document.querySelector("#dashboard-content")!;
+  const loading = document.querySelector("#loading")!;
+  const redirect = document.querySelector("#redirect")!;
+  const userName = document.querySelector("#user-name")!;
+  const userEmail = document.querySelector("#user-email")!;
   {{#if (eq api "orpc")}}
-  const apiMessage = document.getElementById("api-message")!;
+  const apiMessage = document.querySelector("#api-message")!;
   {{/if}}
 
   const init = async () => {
@@ -9168,7 +9049,7 @@ import Layout from "../layouts/layout.astro";
       {{#if (eq payments "polar")}}
       try {
         const { data: customerState } = await authClient.customer.state();
-        const subscriptionInfo = document.getElementById("subscription-info")!;
+        const subscriptionInfo = document.querySelector("#subscription-info")!;
         if (customerState?.activeSubscriptions?.length > 0) {
           subscriptionInfo.innerHTML = \`
             <p class="text-white">Plan: <span class="text-green-400">Pro</span></p>
@@ -9179,7 +9060,7 @@ import Layout from "../layouts/layout.astro";
               Manage Subscription
             </button>
           \`;
-          document.getElementById("manage-subscription")?.addEventListener("click", async () => {
+          document.querySelector("#manage-subscription")?.addEventListener("click", async () => {
             await authClient.customer.portal();
           });
         } else {
@@ -9192,7 +9073,7 @@ import Layout from "../layouts/layout.astro";
               Upgrade to Pro
             </button>
           \`;
-          document.getElementById("upgrade-button")?.addEventListener("click", async () => {
+          document.querySelector("#upgrade-button")?.addEventListener("click", async () => {
             await authClient.checkout({ slug: "pro" });
           });
         }
@@ -9782,6 +9663,7 @@ const LoginPage = () => {
 export default LoginPage;
 `],
   ["auth/better-auth/web/react/next/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
@@ -9921,6 +9803,7 @@ const SignInForm = ({
 export default SignInForm;
 `],
   ["auth/better-auth/web/react/next/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
@@ -9942,16 +9825,14 @@ const SignUpForm = ({
   const form = useForm({
     defaultValues: {
       email: "",
-      password: "",
       name: "",
-    },
+      password: "",},
     onSubmit: async ({ value }) => {
       await authClient.signUp.email(
         {
           email: value.email,
-          password: value.password,
           name: value.name,
-        },
+          password: value.password,},
         {
           onSuccess: () => {
             router.push("/dashboard");
@@ -9965,10 +9846,9 @@ const SignUpForm = ({
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(2, "Name must be at least 2 characters"),
         email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-      }),
+        name: z.string().min(2, "Name must be at least 2 characters"),
+        password: z.string().min(8, "Password must be at least 8 characters"),}),
     },
   });
 
@@ -10150,6 +10030,7 @@ const UserMenu = () => {
 export default UserMenu;
 `],
   ["auth/better-auth/web/react/react-router/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "react-router";
@@ -10289,6 +10170,7 @@ const SignInForm = ({
 export default SignInForm;
 `],
   ["auth/better-auth/web/react/react-router/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "react-router";
@@ -10310,16 +10192,14 @@ const SignUpForm = ({
   const form = useForm({
     defaultValues: {
       email: "",
-      password: "",
       name: "",
-    },
+      password: "",},
     onSubmit: async ({ value }) => {
       await authClient.signUp.email(
         {
           email: value.email,
-          password: value.password,
           name: value.name,
-        },
+          password: value.password,},
         {
           onSuccess: () => {
             navigate("/dashboard");
@@ -10333,10 +10213,9 @@ const SignUpForm = ({
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(2, "Name must be at least 2 characters"),
         email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-      }),
+        name: z.string().min(2, "Name must be at least 2 characters"),
+        password: z.string().min(8, "Password must be at least 8 characters"),}),
     },
   });
 
@@ -10614,6 +10493,7 @@ const Login = () => {
 export default Login;
 `],
   ["auth/better-auth/web/react/tanstack-router/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
@@ -10753,6 +10633,7 @@ const SignInForm = ({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) => {
 export default SignInForm;
 `],
   ["auth/better-auth/web/react/tanstack-router/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
@@ -10772,16 +10653,14 @@ const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
   const form = useForm({
     defaultValues: {
       email: "",
-      password: "",
       name: "",
-    },
+      password: "",},
     onSubmit: async ({ value }) => {
       await authClient.signUp.email(
         {
           email: value.email,
-          password: value.password,
           name: value.name,
-        },
+          password: value.password,},
         {
           onSuccess: () => {
             navigate({
@@ -10797,10 +10676,9 @@ const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(2, "Name must be at least 2 characters"),
         email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-      }),
+        name: z.string().min(2, "Name must be at least 2 characters"),
+        password: z.string().min(8, "Password must be at least 8 characters"),}),
     },
   });
 
@@ -10983,6 +10861,7 @@ const UserMenu = () => {
 export default UserMenu;
 `],
   ["auth/better-auth/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 {{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
@@ -11044,9 +10923,7 @@ export const Route = createFileRoute("/_auth/dashboard")({
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
 
-const AuthLayout = () => {
-	return <Outlet />;
-}
+const AuthLayout = () => <Outlet />
 
 export const Route = createFileRoute("/_auth")({
 	component: AuthLayout,
@@ -11086,6 +10963,7 @@ export const Route = createFileRoute("/login")({
 });
 `],
   ["auth/better-auth/web/react/tanstack-start/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
@@ -11225,6 +11103,7 @@ const SignInForm = ({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) => {
 export default SignInForm;
 `],
   ["auth/better-auth/web/react/tanstack-start/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
@@ -11244,16 +11123,14 @@ const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
   const form = useForm({
     defaultValues: {
       email: "",
-      password: "",
       name: "",
-    },
+      password: "",},
     onSubmit: async ({ value }) => {
       await authClient.signUp.email(
         {
           email: value.email,
-          password: value.password,
           name: value.name,
-        },
+          password: value.password,},
         {
           onSuccess: () => {
             navigate({
@@ -11269,10 +11146,9 @@ const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(2, "Name must be at least 2 characters"),
         email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-      }),
+        name: z.string().min(2, "Name must be at least 2 characters"),
+        password: z.string().min(8, "Password must be at least 8 characters"),}),
     },
   });
 
@@ -11495,6 +11371,7 @@ export const authMiddleware = createMiddleware().server(
 {{/if}}
 `],
   ["auth/better-auth/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 {{#if (eq payments "polar") }}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
@@ -11577,9 +11454,7 @@ import { getPayment } from "@/functions/get-payment";
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
 
-const AuthLayout = () => {
-  return <Outlet />;
-}
+const AuthLayout = () => <Outlet />
 
 export const Route = createFileRoute("/_auth")({
   {{#unless (eq backend "self")}}
@@ -11646,6 +11521,7 @@ export const Route = createFileRoute("/login")({
 });
 `],
   ["auth/better-auth/web/solid/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { createForm } from "@tanstack/solid-form";
 import { useNavigate } from "@tanstack/solid-router";
@@ -11774,6 +11650,7 @@ const SignInForm = ({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) => {
 export default SignInForm;
 `],
   ["auth/better-auth/web/solid/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+
 import { authClient } from "@/lib/auth-client";
 import { createForm } from "@tanstack/solid-form";
 import { useNavigate } from "@tanstack/solid-router";
@@ -11788,16 +11665,14 @@ const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
   const form = createForm(() => ({
     defaultValues: {
       email: "",
-      password: "",
       name: "",
-    },
+      password: "",},
     onSubmit: async ({ value }) => {
       await authClient.signUp.email(
         {
           email: value.email,
-          password: value.password,
           name: value.name,
-        },
+          password: value.password,},
         {
           onSuccess: () => {
             navigate({
@@ -11813,10 +11688,9 @@ const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(2, "Name must be at least 2 characters"),
         email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-      }),
+        name: z.string().min(2, "Name must be at least 2 characters"),
+        password: z.string().min(8, "Password must be at least 8 characters"),}),
     },
   }));
 
@@ -12001,6 +11875,7 @@ export const authClient = createAuthClient({
 });
 `],
   ["auth/better-auth/web/solid/src/routes/dashboard.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
@@ -12057,9 +11932,8 @@ export const Route = createFileRoute("/dashboard")({
 		const session = await authClient.getSession();
 		if (!session.data) {
 			redirect({
-				to: "/login",
 				throw: true,
-			});
+				to: "/login",});
 		}
 		{{#if (eq payments "polar")}}
 		const { data: customerState } = await authClient.customer.state();
@@ -12534,6 +12408,7 @@ export const get = query({
 });
 `],
   ["auth/clerk/convex/native/base/app/(auth)/_layout.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+
 import { Redirect, Stack } from "expo-router";
 import { useAuth } from "@clerk/expo";
 
@@ -12554,8 +12429,10 @@ const AuthRoutesLayout = () => {
 export default AuthRoutesLayout;
 `],
   ["auth/clerk/convex/native/base/app/(auth)/sign-in.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { useSignIn } from "@clerk/expo";
-import { type Href, Link, useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
+import type { Href } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -12725,67 +12602,27 @@ const Page = () => {
 export default Page;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    gap: 12,
-  },
-  title: {
-    marginBottom: 8,
-    fontSize: 24,
-    fontWeight: "700",
-  },
-  label: {
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: "#fff",
-  },
   button: {
-    backgroundColor: "#0a7ea4",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
     alignItems: "center",
+    backgroundColor: "#0a7ea4",
+    borderRadius: 8,
     marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,},
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonPressed: {
     opacity: 0.7,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
   },
   buttonText: {
     color: "#fff",
     fontWeight: "600",
   },
-  secondaryButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  secondaryButtonText: {
-    color: "#0a7ea4",
-    fontWeight: "600",
-  },
-  linkContainer: {
-    flexDirection: "row",
-    gap: 4,
-    marginTop: 12,
-    alignItems: "center",
-  },
-  linkText: {
-    color: "#0a7ea4",
-    fontWeight: "600",
-  },
+  container: {
+    flex: 1,
+    gap: 12,
+    padding: 20,},
   error: {
     color: "#d32f2f",
     fontSize: 12,
@@ -12795,11 +12632,45 @@ const styles = StyleSheet.create({
     color: "#555555",
     fontSize: 13,
   },
-});
+  input: {
+    backgroundColor: "#fff",
+    borderColor: "#ccc",
+    borderRadius: 8,
+    borderWidth: 1,
+    fontSize: 16,
+    padding: 12,},
+  label: {
+    fontSize: 14,
+    fontWeight: "600",},
+  linkContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 12,},
+  linkText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,},
+  secondaryButtonText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 8,},});
 `],
   ["auth/clerk/convex/native/base/app/(auth)/sign-up.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { useAuth, useSignUp } from "@clerk/expo";
-import { type Href, Link, useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
+import type { Href } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -12955,67 +12826,27 @@ const Page = () => {
 export default Page;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    gap: 12,
-  },
-  title: {
-    marginBottom: 8,
-    fontSize: 24,
-    fontWeight: "700",
-  },
-  label: {
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: "#fff",
-  },
   button: {
-    backgroundColor: "#0a7ea4",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
     alignItems: "center",
+    backgroundColor: "#0a7ea4",
+    borderRadius: 8,
     marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,},
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonPressed: {
     opacity: 0.7,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
   },
   buttonText: {
     color: "#fff",
     fontWeight: "600",
   },
-  secondaryButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  secondaryButtonText: {
-    color: "#0a7ea4",
-    fontWeight: "600",
-  },
-  linkContainer: {
-    flexDirection: "row",
-    gap: 4,
-    marginTop: 12,
-    alignItems: "center",
-  },
-  linkText: {
-    color: "#0a7ea4",
-    fontWeight: "600",
-  },
+  container: {
+    flex: 1,
+    gap: 12,
+    padding: 20,},
   error: {
     color: "#d32f2f",
     fontSize: 12,
@@ -13025,7 +12856,39 @@ const styles = StyleSheet.create({
     color: "#555555",
     fontSize: 13,
   },
-});
+  input: {
+    backgroundColor: "#fff",
+    borderColor: "#ccc",
+    borderRadius: 8,
+    borderWidth: 1,
+    fontSize: 16,
+    padding: 12,},
+  label: {
+    fontSize: 14,
+    fontWeight: "600",},
+  linkContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 12,},
+  linkText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,},
+  secondaryButtonText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 8,},});
 `],
   ["auth/clerk/convex/native/base/components/sign-out-button.tsx.hbs", `import { useClerk } from "@clerk/expo";
 import { useRouter } from "expo-router";
@@ -13041,7 +12904,7 @@ export const SignOutButton = () => {
       await signOut();
       // Redirect to your desired page
       router.replace("/");
-    } catch (err) {
+    } catch (error) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
       console.error(JSON.stringify(err, null, 2));
@@ -13164,8 +13027,7 @@ import { Outlet, createFileRoute } from "@tanstack/react-router";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 
 
-const AuthLayout = () => {
-	return (
+const AuthLayout = () => (
 		<>
 			<Authenticated>
 				<Outlet />
@@ -13177,8 +13039,7 @@ const AuthLayout = () => {
 				<div>Loading...</div>
 			</AuthLoading>
 		</>
-	);
-}
+	)
 
 export const Route = createFileRoute("/_auth")({
 	component: AuthLayout,
@@ -13213,8 +13074,7 @@ import { Outlet, createFileRoute } from "@tanstack/react-router";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 
 
-const AuthLayout = () => {
-	return (
+const AuthLayout = () => (
 		<>
 			<Authenticated>
 				<Outlet />
@@ -13226,8 +13086,7 @@ const AuthLayout = () => {
 				<div>Loading...</div>
 			</AuthLoading>
 		</>
-	);
-}
+	)
 
 export const Route = createFileRoute("/_auth")({
 	component: AuthLayout,
@@ -13242,6 +13101,7 @@ export const startInstance = createStart(() => {
 	}
 })`],
   ["auth/clerk/native/base/app/(auth)/_layout.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+
 import { Redirect, Stack } from "expo-router";
 import { useAuth } from "@clerk/expo";
 
@@ -13262,8 +13122,10 @@ const AuthRoutesLayout = () => {
 export default AuthRoutesLayout;
 `],
   ["auth/clerk/native/base/app/(auth)/sign-in.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { useSignIn } from "@clerk/expo";
-import { type Href, Link, useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
+import type { Href } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -13433,67 +13295,27 @@ const Page = () => {
 export default Page;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    gap: 12,
-  },
-  title: {
-    marginBottom: 8,
-    fontSize: 24,
-    fontWeight: "700",
-  },
-  label: {
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: "#fff",
-  },
   button: {
-    backgroundColor: "#0a7ea4",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
     alignItems: "center",
+    backgroundColor: "#0a7ea4",
+    borderRadius: 8,
     marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,},
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonPressed: {
     opacity: 0.7,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
   },
   buttonText: {
     color: "#fff",
     fontWeight: "600",
   },
-  secondaryButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  secondaryButtonText: {
-    color: "#0a7ea4",
-    fontWeight: "600",
-  },
-  linkContainer: {
-    flexDirection: "row",
-    gap: 4,
-    marginTop: 12,
-    alignItems: "center",
-  },
-  linkText: {
-    color: "#0a7ea4",
-    fontWeight: "600",
-  },
+  container: {
+    flex: 1,
+    gap: 12,
+    padding: 20,},
   error: {
     color: "#d32f2f",
     fontSize: 12,
@@ -13503,11 +13325,45 @@ const styles = StyleSheet.create({
     color: "#555555",
     fontSize: 13,
   },
-});
+  input: {
+    backgroundColor: "#fff",
+    borderColor: "#ccc",
+    borderRadius: 8,
+    borderWidth: 1,
+    fontSize: 16,
+    padding: 12,},
+  label: {
+    fontSize: 14,
+    fontWeight: "600",},
+  linkContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 12,},
+  linkText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,},
+  secondaryButtonText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 8,},});
 `],
   ["auth/clerk/native/base/app/(auth)/sign-up.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { useAuth, useSignUp } from "@clerk/expo";
-import { type Href, Link, useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
+import type { Href } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -13663,67 +13519,27 @@ const Page = () => {
 export default Page;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    gap: 12,
-  },
-  title: {
-    marginBottom: 8,
-    fontSize: 24,
-    fontWeight: "700",
-  },
-  label: {
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: "#fff",
-  },
   button: {
-    backgroundColor: "#0a7ea4",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
     alignItems: "center",
+    backgroundColor: "#0a7ea4",
+    borderRadius: 8,
     marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,},
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonPressed: {
     opacity: 0.7,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
   },
   buttonText: {
     color: "#fff",
     fontWeight: "600",
   },
-  secondaryButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  secondaryButtonText: {
-    color: "#0a7ea4",
-    fontWeight: "600",
-  },
-  linkContainer: {
-    flexDirection: "row",
-    gap: 4,
-    marginTop: 12,
-    alignItems: "center",
-  },
-  linkText: {
-    color: "#0a7ea4",
-    fontWeight: "600",
-  },
+  container: {
+    flex: 1,
+    gap: 12,
+    padding: 20,},
   error: {
     color: "#d32f2f",
     fontSize: 12,
@@ -13733,7 +13549,39 @@ const styles = StyleSheet.create({
     color: "#555555",
     fontSize: 13,
   },
-});
+  input: {
+    backgroundColor: "#fff",
+    borderColor: "#ccc",
+    borderRadius: 8,
+    borderWidth: 1,
+    fontSize: 16,
+    padding: 12,},
+  label: {
+    fontSize: 14,
+    fontWeight: "600",},
+  linkContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 12,},
+  linkText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,},
+  secondaryButtonText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 8,},});
 `],
   ["auth/clerk/native/base/components/sign-out-button.tsx.hbs", `import { useClerk } from "@clerk/expo";
 import { useRouter } from "expo-router";
@@ -13747,7 +13595,7 @@ export const SignOutButton = () => {
     try {
       await signOut();
       router.replace("/");
-    } catch (err) {
+    } catch (error) {
       console.error(JSON.stringify(err, null, 2));
     }
   };
@@ -13767,9 +13615,7 @@ export const setClerkAuthTokenGetter = (getToken: ClerkTokenGetter | null) => {
 	clerkTokenGetter = getToken;
 }
 
-export const getClerkAuthToken = async () => {
-	return (await clerkTokenGetter?.()) ?? null;
-}
+export const getClerkAuthToken = async () => (await clerkTokenGetter?.()) ?? null
 `],
   ["auth/clerk/web/react/base/src/utils/clerk-auth.ts.hbs", `type ClerkTokenGetter = () => Promise<string | null>;
 
@@ -13779,9 +13625,7 @@ export const setClerkAuthTokenGetter = (getToken: ClerkTokenGetter | null) => {
 	clerkTokenGetter = getToken;
 }
 
-export const getClerkAuthToken = async () => {
-	return (await clerkTokenGetter?.()) ?? null;
-}
+export const getClerkAuthToken = async () => (await clerkTokenGetter?.()) ?? null
 `],
   ["auth/clerk/web/react/next/src/app/dashboard/page.tsx.hbs", `"use client";
 
@@ -14288,9 +14132,8 @@ import { v } from "convex/values";
 export default defineSchema({
 {{#if (includes examples "todo")}}
   todos: defineTable({
-    text: v.string(),
     completed: v.boolean(),
-  }),
+    text: v.string(),}),
 {{/if}}
 });
 `],
@@ -14427,14 +14270,15 @@ next-env.d.ts
   ["backend/server/base/tsdown.config.ts.hbs", `import { defineConfig } from 'tsdown';
 
 export default defineConfig({
+    clean: true,
     entry: './src/index.ts',
     format: 'esm',
-    outDir: './dist',
-    clean: true,
     noExternal: [/@{{projectName}}\\/.*/u]
-});
+,
+    outDir: './dist'});
 `],
   ["backend/server/elysia/src/index.ts.hbs", `/* oxlint-disable promise/prefer-await-to-callbacks */
+
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq runtime "node")}}
 import { node } from "@elysiajs/node";
@@ -14443,7 +14287,8 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 {{#if (includes examples "ai")}}
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, wrapLanguageModel } from "ai";
+import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, wrapLanguageModel } from "ai";
+import type { UIMessage } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (eq api "trpc")}}
@@ -14518,11 +14363,10 @@ export const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{e
 		}
 
 		return new Response(null, {
-			status: 302,
 			headers: {
 				Location: redirectUrl.toString(),
 			},
-		});
+			status: 302,});
 	})
 {{/if}}
 {{#if (eq auth "better-auth")}}
@@ -14539,9 +14383,8 @@ export const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{e
 		"/rpc*",
 		async (context) => {
 			const { response } = await rpcHandler.handle(context.request, {
-				prefix: "/rpc",
 				context: await createContext({ context }),
-			});
+				prefix: "/rpc",});
 			return response ?? new Response("Not Found", { status: 404 });
 		},
 		{
@@ -14552,9 +14395,8 @@ export const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{e
 		"/api-reference*",
 		async (context) => {
 			const { response } = await apiHandler.handle(context.request, {
-				prefix: "/api-reference",
 				context: await createContext({ context }),
-			});
+				prefix: "/api-reference",});
 			return response ?? new Response("Not Found", { status: 404 });
 		},
 		{
@@ -14565,11 +14407,11 @@ export const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{e
 {{#if (eq api "trpc")}}
 	.all("/trpc/*", async (context) => {
 		const res = await fetchRequestHandler({
-			endpoint: "/trpc",
-			router: appRouter,
-			req: context.request,
 			createContext: () => createContext({ context }),
-		});
+		
+			endpoint: "/trpc",
+			req: context.request,
+			router: appRouter,});
 		return res;
 	})
 {{/if}}
@@ -14578,12 +14420,11 @@ export const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{e
 		const body = (await context.request.json()) as { messages?: UIMessage[] };
 		const uiMessages = body.messages || [];
 		const model = wrapLanguageModel({
-			model: google("gemini-2.5-flash"),
 			middleware: devToolsMiddleware(),
-		});
+			model: google("gemini-2.5-flash"),});
 		const result = streamText({
-			model,
 			messages: await convertToModelMessages(uiMessages),
+			model,
 		});
 
 		return createUIMessageStreamResponse({
@@ -14610,6 +14451,7 @@ if (!process.env.VERCEL) {
 {{/if}}
 `],
   ["backend/server/express/src/index.ts.hbs", `/* oxlint-disable promise/prefer-await-to-callbacks */
+
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq api "trpc")}}
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -14628,7 +14470,8 @@ import { createContext } from "@{{projectName}}/api/context";
 import cors from "cors";
 import express from "express";
 {{#if (includes examples "ai")}}
-import { pipeUIMessageStreamToResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { pipeUIMessageStreamToResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
+import type { UIMessage } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -14722,15 +14565,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 app.use(async (req, res, next) => {
 	const rpcResult = await rpcHandler.handle(req, res, {
-		prefix: "/rpc",
 		context: await createContext({ req }),
-	});
+		prefix: "/rpc",});
 	if (rpcResult.matched) return;
 
 	const apiResult = await apiHandler.handle(req, res, {
-		prefix: "/api-reference",
 		context: await createContext({ req }),
-	});
+		prefix: "/api-reference",});
 	if (apiResult.matched) return;
 
 	next();
@@ -14743,9 +14584,8 @@ app.use(express.json());
 app.post("/ai", async (req, res) => {
 	const { messages = [] } = (req.body || {}) as { messages: UIMessage[] };
 	const model = wrapLanguageModel({
-		model: google("gemini-2.5-flash"),
 		middleware: devToolsMiddleware(),
-	});
+		model: google("gemini-2.5-flash"),});
 	const result = streamText({
 		model,
 		messages: await convertToModelMessages(messages),
@@ -14766,12 +14606,14 @@ app.listen(3000, () => {
 });
 `],
   ["backend/server/fastify/src/index.ts.hbs", `/* oxlint-disable promise/prefer-await-to-callbacks */
+
 import { env } from "@{{projectName}}/env/server";
 import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
 
 {{#if (eq api "trpc")}}
-import { fastifyTRPCPlugin, type FastifyTRPCPluginOptions } from "@trpc/server/adapters/fastify";
+import { fastifyTRPCPlugin } from "@trpc/server/adapters/fastify";
+import type { FastifyTRPCPluginOptions } from "@trpc/server/adapters/fastify";
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter, type AppRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
@@ -14787,7 +14629,8 @@ import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 
 {{#if (includes examples "ai")}}
-import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
+import type { UIMessage } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -14800,8 +14643,6 @@ import { clerkPlugin } from "@clerk/fastify";
 {{/if}}
 
 const baseCorsConfig = {
-	origin: env.CORS_ORIGIN,
-	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 	allowedHeaders: [
 		"Content-Type",
 		"Authorization",
@@ -14809,7 +14650,8 @@ const baseCorsConfig = {
 	],
 	credentials: true,
 	maxAge: 86_400,
-};
+	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+	origin: env.CORS_ORIGIN,};
 
 {{#if (eq api "orpc")}}
 const rpcHandler = new RPCHandler(appRouter, {
@@ -14929,9 +14771,9 @@ fastify.route({
 		} catch (error) {
 			fastify.log.error({ err: error }, "Authentication Error:");
 			reply.status(500).send({
-				error: "Internal authentication error",
 				code: "AUTH_FAILURE"
-			});
+			,
+				error: "Internal authentication error"});
 		}
 	}
 });
@@ -14959,9 +14801,8 @@ interface AiRequestBody {
 fastify.post('/ai', async function (request) {
 	const { messages } = request.body as AiRequestBody;
 	const model = wrapLanguageModel({
-		model: google('gemini-2.5-flash'),
 		middleware: devToolsMiddleware(),
-	});
+		model: google('gemini-2.5-flash'),});
 	const result = streamText({
 		model,
 		messages: await convertToModelMessages(messages),
@@ -14984,6 +14825,7 @@ fastify.listen({ port: 3000{{#if (eq serverDeploy "docker")}}, host: "0.0.0.0"{{
 });
 `],
   ["backend/server/hono/src/index.ts.hbs", `/* oxlint-disable promise/prefer-await-to-callbacks */
+
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq api "orpc")}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
@@ -15026,14 +14868,14 @@ app.use(logger());
 app.use(
 	"/*",
 	cors({
-		origin: env.CORS_ORIGIN,
-		allowMethods: ["GET", "POST", "OPTIONS"],
 {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 		allowHeaders: ["Content-Type", "Authorization"],
 {{/if}}
+		allowMethods: ["GET", "POST", "OPTIONS"],
 {{#if (eq auth "better-auth")}}
 		credentials: true,
 {{/if}}
+		origin: env.CORS_ORIGIN,
 	})
 );
 
@@ -15075,14 +14917,14 @@ app.get("/polar/success", (c) => {
 {{/if}}
 {{#if (eq api "orpc")}}
 export const apiHandler = new OpenAPIHandler(appRouter, {
-	plugins: [
-		new OpenAPIReferencePlugin({
-			schemaConverters: [new ZodToJsonSchemaConverter()],
-		}),
-	],
 	interceptors: [
 		onError((error) => {
 			console.error(error);
+		}),
+	],
+	plugins: [
+		new OpenAPIReferencePlugin({
+			schemaConverters: [new ZodToJsonSchemaConverter()],
 		}),
 	],
 });
@@ -15099,8 +14941,8 @@ app.use("/*", async (c, next) => {
 	const context = await createContext({ context: c });
 
 	const rpcResult = await rpcHandler.handle(c.req.raw, {
-		prefix: "/rpc",
 		context,
+		prefix: "/rpc",
 	});
 
 	if (rpcResult.matched) {
@@ -15108,8 +14950,8 @@ app.use("/*", async (c, next) => {
 	}
 
 	const apiResult = await apiHandler.handle(c.req.raw, {
-		prefix: "/api-reference",
 		context,
+		prefix: "/api-reference",
 	});
 
 	if (apiResult.matched) {
@@ -15124,8 +14966,8 @@ app.use("/*", async (c, next) => {
 app.use(
 	"/trpc/*",
 	trpcServer({
-		router: appRouter,
 		createContext: {{#if (eq auth "clerk")}}async (_opts, context) => ({ ...(await createContext({ context })) }){{else}}(_opts, context) => createContext({ context }){{/if}},
+		router: appRouter,
 	})
 );
 {{/if}}
@@ -15135,12 +14977,11 @@ app.post("/ai", async (c) => {
 	const body = await c.req.json();
 	const uiMessages = body.messages || [];
 	const model = wrapLanguageModel({
-		model: google("gemini-2.5-flash"),
 		middleware: devToolsMiddleware(),
-	});
+		model: google("gemini-2.5-flash"),});
 	const result = streamText({
-		model,
 		messages: await convertToModelMessages(uiMessages),
+		model,
 	});
 
 	return createUIMessageStreamResponse({
@@ -15157,12 +14998,11 @@ app.post("/ai", async (c) => {
 		apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
 	});
 	const model = wrapLanguageModel({
-		model: google("gemini-2.5-flash"),
 		middleware: devToolsMiddleware(),
-	});
+		model: google("gemini-2.5-flash"),});
 	const result = streamText({
-		model,
 		messages: await convertToModelMessages(uiMessages),
+		model,
 	});
 
 	return createUIMessageStreamResponse({
@@ -15171,9 +15011,7 @@ app.post("/ai", async (c) => {
 });
 {{/if}}
 
-app.get("/", (c) => {
-	return c.text("OK");
-});
+app.get("/", (c) => c.text("OK"));
 
 {{#if (eq runtime "node")}}
 import { serve } from "@hono/node-server";
@@ -15406,13 +15244,14 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   }
 }`],
   ["db/drizzle/base/src/schema/index.ts.hbs", `/* oxlint-disable oxc/no-barrel-file, sonarjs/no-wildcard-import, unicorn/no-empty-file */
+
 {{#if (eq auth "better-auth")}}
 export * from "./auth";
 {{/if}}
 {{#if (includes examples "todo")}}
 export * from "./todo";
 {{/if}}
-export {};`],
+`],
   ["db/drizzle/mysql/drizzle.config.ts.hbs", `import { defineConfig } from "drizzle-kit";
 import dotenv from "dotenv";
 
@@ -15425,15 +15264,15 @@ dotenv.config({
 });
 
 export default defineConfig({
-  schema: "./src/schema",
-  out: "./src/migrations",
-  dialect: "mysql",
   dbCredentials: {
     url: process.env.DATABASE_URL || "",
   },
-});
+  dialect: "mysql",
+  out: "./src/migrations",
+  schema: "./src/schema",});
 `],
   ["db/drizzle/mysql/src/index.ts.hbs", `/* oxlint-disable react-doctor/no-barrel-import, sonarjs/no-wildcard-import */
+
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 import type {} from "@{{projectName}}/env/server";
@@ -15445,29 +15284,24 @@ import * as schema from "./schema";
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 
-export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
-	return drizzle({
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => drizzle({
 		connection: {
 			host: env.DATABASE_HOST,
-			username: env.DATABASE_USERNAME,
 			password: env.DATABASE_PASSWORD,
-		},
+			username: env.DATABASE_USERNAME,},
 		mode: "default",
 		schema,
-	});
-}
+	})
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 
-export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
-	return drizzle({
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => drizzle({
 		connection: {
 			uri: env.DATABASE_URL,
 		},
 		mode: "default",
 		schema,
-	});
-}
+	})
 {{/if}}
 
 {{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
@@ -15482,30 +15316,25 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 import { env } from "@{{projectName}}/env/server";
 
-export const createDb = () => {
-	return drizzle({
+export const createDb = () => drizzle({
 		connection: {
 			host: env.DATABASE_HOST,
-			username: env.DATABASE_USERNAME,
 			password: env.DATABASE_PASSWORD,
-		},
+			username: env.DATABASE_USERNAME,},
 		mode: "default",
 		schema,
-	});
-}
+	})
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 import { env } from "@{{projectName}}/env/server";
 
-export const createDb = () => {
-	return drizzle({
+export const createDb = () => drizzle({
 		connection: {
 			uri: env.DATABASE_URL,
 		},
 		mode: "default",
 		schema,
-	});
-}
+	})
 {{/if}}
 {{/if}}
 `],
@@ -15521,15 +15350,15 @@ dotenv.config({
 });
 
 export default defineConfig({
-  schema: "./src/schema",
-  out: "./src/migrations",
-  dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL || "",
   },
-});
+  dialect: "postgresql",
+  out: "./src/migrations",
+  schema: "./src/schema",});
 `],
   ["db/drizzle/postgres/src/index.ts.hbs", `/* oxlint-disable react-doctor/no-barrel-import, sonarjs/no-wildcard-import */
+
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 import type {} from "@{{projectName}}/env/server";
@@ -15629,6 +15458,7 @@ export default defineConfig({
 });
 `],
   ["db/drizzle/sqlite/src/index.ts.hbs", `/* oxlint-disable react-doctor/no-barrel-import, sonarjs/no-wildcard-import */
+
 {{#if (eq dbSetup "d1")}}
 import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/d1";
@@ -15638,9 +15468,7 @@ import type {} from "@{{projectName}}/env/server";
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
-export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
-	return drizzle(env.DB, { schema });
-}
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => drizzle(env.DB, { schema })
 {{else if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 import type {} from "@{{projectName}}/env/server";
@@ -15751,14 +15579,13 @@ dotenv.config({
 });
 
 export default defineConfig({
-  schema: path.join("prisma", "schema"),
-  migrations: {
-    path: path.join("prisma", "migrations"),
-  },
   datasource: {
     url: env("DATABASE_URL"),
   },
-});`],
+  migrations: {
+    path: path.join("prisma", "migrations"),
+  },
+  schema: path.join("prisma", "schema"),});`],
   ["db/prisma/mysql/prisma/schema/schema.prisma.hbs", `generator client {
   provider      = "prisma-client"
   output        = "../generated"
@@ -15798,12 +15625,11 @@ export const createPrismaClient = () => {
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
-		host: url.hostname,
-		port: parseInt(url.port || "3306"),
-		user: url.username,
-		password: url.password,
 		database: url.pathname.slice(1),
-	};
+		host: url.hostname,
+		password: url.password,
+		port: parseInt(url.port || "3306"),
+		user: url.username,};
 
 	const adapter = new PrismaMariaDb(connectionConfig);
 	return new PrismaClient({ adapter });
@@ -15831,12 +15657,11 @@ export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy 
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
-		host: url.hostname,
-		port: parseInt(url.port || "3306"),
-		user: url.username,
-		password: url.password,
 		database: url.pathname.slice(1),
-	};
+		host: url.hostname,
+		password: url.password,
+		port: parseInt(url.port || "3306"),
+		user: url.username,};
 
 	const adapter = new PrismaMariaDb(connectionConfig);
 	return new PrismaClient({ adapter });
@@ -15862,14 +15687,13 @@ dotenv.config({
 })
 
 export default defineConfig({
-  schema: path.join("prisma", "schema"),
-  migrations: {
-    path: path.join("prisma", "migrations"),
-    },
     datasource: {
         url: env('DATABASE_URL'),
     },
-})
+  migrations: {
+    path: path.join("prisma", "migrations"),
+    },
+  schema: path.join("prisma", "schema"),})
 `],
   ["db/prisma/postgres/prisma/schema/schema.prisma.hbs", `generator client {
   provider = "prisma-client"
@@ -15902,13 +15726,11 @@ import { neonConfig } from "@neondatabase/serverless";
 
 neonConfig.poolQueryViaFetch = true;
 
-export const createPrismaClient = () => {
-	return new PrismaClient({
+export const createPrismaClient = () => new PrismaClient({
 		adapter: new PrismaNeon({
 			connectionString: env.DATABASE_URL,
 		}),
-	});
-}
+	})
 
 {{else if (eq dbSetup "prisma-postgres")}}
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -16929,10 +16751,9 @@ import { google } from "@ai-sdk/google";
 import { components } from "./_generated/api";
 
 export const chatAgent = new Agent(components.agent, {
-  name: "Chat Agent",
-  languageModel: google("gemini-2.5-flash"),
   instructions: "You are a helpful AI assistant. Be concise and friendly in your responses.",
-});
+  languageModel: google("gemini-2.5-flash"),
+  name: "Chat Agent",});
 `],
   ["examples/ai/convex/packages/backend/convex/chat.ts.hbs", `import {
   createThread,
@@ -16958,10 +16779,9 @@ export const createNewThread = mutation({
 
 export const listMessages = query({
   args: {
-    threadId: v.string(),
     paginationOpts: paginationOptsValidator,
     streamArgs: vStreamArgs,
-  },
+    threadId: v.string(),},
   handler: async (ctx, args) => {
     const paginated = await listUIMessages(ctx, components.agent, args);
     const streams = await syncStreams(ctx, components.agent, args);
@@ -16971,9 +16791,8 @@ export const listMessages = query({
 
 export const sendMessage = mutation({
   args: {
-    threadId: v.string(),
     prompt: v.string(),
-  },
+    threadId: v.string(),},
   handler: async (ctx, { threadId, prompt }) => {
     const { messageId } = await saveMessage(ctx, components.agent, {
       threadId,
@@ -16989,9 +16808,8 @@ export const sendMessage = mutation({
 
 export const generateResponseAsync = internalAction({
   args: {
-    threadId: v.string(),
     promptMessageId: v.string(),
-  },
+    threadId: v.string(),},
   handler: async (ctx, { threadId, promptMessageId }) => {
     await chatAgent.streamText(
       ctx,
@@ -17003,7 +16821,8 @@ export const generateResponseAsync = internalAction({
 });
 `],
   ["examples/ai/fullstack/next/src/app/api/ai/route.ts.hbs", `import { google } from "@ai-sdk/google";
-import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
+import type { UIMessage } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const maxDuration = 30;
@@ -17012,9 +16831,8 @@ export const POST = async (req: Request) => {
 	const { messages }: { messages: UIMessage[] } = await req.json();
 
 	const model = wrapLanguageModel({
-		model: google("gemini-2.5-flash"),
 		middleware: devToolsMiddleware(),
-	});
+		model: google("gemini-2.5-flash"),});
 	const result = streamText({
 		model,
 		messages: await convertToModelMessages(messages),
@@ -17034,9 +16852,8 @@ export default defineEventHandler(async (event) => {
   const uiMessages = body.messages || [];
 
   const model = wrapLanguageModel({
-    model: google("gemini-2.5-flash"),
     middleware: devToolsMiddleware(),
-  });
+    model: google("gemini-2.5-flash"),});
 
   const result = streamText({
     model,
@@ -17050,16 +16867,16 @@ export default defineEventHandler(async (event) => {
 `],
   ["examples/ai/fullstack/svelte/src/routes/api/ai/+server.ts.hbs", `import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, wrapLanguageModel } from "ai";
+import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, wrapLanguageModel } from "ai";
+import type { UIMessage } from "ai";
 import type { RequestHandler } from "@sveltejs/kit";
 
 export const POST: RequestHandler = async ({ request }) => {
 	const { messages }: { messages: UIMessage[] } = await request.json();
 
 	const model = wrapLanguageModel({
-		model: google("gemini-2.5-flash"),
 		middleware: devToolsMiddleware(),
-	});
+		model: google("gemini-2.5-flash"),});
 	const result = streamText({
 		model,
 		messages: await convertToModelMessages(messages),
@@ -17071,9 +16888,11 @@ export const POST: RequestHandler = async ({ request }) => {
 };
 `],
   ["examples/ai/fullstack/tanstack-start/src/routes/api/ai/$.ts.hbs", `/* oxlint-disable github/filenames-match-regex */
+
 import { createFileRoute } from "@tanstack/react-router";
 import { google } from "@ai-sdk/google";
-import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
+import type { UIMessage } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const Route = createFileRoute("/api/ai/$")({
@@ -17084,9 +16903,8 @@ export const Route = createFileRoute("/api/ai/$")({
           const { messages }: { messages: UIMessage[] } = await request.json();
 
           const model = wrapLanguageModel({
-            model: google("gemini-2.5-flash"),
             middleware: devToolsMiddleware(),
-          });
+            model: google("gemini-2.5-flash"),});
           const result = streamText({
             model,
             messages: await convertToModelMessages(messages),
@@ -17100,9 +16918,8 @@ export const Route = createFileRoute("/api/ai/$")({
           return new Response(
             JSON.stringify({ error: "Failed to process AI request" }),
             {
-              status: 500,
               headers: { "Content-Type": "application/json" },
-            },
+              status: 500,},
           );
         }
       },
@@ -17111,6 +16928,7 @@ export const Route = createFileRoute("/api/ai/$")({
 });
 `],
   ["examples/ai/native/bare/app/(drawer)/ai.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 {{#if (eq backend "convex")}}
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -17213,7 +17031,7 @@ const AIScreen = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ threadId: currentThreadId, prompt: value });
+      await sendMessage({ prompt: value , threadId: currentThreadId});
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -17409,10 +17227,9 @@ const AIScreen = () => {
                 style={[
                   styles.input,
                   {
-                    color: theme.text,
-                    borderColor: theme.border,
                     backgroundColor: theme.card,
-                  },
+                    borderColor: theme.border,
+                    color: theme.text,},
                 ]}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
@@ -17451,12 +17268,149 @@ const AIScreen = () => {
 export default AIScreen;
 
 const styles = StyleSheet.create({
+  assistantBubble: {
+    borderTopLeftRadius: 6,
+    borderWidth: 1,
+  },
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
   container: {
     flex: 1,
   },
   content: {
     flex: 1,
     paddingHorizontal: 16,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    flex: 1,
+    gap: 12,
+    justifyContent: "center",},
+  emptyIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyText: {
+    fontSize: 14,
+    lineHeight: 20,
+    opacity: 0.68,
+    textAlign: "center",
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  input: {
+    borderRadius: 18,
+    borderWidth: 1,
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
+    maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+  },
+  inputContainer: {
+    borderTopWidth: 1,
+    paddingBottom: 12,
+    paddingTop: 12,
+  },
+  inputRow: {
+    alignItems: "flex-end",
+    flexDirection: "row",
+    gap: 8,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 14,
+    opacity: 0.68,
+  },
+  messageBubble: {
+    borderRadius: 18,
+    maxWidth: "86%",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  messageRole: {
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 4,
+    opacity: 0.72,
+  },
+  messageRow: {
+    flexDirection: "row",
+  },
+  messageText: {
+    fontSize: 15,
+    lineHeight: 21,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: 16,
+  },
+  messagesList: {
+    gap: 12,
+  },
+  promptButton: {
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  promptList: {
+    gap: 8,
+    marginTop: 8,
+    width: "100%",
+  },
+  promptText: {
+    fontSize: 13,
+    lineHeight: 18,
+    opacity: 0.68,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  sendButton: {
+    alignItems: "center",
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonDisabled: {
+    borderWidth: 1,
+    opacity: 0.55,
+  },
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  statusText: {
+    fontSize: 13,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
   },
   toolbar: {
     alignItems: "center",
@@ -17465,21 +17419,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingBottom: 12,
     paddingTop: 8,
-  },
-  statusGroup: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-  },
-  statusDot: {
-    borderRadius: 999,
-    height: 8,
-    width: 8,
-  },
-  statusText: {
-    fontSize: 13,
-    fontVariant: ["tabular-nums"],
-    fontWeight: "600",
   },
   toolbarAction: {
     alignItems: "center",
@@ -17497,136 +17436,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
-  scrollView: {
-    flex: 1,
-  },
-  messagesContent: {
-    flexGrow: 1,
-    paddingVertical: 16,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-    gap: 12,
-  },
-  emptyIcon: {
-    alignItems: "center",
-    borderRadius: 999,
-    borderWidth: 1,
-    height: 56,
-    justifyContent: "center",
-    width: 56,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  emptyText: {
-    fontSize: 14,
-    lineHeight: 20,
-    opacity: 0.68,
-    textAlign: "center",
-  },
-  promptList: {
-    gap: 8,
-    marginTop: 8,
-    width: "100%",
-  },
-  promptButton: {
-    borderRadius: 14,
-    borderWidth: 1,
-    gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  promptLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  promptText: {
-    fontSize: 13,
-    lineHeight: 18,
-    opacity: 0.68,
-  },
-  messagesList: {
-    gap: 12,
-  },
-  messageRow: {
-    flexDirection: "row",
-  },
-  userRow: {
-    justifyContent: "flex-end",
-  },
-  assistantRow: {
-    justifyContent: "flex-start",
-  },
-  messageBubble: {
-    borderRadius: 18,
-    maxWidth: "86%",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
   userBubble: {
     borderTopRightRadius: 6,
   },
-  assistantBubble: {
-    borderTopLeftRadius: 6,
-    borderWidth: 1,
-  },
-  messageRole: {
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 4,
-    opacity: 0.72,
-  },
-  messageText: {
-    fontSize: 15,
-    lineHeight: 21,
-  },
-  loadingContainer: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-  },
-  loadingText: {
-    fontSize: 14,
-    opacity: 0.68,
-  },
-  inputContainer: {
-    borderTopWidth: 1,
-    paddingBottom: 12,
-    paddingTop: 12,
-  },
-  inputRow: {
-    alignItems: "flex-end",
-    flexDirection: "row",
-    gap: 8,
-  },
-  input: {
-    borderRadius: 18,
-    borderWidth: 1,
-    flex: 1,
-    fontSize: 15,
-    lineHeight: 20,
-    maxHeight: 120,
-    minHeight: 44,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-  },
-  sendButton: {
-    alignItems: "center",
-    borderRadius: 999,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
-  },
-  sendButtonDisabled: {
-    borderWidth: 1,
-    opacity: 0.55,
-  },
-});
+  userRow: {
+    justifyContent: "flex-end",
+  },});
 {{else}}
 import { useRef, useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -17944,10 +17759,9 @@ const AIScreen = () => {
                 style={[
                   styles.input,
                   {
-                    color: theme.text,
-                    borderColor: theme.border,
                     backgroundColor: theme.card,
-                  },
+                    borderColor: theme.border,
+                    color: theme.text,},
                 ]}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
@@ -17986,12 +17800,167 @@ const AIScreen = () => {
 export default AIScreen;
 
 const styles = StyleSheet.create({
+  assistantBubble: {
+    borderTopLeftRadius: 6,
+    borderWidth: 1,
+  },
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
   container: {
     flex: 1,
   },
   content: {
     flex: 1,
     paddingHorizontal: 16,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    flex: 1,
+    gap: 12,
+    justifyContent: "center",},
+  emptyIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyText: {
+    fontSize: 14,
+    lineHeight: 20,
+    opacity: 0.68,
+    textAlign: "center",
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  errorBanner: {
+    alignItems: "center",
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  input: {
+    borderRadius: 18,
+    borderWidth: 1,
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
+    maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+  },
+  inputContainer: {
+    borderTopWidth: 1,
+    paddingBottom: 12,
+    paddingTop: 12,
+  },
+  inputRow: {
+    alignItems: "flex-end",
+    flexDirection: "row",
+    gap: 8,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 14,
+    opacity: 0.68,
+  },
+  messageBubble: {
+    borderRadius: 18,
+    maxWidth: "86%",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  messageParts: {
+    gap: 4,
+  },
+  messageRole: {
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 4,
+    opacity: 0.72,
+  },
+  messageRow: {
+    flexDirection: "row",
+  },
+  messageText: {
+    fontSize: 15,
+    lineHeight: 21,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: 16,
+  },
+  messagesList: {
+    gap: 12,
+  },
+  promptButton: {
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  promptList: {
+    gap: 8,
+    marginTop: 8,
+    width: "100%",
+  },
+  promptText: {
+    fontSize: 13,
+    lineHeight: 18,
+    opacity: 0.68,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  sendButton: {
+    alignItems: "center",
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonDisabled: {
+    borderWidth: 1,
+    opacity: 0.55,
+  },
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  statusText: {
+    fontSize: 13,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
   },
   toolbar: {
     alignItems: "center",
@@ -18000,21 +17969,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingBottom: 12,
     paddingTop: 8,
-  },
-  statusGroup: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-  },
-  statusDot: {
-    borderRadius: 999,
-    height: 8,
-    width: 8,
-  },
-  statusText: {
-    fontSize: 13,
-    fontVariant: ["tabular-nums"],
-    fontWeight: "600",
   },
   toolbarAction: {
     alignItems: "center",
@@ -18032,154 +17986,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
-  scrollView: {
-    flex: 1,
-  },
-  messagesContent: {
-    flexGrow: 1,
-    paddingVertical: 16,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-    gap: 12,
-  },
-  emptyIcon: {
-    alignItems: "center",
-    borderRadius: 999,
-    borderWidth: 1,
-    height: 56,
-    justifyContent: "center",
-    width: 56,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  emptyText: {
-    fontSize: 14,
-    lineHeight: 20,
-    opacity: 0.68,
-    textAlign: "center",
-  },
-  promptList: {
-    gap: 8,
-    marginTop: 8,
-    width: "100%",
-  },
-  promptButton: {
-    borderRadius: 14,
-    borderWidth: 1,
-    gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  promptLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  promptText: {
-    fontSize: 13,
-    lineHeight: 18,
-    opacity: 0.68,
-  },
-  messagesList: {
-    gap: 12,
-  },
-  messageRow: {
-    flexDirection: "row",
-  },
-  userRow: {
-    justifyContent: "flex-end",
-  },
-  assistantRow: {
-    justifyContent: "flex-start",
-  },
-  messageBubble: {
-    borderRadius: 18,
-    maxWidth: "86%",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
   userBubble: {
     borderTopRightRadius: 6,
   },
-  assistantBubble: {
-    borderTopLeftRadius: 6,
-    borderWidth: 1,
-  },
-  messageRole: {
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 4,
-    opacity: 0.72,
-  },
-  messageParts: {
-    gap: 4,
-  },
-  messageText: {
-    fontSize: 15,
-    lineHeight: 21,
-  },
-  loadingContainer: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-  },
-  loadingText: {
-    fontSize: 14,
-    opacity: 0.68,
-  },
-  errorBanner: {
-    alignItems: "center",
-    borderRadius: 14,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  errorText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  inputContainer: {
-    borderTopWidth: 1,
-    paddingBottom: 12,
-    paddingTop: 12,
-  },
-  inputRow: {
-    alignItems: "flex-end",
-    flexDirection: "row",
-    gap: 8,
-  },
-  input: {
-    borderRadius: 18,
-    borderWidth: 1,
-    flex: 1,
-    fontSize: 15,
-    lineHeight: 20,
-    maxHeight: 120,
-    minHeight: 44,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-  },
-  sendButton: {
-    alignItems: "center",
-    borderRadius: 999,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
-  },
-  sendButtonDisabled: {
-    borderWidth: 1,
-    opacity: 0.55,
-  },
-});
+  userRow: {
+    justifyContent: "flex-end",
+  },});
 {{/if}}
 `],
   ["examples/ai/native/bare/polyfills.js", `import structuredClone from "@ungap/structured-clone";
@@ -18206,6 +18018,7 @@ if (Platform.OS !== "web") {
 export {};
 `],
   ["examples/ai/native/unistyles/app/(drawer)/ai.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import "@/unistyles";
 
 {{#if (eq backend "convex")}}
@@ -18307,7 +18120,7 @@ const AIScreen = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ threadId: currentThreadId, prompt: value });
+      await sendMessage({ prompt: value , threadId: currentThreadId});
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -18514,6 +18327,20 @@ const AIScreen = () => {
 export default AIScreen;
 
 const styles = StyleSheet.create((theme) => ({
+  assistantBubble: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderTopLeftRadius: theme.borderRadius.sm,
+    borderWidth: 1,
+  },
+  assistantMessageText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
   container: {
     flex: 1,
   },
@@ -18521,61 +18348,8 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     paddingHorizontal: theme.spacing.md,
   },
-  toolbar: {
-    alignItems: "center",
-    borderBottomColor: theme.colors.border,
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingBottom: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-  },
-  statusGroup: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: theme.spacing.sm,
-  },
-  statusDot: {
-    borderRadius: 999,
-    height: 8,
-    width: 8,
-  },
-  statusDotBusy: {
-    backgroundColor: theme.colors.primary,
-  },
-  statusDotIdle: {
-    backgroundColor: theme.colors.border,
-  },
-  statusText: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
-    fontVariant: ["tabular-nums"],
-    fontWeight: "600",
-  },
-  toolbarAction: {
-    alignItems: "center",
-    borderColor: theme.colors.border,
-    borderRadius: 999,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: theme.spacing.xs,
-    minHeight: 32,
-    paddingHorizontal: 10,
-  },
-  toolbarActionText: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
-    fontWeight: "600",
-  },
   disabledAction: {
     opacity: 0.45,
-  },
-  messagesContainer: {
-    flex: 1,
-  },
-  messagesContent: {
-    flexGrow: 1,
-    paddingVertical: theme.spacing.md,
   },
   emptyContainer: {
     alignItems: "center",
@@ -18592,22 +18366,65 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
     width: 56,
   },
-  emptyTitle: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize["2xl"],
-    fontWeight: "700",
-    textAlign: "center",
-  },
   emptyText: {
     color: theme.colors.mutedForeground,
     fontSize: theme.fontSize.sm,
     lineHeight: 20,
     textAlign: "center",
   },
-  promptList: {
+  emptyTitle: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  inputContainer: {
+    alignItems: "flex-end",
+    flexDirection: "row",
     gap: theme.spacing.sm,
-    marginTop: theme.spacing.xs,
-    width: "100%",
+  },
+  inputSection: {
+    borderTopColor: theme.colors.border,
+    borderTopWidth: 1,
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+  },
+  loadingText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+  },
+  messageBubble: {
+    borderRadius: theme.borderRadius.xl,
+    maxWidth: "86%",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 10,
+  },
+  messageRole: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: "700",
+    marginBottom: theme.spacing.xs,
+    opacity: 0.72,
+  },
+  messageRow: {
+    flexDirection: "row",
+  },
+  messagesContainer: {
+    flex: 1,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: theme.spacing.md,
+  },
+  messagesWrapper: {
+    gap: theme.spacing.md,
+  },
+  placeholder: {
+    color: theme.colors.mutedForeground,
   },
   promptButton: {
     backgroundColor: theme.colors.card,
@@ -18623,74 +18440,57 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.fontSize.sm,
     fontWeight: "700",
   },
+  promptList: {
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+    width: "100%",
+  },
   promptText: {
     color: theme.colors.mutedForeground,
     fontSize: theme.fontSize.sm,
     lineHeight: 18,
   },
-  messagesWrapper: {
-    gap: theme.spacing.md,
-  },
-  messageRow: {
-    flexDirection: "row",
-  },
-  userRow: {
-    justifyContent: "flex-end",
-  },
-  assistantRow: {
-    justifyContent: "flex-start",
-  },
-  messageBubble: {
-    borderRadius: theme.borderRadius.xl,
-    maxWidth: "86%",
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: 10,
-  },
-  userBubble: {
+  sendButton: {
+    alignItems: "center",
     backgroundColor: theme.colors.primary,
-    borderTopRightRadius: theme.borderRadius.sm,
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
   },
-  assistantBubble: {
+  sendButtonDisabled: {
     backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
-    borderTopLeftRadius: theme.borderRadius.sm,
     borderWidth: 1,
+    opacity: 0.55,
   },
-  messageRole: {
-    fontSize: theme.fontSize.xs,
-    fontWeight: "700",
-    marginBottom: theme.spacing.xs,
-    opacity: 0.72,
+  sendButtonDisabledIcon: {
+    color: theme.colors.mutedForeground,
   },
-  userMessageText: {
+  sendButtonIcon: {
     color: theme.colors.primaryForeground,
-    fontSize: theme.fontSize.sm,
-    lineHeight: 21,
   },
-  assistantMessageText: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
-    lineHeight: 21,
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
   },
-  loadingContainer: {
+  statusDotBusy: {
+    backgroundColor: theme.colors.primary,
+  },
+  statusDotIdle: {
+    backgroundColor: theme.colors.border,
+  },
+  statusGroup: {
     alignItems: "center",
     flexDirection: "row",
     gap: theme.spacing.sm,
   },
-  loadingText: {
-    color: theme.colors.mutedForeground,
+  statusText: {
+    color: theme.colors.foreground,
     fontSize: theme.fontSize.sm,
-  },
-  inputSection: {
-    borderTopColor: theme.colors.border,
-    borderTopWidth: 1,
-    paddingBottom: theme.spacing.md,
-    paddingTop: theme.spacing.md,
-  },
-  inputContainer: {
-    alignItems: "flex-end",
-    flexDirection: "row",
-    gap: theme.spacing.sm,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
   },
   textInput: {
     backgroundColor: theme.colors.card,
@@ -18706,30 +18506,42 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: 11,
   },
-  placeholder: {
-    color: theme.colors.mutedForeground,
-  },
-  sendButton: {
+  toolbar: {
     alignItems: "center",
-    backgroundColor: theme.colors.primary,
-    borderRadius: 999,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
+    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
   },
-  sendButtonIcon: {
-    color: theme.colors.primaryForeground,
-  },
-  sendButtonDisabled: {
-    backgroundColor: theme.colors.card,
+  toolbarAction: {
+    alignItems: "center",
     borderColor: theme.colors.border,
+    borderRadius: 999,
     borderWidth: 1,
-    opacity: 0.55,
+    flexDirection: "row",
+    gap: theme.spacing.xs,
+    minHeight: 32,
+    paddingHorizontal: 10,
   },
-  sendButtonDisabledIcon: {
-    color: theme.colors.mutedForeground,
+  toolbarActionText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "600",
   },
-}));
+  userBubble: {
+    backgroundColor: theme.colors.primary,
+    borderTopRightRadius: theme.borderRadius.sm,
+  },
+  userMessageText: {
+    color: theme.colors.primaryForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  userRow: {
+    justifyContent: "flex-end",
+  },}));
 {{else}}
 import { useRef, useEffect, useState } from "react";
 import {
@@ -19035,6 +18847,20 @@ const AIScreen = () => {
 export default AIScreen;
 
 const styles = StyleSheet.create((theme) => ({
+  assistantBubble: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderTopLeftRadius: theme.borderRadius.sm,
+    borderWidth: 1,
+  },
+  assistantMessageText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
   container: {
     flex: 1,
   },
@@ -19042,61 +18868,8 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     paddingHorizontal: theme.spacing.md,
   },
-  toolbar: {
-    alignItems: "center",
-    borderBottomColor: theme.colors.border,
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingBottom: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-  },
-  statusGroup: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: theme.spacing.sm,
-  },
-  statusDot: {
-    borderRadius: 999,
-    height: 8,
-    width: 8,
-  },
-  statusDotBusy: {
-    backgroundColor: theme.colors.primary,
-  },
-  statusDotIdle: {
-    backgroundColor: theme.colors.border,
-  },
-  statusText: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
-    fontVariant: ["tabular-nums"],
-    fontWeight: "600",
-  },
-  toolbarAction: {
-    alignItems: "center",
-    borderColor: theme.colors.border,
-    borderRadius: 999,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: theme.spacing.xs,
-    minHeight: 32,
-    paddingHorizontal: 10,
-  },
-  toolbarActionText: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
-    fontWeight: "600",
-  },
   disabledAction: {
     opacity: 0.45,
-  },
-  messagesContainer: {
-    flex: 1,
-  },
-  messagesContent: {
-    flexGrow: 1,
-    paddingVertical: theme.spacing.md,
   },
   emptyContainer: {
     alignItems: "center",
@@ -19113,97 +18886,17 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
     width: 56,
   },
-  emptyTitle: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize["2xl"],
-    fontWeight: "700",
-    textAlign: "center",
-  },
   emptyText: {
     color: theme.colors.mutedForeground,
     fontSize: theme.fontSize.sm,
     lineHeight: 20,
     textAlign: "center",
   },
-  promptList: {
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.xs,
-    width: "100%",
-  },
-  promptButton: {
-    backgroundColor: theme.colors.card,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.xl,
-    borderWidth: 1,
-    gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: 12,
-  },
-  promptLabel: {
+  emptyTitle: {
     color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
+    fontSize: theme.fontSize["2xl"],
     fontWeight: "700",
-  },
-  promptText: {
-    color: theme.colors.mutedForeground,
-    fontSize: theme.fontSize.sm,
-    lineHeight: 18,
-  },
-  messagesWrapper: {
-    gap: theme.spacing.md,
-  },
-  messageRow: {
-    flexDirection: "row",
-  },
-  userRow: {
-    justifyContent: "flex-end",
-  },
-  assistantRow: {
-    justifyContent: "flex-start",
-  },
-  messageBubble: {
-    borderRadius: theme.borderRadius.xl,
-    maxWidth: "86%",
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: 10,
-  },
-  userBubble: {
-    backgroundColor: theme.colors.primary,
-    borderTopRightRadius: theme.borderRadius.sm,
-  },
-  assistantBubble: {
-    backgroundColor: theme.colors.card,
-    borderColor: theme.colors.border,
-    borderTopLeftRadius: theme.borderRadius.sm,
-    borderWidth: 1,
-  },
-  messageRole: {
-    fontSize: theme.fontSize.xs,
-    fontWeight: "700",
-    marginBottom: theme.spacing.xs,
-    opacity: 0.72,
-  },
-  messageContentWrapper: {
-    gap: theme.spacing.xs,
-  },
-  userMessageText: {
-    color: theme.colors.primaryForeground,
-    fontSize: theme.fontSize.sm,
-    lineHeight: 21,
-  },
-  assistantMessageText: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
-    lineHeight: 21,
-  },
-  loadingContainer: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: theme.spacing.sm,
-  },
-  loadingText: {
-    color: theme.colors.mutedForeground,
-    fontSize: theme.fontSize.sm,
+    textAlign: "center",
   },
   errorBanner: {
     alignItems: "center",
@@ -19226,16 +18919,122 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.fontSize.sm,
     lineHeight: 18,
   },
+  inputContainer: {
+    alignItems: "flex-end",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+  },
   inputSection: {
     borderTopColor: theme.colors.border,
     borderTopWidth: 1,
     paddingBottom: theme.spacing.md,
     paddingTop: theme.spacing.md,
   },
-  inputContainer: {
-    alignItems: "flex-end",
+  loadingContainer: {
+    alignItems: "center",
     flexDirection: "row",
     gap: theme.spacing.sm,
+  },
+  loadingText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+  },
+  messageBubble: {
+    borderRadius: theme.borderRadius.xl,
+    maxWidth: "86%",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 10,
+  },
+  messageContentWrapper: {
+    gap: theme.spacing.xs,
+  },
+  messageRole: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: "700",
+    marginBottom: theme.spacing.xs,
+    opacity: 0.72,
+  },
+  messageRow: {
+    flexDirection: "row",
+  },
+  messagesContainer: {
+    flex: 1,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: theme.spacing.md,
+  },
+  messagesWrapper: {
+    gap: theme.spacing.md,
+  },
+  placeholder: {
+    color: theme.colors.mutedForeground,
+  },
+  promptButton: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "700",
+  },
+  promptList: {
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+    width: "100%",
+  },
+  promptText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 18,
+  },
+  sendButton: {
+    alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonDisabled: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+    opacity: 0.55,
+  },
+  sendButtonDisabledIcon: {
+    color: theme.colors.mutedForeground,
+  },
+  sendButtonIcon: {
+    color: theme.colors.primaryForeground,
+  },
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
+  statusDotBusy: {
+    backgroundColor: theme.colors.primary,
+  },
+  statusDotIdle: {
+    backgroundColor: theme.colors.border,
+  },
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+  },
+  statusText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
   },
   textInput: {
     backgroundColor: theme.colors.card,
@@ -19251,30 +19050,42 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: 11,
   },
-  placeholder: {
-    color: theme.colors.mutedForeground,
-  },
-  sendButton: {
+  toolbar: {
     alignItems: "center",
-    backgroundColor: theme.colors.primary,
-    borderRadius: 999,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
+    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
   },
-  sendButtonIcon: {
-    color: theme.colors.primaryForeground,
-  },
-  sendButtonDisabled: {
-    backgroundColor: theme.colors.card,
+  toolbarAction: {
+    alignItems: "center",
     borderColor: theme.colors.border,
+    borderRadius: 999,
     borderWidth: 1,
-    opacity: 0.55,
+    flexDirection: "row",
+    gap: theme.spacing.xs,
+    minHeight: 32,
+    paddingHorizontal: 10,
   },
-  sendButtonDisabledIcon: {
-    color: theme.colors.mutedForeground,
+  toolbarActionText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "600",
   },
-}));
+  userBubble: {
+    backgroundColor: theme.colors.primary,
+    borderTopRightRadius: theme.borderRadius.sm,
+  },
+  userMessageText: {
+    color: theme.colors.primaryForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  userRow: {
+    justifyContent: "flex-end",
+  },}));
 {{/if}}
 `],
   ["examples/ai/native/unistyles/polyfills.js", `import structuredClone from "@ungap/structured-clone";
@@ -19396,7 +19207,7 @@ const AIScreen = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ threadId: currentThreadId, prompt: value });
+      await sendMessage({ prompt: value , threadId: currentThreadId});
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -20022,6 +19833,7 @@ const handleSubmit = async (e: Event) => {
 </template>
 `],
   ["examples/ai/web/react/next/src/app/ai/page.tsx.hbs", `/* oxlint-disable react-doctor/no-array-index-as-key */
+
 {{#if (eq backend "convex")}}
 "use client";
 
@@ -20061,7 +19873,8 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
@@ -20152,7 +19965,7 @@ const AIPage = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ threadId: currentThreadId, prompt: text });
+      await sendMessage({ prompt: text , threadId: currentThreadId});
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -20339,7 +20152,8 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
@@ -20554,6 +20368,7 @@ export default AIPage;
 {{/if}}
 `],
   ["examples/ai/web/react/react-router/src/routes/ai.tsx.hbs", `/* oxlint-disable react-doctor/no-array-index-as-key */
+
 {{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
@@ -20567,7 +20382,8 @@ import {
   MessageCircleDashedIcon,
   RotateCwIcon,
 } from "lucide-react";
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
@@ -20659,7 +20475,7 @@ const AI = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ threadId: currentThreadId, prompt: text });
+      await sendMessage({ prompt: text , threadId: currentThreadId});
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -20827,7 +20643,8 @@ import {
   MessageCircleDashedIcon,
   RotateCwIcon,
 } from "lucide-react";
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 import { env } from "@{{projectName}}/env/web";
 
@@ -21050,6 +20867,7 @@ export default AI;
 {{/if}}
 `],
   ["examples/ai/web/react/tanstack-router/src/routes/ai.tsx.hbs", `/* oxlint-disable react-doctor/no-array-index-as-key */
+
 {{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
@@ -21064,7 +20882,8 @@ import {
   MessageCircleDashedIcon,
   RotateCwIcon,
 } from "lucide-react";
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
@@ -21156,7 +20975,7 @@ const RouteComponent = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ threadId: currentThreadId, prompt: text });
+      await sendMessage({ prompt: text , threadId: currentThreadId});
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -21327,7 +21146,8 @@ import {
   MessageCircleDashedIcon,
   RotateCwIcon,
 } from "lucide-react";
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
@@ -21554,6 +21374,7 @@ export const Route = createFileRoute("/ai")({
 {{/if}}
 `],
   ["examples/ai/web/react/tanstack-start/src/routes/ai.tsx.hbs", `/* oxlint-disable react-doctor/no-array-index-as-key */
+
 {{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
@@ -21568,7 +21389,8 @@ import {
   MessageCircleDashedIcon,
   RotateCwIcon,
 } from "lucide-react";
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
@@ -21660,7 +21482,7 @@ const RouteComponent = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ threadId: currentThreadId, prompt: text });
+      await sendMessage({ prompt: text , threadId: currentThreadId});
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -21831,7 +21653,8 @@ import {
   MessageCircleDashedIcon,
   RotateCwIcon,
 } from "lucide-react";
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
@@ -22176,9 +21999,7 @@ export const Route = createFileRoute("/ai")({
 import { v } from "convex/values";
 
 export const getAll = query({
-    handler: async (ctx) => {
-        return await ctx.db.query("todos").collect();
-    },
+    handler: async (ctx) => await ctx.db.query("todos").collect(),
 });
 
 export const create = mutation({
@@ -22187,18 +22008,16 @@ export const create = mutation({
     },
     handler: async (ctx, args) => {
         const newTodoId = await ctx.db.insert("todos", {
-            text: args.text,
             completed: false,
-        });
+            text: args.text,});
         return await ctx.db.get("todos", newTodoId);
     },
 });
 
 export const toggle = mutation({
     args: {
-        id: v.id("todos"),
         completed: v.boolean(),
-    },
+        id: v.id("todos"),},
     handler: async (ctx, args) => {
         await ctx.db.patch("todos", args.id, { completed: args.completed });
         return { success: true };
@@ -22215,6 +22034,7 @@ export const deleteTodo = mutation({
     },
 });`],
   ["examples/todo/native/bare/app/(drawer)/todos.tsx.hbs", `/* oxlint-disable no-use-before-define, complexity */
+
 import { useState } from "react";
 import {
   View,
@@ -22270,12 +22090,12 @@ const TodosScreen = () => {
 
   const handleDeleteTodo = (id: Id<"todos">) => {
     Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
-      { text: "Cancel", style: "cancel" },
+      { style: "cancel" , text: "Cancel"},
       {
-        text: "Delete",
-        style: "destructive",
         onPress: () => deleteTodoMutation({ id }),
-      },
+      
+        style: "destructive",
+        text: "Delete",},
     ]);
   }
 
@@ -22346,12 +22166,12 @@ const TodosScreen = () => {
 
   const handleDeleteTodo = (id: number) => {
     Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
-      { text: "Cancel", style: "cancel" },
+      { style: "cancel" , text: "Cancel"},
       {
-        text: "Delete",
-        style: "destructive",
         onPress: () => deleteMutation.mutate({ id }),
-      },
+      
+        style: "destructive",
+        text: "Delete",},
     ]);
   }
 
@@ -22401,10 +22221,9 @@ const TodosScreen = () => {
                 style={[
                   styles.input,
                   {
-                    color: theme.text,
-                    borderColor: theme.border,
                     backgroundColor: theme.background,
-                  },
+                    borderColor: theme.border,
+                    color: theme.text,},
                 ]}
               />
             </View>
@@ -22636,24 +22455,11 @@ const TodosScreen = () => {
 export default TodosScreen;
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 16,
-  },
-  header: {
-    marginBottom: 16,
-  },
-  headerRow: {
-    flexDirection: "row",
+  addButton: {
     alignItems: "center",
-    justifyContent: "space-between",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
+    height: 48,
+    justifyContent: "center",
+    width: 48,},
   badge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -22662,85 +22468,89 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 12,
   },
-  inputCard: {
-    borderWidth: 1,
-    padding: 12,
-    marginBottom: 16,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  inputContainer: {
-    flex: 1,
-  },
-  input: {
-    borderWidth: 1,
-    padding: 12,
-    fontSize: 16,
-  },
-  addButton: {
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   centerContainer: {
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 32,
   },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 14,
+  checkbox: {
+    alignItems: "center",
+    borderWidth: 2,
+    height: 24,
+    justifyContent: "center",
+    width: 24,},
+  contentContainer: {
+    padding: 16,
+  },
+  deleteButton: {
+    padding: 4,
   },
   emptyCard: {
-    borderWidth: 1,
-    padding: 32,
     alignItems: "center",
+    borderWidth: 1,
     justifyContent: "center",
+    padding: 32,},
+  emptyText: {
+    fontSize: 14,
+    textAlign: "center",
   },
   emptyTitle: {
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 8,
   },
-  emptyText: {
-    fontSize: 14,
-    textAlign: "center",
+  header: {
+    marginBottom: 16,
   },
-  todosList: {
-    gap: 8,
+  headerRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",},
+  input: {
+    borderWidth: 1,
+    fontSize: 16,
+    padding: 12,},
+  inputCard: {
+    borderWidth: 1,
+    marginBottom: 16,
+    padding: 12,},
+  inputContainer: {
+    flex: 1,
+  },
+  inputRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,},
+  loadingText: {
+    fontSize: 14,
+    marginTop: 16,},
+  scrollView: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
   },
   todoCard: {
     borderWidth: 1,
     padding: 12,
   },
   todoRow: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    flexDirection: "row",
+    gap: 12,},
+  todoText: {
+    fontSize: 16,
   },
   todoTextContainer: {
     flex: 1,
   },
-  todoText: {
-    fontSize: 16,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  deleteButton: {
-    padding: 4,
-  },
-});
+  todosList: {
+    gap: 8,
+  },});
 `],
   ["examples/todo/native/unistyles/app/(drawer)/todos.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { useState } from "react";
 import {
   View,
@@ -22795,12 +22605,12 @@ const TodosScreen = () => {
 
   const handleDeleteTodo = (id: Id<"todos">) => {
     Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
-      { text: "Cancel", style: "cancel" },
+      { style: "cancel" , text: "Cancel"},
       {
-        text: "Delete",
-        style: "destructive",
         onPress: () => deleteTodoMutation({ id }),
-      },
+      
+        style: "destructive",
+        text: "Delete",},
     ]);
   };
   {{else}}
@@ -22859,12 +22669,12 @@ const TodosScreen = () => {
 
   const handleDeleteTodo = (id: number) => {
     Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
-      { text: "Cancel", style: "cancel" },
+      { style: "cancel" , text: "Cancel"},
       {
-        text: "Delete",
-        style: "destructive",
         onPress: () => deleteMutation.mutate({ id }),
-      },
+      
+        style: "destructive",
+        text: "Delete",},
     ]);
   };
   {{/if}}
@@ -22990,99 +22800,85 @@ const TodosScreen = () => {
 export default TodosScreen;
 
 const styles = StyleSheet.create((theme) => ({
-  scrollView: {
-    flex: 1,
-  },
-  headerContainer: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    backgroundColor: theme.colors.background,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: theme.colors.typography,
-    marginBottom: theme.spacing.sm,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: theme.colors.typography,
-    marginBottom: theme.spacing.md,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: theme.spacing.md,
-  },
-  textInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 8,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    color: theme.colors.typography,
-    backgroundColor: theme.colors.background,
-    marginRight: theme.spacing.sm,
-    fontSize: 16,
-  },
   addButton: {
+    alignItems: "center",
     backgroundColor: theme.colors.primary,
-    padding: theme.spacing.sm,
     borderRadius: 8,
     justifyContent: "center",
-    alignItems: "center",
-  },
+    padding: theme.spacing.sm,},
   addButtonDisabled: {
     backgroundColor: theme.colors.border,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: theme.spacing.lg,
-  },
-  loadingText: {
-    marginTop: theme.spacing.sm,
-    fontSize: 16,
-    color: theme.colors.typography,
-  },
-  emptyText: {
-    textAlign: "center",
-    marginTop: theme.spacing.xl,
-    fontSize: 16,
-    color: theme.colors.typography,
-  },
-  todoItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    backgroundColor: theme.colors.background,
-  },
-  todoContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
   },
   checkbox: {
     marginRight: theme.spacing.md,
   },
-  todoText: {
-    fontSize: 16,
+  emptyText: {
     color: theme.colors.typography,
+    fontSize: 16,
+    marginTop: theme.spacing.xl,
+    textAlign: "center",},
+  headerContainer: {
+    backgroundColor: theme.colors.background,
+    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 1,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.lg,},
+  headerSubtitle: {
+    color: theme.colors.typography,
+    fontSize: 16,
+    marginBottom: theme.spacing.md,},
+  headerTitle: {
+    color: theme.colors.typography,
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: theme.spacing.sm,},
+  inputContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    marginBottom: theme.spacing.md,},
+  loadingContainer: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    padding: theme.spacing.lg,},
+  loadingText: {
+    color: theme.colors.typography,
+    fontSize: 16,
+    marginTop: theme.spacing.sm,},
+  scrollView: {
     flex: 1,
   },
+  textInput: {
+    backgroundColor: theme.colors.background,
+    borderColor: theme.colors.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    color: theme.colors.typography,
+    flex: 1,
+    fontSize: 16,
+    marginRight: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,},
+  todoContent: {
+    alignItems: "center",
+    flex: 1,
+    flexDirection: "row",},
+  todoItem: {
+    alignItems: "center",
+    backgroundColor: theme.colors.background,
+    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,},
+  todoText: {
+    color: theme.colors.typography,
+    flex: 1,
+    fontSize: 16,},
   todoTextCompleted: {
-    textDecorationLine: "line-through",
     color: theme.colors.border,
-  },
-}));
+    textDecorationLine: "line-through",},}));
 `],
   ["examples/todo/native/uniwind/app/(drawer)/todos.tsx.hbs", `import { useState } from "react";
 import { View, Text, ScrollView, Alert } from "react-native";
@@ -23171,12 +22967,12 @@ const TodosScreen = () => {
 
     const handleDeleteTodo = (id: Id<"todos">) => {
       Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
-        { text: "Cancel", style: "cancel" },
+        { style: "cancel" , text: "Cancel"},
         {
-          text: "Delete",
-          style: "destructive",
           onPress: () => deleteTodoMutation({ id }),
-        },
+        
+          style: "destructive",
+          text: "Delete",},
       ]);
     };
 
@@ -23196,12 +22992,12 @@ const TodosScreen = () => {
 
     const handleDeleteTodo = (id: number) => {
       Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
-        { text: "Cancel", style: "cancel" },
+        { style: "cancel" , text: "Cancel"},
         {
-          text: "Delete",
-          style: "destructive",
           onPress: () => deleteMutation.mutate({ id }),
-        },
+        
+          style: "destructive",
+          text: "Delete",},
       ]);
     };
 
@@ -23454,25 +23250,25 @@ export const todoRouter = router({
   ["examples/todo/server/drizzle/mysql/src/schema/todo.ts", `import { mysqlTable, varchar, int, boolean } from "drizzle-orm/mysql-core";
 
 export const todo = mysqlTable("todo", {
+  completed: boolean("completed").default(false).notNull(),
   id: int("id").primaryKey().autoincrement(),
   text: varchar("text", { length: 255 }).notNull(),
-  completed: boolean("completed").default(false).notNull(),
 });
 `],
   ["examples/todo/server/drizzle/postgres/src/schema/todo.ts", `import { pgTable, text, boolean, serial } from "drizzle-orm/pg-core";
 
 export const todo = pgTable("todo", {
+  completed: boolean("completed").default(false).notNull(),
   id: serial("id").primaryKey(),
   text: text("text").notNull(),
-  completed: boolean("completed").default(false).notNull(),
 });
 `],
   ["examples/todo/server/drizzle/sqlite/src/schema/todo.ts", `import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const todo = sqliteTable("todo", {
+  completed: integer("completed", { mode: "boolean" }).default(false).notNull(),
   id: integer("id").primaryKey({ autoIncrement: true }),
   text: text("text").notNull(),
-  completed: integer("completed", { mode: "boolean" }).default(false).notNull(),
 });
 `],
   ["examples/todo/server/mongoose/base/src/routers/todo.ts.hbs", `{{#if (eq api "orpc")}}
@@ -23554,18 +23350,16 @@ const { Schema, model } = mongoose;
 
 const todoSchema = new Schema({
   id: {
-    type: String,
-    required: true,
     default: () => new mongoose.Types.ObjectId().toString(),
-  },
-  text: {
-    type: String,
+  
     required: true,
-  },
+    type: String,},
+  text: {
+    required: true,
+    type: String,},
   completed: {
-    type: Boolean,
     default: false,
-  },
+    type: Boolean,},
 }, {
   collection: 'todo',
   id: false,
@@ -23779,13 +23573,13 @@ import Layout from "../layouts/layout.astro";
     completed: boolean;
   }
 
-  const newTodoInput = document.getElementById("new-todo") as HTMLInputElement;
-  const addBtn = document.getElementById("add-btn") as HTMLButtonElement;
-  const addForm = document.getElementById("add-form") as HTMLFormElement;
-  const loadingEl = document.getElementById("loading") as HTMLElement;
-  const emptyEl = document.getElementById("empty") as HTMLElement;
-  const todoList = document.getElementById("todo-list") as HTMLElement;
-  const errorEl = document.getElementById("error") as HTMLElement;
+  const newTodoInput = document.querySelector("#new-todo") as HTMLInputElement;
+  const addBtn = document.querySelector("#add-btn") as HTMLButtonElement;
+  const addForm = document.querySelector("#add-form") as HTMLFormElement;
+  const loadingEl = document.querySelector("#loading") as HTMLElement;
+  const emptyEl = document.querySelector("#empty") as HTMLElement;
+  const todoList = document.querySelector("#todo-list") as HTMLElement;
+  const errorEl = document.querySelector("#error") as HTMLElement;
 
   let todos: Todo[] = [];
 
@@ -24151,7 +23945,8 @@ import {
 import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Loader2, Trash2 } from "lucide-react";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState } from "react";
+import type { FormEvent, ReactNode } from "react";
 
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
@@ -24416,7 +24211,8 @@ import {
 import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Loader2, Trash2 } from "lucide-react";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState } from "react";
+import type { FormEvent, ReactNode } from "react";
 
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
@@ -24682,7 +24478,8 @@ import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, Trash2 } from "lucide-react";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState } from "react";
+import type { FormEvent, ReactNode } from "react";
 
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
@@ -24954,7 +24751,8 @@ import { Trash2 } from "lucide-react";
 {{else}}
 import { Loader2, Trash2 } from "lucide-react";
 {{/if}}
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState } from "react";
+import type { FormEvent, ReactNode } from "react";
 
 {{#if (eq backend "convex")}}
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -25390,9 +25188,9 @@ export const Route = createFileRoute("/todos")({
 		try {
 			await client.mutation(api.todos.create, { text });
 			newTodoText = '';
-		} catch (err) {
+		} catch (error) {
 			console.error('Failed to add todo:', err);
-			addError = err instanceof Error ? err : new Error(String(err));
+			addError = err instanceof Error ? err : new Error(String(error));
 		} finally {
 			isAdding = false;
 		}
@@ -25405,9 +25203,9 @@ export const Route = createFileRoute("/todos")({
 		toggleError = null;
 		try {
 			await client.mutation(api.todos.toggle, { id, completed: !completed });
-		} catch (err) {
+		} catch (error) {
 			console.error('Failed to toggle todo:', err);
-			toggleError = err instanceof Error ? err : new Error(String(err));
+			toggleError = err instanceof Error ? err : new Error(String(error));
 		} finally {
 			if (togglingId === id) {
 				togglingId = null;
@@ -25422,9 +25220,9 @@ export const Route = createFileRoute("/todos")({
 		deleteError = null;
 		try {
 			await client.mutation(api.todos.deleteTodo, { id });
-		} catch (err) {
+		} catch (error) {
 			console.error('Failed to delete todo:', err);
-			deleteError = err instanceof Error ? err : new Error(String(err));
+			deleteError = err instanceof Error ? err : new Error(String(error));
 		} finally {
 			if (deletingId === id) {
 				deletingId = null;
@@ -25687,6 +25485,7 @@ shamefully-hoist=true
 strict-peer-dependencies=false
 {{/if}}`],
   ["extras/env.d.ts.hbs", `/* oxlint-disable sonarjs/redundant-type-aliases, typescript/no-empty-interface, typescript/no-empty-object-type */
+
 {{#if (eq serverDeploy "cloudflare")}}
 import { type server } from "@{{projectName}}/infra/alchemy.run";
 {{else}}
@@ -25881,10 +25680,10 @@ const links = [
 <script>
   import { authClient } from "../lib/auth-client";
 
-  const loginLink = document.getElementById("login-link");
-  const userMenu = document.getElementById("user-menu");
-  const userDisplay = document.getElementById("user-display");
-  const signOutButton = document.getElementById("signout-button");
+  const loginLink = document.querySelector("#login-link");
+  const userMenu = document.querySelector("#user-menu");
+  const userDisplay = document.querySelector("#user-display");
+  const signOutButton = document.querySelector("#signout-button");
 
   const checkSession = async () => {
     try {
@@ -25982,8 +25781,8 @@ const TITLE_TEXT = \`
 <script>
   import { orpc } from "../lib/orpc";
 
-  const statusDot = document.getElementById("status-dot") as HTMLElement;
-  const statusText = document.getElementById("status-text") as HTMLElement;
+  const statusDot = document.querySelector("#status-dot") as HTMLElement;
+  const statusText = document.querySelector("#status-text") as HTMLElement;
 
   const checkHealth = async () => {
     try {
@@ -26083,6 +25882,7 @@ web-build/
 }
 `],
   ["frontend/native/bare/app/_layout.tsx.hbs", `/* oxlint-disable sonarjs/variable-name, github/filenames-match-regex */
+
 {{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
@@ -26280,6 +26080,7 @@ const RootLayout = () => {
 export default RootLayout;
 `],
   ["frontend/native/bare/app/(drawer)/_layout.tsx.hbs", `/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
+
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { Drawer } from "expo-router/drawer";
@@ -26372,6 +26173,7 @@ export default DrawerLayout;
 
 `],
   ["frontend/native/bare/app/(drawer)/(tabs)/_layout.tsx.hbs", `/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
+
 import { TabBarIcon } from "@/components/tabbar-icon";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { Tabs } from "expo-router";
@@ -26417,6 +26219,7 @@ export default TabLayout;
 
 `],
   ["frontend/native/bare/app/(drawer)/(tabs)/index.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { Container } from "@/components/container";
 import { Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { ScrollView, View, StyleSheet } from "react-native";
@@ -26455,16 +26258,16 @@ const TabOne = () => {
 export default TabOne;
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-    padding: 16,
-  },
   content: {
     paddingVertical: 16,
   },
-});
+  scrollView: {
+    flex: 1,
+    padding: 16,
+  },});
 `],
   ["frontend/native/bare/app/(drawer)/(tabs)/two.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { Container } from "@/components/container";
 import { Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { ScrollView, View, StyleSheet } from "react-native";
@@ -26503,16 +26306,16 @@ const TabTwo = () => {
 export default TabTwo;
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-    padding: 16,
-  },
   content: {
     paddingVertical: 16,
   },
-});
+  scrollView: {
+    flex: 1,
+    padding: 16,
+  },});
 `],
   ["frontend/native/bare/app/(drawer)/index.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
 import type { ReactNode } from "react";
 {{/if}}
@@ -26602,10 +26405,9 @@ const handlePolarCheckout = async () => {
 		const returnUrl = createURL("/");
 		const polarReturnUrl = getPolarReturnUrl(returnUrl);
 		const { url } = await generateCheckoutLink({
-			productIds: [recurringProduct.id],
 			origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
-			successUrl: polarReturnUrl,
-		});
+			productIds: [recurringProduct.id],
+			successUrl: polarReturnUrl,});
 
 		await openPolarLink(url, returnUrl);
 	} catch {
@@ -26883,67 +26685,61 @@ return (
 export default Home;
 
 const styles = StyleSheet.create({
+authActionsHost: {
+marginTop: 4,
+},
+authHost: {
+marginBottom: 12,
+},
+card: {
+borderWidth: 1,
+marginBottom: 16,
+padding: 16,},
+content: {
+paddingBottom: 32,
+paddingHorizontal: 20,
+paddingTop: 28,},
+paymentActions: {
+marginTop: 12,
+},
 scrollView: {
 flex: 1,
 },
-content: {
-paddingHorizontal: 20,
-paddingTop: 28,
-paddingBottom: 32,
+statusCard: {
+borderRadius: 16,
+borderWidth: 1,
+marginBottom: 16,
+padding: 16,},
+statusCardTitleHost: {
+marginBottom: 8,
 },
+statusContent: {
+flex: 1,
+},
+statusIndicator: {
+borderRadius: 999,
+height: 10,
+width: 10,},
+statusRow: {
+alignItems: "center",
+flexDirection: "row",
+gap: 8,},
 titleHost: {
 alignSelf: "stretch",
 height: 34,
 marginBottom: 24,
 },
-card: {
-padding: 16,
-marginBottom: 16,
-borderWidth: 1,
-},
-statusRow: {
-flexDirection: "row",
-alignItems: "center",
-gap: 8,
-},
-statusIndicator: {
-height: 10,
-width: 10,
-borderRadius: 999,
-},
-statusContent: {
-flex: 1,
-},
 userCard: {
-marginBottom: 16,
-padding: 16,
-borderWidth: 1,
 borderRadius: 16,
-},
+borderWidth: 1,
+marginBottom: 16,
+padding: 16,},
 userHeader: {
 marginBottom: 8,
-},
-paymentActions: {
-marginTop: 12,
-},
-authHost: {
-marginBottom: 12,
-},
-authActionsHost: {
-marginTop: 4,
-},
-statusCard: {
-marginBottom: 16,
-padding: 16,
-borderWidth: 1,
-borderRadius: 16,
-},
-statusCardTitleHost: {
-marginBottom: 8,
-},
-});
+},});
 `],
   ["frontend/native/bare/app/+not-found.tsx.hbs", `/* oxlint-disable github/filenames-match-regex, no-use-before-define */
+
 import { Container } from "@/components/container";
 import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { Stack, router } from "expo-router";
@@ -26993,11 +26789,10 @@ export default NotFoundScreen;
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: "center",
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-  },
+    padding: 16,},
   content: {
     alignItems: "center",
   },
@@ -27008,6 +26803,7 @@ const styles = StyleSheet.create({
 });
 `],
   ["frontend/native/bare/app/modal.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { Container } from "@/components/container";
 import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { View, StyleSheet } from "react-native";
@@ -27056,6 +26852,7 @@ const styles = StyleSheet.create({
 });
 `],
   ["frontend/native/bare/components/container.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "@/lib/use-color-scheme";
@@ -27085,6 +26882,7 @@ const styles = StyleSheet.create({
 });
 `],
   ["frontend/native/bare/components/header-button.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import type { Ref } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -27130,9 +26928,8 @@ export const HeaderButton = ({
 
 const styles = StyleSheet.create({
   button: {
-    padding: 8,
     marginRight: 8,
-  },
+    padding: 8,},
 });
 
 `],
@@ -27151,14 +26948,6 @@ export const TabBarIcon = (props: {
 const DARK = "hsl(222.2 84% 4.9%)";
 
 export const NAV_THEME = {
-  light: {
-    background: WHITE,
-    border: "hsl(220 13% 91%)",
-    card: WHITE,
-    notification: "hsl(0 84.2% 60.2%)",
-    primary: "hsl(221.2 83.2% 53.3%)",
-    text: DARK,
-  },
   dark: {
     background: DARK,
     border: "hsl(217.2 32.6% 17.5%)",
@@ -27167,7 +26956,14 @@ export const NAV_THEME = {
     primary: "hsl(217.2 91.2% 59.8%)",
     text: "hsl(210 40% 98%)",
   },
-};
+  light: {
+    background: WHITE,
+    border: "hsl(220 13% 91%)",
+    card: WHITE,
+    notification: "hsl(0 84.2% 60.2%)",
+    primary: "hsl(221.2 83.2% 53.3%)",
+    text: DARK,
+  },};
 
 `],
   ["frontend/native/bare/lib/use-color-scheme.ts.hbs", `import { useColorScheme as useRNColorScheme } from "react-native";
@@ -27192,6 +26988,7 @@ export const useColorScheme = () => {
 
 `],
   ["frontend/native/bare/metro.config.js.hbs", `/* oxlint-disable unicorn/prefer-module */
+
 // Learn more https://docs.expo.io/guides/customizing-metro
 const { getDefaultConfig } = require("expo/metro-config");
 
@@ -27352,6 +27149,7 @@ android
 }
 `],
   ["frontend/native/unistyles/app/_layout.tsx.hbs", `/* oxlint-disable sonarjs/variable-name, github/filenames-match-regex */
+
 import "@/unistyles";
 {{#if (includes examples "ai")}}
 import "@/polyfills";
@@ -27605,6 +27403,7 @@ const RootLayout = () => {
 export default RootLayout;
 `],
   ["frontend/native/unistyles/app/(drawer)/_layout.tsx.hbs", `/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
+
 import "@/unistyles";
 
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -27696,6 +27495,7 @@ const DrawerLayout = () => {
 export default DrawerLayout;
 `],
   ["frontend/native/unistyles/app/(drawer)/(tabs)/_layout.tsx.hbs", `/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
+
 import "@/unistyles";
 
 import { Tabs } from "expo-router";
@@ -27741,14 +27541,14 @@ const TabLayout = () => {
 export default TabLayout;
 `],
   ["frontend/native/unistyles/app/(drawer)/(tabs)/index.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import "@/unistyles";
 
 import { Container } from "@/components/container";
 import { ScrollView, Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
-const Home = () => {
-  return (
+const Home = () => (
     <Container>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerSection}>
@@ -27760,7 +27560,6 @@ const Home = () => {
       </ScrollView>
     </Container>
   );
-};
 
 export default Home;
 
@@ -27771,27 +27570,24 @@ const styles = StyleSheet.create((theme) => ({
   headerSection: {
     paddingVertical: theme.spacing.xl,
   },
+  subtitle: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.lg,},
   title: {
+    color: theme.colors.foreground,
     fontSize: theme.fontSize["3xl"],
     fontWeight: "bold",
-    color: theme.colors.foreground,
-    marginBottom: theme.spacing.sm,
-  },
-  subtitle: {
-    fontSize: theme.fontSize.lg,
-    color: theme.colors.mutedForeground,
-  },
-}));
+    marginBottom: theme.spacing.sm,},}));
 `],
   ["frontend/native/unistyles/app/(drawer)/(tabs)/two.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import "@/unistyles";
 
 import { Container } from "@/components/container";
 import { ScrollView, Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
-const TabTwo = () => {
-  return (
+const TabTwo = () => (
     <Container>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerSection}>
@@ -27803,7 +27599,6 @@ const TabTwo = () => {
       </ScrollView>
     </Container>
   );
-};
 
 export default TabTwo;
 
@@ -27814,19 +27609,17 @@ const styles = StyleSheet.create((theme) => ({
   headerSection: {
     paddingVertical: theme.spacing.xl,
   },
+  subtitle: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.lg,},
   title: {
+    color: theme.colors.foreground,
     fontSize: theme.fontSize["3xl"],
     fontWeight: "bold",
-    color: theme.colors.foreground,
-    marginBottom: theme.spacing.sm,
-  },
-  subtitle: {
-    fontSize: theme.fontSize.lg,
-    color: theme.colors.mutedForeground,
-  },
-}));
+    marginBottom: theme.spacing.sm,},}));
 `],
   ["frontend/native/unistyles/app/(drawer)/index.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
 import type { ReactNode } from "react";
 {{/if}}
@@ -27915,10 +27708,9 @@ const Home = () => {
       const returnUrl = Linking.createURL("/");
       const polarReturnUrl = getPolarReturnUrl(returnUrl);
       const { url } = await generateCheckoutLink({
-        productIds: [recurringProduct.id],
         origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
-        successUrl: polarReturnUrl,
-      });
+        productIds: [recurringProduct.id],
+        successUrl: polarReturnUrl,});
 
       await openPolarLink(url, returnUrl);
     } catch {
@@ -28155,173 +27947,151 @@ if (!isLoaded) {
 export default Home;
 
 const styles = StyleSheet.create((theme) => ({
+  apiStatusCard: {
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    marginBottom: theme.spacing.md,
+    padding: theme.spacing.md,},
+  apiStatusRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.xs,},
+  apiStatusText: {
+    color: theme.colors.mutedForeground,
+  },
+  apiStatusTitle: {
+    color: theme.colors.foreground,
+    fontWeight: "500",
+    marginBottom: theme.spacing.sm,},
   container: {
     paddingHorizontal: theme.spacing.md,
   },
   heroSection: {
     paddingVertical: theme.spacing.xl,
   },
+  heroSubtitle: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.lg,
+    lineHeight: 28,},
   heroTitle: {
+    color: theme.colors.foreground,
     fontSize: theme.fontSize["4xl"],
     fontWeight: "bold",
-    color: theme.colors.foreground,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,},
+  paymentActions: {
+    alignItems: "flex-start",
+    marginTop: theme.spacing.sm,},
+  polarPrimaryButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,},
+  polarPrimaryButtonText: {
+    color: theme.colors.primaryForeground,
+    fontWeight: "500",
   },
-  heroSubtitle: {
-    fontSize: theme.fontSize.lg,
-    color: theme.colors.mutedForeground,
-    lineHeight: 28,
-  },
-  statusCard: {
-    backgroundColor: theme.colors.card,
-    borderWidth: 1,
+  polarSecondaryButton: {
     borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,},
+  polarSecondaryButtonText: {
+    color: theme.colors.foreground,
+    fontWeight: "500",
   },
-  statusHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: theme.spacing.md,
-  },
-  statusTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: "600",
-    color: theme.colors.cardForeground,
+  signOutButton: {
+    alignSelf: "flex-start",
+    backgroundColor: theme.colors.destructive,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,},
+  signOutText: {
+    color: theme.colors.destructiveForeground,
+    fontWeight: "500",
   },
   statusBadge: {
     backgroundColor: theme.colors.secondary,
-    paddingHorizontal: theme.spacing.sm + 4,
-    paddingVertical: theme.spacing.xs,
     borderRadius: 9999,
-  },
+    paddingHorizontal: theme.spacing.sm + 4,
+    paddingVertical: theme.spacing.xs,},
   statusBadgeText: {
-    fontSize: theme.fontSize.xs,
-    fontWeight: "500",
     color: theme.colors.secondaryForeground,
+    fontSize: theme.fontSize.xs,
+    fontWeight: "500",},
+  statusCard: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    elevation: 2,
+    marginBottom: theme.spacing.lg,
+    padding: theme.spacing.lg,
+    shadowColor: "#000",
+    shadowOffset: { height: 1 , width: 0},
+    shadowOpacity: 0.05,
+    shadowRadius: 3,},
+  statusContent: {
+    flex: 1,
   },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm + 4,
-  },
+  statusDescription: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.xs,},
   statusDot: {
-    height: 12,
-    width: 12,
     borderRadius: 6,
-  },
+    height: 12,
+    width: 12,},
   statusDotSuccess: {
     backgroundColor: theme.colors.success,
   },
   statusDotWarning: {
     backgroundColor: "#F59E0B",
   },
-  statusContent: {
-    flex: 1,
-  },
-  statusLabel: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: "500",
-    color: theme.colors.cardForeground,
-  },
-  statusDescription: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.mutedForeground,
-  },
-  userCard: {
-    backgroundColor: theme.colors.card,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-  },
-  userHeader: {
+  statusHeader: {
+    alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
+    marginBottom: theme.spacing.md,},
+  statusLabel: {
+    color: theme.colors.cardForeground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "500",},
+  statusRow: {
     alignItems: "center",
-    marginBottom: theme.spacing.xs,
-  },
-  userWelcome: {
-    fontSize: theme.fontSize.base,
-    color: theme.colors.foreground,
-  },
+    flexDirection: "row",
+    gap: theme.spacing.sm + 4,},
+  statusTitle: {
+    color: theme.colors.cardForeground,
+    fontSize: theme.fontSize.lg,
+    fontWeight: "600",},
+  userCard: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    marginBottom: theme.spacing.md,
+    padding: theme.spacing.md,},
+  userEmail: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    marginBottom: theme.spacing.md,},
+  userHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: theme.spacing.xs,},
   userName: {
     fontWeight: "500",
   },
-  userEmail: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.mutedForeground,
-    marginBottom: theme.spacing.md,
-  },
-  signOutButton: {
-    backgroundColor: theme.colors.destructive,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    alignSelf: "flex-start",
-  },
-  signOutText: {
-    color: theme.colors.destructiveForeground,
-    fontWeight: "500",
-  },
-  paymentActions: {
-    marginTop: theme.spacing.sm,
-    alignItems: "flex-start",
-  },
-  polarPrimaryButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-  },
-  polarPrimaryButtonText: {
-    color: theme.colors.primaryForeground,
-    fontWeight: "500",
-  },
-  polarSecondaryButton: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-  },
-  polarSecondaryButtonText: {
+  userWelcome: {
     color: theme.colors.foreground,
-    fontWeight: "500",
-  },
-  apiStatusCard: {
-    marginBottom: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    padding: theme.spacing.md,
-  },
-  apiStatusTitle: {
-    marginBottom: theme.spacing.sm,
-    fontWeight: "500",
-    color: theme.colors.foreground,
-  },
-  apiStatusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.xs,
-  },
-  apiStatusText: {
-    color: theme.colors.mutedForeground,
-  },
-}));
+    fontSize: theme.fontSize.base,},}));
 `],
   ["frontend/native/unistyles/app/+html.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+
 import { ScrollViewStyleReset } from "expo-router/html";
-import { type PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 
 import "../unistyles";
 
@@ -28329,8 +28099,7 @@ import "../unistyles";
 // web page during static rendering.
 // The contents of this function only run in Node.js environments and
 // do not have access to the DOM or browser APIs.
-const Root = ({ children }: PropsWithChildren) => {
-  return (
+const Root = ({ children }: PropsWithChildren) => (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
@@ -28351,11 +28120,11 @@ const Root = ({ children }: PropsWithChildren) => {
       <body>{children}</body>
     </html>
   );
-};
 
 export default Root;
 `],
   ["frontend/native/unistyles/app/+not-found.tsx.hbs", `/* oxlint-disable github/filenames-match-regex, no-use-before-define */
+
 import "@/unistyles";
 
 import { Link, Stack } from "expo-router";
@@ -28389,11 +28158,10 @@ export default NotFoundScreen;
 
 const styles = StyleSheet.create((theme) => ({
   container: {
+    alignItems: "center",
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
-    padding: theme.spacing.lg,
-  },
+    padding: theme.spacing.lg,},
   content: {
     alignItems: "center",
   },
@@ -28402,18 +28170,16 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.spacing.md,
   },
   title: {
+    color: theme.colors.foreground,
     fontSize: theme.fontSize["2xl"],
     fontWeight: "bold",
-    color: theme.colors.foreground,
     marginBottom: theme.spacing.sm,
-    textAlign: "center",
-  },
+    textAlign: "center",},
   description: {
     color: theme.colors.mutedForeground,
-    textAlign: "center",
     marginBottom: theme.spacing.xl,
     maxWidth: 280,
-  },
+    textAlign: "center",},
   button: {
     // 10% opacity
     backgroundColor: \`\${theme.colors.primary}1A\`,
@@ -28428,14 +28194,14 @@ const styles = StyleSheet.create((theme) => ({
 }));
 `],
   ["frontend/native/unistyles/app/modal.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import "@/unistyles";
 
 import { Container } from "@/components/container";
 import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
-const Modal = () => {
-  return (
+const Modal = () => (
     <Container>
       <View style={styles.container}>
         <View style={styles.header}>
@@ -28444,7 +28210,6 @@ const Modal = () => {
       </View>
     </Container>
   );
-};
 
 export default Modal;
 
@@ -28454,25 +28219,22 @@ const styles = StyleSheet.create((theme) => ({
     padding: theme.spacing.lg,
   },
   header: {
-    flexDirection: "row",
     alignItems: "center",
+    flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: theme.spacing.xl,
-  },
+    marginBottom: theme.spacing.xl,},
   title: {
-    fontSize: theme.fontSize["2xl"],
-    fontWeight: "bold",
     color: theme.colors.foreground,
-  },
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "bold",},
 }));
 `],
   ["frontend/native/unistyles/babel.config.js.hbs", `/* oxlint-disable unicorn/prefer-module */
+
 const babelConfig = (api) => {
 	api.cache(true);
 
 	return {
-		presets: ["babel-preset-expo"],
-
 		plugins: [
 			[
 				"react-native-unistyles/plugin",
@@ -28484,41 +28246,40 @@ const babelConfig = (api) => {
 			],
 			"react-native-worklets/plugin",
 		],
+		presets: ["babel-preset-expo"],
 	};
 };
 
 module.exports = babelConfig;
 `],
   ["frontend/native/unistyles/breakpoints.ts.hbs", `export const breakpoints = {
-  xs: 0,
-  sm: 576,
-  md: 768,
   lg: 992,
-  xl: 1200,
+  md: 768,
+  sm: 576,
   superLarge: 2000,
   tvLike: 4000,
-} as const;
+  xl: 1200,
+  xs: 0,} as const;
 `],
   ["frontend/native/unistyles/components/container.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import "@/unistyles";
 
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
 
-export const Container = ({ children }: { children: React.ReactNode }) => {
-  return <SafeAreaView style={styles.container}>{children}</SafeAreaView>;
-};
+export const Container = ({ children }: { children: React.ReactNode }) => <SafeAreaView style={styles.container}>{children}</SafeAreaView>;
 
 const styles = StyleSheet.create((theme, rt) => ({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.background,
-    paddingBottom: rt.insets.bottom,
-  },
+    flex: 1,
+    paddingBottom: rt.insets.bottom,},
 }));
 `],
   ["frontend/native/unistyles/components/header-button.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import "@/unistyles";
 
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -28570,6 +28331,7 @@ export const TabBarIcon = (props: {
 import 'expo-router/entry';
 `],
   ["frontend/native/unistyles/metro.config.js.hbs", `/* oxlint-disable unicorn/prefer-module */
+
 const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
@@ -28642,14 +28404,18 @@ const WHITE = "hsl(0 0% 100%)";
 const LIGHT_GRAY = "hsl(0 0% 90%)";
 
 const sharedColors = {
-  success: "#22C55E",
   destructive: "#EF4444",
   destructiveForeground: "#FFFFFF",
-  warning: "#F59E0B",
   info: "#3B82F6",
-} as const;
+  success: "#22C55E",
+  warning: "#F59E0B",} as const;
 
 export const lightTheme = {
+  borderRadius: {
+    lg: 12,
+    md: 8,
+    sm: 6,
+    xl: 16,},
   colors: {
     ...sharedColors,
     typography: BLACK,
@@ -28669,33 +28435,29 @@ export const lightTheme = {
     input: LIGHT_GRAY,
     ring: "hsl(0 0% 20%)",
   },
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-    xxl: 48,
-  },
-  borderRadius: {
-    sm: 6,
-    md: 8,
-    lg: 12,
-    xl: 16,
-  },
   fontSize: {
-    xs: 12,
-    sm: 14,
-    base: 16,
-    lg: 18,
-    xl: 20,
     "2xl": 24,
     "3xl": 30,
     "4xl": 36,
-  },
-} as const;
+    base: 16,
+    lg: 18,
+    sm: 14,
+    xl: 20,
+    xs: 12,},
+  spacing: {
+    lg: 24,
+    md: 16,
+    sm: 8,
+    xl: 32,
+    xs: 4,
+    xxl: 48,},} as const;
 
 export const darkTheme = {
+  borderRadius: {
+    lg: 12,
+    md: 8,
+    sm: 6,
+    xl: 16,},
   colors: {
     ...sharedColors,
     typography: WHITE,
@@ -28715,31 +28477,22 @@ export const darkTheme = {
     input: "hsl(0 0% 15%)",
     ring: "hsl(0 0% 80%)",
   },
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-    xxl: 48,
-  },
-  borderRadius: {
-    sm: 6,
-    md: 8,
-    lg: 12,
-    xl: 16,
-  },
   fontSize: {
-    xs: 12,
-    sm: 14,
-    base: 16,
-    lg: 18,
-    xl: 20,
     "2xl": 24,
     "3xl": 30,
     "4xl": 36,
-  },
-} as const;
+    base: 16,
+    lg: 18,
+    sm: 14,
+    xl: 20,
+    xs: 12,},
+  spacing: {
+    lg: 24,
+    md: 16,
+    sm: 8,
+    xl: 32,
+    xs: 4,
+    xxl: 48,},} as const;
 `],
   ["frontend/native/unistyles/tsconfig.json.hbs", `{
   "extends": "expo/tsconfig.base",
@@ -28754,6 +28507,7 @@ export const darkTheme = {
 }
 `],
   ["frontend/native/unistyles/unistyles.ts.hbs", `/* oxlint-disable typescript/no-empty-interface, typescript/no-empty-object-type */
+
 import { StyleSheet } from "react-native-unistyles";
 
 import { breakpoints } from "./breakpoints";
@@ -28761,10 +28515,10 @@ import { darkTheme, lightTheme } from "./theme";
 
 type AppBreakpoints = typeof breakpoints;
 
-type AppThemes = {
+interface AppThemes {
   light: typeof lightTheme;
   dark: typeof darkTheme;
-};
+}
 
 declare module "react-native-unistyles" {
   export interface UnistylesBreakpoints extends AppBreakpoints {}
@@ -28774,9 +28528,8 @@ declare module "react-native-unistyles" {
 StyleSheet.configure({
   breakpoints,
   themes: {
-    light: lightTheme,
     dark: darkTheme,
-  },
+    light: lightTheme,},
   settings: {
     adaptiveThemes: true,
   },
@@ -28825,6 +28578,7 @@ uniwind-types.d.ts
 }
 `],
   ["frontend/native/uniwind/app/_layout.tsx.hbs", `/* oxlint-disable sonarjs/variable-name, github/filenames-match-regex */
+
 {{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
@@ -29016,6 +28770,7 @@ const Layout = () => {
 export default Layout;
 `],
   ["frontend/native/uniwind/app/(drawer)/_layout.tsx.hbs", `/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
+
 import React, { useCallback } from "react";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
@@ -29036,9 +28791,8 @@ const DrawerLayout = () => {
         headerTintColor: themeColorForeground,
         headerStyle: { backgroundColor: themeColorBackground },
         headerTitleStyle: {
-          fontWeight: "600",
           color: themeColorForeground,
-        },
+          fontWeight: "600",},
         headerRight: renderThemeToggle,
         drawerStyle: { backgroundColor: themeColorBackground },
       }}
@@ -29108,6 +28862,7 @@ const DrawerLayout = () => {
 
 export default DrawerLayout;`],
   ["frontend/native/uniwind/app/(drawer)/(tabs)/_layout.tsx.hbs", `/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
+
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "heroui-native";
@@ -29161,8 +28916,7 @@ export default TabLayout;
 import { View } from "react-native";
 import { Card } from "heroui-native";
 
-const Home = () => {
-	return (
+const Home = () => (
 		<Container className="p-6">
 			<View className="flex-1 justify-center items-center">
 				<Card variant="secondary" className="p-8 items-center">
@@ -29171,7 +28925,6 @@ const Home = () => {
 			</View>
 		</Container>
 	);
-};
 
 export default Home;
 `],
@@ -29179,8 +28932,7 @@ export default Home;
 import { View } from "react-native";
 import { Card } from "heroui-native";
 
-const TabTwo = () => {
-	return (
+const TabTwo = () => (
 		<Container className="p-6">
 			<View className="flex-1 justify-center items-center">
 				<Card variant="secondary" className="p-8 items-center">
@@ -29189,7 +28941,6 @@ const TabTwo = () => {
 			</View>
 		</Container>
 	);
-};
 
 export default TabTwo;
 `],
@@ -29281,10 +29032,9 @@ const handlePolarCheckout = async () => {
     const returnUrl = Linking.createURL("/");
     const polarReturnUrl = getPolarReturnUrl(returnUrl);
     const { url } = await generateCheckoutLink({
-      productIds: [recurringProduct.id],
       origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
-      successUrl: polarReturnUrl,
-    });
+      productIds: [recurringProduct.id],
+      successUrl: polarReturnUrl,});
 
     await openPolarLink(url, returnUrl);
   } catch {
@@ -29517,6 +29267,7 @@ return (
 export default Home;
 `],
   ["frontend/native/uniwind/app/+not-found.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+
 import { Link, Stack } from "expo-router";
 import { Button, Surface } from "heroui-native";
 import { Text, View } from "react-native";
@@ -29586,9 +29337,11 @@ const Modal = () => {
 export default Modal;
 `],
   ["frontend/native/uniwind/components/container.tsx.hbs", `/* oxlint-disable import/no-named-as-default-member */
+
 import { cn } from "heroui-native";
-import { type PropsWithChildren } from "react";
-import { ScrollView, View, type ScrollViewProps, type ViewProps } from "react-native";
+import type { PropsWithChildren } from "react";
+import { ScrollView, View } from "react-native";
+import type { ScrollViewProps, ViewProps } from "react-native";
 import Animated, { type AnimatedProps } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -29670,6 +29423,7 @@ export const ThemeToggle = () => {
 
 `],
   ["frontend/native/uniwind/contexts/app-theme-context.tsx.hbs", `/* oxlint-disable react-doctor/no-react19-deprecated-apis, react-doctor/no-usememo-simple-expression, react-doctor/react-compiler-no-manual-memoization */
+
 import React, { createContext, useCallback, useContext, useMemo } from 'react';
 import { Uniwind, useUniwind } from 'uniwind';
 
@@ -29690,13 +29444,9 @@ const AppThemeContext = createContext<AppThemeContextType | undefined>(
 export const AppThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const { theme } = useUniwind();
 
-    const isLight = useMemo(() => {
-        return theme === 'light';
-    }, [theme]);
+    const isLight = useMemo(() => theme === 'light', [theme]);
 
-    const isDark = useMemo(() => {
-        return theme === 'dark';
-    }, [theme]);
+    const isDark = useMemo(() => theme === 'dark', [theme]);
 
     const setTheme = useCallback((newTheme: ThemeName) => {
         Uniwind.setTheme(newTheme);
@@ -29740,6 +29490,7 @@ export const useAppTheme = () => {
 @source './node_modules/heroui-native/lib';
 `],
   ["frontend/native/uniwind/metro.config.js.hbs", `/* oxlint-disable unicorn/prefer-module */
+
 const { getDefaultConfig } = require("expo/metro-config");
 const { withUniwindConfig } = require("uniwind/metro");
 const { wrapWithReanimatedMetroConfig } = require("react-native-reanimated/metro-config");
@@ -29869,9 +29620,8 @@ logs
   ["frontend/nuxt/app/app.config.ts.hbs", `export default defineAppConfig({
   ui: {
     colors: {
-      primary: 'emerald',
       neutral: 'neutral',
-    },
+      primary: 'emerald',},
   }
 })
 `],
@@ -30220,19 +29970,16 @@ import Providers from "@/components/providers";
 import Header from "@/components/header";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
   subsets: ["latin"],
-});
+  variable: "--font-geist-sans",});
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
   subsets: ["latin"],
-});
+  variable: "--font-geist-mono",});
 
 export const metadata: Metadata = {
-  title: "{{projectName}}",
   description: "{{projectName}}",
-};
+  title: "{{projectName}}",};
 
 {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
 const RootLayout = async ({
@@ -30683,9 +30430,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes";
 export const ThemeProvider = ({
   children,
   ...props
-}: ComponentProps<typeof NextThemesProvider>) => {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
-}
+}: ComponentProps<typeof NextThemesProvider>) => <NextThemesProvider {...props}>{children}</NextThemesProvider>
 
 export { useTheme } from "next-themes";
 `],
@@ -30759,17 +30504,15 @@ const ClerkApiAuthBridge = () => {
 {{/if}}
 
 export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+  { href: "https://fonts.googleapis.com" , rel: "preconnect"},
+  { crossOrigin: "anonymous" , href: "https://fonts.gstatic.com", rel: "preconnect"},
   {
-    rel: "stylesheet",
     href:
       "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-  },
+    rel: "stylesheet",},
 ];
 
-export const Layout = ({ children }: { children: React.ReactNode }) => {
-  return (
+export const Layout = ({ children }: { children: React.ReactNode }) => (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
@@ -30783,8 +30526,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <Scripts />
       </body>
     </html>
-  );
-}
+  )
 
 {{#if (eq backend "convex")}}
 {{#if (eq auth "clerk")}}
@@ -30911,8 +30653,7 @@ const App = ({ loaderData }: Route.ComponentProps) => {
 
 export default App;
 {{else if (eq api "orpc")}}
-const App = () => {
-  return (
+const App = () => (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
         attribute="class"
@@ -30929,12 +30670,10 @@ const App = () => {
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
-};
 
 export default App;
 {{else if (eq api "trpc")}}
-const App = () => {
-  return (
+const App = () => (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
         attribute="class"
@@ -30951,12 +30690,10 @@ const App = () => {
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
-};
 
 export default App;
 {{else}}
-const App = () => {
-  return (
+const App = () => (
     <ThemeProvider
       attribute="class"
       defaultTheme="dark"
@@ -30970,7 +30707,6 @@ const App = () => {
       <Toaster richColors />
     </ThemeProvider>
   );
-};
 
 export default App;
 {{/if}}
@@ -31001,12 +30737,13 @@ export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
   );
 }
 `],
-  ["frontend/react/react-router/src/routes.ts", `import { type RouteConfig } from "@react-router/dev/routes";
+  ["frontend/react/react-router/src/routes.ts", `import type { RouteConfig } from "@react-router/dev/routes";
 import { flatRoutes } from "@react-router/fs-routes";
 
 export default flatRoutes() satisfies RouteConfig;
 `],
   ["frontend/react/react-router/src/routes/_index.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+
 import type { Route } from "./+types/_index";
 {{#if (eq backend "convex")}}
 import { useQuery } from "convex/react";
@@ -31239,9 +30976,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes";
 export const ThemeProvider = ({
   children,
   ...props
-}: ComponentProps<typeof NextThemesProvider>) => {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
-}
+}: ComponentProps<typeof NextThemesProvider>) => <NextThemesProvider {...props}>{children}</NextThemesProvider>
 
 export { useTheme } from "next-themes";
 `],
@@ -31366,7 +31101,7 @@ declare module "@tanstack/react-router" {
   }
 }
 
-const rootElement = document.getElementById("app");
+const rootElement = document.querySelector("#app");
 
 if (!rootElement) {
   throw new Error("Root element not found");
@@ -31378,6 +31113,7 @@ if (!rootElement.hasChildNodes()) {
 }
 `],
   ["frontend/react/tanstack-router/src/routes/__root.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+
 import Header from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
@@ -31465,6 +31201,12 @@ const RootComponent = () => {
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,
   head: () => ({
+    links: [
+      {
+        href: "/favicon.ico",
+        rel: "icon",
+      },
+    ],
     meta: [
       {
         title: "{{projectName}}",
@@ -31473,14 +31215,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         content: "{{projectName}} is a web application",
         name: "description",
       },
-    ],
-    links: [
-      {
-        href: "/favicon.ico",
-        rel: "icon",
-      },
-    ],
-  }),
+    ],}),
 });
 `],
   ["frontend/react/tanstack-router/src/routes/index.tsx.hbs", `import { createFileRoute } from "@tanstack/react-router";
@@ -31599,12 +31334,6 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
 export default defineConfig({
-  server: {
-    port: 3001,
-  },
-  resolve: {
-    tsconfigPaths: true,
-  },
   plugins: [
     tailwindcss(),
     tanstackRouter({
@@ -31613,7 +31342,12 @@ export default defineConfig({
     }),
     react(),
   ],
-});
+  resolve: {
+    tsconfigPaths: true,
+  },
+  server: {
+    port: 3001,
+  },});
 `],
   ["frontend/react/tanstack-start/package.json.hbs", `{
   "name": "web",
@@ -31698,9 +31432,8 @@ export const getRouter = () => {
 	const queryClient: QueryClient = new QueryClient({
 		defaultOptions: {
 			queries: {
-				queryKeyHashFn: convexQueryClient.hashFn(),
 				queryFn: convexQueryClient.queryFn(),
-			},
+				queryKeyHashFn: convexQueryClient.hashFn(),},
 		},
 	});
 	convexQueryClient.connect(queryClient);
@@ -31726,8 +31459,7 @@ export const getRouter = () => {
 {{> getServerUrl}}
 
 {{/unless}}
-const createQueryClient = () => {
-	return new QueryClient({
+const createQueryClient = () => new QueryClient({
 		defaultOptions: { queries: { staleTime: 60 * 1000 } },
 		queryCache: new QueryCache({
 			onError: (error, query) => {
@@ -31741,8 +31473,7 @@ const createQueryClient = () => {
 				});
 			},
 		}),
-	});
-}
+	})
 
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [
@@ -31819,6 +31550,7 @@ declare module "@tanstack/react-router" {
 }
 `],
   ["frontend/react/tanstack-start/src/routes/__root.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
 {{#unless (eq backend "convex")}} {{#unless (eq api "none")}}
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -31867,9 +31599,7 @@ import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 
-const getAuth = createServerFn({ method: "GET" }).handler(async () => {
-  return await getToken();
-});
+const getAuth = createServerFn({ method: "GET" }).handler(async () => await getToken());
 {{else if (eq backend "convex")}}
 import { ConvexProvider } from "convex/react";
 {{/if}}
@@ -32364,37 +32094,28 @@ const Header = () => (
     <div>
       <div className="flex flex-row items-center justify-between px-2 py-1">
         <nav className="flex gap-4 text-lg">
-          {links.map(({ to, label }) => {
+          {links.map(({ to, label }) => (
             {{#if (includes frontend "next")}}
-            return (
-              <Link key={to} href={to}>
-                {label}
-              </Link>
-            );
+            <Link key={to} href={to}>
+              {label}
+            </Link>
             {{else if (includes frontend "react-router")}}
-            return (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) => isActive ? "font-bold" : ""}
-                end
-              >
-                {label}
-              </NavLink>
-            );
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => (isActive ? "font-bold" : "")}
+              end
+            >
+              {label}
+            </NavLink>
             {{else if (or (includes frontend "tanstack-router") (includes frontend "tanstack-start"))}}
-            return (
-              <Link
-                key={to}
-                to={to}
-              >
-                {label}
-              </Link>
-            );
+            <Link key={to} to={to}>
+              {label}
+            </Link>
             {{else}}
-            return null;
+            null
             {{/if}}
-          })}
+          ))}
         </nav>
         <div className="flex items-center gap-2">
           {{#unless (includes frontend "tanstack-start")}}
@@ -32413,13 +32134,11 @@ export default Header;
 `],
   ["frontend/react/web-base/src/components/loader.tsx.hbs", `import { Loader2 } from "lucide-react";
 
-const Loader = () => {
-  return (
+const Loader = () => (
     <div className="flex h-full items-center justify-center pt-8">
       <Loader2 className="animate-spin" />
     </div>
   );
-};
 
 export default Loader;
 `],
@@ -32490,7 +32209,7 @@ import { For } from "solid-js";
 
 const Header = () => {
   const links = [
-    { to: "/", label: "Home" },
+    { label: "Home" , to: "/"},
     {{#if (eq auth "better-auth")}}
     { to: "/dashboard", label: "Dashboard" },
     {{/if}}
@@ -32525,13 +32244,11 @@ export default Header;
 `],
   ["frontend/solid/src/components/loader.tsx", `import { Loader2 } from "lucide-solid";
 
-const Loader = () => {
-  return (
-    <div class="flex h-full items-center justify-center pt-8">
-      <Loader2 class="animate-spin" />
-    </div>
-  );
-};
+const Loader = () => (
+  <div class="flex h-full items-center justify-center pt-8">
+    <Loader2 class="animate-spin" />
+  </div>
+);
 
 export default Loader;
 `],
@@ -32572,12 +32289,13 @@ const App = () => {
   );
 }
 
-const rootElement = document.getElementById("app");
+const rootElement = document.querySelector("#app");
 if (rootElement) {
   render(() => <App />, rootElement);
 }
 `],
   ["frontend/solid/src/routes/__root.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+
 import Header from "@/components/header";
 import { Outlet, createRootRouteWithContext } from "@tanstack/solid-router";
 import { TanStackRouterDevtools } from "@tanstack/solid-router-devtools";
@@ -32731,7 +32449,7 @@ import path from "node:path";
 
 export default defineConfig({
   plugins: [
-    tanstackRouter({ target: "solid", autoCodeSplitting: true }),
+    tanstackRouter({ autoCodeSplitting: true , target: "solid"}),
     solidPlugin(),
     tailwindcss(),
   ],
@@ -32840,7 +32558,6 @@ declare global {
 	}
 }
 
-export {};
 `],
   ["frontend/svelte/src/app.html", `<!doctype html>
 <html lang="en">
@@ -32887,8 +32604,8 @@ export {};
 </div>
 `],
   ["frontend/svelte/src/lib/index.ts", `/* oxlint-disable unicorn/no-empty-file */
+
 // place files you want to import through the \`$lib\` alias in this folder.
-export {};
 `],
   ["frontend/svelte/src/routes/+layout.svelte.hbs", `{{#if (eq backend "convex")}}
 <script lang="ts">
@@ -33242,8 +32959,7 @@ const getCloudflareEnvSync = () => {
 
 type EnvValue = Env[keyof Env];
 
-const createEnvProxy = (getValue: (key: keyof Env & string) => EnvValue | undefined) => {
-	return new Proxy({} as Env, {
+const createEnvProxy = (getValue: (key: keyof Env & string) => EnvValue | undefined) => new Proxy({} as Env, {
 		get(_target, prop) {
 			if (typeof prop !== "string") {
 				return;
@@ -33251,8 +32967,7 @@ const createEnvProxy = (getValue: (key: keyof Env & string) => EnvValue | undefi
 
 			return getValue(prop as keyof Env & string);
 		},
-	});
-}
+	})
 
 const resolveEnvValue = (key: keyof Env & string): EnvValue | undefined => {
 	const nodeValue = getNodeEnvValue(key);
@@ -33526,6 +33241,7 @@ export const env = createEnv({
 }
 `],
   ["packages/infra/alchemy.run.ts.hbs", `/* oxlint-disable typescript/no-non-null-assertion */
+
 import alchemy from "alchemy";
 import {
 {{#if (and (or (eq serverDeploy "cloudflare") (and (eq webDeploy "cloudflare") (eq backend "self"))) (eq dbSetup "d1"))}}
@@ -34038,6 +33754,7 @@ await app.finalize();
 };
 `],
   ["packages/ui/src/components/attachment.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 import * as React from "react"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
@@ -34050,17 +33767,16 @@ const attachmentVariants = cva(
   "group/attachment relative flex w-fit max-w-full min-w-0 shrink-0 flex-wrap rounded-none border bg-card text-card-foreground transition-colors focus-within:ring-1 focus-within:ring-ring/50 has-[>a,>button]:hover:bg-muted/50 data-[state=error]:border-destructive/30 data-[state=idle]:border-dashed",
   {
     variants: {
+      orientation: {
+        horizontal: "min-w-40 items-center",
+        vertical: "w-24 flex-col has-data-[slot=attachment-content]:w-30",
+      },
       size: {
         default:
           "gap-2 text-xs has-data-[slot=attachment-content]:px-2 has-data-[slot=attachment-content]:py-1.5 has-data-[slot=attachment-media]:p-1.5",
         sm: "gap-2.5 text-xs has-data-[slot=attachment-content]:px-1.5 has-data-[slot=attachment-content]:py-1 has-data-[slot=attachment-media]:p-1",
         xs: "gap-1.5 rounded-none text-xs has-data-[slot=attachment-content]:px-1.5 has-data-[slot=attachment-content]:py-1 has-data-[slot=attachment-media]:p-1",
-      },
-      orientation: {
-        horizontal: "min-w-40 items-center",
-        vertical: "w-24 flex-col has-data-[slot=attachment-content]:w-30",
-      },
-    },
+      },},
   }
 )
 
@@ -34091,17 +33807,16 @@ const Attachment = ({
 const attachmentMediaVariants = cva(
   "relative flex aspect-square w-10 shrink-0 items-center justify-center overflow-hidden rounded-none bg-muted text-foreground group-data-[orientation=vertical]/attachment:w-full group-data-[size=sm]/attachment:w-8 group-data-[size=xs]/attachment:w-7 group-data-[size=xs]/attachment:rounded-none group-data-[state=error]/attachment:bg-destructive/10 group-data-[state=error]/attachment:text-destructive group-data-[orientation=vertical]/attachment:*:data-[slot=spinner]:size-6! [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 group-data-[orientation=vertical]/attachment:[&_svg:not([class*='size-'])]:size-6 group-data-[size=xs]/attachment:[&_svg:not([class*='size-'])]:size-3.5",
   {
+    defaultVariants: {
+      variant: "icon",
+    },
     variants: {
       variant: {
         icon: "",
         image:
           "opacity-60 group-data-[state=done]/attachment:opacity-100 group-data-[state=idle]/attachment:opacity-100 *:[img]:aspect-square *:[img]:w-full *:[img]:object-cover",
       },
-    },
-    defaultVariants: {
-      variant: "icon",
-    },
-  }
+    },}
 )
 
 const AttachmentMedia = ({
@@ -34213,9 +33928,8 @@ const AttachmentTrigger = ({
     defaultTagName: "button",
     props: mergeProps<"button">(
       {
-        type: render ? type : (type ?? "button"),
         className: cn("absolute inset-0 z-10 outline-none", className),
-      },
+        type: render ? type : (type ?? "button"),},
       props
     ),
     render,
@@ -34251,6 +33965,7 @@ export {
 }
 `],
   ["packages/ui/src/components/bubble.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 import * as React from "react"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
@@ -34271,28 +33986,26 @@ const BubbleGroup = ({ className, ...props }: React.ComponentProps<"div">) => {
 const bubbleVariants = cva(
   "group/bubble relative flex w-fit max-w-[80%] min-w-0 flex-col gap-1 group-data-[align=end]/message:self-end data-[align=end]:self-end data-[variant=ghost]:max-w-full",
   {
+    defaultVariants: {
+      variant: "default",
+    },
     variants: {
       variant: {
         default:
           "*:data-[slot=bubble-content]:bg-primary *:data-[slot=bubble-content]:text-primary-foreground [&>[data-slot=bubble-content]:is(button,a):hover]:bg-primary/80",
-        secondary:
-          "*:data-[slot=bubble-content]:bg-secondary *:data-[slot=bubble-content]:text-secondary-foreground [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]",
-        muted:
-          "*:data-[slot=bubble-content]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_5%)]",
-        tinted:
-          "*:data-[slot=bubble-content]:bg-[oklch(from_var(--primary)_0.93_calc(c*0.4)_h)] *:data-[slot=bubble-content]:text-foreground dark:*:data-[slot=bubble-content]:bg-[oklch(from_var(--primary)_0.3_calc(c*0.4)_h)] [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.88_calc(c*0.5)_h)] dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.35_calc(c*0.5)_h)]",
-        outline:
-          "*:data-[slot=bubble-content]:border-border *:data-[slot=bubble-content]:bg-background [&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:text-foreground dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-input/30",
-        ghost:
-          "border-none *:data-[slot=bubble-content]:rounded-none *:data-[slot=bubble-content]:bg-transparent *:data-[slot=bubble-content]:p-0 [&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:text-foreground dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted/50",
         destructive:
           "*:data-[slot=bubble-content]:bg-destructive/10 *:data-[slot=bubble-content]:text-destructive dark:*:data-[slot=bubble-content]:bg-destructive/20 [&>[data-slot=bubble-content]:is(button,a):hover]:bg-destructive/20 dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-destructive/30",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
+        ghost:
+          "border-none *:data-[slot=bubble-content]:rounded-none *:data-[slot=bubble-content]:bg-transparent *:data-[slot=bubble-content]:p-0 [&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:text-foreground dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted/50",
+        muted:
+          "*:data-[slot=bubble-content]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_5%)]",
+        outline:
+          "*:data-[slot=bubble-content]:border-border *:data-[slot=bubble-content]:bg-background [&>[data-slot=bubble-content]:is(button,a):hover]:bg-muted [&>[data-slot=bubble-content]:is(button,a):hover]:text-foreground dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-input/30",
+        secondary:
+          "*:data-[slot=bubble-content]:bg-secondary *:data-[slot=bubble-content]:text-secondary-foreground [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]",
+        tinted:
+          "*:data-[slot=bubble-content]:bg-[oklch(from_var(--primary)_0.93_calc(c*0.4)_h)] *:data-[slot=bubble-content]:text-foreground dark:*:data-[slot=bubble-content]:bg-[oklch(from_var(--primary)_0.3_calc(c*0.4)_h)] [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.88_calc(c*0.5)_h)] dark:[&>[data-slot=bubble-content]:is(button,a):hover]:bg-[oklch(from_var(--primary)_0.35_calc(c*0.5)_h)]",},
+    },}
 )
 
 const Bubble = ({
@@ -34341,21 +34054,16 @@ const BubbleContent = ({
 const bubbleReactionsVariants = cva(
   "absolute z-10 flex w-fit shrink-0 items-center justify-center gap-1 rounded-none bg-muted px-1.5 py-0.5 text-xs ring-2 ring-card has-[button]:p-0",
   {
-    variants: {
-      side: {
-        top: "top-0 -translate-y-3/4",
-        bottom: "bottom-0 translate-y-3/4",
-      },
-      align: {
-        start: "left-3",
-        end: "right-3",
-      },
-    },
     defaultVariants: {
-      side: "bottom",
       align: "end",
-    },
-  }
+      side: "bottom",},
+    variants: {
+      align: {
+        end: "right-3",
+        start: "left-3",},
+      side: {
+        bottom: "bottom-0 translate-y-3/4",
+        top: "top-0 -translate-y-3/4",},},}
 )
 
 const BubbleReactions = ({
@@ -34381,6 +34089,7 @@ const BubbleReactions = ({
 export { BubbleGroup, Bubble, BubbleContent, BubbleReactions }
 `],
   ["packages/ui/src/components/button.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -34389,36 +34098,31 @@ import { cn } from "@{{projectName}}/ui/lib/utils"
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-none border border-transparent bg-clip-padding text-xs font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
+    defaultVariants: {
+      size: "default",
+      variant: "default",},
     variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
-        outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-        ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
-        destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
       size: {
         default:
           "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        xs: "h-6 gap-1 rounded-none px-2 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 rounded-none px-2.5 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
         icon: "size-8",
-        "icon-xs": "size-6 rounded-none [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-7 rounded-none",
         "icon-lg": "size-9",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
+        "icon-sm": "size-7 rounded-none",
+        "icon-xs": "size-6 rounded-none [&_svg:not([class*='size-'])]:size-3",
+        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        sm: "h-7 gap-1 rounded-none px-2.5 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+        xs: "h-6 gap-1 rounded-none px-2 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",},
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        destructive:
+          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+        ghost:
+          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+        link: "text-primary underline-offset-4 hover:underline",
+        outline:
+          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",},},}
 )
 
 const Button = ({
@@ -34439,6 +34143,7 @@ const Button = ({
 export { Button, buttonVariants }
 `],
   ["packages/ui/src/components/card.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 import * as React from "react"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
@@ -34544,6 +34249,7 @@ export {
 }
 `],
   ["packages/ui/src/components/checkbox.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 "use client"
 
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
@@ -34574,6 +34280,7 @@ const Checkbox = ({ className, ...props }: CheckboxPrimitive.Root.Props) => {
 export { Checkbox }
 `],
   ["packages/ui/src/components/dropdown-menu.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 "use client"
 
 import * as React from "react"
@@ -34848,6 +34555,7 @@ export {
 }
 `],
   ["packages/ui/src/components/empty.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
@@ -34878,16 +34586,15 @@ const EmptyHeader = ({ className, ...props }: React.ComponentProps<"div">) => {
 const emptyMediaVariants = cva(
   "mb-2 flex shrink-0 items-center justify-center [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
+    defaultVariants: {
+      variant: "default",
+    },
     variants: {
       variant: {
         default: "bg-transparent",
         icon: "flex size-10 shrink-0 items-center justify-center rounded-none bg-muted text-foreground [&_svg:not([class*='size-'])]:size-5",
       },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
+    },}
 )
 
 const EmptyMedia = ({
@@ -34951,6 +34658,7 @@ export {
 }
 `],
   ["packages/ui/src/components/input-group.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 "use client"
 
 import * as React from "react"
@@ -34983,22 +34691,20 @@ const InputGroup = ({ className, ...props }: React.ComponentProps<"div">) => {
 const inputGroupAddonVariants = cva(
   "flex h-auto cursor-text select-none items-center justify-center gap-2 py-1.5 text-xs font-medium text-muted-foreground group-data-[disabled=true]/input-group:opacity-50 [&>kbd]:rounded-none [&>svg:not([class*='size-'])]:size-4",
   {
-    variants: {
-      align: {
-        "inline-start":
-          "order-first pl-2 has-[>button]:ml-[-0.3rem] has-[>kbd]:ml-[-0.15rem]",
-        "inline-end":
-          "order-last pr-2 has-[>button]:mr-[-0.3rem] has-[>kbd]:mr-[-0.15rem]",
-        "block-start":
-          "order-first w-full justify-start px-2.5 pt-2 group-has-[>input]/input-group:pt-2 [.border-b]:pb-2",
-        "block-end":
-          "order-last w-full justify-start px-2.5 pb-2 group-has-[>input]/input-group:pb-2 [.border-t]:pt-2",
-      },
-    },
     defaultVariants: {
       align: "inline-start",
     },
-  }
+    variants: {
+      align: {
+        "block-end":
+          "order-last w-full justify-start px-2.5 pb-2 group-has-[>input]/input-group:pb-2 [.border-t]:pt-2",
+        "block-start":
+          "order-first w-full justify-start px-2.5 pt-2 group-has-[>input]/input-group:pt-2 [.border-b]:pb-2",
+        "inline-end":
+          "order-last pr-2 has-[>button]:mr-[-0.3rem] has-[>kbd]:mr-[-0.15rem]",
+        "inline-start":
+          "order-first pl-2 has-[>button]:ml-[-0.3rem] has-[>kbd]:ml-[-0.15rem]",},
+    },}
 )
 
 const InputGroupAddon = ({
@@ -35028,18 +34734,16 @@ const InputGroupAddon = ({
 const inputGroupButtonVariants = cva(
   "flex items-center gap-2 text-xs shadow-none",
   {
-    variants: {
-      size: {
-        xs: "h-6 gap-1 rounded-none px-1.5 [&>svg:not([class*='size-'])]:size-3.5",
-        sm: "h-7 gap-1 rounded-none px-2",
-        "icon-xs": "size-6 rounded-none p-0 has-[>svg]:p-0",
-        "icon-sm": "size-7 rounded-none p-0 has-[>svg]:p-0",
-      },
-    },
     defaultVariants: {
       size: "xs",
     },
-  }
+    variants: {
+      size: {
+        "icon-sm": "size-7 rounded-none p-0 has-[>svg]:p-0",
+        "icon-xs": "size-6 rounded-none p-0 has-[>svg]:p-0",
+        sm: "h-7 gap-1 rounded-none px-2",
+        xs: "h-6 gap-1 rounded-none px-1.5 [&>svg:not([class*='size-'])]:size-3.5",},
+    },}
 )
 
 const InputGroupButton = ({
@@ -35117,6 +34821,7 @@ export {
 }
 `],
   ["packages/ui/src/components/input.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 import * as React from "react"
 import { Input as InputPrimitive } from "@base-ui/react/input"
 
@@ -35139,6 +34844,7 @@ const Input = ({ className, type, ...props }: React.ComponentProps<"input">) => 
 export { Input }
 `],
   ["packages/ui/src/components/label.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 "use client"
 
 import * as React from "react"
@@ -35161,6 +34867,7 @@ const Label = ({ className, ...props }: React.ComponentProps<"label">) => {
 export { Label }
 `],
   ["packages/ui/src/components/marker.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 import * as React from "react"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
@@ -35173,11 +34880,10 @@ const markerVariants = cva(
   {
     variants: {
       variant: {
+        border: "border-b border-border pb-2",
         default: "",
         separator:
-          "before:mr-1 before:h-px before:min-w-0 before:flex-1 before:bg-border after:ml-1 after:h-px after:min-w-0 after:flex-1 after:bg-border",
-        border: "border-b border-border pb-2",
-      },
+          "before:mr-1 before:h-px before:min-w-0 before:flex-1 before:bg-border after:ml-1 after:h-px after:min-w-0 after:flex-1 after:bg-border",},
     },
   }
 )
@@ -35234,6 +34940,7 @@ const MarkerContent = ({ className, ...props }: React.ComponentProps<"span">) =>
 export { Marker, MarkerIcon, MarkerContent, markerVariants }
 `],
   ["packages/ui/src/components/message-scroller.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 "use client"
 
 import * as React from "react"
@@ -35369,6 +35076,7 @@ export {
 }
 `],
   ["packages/ui/src/components/message.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 import * as React from "react"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
@@ -35463,6 +35171,7 @@ export {
 }
 `],
   ["packages/ui/src/components/skeleton.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
 const Skeleton = ({ className, ...props }: React.ComponentProps<"div">) => {
@@ -35478,6 +35187,7 @@ const Skeleton = ({ className, ...props }: React.ComponentProps<"div">) => {
 export { Skeleton }
 `],
   ["packages/ui/src/components/sonner.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 "use client"
 
 import { useTheme } from "next-themes"
@@ -35530,6 +35240,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
 export { Toaster }
 `],
   ["packages/ui/src/components/textarea.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 import * as React from "react"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
@@ -35550,6 +35261,7 @@ const Textarea = ({ className, ...props }: React.ComponentProps<"textarea">) => 
 export { Textarea }
 `],
   ["packages/ui/src/components/tooltip.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+
 "use client"
 
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
@@ -35619,12 +35331,12 @@ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
 `],
   ["packages/ui/src/hooks/.gitkeep", ``],
   ["packages/ui/src/lib/utils.ts.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
-import { clsx, type ClassValue } from "clsx";
+
+import { clsx } from "clsx";
+import type { ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-export const cn = (...inputs: ClassValue[]) => {
-  return twMerge(clsx(inputs));
-}
+export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs))
 `],
   ["packages/ui/src/styles/globals.css.hbs", `@import 'tailwindcss';
 @import 'tw-animate-css';
@@ -35792,9 +35504,8 @@ export const polar: Polar<DataModel> = new Polar<DataModel>(components.polar, {
     }
 
     return {
-      userId: user._id,
       email: user.email,
-    };
+      userId: user._id,};
   },
 });
 
@@ -35844,12 +35555,10 @@ import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-export const createPolarClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
-	return new Polar({
+export const createPolarClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => new Polar({
 		accessToken: env.POLAR_ACCESS_TOKEN,
 		server: "sandbox",
-	});
-}
+	})
 {{else}}
 export const polarClient = new Polar({
 	accessToken: env.POLAR_ACCESS_TOKEN,
@@ -35875,7 +35584,7 @@ const checkout_id = route.query.checkout_id as string
     searchParams: Promise<{ checkout_id: string }>
 }) => {
     const params = await searchParams;
-    const checkout_id = params.checkout_id;
+    const { checkout_id } = params;
 
     return (
         <div className="px-4 py-8">
@@ -35962,6 +35671,7 @@ export const Route = createFileRoute("/success")({
 });
 `],
   ["payments/polar/web/solid/src/routes/success.tsx.hbs", `/* oxlint-disable no-use-before-define */
+
 import { createFileRoute } from "@tanstack/solid-router";
 import { Show } from "solid-js";
 

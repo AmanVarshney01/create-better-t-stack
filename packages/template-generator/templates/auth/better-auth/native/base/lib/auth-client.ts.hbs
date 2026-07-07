@@ -10,17 +10,16 @@ export const authClient = createAuthClient({
 	plugins: [
 		expoClient({
 			scheme: Constants.expoConfig?.scheme as string,
-			storagePrefix: Constants.expoConfig?.scheme as string,
 			storage: SecureStore,
-		}),
+			storagePrefix: Constants.expoConfig?.scheme as string,}),
 	],
 });
 {{#if (eq payments "polar")}}
 
-type PolarLinkResponse = {
+interface PolarLinkResponse {
 	url: string;
 	redirect: boolean;
-};
+}
 
 type PolarClientResponse<T> = Promise<{
 	data: T | null;

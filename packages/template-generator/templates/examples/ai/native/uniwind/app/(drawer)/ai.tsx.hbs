@@ -94,7 +94,7 @@ const AIScreen = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ threadId: currentThreadId, prompt: value });
+      await sendMessage({ prompt: value , threadId: currentThreadId});
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {

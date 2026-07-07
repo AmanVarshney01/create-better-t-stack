@@ -68,17 +68,15 @@ const ClerkApiAuthBridge = () => {
 {{/if}}
 
 export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+  { href: "https://fonts.googleapis.com" , rel: "preconnect"},
+  { crossOrigin: "anonymous" , href: "https://fonts.gstatic.com", rel: "preconnect"},
   {
-    rel: "stylesheet",
     href:
       "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-  },
+    rel: "stylesheet",},
 ];
 
-export const Layout = ({ children }: { children: React.ReactNode }) => {
-  return (
+export const Layout = ({ children }: { children: React.ReactNode }) => (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
@@ -92,8 +90,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <Scripts />
       </body>
     </html>
-  );
-}
+  )
 
 {{#if (eq backend "convex")}}
 {{#if (eq auth "clerk")}}
@@ -220,8 +217,7 @@ const App = ({ loaderData }: Route.ComponentProps) => {
 
 export default App;
 {{else if (eq api "orpc")}}
-const App = () => {
-  return (
+const App = () => (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
         attribute="class"
@@ -238,12 +234,10 @@ const App = () => {
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
-};
 
 export default App;
 {{else if (eq api "trpc")}}
-const App = () => {
-  return (
+const App = () => (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
         attribute="class"
@@ -260,12 +254,10 @@ const App = () => {
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
-};
 
 export default App;
 {{else}}
-const App = () => {
-  return (
+const App = () => (
     <ThemeProvider
       attribute="class"
       defaultTheme="dark"
@@ -279,7 +271,6 @@ const App = () => {
       <Toaster richColors />
     </ThemeProvider>
   );
-};
 
 export default App;
 {{/if}}

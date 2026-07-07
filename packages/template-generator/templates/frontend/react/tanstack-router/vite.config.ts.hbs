@@ -4,12 +4,6 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
 export default defineConfig({
-  server: {
-    port: 3001,
-  },
-  resolve: {
-    tsconfigPaths: true,
-  },
   plugins: [
     tailwindcss(),
     tanstackRouter({
@@ -18,4 +12,9 @@ export default defineConfig({
     }),
     react(),
   ],
-});
+  resolve: {
+    tsconfigPaths: true,
+  },
+  server: {
+    port: 3001,
+  },});

@@ -1,4 +1,5 @@
 /* oxlint-disable no-use-before-define */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
@@ -13,24 +14,25 @@ import { StyleSheet } from "react-native-unistyles";
 import z from "zod";
 
 const signUpSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .min(2, "Name must be at least 2 characters"),
   email: z
     .string()
     .trim()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
   password: z
     .string()
     .min(1, "Password is required")
-    .min(8, "Use at least 8 characters"),
-});
+    .min(8, "Use at least 8 characters"),});
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -61,13 +63,9 @@ export const SignUp = () => {
 
   const form = useForm({
     defaultValues: {
-      name: "",
       email: "",
-      password: "",
-    },
-    validators: {
-      onSubmit: signUpSchema,
-    },
+      name: "",
+      password: "",},
     onSubmit: async ({ value, formApi }) => {
       await authClient.signUp.email(
         {
@@ -86,7 +84,10 @@ export const SignUp = () => {
         },
       );
     },
-  });
+  
+    validators: {
+      onSubmit: signUpSchema,
+    },});
 
   return (
     <View style={styles.container}>
@@ -184,53 +185,46 @@ export const SignUp = () => {
 }
 
 const styles = StyleSheet.create((theme) => ({
+  button: {
+    alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 6,
+    flexDirection: "row",
+    justifyContent: "center",
+    padding: 16,},
+  buttonText: {
+    fontWeight: "500",
+  },
   container: {
-    marginTop: 24,
-    padding: 16,
+    borderColor: theme.colors.border,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: theme.colors.typography,
-    marginBottom: 16,
-  },
+    marginTop: 24,
+    padding: 16,},
   errorContainer: {
-    marginBottom: 16,
-    padding: 12,
     borderRadius: 6,
-  },
+    marginBottom: 16,
+    padding: 12,},
   errorText: {
     color: theme.colors.destructive,
     fontSize: 14,
   },
   input: {
+    borderColor: theme.colors.border,
+    borderRadius: 6,
+    borderWidth: 1,
+    color: theme.colors.typography,
     marginBottom: 12,
-    padding: 16,
-    borderRadius: 6,
-    color: theme.colors.typography,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
+    padding: 16,},
   inputLast: {
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 6,
-    color: theme.colors.typography,
-    borderWidth: 1,
     borderColor: theme.colors.border,
-  },
-  button: {
-    backgroundColor: theme.colors.primary,
-    padding: 16,
     borderRadius: 6,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: {
-    fontWeight: "500",
-  },
-}));
+    borderWidth: 1,
+    color: theme.colors.typography,
+    marginBottom: 16,
+    padding: 16,},
+  title: {
+    color: theme.colors.typography,
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 16,},}));

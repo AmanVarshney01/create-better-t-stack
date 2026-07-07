@@ -85,12 +85,12 @@ const TodosScreen = () => {
 
     const handleDeleteTodo = (id: Id<"todos">) => {
       Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
-        { text: "Cancel", style: "cancel" },
+        { style: "cancel" , text: "Cancel"},
         {
-          text: "Delete",
-          style: "destructive",
           onPress: () => deleteTodoMutation({ id }),
-        },
+        
+          style: "destructive",
+          text: "Delete",},
       ]);
     };
 
@@ -110,12 +110,12 @@ const TodosScreen = () => {
 
     const handleDeleteTodo = (id: number) => {
       Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
-        { text: "Cancel", style: "cancel" },
+        { style: "cancel" , text: "Cancel"},
         {
-          text: "Delete",
-          style: "destructive",
           onPress: () => deleteMutation.mutate({ id }),
-        },
+        
+          style: "destructive",
+          text: "Delete",},
       ]);
     };
 

@@ -1,4 +1,5 @@
 /* oxlint-disable github/filenames-match-regex, no-use-before-define */
+
 import { Container } from "@/components/container";
 import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { Stack, router } from "expo-router";
@@ -48,11 +49,10 @@ export default NotFoundScreen;
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: "center",
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-  },
+    padding: 16,},
   content: {
     alignItems: "center",
   },

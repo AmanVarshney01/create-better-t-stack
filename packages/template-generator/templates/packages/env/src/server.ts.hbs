@@ -29,8 +29,7 @@ const getCloudflareEnvSync = () => {
 
 type EnvValue = Env[keyof Env];
 
-const createEnvProxy = (getValue: (key: keyof Env & string) => EnvValue | undefined) => {
-	return new Proxy({} as Env, {
+const createEnvProxy = (getValue: (key: keyof Env & string) => EnvValue | undefined) => new Proxy({} as Env, {
 		get(_target, prop) {
 			if (typeof prop !== "string") {
 				return;
@@ -38,8 +37,7 @@ const createEnvProxy = (getValue: (key: keyof Env & string) => EnvValue | undefi
 
 			return getValue(prop as keyof Env & string);
 		},
-	});
-}
+	})
 
 const resolveEnvValue = (key: keyof Env & string): EnvValue | undefined => {
 	const nodeValue = getNodeEnvValue(key);

@@ -16,12 +16,11 @@ export const createPrismaClient = () => {
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
-		host: url.hostname,
-		port: parseInt(url.port || "3306"),
-		user: url.username,
-		password: url.password,
 		database: url.pathname.slice(1),
-	};
+		host: url.hostname,
+		password: url.password,
+		port: parseInt(url.port || "3306"),
+		user: url.username,};
 
 	const adapter = new PrismaMariaDb(connectionConfig);
 	return new PrismaClient({ adapter });
@@ -49,12 +48,11 @@ export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy 
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
-		host: url.hostname,
-		port: parseInt(url.port || "3306"),
-		user: url.username,
-		password: url.password,
 		database: url.pathname.slice(1),
-	};
+		host: url.hostname,
+		password: url.password,
+		port: parseInt(url.port || "3306"),
+		user: url.username,};
 
 	const adapter = new PrismaMariaDb(connectionConfig);
 	return new PrismaClient({ adapter });

@@ -1,4 +1,5 @@
 /* oxlint-disable github/filenames-match-regex, promise/prefer-await-to-callbacks */
+
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
@@ -31,15 +32,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 const handle = async ({ request }: { request: Request }) => {
 	const rpcResult = await rpcHandler.handle(request, {
-		prefix: "/api/rpc",
 		context: await createContext({ req: request }),
-	});
+		prefix: "/api/rpc",});
 	if (rpcResult.response) return rpcResult.response;
 
 	const apiResult = await apiHandler.handle(request, {
-		prefix: "/api/rpc/api-reference",
 		context: await createContext({ req: request }),
-	});
+		prefix: "/api/rpc/api-reference",});
 	if (apiResult.response) return apiResult.response;
 
 	return new Response("Not found", { status: 404 });
@@ -48,12 +47,11 @@ const handle = async ({ request }: { request: Request }) => {
 export const Route = createFileRoute('/api/rpc/$')({
   server: {
     handlers: {
-      HEAD: handle,
-      GET: handle,
-      POST: handle,
-      PUT: handle,
-      PATCH: handle,
       DELETE: handle,
-    },
+      GET: handle,
+      HEAD: handle,
+      PATCH: handle,
+      POST: handle,
+      PUT: handle,},
   },
 })

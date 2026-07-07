@@ -25,9 +25,8 @@ export default defineNuxtPlugin((nuxt) => {
       onError: (error) => {
         console.log(error)
         toast.add({
-          title: 'Error',
           description: error?.message || 'An unexpected error occurred.',
-        })
+          title: 'Error',})
       },
     }),
   })

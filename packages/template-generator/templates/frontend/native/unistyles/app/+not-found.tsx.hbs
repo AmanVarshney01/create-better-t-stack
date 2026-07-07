@@ -1,4 +1,5 @@
 /* oxlint-disable github/filenames-match-regex, no-use-before-define */
+
 import "@/unistyles";
 
 import { Link, Stack } from "expo-router";
@@ -32,11 +33,10 @@ export default NotFoundScreen;
 
 const styles = StyleSheet.create((theme) => ({
   container: {
+    alignItems: "center",
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
-    padding: theme.spacing.lg,
-  },
+    padding: theme.spacing.lg,},
   content: {
     alignItems: "center",
   },
@@ -45,18 +45,16 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.spacing.md,
   },
   title: {
+    color: theme.colors.foreground,
     fontSize: theme.fontSize["2xl"],
     fontWeight: "bold",
-    color: theme.colors.foreground,
     marginBottom: theme.spacing.sm,
-    textAlign: "center",
-  },
+    textAlign: "center",},
   description: {
     color: theme.colors.mutedForeground,
-    textAlign: "center",
     marginBottom: theme.spacing.xl,
     maxWidth: 280,
-  },
+    textAlign: "center",},
   button: {
     // 10% opacity
     backgroundColor: `${theme.colors.primary}1A`,

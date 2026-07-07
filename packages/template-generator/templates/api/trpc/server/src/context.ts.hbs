@@ -36,25 +36,22 @@ import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
 {{#if (eq auth "clerk")}}
-type ClerkContextAuth = {
+interface ClerkContextAuth {
 	userId: string | null;
-};
+}
 
-type ClerkRequestContext = {
+interface ClerkRequestContext {
 	auth: ClerkContextAuth | null;
 	session: null;
-};
-
-const toClerkContextAuth = (auth: { userId: string | null } | null): ClerkContextAuth | null => {
-	return auth ? { userId: auth.userId } : null;
 }
+
+const toClerkContextAuth = (auth: { userId: string | null } | null): ClerkContextAuth | null => auth ? { userId: auth.userId } : null
 {{/if}}
 
 {{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
 const clerkClient = createClerkClient({
-	secretKey: env.CLERK_SECRET_KEY,
 	publishableKey: env.CLERK_PUBLISHABLE_KEY,
-});
+	secretKey: env.CLERK_SECRET_KEY,});
 
 const authenticateClerkRequest = async (request: Request): Promise<ClerkContextAuth | null> => {
 	const requestState = await clerkClient.authenticateRequest(request, {
@@ -117,9 +114,9 @@ export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if
 
 {{else if (eq backend 'hono')}}
 
-export type CreateContextOptions = {
+export interface CreateContextOptions {
 	context: HonoContext;
-};
+}
 
 export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} => {
 {{#if (eq auth "better-auth")}}
@@ -146,9 +143,9 @@ export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if
 
 {{else if (eq backend 'elysia')}}
 
-export type CreateContextOptions = {
+export interface CreateContextOptions {
 	context: ElysiaContext;
-};
+}
 
 export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} => {
 {{#if (eq auth "better-auth")}}
@@ -225,12 +222,10 @@ export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({ req
 }
 
 {{else}}
-export const createContext = () => {
-	return {
+export const createContext = () => ({
 		auth: null,
 		session: null,
-	};
-}
+	})
 {{/if}}
 
 export type Context = Awaited<ReturnType<typeof createContext>>;

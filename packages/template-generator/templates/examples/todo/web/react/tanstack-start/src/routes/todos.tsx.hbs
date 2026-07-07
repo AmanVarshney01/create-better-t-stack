@@ -14,7 +14,8 @@ import { Trash2 } from "lucide-react";
 {{else}}
 import { Loader2, Trash2 } from "lucide-react";
 {{/if}}
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState } from "react";
+import type { FormEvent, ReactNode } from "react";
 
 {{#if (eq backend "convex")}}
 import { useSuspenseQuery } from "@tanstack/react-query";

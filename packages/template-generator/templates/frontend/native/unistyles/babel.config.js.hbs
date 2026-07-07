@@ -1,10 +1,9 @@
 /* oxlint-disable unicorn/prefer-module */
+
 const babelConfig = (api) => {
 	api.cache(true);
 
 	return {
-		presets: ["babel-preset-expo"],
-
 		plugins: [
 			[
 				"react-native-unistyles/plugin",
@@ -16,6 +15,7 @@ const babelConfig = (api) => {
 			],
 			"react-native-worklets/plugin",
 		],
+		presets: ["babel-preset-expo"],
 	};
 };
 

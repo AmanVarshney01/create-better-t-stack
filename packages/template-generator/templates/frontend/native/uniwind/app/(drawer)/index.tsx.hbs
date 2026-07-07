@@ -86,10 +86,9 @@ const handlePolarCheckout = async () => {
     const returnUrl = Linking.createURL("/");
     const polarReturnUrl = getPolarReturnUrl(returnUrl);
     const { url } = await generateCheckoutLink({
-      productIds: [recurringProduct.id],
       origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
-      successUrl: polarReturnUrl,
-    });
+      productIds: [recurringProduct.id],
+      successUrl: polarReturnUrl,});
 
     await openPolarLink(url, returnUrl);
   } catch {

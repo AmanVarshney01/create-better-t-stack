@@ -3,14 +3,18 @@ const WHITE = "hsl(0 0% 100%)";
 const LIGHT_GRAY = "hsl(0 0% 90%)";
 
 const sharedColors = {
-  success: "#22C55E",
   destructive: "#EF4444",
   destructiveForeground: "#FFFFFF",
-  warning: "#F59E0B",
   info: "#3B82F6",
-} as const;
+  success: "#22C55E",
+  warning: "#F59E0B",} as const;
 
 export const lightTheme = {
+  borderRadius: {
+    lg: 12,
+    md: 8,
+    sm: 6,
+    xl: 16,},
   colors: {
     ...sharedColors,
     typography: BLACK,
@@ -30,33 +34,29 @@ export const lightTheme = {
     input: LIGHT_GRAY,
     ring: "hsl(0 0% 20%)",
   },
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-    xxl: 48,
-  },
-  borderRadius: {
-    sm: 6,
-    md: 8,
-    lg: 12,
-    xl: 16,
-  },
   fontSize: {
-    xs: 12,
-    sm: 14,
-    base: 16,
-    lg: 18,
-    xl: 20,
     "2xl": 24,
     "3xl": 30,
     "4xl": 36,
-  },
-} as const;
+    base: 16,
+    lg: 18,
+    sm: 14,
+    xl: 20,
+    xs: 12,},
+  spacing: {
+    lg: 24,
+    md: 16,
+    sm: 8,
+    xl: 32,
+    xs: 4,
+    xxl: 48,},} as const;
 
 export const darkTheme = {
+  borderRadius: {
+    lg: 12,
+    md: 8,
+    sm: 6,
+    xl: 16,},
   colors: {
     ...sharedColors,
     typography: WHITE,
@@ -76,28 +76,19 @@ export const darkTheme = {
     input: "hsl(0 0% 15%)",
     ring: "hsl(0 0% 80%)",
   },
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-    xxl: 48,
-  },
-  borderRadius: {
-    sm: 6,
-    md: 8,
-    lg: 12,
-    xl: 16,
-  },
   fontSize: {
-    xs: 12,
-    sm: 14,
-    base: 16,
-    lg: 18,
-    xl: 20,
     "2xl": 24,
     "3xl": 30,
     "4xl": 36,
-  },
-} as const;
+    base: 16,
+    lg: 18,
+    sm: 14,
+    xl: 20,
+    xs: 12,},
+  spacing: {
+    lg: 24,
+    md: 16,
+    sm: 8,
+    xl: 32,
+    xs: 4,
+    xxl: 48,},} as const;

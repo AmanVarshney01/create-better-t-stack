@@ -1,4 +1,5 @@
 /* oxlint-disable react-doctor/no-barrel-import, sonarjs/no-wildcard-import */
+
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 import type {} from "@{{projectName}}/env/server";
@@ -10,29 +11,24 @@ import * as schema from "./schema";
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 
-export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
-	return drizzle({
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => drizzle({
 		connection: {
 			host: env.DATABASE_HOST,
-			username: env.DATABASE_USERNAME,
 			password: env.DATABASE_PASSWORD,
-		},
+			username: env.DATABASE_USERNAME,},
 		mode: "default",
 		schema,
-	});
-}
+	})
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 
-export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
-	return drizzle({
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => drizzle({
 		connection: {
 			uri: env.DATABASE_URL,
 		},
 		mode: "default",
 		schema,
-	});
-}
+	})
 {{/if}}
 
 {{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
@@ -47,29 +43,24 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 import { env } from "@{{projectName}}/env/server";
 
-export const createDb = () => {
-	return drizzle({
+export const createDb = () => drizzle({
 		connection: {
 			host: env.DATABASE_HOST,
-			username: env.DATABASE_USERNAME,
 			password: env.DATABASE_PASSWORD,
-		},
+			username: env.DATABASE_USERNAME,},
 		mode: "default",
 		schema,
-	});
-}
+	})
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 import { env } from "@{{projectName}}/env/server";
 
-export const createDb = () => {
-	return drizzle({
+export const createDb = () => drizzle({
 		connection: {
 			uri: env.DATABASE_URL,
 		},
 		mode: "default",
 		schema,
-	});
-}
+	})
 {{/if}}
 {{/if}}

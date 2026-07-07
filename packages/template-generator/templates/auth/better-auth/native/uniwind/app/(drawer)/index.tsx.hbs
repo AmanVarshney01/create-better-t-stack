@@ -49,11 +49,10 @@ const handlePolarCheckout = async () => {
   const returnUrl = Linking.createURL("/");
   const polarReturnUrl = getPolarReturnUrl(returnUrl);
   const { data, error } = await polarNativeClient.checkout({
-    slug: "pro",
     redirect: false,
-    successUrl: polarReturnUrl,
     returnUrl: polarReturnUrl,
-  });
+    slug: "pro",
+    successUrl: polarReturnUrl,});
 
   if (error || !data?.url) {
     Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");

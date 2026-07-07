@@ -1,7 +1,9 @@
 /* oxlint-disable github/filenames-match-regex */
+
 import { createFileRoute } from "@tanstack/react-router";
 import { google } from "@ai-sdk/google";
-import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
+import type { UIMessage } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const Route = createFileRoute("/api/ai/$")({
@@ -12,9 +14,8 @@ export const Route = createFileRoute("/api/ai/$")({
           const { messages }: { messages: UIMessage[] } = await request.json();
 
           const model = wrapLanguageModel({
-            model: google("gemini-2.5-flash"),
             middleware: devToolsMiddleware(),
-          });
+            model: google("gemini-2.5-flash"),});
           const result = streamText({
             model,
             messages: await convertToModelMessages(messages),
@@ -28,9 +29,8 @@ export const Route = createFileRoute("/api/ai/$")({
           return new Response(
             JSON.stringify({ error: "Failed to process AI request" }),
             {
-              status: 500,
               headers: { "Content-Type": "application/json" },
-            },
+              status: 500,},
           );
         }
       },

@@ -1,4 +1,5 @@
 /* oxlint-disable no-use-before-define, complexity */
+
 import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
 import { ScrollView, Text, TouchableOpacity, View{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
 {{#if (eq payments "polar")}}
@@ -37,11 +38,10 @@ const handlePolarCheckout = async () => {
   const returnUrl = createURL("/");
   const polarReturnUrl = getPolarReturnUrl(returnUrl);
   const { data, error } = await polarNativeClient.checkout({
-    slug: "pro",
     redirect: false,
-    successUrl: polarReturnUrl,
     returnUrl: polarReturnUrl,
-  });
+    slug: "pro",
+    successUrl: polarReturnUrl,});
 
   if (error || !data?.url) {
     Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
@@ -174,8 +174,24 @@ const Home = () => {
 export default Home;
 
 const styles = StyleSheet.create((theme) => ({
-  pageContainer: {
-    paddingHorizontal: 8,
+  apiStatusCard: {
+    borderColor: theme?.colors?.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 24,
+    padding: 16,},
+  apiStatusRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,},
+  cardTitle: {
+    color: theme?.colors?.typography,
+    fontWeight: "500",
+    marginBottom: 12,},
+  emailText: {
+    color: theme?.colors?.typography,
+    fontSize: 14,
+    marginBottom: 16,
   },
   headerTitle: {
     color: theme?.colors?.typography,
@@ -183,104 +199,75 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "bold",
     marginBottom: 16,
   },
-  sessionInfoCard: {
-    marginBottom: 24,
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme?.colors?.border,
-  },
-  sessionUserRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  welcomeText: {
-    color: theme?.colors?.typography,
-    fontSize: 16,
-  },
-  userNameText: {
-    fontWeight: "500",
+  mutedText: {
     color: theme?.colors?.typography,
   },
-  emailText: {
-    color: theme?.colors?.typography,
-    fontSize: 14,
-    marginBottom: 16,
-  },
-  signOutButton: {
-    backgroundColor: theme?.colors?.destructive,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    alignSelf: "flex-start",
-  },
-  signOutButtonText: {
-    fontWeight: "500",
+  pageContainer: {
+    paddingHorizontal: 8,
   },
   paymentActions: {
-    marginTop: 12,
-    gap: 8,
     alignItems: "flex-start",
-  },
+    gap: 8,
+    marginTop: 12,},
   polarPrimaryButton: {
     backgroundColor: theme?.colors?.primary,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
     borderRadius: 6,
-  },
+    paddingHorizontal: 16,
+    paddingVertical: 8,},
   polarPrimaryButtonText: {
     color: theme?.colors?.primaryForeground,
     fontWeight: "500",
   },
   polarSecondaryButton: {
-    borderWidth: 1,
     borderColor: theme?.colors?.border,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
     borderRadius: 6,
-  },
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 8,},
   polarSecondaryButtonText: {
     color: theme?.colors?.typography,
     fontWeight: "500",
   },
-  apiStatusCard: {
-    marginBottom: 24,
+  privateDataCard: {
+    borderColor: theme?.colors?.border,
     borderRadius: 8,
     borderWidth: 1,
+    marginBottom: 24,
+    padding: 16,},
+  sessionInfoCard: {
     borderColor: theme?.colors?.border,
-    padding: 16,
-  },
-  cardTitle: {
-    marginBottom: 12,
-    fontWeight: "500",
-    color: theme?.colors?.typography,
-  },
-  apiStatusRow: {
-    flexDirection: "row",
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 24,
+    padding: 16,},
+  sessionUserRow: {
     alignItems: "center",
-    gap: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,},
+  signOutButton: {
+    alignSelf: "flex-start",
+    backgroundColor: theme?.colors?.destructive,
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,},
+  signOutButtonText: {
+    fontWeight: "500",
   },
   statusIndicatorDot: {
-    height: 12,
-    width: 12,
     borderRadius: 9999,
-  },
+    height: 12,
+    width: 12,},
   statusIndicatorGreen: {
     backgroundColor: theme.colors.success,
   },
   statusIndicatorRed: {
     backgroundColor: theme.colors.destructive,
   },
-  mutedText: {
+  userNameText: {
     color: theme?.colors?.typography,
-  },
-  privateDataCard: {
-    marginBottom: 24,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme?.colors?.border,
-    padding: 16,
-  },
-}));
+    fontWeight: "500",},
+  welcomeText: {
+    color: theme?.colors?.typography,
+    fontSize: 16,
+  },}));

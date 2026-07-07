@@ -1,4 +1,5 @@
 /* oxlint-disable no-use-before-define, complexity */
+
 import { useState } from "react";
 import {
   View,
@@ -54,12 +55,12 @@ const TodosScreen = () => {
 
   const handleDeleteTodo = (id: Id<"todos">) => {
     Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
-      { text: "Cancel", style: "cancel" },
+      { style: "cancel" , text: "Cancel"},
       {
-        text: "Delete",
-        style: "destructive",
         onPress: () => deleteTodoMutation({ id }),
-      },
+      
+        style: "destructive",
+        text: "Delete",},
     ]);
   }
 
@@ -130,12 +131,12 @@ const TodosScreen = () => {
 
   const handleDeleteTodo = (id: number) => {
     Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
-      { text: "Cancel", style: "cancel" },
+      { style: "cancel" , text: "Cancel"},
       {
-        text: "Delete",
-        style: "destructive",
         onPress: () => deleteMutation.mutate({ id }),
-      },
+      
+        style: "destructive",
+        text: "Delete",},
     ]);
   }
 
@@ -185,10 +186,9 @@ const TodosScreen = () => {
                 style={[
                   styles.input,
                   {
-                    color: theme.text,
-                    borderColor: theme.border,
                     backgroundColor: theme.background,
-                  },
+                    borderColor: theme.border,
+                    color: theme.text,},
                 ]}
               />
             </View>
@@ -420,24 +420,11 @@ const TodosScreen = () => {
 export default TodosScreen;
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 16,
-  },
-  header: {
-    marginBottom: 16,
-  },
-  headerRow: {
-    flexDirection: "row",
+  addButton: {
     alignItems: "center",
-    justifyContent: "space-between",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
+    height: 48,
+    justifyContent: "center",
+    width: 48,},
   badge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -446,80 +433,83 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 12,
   },
-  inputCard: {
-    borderWidth: 1,
-    padding: 12,
-    marginBottom: 16,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  inputContainer: {
-    flex: 1,
-  },
-  input: {
-    borderWidth: 1,
-    padding: 12,
-    fontSize: 16,
-  },
-  addButton: {
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   centerContainer: {
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 32,
   },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 14,
+  checkbox: {
+    alignItems: "center",
+    borderWidth: 2,
+    height: 24,
+    justifyContent: "center",
+    width: 24,},
+  contentContainer: {
+    padding: 16,
+  },
+  deleteButton: {
+    padding: 4,
   },
   emptyCard: {
-    borderWidth: 1,
-    padding: 32,
     alignItems: "center",
+    borderWidth: 1,
     justifyContent: "center",
+    padding: 32,},
+  emptyText: {
+    fontSize: 14,
+    textAlign: "center",
   },
   emptyTitle: {
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 8,
   },
-  emptyText: {
-    fontSize: 14,
-    textAlign: "center",
+  header: {
+    marginBottom: 16,
   },
-  todosList: {
-    gap: 8,
+  headerRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",},
+  input: {
+    borderWidth: 1,
+    fontSize: 16,
+    padding: 12,},
+  inputCard: {
+    borderWidth: 1,
+    marginBottom: 16,
+    padding: 12,},
+  inputContainer: {
+    flex: 1,
+  },
+  inputRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,},
+  loadingText: {
+    fontSize: 14,
+    marginTop: 16,},
+  scrollView: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
   },
   todoCard: {
     borderWidth: 1,
     padding: 12,
   },
   todoRow: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    flexDirection: "row",
+    gap: 12,},
+  todoText: {
+    fontSize: 16,
   },
   todoTextContainer: {
     flex: 1,
   },
-  todoText: {
-    fontSize: 16,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  deleteButton: {
-    padding: 4,
-  },
-});
+  todosList: {
+    gap: 8,
+  },});

@@ -39,13 +39,13 @@ import Layout from "../layouts/layout.astro";
     completed: boolean;
   }
 
-  const newTodoInput = document.getElementById("new-todo") as HTMLInputElement;
-  const addBtn = document.getElementById("add-btn") as HTMLButtonElement;
-  const addForm = document.getElementById("add-form") as HTMLFormElement;
-  const loadingEl = document.getElementById("loading") as HTMLElement;
-  const emptyEl = document.getElementById("empty") as HTMLElement;
-  const todoList = document.getElementById("todo-list") as HTMLElement;
-  const errorEl = document.getElementById("error") as HTMLElement;
+  const newTodoInput = document.querySelector("#new-todo") as HTMLInputElement;
+  const addBtn = document.querySelector("#add-btn") as HTMLButtonElement;
+  const addForm = document.querySelector("#add-form") as HTMLFormElement;
+  const loadingEl = document.querySelector("#loading") as HTMLElement;
+  const emptyEl = document.querySelector("#empty") as HTMLElement;
+  const todoList = document.querySelector("#todo-list") as HTMLElement;
+  const errorEl = document.querySelector("#error") as HTMLElement;
 
   let todos: Todo[] = [];
 

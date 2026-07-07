@@ -42,9 +42,8 @@ export const getRouter = () => {
 	const queryClient: QueryClient = new QueryClient({
 		defaultOptions: {
 			queries: {
-				queryKeyHashFn: convexQueryClient.hashFn(),
 				queryFn: convexQueryClient.queryFn(),
-			},
+				queryKeyHashFn: convexQueryClient.hashFn(),},
 		},
 	});
 	convexQueryClient.connect(queryClient);
@@ -70,8 +69,7 @@ export const getRouter = () => {
 {{> getServerUrl}}
 
 {{/unless}}
-const createQueryClient = () => {
-	return new QueryClient({
+const createQueryClient = () => new QueryClient({
 		defaultOptions: { queries: { staleTime: 60 * 1000 } },
 		queryCache: new QueryCache({
 			onError: (error, query) => {
@@ -85,8 +83,7 @@ const createQueryClient = () => {
 				});
 			},
 		}),
-	});
-}
+	})
 
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [

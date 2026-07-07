@@ -2,9 +2,7 @@ import { authClient } from "@/lib/auth-client";
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
 
-const AuthLayout = () => {
-	return <Outlet />;
-}
+const AuthLayout = () => <Outlet />
 
 export const Route = createFileRoute("/_auth")({
 	component: AuthLayout,

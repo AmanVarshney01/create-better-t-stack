@@ -5,61 +5,57 @@ const { ObjectId } = Schema.Types;
 
 const userSchema = new Schema(
     {
-        _id: { type: ObjectId, auto: true },
-        name: { type: String, required: true },
-        email: { type: String, required: true, unique: true },
-        emailVerified: { type: Boolean, required: true, default: false },
+        _id: { auto: true , type: ObjectId},
+        createdAt: { default: Date.now , required: true, type: Date},
+        email: { required: true, type: String, unique: true },
+        emailVerified: { default: false , required: true, type: Boolean},
         image: { type: String },
-        createdAt: { type: Date, required: true, default: Date.now },
-        updatedAt: { type: Date, required: true, default: Date.now },
-    },
+        name: { required: true , type: String},
+        updatedAt: { default: Date.now , required: true, type: Date},},
     { collection: 'user' }
 );
 
 const sessionSchema = new Schema(
     {
-        _id: { type: ObjectId, auto: true },
-        expiresAt: { type: Date, required: true },
-        token: { type: String, required: true, unique: true },
-        createdAt: { type: Date, required: true, default: Date.now },
-        updatedAt: { type: Date, required: true, default: Date.now },
+        _id: { auto: true , type: ObjectId},
+        createdAt: { default: Date.now , required: true, type: Date},
+        expiresAt: { required: true , type: Date},
         ipAddress: { type: String },
+        token: { required: true, type: String, unique: true },
+        updatedAt: { default: Date.now , required: true, type: Date},
         userAgent: { type: String },
-        userId: { type: ObjectId, ref: 'User', required: true },
-    },
+        userId: { ref: 'User', required: true , type: ObjectId},},
     { collection: 'session' }
 );
 sessionSchema.index({ userId: 1 });
 
 const accountSchema = new Schema(
     {
-        _id: { type: ObjectId, auto: true },
-        accountId: { type: String, required: true },
-        providerId: { type: String, required: true },
-        userId: { type: ObjectId, ref: 'User', required: true },
+        _id: { auto: true , type: ObjectId},
         accessToken: { type: String },
-        refreshToken: { type: String },
-        idToken: { type: String },
         accessTokenExpiresAt: { type: Date },
+        accountId: { required: true , type: String},
+        createdAt: { default: Date.now , required: true, type: Date},
+        idToken: { type: String },
+        password: { type: String },
+        providerId: { required: true , type: String},
+        refreshToken: { type: String },
         refreshTokenExpiresAt: { type: Date },
         scope: { type: String },
-        password: { type: String },
-        createdAt: { type: Date, required: true, default: Date.now },
-        updatedAt: { type: Date, required: true, default: Date.now },
-    },
+        updatedAt: { default: Date.now , required: true, type: Date},
+        userId: { ref: 'User', required: true , type: ObjectId},},
     { collection: 'account' }
 );
 accountSchema.index({ userId: 1 });
 
 const verificationSchema = new Schema(
     {
-        _id: { type: ObjectId, auto: true },
-        identifier: { type: String, required: true },
-        value: { type: String, required: true },
-        expiresAt: { type: Date, required: true },
-        createdAt: { type: Date, required: true, default: Date.now },
-        updatedAt: { type: Date, required: true, default: Date.now },
-    },
+        _id: { auto: true , type: ObjectId},
+        createdAt: { default: Date.now , required: true, type: Date},
+        expiresAt: { required: true , type: Date},
+        identifier: { required: true , type: String},
+        updatedAt: { default: Date.now , required: true, type: Date},
+        value: { required: true , type: String},},
     { collection: 'verification' }
 );
 verificationSchema.index({ identifier: 1 });

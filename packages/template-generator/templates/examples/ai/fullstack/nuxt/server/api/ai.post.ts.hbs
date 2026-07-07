@@ -7,9 +7,8 @@ export default defineEventHandler(async (event) => {
   const uiMessages = body.messages || [];
 
   const model = wrapLanguageModel({
-    model: google("gemini-2.5-flash"),
     middleware: devToolsMiddleware(),
-  });
+    model: google("gemini-2.5-flash"),});
 
   const result = streamText({
     model,

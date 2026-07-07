@@ -1,4 +1,5 @@
 /* oxlint-disable typescript/no-non-null-assertion */
+
 import alchemy from "alchemy";
 import {
 {{#if (and (or (eq serverDeploy "cloudflare") (and (eq webDeploy "cloudflare") (eq backend "self"))) (eq dbSetup "d1"))}}

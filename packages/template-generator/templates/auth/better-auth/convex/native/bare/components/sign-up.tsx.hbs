@@ -1,4 +1,5 @@
 /* oxlint-disable no-use-before-define */
+
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
@@ -15,24 +16,25 @@ import { useColorScheme } from "@/lib/use-color-scheme";
 import z from "zod";
 
 const signUpSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .min(2, "Name must be at least 2 characters"),
   email: z
     .string()
     .trim()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
   password: z
     .string()
     .min(1, "Password is required")
-    .min(8, "Use at least 8 characters"),
-});
+    .min(8, "Use at least 8 characters"),});
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -65,13 +67,9 @@ const SignUp = () => {
 
   const form = useForm({
     defaultValues: {
-      name: "",
       email: "",
-      password: "",
-    },
-    validators: {
-      onSubmit: signUpSchema,
-    },
+      name: "",
+      password: "",},
     onSubmit: async ({ value, formApi }) => {
       await authClient.signUp.email(
         {
@@ -90,7 +88,10 @@ const SignUp = () => {
         },
       );
     },
-  });
+  
+    validators: {
+      onSubmit: signUpSchema,
+    },});
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -119,10 +120,9 @@ const SignUp = () => {
                     style={[
                       styles.input,
                       {
-                        color: theme.text,
-                        borderColor: theme.border,
                         backgroundColor: theme.background,
-                      },
+                        borderColor: theme.border,
+                        color: theme.text,},
                     ]}
                     placeholder="Name"
                     placeholderTextColor={theme.text}
@@ -144,10 +144,9 @@ const SignUp = () => {
                     style={[
                       styles.input,
                       {
-                        color: theme.text,
-                        borderColor: theme.border,
                         backgroundColor: theme.background,
-                      },
+                        borderColor: theme.border,
+                        color: theme.text,},
                     ]}
                     placeholder="Email"
                     placeholderTextColor={theme.text}
@@ -171,10 +170,9 @@ const SignUp = () => {
                     style={[
                       styles.input,
                       {
-                        color: theme.text,
-                        borderColor: theme.border,
                         backgroundColor: theme.background,
-                      },
+                        borderColor: theme.border,
+                        color: theme.text,},
                     ]}
                     placeholder="Password"
                     placeholderTextColor={theme.text}
@@ -218,16 +216,18 @@ const SignUp = () => {
 }
 
 const styles = StyleSheet.create({
+  button: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,},
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 16,
+  },
   card: {
-    marginTop: 16,
-    padding: 16,
     borderWidth: 1,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
-  },
+    marginTop: 16,
+    padding: 16,},
   errorContainer: {
     marginBottom: 12,
     padding: 8,
@@ -237,19 +237,13 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    padding: 12,
     fontSize: 16,
     marginBottom: 12,
-  },
-  button: {
-    padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-  },
-});
+    padding: 12,},
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },});
 
 export { SignUp };

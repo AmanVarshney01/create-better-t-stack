@@ -52,10 +52,10 @@ import { authClient } from "../lib/auth-client";
 <script>
   import { authClient } from "../lib/auth-client";
 
-  const form = document.getElementById("signin-form") as HTMLFormElement;
-  const emailInput = document.getElementById("email") as HTMLInputElement;
-  const passwordInput = document.getElementById("password") as HTMLInputElement;
-  const formError = document.getElementById("form-error") as HTMLParagraphElement;
+  const form = document.querySelector("#signin-form") as HTMLFormElement;
+  const emailInput = document.querySelector("#email") as HTMLInputElement;
+  const passwordInput = document.querySelector("#password") as HTMLInputElement;
+  const formError = document.querySelector("#form-error") as HTMLParagraphElement;
   const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
 
   form.addEventListener("submit", async (e) => {

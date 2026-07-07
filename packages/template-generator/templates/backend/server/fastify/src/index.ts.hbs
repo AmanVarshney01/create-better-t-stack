@@ -1,10 +1,12 @@
 /* oxlint-disable promise/prefer-await-to-callbacks */
+
 import { env } from "@{{projectName}}/env/server";
 import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
 
 {{#if (eq api "trpc")}}
-import { fastifyTRPCPlugin, type FastifyTRPCPluginOptions } from "@trpc/server/adapters/fastify";
+import { fastifyTRPCPlugin } from "@trpc/server/adapters/fastify";
+import type { FastifyTRPCPluginOptions } from "@trpc/server/adapters/fastify";
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter, type AppRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
@@ -20,7 +22,8 @@ import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 
 {{#if (includes examples "ai")}}
-import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
+import type { UIMessage } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -33,8 +36,6 @@ import { clerkPlugin } from "@clerk/fastify";
 {{/if}}
 
 const baseCorsConfig = {
-	origin: env.CORS_ORIGIN,
-	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 	allowedHeaders: [
 		"Content-Type",
 		"Authorization",
@@ -42,7 +43,8 @@ const baseCorsConfig = {
 	],
 	credentials: true,
 	maxAge: 86_400,
-};
+	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+	origin: env.CORS_ORIGIN,};
 
 {{#if (eq api "orpc")}}
 const rpcHandler = new RPCHandler(appRouter, {
@@ -162,9 +164,9 @@ fastify.route({
 		} catch (error) {
 			fastify.log.error({ err: error }, "Authentication Error:");
 			reply.status(500).send({
-				error: "Internal authentication error",
 				code: "AUTH_FAILURE"
-			});
+			,
+				error: "Internal authentication error"});
 		}
 	}
 });
@@ -192,9 +194,8 @@ interface AiRequestBody {
 fastify.post('/ai', async function (request) {
 	const { messages } = request.body as AiRequestBody;
 	const model = wrapLanguageModel({
-		model: google('gemini-2.5-flash'),
 		middleware: devToolsMiddleware(),
-	});
+		model: google('gemini-2.5-flash'),});
 	const result = streamText({
 		model,
 		messages: await convertToModelMessages(messages),

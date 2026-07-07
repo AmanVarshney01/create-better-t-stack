@@ -9,9 +9,7 @@ import { getPayment } from "@/functions/get-payment";
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
 
-const AuthLayout = () => {
-  return <Outlet />;
-}
+const AuthLayout = () => <Outlet />
 
 export const Route = createFileRoute("/_auth")({
   {{#unless (eq backend "self")}}

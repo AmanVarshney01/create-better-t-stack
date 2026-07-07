@@ -1,4 +1,5 @@
 /* oxlint-disable react-doctor/no-barrel-import, sonarjs/no-wildcard-import */
+
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 import type {} from "@{{projectName}}/env/server";

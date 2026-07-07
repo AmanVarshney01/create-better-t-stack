@@ -98,9 +98,7 @@ const link = new RPCLink({
 {{/if}}
 });
 
-const getORPCClient = () => {
-	return createORPCClient(link) as RouterClient<AppRouter>;
-};
+const getORPCClient = () => createORPCClient(link) as RouterClient<AppRouter>;
 
 export const client: RouterClient<AppRouter> = getORPCClient();
 {{else}}

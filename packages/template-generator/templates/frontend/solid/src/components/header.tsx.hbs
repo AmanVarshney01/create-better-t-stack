@@ -6,7 +6,7 @@ import { For } from "solid-js";
 
 const Header = () => {
   const links = [
-    { to: "/", label: "Home" },
+    { label: "Home" , to: "/"},
     {{#if (eq auth "better-auth")}}
     { to: "/dashboard", label: "Dashboard" },
     {{/if}}

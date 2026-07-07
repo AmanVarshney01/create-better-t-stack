@@ -6,9 +6,7 @@ import { todoRouter } from "./todo";
 {{/if}}
 
 export const appRouter = {
-  healthCheck: publicProcedure.handler(() => {
-    return "OK";
-  }),
+  healthCheck: publicProcedure.handler(() => "OK"),
   {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
   privateData: protectedProcedure.handler(({ context }) => {
     return {
@@ -37,16 +35,12 @@ import { todoRouter } from "./todo";
 {{/if}}
 
 export const appRouter = router({
-  healthCheck: publicProcedure.query(() => {
-    return "OK";
-  }),
+  healthCheck: publicProcedure.query(() => "OK"),
   {{#if (eq auth "better-auth")}}
-  privateData: protectedProcedure.query(({ ctx }) => {
-    return {
+  privateData: protectedProcedure.query(({ ctx }) => ({
       message: "This is private",
       user: ctx.session.user,
-    };
-  }),
+    })),
   {{/if}}
   {{#if (includes examples "todo")}}
   todo: todoRouter,

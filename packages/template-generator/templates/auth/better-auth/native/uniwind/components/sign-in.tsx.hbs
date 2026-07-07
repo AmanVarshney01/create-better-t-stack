@@ -24,7 +24,9 @@ const signInSchema = z.object({
 });
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -71,16 +73,14 @@ const SignIn = () => {
         {
           onError(error) {
             toast.show({
-              variant: "danger",
               label: error.error?.message || "Failed to sign in",
-            });
+              variant: "danger",});
           },
           onSuccess() {
             formApi.reset();
             toast.show({
-              variant: "success",
               label: "Signed in successfully",
-            });
+              variant: "success",});
             {{#if (eq api "orpc")}}
             queryClient.refetchQueries();
             {{/if}}

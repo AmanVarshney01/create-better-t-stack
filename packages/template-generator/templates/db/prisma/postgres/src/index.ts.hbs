@@ -7,13 +7,11 @@ import { neonConfig } from "@neondatabase/serverless";
 
 neonConfig.poolQueryViaFetch = true;
 
-export const createPrismaClient = () => {
-	return new PrismaClient({
+export const createPrismaClient = () => new PrismaClient({
 		adapter: new PrismaNeon({
 			connectionString: env.DATABASE_URL,
 		}),
-	});
-}
+	})
 
 {{else if (eq dbSetup "prisma-postgres")}}
 import { PrismaPg } from "@prisma/adapter-pg";

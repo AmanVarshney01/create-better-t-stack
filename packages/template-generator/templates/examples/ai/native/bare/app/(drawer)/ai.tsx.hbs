@@ -1,4 +1,5 @@
 /* oxlint-disable no-use-before-define */
+
 {{#if (eq backend "convex")}}
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -101,7 +102,7 @@ const AIScreen = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ threadId: currentThreadId, prompt: value });
+      await sendMessage({ prompt: value , threadId: currentThreadId});
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -297,10 +298,9 @@ const AIScreen = () => {
                 style={[
                   styles.input,
                   {
-                    color: theme.text,
-                    borderColor: theme.border,
                     backgroundColor: theme.card,
-                  },
+                    borderColor: theme.border,
+                    color: theme.text,},
                 ]}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
@@ -339,12 +339,149 @@ const AIScreen = () => {
 export default AIScreen;
 
 const styles = StyleSheet.create({
+  assistantBubble: {
+    borderTopLeftRadius: 6,
+    borderWidth: 1,
+  },
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
   container: {
     flex: 1,
   },
   content: {
     flex: 1,
     paddingHorizontal: 16,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    flex: 1,
+    gap: 12,
+    justifyContent: "center",},
+  emptyIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyText: {
+    fontSize: 14,
+    lineHeight: 20,
+    opacity: 0.68,
+    textAlign: "center",
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  input: {
+    borderRadius: 18,
+    borderWidth: 1,
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
+    maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+  },
+  inputContainer: {
+    borderTopWidth: 1,
+    paddingBottom: 12,
+    paddingTop: 12,
+  },
+  inputRow: {
+    alignItems: "flex-end",
+    flexDirection: "row",
+    gap: 8,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 14,
+    opacity: 0.68,
+  },
+  messageBubble: {
+    borderRadius: 18,
+    maxWidth: "86%",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  messageRole: {
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 4,
+    opacity: 0.72,
+  },
+  messageRow: {
+    flexDirection: "row",
+  },
+  messageText: {
+    fontSize: 15,
+    lineHeight: 21,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: 16,
+  },
+  messagesList: {
+    gap: 12,
+  },
+  promptButton: {
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  promptList: {
+    gap: 8,
+    marginTop: 8,
+    width: "100%",
+  },
+  promptText: {
+    fontSize: 13,
+    lineHeight: 18,
+    opacity: 0.68,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  sendButton: {
+    alignItems: "center",
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonDisabled: {
+    borderWidth: 1,
+    opacity: 0.55,
+  },
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  statusText: {
+    fontSize: 13,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
   },
   toolbar: {
     alignItems: "center",
@@ -353,21 +490,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingBottom: 12,
     paddingTop: 8,
-  },
-  statusGroup: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-  },
-  statusDot: {
-    borderRadius: 999,
-    height: 8,
-    width: 8,
-  },
-  statusText: {
-    fontSize: 13,
-    fontVariant: ["tabular-nums"],
-    fontWeight: "600",
   },
   toolbarAction: {
     alignItems: "center",
@@ -385,136 +507,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
-  scrollView: {
-    flex: 1,
-  },
-  messagesContent: {
-    flexGrow: 1,
-    paddingVertical: 16,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-    gap: 12,
-  },
-  emptyIcon: {
-    alignItems: "center",
-    borderRadius: 999,
-    borderWidth: 1,
-    height: 56,
-    justifyContent: "center",
-    width: 56,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  emptyText: {
-    fontSize: 14,
-    lineHeight: 20,
-    opacity: 0.68,
-    textAlign: "center",
-  },
-  promptList: {
-    gap: 8,
-    marginTop: 8,
-    width: "100%",
-  },
-  promptButton: {
-    borderRadius: 14,
-    borderWidth: 1,
-    gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  promptLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  promptText: {
-    fontSize: 13,
-    lineHeight: 18,
-    opacity: 0.68,
-  },
-  messagesList: {
-    gap: 12,
-  },
-  messageRow: {
-    flexDirection: "row",
-  },
-  userRow: {
-    justifyContent: "flex-end",
-  },
-  assistantRow: {
-    justifyContent: "flex-start",
-  },
-  messageBubble: {
-    borderRadius: 18,
-    maxWidth: "86%",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
   userBubble: {
     borderTopRightRadius: 6,
   },
-  assistantBubble: {
-    borderTopLeftRadius: 6,
-    borderWidth: 1,
-  },
-  messageRole: {
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 4,
-    opacity: 0.72,
-  },
-  messageText: {
-    fontSize: 15,
-    lineHeight: 21,
-  },
-  loadingContainer: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-  },
-  loadingText: {
-    fontSize: 14,
-    opacity: 0.68,
-  },
-  inputContainer: {
-    borderTopWidth: 1,
-    paddingBottom: 12,
-    paddingTop: 12,
-  },
-  inputRow: {
-    alignItems: "flex-end",
-    flexDirection: "row",
-    gap: 8,
-  },
-  input: {
-    borderRadius: 18,
-    borderWidth: 1,
-    flex: 1,
-    fontSize: 15,
-    lineHeight: 20,
-    maxHeight: 120,
-    minHeight: 44,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-  },
-  sendButton: {
-    alignItems: "center",
-    borderRadius: 999,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
-  },
-  sendButtonDisabled: {
-    borderWidth: 1,
-    opacity: 0.55,
-  },
-});
+  userRow: {
+    justifyContent: "flex-end",
+  },});
 {{else}}
 import { useRef, useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -832,10 +830,9 @@ const AIScreen = () => {
                 style={[
                   styles.input,
                   {
-                    color: theme.text,
-                    borderColor: theme.border,
                     backgroundColor: theme.card,
-                  },
+                    borderColor: theme.border,
+                    color: theme.text,},
                 ]}
                 onSubmitEditing={(e) => {
                   e.preventDefault();
@@ -874,12 +871,167 @@ const AIScreen = () => {
 export default AIScreen;
 
 const styles = StyleSheet.create({
+  assistantBubble: {
+    borderTopLeftRadius: 6,
+    borderWidth: 1,
+  },
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
   container: {
     flex: 1,
   },
   content: {
     flex: 1,
     paddingHorizontal: 16,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    flex: 1,
+    gap: 12,
+    justifyContent: "center",},
+  emptyIcon: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+  },
+  emptyText: {
+    fontSize: 14,
+    lineHeight: 20,
+    opacity: 0.68,
+    textAlign: "center",
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  errorBanner: {
+    alignItems: "center",
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  input: {
+    borderRadius: 18,
+    borderWidth: 1,
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
+    maxHeight: 120,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+  },
+  inputContainer: {
+    borderTopWidth: 1,
+    paddingBottom: 12,
+    paddingTop: 12,
+  },
+  inputRow: {
+    alignItems: "flex-end",
+    flexDirection: "row",
+    gap: 8,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 14,
+    opacity: 0.68,
+  },
+  messageBubble: {
+    borderRadius: 18,
+    maxWidth: "86%",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  messageParts: {
+    gap: 4,
+  },
+  messageRole: {
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 4,
+    opacity: 0.72,
+  },
+  messageRow: {
+    flexDirection: "row",
+  },
+  messageText: {
+    fontSize: 15,
+    lineHeight: 21,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: 16,
+  },
+  messagesList: {
+    gap: 12,
+  },
+  promptButton: {
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  promptList: {
+    gap: 8,
+    marginTop: 8,
+    width: "100%",
+  },
+  promptText: {
+    fontSize: 13,
+    lineHeight: 18,
+    opacity: 0.68,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  sendButton: {
+    alignItems: "center",
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonDisabled: {
+    borderWidth: 1,
+    opacity: 0.55,
+  },
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  statusText: {
+    fontSize: 13,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
   },
   toolbar: {
     alignItems: "center",
@@ -888,21 +1040,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingBottom: 12,
     paddingTop: 8,
-  },
-  statusGroup: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-  },
-  statusDot: {
-    borderRadius: 999,
-    height: 8,
-    width: 8,
-  },
-  statusText: {
-    fontSize: 13,
-    fontVariant: ["tabular-nums"],
-    fontWeight: "600",
   },
   toolbarAction: {
     alignItems: "center",
@@ -920,152 +1057,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
-  scrollView: {
-    flex: 1,
-  },
-  messagesContent: {
-    flexGrow: 1,
-    paddingVertical: 16,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-    gap: 12,
-  },
-  emptyIcon: {
-    alignItems: "center",
-    borderRadius: 999,
-    borderWidth: 1,
-    height: 56,
-    justifyContent: "center",
-    width: 56,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  emptyText: {
-    fontSize: 14,
-    lineHeight: 20,
-    opacity: 0.68,
-    textAlign: "center",
-  },
-  promptList: {
-    gap: 8,
-    marginTop: 8,
-    width: "100%",
-  },
-  promptButton: {
-    borderRadius: 14,
-    borderWidth: 1,
-    gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  promptLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  promptText: {
-    fontSize: 13,
-    lineHeight: 18,
-    opacity: 0.68,
-  },
-  messagesList: {
-    gap: 12,
-  },
-  messageRow: {
-    flexDirection: "row",
-  },
-  userRow: {
-    justifyContent: "flex-end",
-  },
-  assistantRow: {
-    justifyContent: "flex-start",
-  },
-  messageBubble: {
-    borderRadius: 18,
-    maxWidth: "86%",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
   userBubble: {
     borderTopRightRadius: 6,
   },
-  assistantBubble: {
-    borderTopLeftRadius: 6,
-    borderWidth: 1,
-  },
-  messageRole: {
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 4,
-    opacity: 0.72,
-  },
-  messageParts: {
-    gap: 4,
-  },
-  messageText: {
-    fontSize: 15,
-    lineHeight: 21,
-  },
-  loadingContainer: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-  },
-  loadingText: {
-    fontSize: 14,
-    opacity: 0.68,
-  },
-  errorBanner: {
-    alignItems: "center",
-    borderRadius: 14,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  errorText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  inputContainer: {
-    borderTopWidth: 1,
-    paddingBottom: 12,
-    paddingTop: 12,
-  },
-  inputRow: {
-    alignItems: "flex-end",
-    flexDirection: "row",
-    gap: 8,
-  },
-  input: {
-    borderRadius: 18,
-    borderWidth: 1,
-    flex: 1,
-    fontSize: 15,
-    lineHeight: 20,
-    maxHeight: 120,
-    minHeight: 44,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-  },
-  sendButton: {
-    alignItems: "center",
-    borderRadius: 999,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
-  },
-  sendButtonDisabled: {
-    borderWidth: 1,
-    opacity: 0.55,
-  },
-});
+  userRow: {
+    justifyContent: "flex-end",
+  },});
 {{/if}}

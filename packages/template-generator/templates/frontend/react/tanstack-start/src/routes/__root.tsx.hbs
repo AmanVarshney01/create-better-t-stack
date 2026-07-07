@@ -1,4 +1,5 @@
 /* oxlint-disable github/filenames-match-regex */
+
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
 {{#unless (eq backend "convex")}} {{#unless (eq api "none")}}
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -47,9 +48,7 @@ import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 
-const getAuth = createServerFn({ method: "GET" }).handler(async () => {
-  return await getToken();
-});
+const getAuth = createServerFn({ method: "GET" }).handler(async () => await getToken());
 {{else if (eq backend "convex")}}
 import { ConvexProvider } from "convex/react";
 {{/if}}

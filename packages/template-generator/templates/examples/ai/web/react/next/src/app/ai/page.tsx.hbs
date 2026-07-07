@@ -1,4 +1,5 @@
 /* oxlint-disable react-doctor/no-array-index-as-key */
+
 {{#if (eq backend "convex")}}
 "use client";
 
@@ -38,7 +39,8 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
@@ -129,7 +131,7 @@ const AIPage = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ threadId: currentThreadId, prompt: text });
+      await sendMessage({ prompt: text , threadId: currentThreadId});
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -316,7 +318,8 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";

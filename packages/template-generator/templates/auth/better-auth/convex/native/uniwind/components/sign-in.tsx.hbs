@@ -18,7 +18,9 @@ const signInSchema = z.object({
 });
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -53,9 +55,6 @@ export const SignIn = () => {
       email: "",
       password: "",
     },
-    validators: {
-      onSubmit: signInSchema,
-    },
     onSubmit: async ({ value, formApi }) => {
       await authClient.signIn.email(
         {
@@ -65,21 +64,22 @@ export const SignIn = () => {
         {
           onError(error) {
             toast.show({
-              variant: "danger",
               label: error.error?.message || "Failed to sign in",
-            });
+              variant: "danger",});
           },
           onSuccess() {
             formApi.reset();
             toast.show({
-              variant: "success",
               label: "Signed in successfully",
-            });
+              variant: "success",});
           },
         },
       );
     },
-  });
+  
+    validators: {
+      onSubmit: signInSchema,
+    },});
 
   return (
     <Surface variant="secondary" className="p-4 rounded-lg">

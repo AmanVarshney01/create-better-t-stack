@@ -1,4 +1,5 @@
 /* oxlint-disable sonarjs/no-wildcard-import */
+
 {{#if (eq orm "prisma")}}
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
@@ -44,10 +45,9 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 {{#if (ne backend "self")}}
 		advanced: {
 			defaultCookieAttributes: {
-				sameSite: "none",
-				secure: true,
 				httpOnly: true,
-			},
+				sameSite: "none",
+				secure: true,},
 		},
 {{/if}}
 		plugins: [
@@ -127,10 +127,9 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 {{#if (ne backend "self")}}
 		advanced: {
 			defaultCookieAttributes: {
-				sameSite: "none",
-				secure: true,
 				httpOnly: true,
-			},
+				sameSite: "none",
+				secure: true,},
 		},
 {{/if}}
 		plugins: [
@@ -207,10 +206,9 @@ export const createAuth = () => {
 		baseURL: env.BETTER_AUTH_URL,
 		advanced: {
 			defaultCookieAttributes: {
-				sameSite: "none",
-				secure: true,
 				httpOnly: true,
-			},
+				sameSite: "none",
+				secure: true,},
 			// uncomment crossSubDomainCookies setting when ready to deploy and replace <your-workers-subdomain> with your actual workers subdomain
 			// https://developers.cloudflare.com/workers/wrangler/configuration/#workersdev
 			// crossSubDomainCookies: {
@@ -282,10 +280,9 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 {{#if (ne backend "self")}}
 		advanced: {
 			defaultCookieAttributes: {
-				sameSite: "none",
-				secure: true,
 				httpOnly: true,
-			},
+				sameSite: "none",
+				secure: true,},
 		},
 {{/if}}
 {{#if (eq payments "polar")}}
@@ -354,10 +351,9 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 {{#if (ne backend "self")}}
 		advanced: {
 			defaultCookieAttributes: {
-				sameSite: "none",
-				secure: true,
 				httpOnly: true,
-			},
+				sameSite: "none",
+				secure: true,},
 		},
 {{/if}}
 {{#if (eq payments "polar")}}

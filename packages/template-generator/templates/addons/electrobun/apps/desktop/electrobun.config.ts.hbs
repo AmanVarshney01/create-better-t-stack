@@ -5,10 +5,9 @@ const webBuildDir =
 
 export default {
   app: {
-    name: "{{projectName}}",
     identifier: "dev.bettertstack.{{projectName}}.desktop",
-    version: "0.0.1",
-  },
+    name: "{{projectName}}",
+    version: "0.0.1",},
   runtime: {
     exitOnLastWindowClosed: true,
   },
@@ -19,18 +18,17 @@ export default {
     copy: {
       [webBuildDir]: "views/mainview",
     },
-    watchIgnore: [`${webBuildDir}/**`],
-    mac: {
-      bundleCEF: true,
-      defaultRenderer: "cef",
-    },
     linux: {
       bundleCEF: true,
       defaultRenderer: "cef",
     },
-    win: {
+    mac: {
       bundleCEF: true,
       defaultRenderer: "cef",
     },
-  },
+    watchIgnore: [`${webBuildDir}/**`],
+    win: {
+      bundleCEF: true,
+      defaultRenderer: "cef",
+    },},
 } satisfies ElectrobunConfig;

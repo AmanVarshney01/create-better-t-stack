@@ -1,4 +1,5 @@
-import { createClient, type GenericCtx } from "@convex-dev/better-auth";
+import { createClient } from "@convex-dev/better-auth";
+import type { GenericCtx } from "@convex-dev/better-auth";
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
 {{else}}
@@ -61,7 +62,5 @@ export { createAuth };
 
 export const getCurrentUser = query({
   args: {},
-  handler: async (ctx) => {
-    return await authComponent.safeGetAuthUser(ctx);
-  },
+  handler: async (ctx) => await authComponent.safeGetAuthUser(ctx),
 });

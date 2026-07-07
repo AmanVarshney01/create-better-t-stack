@@ -30,37 +30,28 @@ const Header = () => (
     <div>
       <div className="flex flex-row items-center justify-between px-2 py-1">
         <nav className="flex gap-4 text-lg">
-          {links.map(({ to, label }) => {
+          {links.map(({ to, label }) => (
             {{#if (includes frontend "next")}}
-            return (
-              <Link key={to} href={to}>
-                {label}
-              </Link>
-            );
+            <Link key={to} href={to}>
+              {label}
+            </Link>
             {{else if (includes frontend "react-router")}}
-            return (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) => isActive ? "font-bold" : ""}
-                end
-              >
-                {label}
-              </NavLink>
-            );
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => (isActive ? "font-bold" : "")}
+              end
+            >
+              {label}
+            </NavLink>
             {{else if (or (includes frontend "tanstack-router") (includes frontend "tanstack-start"))}}
-            return (
-              <Link
-                key={to}
-                to={to}
-              >
-                {label}
-              </Link>
-            );
+            <Link key={to} to={to}>
+              {label}
+            </Link>
             {{else}}
-            return null;
+            null
             {{/if}}
-          })}
+          ))}
         </nav>
         <div className="flex items-center gap-2">
           {{#unless (includes frontend "tanstack-start")}}

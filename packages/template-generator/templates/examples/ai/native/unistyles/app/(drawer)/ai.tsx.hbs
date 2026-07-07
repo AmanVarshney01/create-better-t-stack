@@ -1,4 +1,5 @@
 /* oxlint-disable no-use-before-define */
+
 import "@/unistyles";
 
 {{#if (eq backend "convex")}}
@@ -100,7 +101,7 @@ const AIScreen = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ threadId: currentThreadId, prompt: value });
+      await sendMessage({ prompt: value , threadId: currentThreadId});
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
@@ -307,6 +308,20 @@ const AIScreen = () => {
 export default AIScreen;
 
 const styles = StyleSheet.create((theme) => ({
+  assistantBubble: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderTopLeftRadius: theme.borderRadius.sm,
+    borderWidth: 1,
+  },
+  assistantMessageText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
   container: {
     flex: 1,
   },
@@ -314,61 +329,8 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     paddingHorizontal: theme.spacing.md,
   },
-  toolbar: {
-    alignItems: "center",
-    borderBottomColor: theme.colors.border,
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingBottom: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-  },
-  statusGroup: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: theme.spacing.sm,
-  },
-  statusDot: {
-    borderRadius: 999,
-    height: 8,
-    width: 8,
-  },
-  statusDotBusy: {
-    backgroundColor: theme.colors.primary,
-  },
-  statusDotIdle: {
-    backgroundColor: theme.colors.border,
-  },
-  statusText: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
-    fontVariant: ["tabular-nums"],
-    fontWeight: "600",
-  },
-  toolbarAction: {
-    alignItems: "center",
-    borderColor: theme.colors.border,
-    borderRadius: 999,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: theme.spacing.xs,
-    minHeight: 32,
-    paddingHorizontal: 10,
-  },
-  toolbarActionText: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
-    fontWeight: "600",
-  },
   disabledAction: {
     opacity: 0.45,
-  },
-  messagesContainer: {
-    flex: 1,
-  },
-  messagesContent: {
-    flexGrow: 1,
-    paddingVertical: theme.spacing.md,
   },
   emptyContainer: {
     alignItems: "center",
@@ -385,22 +347,65 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
     width: 56,
   },
-  emptyTitle: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize["2xl"],
-    fontWeight: "700",
-    textAlign: "center",
-  },
   emptyText: {
     color: theme.colors.mutedForeground,
     fontSize: theme.fontSize.sm,
     lineHeight: 20,
     textAlign: "center",
   },
-  promptList: {
+  emptyTitle: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  inputContainer: {
+    alignItems: "flex-end",
+    flexDirection: "row",
     gap: theme.spacing.sm,
-    marginTop: theme.spacing.xs,
-    width: "100%",
+  },
+  inputSection: {
+    borderTopColor: theme.colors.border,
+    borderTopWidth: 1,
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+  },
+  loadingText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+  },
+  messageBubble: {
+    borderRadius: theme.borderRadius.xl,
+    maxWidth: "86%",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 10,
+  },
+  messageRole: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: "700",
+    marginBottom: theme.spacing.xs,
+    opacity: 0.72,
+  },
+  messageRow: {
+    flexDirection: "row",
+  },
+  messagesContainer: {
+    flex: 1,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: theme.spacing.md,
+  },
+  messagesWrapper: {
+    gap: theme.spacing.md,
+  },
+  placeholder: {
+    color: theme.colors.mutedForeground,
   },
   promptButton: {
     backgroundColor: theme.colors.card,
@@ -416,74 +421,57 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.fontSize.sm,
     fontWeight: "700",
   },
+  promptList: {
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+    width: "100%",
+  },
   promptText: {
     color: theme.colors.mutedForeground,
     fontSize: theme.fontSize.sm,
     lineHeight: 18,
   },
-  messagesWrapper: {
-    gap: theme.spacing.md,
-  },
-  messageRow: {
-    flexDirection: "row",
-  },
-  userRow: {
-    justifyContent: "flex-end",
-  },
-  assistantRow: {
-    justifyContent: "flex-start",
-  },
-  messageBubble: {
-    borderRadius: theme.borderRadius.xl,
-    maxWidth: "86%",
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: 10,
-  },
-  userBubble: {
+  sendButton: {
+    alignItems: "center",
     backgroundColor: theme.colors.primary,
-    borderTopRightRadius: theme.borderRadius.sm,
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
   },
-  assistantBubble: {
+  sendButtonDisabled: {
     backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
-    borderTopLeftRadius: theme.borderRadius.sm,
     borderWidth: 1,
+    opacity: 0.55,
   },
-  messageRole: {
-    fontSize: theme.fontSize.xs,
-    fontWeight: "700",
-    marginBottom: theme.spacing.xs,
-    opacity: 0.72,
+  sendButtonDisabledIcon: {
+    color: theme.colors.mutedForeground,
   },
-  userMessageText: {
+  sendButtonIcon: {
     color: theme.colors.primaryForeground,
-    fontSize: theme.fontSize.sm,
-    lineHeight: 21,
   },
-  assistantMessageText: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
-    lineHeight: 21,
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
   },
-  loadingContainer: {
+  statusDotBusy: {
+    backgroundColor: theme.colors.primary,
+  },
+  statusDotIdle: {
+    backgroundColor: theme.colors.border,
+  },
+  statusGroup: {
     alignItems: "center",
     flexDirection: "row",
     gap: theme.spacing.sm,
   },
-  loadingText: {
-    color: theme.colors.mutedForeground,
+  statusText: {
+    color: theme.colors.foreground,
     fontSize: theme.fontSize.sm,
-  },
-  inputSection: {
-    borderTopColor: theme.colors.border,
-    borderTopWidth: 1,
-    paddingBottom: theme.spacing.md,
-    paddingTop: theme.spacing.md,
-  },
-  inputContainer: {
-    alignItems: "flex-end",
-    flexDirection: "row",
-    gap: theme.spacing.sm,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
   },
   textInput: {
     backgroundColor: theme.colors.card,
@@ -499,30 +487,42 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: 11,
   },
-  placeholder: {
-    color: theme.colors.mutedForeground,
-  },
-  sendButton: {
+  toolbar: {
     alignItems: "center",
-    backgroundColor: theme.colors.primary,
-    borderRadius: 999,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
+    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
   },
-  sendButtonIcon: {
-    color: theme.colors.primaryForeground,
-  },
-  sendButtonDisabled: {
-    backgroundColor: theme.colors.card,
+  toolbarAction: {
+    alignItems: "center",
     borderColor: theme.colors.border,
+    borderRadius: 999,
     borderWidth: 1,
-    opacity: 0.55,
+    flexDirection: "row",
+    gap: theme.spacing.xs,
+    minHeight: 32,
+    paddingHorizontal: 10,
   },
-  sendButtonDisabledIcon: {
-    color: theme.colors.mutedForeground,
+  toolbarActionText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "600",
   },
-}));
+  userBubble: {
+    backgroundColor: theme.colors.primary,
+    borderTopRightRadius: theme.borderRadius.sm,
+  },
+  userMessageText: {
+    color: theme.colors.primaryForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  userRow: {
+    justifyContent: "flex-end",
+  },}));
 {{else}}
 import { useRef, useEffect, useState } from "react";
 import {
@@ -828,6 +828,20 @@ const AIScreen = () => {
 export default AIScreen;
 
 const styles = StyleSheet.create((theme) => ({
+  assistantBubble: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderTopLeftRadius: theme.borderRadius.sm,
+    borderWidth: 1,
+  },
+  assistantMessageText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  assistantRow: {
+    justifyContent: "flex-start",
+  },
   container: {
     flex: 1,
   },
@@ -835,61 +849,8 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     paddingHorizontal: theme.spacing.md,
   },
-  toolbar: {
-    alignItems: "center",
-    borderBottomColor: theme.colors.border,
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingBottom: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-  },
-  statusGroup: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: theme.spacing.sm,
-  },
-  statusDot: {
-    borderRadius: 999,
-    height: 8,
-    width: 8,
-  },
-  statusDotBusy: {
-    backgroundColor: theme.colors.primary,
-  },
-  statusDotIdle: {
-    backgroundColor: theme.colors.border,
-  },
-  statusText: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
-    fontVariant: ["tabular-nums"],
-    fontWeight: "600",
-  },
-  toolbarAction: {
-    alignItems: "center",
-    borderColor: theme.colors.border,
-    borderRadius: 999,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: theme.spacing.xs,
-    minHeight: 32,
-    paddingHorizontal: 10,
-  },
-  toolbarActionText: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
-    fontWeight: "600",
-  },
   disabledAction: {
     opacity: 0.45,
-  },
-  messagesContainer: {
-    flex: 1,
-  },
-  messagesContent: {
-    flexGrow: 1,
-    paddingVertical: theme.spacing.md,
   },
   emptyContainer: {
     alignItems: "center",
@@ -906,97 +867,17 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
     width: 56,
   },
-  emptyTitle: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize["2xl"],
-    fontWeight: "700",
-    textAlign: "center",
-  },
   emptyText: {
     color: theme.colors.mutedForeground,
     fontSize: theme.fontSize.sm,
     lineHeight: 20,
     textAlign: "center",
   },
-  promptList: {
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.xs,
-    width: "100%",
-  },
-  promptButton: {
-    backgroundColor: theme.colors.card,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.xl,
-    borderWidth: 1,
-    gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: 12,
-  },
-  promptLabel: {
+  emptyTitle: {
     color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
+    fontSize: theme.fontSize["2xl"],
     fontWeight: "700",
-  },
-  promptText: {
-    color: theme.colors.mutedForeground,
-    fontSize: theme.fontSize.sm,
-    lineHeight: 18,
-  },
-  messagesWrapper: {
-    gap: theme.spacing.md,
-  },
-  messageRow: {
-    flexDirection: "row",
-  },
-  userRow: {
-    justifyContent: "flex-end",
-  },
-  assistantRow: {
-    justifyContent: "flex-start",
-  },
-  messageBubble: {
-    borderRadius: theme.borderRadius.xl,
-    maxWidth: "86%",
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: 10,
-  },
-  userBubble: {
-    backgroundColor: theme.colors.primary,
-    borderTopRightRadius: theme.borderRadius.sm,
-  },
-  assistantBubble: {
-    backgroundColor: theme.colors.card,
-    borderColor: theme.colors.border,
-    borderTopLeftRadius: theme.borderRadius.sm,
-    borderWidth: 1,
-  },
-  messageRole: {
-    fontSize: theme.fontSize.xs,
-    fontWeight: "700",
-    marginBottom: theme.spacing.xs,
-    opacity: 0.72,
-  },
-  messageContentWrapper: {
-    gap: theme.spacing.xs,
-  },
-  userMessageText: {
-    color: theme.colors.primaryForeground,
-    fontSize: theme.fontSize.sm,
-    lineHeight: 21,
-  },
-  assistantMessageText: {
-    color: theme.colors.foreground,
-    fontSize: theme.fontSize.sm,
-    lineHeight: 21,
-  },
-  loadingContainer: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: theme.spacing.sm,
-  },
-  loadingText: {
-    color: theme.colors.mutedForeground,
-    fontSize: theme.fontSize.sm,
+    textAlign: "center",
   },
   errorBanner: {
     alignItems: "center",
@@ -1019,16 +900,122 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.fontSize.sm,
     lineHeight: 18,
   },
+  inputContainer: {
+    alignItems: "flex-end",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+  },
   inputSection: {
     borderTopColor: theme.colors.border,
     borderTopWidth: 1,
     paddingBottom: theme.spacing.md,
     paddingTop: theme.spacing.md,
   },
-  inputContainer: {
-    alignItems: "flex-end",
+  loadingContainer: {
+    alignItems: "center",
     flexDirection: "row",
     gap: theme.spacing.sm,
+  },
+  loadingText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+  },
+  messageBubble: {
+    borderRadius: theme.borderRadius.xl,
+    maxWidth: "86%",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 10,
+  },
+  messageContentWrapper: {
+    gap: theme.spacing.xs,
+  },
+  messageRole: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: "700",
+    marginBottom: theme.spacing.xs,
+    opacity: 0.72,
+  },
+  messageRow: {
+    flexDirection: "row",
+  },
+  messagesContainer: {
+    flex: 1,
+  },
+  messagesContent: {
+    flexGrow: 1,
+    paddingVertical: theme.spacing.md,
+  },
+  messagesWrapper: {
+    gap: theme.spacing.md,
+  },
+  placeholder: {
+    color: theme.colors.mutedForeground,
+  },
+  promptButton: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 12,
+  },
+  promptLabel: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "700",
+  },
+  promptList: {
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+    width: "100%",
+  },
+  promptText: {
+    color: theme.colors.mutedForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 18,
+  },
+  sendButton: {
+    alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 999,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  sendButtonDisabled: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+    opacity: 0.55,
+  },
+  sendButtonDisabledIcon: {
+    color: theme.colors.mutedForeground,
+  },
+  sendButtonIcon: {
+    color: theme.colors.primaryForeground,
+  },
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
+  statusDotBusy: {
+    backgroundColor: theme.colors.primary,
+  },
+  statusDotIdle: {
+    backgroundColor: theme.colors.border,
+  },
+  statusGroup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+  },
+  statusText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "600",
   },
   textInput: {
     backgroundColor: theme.colors.card,
@@ -1044,28 +1031,40 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: 11,
   },
-  placeholder: {
-    color: theme.colors.mutedForeground,
-  },
-  sendButton: {
+  toolbar: {
     alignItems: "center",
-    backgroundColor: theme.colors.primary,
-    borderRadius: 999,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
+    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
   },
-  sendButtonIcon: {
-    color: theme.colors.primaryForeground,
-  },
-  sendButtonDisabled: {
-    backgroundColor: theme.colors.card,
+  toolbarAction: {
+    alignItems: "center",
     borderColor: theme.colors.border,
+    borderRadius: 999,
     borderWidth: 1,
-    opacity: 0.55,
+    flexDirection: "row",
+    gap: theme.spacing.xs,
+    minHeight: 32,
+    paddingHorizontal: 10,
   },
-  sendButtonDisabledIcon: {
-    color: theme.colors.mutedForeground,
+  toolbarActionText: {
+    color: theme.colors.foreground,
+    fontSize: theme.fontSize.sm,
+    fontWeight: "600",
   },
-}));
+  userBubble: {
+    backgroundColor: theme.colors.primary,
+    borderTopRightRadius: theme.borderRadius.sm,
+  },
+  userMessageText: {
+    color: theme.colors.primaryForeground,
+    fontSize: theme.fontSize.sm,
+    lineHeight: 21,
+  },
+  userRow: {
+    justifyContent: "flex-end",
+  },}));
 {{/if}}

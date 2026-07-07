@@ -6,7 +6,7 @@ import path from "node:path";
 
 export default defineConfig({
   plugins: [
-    tanstackRouter({ target: "solid", autoCodeSplitting: true }),
+    tanstackRouter({ autoCodeSplitting: true , target: "solid"}),
     solidPlugin(),
     tailwindcss(),
   ],

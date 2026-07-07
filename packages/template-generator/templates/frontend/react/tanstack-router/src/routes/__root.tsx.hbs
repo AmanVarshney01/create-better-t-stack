@@ -1,4 +1,5 @@
 /* oxlint-disable github/filenames-match-regex */
+
 import Header from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
@@ -86,6 +87,12 @@ const RootComponent = () => {
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,
   head: () => ({
+    links: [
+      {
+        href: "/favicon.ico",
+        rel: "icon",
+      },
+    ],
     meta: [
       {
         title: "{{projectName}}",
@@ -94,12 +101,5 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         content: "{{projectName}} is a web application",
         name: "description",
       },
-    ],
-    links: [
-      {
-        href: "/favicon.ico",
-        rel: "icon",
-      },
-    ],
-  }),
+    ],}),
 });

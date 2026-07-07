@@ -39,8 +39,8 @@ const TITLE_TEXT = `
 <script>
   import { orpc } from "../lib/orpc";
 
-  const statusDot = document.getElementById("status-dot") as HTMLElement;
-  const statusText = document.getElementById("status-text") as HTMLElement;
+  const statusDot = document.querySelector("#status-dot") as HTMLElement;
+  const statusText = document.querySelector("#status-text") as HTMLElement;
 
   const checkHealth = async () => {
     try {

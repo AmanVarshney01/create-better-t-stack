@@ -27,9 +27,9 @@
 		try {
 			await client.mutation(api.todos.create, { text });
 			newTodoText = '';
-		} catch (err) {
+		} catch (error) {
 			console.error('Failed to add todo:', err);
-			addError = err instanceof Error ? err : new Error(String(err));
+			addError = err instanceof Error ? err : new Error(String(error));
 		} finally {
 			isAdding = false;
 		}
@@ -42,9 +42,9 @@
 		toggleError = null;
 		try {
 			await client.mutation(api.todos.toggle, { id, completed: !completed });
-		} catch (err) {
+		} catch (error) {
 			console.error('Failed to toggle todo:', err);
-			toggleError = err instanceof Error ? err : new Error(String(err));
+			toggleError = err instanceof Error ? err : new Error(String(error));
 		} finally {
 			if (togglingId === id) {
 				togglingId = null;
@@ -59,9 +59,9 @@
 		deleteError = null;
 		try {
 			await client.mutation(api.todos.deleteTodo, { id });
-		} catch (err) {
+		} catch (error) {
 			console.error('Failed to delete todo:', err);
-			deleteError = err instanceof Error ? err : new Error(String(err));
+			deleteError = err instanceof Error ? err : new Error(String(error));
 		} finally {
 			if (deletingId === id) {
 				deletingId = null;

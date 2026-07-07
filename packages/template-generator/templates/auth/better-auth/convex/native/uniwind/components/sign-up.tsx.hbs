@@ -6,24 +6,25 @@ import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast
 import z from "zod";
 
 const signUpSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .min(2, "Name must be at least 2 characters"),
   email: z
     .string()
     .trim()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
   password: z
     .string()
     .min(1, "Password is required")
-    .min(8, "Use at least 8 characters"),
-});
+    .min(8, "Use at least 8 characters"),});
 
 const getErrorMessage = (error: unknown): string | null => {
-  if (!error) return null;
+  if (!error) {
+    return null;
+  }
 
   if (typeof error === "string") {
     return error;
@@ -56,13 +57,9 @@ export const SignUp = () => {
 
   const form = useForm({
     defaultValues: {
-      name: "",
       email: "",
-      password: "",
-    },
-    validators: {
-      onSubmit: signUpSchema,
-    },
+      name: "",
+      password: "",},
     onSubmit: async ({ value, formApi }) => {
       await authClient.signUp.email(
         {
@@ -73,21 +70,22 @@ export const SignUp = () => {
         {
           onError(error) {
             toast.show({
-              variant: "danger",
               label: error.error?.message || "Failed to sign up",
-            });
+              variant: "danger",});
           },
           onSuccess() {
             formApi.reset();
             toast.show({
-              variant: "success",
               label: "Account created successfully",
-            });
+              variant: "success",});
           },
         },
       );
     },
-  });
+  
+    validators: {
+      onSubmit: signUpSchema,
+    },});
 
   return (
     <Surface variant="secondary" className="p-4 rounded-lg">

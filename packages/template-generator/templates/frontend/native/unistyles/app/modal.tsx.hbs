@@ -1,12 +1,12 @@
 /* oxlint-disable no-use-before-define */
+
 import "@/unistyles";
 
 import { Container } from "@/components/container";
 import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
-const Modal = () => {
-  return (
+const Modal = () => (
     <Container>
       <View style={styles.container}>
         <View style={styles.header}>
@@ -15,7 +15,6 @@ const Modal = () => {
       </View>
     </Container>
   );
-};
 
 export default Modal;
 
@@ -25,14 +24,12 @@ const styles = StyleSheet.create((theme) => ({
     padding: theme.spacing.lg,
   },
   header: {
-    flexDirection: "row",
     alignItems: "center",
+    flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: theme.spacing.xl,
-  },
+    marginBottom: theme.spacing.xl,},
   title: {
-    fontSize: theme.fontSize["2xl"],
-    fontWeight: "bold",
     color: theme.colors.foreground,
-  },
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "bold",},
 }));
