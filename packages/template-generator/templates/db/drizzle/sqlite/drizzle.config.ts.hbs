@@ -10,19 +10,19 @@ dotenv.config({
 });
 
 export default defineConfig({
-  schema: "./src/schema",
-  out: "./src/migrations",
   {{#if (eq dbSetup "d1")}}
   // DOCS: https://orm.drizzle.team/docs/guides/d1-http-with-drizzle-kit
   dialect: "sqlite",
   driver: "d1-http",
   {{else}}
-  dialect: "turso",
   dbCredentials: {
-    url: process.env.DATABASE_URL || "",
     {{#if (eq dbSetup "turso")}}
     authToken: process.env.DATABASE_AUTH_TOKEN,
     {{/if}}
+  out: "./src/migrations",
+  schema: "./src/schema",
+    url: process.env.DATABASE_URL || "",
   },
+  dialect: "turso",
   {{/if}}
 });

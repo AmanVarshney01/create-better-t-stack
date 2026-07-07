@@ -7,7 +7,9 @@ import { createEnv } from "@t3-oss/env-core";
 {{else}}
 import { createEnv } from "@t3-oss/env-core";
 {{/if}}
+{{#unless (or (eq backend "none") (and (eq backend "self") (ne auth "clerk")))}}
 import { z } from "zod";
+{{/unless}}
 
 {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 const serverUrlSchema = z.union([

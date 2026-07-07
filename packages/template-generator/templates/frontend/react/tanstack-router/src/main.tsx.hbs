@@ -33,6 +33,7 @@ import { routeTree } from "./routeTree.gen";
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+// oxlint-disable-next-line sonarjs/function-name -- component renders null
 const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 

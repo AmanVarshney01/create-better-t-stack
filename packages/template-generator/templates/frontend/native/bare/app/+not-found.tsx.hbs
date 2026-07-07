@@ -1,4 +1,4 @@
-/* oxlint-disable github/filenames-match-regex */
+/* oxlint-disable github/filenames-match-regex, no-use-before-define */
 import { Container } from "@/components/container";
 import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { Stack, router } from "expo-router";
@@ -28,7 +28,7 @@ const NotFoundScreen = () => {
                   textStyle=\{{ color: theme.text, fontSize: 14, textAlign: "center" }}
                   style=\{{ opacity: 0.7 }}
                 >
-                  Sorry, the page you're looking for doesn't exist.
+                  Sorry, the page you&apos;re looking for doesn&apos;t exist.
                 </ExpoUIText>
                 <Button
                   label="Go to Home"

@@ -17,6 +17,7 @@ export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflar
 			username: env.DATABASE_USERNAME,
 			password: env.DATABASE_PASSWORD,
 		},
+		mode: "default",
 		schema,
 	});
 }
@@ -28,6 +29,7 @@ export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflar
 		connection: {
 			uri: env.DATABASE_URL,
 		},
+		mode: "default",
 		schema,
 	});
 }
@@ -52,6 +54,7 @@ export const createDb = () => {
 			username: env.DATABASE_USERNAME,
 			password: env.DATABASE_PASSWORD,
 		},
+		mode: "default",
 		schema,
 	});
 }
@@ -64,6 +67,7 @@ export const createDb = () => {
 		connection: {
 			uri: env.DATABASE_URL,
 		},
+		mode: "default",
 		schema,
 	});
 }

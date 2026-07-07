@@ -492,7 +492,16 @@ function addNextAiEvlogSetup(content: string) {
 function addNextBetterAuthToRoute(content: string) {
   let nextContent = addNamedImport(content, "@/lib/evlog-auth", ["identifyEvlogUser"]);
 
-  nextContent = nextContent.replace("const handler = (req:", "const handler = async (req:");
+  // the trpc route handler ships as a concise arrow; expand it so the auth
+  // identification runs before the request is handled
+  const conciseHandler = "const handler = (req: NextRequest) =>\n\tfetchRequestHandler({";
+  if (nextContent.includes(conciseHandler) && !nextContent.includes("identifyEvlogUser(req)")) {
+    nextContent = nextContent.replace(
+      conciseHandler,
+      "const handler = async (req: NextRequest) => {\n\tawait identifyEvlogUser(req);\n\treturn fetchRequestHandler({",
+    );
+    nextContent = nextContent.replace(/\t\}\);\n(\n?export \{ handler)/u, "\t});\n};\n$1");
+  }
 
   for (const marker of [
     "const handler = async (req: NextRequest) => {",

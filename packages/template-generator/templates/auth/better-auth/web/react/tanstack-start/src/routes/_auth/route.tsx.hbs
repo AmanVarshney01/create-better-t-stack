@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_auth")({
     {{/if}}
   },
   {{#if (eq backend "self")}}
-  loader: async ({ context }) => {
+  loader: ({ context }) => {
     if (!context.session) {
       throw redirect({
         to: "/login",

@@ -41,7 +41,6 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
-import { StatusBar } from "expo-status-bar";
 
 export const unstable_settings = {
   initialRouteName: "(drawer)",
@@ -54,6 +53,7 @@ const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+// oxlint-disable-next-line sonarjs/function-name -- component renders null
 const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 

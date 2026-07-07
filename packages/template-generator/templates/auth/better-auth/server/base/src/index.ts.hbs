@@ -58,6 +58,7 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 				enableCustomerPortal: true,
 				use: [
 					checkout({
+						authenticatedUsersOnly: true,
 						products: [
 							{
 								productId: "your-product-id",
@@ -65,7 +66,6 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 							},
 						],
 						successUrl: env.POLAR_SUCCESS_URL,
-						authenticatedUsersOnly: true,
 					}),
 					portal(),
 				],
@@ -141,6 +141,7 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 				enableCustomerPortal: true,
 				use: [
 					checkout({
+						authenticatedUsersOnly: true,
 						products: [
 							{
 								productId: "your-product-id",
@@ -148,7 +149,6 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 							},
 						],
 						successUrl: env.POLAR_SUCCESS_URL,
-						authenticatedUsersOnly: true,
 					}),
 					portal(),
 				],
@@ -226,6 +226,7 @@ export const createAuth = () => {
 				enableCustomerPortal: true,
 				use: [
 					checkout({
+						authenticatedUsersOnly: true,
 						products: [
 							{
 								productId: "your-product-id",
@@ -233,7 +234,6 @@ export const createAuth = () => {
 							},
 						],
 						successUrl: env.POLAR_SUCCESS_URL,
-						authenticatedUsersOnly: true,
 					}),
 					portal(),
 				],
@@ -296,6 +296,7 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 				enableCustomerPortal: true,
 				use: [
 					checkout({
+						authenticatedUsersOnly: true,
 						products: [
 							{
 								productId: "your-product-id",
@@ -303,7 +304,6 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 							},
 						],
 						successUrl: env.POLAR_SUCCESS_URL,
-						authenticatedUsersOnly: true,
 					}),
 					portal(),
 				],
@@ -368,6 +368,7 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 				enableCustomerPortal: true,
 				use: [
 					checkout({
+						authenticatedUsersOnly: true,
 						products: [
 							{
 								productId: "your-product-id",
@@ -375,7 +376,6 @@ export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 							},
 						],
 						successUrl: env.POLAR_SUCCESS_URL,
-						authenticatedUsersOnly: true,
 					}),
 					portal(),
 				],

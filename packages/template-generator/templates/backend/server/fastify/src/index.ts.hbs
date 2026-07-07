@@ -41,7 +41,7 @@ const baseCorsConfig = {
 		"X-Requested-With"
 	],
 	credentials: true,
-	maxAge: 86400,
+	maxAge: 86_400,
 };
 
 {{#if (eq api "orpc")}}
@@ -206,9 +206,7 @@ fastify.post('/ai', async function (request) {
 });
 {{/if}}
 
-fastify.get('/', async () => {
-	return 'OK';
-});
+fastify.get('/', () => 'OK');
 
 fastify.listen({ port: 3000{{#if (eq serverDeploy "docker")}}, host: "0.0.0.0"{{/if}} }, (err) => {
 	if (err) {

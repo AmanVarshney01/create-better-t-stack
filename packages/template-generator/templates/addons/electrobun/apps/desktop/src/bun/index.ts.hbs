@@ -22,7 +22,7 @@ const getMainViewUrl = async (): Promise<string> => {
 
 const url = await getMainViewUrl();
 
-new BrowserWindow({
+export const mainWindow = new BrowserWindow({
   title: "{{projectName}}",
   url,
   frame: {

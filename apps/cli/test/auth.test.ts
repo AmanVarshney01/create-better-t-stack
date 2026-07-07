@@ -479,7 +479,7 @@ describe("Authentication Configurations", () => {
 
         expect(nativeIndexFile).toContain("polarNativeClient.checkout");
         expect(nativeIndexFile).toContain("polarNativeClient.customer.portal");
-        expect(nativeIndexFile).toContain("WebBrowser.openAuthSessionAsync");
+        expect(nativeIndexFile).toContain("openAuthSessionAsync");
         expect(nativeIndexFile).toContain('new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL)');
         expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
         expect(nativeIndexFile).toContain("returnUrl: polarReturnUrl");
@@ -553,7 +553,7 @@ describe("Authentication Configurations", () => {
 
         expect(nativeIndexFile).toContain("api.polar.generateCheckoutLink");
         expect(nativeIndexFile).toContain("api.polar.generateCustomerPortalUrl");
-        expect(nativeIndexFile).toContain("WebBrowser.openAuthSessionAsync");
+        expect(nativeIndexFile).toContain("openAuthSessionAsync");
         expect(nativeIndexFile).toContain(
           'new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL)',
         );

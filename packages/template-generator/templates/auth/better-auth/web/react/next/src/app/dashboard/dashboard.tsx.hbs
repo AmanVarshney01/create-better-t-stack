@@ -35,7 +35,8 @@ const Dashboard = ({
 	{{/if}}
 
 	return (
-		<>
+		<div className="space-y-2">
+			<p>Welcome {session.user.name}</p>
 			{{#if (eq api "orpc")}}
 			<p>API: {privateData?.message}</p>
 			{{/if}}
@@ -54,7 +55,7 @@ const Dashboard = ({
 				</Button>
 			)}
 			{{/if}}
-		</>
+		</div>
 	);
 };
 

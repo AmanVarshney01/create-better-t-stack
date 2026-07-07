@@ -1,3 +1,4 @@
+/* oxlint-disable no-use-before-define */
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
@@ -72,8 +73,8 @@ const SignIn = () => {
           password: value.password,
         },
         {
-          onError(error) {
-            setError(error.error?.message || "Failed to sign in");
+          onError(signUpError) {
+            setError(signUpError.error?.message || "Failed to sign in");
           },
           onSuccess() {
             setError(null);

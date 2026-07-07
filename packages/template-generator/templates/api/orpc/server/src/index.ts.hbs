@@ -6,7 +6,7 @@ export const o = os.$context<Context>();
 export const publicProcedure = o;
 
 {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
-const requireAuth = o.middleware(async ({ context, next }) => {
+const requireAuth = o.middleware(({ context, next }) => {
   {{#if (eq auth "better-auth")}}
   if (!context.session?.user) {
     throw new ORPCError("UNAUTHORIZED");

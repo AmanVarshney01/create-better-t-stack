@@ -1,13 +1,17 @@
+/* oxlint-disable no-use-before-define */
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { forwardRef } from "react";
+import type { Ref } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
-export const HeaderButton = forwardRef<
-  View,
-  { onPress?: () => void }
->(({ onPress }, ref) => {
+export const HeaderButton = ({
+  onPress,
+  ref,
+}: {
+  onPress?: () => void;
+  ref?: Ref<View>;
+}) => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 
@@ -36,7 +40,7 @@ export const HeaderButton = forwardRef<
       )}
     </Pressable>
   );
-});
+};
 
 const styles = StyleSheet.create({
   button: {

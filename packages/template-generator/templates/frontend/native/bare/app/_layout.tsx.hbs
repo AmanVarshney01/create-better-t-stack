@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
 });
 
 {{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+// oxlint-disable-next-line sonarjs/function-name -- component renders null
 const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
@@ -92,7 +93,6 @@ const RootLayout = () => {
   const { isDarkColorScheme } = useColorScheme();
 
   return (
-    <>
       {{#if (eq backend "convex")}}
         {{#if (eq auth "clerk")}}
           <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
@@ -190,7 +190,6 @@ const RootLayout = () => {
           {{/unless}}
         {{/if}}
       {{/if}}
-    </>
   );
 };
 

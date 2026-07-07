@@ -1,8 +1,9 @@
+/* oxlint-disable no-use-before-define, complexity */
 import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
 import { ScrollView, Text, TouchableOpacity, View{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
 {{#if (eq payments "polar")}}
-import * as Linking from "expo-linking";
-import * as WebBrowser from "expo-web-browser";
+import { createURL } from "expo-linking";
+import { openAuthSessionAsync } from "expo-web-browser";
 import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { StyleSheet } from "react-native-unistyles";
@@ -19,6 +20,50 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient, trpc } from "@/utils/trpc";
 {{/if}}
 
+{{#if (eq payments "polar")}}
+const openPolarLink = async (url: string, returnUrl: string) => {
+  await openAuthSessionAsync(url, returnUrl);
+};
+
+const getPolarReturnUrl = (returnUrl: string) => {
+  const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+  url.searchParams.set("returnUrl", returnUrl);
+  return url.toString();
+};
+{{/if}}
+
+{{#if (eq payments "polar")}}
+const handlePolarCheckout = async () => {
+  const returnUrl = createURL("/");
+  const polarReturnUrl = getPolarReturnUrl(returnUrl);
+  const { data, error } = await polarNativeClient.checkout({
+    slug: "pro",
+    redirect: false,
+    successUrl: polarReturnUrl,
+    returnUrl: polarReturnUrl,
+  });
+
+  if (error || !data?.url) {
+    Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
+    return;
+  }
+
+  await openPolarLink(data.url, returnUrl);
+};
+
+const handlePolarPortal = async () => {
+  const returnUrl = createURL("/");
+  const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
+
+  if (error || !data?.url) {
+    Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");
+    return;
+  }
+
+  await openPolarLink(data.url, returnUrl);
+};
+{{/if}}
+
 const Home = () => {
     {{#if (eq api "orpc")}}
     const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
@@ -29,48 +74,7 @@ const Home = () => {
     const privateData = useQuery(trpc.privateData.queryOptions());
     {{/if}}
   const { data: session } = authClient.useSession();
-  {{#if (eq payments "polar")}}
 
-  const openPolarLink = async (url: string, returnUrl: string) => {
-    await WebBrowser.openAuthSessionAsync(url, returnUrl);
-  };
-
-  const getPolarReturnUrl = (returnUrl: string) => {
-    const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
-    url.searchParams.set("returnUrl", returnUrl);
-    return url.toString();
-  };
-
-  const handlePolarCheckout = async () => {
-    const returnUrl = Linking.createURL("/");
-    const polarReturnUrl = getPolarReturnUrl(returnUrl);
-    const { data, error } = await polarNativeClient.checkout({
-      slug: "pro",
-      redirect: false,
-      successUrl: polarReturnUrl,
-      returnUrl: polarReturnUrl,
-    });
-
-    if (error || !data?.url) {
-      Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
-      return;
-    }
-
-    await openPolarLink(data.url, returnUrl);
-  };
-
-  const handlePolarPortal = async () => {
-    const returnUrl = Linking.createURL("/");
-    const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
-
-    if (error || !data?.url) {
-      Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");
-      return;
-    }
-
-    await openPolarLink(data.url, returnUrl);
-  };
-  {{/if}}
 
   {{#unless (eq api "none")}}
   let apiStatusText = "API Disconnected";

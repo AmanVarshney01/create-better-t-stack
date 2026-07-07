@@ -1,3 +1,7 @@
+const BLACK = "hsl(0 0% 0%)";
+const WHITE = "hsl(0 0% 100%)";
+const LIGHT_GRAY = "hsl(0 0% 90%)";
+
 const sharedColors = {
   success: "#22C55E",
   destructive: "#EF4444",
@@ -9,21 +13,21 @@ const sharedColors = {
 export const lightTheme = {
   colors: {
     ...sharedColors,
-    typography: "hsl(0 0% 0%)",
-    background: "hsl(0 0% 100%)",
-    foreground: "hsl(0 0% 0%)",
+    typography: BLACK,
+    background: WHITE,
+    foreground: BLACK,
     card: "hsl(0 0% 98%)",
-    cardForeground: "hsl(0 0% 0%)",
+    cardForeground: BLACK,
     primary: "hsl(0 0% 10%)",
-    primaryForeground: "hsl(0 0% 100%)",
+    primaryForeground: WHITE,
     secondary: "hsl(0 0% 95%)",
-    secondaryForeground: "hsl(0 0% 0%)",
+    secondaryForeground: BLACK,
     muted: "hsl(0 0% 96%)",
     mutedForeground: "hsl(0 0% 45%)",
     accent: "hsl(0 0% 96%)",
-    accentForeground: "hsl(0 0% 0%)",
-    border: "hsl(0 0% 90%)",
-    input: "hsl(0 0% 90%)",
+    accentForeground: BLACK,
+    border: LIGHT_GRAY,
+    input: LIGHT_GRAY,
     ring: "hsl(0 0% 20%)",
   },
   spacing: {
@@ -55,19 +59,19 @@ export const lightTheme = {
 export const darkTheme = {
   colors: {
     ...sharedColors,
-    typography: "hsl(0 0% 100%)",
-    background: "hsl(0 0% 0%)",
-    foreground: "hsl(0 0% 100%)",
+    typography: WHITE,
+    background: BLACK,
+    foreground: WHITE,
     card: "hsl(0 0% 2%)",
-    cardForeground: "hsl(0 0% 100%)",
-    primary: "hsl(0 0% 90%)",
-    primaryForeground: "hsl(0 0% 0%)",
+    cardForeground: WHITE,
+    primary: LIGHT_GRAY,
+    primaryForeground: BLACK,
     secondary: "hsl(0 0% 10%)",
-    secondaryForeground: "hsl(0 0% 100%)",
+    secondaryForeground: WHITE,
     muted: "hsl(0 0% 8%)",
     mutedForeground: "hsl(0 0% 65%)",
     accent: "hsl(0 0% 8%)",
-    accentForeground: "hsl(0 0% 100%)",
+    accentForeground: WHITE,
     border: "hsl(0 0% 15%)",
     input: "hsl(0 0% 15%)",
     ring: "hsl(0 0% 80%)",

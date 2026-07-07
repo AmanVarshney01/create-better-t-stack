@@ -1,8 +1,12 @@
+/* oxlint-disable no-use-before-define */
+{{#if (and (ne backend "convex") (eq auth "clerk"))}}
+import type { ReactNode } from "react";
+{{/if}}
 import { {{#if (or (eq auth "clerk") (eq auth "better-auth"))}}Button, {{/if}}Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { View, ScrollView, StyleSheet{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
-import * as Linking from "expo-linking";
-import * as WebBrowser from "expo-web-browser";
+import { createURL } from "expo-linking";
+import { openAuthSessionAsync } from "expo-web-browser";
 import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
@@ -65,7 +69,7 @@ const generateCustomerPortalUrl = useAction(api.polar.generateCustomerPortalUrl)
 const recurringProduct = products?.find((product) => product.isRecurring);
 
 const openPolarLink = async (url: string, returnUrl: string) => {
-	await WebBrowser.openAuthSessionAsync(url, returnUrl);
+	await openAuthSessionAsync(url, returnUrl);
 };
 
 const getPolarReturnUrl = (returnUrl: string) => {
@@ -81,7 +85,7 @@ const handlePolarCheckout = async () => {
 			return;
 		}
 
-		const returnUrl = Linking.createURL("/");
+		const returnUrl = createURL("/");
 		const polarReturnUrl = getPolarReturnUrl(returnUrl);
 		const { url } = await generateCheckoutLink({
 			productIds: [recurringProduct.id],
@@ -97,7 +101,7 @@ const handlePolarCheckout = async () => {
 
 const handlePolarPortal = async () => {
 	try {
-		const returnUrl = Linking.createURL("/");
+		const returnUrl = createURL("/");
 		const { url } = await generateCustomerPortalUrl({
 			returnUrl: getPolarReturnUrl(returnUrl),
 		});
@@ -120,6 +124,59 @@ if (isLoading) {
   apiStatusText = "All systems operational";
 }
 {{/unless}}
+{{#if (and (ne backend "convex") (eq auth "clerk"))}}
+let clerkContent: ReactNode;
+if (!isLoaded) {
+  clerkContent = (
+
+      <Host matchContents=\{{ vertical: true }}>
+        <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 14 }}>
+          Loading...
+        </ExpoUIText>
+      </Host>
+  );
+} else if (isSignedIn) {
+  clerkContent = (
+
+      <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Host style={styles.userHeader} matchContents=\{{ vertical: true }}>
+          <Column spacing={8}>
+            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 16 }}>
+              {`Welcome, ${user?.fullName ?? user?.firstName ?? "there"}`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\{{ color: theme.text, fontSize: 14 }}
+              style=\{{ opacity: 0.7 }}
+            >
+              {user?.emailAddresses[0]?.emailAddress ?? ""}
+            </ExpoUIText>
+          </Column>
+        </Host>
+        <SignOutButton />
+      </View>
+  );
+} else {
+  clerkContent = (
+
+      <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Host style={styles.authActionsHost} matchContents=\{{ vertical: true }}>
+          <Column spacing={8}>
+            <Button
+              label="Sign in"
+              variant="outlined"
+              onPress={() => router.push("/(auth)/sign-in")}
+            />
+            <Button
+              label="Sign up"
+              onPress={() => router.push("/(auth)/sign-up")}
+            />
+          </Column>
+        </Host>
+      </View>
+  );
+}
+{{/if}}
+
 return (
 <Container>
   <ScrollView style={styles.scrollView} contentInsetAdjustmentBehavior="never">
@@ -225,46 +282,7 @@ return (
       {{/if}}
 
       {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-      {!isLoaded ? (
-      <Host matchContents=\{{ vertical: true }}>
-        <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 14 }}>
-          Loading...
-        </ExpoUIText>
-      </Host>
-      ) : isSignedIn ? (
-      <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Host style={styles.userHeader} matchContents=\{{ vertical: true }}>
-          <Column spacing={8}>
-            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 16 }}>
-              {`Welcome, ${user?.fullName ?? user?.firstName ?? "there"}`}
-            </ExpoUIText>
-            <ExpoUIText
-              textStyle=\{{ color: theme.text, fontSize: 14 }}
-              style=\{{ opacity: 0.7 }}
-            >
-              {user?.emailAddresses[0]?.emailAddress ?? ""}
-            </ExpoUIText>
-          </Column>
-        </Host>
-        <SignOutButton />
-      </View>
-      ) : (
-      <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Host style={styles.authActionsHost} matchContents=\{{ vertical: true }}>
-          <Column spacing={8}>
-            <Button
-              label="Sign in"
-              variant="outlined"
-              onPress={() => router.push("/(auth)/sign-in")}
-            />
-            <Button
-              label="Sign up"
-              onPress={() => router.push("/(auth)/sign-up")}
-            />
-          </Column>
-        </Host>
-      </View>
-      )}
+      {clerkContent}
       {{/if}}
 
       {{#if (and (eq backend "convex") (eq auth "better-auth"))}}

@@ -53,15 +53,15 @@ export function processPwaPlugins(vfs: VirtualFileSystem, config: ProjectConfig)
     const pluginsProperty = configObject.getProperty("plugins");
 
     const pwaConfig = `VitePWA({
-  registerType: "autoUpdate",
+  devOptions: { enabled: true },
   manifest: {
+    description: "${projectName} - PWA Application",
     name: "${projectName}",
     short_name: "${projectName}",
-    description: "${projectName} - PWA Application",
     theme_color: "#0c0c0c",
   },
-  pwaAssets: { disabled: false, config: true },
-  devOptions: { enabled: true },
+  pwaAssets: { config: true, disabled: false },
+  registerType: "autoUpdate",
 })`;
 
     if (pluginsProperty && Node.isPropertyAssignment(pluginsProperty)) {

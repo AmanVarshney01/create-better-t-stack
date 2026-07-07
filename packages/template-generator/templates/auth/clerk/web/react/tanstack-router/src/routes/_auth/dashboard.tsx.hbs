@@ -14,20 +14,21 @@ const RouteComponent = () => {
 	const user = useUser();
 	const nameFromParts = [user.user?.firstName, user.user?.lastName].filter(Boolean).join(" ");
 	const displayName =
-		user.user?.fullName ||
-		nameFromParts ||
-		user.user?.username ||
-		user.user?.primaryEmailAddress?.emailAddress ||
-		user.user?.primaryPhoneNumber?.phoneNumber ||
-		"User";
+		[
+			user.user?.fullName,
+			nameFromParts,
+			user.user?.username,
+			user.user?.primaryEmailAddress?.emailAddress,
+			user.user?.primaryPhoneNumber?.phoneNumber,
+		].find(Boolean) ?? "User";
 	{{#if (eq api "orpc")}}
-	const privateData = useQuery({
+	const { data: privateData } = useQuery({
 		...orpc.privateData.queryOptions(),
 		enabled: user.isLoaded && !!user.user,
 	});
 	{{/if}}
 	{{#if (eq api "trpc")}}
-	const privateData = useQuery({
+	const { data: privateData } = useQuery({
 		...trpc.privateData.queryOptions(),
 		enabled: user.isLoaded && !!user.user,
 	});

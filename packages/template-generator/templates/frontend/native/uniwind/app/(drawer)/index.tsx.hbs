@@ -1,3 +1,6 @@
+{{#if (and (ne backend "convex") (eq auth "clerk"))}}
+import type { ReactNode } from "react";
+{{/if}}
 import { Text, View{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
 import * as Linking from "expo-linking";
@@ -134,6 +137,47 @@ if (isLoading) {
 {{/if}}
 {{/unless}}
 
+{{#if (and (ne backend "convex") (eq auth "clerk"))}}
+let clerkContent: ReactNode;
+if (!isLoaded) {
+  clerkContent = (
+
+  <View className="mt-4 items-center">
+    <Spinner size="sm" />
+  </View>
+  );
+} else if (isSignedIn) {
+  clerkContent = (
+
+  <Surface variant="secondary" className="mt-5 p-4 rounded-xl">
+    <View className="flex-row items-center justify-between">
+      <View className="flex-1">
+        <Text className="text-foreground font-medium">
+          {user?.fullName ?? user?.firstName ?? "Welcome"}
+        </Text>
+        <Text className="text-muted text-xs mt-0.5">
+          {user?.emailAddresses[0]?.emailAddress}
+        </Text>
+      </View>
+      <SignOutButton />
+    </View>
+  </Surface>
+  );
+} else {
+  clerkContent = (
+
+  <View className="mt-4 gap-3">
+    <Link href="/(auth)/sign-in" asChild>
+      <Button variant="secondary"><Button.Label>Sign In</Button.Label></Button>
+    </Link>
+    <Link href="/(auth)/sign-up" asChild>
+      <Button variant="ghost"><Button.Label>Sign Up</Button.Label></Button>
+    </Link>
+  </View>
+  );
+}
+{{/if}}
+
 return (
 <Container className="px-4 pb-4">
   <View className="py-6 mb-5">
@@ -215,34 +259,7 @@ return (
   {{/if}}
 
   {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-  {!isLoaded ? (
-  <View className="mt-4 items-center">
-    <Spinner size="sm" />
-  </View>
-  ) : isSignedIn ? (
-  <Surface variant="secondary" className="mt-5 p-4 rounded-xl">
-    <View className="flex-row items-center justify-between">
-      <View className="flex-1">
-        <Text className="text-foreground font-medium">
-          {user?.fullName ?? user?.firstName ?? "Welcome"}
-        </Text>
-        <Text className="text-muted text-xs mt-0.5">
-          {user?.emailAddresses[0]?.emailAddress}
-        </Text>
-      </View>
-      <SignOutButton />
-    </View>
-  </Surface>
-  ) : (
-  <View className="mt-4 gap-3">
-    <Link href="/(auth)/sign-in" asChild>
-      <Button variant="secondary"><Button.Label>Sign In</Button.Label></Button>
-    </Link>
-    <Link href="/(auth)/sign-up" asChild>
-      <Button variant="ghost"><Button.Label>Sign Up</Button.Label></Button>
-    </Link>
-  </View>
-  )}
+  {clerkContent}
   {{/if}}
 
   {{#if (and (eq backend "convex") (eq auth "better-auth"))}}

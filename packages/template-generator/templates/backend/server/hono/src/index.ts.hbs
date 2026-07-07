@@ -140,7 +140,7 @@ app.use(
 	"/trpc/*",
 	trpcServer({
 		router: appRouter,
-		createContext: (_opts, context) => createContext({ context }),
+		createContext: {{#if (eq auth "clerk")}}async (_opts, context) => ({ ...(await createContext({ context })) }){{else}}(_opts, context) => createContext({ context }){{/if}},
 	})
 );
 {{/if}}

@@ -1,4 +1,4 @@
-/* oxlint-disable github/filenames-match-regex */
+/* oxlint-disable github/filenames-match-regex, no-use-before-define */
 import "@/unistyles";
 
 import { Link, Stack } from "expo-router";
@@ -16,7 +16,7 @@ const NotFoundScreen = () => {
             <Text style={styles.emoji}>🤔</Text>
             <Text style={styles.title}>Page Not Found</Text>
             <Text style={styles.description}>
-              Sorry, the page you're looking for doesn't exist.
+              Sorry, the page you&apos;re looking for doesn&apos;t exist.
             </Text>
             <Link href="/" style={styles.button}>
               <Text style={styles.buttonText}>Go to Home</Text>
@@ -58,10 +58,11 @@ const styles = StyleSheet.create((theme) => ({
     maxWidth: 280,
   },
   button: {
-    backgroundColor: `${theme.colors.primary}1A`, // 10% opacity
+    // 10% opacity
+    backgroundColor: `${theme.colors.primary}1A`,
+    borderRadius: theme.borderRadius.lg,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm + 4,
-    borderRadius: theme.borderRadius.lg,
   },
   buttonText: {
     color: theme.colors.primary,

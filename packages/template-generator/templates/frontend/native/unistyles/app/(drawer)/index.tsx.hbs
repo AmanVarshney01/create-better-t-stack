@@ -1,3 +1,7 @@
+/* oxlint-disable no-use-before-define */
+{{#if (and (ne backend "convex") (eq auth "clerk"))}}
+import type { ReactNode } from "react";
+{{/if}}
 import "@/unistyles";
 
 import { ScrollView, Text, View, TouchableOpacity{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
@@ -119,6 +123,42 @@ const Home = () => {
     apiStatusText = "Connected to API";
   }
   {{/unless}}
+{{#if (and (ne backend "convex") (eq auth "clerk"))}}
+let clerkContent: ReactNode;
+if (!isLoaded) {
+  clerkContent = (
+
+          <Text style={styles.apiStatusText}>Loading...</Text>
+  );
+} else if (isSignedIn) {
+  clerkContent = (
+
+          <View style={styles.userCard}>
+            <View style={styles.userHeader}>
+              <Text style={styles.userWelcome}>
+                Welcome,{" "}
+                <Text style={styles.userName}>{user?.fullName ?? user?.firstName ?? "there"}</Text>
+              </Text>
+            </View>
+            <Text style={styles.userEmail}>{user?.emailAddresses[0]?.emailAddress}</Text>
+            <SignOutButton />
+          </View>
+  );
+} else {
+  clerkContent = (
+
+          <>
+            <Link href="/(auth)/sign-in">
+              <Text style={styles.apiStatusText}>Sign in</Text>
+            </Link>
+            <Link href="/(auth)/sign-up">
+              <Text style={styles.apiStatusText}>Sign up</Text>
+            </Link>
+          </>
+  );
+}
+{{/if}}
+
   return (
     <Container>
       <ScrollView
@@ -210,29 +250,7 @@ const Home = () => {
         {{/if}}
 
         {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-        {!isLoaded ? (
-          <Text style={styles.apiStatusText}>Loading...</Text>
-        ) : isSignedIn ? (
-          <View style={styles.userCard}>
-            <View style={styles.userHeader}>
-              <Text style={styles.userWelcome}>
-                Welcome,{" "}
-                <Text style={styles.userName}>{user?.fullName ?? user?.firstName ?? "there"}</Text>
-              </Text>
-            </View>
-            <Text style={styles.userEmail}>{user?.emailAddresses[0]?.emailAddress}</Text>
-            <SignOutButton />
-          </View>
-        ) : (
-          <>
-            <Link href="/(auth)/sign-in">
-              <Text style={styles.apiStatusText}>Sign in</Text>
-            </Link>
-            <Link href="/(auth)/sign-up">
-              <Text style={styles.apiStatusText}>Sign up</Text>
-            </Link>
-          </>
-        )}
+        {clerkContent}
         {{/if}}
 
         {{#if (and (eq backend "convex") (eq auth "better-auth"))}}

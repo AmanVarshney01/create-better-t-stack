@@ -1,16 +1,19 @@
 {{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference types="@cloudflare/workers-types" />
+// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
 export { env } from "cloudflare:workers";
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "next"))}}
+// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference path="../env.d.ts" />
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 const getNodeEnvValue = (key: string) => {
 	if (key === "DB") {
-		return undefined;
+		return;
 	}
 
 	return process.env[key];
@@ -20,7 +23,7 @@ const getCloudflareEnvSync = () => {
 	try {
 		return getCloudflareContext().env as Env;
 	} catch {
-		return undefined;
+		return;
 	}
 }
 
@@ -30,7 +33,7 @@ const createEnvProxy = (getValue: (key: keyof Env & string) => EnvValue | undefi
 	return new Proxy({} as Env, {
 		get(_target, prop) {
 			if (typeof prop !== "string") {
-				return undefined;
+				return;
 			}
 
 			return getValue(prop as keyof Env & string);
@@ -66,6 +69,7 @@ export const getEnvAsync = async () => {
 
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference path="../env.d.ts" />
 import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
@@ -85,7 +89,9 @@ export const env = new Proxy({} as Env, {
 	},
 });
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference types="@cloudflare/workers-types" />
+// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
@@ -101,7 +107,9 @@ const getVercelOrigin = () => {
 		process.env.VERCEL_ENV === "production"
 			? (process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL)
 			: (process.env.VERCEL_URL ?? process.env.VERCEL_PROJECT_PRODUCTION_URL);
-	if (!vercelUrl) return undefined;
+	if (!vercelUrl) {
+		return;
+	}
 	return vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`;
 }
 
@@ -153,7 +161,7 @@ export const env = createEnv({
 		CORS_ORIGIN: z.url(),
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
-	runtimeEnv: {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}runtimeEnv{{else}}process.env{{/if}},
+	{{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}runtimeEnv,{{else}}runtimeEnv: process.env,{{/if}}
 	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });

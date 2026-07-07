@@ -81,6 +81,113 @@ const COMBOS: Array<{ name: string; overrides: Record<string, unknown> }> = [
     },
   },
   { name: "elysia", overrides: { frontend: ["tanstack-router"], backend: "elysia" } },
+  { name: "native-bare-orpc", overrides: { frontend: ["native-bare"], api: "orpc" } },
+  {
+    name: "native-unistyles-polar",
+    overrides: { frontend: ["native-unistyles"], auth: "better-auth", payments: "polar" },
+  },
+  { name: "clerk-web", overrides: { frontend: ["tanstack-router"], auth: "clerk" } },
+  { name: "clerk-native", overrides: { frontend: ["native-bare"], auth: "clerk", examples: [] } },
+  {
+    name: "clerk-convex",
+    overrides: {
+      frontend: ["tanstack-router"],
+      backend: "convex",
+      api: "none",
+      database: "none",
+      orm: "none",
+      runtime: "none",
+      auth: "clerk",
+    },
+  },
+  {
+    name: "better-auth-convex",
+    overrides: {
+      frontend: ["react-router"],
+      backend: "convex",
+      api: "none",
+      database: "none",
+      orm: "none",
+      runtime: "none",
+      auth: "better-auth",
+    },
+  },
+  {
+    name: "self-next",
+    overrides: { frontend: ["next"], backend: "self", runtime: "none", auth: "better-auth" },
+  },
+  {
+    name: "self-start-orpc",
+    overrides: {
+      frontend: ["tanstack-start"],
+      backend: "self",
+      runtime: "none",
+      api: "orpc",
+      auth: "better-auth",
+    },
+  },
+  {
+    name: "mysql-docker",
+    overrides: { frontend: ["tanstack-router"], database: "mysql", dbSetup: "docker" },
+  },
+  {
+    name: "fastify-prisma",
+    overrides: { frontend: ["tanstack-router"], backend: "fastify", orm: "prisma" },
+  },
+  {
+    name: "prisma-mongodb",
+    overrides: { frontend: ["svelte"], api: "orpc", database: "mongodb", orm: "prisma" },
+  },
+  {
+    name: "postgres-docker-deploy",
+    overrides: {
+      frontend: ["solid"],
+      api: "orpc",
+      database: "postgres",
+      dbSetup: "docker",
+      webDeploy: "docker",
+      serverDeploy: "docker",
+    },
+  },
+  {
+    name: "vercel-deploy",
+    overrides: {
+      frontend: ["next"],
+      auth: "better-auth",
+      webDeploy: "vercel",
+      serverDeploy: "vercel",
+    },
+  },
+  {
+    name: "workers-d1",
+    overrides: {
+      frontend: ["tanstack-router"],
+      runtime: "workers",
+      dbSetup: "d1",
+      webDeploy: "cloudflare",
+      serverDeploy: "cloudflare",
+    },
+  },
+  {
+    name: "desktop-addons",
+    overrides: {
+      frontend: ["tanstack-router"],
+      addons: ["ultracite", "turborepo", "lefthook", "pwa", "electrobun"],
+    },
+  },
+  { name: "pnpm", overrides: { frontend: ["react-router"], api: "orpc", packageManager: "pnpm" } },
+  {
+    name: "frontend-only",
+    overrides: {
+      frontend: ["tanstack-router"],
+      backend: "none",
+      api: "none",
+      database: "none",
+      orm: "none",
+      runtime: "none",
+      examples: [],
+    },
+  },
 ];
 
 describe.skipIf(!enabled)("ultracite template compliance (oxlint)", () => {

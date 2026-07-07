@@ -66,8 +66,8 @@ export const SignUp = () => {
     onSubmit: async ({ value, formApi }) => {
       await authClient.signUp.email(
         {
-          name: value.name.trim(),
           email: value.email.trim(),
+          name: value.name.trim(),
           password: value.password,
         },
         {

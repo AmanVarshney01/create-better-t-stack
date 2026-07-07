@@ -3,12 +3,11 @@ import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 import { NextRequest } from "next/server";
 
-const handler = (req: NextRequest) => {
-	return fetchRequestHandler({
+const handler = (req: NextRequest) =>
+	fetchRequestHandler({
+		createContext: () => createContext(req),
 		endpoint: "/api/trpc",
 		req,
 		router: appRouter,
-		createContext: () => createContext(req),
 	});
-}
 export { handler as GET, handler as POST };

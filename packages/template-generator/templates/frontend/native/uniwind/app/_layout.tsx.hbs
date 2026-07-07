@@ -60,6 +60,7 @@ export const unstable_settings = {
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+// oxlint-disable-next-line sonarjs/function-name -- component renders null
 const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
