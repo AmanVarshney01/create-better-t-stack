@@ -42,6 +42,11 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
       - name: Install Dependencies
         run: bun install --frozen-lockfile
         env:
