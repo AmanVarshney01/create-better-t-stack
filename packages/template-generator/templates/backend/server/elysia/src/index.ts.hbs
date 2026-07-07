@@ -1,3 +1,4 @@
+/* oxlint-disable promise/prefer-await-to-callbacks */
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq runtime "node")}}
 import { node } from "@elysiajs/node";
@@ -49,7 +50,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 });
 {{/if}}
 
-const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
+export const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
 	.use(
 		cors({
 			origin: env.CORS_ORIGIN,

@@ -1,3 +1,4 @@
+/* oxlint-disable github/filenames-match-regex */
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
@@ -28,7 +29,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	],
 });
 
-async function handle({ request }: { request: Request }) {
+const handle = async ({ request }: { request: Request }) => {
 	const rpcResult = await rpcHandler.handle(request, {
 		prefix: "/api/rpc",
 		context: await createContext({ req: request }),

@@ -19,7 +19,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient, trpc } from "@/utils/trpc";
 {{/if}}
 
-export default function Home() {
+const Home = () => {
 {{#if (eq api "orpc")}}
 const healthCheck = useQuery(orpc.healthCheck.queryOptions());
 const privateData = useQuery(orpc.privateData.queryOptions());
@@ -183,4 +183,6 @@ return (
   )}
 </Container>
 );
-}
+};
+
+export default Home;

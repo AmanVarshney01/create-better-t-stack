@@ -2,11 +2,8 @@ import { SignInButton } from "@clerk/tanstack-react-start";
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 
-export const Route = createFileRoute("/_auth")({
-	component: AuthLayout,
-});
 
-function AuthLayout() {
+const AuthLayout = () => {
 	return (
 		<>
 			<Authenticated>
@@ -21,3 +18,7 @@ function AuthLayout() {
 		</>
 	);
 }
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});

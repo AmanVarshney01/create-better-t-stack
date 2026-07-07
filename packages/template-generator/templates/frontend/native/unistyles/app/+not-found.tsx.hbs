@@ -1,3 +1,4 @@
+/* oxlint-disable github/filenames-match-regex */
 import "@/unistyles";
 
 import { Link, Stack } from "expo-router";
@@ -5,7 +6,7 @@ import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
 
-export default function NotFoundScreen() {
+const NotFoundScreen = () => {
   return (
     <>
       <Stack.Screen options=\{{ title: "Oops!" }} />
@@ -25,7 +26,9 @@ export default function NotFoundScreen() {
       </Container>
     </>
   );
-}
+};
+
+export default NotFoundScreen;
 
 const styles = StyleSheet.create((theme) => ({
   container: {

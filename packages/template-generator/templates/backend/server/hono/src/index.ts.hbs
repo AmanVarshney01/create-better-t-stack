@@ -1,3 +1,4 @@
+/* oxlint-disable promise/prefer-await-to-callbacks */
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq api "orpc")}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
@@ -114,7 +115,7 @@ app.use("/*", async (c, next) => {
 
 	const rpcResult = await rpcHandler.handle(c.req.raw, {
 		prefix: "/rpc",
-		context: context,
+		context,
 	});
 
 	if (rpcResult.matched) {
@@ -123,14 +124,14 @@ app.use("/*", async (c, next) => {
 
 	const apiResult = await apiHandler.handle(c.req.raw, {
 		prefix: "/api-reference",
-		context: context,
+		context,
 	});
 
 	if (apiResult.matched) {
 		return c.newResponse(apiResult.response.body, apiResult.response);
 	}
 
-	await next();
+	return next();
 });
 {{/if}}
 
@@ -139,9 +140,7 @@ app.use(
 	"/trpc/*",
 	trpcServer({
 		router: appRouter,
-		createContext: (_opts, context) => {
-			return createContext({ context });
-		},
+		createContext: (_opts, context) => createContext({ context }),
 	})
 );
 {{/if}}

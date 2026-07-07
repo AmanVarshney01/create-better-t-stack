@@ -3,7 +3,7 @@ import { BrowserWindow, Updater } from "electrobun/bun";
 const DEV_SERVER_PORT = {{#if (or (includes frontend "react-router") (includes frontend "svelte"))}}5173{{else if (includes frontend "astro")}}4321{{else}}3001{{/if}};
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
 
-async function getMainViewUrl(): Promise<string> {
+const getMainViewUrl = async (): Promise<string> => {
   const channel = await Updater.localInfo.channel();
   if (channel === "dev") {
     try {

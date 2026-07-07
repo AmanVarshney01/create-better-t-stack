@@ -3,11 +3,8 @@ import SignUpForm from "@/components/sign-up-form";
 import { createFileRoute } from "@tanstack/solid-router";
 import { createSignal, Match, Switch } from "solid-js";
 
-export const Route = createFileRoute("/login")({
-  component: RouteComponent,
-});
 
-function RouteComponent() {
+const RouteComponent = () => {
   const [showSignIn, setShowSignIn] = createSignal(false);
 
   return (
@@ -21,3 +18,7 @@ function RouteComponent() {
     </Switch>
   );
 }
+
+export const Route = createFileRoute("/login")({
+  component: RouteComponent,
+});

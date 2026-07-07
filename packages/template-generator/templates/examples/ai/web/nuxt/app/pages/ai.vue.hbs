@@ -38,11 +38,11 @@ const { messages, status, error, sendMessage, stop, regenerate } = useChat({
 const hasMessages = computed(() => messages.value.length > 0)
 const isLoading = computed(() => status.value === 'submitted' || status.value === 'streaming')
 
-function applySuggestion(prompt: string) {
+const applySuggestion = (prompt: string) => {
   input.value = prompt
 }
 
-async function handleSubmit(e: Event) {
+const handleSubmit = async (e: Event) => {
   e.preventDefault()
   const userInput = input.value
   input.value = ''

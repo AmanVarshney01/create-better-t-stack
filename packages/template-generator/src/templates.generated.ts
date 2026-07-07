@@ -159,7 +159,7 @@ export default {
 const DEV_SERVER_PORT = {{#if (or (includes frontend "react-router") (includes frontend "svelte"))}}5173{{else if (includes frontend "astro")}}4321{{else}}3001{{/if}};
 const DEV_SERVER_URL = \`http://localhost:\${DEV_SERVER_PORT}\`;
 
-async function getMainViewUrl(): Promise<string> {
+const getMainViewUrl = async (): Promise<string> => {
   const channel = await Updater.localInfo.channel();
   if (channel === "dev") {
     try {
@@ -211,10 +211,12 @@ console.log("Electrobun desktop shell started.");
   ["addons/lefthook/lefthook.yml.hbs", `# Lefthook configuration
 # https://github.com/evilmartians/lefthook
 
+# \`jobs:\` must directly follow \`pre-commit:\` so ultracite init can merge its job
 pre-commit:
-  parallel: true
   jobs:
-{{#if (includes addons "biome")}}
+{{#if (includes addons "ultracite")}}
+    # ultracite init inserts its fix job here
+{{else if (includes addons "biome")}}
     - name: biome
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
       run: {{packageManager}} biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
@@ -236,6 +238,7 @@ pre-commit:
     # - name: lint
     #   run: {{packageManagerRunCmd}} lint
 {{/if}}
+  parallel: true
 `],
   ["addons/pwa/apps/web/next/public/favicon/apple-touch-icon.png", `[Binary file]`],
   ["addons/pwa/apps/web/next/public/favicon/favicon-96x96.png", `[Binary file]`],
@@ -271,7 +274,7 @@ pre-commit:
   ["addons/pwa/apps/web/next/public/favicon/web-app-manifest-512x512.png", `[Binary file]`],
   ["addons/pwa/apps/web/next/src/app/manifest.ts.hbs", `import type { MetadataRoute } from "next";
 
-export default function manifest(): MetadataRoute.Manifest {
+const manifest = (): MetadataRoute.Manifest => {
 	return {
 		name: "{{projectName}}",
 		short_name: "{{projectName}}",
@@ -294,7 +297,9 @@ export default function manifest(): MetadataRoute.Manifest {
 			},
 		],
 	};
-}
+};
+
+export default manifest;
 `],
   ["addons/pwa/apps/web/vite/public/logo.png", `[Binary file]`],
   ["addons/pwa/apps/web/vite/pwa-assets.config.ts.hbs", `import {
@@ -389,7 +394,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	],
 });
 
-async function handleRequest(req: NextRequest) {
+const handleRequest = async (req: NextRequest) => {
 	const rpcResult = await rpcHandler.handle(req, {
 		prefix: "/api/rpc",
 		context: await createContext(req),
@@ -615,7 +620,8 @@ export const PUT = handle;
 export const PATCH = handle;
 export const DELETE = handle;
 `],
-  ["api/orpc/fullstack/tanstack-start/src/routes/api/rpc/$.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
+  ["api/orpc/fullstack/tanstack-start/src/routes/api/rpc/$.ts.hbs", `/* oxlint-disable github/filenames-match-regex */
+import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -645,7 +651,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	],
 });
 
-async function handle({ request }: { request: Request }) {
+const handle = async ({ request }: { request: Request }) => {
 	const rpcResult = await rpcHandler.handle(request, {
 		prefix: "/api/rpc",
 		context: await createContext({ req: request }),
@@ -694,7 +700,7 @@ export const queryClient = new QueryClient({
 	}),
 });
 
-async function expoFetch(request: Request, init?: RequestInit) {
+const expoFetch = async (request: Request, init?: RequestInit) => {
 	const { fetch } = await import("expo/fetch");
 
 	return fetch(request.url, {
@@ -810,7 +816,7 @@ type ClerkRequestContext = {
 	session: null;
 };
 
-function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContextAuth | null {
+const toClerkContextAuth = (auth: { userId: string | null } | null): ClerkContextAuth | null => {
 	return auth ? { userId: auth.userId } : null;
 }
 {{/if}}
@@ -826,7 +832,7 @@ const clerkClient = createClerkClient({
 	publishableKey: env.CLERK_PUBLISHABLE_KEY,
 });
 
-async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth | null> {
+const authenticateClerkRequest = async (request: Request): Promise<ClerkContextAuth | null> => {
 	const requestState = await clerkClient.authenticateRequest(request, {
 		authorizedParties: [env.CORS_ORIGIN],
 	});
@@ -845,7 +851,7 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 
-export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
@@ -877,7 +883,7 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
@@ -913,7 +919,7 @@ export type CreateContextOptions = {
 	headers: Headers;
 };
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) => {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
@@ -947,7 +953,7 @@ export type CreateContextOptions = {
 {{/if}}
 };
 
-export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env: _env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions) {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env: _env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions) => {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth({{#if (eq webDeploy "cloudflare")}}env{{/if}}){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
@@ -981,7 +987,7 @@ export type CreateContextOptions = {
 	headers: Headers;
 };
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) => {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
@@ -1010,7 +1016,7 @@ export type CreateContextOptions = {
 	context: HonoContext;
 };
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: context.req.raw.headers,
@@ -1043,7 +1049,7 @@ export type CreateContextOptions = {
 	context: ElysiaContext;
 };
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
@@ -1079,7 +1085,7 @@ interface CreateContextOptions {
 	req: Request;
 }
 
-export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateContextOptions) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
@@ -1113,7 +1119,7 @@ import { getAuth } from "@clerk/fastify";
 import type { IncomingHttpHeaders } from "node:http";
 {{/if}}
 
-export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typeof getAuth>[0]{{else}}IncomingHttpHeaders{{/if}}){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}(req: {{#if (eq auth "clerk")}}Parameters<typeof getAuth>[0]{{else}}IncomingHttpHeaders{{/if}}) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(req),
@@ -1138,7 +1144,7 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 }
 
 {{else}}
-export async function createContext() {
+export const createContext = () => {
 	return {
 		auth: null,
 		session: null,
@@ -1287,7 +1293,7 @@ import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
-function getServerUrl(url: string) {
+const getServerUrl = (url: string) => {
   const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
 
   if (!normalized.startsWith("/")) {
@@ -1409,7 +1415,7 @@ import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 {{/if}}
 
-export function createQueryClient() {
+export const createQueryClient = () => {
 	return new QueryClient({
 		queryCache: new QueryCache({
 			onError: (error, query) => {
@@ -1629,7 +1635,7 @@ import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 import { NextRequest } from "next/server";
 
-function handler(req: NextRequest) {
+const handler = (req: NextRequest) => {
 	return fetchRequestHandler({
 		endpoint: "/api/trpc",
 		req,
@@ -1639,12 +1645,13 @@ function handler(req: NextRequest) {
 }
 export { handler as GET, handler as POST };
 `],
-  ["api/trpc/fullstack/tanstack-start/src/routes/api/trpc/$.ts.hbs", `import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
+  ["api/trpc/fullstack/tanstack-start/src/routes/api/trpc/$.ts.hbs", `/* oxlint-disable github/filenames-match-regex */
+import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import { appRouter } from '@{{projectName}}/api/routers/index'
 import { createContext } from '@{{projectName}}/api/context'
 import { createFileRoute } from '@tanstack/react-router'
 
-function handler({ request }: { request: Request }) {
+const handler = ({ request }: { request: Request }) => {
   return fetchRequestHandler({
     req: request,
     router: appRouter,
@@ -1778,7 +1785,7 @@ type ClerkRequestContext = {
 	session: null;
 };
 
-function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContextAuth | null {
+const toClerkContextAuth = (auth: { userId: string | null } | null): ClerkContextAuth | null => {
 	return auth ? { userId: auth.userId } : null;
 }
 {{/if}}
@@ -1792,7 +1799,7 @@ const clerkClient = createClerkClient({
 	publishableKey: env.CLERK_PUBLISHABLE_KEY,
 });
 
-async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth | null> {
+const authenticateClerkRequest = async (request: Request): Promise<ClerkContextAuth | null> => {
 	const requestState = await clerkClient.authenticateRequest(request, {
 		authorizedParties: [env.CORS_ORIGIN],
 	});
@@ -1810,7 +1817,7 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 
-export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
@@ -1842,7 +1849,7 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
@@ -1879,7 +1886,7 @@ export type CreateContextOptions = {
 	context: HonoContext;
 };
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: context.req.raw.headers,
@@ -1912,7 +1919,7 @@ export type CreateContextOptions = {
 	context: ElysiaContext;
 };
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
@@ -1944,7 +1951,7 @@ import { auth } from "@{{projectName}}/auth";
 import { getAuth } from "@clerk/express";
 {{/if}}
 
-export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateExpressContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateExpressContextOptions) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
@@ -1976,7 +1983,7 @@ import { auth } from "@{{projectName}}/auth";
 import { getAuth } from "@clerk/fastify";
 {{/if}}
 
-export async function createContext({ req }: CreateFastifyContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({ req }: CreateFastifyContextOptions) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(req.headers),
@@ -2001,7 +2008,7 @@ export async function createContext({ req }: CreateFastifyContextOptions){{#if (
 }
 
 {{else}}
-export async function createContext() {
+export const createContext = () => {
 	return {
 		auth: null,
 		session: null,
@@ -2285,7 +2292,7 @@ const nativeAppUrl = process.env.NATIVE_APP_URL || "{{projectName}}://";
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
-function createAuth(ctx: GenericCtx<DataModel>) {
+const createAuth = (ctx: GenericCtx<DataModel>) => {
   return betterAuth({
     {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router"))}}
     baseURL: process.env.CONVEX_SITE_URL,
@@ -2384,7 +2391,7 @@ polar.registerRoutes(http);
 
 export default http;
 `],
-  ["auth/better-auth/convex/backend/convex/privateData.ts.hbs", `import { query } from "./_generated/server";
+  ["auth/better-auth/convex/backend/convex/privatedata.ts.hbs", `import { query } from "./_generated/server";
 import { authComponent } from "./auth";
 
 export const get = query({
@@ -2429,7 +2436,7 @@ const signInSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -2456,7 +2463,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-function SignIn() {
+const SignIn = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);
@@ -2657,7 +2664,7 @@ const signUpSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -2684,7 +2691,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-function SignUp() {
+const SignUp = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);
@@ -2927,7 +2934,7 @@ const signInSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -2954,7 +2961,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-export function SignIn() {
+export const SignIn = () => {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
@@ -3136,7 +3143,7 @@ const signUpSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -3163,7 +3170,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-export function SignUp() {
+export const SignUp = () => {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
@@ -3361,7 +3368,7 @@ const signInSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -3388,7 +3395,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-export function SignIn() {
+export const SignIn = () => {
   const passwordInputRef = useRef<TextInput>(null);
   const { toast } = useToast();
 
@@ -3524,7 +3531,7 @@ const signUpSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -3551,7 +3558,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-export function SignUp() {
+export const SignUp = () => {
   const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
   const { toast } = useToast();
@@ -3714,8 +3721,8 @@ import {
 } from "convex/react";
 import { useState } from "react";
 
-function DashboardContent() {
-    const privateData = useQuery(api.privateData.get);
+const DashboardContent = () => {
+    const privateData = useQuery(api.privatedata.get);
     {{#if (eq payments "polar")}}
     const products = useQuery(api.polar.listAllProducts);
     const subscription = useQuery(api.polar.getCurrentSubscription);
@@ -3759,7 +3766,7 @@ function DashboardContent() {
     );
 }
 
-export default function DashboardPage() {
+const DashboardPage = () => {
     const [showSignIn, setShowSignIn] = useState(false);
 
     return (
@@ -3779,9 +3786,12 @@ export default function DashboardPage() {
             </AuthLoading>
         </>
     );
-}
+};
+
+export default DashboardPage;
 `],
-  ["auth/better-auth/convex/web/react/next/src/components/sign-in-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/convex/web/react/next/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -3790,11 +3800,11 @@ import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 import { useRouter } from "next/navigation";
 
-export default function SignInForm({
+const SignInForm = ({
 	onSwitchToSignUp,
 }: {
 	onSwitchToSignUp: () => void;
-}) {
+}) => {
 	const router = useRouter();
 
 	const form = useForm({
@@ -3909,9 +3919,12 @@ export default function SignInForm({
 			</div>
 		</div>
 	);
-}
+};
+
+export default SignInForm;
 `],
-  ["auth/better-auth/convex/web/react/next/src/components/sign-up-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/convex/web/react/next/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -3920,11 +3933,11 @@ import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 import { useRouter } from "next/navigation";
 
-export default function SignUpForm({
+const SignUpForm = ({
 	onSwitchToSignIn,
 }: {
 	onSwitchToSignIn: () => void;
-}) {
+}) => {
 	const router = useRouter();
 
 	const form = useForm({
@@ -4064,7 +4077,9 @@ export default function SignUpForm({
 			</div>
 		</div>
 	);
-}
+};
+
+export default SignUpForm;
 `],
   ["auth/better-auth/convex/web/react/next/src/components/user-menu.tsx.hbs", `import {
 	DropdownMenu,
@@ -4081,7 +4096,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 
-export default function UserMenu() {
+const UserMenu = () => {
 	const router = useRouter();
 	const user = useQuery(api.auth.getCurrentUser)
 
@@ -4113,7 +4128,9 @@ export default function UserMenu() {
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);
-}
+};
+
+export default UserMenu;
 `],
   ["auth/better-auth/convex/web/react/next/src/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/react";
 import { convexClient } from "@convex-dev/better-auth/client/plugins";
@@ -4138,7 +4155,8 @@ export const {
 	convexSiteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
 });
 `],
-  ["auth/better-auth/convex/web/react/react-router/src/components/sign-in-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/convex/web/react/react-router/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -4147,11 +4165,11 @@ import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 
-export default function SignInForm({
+const SignInForm = ({
   onSwitchToSignUp,
 }: {
   onSwitchToSignUp: () => void;
-}) {
+}) => {
   const navigate = useNavigate();
 
   const form = useForm({
@@ -4267,9 +4285,12 @@ export default function SignInForm({
       </div>
     </div>
   );
-}
+};
+
+export default SignInForm;
 `],
-  ["auth/better-auth/convex/web/react/react-router/src/components/sign-up-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/convex/web/react/react-router/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -4278,11 +4299,11 @@ import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 
-export default function SignUpForm({
+const SignUpForm = ({
   onSwitchToSignIn,
 }: {
   onSwitchToSignIn: () => void;
-}) {
+}) => {
   const navigate = useNavigate();
 
   const form = useForm({
@@ -4423,7 +4444,9 @@ export default function SignUpForm({
       </div>
     </div>
   );
-}
+};
+
+export default SignUpForm;
 `],
   ["auth/better-auth/convex/web/react/react-router/src/components/user-menu.tsx.hbs", `import { useNavigate } from "react-router";
 
@@ -4442,7 +4465,7 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 
 import { Button } from "@{{projectName}}/ui/components/button";
 
-export default function UserMenu() {
+const UserMenu = () => {
   const navigate = useNavigate();
   const user = useQuery(api.auth.getCurrentUser);
 
@@ -4474,7 +4497,9 @@ export default function UserMenu() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
+
+export default UserMenu;
 `],
   ["auth/better-auth/convex/web/react/react-router/src/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/react";
 import {
@@ -4504,8 +4529,8 @@ import {
 } from "convex/react";
 import { useState } from "react";
 
-function PrivateDashboardContent() {
-  const privateData = useQuery(api.privateData.get);
+const PrivateDashboardContent = () => {
+  const privateData = useQuery(api.privatedata.get);
   {{#if (eq payments "polar")}}
   const products = useQuery(api.polar.listAllProducts);
   const subscription = useQuery(api.polar.getCurrentSubscription);
@@ -4549,7 +4574,7 @@ function PrivateDashboardContent() {
   );
 }
 
-export default function Dashboard() {
+const Dashboard = () => {
   const [showSignIn, setShowSignIn] = useState(false);
 
   return (
@@ -4569,9 +4594,12 @@ export default function Dashboard() {
       </AuthLoading>
     </>
   );
-}
+};
+
+export default Dashboard;
 `],
-  ["auth/better-auth/convex/web/react/tanstack-router/src/components/sign-in-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/convex/web/react/tanstack-router/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -4580,11 +4608,11 @@ import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 
-export default function SignInForm({
+const SignInForm = ({
     onSwitchToSignUp,
 }: {
     onSwitchToSignUp: () => void;
-}) {
+}) => {
     const navigate = useNavigate({
         from: "/",
     });
@@ -4703,9 +4731,12 @@ export default function SignInForm({
             </div>
         </div>
     );
-}
+};
+
+export default SignInForm;
 `],
-  ["auth/better-auth/convex/web/react/tanstack-router/src/components/sign-up-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/convex/web/react/tanstack-router/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -4714,11 +4745,11 @@ import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 
-export default function SignUpForm({
+const SignUpForm = ({
     onSwitchToSignIn,
 }: {
     onSwitchToSignIn: () => void;
-}) {
+}) => {
     const navigate = useNavigate({
         from: "/",
     });
@@ -4862,7 +4893,9 @@ export default function SignUpForm({
             </div>
         </div>
     );
-}
+};
+
+export default SignUpForm;
 `],
   ["auth/better-auth/convex/web/react/tanstack-router/src/components/user-menu.tsx.hbs", `import { useNavigate } from "@tanstack/react-router";
 
@@ -4881,7 +4914,7 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 
 import { Button } from "@{{projectName}}/ui/components/button";
 
-export default function UserMenu() {
+const UserMenu = () => {
     const navigate = useNavigate();
     const user = useQuery(api.auth.getCurrentUser)
 
@@ -4915,7 +4948,9 @@ export default function UserMenu() {
             </DropdownMenuContent>
         </DropdownMenu>
     );
-}
+};
+
+export default UserMenu;
 `],
   ["auth/better-auth/convex/web/react/tanstack-router/src/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/react";
 import {
@@ -4938,12 +4973,9 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/_auth/dashboard")({
-  component: DashboardContent,
-});
 
-function DashboardContent() {
-  const privateData = useQuery(api.privateData.get);
+const DashboardContent = () => {
+  const privateData = useQuery(api.privatedata.get);
   {{#if (eq payments "polar")}}
   const products = useQuery(api.polar.listAllProducts);
   const subscription = useQuery(api.polar.getCurrentSubscription);
@@ -4986,6 +5018,10 @@ function DashboardContent() {
     </div>
   );
 }
+
+export const Route = createFileRoute("/_auth/dashboard")({
+  component: DashboardContent,
+});
 `],
   ["auth/better-auth/convex/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
@@ -4993,11 +5029,8 @@ import { Outlet, createFileRoute } from "@tanstack/react-router";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { useState } from "react";
 
-export const Route = createFileRoute("/_auth")({
-  component: AuthLayout,
-});
 
-function AuthLayout() {
+const AuthLayout = () => {
   const [showSignIn, setShowSignIn] = useState(false);
 
   return (
@@ -5018,8 +5051,13 @@ function AuthLayout() {
     </>
   );
 }
+
+export const Route = createFileRoute("/_auth")({
+  component: AuthLayout,
+});
 `],
-  ["auth/better-auth/convex/web/react/tanstack-start/src/components/sign-in-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/convex/web/react/tanstack-start/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -5028,11 +5066,11 @@ import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 
-export default function SignInForm({
+const SignInForm = ({
     onSwitchToSignUp,
 }: {
     onSwitchToSignUp: () => void;
-}) {
+}) => {
     const navigate = useNavigate({
         from: "/",
     });
@@ -5151,9 +5189,12 @@ export default function SignInForm({
             </div>
         </div>
     );
-}
+};
+
+export default SignInForm;
 `],
-  ["auth/better-auth/convex/web/react/tanstack-start/src/components/sign-up-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/convex/web/react/tanstack-start/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -5162,11 +5203,11 @@ import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 
-export default function SignUpForm({
+const SignUpForm = ({
     onSwitchToSignIn,
 }: {
     onSwitchToSignIn: () => void;
-}) {
+}) => {
     const navigate = useNavigate({
         from: "/",
     });
@@ -5310,7 +5351,9 @@ export default function SignUpForm({
             </div>
         </div>
     );
-}
+};
+
+export default SignUpForm;
 `],
   ["auth/better-auth/convex/web/react/tanstack-start/src/components/user-menu.tsx.hbs", `import {
     DropdownMenu,
@@ -5327,7 +5370,7 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 
 import { Button } from "@{{projectName}}/ui/components/button";
 
-export default function UserMenu() {
+const UserMenu = () => {
     const user = useQuery(api.auth.getCurrentUser)
 
     return (
@@ -5358,7 +5401,9 @@ export default function UserMenu() {
             </DropdownMenuContent>
         </DropdownMenu>
     );
-}
+};
+
+export default UserMenu;
 `],
   ["auth/better-auth/convex/web/react/tanstack-start/src/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/react";
 import { convexClient } from "@convex-dev/better-auth/client/plugins";
@@ -5389,12 +5434,9 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/_auth/dashboard")({
-  component: DashboardContent,
-});
 
-function DashboardContent() {
-  const privateData = useQuery(api.privateData.get);
+const DashboardContent = () => {
+  const privateData = useQuery(api.privatedata.get);
   {{#if (eq payments "polar")}}
   const products = useQuery(api.polar.listAllProducts);
   const subscription = useQuery(api.polar.getCurrentSubscription);
@@ -5437,6 +5479,10 @@ function DashboardContent() {
     </div>
   );
 }
+
+export const Route = createFileRoute("/_auth/dashboard")({
+  component: DashboardContent,
+});
 `],
   ["auth/better-auth/convex/web/react/tanstack-start/src/routes/_auth/route.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
@@ -5444,11 +5490,8 @@ import { Outlet, createFileRoute } from "@tanstack/react-router";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { useState } from "react";
 
-export const Route = createFileRoute("/_auth")({
-  component: AuthLayout,
-});
 
-function AuthLayout() {
+const AuthLayout = () => {
   const [showSignIn, setShowSignIn] = useState(false);
 
   return (
@@ -5469,8 +5512,13 @@ function AuthLayout() {
     </>
   );
 }
+
+export const Route = createFileRoute("/_auth")({
+  component: AuthLayout,
+});
 `],
-  ["auth/better-auth/convex/web/react/tanstack-start/src/routes/api/auth/$.ts.hbs", `import { createFileRoute } from "@tanstack/react-router";
+  ["auth/better-auth/convex/web/react/tanstack-start/src/routes/api/auth/$.ts.hbs", `/* oxlint-disable github/filenames-match-regex */
+import { createFileRoute } from "@tanstack/react-router";
 import { handler } from "@/lib/auth-server";
 
 export const Route = createFileRoute("/api/auth/$")({
@@ -5539,11 +5587,11 @@ import { auth } from "@{{projectName}}/auth";
 import { toNextJsHandler } from "better-auth/next-js";
 
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-export async function GET(request: Request) {
+export const GET = async (request: Request) => {
 	return toNextJsHandler(createAuth()).GET(request);
 }
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
 	return toNextJsHandler(createAuth()).POST(request);
 }
 {{else}}
@@ -5602,7 +5650,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	});
 };
 `],
-  ["auth/better-auth/fullstack/tanstack-start/src/routes/api/auth/$.ts.hbs", `{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+  ["auth/better-auth/fullstack/tanstack-start/src/routes/api/auth/$.ts.hbs", `/* oxlint-disable github/filenames-match-regex */
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 import { createAuth } from '@{{projectName}}/auth'
 {{else}}
 import { auth } from '@{{projectName}}/auth'
@@ -5650,7 +5699,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient, trpc } from "@/utils/trpc";
 {{/if}}
 
-export default function Home() {
+const Home = () => {
 const { colorScheme } = useColorScheme();
 const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 {{#if (eq api "orpc")}}
@@ -5832,7 +5881,9 @@ return (
   </ScrollView>
 </Container>
 );
-}
+};
+
+export default Home;
 
 const styles = StyleSheet.create({
 scrollView: {
@@ -5922,7 +5973,7 @@ const signInSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -5949,7 +6000,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-function SignIn() {
+const SignIn = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);
@@ -6162,7 +6213,7 @@ const signUpSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -6189,7 +6240,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-function SignUp() {
+const SignUp = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);
@@ -6456,13 +6507,13 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient, trpc } from "@/utils/trpc";
 {{/if}}
 
-export default function Home() {
+const Home = () => {
     {{#if (eq api "orpc")}}
-    const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+    const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
     const privateData = useQuery(orpc.privateData.queryOptions());
     {{/if}}
     {{#if (eq api "trpc")}}
-    const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+    const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
     const privateData = useQuery(trpc.privateData.queryOptions());
     {{/if}}
   const { data: session } = authClient.useSession();
@@ -6509,6 +6560,14 @@ export default function Home() {
   };
   {{/if}}
 
+  {{#unless (eq api "none")}}
+  let apiStatusText = "API Disconnected";
+  if (isLoading) {
+    apiStatusText = "Checking...";
+  } else if (healthCheck) {
+    apiStatusText = "Connected to API";
+  }
+  {{/unless}}
   return (
     <Container>
       <ScrollView>
@@ -6563,17 +6622,13 @@ export default function Home() {
               <View
                 style={[
                   styles.statusIndicatorDot,
-                  healthCheck.data
+                  healthCheck
                     ? styles.statusIndicatorGreen
                     : styles.statusIndicatorRed,
                 ]}
               />
               <Text style={styles.mutedText}>
-                {healthCheck.isLoading
-                  ? "Checking..."
-                  : healthCheck.data
-                    ? "Connected to API"
-                    : "API Disconnected"}
+                {apiStatusText}
               </Text>
             </View>
           </View>
@@ -6598,7 +6653,9 @@ export default function Home() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default Home;
 
 const styles = StyleSheet.create((theme) => ({
   pageContainer: {
@@ -6743,7 +6800,7 @@ const signInSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -6770,7 +6827,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-export function SignIn() {
+export const SignIn = () => {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
@@ -6964,7 +7021,7 @@ const signUpSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -6991,7 +7048,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-export function SignUp() {
+export const SignUp = () => {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
@@ -7197,7 +7254,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient, trpc } from "@/utils/trpc";
 {{/if}}
 
-export default function Home() {
+const Home = () => {
 {{#if (eq api "orpc")}}
 const healthCheck = useQuery(orpc.healthCheck.queryOptions());
 const privateData = useQuery(orpc.privateData.queryOptions());
@@ -7361,7 +7418,9 @@ return (
   )}
 </Container>
 );
-}
+};
+
+export default Home;
 `],
   ["auth/better-auth/native/uniwind/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
@@ -7388,7 +7447,7 @@ const signInSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -7415,7 +7474,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-function SignIn() {
+const SignIn = () => {
   const passwordInputRef = useRef<TextInput>(null);
   const { toast } = useToast();
 
@@ -7565,7 +7624,7 @@ const signUpSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -7592,7 +7651,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-export function SignUp() {
+export const SignUp = () => {
   const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
   const { toast } = useToast();
@@ -7788,7 +7847,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   "scripts": {},
   "devDependencies": {}
 }`],
-  ["auth/better-auth/server/base/src/index.ts.hbs", `{{#if (eq orm "prisma")}}
+  ["auth/better-auth/server/base/src/index.ts.hbs", `/* oxlint-disable sonarjs/no-wildcard-import */
+{{#if (eq orm "prisma")}}
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
@@ -7806,7 +7866,7 @@ import { polarClient } from "./lib/payments";
 {{/if}}
 import { createPrismaClient } from "@{{projectName}}/db";
 
-export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env{{/if}});
 
 	return betterAuth({
@@ -7890,7 +7950,7 @@ import { createDb } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
 
-export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env{{/if}});
 
 	return betterAuth({
@@ -7898,7 +7958,7 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 {{#if (eq database "postgres")}}provider: "pg",{{/if}}
 {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
 {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
-			schema: schema,
+			schema,
 		}),
 		trustedOrigins: [
 			env.CORS_ORIGIN,
@@ -7964,7 +8024,7 @@ import { createDb } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
 
-export function createAuth() {
+export const createAuth = () => {
 	const db = createDb();
 
 	return betterAuth({
@@ -7972,7 +8032,7 @@ export function createAuth() {
 {{#if (eq database "postgres")}}provider: "pg",{{/if}}
 {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
 {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
-			schema: schema,
+			schema,
 		}),
 		trustedOrigins: [
 			env.CORS_ORIGIN,
@@ -8052,7 +8112,7 @@ import { polarClient } from "./lib/payments";
 {{/if}}
 import { client } from "@{{projectName}}/db";
 
-export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	return betterAuth({
 		database: mongodbAdapter(client),
 		trustedOrigins: [
@@ -8124,7 +8184,7 @@ import { polarClient } from "./lib/payments";
 {{/if}}
 
 
-export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	return betterAuth({
 		database: "", // Invalid configuration
 		trustedOrigins: [
@@ -8208,7 +8268,7 @@ export const user = mysqlTable("user", {
   createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { fsp: 3 })
     .defaultNow()
-    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -8220,7 +8280,7 @@ export const session = mysqlTable(
     token: varchar("token", { length: 255 }).notNull().unique(),
     createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
@@ -8249,7 +8309,7 @@ export const account = mysqlTable(
     password: text("password"),
     createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [index("account_userId_idx").on(table.userId)],
@@ -8265,7 +8325,7 @@ export const verification = mysqlTable(
     createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
       .defaultNow()
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
@@ -8302,7 +8362,7 @@ export const user = pgTable("user", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
-    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -8314,7 +8374,7 @@ export const session = pgTable(
     token: text("token").notNull().unique(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
@@ -8343,7 +8403,7 @@ export const account = pgTable(
     password: text("password"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [index("account_userId_idx").on(table.userId)],
@@ -8359,7 +8419,7 @@ export const verification = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
@@ -8400,7 +8460,7 @@ export const user = sqliteTable("user", {
     .notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" })
     .default(sql\`(cast(unixepoch('subsecond') * 1000 as integer))\`)
-    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -8414,7 +8474,7 @@ export const session = sqliteTable(
       .default(sql\`(cast(unixepoch('subsecond') * 1000 as integer))\`)
       .notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
@@ -8449,7 +8509,7 @@ export const account = sqliteTable(
       .default(sql\`(cast(unixepoch('subsecond') * 1000 as integer))\`)
       .notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [index("account_userId_idx").on(table.userId)],
@@ -8467,7 +8527,7 @@ export const verification = sqliteTable(
       .notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" })
       .default(sql\`(cast(unixepoch('subsecond') * 1000 as integer))\`)
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
@@ -9041,7 +9101,7 @@ export const authClient = createAuthClient({
 });
 `],
   ["auth/better-auth/web/astro/src/pages/dashboard.astro.hbs", `---
-import Layout from "../layouts/Layout.astro";
+import Layout from "../layouts/layout.astro";
 ---
 
 <Layout title="Dashboard - {{projectName}}">
@@ -9105,7 +9165,7 @@ import Layout from "../layouts/Layout.astro";
   const apiMessage = document.getElementById("api-message")!;
   {{/if}}
 
-  async function init() {
+  const init = async () => {
     try {
       const { data: session } = await authClient.getSession();
       
@@ -9178,7 +9238,7 @@ import Layout from "../layouts/Layout.astro";
 `],
   ["auth/better-auth/web/astro/src/pages/login.astro.hbs", `---
 import SignInForm from "../components/SignInForm.astro";
-import Layout from "../layouts/Layout.astro";
+import Layout from "../layouts/layout.astro";
 ---
 
 <Layout title="Sign In - {{projectName}}">
@@ -9189,7 +9249,7 @@ import Layout from "../layouts/Layout.astro";
 `],
   ["auth/better-auth/web/astro/src/pages/signup.astro.hbs", `---
 import SignUpForm from "../components/SignUpForm.astro";
-import Layout from "../layouts/Layout.astro";
+import Layout from "../layouts/layout.astro";
 ---
 
 <Layout title="Sign Up - {{projectName}}">
@@ -9233,7 +9293,7 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-async function onSubmit(event: FormSubmitEvent<Schema>) {
+const onSubmit = async (event: FormSubmitEvent<Schema>) => {
   loading.value = true
   try {
     await $authClient.signIn.email(
@@ -9324,7 +9384,7 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-async function onSubmit(event: FormSubmitEvent<Schema>) {
+const onSubmit = async (event: FormSubmitEvent<Schema>) => {
   loading.value = true
   try {
     await $authClient.signUp.email(
@@ -9626,7 +9686,7 @@ import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 {{/if}}
 
-export default function Dashboard({
+const Dashboard = ({
 	{{#if (eq payments "polar")}}
 	customerState,
 	{{/if}}
@@ -9636,12 +9696,12 @@ export default function Dashboard({
 	customerState: ReturnType<typeof authClient.customer.state>;
 	{{/if}}
 	session: typeof authClient.$Infer.Session;
-}) {
+}) => {
 	{{#if (eq api "orpc")}}
-	const privateData = useQuery(orpc.privateData.queryOptions());
+	const { data: privateData } = useQuery(orpc.privateData.queryOptions());
 	{{/if}}
 	{{#if (eq api "trpc")}}
-	const privateData = useQuery(trpc.privateData.queryOptions());
+	const { data: privateData } = useQuery(trpc.privateData.queryOptions());
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
@@ -9651,10 +9711,10 @@ export default function Dashboard({
 	return (
 		<>
 			{{#if (eq api "orpc")}}
-			<p>API: {privateData.data?.message}</p>
+			<p>API: {privateData?.message}</p>
 			{{/if}}
 			{{#if (eq api "trpc")}}
-			<p>API: {privateData.data?.message}</p>
+			<p>API: {privateData?.message}</p>
 			{{/if}}
 			{{#if (eq payments "polar")}}
 			<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
@@ -9670,7 +9730,9 @@ export default function Dashboard({
 			{{/if}}
 		</>
 	);
-}
+};
+
+export default Dashboard;
 `],
   ["auth/better-auth/web/react/next/src/app/dashboard/page.tsx.hbs", `import { redirect } from "next/navigation";
 import Dashboard from "./dashboard";
@@ -9686,7 +9748,7 @@ import { auth } from "@{{projectName}}/auth";
 import { authClient } from "@/lib/auth-client";
 {{/if}}
 
-export default async function DashboardPage() {
+const DashboardPage = async () => {
 	{{#if (eq backend "self")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: await headers(),
@@ -9719,7 +9781,9 @@ export default async function DashboardPage() {
 			<Dashboard session={session} {{#if (eq payments "polar")}}customerState={customerState}{{/if}} />
 		</div>
 	);
-}
+};
+
+export default DashboardPage;
 `],
   ["auth/better-auth/web/react/next/src/app/login/page.tsx.hbs", `"use client"
 
@@ -9728,17 +9792,19 @@ import SignUpForm from "@/components/sign-up-form";
 import { useState } from "react";
 
 
-export default function LoginPage() {
+const LoginPage = () => {
   const [showSignIn, setShowSignIn] = useState(false);
 
-  return showSignIn ? (
-    <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
-  ) : (
-    <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
-  );
-}
+  if (showSignIn) {
+    return <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />;
+  }
+  return <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />;
+};;
+
+export default LoginPage;
 `],
-  ["auth/better-auth/web/react/next/src/components/sign-in-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/react/next/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -9748,11 +9814,11 @@ import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 import { useRouter } from "next/navigation";
 
-export default function SignInForm({
+const SignInForm = ({
   onSwitchToSignUp,
 }: {
   onSwitchToSignUp: () => void;
-}) {
+}) => {
   const router = useRouter()
   const { isPending } = authClient.useSession();
 
@@ -9872,9 +9938,12 @@ export default function SignInForm({
       </div>
     </div>
   );
-}
+};
+
+export default SignInForm;
 `],
-  ["auth/better-auth/web/react/next/src/components/sign-up-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/react/next/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -9884,11 +9953,11 @@ import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 import { useRouter } from "next/navigation";
 
-export default function SignUpForm({
+const SignUpForm = ({
   onSwitchToSignIn,
 }: {
   onSwitchToSignIn: () => void;
-}) {
+}) => {
   const router = useRouter();
   const { isPending } = authClient.useSession();
 
@@ -10033,7 +10102,9 @@ export default function SignUpForm({
       </div>
     </div>
   );
-}
+};
+
+export default SignUpForm;
 `],
   ["auth/better-auth/web/react/next/src/components/user-menu.tsx.hbs", `import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10052,7 +10123,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@{{projectName}}/ui/components/button";
 import { Skeleton } from "@{{projectName}}/ui/components/skeleton";
 
-export default function UserMenu() {
+const UserMenu = () => {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
 
@@ -10096,9 +10167,12 @@ export default function UserMenu() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
+
+export default UserMenu;
 `],
-  ["auth/better-auth/web/react/react-router/src/components/sign-in-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/react/react-router/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -10108,11 +10182,11 @@ import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 
-export default function SignInForm({
+const SignInForm = ({
   onSwitchToSignUp,
 }: {
   onSwitchToSignUp: () => void;
-}) {
+}) => {
   const navigate = useNavigate();
   const { isPending } = authClient.useSession();
 
@@ -10232,9 +10306,12 @@ export default function SignInForm({
       </div>
     </div>
   );
-}
+};
+
+export default SignInForm;
 `],
-  ["auth/better-auth/web/react/react-router/src/components/sign-up-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/react/react-router/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -10244,11 +10321,11 @@ import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 
-export default function SignUpForm({
+const SignUpForm = ({
   onSwitchToSignIn,
 }: {
   onSwitchToSignIn: () => void;
-}) {
+}) => {
   const navigate = useNavigate();
   const { isPending } = authClient.useSession();
 
@@ -10393,7 +10470,9 @@ export default function SignUpForm({
       </div>
     </div>
   );
-}
+};
+
+export default SignUpForm;
 `],
   ["auth/better-auth/web/react/react-router/src/components/user-menu.tsx.hbs", `import { Link, useNavigate } from "react-router";
 
@@ -10411,7 +10490,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@{{projectName}}/ui/components/button";
 import { Skeleton } from "@{{projectName}}/ui/components/skeleton";
 
-export default function UserMenu() {
+const UserMenu = () => {
   const navigate = useNavigate();
   const { data: session, isPending } = authClient.useSession();
 
@@ -10455,7 +10534,9 @@ export default function UserMenu() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
+
+export default UserMenu;
 `],
   ["auth/better-auth/web/react/react-router/src/routes/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
@@ -10473,7 +10554,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
-export default function Dashboard() {
+const Dashboard = () => {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
   {{#if (eq payments "polar")}}
@@ -10481,10 +10562,10 @@ export default function Dashboard() {
   {{/if}}
 
   {{#if (eq api "orpc")}}
-  const privateData = useQuery(orpc.privateData.queryOptions());
+  const { data: privateData } = useQuery(orpc.privateData.queryOptions());
   {{/if}}
   {{#if (eq api "trpc")}}
-  const privateData = useQuery(trpc.privateData.queryOptions());
+  const { data: privateData } = useQuery(trpc.privateData.queryOptions());
   {{/if}}
 
   useEffect(() => {
@@ -10495,7 +10576,7 @@ export default function Dashboard() {
 
   {{#if (eq payments "polar")}}
   useEffect(() => {
-    async function fetchCustomerState() {
+    const fetchCustomerState = async () => {
       if (session) {
         const { data } = await authClient.customer.state();
         setCustomerState(data);
@@ -10519,7 +10600,7 @@ export default function Dashboard() {
       <h1>Dashboard</h1>
       <p>Welcome {session?.user.name}</p>
       {{#if (or (eq api "orpc") (eq api "trpc"))}}
-      <p>API: {privateData.data?.message}</p>
+      <p>API: {privateData?.message}</p>
       {{/if}}
       {{#if (eq payments "polar")}}
       <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
@@ -10535,23 +10616,27 @@ export default function Dashboard() {
       {{/if}}
     </div>
   );
-}
+};
+
+export default Dashboard;
 `],
   ["auth/better-auth/web/react/react-router/src/routes/login.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import { useState } from "react";
 
-export default function Login() {
+const Login = () => {
   const [showSignIn, setShowSignIn] = useState(false);
 
-  return showSignIn ? (
-    <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
-  ) : (
-    <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
-  );
-}
+  if (showSignIn) {
+    return <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />;
+  }
+  return <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />;
+};;
+
+export default Login;
 `],
-  ["auth/better-auth/web/react/tanstack-router/src/components/sign-in-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/react/tanstack-router/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -10561,7 +10646,7 @@ import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 
-export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
+const SignInForm = ({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) => {
   const navigate = useNavigate({
     from: "/",
   });
@@ -10685,9 +10770,12 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
       </div>
     </div>
   );
-}
+};
+
+export default SignInForm;
 `],
-  ["auth/better-auth/web/react/tanstack-router/src/components/sign-up-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/react/tanstack-router/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -10697,7 +10785,7 @@ import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 
-export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
+const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
   const navigate = useNavigate({
     from: "/",
   });
@@ -10846,7 +10934,9 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
       </div>
     </div>
   );
-}
+};
+
+export default SignUpForm;
 `],
   ["auth/better-auth/web/react/tanstack-router/src/components/user-menu.tsx.hbs", `import { Link, useNavigate } from "@tanstack/react-router";
 
@@ -10864,7 +10954,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@{{projectName}}/ui/components/button";
 import { Skeleton } from "@{{projectName}}/ui/components/skeleton";
 
-export default function UserMenu() {
+const UserMenu = () => {
   const navigate = useNavigate();
   const { data: session, isPending } = authClient.useSession();
 
@@ -10910,9 +11000,12 @@ export default function UserMenu() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
+
+export default UserMenu;
 `],
-  ["auth/better-auth/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
+  ["auth/better-auth/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `/* oxlint-disable no-use-before-define */
+{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
 {{/if}}
@@ -10927,18 +11020,15 @@ import { useQuery } from "@tanstack/react-query";
 {{/if}}
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_auth/dashboard")({
-	component: RouteComponent,
-});
 
-function RouteComponent() {
+const RouteComponent = () => {
 	const { session{{#if (eq payments "polar")}}, customerState{{/if}} } = Route.useRouteContext();
 
 	{{#if (eq api "orpc")}}
-	const privateData = useQuery(orpc.privateData.queryOptions());
+	const { data: privateData } = useQuery(orpc.privateData.queryOptions());
 	{{/if}}
 	{{#if (eq api "trpc")}}
-	const privateData = useQuery(trpc.privateData.queryOptions());
+	const { data: privateData } = useQuery(trpc.privateData.queryOptions());
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
@@ -10950,7 +11040,7 @@ function RouteComponent() {
 			<h1>Dashboard</h1>
 			<p>Welcome {session.data?.user.name}</p>
 			{{#if (or (eq api "orpc") (eq api "trpc"))}}
-			<p>API: {privateData.data?.message}</p>
+			<p>API: {privateData?.message}</p>
 			{{/if}}
 			{{#if (eq payments "polar")}}
 			<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
@@ -10967,9 +11057,18 @@ function RouteComponent() {
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_auth/dashboard")({
+	component: RouteComponent,
+});
 `],
   ["auth/better-auth/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+
+
+const AuthLayout = () => {
+	return <Outlet />;
+}
 
 export const Route = createFileRoute("/_auth")({
 	component: AuthLayout,
@@ -10988,31 +11087,28 @@ export const Route = createFileRoute("/_auth")({
 		{{/if}}
 	},
 });
-
-function AuthLayout() {
-	return <Outlet />;
-}
 `],
   ["auth/better-auth/web/react/tanstack-router/src/routes/login.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
+
+const RouteComponent = () => {
+  const [showSignIn, setShowSignIn] = useState(false);
+
+  if (showSignIn) {
+    return <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />;
+  }
+  return <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />;
+};
+
 export const Route = createFileRoute("/login")({
   component: RouteComponent,
 });
-
-function RouteComponent() {
-  const [showSignIn, setShowSignIn] = useState(false);
-
-  return showSignIn ? (
-    <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
-  ) : (
-    <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
-  );
-}
 `],
-  ["auth/better-auth/web/react/tanstack-start/src/components/sign-in-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/react/tanstack-start/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -11022,7 +11118,7 @@ import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 
-export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
+const SignInForm = ({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) => {
   const navigate = useNavigate({
     from: "/",
   });
@@ -11146,9 +11242,12 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
       </div>
     </div>
   );
-}
+};
+
+export default SignInForm;
 `],
-  ["auth/better-auth/web/react/tanstack-start/src/components/sign-up-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/react/tanstack-start/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -11158,7 +11257,7 @@ import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 
-export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
+const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
   const navigate = useNavigate({
     from: "/",
   });
@@ -11307,7 +11406,9 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
       </div>
     </div>
   );
-}
+};
+
+export default SignUpForm;
 `],
   ["auth/better-auth/web/react/tanstack-start/src/components/user-menu.tsx.hbs", `import { Link, useNavigate } from "@tanstack/react-router";
 
@@ -11325,7 +11426,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@{{projectName}}/ui/components/button";
 import { Skeleton } from "@{{projectName}}/ui/components/skeleton";
 
-export default function UserMenu() {
+const UserMenu = () => {
   const navigate = useNavigate();
   const { data: session, isPending } = authClient.useSession();
 
@@ -11371,7 +11472,9 @@ export default function UserMenu() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
+
+export default UserMenu;
 `],
   ["auth/better-auth/web/react/tanstack-start/src/functions/get-user.ts.hbs", `import { authMiddleware } from "@/middleware/auth";
 import { createServerFn } from "@tanstack/react-start";
@@ -11415,7 +11518,8 @@ export const authMiddleware = createMiddleware().server(
 );
 {{/if}}
 `],
-  ["auth/better-auth/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq payments "polar") }}
+  ["auth/better-auth/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `/* oxlint-disable no-use-before-define */
+{{#if (eq payments "polar") }}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
 {{/if}}
@@ -11429,19 +11533,16 @@ import { useQuery } from "@tanstack/react-query";
 {{/if}}
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_auth/dashboard")({
-  component: RouteComponent,
-});
 
-function RouteComponent() {
+const RouteComponent = () => {
   const { session{{#if (eq payments "polar") }}, customerState{{/if}} } = Route.useRouteContext();
 
   {{#if (eq api "trpc") }}
   const trpc = useTRPC();
-  const privateData = useQuery(trpc.privateData.queryOptions());
+  const { data: privateData } = useQuery(trpc.privateData.queryOptions());
   {{/if}}
   {{#if (eq api "orpc") }}
-  const privateData = useQuery(orpc.privateData.queryOptions());
+  const { data: privateData } = useQuery(orpc.privateData.queryOptions());
   {{/if}}
 
   {{#if (eq payments "polar") }}
@@ -11457,9 +11558,9 @@ function RouteComponent() {
       <p>Welcome {session.data?.user.name}</p>
       {{/if}}
       {{#if (eq api "trpc") }}
-      <p>API: {privateData.data?.message}</p>
+      <p>API: {privateData?.message}</p>
       {{else if (eq api "orpc") }}
-      <p>API: {privateData.data?.message}</p>
+      <p>API: {privateData?.message}</p>
       {{/if}}
       {{#if (eq payments "polar") }}
       <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
@@ -11484,6 +11585,10 @@ function RouteComponent() {
     </div>
   );
 }
+
+export const Route = createFileRoute("/_auth/dashboard")({
+  component: RouteComponent,
+});
 `],
   ["auth/better-auth/web/react/tanstack-start/src/routes/_auth/route.tsx.hbs", `{{#if (eq backend "self")}}
 import { getUser } from "@/functions/get-user";
@@ -11494,6 +11599,11 @@ import { authClient } from "@/lib/auth-client";
 import { getPayment } from "@/functions/get-payment";
 {{/if}}
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+
+
+const AuthLayout = () => {
+  return <Outlet />;
+}
 
 export const Route = createFileRoute("/_auth")({
   {{#unless (eq backend "self")}}
@@ -11539,37 +11649,34 @@ export const Route = createFileRoute("/_auth")({
   },
   {{/if}}
 });
-
-function AuthLayout() {
-  return <Outlet />;
-}
 `],
   ["auth/better-auth/web/react/tanstack-start/src/routes/login.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
+
+const RouteComponent = () => {
+  const [showSignIn, setShowSignIn] = useState(false);
+
+  if (showSignIn) {
+    return <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />;
+  }
+  return <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />;
+};
+
 export const Route = createFileRoute("/login")({
   component: RouteComponent,
 });
-
-function RouteComponent() {
-  const [showSignIn, setShowSignIn] = useState(false);
-
-  return showSignIn ? (
-    <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
-  ) : (
-    <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
-  );
-}
 `],
-  ["auth/better-auth/web/solid/src/components/sign-in-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/solid/src/components/sign-in-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { createForm } from "@tanstack/solid-form";
 import { useNavigate } from "@tanstack/solid-router";
 import z from "zod";
 import { For } from "solid-js";
 
-export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
+const SignInForm = ({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) => {
   const navigate = useNavigate({
     from: "/",
   });
@@ -11686,15 +11793,18 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
       </div>
     </div>
   );
-}
+};
+
+export default SignInForm;
 `],
-  ["auth/better-auth/web/solid/src/components/sign-up-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/solid/src/components/sign-up-form.tsx.hbs", `/* oxlint-disable react-doctor/no-prevent-default */
+import { authClient } from "@/lib/auth-client";
 import { createForm } from "@tanstack/solid-form";
 import { useNavigate } from "@tanstack/solid-router";
 import z from "zod";
 import { For } from "solid-js";
 
-export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
+const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
   const navigate = useNavigate({
     from: "/",
   });
@@ -11835,13 +11945,15 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
       </div>
     </div>
   );
-}
+};
+
+export default SignUpForm;
 `],
   ["auth/better-auth/web/solid/src/components/user-menu.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 import { useNavigate, Link } from "@tanstack/solid-router";
 import { createSignal, Show } from "solid-js";
 
-export default function UserMenu() {
+const UserMenu = () => {
   const navigate = useNavigate();
   const session = authClient.useSession();
   const [isMenuOpen, setIsMenuOpen] = createSignal(false);
@@ -11891,7 +12003,9 @@ export default function UserMenu() {
       </Show>
     </div>
   );
-}
+};
+
+export default UserMenu;
 `],
   ["auth/better-auth/web/solid/src/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/solid";
 {{#if (eq payments "polar")}}
@@ -11910,33 +12024,16 @@ export const authClient = createAuthClient({
 {{/if}}
 });
 `],
-  ["auth/better-auth/web/solid/src/routes/dashboard.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/solid/src/routes/dashboard.tsx.hbs", `/* oxlint-disable no-use-before-define */
+import { authClient } from "@/lib/auth-client";
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/solid-query";
 {{/if}}
 import { createFileRoute, redirect } from "@tanstack/solid-router";
 
-export const Route = createFileRoute("/dashboard")({
-	component: RouteComponent,
-	beforeLoad: async () => {
-		const session = await authClient.getSession();
-		if (!session.data) {
-			redirect({
-				to: "/login",
-				throw: true,
-			});
-		}
-		{{#if (eq payments "polar")}}
-		const { data: customerState } = await authClient.customer.state();
-		return { session, customerState };
-		{{else}}
-		return { session };
-		{{/if}}
-	},
-});
 
-function RouteComponent() {
+const RouteComponent = () => {
 	const context = Route.useRouteContext();
 
 	const session = context().session;
@@ -11977,17 +12074,33 @@ function RouteComponent() {
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/dashboard")({
+	component: RouteComponent,
+	beforeLoad: async () => {
+		const session = await authClient.getSession();
+		if (!session.data) {
+			redirect({
+				to: "/login",
+				throw: true,
+			});
+		}
+		{{#if (eq payments "polar")}}
+		const { data: customerState } = await authClient.customer.state();
+		return { session, customerState };
+		{{else}}
+		return { session };
+		{{/if}}
+	},
+});
 `],
   ["auth/better-auth/web/solid/src/routes/login.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import { createFileRoute } from "@tanstack/solid-router";
 import { createSignal, Match, Switch } from "solid-js";
 
-export const Route = createFileRoute("/login")({
-  component: RouteComponent,
-});
 
-function RouteComponent() {
+const RouteComponent = () => {
   const [showSignIn, setShowSignIn] = createSignal(false);
 
   return (
@@ -12001,6 +12114,10 @@ function RouteComponent() {
     </Switch>
   );
 }
+
+export const Route = createFileRoute("/login")({
+  component: RouteComponent,
+});
 `],
   ["auth/better-auth/web/svelte/src/components/SignInForm.svelte.hbs", `<script lang="ts">
 	import { createForm } from '@tanstack/svelte-form';
@@ -12265,7 +12382,7 @@ function RouteComponent() {
 
 	const sessionQuery = authClient.useSession();
 
-	async function handleSignOut() {
+	const handleSignOut = async () => {
 		await authClient.signOut({
 		fetchOptions: {
 			onSuccess: () => {
@@ -12278,7 +12395,7 @@ function RouteComponent() {
 		});
 	}
 
-	function goToLogin() {
+	const goToLogin = () => {
 		goto('/login');
 	}
 
@@ -12336,6 +12453,7 @@ export const authClient = createAuthClient({
 });
 `],
   ["auth/better-auth/web/svelte/src/routes/dashboard/+page.svelte.hbs", `<script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 	import { goto } from '$app/navigation';
 	import { authClient } from '$lib/auth-client';
 	{{#if (eq api "orpc")}}
@@ -12396,6 +12514,7 @@ export const authClient = createAuthClient({
 {/if}
 `],
   ["auth/better-auth/web/svelte/src/routes/login/+page.svelte.hbs", `<script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 	import SignInForm from '../../components/SignInForm.svelte';
 	import SignUpForm from '../../components/SignUpForm.svelte';
 
@@ -12421,7 +12540,7 @@ export const authClient = createAuthClient({
 	],
 };
 `],
-  ["auth/clerk/convex/backend/convex/privateData.ts.hbs", `import { query } from "./_generated/server";
+  ["auth/clerk/convex/backend/convex/privatedata.ts.hbs", `import { query } from "./_generated/server";
 
 export const get = query({
 	args: {},
@@ -12438,10 +12557,11 @@ export const get = query({
 	},
 });
 `],
-  ["auth/clerk/convex/native/base/app/(auth)/_layout.tsx.hbs", `import { Redirect, Stack } from "expo-router";
+  ["auth/clerk/convex/native/base/app/(auth)/_layout.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+import { Redirect, Stack } from "expo-router";
 import { useAuth } from "@clerk/expo";
 
-export default function AuthRoutesLayout() {
+const AuthRoutesLayout = () => {
   const { isLoaded, isSignedIn } = useAuth();
 
   if (!isLoaded) {
@@ -12453,20 +12573,22 @@ export default function AuthRoutesLayout() {
   }
 
   return <Stack />;
-}
+};
+
+export default AuthRoutesLayout;
 `],
   ["auth/clerk/convex/native/base/app/(auth)/sign-in.tsx.hbs", `import { useSignIn } from "@clerk/expo";
 import { type Href, Link, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-function pushDecoratedUrl(router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) {
+const pushDecoratedUrl = (router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) => {
   const url = decorateUrl(href);
   const nextHref = url.startsWith("http") ? new URL(url).pathname : url;
   router.push(nextHref as Href);
 }
 
-export default function Page() {
+const Page = () => {
   const { signIn, errors, fetchStatus } = useSignIn();
   const router = useRouter();
   const [emailAddress, setEmailAddress] = React.useState("");
@@ -12621,7 +12743,9 @@ export default function Page() {
       </View>
     </View>
   );
-}
+};
+
+export default Page;
 
 const styles = StyleSheet.create({
   container: {
@@ -12701,13 +12825,13 @@ import { type Href, Link, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-function pushDecoratedUrl(router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) {
+const pushDecoratedUrl = (router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) => {
   const url = decorateUrl(href);
   const nextHref = url.startsWith("http") ? new URL(url).pathname : url;
   router.push(nextHref as Href);
 }
 
-export default function Page() {
+const Page = () => {
   const { signUp, errors, fetchStatus } = useSignUp();
   const { isSignedIn } = useAuth();
   const router = useRouter();
@@ -12848,7 +12972,9 @@ export default function Page() {
       <View nativeID="clerk-captcha" />
     </View>
   );
-}
+};
+
+export default Page;
 
 const styles = StyleSheet.create({
   container: {
@@ -12957,9 +13083,9 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 
-export default function Dashboard() {
+const Dashboard = () => {
   const user = useUser();
-  const privateData = useQuery(api.privateData.get);
+  const privateData = useQuery(api.privatedata.get);
 
   return (
     <>
@@ -12979,7 +13105,9 @@ export default function Dashboard() {
       </AuthLoading>
     </>
   );
-}
+};
+
+export default Dashboard;
 `],
   ["auth/clerk/convex/web/react/next/src/proxy.ts.hbs", `import { clerkMiddleware } from "@clerk/nextjs/server";
 
@@ -13003,8 +13131,8 @@ import {
 	useQuery,
 } from "convex/react";
 
-export default function Dashboard() {
-	const privateData = useQuery(api.privateData.get);
+const Dashboard = () => {
+	const privateData = useQuery(api.privatedata.get);
 	const user = useUser();
 
 	return (
@@ -13025,19 +13153,18 @@ export default function Dashboard() {
 			</AuthLoading>
 		</>
 	);
-}
+};
+
+export default Dashboard;
 `],
   ["auth/clerk/convex/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `import { UserButton, useUser } from "@clerk/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/_auth/dashboard")({
-	component: RouteComponent,
-});
 
-function RouteComponent() {
-	const privateData = useQuery(api.privateData.get);
+const RouteComponent = () => {
+	const privateData = useQuery(api.privatedata.get);
 	const user = useUser();
 
 	return (
@@ -13049,16 +13176,17 @@ function RouteComponent() {
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_auth/dashboard")({
+	component: RouteComponent,
+});
 `],
   ["auth/clerk/convex/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import { SignInButton } from "@clerk/react";
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 
-export const Route = createFileRoute("/_auth")({
-	component: AuthLayout,
-});
 
-function AuthLayout() {
+const AuthLayout = () => {
 	return (
 		<>
 			<Authenticated>
@@ -13073,18 +13201,19 @@ function AuthLayout() {
 		</>
 	);
 }
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
 `],
   ["auth/clerk/convex/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `import { UserButton, useUser } from "@clerk/tanstack-react-start";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/_auth/dashboard")({
-	component: RouteComponent,
-});
 
-function RouteComponent() {
-	const privateData = useQuery(api.privateData.get);
+const RouteComponent = () => {
+	const privateData = useQuery(api.privatedata.get);
 	const user = useUser();
 
 	return (
@@ -13096,16 +13225,17 @@ function RouteComponent() {
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_auth/dashboard")({
+	component: RouteComponent,
+});
 `],
   ["auth/clerk/convex/web/react/tanstack-start/src/routes/_auth/route.tsx.hbs", `import { SignInButton } from "@clerk/tanstack-react-start";
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 
-export const Route = createFileRoute("/_auth")({
-	component: AuthLayout,
-});
 
-function AuthLayout() {
+const AuthLayout = () => {
 	return (
 		<>
 			<Authenticated>
@@ -13120,6 +13250,10 @@ function AuthLayout() {
 		</>
 	);
 }
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
 `],
   ["auth/clerk/convex/web/react/tanstack-start/src/start.ts.hbs", `import { clerkMiddleware } from '@clerk/tanstack-react-start/server'
 import { createStart } from '@tanstack/react-start'
@@ -13129,10 +13263,11 @@ export const startInstance = createStart(() => {
 		requestMiddleware: [clerkMiddleware()],
 	}
 })`],
-  ["auth/clerk/native/base/app/(auth)/_layout.tsx.hbs", `import { Redirect, Stack } from "expo-router";
+  ["auth/clerk/native/base/app/(auth)/_layout.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+import { Redirect, Stack } from "expo-router";
 import { useAuth } from "@clerk/expo";
 
-export default function AuthRoutesLayout() {
+const AuthRoutesLayout = () => {
   const { isLoaded, isSignedIn } = useAuth();
 
   if (!isLoaded) {
@@ -13144,20 +13279,22 @@ export default function AuthRoutesLayout() {
   }
 
   return <Stack />;
-}
+};
+
+export default AuthRoutesLayout;
 `],
   ["auth/clerk/native/base/app/(auth)/sign-in.tsx.hbs", `import { useSignIn } from "@clerk/expo";
 import { type Href, Link, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-function pushDecoratedUrl(router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) {
+const pushDecoratedUrl = (router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) => {
   const url = decorateUrl(href);
   const nextHref = url.startsWith("http") ? new URL(url).pathname : url;
   router.push(nextHref as Href);
 }
 
-export default function Page() {
+const Page = () => {
   const { signIn, errors, fetchStatus } = useSignIn();
   const router = useRouter();
   const [emailAddress, setEmailAddress] = React.useState("");
@@ -13312,7 +13449,9 @@ export default function Page() {
       </View>
     </View>
   );
-}
+};
+
+export default Page;
 
 const styles = StyleSheet.create({
   container: {
@@ -13392,13 +13531,13 @@ import { type Href, Link, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-function pushDecoratedUrl(router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) {
+const pushDecoratedUrl = (router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) => {
   const url = decorateUrl(href);
   const nextHref = url.startsWith("http") ? new URL(url).pathname : url;
   router.push(nextHref as Href);
 }
 
-export default function Page() {
+const Page = () => {
   const { signUp, errors, fetchStatus } = useSignUp();
   const { isSignedIn } = useAuth();
   const router = useRouter();
@@ -13539,7 +13678,9 @@ export default function Page() {
       <View nativeID="clerk-captcha" />
     </View>
   );
-}
+};
+
+export default Page;
 
 const styles = StyleSheet.create({
   container: {
@@ -13642,11 +13783,11 @@ export const SignOutButton = () => {
 
 let clerkTokenGetter: ClerkTokenGetter | null = null;
 
-export function setClerkAuthTokenGetter(getToken: ClerkTokenGetter | null) {
+export const setClerkAuthTokenGetter = (getToken: ClerkTokenGetter | null) => {
 	clerkTokenGetter = getToken;
 }
 
-export async function getClerkAuthToken() {
+export const getClerkAuthToken = async () => {
 	return (await clerkTokenGetter?.()) ?? null;
 }
 `],
@@ -13654,11 +13795,11 @@ export async function getClerkAuthToken() {
 
 let clerkTokenGetter: ClerkTokenGetter | null = null;
 
-export function setClerkAuthTokenGetter(getToken: ClerkTokenGetter | null) {
+export const setClerkAuthTokenGetter = (getToken: ClerkTokenGetter | null) => {
 	clerkTokenGetter = getToken;
 }
 
-export async function getClerkAuthToken() {
+export const getClerkAuthToken = async () => {
 	return (await clerkTokenGetter?.()) ?? null;
 }
 `],
@@ -13674,7 +13815,7 @@ import { trpc } from "@/utils/trpc";
 {{/if}}
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
-export default function Dashboard() {
+const Dashboard = () => {
   const user = useUser();
   const nameFromParts = [user.user?.firstName, user.user?.lastName].filter(Boolean).join(" ");
   const displayName =
@@ -13714,12 +13855,14 @@ export default function Dashboard() {
       <h1 className="text-2xl font-semibold">Dashboard</h1>
       <p>Welcome {displayName}</p>
       {{#if (or (eq api "orpc") (eq api "trpc"))}}
-      <p>API: {privateData.data?.message}</p>
+      <p>API: {privateData?.message}</p>
       {{/if}}
       <UserButton />
     </div>
   );
-}
+};
+
+export default Dashboard;
 `],
   ["auth/clerk/web/react/next/src/proxy.ts.hbs", `import { clerkMiddleware } from "@clerk/nextjs/server";
 
@@ -13744,7 +13887,7 @@ import { trpc } from "@/utils/trpc";
 {{/if}}
 import { SignInButton, UserButton, useUser } from "@clerk/react-router";
 
-export default function Dashboard() {
+const Dashboard = () => {
   const user = useUser();
   const nameFromParts = [user.user?.firstName, user.user?.lastName].filter(Boolean).join(" ");
   const displayName =
@@ -13784,12 +13927,14 @@ export default function Dashboard() {
       <h1 className="text-2xl font-semibold">Dashboard</h1>
       <p>Welcome {displayName}</p>
       {{#if (or (eq api "orpc") (eq api "trpc"))}}
-      <p>API: {privateData.data?.message}</p>
+      <p>API: {privateData?.message}</p>
       {{/if}}
       <UserButton />
     </div>
   );
-}
+};
+
+export default Dashboard;
 `],
   ["auth/clerk/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
@@ -13802,11 +13947,8 @@ import { trpc } from "@/utils/trpc";
 import { UserButton, useUser } from "@clerk/react";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_auth/dashboard")({
-	component: RouteComponent,
-});
 
-function RouteComponent() {
+const RouteComponent = () => {
 	const user = useUser();
 	const nameFromParts = [user.user?.firstName, user.user?.lastName].filter(Boolean).join(" ");
 	const displayName =
@@ -13834,21 +13976,22 @@ function RouteComponent() {
 			<h1 className="text-2xl font-semibold">Dashboard</h1>
 			<p>Welcome {displayName}</p>
 			{{#if (or (eq api "orpc") (eq api "trpc"))}}
-			<p>API: {privateData.data?.message}</p>
+			<p>API: {privateData?.message}</p>
 			{{/if}}
 			<UserButton />
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_auth/dashboard")({
+	component: RouteComponent,
+});
 `],
   ["auth/clerk/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import { SignInButton, useUser } from "@clerk/react";
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_auth")({
-	component: AuthLayout,
-});
 
-function AuthLayout() {
+const AuthLayout = () => {
 	const user = useUser();
 
 	if (!user.isLoaded) {
@@ -13865,6 +14008,10 @@ function AuthLayout() {
 
 	return <Outlet />;
 }
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
 `],
   ["auth/clerk/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq api "trpc")}}
 import { useTRPC } from "@/utils/trpc";
@@ -13877,11 +14024,8 @@ import { orpc } from "@/utils/orpc";
 import { UserButton, useUser } from "@clerk/tanstack-react-start";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_auth/dashboard")({
-	component: RouteComponent,
-});
 
-function RouteComponent() {
+const RouteComponent = () => {
 	const user = useUser();
 	const nameFromParts = [user.user?.firstName, user.user?.lastName].filter(Boolean).join(" ");
 	const displayName =
@@ -13910,21 +14054,22 @@ function RouteComponent() {
 			<h1 className="text-2xl font-semibold">Dashboard</h1>
 			<p>Welcome {displayName}</p>
 			{{#if (or (eq api "orpc") (eq api "trpc"))}}
-			<p>API: {privateData.data?.message}</p>
+			<p>API: {privateData?.message}</p>
 			{{/if}}
 			<UserButton />
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_auth/dashboard")({
+	component: RouteComponent,
+});
 `],
   ["auth/clerk/web/react/tanstack-start/src/routes/_auth/route.tsx.hbs", `import { SignInButton, useUser } from "@clerk/tanstack-react-start";
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_auth")({
-	component: AuthLayout,
-});
 
-function AuthLayout() {
+const AuthLayout = () => {
 	const user = useUser();
 
 	if (!user.isLoaded) {
@@ -13941,6 +14086,10 @@ function AuthLayout() {
 
 	return <Outlet />;
 }
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
 `],
   ["auth/clerk/web/react/tanstack-start/src/start.ts.hbs", `import { clerkMiddleware } from '@clerk/tanstack-react-start/server'
 import { createStart } from '@tanstack/react-start'
@@ -14054,12 +14203,10 @@ app.use(agent);
 
 export default app;
 `],
-  ["backend/convex/packages/backend/convex/healthCheck.ts.hbs", `import { query } from "./_generated/server";
+  ["backend/convex/packages/backend/convex/healthcheck.ts.hbs", `import { query } from "./_generated/server";
 
 export const get = query({
-  handler: async () => {
-    return "OK";
-  },
+  handler: () => "OK",
 });
 `],
   ["backend/convex/packages/backend/convex/README.md", `# Welcome to your Convex functions directory!
@@ -14300,10 +14447,11 @@ export default defineConfig({
     format: 'esm',
     outDir: './dist',
     clean: true,
-    noExternal: [/@{{projectName}}\\/.*/]
+    noExternal: [/@{{projectName}}\\/.*/u]
 });
 `],
-  ["backend/server/elysia/src/index.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+  ["backend/server/elysia/src/index.ts.hbs", `/* oxlint-disable promise/prefer-await-to-callbacks */
+import { env } from "@{{projectName}}/env/server";
 {{#if (eq runtime "node")}}
 import { node } from "@elysiajs/node";
 {{/if}}
@@ -14354,7 +14502,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 });
 {{/if}}
 
-const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
+export const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
 	.use(
 		cors({
 			origin: env.CORS_ORIGIN,
@@ -14477,7 +14625,8 @@ if (!process.env.VERCEL) {
 	});
 {{/if}}
 `],
-  ["backend/server/express/src/index.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+  ["backend/server/express/src/index.ts.hbs", `/* oxlint-disable promise/prefer-await-to-callbacks */
+import { env } from "@{{projectName}}/env/server";
 {{#if (eq api "trpc")}}
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { createContext } from "@{{projectName}}/api/context";
@@ -14508,6 +14657,7 @@ import { clerkMiddleware } from "@clerk/express";
 {{/if}}
 
 const app = express();
+app.disable("x-powered-by");
 
 app.use(
 	cors({
@@ -14631,7 +14781,8 @@ app.listen(3000, () => {
 	console.log("Server is running on http://localhost:3000");
 });
 `],
-  ["backend/server/fastify/src/index.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+  ["backend/server/fastify/src/index.ts.hbs", `/* oxlint-disable promise/prefer-await-to-callbacks */
+import { env } from "@{{projectName}}/env/server";
 import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
 
@@ -14850,7 +15001,8 @@ fastify.listen({ port: 3000{{#if (eq serverDeploy "docker")}}, host: "0.0.0.0"{{
 	console.log("Server running on port 3000");
 });
 `],
-  ["backend/server/hono/src/index.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+  ["backend/server/hono/src/index.ts.hbs", `/* oxlint-disable promise/prefer-await-to-callbacks */
+import { env } from "@{{projectName}}/env/server";
 {{#if (eq api "orpc")}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -14966,7 +15118,7 @@ app.use("/*", async (c, next) => {
 
 	const rpcResult = await rpcHandler.handle(c.req.raw, {
 		prefix: "/rpc",
-		context: context,
+		context,
 	});
 
 	if (rpcResult.matched) {
@@ -14975,14 +15127,14 @@ app.use("/*", async (c, next) => {
 
 	const apiResult = await apiHandler.handle(c.req.raw, {
 		prefix: "/api-reference",
-		context: context,
+		context,
 	});
 
 	if (apiResult.matched) {
 		return c.newResponse(apiResult.response.body, apiResult.response);
 	}
 
-	await next();
+	return next();
 });
 {{/if}}
 
@@ -14991,9 +15143,7 @@ app.use(
 	"/trpc/*",
 	trpcServer({
 		router: appRouter,
-		createContext: (_opts, context) => {
-			return createContext({ context });
-		},
+		createContext: (_opts, context) => createContext({ context }),
 	})
 );
 {{/if}}
@@ -15273,7 +15423,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
     "composite": true
   }
 }`],
-  ["db/drizzle/base/src/schema/index.ts.hbs", `{{#if (eq auth "better-auth")}}
+  ["db/drizzle/base/src/schema/index.ts.hbs", `/* oxlint-disable oxc/no-barrel-file, sonarjs/no-wildcard-import, unicorn/no-empty-file */
+{{#if (eq auth "better-auth")}}
 export * from "./auth";
 {{/if}}
 {{#if (includes examples "todo")}}
@@ -15300,7 +15451,8 @@ export default defineConfig({
   },
 });
 `],
-  ["db/drizzle/mysql/src/index.ts.hbs", `{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
+  ["db/drizzle/mysql/src/index.ts.hbs", `/* oxlint-disable react-doctor/no-barrel-import, sonarjs/no-wildcard-import */
+{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 import type {} from "@{{projectName}}/env/server";
 {{else}}
@@ -15311,7 +15463,7 @@ import * as schema from "./schema";
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	return drizzle({
 		connection: {
 			host: env.DATABASE_HOST,
@@ -15324,7 +15476,7 @@ export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflar
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	return drizzle({
 		connection: {
 			uri: env.DATABASE_URL,
@@ -15346,7 +15498,7 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 import { env } from "@{{projectName}}/env/server";
 
-export function createDb() {
+export const createDb = () => {
 	return drizzle({
 		connection: {
 			host: env.DATABASE_HOST,
@@ -15360,7 +15512,7 @@ export function createDb() {
 import { drizzle } from "drizzle-orm/mysql2";
 import { env } from "@{{projectName}}/env/server";
 
-export function createDb() {
+export const createDb = () => {
 	return drizzle({
 		connection: {
 			uri: env.DATABASE_URL,
@@ -15391,7 +15543,8 @@ export default defineConfig({
   },
 });
 `],
-  ["db/drizzle/postgres/src/index.ts.hbs", `{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
+  ["db/drizzle/postgres/src/index.ts.hbs", `/* oxlint-disable react-doctor/no-barrel-import, sonarjs/no-wildcard-import */
+{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 import type {} from "@{{projectName}}/env/server";
 {{else}}
@@ -15403,7 +15556,7 @@ import * as schema from "./schema";
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const sql = neon(env.DATABASE_URL);
 	return drizzle(sql, { schema });
 }
@@ -15413,7 +15566,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 {{/if}}
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 	const pool = new Pool({
 		connectionString: env.DATABASE_URL,
@@ -15440,7 +15593,7 @@ import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { env } from "@{{projectName}}/env/server";
 
-export function createDb() {
+export const createDb = () => {
 	const sql = neon(env.DATABASE_URL || "");
 	return drizzle(sql, { schema });
 }
@@ -15449,7 +15602,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { env } from "@{{projectName}}/env/server";
 import { Pool } from "pg";
 
-export function createDb() {
+export const createDb = () => {
 	const pool = new Pool({
 		connectionString: env.DATABASE_URL || "",
 		maxUses: 1,
@@ -15489,7 +15642,8 @@ export default defineConfig({
   {{/if}}
 });
 `],
-  ["db/drizzle/sqlite/src/index.ts.hbs", `{{#if (eq dbSetup "d1")}}
+  ["db/drizzle/sqlite/src/index.ts.hbs", `/* oxlint-disable react-doctor/no-barrel-import, sonarjs/no-wildcard-import */
+{{#if (eq dbSetup "d1")}}
 import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/d1";
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
@@ -15498,7 +15652,7 @@ import type {} from "@{{projectName}}/env/server";
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	return drizzle(env.DB, { schema });
 }
 {{else if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
@@ -15511,7 +15665,7 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const client = createClient({
 		url: env.DATABASE_URL,
 {{#if (eq dbSetup "turso")}}
@@ -15531,7 +15685,7 @@ import { drizzle } from "drizzle-orm/libsql";
 import { env } from "@{{projectName}}/env/server";
 import { createClient } from "@libsql/client";
 
-export function createDb() {
+export const createDb = () => {
 	const client = createClient({
 		url: env.DATABASE_URL || "",
 {{#if (eq dbSetup "turso")}}
@@ -15647,14 +15801,14 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export function createPrismaClient() {
+export const createPrismaClient = () => {
 	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export function createPrismaClient() {
+export const createPrismaClient = () => {
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
@@ -15680,14 +15834,14 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
@@ -15762,7 +15916,7 @@ import { neonConfig } from "@neondatabase/serverless";
 
 neonConfig.poolQueryViaFetch = true;
 
-export function createPrismaClient() {
+export const createPrismaClient = () => {
 	return new PrismaClient({
 		adapter: new PrismaNeon({
 			connectionString: env.DATABASE_URL,
@@ -15773,7 +15927,7 @@ export function createPrismaClient() {
 {{else if (eq dbSetup "prisma-postgres")}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-export function createPrismaClient() {
+export const createPrismaClient = () => {
 	const adapter = new PrismaPg({
 		connectionString: env.DATABASE_URL,
 		maxUses: 1,
@@ -15785,7 +15939,7 @@ export function createPrismaClient() {
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-export function createPrismaClient() {
+export const createPrismaClient = () => {
 	const adapter = new PrismaPg({
 		connectionString: env.DATABASE_URL,
 		maxUses: 1,
@@ -15804,7 +15958,7 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const adapter = new PrismaNeon({
 		connectionString: env.DATABASE_URL,
 	});
@@ -15815,7 +15969,7 @@ export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy 
 {{else if (eq dbSetup "prisma-postgres")}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const adapter = new PrismaPg({
 		connectionString: env.DATABASE_URL,
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
@@ -15829,7 +15983,7 @@ export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy 
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const adapter = new PrismaPg({
 		connectionString: env.DATABASE_URL,
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
@@ -15901,7 +16055,7 @@ import type {} from "@{{projectName}}/env/server";
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const adapter = new PrismaD1(env.DB);
 	return new PrismaClient({ adapter });
 }
@@ -15918,7 +16072,7 @@ import type {} from "@{{projectName}}/env/server";
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const adapter = new PrismaLibSql({
 		url: env.DATABASE_URL,
 {{#if (eq dbSetup "turso")}}
@@ -16868,7 +17022,7 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const maxDuration = 30;
 
-export async function POST(req: Request) {
+export const POST = async (req: Request) => {
 	const { messages }: { messages: UIMessage[] } = await req.json();
 
 	const model = wrapLanguageModel({
@@ -16930,7 +17084,8 @@ export const POST: RequestHandler = async ({ request }) => {
 	});
 };
 `],
-  ["examples/ai/fullstack/tanstack-start/src/routes/api/ai/$.ts.hbs", `import { createFileRoute } from "@tanstack/react-router";
+  ["examples/ai/fullstack/tanstack-start/src/routes/api/ai/$.ts.hbs", `/* oxlint-disable github/filenames-match-regex */
+import { createFileRoute } from "@tanstack/react-router";
 import { google } from "@ai-sdk/google";
 import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
@@ -17009,7 +17164,7 @@ const starterPrompts = [
   },
 ];
 
-function MessageContent({
+const MessageContent = ({
   text,
   isStreaming,
   textColor,
@@ -17017,7 +17172,7 @@ function MessageContent({
   text: string;
   isStreaming: boolean;
   textColor: string;
-}) {
+}) => {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -17029,7 +17184,7 @@ function MessageContent({
   );
 }
 
-export default function AIScreen() {
+const AIScreen = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [input, setInput] = useState("");
@@ -17057,7 +17212,7 @@ export default function AIScreen() {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages, isLoading]);
 
-  async function sendPrompt(prompt: string) {
+  const sendPrompt = async (prompt: string) => {
     const value = prompt.trim();
     if (!value || isBusy) return;
 
@@ -17079,7 +17234,7 @@ export default function AIScreen() {
     }
   }
 
-  function onNewChat() {
+  const onNewChat = () => {
     if (isBusy) return;
     setInput("");
     setThreadId(null);
@@ -17304,7 +17459,9 @@ export default function AIScreen() {
       </KeyboardAvoidingView>
     </Container>
   );
-}
+};
+
+export default AIScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -17530,7 +17687,7 @@ const generateAPIUrl = (relativePath: string) => {
   return serverUrl.concat(path);
 };
 
-export default function AIScreen() {
+const AIScreen = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [input, setInput] = useState("");
@@ -17549,7 +17706,7 @@ export default function AIScreen() {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages, isBusy]);
 
-  function sendPrompt(prompt: string) {
+  const sendPrompt = (prompt: string) => {
     const value = prompt.trim();
     if (!value || isBusy) return;
 
@@ -17557,7 +17714,7 @@ export default function AIScreen() {
     setInput("");
   }
 
-  function onNewChat() {
+  const onNewChat = () => {
     if (isBusy) return;
     setInput("");
     setMessages([]);
@@ -17837,7 +17994,9 @@ export default function AIScreen() {
       </KeyboardAvoidingView>
     </Container>
   );
-}
+};
+
+export default AIScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -18099,7 +18258,7 @@ const starterPrompts = [
   },
 ];
 
-function MessageContent({
+const MessageContent = ({
   text,
   isStreaming,
   style,
@@ -18107,7 +18266,7 @@ function MessageContent({
   text: string;
   isStreaming: boolean;
   style: object;
-}) {
+}) => {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -18119,7 +18278,7 @@ function MessageContent({
   );
 }
 
-export default function AIScreen() {
+const AIScreen = () => {
   const { theme } = useUnistyles();
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
@@ -18362,7 +18521,9 @@ export default function AIScreen() {
       </KeyboardAvoidingView>
     </Container>
   );
-}
+};
+
+export default AIScreen;
 
 const styles = StyleSheet.create((theme) => ({
   container: {
@@ -18626,7 +18787,7 @@ const generateAPIUrl = (relativePath: string) => {
   return serverUrl.concat(path);
 };
 
-export default function AIScreen() {
+const AIScreen = () => {
   const { theme } = useUnistyles();
   const [input, setInput] = useState("");
   const { messages, error, sendMessage, status, setMessages } = useChat({
@@ -18881,7 +19042,9 @@ export default function AIScreen() {
       </KeyboardAvoidingView>
     </Container>
   );
-}
+};
+
+export default AIScreen;
 
 const styles = StyleSheet.create((theme) => ({
   container: {
@@ -19185,13 +19348,13 @@ const starterPrompts = [
   },
 ];
 
-function MessageContent({
+const MessageContent = ({
   text,
   isStreaming,
 }: {
   text: string;
   isStreaming: boolean;
-}) {
+}) => {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -19203,7 +19366,7 @@ function MessageContent({
   );
 }
 
-export default function AIScreen() {
+const AIScreen = () => {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -19425,7 +19588,9 @@ export default function AIScreen() {
       </KeyboardAvoidingView>
     </Container>
   );
-}
+};
+
+export default AIScreen;
 {{else}}
 import { useRef, useEffect, useState } from "react";
 import {
@@ -19469,7 +19634,7 @@ const generateAPIUrl = (relativePath: string) => {
   return serverUrl.concat(path);
 };
 
-export default function AIScreen() {
+const AIScreen = () => {
   const [input, setInput] = useState("");
   const { messages, error, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -19695,7 +19860,9 @@ export default function AIScreen() {
       </KeyboardAvoidingView>
     </Container>
   );
-}
+};
+
+export default AIScreen;
 {{/if}}
 `],
   ["examples/ai/native/uniwind/polyfills.js", `import structuredClone from "@ungap/structured-clone";
@@ -19761,11 +19928,11 @@ const { messages, status, error, sendMessage, stop, regenerate } = useChat({
 const hasMessages = computed(() => messages.value.length > 0)
 const isLoading = computed(() => status.value === 'submitted' || status.value === 'streaming')
 
-function applySuggestion(prompt: string) {
+const applySuggestion = (prompt: string) => {
   input.value = prompt
 }
 
-async function handleSubmit(e: Event) {
+const handleSubmit = async (e: Event) => {
   e.preventDefault()
   const userInput = input.value
   input.value = ''
@@ -19866,7 +20033,8 @@ async function handleSubmit(e: Event) {
   </UContainer>
 </template>
 `],
-  ["examples/ai/web/react/next/src/app/ai/page.tsx.hbs", `{{#if (eq backend "convex")}}
+  ["examples/ai/web/react/next/src/app/ai/page.tsx.hbs", `/* oxlint-disable react-doctor/no-array-index-as-key */
+{{#if (eq backend "convex")}}
 "use client";
 
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
@@ -19883,6 +20051,13 @@ import {
 } from "lucide-react";
 {{#if (eq webDeploy "cloudflare")}}
 import dynamic from "next/dynamic";
+
+const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    e.currentTarget.form?.requestSubmit();
+  }
+};
 
 const Streamdown = dynamic(
   () => import("streamdown").then((mod) => ({ default: mod.Streamdown })),
@@ -19934,13 +20109,20 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-function StreamingMessageText({
+const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    e.currentTarget.form?.requestSubmit();
+  }
+};
+
+const StreamingMessageText = ({
   text,
   isStreaming,
 }: {
   text: string;
   isStreaming: boolean;
-}) {
+}) => {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -19948,7 +20130,7 @@ function StreamingMessageText({
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
-export default function AIPage() {
+const AIPage = () => {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -19987,13 +20169,6 @@ export default function AIPage() {
       console.error("Failed to send message:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
     }
   };
 
@@ -20145,7 +20320,9 @@ export default function AIPage() {
       </div>
     </MessageScrollerProvider>
   );
-}
+};
+
+export default AIPage;
 {{else}}
 "use client";
 
@@ -20211,7 +20388,7 @@ import {
 } from "@{{projectName}}/ui/components/tooltip";
 import { env } from "@{{projectName}}/env/web";
 
-export default function AIPage() {
+const AIPage = () => {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -20228,13 +20405,6 @@ export default function AIPage() {
     setInput("");
   };
 
-  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
-    }
-  };
-
   const resetConversation = () => {
     setInput("");
     setMessages([]);
@@ -20314,7 +20484,7 @@ export default function AIPage() {
                                       if (part.type === "text") {
                                         return (
                                           <Streamdown
-                                            key={index}
+                                            key={\`\${message.id}-part-\${index}\`}
                                             isAnimating={status === "streaming" && message.role === "assistant"}
                                           >
                                             {part.text}
@@ -20390,10 +20560,13 @@ export default function AIPage() {
       </div>
     </MessageScrollerProvider>
   );
-}
+};
+
+export default AIPage;
 {{/if}}
 `],
-  ["examples/ai/web/react/react-router/src/routes/ai.tsx.hbs", `{{#if (eq backend "convex")}}
+  ["examples/ai/web/react/react-router/src/routes/ai.tsx.hbs", `/* oxlint-disable react-doctor/no-array-index-as-key */
+{{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   useSmoothText,
@@ -20443,13 +20616,20 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-function StreamingMessageText({
+const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    e.currentTarget.form?.requestSubmit();
+  }
+};
+
+const StreamingMessageText = ({
   text,
   isStreaming,
 }: {
   text: string;
   isStreaming: boolean;
-}) {
+}) => {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -20457,7 +20637,7 @@ function StreamingMessageText({
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
-export default function AI() {
+const AI = () => {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -20496,13 +20676,6 @@ export default function AI() {
       console.error("Failed to send message:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
     }
   };
 
@@ -20654,7 +20827,9 @@ export default function AI() {
       </div>
     </MessageScrollerProvider>
   );
-}
+};
+
+export default AI;
 {{else}}
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -20702,7 +20877,14 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-export default function AI() {
+const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    e.currentTarget.form?.requestSubmit();
+  }
+};
+
+const AI = () => {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -20719,13 +20901,6 @@ export default function AI() {
     setInput("");
   };
 
-  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
-    }
-  };
-
   const resetConversation = () => {
     setInput("");
     setMessages([]);
@@ -20805,7 +20980,7 @@ export default function AI() {
                                       if (part.type === "text") {
                                         return (
                                           <Streamdown
-                                            key={index}
+                                            key={\`\${message.id}-part-\${index}\`}
                                             isAnimating={status === "streaming" && message.role === "assistant"}
                                           >
                                             {part.text}
@@ -20881,10 +21056,13 @@ export default function AI() {
       </div>
     </MessageScrollerProvider>
   );
-}
+};
+
+export default AI;
 {{/if}}
 `],
-  ["examples/ai/web/react/tanstack-router/src/routes/ai.tsx.hbs", `{{#if (eq backend "convex")}}
+  ["examples/ai/web/react/tanstack-router/src/routes/ai.tsx.hbs", `/* oxlint-disable react-doctor/no-array-index-as-key */
+{{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   useSmoothText,
@@ -20935,17 +21113,20 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-export const Route = createFileRoute("/ai")({
-  component: RouteComponent,
-});
+const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    e.currentTarget.form?.requestSubmit();
+  }
+};
 
-function StreamingMessageText({
+const StreamingMessageText = ({
   text,
   isStreaming,
 }: {
   text: string;
   isStreaming: boolean;
-}) {
+}) => {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -20953,7 +21134,7 @@ function StreamingMessageText({
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
-function RouteComponent() {
+const RouteComponent = () => {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -20992,13 +21173,6 @@ function RouteComponent() {
       console.error("Failed to send message:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
     }
   };
 
@@ -21151,6 +21325,10 @@ function RouteComponent() {
     </MessageScrollerProvider>
   );
 }
+
+export const Route = createFileRoute("/ai")({
+  component: RouteComponent,
+});
 {{else}}
 import { useChat } from "@ai-sdk/react";
 import { createFileRoute } from "@tanstack/react-router";
@@ -21201,11 +21379,14 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-export const Route = createFileRoute("/ai")({
-  component: RouteComponent,
-});
+const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    e.currentTarget.form?.requestSubmit();
+  }
+};
 
-function RouteComponent() {
+const RouteComponent = () => {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -21220,13 +21401,6 @@ function RouteComponent() {
     if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
-  };
-
-  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
-    }
   };
 
   const resetConversation = () => {
@@ -21308,7 +21482,7 @@ function RouteComponent() {
                                       if (part.type === "text") {
                                         return (
                                           <Streamdown
-                                            key={index}
+                                            key={\`\${message.id}-part-\${index}\`}
                                             isAnimating={status === "streaming" && message.role === "assistant"}
                                           >
                                             {part.text}
@@ -21385,9 +21559,14 @@ function RouteComponent() {
     </MessageScrollerProvider>
   );
 }
+
+export const Route = createFileRoute("/ai")({
+  component: RouteComponent,
+});
 {{/if}}
 `],
-  ["examples/ai/web/react/tanstack-start/src/routes/ai.tsx.hbs", `{{#if (eq backend "convex")}}
+  ["examples/ai/web/react/tanstack-start/src/routes/ai.tsx.hbs", `/* oxlint-disable react-doctor/no-array-index-as-key */
+{{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
   useSmoothText,
@@ -21438,17 +21617,20 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-export const Route = createFileRoute("/ai")({
-  component: RouteComponent,
-});
+const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    e.currentTarget.form?.requestSubmit();
+  }
+};
 
-function StreamingMessageText({
+const StreamingMessageText = ({
   text,
   isStreaming,
 }: {
   text: string;
   isStreaming: boolean;
-}) {
+}) => {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -21456,7 +21638,7 @@ function StreamingMessageText({
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
-function RouteComponent() {
+const RouteComponent = () => {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -21495,13 +21677,6 @@ function RouteComponent() {
       console.error("Failed to send message:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
     }
   };
 
@@ -21654,6 +21829,10 @@ function RouteComponent() {
     </MessageScrollerProvider>
   );
 }
+
+export const Route = createFileRoute("/ai")({
+  component: RouteComponent,
+});
 {{else}}
 import { useChat } from "@ai-sdk/react";
 import { createFileRoute } from "@tanstack/react-router";
@@ -21704,11 +21883,14 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-export const Route = createFileRoute("/ai")({
-  component: RouteComponent,
-});
+const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    e.currentTarget.form?.requestSubmit();
+  }
+};
 
-function RouteComponent() {
+const RouteComponent = () => {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -21723,13 +21905,6 @@ function RouteComponent() {
     if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
-  };
-
-  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
-    }
   };
 
   const resetConversation = () => {
@@ -21811,7 +21986,7 @@ function RouteComponent() {
                                       if (part.type === "text") {
                                         return (
                                           <Streamdown
-                                            key={index}
+                                            key={\`\${message.id}-part-\${index}\`}
                                             isAnimating={status === "streaming" && message.role === "assistant"}
                                           >
                                             {part.text}
@@ -21888,9 +22063,14 @@ function RouteComponent() {
     </MessageScrollerProvider>
   );
 }
+
+export const Route = createFileRoute("/ai")({
+  component: RouteComponent,
+});
 {{/if}}
 `],
   ["examples/ai/web/svelte/src/routes/ai/+page.svelte.hbs", `<script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 	{{#unless (eq backend "self")}}
 	import { PUBLIC_SERVER_URL } from "$env/static/public";
 	{{/unless}}
@@ -21918,7 +22098,7 @@ function RouteComponent() {
 		}
 	});
 
-	function handleSubmit(e: Event) {
+	const handleSubmit = (e: Event) => {
 		e.preventDefault();
 		const text = input.trim();
 		if (!text) return;
@@ -22077,7 +22257,7 @@ import { trpc } from "@/utils/trpc";
   {{/if}}
 {{/unless}}
 
-export default function TodosScreen() {
+const TodosScreen = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [newTodoText, setNewTodoText] = useState("");
@@ -22088,18 +22268,18 @@ export default function TodosScreen() {
   const toggleTodoMutation = useMutation(api.todos.toggle);
   const deleteTodoMutation = useMutation(api.todos.deleteTodo);
 
-  async function handleAddTodo() {
+  const handleAddTodo = async () => {
     const text = newTodoText.trim();
     if (!text) return;
     await createTodoMutation({ text });
     setNewTodoText("");
   }
 
-  function handleToggleTodo(id: Id<"todos">, currentCompleted: boolean) {
+  const handleToggleTodo = (id: Id<"todos">, currentCompleted: boolean) => {
     toggleTodoMutation({ id, completed: !currentCompleted });
   }
 
-  function handleDeleteTodo(id: Id<"todos">) {
+  const handleDeleteTodo = (id: Id<"todos">) => {
     Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -22165,17 +22345,17 @@ export default function TodosScreen() {
   );
     {{/if}}
 
-  function handleAddTodo() {
+  const handleAddTodo = () => {
     if (newTodoText.trim()) {
       createMutation.mutate({ text: newTodoText });
     }
   }
 
-  function handleToggleTodo(id: number, completed: boolean) {
+  const handleToggleTodo = (id: number, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   }
 
-  function handleDeleteTodo(id: number) {
+  const handleDeleteTodo = (id: number) => {
     Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -22462,7 +22642,9 @@ export default function TodosScreen() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default TodosScreen;
 
 const styles = StyleSheet.create({
   scrollView: {
@@ -22600,7 +22782,7 @@ import { trpc } from "@/utils/trpc";
 {{/if}}
 {{/unless}}
 
-export default function TodosScreen() {
+const TodosScreen = () => {
   const [newTodoText, setNewTodoText] = useState("");
   const { theme } = useUnistyles();
 
@@ -22813,7 +22995,9 @@ export default function TodosScreen() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default TodosScreen;
 
 const styles = StyleSheet.create((theme) => ({
   scrollView: {
@@ -22931,7 +23115,7 @@ import { Container } from "@/components/container";
 {{/unless}}
 import { Button, Checkbox, Chip, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
 
-export default function TodosScreen() {
+const TodosScreen = () => {
   const [newTodoText, setNewTodoText] = useState("");
   {{#if (eq backend "convex")}}
     const todos = useQuery(api.todos.getAll);
@@ -23191,7 +23375,9 @@ export default function TodosScreen() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default TodosScreen;
 `],
   ["examples/todo/server/drizzle/base/src/routers/todo.ts.hbs", `{{#if (eq api "orpc")}}
 import { eq } from "drizzle-orm";
@@ -23205,46 +23391,32 @@ import { todo } from "@{{projectName}}/db/schema/todo";
 import { publicProcedure } from "../index";
 
 export const todoRouter = {
-  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-    const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
-{{/if}}
-    return await db.select().from(todo);
-  }),
+  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) =>
+    await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}db{{/if}}.select().from(todo),
+  ),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
-{{/if}}
-      return await db
-        .insert(todo)
-        .values({
-          text: input.text,
-        });
-    }),
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) =>
+      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}db{{/if}}.insert(todo).values({
+        text: input.text,
+      }),
+    ),
 
   toggle: publicProcedure
-    .input(z.object({ id: z.number(), completed: z.boolean() }))
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
-{{/if}}
-      return await db
+    .input(z.object({ completed: z.boolean(), id: z.number() }))
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) =>
+      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}db{{/if}}
         .update(todo)
         .set({ completed: input.completed })
-        .where(eq(todo.id, input.id));
-    }),
+        .where(eq(todo.id, input.id)),
+    ),
 
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
-{{/if}}
-      return await db.delete(todo).where(eq(todo.id, input.id));
-    }),
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) =>
+      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}db{{/if}}.delete(todo).where(eq(todo.id, input.id)),
+    ),
 };
 {{/if}}
 
@@ -23260,44 +23432,32 @@ import { db } from "@{{projectName}}/db";
 {{/if}}
 
 export const todoRouter = router({
-  getAll: publicProcedure.query(async () => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-    const db = createDb();
-{{/if}}
-    return await db.select().from(todo);
-  }),
+  getAll: publicProcedure.query(async () =>
+    await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb(){{else}}db{{/if}}.select().from(todo),
+  ),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .mutation(async ({ input }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb();
-{{/if}}
-      return await db.insert(todo).values({
+    .mutation(async ({ input }) =>
+      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb(){{else}}db{{/if}}.insert(todo).values({
         text: input.text,
-      });
-    }),
+      }),
+    ),
 
   toggle: publicProcedure
-    .input(z.object({ id: z.number(), completed: z.boolean() }))
-    .mutation(async ({ input }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb();
-{{/if}}
-      return await db
+    .input(z.object({ completed: z.boolean(), id: z.number() }))
+    .mutation(async ({ input }) =>
+      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb(){{else}}db{{/if}}
         .update(todo)
         .set({ completed: input.completed })
-        .where(eq(todo.id, input.id));
-    }),
+        .where(eq(todo.id, input.id)),
+    ),
 
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb();
-{{/if}}
-      return await db.delete(todo).where(eq(todo.id, input.id));
-    }),
+    .mutation(async ({ input }) =>
+      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb(){{else}}db{{/if}}.delete(todo).where(eq(todo.id, input.id)),
+    ),
 });
 {{/if}}
 `],
@@ -23346,7 +23506,7 @@ export const todoRouter = {
     }),
 
     toggle: publicProcedure
-        .input(z.object({ id: z.string(), completed: z.boolean() }))
+        .input(z.object({ completed: z.boolean(), id: z.string() }))
         .handler(async ({ input }) => {
             await Todo.updateOne({ id: input.id }, { completed: input.completed });
             return { success: true };
@@ -23383,7 +23543,7 @@ export const todoRouter = router({
     }),
 
     toggle: publicProcedure
-        .input(z.object({ id: z.string(), completed: z.boolean() }))
+        .input(z.object({ completed: z.boolean(), id: z.string() }))
         .mutation(async ({ input }) => {
             await Todo.updateOne({ id: input.id }, { completed: input.completed });
             return { success: true };
@@ -23435,45 +23595,36 @@ import prisma from "@{{projectName}}/db";
 import { publicProcedure } from "../index";
 
 export const todoRouter = {
-  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-    const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
-{{/if}}
-    return await prisma.todo.findMany({
+  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) =>
+    await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}prisma{{/if}}.todo.findMany({
       orderBy: {
         id: "asc",
       },
-    });
-  }),
+    }),
+  ),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
-{{/if}}
-      return await prisma.todo.create({
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) =>
+      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}prisma{{/if}}.todo.create({
         data: {
           text: input.text,
         },
-      });
-    }),
+      }),
+    ),
 
   toggle: publicProcedure
     {{#if (eq database "mongodb")}}
-    .input(z.object({ id: z.string(), completed: z.boolean() }))
+    .input(z.object({ completed: z.boolean(), id: z.string() }))
     {{else}}
-    .input(z.object({ id: z.number(), completed: z.boolean() }))
+    .input(z.object({ completed: z.boolean(), id: z.number() }))
     {{/if}}
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
-{{/if}}
-      return await prisma.todo.update({
-        where: { id: input.id },
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) =>
+      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}prisma{{/if}}.todo.update({
         data: { completed: input.completed },
-      });
-    }),
+        where: { id: input.id },
+      }),
+    ),
 
   delete: publicProcedure
     {{#if (eq database "mongodb")}}
@@ -23481,14 +23632,11 @@ export const todoRouter = {
     {{else}}
     .input(z.object({ id: z.number() }))
     {{/if}}
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
-{{/if}}
-      return await prisma.todo.delete({
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) =>
+      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}prisma{{/if}}.todo.delete({
         where: { id: input.id },
-      });
-    }),
+      }),
+    ),
 };
 {{/if}}
 
@@ -23503,35 +23651,29 @@ import prisma from "@{{projectName}}/db";
 import { publicProcedure, router } from "../index";
 
 export const todoRouter = router({
-  getAll: publicProcedure.query(async () => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-    const prisma = createPrismaClient();
-{{/if}}
-    return await prisma.todo.findMany({
+  getAll: publicProcedure.query(async () =>
+    await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createPrismaClient(){{else}}prisma{{/if}}.todo.findMany({
       orderBy: {
-        id: "asc"
-      }
-    });
-  }),
+        id: "asc",
+      },
+    }),
+  ),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .mutation(async ({ input }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const prisma = createPrismaClient();
-{{/if}}
-      return await prisma.todo.create({
+    .mutation(async ({ input }) =>
+      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createPrismaClient(){{else}}prisma{{/if}}.todo.create({
         data: {
           text: input.text,
         },
-      });
-    }),
+      }),
+    ),
 
   toggle: publicProcedure
     {{#if (eq database "mongodb")}}
-    .input(z.object({ id: z.string(), completed: z.boolean() }))
+    .input(z.object({ completed: z.boolean(), id: z.string() }))
     {{else}}
-    .input(z.object({ id: z.number(), completed: z.boolean() }))
+    .input(z.object({ completed: z.boolean(), id: z.number() }))
     {{/if}}
     .mutation(async ({ input }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
@@ -23539,10 +23681,10 @@ export const todoRouter = router({
 {{/if}}
       try {
         return await prisma.todo.update({
-          where: { id: input.id },
           data: { completed: input.completed },
+          where: { id: input.id },
         });
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Todo not found",
@@ -23564,7 +23706,7 @@ export const todoRouter = router({
         return await prisma.todo.delete({
           where: { id: input.id },
         });
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Todo not found",
@@ -23607,7 +23749,7 @@ export const todoRouter = router({
 }
 `],
   ["examples/todo/web/astro/src/pages/todos.astro.hbs", `---
-import Layout from "../layouts/Layout.astro";
+import Layout from "../layouts/layout.astro";
 ---
 
 <Layout title="Todos - {{projectName}}">
@@ -23638,6 +23780,7 @@ import Layout from "../layouts/Layout.astro";
 </Layout>
 
 <script>
+  /* oxlint-disable no-use-before-define, github/no-inner-html */
   import { orpc } from "../lib/orpc";
 
   interface Todo {
@@ -23649,20 +23792,37 @@ import Layout from "../layouts/Layout.astro";
   const newTodoInput = document.getElementById("new-todo") as HTMLInputElement;
   const addBtn = document.getElementById("add-btn") as HTMLButtonElement;
   const addForm = document.getElementById("add-form") as HTMLFormElement;
-  const loadingEl = document.getElementById("loading")!;
-  const emptyEl = document.getElementById("empty")!;
-  const todoList = document.getElementById("todo-list")!;
-  const errorEl = document.getElementById("error")!;
+  const loadingEl = document.getElementById("loading") as HTMLElement;
+  const emptyEl = document.getElementById("empty") as HTMLElement;
+  const todoList = document.getElementById("todo-list") as HTMLElement;
+  const errorEl = document.getElementById("error") as HTMLElement;
 
   let todos: Todo[] = [];
 
-  function showError(message: string) {
+  const showError = (message: string) => {
     errorEl.textContent = message;
     errorEl.classList.remove("hidden");
     setTimeout(() => errorEl.classList.add("hidden"), 3000);
   }
 
-  function renderTodos() {
+  const onToggleChange = async (e: Event) => {
+    const li = (e.target as HTMLElement).closest("li");
+    const id = Number(li?.dataset.id);
+    const todo = todos.find(t => t.id === id);
+    if (todo) {
+      await toggleTodo(id, todo.completed);
+    }
+  };
+
+  const onDeleteClick = async (e: Event) => {
+    const li = (e.target as HTMLElement).closest("li");
+    const id = Number(li?.dataset.id);
+    if (!Number.isNaN(id)) {
+      await deleteTodo(id);
+    }
+  };
+
+  const renderTodos = () => {
     loadingEl.classList.add("hidden");
     
     if (todos.length === 0) {
@@ -23696,27 +23856,16 @@ import Layout from "../layouts/Layout.astro";
     \`).join("");
 
     // Add event listeners
-    todoList.querySelectorAll(".toggle-checkbox").forEach(checkbox => {
-      checkbox.addEventListener("change", async (e) => {
-        const li = (e.target as HTMLElement).closest("li")!;
-        const id = parseInt(li.dataset.id!);
-        const todo = todos.find(t => t.id === id);
-        if (todo) {
-          await toggleTodo(id, todo.completed);
-        }
-      });
-    });
+    for (const checkbox of todoList.querySelectorAll(".toggle-checkbox")) {
+      checkbox.addEventListener("change", onToggleChange);
+    }
 
-    todoList.querySelectorAll(".delete-btn").forEach(btn => {
-      btn.addEventListener("click", async (e) => {
-        const li = (e.target as HTMLElement).closest("li")!;
-        const id = parseInt(li.dataset.id!);
-        await deleteTodo(id);
-      });
-    });
+    for (const btn of todoList.querySelectorAll(".delete-btn")) {
+      btn.addEventListener("click", onDeleteClick);
+    }
   }
 
-  async function loadTodos() {
+  const loadTodos = async () => {
     try {
       todos = await orpc.todo.getAll();
       renderTodos();
@@ -23726,7 +23875,7 @@ import Layout from "../layouts/Layout.astro";
     }
   }
 
-  async function addTodo(text: string) {
+  const addTodo = async (text: string) => {
     addBtn.disabled = true;
     addBtn.textContent = "Adding...";
     try {
@@ -23741,7 +23890,7 @@ import Layout from "../layouts/Layout.astro";
     }
   }
 
-  async function toggleTodo(id: number, completed: boolean) {
+  const toggleTodo = async (id: number, completed: boolean) => {
     try {
       await orpc.todo.toggle({ id, completed: !completed });
       await loadTodos();
@@ -23750,7 +23899,7 @@ import Layout from "../layouts/Layout.astro";
     }
   }
 
-  async function deleteTodo(id: number) {
+  const deleteTodo = async (id: number) => {
     try {
       await orpc.todo.delete({ id });
       await loadTodos();
@@ -23787,7 +23936,7 @@ const { mutate: deleteTodo, error: deleteError } = useConvexMutation(
   api.todos.deleteTodo,
 );
 
-function handleAddTodo() {
+const handleAddTodo = () => {
   const text = newTodoText.value.trim();
   if (!text) return;
 
@@ -23795,11 +23944,11 @@ function handleAddTodo() {
   newTodoText.value = "";
 }
 
-function handleToggleTodo(id: Id<"todos">, completed: boolean) {
+const handleToggleTodo = (id: Id<"todos">, completed: boolean) => {
   toggleTodo({ id, completed: !completed });
 }
 
-function handleDeleteTodo(id: Id<"todos">) {
+const handleDeleteTodo = (id: Id<"todos">) => {
   deleteTodo({ id });
 }
 {{else}}
@@ -23815,7 +23964,9 @@ const todos = useQuery($orpc.todo.getAll.queryOptions())
 onServerPrefetch(async () => {
   try {
     await todos.suspense()
-  } catch {}
+  } catch {
+    // suspense errors surface through the query state
+  }
 })
 
 const createMutation = useMutation($orpc.todo.create.mutationOptions({
@@ -23833,17 +23984,17 @@ const deleteMutation = useMutation($orpc.todo.delete.mutationOptions({
   onSuccess: () => queryClient.invalidateQueries()
 }))
 
-function handleAddTodo() {
+const handleAddTodo = () => {
   if (newTodoText.value.trim()) {
     createMutation.mutate({ text: newTodoText.value })
   }
 }
 
-function handleToggleTodo(id: number, completed: boolean) {
+const handleToggleTodo = (id: number, completed: boolean) => {
   toggleMutation.mutate({ id, completed: !completed })
 }
 
-function handleDeleteTodo(id: number) {
+const handleDeleteTodo = (id: number) => {
   deleteMutation.mutate({ id })
 }
 {{/if}}
@@ -24010,254 +24161,7 @@ import {
 import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Loader2, Trash2 } from "lucide-react";
-import { useState, type FormEvent } from "react";
-
-{{#if (eq backend "convex")}}
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
-{{else}}
-import { useMutation, useQuery } from "@tanstack/react-query";
-  {{#if (eq api "orpc")}}
-import { orpc } from "@/utils/orpc";
-  {{/if}}
-  {{#if (eq api "trpc")}}
-import { trpc } from "@/utils/trpc";
-  {{/if}}
-{{/if}}
-
-{{#unless (eq backend "convex")}}
-type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
-{{/unless}}
-
-export default function TodosPage() {
-  const [newTodoText, setNewTodoText] = useState("");
-
-  {{#if (eq backend "convex")}}
-  const todos = useQuery(api.todos.getAll);
-  const createTodoMutation = useMutation(api.todos.create);
-  const toggleTodoMutation = useMutation(api.todos.toggle);
-  const deleteTodoMutation = useMutation(api.todos.deleteTodo);
-
-  const handleAddTodo = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const text = newTodoText.trim();
-    if (!text) return;
-    await createTodoMutation({ text });
-    setNewTodoText("");
-  };
-
-  const handleToggleTodo = (id: Id<"todos">, currentCompleted: boolean) => {
-    toggleTodoMutation({ id, completed: !currentCompleted });
-  };
-
-  const handleDeleteTodo = (id: Id<"todos">) => {
-    deleteTodoMutation({ id });
-  };
-  {{else}}
-    {{#if (eq api "orpc")}}
-    const todos = useQuery(orpc.todo.getAll.queryOptions());
-    const createMutation = useMutation(
-      orpc.todo.create.mutationOptions({
-        onSuccess: () => {
-          todos.refetch();
-          setNewTodoText("");
-        },
-      }),
-    );
-    const toggleMutation = useMutation(
-      orpc.todo.toggle.mutationOptions({
-        onSuccess: () => { todos.refetch() },
-      }),
-    );
-    const deleteMutation = useMutation(
-      orpc.todo.delete.mutationOptions({
-        onSuccess: () => { todos.refetch() },
-      }),
-    );
-    {{/if}}
-    {{#if (eq api "trpc")}}
-    const todos = useQuery(trpc.todo.getAll.queryOptions());
-    const createMutation = useMutation(
-      trpc.todo.create.mutationOptions({
-        onSuccess: () => {
-          todos.refetch();
-          setNewTodoText("");
-        },
-      }),
-    );
-    const toggleMutation = useMutation(
-      trpc.todo.toggle.mutationOptions({
-        onSuccess: () => { todos.refetch() },
-      }),
-    );
-    const deleteMutation = useMutation(
-      trpc.todo.delete.mutationOptions({
-        onSuccess: () => { todos.refetch() },
-      }),
-    );
-    {{/if}}
-
-  const handleAddTodo = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (newTodoText.trim()) {
-      createMutation.mutate({ text: newTodoText });
-    }
-  };
-
-  const handleToggleTodo = (id: TodoId, completed: boolean) => {
-    toggleMutation.mutate({ id, completed: !completed });
-  };
-
-  const handleDeleteTodo = (id: TodoId) => {
-    deleteMutation.mutate({ id });
-  };
-  {{/if}}
-
-  return (
-    <div className="mx-auto w-full max-w-md py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Todo List</CardTitle>
-          <CardDescription>Manage your tasks efficiently</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form
-            onSubmit={handleAddTodo}
-            className="mb-6 flex items-center space-x-2"
-          >
-            <Input
-              value={newTodoText}
-              onChange={(e) => setNewTodoText(e.target.value)}
-              placeholder="Add a new task..."
-              {{#if (eq backend "convex")}}
-              {{else}}
-              disabled={createMutation.isPending}
-              {{/if}}
-            />
-            <Button
-              type="submit"
-              {{#if (eq backend "convex")}}
-              disabled={!newTodoText.trim()}
-              {{else}}
-              disabled={createMutation.isPending || !newTodoText.trim()}
-              {{/if}}
-            >
-              {{#if (eq backend "convex")}}
-                Add
-              {{else}}
-                {createMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Add"
-                )}
-              {{/if}}
-            </Button>
-          </form>
-
-          {{#if (eq backend "convex")}}
-            {todos === undefined ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : todos.length === 0 ? (
-              <p className="py-4 text-center">No todos yet. Add one above!</p>
-            ) : (
-              <ul className="space-y-2">
-                {todos.map((todo) => (
-                  <li
-                    key={todo._id}
-                    className="flex items-center justify-between rounded-md border p-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={todo.completed}
-                        onCheckedChange={() =>
-                          handleToggleTodo(todo._id, todo.completed)
-                        }
-                        id={\`todo-\${todo._id}\`}
-                      />
-                      <label
-                        htmlFor={\`todo-\${todo._id}\`}
-                        className={\`\${todo.completed ? "line-through text-muted-foreground" : ""}\`}
-                      >
-                        {todo.text}
-                      </label>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteTodo(todo._id)}
-                      aria-label="Delete todo"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          {{else}}
-            {todos.isLoading ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : todos.data?.length === 0 ? (
-              <p className="py-4 text-center">
-                No todos yet. Add one above!
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {todos.data?.map((todo) => (
-                  <li
-                    key={todo.id}
-                    className="flex items-center justify-between rounded-md border p-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={todo.completed}
-                        onCheckedChange={() =>
-                          handleToggleTodo(todo.id, todo.completed)
-                        }
-                        id={\`todo-\${todo.id}\`}
-                      />
-                      <label
-                        htmlFor={\`todo-\${todo.id}\`}
-                        className={\`\${todo.completed ? "line-through text-muted-foreground" : ""}\`}
-                      >
-                        {todo.text}
-                      </label>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteTodo(todo.id)}
-                      aria-label="Delete todo"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          {{/if}}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-`],
-  ["examples/todo/web/react/react-router/src/routes/todos.tsx.hbs", `import { Button } from "@{{projectName}}/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@{{projectName}}/ui/components/card";
-import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
-import { Input } from "@{{projectName}}/ui/components/input";
-import { Loader2, Trash2 } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
@@ -24273,11 +24177,7 @@ import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
 
-{{#unless (eq backend "convex")}}
-type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
-{{/unless}}
-
-export default function Todos() {
+const TodosPage = () => {
   const [newTodoText, setNewTodoText] = useState("");
 
   {{#if (eq backend "convex")}}
@@ -24289,7 +24189,9 @@ export default function Todos() {
   const handleAddTodo = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = newTodoText.trim();
-    if (!text) return;
+    if (!text) {
+      return;
+    }
     await createTodo({ text });
     setNewTodoText("");
   };
@@ -24303,45 +24205,53 @@ export default function Todos() {
   };
   {{else}}
     {{#if (eq api "orpc")}}
-    const todos = useQuery(orpc.todo.getAll.queryOptions());
+    const { data: todos, isLoading, refetch } = useQuery(orpc.todo.getAll.queryOptions());
     const createMutation = useMutation(
       orpc.todo.create.mutationOptions({
         onSuccess: () => {
-          todos.refetch();
+          refetch();
           setNewTodoText("");
         },
-      })
+      }),
     );
     const toggleMutation = useMutation(
       orpc.todo.toggle.mutationOptions({
-        onSuccess: () => { todos.refetch() },
-      })
+        onSuccess: () => {
+          refetch();
+        },
+      }),
     );
     const deleteMutation = useMutation(
       orpc.todo.delete.mutationOptions({
-        onSuccess: () => { todos.refetch() },
-      })
+        onSuccess: () => {
+          refetch();
+        },
+      }),
     );
     {{/if}}
     {{#if (eq api "trpc")}}
-    const todos = useQuery(trpc.todo.getAll.queryOptions());
+    const { data: todos, isLoading, refetch } = useQuery(trpc.todo.getAll.queryOptions());
     const createMutation = useMutation(
       trpc.todo.create.mutationOptions({
         onSuccess: () => {
-          todos.refetch();
+          refetch();
           setNewTodoText("");
         },
-      })
+      }),
     );
     const toggleMutation = useMutation(
       trpc.todo.toggle.mutationOptions({
-        onSuccess: () => { todos.refetch() },
-      })
+        onSuccess: () => {
+          refetch();
+        },
+      }),
     );
     const deleteMutation = useMutation(
       trpc.todo.delete.mutationOptions({
-        onSuccess: () => { todos.refetch() },
-      })
+        onSuccess: () => {
+          refetch();
+        },
+      }),
     );
     {{/if}}
 
@@ -24352,17 +24262,111 @@ export default function Todos() {
     }
   };
 
-  const handleToggleTodo = (id: TodoId, completed: boolean) => {
+  const handleToggleTodo = (id: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}}, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: TodoId) => {
+  const handleDeleteTodo = (id: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}}) => {
     deleteMutation.mutate({ id });
   };
   {{/if}}
 
+  {{#if (eq backend "convex")}}
+  let listContent: ReactNode;
+  if (todos === undefined) {
+    listContent = (
+      <div className="flex justify-center py-4">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  } else if (todos.length === 0) {
+    listContent = <p className="py-4 text-center">No todos yet. Add one above!</p>;
+  } else {
+    listContent = (
+      <ul className="space-y-2">
+        {todos.map((todo: { _id: Id<"todos">; completed: boolean; text: string }) => (
+          <li
+            key={todo._id}
+            className="flex items-center justify-between rounded-md border p-2"
+          >
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={todo.completed}
+                onCheckedChange={() =>
+                  handleToggleTodo(todo._id, todo.completed)
+                }
+                id={\`todo-\${todo._id}\`}
+              />
+              <label
+                htmlFor={\`todo-\${todo._id}\`}
+                className={\`\${todo.completed ? "line-through text-muted-foreground" : ""}\`}
+              >
+                {todo.text}
+              </label>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDeleteTodo(todo._id)}
+              aria-label="Delete todo"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  {{else}}
+  let listContent: ReactNode;
+  if (isLoading) {
+    listContent = (
+      <div className="flex justify-center py-4">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  } else if (todos?.length === 0) {
+    listContent = <p className="py-4 text-center">No todos yet. Add one above!</p>;
+  } else {
+    listContent = (
+      <ul className="space-y-2">
+        {todos?.map((todo) => (
+          <li
+            key={todo.id}
+            className="flex items-center justify-between rounded-md border p-2"
+          >
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={todo.completed}
+                onCheckedChange={() =>
+                  handleToggleTodo(todo.id, todo.completed)
+                }
+                id={\`todo-\${todo.id}\`}
+              />
+              <label
+                htmlFor={\`todo-\${todo.id}\`}
+                className={\`\${todo.completed ? "line-through" : ""}\`}
+              >
+                {todo.text}
+              </label>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDeleteTodo(todo.id)}
+              aria-label="Delete todo"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  {{/if}}
+
   return (
-    <div className="w-full mx-auto max-w-md py-10">
+    <div className="mx-auto w-full max-w-md py-10">
       <Card>
         <CardHeader>
           <CardTitle>Todo List</CardTitle>
@@ -24402,96 +24406,279 @@ export default function Todos() {
             </Button>
           </form>
 
-          {{#if (eq backend "convex")}}
-            {todos === undefined ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : todos.length === 0 ? (
-              <p className="py-4 text-center">No todos yet. Add one above!</p>
-            ) : (
-              <ul className="space-y-2">
-                {todos.map((todo) => (
-                  <li
-                    key={todo._id}
-                    className="flex items-center justify-between rounded-md border p-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={todo.completed}
-                        onCheckedChange={() =>
-                          handleToggleTodo(todo._id, todo.completed)
-                        }
-                        id={\`todo-\${todo._id}\`}
-                      />
-                      <label
-                        htmlFor={\`todo-\${todo._id}\`}
-                        className={\`\${todo.completed ? "line-through text-muted-foreground" : ""}\`}
-                      >
-                        {todo.text}
-                      </label>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteTodo(todo._id)}
-                      aria-label="Delete todo"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          {{else}}
-            {todos.isLoading ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : todos.data?.length === 0 ? (
-              <p className="py-4 text-center">
-                No todos yet. Add one above!
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {todos.data?.map((todo) => (
-                  <li
-                    key={todo.id}
-                    className="flex items-center justify-between rounded-md border p-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={todo.completed}
-                        onCheckedChange={() =>
-                          handleToggleTodo(todo.id, todo.completed)
-                        }
-                        id={\`todo-\${todo.id}\`}
-                      />
-                      <label
-                        htmlFor={\`todo-\${todo.id}\`}
-                        className={\`\${todo.completed ? "line-through" : ""}\`}
-                      >
-                        {todo.text}
-                      </label>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteTodo(todo.id)}
-                      aria-label="Delete todo"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          {{/if}}
+          {listContent}
         </CardContent>
       </Card>
     </div>
   );
-}
+};
+
+export default TodosPage;
+`],
+  ["examples/todo/web/react/react-router/src/routes/todos.tsx.hbs", `import { Button } from "@{{projectName}}/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@{{projectName}}/ui/components/card";
+import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Loader2, Trash2 } from "lucide-react";
+import { useState, type FormEvent, type ReactNode } from "react";
+
+{{#if (eq backend "convex")}}
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+{{else}}
+  {{#if (eq api "orpc")}}
+  import { orpc } from "@/utils/orpc";
+  {{/if}}
+  {{#if (eq api "trpc")}}
+  import { trpc } from "@/utils/trpc";
+  {{/if}}
+import { useMutation, useQuery } from "@tanstack/react-query";
+{{/if}}
+
+const Todos = () => {
+  const [newTodoText, setNewTodoText] = useState("");
+
+  {{#if (eq backend "convex")}}
+  const todos = useQuery(api.todos.getAll);
+  const createTodo = useMutation(api.todos.create);
+  const toggleTodo = useMutation(api.todos.toggle);
+  const deleteTodo = useMutation(api.todos.deleteTodo);
+
+  const handleAddTodo = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const text = newTodoText.trim();
+    if (!text) {
+      return;
+    }
+    await createTodo({ text });
+    setNewTodoText("");
+  };
+
+  const handleToggleTodo = (id: Id<"todos">, currentCompleted: boolean) => {
+    toggleTodo({ id, completed: !currentCompleted });
+  };
+
+  const handleDeleteTodo = (id: Id<"todos">) => {
+    deleteTodo({ id });
+  };
+  {{else}}
+    {{#if (eq api "orpc")}}
+    const { data: todos, isLoading, refetch } = useQuery(orpc.todo.getAll.queryOptions());
+    const createMutation = useMutation(
+      orpc.todo.create.mutationOptions({
+        onSuccess: () => {
+          refetch();
+          setNewTodoText("");
+        },
+      }),
+    );
+    const toggleMutation = useMutation(
+      orpc.todo.toggle.mutationOptions({
+        onSuccess: () => {
+          refetch();
+        },
+      }),
+    );
+    const deleteMutation = useMutation(
+      orpc.todo.delete.mutationOptions({
+        onSuccess: () => {
+          refetch();
+        },
+      }),
+    );
+    {{/if}}
+    {{#if (eq api "trpc")}}
+    const { data: todos, isLoading, refetch } = useQuery(trpc.todo.getAll.queryOptions());
+    const createMutation = useMutation(
+      trpc.todo.create.mutationOptions({
+        onSuccess: () => {
+          refetch();
+          setNewTodoText("");
+        },
+      }),
+    );
+    const toggleMutation = useMutation(
+      trpc.todo.toggle.mutationOptions({
+        onSuccess: () => {
+          refetch();
+        },
+      }),
+    );
+    const deleteMutation = useMutation(
+      trpc.todo.delete.mutationOptions({
+        onSuccess: () => {
+          refetch();
+        },
+      }),
+    );
+    {{/if}}
+
+  const handleAddTodo = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (newTodoText.trim()) {
+      createMutation.mutate({ text: newTodoText });
+    }
+  };
+
+  const handleToggleTodo = (id: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}}, completed: boolean) => {
+    toggleMutation.mutate({ id, completed: !completed });
+  };
+
+  const handleDeleteTodo = (id: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}}) => {
+    deleteMutation.mutate({ id });
+  };
+  {{/if}}
+
+  {{#if (eq backend "convex")}}
+  let listContent: ReactNode;
+  if (todos === undefined) {
+    listContent = (
+      <div className="flex justify-center py-4">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  } else if (todos.length === 0) {
+    listContent = <p className="py-4 text-center">No todos yet. Add one above!</p>;
+  } else {
+    listContent = (
+      <ul className="space-y-2">
+        {todos.map((todo: { _id: Id<"todos">; completed: boolean; text: string }) => (
+          <li
+            key={todo._id}
+            className="flex items-center justify-between rounded-md border p-2"
+          >
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={todo.completed}
+                onCheckedChange={() =>
+                  handleToggleTodo(todo._id, todo.completed)
+                }
+                id={\`todo-\${todo._id}\`}
+              />
+              <label
+                htmlFor={\`todo-\${todo._id}\`}
+                className={\`\${todo.completed ? "line-through text-muted-foreground" : ""}\`}
+              >
+                {todo.text}
+              </label>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDeleteTodo(todo._id)}
+              aria-label="Delete todo"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  {{else}}
+  let listContent: ReactNode;
+  if (isLoading) {
+    listContent = (
+      <div className="flex justify-center py-4">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  } else if (todos?.length === 0) {
+    listContent = <p className="py-4 text-center">No todos yet. Add one above!</p>;
+  } else {
+    listContent = (
+      <ul className="space-y-2">
+        {todos?.map((todo) => (
+          <li
+            key={todo.id}
+            className="flex items-center justify-between rounded-md border p-2"
+          >
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={todo.completed}
+                onCheckedChange={() =>
+                  handleToggleTodo(todo.id, todo.completed)
+                }
+                id={\`todo-\${todo.id}\`}
+              />
+              <label
+                htmlFor={\`todo-\${todo.id}\`}
+                className={\`\${todo.completed ? "line-through" : ""}\`}
+              >
+                {todo.text}
+              </label>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDeleteTodo(todo.id)}
+              aria-label="Delete todo"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  {{/if}}
+
+  return (
+    <div className="mx-auto w-full max-w-md py-10">
+      <Card>
+        <CardHeader>
+          <CardTitle>Todo List</CardTitle>
+          <CardDescription>Manage your tasks efficiently</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            onSubmit={handleAddTodo}
+            className="mb-6 flex items-center space-x-2"
+          >
+            <Input
+              value={newTodoText}
+              onChange={(e) => setNewTodoText(e.target.value)}
+              placeholder="Add a new task..."
+              {{#if (eq backend "convex")}}
+              {{else}}
+              disabled={createMutation.isPending}
+              {{/if}}
+            />
+            <Button
+              type="submit"
+              {{#if (eq backend "convex")}}
+              disabled={!newTodoText.trim()}
+              {{else}}
+              disabled={createMutation.isPending || !newTodoText.trim()}
+              {{/if}}
+            >
+              {{#if (eq backend "convex")}}
+              Add
+              {{else}}
+                {createMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Add"
+                )}
+              {{/if}}
+            </Button>
+          </form>
+
+          {listContent}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default Todos;
 `],
   ["examples/todo/web/react/tanstack-router/src/routes/todos.tsx.hbs", `import { Button } from "@{{projectName}}/ui/components/button";
 import {
@@ -24505,7 +24692,7 @@ import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, Trash2 } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
@@ -24521,15 +24708,7 @@ import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
 
-{{#unless (eq backend "convex")}}
-type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
-{{/unless}}
-
-export const Route = createFileRoute("/todos")({
-  component: TodosRoute,
-});
-
-function TodosRoute() {
+const TodosRoute = () => {
   const [newTodoText, setNewTodoText] = useState("");
 
   {{#if (eq backend "convex")}}
@@ -24541,7 +24720,9 @@ function TodosRoute() {
   const handleAddTodo = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = newTodoText.trim();
-    if (!text) return;
+    if (!text) {
+      return;
+    }
     await createTodo({ text });
     setNewTodoText("");
   };
@@ -24555,44 +24736,52 @@ function TodosRoute() {
   };
   {{else}}
     {{#if (eq api "orpc")}}
-    const todos = useQuery(orpc.todo.getAll.queryOptions());
+    const { data: todos, isLoading, refetch } = useQuery(orpc.todo.getAll.queryOptions());
     const createMutation = useMutation(
       orpc.todo.create.mutationOptions({
         onSuccess: () => {
-          todos.refetch();
+          refetch();
           setNewTodoText("");
         },
       }),
     );
     const toggleMutation = useMutation(
       orpc.todo.toggle.mutationOptions({
-        onSuccess: () => { todos.refetch() },
+        onSuccess: () => {
+          refetch();
+        },
       }),
     );
     const deleteMutation = useMutation(
       orpc.todo.delete.mutationOptions({
-        onSuccess: () => { todos.refetch() },
+        onSuccess: () => {
+          refetch();
+        },
       }),
     );
     {{/if}}
     {{#if (eq api "trpc")}}
-    const todos = useQuery(trpc.todo.getAll.queryOptions());
+    const { data: todos, isLoading, refetch } = useQuery(trpc.todo.getAll.queryOptions());
     const createMutation = useMutation(
       trpc.todo.create.mutationOptions({
         onSuccess: () => {
-          todos.refetch();
+          refetch();
           setNewTodoText("");
         },
       }),
     );
     const toggleMutation = useMutation(
       trpc.todo.toggle.mutationOptions({
-        onSuccess: () => { todos.refetch() },
+        onSuccess: () => {
+          refetch();
+        },
       }),
     );
     const deleteMutation = useMutation(
       trpc.todo.delete.mutationOptions({
-        onSuccess: () => { todos.refetch() },
+        onSuccess: () => {
+          refetch();
+        },
       }),
     );
     {{/if}}
@@ -24604,13 +24793,107 @@ function TodosRoute() {
     }
   };
 
-  const handleToggleTodo = (id: TodoId, completed: boolean) => {
+  const handleToggleTodo = (id: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}}, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: TodoId) => {
+  const handleDeleteTodo = (id: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}}) => {
     deleteMutation.mutate({ id });
   };
+  {{/if}}
+
+  {{#if (eq backend "convex")}}
+  let listContent: ReactNode;
+  if (todos === undefined) {
+    listContent = (
+      <div className="flex justify-center py-4">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  } else if (todos.length === 0) {
+    listContent = <p className="py-4 text-center">No todos yet. Add one above!</p>;
+  } else {
+    listContent = (
+      <ul className="space-y-2">
+        {todos.map((todo: { _id: Id<"todos">; completed: boolean; text: string }) => (
+          <li
+            key={todo._id}
+            className="flex items-center justify-between rounded-md border p-2"
+          >
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={todo.completed}
+                onCheckedChange={() =>
+                  handleToggleTodo(todo._id, todo.completed)
+                }
+                id={\`todo-\${todo._id}\`}
+              />
+              <label
+                htmlFor={\`todo-\${todo._id}\`}
+                className={\`\${todo.completed ? "line-through text-muted-foreground" : ""}\`}
+              >
+                {todo.text}
+              </label>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDeleteTodo(todo._id)}
+              aria-label="Delete todo"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  {{else}}
+  let listContent: ReactNode;
+  if (isLoading) {
+    listContent = (
+      <div className="flex justify-center py-4">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  } else if (todos?.length === 0) {
+    listContent = <p className="py-4 text-center">No todos yet. Add one above!</p>;
+  } else {
+    listContent = (
+      <ul className="space-y-2">
+        {todos?.map((todo) => (
+          <li
+            key={todo.id}
+            className="flex items-center justify-between rounded-md border p-2"
+          >
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={todo.completed}
+                onCheckedChange={() =>
+                  handleToggleTodo(todo.id, todo.completed)
+                }
+                id={\`todo-\${todo.id}\`}
+              />
+              <label
+                htmlFor={\`todo-\${todo.id}\`}
+                className={\`\${todo.completed ? "line-through" : ""}\`}
+              >
+                {todo.text}
+              </label>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDeleteTodo(todo.id)}
+              aria-label="Delete todo"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
   {{/if}}
 
   return (
@@ -24654,96 +24937,16 @@ function TodosRoute() {
             </Button>
           </form>
 
-          {{#if (eq backend "convex")}}
-            {todos === undefined ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : todos.length === 0 ? (
-              <p className="py-4 text-center">No todos yet. Add one above!</p>
-            ) : (
-              <ul className="space-y-2">
-                {todos.map((todo) => (
-                  <li
-                    key={todo._id}
-                    className="flex items-center justify-between rounded-md border p-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={todo.completed}
-                        onCheckedChange={() =>
-                          handleToggleTodo(todo._id, todo.completed)
-                        }
-                        id={\`todo-\${todo._id}\`}
-                      />
-                      <label
-                        htmlFor={\`todo-\${todo._id}\`}
-                        className={\`\${todo.completed ? "line-through text-muted-foreground" : ""}\`}
-                      >
-                        {todo.text}
-                      </label>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteTodo(todo._id)}
-                      aria-label="Delete todo"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          {{else}}
-            {todos.isLoading ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : todos.data?.length === 0 ? (
-              <p className="py-4 text-center">
-                No todos yet. Add one above!
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {todos.data?.map((todo) => (
-                  <li
-                    key={todo.id}
-                    className="flex items-center justify-between rounded-md border p-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={todo.completed}
-                        onCheckedChange={() =>
-                          handleToggleTodo(todo.id, todo.completed)
-                        }
-                        id={\`todo-\${todo.id}\`}
-                      />
-                      <label
-                        htmlFor={\`todo-\${todo.id}\`}
-                        className={\`\${todo.completed ? "line-through" : ""}\`}
-                      >
-                        {todo.text}
-                      </label>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteTodo(todo.id)}
-                      aria-label="Delete todo"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          {{/if}}
+          {listContent}
         </CardContent>
       </Card>
     </div>
   );
-}
+};
+
+export const Route = createFileRoute("/todos")({
+  component: TodosRoute,
+});
 `],
   ["examples/todo/web/react/tanstack-start/src/routes/todos.tsx.hbs", `import { Button } from "@{{projectName}}/ui/components/button";
 import {
@@ -24761,7 +24964,7 @@ import { Trash2 } from "lucide-react";
 {{else}}
 import { Loader2, Trash2 } from "lucide-react";
 {{/if}}
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 
 {{#if (eq backend "convex")}}
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -24779,20 +24982,11 @@ import { orpc } from "@/utils/orpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
 
-{{#unless (eq backend "convex")}}
-type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
-{{/unless}}
-
-export const Route = createFileRoute("/todos")({
-  component: TodosRoute,
-});
-
-function TodosRoute() {
+const TodosRoute = () => {
   const [newTodoText, setNewTodoText] = useState("");
 
   {{#if (eq backend "convex")}}
-  const todosQuery = useSuspenseQuery(convexQuery(api.todos.getAll, {}));
-  const todos = todosQuery.data;
+  const { data: todos } = useSuspenseQuery(convexQuery(api.todos.getAll, {}));
 
   const createTodo = useMutation(api.todos.create);
   const toggleTodo = useMutation(api.todos.toggle);
@@ -24835,44 +25029,52 @@ function TodosRoute() {
     {{/if}}
 
     {{#if (eq api "trpc")}}
-  const todos = useQuery(trpc.todo.getAll.queryOptions());
+  const { data: todos, isLoading, refetch } = useQuery(trpc.todo.getAll.queryOptions());
   const createMutation = useMutation(
     trpc.todo.create.mutationOptions({
       onSuccess: () => {
-        todos.refetch();
+        refetch();
         setNewTodoText("");
       },
     }),
   );
   const toggleMutation = useMutation(
     trpc.todo.toggle.mutationOptions({
-      onSuccess: () => { todos.refetch() },
+      onSuccess: () => {
+        refetch();
+      },
     }),
   );
   const deleteMutation = useMutation(
     trpc.todo.delete.mutationOptions({
-      onSuccess: () => { todos.refetch() },
+      onSuccess: () => {
+        refetch();
+      },
     }),
   );
     {{/if}}
     {{#if (eq api "orpc")}}
-  const todos = useQuery(orpc.todo.getAll.queryOptions());
+  const { data: todos, isLoading, refetch } = useQuery(orpc.todo.getAll.queryOptions());
   const createMutation = useMutation(
     orpc.todo.create.mutationOptions({
       onSuccess: () => {
-        todos.refetch();
+        refetch();
         setNewTodoText("");
       },
     }),
   );
   const toggleMutation = useMutation(
     orpc.todo.toggle.mutationOptions({
-      onSuccess: () => { todos.refetch() },
+      onSuccess: () => {
+        refetch();
+      },
     }),
   );
   const deleteMutation = useMutation(
     orpc.todo.delete.mutationOptions({
-      onSuccess: () => { todos.refetch() },
+      onSuccess: () => {
+        refetch();
+      },
     }),
   );
     {{/if}}
@@ -24884,14 +25086,62 @@ function TodosRoute() {
     }
   };
 
-  const handleToggleTodo = (id: TodoId, completed: boolean) => {
+  const handleToggleTodo = (id: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}}, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: TodoId) => {
+  const handleDeleteTodo = (id: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}}) => {
     deleteMutation.mutate({ id });
   };
   {{/if}}
+
+  {{#unless (eq backend "convex")}}
+  let listContent: ReactNode;
+  if (isLoading) {
+    listContent = (
+      <div className="flex justify-center py-4">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  } else if (todos?.length === 0) {
+    listContent = <p className="py-4 text-center">No todos yet. Add one above!</p>;
+  } else {
+    listContent = (
+      <ul className="space-y-2">
+        {todos?.map((todo) => (
+          <li
+            key={todo.id}
+            className="flex items-center justify-between rounded-md border p-2"
+          >
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={todo.completed}
+                onCheckedChange={() =>
+                  handleToggleTodo(todo.id, todo.completed)
+                }
+                id={\`todo-\${todo.id}\`}
+              />
+              <label
+                htmlFor={\`todo-\${todo.id}\`}
+                className={\`\${todo.completed ? "line-through" : ""}\`}
+              >
+                {todo.text}
+              </label>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDeleteTodo(todo.id)}
+              aria-label="Delete todo"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  {{/unless}}
 
   return (
     <div className="mx-auto w-full max-w-md py-10">
@@ -24975,52 +25225,17 @@ function TodosRoute() {
             </ul>
           )}
           {{else}}
-          {todos.isLoading ? (
-            <div className="flex justify-center py-4">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
-          ) : todos.data?.length === 0 ? (
-            <p className="py-4 text-center">No todos yet. Add one above!</p>
-          ) : (
-            <ul className="space-y-2">
-              {todos.data?.map((todo) => (
-                <li
-                  key={todo.id}
-                  className="flex items-center justify-between rounded-md border p-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      checked={todo.completed}
-                      onCheckedChange={() =>
-                        handleToggleTodo(todo.id, todo.completed)
-                      }
-                      id={\`todo-\${todo.id}\`}
-                    />
-                    <label
-                      htmlFor={\`todo-\${todo.id}\`}
-                      className={\`\${todo.completed ? "line-through" : ""}\`}
-                    >
-                      {todo.text}
-                    </label>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteTodo(todo.id)}
-                    aria-label="Delete todo"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
+          {listContent}
           {{/if}}
         </CardContent>
       </Card>
     </div>
   );
 }
+
+export const Route = createFileRoute("/todos")({
+  component: TodosRoute,
+});
 `],
   ["examples/todo/web/solid/src/routes/todos.tsx.hbs", `import { createFileRoute } from "@tanstack/solid-router";
 import { Loader2, Trash2 } from "lucide-solid";
@@ -25028,11 +25243,8 @@ import { createSignal, For, Show } from "solid-js";
 import { orpc } from "@/utils/orpc";
 import { useQuery, useMutation } from "@tanstack/solid-query";
 
-export const Route = createFileRoute("/todos")({
-  component: TodosRoute,
-});
 
-function TodosRoute() {
+const TodosRoute = () => {
   const [newTodoText, setNewTodoText] = createSignal("");
 
   const todos = useQuery(() => orpc.todo.getAll.queryOptions());
@@ -25154,9 +25366,14 @@ function TodosRoute() {
     </div>
   );
 }
+
+export const Route = createFileRoute("/todos")({
+  component: TodosRoute,
+});
 `],
   ["examples/todo/web/svelte/src/routes/todos/+page.svelte.hbs", `{{#if (eq backend "convex")}}
 <script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '@{{projectName}}/backend/convex/_generated/api';
 	import type { Id } from '@{{projectName}}/backend/convex/_generated/dataModel';
@@ -25173,7 +25390,7 @@ function TodosRoute() {
 
 	const todosQuery = useQuery(api.todos.getAll, {});
 
-	async function handleAddTodo(event: SubmitEvent) {
+	const handleAddTodo = async (event: SubmitEvent) => {
 		event.preventDefault();
 		const text = newTodoText.trim();
 		if (!text || isAdding) return;
@@ -25191,7 +25408,7 @@ function TodosRoute() {
 		}
 	}
 
-	async function handleToggleTodo(id: Id<'todos'>, completed: boolean) {
+	const handleToggleTodo = async (id: Id<'todos'>, completed: boolean) => {
 		if (togglingId === id || deletingId === id) return;
 
 		togglingId = id;
@@ -25208,7 +25425,7 @@ function TodosRoute() {
 		}
 	}
 
-	async function handleDeleteTodo(id: Id<'todos'>) {
+	const handleDeleteTodo = async (id: Id<'todos'>) => {
 		if (togglingId === id || deletingId === id) return;
 
 		deletingId = id;
@@ -25318,6 +25535,7 @@ function TodosRoute() {
 </div>
 {{else}}
 <script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 	{{#if (eq api "orpc")}}
 	import { orpc } from '$lib/orpc';
 	{{/if}}
@@ -25363,7 +25581,7 @@ function TodosRoute() {
 	);
 	{{/if}}
 
-	function handleAddTodo(event: SubmitEvent) {
+	const handleAddTodo = (event: SubmitEvent) => {
 		event.preventDefault();
 		const text = newTodoText.trim();
 		if (text) {
@@ -25371,11 +25589,11 @@ function TodosRoute() {
 		}
 	}
 
-	function handleToggleTodo(id: number, completed: boolean) {
+	const handleToggleTodo = (id: number, completed: boolean) => {
 		toggleMutation.mutate({ id, completed: !completed });
 	}
 
-	function handleDeleteTodo(id: number) {
+	const handleDeleteTodo = (id: number) => {
 		deleteMutation.mutate({ id });
 	}
 
@@ -25624,7 +25842,7 @@ export default defineConfig({
     </style>
 </svg>
 `],
-  ["frontend/astro/src/components/Header.astro.hbs", `---
+  ["frontend/astro/src/components/header.astro.hbs", `---
 const links = [
   { to: "/", label: "Home" },
   {{#if (eq auth "better-auth")}}
@@ -25677,7 +25895,7 @@ const links = [
   const userDisplay = document.getElementById("user-display");
   const signOutButton = document.getElementById("signout-button");
 
-  async function checkSession() {
+  const checkSession = async () => {
     try {
       const { data: session } = await authClient.getSession();
       if (session?.user) {
@@ -25706,9 +25924,9 @@ const links = [
 </script>
 {{/if}}
 `],
-  ["frontend/astro/src/layouts/Layout.astro.hbs", `---
+  ["frontend/astro/src/layouts/layout.astro.hbs", `---
 import "../styles/global.css";
-import Header from "../components/Header.astro";
+import Header from "../components/header.astro";
 
 interface Props {
   title?: string;
@@ -25733,7 +25951,7 @@ const { title = "{{projectName}}" } = Astro.props;
 </html>
 `],
   ["frontend/astro/src/pages/index.astro.hbs", `---
-import Layout from "../layouts/Layout.astro";
+import Layout from "../layouts/layout.astro";
 
 const TITLE_TEXT = \`
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -25773,12 +25991,12 @@ const TITLE_TEXT = \`
 <script>
   import { orpc } from "../lib/orpc";
 
-  const statusDot = document.getElementById("status-dot")!;
-  const statusText = document.getElementById("status-text")!;
+  const statusDot = document.getElementById("status-dot") as HTMLElement;
+  const statusText = document.getElementById("status-text") as HTMLElement;
 
-  async function checkHealth() {
+  const checkHealth = async () => {
     try {
-      const data = await orpc.healthCheck();
+      await orpc.healthCheck();
       statusDot.className = "h-2 w-2 rounded-full bg-green-500";
       statusText.textContent = "Connected";
     } catch (error) {
@@ -25873,7 +26091,8 @@ web-build/
 	}
 }
 `],
-  ["frontend/native/bare/app/_layout.tsx.hbs", `{{#if (includes examples "ai")}}
+  ["frontend/native/bare/app/_layout.tsx.hbs", `/* oxlint-disable sonarjs/variable-name, github/filenames-match-regex */
+{{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
 {{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
@@ -25947,7 +26166,7 @@ const styles = StyleSheet.create({
 });
 
 {{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
-function ClerkApiAuthBridge() {
+const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -25962,7 +26181,7 @@ function ClerkApiAuthBridge() {
 }
 {{/if}}
 
-export default function RootLayout() {
+const RootLayout = () => {
   const { isDarkColorScheme } = useColorScheme();
 
   return (
@@ -26066,9 +26285,12 @@ export default function RootLayout() {
       {{/if}}
     </>
   );
-}
+};
+
+export default RootLayout;
 `],
-  ["frontend/native/bare/app/(drawer)/_layout.tsx.hbs", `import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+  ["frontend/native/bare/app/(drawer)/_layout.tsx.hbs", `/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { useColorScheme } from "@/lib/use-color-scheme";
@@ -26159,12 +26381,13 @@ const DrawerLayout = () => {
 export default DrawerLayout;
 
 `],
-  ["frontend/native/bare/app/(drawer)/(tabs)/_layout.tsx.hbs", `import { TabBarIcon } from "@/components/tabbar-icon";
+  ["frontend/native/bare/app/(drawer)/(tabs)/_layout.tsx.hbs", `/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
+import { TabBarIcon } from "@/components/tabbar-icon";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { Tabs } from "expo-router";
 import { NAV_THEME } from "@/lib/constants";
 
-export default function TabLayout() {
+const TabLayout = () => {
   const { isDarkColorScheme } = useColorScheme();
   const theme = isDarkColorScheme ? NAV_THEME.dark : NAV_THEME.light;
 
@@ -26198,7 +26421,9 @@ export default function TabLayout() {
       />
     </Tabs>
   );
-}
+};
+
+export default TabLayout;
 
 `],
   ["frontend/native/bare/app/(drawer)/(tabs)/index.tsx.hbs", `import { Container } from "@/components/container";
@@ -26207,7 +26432,7 @@ import { ScrollView, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
-export default function TabOne() {
+const TabOne = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 
@@ -26234,7 +26459,9 @@ export default function TabOne() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default TabOne;
 
 const styles = StyleSheet.create({
   scrollView: {
@@ -26252,7 +26479,7 @@ import { ScrollView, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
-export default function TabTwo() {
+const TabTwo = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 
@@ -26279,7 +26506,9 @@ export default function TabTwo() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default TabTwo;
 
 const styles = StyleSheet.create({
   scrollView: {
@@ -26330,24 +26559,24 @@ import { useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 {{/if}}
 
-export default function Home() {
+const Home = () => {
 const { colorScheme } = useColorScheme();
 const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 {{#if (eq api "orpc")}}
-const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
 {{/if}}
 {{#if (eq api "trpc")}}
-const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
 {{/if}}
 {{#if (and (eq backend "convex") (eq auth "clerk"))}}
 const { user } = useUser();
-const healthCheck = useQuery(api.healthCheck.get);
-const privateData = useQuery(api.privateData.get);
+const healthCheck = useQuery(api.healthcheck.get);
+const privateData = useQuery(api.privatedata.get);
 {{else if (and (ne backend "convex") (eq auth "clerk"))}}
 const { isLoaded, isSignedIn } = useAuth();
 const { user } = useUser();
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-const healthCheck = useQuery(api.healthCheck.get);
+const healthCheck = useQuery(api.healthcheck.get);
 const { isAuthenticated } = useConvexAuth();
 const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
 {{#if (eq payments "polar")}}
@@ -26402,9 +26631,17 @@ const handlePolarPortal = async () => {
 };
 {{/if}}
 {{else if (eq backend "convex")}}
-const healthCheck = useQuery(api.healthCheck.get);
+const healthCheck = useQuery(api.healthcheck.get);
 {{/if}}
 
+{{#unless (eq api "none")}}
+let apiStatusText = "Service unavailable";
+if (isLoading) {
+  apiStatusText = "Checking connection...";
+} else if (healthCheck) {
+  apiStatusText = "All systems operational";
+}
+{{/unless}}
 return (
 <Container>
   <ScrollView style={styles.scrollView} contentInsetAdjustmentBehavior="never">
@@ -26447,7 +26684,7 @@ return (
         {{else}}
         {{#unless (eq api "none")}}
         <View style={styles.statusRow}>
-          <View style={[styles.statusIndicator, { backgroundColor: healthCheck.data ? "#10b981" : "#f59e0b" }]} />
+          <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#f59e0b" }]} />
           <View style={styles.statusContent}>
             <Host matchContents=\\{{ vertical: true }}>
               <Column spacing={4}>
@@ -26460,11 +26697,7 @@ return (
                   textStyle=\\{{ color: theme.text, fontSize: 12 }}
                   style=\\{{ opacity: 0.7 }}
                 >
-                  {healthCheck.isLoading
-                  ? "Checking connection..."
-                  : healthCheck.data
-                  ? "All systems operational"
-                  : "Service unavailable"}
+                  {apiStatusText}
                 </ExpoUIText>
               </Column>
             </Host>
@@ -26635,7 +26868,9 @@ return (
   </ScrollView>
 </Container>
 );
-}
+};
+
+export default Home;
 
 const styles = StyleSheet.create({
 scrollView: {
@@ -26698,14 +26933,15 @@ marginBottom: 8,
 },
 });
 `],
-  ["frontend/native/bare/app/+not-found.tsx.hbs", `import { Container } from "@/components/container";
+  ["frontend/native/bare/app/+not-found.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+import { Container } from "@/components/container";
 import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { Stack, router } from "expo-router";
 import { Text, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
-export default function NotFoundScreen() {
+const NotFoundScreen = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 
@@ -26741,7 +26977,9 @@ export default function NotFoundScreen() {
       </Container>
     </>
   );
-}
+};
+
+export default NotFoundScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -26765,7 +27003,7 @@ import { View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
-export default function Modal() {
+const Modal = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 
@@ -26791,7 +27029,9 @@ export default function Modal() {
       </View>
     </Container>
   );
-}
+};
+
+export default Modal;
 
 const styles = StyleSheet.create({
   container: {
@@ -26810,7 +27050,7 @@ import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 import { StyleSheet } from "react-native";
 
-export function Container({ children }: { children: React.ReactNode }) {
+export const Container = ({ children }: { children: React.ReactNode }) => {
   const { colorScheme } = useColorScheme();
   const backgroundColor = colorScheme === "dark" 
     ? NAV_THEME.dark.background 
@@ -26913,7 +27153,7 @@ export const TabBarIcon = (props: {
 `],
   ["frontend/native/bare/lib/use-color-scheme.ts.hbs", `import { useColorScheme as useRNColorScheme } from "react-native";
 
-export function useColorScheme() {
+export const useColorScheme = () => {
   const systemColorScheme = useRNColorScheme();
   const colorScheme = systemColorScheme ?? "light";
   
@@ -26932,7 +27172,8 @@ export function useColorScheme() {
 }
 
 `],
-  ["frontend/native/bare/metro.config.js.hbs", `// Learn more https://docs.expo.io/guides/customizing-metro
+  ["frontend/native/bare/metro.config.js.hbs", `/* oxlint-disable unicorn/prefer-module */
+// Learn more https://docs.expo.io/guides/customizing-metro
 const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
@@ -27091,7 +27332,8 @@ android
   }
 }
 `],
-  ["frontend/native/unistyles/app/_layout.tsx.hbs", `import "@/unistyles";
+  ["frontend/native/unistyles/app/_layout.tsx.hbs", `/* oxlint-disable sonarjs/variable-name, github/filenames-match-regex */
+import "@/unistyles";
 {{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
@@ -27146,7 +27388,7 @@ const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
-function ClerkApiAuthBridge() {
+const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -27161,7 +27403,7 @@ function ClerkApiAuthBridge() {
 }
 {{/if}}
 
-export default function RootLayout() {
+const RootLayout = () => {
   const { theme } = useUnistyles();
 
   return (
@@ -27339,9 +27581,12 @@ export default function RootLayout() {
       {{/if}}
     {{/if}}
   );
-}
+};
+
+export default RootLayout;
 `],
-  ["frontend/native/unistyles/app/(drawer)/_layout.tsx.hbs", `import "@/unistyles";
+  ["frontend/native/unistyles/app/(drawer)/_layout.tsx.hbs", `/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
+import "@/unistyles";
 
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
@@ -27431,14 +27676,15 @@ const DrawerLayout = () => {
 
 export default DrawerLayout;
 `],
-  ["frontend/native/unistyles/app/(drawer)/(tabs)/_layout.tsx.hbs", `import "@/unistyles";
+  ["frontend/native/unistyles/app/(drawer)/(tabs)/_layout.tsx.hbs", `/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
+import "@/unistyles";
 
 import { Tabs } from "expo-router";
 import { useUnistyles } from "react-native-unistyles";
 
 import { TabBarIcon } from "@/components/tabbar-icon";
 
-export default function TabLayout() {
+const TabLayout = () => {
   const { theme } = useUnistyles();
 
   return (
@@ -27471,7 +27717,9 @@ export default function TabLayout() {
       />
     </Tabs>
   );
-}
+};
+
+export default TabLayout;
 `],
   ["frontend/native/unistyles/app/(drawer)/(tabs)/index.tsx.hbs", `import "@/unistyles";
 
@@ -27479,7 +27727,7 @@ import { Container } from "@/components/container";
 import { ScrollView, Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
-export default function Home() {
+const Home = () => {
   return (
     <Container>
       <ScrollView contentContainerStyle={styles.container}>
@@ -27492,7 +27740,9 @@ export default function Home() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default Home;
 
 const styles = StyleSheet.create((theme) => ({
   container: {
@@ -27519,7 +27769,7 @@ import { Container } from "@/components/container";
 import { ScrollView, Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
-export default function TabTwo() {
+const TabTwo = () => {
   return (
     <Container>
       <ScrollView contentContainerStyle={styles.container}>
@@ -27532,7 +27782,9 @@ export default function TabTwo() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default TabTwo;
 
 const styles = StyleSheet.create((theme) => ({
   container: {
@@ -27593,22 +27845,22 @@ import { useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 {{/if}}
 
-export default function Home() {
+const Home = () => {
   {{#if (eq api "orpc")}}
-  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
   {{/if}}
   {{#if (eq api "trpc")}}
-  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
   {{/if}}
   {{#if (and (eq backend "convex") (eq auth "clerk"))}}
   const { user } = useUser();
-  const healthCheck = useQuery(api.healthCheck.get);
-  const privateData = useQuery(api.privateData.get);
+  const healthCheck = useQuery(api.healthcheck.get);
+  const privateData = useQuery(api.privatedata.get);
   {{else if (and (ne backend "convex") (eq auth "clerk"))}}
   const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-  const healthCheck = useQuery(api.healthCheck.get);
+  const healthCheck = useQuery(api.healthcheck.get);
   const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
   {{#if (eq payments "polar")}}
@@ -27663,9 +27915,17 @@ export default function Home() {
   };
   {{/if}}
   {{else if (eq backend "convex")}}
-  const healthCheck = useQuery(api.healthCheck.get);
+  const healthCheck = useQuery(api.healthcheck.get);
   {{/if}}
 
+  {{#unless (eq api "none")}}
+  let apiStatusText = "API Disconnected";
+  if (isLoading) {
+    apiStatusText = "Checking connection...";
+  } else if (healthCheck) {
+    apiStatusText = "Connected to API";
+  }
+  {{/unless}}
   return (
     <Container>
       <ScrollView
@@ -27713,7 +27973,7 @@ export default function Home() {
               <View
                 style={[
                   styles.statusDot,
-                  healthCheck.data
+                  healthCheck
                     ? styles.statusDotSuccess
                     : styles.statusDotWarning,
                 ]}
@@ -27724,11 +27984,7 @@ export default function Home() {
                   {{#if (eq api "trpc")}}TRPC{{/if}}
                 </Text>
                 <Text style={styles.statusDescription}>
-                  {healthCheck.isLoading
-                    ? "Checking connection..."
-                    : healthCheck.data
-                    ? "Connected to API"
-                    : "API Disconnected"}
+                  {apiStatusText}
                 </Text>
               </View>
             </View>
@@ -27855,7 +28111,9 @@ export default function Home() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default Home;
 
 const styles = StyleSheet.create((theme) => ({
   container: {
@@ -28022,7 +28280,8 @@ const styles = StyleSheet.create((theme) => ({
   },
 }));
 `],
-  ["frontend/native/unistyles/app/+html.tsx.hbs", `import { ScrollViewStyleReset } from "expo-router/html";
+  ["frontend/native/unistyles/app/+html.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+import { ScrollViewStyleReset } from "expo-router/html";
 import { type PropsWithChildren } from "react";
 
 import "../unistyles";
@@ -28031,7 +28290,7 @@ import "../unistyles";
 // web page during static rendering.
 // The contents of this function only run in Node.js environments and
 // do not have access to the DOM or browser APIs.
-export default function Root({ children }: PropsWithChildren) {
+const Root = ({ children }: PropsWithChildren) => {
   return (
     <html lang="en">
       <head>
@@ -28053,16 +28312,19 @@ export default function Root({ children }: PropsWithChildren) {
       <body>{children}</body>
     </html>
   );
-}
+};
+
+export default Root;
 `],
-  ["frontend/native/unistyles/app/+not-found.tsx.hbs", `import "@/unistyles";
+  ["frontend/native/unistyles/app/+not-found.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+import "@/unistyles";
 
 import { Link, Stack } from "expo-router";
 import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
 
-export default function NotFoundScreen() {
+const NotFoundScreen = () => {
   return (
     <>
       <Stack.Screen options=\\{{ title: "Oops!" }} />
@@ -28082,7 +28344,9 @@ export default function NotFoundScreen() {
       </Container>
     </>
   );
-}
+};
+
+export default NotFoundScreen;
 
 const styles = StyleSheet.create((theme) => ({
   container: {
@@ -28129,7 +28393,7 @@ import { Container } from "@/components/container";
 import { Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
-export default function Modal() {
+const Modal = () => {
   return (
     <Container>
       <View style={styles.container}>
@@ -28139,7 +28403,9 @@ export default function Modal() {
       </View>
     </Container>
   );
-}
+};
+
+export default Modal;
 
 const styles = StyleSheet.create((theme) => ({
   container: {
@@ -28262,7 +28528,8 @@ export const TabBarIcon = (props: {
   ["frontend/native/unistyles/index.js.hbs", `import './unistyles';
 import 'expo-router/entry';
 `],
-  ["frontend/native/unistyles/metro.config.js.hbs", `const { getDefaultConfig } = require("expo/metro-config");
+  ["frontend/native/unistyles/metro.config.js.hbs", `/* oxlint-disable unicorn/prefer-module */
+const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
 {{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
@@ -28511,7 +28778,8 @@ uniwind-types.d.ts
   }
 }
 `],
-  ["frontend/native/uniwind/app/_layout.tsx.hbs", `{{#if (includes examples "ai")}}
+  ["frontend/native/uniwind/app/_layout.tsx.hbs", `/* oxlint-disable sonarjs/variable-name, github/filenames-match-regex */
+{{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
 {{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
@@ -28572,7 +28840,7 @@ export const unstable_settings = {
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
-function ClerkApiAuthBridge() {
+const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -28587,19 +28855,19 @@ function ClerkApiAuthBridge() {
 }
 {{/if}}
 
-function StackLayout() {
+const StackLayout = () => {
   return (
     <Stack screenOptions=\\{{}}>
       <Stack.Screen name="(drawer)" options=\\{{ headerShown: false }} />
       {{#if (eq auth "clerk")}}
         <Stack.Screen name="(auth)" options=\\{{ headerShown: false }} />
       {{/if}}
-      <Stack.Screen name="modal" options=\\{{ title: "Modal", presentation: "modal" }} />
+      <Stack.Screen name="modal" options=\\{{ presentation: "modal", title: "Modal" }} />
     </Stack>
   );
 }
 
-export default function Layout() {
+const Layout = () => {
   return (
     {{#if (eq backend "convex")}}
       {{#if (eq auth "clerk")}}
@@ -28696,9 +28964,12 @@ export default function Layout() {
       {{/if}}
     {{/if}}
   );
-}
+};
+
+export default Layout;
 `],
-  ["frontend/native/uniwind/app/(drawer)/_layout.tsx.hbs", `import React, { useCallback } from "react";
+  ["frontend/native/uniwind/app/(drawer)/_layout.tsx.hbs", `/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
+import React, { useCallback } from "react";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { Drawer } from "expo-router/drawer";
@@ -28706,7 +28977,7 @@ import { useThemeColor } from "heroui-native";
 import { Pressable, Text } from "react-native";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-function DrawerLayout() {
+const DrawerLayout = () => {
   const themeColorForeground = useThemeColor("foreground");
   const themeColorBackground = useThemeColor("background");
 
@@ -28789,11 +29060,12 @@ function DrawerLayout() {
 }
 
 export default DrawerLayout;`],
-  ["frontend/native/uniwind/app/(drawer)/(tabs)/_layout.tsx.hbs", `import { Tabs } from "expo-router";
+  ["frontend/native/uniwind/app/(drawer)/(tabs)/_layout.tsx.hbs", `/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
+import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "heroui-native";
 
-export default function TabLayout() {
+const TabLayout = () => {
 	const themeColorForeground = useThemeColor("foreground");
 	const themeColorBackground = useThemeColor("background");
 
@@ -28834,13 +29106,15 @@ export default function TabLayout() {
 			/>
 		</Tabs>
 	);
-}
+};
+
+export default TabLayout;
 `],
   ["frontend/native/uniwind/app/(drawer)/(tabs)/index.tsx.hbs", `import { Container } from "@/components/container";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { Card } from "heroui-native";
 
-export default function Home() {
+const Home = () => {
 	return (
 		<Container className="p-6">
 			<View className="flex-1 justify-center items-center">
@@ -28850,13 +29124,15 @@ export default function Home() {
 			</View>
 		</Container>
 	);
-}
+};
+
+export default Home;
 `],
   ["frontend/native/uniwind/app/(drawer)/(tabs)/two.tsx.hbs", `import { Container } from "@/components/container";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { Card } from "heroui-native";
 
-export default function TabTwo() {
+const TabTwo = () => {
 	return (
 		<Container className="p-6">
 			<View className="flex-1 justify-center items-center">
@@ -28866,7 +29142,9 @@ export default function TabTwo() {
 			</View>
 		</Container>
 	);
-}
+};
+
+export default TabTwo;
 `],
   ["frontend/native/uniwind/app/(drawer)/index.tsx.hbs", `import { Text, View{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
@@ -28906,9 +29184,9 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 {{#unless (or (eq backend "none") (and (eq backend "convex") (eq auth "better-auth")))}}
 import { Ionicons } from "@expo/vector-icons";
 {{/unless}}
-import { Button, Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
+import { {{#if (or (eq auth "clerk") (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar")))}}Button, {{/if}}Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
 
-export default function Home() {
+const Home = () => {
 {{#if (eq api "orpc")}}
 const healthCheck = useQuery(orpc.healthCheck.queryOptions());
 {{/if}}
@@ -28917,13 +29195,13 @@ const healthCheck = useQuery(trpc.healthCheck.queryOptions());
 {{/if}}
 {{#if (and (eq backend "convex") (eq auth "clerk"))}}
 const { user } = useUser();
-const healthCheck = useQuery(api.healthCheck.get);
-const privateData = useQuery(api.privateData.get);
+const healthCheck = useQuery(api.healthcheck.get);
+const privateData = useQuery(api.privatedata.get);
 {{else if (and (ne backend "convex") (eq auth "clerk"))}}
 const { isLoaded, isSignedIn } = useAuth();
 const { user } = useUser();
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-const healthCheck = useQuery(api.healthCheck.get);
+const healthCheck = useQuery(api.healthcheck.get);
 const { isAuthenticated } = useConvexAuth();
 const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
 {{#if (eq payments "polar")}}
@@ -28978,7 +29256,7 @@ const handlePolarPortal = async () => {
 };
 {{/if}}
 {{else if (eq backend "convex")}}
-const healthCheck = useQuery(api.healthCheck.get);
+const healthCheck = useQuery(api.healthcheck.get);
 {{/if}}
 {{#unless (eq backend "none")}}
 const successColor = useThemeColor("success");
@@ -28992,6 +29270,15 @@ const isLoading = healthCheck === undefined;
 const isConnected = healthCheck?.data === "OK";
 const isLoading = healthCheck?.isLoading;
 {{/unless}}
+{{/if}}
+{{#if (or (eq backend "convex") (ne api "none"))}}
+
+let apiStatusText = "API Disconnected";
+if (isLoading) {
+  apiStatusText = "Checking connection...";
+} else if (isConnected) {
+  apiStatusText = "Connected to API";
+}
 {{/if}}
 {{/unless}}
 
@@ -29031,11 +29318,7 @@ return (
             {{/if}}
           </Text>
           <Text className="text-muted text-xs mt-0.5">
-            {isLoading
-            ? "Checking connection..."
-            : isConnected
-            ? "Connected to API"
-            : "API Disconnected"}
+            {apiStatusText}
           </Text>
         </View>
         {isLoading && <Spinner size="sm" />}
@@ -29165,15 +29448,18 @@ return (
   {{/if}}
 </Container>
 );
-}
+};
+
+export default Home;
 `],
-  ["frontend/native/uniwind/app/+not-found.tsx.hbs", `import { Link, Stack } from "expo-router";
+  ["frontend/native/uniwind/app/+not-found.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+import { Link, Stack } from "expo-router";
 import { Button, Surface } from "heroui-native";
 import { Text, View } from "react-native";
 
 import { Container } from "@/components/container";
 
-export default function NotFoundScreen() {
+const NotFoundScreen = () => {
 	return (
 		<>
 			<Stack.Screen options=\\{{ title: "Not Found" }} />
@@ -29183,7 +29469,7 @@ export default function NotFoundScreen() {
 						<Text className="text-4xl mb-3">🤔</Text>
 						<Text className="text-foreground font-medium text-lg mb-1">Page Not Found</Text>
 						<Text className="text-muted text-sm text-center mb-4">
-							The page you're looking for doesn't exist.
+							The page you&apos;re looking for doesn&apos;t exist.
 						</Text>
 						<Link href="/" asChild>
 							<Button size="sm">Go Home</Button>
@@ -29193,7 +29479,9 @@ export default function NotFoundScreen() {
 			</Container>
 		</>
 	);
-}
+};
+
+export default NotFoundScreen;
 `],
   ["frontend/native/uniwind/app/modal.tsx.hbs", `import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -29202,12 +29490,12 @@ import { Text, View } from "react-native";
 
 import { Container } from "@/components/container";
 
-function Modal() {
-	const accentForegroundColor = useThemeColor("accent-foreground");
+const handleClose = () => {
+	router.back();
+};
 
-	function handleClose() {
-		router.back();
-	}
+const Modal = () => {
+	const accentForegroundColor = useThemeColor("accent-foreground");
 
 	return (
 		<Container>
@@ -29233,7 +29521,8 @@ function Modal() {
 
 export default Modal;
 `],
-  ["frontend/native/uniwind/components/container.tsx.hbs", `import { cn } from "heroui-native";
+  ["frontend/native/uniwind/components/container.tsx.hbs", `/* oxlint-disable import/no-named-as-default-member */
+import { cn } from "heroui-native";
 import { type PropsWithChildren } from "react";
 import { ScrollView, View, type ScrollViewProps, type ViewProps } from "react-native";
 import Animated, { type AnimatedProps } from "react-native-reanimated";
@@ -29247,13 +29536,13 @@ type Props = AnimatedProps<ViewProps> & {
   scrollViewProps?: Omit<ScrollViewProps, "contentContainerStyle">;
 };
 
-export function Container({
+export const Container = ({
   children,
   className,
   isScrollable = true,
   scrollViewProps,
   ...props
-}: PropsWithChildren<Props>) {
+}: PropsWithChildren<Props>) => {
   const insets = useSafeAreaInsets();
 
   return (
@@ -29281,7 +29570,7 @@ export function Container({
 }
 `],
   ["frontend/native/uniwind/components/theme-toggle.tsx.hbs", `import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
+import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
 import { Platform, Pressable } from 'react-native';
 import Animated, { FadeOut, ZoomIn } from 'react-native-reanimated';
 import { withUniwind } from 'uniwind';
@@ -29289,14 +29578,14 @@ import { useAppTheme } from '@/contexts/app-theme-context';
 
 const StyledIonicons = withUniwind(Ionicons);
 
-export function ThemeToggle() {
+export const ThemeToggle = () => {
 	const { toggleTheme, isLight } = useAppTheme();
 
 	return (
 		<Pressable
 			onPress={() => {
 				if (Platform.OS === 'ios') {
-					Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+					impactAsync(ImpactFeedbackStyle.Light);
 				}
 				toggleTheme();
 			}}
@@ -29316,7 +29605,8 @@ export function ThemeToggle() {
 }
 
 `],
-  ["frontend/native/uniwind/contexts/app-theme-context.tsx.hbs", `import React, { createContext, useCallback, useContext, useMemo } from 'react';
+  ["frontend/native/uniwind/contexts/app-theme-context.tsx.hbs", `/* oxlint-disable react-doctor/no-react19-deprecated-apis, react-doctor/no-usememo-simple-expression, react-doctor/react-compiler-no-manual-memoization */
+import React, { createContext, useCallback, useContext, useMemo } from 'react';
 import { Uniwind, useUniwind } from 'uniwind';
 
 type ThemeName = 'light' | 'dark';
@@ -29370,7 +29660,7 @@ export const AppThemeProvider = ({ children }: { children: React.ReactNode }) =>
     );
 };
 
-export function useAppTheme() {
+export const useAppTheme = () => {
     const context = useContext(AppThemeContext);
     if (!context) {
         throw new Error('useAppTheme must be used within AppThemeProvider');
@@ -29385,7 +29675,8 @@ export function useAppTheme() {
 
 @source './node_modules/heroui-native/lib';
 `],
-  ["frontend/native/uniwind/metro.config.js.hbs", `const { getDefaultConfig } = require("expo/metro-config");
+  ["frontend/native/uniwind/metro.config.js.hbs", `/* oxlint-disable unicorn/prefer-module */
+const { getDefaultConfig } = require("expo/metro-config");
 const { withUniwindConfig } = require("uniwind/metro");
 const { wrapWithReanimatedMetroConfig } = require("react-native-reanimated/metro-config");
 
@@ -29481,7 +29772,7 @@ module.exports = uniwindConfig;
 }`],
   ["frontend/native/uniwind/uniwind-env.d.ts", `/// <reference types="uniwind/types" />
 
-declare module "*.css";
+declare module "*.css" {}
 `],
   ["frontend/nuxt/_gitignore", `# Nuxt dev/build outputs
 .output
@@ -29543,7 +29834,7 @@ import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
   ["frontend/nuxt/app/assets/css/main.css", `@import "tailwindcss";
 @import "@nuxt/ui";
 `],
-  ["frontend/nuxt/app/components/Header.vue.hbs", `<script setup lang="ts">
+  ["frontend/nuxt/app/components/header.vue.hbs", `<script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 {{#if (eq auth "better-auth")}}
 import UserMenu from './UserMenu.vue'
@@ -29601,8 +29892,8 @@ import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { useConvexQuery } from "convex-vue";
 {{else}}
   {{#unless (eq api "none")}}
-const { $orpc } = useNuxtApp()
 import { useQuery } from '@tanstack/vue-query'
+const { $orpc } = useNuxtApp()
   {{/unless}}
 {{/if}}
 
@@ -29623,7 +29914,7 @@ const TITLE_TEXT = \`
  \`;
 
 {{#if (eq backend "convex")}}
-const healthCheck = useConvexQuery(api.healthCheck.get, {});
+const healthCheck = useConvexQuery(api.healthcheck.get, {});
 {{else}}
   {{#unless (eq api "none")}}
 const healthCheck = useQuery($orpc.healthCheck.queryOptions())
@@ -29631,7 +29922,9 @@ const healthCheck = useQuery($orpc.healthCheck.queryOptions())
 onServerPrefetch(async () => {
   try {
     await healthCheck.suspense()
-  } catch {}
+  } catch {
+    // suspense errors surface through the query state
+  }
 })
   {{/unless}}
 {{/if}}
@@ -29724,11 +30017,11 @@ export default defineNuxtConfig({
   },
   {{else if (and (ne backend "self") (ne backend "none"))}}
   runtimeConfig: {
-    // server-side override for SSR fetches (NUXT_SERVER_URL); falls back to the public URL
-    serverUrl: "",
     public: {
       serverUrl: process.env.NUXT_PUBLIC_SERVER_URL ?? "",
-    }
+    },
+    // server-side override for SSR fetches (NUXT_SERVER_URL); falls back to the public URL
+    serverUrl: "",
   },
   {{/if}}
 })
@@ -29878,11 +30171,11 @@ export const metadata: Metadata = {
 };
 
 {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
-export default async function RootLayout({
+const RootLayout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
   const token = await getToken();
   return (
     <html lang="en" suppressHydrationWarning>
@@ -29898,13 +30191,15 @@ export default async function RootLayout({
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;
 {{else}}
-export default function RootLayout({
+const RootLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
@@ -29926,7 +30221,9 @@ export default function RootLayout({
 			</body>
 		</html>
 	);
-}
+};
+
+export default RootLayout;
 {{/if}}
 `],
   ["frontend/react/next/src/app/page.tsx.hbs", `"use client"
@@ -29959,13 +30256,34 @@ const TITLE_TEXT = \`
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  \`;
 
-export default function Home() {
+const Home = () => {
   {{#if (eq backend "convex")}}
-  const healthCheck = useQuery(api.healthCheck.get);
+  const healthCheck = useQuery(api.healthcheck.get);
   {{else if (eq api "orpc")}}
-  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
   {{else if (eq api "trpc")}}
-  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
+  {{/if}}
+
+  {{#if (eq backend "convex")}}
+  let statusText = "Error";
+  let statusColor = "bg-red-500";
+  if (healthCheck === undefined) {
+    statusText = "Checking...";
+    statusColor = "bg-orange-400";
+  } else if (healthCheck === "OK") {
+    statusText = "Connected";
+    statusColor = "bg-green-500";
+  }
+  {{else}}
+  {{#unless (eq api "none")}}
+  let statusText = "Disconnected";
+  if (isLoading) {
+    statusText = "Checking...";
+  } else if (healthCheck) {
+    statusText = "Connected";
+  }
+  {{/unless}}
   {{/if}}
 
   return (
@@ -29977,28 +30295,20 @@ export default function Home() {
           {{#if (eq backend "convex")}}
           <div className="flex items-center gap-2">
             <div
-              className={\`h-2 w-2 rounded-full \${healthCheck === "OK" ? "bg-green-500" : healthCheck === undefined ? "bg-orange-400" : "bg-red-500"}\`}
+              className={\`h-2 w-2 rounded-full \${statusColor}\`}
             />
             <span className="text-sm text-muted-foreground">
-              {healthCheck === undefined
-                ? "Checking..."
-                : healthCheck === "OK"
-                  ? "Connected"
-                  : "Error"}
+              {statusText}
             </span>
           </div>
           {{else}}
             {{#unless (eq api "none")}}
             <div className="flex items-center gap-2">
               <div
-                className={\`h-2 w-2 rounded-full \${healthCheck.data ? "bg-green-500" : "bg-red-500"}\`}
+                className={\`h-2 w-2 rounded-full \${healthCheck ? "bg-green-500" : "bg-red-500"}\`}
               />
               <span className="text-sm text-muted-foreground">
-                {healthCheck.isLoading
-                  ? "Checking..."
-                  : healthCheck.data
-                    ? "Connected"
-                    : "Disconnected"}
+                {statusText}
               </span>
             </div>
             {{/unless}}
@@ -30007,11 +30317,12 @@ export default function Home() {
       </div>
     </div>
   );
-}
+};
+
+export default Home;
 `],
   ["frontend/react/next/src/components/mode-toggle.tsx.hbs", `"use client"
 
-import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@{{projectName}}/ui/components/button"
@@ -30022,7 +30333,7 @@ import {
   DropdownMenuTrigger,
 } from "@{{projectName}}/ui/components/dropdown-menu"
 
-export function ModeToggle() {
+export const ModeToggle = () => {
   const { setTheme } = useTheme()
 
   return (
@@ -30090,7 +30401,7 @@ const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
-function ClerkApiAuthBridge() {
+const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -30105,7 +30416,7 @@ function ClerkApiAuthBridge() {
 }
 {{/if}}
 
-export default function Providers({
+const Providers = ({
   children,
 {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
   initialToken,
@@ -30115,7 +30426,7 @@ export default function Providers({
 {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
   initialToken?: string | null;
 {{/if}}
-}) {
+}) => {
   return (
     <ThemeProvider
       attribute="class"
@@ -30160,17 +30471,20 @@ export default function Providers({
       <Toaster richColors />
     </ThemeProvider>
   );
-}
+};
+
+export default Providers;
 `],
   ["frontend/react/next/src/components/theme-provider.tsx.hbs", `"use client"
 
-import * as React from "react"
+import type { ComponentProps } from "react";
+
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 
-export function ThemeProvider({
+export const ThemeProvider = ({
   children,
   ...props
-}: React.ComponentProps<typeof NextThemesProvider>) {
+}: ComponentProps<typeof NextThemesProvider>) => {
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>
 }
 `],
@@ -30279,7 +30593,7 @@ import {
 } from "@{{projectName}}/ui/components/dropdown-menu";
 import { useTheme } from "@/components/theme-provider";
 
-export function ModeToggle() {
+export const ModeToggle = () => {
   const { setTheme } = useTheme();
 
   return (
@@ -30298,13 +30612,13 @@ export function ModeToggle() {
   );
 }
 `],
-  ["frontend/react/react-router/src/components/theme-provider.tsx.hbs", `import * as React from "react";
+  ["frontend/react/react-router/src/components/theme-provider.tsx.hbs", `import type { ComponentProps } from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
-export function ThemeProvider({
+export const ThemeProvider = ({
   children,
   ...props
-}: React.ComponentProps<typeof NextThemesProvider>) {
+}: ComponentProps<typeof NextThemesProvider>) => {
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
 
@@ -30363,7 +30677,7 @@ export const loader = (args: Route.LoaderArgs) => rootAuthLoader(args);
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
-function ClerkApiAuthBridge() {
+const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -30388,7 +30702,7 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="en">
       <head>
@@ -30408,11 +30722,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 {{#if (eq backend "convex")}}
 {{#if (eq auth "clerk")}}
-export default function App({ loaderData }: Route.ComponentProps) {
+const App = ({ loaderData }: Route.ComponentProps) => {
 {{else if (eq auth "better-auth")}}
-export default function App() {
+const App = () => {
 {{else}}
-export default function App() {
+const App = () => {
 {{/if}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
   {{#if (eq auth "clerk")}}
@@ -30469,9 +30783,11 @@ export default function App() {
     </ConvexProvider>
   );
   {{/if}}
-}
+};
+
+export default App;
 {{else if (eq auth "clerk")}}
-export default function App({ loaderData }: Route.ComponentProps) {
+const App = ({ loaderData }: Route.ComponentProps) => {
   return (
     <ClerkProvider loaderData={loaderData}>
       {{#unless (eq api "none")}}
@@ -30525,9 +30841,11 @@ export default function App({ loaderData }: Route.ComponentProps) {
       {{/if}}
     </ClerkProvider>
   );
-}
+};
+
+export default App;
 {{else if (eq api "orpc")}}
-export default function App() {
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
@@ -30545,9 +30863,11 @@ export default function App() {
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
-}
+};
+
+export default App;
 {{else if (eq api "trpc")}}
-export default function App() {
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
@@ -30565,9 +30885,11 @@ export default function App() {
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
-}
+};
+
+export default App;
 {{else}}
-export default function App() {
+const App = () => {
   return (
     <ThemeProvider
       attribute="class"
@@ -30582,10 +30904,12 @@ export default function App() {
       <Toaster richColors />
     </ThemeProvider>
   );
-}
+};
+
+export default App;
 {{/if}}
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
@@ -30596,8 +30920,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         ? "The requested page could not be found."
         : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
+    ({ message: details, stack } = error);
   }
   return (
     <main className="pt-16 p-4 container mx-auto">
@@ -30617,7 +30940,8 @@ import { flatRoutes } from "@react-router/fs-routes";
 
 export default flatRoutes() satisfies RouteConfig;
 `],
-  ["frontend/react/react-router/src/routes/_index.tsx.hbs", `import type { Route } from "./+types/_index";
+  ["frontend/react/react-router/src/routes/_index.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+import type { Route } from "./+types/_index";
 {{#if (eq backend "convex")}}
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
@@ -30647,17 +30971,38 @@ const TITLE_TEXT = \`
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  \`;
 
-export function meta({}: Route.MetaArgs) {
-  return [{ title: "{{projectName}}" }, { name: "description", content: "{{projectName}} is a web application" }];
+export const meta = (_args: Route.MetaArgs) => {
+  return [{ title: "{{projectName}}" }, { content: "{{projectName}} is a web application", name: "description" }];
 }
 
-export default function Home() {
+const Home = () => {
   {{#if (eq backend "convex")}}
-  const healthCheck = useQuery(api.healthCheck.get);
+  const healthCheck = useQuery(api.healthcheck.get);
   {{else if (eq api "orpc")}}
-  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
   {{else if (eq api "trpc")}}
-  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
+  {{/if}}
+
+  {{#if (eq backend "convex")}}
+  let statusText = "Error";
+  let statusColor = "bg-red-500";
+  if (healthCheck === undefined) {
+    statusText = "Checking...";
+    statusColor = "bg-orange-400";
+  } else if (healthCheck === "OK") {
+    statusText = "Connected";
+    statusColor = "bg-green-500";
+  }
+  {{else}}
+  {{#unless (eq api "none")}}
+  let statusText = "Disconnected";
+  if (isLoading) {
+    statusText = "Checking...";
+  } else if (healthCheck) {
+    statusText = "Connected";
+  }
+  {{/unless}}
   {{/if}}
 
   return (
@@ -30669,30 +31014,20 @@ export default function Home() {
           {{#if (eq backend "convex")}}
           <div className="flex items-center gap-2">
             <div
-              className={\`h-2 w-2 rounded-full \${healthCheck === "OK" ? "bg-green-500" : healthCheck === undefined ? "bg-orange-400" : "bg-red-500"}\`}
+              className={\`h-2 w-2 rounded-full \${statusColor}\`}
             />
             <span className="text-sm text-muted-foreground">
-              {healthCheck === undefined
-                ? "Checking..."
-                : healthCheck === "OK"
-                  ? "Connected"
-                  : "Error"}
+              {statusText}
             </span>
           </div>
           {{else}}
             {{#unless (eq api "none")}}
             <div className="flex items-center gap-2">
               <div
-                className={\`h-2 w-2 rounded-full \${
-                  healthCheck.data ? "bg-green-500" : "bg-red-500"
-                }\`}
+                className={\`h-2 w-2 rounded-full \${healthCheck ? "bg-green-500" : "bg-red-500"}\`}
               />
               <span className="text-sm text-muted-foreground">
-                {healthCheck.isLoading
-                  ? "Checking..."
-                  : healthCheck.data
-                  ? "Connected"
-                  : "Disconnected"}
+                {statusText}
               </span>
             </div>
             {{/unless}}
@@ -30701,7 +31036,9 @@ export default function Home() {
       </div>
     </div>
   );
-}
+};
+
+export default Home;
 `],
   ["frontend/react/react-router/tsconfig.json.hbs", `{
   "include": [
@@ -30811,7 +31148,7 @@ import {
 } from "@{{projectName}}/ui/components/dropdown-menu";
 import { useTheme } from "@/components/theme-provider";
 
-export function ModeToggle() {
+export const ModeToggle = () => {
   const { setTheme } = useTheme();
 
   return (
@@ -30830,13 +31167,13 @@ export function ModeToggle() {
   );
 }
 `],
-  ["frontend/react/tanstack-router/src/components/theme-provider.tsx.hbs", `import * as React from "react";
+  ["frontend/react/tanstack-router/src/components/theme-provider.tsx.hbs", `import type { ComponentProps } from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
-export function ThemeProvider({
+export const ThemeProvider = ({
   children,
   ...props
-}: React.ComponentProps<typeof NextThemesProvider>) {
+}: ComponentProps<typeof NextThemesProvider>) => {
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
 
@@ -30866,20 +31203,18 @@ import { routeTree } from "./routeTree.gen";
   import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react";
 {{/if}}
 {{#if (eq backend "convex")}}
-  import { ConvexReactClient } from "convex/react";
+  import { ConvexReactClient{{#unless (or (eq auth "clerk") (eq auth "better-auth"))}}, ConvexProvider{{/unless}} } from "convex/react";
   {{#if (eq auth "clerk")}}
   import { ConvexProviderWithClerk } from "convex/react-clerk";
   {{else if (eq auth "better-auth")}}
   import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
   import { authClient } from "@/lib/auth-client";
-  {{else}}
-  import { ConvexProvider } from "convex/react";
   {{/if}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
-function ClerkApiAuthBridge() {
+const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -30901,64 +31236,58 @@ const router = createRouter({
   defaultPendingComponent: () => <Loader />,
   {{#if (eq api "orpc")}}
   context: { orpc, queryClient },
-  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
-    return (
-      {{#if (eq auth "clerk")}}
-      <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
-        <ClerkApiAuthBridge />
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
-      </ClerkProvider>
-      {{else}}
+  Wrap: ({ children }: { children: React.ReactNode }) => (
+    {{#if (eq auth "clerk")}}
+    <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+      <ClerkApiAuthBridge />
       <QueryClientProvider client={queryClient}>
         {children}
       </QueryClientProvider>
-      {{/if}}
-    );
-  },
+    </ClerkProvider>
+    {{else}}
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+    {{/if}}
+  ),
   {{else if (eq api "trpc")}}
   context: { trpc, queryClient },
-  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
-    return (
-      {{#if (eq auth "clerk")}}
-      <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
-        <ClerkApiAuthBridge />
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
-      </ClerkProvider>
-      {{else}}
+  Wrap: ({ children }: { children: React.ReactNode }) => (
+    {{#if (eq auth "clerk")}}
+    <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+      <ClerkApiAuthBridge />
       <QueryClientProvider client={queryClient}>
         {children}
       </QueryClientProvider>
-      {{/if}}
-    );
-  },
+    </ClerkProvider>
+    {{else}}
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+    {{/if}}
+  ),
   {{else if (eq backend "convex")}}
   context: {},
-  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
+  Wrap: ({ children }: { children: React.ReactNode }) => (
     {{#if (eq auth "clerk")}}
-    return (
-      <ClerkProvider
-        publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}
-      >
-        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-          {children}
-        </ConvexProviderWithClerk>
-      </ClerkProvider>
-    );
+    <ClerkProvider
+      publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}
+    >
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        {children}
+      </ConvexProviderWithClerk>
+    </ClerkProvider>
     {{else if (eq auth "better-auth")}}
-    return <ConvexBetterAuthProvider client={convex} authClient={authClient}>{children}</ConvexBetterAuthProvider>;
+    <ConvexBetterAuthProvider client={convex} authClient={authClient}>{children}</ConvexBetterAuthProvider>
     {{else}}
-    return <ConvexProvider client={convex}>{children}</ConvexProvider>;
+    <ConvexProvider client={convex}>{children}</ConvexProvider>
     {{/if}}
-  },
+  ),
   {{else if (eq auth "clerk")}}
   context: {},
-  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
-    return <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>{children}</ClerkProvider>;
-  },
+  Wrap: ({ children }: { children: React.ReactNode }) => (
+    <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>{children}</ClerkProvider>
+  ),
   {{else}}
   context: {},
   {{/if}}
@@ -30976,12 +31305,13 @@ if (!rootElement) {
   throw new Error("Root element not found");
 }
 
-if (!rootElement.innerHTML) {
+if (!rootElement.hasChildNodes()) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(<RouterProvider router={router} />);
 }
 `],
-  ["frontend/react/tanstack-router/src/routes/__root.tsx.hbs", `import Header from "@/components/header";
+  ["frontend/react/tanstack-router/src/routes/__root.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+import Header from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
 {{#if (eq api "orpc")}}
@@ -31017,31 +31347,11 @@ export interface RouterAppContext {
   queryClient: QueryClient;
 }
 {{else}}
-export interface RouterAppContext {}
+export type RouterAppContext = Record<string, never>;
 {{/if}}
 
-export const Route = createRootRouteWithContext<RouterAppContext>()({
-  component: RootComponent,
-  head: () => ({
-    meta: [
-      {
-        title: "{{projectName}}",
-      },
-      {
-        name: "description",
-        content: "{{projectName}} is a web application",
-      },
-    ],
-    links: [
-      {
-        rel: "icon",
-        href: "/favicon.ico",
-      },
-    ],
-  }),
-});
 
-function RootComponent() {
+const RootComponent = () => {
   {{#if (eq api "orpc")}}
   const [client] = useState<AppRouterClient>(() => createORPCClient(link));
   const [orpcUtils] = useState(() => createTanstackQueryUtils(client));
@@ -31084,6 +31394,27 @@ function RootComponent() {
     </>
   );
 }
+
+export const Route = createRootRouteWithContext<RouterAppContext>()({
+  component: RootComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "{{projectName}}",
+      },
+      {
+        content: "{{projectName}} is a web application",
+        name: "description",
+      },
+    ],
+    links: [
+      {
+        href: "/favicon.ico",
+        rel: "icon",
+      },
+    ],
+  }),
+});
 `],
   ["frontend/react/tanstack-router/src/routes/index.tsx.hbs", `import { createFileRoute } from "@tanstack/react-router";
 {{#if (eq api "orpc")}}
@@ -31099,9 +31430,6 @@ import { useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 {{/if}}
 
-export const Route = createFileRoute("/")({
-  component: HomeComponent,
-});
 
 const TITLE_TEXT = \`
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -31119,15 +31447,34 @@ const TITLE_TEXT = \`
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  \`;
 
-function HomeComponent() {
+const HomeComponent = () => {
   {{#if (eq api "orpc")}}
-  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
   {{/if}}
   {{#if (eq api "trpc")}}
-  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
   {{/if}}
   {{#if (eq backend "convex")}}
-  const healthCheck = useQuery(api.healthCheck.get);
+  const healthCheck = useQuery(api.healthcheck.get);
+
+  let statusText = "Error";
+  let statusColor = "bg-red-500";
+  if (healthCheck === undefined) {
+    statusText = "Checking...";
+    statusColor = "bg-orange-400";
+  } else if (healthCheck === "OK") {
+    statusText = "Connected";
+    statusColor = "bg-green-500";
+  }
+  {{else}}
+  {{#unless (eq api "none")}}
+  let statusText = "Disconnected";
+  if (isLoading) {
+    statusText = "Checking...";
+  } else if (healthCheck) {
+    statusText = "Connected";
+  }
+  {{/unless}}
   {{/if}}
 
   return (
@@ -31138,30 +31485,16 @@ function HomeComponent() {
           <h2 className="mb-2 font-medium">API Status</h2>
           {{#if (eq backend "convex")}}
           <div className="flex items-center gap-2">
-            <div
-              className={\`h-2 w-2 rounded-full \${healthCheck === "OK" ? "bg-green-500" : healthCheck === undefined ? "bg-orange-400" : "bg-red-500"}\`}
-            />
-            <span className="text-sm text-muted-foreground">
-              {healthCheck === undefined
-                ? "Checking..."
-                : healthCheck === "OK"
-                  ? "Connected"
-                  : "Error"}
-            </span>
+            <div className={\`h-2 w-2 rounded-full \${statusColor}\`} />
+            <span className="text-sm text-muted-foreground">{statusText}</span>
           </div>
           {{else}}
             {{#unless (eq api "none")}}
             <div className="flex items-center gap-2">
               <div
-                className={\`h-2 w-2 rounded-full \${healthCheck.data ? "bg-green-500" : "bg-red-500"}\`}
+                className={\`h-2 w-2 rounded-full \${healthCheck ? "bg-green-500" : "bg-red-500"}\`}
               />
-              <span className="text-sm text-muted-foreground">
-                {healthCheck.isLoading
-                  ? "Checking..."
-                  : healthCheck.data
-                    ? "Connected"
-                    : "Disconnected"}
-              </span>
+              <span className="text-sm text-muted-foreground">{statusText}</span>
             </div>
             {{/unless}}
           {{/if}}
@@ -31170,6 +31503,10 @@ function HomeComponent() {
     </div>
   );
 }
+
+export const Route = createFileRoute("/")({
+  component: HomeComponent,
+});
 `],
   ["frontend/react/tanstack-router/tsconfig.json.hbs", `{
   "compilerOptions": {
@@ -31204,8 +31541,8 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     tanstackRouter({
-      target: "react",
       autoCodeSplitting: true,
+      target: "react",
     }),
     react(),
   ],
@@ -31283,7 +31620,7 @@ import { createQueryClient, orpc } from "./utils/orpc";
 {{/if}}
 
 {{#if (eq backend "convex")}}
-export function getRouter() {
+export const getRouter = () => {
 	const convexUrl = env.VITE_CONVEX_URL;
 	if (!convexUrl) {
 		throw new Error("VITE_CONVEX_URL is not set");
@@ -31322,8 +31659,9 @@ export function getRouter() {
 {{> getServerUrl}}
 
 {{/unless}}
-function createQueryClient() {
+const createQueryClient = () => {
 	return new QueryClient({
+		defaultOptions: { queries: { staleTime: 60 * 1000 } },
 		queryCache: new QueryCache({
 			onError: (error, query) => {
 				toast.error(error.message, {
@@ -31336,7 +31674,6 @@ function createQueryClient() {
 				});
 			},
 		}),
-		defaultOptions: { queries: { staleTime: 60 * 1000 } },
 	});
 }
 
@@ -31414,7 +31751,8 @@ declare module "@tanstack/react-router" {
 	}
 }
 `],
-  ["frontend/react/tanstack-start/src/routes/__root.tsx.hbs", `import { Toaster } from "@{{projectName}}/ui/components/sonner";
+  ["frontend/react/tanstack-start/src/routes/__root.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+import { Toaster } from "@{{projectName}}/ui/components/sonner";
 {{#unless (eq backend "convex")}} {{#unless (eq api "none")}}
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 {{/unless}} {{/unless}}
@@ -31470,7 +31808,7 @@ import { ConvexProvider } from "convex/react";
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
-function ClerkApiAuthBridge() {
+const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -31510,52 +31848,8 @@ export interface RouterAppContext {
   {{/if}}
 {{/if}}
 
-export const Route = createRootRouteWithContext<RouterAppContext>()({
-  head: () => ({
-    meta: [
-      {
-        charSet: "utf-8",
-      },
-      {
-        name: "viewport",
-        content: "width=device-width, initial-scale=1",
-      },
-      {
-        title: "My App",
-      },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-    ],
-  }),
 
-  component: RootDocument,
-  {{#if (and (eq backend "convex") (eq auth "clerk"))}}
-  beforeLoad: async (ctx) => {
-    const { userId, token } = await fetchClerkAuth();
-    if (token) {
-      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
-    }
-    return { userId, token };
-  },
-  {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-  beforeLoad: async (ctx) => {
-    const token = await getAuth();
-    if (token) {
-      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
-    }
-    return {
-      isAuthenticated: !!token,
-      token,
-    };
-  },
-  {{/if}}
-});
-
-function RootDocument() {
+const RootDocument = () => {
   {{#if (and (eq backend "convex") (eq auth "clerk"))}}
   const context = useRouteContext({ from: Route.id });
   return (
@@ -31669,6 +31963,51 @@ function RootDocument() {
   );
   {{/if}}
 }
+
+export const Route = createRootRouteWithContext<RouterAppContext>()({
+  head: () => ({
+    links: [
+      {
+        href: appCss,
+        rel: "stylesheet",
+      },
+    ],
+    meta: [
+      {
+        charSet: "utf-8",
+      },
+      {
+        content: "width=device-width, initial-scale=1",
+        name: "viewport",
+      },
+      {
+        title: "My App",
+      },
+    ],
+  }),
+
+  component: RootDocument,
+  {{#if (and (eq backend "convex") (eq auth "clerk"))}}
+  beforeLoad: async (ctx) => {
+    const { userId, token } = await fetchClerkAuth();
+    if (token) {
+      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+    }
+    return { userId, token };
+  },
+  {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+  beforeLoad: async (ctx) => {
+    const token = await getAuth();
+    if (token) {
+      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+    }
+    return {
+      isAuthenticated: !!token,
+      token,
+    };
+  },
+  {{/if}}
+});
 `],
   ["frontend/react/tanstack-start/src/routes/index.tsx.hbs", `import { createFileRoute } from "@tanstack/react-router";
 {{#if (eq backend "convex")}}
@@ -31685,9 +32024,6 @@ import { orpc } from "@/utils/orpc";
   {{/if}}
 {{/if}}
 
-export const Route = createFileRoute("/")({
-  component: HomeComponent,
-});
 
 const TITLE_TEXT = \`
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -31705,14 +32041,35 @@ const TITLE_TEXT = \`
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  \`;
 
-function HomeComponent() {
+const HomeComponent = () => {
   {{#if (eq backend "convex")}}
-  const healthCheck = useQuery(convexQuery(api.healthCheck.get, {}));
+  const { data: healthCheck, isLoading } = useQuery(convexQuery(api.healthcheck.get, {}));
   {{else if (eq api "trpc")}}
   const trpc = useTRPC();
-  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
   {{else if (eq api "orpc")}}
-  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
+  {{/if}}
+
+  {{#if (eq backend "convex")}}
+  let statusText = "Error";
+  let statusColor = "bg-red-500";
+  if (isLoading) {
+    statusText = "Checking...";
+    statusColor = "bg-orange-400";
+  } else if (healthCheck === "OK") {
+    statusText = "Connected";
+    statusColor = "bg-green-500";
+  }
+  {{else}}
+  {{#unless (eq api "none")}}
+  let statusText = "Disconnected";
+  if (isLoading) {
+    statusText = "Checking...";
+  } else if (healthCheck) {
+    statusText = "Connected";
+  }
+  {{/unless}}
   {{/if}}
 
   return (
@@ -31724,28 +32081,20 @@ function HomeComponent() {
           {{#if (eq backend "convex")}}
           <div className="flex items-center gap-2">
             <div
-              className={\`h-2 w-2 rounded-full \${healthCheck.data === "OK" ? "bg-green-500" : healthCheck.isLoading ? "bg-orange-400" : "bg-red-500"}\`}
+              className={\`h-2 w-2 rounded-full \${statusColor}\`}
             />
             <span className="text-muted-foreground text-sm">
-              {healthCheck.isLoading
-                ? "Checking..."
-                : healthCheck.data === "OK"
-                  ? "Connected"
-                  : "Error"}
+              {statusText}
             </span>
           </div>
           {{else}}
             {{#unless (eq api "none")}}
             <div className="flex items-center gap-2">
               <div
-                className={\`h-2 w-2 rounded-full \${healthCheck.data ? "bg-green-500" : "bg-red-500"}\`}
+                className={\`h-2 w-2 rounded-full \${healthCheck ? "bg-green-500" : "bg-red-500"}\`}
               />
               <span className="text-muted-foreground text-sm">
-                {healthCheck.isLoading
-                  ? "Checking..."
-                  : healthCheck.data
-                    ? "Connected"
-                    : "Disconnected"}
+                {statusText}
               </span>
             </div>
             {{/unless}}
@@ -31755,6 +32104,10 @@ function HomeComponent() {
     </div>
   );
 }
+
+export const Route = createFileRoute("/")({
+  component: HomeComponent,
+});
 `],
   ["frontend/react/tanstack-start/tsconfig.json.hbs", `{
   "include": ["**/*.ts", "**/*.tsx"],
@@ -31926,21 +32279,20 @@ import { ModeToggle } from "./mode-toggle";
 import UserMenu from "./user-menu";
 {{/if}}
 
-export default function Header() {
-  const links = [
-    { to: "/", label: "Home" },
-    {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
-      { to: "/dashboard", label: "Dashboard" },
-    {{/if}}
-    {{#if (includes examples "todo")}}
-    { to: "/todos", label: "Todos" },
-    {{/if}}
-    {{#if (includes examples "ai")}}
-    { to: "/ai", label: "AI Chat" },
-    {{/if}}
-  ] as const;
+const links = [
+  { label: "Home", to: "/" },
+  {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+  { label: "Dashboard", to: "/dashboard" },
+  {{/if}}
+  {{#if (includes examples "todo")}}
+  { label: "Todos", to: "/todos" },
+  {{/if}}
+  {{#if (includes examples "ai")}}
+  { label: "AI Chat", to: "/ai" },
+  {{/if}}
+] as const;
 
-  return (
+const Header = () => (
     <div>
       <div className="flex flex-row items-center justify-between px-2 py-1">
         <nav className="flex gap-4 text-lg">
@@ -31987,18 +32339,21 @@ export default function Header() {
       </div>
       <hr />
     </div>
-  );
-}
+);
+
+export default Header;
 `],
   ["frontend/react/web-base/src/components/loader.tsx.hbs", `import { Loader2 } from "lucide-react";
 
-export default function Loader() {
+const Loader = () => {
   return (
     <div className="flex h-full items-center justify-center pt-8">
       <Loader2 className="animate-spin" />
     </div>
   );
-}
+};
+
+export default Loader;
 `],
   ["frontend/react/web-base/src/index.css.hbs", `@import '@{{projectName}}/ui/globals.css';
 {{#if (includes examples "ai")}}
@@ -32065,7 +32420,7 @@ import UserMenu from "./user-menu";
 {{/if}}
 import { For } from "solid-js";
 
-export default function Header() {
+const Header = () => {
   const links = [
     { to: "/", label: "Home" },
     {{#if (eq auth "better-auth")}}
@@ -32096,17 +32451,21 @@ export default function Header() {
       <hr />
     </div>
   );
-}
+};
+
+export default Header;
 `],
   ["frontend/solid/src/components/loader.tsx", `import { Loader2 } from "lucide-solid";
 
-export default function Loader() {
+const Loader = () => {
   return (
     <div class="flex h-full items-center justify-center pt-8">
       <Loader2 class="animate-spin" />
     </div>
   );
-}
+};
+
+export default Loader;
 `],
   ["frontend/solid/src/main.tsx.hbs", `import { RouterProvider, createRouter } from "@tanstack/solid-router";
 import { render } from "solid-js/web";
@@ -32133,7 +32492,7 @@ declare module "@tanstack/solid-router" {
   }
 }
 
-function App() {
+const App = () => {
   return (
     {{#if (eq api "orpc")}}
     <QueryClientProvider client={queryClient}>
@@ -32150,7 +32509,8 @@ if (rootElement) {
   render(() => <App />, rootElement);
 }
 `],
-  ["frontend/solid/src/routes/__root.tsx.hbs", `import Header from "@/components/header";
+  ["frontend/solid/src/routes/__root.tsx.hbs", `/* oxlint-disable github/filenames-match-regex */
+import Header from "@/components/header";
 import { Outlet, createRootRouteWithContext } from "@tanstack/solid-router";
 import { TanStackRouterDevtools } from "@tanstack/solid-router-devtools";
 {{#if (eq api "orpc")}}
@@ -32166,11 +32526,8 @@ export interface RouterContext {
 export interface RouterContext {}
 {{/if}}
 
-export const Route = createRootRouteWithContext<RouterContext>()({
-  component: RootComponent,
-});
 
-function RootComponent() {
+const RootComponent = () => {
   return (
     <>
       <div class="grid grid-rows-[auto_1fr] h-svh">
@@ -32184,6 +32541,10 @@ function RootComponent() {
     </>
   );
 }
+
+export const Route = createRootRouteWithContext<RouterContext>()({
+  component: RootComponent,
+});
 `],
   ["frontend/solid/src/routes/index.tsx.hbs", `import { createFileRoute } from "@tanstack/solid-router";
 {{#if (eq api "orpc")}}
@@ -32193,9 +32554,6 @@ import { Match, Switch } from "solid-js";
 {{else}}
 {{/if}}
 
-export const Route = createFileRoute("/")({
-  component: App,
-});
 
 const TITLE_TEXT = \`
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -32213,7 +32571,7 @@ const TITLE_TEXT = \`
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  \`;
 
-function App() {
+const App = () => {
   {{#if (eq api "orpc")}}
   const healthCheck = useQuery(() => orpc.healthCheck.queryOptions());
   {{/if}}
@@ -32257,6 +32615,10 @@ function App() {
     </div>
   );
 }
+
+export const Route = createFileRoute("/")({
+  component: App,
+});
 `],
   ["frontend/solid/src/styles.css", `@import "tailwindcss";
 
@@ -32307,7 +32669,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
   server: {
@@ -32425,7 +32787,7 @@ export {};
   </body>
 </html>
 `],
-  ["frontend/svelte/src/components/Header.svelte.hbs", `<script lang="ts">
+  ["frontend/svelte/src/components/header.svelte.hbs", `<script lang="ts">
 
     {{#if (eq auth "better-auth")}}
 	import UserMenu from './UserMenu.svelte';
@@ -32456,13 +32818,15 @@ export {};
 	<hr class="border-neutral-800" />
 </div>
 `],
-  ["frontend/svelte/src/lib/index.ts", `// place files you want to import through the \`$lib\` alias in this folder.
+  ["frontend/svelte/src/lib/index.ts", `/* oxlint-disable unicorn/no-empty-file */
+// place files you want to import through the \`$lib\` alias in this folder.
 export {};
 `],
   ["frontend/svelte/src/routes/+layout.svelte.hbs", `{{#if (eq backend "convex")}}
 <script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 	import '../app.css';
-    import Header from '../components/Header.svelte';
+    import Header from '../components/header.svelte';
     import { PUBLIC_CONVEX_URL } from '$env/static/public';
 	import { setupConvex } from 'convex-svelte';
 
@@ -32479,11 +32843,12 @@ export {};
 {{else}}
   {{#if (eq api "orpc")}}
 <script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
     import { QueryClientProvider } from '@tanstack/svelte-query';
     import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools'
 	import '../app.css';
     import { queryClient } from '$lib/orpc';
-    import Header from '../components/Header.svelte';
+    import Header from '../components/header.svelte';
 
 	const { children } = $props();
 </script>
@@ -32499,8 +32864,9 @@ export {};
 </QueryClientProvider>
   {{else}}
 <script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 	import '../app.css';
-    import Header from '../components/Header.svelte';
+    import Header from '../components/header.svelte';
 
 	const { children } = $props();
 </script>
@@ -32516,10 +32882,11 @@ export {};
 `],
   ["frontend/svelte/src/routes/+page.svelte.hbs", `{{#if (eq backend "convex")}}
 <script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 import { useQuery } from 'convex-svelte';
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 
-const healthCheck = useQuery(api.healthCheck.get, {});
+const healthCheck = useQuery(api.healthcheck.get, {});
 
 const TITLE_TEXT = \`
    ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -32560,6 +32927,7 @@ const TITLE_TEXT = \`
 </div>
 {{else}}
 <script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 {{#if (eq api "orpc")}}
 import { orpc } from "$lib/orpc";
 import { createQuery } from "@tanstack/svelte-query";
@@ -32623,10 +32991,6 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	// Consult https://svelte.dev/docs/kit/integrations
-	// for more information about preprocessors
-	preprocess: vitePreprocess(),
-
 	kit: {
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 		// adapter-static emits files Electrobun and Tauri can bundle directly.
@@ -32649,7 +33013,10 @@ const config = {
 		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
 		adapter: adapter()
 {{/if}}
-	}
+	},
+
+	// Consult https://svelte.dev/docs/kit/integrations for preprocessors
+	preprocess: vitePreprocess()
 };
 
 export default config;
@@ -32786,7 +33153,7 @@ export { env } from "cloudflare:workers";
 /// <reference path="../env.d.ts" />
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-function getNodeEnvValue(key: string) {
+const getNodeEnvValue = (key: string) => {
 	if (key === "DB") {
 		return undefined;
 	}
@@ -32794,7 +33161,7 @@ function getNodeEnvValue(key: string) {
 	return process.env[key];
 }
 
-function getCloudflareEnvSync() {
+const getCloudflareEnvSync = () => {
 	try {
 		return getCloudflareContext().env as Env;
 	} catch {
@@ -32804,7 +33171,7 @@ function getCloudflareEnvSync() {
 
 type EnvValue = Env[keyof Env];
 
-function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefined) {
+const createEnvProxy = (getValue: (key: keyof Env & string) => EnvValue | undefined) => {
 	return new Proxy({} as Env, {
 		get(_target, prop) {
 			if (typeof prop !== "string") {
@@ -32816,7 +33183,7 @@ function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefi
 	});
 }
 
-function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
+const resolveEnvValue = (key: keyof Env & string): EnvValue | undefined => {
 	const nodeValue = getNodeEnvValue(key);
 	if (nodeValue !== undefined) {
 		return nodeValue as EnvValue;
@@ -32829,7 +33196,7 @@ function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
 // In the Cloudflare runtime, fall back to OpenNext's Cloudflare context bindings.
 // For static routes (ISR/SSG), use getEnvAsync() so OpenNext can resolve bindings
 // with the async Cloudflare context API.
-export async function getEnvAsync() {
+export const getEnvAsync = async () => {
 	const cloudflareEnv = (await getCloudflareContext({ async: true })).env as Env;
 
 	return createEnvProxy((key) => {
@@ -32874,7 +33241,7 @@ import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
 {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}
-function getVercelOrigin() {
+const getVercelOrigin = () => {
 	const vercelUrl =
 		process.env.VERCEL_ENV === "production"
 			? (process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL)
@@ -32951,7 +33318,7 @@ import { z } from "zod";
 {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 const serverUrlSchema = z.union([
 	z.url(),
-	z.string().regex(/^\\/(?!\\/)/, "Use an absolute URL or a same-origin path like /api"),
+	z.string().regex(/^\\/(?!\\/)/u, "Use an absolute URL or a same-origin path like /api"),
 ]);
 
 {{/if}}
@@ -33000,7 +33367,7 @@ export const env = createEnv({
 	client: {
 		PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 	},
-	runtimeEnv: (import.meta as any).env,
+	runtimeEnv: (import.meta as unknown as { env: Record<string, string | undefined> }).env,
 {{else}}
 	clientPrefix: "VITE_",
 	client: {
@@ -33012,7 +33379,7 @@ export const env = createEnv({
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 	},
-	runtimeEnv: (import.meta as any).env,
+	runtimeEnv: (import.meta as unknown as { env: Record<string, string | undefined> }).env,
 {{/if}}
 {{else if (eq backend "self")}}
 {{#if (includes frontend "next")}}
@@ -33035,7 +33402,7 @@ export const env = createEnv({
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 	},
-	runtimeEnv: (import.meta as any).env,
+	runtimeEnv: (import.meta as unknown as { env: Record<string, string | undefined> }).env,
 {{/if}}
 {{else if (ne backend "none")}}
 {{#if (includes frontend "next")}}
@@ -33060,7 +33427,7 @@ export const env = createEnv({
 	client: {
 		PUBLIC_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 	},
-	runtimeEnv: (import.meta as any).env,
+	runtimeEnv: (import.meta as unknown as { env: Record<string, string | undefined> }).env,
 {{else}}
 	clientPrefix: "VITE_",
 	client: {
@@ -33069,7 +33436,7 @@ export const env = createEnv({
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 	},
-	runtimeEnv: (import.meta as any).env,
+	runtimeEnv: (import.meta as unknown as { env: Record<string, string | undefined> }).env,
 {{/if}}
 {{/if}}
 	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
@@ -33589,7 +33956,8 @@ await app.finalize();
   },
 };
 `],
-  ["packages/ui/src/components/attachment.tsx.hbs", `import * as React from "react"
+  ["packages/ui/src/components/attachment.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+import * as React from "react"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -33615,7 +33983,7 @@ const attachmentVariants = cva(
   }
 )
 
-function Attachment({
+const Attachment = ({
   className,
   state = "done",
   size = "default",
@@ -33624,7 +33992,7 @@ function Attachment({
 }: React.ComponentProps<"div"> &
   VariantProps<typeof attachmentVariants> & {
     state?: "idle" | "uploading" | "processing" | "error" | "done"
-  }) {
+  }) => {
   const resolvedOrientation = orientation ?? "horizontal"
 
   return (
@@ -33655,11 +34023,11 @@ const attachmentMediaVariants = cva(
   }
 )
 
-function AttachmentMedia({
+const AttachmentMedia = ({
   className,
   variant = "icon",
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof attachmentMediaVariants>) {
+}: React.ComponentProps<"div"> & VariantProps<typeof attachmentMediaVariants>) => {
   return (
     <div
       data-slot="attachment-media"
@@ -33670,10 +34038,10 @@ function AttachmentMedia({
   )
 }
 
-function AttachmentContent({
+const AttachmentContent = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="attachment-content"
@@ -33686,10 +34054,10 @@ function AttachmentContent({
   )
 }
 
-function AttachmentTitle({
+const AttachmentTitle = ({
   className,
   ...props
-}: React.ComponentProps<"span">) {
+}: React.ComponentProps<"span">) => {
   return (
     <span
       data-slot="attachment-title"
@@ -33702,10 +34070,10 @@ function AttachmentTitle({
   )
 }
 
-function AttachmentDescription({
+const AttachmentDescription = ({
   className,
   ...props
-}: React.ComponentProps<"span">) {
+}: React.ComponentProps<"span">) => {
   return (
     <span
       data-slot="attachment-description"
@@ -33719,10 +34087,10 @@ function AttachmentDescription({
   )
 }
 
-function AttachmentActions({
+const AttachmentActions = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="attachment-actions"
@@ -33735,13 +34103,13 @@ function AttachmentActions({
   )
 }
 
-function AttachmentAction({
+const AttachmentAction = ({
   className,
   variant,
   size = "icon-xs",
   type = "button",
   ...props
-}: React.ComponentProps<typeof Button>) {
+}: React.ComponentProps<typeof Button>) => {
   return (
     <Button
       data-slot="attachment-action"
@@ -33754,12 +34122,12 @@ function AttachmentAction({
   )
 }
 
-function AttachmentTrigger({
+const AttachmentTrigger = ({
   className,
   render,
   type,
   ...props
-}: useRender.ComponentProps<"button">) {
+}: useRender.ComponentProps<"button">) => {
   return useRender({
     defaultTagName: "button",
     props: mergeProps<"button">(
@@ -33776,7 +34144,7 @@ function AttachmentTrigger({
   })
 }
 
-function AttachmentGroup({ className, ...props }: React.ComponentProps<"div">) {
+const AttachmentGroup = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="attachment-group"
@@ -33801,14 +34169,15 @@ export {
   AttachmentTrigger,
 }
 `],
-  ["packages/ui/src/components/bubble.tsx.hbs", `import * as React from "react"
+  ["packages/ui/src/components/bubble.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+import * as React from "react"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
-function BubbleGroup({ className, ...props }: React.ComponentProps<"div">) {
+const BubbleGroup = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="bubble-group"
@@ -33845,7 +34214,7 @@ const bubbleVariants = cva(
   }
 )
 
-function Bubble({
+const Bubble = ({
   variant = "default",
   align = "start",
   className,
@@ -33853,7 +34222,7 @@ function Bubble({
 }: React.ComponentProps<"div"> &
   VariantProps<typeof bubbleVariants> & {
     align?: "start" | "end"
-  }) {
+  }) => {
   return (
     <div
       data-slot="bubble"
@@ -33865,11 +34234,11 @@ function Bubble({
   )
 }
 
-function BubbleContent({
+const BubbleContent = ({
   className,
   render,
   ...props
-}: useRender.ComponentProps<"div">) {
+}: useRender.ComponentProps<"div">) => {
   return useRender({
     defaultTagName: "div",
     props: mergeProps<"div">(
@@ -33908,7 +34277,7 @@ const bubbleReactionsVariants = cva(
   }
 )
 
-function BubbleReactions({
+const BubbleReactions = ({
   side = "bottom",
   align = "end",
   className,
@@ -33916,7 +34285,7 @@ function BubbleReactions({
 }: React.ComponentProps<"div"> & {
   align?: "start" | "end"
   side?: "top" | "bottom"
-}) {
+}) => {
   return (
     <div
       data-slot="bubble-reactions"
@@ -33930,7 +34299,8 @@ function BubbleReactions({
 
 export { BubbleGroup, Bubble, BubbleContent, BubbleReactions }
 `],
-  ["packages/ui/src/components/button.tsx.hbs", `import { Button as ButtonPrimitive } from "@base-ui/react/button"
+  ["packages/ui/src/components/button.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
@@ -33970,12 +34340,12 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
+const Button = ({
   className,
   variant = "default",
   size = "default",
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) => {
   return (
     <ButtonPrimitive
       data-slot="button"
@@ -33987,15 +34357,16 @@ function Button({
 
 export { Button, buttonVariants }
 `],
-  ["packages/ui/src/components/card.tsx.hbs", `import * as React from "react"
+  ["packages/ui/src/components/card.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+import * as React from "react"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
-function Card({
+const Card = ({
   className,
   size = "default",
   ...props
-}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) => {
   return (
     <div
       data-slot="card"
@@ -34009,7 +34380,7 @@ function Card({
   )
 }
 
-function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+const CardHeader = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="card-header"
@@ -34022,7 +34393,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+const CardTitle = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="card-title"
@@ -34035,7 +34406,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+const CardDescription = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="card-description"
@@ -34045,7 +34416,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardAction({ className, ...props }: React.ComponentProps<"div">) {
+const CardAction = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="card-action"
@@ -34058,7 +34429,7 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardContent({ className, ...props }: React.ComponentProps<"div">) {
+const CardContent = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="card-content"
@@ -34068,7 +34439,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
+const CardFooter = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="card-footer"
@@ -34091,14 +34462,15 @@ export {
   CardContent,
 }
 `],
-  ["packages/ui/src/components/checkbox.tsx.hbs", `"use client"
+  ["packages/ui/src/components/checkbox.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+"use client"
 
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 import { CheckIcon } from "lucide-react"
 
-function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
+const Checkbox = ({ className, ...props }: CheckboxPrimitive.Root.Props) => {
   return (
     <CheckboxPrimitive.Root
       data-slot="checkbox"
@@ -34120,7 +34492,8 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
 
 export { Checkbox }
 `],
-  ["packages/ui/src/components/dropdown-menu.tsx.hbs", `"use client"
+  ["packages/ui/src/components/dropdown-menu.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+"use client"
 
 import * as React from "react"
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
@@ -34128,19 +34501,19 @@ import { Menu as MenuPrimitive } from "@base-ui/react/menu"
 import { cn } from "@{{projectName}}/ui/lib/utils"
 import { ChevronRightIcon, CheckIcon } from "lucide-react"
 
-function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
+const DropdownMenu = ({ ...props }: MenuPrimitive.Root.Props) => {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
 }
 
-function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
+const DropdownMenuPortal = ({ ...props }: MenuPrimitive.Portal.Props) => {
   return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
 }
 
-function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
+const DropdownMenuTrigger = ({ ...props }: MenuPrimitive.Trigger.Props) => {
   return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
 }
 
-function DropdownMenuContent({
+const DropdownMenuContent = ({
   align = "start",
   alignOffset = 0,
   side = "bottom",
@@ -34151,7 +34524,7 @@ function DropdownMenuContent({
   Pick<
     MenuPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset"
-  >) {
+  >) => {
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
@@ -34174,17 +34547,17 @@ function DropdownMenuContent({
   )
 }
 
-function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
+const DropdownMenuGroup = ({ ...props }: MenuPrimitive.Group.Props) => {
   return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
 }
 
-function DropdownMenuLabel({
+const DropdownMenuLabel = ({
   className,
   inset,
   ...props
 }: MenuPrimitive.GroupLabel.Props & {
   inset?: boolean
-}) {
+}) => {
   return (
     <MenuPrimitive.GroupLabel
       data-slot="dropdown-menu-label"
@@ -34198,7 +34571,7 @@ function DropdownMenuLabel({
   )
 }
 
-function DropdownMenuItem({
+const DropdownMenuItem = ({
   className,
   inset,
   variant = "default",
@@ -34206,7 +34579,7 @@ function DropdownMenuItem({
 }: MenuPrimitive.Item.Props & {
   inset?: boolean
   variant?: "default" | "destructive"
-}) {
+}) => {
   return (
     <MenuPrimitive.Item
       data-slot="dropdown-menu-item"
@@ -34221,18 +34594,18 @@ function DropdownMenuItem({
   )
 }
 
-function DropdownMenuSub({ ...props }: MenuPrimitive.SubmenuRoot.Props) {
+const DropdownMenuSub = ({ ...props }: MenuPrimitive.SubmenuRoot.Props) => {
   return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />
 }
 
-function DropdownMenuSubTrigger({
+const DropdownMenuSubTrigger = ({
   className,
   inset,
   children,
   ...props
 }: MenuPrimitive.SubmenuTrigger.Props & {
   inset?: boolean
-}) {
+}) => {
   return (
     <MenuPrimitive.SubmenuTrigger
       data-slot="dropdown-menu-sub-trigger"
@@ -34249,14 +34622,14 @@ function DropdownMenuSubTrigger({
   )
 }
 
-function DropdownMenuSubContent({
+const DropdownMenuSubContent = ({
   align = "start",
   alignOffset = -3,
   side = "right",
   sideOffset = 0,
   className,
   ...props
-}: React.ComponentProps<typeof DropdownMenuContent>) {
+}: React.ComponentProps<typeof DropdownMenuContent>) => {
   return (
     <DropdownMenuContent
       data-slot="dropdown-menu-sub-content"
@@ -34273,7 +34646,7 @@ function DropdownMenuSubContent({
   )
 }
 
-function DropdownMenuCheckboxItem({
+const DropdownMenuCheckboxItem = ({
   className,
   children,
   checked,
@@ -34281,7 +34654,7 @@ function DropdownMenuCheckboxItem({
   ...props
 }: MenuPrimitive.CheckboxItem.Props & {
   inset?: boolean
-}) {
+}) => {
   return (
     <MenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
@@ -34306,7 +34679,7 @@ function DropdownMenuCheckboxItem({
   )
 }
 
-function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
+const DropdownMenuRadioGroup = ({ ...props }: MenuPrimitive.RadioGroup.Props) => {
   return (
     <MenuPrimitive.RadioGroup
       data-slot="dropdown-menu-radio-group"
@@ -34315,14 +34688,14 @@ function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
   )
 }
 
-function DropdownMenuRadioItem({
+const DropdownMenuRadioItem = ({
   className,
   children,
   inset,
   ...props
 }: MenuPrimitive.RadioItem.Props & {
   inset?: boolean
-}) {
+}) => {
   return (
     <MenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
@@ -34346,10 +34719,10 @@ function DropdownMenuRadioItem({
   )
 }
 
-function DropdownMenuSeparator({
+const DropdownMenuSeparator = ({
   className,
   ...props
-}: MenuPrimitive.Separator.Props) {
+}: MenuPrimitive.Separator.Props) => {
   return (
     <MenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
@@ -34359,10 +34732,10 @@ function DropdownMenuSeparator({
   )
 }
 
-function DropdownMenuShortcut({
+const DropdownMenuShortcut = ({
   className,
   ...props
-}: React.ComponentProps<"span">) {
+}: React.ComponentProps<"span">) => {
   return (
     <span
       data-slot="dropdown-menu-shortcut"
@@ -34393,11 +34766,12 @@ export {
   DropdownMenuSubContent,
 }
 `],
-  ["packages/ui/src/components/empty.tsx.hbs", `import { cva, type VariantProps } from "class-variance-authority"
+  ["packages/ui/src/components/empty.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
-function Empty({ className, ...props }: React.ComponentProps<"div">) {
+const Empty = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="empty"
@@ -34410,7 +34784,7 @@ function Empty({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function EmptyHeader({ className, ...props }: React.ComponentProps<"div">) {
+const EmptyHeader = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="empty-header"
@@ -34435,11 +34809,11 @@ const emptyMediaVariants = cva(
   }
 )
 
-function EmptyMedia({
+const EmptyMedia = ({
   className,
   variant = "default",
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) {
+}: React.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) => {
   return (
     <div
       data-slot="empty-icon"
@@ -34450,7 +34824,7 @@ function EmptyMedia({
   )
 }
 
-function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
+const EmptyTitle = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="empty-title"
@@ -34460,7 +34834,7 @@ function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
+const EmptyDescription = ({ className, ...props }: React.ComponentProps<"p">) => {
   return (
     <div
       data-slot="empty-description"
@@ -34473,7 +34847,7 @@ function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
   )
 }
 
-function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
+const EmptyContent = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="empty-content"
@@ -34495,7 +34869,8 @@ export {
   EmptyMedia,
 }
 `],
-  ["packages/ui/src/components/input-group.tsx.hbs", `"use client"
+  ["packages/ui/src/components/input-group.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+"use client"
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -34505,7 +34880,7 @@ import { Button } from "@{{projectName}}/ui/components/button"
 import { Input } from "@{{projectName}}/ui/components/input"
 import { Textarea } from "@{{projectName}}/ui/components/textarea"
 
-function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
+const InputGroup = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="input-group"
@@ -34545,11 +34920,11 @@ const inputGroupAddonVariants = cva(
   }
 )
 
-function InputGroupAddon({
+const InputGroupAddon = ({
   className,
   align = "inline-start",
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
+}: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) => {
   return (
     <div
       role="group"
@@ -34586,7 +34961,7 @@ const inputGroupButtonVariants = cva(
   }
 )
 
-function InputGroupButton({
+const InputGroupButton = ({
   className,
   type = "button",
   variant = "ghost",
@@ -34595,7 +34970,7 @@ function InputGroupButton({
 }: Omit<React.ComponentProps<typeof Button>, "size" | "type"> &
   VariantProps<typeof inputGroupButtonVariants> & {
     type?: "button" | "submit" | "reset"
-  }) {
+  }) => {
   return (
     <Button
       type={type}
@@ -34607,7 +34982,7 @@ function InputGroupButton({
   )
 }
 
-function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
+const InputGroupText = ({ className, ...props }: React.ComponentProps<"span">) => {
   return (
     <span
       className={cn(
@@ -34619,10 +34994,10 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
   )
 }
 
-function InputGroupInput({
+const InputGroupInput = ({
   className,
   ...props
-}: React.ComponentProps<"input">) {
+}: React.ComponentProps<"input">) => {
   return (
     <Input
       data-slot="input-group-control"
@@ -34635,10 +35010,10 @@ function InputGroupInput({
   )
 }
 
-function InputGroupTextarea({
+const InputGroupTextarea = ({
   className,
   ...props
-}: React.ComponentProps<"textarea">) {
+}: React.ComponentProps<"textarea">) => {
   return (
     <Textarea
       data-slot="input-group-control"
@@ -34660,12 +35035,13 @@ export {
   InputGroupTextarea,
 }
 `],
-  ["packages/ui/src/components/input.tsx.hbs", `import * as React from "react"
+  ["packages/ui/src/components/input.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+import * as React from "react"
 import { Input as InputPrimitive } from "@base-ui/react/input"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+const Input = ({ className, type, ...props }: React.ComponentProps<"input">) => {
   return (
     <InputPrimitive
       type={type}
@@ -34681,13 +35057,14 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
 
 export { Input }
 `],
-  ["packages/ui/src/components/label.tsx.hbs", `"use client"
+  ["packages/ui/src/components/label.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+"use client"
 
 import * as React from "react"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
-function Label({ className, ...props }: React.ComponentProps<"label">) {
+const Label = ({ className, ...props }: React.ComponentProps<"label">) => {
   return (
     <label
       data-slot="label"
@@ -34702,7 +35079,8 @@ function Label({ className, ...props }: React.ComponentProps<"label">) {
 
 export { Label }
 `],
-  ["packages/ui/src/components/marker.tsx.hbs", `import * as React from "react"
+  ["packages/ui/src/components/marker.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+import * as React from "react"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -34723,12 +35101,12 @@ const markerVariants = cva(
   }
 )
 
-function Marker({
+const Marker = ({
   className,
   variant = "default",
   render,
   ...props
-}: useRender.ComponentProps<"div"> & VariantProps<typeof markerVariants>) {
+}: useRender.ComponentProps<"div"> & VariantProps<typeof markerVariants>) => {
   return useRender({
     defaultTagName: "div",
     props: mergeProps<"div">(
@@ -34745,7 +35123,7 @@ function Marker({
   })
 }
 
-function MarkerIcon({ className, ...props }: React.ComponentProps<"span">) {
+const MarkerIcon = ({ className, ...props }: React.ComponentProps<"span">) => {
   return (
     <span
       data-slot="marker-icon"
@@ -34759,7 +35137,7 @@ function MarkerIcon({ className, ...props }: React.ComponentProps<"span">) {
   )
 }
 
-function MarkerContent({ className, ...props }: React.ComponentProps<"span">) {
+const MarkerContent = ({ className, ...props }: React.ComponentProps<"span">) => {
   return (
     <span
       data-slot="marker-content"
@@ -34774,7 +35152,8 @@ function MarkerContent({ className, ...props }: React.ComponentProps<"span">) {
 
 export { Marker, MarkerIcon, MarkerContent, markerVariants }
 `],
-  ["packages/ui/src/components/message-scroller.tsx.hbs", `"use client"
+  ["packages/ui/src/components/message-scroller.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+"use client"
 
 import * as React from "react"
 import {
@@ -34788,16 +35167,16 @@ import { cn } from "@{{projectName}}/ui/lib/utils"
 import { Button } from "@{{projectName}}/ui/components/button"
 import { ArrowDownIcon } from "lucide-react"
 
-function MessageScrollerProvider(
+const MessageScrollerProvider = (
   props: React.ComponentProps<typeof MessageScrollerPrimitive.Provider>
-) {
+) => {
   return <MessageScrollerPrimitive.Provider {...props} />
 }
 
-function MessageScroller({
+const MessageScroller = ({
   className,
   ...props
-}: React.ComponentProps<typeof MessageScrollerPrimitive.Root>) {
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Root>) => {
   return (
     <MessageScrollerPrimitive.Root
       data-slot="message-scroller"
@@ -34810,10 +35189,10 @@ function MessageScroller({
   )
 }
 
-function MessageScrollerViewport({
+const MessageScrollerViewport = ({
   className,
   ...props
-}: React.ComponentProps<typeof MessageScrollerPrimitive.Viewport>) {
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Viewport>) => {
   return (
     <MessageScrollerPrimitive.Viewport
       data-slot="message-scroller-viewport"
@@ -34826,10 +35205,10 @@ function MessageScrollerViewport({
   )
 }
 
-function MessageScrollerContent({
+const MessageScrollerContent = ({
   className,
   ...props
-}: React.ComponentProps<typeof MessageScrollerPrimitive.Content>) {
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Content>) => {
   return (
     <MessageScrollerPrimitive.Content
       data-slot="message-scroller-content"
@@ -34842,11 +35221,11 @@ function MessageScrollerContent({
   )
 }
 
-function MessageScrollerItem({
+const MessageScrollerItem = ({
   className,
   scrollAnchor = false,
   ...props
-}: React.ComponentProps<typeof MessageScrollerPrimitive.Item>) {
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Item>) => {
   return (
     <MessageScrollerPrimitive.Item
       data-slot="message-scroller-item"
@@ -34860,7 +35239,7 @@ function MessageScrollerItem({
   )
 }
 
-function MessageScrollerButton({
+const MessageScrollerButton = ({
   direction = "end",
   className,
   children,
@@ -34869,7 +35248,7 @@ function MessageScrollerButton({
   size = "icon-sm",
   ...props
 }: React.ComponentProps<typeof MessageScrollerPrimitive.Button> &
-  Pick<React.ComponentProps<typeof Button>, "variant" | "size">) {
+  Pick<React.ComponentProps<typeof Button>, "variant" | "size">) => {
   return (
     <MessageScrollerPrimitive.Button
       data-slot="message-scroller-button"
@@ -34908,11 +35287,12 @@ export {
   useMessageScrollerVisibility,
 }
 `],
-  ["packages/ui/src/components/message.tsx.hbs", `import * as React from "react"
+  ["packages/ui/src/components/message.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+import * as React from "react"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
-function MessageGroup({ className, ...props }: React.ComponentProps<"div">) {
+const MessageGroup = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="message-group"
@@ -34922,11 +35302,11 @@ function MessageGroup({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function Message({
+const Message = ({
   className,
   align = "start",
   ...props
-}: React.ComponentProps<"div"> & { align?: "start" | "end" }) {
+}: React.ComponentProps<"div"> & { align?: "start" | "end" }) => {
   return (
     <div
       data-slot="message"
@@ -34940,7 +35320,7 @@ function Message({
   )
 }
 
-function MessageAvatar({ className, ...props }: React.ComponentProps<"div">) {
+const MessageAvatar = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="message-avatar"
@@ -34953,7 +35333,7 @@ function MessageAvatar({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function MessageContent({ className, ...props }: React.ComponentProps<"div">) {
+const MessageContent = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="message-content"
@@ -34966,7 +35346,7 @@ function MessageContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function MessageHeader({ className, ...props }: React.ComponentProps<"div">) {
+const MessageHeader = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="message-header"
@@ -34979,7 +35359,7 @@ function MessageHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function MessageFooter({ className, ...props }: React.ComponentProps<"div">) {
+const MessageFooter = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="message-footer"
@@ -35001,9 +35381,10 @@ export {
   MessageHeader,
 }
 `],
-  ["packages/ui/src/components/skeleton.tsx.hbs", `import { cn } from "@{{projectName}}/ui/lib/utils"
+  ["packages/ui/src/components/skeleton.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+import { cn } from "@{{projectName}}/ui/lib/utils"
 
-function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
+const Skeleton = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="skeleton"
@@ -35015,7 +35396,8 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
 
 export { Skeleton }
 `],
-  ["packages/ui/src/components/sonner.tsx.hbs", `"use client"
+  ["packages/ui/src/components/sonner.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+"use client"
 
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
@@ -35066,11 +35448,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
 export { Toaster }
 `],
-  ["packages/ui/src/components/textarea.tsx.hbs", `import * as React from "react"
+  ["packages/ui/src/components/textarea.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+import * as React from "react"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
-function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
+const Textarea = ({ className, ...props }: React.ComponentProps<"textarea">) => {
   return (
     <textarea
       data-slot="textarea"
@@ -35085,16 +35468,17 @@ function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
 
 export { Textarea }
 `],
-  ["packages/ui/src/components/tooltip.tsx.hbs", `"use client"
+  ["packages/ui/src/components/tooltip.tsx.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+"use client"
 
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
-function TooltipProvider({
+const TooltipProvider = ({
   delay = 0,
   ...props
-}: TooltipPrimitive.Provider.Props) {
+}: TooltipPrimitive.Provider.Props) => {
   return (
     <TooltipPrimitive.Provider
       data-slot="tooltip-provider"
@@ -35104,15 +35488,15 @@ function TooltipProvider({
   )
 }
 
-function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
+const Tooltip = ({ ...props }: TooltipPrimitive.Root.Props) => {
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
 }
 
-function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
+const TooltipTrigger = ({ ...props }: TooltipPrimitive.Trigger.Props) => {
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
 }
 
-function TooltipContent({
+const TooltipContent = ({
   className,
   side = "top",
   sideOffset = 4,
@@ -35124,7 +35508,7 @@ function TooltipContent({
   Pick<
     TooltipPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset"
-  >) {
+  >) => {
   return (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Positioner
@@ -35153,10 +35537,11 @@ function TooltipContent({
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
 `],
   ["packages/ui/src/hooks/.gitkeep", ``],
-  ["packages/ui/src/lib/utils.ts.hbs", `import { clsx, type ClassValue } from "clsx";
+  ["packages/ui/src/lib/utils.ts.hbs", `/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
+import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-export function cn(...inputs: ClassValue[]) {
+export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
 }
 `],
@@ -35378,7 +35763,7 @@ import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-export function createPolarClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createPolarClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	return new Polar({
 		accessToken: env.POLAR_ACCESS_TOKEN,
 		server: "sandbox",
@@ -35403,11 +35788,11 @@ const checkout_id = route.query.checkout_id as string
   </div>
 </template>
 `],
-  ["payments/polar/web/react/next/src/app/success/page.tsx.hbs", `export default async function SuccessPage({
+  ["payments/polar/web/react/next/src/app/success/page.tsx.hbs", `const SuccessPage = async ({
     searchParams,
 }: {
     searchParams: Promise<{ checkout_id: string }>
-}) {
+}) => {
     const params = await searchParams;
     const checkout_id = params.checkout_id;
 
@@ -35417,11 +35802,13 @@ const checkout_id = route.query.checkout_id as string
             {checkout_id && <p>Checkout ID: {checkout_id}</p>}
         </div>
     );
-}
+};
+
+export default SuccessPage;
 `],
   ["payments/polar/web/react/react-router/src/routes/success.tsx.hbs", `import { useSearchParams } from "react-router";
 
-export default function SuccessPage() {
+const SuccessPage = () => {
     const [searchParams] = useSearchParams();
     const checkout_id = searchParams.get("checkout_id");
 
@@ -35431,18 +35818,14 @@ export default function SuccessPage() {
             {checkout_id && <p>Checkout ID: {checkout_id}</p>}
         </div>
     );
-}
+};
+
+export default SuccessPage;
 `],
   ["payments/polar/web/react/tanstack-router/src/routes/success.tsx.hbs", `import { createFileRoute, useSearch } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/success")({
-	component: SuccessPage,
-	validateSearch: (search) => ({
-		checkout_id: search.checkout_id as string,
-	}),
-});
 
-function SuccessPage() {
+const SuccessPage = () => {
 	const { checkout_id } = useSearch({ from: "/success" });
 
 	return (
@@ -35452,6 +35835,13 @@ function SuccessPage() {
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/success")({
+	component: SuccessPage,
+	validateSearch: (search) => ({
+		checkout_id: search.checkout_id as string,
+	}),
+});
 `],
   ["payments/polar/web/react/tanstack-start/src/functions/get-payment.ts.hbs", `import { authClient } from "@/lib/auth-client";
 import { authMiddleware } from "@/middleware/auth";
@@ -35471,14 +35861,8 @@ export const getPayment = createServerFn({ method: "GET" })
 `],
   ["payments/polar/web/react/tanstack-start/src/routes/success.tsx.hbs", `import { createFileRoute, useSearch } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/success")({
-	component: SuccessPage,
-	validateSearch: (search) => ({
-		checkout_id: search.checkout_id as string,
-	}),
-});
 
-function SuccessPage() {
+const SuccessPage = () => {
 	const { checkout_id } = useSearch({ from: "/success" });
 
 	return (
@@ -35488,9 +35872,6 @@ function SuccessPage() {
 		</div>
 	);
 }
-`],
-  ["payments/polar/web/solid/src/routes/success.tsx.hbs", `import { createFileRoute } from "@tanstack/solid-router";
-import { Show } from "solid-js";
 
 export const Route = createFileRoute("/success")({
 	component: SuccessPage,
@@ -35498,8 +35879,13 @@ export const Route = createFileRoute("/success")({
 		checkout_id: search.checkout_id as string,
 	}),
 });
+`],
+  ["payments/polar/web/solid/src/routes/success.tsx.hbs", `/* oxlint-disable no-use-before-define */
+import { createFileRoute } from "@tanstack/solid-router";
+import { Show } from "solid-js";
 
-function SuccessPage() {
+
+const SuccessPage = () => {
 	const searchParams = Route.useSearch();
 	const checkout_id = searchParams().checkout_id;
 
@@ -35512,8 +35898,16 @@ function SuccessPage() {
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/success")({
+	component: SuccessPage,
+	validateSearch: (search) => ({
+		checkout_id: search.checkout_id as string,
+	}),
+});
 `],
   ["payments/polar/web/svelte/src/routes/success/+page.svelte.hbs", `<script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 	import { page } from '$app/state';
 	
 	const checkout_id = $derived(page.url.searchParams.get('checkout_id'));

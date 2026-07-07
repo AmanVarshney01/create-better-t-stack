@@ -14,7 +14,7 @@ import { Trash2 } from "lucide-react";
 {{else}}
 import { Loader2, Trash2 } from "lucide-react";
 {{/if}}
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 
 {{#if (eq backend "convex")}}
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -32,20 +32,11 @@ import { orpc } from "@/utils/orpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
 
-{{#unless (eq backend "convex")}}
-type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
-{{/unless}}
-
-export const Route = createFileRoute("/todos")({
-  component: TodosRoute,
-});
-
-function TodosRoute() {
+const TodosRoute = () => {
   const [newTodoText, setNewTodoText] = useState("");
 
   {{#if (eq backend "convex")}}
-  const todosQuery = useSuspenseQuery(convexQuery(api.todos.getAll, {}));
-  const todos = todosQuery.data;
+  const { data: todos } = useSuspenseQuery(convexQuery(api.todos.getAll, {}));
 
   const createTodo = useMutation(api.todos.create);
   const toggleTodo = useMutation(api.todos.toggle);
@@ -88,44 +79,52 @@ function TodosRoute() {
     {{/if}}
 
     {{#if (eq api "trpc")}}
-  const todos = useQuery(trpc.todo.getAll.queryOptions());
+  const { data: todos, isLoading, refetch } = useQuery(trpc.todo.getAll.queryOptions());
   const createMutation = useMutation(
     trpc.todo.create.mutationOptions({
       onSuccess: () => {
-        todos.refetch();
+        refetch();
         setNewTodoText("");
       },
     }),
   );
   const toggleMutation = useMutation(
     trpc.todo.toggle.mutationOptions({
-      onSuccess: () => { todos.refetch() },
+      onSuccess: () => {
+        refetch();
+      },
     }),
   );
   const deleteMutation = useMutation(
     trpc.todo.delete.mutationOptions({
-      onSuccess: () => { todos.refetch() },
+      onSuccess: () => {
+        refetch();
+      },
     }),
   );
     {{/if}}
     {{#if (eq api "orpc")}}
-  const todos = useQuery(orpc.todo.getAll.queryOptions());
+  const { data: todos, isLoading, refetch } = useQuery(orpc.todo.getAll.queryOptions());
   const createMutation = useMutation(
     orpc.todo.create.mutationOptions({
       onSuccess: () => {
-        todos.refetch();
+        refetch();
         setNewTodoText("");
       },
     }),
   );
   const toggleMutation = useMutation(
     orpc.todo.toggle.mutationOptions({
-      onSuccess: () => { todos.refetch() },
+      onSuccess: () => {
+        refetch();
+      },
     }),
   );
   const deleteMutation = useMutation(
     orpc.todo.delete.mutationOptions({
-      onSuccess: () => { todos.refetch() },
+      onSuccess: () => {
+        refetch();
+      },
     }),
   );
     {{/if}}
@@ -137,14 +136,62 @@ function TodosRoute() {
     }
   };
 
-  const handleToggleTodo = (id: TodoId, completed: boolean) => {
+  const handleToggleTodo = (id: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}}, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: TodoId) => {
+  const handleDeleteTodo = (id: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}}) => {
     deleteMutation.mutate({ id });
   };
   {{/if}}
+
+  {{#unless (eq backend "convex")}}
+  let listContent: ReactNode;
+  if (isLoading) {
+    listContent = (
+      <div className="flex justify-center py-4">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  } else if (todos?.length === 0) {
+    listContent = <p className="py-4 text-center">No todos yet. Add one above!</p>;
+  } else {
+    listContent = (
+      <ul className="space-y-2">
+        {todos?.map((todo) => (
+          <li
+            key={todo.id}
+            className="flex items-center justify-between rounded-md border p-2"
+          >
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={todo.completed}
+                onCheckedChange={() =>
+                  handleToggleTodo(todo.id, todo.completed)
+                }
+                id={`todo-${todo.id}`}
+              />
+              <label
+                htmlFor={`todo-${todo.id}`}
+                className={`${todo.completed ? "line-through" : ""}`}
+              >
+                {todo.text}
+              </label>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDeleteTodo(todo.id)}
+              aria-label="Delete todo"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  {{/unless}}
 
   return (
     <div className="mx-auto w-full max-w-md py-10">
@@ -228,49 +275,14 @@ function TodosRoute() {
             </ul>
           )}
           {{else}}
-          {todos.isLoading ? (
-            <div className="flex justify-center py-4">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
-          ) : todos.data?.length === 0 ? (
-            <p className="py-4 text-center">No todos yet. Add one above!</p>
-          ) : (
-            <ul className="space-y-2">
-              {todos.data?.map((todo) => (
-                <li
-                  key={todo.id}
-                  className="flex items-center justify-between rounded-md border p-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      checked={todo.completed}
-                      onCheckedChange={() =>
-                        handleToggleTodo(todo.id, todo.completed)
-                      }
-                      id={`todo-${todo.id}`}
-                    />
-                    <label
-                      htmlFor={`todo-${todo.id}`}
-                      className={`${todo.completed ? "line-through" : ""}`}
-                    >
-                      {todo.text}
-                    </label>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteTodo(todo.id)}
-                    aria-label="Delete todo"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
+          {listContent}
           {{/if}}
         </CardContent>
       </Card>
     </div>
   );
 }
+
+export const Route = createFileRoute("/todos")({
+  component: TodosRoute,
+});

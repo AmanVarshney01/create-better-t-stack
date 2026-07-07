@@ -38,7 +38,7 @@ const starterPrompts = [
   },
 ];
 
-function MessageContent({
+const MessageContent = ({
   text,
   isStreaming,
   textColor,
@@ -46,7 +46,7 @@ function MessageContent({
   text: string;
   isStreaming: boolean;
   textColor: string;
-}) {
+}) => {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -58,7 +58,7 @@ function MessageContent({
   );
 }
 
-export default function AIScreen() {
+const AIScreen = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [input, setInput] = useState("");
@@ -86,7 +86,7 @@ export default function AIScreen() {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages, isLoading]);
 
-  async function sendPrompt(prompt: string) {
+  const sendPrompt = async (prompt: string) => {
     const value = prompt.trim();
     if (!value || isBusy) return;
 
@@ -108,7 +108,7 @@ export default function AIScreen() {
     }
   }
 
-  function onNewChat() {
+  const onNewChat = () => {
     if (isBusy) return;
     setInput("");
     setThreadId(null);
@@ -333,7 +333,9 @@ export default function AIScreen() {
       </KeyboardAvoidingView>
     </Container>
   );
-}
+};
+
+export default AIScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -559,7 +561,7 @@ const generateAPIUrl = (relativePath: string) => {
   return serverUrl.concat(path);
 };
 
-export default function AIScreen() {
+const AIScreen = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [input, setInput] = useState("");
@@ -578,7 +580,7 @@ export default function AIScreen() {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages, isBusy]);
 
-  function sendPrompt(prompt: string) {
+  const sendPrompt = (prompt: string) => {
     const value = prompt.trim();
     if (!value || isBusy) return;
 
@@ -586,7 +588,7 @@ export default function AIScreen() {
     setInput("");
   }
 
-  function onNewChat() {
+  const onNewChat = () => {
     if (isBusy) return;
     setInput("");
     setMessages([]);
@@ -866,7 +868,9 @@ export default function AIScreen() {
       </KeyboardAvoidingView>
     </Container>
   );
-}
+};
+
+export default AIScreen;
 
 const styles = StyleSheet.create({
   container: {

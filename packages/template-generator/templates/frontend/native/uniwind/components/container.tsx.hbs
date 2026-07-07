@@ -1,3 +1,4 @@
+/* oxlint-disable import/no-named-as-default-member */
 import { cn } from "heroui-native";
 import { type PropsWithChildren } from "react";
 import { ScrollView, View, type ScrollViewProps, type ViewProps } from "react-native";
@@ -12,13 +13,13 @@ type Props = AnimatedProps<ViewProps> & {
   scrollViewProps?: Omit<ScrollViewProps, "contentContainerStyle">;
 };
 
-export function Container({
+export const Container = ({
   children,
   className,
   isScrollable = true,
   scrollViewProps,
   ...props
-}: PropsWithChildren<Props>) {
+}: PropsWithChildren<Props>) => {
   const insets = useSafeAreaInsets();
 
   return (

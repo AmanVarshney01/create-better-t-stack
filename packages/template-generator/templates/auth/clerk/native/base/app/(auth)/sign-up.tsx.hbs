@@ -3,13 +3,13 @@ import { type Href, Link, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-function pushDecoratedUrl(router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) {
+const pushDecoratedUrl = (router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) => {
   const url = decorateUrl(href);
   const nextHref = url.startsWith("http") ? new URL(url).pathname : url;
   router.push(nextHref as Href);
 }
 
-export default function Page() {
+const Page = () => {
   const { signUp, errors, fetchStatus } = useSignUp();
   const { isSignedIn } = useAuth();
   const router = useRouter();
@@ -150,7 +150,9 @@ export default function Page() {
       <View nativeID="clerk-captcha" />
     </View>
   );
-}
+};
+
+export default Page;
 
 const styles = StyleSheet.create({
   container: {

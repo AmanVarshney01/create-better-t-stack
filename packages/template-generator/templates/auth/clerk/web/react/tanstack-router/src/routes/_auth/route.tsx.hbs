@@ -1,11 +1,8 @@
 import { SignInButton, useUser } from "@clerk/react";
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_auth")({
-	component: AuthLayout,
-});
 
-function AuthLayout() {
+const AuthLayout = () => {
 	const user = useUser();
 
 	if (!user.isLoaded) {
@@ -22,3 +19,7 @@ function AuthLayout() {
 
 	return <Outlet />;
 }
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});

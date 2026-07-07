@@ -15,7 +15,7 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@{{projectName}}/ui/components/button";
 import { Skeleton } from "@{{projectName}}/ui/components/skeleton";
 
-export default function UserMenu() {
+const UserMenu = () => {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
 
@@ -59,4 +59,6 @@ export default function UserMenu() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
+
+export default UserMenu;

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-export default function manifest(): MetadataRoute.Manifest {
+const manifest = (): MetadataRoute.Manifest => {
 	return {
 		name: "{{projectName}}",
 		short_name: "{{projectName}}",
@@ -23,4 +23,6 @@ export default function manifest(): MetadataRoute.Manifest {
 			},
 		],
 	};
-}
+};
+
+export default manifest;

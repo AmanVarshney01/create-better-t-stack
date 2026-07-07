@@ -16,8 +16,8 @@ import {
 } from "convex/react";
 import { useState } from "react";
 
-function DashboardContent() {
-    const privateData = useQuery(api.privateData.get);
+const DashboardContent = () => {
+    const privateData = useQuery(api.privatedata.get);
     {{#if (eq payments "polar")}}
     const products = useQuery(api.polar.listAllProducts);
     const subscription = useQuery(api.polar.getCurrentSubscription);
@@ -61,7 +61,7 @@ function DashboardContent() {
     );
 }
 
-export default function DashboardPage() {
+const DashboardPage = () => {
     const [showSignIn, setShowSignIn] = useState(false);
 
     return (
@@ -81,4 +81,6 @@ export default function DashboardPage() {
             </AuthLoading>
         </>
     );
-}
+};
+
+export default DashboardPage;

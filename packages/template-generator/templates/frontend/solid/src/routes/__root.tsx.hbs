@@ -1,3 +1,4 @@
+/* oxlint-disable github/filenames-match-regex */
 import Header from "@/components/header";
 import { Outlet, createRootRouteWithContext } from "@tanstack/solid-router";
 import { TanStackRouterDevtools } from "@tanstack/solid-router-devtools";
@@ -14,11 +15,8 @@ export interface RouterContext {
 export interface RouterContext {}
 {{/if}}
 
-export const Route = createRootRouteWithContext<RouterContext>()({
-  component: RootComponent,
-});
 
-function RootComponent() {
+const RootComponent = () => {
   return (
     <>
       <div class="grid grid-rows-[auto_1fr] h-svh">
@@ -32,3 +30,7 @@ function RootComponent() {
     </>
   );
 }
+
+export const Route = createRootRouteWithContext<RouterContext>()({
+  component: RootComponent,
+});

@@ -19,7 +19,7 @@ import { Container } from "@/components/container";
 {{/unless}}
 import { Button, Checkbox, Chip, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
 
-export default function TodosScreen() {
+const TodosScreen = () => {
   const [newTodoText, setNewTodoText] = useState("");
   {{#if (eq backend "convex")}}
     const todos = useQuery(api.todos.getAll);
@@ -279,4 +279,6 @@ export default function TodosScreen() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default TodosScreen;

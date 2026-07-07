@@ -1,3 +1,4 @@
+/* oxlint-disable github/filenames-match-regex */
 import { Container } from "@/components/container";
 import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { Stack, router } from "expo-router";
@@ -5,7 +6,7 @@ import { Text, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
-export default function NotFoundScreen() {
+const NotFoundScreen = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 
@@ -41,7 +42,9 @@ export default function NotFoundScreen() {
       </Container>
     </>
   );
-}
+};
+
+export default NotFoundScreen;
 
 const styles = StyleSheet.create({
   container: {

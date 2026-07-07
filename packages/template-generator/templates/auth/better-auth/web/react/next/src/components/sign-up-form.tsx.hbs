@@ -1,3 +1,4 @@
+/* oxlint-disable react-doctor/no-prevent-default */
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
@@ -8,11 +9,11 @@ import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 import { useRouter } from "next/navigation";
 
-export default function SignUpForm({
+const SignUpForm = ({
   onSwitchToSignIn,
 }: {
   onSwitchToSignIn: () => void;
-}) {
+}) => {
   const router = useRouter();
   const { isPending } = authClient.useSession();
 
@@ -157,4 +158,6 @@ export default function SignUpForm({
       </div>
     </div>
   );
-}
+};
+
+export default SignUpForm;

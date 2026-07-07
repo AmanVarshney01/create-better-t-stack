@@ -9,11 +9,8 @@ import { orpc } from "@/utils/orpc";
 import { UserButton, useUser } from "@clerk/tanstack-react-start";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_auth/dashboard")({
-	component: RouteComponent,
-});
 
-function RouteComponent() {
+const RouteComponent = () => {
 	const user = useUser();
 	const nameFromParts = [user.user?.firstName, user.user?.lastName].filter(Boolean).join(" ");
 	const displayName =
@@ -42,9 +39,13 @@ function RouteComponent() {
 			<h1 className="text-2xl font-semibold">Dashboard</h1>
 			<p>Welcome {displayName}</p>
 			{{#if (or (eq api "orpc") (eq api "trpc"))}}
-			<p>API: {privateData.data?.message}</p>
+			<p>API: {privateData?.message}</p>
 			{{/if}}
 			<UserButton />
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/_auth/dashboard")({
+	component: RouteComponent,
+});

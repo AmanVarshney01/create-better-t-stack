@@ -1,3 +1,4 @@
+/* oxlint-disable react-doctor/no-array-index-as-key */
 {{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
@@ -48,13 +49,20 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-function StreamingMessageText({
+const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    e.currentTarget.form?.requestSubmit();
+  }
+};
+
+const StreamingMessageText = ({
   text,
   isStreaming,
 }: {
   text: string;
   isStreaming: boolean;
-}) {
+}) => {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -62,7 +70,7 @@ function StreamingMessageText({
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
-export default function AI() {
+const AI = () => {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -101,13 +109,6 @@ export default function AI() {
       console.error("Failed to send message:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
     }
   };
 
@@ -259,7 +260,9 @@ export default function AI() {
       </div>
     </MessageScrollerProvider>
   );
-}
+};
+
+export default AI;
 {{else}}
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -307,7 +310,14 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-export default function AI() {
+const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    e.currentTarget.form?.requestSubmit();
+  }
+};
+
+const AI = () => {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -322,13 +332,6 @@ export default function AI() {
     if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
-  };
-
-  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
-    }
   };
 
   const resetConversation = () => {
@@ -410,7 +413,7 @@ export default function AI() {
                                       if (part.type === "text") {
                                         return (
                                           <Streamdown
-                                            key={index}
+                                            key={`${message.id}-part-${index}`}
                                             isAnimating={status === "streaming" && message.role === "assistant"}
                                           >
                                             {part.text}
@@ -486,5 +489,7 @@ export default function AI() {
       </div>
     </MessageScrollerProvider>
   );
-}
+};
+
+export default AI;
 {{/if}}

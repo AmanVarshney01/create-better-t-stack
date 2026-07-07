@@ -478,11 +478,11 @@ function addNextAiEvlogSetup(content: string) {
 
   if (!nextContent.includes("withEvlog(async (req: Request)")) {
     nextContent = nextContent.replace(
-      "export async function POST(req: Request) {",
+      "export const POST = async (req: Request) => {",
       "export const POST = withEvlog(async (req: Request) => {",
     );
     if (nextContent.includes("export const POST = withEvlog(async (req: Request) => {")) {
-      nextContent = nextContent.replace(/\n}\s*$/, "\n});\n");
+      nextContent = nextContent.replace(/\n};?\s*$/, "\n});\n");
     }
   }
 
@@ -492,11 +492,11 @@ function addNextAiEvlogSetup(content: string) {
 function addNextBetterAuthToRoute(content: string) {
   let nextContent = addNamedImport(content, "@/lib/evlog-auth", ["identifyEvlogUser"]);
 
-  nextContent = nextContent.replace("function handler(req:", "async function handler(req:");
+  nextContent = nextContent.replace("const handler = (req:", "const handler = async (req:");
 
   for (const marker of [
-    "async function handler(req: NextRequest) {",
-    "async function handleRequest(req: NextRequest) {",
+    "const handler = async (req: NextRequest) => {",
+    "const handleRequest = async (req: NextRequest) => {",
     "export const POST = withEvlog(async (req: Request) => {",
   ]) {
     nextContent = insertAfterOnce(

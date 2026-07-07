@@ -38,7 +38,7 @@ const starterPrompts = [
   },
 ];
 
-function MessageContent({
+const MessageContent = ({
   text,
   isStreaming,
   style,
@@ -46,7 +46,7 @@ function MessageContent({
   text: string;
   isStreaming: boolean;
   style: object;
-}) {
+}) => {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -58,7 +58,7 @@ function MessageContent({
   );
 }
 
-export default function AIScreen() {
+const AIScreen = () => {
   const { theme } = useUnistyles();
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
@@ -301,7 +301,9 @@ export default function AIScreen() {
       </KeyboardAvoidingView>
     </Container>
   );
-}
+};
+
+export default AIScreen;
 
 const styles = StyleSheet.create((theme) => ({
   container: {
@@ -565,7 +567,7 @@ const generateAPIUrl = (relativePath: string) => {
   return serverUrl.concat(path);
 };
 
-export default function AIScreen() {
+const AIScreen = () => {
   const { theme } = useUnistyles();
   const [input, setInput] = useState("");
   const { messages, error, sendMessage, status, setMessages } = useChat({
@@ -820,7 +822,9 @@ export default function AIScreen() {
       </KeyboardAvoidingView>
     </Container>
   );
-}
+};
+
+export default AIScreen;
 
 const styles = StyleSheet.create((theme) => ({
   container: {

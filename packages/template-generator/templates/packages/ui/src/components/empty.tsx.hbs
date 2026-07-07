@@ -1,8 +1,9 @@
+/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
-function Empty({ className, ...props }: React.ComponentProps<"div">) {
+const Empty = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="empty"
@@ -15,7 +16,7 @@ function Empty({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function EmptyHeader({ className, ...props }: React.ComponentProps<"div">) {
+const EmptyHeader = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="empty-header"
@@ -40,11 +41,11 @@ const emptyMediaVariants = cva(
   }
 )
 
-function EmptyMedia({
+const EmptyMedia = ({
   className,
   variant = "default",
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) {
+}: React.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) => {
   return (
     <div
       data-slot="empty-icon"
@@ -55,7 +56,7 @@ function EmptyMedia({
   )
 }
 
-function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
+const EmptyTitle = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="empty-title"
@@ -65,7 +66,7 @@ function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
+const EmptyDescription = ({ className, ...props }: React.ComponentProps<"p">) => {
   return (
     <div
       data-slot="empty-description"
@@ -78,7 +79,7 @@ function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
   )
 }
 
-function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
+const EmptyContent = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="empty-content"

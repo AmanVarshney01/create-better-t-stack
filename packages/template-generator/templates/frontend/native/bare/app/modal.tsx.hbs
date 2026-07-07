@@ -4,7 +4,7 @@ import { View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
-export default function Modal() {
+const Modal = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 
@@ -30,7 +30,9 @@ export default function Modal() {
       </View>
     </Container>
   );
-}
+};
+
+export default Modal;
 
 const styles = StyleSheet.create({
   container: {

@@ -6,9 +6,6 @@ import { Match, Switch } from "solid-js";
 {{else}}
 {{/if}}
 
-export const Route = createFileRoute("/")({
-  component: App,
-});
 
 const TITLE_TEXT = `
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -26,7 +23,7 @@ const TITLE_TEXT = `
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  `;
 
-function App() {
+const App = () => {
   {{#if (eq api "orpc")}}
   const healthCheck = useQuery(() => orpc.healthCheck.queryOptions());
   {{/if}}
@@ -70,3 +67,7 @@ function App() {
     </div>
   );
 }
+
+export const Route = createFileRoute("/")({
+  component: App,
+});

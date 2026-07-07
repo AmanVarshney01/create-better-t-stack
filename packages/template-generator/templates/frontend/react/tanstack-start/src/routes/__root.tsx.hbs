@@ -1,3 +1,4 @@
+/* oxlint-disable github/filenames-match-regex */
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
 {{#unless (eq backend "convex")}} {{#unless (eq api "none")}}
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -54,7 +55,7 @@ import { ConvexProvider } from "convex/react";
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
-function ClerkApiAuthBridge() {
+const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -94,52 +95,8 @@ export interface RouterAppContext {
   {{/if}}
 {{/if}}
 
-export const Route = createRootRouteWithContext<RouterAppContext>()({
-  head: () => ({
-    meta: [
-      {
-        charSet: "utf-8",
-      },
-      {
-        name: "viewport",
-        content: "width=device-width, initial-scale=1",
-      },
-      {
-        title: "My App",
-      },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-    ],
-  }),
 
-  component: RootDocument,
-  {{#if (and (eq backend "convex") (eq auth "clerk"))}}
-  beforeLoad: async (ctx) => {
-    const { userId, token } = await fetchClerkAuth();
-    if (token) {
-      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
-    }
-    return { userId, token };
-  },
-  {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-  beforeLoad: async (ctx) => {
-    const token = await getAuth();
-    if (token) {
-      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
-    }
-    return {
-      isAuthenticated: !!token,
-      token,
-    };
-  },
-  {{/if}}
-});
-
-function RootDocument() {
+const RootDocument = () => {
   {{#if (and (eq backend "convex") (eq auth "clerk"))}}
   const context = useRouteContext({ from: Route.id });
   return (
@@ -253,3 +210,48 @@ function RootDocument() {
   );
   {{/if}}
 }
+
+export const Route = createRootRouteWithContext<RouterAppContext>()({
+  head: () => ({
+    links: [
+      {
+        href: appCss,
+        rel: "stylesheet",
+      },
+    ],
+    meta: [
+      {
+        charSet: "utf-8",
+      },
+      {
+        content: "width=device-width, initial-scale=1",
+        name: "viewport",
+      },
+      {
+        title: "My App",
+      },
+    ],
+  }),
+
+  component: RootDocument,
+  {{#if (and (eq backend "convex") (eq auth "clerk"))}}
+  beforeLoad: async (ctx) => {
+    const { userId, token } = await fetchClerkAuth();
+    if (token) {
+      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+    }
+    return { userId, token };
+  },
+  {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+  beforeLoad: async (ctx) => {
+    const token = await getAuth();
+    if (token) {
+      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+    }
+    return {
+      isAuthenticated: !!token,
+      token,
+    };
+  },
+  {{/if}}
+});

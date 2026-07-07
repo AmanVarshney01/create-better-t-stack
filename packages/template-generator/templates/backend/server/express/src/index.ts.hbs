@@ -1,3 +1,4 @@
+/* oxlint-disable promise/prefer-await-to-callbacks */
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq api "trpc")}}
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -29,6 +30,7 @@ import { clerkMiddleware } from "@clerk/express";
 {{/if}}
 
 const app = express();
+app.disable("x-powered-by");
 
 app.use(
 	cors({

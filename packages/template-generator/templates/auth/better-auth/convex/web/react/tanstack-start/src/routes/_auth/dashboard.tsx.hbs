@@ -7,12 +7,9 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 
-export const Route = createFileRoute("/_auth/dashboard")({
-  component: DashboardContent,
-});
 
-function DashboardContent() {
-  const privateData = useQuery(api.privateData.get);
+const DashboardContent = () => {
+  const privateData = useQuery(api.privatedata.get);
   {{#if (eq payments "polar")}}
   const products = useQuery(api.polar.listAllProducts);
   const subscription = useQuery(api.polar.getCurrentSubscription);
@@ -55,3 +52,7 @@ function DashboardContent() {
     </div>
   );
 }
+
+export const Route = createFileRoute("/_auth/dashboard")({
+  component: DashboardContent,
+});

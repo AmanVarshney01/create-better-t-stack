@@ -1,7 +1,8 @@
 {{#if (eq backend "convex")}}
 <script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 	import '../app.css';
-    import Header from '../components/Header.svelte';
+    import Header from '../components/header.svelte';
     import { PUBLIC_CONVEX_URL } from '$env/static/public';
 	import { setupConvex } from 'convex-svelte';
 
@@ -18,11 +19,12 @@
 {{else}}
   {{#if (eq api "orpc")}}
 <script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
     import { QueryClientProvider } from '@tanstack/svelte-query';
     import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools'
 	import '../app.css';
     import { queryClient } from '$lib/orpc';
-    import Header from '../components/Header.svelte';
+    import Header from '../components/header.svelte';
 
 	const { children } = $props();
 </script>
@@ -38,8 +40,9 @@
 </QueryClientProvider>
   {{else}}
 <script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 	import '../app.css';
-    import Header from '../components/Header.svelte';
+    import Header from '../components/header.svelte';
 
 	const { children } = $props();
 </script>

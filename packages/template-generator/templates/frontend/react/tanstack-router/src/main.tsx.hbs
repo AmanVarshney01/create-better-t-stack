@@ -22,20 +22,18 @@ import { routeTree } from "./routeTree.gen";
   import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react";
 {{/if}}
 {{#if (eq backend "convex")}}
-  import { ConvexReactClient } from "convex/react";
+  import { ConvexReactClient{{#unless (or (eq auth "clerk") (eq auth "better-auth"))}}, ConvexProvider{{/unless}} } from "convex/react";
   {{#if (eq auth "clerk")}}
   import { ConvexProviderWithClerk } from "convex/react-clerk";
   {{else if (eq auth "better-auth")}}
   import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
   import { authClient } from "@/lib/auth-client";
-  {{else}}
-  import { ConvexProvider } from "convex/react";
   {{/if}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
-function ClerkApiAuthBridge() {
+const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -57,64 +55,58 @@ const router = createRouter({
   defaultPendingComponent: () => <Loader />,
   {{#if (eq api "orpc")}}
   context: { orpc, queryClient },
-  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
-    return (
-      {{#if (eq auth "clerk")}}
-      <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
-        <ClerkApiAuthBridge />
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
-      </ClerkProvider>
-      {{else}}
+  Wrap: ({ children }: { children: React.ReactNode }) => (
+    {{#if (eq auth "clerk")}}
+    <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+      <ClerkApiAuthBridge />
       <QueryClientProvider client={queryClient}>
         {children}
       </QueryClientProvider>
-      {{/if}}
-    );
-  },
+    </ClerkProvider>
+    {{else}}
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+    {{/if}}
+  ),
   {{else if (eq api "trpc")}}
   context: { trpc, queryClient },
-  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
-    return (
-      {{#if (eq auth "clerk")}}
-      <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
-        <ClerkApiAuthBridge />
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
-      </ClerkProvider>
-      {{else}}
+  Wrap: ({ children }: { children: React.ReactNode }) => (
+    {{#if (eq auth "clerk")}}
+    <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+      <ClerkApiAuthBridge />
       <QueryClientProvider client={queryClient}>
         {children}
       </QueryClientProvider>
-      {{/if}}
-    );
-  },
+    </ClerkProvider>
+    {{else}}
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+    {{/if}}
+  ),
   {{else if (eq backend "convex")}}
   context: {},
-  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
+  Wrap: ({ children }: { children: React.ReactNode }) => (
     {{#if (eq auth "clerk")}}
-    return (
-      <ClerkProvider
-        publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}
-      >
-        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-          {children}
-        </ConvexProviderWithClerk>
-      </ClerkProvider>
-    );
+    <ClerkProvider
+      publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}
+    >
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        {children}
+      </ConvexProviderWithClerk>
+    </ClerkProvider>
     {{else if (eq auth "better-auth")}}
-    return <ConvexBetterAuthProvider client={convex} authClient={authClient}>{children}</ConvexBetterAuthProvider>;
+    <ConvexBetterAuthProvider client={convex} authClient={authClient}>{children}</ConvexBetterAuthProvider>
     {{else}}
-    return <ConvexProvider client={convex}>{children}</ConvexProvider>;
+    <ConvexProvider client={convex}>{children}</ConvexProvider>
     {{/if}}
-  },
+  ),
   {{else if (eq auth "clerk")}}
   context: {},
-  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
-    return <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>{children}</ClerkProvider>;
-  },
+  Wrap: ({ children }: { children: React.ReactNode }) => (
+    <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>{children}</ClerkProvider>
+  ),
   {{else}}
   context: {},
   {{/if}}
@@ -132,7 +124,7 @@ if (!rootElement) {
   throw new Error("Root element not found");
 }
 
-if (!rootElement.innerHTML) {
+if (!rootElement.hasChildNodes()) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(<RouterProvider router={router} />);
 }

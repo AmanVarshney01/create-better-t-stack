@@ -1,5 +1,6 @@
 {{#if (eq backend "convex")}}
 <script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '@{{projectName}}/backend/convex/_generated/api';
 	import type { Id } from '@{{projectName}}/backend/convex/_generated/dataModel';
@@ -16,7 +17,7 @@
 
 	const todosQuery = useQuery(api.todos.getAll, {});
 
-	async function handleAddTodo(event: SubmitEvent) {
+	const handleAddTodo = async (event: SubmitEvent) => {
 		event.preventDefault();
 		const text = newTodoText.trim();
 		if (!text || isAdding) return;
@@ -34,7 +35,7 @@
 		}
 	}
 
-	async function handleToggleTodo(id: Id<'todos'>, completed: boolean) {
+	const handleToggleTodo = async (id: Id<'todos'>, completed: boolean) => {
 		if (togglingId === id || deletingId === id) return;
 
 		togglingId = id;
@@ -51,7 +52,7 @@
 		}
 	}
 
-	async function handleDeleteTodo(id: Id<'todos'>) {
+	const handleDeleteTodo = async (id: Id<'todos'>) => {
 		if (togglingId === id || deletingId === id) return;
 
 		deletingId = id;
@@ -161,6 +162,7 @@
 </div>
 {{else}}
 <script lang="ts">
+/* oxlint-disable github/filenames-match-regex */
 	{{#if (eq api "orpc")}}
 	import { orpc } from '$lib/orpc';
 	{{/if}}
@@ -206,7 +208,7 @@
 	);
 	{{/if}}
 
-	function handleAddTodo(event: SubmitEvent) {
+	const handleAddTodo = (event: SubmitEvent) => {
 		event.preventDefault();
 		const text = newTodoText.trim();
 		if (text) {
@@ -214,11 +216,11 @@
 		}
 	}
 
-	function handleToggleTodo(id: number, completed: boolean) {
+	const handleToggleTodo = (id: number, completed: boolean) => {
 		toggleMutation.mutate({ id, completed: !completed });
 	}
 
-	function handleDeleteTodo(id: number) {
+	const handleDeleteTodo = (id: number) => {
 		deleteMutation.mutate({ id });
 	}
 

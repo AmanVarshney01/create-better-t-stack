@@ -1,3 +1,4 @@
+/* oxlint-disable github/filenames-match-regex */
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 import { createAuth } from '@{{projectName}}/auth'
 {{else}}

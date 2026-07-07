@@ -1,14 +1,9 @@
+/* oxlint-disable no-use-before-define */
 import { createFileRoute } from "@tanstack/solid-router";
 import { Show } from "solid-js";
 
-export const Route = createFileRoute("/success")({
-	component: SuccessPage,
-	validateSearch: (search) => ({
-		checkout_id: search.checkout_id as string,
-	}),
-});
 
-function SuccessPage() {
+const SuccessPage = () => {
 	const searchParams = Route.useSearch();
 	const checkout_id = searchParams().checkout_id;
 
@@ -21,3 +16,10 @@ function SuccessPage() {
 		</div>
 	);
 }
+
+export const Route = createFileRoute("/success")({
+	component: SuccessPage,
+	validateSearch: (search) => ({
+		checkout_id: search.checkout_id as string,
+	}),
+});

@@ -13,9 +13,6 @@ import { orpc } from "@/utils/orpc";
   {{/if}}
 {{/if}}
 
-export const Route = createFileRoute("/")({
-  component: HomeComponent,
-});
 
 const TITLE_TEXT = `
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -33,14 +30,35 @@ const TITLE_TEXT = `
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  `;
 
-function HomeComponent() {
+const HomeComponent = () => {
   {{#if (eq backend "convex")}}
-  const healthCheck = useQuery(convexQuery(api.healthCheck.get, {}));
+  const { data: healthCheck, isLoading } = useQuery(convexQuery(api.healthcheck.get, {}));
   {{else if (eq api "trpc")}}
   const trpc = useTRPC();
-  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
   {{else if (eq api "orpc")}}
-  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
+  {{/if}}
+
+  {{#if (eq backend "convex")}}
+  let statusText = "Error";
+  let statusColor = "bg-red-500";
+  if (isLoading) {
+    statusText = "Checking...";
+    statusColor = "bg-orange-400";
+  } else if (healthCheck === "OK") {
+    statusText = "Connected";
+    statusColor = "bg-green-500";
+  }
+  {{else}}
+  {{#unless (eq api "none")}}
+  let statusText = "Disconnected";
+  if (isLoading) {
+    statusText = "Checking...";
+  } else if (healthCheck) {
+    statusText = "Connected";
+  }
+  {{/unless}}
   {{/if}}
 
   return (
@@ -52,28 +70,20 @@ function HomeComponent() {
           {{#if (eq backend "convex")}}
           <div className="flex items-center gap-2">
             <div
-              className={`h-2 w-2 rounded-full ${healthCheck.data === "OK" ? "bg-green-500" : healthCheck.isLoading ? "bg-orange-400" : "bg-red-500"}`}
+              className={`h-2 w-2 rounded-full ${statusColor}`}
             />
             <span className="text-muted-foreground text-sm">
-              {healthCheck.isLoading
-                ? "Checking..."
-                : healthCheck.data === "OK"
-                  ? "Connected"
-                  : "Error"}
+              {statusText}
             </span>
           </div>
           {{else}}
             {{#unless (eq api "none")}}
             <div className="flex items-center gap-2">
               <div
-                className={`h-2 w-2 rounded-full ${healthCheck.data ? "bg-green-500" : "bg-red-500"}`}
+                className={`h-2 w-2 rounded-full ${healthCheck ? "bg-green-500" : "bg-red-500"}`}
               />
               <span className="text-muted-foreground text-sm">
-                {healthCheck.isLoading
-                  ? "Checking..."
-                  : healthCheck.data
-                    ? "Connected"
-                    : "Disconnected"}
+                {statusText}
               </span>
             </div>
             {{/unless}}
@@ -83,3 +93,7 @@ function HomeComponent() {
     </div>
   );
 }
+
+export const Route = createFileRoute("/")({
+  component: HomeComponent,
+});

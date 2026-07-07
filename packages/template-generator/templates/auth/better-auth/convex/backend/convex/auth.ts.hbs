@@ -22,7 +22,7 @@ const nativeAppUrl = process.env.NATIVE_APP_URL || "{{projectName}}://";
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
-function createAuth(ctx: GenericCtx<DataModel>) {
+const createAuth = (ctx: GenericCtx<DataModel>) => {
   return betterAuth({
     {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router"))}}
     baseURL: process.env.CONVEX_SITE_URL,

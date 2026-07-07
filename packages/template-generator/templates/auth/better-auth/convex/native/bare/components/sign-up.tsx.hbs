@@ -30,7 +30,7 @@ const signUpSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -57,7 +57,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-function SignUp() {
+const SignUp = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);

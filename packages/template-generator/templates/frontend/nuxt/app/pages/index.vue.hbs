@@ -4,8 +4,8 @@ import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { useConvexQuery } from "convex-vue";
 {{else}}
   {{#unless (eq api "none")}}
-const { $orpc } = useNuxtApp()
 import { useQuery } from '@tanstack/vue-query'
+const { $orpc } = useNuxtApp()
   {{/unless}}
 {{/if}}
 
@@ -26,7 +26,7 @@ const TITLE_TEXT = `
  `;
 
 {{#if (eq backend "convex")}}
-const healthCheck = useConvexQuery(api.healthCheck.get, {});
+const healthCheck = useConvexQuery(api.healthcheck.get, {});
 {{else}}
   {{#unless (eq api "none")}}
 const healthCheck = useQuery($orpc.healthCheck.queryOptions())
@@ -34,7 +34,9 @@ const healthCheck = useQuery($orpc.healthCheck.queryOptions())
 onServerPrefetch(async () => {
   try {
     await healthCheck.suspense()
-  } catch {}
+  } catch {
+    // suspense errors surface through the query state
+  }
 })
   {{/unless}}
 {{/if}}

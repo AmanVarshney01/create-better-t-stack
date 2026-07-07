@@ -8,7 +8,7 @@ export { env } from "cloudflare:workers";
 /// <reference path="../env.d.ts" />
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-function getNodeEnvValue(key: string) {
+const getNodeEnvValue = (key: string) => {
 	if (key === "DB") {
 		return undefined;
 	}
@@ -16,7 +16,7 @@ function getNodeEnvValue(key: string) {
 	return process.env[key];
 }
 
-function getCloudflareEnvSync() {
+const getCloudflareEnvSync = () => {
 	try {
 		return getCloudflareContext().env as Env;
 	} catch {
@@ -26,7 +26,7 @@ function getCloudflareEnvSync() {
 
 type EnvValue = Env[keyof Env];
 
-function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefined) {
+const createEnvProxy = (getValue: (key: keyof Env & string) => EnvValue | undefined) => {
 	return new Proxy({} as Env, {
 		get(_target, prop) {
 			if (typeof prop !== "string") {
@@ -38,7 +38,7 @@ function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefi
 	});
 }
 
-function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
+const resolveEnvValue = (key: keyof Env & string): EnvValue | undefined => {
 	const nodeValue = getNodeEnvValue(key);
 	if (nodeValue !== undefined) {
 		return nodeValue as EnvValue;
@@ -51,7 +51,7 @@ function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
 // In the Cloudflare runtime, fall back to OpenNext's Cloudflare context bindings.
 // For static routes (ISR/SSG), use getEnvAsync() so OpenNext can resolve bindings
 // with the async Cloudflare context API.
-export async function getEnvAsync() {
+export const getEnvAsync = async () => {
 	const cloudflareEnv = (await getCloudflareContext({ async: true })).env as Env;
 
 	return createEnvProxy((key) => {
@@ -96,7 +96,7 @@ import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
 {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}
-function getVercelOrigin() {
+const getVercelOrigin = () => {
 	const vercelUrl =
 		process.env.VERCEL_ENV === "production"
 			? (process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL)

@@ -1,9 +1,10 @@
+/* oxlint-disable github/filenames-match-regex */
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import { appRouter } from '@{{projectName}}/api/routers/index'
 import { createContext } from '@{{projectName}}/api/context'
 import { createFileRoute } from '@tanstack/react-router'
 
-function handler({ request }: { request: Request }) {
+const handler = ({ request }: { request: Request }) => {
   return fetchRequestHandler({
     req: request,
     router: appRouter,

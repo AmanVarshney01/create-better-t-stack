@@ -1,3 +1,4 @@
+/* oxlint-disable github/filenames-match-regex */
 import { ScrollViewStyleReset } from "expo-router/html";
 import { type PropsWithChildren } from "react";
 
@@ -7,7 +8,7 @@ import "../unistyles";
 // web page during static rendering.
 // The contents of this function only run in Node.js environments and
 // do not have access to the DOM or browser APIs.
-export default function Root({ children }: PropsWithChildren) {
+const Root = ({ children }: PropsWithChildren) => {
   return (
     <html lang="en">
       <head>
@@ -29,4 +30,6 @@ export default function Root({ children }: PropsWithChildren) {
       <body>{children}</body>
     </html>
   );
-}
+};
+
+export default Root;

@@ -29,7 +29,7 @@ import { trpc } from "@/utils/trpc";
 {{/if}}
 {{/unless}}
 
-export default function TodosScreen() {
+const TodosScreen = () => {
   const [newTodoText, setNewTodoText] = useState("");
   const { theme } = useUnistyles();
 
@@ -242,7 +242,9 @@ export default function TodosScreen() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default TodosScreen;
 
 const styles = StyleSheet.create((theme) => ({
   scrollView: {

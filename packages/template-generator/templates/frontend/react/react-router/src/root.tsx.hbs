@@ -51,7 +51,7 @@ export const loader = (args: Route.LoaderArgs) => rootAuthLoader(args);
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
-function ClerkApiAuthBridge() {
+const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="en">
       <head>
@@ -96,11 +96,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 {{#if (eq backend "convex")}}
 {{#if (eq auth "clerk")}}
-export default function App({ loaderData }: Route.ComponentProps) {
+const App = ({ loaderData }: Route.ComponentProps) => {
 {{else if (eq auth "better-auth")}}
-export default function App() {
+const App = () => {
 {{else}}
-export default function App() {
+const App = () => {
 {{/if}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
   {{#if (eq auth "clerk")}}
@@ -157,9 +157,11 @@ export default function App() {
     </ConvexProvider>
   );
   {{/if}}
-}
+};
+
+export default App;
 {{else if (eq auth "clerk")}}
-export default function App({ loaderData }: Route.ComponentProps) {
+const App = ({ loaderData }: Route.ComponentProps) => {
   return (
     <ClerkProvider loaderData={loaderData}>
       {{#unless (eq api "none")}}
@@ -213,9 +215,11 @@ export default function App({ loaderData }: Route.ComponentProps) {
       {{/if}}
     </ClerkProvider>
   );
-}
+};
+
+export default App;
 {{else if (eq api "orpc")}}
-export default function App() {
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
@@ -233,9 +237,11 @@ export default function App() {
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
-}
+};
+
+export default App;
 {{else if (eq api "trpc")}}
-export default function App() {
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
@@ -253,9 +259,11 @@ export default function App() {
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
-}
+};
+
+export default App;
 {{else}}
-export default function App() {
+const App = () => {
   return (
     <ThemeProvider
       attribute="class"
@@ -270,10 +278,12 @@ export default function App() {
       <Toaster richColors />
     </ThemeProvider>
   );
-}
+};
+
+export default App;
 {{/if}}
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
@@ -284,8 +294,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         ? "The requested page could not be found."
         : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
+    ({ message: details, stack } = error);
   }
   return (
     <main className="pt-16 p-4 container mx-auto">

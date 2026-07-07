@@ -24,11 +24,11 @@ export const metadata: Metadata = {
 };
 
 {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
-export default async function RootLayout({
+const RootLayout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
   const token = await getToken();
   return (
     <html lang="en" suppressHydrationWarning>
@@ -44,13 +44,15 @@ export default async function RootLayout({
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;
 {{else}}
-export default function RootLayout({
+const RootLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
@@ -72,5 +74,7 @@ export default function RootLayout({
 			</body>
 		</html>
 	);
-}
+};
+
+export default RootLayout;
 {{/if}}

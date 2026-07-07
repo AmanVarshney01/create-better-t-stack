@@ -36,9 +36,9 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 {{#unless (or (eq backend "none") (and (eq backend "convex") (eq auth "better-auth")))}}
 import { Ionicons } from "@expo/vector-icons";
 {{/unless}}
-import { Button, Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
+import { {{#if (or (eq auth "clerk") (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar")))}}Button, {{/if}}Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
 
-export default function Home() {
+const Home = () => {
 {{#if (eq api "orpc")}}
 const healthCheck = useQuery(orpc.healthCheck.queryOptions());
 {{/if}}
@@ -47,13 +47,13 @@ const healthCheck = useQuery(trpc.healthCheck.queryOptions());
 {{/if}}
 {{#if (and (eq backend "convex") (eq auth "clerk"))}}
 const { user } = useUser();
-const healthCheck = useQuery(api.healthCheck.get);
-const privateData = useQuery(api.privateData.get);
+const healthCheck = useQuery(api.healthcheck.get);
+const privateData = useQuery(api.privatedata.get);
 {{else if (and (ne backend "convex") (eq auth "clerk"))}}
 const { isLoaded, isSignedIn } = useAuth();
 const { user } = useUser();
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-const healthCheck = useQuery(api.healthCheck.get);
+const healthCheck = useQuery(api.healthcheck.get);
 const { isAuthenticated } = useConvexAuth();
 const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
 {{#if (eq payments "polar")}}
@@ -108,7 +108,7 @@ const handlePolarPortal = async () => {
 };
 {{/if}}
 {{else if (eq backend "convex")}}
-const healthCheck = useQuery(api.healthCheck.get);
+const healthCheck = useQuery(api.healthcheck.get);
 {{/if}}
 {{#unless (eq backend "none")}}
 const successColor = useThemeColor("success");
@@ -122,6 +122,15 @@ const isLoading = healthCheck === undefined;
 const isConnected = healthCheck?.data === "OK";
 const isLoading = healthCheck?.isLoading;
 {{/unless}}
+{{/if}}
+{{#if (or (eq backend "convex") (ne api "none"))}}
+
+let apiStatusText = "API Disconnected";
+if (isLoading) {
+  apiStatusText = "Checking connection...";
+} else if (isConnected) {
+  apiStatusText = "Connected to API";
+}
 {{/if}}
 {{/unless}}
 
@@ -161,11 +170,7 @@ return (
             {{/if}}
           </Text>
           <Text className="text-muted text-xs mt-0.5">
-            {isLoading
-            ? "Checking connection..."
-            : isConnected
-            ? "Connected to API"
-            : "API Disconnected"}
+            {apiStatusText}
           </Text>
         </View>
         {isLoading && <Spinner size="sm" />}
@@ -295,4 +300,6 @@ return (
   {{/if}}
 </Container>
 );
-}
+};
+
+export default Home;

@@ -37,24 +37,24 @@ import { useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 {{/if}}
 
-export default function Home() {
+const Home = () => {
 const { colorScheme } = useColorScheme();
 const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 {{#if (eq api "orpc")}}
-const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
 {{/if}}
 {{#if (eq api "trpc")}}
-const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
 {{/if}}
 {{#if (and (eq backend "convex") (eq auth "clerk"))}}
 const { user } = useUser();
-const healthCheck = useQuery(api.healthCheck.get);
-const privateData = useQuery(api.privateData.get);
+const healthCheck = useQuery(api.healthcheck.get);
+const privateData = useQuery(api.privatedata.get);
 {{else if (and (ne backend "convex") (eq auth "clerk"))}}
 const { isLoaded, isSignedIn } = useAuth();
 const { user } = useUser();
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-const healthCheck = useQuery(api.healthCheck.get);
+const healthCheck = useQuery(api.healthcheck.get);
 const { isAuthenticated } = useConvexAuth();
 const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
 {{#if (eq payments "polar")}}
@@ -109,9 +109,17 @@ const handlePolarPortal = async () => {
 };
 {{/if}}
 {{else if (eq backend "convex")}}
-const healthCheck = useQuery(api.healthCheck.get);
+const healthCheck = useQuery(api.healthcheck.get);
 {{/if}}
 
+{{#unless (eq api "none")}}
+let apiStatusText = "Service unavailable";
+if (isLoading) {
+  apiStatusText = "Checking connection...";
+} else if (healthCheck) {
+  apiStatusText = "All systems operational";
+}
+{{/unless}}
 return (
 <Container>
   <ScrollView style={styles.scrollView} contentInsetAdjustmentBehavior="never">
@@ -154,7 +162,7 @@ return (
         {{else}}
         {{#unless (eq api "none")}}
         <View style={styles.statusRow}>
-          <View style={[styles.statusIndicator, { backgroundColor: healthCheck.data ? "#10b981" : "#f59e0b" }]} />
+          <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#f59e0b" }]} />
           <View style={styles.statusContent}>
             <Host matchContents=\{{ vertical: true }}>
               <Column spacing={4}>
@@ -167,11 +175,7 @@ return (
                   textStyle=\{{ color: theme.text, fontSize: 12 }}
                   style=\{{ opacity: 0.7 }}
                 >
-                  {healthCheck.isLoading
-                  ? "Checking connection..."
-                  : healthCheck.data
-                  ? "All systems operational"
-                  : "Service unavailable"}
+                  {apiStatusText}
                 </ExpoUIText>
               </Column>
             </Host>
@@ -342,7 +346,9 @@ return (
   </ScrollView>
 </Container>
 );
-}
+};
+
+export default Home;
 
 const styles = StyleSheet.create({
 scrollView: {

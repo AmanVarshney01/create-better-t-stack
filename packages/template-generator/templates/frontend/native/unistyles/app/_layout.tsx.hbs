@@ -1,3 +1,4 @@
+/* oxlint-disable sonarjs/variable-name, github/filenames-match-regex */
 import "@/unistyles";
 {{#if (includes examples "ai")}}
 import "@/polyfills";
@@ -53,7 +54,7 @@ const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
-function ClerkApiAuthBridge() {
+const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -68,7 +69,7 @@ function ClerkApiAuthBridge() {
 }
 {{/if}}
 
-export default function RootLayout() {
+const RootLayout = () => {
   const { theme } = useUnistyles();
 
   return (
@@ -246,4 +247,6 @@ export default function RootLayout() {
       {{/if}}
     {{/if}}
   );
-}
+};
+
+export default RootLayout;

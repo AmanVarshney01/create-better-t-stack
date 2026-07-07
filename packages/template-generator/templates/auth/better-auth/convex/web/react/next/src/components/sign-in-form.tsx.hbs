@@ -1,3 +1,4 @@
+/* oxlint-disable react-doctor/no-prevent-default */
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
@@ -7,11 +8,11 @@ import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 import { useRouter } from "next/navigation";
 
-export default function SignInForm({
+const SignInForm = ({
 	onSwitchToSignUp,
 }: {
 	onSwitchToSignUp: () => void;
-}) {
+}) => {
 	const router = useRouter();
 
 	const form = useForm({
@@ -126,4 +127,6 @@ export default function SignInForm({
 			</div>
 		</div>
 	);
-}
+};
+
+export default SignInForm;

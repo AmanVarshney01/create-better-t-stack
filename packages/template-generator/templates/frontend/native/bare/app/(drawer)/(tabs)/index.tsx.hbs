@@ -4,7 +4,7 @@ import { ScrollView, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
-export default function TabOne() {
+const TabOne = () => {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 
@@ -31,7 +31,9 @@ export default function TabOne() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default TabOne;
 
 const styles = StyleSheet.create({
   scrollView: {

@@ -7,8 +7,8 @@ import {
 	useQuery,
 } from "convex/react";
 
-export default function Dashboard() {
-	const privateData = useQuery(api.privateData.get);
+const Dashboard = () => {
+	const privateData = useQuery(api.privatedata.get);
 	const user = useUser();
 
 	return (
@@ -29,4 +29,6 @@ export default function Dashboard() {
 			</AuthLoading>
 		</>
 	);
-}
+};
+
+export default Dashboard;

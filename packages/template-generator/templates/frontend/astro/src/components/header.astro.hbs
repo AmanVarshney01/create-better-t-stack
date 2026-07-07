@@ -51,7 +51,7 @@ const links = [
   const userDisplay = document.getElementById("user-display");
   const signOutButton = document.getElementById("signout-button");
 
-  async function checkSession() {
+  const checkSession = async () => {
     try {
       const { data: session } = await authClient.getSession();
       if (session?.user) {

@@ -19,7 +19,7 @@ export const todoRouter = {
     }),
 
     toggle: publicProcedure
-        .input(z.object({ id: z.string(), completed: z.boolean() }))
+        .input(z.object({ completed: z.boolean(), id: z.string() }))
         .handler(async ({ input }) => {
             await Todo.updateOne({ id: input.id }, { completed: input.completed });
             return { success: true };
@@ -56,7 +56,7 @@ export const todoRouter = router({
     }),
 
     toggle: publicProcedure
-        .input(z.object({ id: z.string(), completed: z.boolean() }))
+        .input(z.object({ completed: z.boolean(), id: z.string() }))
         .mutation(async ({ input }) => {
             await Todo.updateOne({ id: input.id }, { completed: input.completed });
             return { success: true };

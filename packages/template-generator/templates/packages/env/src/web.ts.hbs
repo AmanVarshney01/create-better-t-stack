@@ -12,7 +12,7 @@ import { z } from "zod";
 {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 const serverUrlSchema = z.union([
 	z.url(),
-	z.string().regex(/^\/(?!\/)/, "Use an absolute URL or a same-origin path like /api"),
+	z.string().regex(/^\/(?!\/)/u, "Use an absolute URL or a same-origin path like /api"),
 ]);
 
 {{/if}}
@@ -61,7 +61,7 @@ export const env = createEnv({
 	client: {
 		PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
 	},
-	runtimeEnv: (import.meta as any).env,
+	runtimeEnv: (import.meta as unknown as { env: Record<string, string | undefined> }).env,
 {{else}}
 	clientPrefix: "VITE_",
 	client: {
@@ -73,7 +73,7 @@ export const env = createEnv({
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 	},
-	runtimeEnv: (import.meta as any).env,
+	runtimeEnv: (import.meta as unknown as { env: Record<string, string | undefined> }).env,
 {{/if}}
 {{else if (eq backend "self")}}
 {{#if (includes frontend "next")}}
@@ -96,7 +96,7 @@ export const env = createEnv({
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 	},
-	runtimeEnv: (import.meta as any).env,
+	runtimeEnv: (import.meta as unknown as { env: Record<string, string | undefined> }).env,
 {{/if}}
 {{else if (ne backend "none")}}
 {{#if (includes frontend "next")}}
@@ -121,7 +121,7 @@ export const env = createEnv({
 	client: {
 		PUBLIC_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 	},
-	runtimeEnv: (import.meta as any).env,
+	runtimeEnv: (import.meta as unknown as { env: Record<string, string | undefined> }).env,
 {{else}}
 	clientPrefix: "VITE_",
 	client: {
@@ -130,7 +130,7 @@ export const env = createEnv({
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 	},
-	runtimeEnv: (import.meta as any).env,
+	runtimeEnv: (import.meta as unknown as { env: Record<string, string | undefined> }).env,
 {{/if}}
 {{/if}}
 	skipValidation: !!process.env.SKIP_ENV_VALIDATION,

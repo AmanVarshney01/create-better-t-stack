@@ -1,5 +1,5 @@
 ---
-import Layout from "../layouts/Layout.astro";
+import Layout from "../layouts/layout.astro";
 
 const TITLE_TEXT = `
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -39,12 +39,12 @@ const TITLE_TEXT = `
 <script>
   import { orpc } from "../lib/orpc";
 
-  const statusDot = document.getElementById("status-dot")!;
-  const statusText = document.getElementById("status-text")!;
+  const statusDot = document.getElementById("status-dot") as HTMLElement;
+  const statusText = document.getElementById("status-text") as HTMLElement;
 
-  async function checkHealth() {
+  const checkHealth = async () => {
     try {
-      const data = await orpc.healthCheck();
+      await orpc.healthCheck();
       statusDot.className = "h-2 w-2 rounded-full bg-green-500";
       statusText.textContent = "Connected";
     } catch (error) {

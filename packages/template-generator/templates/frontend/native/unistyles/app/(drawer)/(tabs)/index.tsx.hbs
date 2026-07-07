@@ -4,7 +4,7 @@ import { Container } from "@/components/container";
 import { ScrollView, Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
-export default function Home() {
+const Home = () => {
   return (
     <Container>
       <ScrollView contentContainerStyle={styles.container}>
@@ -17,7 +17,9 @@ export default function Home() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default Home;
 
 const styles = StyleSheet.create((theme) => ({
   container: {

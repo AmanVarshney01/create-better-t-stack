@@ -1,3 +1,4 @@
+/* oxlint-disable react-doctor/no-barrel-import, sonarjs/no-wildcard-import */
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 import type {} from "@{{projectName}}/env/server";
@@ -9,7 +10,7 @@ import * as schema from "./schema";
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	return drizzle({
 		connection: {
 			host: env.DATABASE_HOST,
@@ -22,7 +23,7 @@ export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflar
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	return drizzle({
 		connection: {
 			uri: env.DATABASE_URL,
@@ -44,7 +45,7 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 import { env } from "@{{projectName}}/env/server";
 
-export function createDb() {
+export const createDb = () => {
 	return drizzle({
 		connection: {
 			host: env.DATABASE_HOST,
@@ -58,7 +59,7 @@ export function createDb() {
 import { drizzle } from "drizzle-orm/mysql2";
 import { env } from "@{{projectName}}/env/server";
 
-export function createDb() {
+export const createDb = () => {
 	return drizzle({
 		connection: {
 			uri: env.DATABASE_URL,

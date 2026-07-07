@@ -27,7 +27,7 @@ import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 {{/if}}
 
-export function createQueryClient() {
+export const createQueryClient = () => {
 	return new QueryClient({
 		queryCache: new QueryCache({
 			onError: (error, query) => {

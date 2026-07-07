@@ -13,7 +13,7 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 
 import { Button } from "@{{projectName}}/ui/components/button";
 
-export default function UserMenu() {
+const UserMenu = () => {
     const user = useQuery(api.auth.getCurrentUser)
 
     return (
@@ -44,4 +44,6 @@ export default function UserMenu() {
             </DropdownMenuContent>
         </DropdownMenu>
     );
-}
+};
+
+export default UserMenu;

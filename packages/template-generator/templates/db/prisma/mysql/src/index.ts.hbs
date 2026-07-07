@@ -5,14 +5,14 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export function createPrismaClient() {
+export const createPrismaClient = () => {
 	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export function createPrismaClient() {
+export const createPrismaClient = () => {
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
@@ -38,14 +38,14 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {

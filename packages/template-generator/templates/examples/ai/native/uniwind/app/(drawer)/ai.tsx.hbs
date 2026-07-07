@@ -34,13 +34,13 @@ const starterPrompts = [
   },
 ];
 
-function MessageContent({
+const MessageContent = ({
   text,
   isStreaming,
 }: {
   text: string;
   isStreaming: boolean;
-}) {
+}) => {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -52,7 +52,7 @@ function MessageContent({
   );
 }
 
-export default function AIScreen() {
+const AIScreen = () => {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -274,7 +274,9 @@ export default function AIScreen() {
       </KeyboardAvoidingView>
     </Container>
   );
-}
+};
+
+export default AIScreen;
 {{else}}
 import { useRef, useEffect, useState } from "react";
 import {
@@ -318,7 +320,7 @@ const generateAPIUrl = (relativePath: string) => {
   return serverUrl.concat(path);
 };
 
-export default function AIScreen() {
+const AIScreen = () => {
   const [input, setInput] = useState("");
   const { messages, error, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -544,5 +546,7 @@ export default function AIScreen() {
       </KeyboardAvoidingView>
     </Container>
   );
-}
+};
+
+export default AIScreen;
 {{/if}}

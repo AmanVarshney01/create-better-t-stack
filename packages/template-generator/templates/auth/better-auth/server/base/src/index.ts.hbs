@@ -1,3 +1,4 @@
+/* oxlint-disable sonarjs/no-wildcard-import */
 {{#if (eq orm "prisma")}}
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
@@ -16,7 +17,7 @@ import { polarClient } from "./lib/payments";
 {{/if}}
 import { createPrismaClient } from "@{{projectName}}/db";
 
-export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env{{/if}});
 
 	return betterAuth({
@@ -100,7 +101,7 @@ import { createDb } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
 
-export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env{{/if}});
 
 	return betterAuth({
@@ -108,7 +109,7 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 {{#if (eq database "postgres")}}provider: "pg",{{/if}}
 {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
 {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
-			schema: schema,
+			schema,
 		}),
 		trustedOrigins: [
 			env.CORS_ORIGIN,
@@ -174,7 +175,7 @@ import { createDb } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
 
-export function createAuth() {
+export const createAuth = () => {
 	const db = createDb();
 
 	return betterAuth({
@@ -182,7 +183,7 @@ export function createAuth() {
 {{#if (eq database "postgres")}}provider: "pg",{{/if}}
 {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
 {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
-			schema: schema,
+			schema,
 		}),
 		trustedOrigins: [
 			env.CORS_ORIGIN,
@@ -262,7 +263,7 @@ import { polarClient } from "./lib/payments";
 {{/if}}
 import { client } from "@{{projectName}}/db";
 
-export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	return betterAuth({
 		database: mongodbAdapter(client),
 		trustedOrigins: [
@@ -334,7 +335,7 @@ import { polarClient } from "./lib/payments";
 {{/if}}
 
 
-export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createAuth = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	return betterAuth({
 		database: "", // Invalid configuration
 		trustedOrigins: [

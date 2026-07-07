@@ -1,3 +1,4 @@
+/* oxlint-disable react-doctor/no-array-index-as-key */
 {{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
@@ -49,17 +50,20 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-export const Route = createFileRoute("/ai")({
-  component: RouteComponent,
-});
+const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    e.currentTarget.form?.requestSubmit();
+  }
+};
 
-function StreamingMessageText({
+const StreamingMessageText = ({
   text,
   isStreaming,
 }: {
   text: string;
   isStreaming: boolean;
-}) {
+}) => {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -67,7 +71,7 @@ function StreamingMessageText({
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
-function RouteComponent() {
+const RouteComponent = () => {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,13 +110,6 @@ function RouteComponent() {
       console.error("Failed to send message:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
     }
   };
 
@@ -265,6 +262,10 @@ function RouteComponent() {
     </MessageScrollerProvider>
   );
 }
+
+export const Route = createFileRoute("/ai")({
+  component: RouteComponent,
+});
 {{else}}
 import { useChat } from "@ai-sdk/react";
 import { createFileRoute } from "@tanstack/react-router";
@@ -315,11 +316,14 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-export const Route = createFileRoute("/ai")({
-  component: RouteComponent,
-});
+const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    e.currentTarget.form?.requestSubmit();
+  }
+};
 
-function RouteComponent() {
+const RouteComponent = () => {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -334,13 +338,6 @@ function RouteComponent() {
     if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
-  };
-
-  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      e.currentTarget.form?.requestSubmit();
-    }
   };
 
   const resetConversation = () => {
@@ -422,7 +419,7 @@ function RouteComponent() {
                                       if (part.type === "text") {
                                         return (
                                           <Streamdown
-                                            key={index}
+                                            key={`${message.id}-part-${index}`}
                                             isAnimating={status === "streaming" && message.role === "assistant"}
                                           >
                                             {part.text}
@@ -499,4 +496,8 @@ function RouteComponent() {
     </MessageScrollerProvider>
   );
 }
+
+export const Route = createFileRoute("/ai")({
+  component: RouteComponent,
+});
 {{/if}}

@@ -8,7 +8,7 @@ type ClerkRequestContext = {
 	session: null;
 };
 
-function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContextAuth | null {
+const toClerkContextAuth = (auth: { userId: string | null } | null): ClerkContextAuth | null => {
 	return auth ? { userId: auth.userId } : null;
 }
 {{/if}}
@@ -24,7 +24,7 @@ const clerkClient = createClerkClient({
 	publishableKey: env.CLERK_PUBLISHABLE_KEY,
 });
 
-async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth | null> {
+const authenticateClerkRequest = async (request: Request): Promise<ClerkContextAuth | null> => {
 	const requestState = await clerkClient.authenticateRequest(request, {
 		authorizedParties: [env.CORS_ORIGIN],
 	});
@@ -43,7 +43,7 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 
-export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
@@ -75,7 +75,7 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
@@ -111,7 +111,7 @@ export type CreateContextOptions = {
 	headers: Headers;
 };
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) => {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
@@ -145,7 +145,7 @@ export type CreateContextOptions = {
 {{/if}}
 };
 
-export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env: _env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions) {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env: _env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions) => {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth({{#if (eq webDeploy "cloudflare")}}env{{/if}}){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
@@ -179,7 +179,7 @@ export type CreateContextOptions = {
 	headers: Headers;
 };
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) => {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
@@ -208,7 +208,7 @@ export type CreateContextOptions = {
 	context: HonoContext;
 };
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: context.req.raw.headers,
@@ -241,7 +241,7 @@ export type CreateContextOptions = {
 	context: ElysiaContext;
 };
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
@@ -277,7 +277,7 @@ interface CreateContextOptions {
 	req: Request;
 }
 
-export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateContextOptions) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
@@ -311,7 +311,7 @@ import { getAuth } from "@clerk/fastify";
 import type { IncomingHttpHeaders } from "node:http";
 {{/if}}
 
-export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typeof getAuth>[0]{{else}}IncomingHttpHeaders{{/if}}){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export const createContext = {{#unless (eq auth "none")}}async {{/unless}}(req: {{#if (eq auth "clerk")}}Parameters<typeof getAuth>[0]{{else}}IncomingHttpHeaders{{/if}}) => {{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(req),
@@ -336,7 +336,7 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 }
 
 {{else}}
-export async function createContext() {
+export const createContext = () => {
 	return {
 		auth: null,
 		session: null,

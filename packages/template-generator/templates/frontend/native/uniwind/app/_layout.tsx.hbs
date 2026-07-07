@@ -1,3 +1,4 @@
+/* oxlint-disable sonarjs/variable-name, github/filenames-match-regex */
 {{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
@@ -59,7 +60,7 @@ export const unstable_settings = {
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
-function ClerkApiAuthBridge() {
+const ClerkApiAuthBridge = () => {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -74,19 +75,19 @@ function ClerkApiAuthBridge() {
 }
 {{/if}}
 
-function StackLayout() {
+const StackLayout = () => {
   return (
     <Stack screenOptions=\{{}}>
       <Stack.Screen name="(drawer)" options=\{{ headerShown: false }} />
       {{#if (eq auth "clerk")}}
         <Stack.Screen name="(auth)" options=\{{ headerShown: false }} />
       {{/if}}
-      <Stack.Screen name="modal" options=\{{ title: "Modal", presentation: "modal" }} />
+      <Stack.Screen name="modal" options=\{{ presentation: "modal", title: "Modal" }} />
     </Stack>
   );
 }
 
-export default function Layout() {
+const Layout = () => {
   return (
     {{#if (eq backend "convex")}}
       {{#if (eq auth "clerk")}}
@@ -183,4 +184,6 @@ export default function Layout() {
       {{/if}}
     {{/if}}
   );
-}
+};
+
+export default Layout;

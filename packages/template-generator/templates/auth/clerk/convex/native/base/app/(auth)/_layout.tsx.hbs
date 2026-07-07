@@ -1,7 +1,8 @@
+/* oxlint-disable github/filenames-match-regex */
 import { Redirect, Stack } from "expo-router";
 import { useAuth } from "@clerk/expo";
 
-export default function AuthRoutesLayout() {
+const AuthRoutesLayout = () => {
   const { isLoaded, isSignedIn } = useAuth();
 
   if (!isLoaded) {
@@ -13,4 +14,6 @@ export default function AuthRoutesLayout() {
   }
 
   return <Stack />;
-}
+};
+
+export default AuthRoutesLayout;

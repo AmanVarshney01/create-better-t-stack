@@ -20,7 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient, trpc } from "@/utils/trpc";
 {{/if}}
 
-export default function Home() {
+const Home = () => {
 const { colorScheme } = useColorScheme();
 const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 {{#if (eq api "orpc")}}
@@ -202,7 +202,9 @@ return (
   </ScrollView>
 </Container>
 );
-}
+};
+
+export default Home;
 
 const styles = StyleSheet.create({
 scrollView: {

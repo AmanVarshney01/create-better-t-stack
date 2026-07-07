@@ -4,7 +4,7 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const maxDuration = 30;
 
-export async function POST(req: Request) {
+export const POST = async (req: Request) => {
 	const { messages }: { messages: UIMessage[] } = await req.json();
 
 	const model = wrapLanguageModel({

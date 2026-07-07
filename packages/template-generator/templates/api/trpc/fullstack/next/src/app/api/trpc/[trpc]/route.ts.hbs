@@ -3,7 +3,7 @@ import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 import { NextRequest } from "next/server";
 
-function handler(req: NextRequest) {
+const handler = (req: NextRequest) => {
 	return fetchRequestHandler({
 		endpoint: "/api/trpc",
 		req,

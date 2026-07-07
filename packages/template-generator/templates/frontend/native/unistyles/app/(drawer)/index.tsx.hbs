@@ -38,22 +38,22 @@ import { useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 {{/if}}
 
-export default function Home() {
+const Home = () => {
   {{#if (eq api "orpc")}}
-  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
   {{/if}}
   {{#if (eq api "trpc")}}
-  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
   {{/if}}
   {{#if (and (eq backend "convex") (eq auth "clerk"))}}
   const { user } = useUser();
-  const healthCheck = useQuery(api.healthCheck.get);
-  const privateData = useQuery(api.privateData.get);
+  const healthCheck = useQuery(api.healthcheck.get);
+  const privateData = useQuery(api.privatedata.get);
   {{else if (and (ne backend "convex") (eq auth "clerk"))}}
   const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-  const healthCheck = useQuery(api.healthCheck.get);
+  const healthCheck = useQuery(api.healthcheck.get);
   const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
   {{#if (eq payments "polar")}}
@@ -108,9 +108,17 @@ export default function Home() {
   };
   {{/if}}
   {{else if (eq backend "convex")}}
-  const healthCheck = useQuery(api.healthCheck.get);
+  const healthCheck = useQuery(api.healthcheck.get);
   {{/if}}
 
+  {{#unless (eq api "none")}}
+  let apiStatusText = "API Disconnected";
+  if (isLoading) {
+    apiStatusText = "Checking connection...";
+  } else if (healthCheck) {
+    apiStatusText = "Connected to API";
+  }
+  {{/unless}}
   return (
     <Container>
       <ScrollView
@@ -158,7 +166,7 @@ export default function Home() {
               <View
                 style={[
                   styles.statusDot,
-                  healthCheck.data
+                  healthCheck
                     ? styles.statusDotSuccess
                     : styles.statusDotWarning,
                 ]}
@@ -169,11 +177,7 @@ export default function Home() {
                   {{#if (eq api "trpc")}}TRPC{{/if}}
                 </Text>
                 <Text style={styles.statusDescription}>
-                  {healthCheck.isLoading
-                    ? "Checking connection..."
-                    : healthCheck.data
-                    ? "Connected to API"
-                    : "API Disconnected"}
+                  {apiStatusText}
                 </Text>
               </View>
             </View>
@@ -300,7 +304,9 @@ export default function Home() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default Home;
 
 const styles = StyleSheet.create((theme) => ({
   container: {

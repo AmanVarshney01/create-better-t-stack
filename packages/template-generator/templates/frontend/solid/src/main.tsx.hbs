@@ -23,7 +23,7 @@ declare module "@tanstack/solid-router" {
   }
 }
 
-function App() {
+const App = () => {
   return (
     {{#if (eq api "orpc")}}
     <QueryClientProvider client={queryClient}>

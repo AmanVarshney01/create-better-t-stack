@@ -34,7 +34,7 @@ const signUpSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-function getErrorMessage(error: unknown): string | null {
+const getErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
 
   if (typeof error === "string") {
@@ -61,7 +61,7 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-export function SignUp() {
+export const SignUp = () => {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm({

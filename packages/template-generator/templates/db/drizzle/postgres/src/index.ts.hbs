@@ -1,3 +1,4 @@
+/* oxlint-disable react-doctor/no-barrel-import, sonarjs/no-wildcard-import */
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 import type {} from "@{{projectName}}/env/server";
@@ -10,7 +11,7 @@ import * as schema from "./schema";
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const sql = neon(env.DATABASE_URL);
 	return drizzle(sql, { schema });
 }
@@ -20,7 +21,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 {{/if}}
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createDb = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 	const pool = new Pool({
 		connectionString: env.DATABASE_URL,
@@ -47,7 +48,7 @@ import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { env } from "@{{projectName}}/env/server";
 
-export function createDb() {
+export const createDb = () => {
 	const sql = neon(env.DATABASE_URL || "");
 	return drizzle(sql, { schema });
 }
@@ -56,7 +57,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { env } from "@{{projectName}}/env/server";
 import { Pool } from "pg";
 
-export function createDb() {
+export const createDb = () => {
 	const pool = new Pool({
 		connectionString: env.DATABASE_URL || "",
 		maxUses: 1,

@@ -8,7 +8,7 @@ import type {} from "@{{projectName}}/env/server";
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const adapter = new PrismaD1(env.DB);
 	return new PrismaClient({ adapter });
 }
@@ -25,7 +25,7 @@ import type {} from "@{{projectName}}/env/server";
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
 	const adapter = new PrismaLibSql({
 		url: env.DATABASE_URL,
 {{#if (eq dbSetup "turso")}}

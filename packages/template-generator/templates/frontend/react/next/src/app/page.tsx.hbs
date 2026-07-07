@@ -28,13 +28,34 @@ const TITLE_TEXT = `
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  `;
 
-export default function Home() {
+const Home = () => {
   {{#if (eq backend "convex")}}
-  const healthCheck = useQuery(api.healthCheck.get);
+  const healthCheck = useQuery(api.healthcheck.get);
   {{else if (eq api "orpc")}}
-  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
   {{else if (eq api "trpc")}}
-  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
+  {{/if}}
+
+  {{#if (eq backend "convex")}}
+  let statusText = "Error";
+  let statusColor = "bg-red-500";
+  if (healthCheck === undefined) {
+    statusText = "Checking...";
+    statusColor = "bg-orange-400";
+  } else if (healthCheck === "OK") {
+    statusText = "Connected";
+    statusColor = "bg-green-500";
+  }
+  {{else}}
+  {{#unless (eq api "none")}}
+  let statusText = "Disconnected";
+  if (isLoading) {
+    statusText = "Checking...";
+  } else if (healthCheck) {
+    statusText = "Connected";
+  }
+  {{/unless}}
   {{/if}}
 
   return (
@@ -46,28 +67,20 @@ export default function Home() {
           {{#if (eq backend "convex")}}
           <div className="flex items-center gap-2">
             <div
-              className={`h-2 w-2 rounded-full ${healthCheck === "OK" ? "bg-green-500" : healthCheck === undefined ? "bg-orange-400" : "bg-red-500"}`}
+              className={`h-2 w-2 rounded-full ${statusColor}`}
             />
             <span className="text-sm text-muted-foreground">
-              {healthCheck === undefined
-                ? "Checking..."
-                : healthCheck === "OK"
-                  ? "Connected"
-                  : "Error"}
+              {statusText}
             </span>
           </div>
           {{else}}
             {{#unless (eq api "none")}}
             <div className="flex items-center gap-2">
               <div
-                className={`h-2 w-2 rounded-full ${healthCheck.data ? "bg-green-500" : "bg-red-500"}`}
+                className={`h-2 w-2 rounded-full ${healthCheck ? "bg-green-500" : "bg-red-500"}`}
               />
               <span className="text-sm text-muted-foreground">
-                {healthCheck.isLoading
-                  ? "Checking..."
-                  : healthCheck.data
-                    ? "Connected"
-                    : "Disconnected"}
+                {statusText}
               </span>
             </div>
             {{/unless}}
@@ -76,4 +89,6 @@ export default function Home() {
       </div>
     </div>
   );
-}
+};
+
+export default Home;

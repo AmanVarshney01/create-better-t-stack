@@ -15,7 +15,7 @@ const { mutate: deleteTodo, error: deleteError } = useConvexMutation(
   api.todos.deleteTodo,
 );
 
-function handleAddTodo() {
+const handleAddTodo = () => {
   const text = newTodoText.value.trim();
   if (!text) return;
 
@@ -23,11 +23,11 @@ function handleAddTodo() {
   newTodoText.value = "";
 }
 
-function handleToggleTodo(id: Id<"todos">, completed: boolean) {
+const handleToggleTodo = (id: Id<"todos">, completed: boolean) => {
   toggleTodo({ id, completed: !completed });
 }
 
-function handleDeleteTodo(id: Id<"todos">) {
+const handleDeleteTodo = (id: Id<"todos">) => {
   deleteTodo({ id });
 }
 {{else}}
@@ -43,7 +43,9 @@ const todos = useQuery($orpc.todo.getAll.queryOptions())
 onServerPrefetch(async () => {
   try {
     await todos.suspense()
-  } catch {}
+  } catch {
+    // suspense errors surface through the query state
+  }
 })
 
 const createMutation = useMutation($orpc.todo.create.mutationOptions({
@@ -61,17 +63,17 @@ const deleteMutation = useMutation($orpc.todo.delete.mutationOptions({
   onSuccess: () => queryClient.invalidateQueries()
 }))
 
-function handleAddTodo() {
+const handleAddTodo = () => {
   if (newTodoText.value.trim()) {
     createMutation.mutate({ text: newTodoText.value })
   }
 }
 
-function handleToggleTodo(id: number, completed: boolean) {
+const handleToggleTodo = (id: number, completed: boolean) => {
   toggleMutation.mutate({ id, completed: !completed })
 }
 
-function handleDeleteTodo(id: number) {
+const handleDeleteTodo = (id: number) => {
   deleteMutation.mutate({ id })
 }
 {{/if}}

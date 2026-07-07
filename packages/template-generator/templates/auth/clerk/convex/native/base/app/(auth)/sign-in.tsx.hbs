@@ -3,13 +3,13 @@ import { type Href, Link, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-function pushDecoratedUrl(router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) {
+const pushDecoratedUrl = (router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) => {
   const url = decorateUrl(href);
   const nextHref = url.startsWith("http") ? new URL(url).pathname : url;
   router.push(nextHref as Href);
 }
 
-export default function Page() {
+const Page = () => {
   const { signIn, errors, fetchStatus } = useSignIn();
   const router = useRouter();
   const [emailAddress, setEmailAddress] = React.useState("");
@@ -164,7 +164,9 @@ export default function Page() {
       </View>
     </View>
   );
-}
+};
+
+export default Page;
 
 const styles = StyleSheet.create({
   container: {

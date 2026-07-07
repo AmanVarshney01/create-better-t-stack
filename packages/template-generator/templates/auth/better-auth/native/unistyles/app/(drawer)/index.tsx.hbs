@@ -19,13 +19,13 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient, trpc } from "@/utils/trpc";
 {{/if}}
 
-export default function Home() {
+const Home = () => {
     {{#if (eq api "orpc")}}
-    const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+    const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
     const privateData = useQuery(orpc.privateData.queryOptions());
     {{/if}}
     {{#if (eq api "trpc")}}
-    const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+    const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
     const privateData = useQuery(trpc.privateData.queryOptions());
     {{/if}}
   const { data: session } = authClient.useSession();
@@ -72,6 +72,14 @@ export default function Home() {
   };
   {{/if}}
 
+  {{#unless (eq api "none")}}
+  let apiStatusText = "API Disconnected";
+  if (isLoading) {
+    apiStatusText = "Checking...";
+  } else if (healthCheck) {
+    apiStatusText = "Connected to API";
+  }
+  {{/unless}}
   return (
     <Container>
       <ScrollView>
@@ -126,17 +134,13 @@ export default function Home() {
               <View
                 style={[
                   styles.statusIndicatorDot,
-                  healthCheck.data
+                  healthCheck
                     ? styles.statusIndicatorGreen
                     : styles.statusIndicatorRed,
                 ]}
               />
               <Text style={styles.mutedText}>
-                {healthCheck.isLoading
-                  ? "Checking..."
-                  : healthCheck.data
-                    ? "Connected to API"
-                    : "API Disconnected"}
+                {apiStatusText}
               </Text>
             </View>
           </View>
@@ -161,7 +165,9 @@ export default function Home() {
       </ScrollView>
     </Container>
   );
-}
+};
+
+export default Home;
 
 const styles = StyleSheet.create((theme) => ({
   pageContainer: {

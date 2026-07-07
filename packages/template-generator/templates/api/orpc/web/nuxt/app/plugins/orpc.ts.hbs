@@ -4,7 +4,7 @@ import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
-function getServerUrl(url: string) {
+const getServerUrl = (url: string) => {
   const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
 
   if (!normalized.startsWith("/")) {
