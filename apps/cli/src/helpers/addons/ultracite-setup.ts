@@ -1,5 +1,8 @@
+import path from "node:path";
+
 import { Result } from "better-result";
 import { $ } from "execa";
+import fs from "fs-extra";
 import pc from "picocolors";
 
 import { navigableMultiselect, navigableSelect } from "../../prompts/navigable";
@@ -11,7 +14,7 @@ import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
 import { cliLog, createSpinner } from "../../utils/terminal-output";
 
-type UltraciteLinter = "biome" | "eslint" | "oxlint";
+type UltraciteLinter = "biome" | "oxlint";
 
 type UltraciteEditor =
   | "vscode"
@@ -84,7 +87,6 @@ type UltraciteInitArgsInput = {
 
 const LINTERS = {
   biome: { label: "Biome (Recommended)" },
-  eslint: { label: "ESLint + Prettier + Stylelint" },
   oxlint: { label: "Oxlint + Oxfmt" },
 } as const;
 
@@ -141,31 +143,36 @@ const HOOKS = {
   copilot: { label: "GitHub Copilot" },
 } as const;
 
+// Pinned so upstream preset releases can't silently break scaffold lint compliance;
+// bump alongside a template compliance run (BTS_ULTRACITE_COMPLIANCE=1 bun test)
+const ULTRACITE_VERSION = "7.9.2";
+
 const DEFAULT_LINTER: UltraciteLinter = "biome";
 const DEFAULT_EDITORS: UltraciteEditor[] = ["vscode"];
 const DEFAULT_AGENTS: UltraciteAgent[] = ["universal"];
 const DEFAULT_HOOKS: UltraciteHook[] = [];
 
 function getFrameworksFromFrontend(frontend: string[]): string[] {
-  const frameworkMap: Record<string, string> = {
-    "tanstack-router": "react",
-    "react-router": "react",
-    "tanstack-start": "react",
-    next: "next",
-    nuxt: "vue",
-    "native-bare": "react",
-    "native-uniwind": "react",
-    "native-unistyles": "react",
-    svelte: "svelte",
-    solid: "solid",
-    astro: "astro",
+  // Tags mirror ultracite's own package.json detection (react-router -> remix rules)
+  const frameworkMap: Record<string, string[]> = {
+    "tanstack-router": ["react", "tanstack"],
+    "react-router": ["react", "remix"],
+    "tanstack-start": ["react", "tanstack"],
+    next: ["react", "next"],
+    nuxt: ["vue"],
+    "native-bare": ["react"],
+    "native-uniwind": ["react"],
+    "native-unistyles": ["react"],
+    svelte: ["svelte"],
+    solid: ["solid"],
+    astro: ["astro"],
   };
 
   const frameworks = new Set<string>();
 
   for (const f of frontend) {
-    if (f !== "none" && frameworkMap[f]) {
-      frameworks.add(frameworkMap[f]);
+    for (const framework of frameworkMap[f] ?? []) {
+      frameworks.add(framework);
     }
   }
 
@@ -205,11 +212,41 @@ export function buildUltraciteInitArgs({
 
   return [
     ...getPackageRunnerPrefix(packageManager),
-    "ultracite@latest",
+    `ultracite@${ULTRACITE_VERSION}`,
     ...ultraciteArgs,
     "--skip-install",
     "--quiet",
   ];
+}
+
+// `husky init` (run by ultracite's husky integration) writes a sample "<pm> test" hook line
+async function removeHuskySampleHook(projectDir: string): Promise<void> {
+  const hookPath = path.join(projectDir, ".husky", "pre-commit");
+  if (!(await fs.pathExists(hookPath))) return;
+  const content = await fs.readFile(hookPath, "utf-8");
+  const cleaned = content
+    .split("\n")
+    .filter((line) => !/^(?:npm|pnpm|yarn|bun|deno)(?: run)? test$/.test(line.trim()))
+    .join("\n");
+  if (cleaned !== content) {
+    await fs.writeFile(hookPath, cleaned);
+  }
+}
+
+// `ultracite fix` needs two passes: its lint autofixes are not re-formatted by
+// oxfmt within the same run, so a single pass leaves `check` failing on format
+export async function runUltraciteFixAfterInstall(config: ProjectConfig): Promise<void> {
+  if (shouldSkipExternalCommands()) return;
+  if (!config.addons.includes("ultracite")) return;
+
+  const { packageManager, projectDir } = config;
+  for (let pass = 0; pass < 2; pass++) {
+    try {
+      await $({ cwd: projectDir, env: { CI: "true" } })`${[packageManager, "run", "fix"]}`;
+    } catch {
+      // unfixable findings exit non-zero; the fixes and formatting still applied
+    }
+  }
 }
 
 export async function setupUltracite(
@@ -336,6 +373,10 @@ export async function setupUltracite(
   if (initResult.isErr()) {
     cliLog.error(pc.red("Failed to set up Ultracite"));
     return initResult;
+  }
+
+  if (gitHooks.includes("husky")) {
+    await removeHuskySampleHook(projectDir);
   }
 
   s.stop("Ultracite setup successfully!");

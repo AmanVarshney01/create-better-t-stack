@@ -1,10 +1,12 @@
 # Lefthook configuration
 # https://github.com/evilmartians/lefthook
 
+# `jobs:` must directly follow `pre-commit:` so ultracite init can merge its job
 pre-commit:
-  parallel: true
   jobs:
-{{#if (includes addons "biome")}}
+{{#if (includes addons "ultracite")}}
+    # ultracite init inserts its fix job here
+{{else if (includes addons "biome")}}
     - name: biome
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
       run: {{packageManager}} biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
@@ -26,3 +28,4 @@ pre-commit:
     # - name: lint
     #   run: {{packageManagerRunCmd}} lint
 {{/if}}
+  parallel: true

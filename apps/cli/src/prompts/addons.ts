@@ -62,7 +62,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       break;
     case "ultracite":
       label = "Ultracite";
-      hint = "Zero-config Biome preset with AI integration";
+      hint = "Zero-config preset for Biome, ESLint, or Oxlint with AI integration";
       break;
     case "lefthook":
       label = "Lefthook";

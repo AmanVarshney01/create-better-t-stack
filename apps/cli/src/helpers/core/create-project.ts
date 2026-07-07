@@ -14,6 +14,7 @@ import { ProjectCreationError } from "../../utils/errors";
 import { formatProject } from "../../utils/file-formatter";
 import { getLatestCLIVersion } from "../../utils/get-latest-cli-version";
 import { setupAddons } from "../addons/addons-setup";
+import { runUltraciteFixAfterInstall } from "../addons/ultracite-setup";
 import { setupDatabase } from "../core/db-setup";
 import { initializeGit } from "./git";
 import { installDependencies } from "./install-dependencies";
@@ -127,6 +128,8 @@ export async function createProject(
           packageManager: options.packageManager,
         }),
       );
+
+      await runUltraciteFixAfterInstall(options);
     }
 
     // Initialize git if requested
