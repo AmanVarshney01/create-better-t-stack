@@ -233,22 +233,6 @@ async function removeHuskySampleHook(projectDir: string): Promise<void> {
   }
 }
 
-// `ultracite fix` needs two passes: its lint autofixes are not re-formatted by
-// oxfmt within the same run, so a single pass leaves `check` failing on format
-export async function runUltraciteFixAfterInstall(config: ProjectConfig): Promise<void> {
-  if (shouldSkipExternalCommands()) return;
-  if (!config.addons.includes("ultracite")) return;
-
-  const { packageManager, projectDir } = config;
-  for (let pass = 0; pass < 2; pass++) {
-    try {
-      await $({ cwd: projectDir, env: { CI: "true" } })`${[packageManager, "run", "fix"]}`;
-    } catch {
-      // unfixable findings exit non-zero; the fixes and formatting still applied
-    }
-  }
-}
-
 export async function setupUltracite(
   config: ProjectConfig,
   gitHooks: string[],
