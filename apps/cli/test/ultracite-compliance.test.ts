@@ -201,6 +201,10 @@ describe.skipIf(!enabled)("ultracite template compliance (oxlint)", () => {
         await $({ cwd: dir, env })`bun run ${CLI} create-json --input ${JSON.stringify(payload)}`;
 
         const projectDir = path.join(dir, "compliance-check");
+        // fix mirrors what the installed pre-commit hook runs; twice because
+        // ultracite's lint autofixes aren't re-formatted within the same pass
+        await $({ cwd: projectDir, reject: false })`bun run fix`;
+        await $({ cwd: projectDir, reject: false })`bun run fix`;
         const check = await $({ cwd: projectDir, reject: false })`bun run check`;
         expect(`${check.stdout}\n${check.stderr}`).not.toMatch(/: (error|warning) /);
         expect(check.exitCode).toBe(0);

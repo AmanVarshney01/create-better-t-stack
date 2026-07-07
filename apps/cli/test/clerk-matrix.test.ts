@@ -163,13 +163,13 @@ describe("Clerk matrix", () => {
           );
         }
 
-        if (!contextFile?.includes("type ClerkContextAuth")) {
+        if (!contextFile?.includes("interface ClerkContextAuth")) {
           failures.push(
             `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing ClerkContextAuth in packages/api/src/context.ts`,
           );
         }
 
-        if (!contextFile?.includes("type ClerkRequestContext")) {
+        if (!contextFile?.includes("interface ClerkRequestContext")) {
           failures.push(
             `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing ClerkRequestContext in packages/api/src/context.ts`,
           );

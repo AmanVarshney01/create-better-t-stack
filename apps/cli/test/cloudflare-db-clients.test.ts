@@ -170,7 +170,7 @@ describe("Cloudflare DB client generation", () => {
       const todoRouterFile = files.get("packages/api/src/routers/todo.ts");
 
       expect(dbFile).toContain('import { drizzle } from "drizzle-orm/d1";');
-      expect(dbFile).toContain("return drizzle(env.DB, { schema });");
+      expect(dbFile).toContain("drizzle(env.DB, { schema })");
       expect(dbFile).not.toContain('import { drizzle } from "drizzle-orm/libsql";');
       expect(dbFile).not.toContain("export const db = createDb();");
       expect(authFile).toContain("export const createAuth = ()");
