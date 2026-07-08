@@ -12,9 +12,7 @@ type PackageJson = {
 };
 
 export const dependencyVersionMap = {
-  // Native tsc; no JS API until 7.1 — workspaces whose tooling embeds the
-  // TS API (svelte/nuxt/astro web apps, expo native) pin ^6 in their templates
-  typescript: "^7",
+  typescript: "^6",
 
   "better-auth": "1.6.23",
   "@better-auth/expo": "1.6.23",
