@@ -1,6 +1,6 @@
 import { useSearchParams } from "react-router";
 
-const SuccessPage = () => {
+export default function SuccessPage() {
     const [searchParams] = useSearchParams();
     const checkout_id = searchParams.get("checkout_id");
 
@@ -10,6 +10,4 @@ const SuccessPage = () => {
             {checkout_id && <p>Checkout ID: {checkout_id}</p>}
         </div>
     );
-};
-
-export default SuccessPage;
+}

@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
-const Dashboard = () => {
+export default function Dashboard() {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
   {{#if (eq payments "polar")}}
@@ -22,10 +22,10 @@ const Dashboard = () => {
   {{/if}}
 
   {{#if (eq api "orpc")}}
-  const { data: privateData } = useQuery(orpc.privateData.queryOptions());
+  const privateData = useQuery(orpc.privateData.queryOptions());
   {{/if}}
   {{#if (eq api "trpc")}}
-  const { data: privateData } = useQuery(trpc.privateData.queryOptions());
+  const privateData = useQuery(trpc.privateData.queryOptions());
   {{/if}}
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const Dashboard = () => {
 
   {{#if (eq payments "polar")}}
   useEffect(() => {
-    const fetchCustomerState = async () => {
+    async function fetchCustomerState() {
       if (session) {
         const { data } = await authClient.customer.state();
         setCustomerState(data);
@@ -60,7 +60,7 @@ const Dashboard = () => {
       <h1>Dashboard</h1>
       <p>Welcome {session?.user.name}</p>
       {{#if (or (eq api "orpc") (eq api "trpc"))}}
-      <p>API: {privateData?.message}</p>
+      <p>API: {privateData.data?.message}</p>
       {{/if}}
       {{#if (eq payments "polar")}}
       <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
@@ -76,6 +76,4 @@ const Dashboard = () => {
       {{/if}}
     </div>
   );
-};
-
-export default Dashboard;
+}

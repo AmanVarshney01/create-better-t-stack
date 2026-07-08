@@ -1,5 +1,3 @@
-/* oxlint-disable promise/prefer-await-to-callbacks */
-
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq runtime "node")}}
 import { node } from "@elysiajs/node";
@@ -8,8 +6,7 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 {{#if (includes examples "ai")}}
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, wrapLanguageModel } from "ai";
-import type { UIMessage } from "ai";
+import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (eq api "trpc")}}
@@ -52,7 +49,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 });
 {{/if}}
 
-export const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
+const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
 	.use(
 		cors({
 			origin: env.CORS_ORIGIN,
@@ -84,10 +81,11 @@ export const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{e
 		}
 
 		return new Response(null, {
+			status: 302,
 			headers: {
 				Location: redirectUrl.toString(),
 			},
-			status: 302,});
+		});
 	})
 {{/if}}
 {{#if (eq auth "better-auth")}}
@@ -104,8 +102,9 @@ export const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{e
 		"/rpc*",
 		async (context) => {
 			const { response } = await rpcHandler.handle(context.request, {
+				prefix: "/rpc",
 				context: await createContext({ context }),
-				prefix: "/rpc",});
+			});
 			return response ?? new Response("Not Found", { status: 404 });
 		},
 		{
@@ -116,8 +115,9 @@ export const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{e
 		"/api-reference*",
 		async (context) => {
 			const { response } = await apiHandler.handle(context.request, {
+				prefix: "/api-reference",
 				context: await createContext({ context }),
-				prefix: "/api-reference",});
+			});
 			return response ?? new Response("Not Found", { status: 404 });
 		},
 		{
@@ -128,11 +128,11 @@ export const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{e
 {{#if (eq api "trpc")}}
 	.all("/trpc/*", async (context) => {
 		const res = await fetchRequestHandler({
-			createContext: () => createContext({ context }),
-		
 			endpoint: "/trpc",
+			router: appRouter,
 			req: context.request,
-			router: appRouter,});
+			createContext: () => createContext({ context }),
+		});
 		return res;
 	})
 {{/if}}
@@ -141,11 +141,12 @@ export const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{e
 		const body = (await context.request.json()) as { messages?: UIMessage[] };
 		const uiMessages = body.messages || [];
 		const model = wrapLanguageModel({
+			model: google("gemini-2.5-flash"),
 			middleware: devToolsMiddleware(),
-			model: google("gemini-2.5-flash"),});
+		});
 		const result = streamText({
-			messages: await convertToModelMessages(uiMessages),
 			model,
+			messages: await convertToModelMessages(uiMessages),
 		});
 
 		return createUIMessageStreamResponse({

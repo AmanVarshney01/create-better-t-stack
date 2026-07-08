@@ -21,7 +21,8 @@ const trpcClient = createTRPCClient<AppRouter>({
 			url: `${env.EXPO_PUBLIC_SERVER_URL}/trpc`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
-			fetch(url, options) {
+			fetch:
+				function (url, options) {
 					return fetch(url, {
 						...options,
 						// Better Auth Expo forwards the session cookie manually on native.
@@ -40,7 +41,7 @@ const trpcClient = createTRPCClient<AppRouter>({
 				return Object.fromEntries(headers);
 			},
 {{else if (eq auth "clerk")}}
-			async headers() {
+			headers: async function () {
 				const token = await getClerkAuthToken();
 				return token ? { Authorization: `Bearer ${token}` } : {};
 			},

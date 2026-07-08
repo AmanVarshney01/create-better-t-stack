@@ -1,5 +1,5 @@
 ---
-import Layout from "../layouts/layout.astro";
+import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="Todos - {{projectName}}">
@@ -30,7 +30,6 @@ import Layout from "../layouts/layout.astro";
 </Layout>
 
 <script>
-  /* oxlint-disable no-use-before-define, github/no-inner-html */
   import { orpc } from "../lib/orpc";
 
   interface Todo {
@@ -39,40 +38,23 @@ import Layout from "../layouts/layout.astro";
     completed: boolean;
   }
 
-  const newTodoInput = document.querySelector("#new-todo") as HTMLInputElement;
-  const addBtn = document.querySelector("#add-btn") as HTMLButtonElement;
-  const addForm = document.querySelector("#add-form") as HTMLFormElement;
-  const loadingEl = document.querySelector("#loading") as HTMLElement;
-  const emptyEl = document.querySelector("#empty") as HTMLElement;
-  const todoList = document.querySelector("#todo-list") as HTMLElement;
-  const errorEl = document.querySelector("#error") as HTMLElement;
+  const newTodoInput = document.getElementById("new-todo") as HTMLInputElement;
+  const addBtn = document.getElementById("add-btn") as HTMLButtonElement;
+  const addForm = document.getElementById("add-form") as HTMLFormElement;
+  const loadingEl = document.getElementById("loading")!;
+  const emptyEl = document.getElementById("empty")!;
+  const todoList = document.getElementById("todo-list")!;
+  const errorEl = document.getElementById("error")!;
 
   let todos: Todo[] = [];
 
-  const showError = (message: string) => {
+  function showError(message: string) {
     errorEl.textContent = message;
     errorEl.classList.remove("hidden");
     setTimeout(() => errorEl.classList.add("hidden"), 3000);
   }
 
-  const onToggleChange = async (e: Event) => {
-    const li = (e.target as HTMLElement).closest("li");
-    const id = Number(li?.dataset.id);
-    const todo = todos.find(t => t.id === id);
-    if (todo) {
-      await toggleTodo(id, todo.completed);
-    }
-  };
-
-  const onDeleteClick = async (e: Event) => {
-    const li = (e.target as HTMLElement).closest("li");
-    const id = Number(li?.dataset.id);
-    if (!Number.isNaN(id)) {
-      await deleteTodo(id);
-    }
-  };
-
-  const renderTodos = () => {
+  function renderTodos() {
     loadingEl.classList.add("hidden");
     
     if (todos.length === 0) {
@@ -106,16 +88,27 @@ import Layout from "../layouts/layout.astro";
     `).join("");
 
     // Add event listeners
-    for (const checkbox of todoList.querySelectorAll(".toggle-checkbox")) {
-      checkbox.addEventListener("change", onToggleChange);
-    }
+    todoList.querySelectorAll(".toggle-checkbox").forEach(checkbox => {
+      checkbox.addEventListener("change", async (e) => {
+        const li = (e.target as HTMLElement).closest("li")!;
+        const id = parseInt(li.dataset.id!);
+        const todo = todos.find(t => t.id === id);
+        if (todo) {
+          await toggleTodo(id, todo.completed);
+        }
+      });
+    });
 
-    for (const btn of todoList.querySelectorAll(".delete-btn")) {
-      btn.addEventListener("click", onDeleteClick);
-    }
+    todoList.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        const li = (e.target as HTMLElement).closest("li")!;
+        const id = parseInt(li.dataset.id!);
+        await deleteTodo(id);
+      });
+    });
   }
 
-  const loadTodos = async () => {
+  async function loadTodos() {
     try {
       todos = await orpc.todo.getAll();
       renderTodos();
@@ -125,7 +118,7 @@ import Layout from "../layouts/layout.astro";
     }
   }
 
-  const addTodo = async (text: string) => {
+  async function addTodo(text: string) {
     addBtn.disabled = true;
     addBtn.textContent = "Adding...";
     try {
@@ -140,7 +133,7 @@ import Layout from "../layouts/layout.astro";
     }
   }
 
-  const toggleTodo = async (id: number, completed: boolean) => {
+  async function toggleTodo(id: number, completed: boolean) {
     try {
       await orpc.todo.toggle({ id, completed: !completed });
       await loadTodos();
@@ -149,7 +142,7 @@ import Layout from "../layouts/layout.astro";
     }
   }
 
-  const deleteTodo = async (id: number) => {
+  async function deleteTodo(id: number) {
     try {
       await orpc.todo.delete({ id });
       await loadTodos();

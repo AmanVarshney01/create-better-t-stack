@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 {{#if (eq payments "polar") }}
 import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
@@ -14,16 +12,19 @@ import { useQuery } from "@tanstack/react-query";
 {{/if}}
 import { createFileRoute } from "@tanstack/react-router";
 
+export const Route = createFileRoute("/_auth/dashboard")({
+  component: RouteComponent,
+});
 
-const RouteComponent = () => {
+function RouteComponent() {
   const { session{{#if (eq payments "polar") }}, customerState{{/if}} } = Route.useRouteContext();
 
   {{#if (eq api "trpc") }}
   const trpc = useTRPC();
-  const { data: privateData } = useQuery(trpc.privateData.queryOptions());
+  const privateData = useQuery(trpc.privateData.queryOptions());
   {{/if}}
   {{#if (eq api "orpc") }}
-  const { data: privateData } = useQuery(orpc.privateData.queryOptions());
+  const privateData = useQuery(orpc.privateData.queryOptions());
   {{/if}}
 
   {{#if (eq payments "polar") }}
@@ -39,9 +40,9 @@ const RouteComponent = () => {
       <p>Welcome {session.data?.user.name}</p>
       {{/if}}
       {{#if (eq api "trpc") }}
-      <p>API: {privateData?.message}</p>
+      <p>API: {privateData.data?.message}</p>
       {{else if (eq api "orpc") }}
-      <p>API: {privateData?.message}</p>
+      <p>API: {privateData.data?.message}</p>
       {{/if}}
       {{#if (eq payments "polar") }}
       <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
@@ -66,7 +67,3 @@ const RouteComponent = () => {
     </div>
   );
 }
-
-export const Route = createFileRoute("/_auth/dashboard")({
-  component: RouteComponent,
-});

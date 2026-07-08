@@ -1,45 +1,44 @@
 {{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
-// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference types="@cloudflare/workers-types" />
-// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
 export { env } from "cloudflare:workers";
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "next"))}}
-// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference path="../env.d.ts" />
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-const getNodeEnvValue = (key: string) => {
+function getNodeEnvValue(key: string) {
 	if (key === "DB") {
-		return;
+		return undefined;
 	}
 
 	return process.env[key];
 }
 
-const getCloudflareEnvSync = () => {
+function getCloudflareEnvSync() {
 	try {
 		return getCloudflareContext().env as Env;
 	} catch {
-		return;
+		return undefined;
 	}
 }
 
 type EnvValue = Env[keyof Env];
 
-const createEnvProxy = (getValue: (key: keyof Env & string) => EnvValue | undefined) => new Proxy({} as Env, {
+function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefined) {
+	return new Proxy({} as Env, {
 		get(_target, prop) {
 			if (typeof prop !== "string") {
-				return;
+				return undefined;
 			}
 
 			return getValue(prop as keyof Env & string);
 		},
-	})
+	});
+}
 
-const resolveEnvValue = (key: keyof Env & string): EnvValue | undefined => {
+function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
 	const nodeValue = getNodeEnvValue(key);
 	if (nodeValue !== undefined) {
 		return nodeValue as EnvValue;
@@ -52,7 +51,7 @@ const resolveEnvValue = (key: keyof Env & string): EnvValue | undefined => {
 // In the Cloudflare runtime, fall back to OpenNext's Cloudflare context bindings.
 // For static routes (ISR/SSG), use getEnvAsync() so OpenNext can resolve bindings
 // with the async Cloudflare context API.
-export const getEnvAsync = async () => {
+export async function getEnvAsync() {
 	const cloudflareEnv = (await getCloudflareContext({ async: true })).env as Env;
 
 	return createEnvProxy((key) => {
@@ -67,7 +66,6 @@ export const getEnvAsync = async () => {
 
 export const env = createEnvProxy(resolveEnvValue);
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference path="../env.d.ts" />
 import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
@@ -87,9 +85,7 @@ export const env = new Proxy({} as Env, {
 	},
 });
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
-// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference types="@cloudflare/workers-types" />
-// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
@@ -100,14 +96,12 @@ import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
 {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}
-const getVercelOrigin = () => {
+function getVercelOrigin() {
 	const vercelUrl =
 		process.env.VERCEL_ENV === "production"
 			? (process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL)
 			: (process.env.VERCEL_URL ?? process.env.VERCEL_PROJECT_PRODUCTION_URL);
-	if (!vercelUrl) {
-		return;
-	}
+	if (!vercelUrl) return undefined;
 	return vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`;
 }
 
@@ -159,7 +153,7 @@ export const env = createEnv({
 		CORS_ORIGIN: z.url(),
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
-	{{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}runtimeEnv,{{else}}runtimeEnv: process.env,{{/if}}
+	runtimeEnv: {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}runtimeEnv{{else}}process.env{{/if}},
 	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });

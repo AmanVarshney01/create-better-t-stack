@@ -1,12 +1,10 @@
-/* oxlint-disable no-use-before-define */
-
 import { Container } from "@/components/container";
 import { Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { ScrollView, View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
-const TabTwo = () => {
+export default function TabTwo() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 
@@ -33,15 +31,14 @@ const TabTwo = () => {
       </ScrollView>
     </Container>
   );
-};
-
-export default TabTwo;
+}
 
 const styles = StyleSheet.create({
-  content: {
-    paddingVertical: 16,
-  },
   scrollView: {
     flex: 1,
     padding: 16,
-  },});
+  },
+  content: {
+    paddingVertical: 16,
+  },
+});

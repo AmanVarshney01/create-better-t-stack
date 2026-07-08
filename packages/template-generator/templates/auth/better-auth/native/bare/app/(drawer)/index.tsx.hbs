@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { View, ScrollView, StyleSheet{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
 {{#if (eq payments "polar")}}
@@ -22,7 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient, trpc } from "@/utils/trpc";
 {{/if}}
 
-const Home = () => {
+export default function Home() {
 const { colorScheme } = useColorScheme();
 const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 {{#if (eq api "orpc")}}
@@ -54,10 +52,11 @@ const handlePolarCheckout = async () => {
 	const returnUrl = Linking.createURL("/");
 	const polarReturnUrl = getPolarReturnUrl(returnUrl);
 	const { data, error } = await polarNativeClient.checkout({
-		redirect: false,
-		returnUrl: polarReturnUrl,
 		slug: "pro",
-		successUrl: polarReturnUrl,});
+		redirect: false,
+		successUrl: polarReturnUrl,
+		returnUrl: polarReturnUrl,
+	});
 
 	if (error || !data?.url) {
 		Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
@@ -203,55 +202,59 @@ return (
   </ScrollView>
 </Container>
 );
-};
-
-export default Home;
+}
 
 const styles = StyleSheet.create({
-cardTitleHost: {
-marginBottom: 12,
-},
-content: {
-paddingBottom: 32,
-paddingHorizontal: 20,
-paddingTop: 28,},
-paymentActions: {
-marginTop: 12,
-},
-privateDataCard: {
-borderRadius: 16,
-borderWidth: 1,
-marginBottom: 16,
-padding: 16,},
 scrollView: {
 flex: 1,
 },
-statusCard: {
-borderRadius: 16,
-borderWidth: 1,
-marginBottom: 16,
-padding: 16,},
-statusContent: {
-flex: 1,
+content: {
+paddingHorizontal: 20,
+paddingTop: 28,
+paddingBottom: 32,
 },
-statusIndicator: {
-height: 8,
-width: 8,
-},
-statusRow: {
-alignItems: "center",
-flexDirection: "row",
-gap: 8,},
 titleHost: {
 alignSelf: "stretch",
 height: 34,
 marginBottom: 24,
 },
 userCard: {
-borderRadius: 16,
-borderWidth: 1,
 marginBottom: 16,
-padding: 16,},
+padding: 16,
+borderWidth: 1,
+borderRadius: 16,
+},
 userHeader: {
 marginBottom: 8,
-},});
+},
+paymentActions: {
+marginTop: 12,
+},
+statusCard: {
+marginBottom: 16,
+padding: 16,
+borderWidth: 1,
+borderRadius: 16,
+},
+cardTitleHost: {
+marginBottom: 12,
+},
+statusRow: {
+flexDirection: "row",
+alignItems: "center",
+gap: 8,
+},
+statusIndicator: {
+height: 8,
+width: 8,
+},
+statusContent: {
+flex: 1,
+},
+privateDataCard: {
+marginBottom: 16,
+padding: 16,
+borderWidth: 1,
+borderRadius: 16,
+},
+});

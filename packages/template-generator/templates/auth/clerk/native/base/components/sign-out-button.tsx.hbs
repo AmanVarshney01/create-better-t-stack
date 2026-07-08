@@ -10,7 +10,7 @@ export const SignOutButton = () => {
     try {
       await signOut();
       router.replace("/");
-    } catch (error) {
+    } catch (err) {
       console.error(JSON.stringify(err, null, 2));
     }
   };

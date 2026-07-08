@@ -41,8 +41,7 @@ const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
-// oxlint-disable-next-line sonarjs/function-name -- component renders null
-const ClerkApiAuthBridge = () => {
+function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -57,7 +56,7 @@ const ClerkApiAuthBridge = () => {
 }
 {{/if}}
 
-const Providers = ({
+export default function Providers({
   children,
 {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
   initialToken,
@@ -67,7 +66,7 @@ const Providers = ({
 {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
   initialToken?: string | null;
 {{/if}}
-}) => {
+}) {
   return (
     <ThemeProvider
       attribute="class"
@@ -112,6 +111,4 @@ const Providers = ({
       <Toaster richColors />
     </ThemeProvider>
   );
-};
-
-export default Providers;
+}

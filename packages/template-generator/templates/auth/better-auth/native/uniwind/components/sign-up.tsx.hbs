@@ -12,25 +12,24 @@ import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast
 import z from "zod";
 
 const signUpSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, "Email is required")
-    .email("Enter a valid email address"),
   name: z
     .string()
     .trim()
     .min(1, "Name is required")
     .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
   password: z
     .string()
     .min(1, "Password is required")
-    .min(8, "Use at least 8 characters"),});
+    .min(8, "Use at least 8 characters"),
+});
 
-const getErrorMessage = (error: unknown): string | null => {
-  if (!error) {
-    return null;
-  }
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
 
   if (typeof error === "string") {
     return error;
@@ -56,37 +55,40 @@ const getErrorMessage = (error: unknown): string | null => {
   return null;
 }
 
-export const SignUp = () => {
+export function SignUp() {
   const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
   const { toast } = useToast();
 
   const form = useForm({
     defaultValues: {
-      email: "",
       name: "",
-      password: "",},
+      email: "",
+      password: "",
+    },
     validators: {
       onSubmit: signUpSchema,
     },
     onSubmit: async ({ value, formApi }) => {
       await authClient.signUp.email(
         {
-          email: value.email.trim(),
           name: value.name.trim(),
+          email: value.email.trim(),
           password: value.password,
         },
         {
           onError(error) {
             toast.show({
+              variant: "danger",
               label: error.error?.message || "Failed to sign up",
-              variant: "danger",});
+            });
           },
           onSuccess() {
             formApi.reset();
             toast.show({
+              variant: "success",
               label: "Account created successfully",
-              variant: "success",});
+            });
             {{#if (eq api "orpc")}}
             queryClient.refetchQueries();
             {{/if}}

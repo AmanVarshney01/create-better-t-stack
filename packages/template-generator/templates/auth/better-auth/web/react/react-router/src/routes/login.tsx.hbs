@@ -2,13 +2,12 @@ import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import { useState } from "react";
 
-const Login = () => {
+export default function Login() {
   const [showSignIn, setShowSignIn] = useState(false);
 
-  if (showSignIn) {
-    return <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />;
-  }
-  return <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />;
-};;
-
-export default Login;
+  return showSignIn ? (
+    <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
+  ) : (
+    <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
+  );
+}

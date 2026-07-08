@@ -1,6 +1,3 @@
-{{#if (and (ne backend "convex") (eq auth "clerk"))}}
-import type { ReactNode } from "react";
-{{/if}}
 import { Text, View{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
 import * as Linking from "expo-linking";
@@ -39,9 +36,9 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 {{#unless (or (eq backend "none") (and (eq backend "convex") (eq auth "better-auth")))}}
 import { Ionicons } from "@expo/vector-icons";
 {{/unless}}
-import { {{#if (or (eq auth "clerk") (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar")))}}Button, {{/if}}Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
+import { Button, Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
 
-const Home = () => {
+export default function Home() {
 {{#if (eq api "orpc")}}
 const healthCheck = useQuery(orpc.healthCheck.queryOptions());
 {{/if}}
@@ -50,13 +47,13 @@ const healthCheck = useQuery(trpc.healthCheck.queryOptions());
 {{/if}}
 {{#if (and (eq backend "convex") (eq auth "clerk"))}}
 const { user } = useUser();
-const healthCheck = useQuery(api.healthcheck.get);
-const privateData = useQuery(api.privatedata.get);
+const healthCheck = useQuery(api.healthCheck.get);
+const privateData = useQuery(api.privateData.get);
 {{else if (and (ne backend "convex") (eq auth "clerk"))}}
 const { isLoaded, isSignedIn } = useAuth();
 const { user } = useUser();
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-const healthCheck = useQuery(api.healthcheck.get);
+const healthCheck = useQuery(api.healthCheck.get);
 const { isAuthenticated } = useConvexAuth();
 const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
 {{#if (eq payments "polar")}}
@@ -86,9 +83,10 @@ const handlePolarCheckout = async () => {
     const returnUrl = Linking.createURL("/");
     const polarReturnUrl = getPolarReturnUrl(returnUrl);
     const { url } = await generateCheckoutLink({
-      origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
       productIds: [recurringProduct.id],
-      successUrl: polarReturnUrl,});
+      origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+      successUrl: polarReturnUrl,
+    });
 
     await openPolarLink(url, returnUrl);
   } catch {
@@ -110,7 +108,7 @@ const handlePolarPortal = async () => {
 };
 {{/if}}
 {{else if (eq backend "convex")}}
-const healthCheck = useQuery(api.healthcheck.get);
+const healthCheck = useQuery(api.healthCheck.get);
 {{/if}}
 {{#unless (eq backend "none")}}
 const successColor = useThemeColor("success");
@@ -125,57 +123,7 @@ const isConnected = healthCheck?.data === "OK";
 const isLoading = healthCheck?.isLoading;
 {{/unless}}
 {{/if}}
-{{#if (or (eq backend "convex") (ne api "none"))}}
-
-let apiStatusText = "API Disconnected";
-if (isLoading) {
-  apiStatusText = "Checking connection...";
-} else if (isConnected) {
-  apiStatusText = "Connected to API";
-}
-{{/if}}
 {{/unless}}
-
-{{#if (and (ne backend "convex") (eq auth "clerk"))}}
-let clerkContent: ReactNode;
-if (!isLoaded) {
-  clerkContent = (
-
-  <View className="mt-4 items-center">
-    <Spinner size="sm" />
-  </View>
-  );
-} else if (isSignedIn) {
-  clerkContent = (
-
-  <Surface variant="secondary" className="mt-5 p-4 rounded-xl">
-    <View className="flex-row items-center justify-between">
-      <View className="flex-1">
-        <Text className="text-foreground font-medium">
-          {user?.fullName ?? user?.firstName ?? "Welcome"}
-        </Text>
-        <Text className="text-muted text-xs mt-0.5">
-          {user?.emailAddresses[0]?.emailAddress}
-        </Text>
-      </View>
-      <SignOutButton />
-    </View>
-  </Surface>
-  );
-} else {
-  clerkContent = (
-
-  <View className="mt-4 gap-3">
-    <Link href="/(auth)/sign-in" asChild>
-      <Button variant="secondary"><Button.Label>Sign In</Button.Label></Button>
-    </Link>
-    <Link href="/(auth)/sign-up" asChild>
-      <Button variant="ghost"><Button.Label>Sign Up</Button.Label></Button>
-    </Link>
-  </View>
-  );
-}
-{{/if}}
 
 return (
 <Container className="px-4 pb-4">
@@ -213,7 +161,11 @@ return (
             {{/if}}
           </Text>
           <Text className="text-muted text-xs mt-0.5">
-            {apiStatusText}
+            {isLoading
+            ? "Checking connection..."
+            : isConnected
+            ? "Connected to API"
+            : "API Disconnected"}
           </Text>
         </View>
         {isLoading && <Spinner size="sm" />}
@@ -258,7 +210,34 @@ return (
   {{/if}}
 
   {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-  {clerkContent}
+  {!isLoaded ? (
+  <View className="mt-4 items-center">
+    <Spinner size="sm" />
+  </View>
+  ) : isSignedIn ? (
+  <Surface variant="secondary" className="mt-5 p-4 rounded-xl">
+    <View className="flex-row items-center justify-between">
+      <View className="flex-1">
+        <Text className="text-foreground font-medium">
+          {user?.fullName ?? user?.firstName ?? "Welcome"}
+        </Text>
+        <Text className="text-muted text-xs mt-0.5">
+          {user?.emailAddresses[0]?.emailAddress}
+        </Text>
+      </View>
+      <SignOutButton />
+    </View>
+  </Surface>
+  ) : (
+  <View className="mt-4 gap-3">
+    <Link href="/(auth)/sign-in" asChild>
+      <Button variant="secondary"><Button.Label>Sign In</Button.Label></Button>
+    </Link>
+    <Link href="/(auth)/sign-up" asChild>
+      <Button variant="ghost"><Button.Label>Sign Up</Button.Label></Button>
+    </Link>
+  </View>
+  )}
   {{/if}}
 
   {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
@@ -316,6 +295,4 @@ return (
   {{/if}}
 </Container>
 );
-};
-
-export default Home;
+}

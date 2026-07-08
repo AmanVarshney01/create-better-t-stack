@@ -81,7 +81,7 @@ if (env.size === 0) {
 	process.exit(0);
 }
 
-const LOCAL_VALUE_PATTERN = /localhost|127\.0\.0\.1|0\.0\.0\.0|^file:/iu;
+const LOCAL_VALUE_PATTERN = /localhost|127\.0\.0\.1|0\.0\.0\.0|^file:/i;
 const localKeys = [...env.entries()]
 	.filter(([, value]) => LOCAL_VALUE_PATTERN.test(value))
 	.map(([key]) => key);
@@ -107,11 +107,11 @@ for (const [key, value] of env.entries()) {
 			...vercelArgs,
 		],
 		{
-			encoding: "utf8",
 			input: `${value}\n`,
+			stdio: ["pipe", "inherit", "inherit"],
+			encoding: "utf8",
 			// Windows resolves bunx/npx/pnpm via .cmd shims, which need a shell
 			shell: process.platform === "win32",
-			stdio: ["pipe", "inherit", "inherit"],
 		},
 	);
 

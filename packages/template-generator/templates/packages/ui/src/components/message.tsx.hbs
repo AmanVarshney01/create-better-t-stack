@@ -1,10 +1,8 @@
-/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
-
 import * as React from "react"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
-const MessageGroup = ({ className, ...props }: React.ComponentProps<"div">) => {
+function MessageGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="message-group"
@@ -14,11 +12,11 @@ const MessageGroup = ({ className, ...props }: React.ComponentProps<"div">) => {
   )
 }
 
-const Message = ({
+function Message({
   className,
   align = "start",
   ...props
-}: React.ComponentProps<"div"> & { align?: "start" | "end" }) => {
+}: React.ComponentProps<"div"> & { align?: "start" | "end" }) {
   return (
     <div
       data-slot="message"
@@ -32,7 +30,7 @@ const Message = ({
   )
 }
 
-const MessageAvatar = ({ className, ...props }: React.ComponentProps<"div">) => {
+function MessageAvatar({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="message-avatar"
@@ -45,7 +43,7 @@ const MessageAvatar = ({ className, ...props }: React.ComponentProps<"div">) => 
   )
 }
 
-const MessageContent = ({ className, ...props }: React.ComponentProps<"div">) => {
+function MessageContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="message-content"
@@ -58,7 +56,7 @@ const MessageContent = ({ className, ...props }: React.ComponentProps<"div">) =>
   )
 }
 
-const MessageHeader = ({ className, ...props }: React.ComponentProps<"div">) => {
+function MessageHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="message-header"
@@ -71,7 +69,7 @@ const MessageHeader = ({ className, ...props }: React.ComponentProps<"div">) => 
   )
 }
 
-const MessageFooter = ({ className, ...props }: React.ComponentProps<"div">) => {
+function MessageFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="message-footer"

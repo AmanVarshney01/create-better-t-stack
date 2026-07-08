@@ -1,5 +1,3 @@
-/* oxlint-disable typescript/no-empty-interface, typescript/no-empty-object-type */
-
 import { StyleSheet } from "react-native-unistyles";
 
 import { breakpoints } from "./breakpoints";
@@ -7,10 +5,10 @@ import { darkTheme, lightTheme } from "./theme";
 
 type AppBreakpoints = typeof breakpoints;
 
-interface AppThemes {
+type AppThemes = {
   light: typeof lightTheme;
   dark: typeof darkTheme;
-}
+};
 
 declare module "react-native-unistyles" {
   export interface UnistylesBreakpoints extends AppBreakpoints {}
@@ -20,8 +18,9 @@ declare module "react-native-unistyles" {
 StyleSheet.configure({
   breakpoints,
   themes: {
+    light: lightTheme,
     dark: darkTheme,
-    light: lightTheme,},
+  },
   settings: {
     adaptiveThemes: true,
   },

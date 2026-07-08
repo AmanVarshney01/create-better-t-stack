@@ -19,7 +19,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient, trpc } from "@/utils/trpc";
 {{/if}}
 
-const Home = () => {
+export default function Home() {
 {{#if (eq api "orpc")}}
 const healthCheck = useQuery(orpc.healthCheck.queryOptions());
 const privateData = useQuery(orpc.privateData.queryOptions());
@@ -49,10 +49,11 @@ const handlePolarCheckout = async () => {
   const returnUrl = Linking.createURL("/");
   const polarReturnUrl = getPolarReturnUrl(returnUrl);
   const { data, error } = await polarNativeClient.checkout({
-    redirect: false,
-    returnUrl: polarReturnUrl,
     slug: "pro",
-    successUrl: polarReturnUrl,});
+    redirect: false,
+    successUrl: polarReturnUrl,
+    returnUrl: polarReturnUrl,
+  });
 
   if (error || !data?.url) {
     Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
@@ -182,6 +183,4 @@ return (
   )}
 </Container>
 );
-};
-
-export default Home;
+}

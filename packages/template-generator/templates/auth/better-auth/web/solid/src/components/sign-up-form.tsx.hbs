@@ -1,12 +1,10 @@
-/* oxlint-disable react-doctor/no-prevent-default */
-
 import { authClient } from "@/lib/auth-client";
 import { createForm } from "@tanstack/solid-form";
 import { useNavigate } from "@tanstack/solid-router";
 import z from "zod";
 import { For } from "solid-js";
 
-const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
+export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
   const navigate = useNavigate({
     from: "/",
   });
@@ -14,14 +12,16 @@ const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
   const form = createForm(() => ({
     defaultValues: {
       email: "",
+      password: "",
       name: "",
-      password: "",},
+    },
     onSubmit: async ({ value }) => {
       await authClient.signUp.email(
         {
           email: value.email,
+          password: value.password,
           name: value.name,
-          password: value.password,},
+        },
         {
           onSuccess: () => {
             navigate({
@@ -37,9 +37,10 @@ const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
     },
     validators: {
       onSubmit: z.object({
-        email: z.email("Invalid email address"),
         name: z.string().min(2, "Name must be at least 2 characters"),
-        password: z.string().min(8, "Password must be at least 8 characters"),}),
+        email: z.email("Invalid email address"),
+        password: z.string().min(8, "Password must be at least 8 characters"),
+      }),
     },
   }));
 
@@ -144,6 +145,4 @@ const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
       </div>
     </div>
   );
-};
-
-export default SignUpForm;
+}

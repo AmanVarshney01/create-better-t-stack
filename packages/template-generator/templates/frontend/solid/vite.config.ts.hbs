@@ -6,13 +6,13 @@ import path from "node:path";
 
 export default defineConfig({
   plugins: [
-    tanstackRouter({ autoCodeSplitting: true , target: "solid"}),
+    tanstackRouter({ target: "solid", autoCodeSplitting: true }),
     solidPlugin(),
     tailwindcss(),
   ],
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "./src"),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
   server: {

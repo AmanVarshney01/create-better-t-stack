@@ -1,5 +1,3 @@
-/* oxlint-disable github/filenames-match-regex */
-
 import type { Route } from "./+types/_index";
 {{#if (eq backend "convex")}}
 import { useQuery } from "convex/react";
@@ -30,38 +28,17 @@ const TITLE_TEXT = `
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  `;
 
-export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: "{{projectName}}" }, { content: "{{projectName}} is a web application", name: "description" }];
+export function meta({}: Route.MetaArgs) {
+  return [{ title: "{{projectName}}" }, { name: "description", content: "{{projectName}} is a web application" }];
 }
 
-const Home = () => {
+export default function Home() {
   {{#if (eq backend "convex")}}
-  const healthCheck = useQuery(api.healthcheck.get);
+  const healthCheck = useQuery(api.healthCheck.get);
   {{else if (eq api "orpc")}}
-  const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
+  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
   {{else if (eq api "trpc")}}
-  const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
-  {{/if}}
-
-  {{#if (eq backend "convex")}}
-  let statusText = "Error";
-  let statusColor = "bg-red-500";
-  if (healthCheck === undefined) {
-    statusText = "Checking...";
-    statusColor = "bg-orange-400";
-  } else if (healthCheck === "OK") {
-    statusText = "Connected";
-    statusColor = "bg-green-500";
-  }
-  {{else}}
-  {{#unless (eq api "none")}}
-  let statusText = "Disconnected";
-  if (isLoading) {
-    statusText = "Checking...";
-  } else if (healthCheck) {
-    statusText = "Connected";
-  }
-  {{/unless}}
+  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
   {{/if}}
 
   return (
@@ -73,20 +50,30 @@ const Home = () => {
           {{#if (eq backend "convex")}}
           <div className="flex items-center gap-2">
             <div
-              className={`h-2 w-2 rounded-full ${statusColor}`}
+              className={`h-2 w-2 rounded-full ${healthCheck === "OK" ? "bg-green-500" : healthCheck === undefined ? "bg-orange-400" : "bg-red-500"}`}
             />
             <span className="text-sm text-muted-foreground">
-              {statusText}
+              {healthCheck === undefined
+                ? "Checking..."
+                : healthCheck === "OK"
+                  ? "Connected"
+                  : "Error"}
             </span>
           </div>
           {{else}}
             {{#unless (eq api "none")}}
             <div className="flex items-center gap-2">
               <div
-                className={`h-2 w-2 rounded-full ${healthCheck ? "bg-green-500" : "bg-red-500"}`}
+                className={`h-2 w-2 rounded-full ${
+                  healthCheck.data ? "bg-green-500" : "bg-red-500"
+                }`}
               />
               <span className="text-sm text-muted-foreground">
-                {statusText}
+                {healthCheck.isLoading
+                  ? "Checking..."
+                  : healthCheck.data
+                  ? "Connected"
+                  : "Disconnected"}
               </span>
             </div>
             {{/unless}}
@@ -95,6 +82,4 @@ const Home = () => {
       </div>
     </div>
   );
-};
-
-export default Home;
+}

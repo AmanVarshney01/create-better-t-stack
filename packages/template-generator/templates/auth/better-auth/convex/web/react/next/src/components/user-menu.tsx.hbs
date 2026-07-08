@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 
-const UserMenu = () => {
+export default function UserMenu() {
 	const router = useRouter();
 	const user = useQuery(api.auth.getCurrentUser)
 
@@ -45,6 +45,4 @@ const UserMenu = () => {
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);
-};
-
-export default UserMenu;
+}

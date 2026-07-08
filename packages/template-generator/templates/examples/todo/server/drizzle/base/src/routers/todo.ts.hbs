@@ -10,32 +10,46 @@ import { todo } from "@{{projectName}}/db/schema/todo";
 import { publicProcedure } from "../index";
 
 export const todoRouter = {
-  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) =>
-    await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}db{{/if}}.select().from(todo),
-  ),
+  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+    const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
+    return await db.select().from(todo);
+  }),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) =>
-      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}db{{/if}}.insert(todo).values({
-        text: input.text,
-      }),
-    ),
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
+      return await db
+        .insert(todo)
+        .values({
+          text: input.text,
+        });
+    }),
 
   toggle: publicProcedure
-    .input(z.object({ completed: z.boolean(), id: z.number() }))
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) =>
-      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}db{{/if}}
+    .input(z.object({ id: z.number(), completed: z.boolean() }))
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
+      return await db
         .update(todo)
         .set({ completed: input.completed })
-        .where(eq(todo.id, input.id)),
-    ),
+        .where(eq(todo.id, input.id));
+    }),
 
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) =>
-      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}db{{/if}}.delete(todo).where(eq(todo.id, input.id)),
-    ),
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
+      return await db.delete(todo).where(eq(todo.id, input.id));
+    }),
 };
 {{/if}}
 
@@ -51,31 +65,43 @@ import { db } from "@{{projectName}}/db";
 {{/if}}
 
 export const todoRouter = router({
-  getAll: publicProcedure.query(async () =>
-    await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb(){{else}}db{{/if}}.select().from(todo),
-  ),
+  getAll: publicProcedure.query(async () => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+    const db = createDb();
+{{/if}}
+    return await db.select().from(todo);
+  }),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .mutation(async ({ input }) =>
-      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb(){{else}}db{{/if}}.insert(todo).values({
+    .mutation(async ({ input }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const db = createDb();
+{{/if}}
+      return await db.insert(todo).values({
         text: input.text,
-      }),
-    ),
+      });
+    }),
 
   toggle: publicProcedure
-    .input(z.object({ completed: z.boolean(), id: z.number() }))
-    .mutation(async ({ input }) =>
-      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb(){{else}}db{{/if}}
+    .input(z.object({ id: z.number(), completed: z.boolean() }))
+    .mutation(async ({ input }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const db = createDb();
+{{/if}}
+      return await db
         .update(todo)
         .set({ completed: input.completed })
-        .where(eq(todo.id, input.id)),
-    ),
+        .where(eq(todo.id, input.id));
+    }),
 
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) =>
-      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createDb(){{else}}db{{/if}}.delete(todo).where(eq(todo.id, input.id)),
-    ),
+    .mutation(async ({ input }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const db = createDb();
+{{/if}}
+      return await db.delete(todo).where(eq(todo.id, input.id));
+    }),
 });
 {{/if}}

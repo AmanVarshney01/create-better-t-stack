@@ -12,7 +12,7 @@ jobs:
   test:
     name: Test Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 15
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -34,11 +34,6 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
-
       - name: Install Dependencies
         run: bun install --frozen-lockfile
         env:
@@ -56,11 +51,3 @@ jobs:
         env:
           AGENT: 1
           BTS_TELEMETRY: 0
-
-      - name: Ultracite Compliance Matrix
-        working-directory: apps/cli
-        run: bun test test/ultracite-compliance.test.ts
-        env:
-          AGENT: 1
-          BTS_TELEMETRY: 0
-          BTS_ULTRACITE_COMPLIANCE: 1

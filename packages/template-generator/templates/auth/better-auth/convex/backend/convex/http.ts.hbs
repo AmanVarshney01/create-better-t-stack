@@ -14,6 +14,8 @@ const nativeAppUrl = process.env.NATIVE_APP_URL || "{{projectName}}://";
 const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 
 http.route({
+  path: "/polar/success",
+  method: "GET",
   handler: httpAction(async (_ctx, request) => {
     const requestUrl = new URL(request.url);
     const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
@@ -30,14 +32,13 @@ http.route({
     }
 
     return new Response(null, {
+      status: 302,
       headers: {
         Location: redirectUrl.toString(),
       },
-      status: 302,});
+    });
   }),
-
-  method: "GET",
-  path: "/polar/success",});
+});
 
 {{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}

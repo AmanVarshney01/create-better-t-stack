@@ -23,11 +23,11 @@ export default defineNuxtConfig({
   },
   {{else if (and (ne backend "self") (ne backend "none"))}}
   runtimeConfig: {
-    public: {
-      serverUrl: process.env.NUXT_PUBLIC_SERVER_URL ?? "",
-    },
     // server-side override for SSR fetches (NUXT_SERVER_URL); falls back to the public URL
     serverUrl: "",
+    public: {
+      serverUrl: process.env.NUXT_PUBLIC_SERVER_URL ?? "",
+    }
   },
   {{/if}}
 })

@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
@@ -16,25 +14,24 @@ import { useColorScheme } from "@/lib/use-color-scheme";
 import z from "zod";
 
 const signUpSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, "Email is required")
-    .email("Enter a valid email address"),
   name: z
     .string()
     .trim()
     .min(1, "Name is required")
     .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
   password: z
     .string()
     .min(1, "Password is required")
-    .min(8, "Use at least 8 characters"),});
+    .min(8, "Use at least 8 characters"),
+});
 
-const getErrorMessage = (error: unknown): string | null => {
-  if (!error) {
-    return null;
-  }
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
 
   if (typeof error === "string") {
     return error;
@@ -60,26 +57,30 @@ const getErrorMessage = (error: unknown): string | null => {
   return null;
 }
 
-const SignUp = () => {
+function SignUp() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: {
-      email: "",
       name: "",
-      password: "",},
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signUpSchema,
+    },
     onSubmit: async ({ value, formApi }) => {
       await authClient.signUp.email(
         {
-          email: value.email.trim(),
           name: value.name.trim(),
+          email: value.email.trim(),
           password: value.password,
         },
         {
-          onError(signUpError) {
-            setError(signUpError.error?.message || "Failed to sign up");
+          onError(error) {
+            setError(error.error?.message || "Failed to sign up");
           },
           onSuccess() {
             setError(null);
@@ -88,10 +89,7 @@ const SignUp = () => {
         },
       );
     },
-  
-    validators: {
-      onSubmit: signUpSchema,
-    },});
+  });
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -120,9 +118,10 @@ const SignUp = () => {
                     style={[
                       styles.input,
                       {
-                        backgroundColor: theme.background,
+                        color: theme.text,
                         borderColor: theme.border,
-                        color: theme.text,},
+                        backgroundColor: theme.background,
+                      },
                     ]}
                     placeholder="Name"
                     placeholderTextColor={theme.text}
@@ -144,9 +143,10 @@ const SignUp = () => {
                     style={[
                       styles.input,
                       {
-                        backgroundColor: theme.background,
+                        color: theme.text,
                         borderColor: theme.border,
-                        color: theme.text,},
+                        backgroundColor: theme.background,
+                      },
                     ]}
                     placeholder="Email"
                     placeholderTextColor={theme.text}
@@ -170,9 +170,10 @@ const SignUp = () => {
                     style={[
                       styles.input,
                       {
-                        backgroundColor: theme.background,
+                        color: theme.text,
                         borderColor: theme.border,
-                        color: theme.text,},
+                        backgroundColor: theme.background,
+                      },
                     ]}
                     placeholder="Password"
                     placeholderTextColor={theme.text}
@@ -216,18 +217,16 @@ const SignUp = () => {
 }
 
 const styles = StyleSheet.create({
-  button: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 12,},
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-  },
   card: {
-    borderWidth: 1,
     marginTop: 16,
-    padding: 16,},
+    padding: 16,
+    borderWidth: 1,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },
   errorContainer: {
     marginBottom: 12,
     padding: 8,
@@ -237,13 +236,19 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
+    padding: 12,
     fontSize: 16,
     marginBottom: 12,
-    padding: 12,},
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
-  },});
+  },
+  button: {
+    padding: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 16,
+  },
+});
 
 export { SignUp };

@@ -1,5 +1,3 @@
-/* oxlint-disable promise/prefer-await-to-callbacks */
-
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq api "trpc")}}
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -18,8 +16,7 @@ import { createContext } from "@{{projectName}}/api/context";
 import cors from "cors";
 import express from "express";
 {{#if (includes examples "ai")}}
-import { pipeUIMessageStreamToResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
-import type { UIMessage } from "ai";
+import { pipeUIMessageStreamToResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
@@ -32,7 +29,6 @@ import { clerkMiddleware } from "@clerk/express";
 {{/if}}
 
 const app = express();
-app.disable("x-powered-by");
 
 app.use(
 	cors({
@@ -113,13 +109,15 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 app.use(async (req, res, next) => {
 	const rpcResult = await rpcHandler.handle(req, res, {
+		prefix: "/rpc",
 		context: await createContext({ req }),
-		prefix: "/rpc",});
+	});
 	if (rpcResult.matched) return;
 
 	const apiResult = await apiHandler.handle(req, res, {
+		prefix: "/api-reference",
 		context: await createContext({ req }),
-		prefix: "/api-reference",});
+	});
 	if (apiResult.matched) return;
 
 	next();
@@ -132,8 +130,9 @@ app.use(express.json());
 app.post("/ai", async (req, res) => {
 	const { messages = [] } = (req.body || {}) as { messages: UIMessage[] };
 	const model = wrapLanguageModel({
+		model: google("gemini-2.5-flash"),
 		middleware: devToolsMiddleware(),
-		model: google("gemini-2.5-flash"),});
+	});
 	const result = streamText({
 		model,
 		messages: await convertToModelMessages(messages),

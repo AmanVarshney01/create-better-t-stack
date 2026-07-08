@@ -2,8 +2,10 @@ type ClerkTokenGetter = () => Promise<string | null>;
 
 let clerkTokenGetter: ClerkTokenGetter | null = null;
 
-export const setClerkAuthTokenGetter = (getToken: ClerkTokenGetter | null) => {
+export function setClerkAuthTokenGetter(getToken: ClerkTokenGetter | null) {
 	clerkTokenGetter = getToken;
 }
 
-export const getClerkAuthToken = async () => (await clerkTokenGetter?.()) ?? null
+export async function getClerkAuthToken() {
+	return (await clerkTokenGetter?.()) ?? null;
+}

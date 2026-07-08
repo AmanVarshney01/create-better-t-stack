@@ -1,18 +1,15 @@
-/* oxlint-disable no-use-before-define */
-
 import { useSignIn } from "@clerk/expo";
-import { Link, useRouter } from "expo-router";
-import type { Href } from "expo-router";
+import { type Href, Link, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-const pushDecoratedUrl = (router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) => {
+function pushDecoratedUrl(router: ReturnType<typeof useRouter>, decorateUrl: (url: string) => string, href: string) {
   const url = decorateUrl(href);
   const nextHref = url.startsWith("http") ? new URL(url).pathname : url;
   router.push(nextHref as Href);
 }
 
-const Page = () => {
+export default function Page() {
   const { signIn, errors, fetchStatus } = useSignIn();
   const router = useRouter();
   const [emailAddress, setEmailAddress] = React.useState("");
@@ -160,39 +157,77 @@ const Page = () => {
         <Text style={styles.buttonText}>Sign in</Text>
       </Pressable>
       <View style={styles.linkContainer}>
-        <Text>Don&apos;t have an account? </Text>
+        <Text>Don't have an account? </Text>
         <Link href="/sign-up">
           <Text style={styles.linkText}>Sign up</Text>
         </Link>
       </View>
     </View>
   );
-};
-
-export default Page;
+}
 
 const styles = StyleSheet.create({
-  button: {
-    alignItems: "center",
-    backgroundColor: "#0a7ea4",
+  container: {
+    flex: 1,
+    padding: 20,
+    gap: 12,
+  },
+  title: {
+    marginBottom: 8,
+    fontSize: 24,
+    fontWeight: "700",
+  },
+  label: {
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
     borderRadius: 8,
-    marginTop: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: "#fff",
+  },
+  button: {
+    backgroundColor: "#0a7ea4",
+    paddingVertical: 12,
     paddingHorizontal: 24,
-    paddingVertical: 12,},
-  buttonDisabled: {
-    opacity: 0.5,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
   },
   buttonPressed: {
     opacity: 0.7,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonText: {
     color: "#fff",
     fontWeight: "600",
   },
-  container: {
-    flex: 1,
-    gap: 12,
-    padding: 20,},
+  secondaryButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  secondaryButtonText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
+  linkContainer: {
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 12,
+    alignItems: "center",
+  },
+  linkText: {
+    color: "#0a7ea4",
+    fontWeight: "600",
+  },
   error: {
     color: "#d32f2f",
     fontSize: 12,
@@ -202,36 +237,4 @@ const styles = StyleSheet.create({
     color: "#555555",
     fontSize: 13,
   },
-  input: {
-    backgroundColor: "#fff",
-    borderColor: "#ccc",
-    borderRadius: 8,
-    borderWidth: 1,
-    fontSize: 16,
-    padding: 12,},
-  label: {
-    fontSize: 14,
-    fontWeight: "600",},
-  linkContainer: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 4,
-    marginTop: 12,},
-  linkText: {
-    color: "#0a7ea4",
-    fontWeight: "600",
-  },
-  secondaryButton: {
-    alignItems: "center",
-    borderRadius: 8,
-    marginTop: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 12,},
-  secondaryButtonText: {
-    color: "#0a7ea4",
-    fontWeight: "600",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 8,},});
+});

@@ -1,13 +1,8 @@
-/* oxlint-disable no-use-before-define */
-
-{{#if (and (ne backend "convex") (eq auth "clerk"))}}
-import type { ReactNode } from "react";
-{{/if}}
 import { {{#if (or (eq auth "clerk") (eq auth "better-auth"))}}Button, {{/if}}Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { View, ScrollView, StyleSheet{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
-import { createURL } from "expo-linking";
-import { openAuthSessionAsync } from "expo-web-browser";
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
@@ -42,24 +37,24 @@ import { useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 {{/if}}
 
-const Home = () => {
+export default function Home() {
 const { colorScheme } = useColorScheme();
 const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 {{#if (eq api "orpc")}}
-const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
+const healthCheck = useQuery(orpc.healthCheck.queryOptions());
 {{/if}}
 {{#if (eq api "trpc")}}
-const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
+const healthCheck = useQuery(trpc.healthCheck.queryOptions());
 {{/if}}
 {{#if (and (eq backend "convex") (eq auth "clerk"))}}
 const { user } = useUser();
-const healthCheck = useQuery(api.healthcheck.get);
-const privateData = useQuery(api.privatedata.get);
+const healthCheck = useQuery(api.healthCheck.get);
+const privateData = useQuery(api.privateData.get);
 {{else if (and (ne backend "convex") (eq auth "clerk"))}}
 const { isLoaded, isSignedIn } = useAuth();
 const { user } = useUser();
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-const healthCheck = useQuery(api.healthcheck.get);
+const healthCheck = useQuery(api.healthCheck.get);
 const { isAuthenticated } = useConvexAuth();
 const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
 {{#if (eq payments "polar")}}
@@ -70,7 +65,7 @@ const generateCustomerPortalUrl = useAction(api.polar.generateCustomerPortalUrl)
 const recurringProduct = products?.find((product) => product.isRecurring);
 
 const openPolarLink = async (url: string, returnUrl: string) => {
-	await openAuthSessionAsync(url, returnUrl);
+	await WebBrowser.openAuthSessionAsync(url, returnUrl);
 };
 
 const getPolarReturnUrl = (returnUrl: string) => {
@@ -86,12 +81,13 @@ const handlePolarCheckout = async () => {
 			return;
 		}
 
-		const returnUrl = createURL("/");
+		const returnUrl = Linking.createURL("/");
 		const polarReturnUrl = getPolarReturnUrl(returnUrl);
 		const { url } = await generateCheckoutLink({
-			origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
 			productIds: [recurringProduct.id],
-			successUrl: polarReturnUrl,});
+			origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+			successUrl: polarReturnUrl,
+		});
 
 		await openPolarLink(url, returnUrl);
 	} catch {
@@ -101,7 +97,7 @@ const handlePolarCheckout = async () => {
 
 const handlePolarPortal = async () => {
 	try {
-		const returnUrl = createURL("/");
+		const returnUrl = Linking.createURL("/");
 		const { url } = await generateCustomerPortalUrl({
 			returnUrl: getPolarReturnUrl(returnUrl),
 		});
@@ -113,68 +109,7 @@ const handlePolarPortal = async () => {
 };
 {{/if}}
 {{else if (eq backend "convex")}}
-const healthCheck = useQuery(api.healthcheck.get);
-{{/if}}
-
-{{#unless (eq api "none")}}
-let apiStatusText = "Service unavailable";
-if (isLoading) {
-  apiStatusText = "Checking connection...";
-} else if (healthCheck) {
-  apiStatusText = "All systems operational";
-}
-{{/unless}}
-{{#if (and (ne backend "convex") (eq auth "clerk"))}}
-let clerkContent: ReactNode;
-if (!isLoaded) {
-  clerkContent = (
-
-      <Host matchContents=\{{ vertical: true }}>
-        <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 14 }}>
-          Loading...
-        </ExpoUIText>
-      </Host>
-  );
-} else if (isSignedIn) {
-  clerkContent = (
-
-      <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Host style={styles.userHeader} matchContents=\{{ vertical: true }}>
-          <Column spacing={8}>
-            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 16 }}>
-              {`Welcome, ${user?.fullName ?? user?.firstName ?? "there"}`}
-            </ExpoUIText>
-            <ExpoUIText
-              textStyle=\{{ color: theme.text, fontSize: 14 }}
-              style=\{{ opacity: 0.7 }}
-            >
-              {user?.emailAddresses[0]?.emailAddress ?? ""}
-            </ExpoUIText>
-          </Column>
-        </Host>
-        <SignOutButton />
-      </View>
-  );
-} else {
-  clerkContent = (
-
-      <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Host style={styles.authActionsHost} matchContents=\{{ vertical: true }}>
-          <Column spacing={8}>
-            <Button
-              label="Sign in"
-              variant="outlined"
-              onPress={() => router.push("/(auth)/sign-in")}
-            />
-            <Button
-              label="Sign up"
-              onPress={() => router.push("/(auth)/sign-up")}
-            />
-          </Column>
-        </Host>
-      </View>
-  );
-}
+const healthCheck = useQuery(api.healthCheck.get);
 {{/if}}
 
 return (
@@ -219,7 +154,7 @@ return (
         {{else}}
         {{#unless (eq api "none")}}
         <View style={styles.statusRow}>
-          <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#f59e0b" }]} />
+          <View style={[styles.statusIndicator, { backgroundColor: healthCheck.data ? "#10b981" : "#f59e0b" }]} />
           <View style={styles.statusContent}>
             <Host matchContents=\{{ vertical: true }}>
               <Column spacing={4}>
@@ -232,7 +167,11 @@ return (
                   textStyle=\{{ color: theme.text, fontSize: 12 }}
                   style=\{{ opacity: 0.7 }}
                 >
-                  {apiStatusText}
+                  {healthCheck.isLoading
+                  ? "Checking connection..."
+                  : healthCheck.data
+                  ? "All systems operational"
+                  : "Service unavailable"}
                 </ExpoUIText>
               </Column>
             </Host>
@@ -282,7 +221,46 @@ return (
       {{/if}}
 
       {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-      {clerkContent}
+      {!isLoaded ? (
+      <Host matchContents=\{{ vertical: true }}>
+        <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 14 }}>
+          Loading...
+        </ExpoUIText>
+      </Host>
+      ) : isSignedIn ? (
+      <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Host style={styles.userHeader} matchContents=\{{ vertical: true }}>
+          <Column spacing={8}>
+            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 16 }}>
+              {`Welcome, ${user?.fullName ?? user?.firstName ?? "there"}`}
+            </ExpoUIText>
+            <ExpoUIText
+              textStyle=\{{ color: theme.text, fontSize: 14 }}
+              style=\{{ opacity: 0.7 }}
+            >
+              {user?.emailAddresses[0]?.emailAddress ?? ""}
+            </ExpoUIText>
+          </Column>
+        </Host>
+        <SignOutButton />
+      </View>
+      ) : (
+      <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Host style={styles.authActionsHost} matchContents=\{{ vertical: true }}>
+          <Column spacing={8}>
+            <Button
+              label="Sign in"
+              variant="outlined"
+              onPress={() => router.push("/(auth)/sign-in")}
+            />
+            <Button
+              label="Sign up"
+              onPress={() => router.push("/(auth)/sign-up")}
+            />
+          </Column>
+        </Host>
+      </View>
+      )}
       {{/if}}
 
       {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
@@ -364,60 +342,65 @@ return (
   </ScrollView>
 </Container>
 );
-};
-
-export default Home;
+}
 
 const styles = StyleSheet.create({
-authActionsHost: {
-marginTop: 4,
-},
-authHost: {
-marginBottom: 12,
-},
-card: {
-borderWidth: 1,
-marginBottom: 16,
-padding: 16,},
-content: {
-paddingBottom: 32,
-paddingHorizontal: 20,
-paddingTop: 28,},
-paymentActions: {
-marginTop: 12,
-},
 scrollView: {
 flex: 1,
 },
-statusCard: {
-borderRadius: 16,
-borderWidth: 1,
-marginBottom: 16,
-padding: 16,},
-statusCardTitleHost: {
-marginBottom: 8,
+content: {
+paddingHorizontal: 20,
+paddingTop: 28,
+paddingBottom: 32,
 },
-statusContent: {
-flex: 1,
-},
-statusIndicator: {
-borderRadius: 999,
-height: 10,
-width: 10,},
-statusRow: {
-alignItems: "center",
-flexDirection: "row",
-gap: 8,},
 titleHost: {
 alignSelf: "stretch",
 height: 34,
 marginBottom: 24,
 },
-userCard: {
-borderRadius: 16,
-borderWidth: 1,
+card: {
+padding: 16,
 marginBottom: 16,
-padding: 16,},
+borderWidth: 1,
+},
+statusRow: {
+flexDirection: "row",
+alignItems: "center",
+gap: 8,
+},
+statusIndicator: {
+height: 10,
+width: 10,
+borderRadius: 999,
+},
+statusContent: {
+flex: 1,
+},
+userCard: {
+marginBottom: 16,
+padding: 16,
+borderWidth: 1,
+borderRadius: 16,
+},
 userHeader: {
 marginBottom: 8,
-},});
+},
+paymentActions: {
+marginTop: 12,
+},
+authHost: {
+marginBottom: 12,
+},
+authActionsHost: {
+marginTop: 4,
+},
+statusCard: {
+marginBottom: 16,
+padding: 16,
+borderWidth: 1,
+borderRadius: 16,
+},
+statusCardTitleHost: {
+marginBottom: 8,
+},
+});

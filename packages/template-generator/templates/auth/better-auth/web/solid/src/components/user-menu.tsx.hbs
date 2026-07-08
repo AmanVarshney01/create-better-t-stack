@@ -2,7 +2,7 @@ import { authClient } from "@/lib/auth-client";
 import { useNavigate, Link } from "@tanstack/solid-router";
 import { createSignal, Show } from "solid-js";
 
-const UserMenu = () => {
+export default function UserMenu() {
   const navigate = useNavigate();
   const session = authClient.useSession();
   const [isMenuOpen, setIsMenuOpen] = createSignal(false);
@@ -52,6 +52,4 @@ const UserMenu = () => {
       </Show>
     </div>
   );
-};
-
-export default UserMenu;
+}

@@ -1,6 +1,5 @@
 {{#if (eq backend "convex")}}
 <script lang="ts">
-/* oxlint-disable github/filenames-match-regex */
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '@{{projectName}}/backend/convex/_generated/api';
 	import type { Id } from '@{{projectName}}/backend/convex/_generated/dataModel';
@@ -17,7 +16,7 @@
 
 	const todosQuery = useQuery(api.todos.getAll, {});
 
-	const handleAddTodo = async (event: SubmitEvent) => {
+	async function handleAddTodo(event: SubmitEvent) {
 		event.preventDefault();
 		const text = newTodoText.trim();
 		if (!text || isAdding) return;
@@ -27,24 +26,24 @@
 		try {
 			await client.mutation(api.todos.create, { text });
 			newTodoText = '';
-		} catch (error) {
+		} catch (err) {
 			console.error('Failed to add todo:', err);
-			addError = err instanceof Error ? err : new Error(String(error));
+			addError = err instanceof Error ? err : new Error(String(err));
 		} finally {
 			isAdding = false;
 		}
 	}
 
-	const handleToggleTodo = async (id: Id<'todos'>, completed: boolean) => {
+	async function handleToggleTodo(id: Id<'todos'>, completed: boolean) {
 		if (togglingId === id || deletingId === id) return;
 
 		togglingId = id;
 		toggleError = null;
 		try {
 			await client.mutation(api.todos.toggle, { id, completed: !completed });
-		} catch (error) {
+		} catch (err) {
 			console.error('Failed to toggle todo:', err);
-			toggleError = err instanceof Error ? err : new Error(String(error));
+			toggleError = err instanceof Error ? err : new Error(String(err));
 		} finally {
 			if (togglingId === id) {
 				togglingId = null;
@@ -52,16 +51,16 @@
 		}
 	}
 
-	const handleDeleteTodo = async (id: Id<'todos'>) => {
+	async function handleDeleteTodo(id: Id<'todos'>) {
 		if (togglingId === id || deletingId === id) return;
 
 		deletingId = id;
 		deleteError = null;
 		try {
 			await client.mutation(api.todos.deleteTodo, { id });
-		} catch (error) {
+		} catch (err) {
 			console.error('Failed to delete todo:', err);
-			deleteError = err instanceof Error ? err : new Error(String(error));
+			deleteError = err instanceof Error ? err : new Error(String(err));
 		} finally {
 			if (deletingId === id) {
 				deletingId = null;
@@ -162,7 +161,6 @@
 </div>
 {{else}}
 <script lang="ts">
-/* oxlint-disable github/filenames-match-regex */
 	{{#if (eq api "orpc")}}
 	import { orpc } from '$lib/orpc';
 	{{/if}}
@@ -208,7 +206,7 @@
 	);
 	{{/if}}
 
-	const handleAddTodo = (event: SubmitEvent) => {
+	function handleAddTodo(event: SubmitEvent) {
 		event.preventDefault();
 		const text = newTodoText.trim();
 		if (text) {
@@ -216,11 +214,11 @@
 		}
 	}
 
-	const handleToggleTodo = (id: number, completed: boolean) => {
+	function handleToggleTodo(id: number, completed: boolean) {
 		toggleMutation.mutate({ id, completed: !completed });
 	}
 
-	const handleDeleteTodo = (id: number) => {
+	function handleDeleteTodo(id: number) {
 		deleteMutation.mutate({ id });
 	}
 

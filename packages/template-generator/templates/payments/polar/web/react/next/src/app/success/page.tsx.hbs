@@ -1,10 +1,10 @@
-const SuccessPage = async ({
+export default async function SuccessPage({
     searchParams,
 }: {
     searchParams: Promise<{ checkout_id: string }>
-}) => {
+}) {
     const params = await searchParams;
-    const { checkout_id } = params;
+    const checkout_id = params.checkout_id;
 
     return (
         <div className="px-4 py-8">
@@ -12,6 +12,4 @@ const SuccessPage = async ({
             {checkout_id && <p>Checkout ID: {checkout_id}</p>}
         </div>
     );
-};
-
-export default SuccessPage;
+}

@@ -19,7 +19,7 @@ export const queryClient = new QueryClient({
 	}),
 });
 
-const expoFetch = async (request: Request, init?: RequestInit) => {
+async function expoFetch(request: Request, init?: RequestInit) {
 	const { fetch } = await import("expo/fetch");
 
 	return fetch(request.url, {

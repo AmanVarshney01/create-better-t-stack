@@ -1,10 +1,8 @@
-/* oxlint-disable no-use-before-define, complexity */
-
 import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
 import { ScrollView, Text, TouchableOpacity, View{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
 {{#if (eq payments "polar")}}
-import { createURL } from "expo-linking";
-import { openAuthSessionAsync } from "expo-web-browser";
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { StyleSheet } from "react-native-unistyles";
@@ -21,69 +19,59 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient, trpc } from "@/utils/trpc";
 {{/if}}
 
-{{#if (eq payments "polar")}}
-const openPolarLink = async (url: string, returnUrl: string) => {
-  await openAuthSessionAsync(url, returnUrl);
-};
-
-const getPolarReturnUrl = (returnUrl: string) => {
-  const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
-  url.searchParams.set("returnUrl", returnUrl);
-  return url.toString();
-};
-{{/if}}
-
-{{#if (eq payments "polar")}}
-const handlePolarCheckout = async () => {
-  const returnUrl = createURL("/");
-  const polarReturnUrl = getPolarReturnUrl(returnUrl);
-  const { data, error } = await polarNativeClient.checkout({
-    redirect: false,
-    returnUrl: polarReturnUrl,
-    slug: "pro",
-    successUrl: polarReturnUrl,});
-
-  if (error || !data?.url) {
-    Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
-    return;
-  }
-
-  await openPolarLink(data.url, returnUrl);
-};
-
-const handlePolarPortal = async () => {
-  const returnUrl = createURL("/");
-  const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
-
-  if (error || !data?.url) {
-    Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");
-    return;
-  }
-
-  await openPolarLink(data.url, returnUrl);
-};
-{{/if}}
-
-const Home = () => {
+export default function Home() {
     {{#if (eq api "orpc")}}
-    const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
+    const healthCheck = useQuery(orpc.healthCheck.queryOptions());
     const privateData = useQuery(orpc.privateData.queryOptions());
     {{/if}}
     {{#if (eq api "trpc")}}
-    const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
+    const healthCheck = useQuery(trpc.healthCheck.queryOptions());
     const privateData = useQuery(trpc.privateData.queryOptions());
     {{/if}}
   const { data: session } = authClient.useSession();
+  {{#if (eq payments "polar")}}
 
+  const openPolarLink = async (url: string, returnUrl: string) => {
+    await WebBrowser.openAuthSessionAsync(url, returnUrl);
+  };
 
-  {{#unless (eq api "none")}}
-  let apiStatusText = "API Disconnected";
-  if (isLoading) {
-    apiStatusText = "Checking...";
-  } else if (healthCheck) {
-    apiStatusText = "Connected to API";
-  }
-  {{/unless}}
+  const getPolarReturnUrl = (returnUrl: string) => {
+    const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+    url.searchParams.set("returnUrl", returnUrl);
+    return url.toString();
+  };
+
+  const handlePolarCheckout = async () => {
+    const returnUrl = Linking.createURL("/");
+    const polarReturnUrl = getPolarReturnUrl(returnUrl);
+    const { data, error } = await polarNativeClient.checkout({
+      slug: "pro",
+      redirect: false,
+      successUrl: polarReturnUrl,
+      returnUrl: polarReturnUrl,
+    });
+
+    if (error || !data?.url) {
+      Alert.alert("Checkout unavailable", error?.message ?? "Unable to create a checkout session.");
+      return;
+    }
+
+    await openPolarLink(data.url, returnUrl);
+  };
+
+  const handlePolarPortal = async () => {
+    const returnUrl = Linking.createURL("/");
+    const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
+
+    if (error || !data?.url) {
+      Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");
+      return;
+    }
+
+    await openPolarLink(data.url, returnUrl);
+  };
+  {{/if}}
+
   return (
     <Container>
       <ScrollView>
@@ -138,13 +126,17 @@ const Home = () => {
               <View
                 style={[
                   styles.statusIndicatorDot,
-                  healthCheck
+                  healthCheck.data
                     ? styles.statusIndicatorGreen
                     : styles.statusIndicatorRed,
                 ]}
               />
               <Text style={styles.mutedText}>
-                {apiStatusText}
+                {healthCheck.isLoading
+                  ? "Checking..."
+                  : healthCheck.data
+                    ? "Connected to API"
+                    : "API Disconnected"}
               </Text>
             </View>
           </View>
@@ -169,29 +161,11 @@ const Home = () => {
       </ScrollView>
     </Container>
   );
-};
-
-export default Home;
+}
 
 const styles = StyleSheet.create((theme) => ({
-  apiStatusCard: {
-    borderColor: theme?.colors?.border,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginBottom: 24,
-    padding: 16,},
-  apiStatusRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,},
-  cardTitle: {
-    color: theme?.colors?.typography,
-    fontWeight: "500",
-    marginBottom: 12,},
-  emailText: {
-    color: theme?.colors?.typography,
-    fontSize: 14,
-    marginBottom: 16,
+  pageContainer: {
+    paddingHorizontal: 8,
   },
   headerTitle: {
     color: theme?.colors?.typography,
@@ -199,75 +173,104 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "bold",
     marginBottom: 16,
   },
-  mutedText: {
+  sessionInfoCard: {
+    marginBottom: 24,
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme?.colors?.border,
+  },
+  sessionUserRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  welcomeText: {
+    color: theme?.colors?.typography,
+    fontSize: 16,
+  },
+  userNameText: {
+    fontWeight: "500",
     color: theme?.colors?.typography,
   },
-  pageContainer: {
-    paddingHorizontal: 8,
+  emailText: {
+    color: theme?.colors?.typography,
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  signOutButton: {
+    backgroundColor: theme?.colors?.destructive,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+  },
+  signOutButtonText: {
+    fontWeight: "500",
   },
   paymentActions: {
-    alignItems: "flex-start",
+    marginTop: 12,
     gap: 8,
-    marginTop: 12,},
+    alignItems: "flex-start",
+  },
   polarPrimaryButton: {
     backgroundColor: theme?.colors?.primary,
-    borderRadius: 6,
+    paddingVertical: 8,
     paddingHorizontal: 16,
-    paddingVertical: 8,},
+    borderRadius: 6,
+  },
   polarPrimaryButtonText: {
     color: theme?.colors?.primaryForeground,
     fontWeight: "500",
   },
   polarSecondaryButton: {
-    borderColor: theme?.colors?.border,
-    borderRadius: 6,
     borderWidth: 1,
+    borderColor: theme?.colors?.border,
+    paddingVertical: 8,
     paddingHorizontal: 16,
-    paddingVertical: 8,},
+    borderRadius: 6,
+  },
   polarSecondaryButtonText: {
     color: theme?.colors?.typography,
     fontWeight: "500",
   },
-  privateDataCard: {
-    borderColor: theme?.colors?.border,
+  apiStatusCard: {
+    marginBottom: 24,
     borderRadius: 8,
     borderWidth: 1,
-    marginBottom: 24,
-    padding: 16,},
-  sessionInfoCard: {
     borderColor: theme?.colors?.border,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginBottom: 24,
-    padding: 16,},
-  sessionUserRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,},
-  signOutButton: {
-    alignSelf: "flex-start",
-    backgroundColor: theme?.colors?.destructive,
-    borderRadius: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,},
-  signOutButtonText: {
+    padding: 16,
+  },
+  cardTitle: {
+    marginBottom: 12,
     fontWeight: "500",
+    color: theme?.colors?.typography,
+  },
+  apiStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   statusIndicatorDot: {
-    borderRadius: 9999,
     height: 12,
-    width: 12,},
+    width: 12,
+    borderRadius: 9999,
+  },
   statusIndicatorGreen: {
     backgroundColor: theme.colors.success,
   },
   statusIndicatorRed: {
     backgroundColor: theme.colors.destructive,
   },
-  userNameText: {
+  mutedText: {
     color: theme?.colors?.typography,
-    fontWeight: "500",},
-  welcomeText: {
-    color: theme?.colors?.typography,
-    fontSize: 16,
-  },}));
+  },
+  privateDataCard: {
+    marginBottom: 24,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme?.colors?.border,
+    padding: 16,
+  },
+}));

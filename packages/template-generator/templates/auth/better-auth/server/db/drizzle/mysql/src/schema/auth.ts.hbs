@@ -9,15 +9,15 @@ import {
 } from "drizzle-orm/mysql-core";
 
 export const user = mysqlTable("user", {
-  createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+  id: varchar("id", { length: 36 }).primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
-  id: varchar("id", { length: 36 }).primaryKey(),
   image: text("image"),
-  name: varchar("name", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { fsp: 3 })
     .defaultNow()
-    .$onUpdate(() => new Date())
+    .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
 
@@ -29,7 +29,7 @@ export const session = mysqlTable(
     token: varchar("token", { length: 255 }).notNull().unique(),
     createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
-      .$onUpdate(() => new Date())
+      .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
@@ -58,7 +58,7 @@ export const account = mysqlTable(
     password: text("password"),
     createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
-      .$onUpdate(() => new Date())
+      .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
   (table) => [index("account_userId_idx").on(table.userId)],
@@ -67,22 +67,23 @@ export const account = mysqlTable(
 export const verification = mysqlTable(
   "verification",
   {
-    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
-    expiresAt: timestamp("expires_at", { fsp: 3 }).notNull(),
     id: varchar("id", { length: 36 }).primaryKey(),
     identifier: varchar("identifier", { length: 255 }).notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at", { fsp: 3 }).notNull(),
+    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
       .defaultNow()
-      .$onUpdate(() => new Date())
+      .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
-  
-    value: text("value").notNull(),},
+  },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
 export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
   accounts: many(account),
-  sessions: many(session),}));
+}));
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {

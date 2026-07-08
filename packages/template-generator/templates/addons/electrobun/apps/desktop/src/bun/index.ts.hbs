@@ -3,7 +3,7 @@ import { BrowserWindow, Updater } from "electrobun/bun";
 const DEV_SERVER_PORT = {{#if (or (includes frontend "react-router") (includes frontend "svelte"))}}5173{{else if (includes frontend "astro")}}4321{{else}}3001{{/if}};
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
 
-const getMainViewUrl = async (): Promise<string> => {
+async function getMainViewUrl(): Promise<string> {
   const channel = await Updater.localInfo.channel();
   if (channel === "dev") {
     try {
@@ -22,14 +22,15 @@ const getMainViewUrl = async (): Promise<string> => {
 
 const url = await getMainViewUrl();
 
-export const mainWindow = new BrowserWindow({
+new BrowserWindow({
   title: "{{projectName}}",
   url,
   frame: {
-    height: 820,
     width: 1280,
+    height: 820,
     x: 120,
-    y: 120,},
+    y: 120,
+  },
 });
 
 console.log("Electrobun desktop shell started.");

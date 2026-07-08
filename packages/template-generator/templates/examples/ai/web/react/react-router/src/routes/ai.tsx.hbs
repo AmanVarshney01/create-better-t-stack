@@ -1,5 +1,3 @@
-/* oxlint-disable react-doctor/no-array-index-as-key */
-
 {{#if (eq backend "convex")}}
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
@@ -13,8 +11,7 @@ import {
   MessageCircleDashedIcon,
   RotateCwIcon,
 } from "lucide-react";
-import { useState } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
@@ -51,20 +48,13 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    e.currentTarget.form?.requestSubmit();
-  }
-};
-
-const StreamingMessageText = ({
+function StreamingMessageText({
   text,
   isStreaming,
 }: {
   text: string;
   isStreaming: boolean;
-}) => {
+}) {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -72,7 +62,7 @@ const StreamingMessageText = ({
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
-const AI = () => {
+export default function AI() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,11 +96,18 @@ const AI = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ prompt: text , threadId: currentThreadId});
+      await sendMessage({ threadId: currentThreadId, prompt: text });
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
     }
   };
 
@@ -262,9 +259,7 @@ const AI = () => {
       </div>
     </MessageScrollerProvider>
   );
-};
-
-export default AI;
+}
 {{else}}
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -274,8 +269,7 @@ import {
   MessageCircleDashedIcon,
   RotateCwIcon,
 } from "lucide-react";
-import { useState } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 import { env } from "@{{projectName}}/env/web";
 
@@ -313,14 +307,7 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    e.currentTarget.form?.requestSubmit();
-  }
-};
-
-const AI = () => {
+export default function AI() {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -335,6 +322,13 @@ const AI = () => {
     if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
+  };
+
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
   };
 
   const resetConversation = () => {
@@ -416,7 +410,7 @@ const AI = () => {
                                       if (part.type === "text") {
                                         return (
                                           <Streamdown
-                                            key={`${message.id}-part-${index}`}
+                                            key={index}
                                             isAnimating={status === "streaming" && message.role === "assistant"}
                                           >
                                             {part.text}
@@ -492,7 +486,5 @@ const AI = () => {
       </div>
     </MessageScrollerProvider>
   );
-};
-
-export default AI;
+}
 {{/if}}

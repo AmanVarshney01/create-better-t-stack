@@ -1,12 +1,10 @@
-/* oxlint-disable github/filenames-match-regex */
-
 import { Link, Stack } from "expo-router";
 import { Button, Surface } from "heroui-native";
 import { Text, View } from "react-native";
 
 import { Container } from "@/components/container";
 
-const NotFoundScreen = () => {
+export default function NotFoundScreen() {
 	return (
 		<>
 			<Stack.Screen options=\{{ title: "Not Found" }} />
@@ -16,7 +14,7 @@ const NotFoundScreen = () => {
 						<Text className="text-4xl mb-3">🤔</Text>
 						<Text className="text-foreground font-medium text-lg mb-1">Page Not Found</Text>
 						<Text className="text-muted text-sm text-center mb-4">
-							The page you&apos;re looking for doesn&apos;t exist.
+							The page you're looking for doesn't exist.
 						</Text>
 						<Link href="/" asChild>
 							<Button size="sm">Go Home</Button>
@@ -26,6 +24,4 @@ const NotFoundScreen = () => {
 			</Container>
 		</>
 	);
-};
-
-export default NotFoundScreen;
+}

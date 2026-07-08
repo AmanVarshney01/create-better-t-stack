@@ -1,10 +1,9 @@
 {{#if (eq backend "convex")}}
 <script lang="ts">
-/* oxlint-disable github/filenames-match-regex */
 import { useQuery } from 'convex-svelte';
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 
-const healthCheck = useQuery(api.healthcheck.get, {});
+const healthCheck = useQuery(api.healthCheck.get, {});
 
 const TITLE_TEXT = `
    ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -45,7 +44,6 @@ const TITLE_TEXT = `
 </div>
 {{else}}
 <script lang="ts">
-/* oxlint-disable github/filenames-match-regex */
 {{#if (eq api "orpc")}}
 import { orpc } from "$lib/orpc";
 import { createQuery } from "@tanstack/svelte-query";

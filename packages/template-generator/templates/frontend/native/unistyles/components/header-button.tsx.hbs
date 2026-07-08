@@ -1,12 +1,14 @@
-/* oxlint-disable no-use-before-define */
-
 import "@/unistyles";
 
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { forwardRef } from "react";
 import { Pressable } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
-export const HeaderButton = ({ onPress }: { onPress?: () => void }) => {
+export const HeaderButton = forwardRef<
+  typeof Pressable,
+  { onPress?: () => void }
+>(({ onPress }, ref) => {
   return (
     <Pressable onPress={onPress} style={styles.button}>
       {({ pressed }) => (
@@ -21,15 +23,14 @@ export const HeaderButton = ({ onPress }: { onPress?: () => void }) => {
       )}
     </Pressable>
   );
-};
+});
 
 const styles = StyleSheet.create((theme) => ({
   button: {
-    // 50% opacity
-    backgroundColor: `${theme.colors.secondary}80`,
-    borderRadius: theme.borderRadius.lg,
-    marginRight: theme.spacing.sm,
     padding: theme.spacing.sm,
+    marginRight: theme.spacing.sm,
+    borderRadius: theme.borderRadius.lg,
+    backgroundColor: `${theme.colors.secondary}80`, // 50% opacity
   },
   icon: {
     color: theme.colors.secondaryForeground,

@@ -4,7 +4,7 @@
 
 	const sessionQuery = authClient.useSession();
 
-	const handleSignOut = async () => {
+	async function handleSignOut() {
 		await authClient.signOut({
 		fetchOptions: {
 			onSuccess: () => {
@@ -17,7 +17,7 @@
 		});
 	}
 
-	const goToLogin = () => {
+	function goToLogin() {
 		goto('/login');
 	}
 

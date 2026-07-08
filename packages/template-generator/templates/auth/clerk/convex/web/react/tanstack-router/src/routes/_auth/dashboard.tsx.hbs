@@ -3,9 +3,12 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 
+export const Route = createFileRoute("/_auth/dashboard")({
+	component: RouteComponent,
+});
 
-const RouteComponent = () => {
-	const privateData = useQuery(api.privatedata.get);
+function RouteComponent() {
+	const privateData = useQuery(api.privateData.get);
 	const user = useUser();
 
 	return (
@@ -17,7 +20,3 @@ const RouteComponent = () => {
 		</div>
 	);
 }
-
-export const Route = createFileRoute("/_auth/dashboard")({
-	component: RouteComponent,
-});

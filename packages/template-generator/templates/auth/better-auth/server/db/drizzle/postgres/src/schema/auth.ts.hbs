@@ -2,27 +2,27 @@ import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
-  id: text("id").primaryKey(),
   image: text("image"),
-  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
-    .$onUpdate(() => new Date())
+    .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
 
 export const session = pgTable(
   "session",
   {
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
     id: text("id").primaryKey(),
+    expiresAt: timestamp("expires_at").notNull(),
     token: text("token").notNull().unique(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
-      .$onUpdate(() => new Date())
+      .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
@@ -51,7 +51,7 @@ export const account = pgTable(
     password: text("password"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
-      .$onUpdate(() => new Date())
+      .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
   (table) => [index("account_userId_idx").on(table.userId)],
@@ -60,22 +60,23 @@ export const account = pgTable(
 export const verification = pgTable(
   "verification",
   {
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
     id: text("id").primaryKey(),
     identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
-      .$onUpdate(() => new Date())
+      .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
-  
-    value: text("value").notNull(),},
+  },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
 export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
   accounts: many(account),
-  sessions: many(session),}));
+}));
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {

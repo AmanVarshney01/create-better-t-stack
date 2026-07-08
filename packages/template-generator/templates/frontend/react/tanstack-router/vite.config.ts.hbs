@@ -4,17 +4,18 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    tanstackRouter({
-      autoCodeSplitting: true,
-      target: "react",
-    }),
-    react(),
-  ],
+  server: {
+    port: 3001,
+  },
   resolve: {
     tsconfigPaths: true,
   },
-  server: {
-    port: 3001,
-  },});
+  plugins: [
+    tailwindcss(),
+    tanstackRouter({
+      target: "react",
+      autoCodeSplitting: true,
+    }),
+    react(),
+  ],
+});

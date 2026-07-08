@@ -511,7 +511,7 @@ describe("API Configurations", () => {
 
       expect(serverFile).toContain("context: await createContext(request.headers)");
       expect(contextFile).toContain('import type { IncomingHttpHeaders } from "node:http";');
-      expect(contextFile).toContain("export const createContext = (req: IncomingHttpHeaders)");
+      expect(contextFile).toContain("createContext(req: IncomingHttpHeaders)");
     });
 
     it("should scaffold native oRPC with Expo fetch support for each auth branch", async () => {
@@ -613,7 +613,7 @@ describe("API Configurations", () => {
       const authRouteFile = files.get("apps/web/src/routes/_auth/route.tsx");
       const dashboardFile = files.get("apps/web/src/routes/_auth/dashboard.tsx");
 
-      expect(orpcFile).toContain("export const createQueryClient = ()");
+      expect(orpcFile).toContain("function createQueryClient()");
       expect(orpcFile).toContain("defaultOptions: { queries: { staleTime: 60 * 1000 } },");
       expect(orpcFile).toContain("query.invalidate();");
       expect(orpcFile).not.toContain("void query.invalidate");

@@ -1,8 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
-{{#if (and (ne backend "convex") (eq auth "clerk"))}}
-import type { ReactNode } from "react";
-{{/if}}
 import "@/unistyles";
 
 import { ScrollView, Text, View, TouchableOpacity{{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}, Alert{{/if}} } from "react-native";
@@ -43,22 +38,22 @@ import { useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 {{/if}}
 
-const Home = () => {
+export default function Home() {
   {{#if (eq api "orpc")}}
-  const { data: healthCheck, isLoading } = useQuery(orpc.healthCheck.queryOptions());
+  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
   {{/if}}
   {{#if (eq api "trpc")}}
-  const { data: healthCheck, isLoading } = useQuery(trpc.healthCheck.queryOptions());
+  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
   {{/if}}
   {{#if (and (eq backend "convex") (eq auth "clerk"))}}
   const { user } = useUser();
-  const healthCheck = useQuery(api.healthcheck.get);
-  const privateData = useQuery(api.privatedata.get);
+  const healthCheck = useQuery(api.healthCheck.get);
+  const privateData = useQuery(api.privateData.get);
   {{else if (and (ne backend "convex") (eq auth "clerk"))}}
   const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
-  const healthCheck = useQuery(api.healthcheck.get);
+  const healthCheck = useQuery(api.healthCheck.get);
   const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
   {{#if (eq payments "polar")}}
@@ -88,9 +83,10 @@ const Home = () => {
       const returnUrl = Linking.createURL("/");
       const polarReturnUrl = getPolarReturnUrl(returnUrl);
       const { url } = await generateCheckoutLink({
-        origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
         productIds: [recurringProduct.id],
-        successUrl: polarReturnUrl,});
+        origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+        successUrl: polarReturnUrl,
+      });
 
       await openPolarLink(url, returnUrl);
     } catch {
@@ -112,52 +108,8 @@ const Home = () => {
   };
   {{/if}}
   {{else if (eq backend "convex")}}
-  const healthCheck = useQuery(api.healthcheck.get);
+  const healthCheck = useQuery(api.healthCheck.get);
   {{/if}}
-
-  {{#unless (eq api "none")}}
-  let apiStatusText = "API Disconnected";
-  if (isLoading) {
-    apiStatusText = "Checking connection...";
-  } else if (healthCheck) {
-    apiStatusText = "Connected to API";
-  }
-  {{/unless}}
-{{#if (and (ne backend "convex") (eq auth "clerk"))}}
-let clerkContent: ReactNode;
-if (!isLoaded) {
-  clerkContent = (
-
-          <Text style={styles.apiStatusText}>Loading...</Text>
-  );
-} else if (isSignedIn) {
-  clerkContent = (
-
-          <View style={styles.userCard}>
-            <View style={styles.userHeader}>
-              <Text style={styles.userWelcome}>
-                Welcome,{" "}
-                <Text style={styles.userName}>{user?.fullName ?? user?.firstName ?? "there"}</Text>
-              </Text>
-            </View>
-            <Text style={styles.userEmail}>{user?.emailAddresses[0]?.emailAddress}</Text>
-            <SignOutButton />
-          </View>
-  );
-} else {
-  clerkContent = (
-
-          <>
-            <Link href="/(auth)/sign-in">
-              <Text style={styles.apiStatusText}>Sign in</Text>
-            </Link>
-            <Link href="/(auth)/sign-up">
-              <Text style={styles.apiStatusText}>Sign up</Text>
-            </Link>
-          </>
-  );
-}
-{{/if}}
 
   return (
     <Container>
@@ -206,7 +158,7 @@ if (!isLoaded) {
               <View
                 style={[
                   styles.statusDot,
-                  healthCheck
+                  healthCheck.data
                     ? styles.statusDotSuccess
                     : styles.statusDotWarning,
                 ]}
@@ -217,7 +169,11 @@ if (!isLoaded) {
                   {{#if (eq api "trpc")}}TRPC{{/if}}
                 </Text>
                 <Text style={styles.statusDescription}>
-                  {apiStatusText}
+                  {healthCheck.isLoading
+                    ? "Checking connection..."
+                    : healthCheck.data
+                    ? "Connected to API"
+                    : "API Disconnected"}
                 </Text>
               </View>
             </View>
@@ -250,7 +206,29 @@ if (!isLoaded) {
         {{/if}}
 
         {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-        {clerkContent}
+        {!isLoaded ? (
+          <Text style={styles.apiStatusText}>Loading...</Text>
+        ) : isSignedIn ? (
+          <View style={styles.userCard}>
+            <View style={styles.userHeader}>
+              <Text style={styles.userWelcome}>
+                Welcome,{" "}
+                <Text style={styles.userName}>{user?.fullName ?? user?.firstName ?? "there"}</Text>
+              </Text>
+            </View>
+            <Text style={styles.userEmail}>{user?.emailAddresses[0]?.emailAddress}</Text>
+            <SignOutButton />
+          </View>
+        ) : (
+          <>
+            <Link href="/(auth)/sign-in">
+              <Text style={styles.apiStatusText}>Sign in</Text>
+            </Link>
+            <Link href="/(auth)/sign-up">
+              <Text style={styles.apiStatusText}>Sign up</Text>
+            </Link>
+          </>
+        )}
         {{/if}}
 
         {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
@@ -322,148 +300,169 @@ if (!isLoaded) {
       </ScrollView>
     </Container>
   );
-};
-
-export default Home;
+}
 
 const styles = StyleSheet.create((theme) => ({
-  apiStatusCard: {
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    marginBottom: theme.spacing.md,
-    padding: theme.spacing.md,},
-  apiStatusRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: theme.spacing.xs,},
-  apiStatusText: {
-    color: theme.colors.mutedForeground,
-  },
-  apiStatusTitle: {
-    color: theme.colors.foreground,
-    fontWeight: "500",
-    marginBottom: theme.spacing.sm,},
   container: {
     paddingHorizontal: theme.spacing.md,
   },
   heroSection: {
     paddingVertical: theme.spacing.xl,
   },
-  heroSubtitle: {
-    color: theme.colors.mutedForeground,
-    fontSize: theme.fontSize.lg,
-    lineHeight: 28,},
   heroTitle: {
-    color: theme.colors.foreground,
     fontSize: theme.fontSize["4xl"],
     fontWeight: "bold",
-    marginBottom: theme.spacing.sm,},
-  paymentActions: {
-    alignItems: "flex-start",
-    marginTop: theme.spacing.sm,},
-  polarPrimaryButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,},
-  polarPrimaryButtonText: {
-    color: theme.colors.primaryForeground,
-    fontWeight: "500",
-  },
-  polarSecondaryButton: {
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,},
-  polarSecondaryButtonText: {
     color: theme.colors.foreground,
-    fontWeight: "500",
+    marginBottom: theme.spacing.sm,
   },
-  signOutButton: {
-    alignSelf: "flex-start",
-    backgroundColor: theme.colors.destructive,
-    borderRadius: theme.borderRadius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,},
-  signOutText: {
-    color: theme.colors.destructiveForeground,
-    fontWeight: "500",
+  heroSubtitle: {
+    fontSize: theme.fontSize.lg,
+    color: theme.colors.mutedForeground,
+    lineHeight: 28,
+  },
+  statusCard: {
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  statusHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: theme.spacing.md,
+  },
+  statusTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: "600",
+    color: theme.colors.cardForeground,
   },
   statusBadge: {
     backgroundColor: theme.colors.secondary,
-    borderRadius: 9999,
     paddingHorizontal: theme.spacing.sm + 4,
-    paddingVertical: theme.spacing.xs,},
-  statusBadgeText: {
-    color: theme.colors.secondaryForeground,
-    fontSize: theme.fontSize.xs,
-    fontWeight: "500",},
-  statusCard: {
-    backgroundColor: theme.colors.card,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.xl,
-    borderWidth: 1,
-    elevation: 2,
-    marginBottom: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    shadowColor: "#000",
-    shadowOffset: { height: 1 , width: 0},
-    shadowOpacity: 0.05,
-    shadowRadius: 3,},
-  statusContent: {
-    flex: 1,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: 9999,
   },
-  statusDescription: {
-    color: theme.colors.mutedForeground,
-    fontSize: theme.fontSize.xs,},
+  statusBadgeText: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: "500",
+    color: theme.colors.secondaryForeground,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm + 4,
+  },
   statusDot: {
-    borderRadius: 6,
     height: 12,
-    width: 12,},
+    width: 12,
+    borderRadius: 6,
+  },
   statusDotSuccess: {
     backgroundColor: theme.colors.success,
   },
   statusDotWarning: {
     backgroundColor: "#F59E0B",
   },
-  statusHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: theme.spacing.md,},
+  statusContent: {
+    flex: 1,
+  },
   statusLabel: {
-    color: theme.colors.cardForeground,
     fontSize: theme.fontSize.sm,
-    fontWeight: "500",},
-  statusRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: theme.spacing.sm + 4,},
-  statusTitle: {
+    fontWeight: "500",
     color: theme.colors.cardForeground,
-    fontSize: theme.fontSize.lg,
-    fontWeight: "600",},
+  },
+  statusDescription: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.mutedForeground,
+  },
   userCard: {
     backgroundColor: theme.colors.card,
+    borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
+    padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
-    padding: theme.spacing.md,},
-  userEmail: {
-    color: theme.colors.mutedForeground,
-    fontSize: theme.fontSize.sm,
-    marginBottom: theme.spacing.md,},
+  },
   userHeader: {
-    alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: theme.spacing.xs,},
+    alignItems: "center",
+    marginBottom: theme.spacing.xs,
+  },
+  userWelcome: {
+    fontSize: theme.fontSize.base,
+    color: theme.colors.foreground,
+  },
   userName: {
     fontWeight: "500",
   },
-  userWelcome: {
+  userEmail: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.mutedForeground,
+    marginBottom: theme.spacing.md,
+  },
+  signOutButton: {
+    backgroundColor: theme.colors.destructive,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    alignSelf: "flex-start",
+  },
+  signOutText: {
+    color: theme.colors.destructiveForeground,
+    fontWeight: "500",
+  },
+  paymentActions: {
+    marginTop: theme.spacing.sm,
+    alignItems: "flex-start",
+  },
+  polarPrimaryButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+  },
+  polarPrimaryButtonText: {
+    color: theme.colors.primaryForeground,
+    fontWeight: "500",
+  },
+  polarSecondaryButton: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+  },
+  polarSecondaryButtonText: {
     color: theme.colors.foreground,
-    fontSize: theme.fontSize.base,},}));
+    fontWeight: "500",
+  },
+  apiStatusCard: {
+    marginBottom: theme.spacing.md,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.md,
+  },
+  apiStatusTitle: {
+    marginBottom: theme.spacing.sm,
+    fontWeight: "500",
+    color: theme.colors.foreground,
+  },
+  apiStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+  },
+  apiStatusText: {
+    color: theme.colors.mutedForeground,
+  },
+}));

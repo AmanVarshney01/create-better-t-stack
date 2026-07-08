@@ -1,5 +1,3 @@
-/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
-
 import "@/unistyles";
 
 import { Tabs } from "expo-router";
@@ -7,7 +5,7 @@ import { useUnistyles } from "react-native-unistyles";
 
 import { TabBarIcon } from "@/components/tabbar-icon";
 
-const TabLayout = () => {
+export default function TabLayout() {
   const { theme } = useUnistyles();
 
   return (
@@ -40,6 +38,4 @@ const TabLayout = () => {
       />
     </Tabs>
   );
-};
-
-export default TabLayout;
+}

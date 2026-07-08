@@ -1,5 +1,4 @@
 <script lang="ts">
-/* oxlint-disable github/filenames-match-regex */
 	{{#unless (eq backend "self")}}
 	import { PUBLIC_SERVER_URL } from "$env/static/public";
 	{{/unless}}
@@ -27,7 +26,7 @@
 		}
 	});
 
-	const handleSubmit = (e: Event) => {
+	function handleSubmit(e: Event) {
 		e.preventDefault();
 		const text = input.trim();
 		if (!text) return;

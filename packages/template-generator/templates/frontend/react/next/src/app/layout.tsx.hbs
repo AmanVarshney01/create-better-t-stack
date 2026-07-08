@@ -9,23 +9,26 @@ import Providers from "@/components/providers";
 import Header from "@/components/header";
 
 const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  variable: "--font-geist-sans",});
+});
 
 const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
-  variable: "--font-geist-mono",});
+});
 
 export const metadata: Metadata = {
+  title: "{{projectName}}",
   description: "{{projectName}}",
-  title: "{{projectName}}",};
+};
 
 {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
-const RootLayout = async ({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) => {
+}>) {
   const token = await getToken();
   return (
     <html lang="en" suppressHydrationWarning>
@@ -41,15 +44,13 @@ const RootLayout = async ({
       </body>
     </html>
   );
-};
-
-export default RootLayout;
+}
 {{else}}
-const RootLayout = ({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) => {
+}>) {
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
@@ -71,7 +72,5 @@ const RootLayout = ({
 			</body>
 		</html>
 	);
-};
-
-export default RootLayout;
+}
 {{/if}}

@@ -1,5 +1,5 @@
 ---
-import Layout from "../layouts/layout.astro";
+import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="Dashboard - {{projectName}}">
@@ -54,16 +54,16 @@ import Layout from "../layouts/layout.astro";
   import { orpc } from "../lib/orpc";
   {{/if}}
 
-  const dashboardContent = document.querySelector("#dashboard-content")!;
-  const loading = document.querySelector("#loading")!;
-  const redirect = document.querySelector("#redirect")!;
-  const userName = document.querySelector("#user-name")!;
-  const userEmail = document.querySelector("#user-email")!;
+  const dashboardContent = document.getElementById("dashboard-content")!;
+  const loading = document.getElementById("loading")!;
+  const redirect = document.getElementById("redirect")!;
+  const userName = document.getElementById("user-name")!;
+  const userEmail = document.getElementById("user-email")!;
   {{#if (eq api "orpc")}}
-  const apiMessage = document.querySelector("#api-message")!;
+  const apiMessage = document.getElementById("api-message")!;
   {{/if}}
 
-  const init = async () => {
+  async function init() {
     try {
       const { data: session } = await authClient.getSession();
       
@@ -89,7 +89,7 @@ import Layout from "../layouts/layout.astro";
       {{#if (eq payments "polar")}}
       try {
         const { data: customerState } = await authClient.customer.state();
-        const subscriptionInfo = document.querySelector("#subscription-info")!;
+        const subscriptionInfo = document.getElementById("subscription-info")!;
         if (customerState?.activeSubscriptions?.length > 0) {
           subscriptionInfo.innerHTML = `
             <p class="text-white">Plan: <span class="text-green-400">Pro</span></p>
@@ -100,7 +100,7 @@ import Layout from "../layouts/layout.astro";
               Manage Subscription
             </button>
           `;
-          document.querySelector("#manage-subscription")?.addEventListener("click", async () => {
+          document.getElementById("manage-subscription")?.addEventListener("click", async () => {
             await authClient.customer.portal();
           });
         } else {
@@ -113,7 +113,7 @@ import Layout from "../layouts/layout.astro";
               Upgrade to Pro
             </button>
           `;
-          document.querySelector("#upgrade-button")?.addEventListener("click", async () => {
+          document.getElementById("upgrade-button")?.addEventListener("click", async () => {
             await authClient.checkout({ slug: "pro" });
           });
         }

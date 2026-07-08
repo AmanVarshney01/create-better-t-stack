@@ -8,9 +8,6 @@ import { getPayment } from "@/functions/get-payment";
 {{/if}}
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
-
-const AuthLayout = () => <Outlet />
-
 export const Route = createFileRoute("/_auth")({
   {{#unless (eq backend "self")}}
   ssr: false,
@@ -46,7 +43,7 @@ export const Route = createFileRoute("/_auth")({
     {{/if}}
   },
   {{#if (eq backend "self")}}
-  loader: ({ context }) => {
+  loader: async ({ context }) => {
     if (!context.session) {
       throw redirect({
         to: "/login",
@@ -55,3 +52,7 @@ export const Route = createFileRoute("/_auth")({
   },
   {{/if}}
 });
+
+function AuthLayout() {
+  return <Outlet />;
+}

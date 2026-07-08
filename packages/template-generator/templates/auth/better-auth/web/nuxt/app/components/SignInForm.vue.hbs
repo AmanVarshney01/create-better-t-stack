@@ -33,7 +33,7 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-const onSubmit = async (event: FormSubmitEvent<Schema>) => {
+async function onSubmit(event: FormSubmitEvent<Schema>) {
   loading.value = true
   try {
     await $authClient.signIn.email(

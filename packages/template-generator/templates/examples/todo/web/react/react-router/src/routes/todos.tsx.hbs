@@ -9,8 +9,7 @@ import {
 import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Loader2, Trash2 } from "lucide-react";
-import { useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import { useState, type FormEvent } from "react";
 
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
@@ -26,7 +25,11 @@ import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
 
-const Todos = () => {
+{{#unless (eq backend "convex")}}
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+{{/unless}}
+
+export default function Todos() {
   const [newTodoText, setNewTodoText] = useState("");
 
   {{#if (eq backend "convex")}}
@@ -38,9 +41,7 @@ const Todos = () => {
   const handleAddTodo = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = newTodoText.trim();
-    if (!text) {
-      return;
-    }
+    if (!text) return;
     await createTodo({ text });
     setNewTodoText("");
   };
@@ -54,53 +55,45 @@ const Todos = () => {
   };
   {{else}}
     {{#if (eq api "orpc")}}
-    const { data: todos, isLoading, refetch } = useQuery(orpc.todo.getAll.queryOptions());
+    const todos = useQuery(orpc.todo.getAll.queryOptions());
     const createMutation = useMutation(
       orpc.todo.create.mutationOptions({
         onSuccess: () => {
-          refetch();
+          todos.refetch();
           setNewTodoText("");
         },
-      }),
+      })
     );
     const toggleMutation = useMutation(
       orpc.todo.toggle.mutationOptions({
-        onSuccess: () => {
-          refetch();
-        },
-      }),
+        onSuccess: () => { todos.refetch() },
+      })
     );
     const deleteMutation = useMutation(
       orpc.todo.delete.mutationOptions({
-        onSuccess: () => {
-          refetch();
-        },
-      }),
+        onSuccess: () => { todos.refetch() },
+      })
     );
     {{/if}}
     {{#if (eq api "trpc")}}
-    const { data: todos, isLoading, refetch } = useQuery(trpc.todo.getAll.queryOptions());
+    const todos = useQuery(trpc.todo.getAll.queryOptions());
     const createMutation = useMutation(
       trpc.todo.create.mutationOptions({
         onSuccess: () => {
-          refetch();
+          todos.refetch();
           setNewTodoText("");
         },
-      }),
+      })
     );
     const toggleMutation = useMutation(
       trpc.todo.toggle.mutationOptions({
-        onSuccess: () => {
-          refetch();
-        },
-      }),
+        onSuccess: () => { todos.refetch() },
+      })
     );
     const deleteMutation = useMutation(
       trpc.todo.delete.mutationOptions({
-        onSuccess: () => {
-          refetch();
-        },
-      }),
+        onSuccess: () => { todos.refetch() },
+      })
     );
     {{/if}}
 
@@ -111,111 +104,17 @@ const Todos = () => {
     }
   };
 
-  const handleToggleTodo = (id: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}}, completed: boolean) => {
+  const handleToggleTodo = (id: TodoId, completed: boolean) => {
     toggleMutation.mutate({ id, completed: !completed });
   };
 
-  const handleDeleteTodo = (id: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}}) => {
+  const handleDeleteTodo = (id: TodoId) => {
     deleteMutation.mutate({ id });
   };
   {{/if}}
 
-  {{#if (eq backend "convex")}}
-  let listContent: ReactNode;
-  if (todos === undefined) {
-    listContent = (
-      <div className="flex justify-center py-4">
-        <Loader2 className="h-6 w-6 animate-spin" />
-      </div>
-    );
-  } else if (todos.length === 0) {
-    listContent = <p className="py-4 text-center">No todos yet. Add one above!</p>;
-  } else {
-    listContent = (
-      <ul className="space-y-2">
-        {todos.map((todo: { _id: Id<"todos">; completed: boolean; text: string }) => (
-          <li
-            key={todo._id}
-            className="flex items-center justify-between rounded-md border p-2"
-          >
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                checked={todo.completed}
-                onCheckedChange={() =>
-                  handleToggleTodo(todo._id, todo.completed)
-                }
-                id={`todo-${todo._id}`}
-              />
-              <label
-                htmlFor={`todo-${todo._id}`}
-                className={`${todo.completed ? "line-through text-muted-foreground" : ""}`}
-              >
-                {todo.text}
-              </label>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleDeleteTodo(todo._id)}
-              aria-label="Delete todo"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </li>
-        ))}
-      </ul>
-    );
-  }
-  {{else}}
-  let listContent: ReactNode;
-  if (isLoading) {
-    listContent = (
-      <div className="flex justify-center py-4">
-        <Loader2 className="h-6 w-6 animate-spin" />
-      </div>
-    );
-  } else if (todos?.length === 0) {
-    listContent = <p className="py-4 text-center">No todos yet. Add one above!</p>;
-  } else {
-    listContent = (
-      <ul className="space-y-2">
-        {todos?.map((todo) => (
-          <li
-            key={todo.id}
-            className="flex items-center justify-between rounded-md border p-2"
-          >
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                checked={todo.completed}
-                onCheckedChange={() =>
-                  handleToggleTodo(todo.id, todo.completed)
-                }
-                id={`todo-${todo.id}`}
-              />
-              <label
-                htmlFor={`todo-${todo.id}`}
-                className={`${todo.completed ? "line-through" : ""}`}
-              >
-                {todo.text}
-              </label>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleDeleteTodo(todo.id)}
-              aria-label="Delete todo"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </li>
-        ))}
-      </ul>
-    );
-  }
-  {{/if}}
-
   return (
-    <div className="mx-auto w-full max-w-md py-10">
+    <div className="w-full mx-auto max-w-md py-10">
       <Card>
         <CardHeader>
           <CardTitle>Todo List</CardTitle>
@@ -255,11 +154,93 @@ const Todos = () => {
             </Button>
           </form>
 
-          {listContent}
+          {{#if (eq backend "convex")}}
+            {todos === undefined ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : todos.length === 0 ? (
+              <p className="py-4 text-center">No todos yet. Add one above!</p>
+            ) : (
+              <ul className="space-y-2">
+                {todos.map((todo) => (
+                  <li
+                    key={todo._id}
+                    className="flex items-center justify-between rounded-md border p-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={todo.completed}
+                        onCheckedChange={() =>
+                          handleToggleTodo(todo._id, todo.completed)
+                        }
+                        id={`todo-${todo._id}`}
+                      />
+                      <label
+                        htmlFor={`todo-${todo._id}`}
+                        className={`${todo.completed ? "line-through text-muted-foreground" : ""}`}
+                      >
+                        {todo.text}
+                      </label>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteTodo(todo._id)}
+                      aria-label="Delete todo"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          {{else}}
+            {todos.isLoading ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : todos.data?.length === 0 ? (
+              <p className="py-4 text-center">
+                No todos yet. Add one above!
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {todos.data?.map((todo) => (
+                  <li
+                    key={todo.id}
+                    className="flex items-center justify-between rounded-md border p-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={todo.completed}
+                        onCheckedChange={() =>
+                          handleToggleTodo(todo.id, todo.completed)
+                        }
+                        id={`todo-${todo.id}`}
+                      />
+                      <label
+                        htmlFor={`todo-${todo.id}`}
+                        className={`${todo.completed ? "line-through" : ""}`}
+                      >
+                        {todo.text}
+                      </label>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteTodo(todo.id)}
+                      aria-label="Delete todo"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          {{/if}}
         </CardContent>
       </Card>
     </div>
   );
-};
-
-export default Todos;
+}

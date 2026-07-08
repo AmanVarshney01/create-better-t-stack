@@ -64,11 +64,11 @@ import { authClient } from "../lib/auth-client";
 <script>
   import { authClient } from "../lib/auth-client";
 
-  const form = document.querySelector("#signup-form") as HTMLFormElement;
-  const nameInput = document.querySelector("#name") as HTMLInputElement;
-  const emailInput = document.querySelector("#email") as HTMLInputElement;
-  const passwordInput = document.querySelector("#password") as HTMLInputElement;
-  const formError = document.querySelector("#form-error") as HTMLParagraphElement;
+  const form = document.getElementById("signup-form") as HTMLFormElement;
+  const nameInput = document.getElementById("name") as HTMLInputElement;
+  const emailInput = document.getElementById("email") as HTMLInputElement;
+  const passwordInput = document.getElementById("password") as HTMLInputElement;
+  const formError = document.getElementById("form-error") as HTMLParagraphElement;
   const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
 
   form.addEventListener("submit", async (e) => {

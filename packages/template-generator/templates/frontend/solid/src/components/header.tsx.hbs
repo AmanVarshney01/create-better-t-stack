@@ -4,9 +4,9 @@ import UserMenu from "./user-menu";
 {{/if}}
 import { For } from "solid-js";
 
-const Header = () => {
+export default function Header() {
   const links = [
-    { label: "Home" , to: "/"},
+    { to: "/", label: "Home" },
     {{#if (eq auth "better-auth")}}
     { to: "/dashboard", label: "Dashboard" },
     {{/if}}
@@ -35,6 +35,4 @@ const Header = () => {
       <hr />
     </div>
   );
-};
-
-export default Header;
+}

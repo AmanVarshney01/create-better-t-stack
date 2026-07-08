@@ -1,5 +1,3 @@
-/* oxlint-disable react-doctor/no-array-index-as-key */
-
 {{#if (eq backend "convex")}}
 "use client";
 
@@ -18,13 +16,6 @@ import {
 {{#if (eq webDeploy "cloudflare")}}
 import dynamic from "next/dynamic";
 
-const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    e.currentTarget.form?.requestSubmit();
-  }
-};
-
 const Streamdown = dynamic(
   () => import("streamdown").then((mod) => ({ default: mod.Streamdown })),
   {
@@ -39,8 +30,7 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useState } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
@@ -76,20 +66,13 @@ import {
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
 
-const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    e.currentTarget.form?.requestSubmit();
-  }
-};
-
-const StreamingMessageText = ({
+function StreamingMessageText({
   text,
   isStreaming,
 }: {
   text: string;
   isStreaming: boolean;
-}) => {
+}) {
   const [visibleText] = useSmoothText(text, {
     startStreaming: isStreaming,
   });
@@ -97,7 +80,7 @@ const StreamingMessageText = ({
   return <Streamdown>{visibleText}</Streamdown>;
 }
 
-const AIPage = () => {
+export default function AIPage() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -131,11 +114,18 @@ const AIPage = () => {
         setThreadId(currentThreadId);
       }
 
-      await sendMessage({ prompt: text , threadId: currentThreadId});
+      await sendMessage({ threadId: currentThreadId, prompt: text });
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
     }
   };
 
@@ -287,9 +277,7 @@ const AIPage = () => {
       </div>
     </MessageScrollerProvider>
   );
-};
-
-export default AIPage;
+}
 {{else}}
 "use client";
 
@@ -318,8 +306,7 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useState } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
@@ -356,7 +343,7 @@ import {
 } from "@{{projectName}}/ui/components/tooltip";
 import { env } from "@{{projectName}}/env/web";
 
-const AIPage = () => {
+export default function AIPage() {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -371,6 +358,13 @@ const AIPage = () => {
     if (!text || isSending) return;
     sendMessage({ text });
     setInput("");
+  };
+
+  const handlePromptKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
   };
 
   const resetConversation = () => {
@@ -452,7 +446,7 @@ const AIPage = () => {
                                       if (part.type === "text") {
                                         return (
                                           <Streamdown
-                                            key={`${message.id}-part-${index}`}
+                                            key={index}
                                             isAnimating={status === "streaming" && message.role === "assistant"}
                                           >
                                             {part.text}
@@ -528,7 +522,5 @@ const AIPage = () => {
       </div>
     </MessageScrollerProvider>
   );
-};
-
-export default AIPage;
+}
 {{/if}}

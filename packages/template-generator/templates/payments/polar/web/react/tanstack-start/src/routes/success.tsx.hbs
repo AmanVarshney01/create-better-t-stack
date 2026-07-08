@@ -1,7 +1,13 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 
+export const Route = createFileRoute("/success")({
+	component: SuccessPage,
+	validateSearch: (search) => ({
+		checkout_id: search.checkout_id as string,
+	}),
+});
 
-const SuccessPage = () => {
+function SuccessPage() {
 	const { checkout_id } = useSearch({ from: "/success" });
 
 	return (
@@ -11,10 +17,3 @@ const SuccessPage = () => {
 		</div>
 	);
 }
-
-export const Route = createFileRoute("/success")({
-	component: SuccessPage,
-	validateSearch: (search) => ({
-		checkout_id: search.checkout_id as string,
-	}),
-});

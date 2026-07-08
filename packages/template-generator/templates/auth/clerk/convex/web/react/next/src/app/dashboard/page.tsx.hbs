@@ -4,9 +4,9 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 
-const Dashboard = () => {
+export default function Dashboard() {
   const user = useUser();
-  const privateData = useQuery(api.privatedata.get);
+  const privateData = useQuery(api.privateData.get);
 
   return (
     <>
@@ -26,6 +26,4 @@ const Dashboard = () => {
       </AuthLoading>
     </>
   );
-};
-
-export default Dashboard;
+}

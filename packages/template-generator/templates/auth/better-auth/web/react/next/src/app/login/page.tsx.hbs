@@ -5,13 +5,12 @@ import SignUpForm from "@/components/sign-up-form";
 import { useState } from "react";
 
 
-const LoginPage = () => {
+export default function LoginPage() {
   const [showSignIn, setShowSignIn] = useState(false);
 
-  if (showSignIn) {
-    return <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />;
-  }
-  return <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />;
-};;
-
-export default LoginPage;
+  return showSignIn ? (
+    <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
+  ) : (
+    <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
+  );
+}

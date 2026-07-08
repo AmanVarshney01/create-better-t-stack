@@ -5,22 +5,23 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export const createPrismaClient = () => {
+export function createPrismaClient() {
 	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export const createPrismaClient = () => {
+export function createPrismaClient() {
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
-		database: url.pathname.slice(1),
 		host: url.hostname,
-		password: url.password,
 		port: parseInt(url.port || "3306"),
-		user: url.username,};
+		user: url.username,
+		password: url.password,
+		database: url.pathname.slice(1),
+	};
 
 	const adapter = new PrismaMariaDb(connectionConfig);
 	return new PrismaClient({ adapter });
@@ -37,22 +38,23 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export const createPrismaClient = ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) => {
+export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
-		database: url.pathname.slice(1),
 		host: url.hostname,
-		password: url.password,
 		port: parseInt(url.port || "3306"),
-		user: url.username,};
+		user: url.username,
+		password: url.password,
+		database: url.pathname.slice(1),
+	};
 
 	const adapter = new PrismaMariaDb(connectionConfig);
 	return new PrismaClient({ adapter });

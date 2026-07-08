@@ -27,11 +27,8 @@ import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 {{/if}}
 
-export const createQueryClient = () => {
+export function createQueryClient() {
 	return new QueryClient({
-{{#if (includes frontend "tanstack-start")}}
-		defaultOptions: { queries: { staleTime: 60 * 1000 } },
-{{/if}}
 		queryCache: new QueryCache({
 			onError: (error, query) => {
 				toast.error(`Error: ${error.message}`, {
@@ -44,6 +41,9 @@ export const createQueryClient = () => {
 				});
 			},
 		}),
+{{#if (includes frontend "tanstack-start")}}
+		defaultOptions: { queries: { staleTime: 60 * 1000 } },
+{{/if}}
 	});
 }
 
@@ -59,7 +59,9 @@ export const queryClient = createQueryClient();
 const getORPCClient = createIsomorphicFn()
 	.server(() =>
 		createRouterClient(appRouter, {
-			context: () => createContext({ req: getRequest() }),
+			context: async () => {
+				return createContext({ req: getRequest() });
+			},
 		}),
 	)
 	.client((): RouterClient<typeof appRouter> => {
@@ -98,7 +100,9 @@ const link = new RPCLink({
 {{/if}}
 });
 
-const getORPCClient = () => createORPCClient(link) as RouterClient<AppRouter>;
+const getORPCClient = () => {
+	return createORPCClient(link) as RouterClient<AppRouter>;
+};
 
 export const client: RouterClient<AppRouter> = getORPCClient();
 {{else}}

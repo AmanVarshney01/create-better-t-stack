@@ -1,5 +1,3 @@
-/* oxlint-disable react-doctor/no-prevent-default */
-
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "react-router";
@@ -10,25 +8,27 @@ import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Label } from "@{{projectName}}/ui/components/label";
 
-const SignUpForm = ({
+export default function SignUpForm({
   onSwitchToSignIn,
 }: {
   onSwitchToSignIn: () => void;
-}) => {
+}) {
   const navigate = useNavigate();
   const { isPending } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
       email: "",
+      password: "",
       name: "",
-      password: "",},
+    },
     onSubmit: async ({ value }) => {
       await authClient.signUp.email(
         {
           email: value.email,
+          password: value.password,
           name: value.name,
-          password: value.password,},
+        },
         {
           onSuccess: () => {
             navigate("/dashboard");
@@ -42,9 +42,10 @@ const SignUpForm = ({
     },
     validators: {
       onSubmit: z.object({
-        email: z.email("Invalid email address"),
         name: z.string().min(2, "Name must be at least 2 characters"),
-        password: z.string().min(8, "Password must be at least 8 characters"),}),
+        email: z.email("Invalid email address"),
+        password: z.string().min(8, "Password must be at least 8 characters"),
+      }),
     },
   });
 
@@ -156,6 +157,4 @@ const SignUpForm = ({
       </div>
     </div>
   );
-};
-
-export default SignUpForm;
+}

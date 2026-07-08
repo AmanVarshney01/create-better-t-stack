@@ -46,12 +46,12 @@ const links = [
 <script>
   import { authClient } from "../lib/auth-client";
 
-  const loginLink = document.querySelector("#login-link");
-  const userMenu = document.querySelector("#user-menu");
-  const userDisplay = document.querySelector("#user-display");
-  const signOutButton = document.querySelector("#signout-button");
+  const loginLink = document.getElementById("login-link");
+  const userMenu = document.getElementById("user-menu");
+  const userDisplay = document.getElementById("user-display");
+  const signOutButton = document.getElementById("signout-button");
 
-  const checkSession = async () => {
+  async function checkSession() {
     try {
       const { data: session } = await authClient.getSession();
       if (session?.user) {

@@ -1,15 +1,13 @@
-/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
-
 "use client"
 
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 
-const TooltipProvider = ({
+function TooltipProvider({
   delay = 0,
   ...props
-}: TooltipPrimitive.Provider.Props) => {
+}: TooltipPrimitive.Provider.Props) {
   return (
     <TooltipPrimitive.Provider
       data-slot="tooltip-provider"
@@ -19,15 +17,15 @@ const TooltipProvider = ({
   )
 }
 
-const Tooltip = ({ ...props }: TooltipPrimitive.Root.Props) => {
+function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
 }
 
-const TooltipTrigger = ({ ...props }: TooltipPrimitive.Trigger.Props) => {
+function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
 }
 
-const TooltipContent = ({
+function TooltipContent({
   className,
   side = "top",
   sideOffset = 4,
@@ -39,7 +37,7 @@ const TooltipContent = ({
   Pick<
     TooltipPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset"
-  >) => {
+  >) {
   return (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Positioner

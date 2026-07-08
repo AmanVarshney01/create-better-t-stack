@@ -68,9 +68,9 @@ describe("Authentication Configurations", () => {
         path.join(projectDir, "apps/web/src/routes/todos.tsx"),
         "utf8",
       );
-      expect(todosRoute).toContain("handleToggleTodo = (id: string");
-      expect(todosRoute).toContain("const handleToggleTodo = (id: string");
-      expect(todosRoute).toContain("const handleDeleteTodo = (id: string");
+      expect(todosRoute).toContain("handleToggleTodo = (id: TodoId");
+      expect(todosRoute).toContain("const handleToggleTodo = (id: TodoId");
+      expect(todosRoute).toContain("const handleDeleteTodo = (id: TodoId");
 
       const todoRouter = await fs.readFile(
         path.join(projectDir, "packages/api/src/routers/todo.ts"),
@@ -84,8 +84,8 @@ describe("Authentication Configurations", () => {
         "utf8",
       );
       expect(authModels).toContain("const { ObjectId } = Schema.Types");
-      expect(authModels).toContain("_id: { auto: true, type: ObjectId }");
-      expect(authModels).toContain('userId: { ref: "User", required: true, type: ObjectId }');
+      expect(authModels).toContain("_id: { type: ObjectId, auto: true }");
+      expect(authModels).toContain('userId: { type: ObjectId, ref: "User", required: true }');
       expect(authModels).toContain("sessionSchema.index({ userId: 1 })");
       expect(authModels).toContain("verificationSchema.index({ identifier: 1 })");
     });
@@ -844,9 +844,9 @@ describe("Authentication Configurations", () => {
       expect(dashboardFile).not.toContain("SignedOut");
       expect(dashboardFile).toContain("useUser");
       expect(dashboardFile).toContain("privateData.queryOptions()");
-      expect(apiContextFile).toContain("interface ClerkContextAuth");
-      expect(apiContextFile).toContain("interface ClerkRequestContext");
-      expect(apiContextFile).toContain("const toClerkContextAuth = (");
+      expect(apiContextFile).toContain("type ClerkContextAuth = {");
+      expect(apiContextFile).toContain("type ClerkRequestContext = {");
+      expect(apiContextFile).toContain("function toClerkContextAuth(");
       expect(apiContextFile).toContain("Promise<ClerkRequestContext>");
       expect(apiContextFile).toContain("publishableKey: env.CLERK_PUBLISHABLE_KEY");
       expect(apiContextFile).toContain("authorizedParties: [env.CORS_ORIGIN]");

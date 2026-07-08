@@ -2,7 +2,6 @@ import { createAuthClient } from "better-auth/react";
 import { convexClient, crossDomainClient } from "@convex-dev/better-auth/client/plugins";
 import { expoClient } from "@better-auth/expo/client";
 import Constants from "expo-constants";
-// oxlint-disable-next-line sonarjs/no-wildcard-import -- passed as the storage implementation
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 import { env } from "@{{projectName}}/env/native";
@@ -15,7 +14,8 @@ export const authClient = createAuthClient({
 			? crossDomainClient()
 			: expoClient({
 				scheme: Constants.expoConfig?.scheme as string,
+				storagePrefix: Constants.expoConfig?.scheme as string,
 				storage: SecureStore,
-				storagePrefix: Constants.expoConfig?.scheme as string,}),
+			}),
 	],
 });

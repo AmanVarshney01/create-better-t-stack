@@ -1,12 +1,10 @@
-/* oxlint-disable no-use-before-define */
-
 import { Container } from "@/components/container";
 import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
 import { View, StyleSheet } from "react-native";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
 
-const Modal = () => {
+export default function Modal() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
 
@@ -32,9 +30,7 @@ const Modal = () => {
       </View>
     </Container>
   );
-};
-
-export default Modal;
+}
 
 const styles = StyleSheet.create({
   container: {

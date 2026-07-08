@@ -23,10 +23,8 @@ const signInSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-const getErrorMessage = (error: unknown): string | null => {
-  if (!error) {
-    return null;
-  }
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
 
   if (typeof error === "string") {
     return error;
@@ -52,7 +50,7 @@ const getErrorMessage = (error: unknown): string | null => {
   return null;
 }
 
-const SignIn = () => {
+function SignIn() {
   const passwordInputRef = useRef<TextInput>(null);
   const { toast } = useToast();
 
@@ -73,14 +71,16 @@ const SignIn = () => {
         {
           onError(error) {
             toast.show({
+              variant: "danger",
               label: error.error?.message || "Failed to sign in",
-              variant: "danger",});
+            });
           },
           onSuccess() {
             formApi.reset();
             toast.show({
+              variant: "success",
               label: "Signed in successfully",
-              variant: "success",});
+            });
             {{#if (eq api "orpc")}}
             queryClient.refetchQueries();
             {{/if}}

@@ -1,12 +1,11 @@
-/* oxlint-disable no-use-before-define */
-
 import "@/unistyles";
 
 import { Container } from "@/components/container";
 import { ScrollView, Text, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
-const TabTwo = () => (
+export default function TabTwo() {
+  return (
     <Container>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerSection}>
@@ -18,8 +17,7 @@ const TabTwo = () => (
       </ScrollView>
     </Container>
   );
-
-export default TabTwo;
+}
 
 const styles = StyleSheet.create((theme) => ({
   container: {
@@ -28,11 +26,14 @@ const styles = StyleSheet.create((theme) => ({
   headerSection: {
     paddingVertical: theme.spacing.xl,
   },
-  subtitle: {
-    color: theme.colors.mutedForeground,
-    fontSize: theme.fontSize.lg,},
   title: {
-    color: theme.colors.foreground,
     fontSize: theme.fontSize["3xl"],
     fontWeight: "bold",
-    marginBottom: theme.spacing.sm,},}));
+    color: theme.colors.foreground,
+    marginBottom: theme.spacing.sm,
+  },
+  subtitle: {
+    fontSize: theme.fontSize.lg,
+    color: theme.colors.mutedForeground,
+  },
+}));

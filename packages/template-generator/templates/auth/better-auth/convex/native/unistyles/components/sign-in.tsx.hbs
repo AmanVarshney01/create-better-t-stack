@@ -1,5 +1,3 @@
-/* oxlint-disable no-use-before-define */
-
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
@@ -25,10 +23,8 @@ const signInSchema = z.object({
     .min(8, "Use at least 8 characters"),
 });
 
-const getErrorMessage = (error: unknown): string | null => {
-  if (!error) {
-    return null;
-  }
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
 
   if (typeof error === "string") {
     return error;
@@ -54,13 +50,16 @@ const getErrorMessage = (error: unknown): string | null => {
   return null;
 }
 
-export const SignIn = () => {
+export function SignIn() {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: {
       email: "",
       password: "",
+    },
+    validators: {
+      onSubmit: signInSchema,
     },
     onSubmit: async ({ value, formApi }) => {
       await authClient.signIn.email(
@@ -69,8 +68,8 @@ export const SignIn = () => {
           password: value.password,
         },
         {
-          onError(signUpError) {
-            setError(signUpError.error?.message || "Failed to sign in");
+          onError(error) {
+            setError(error.error?.message || "Failed to sign in");
           },
           onSuccess() {
             setError(null);
@@ -79,10 +78,7 @@ export const SignIn = () => {
         },
       );
     },
-  
-    validators: {
-      onSubmit: signInSchema,
-    },});
+  });
 
   return (
     <View style={styles.container}>
@@ -163,39 +159,45 @@ export const SignIn = () => {
 }
 
 const styles = StyleSheet.create((theme) => ({
-  button: {
-    alignItems: "center",
-    backgroundColor: theme.colors.primary,
-    borderRadius: 6,
-    flexDirection: "row",
-    justifyContent: "center",
-    padding: 16,},
-  buttonText: {
-    fontWeight: "500",
-  },
   container: {
-    borderColor: theme.colors.border,
+    marginTop: 24,
+    padding: 16,
     borderRadius: 8,
     borderWidth: 1,
-    marginTop: 24,
-    padding: 16,},
-  errorContainer: {
-    borderRadius: 6,
+    borderColor: theme.colors.border,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: theme.colors.typography,
     marginBottom: 16,
-    padding: 12,},
+  },
+  errorContainer: {
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 6,
+  },
   errorText: {
     color: theme.colors.destructive,
     fontSize: 14,
   },
   input: {
-    borderColor: theme.colors.border,
-    borderRadius: 6,
-    borderWidth: 1,
-    color: theme.colors.typography,
     marginBottom: 12,
-    padding: 16,},
-  title: {
+    padding: 16,
+    borderRadius: 6,
     color: theme.colors.typography,
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 16,},}));
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  button: {
+    backgroundColor: theme.colors.primary,
+    padding: 16,
+    borderRadius: 6,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  buttonText: {
+    fontWeight: "500",
+  },
+}));

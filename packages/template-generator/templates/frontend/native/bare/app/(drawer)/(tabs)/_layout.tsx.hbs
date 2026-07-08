@@ -1,11 +1,9 @@
-/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
-
 import { TabBarIcon } from "@/components/tabbar-icon";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { Tabs } from "expo-router";
 import { NAV_THEME } from "@/lib/constants";
 
-const TabLayout = () => {
+export default function TabLayout() {
   const { isDarkColorScheme } = useColorScheme();
   const theme = isDarkColorScheme ? NAV_THEME.dark : NAV_THEME.light;
 
@@ -39,7 +37,5 @@ const TabLayout = () => {
       />
     </Tabs>
   );
-};
-
-export default TabLayout;
+}
 

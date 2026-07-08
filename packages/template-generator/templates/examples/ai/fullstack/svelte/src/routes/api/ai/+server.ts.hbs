@@ -1,15 +1,15 @@
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, wrapLanguageModel } from "ai";
-import type { UIMessage } from "ai";
+import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, wrapLanguageModel } from "ai";
 import type { RequestHandler } from "@sveltejs/kit";
 
 export const POST: RequestHandler = async ({ request }) => {
 	const { messages }: { messages: UIMessage[] } = await request.json();
 
 	const model = wrapLanguageModel({
+		model: google("gemini-2.5-flash"),
 		middleware: devToolsMiddleware(),
-		model: google("gemini-2.5-flash"),});
+	});
 	const result = streamText({
 		model,
 		messages: await convertToModelMessages(messages),

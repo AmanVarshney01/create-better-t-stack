@@ -8,36 +8,45 @@ import prisma from "@{{projectName}}/db";
 import { publicProcedure } from "../index";
 
 export const todoRouter = {
-  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) =>
-    await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}prisma{{/if}}.todo.findMany({
+  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+    const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
+    return await prisma.todo.findMany({
       orderBy: {
         id: "asc",
       },
-    }),
-  ),
+    });
+  }),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) =>
-      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}prisma{{/if}}.todo.create({
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
+      return await prisma.todo.create({
         data: {
           text: input.text,
         },
-      }),
-    ),
+      });
+    }),
 
   toggle: publicProcedure
     {{#if (eq database "mongodb")}}
-    .input(z.object({ completed: z.boolean(), id: z.string() }))
+    .input(z.object({ id: z.string(), completed: z.boolean() }))
     {{else}}
-    .input(z.object({ completed: z.boolean(), id: z.number() }))
+    .input(z.object({ id: z.number(), completed: z.boolean() }))
     {{/if}}
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) =>
-      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}prisma{{/if}}.todo.update({
-        data: { completed: input.completed },
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
+      return await prisma.todo.update({
         where: { id: input.id },
-      }),
-    ),
+        data: { completed: input.completed },
+      });
+    }),
 
   delete: publicProcedure
     {{#if (eq database "mongodb")}}
@@ -45,11 +54,14 @@ export const todoRouter = {
     {{else}}
     .input(z.object({ id: z.number() }))
     {{/if}}
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) =>
-      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}}){{else}}prisma{{/if}}.todo.delete({
+    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+{{/if}}
+      return await prisma.todo.delete({
         where: { id: input.id },
-      }),
-    ),
+      });
+    }),
 };
 {{/if}}
 
@@ -64,29 +76,35 @@ import prisma from "@{{projectName}}/db";
 import { publicProcedure, router } from "../index";
 
 export const todoRouter = router({
-  getAll: publicProcedure.query(async () =>
-    await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createPrismaClient(){{else}}prisma{{/if}}.todo.findMany({
+  getAll: publicProcedure.query(async () => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+    const prisma = createPrismaClient();
+{{/if}}
+    return await prisma.todo.findMany({
       orderBy: {
-        id: "asc",
-      },
-    }),
-  ),
+        id: "asc"
+      }
+    });
+  }),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .mutation(async ({ input }) =>
-      await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createPrismaClient(){{else}}prisma{{/if}}.todo.create({
+    .mutation(async ({ input }) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+      const prisma = createPrismaClient();
+{{/if}}
+      return await prisma.todo.create({
         data: {
           text: input.text,
         },
-      }),
-    ),
+      });
+    }),
 
   toggle: publicProcedure
     {{#if (eq database "mongodb")}}
-    .input(z.object({ completed: z.boolean(), id: z.string() }))
+    .input(z.object({ id: z.string(), completed: z.boolean() }))
     {{else}}
-    .input(z.object({ completed: z.boolean(), id: z.number() }))
+    .input(z.object({ id: z.number(), completed: z.boolean() }))
     {{/if}}
     .mutation(async ({ input }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
@@ -94,10 +112,10 @@ export const todoRouter = router({
 {{/if}}
       try {
         return await prisma.todo.update({
-          data: { completed: input.completed },
           where: { id: input.id },
+          data: { completed: input.completed },
         });
-      } catch {
+      } catch (error) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Todo not found",
@@ -119,7 +137,7 @@ export const todoRouter = router({
         return await prisma.todo.delete({
           where: { id: input.id },
         });
-      } catch {
+      } catch (error) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Todo not found",

@@ -1,5 +1,3 @@
-/* oxlint-disable react/no-unstable-nested-components, react-doctor/react-compiler-no-manual-memoization, github/filenames-match-regex */
-
 import React, { useCallback } from "react";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
@@ -8,7 +6,7 @@ import { useThemeColor } from "heroui-native";
 import { Pressable, Text } from "react-native";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const DrawerLayout = () => {
+function DrawerLayout() {
   const themeColorForeground = useThemeColor("foreground");
   const themeColorBackground = useThemeColor("background");
 
@@ -20,8 +18,9 @@ const DrawerLayout = () => {
         headerTintColor: themeColorForeground,
         headerStyle: { backgroundColor: themeColorBackground },
         headerTitleStyle: {
+          fontWeight: "600",
           color: themeColorForeground,
-          fontWeight: "600",},
+        },
         headerRight: renderThemeToggle,
         drawerStyle: { backgroundColor: themeColorBackground },
       }}

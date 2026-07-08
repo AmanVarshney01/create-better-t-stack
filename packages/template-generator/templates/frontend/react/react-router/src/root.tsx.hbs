@@ -51,8 +51,7 @@ export const loader = (args: Route.LoaderArgs) => rootAuthLoader(args);
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
-// oxlint-disable-next-line sonarjs/function-name -- component renders null
-const ClerkApiAuthBridge = () => {
+function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -68,15 +67,17 @@ const ClerkApiAuthBridge = () => {
 {{/if}}
 
 export const links: Route.LinksFunction = () => [
-  { href: "https://fonts.googleapis.com" , rel: "preconnect"},
-  { crossOrigin: "anonymous" , href: "https://fonts.gstatic.com", rel: "preconnect"},
+  { rel: "preconnect", href: "https://fonts.googleapis.com" },
+  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
   {
+    rel: "stylesheet",
     href:
       "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-    rel: "stylesheet",},
+  },
 ];
 
-export const Layout = ({ children }: { children: React.ReactNode }) => (
+export function Layout({ children }: { children: React.ReactNode }) {
+  return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
@@ -90,15 +91,16 @@ export const Layout = ({ children }: { children: React.ReactNode }) => (
         <Scripts />
       </body>
     </html>
-  )
+  );
+}
 
 {{#if (eq backend "convex")}}
 {{#if (eq auth "clerk")}}
-const App = ({ loaderData }: Route.ComponentProps) => {
+export default function App({ loaderData }: Route.ComponentProps) {
 {{else if (eq auth "better-auth")}}
-const App = () => {
+export default function App() {
 {{else}}
-const App = () => {
+export default function App() {
 {{/if}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
   {{#if (eq auth "clerk")}}
@@ -155,11 +157,9 @@ const App = () => {
     </ConvexProvider>
   );
   {{/if}}
-};
-
-export default App;
+}
 {{else if (eq auth "clerk")}}
-const App = ({ loaderData }: Route.ComponentProps) => {
+export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <ClerkProvider loaderData={loaderData}>
       {{#unless (eq api "none")}}
@@ -213,11 +213,10 @@ const App = ({ loaderData }: Route.ComponentProps) => {
       {{/if}}
     </ClerkProvider>
   );
-};
-
-export default App;
+}
 {{else if (eq api "orpc")}}
-const App = () => (
+export default function App() {
+  return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
         attribute="class"
@@ -234,10 +233,10 @@ const App = () => (
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
-
-export default App;
+}
 {{else if (eq api "trpc")}}
-const App = () => (
+export default function App() {
+  return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
         attribute="class"
@@ -254,10 +253,10 @@ const App = () => (
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
-
-export default App;
+}
 {{else}}
-const App = () => (
+export default function App() {
+  return (
     <ThemeProvider
       attribute="class"
       defaultTheme="dark"
@@ -271,11 +270,10 @@ const App = () => (
       <Toaster richColors />
     </ThemeProvider>
   );
-
-export default App;
+}
 {{/if}}
 
-export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
@@ -286,7 +284,8 @@ export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
         ? "The requested page could not be found."
         : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
-    ({ message: details, stack } = error);
+    details = error.message;
+    stack = error.stack;
   }
   return (
     <main className="pt-16 p-4 container mx-auto">

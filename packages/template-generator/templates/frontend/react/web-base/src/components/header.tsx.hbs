@@ -13,45 +13,55 @@ import { ModeToggle } from "./mode-toggle";
 import UserMenu from "./user-menu";
 {{/if}}
 
-const links = [
-  { label: "Home", to: "/" },
-  {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
-  { label: "Dashboard", to: "/dashboard" },
-  {{/if}}
-  {{#if (includes examples "todo")}}
-  { label: "Todos", to: "/todos" },
-  {{/if}}
-  {{#if (includes examples "ai")}}
-  { label: "AI Chat", to: "/ai" },
-  {{/if}}
-] as const;
+export default function Header() {
+  const links = [
+    { to: "/", label: "Home" },
+    {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+      { to: "/dashboard", label: "Dashboard" },
+    {{/if}}
+    {{#if (includes examples "todo")}}
+    { to: "/todos", label: "Todos" },
+    {{/if}}
+    {{#if (includes examples "ai")}}
+    { to: "/ai", label: "AI Chat" },
+    {{/if}}
+  ] as const;
 
-const Header = () => (
+  return (
     <div>
       <div className="flex flex-row items-center justify-between px-2 py-1">
         <nav className="flex gap-4 text-lg">
-          {links.map(({ to, label }) => (
+          {links.map(({ to, label }) => {
             {{#if (includes frontend "next")}}
-            <Link key={to} href={to}>
-              {label}
-            </Link>
+            return (
+              <Link key={to} href={to}>
+                {label}
+              </Link>
+            );
             {{else if (includes frontend "react-router")}}
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) => (isActive ? "font-bold" : "")}
-              end
-            >
-              {label}
-            </NavLink>
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) => isActive ? "font-bold" : ""}
+                end
+              >
+                {label}
+              </NavLink>
+            );
             {{else if (or (includes frontend "tanstack-router") (includes frontend "tanstack-start"))}}
-            <Link key={to} to={to}>
-              {label}
-            </Link>
+            return (
+              <Link
+                key={to}
+                to={to}
+              >
+                {label}
+              </Link>
+            );
             {{else}}
-            null
+            return null;
             {{/if}}
-          ))}
+          })}
         </nav>
         <div className="flex items-center gap-2">
           {{#unless (includes frontend "tanstack-start")}}
@@ -64,6 +74,5 @@ const Header = () => (
       </div>
       <hr />
     </div>
-);
-
-export default Header;
+  );
+}

@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 {{/if}}
 
-const Dashboard = ({
+export default function Dashboard({
 	{{#if (eq payments "polar")}}
 	customerState,
 	{{/if}}
@@ -22,12 +22,12 @@ const Dashboard = ({
 	customerState: ReturnType<typeof authClient.customer.state>;
 	{{/if}}
 	session: typeof authClient.$Infer.Session;
-}) => {
+}) {
 	{{#if (eq api "orpc")}}
-	const { data: privateData } = useQuery(orpc.privateData.queryOptions());
+	const privateData = useQuery(orpc.privateData.queryOptions());
 	{{/if}}
 	{{#if (eq api "trpc")}}
-	const { data: privateData } = useQuery(trpc.privateData.queryOptions());
+	const privateData = useQuery(trpc.privateData.queryOptions());
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
@@ -35,13 +35,12 @@ const Dashboard = ({
 	{{/if}}
 
 	return (
-		<div className="space-y-2">
-			<p>Welcome {session.user.name}</p>
+		<>
 			{{#if (eq api "orpc")}}
-			<p>API: {privateData?.message}</p>
+			<p>API: {privateData.data?.message}</p>
 			{{/if}}
 			{{#if (eq api "trpc")}}
-			<p>API: {privateData?.message}</p>
+			<p>API: {privateData.data?.message}</p>
 			{{/if}}
 			{{#if (eq payments "polar")}}
 			<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
@@ -55,8 +54,6 @@ const Dashboard = ({
 				</Button>
 			)}
 			{{/if}}
-		</div>
+		</>
 	);
-};
-
-export default Dashboard;
+}

@@ -452,14 +452,14 @@ describe("Deployment Configurations", () => {
       });
       expect(packageJson.scripts).not.toHaveProperty("deploy:vercel");
       expect(files.get("packages/env/src/web.ts")).toContain("const serverUrlSchema = z.union");
-      expect(files.get("packages/env/src/server.ts")).toContain("const getVercelOrigin = ()");
+      expect(files.get("packages/env/src/server.ts")).toContain("function getVercelOrigin()");
       // Server-side better-auth must build public callback URLs through the
       // /api rewrite prefix, not the bare origin
       expect(files.get("packages/env/src/server.ts")).toContain("${vercelOrigin}/api/auth");
       // better-auth and tRPC clients must normalize the same-origin /api path;
       // both reject relative URLs (BetterAuthError / SSR fetch failure)
       const authClient = files.get("apps/web/src/lib/auth-client.ts") ?? "";
-      expect(authClient).toContain("const getServerUrl = (url: string)");
+      expect(authClient).toContain("function getServerUrl(url: string)");
       // The /api/auth suffix is required: better-auth uses a baseURL with a
       // path as-is, so the origin-only shortcut breaks same-origin deploys
       expect(authClient).toContain(
@@ -554,7 +554,7 @@ describe("Deployment Configurations", () => {
       expect(files.get("packages/env/src/web.ts")).toContain(
         "Use an absolute URL or a same-origin path like /api",
       );
-      expect(orpcClient).toContain("const getServerUrl = (url: string)");
+      expect(orpcClient).toContain("function getServerUrl(url: string)");
       expect(orpcClient).toContain("window.location.origin");
       expect(orpcClient).toContain("VERCEL_PROJECT_PRODUCTION_URL");
       // Preview/branch SSR must resolve the current deployment, not production.

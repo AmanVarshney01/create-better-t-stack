@@ -1,5 +1,3 @@
-/* oxlint-disable arrow-body-style, sort-keys, import/consistent-type-specifier-style, jsx-a11y/click-events-have-key-events, jsx-a11y/label-has-associated-control, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role, react-doctor/only-export-components, sonarjs/function-name, sonarjs/max-union-size, sonarjs/no-wildcard-import, unicorn/prefer-export-from */
-
 "use client"
 
 import * as React from "react"
@@ -14,16 +12,16 @@ import { cn } from "@{{projectName}}/ui/lib/utils"
 import { Button } from "@{{projectName}}/ui/components/button"
 import { ArrowDownIcon } from "lucide-react"
 
-const MessageScrollerProvider = (
+function MessageScrollerProvider(
   props: React.ComponentProps<typeof MessageScrollerPrimitive.Provider>
-) => {
+) {
   return <MessageScrollerPrimitive.Provider {...props} />
 }
 
-const MessageScroller = ({
+function MessageScroller({
   className,
   ...props
-}: React.ComponentProps<typeof MessageScrollerPrimitive.Root>) => {
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Root>) {
   return (
     <MessageScrollerPrimitive.Root
       data-slot="message-scroller"
@@ -36,10 +34,10 @@ const MessageScroller = ({
   )
 }
 
-const MessageScrollerViewport = ({
+function MessageScrollerViewport({
   className,
   ...props
-}: React.ComponentProps<typeof MessageScrollerPrimitive.Viewport>) => {
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Viewport>) {
   return (
     <MessageScrollerPrimitive.Viewport
       data-slot="message-scroller-viewport"
@@ -52,10 +50,10 @@ const MessageScrollerViewport = ({
   )
 }
 
-const MessageScrollerContent = ({
+function MessageScrollerContent({
   className,
   ...props
-}: React.ComponentProps<typeof MessageScrollerPrimitive.Content>) => {
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Content>) {
   return (
     <MessageScrollerPrimitive.Content
       data-slot="message-scroller-content"
@@ -68,11 +66,11 @@ const MessageScrollerContent = ({
   )
 }
 
-const MessageScrollerItem = ({
+function MessageScrollerItem({
   className,
   scrollAnchor = false,
   ...props
-}: React.ComponentProps<typeof MessageScrollerPrimitive.Item>) => {
+}: React.ComponentProps<typeof MessageScrollerPrimitive.Item>) {
   return (
     <MessageScrollerPrimitive.Item
       data-slot="message-scroller-item"
@@ -86,7 +84,7 @@ const MessageScrollerItem = ({
   )
 }
 
-const MessageScrollerButton = ({
+function MessageScrollerButton({
   direction = "end",
   className,
   children,
@@ -95,7 +93,7 @@ const MessageScrollerButton = ({
   size = "icon-sm",
   ...props
 }: React.ComponentProps<typeof MessageScrollerPrimitive.Button> &
-  Pick<React.ComponentProps<typeof Button>, "variant" | "size">) => {
+  Pick<React.ComponentProps<typeof Button>, "variant" | "size">) {
   return (
     <MessageScrollerPrimitive.Button
       data-slot="message-scroller-button"

@@ -1,33 +1,29 @@
-/* oxlint-disable typescript/no-non-null-assertion */
-
 import alchemy from "alchemy";
-import {
-{{#if (and (or (eq serverDeploy "cloudflare") (and (eq webDeploy "cloudflare") (eq backend "self"))) (eq dbSetup "d1"))}}
-	D1Database,
-{{/if}}
 {{#if (eq webDeploy "cloudflare")}}
 {{#if (includes frontend "next")}}
-	Nextjs,
+import { Nextjs } from "alchemy/cloudflare";
 {{else if (includes frontend "nuxt")}}
-	Nuxt,
+import { Nuxt } from "alchemy/cloudflare";
 {{else if (includes frontend "svelte")}}
-	SvelteKit,
+import { SvelteKit } from "alchemy/cloudflare";
 {{else if (includes frontend "tanstack-start")}}
-	TanStackStart,
+import { TanStackStart } from "alchemy/cloudflare";
 {{else if (includes frontend "tanstack-router")}}
-	Vite,
+import { Vite } from "alchemy/cloudflare";
 {{else if (includes frontend "react-router")}}
-	ReactRouter,
+import { ReactRouter } from "alchemy/cloudflare";
 {{else if (includes frontend "solid")}}
-	Vite,
+import { Vite } from "alchemy/cloudflare";
 {{else if (includes frontend "astro")}}
-	Astro,
+import { Astro } from "alchemy/cloudflare";
 {{/if}}
 {{/if}}
 {{#if (eq serverDeploy "cloudflare")}}
-	Worker,
+import { Worker } from "alchemy/cloudflare";
 {{/if}}
-} from "alchemy/cloudflare";
+{{#if (and (or (eq serverDeploy "cloudflare") (and (eq webDeploy "cloudflare") (eq backend "self"))) (eq dbSetup "d1"))}}
+import { D1Database } from "alchemy/cloudflare";
+{{/if}}
 import { config } from "dotenv";
 
 {{#if (and (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}

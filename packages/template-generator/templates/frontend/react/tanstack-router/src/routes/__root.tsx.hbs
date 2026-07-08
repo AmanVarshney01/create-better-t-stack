@@ -1,5 +1,3 @@
-/* oxlint-disable github/filenames-match-regex */
-
 import Header from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
@@ -36,11 +34,31 @@ export interface RouterAppContext {
   queryClient: QueryClient;
 }
 {{else}}
-export type RouterAppContext = Record<string, never>;
+export interface RouterAppContext {}
 {{/if}}
 
+export const Route = createRootRouteWithContext<RouterAppContext>()({
+  component: RootComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "{{projectName}}",
+      },
+      {
+        name: "description",
+        content: "{{projectName}} is a web application",
+      },
+    ],
+    links: [
+      {
+        rel: "icon",
+        href: "/favicon.ico",
+      },
+    ],
+  }),
+});
 
-const RootComponent = () => {
+function RootComponent() {
   {{#if (eq api "orpc")}}
   const [client] = useState<AppRouterClient>(() => createORPCClient(link));
   const [orpcUtils] = useState(() => createTanstackQueryUtils(client));
@@ -83,23 +101,3 @@ const RootComponent = () => {
     </>
   );
 }
-
-export const Route = createRootRouteWithContext<RouterAppContext>()({
-  component: RootComponent,
-  head: () => ({
-    links: [
-      {
-        href: "/favicon.ico",
-        rel: "icon",
-      },
-    ],
-    meta: [
-      {
-        title: "{{projectName}}",
-      },
-      {
-        content: "{{projectName}} is a web application",
-        name: "description",
-      },
-    ],}),
-});

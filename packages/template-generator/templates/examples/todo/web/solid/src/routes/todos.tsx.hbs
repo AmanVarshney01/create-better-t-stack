@@ -4,8 +4,11 @@ import { createSignal, For, Show } from "solid-js";
 import { orpc } from "@/utils/orpc";
 import { useQuery, useMutation } from "@tanstack/solid-query";
 
+export const Route = createFileRoute("/todos")({
+  component: TodosRoute,
+});
 
-const TodosRoute = () => {
+function TodosRoute() {
   const [newTodoText, setNewTodoText] = createSignal("");
 
   const todos = useQuery(() => orpc.todo.getAll.queryOptions());
@@ -127,7 +130,3 @@ const TodosRoute = () => {
     </div>
   );
 }
-
-export const Route = createFileRoute("/todos")({
-  component: TodosRoute,
-});

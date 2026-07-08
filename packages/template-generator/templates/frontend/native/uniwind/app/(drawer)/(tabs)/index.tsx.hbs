@@ -1,8 +1,9 @@
 import { Container } from "@/components/container";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { Card } from "heroui-native";
 
-const Home = () => (
+export default function Home() {
+	return (
 		<Container className="p-6">
 			<View className="flex-1 justify-center items-center">
 				<Card variant="secondary" className="p-8 items-center">
@@ -11,5 +12,4 @@ const Home = () => (
 			</View>
 		</Container>
 	);
-
-export default Home;
+}

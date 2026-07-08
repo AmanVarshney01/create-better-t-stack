@@ -11,7 +11,7 @@ Handlebars.registerHelper("includes", (arr, val) => Array.isArray(arr) && arr.in
 
 // Shared across every web client template (oRPC/tRPC/better-auth) so the
 // same-origin URL normalization for Vercel deploys has one source of truth.
-const getServerUrlSource = `const getServerUrl = (url: string) => {
+const getServerUrlSource = `function getServerUrl(url: string) {
 	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
 
 	if (!normalized.startsWith("/")) {
@@ -35,7 +35,7 @@ const getServerUrlSource = `const getServerUrl = (url: string) => {
 	}
 
 	return \`http://localhost:3000\${normalized}\`;
-};`;
+}`;
 
 Handlebars.registerPartial("getServerUrl", getServerUrlSource);
 Handlebars.registerPartial("getServerUrlSpaces", getServerUrlSource.replaceAll("\t", "  "));

@@ -478,11 +478,11 @@ function addNextAiEvlogSetup(content: string) {
 
   if (!nextContent.includes("withEvlog(async (req: Request)")) {
     nextContent = nextContent.replace(
-      "export const POST = async (req: Request) => {",
+      "export async function POST(req: Request) {",
       "export const POST = withEvlog(async (req: Request) => {",
     );
     if (nextContent.includes("export const POST = withEvlog(async (req: Request) => {")) {
-      nextContent = nextContent.replace(/\n};?\s*$/, "\n});\n");
+      nextContent = nextContent.replace(/\n}\s*$/, "\n});\n");
     }
   }
 
@@ -492,20 +492,11 @@ function addNextAiEvlogSetup(content: string) {
 function addNextBetterAuthToRoute(content: string) {
   let nextContent = addNamedImport(content, "@/lib/evlog-auth", ["identifyEvlogUser"]);
 
-  // the trpc route handler ships as a concise arrow; expand it so the auth
-  // identification runs before the request is handled
-  const conciseHandler = "const handler = (req: NextRequest) =>\n\tfetchRequestHandler({";
-  if (nextContent.includes(conciseHandler) && !nextContent.includes("identifyEvlogUser(req)")) {
-    nextContent = nextContent.replace(
-      conciseHandler,
-      "const handler = async (req: NextRequest) => {\n\tawait identifyEvlogUser(req);\n\treturn fetchRequestHandler({",
-    );
-    nextContent = nextContent.replace(/\t\}\);\n(\n?export \{ handler)/u, "\t});\n};\n$1");
-  }
+  nextContent = nextContent.replace("function handler(req:", "async function handler(req:");
 
   for (const marker of [
-    "const handler = async (req: NextRequest) => {",
-    "const handleRequest = async (req: NextRequest) => {",
+    "async function handler(req: NextRequest) {",
+    "async function handleRequest(req: NextRequest) {",
     "export const POST = withEvlog(async (req: Request) => {",
   ]) {
     nextContent = insertAfterOnce(
