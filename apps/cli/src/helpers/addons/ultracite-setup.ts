@@ -360,7 +360,11 @@ export async function setupUltracite(
   }
 
   if (gitHooks.includes("husky")) {
-    await removeHuskySampleHook(projectDir);
+    // best-effort: a failed sample-hook cleanup must not fail a successful init
+    await Result.tryPromise({
+      try: () => removeHuskySampleHook(projectDir),
+      catch: (e) => e,
+    });
   }
 
   s.stop("Ultracite setup successfully!");
