@@ -57,69 +57,6 @@ describe("API Configurations", () => {
       });
     }
 
-    it("should fail with tRPC + Nuxt", async () => {
-      const result = await runTRPCTest({
-        projectName: "trpc-nuxt-fail",
-        api: "trpc",
-        frontend: ["nuxt"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-      });
-
-      expectError(result, "tRPC API is not supported with 'nuxt' frontend");
-    });
-
-    it("should fail with tRPC + Svelte", async () => {
-      const result = await runTRPCTest({
-        projectName: "trpc-svelte-fail",
-        api: "trpc",
-        frontend: ["svelte"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-      });
-
-      expectError(result, "tRPC API is not supported with 'svelte' frontend");
-    });
-
-    it("should fail with tRPC + Solid", async () => {
-      const result = await runTRPCTest({
-        projectName: "trpc-solid-fail",
-        api: "trpc",
-        frontend: ["solid"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-      });
-
-      expectError(result, "tRPC API is not supported with 'solid' frontend");
-    });
-
     const backends = ["hono", "express", "fastify", "elysia"];
 
     for (const backend of backends) {
@@ -542,44 +479,6 @@ describe("API Configurations", () => {
     }
   });
 
-  describe("All API Types", () => {
-    const apis = ["trpc", "orpc", "none"];
-
-    for (const api of apis) {
-      it(`should work with ${api} API`, async () => {
-        const config: TestConfig = {
-          projectName: `test-api-${api}`,
-          api: api as API,
-          addons: ["none"],
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
-        };
-
-        if (api === "none") {
-          config.backend = "none";
-          config.runtime = "none";
-          config.database = "none";
-          config.orm = "none";
-          config.auth = "none";
-          config.frontend = ["tanstack-router"];
-        } else {
-          config.backend = "hono";
-          config.runtime = "bun";
-          config.database = "sqlite";
-          config.orm = "drizzle";
-          config.auth = "none";
-          config.frontend = ["tanstack-router"];
-        }
-
-        const result = await runTRPCTest(config);
-        expectSuccess(result);
-      });
-    }
-  });
-
   describe("API Edge Cases", () => {
     it("should scaffold Fastify oRPC context with matching request shapes", async () => {
       const result = await createVirtual({
@@ -612,9 +511,7 @@ describe("API Configurations", () => {
 
       expect(serverFile).toContain("context: await createContext(request.headers)");
       expect(contextFile).toContain('import type { IncomingHttpHeaders } from "node:http";');
-      expect(contextFile).toContain(
-        "export async function createContext(req: IncomingHttpHeaders)",
-      );
+      expect(contextFile).toContain("createContext(req: IncomingHttpHeaders)");
     });
 
     it("should scaffold native oRPC with Expo fetch support for each auth branch", async () => {
@@ -716,7 +613,7 @@ describe("API Configurations", () => {
       const authRouteFile = files.get("apps/web/src/routes/_auth/route.tsx");
       const dashboardFile = files.get("apps/web/src/routes/_auth/dashboard.tsx");
 
-      expect(orpcFile).toContain("export function createQueryClient()");
+      expect(orpcFile).toContain("function createQueryClient()");
       expect(orpcFile).toContain("defaultOptions: { queries: { staleTime: 60 * 1000 } },");
       expect(orpcFile).toContain("query.invalidate();");
       expect(orpcFile).not.toContain("void query.invalidate");

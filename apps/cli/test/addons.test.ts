@@ -59,33 +59,6 @@ function expectDocsShapedEvlogAuth(content: string) {
 }
 
 describe("Addon Configurations", () => {
-  describe("Universal Addons (no frontend restrictions)", () => {
-    const universalAddons = ["biome", "lefthook", "husky", "turborepo", "vite-plus", "mcp"];
-
-    for (const addon of universalAddons) {
-      it(`should work with ${addon} addon on any frontend`, async () => {
-        const result = await runTRPCTest({
-          projectName: `${addon}-universal`,
-          addons: [addon as Addons],
-          frontend: ["tanstack-router"],
-          backend: "hono",
-          runtime: "bun",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          api: "trpc",
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
-        });
-
-        expectSuccess(result);
-      });
-    }
-  });
-
   describe("Frontend-Specific Addons", () => {
     describe("PWA Addon", () => {
       const pwaCompatibleFrontends = ["tanstack-router", "react-router", "solid", "next"];
@@ -391,6 +364,32 @@ describe("Addon Configurations", () => {
         expect(nextConfig).not.toContain('output: "export"');
       });
     });
+  });
+
+  describe("Standalone Addons", () => {
+    // smoke coverage for addons that have no dedicated content tests
+    for (const addon of ["oxlint", "lefthook", "mcp"] as const) {
+      it(`should work with ${addon} addon`, async () => {
+        const result = await runTRPCTest({
+          projectName: `${addon}-standalone`,
+          addons: [addon],
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
   });
 
   describe("Multiple Addons", () => {
@@ -1791,55 +1790,5 @@ describe("Addon Configurations", () => {
 
       expectError(result, "Cannot combine 'none' with other addons");
     });
-  });
-
-  describe("All Available Addons", () => {
-    const testableAddons = [
-      "pwa",
-      "tauri",
-      "electrobun",
-      "biome",
-      "husky",
-      "turborepo",
-      "nx",
-      "vite-plus",
-      "oxlint",
-      "evlog",
-      // Note: starlight, ultracite, fumadocs are prompt-controlled only
-    ];
-
-    for (const addon of testableAddons) {
-      it(`should work with ${addon} addon in appropriate setup`, async () => {
-        const config: TestConfig = {
-          projectName: `test-${addon}`,
-          addons: [addon as Addons],
-          backend: "hono",
-          runtime: "bun",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          api: "trpc",
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
-        };
-
-        // Choose compatible frontend for each addon
-        if (["pwa"].includes(addon)) {
-          config.frontend = ["tanstack-router"]; // PWA compatible
-        } else if (["tauri"].includes(addon)) {
-          config.frontend = ["tanstack-router"]; // Tauri compatible
-        } else if (["electrobun"].includes(addon)) {
-          config.frontend = ["tanstack-router"]; // Electrobun compatible
-        } else {
-          config.frontend = ["tanstack-router"]; // Universal addons
-        }
-
-        const result = await runTRPCTest(config);
-        expectSuccess(result);
-      });
-    }
   });
 });

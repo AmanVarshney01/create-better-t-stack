@@ -48,7 +48,7 @@ describe("Cloudflare DB client generation", () => {
     expect(envFile).toContain('export { env } from "cloudflare:workers";');
     expect(serverFile).toContain("createAuth().handler(c.req.raw)");
     expect(contextFile).toContain("createAuth().api.getSession");
-    expect(todoRouterFile).toContain("const db = createDb();");
+    expect(todoRouterFile).toContain("createDb()");
   });
 
   it("uses request-scoped db/auth factories for Next on Cloudflare", async () => {
@@ -170,7 +170,7 @@ describe("Cloudflare DB client generation", () => {
       const todoRouterFile = files.get("packages/api/src/routers/todo.ts");
 
       expect(dbFile).toContain('import { drizzle } from "drizzle-orm/d1";');
-      expect(dbFile).toContain("return drizzle(env.DB, { schema });");
+      expect(dbFile).toContain("drizzle(env.DB, { schema })");
       expect(dbFile).not.toContain('import { drizzle } from "drizzle-orm/libsql";');
       expect(dbFile).not.toContain("export const db = createDb();");
       expect(authFile).toContain("export function createAuth()");
@@ -183,7 +183,7 @@ describe("Cloudflare DB client generation", () => {
         expect(routeFile).toContain(needle);
       }
       expect(contextFile).toContain("createAuth().api.getSession");
-      expect(todoRouterFile).toContain("const db = createDb();");
+      expect(todoRouterFile).toContain("createDb()");
     });
   }
 

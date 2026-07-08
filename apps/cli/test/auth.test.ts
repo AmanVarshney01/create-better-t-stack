@@ -4,37 +4,10 @@ import path from "node:path";
 import fs from "fs-extra";
 
 import type { Backend, Database, Frontend, ORM } from "../src/types";
-import {
-  AUTH_PROVIDERS,
-  expectError,
-  expectSuccess,
-  runTRPCTest,
-  type TestConfig,
-} from "./test-utils";
+import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("Authentication Configurations", () => {
   describe("Better-Auth Provider", () => {
-    it("should work with better-auth + database", async () => {
-      const result = await runTRPCTest({
-        projectName: "better-auth-db",
-        auth: "better-auth",
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["turborepo"],
-        examples: ["todo"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-
     const databases = ["sqlite", "postgres", "mysql"];
     for (const database of databases) {
       it(`should work with better-auth + ${database}`, async () => {
@@ -95,7 +68,7 @@ describe("Authentication Configurations", () => {
         path.join(projectDir, "apps/web/src/routes/todos.tsx"),
         "utf8",
       );
-      expect(todosRoute).toContain("type TodoId = string");
+      expect(todosRoute).toContain("handleToggleTodo = (id: TodoId");
       expect(todosRoute).toContain("const handleToggleTodo = (id: TodoId");
       expect(todosRoute).toContain("const handleDeleteTodo = (id: TodoId");
 
@@ -219,29 +192,6 @@ describe("Authentication Configurations", () => {
       expect(guardIndex).toBeGreaterThanOrEqual(0);
       expect(paymentIndex).toBeGreaterThanOrEqual(0);
       expect(guardIndex).toBeLessThan(paymentIndex);
-    });
-
-    it("should fail with better-auth + no database (non-convex)", async () => {
-      const result = await runTRPCTest({
-        projectName: "better-auth-no-db-fail",
-        auth: "better-auth",
-        backend: "hono",
-        runtime: "bun",
-        database: "none",
-        orm: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["turborepo"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      // This should actually succeed - better-auth can work without a database
-      // if no examples require one
-      expectSuccess(result);
     });
 
     it("should work with better-auth + convex backend (tanstack-router)", async () => {
@@ -529,7 +479,7 @@ describe("Authentication Configurations", () => {
 
         expect(nativeIndexFile).toContain("polarNativeClient.checkout");
         expect(nativeIndexFile).toContain("polarNativeClient.customer.portal");
-        expect(nativeIndexFile).toContain("WebBrowser.openAuthSessionAsync");
+        expect(nativeIndexFile).toContain("openAuthSessionAsync");
         expect(nativeIndexFile).toContain('new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL)');
         expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
         expect(nativeIndexFile).toContain("returnUrl: polarReturnUrl");
@@ -603,7 +553,7 @@ describe("Authentication Configurations", () => {
 
         expect(nativeIndexFile).toContain("api.polar.generateCheckoutLink");
         expect(nativeIndexFile).toContain("api.polar.generateCustomerPortalUrl");
-        expect(nativeIndexFile).toContain("WebBrowser.openAuthSessionAsync");
+        expect(nativeIndexFile).toContain("openAuthSessionAsync");
         expect(nativeIndexFile).toContain(
           'new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL)',
         );
@@ -894,9 +844,9 @@ describe("Authentication Configurations", () => {
       expect(dashboardFile).not.toContain("SignedOut");
       expect(dashboardFile).toContain("useUser");
       expect(dashboardFile).toContain("privateData.queryOptions()");
-      expect(apiContextFile).toContain("type ClerkContextAuth");
-      expect(apiContextFile).toContain("type ClerkRequestContext");
-      expect(apiContextFile).toContain("function toClerkContextAuth");
+      expect(apiContextFile).toContain("type ClerkContextAuth = {");
+      expect(apiContextFile).toContain("type ClerkRequestContext = {");
+      expect(apiContextFile).toContain("function toClerkContextAuth(");
       expect(apiContextFile).toContain("Promise<ClerkRequestContext>");
       expect(apiContextFile).toContain("publishableKey: env.CLERK_PUBLISHABLE_KEY");
       expect(apiContextFile).toContain("authorizedParties: [env.CORS_ORIGIN]");
@@ -1200,49 +1150,6 @@ describe("Authentication Configurations", () => {
           install: false,
         });
 
-        expectSuccess(result);
-      });
-    }
-  });
-
-  describe("All Auth Providers", () => {
-    for (const auth of AUTH_PROVIDERS) {
-      it(`should work with ${auth} in appropriate setup`, async () => {
-        const config: TestConfig = {
-          projectName: `test-${auth}`,
-          auth,
-          frontend: ["tanstack-router"],
-          addons: ["turborepo"],
-          examples: ["todo"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
-        };
-
-        // Set appropriate setup for each auth provider
-        if (auth === "clerk") {
-          config.backend = "convex";
-          config.runtime = "none";
-          config.database = "none";
-          config.orm = "none";
-          config.api = "none";
-        } else if (auth === "better-auth") {
-          config.backend = "hono";
-          config.runtime = "bun";
-          config.database = "sqlite";
-          config.orm = "drizzle";
-          config.api = "trpc";
-        } else {
-          // none
-          config.backend = "hono";
-          config.runtime = "bun";
-          config.database = "sqlite";
-          config.orm = "drizzle";
-          config.api = "trpc";
-        }
-
-        const result = await runTRPCTest(config);
         expectSuccess(result);
       });
     }

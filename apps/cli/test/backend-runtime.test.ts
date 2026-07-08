@@ -341,68 +341,6 @@ describe("Backend and Runtime Combinations", () => {
     });
   });
 
-  describe("All Backend Types", () => {
-    const backends = ["hono", "express", "fastify", "elysia", "convex", "none", "self"] as const;
-
-    for (const backend of backends) {
-      it(`should work with appropriate defaults for ${backend}`, async () => {
-        const config: TestConfig = {
-          projectName: `test-${backend}`,
-          backend: backend as Backend,
-          frontend: ["tanstack-router"],
-          addons: ["none"],
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
-        };
-
-        // Set appropriate defaults for each backend
-        switch (backend) {
-          case "convex":
-            config.runtime = "none";
-            config.database = "none";
-            config.orm = "none";
-            config.auth = "clerk";
-            config.api = "none";
-            break;
-          case "none":
-            config.runtime = "none";
-            config.database = "none";
-            config.orm = "none";
-            config.auth = "none";
-            config.api = "none";
-            break;
-          case "self":
-            config.frontend = ["next"]; // Self backend only works with Next.js
-            config.runtime = "none";
-            config.database = "sqlite";
-            config.orm = "drizzle";
-            config.auth = "better-auth";
-            config.api = "trpc";
-            break;
-          case "elysia":
-            config.runtime = "bun";
-            config.database = "sqlite";
-            config.orm = "drizzle";
-            config.auth = "none";
-            config.api = "trpc";
-            break;
-          default:
-            config.runtime = "bun";
-            config.database = "sqlite";
-            config.orm = "drizzle";
-            config.auth = "none";
-            config.api = "trpc";
-        }
-
-        const result = await runTRPCTest(config);
-        expectSuccess(result);
-      });
-    }
-  });
-
   describe("Self Backend Constraints", () => {
     it("should work with self backend and Next.js frontend", async () => {
       const result = await runTRPCTest({

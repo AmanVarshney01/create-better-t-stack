@@ -243,9 +243,7 @@ export const SkillSelectionSchema = z.strictObject({
   skills: z.array(z.string()).describe("Curated skill names to install from this source"),
 });
 
-export const UltraciteLinterSchema = z
-  .enum(["biome", "eslint", "oxlint"])
-  .describe("Ultracite linter");
+export const UltraciteLinterSchema = z.enum(["biome", "oxlint"]).describe("Ultracite linter");
 
 export const UltraciteEditorSchema = z
   .enum([

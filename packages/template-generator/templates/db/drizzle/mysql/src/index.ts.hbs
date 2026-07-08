@@ -28,6 +28,7 @@ export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflar
 			uri: env.DATABASE_URL,
 		},
 		schema,
+		mode: "default",
 	});
 }
 {{/if}}
@@ -64,6 +65,7 @@ export function createDb() {
 			uri: env.DATABASE_URL,
 		},
 		schema,
+		mode: "default",
 	});
 }
 {{/if}}

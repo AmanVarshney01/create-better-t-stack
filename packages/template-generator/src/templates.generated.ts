@@ -149,6 +149,7 @@ export default {
   },
   "devDependencies": {
     "@types/bun": "^1.3.14",
+    "@types/three": "^0.165.0",
     "concurrently": "^10.0.3",
     "typescript": "^6"
   }
@@ -15330,6 +15331,7 @@ export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflar
 			uri: env.DATABASE_URL,
 		},
 		schema,
+		mode: "default",
 	});
 }
 {{/if}}
@@ -15366,6 +15368,7 @@ export function createDb() {
 			uri: env.DATABASE_URL,
 		},
 		schema,
+		mode: "default",
 	});
 }
 {{/if}}

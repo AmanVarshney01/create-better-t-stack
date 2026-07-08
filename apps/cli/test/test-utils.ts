@@ -20,22 +20,7 @@ import type {
   ServerDeploy,
   DatabaseSetup,
 } from "../src/types";
-import {
-  AddonsSchema,
-  APISchema,
-  AuthSchema,
-  BackendSchema,
-  DatabaseSchema,
-  DatabaseSetupSchema,
-  ExamplesSchema,
-  FrontendSchema,
-  ORMSchema,
-  PackageManagerSchema,
-  PaymentsSchema,
-  RuntimeSchema,
-  ServerDeploySchema,
-  WebDeploySchema,
-} from "../src/types";
+import { PackageManagerSchema, ServerDeploySchema, WebDeploySchema } from "../src/types";
 
 // Smoke directory path - use the same as setup.ts
 const SMOKE_DIR_PATH = join(import.meta.dir, "..", ".smoke");
@@ -183,13 +168,6 @@ export function expectError(result: TestResult, expectedMessage?: string) {
   }
 }
 
-// Helper function to create properly typed test configs
-export function createTestConfig(
-  config: Partial<TestConfig> & { projectName: string },
-): TestConfig {
-  return config as TestConfig;
-}
-
 /**
  * Extract enum values from a Zod enum schema
  */
@@ -199,30 +177,8 @@ function extractEnumValues<T extends string>(schema: { options: readonly T[] }):
 
 // Test data generators inferred from Zod schemas
 export const PACKAGE_MANAGERS = extractEnumValues(PackageManagerSchema);
-export const DATABASES = extractEnumValues(DatabaseSchema);
-export const ORMS = extractEnumValues(ORMSchema);
-export const BACKENDS = extractEnumValues(BackendSchema);
-export const RUNTIMES = extractEnumValues(RuntimeSchema);
-export const FRONTENDS = extractEnumValues(FrontendSchema);
-export const ADDONS = extractEnumValues(AddonsSchema);
-export const EXAMPLES = extractEnumValues(ExamplesSchema);
-export const AUTH_PROVIDERS = extractEnumValues(AuthSchema);
-export const PAYMENTS_PROVIDERS = extractEnumValues(PaymentsSchema);
-export const API_TYPES = extractEnumValues(APISchema);
 export const WEB_DEPLOYS = extractEnumValues(WebDeploySchema);
 export const SERVER_DEPLOYS = extractEnumValues(ServerDeploySchema);
-export const DB_SETUPS = extractEnumValues(DatabaseSetupSchema);
-
-// Convenience functions for common test patterns
-export function createBasicConfig(overrides: Partial<TestConfig> = {}): TestConfig {
-  return {
-    projectName: "test-app",
-    yes: true, // Use defaults
-    install: false,
-    git: true,
-    ...overrides,
-  };
-}
 
 export function createCustomConfig(config: Partial<TestConfig>): TestConfig {
   return {
