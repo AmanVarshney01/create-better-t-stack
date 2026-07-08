@@ -145,7 +145,7 @@ const HOOKS = {
 
 // Pinned so upstream preset releases can't silently break scaffold lint compliance;
 // bump alongside a template compliance run (BTS_ULTRACITE_COMPLIANCE=1 bun test)
-const ULTRACITE_VERSION = "7.9.2";
+const ULTRACITE_VERSION = "7.9.3";
 
 const DEFAULT_LINTER: UltraciteLinter = "biome";
 const DEFAULT_EDITORS: UltraciteEditor[] = ["vscode"];
