@@ -151,7 +151,7 @@ export default {
     "@types/bun": "^1.3.14",
     "@types/three": "^0.165.0",
     "concurrently": "^10.0.3",
-    "typescript": "^6"
+    "typescript": "^7"
   }
 }
 `],
@@ -25613,7 +25613,8 @@ export default defineConfig({
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.2",
-    "tailwindcss": "^4.3.2"
+    "tailwindcss": "^4.3.2",
+    "typescript": "^6"
   }
 }
 `],
@@ -29754,7 +29755,8 @@ export default defineNuxtConfig({
   },
   "devDependencies": {
     "tailwindcss": "^4.3.2",
-    "@iconify-json/lucide": "^1.2.115"
+    "@iconify-json/lucide": "^1.2.115",
+    "typescript": "^6"
   }
 }
 `],
@@ -29844,7 +29846,8 @@ initOpenNextCloudflareForDev();
     "@types/node": "^20",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.3.2"
+    "tailwindcss": "^4.3.2",
+    "typescript": "^6"
   }
 }
 `],
@@ -32369,6 +32372,7 @@ vite.config.ts.timestamp-*
 		"@tailwindcss/vite": "^4.3.2",
 		"svelte": "^5.56.4",
 		"svelte-check": "^4.7.1",
+		"typescript": "^6",
 		"tailwindcss": "^4.3.2",
 		"vite": "^8.1.3"
 	},
