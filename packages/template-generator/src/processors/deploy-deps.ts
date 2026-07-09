@@ -113,6 +113,12 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     const webPkgPath = "apps/web/package.json";
     if (!vfs.exists(webPkgPath)) return;
 
+    // framework dev servers need wrangler for local D1 (bindings proxy + migrations)
+    const needsLocalD1 =
+      isBackendSelf &&
+      config.dbSetup === "d1" &&
+      ["nuxt", "svelte", "astro"].some((f) => frontend.includes(f));
+
     if (frontend.includes("next")) {
       addPackageDependency({
         vfs,
@@ -120,17 +126,31 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
         dependencies: ["@opennextjs/cloudflare"],
         devDependencies: ["wrangler", "@cloudflare/workers-types"],
       });
+    } else if (frontend.includes("nuxt")) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        devDependencies: isBackendSelf
+          ? needsLocalD1
+            ? ["nitro-cloudflare-dev", "wrangler"]
+            : ["nitro-cloudflare-dev"]
+          : [],
+      });
     } else if (frontend.includes("svelte")) {
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: ["@sveltejs/adapter-cloudflare"],
+        devDependencies: needsLocalD1
+          ? ["@sveltejs/adapter-cloudflare", "wrangler"]
+          : ["@sveltejs/adapter-cloudflare"],
       });
     } else if (frontend.includes("astro")) {
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: ["@astrojs/cloudflare", "@cloudflare/workers-types"],
+        devDependencies: needsLocalD1
+          ? ["@astrojs/cloudflare", "@cloudflare/workers-types", "wrangler"]
+          : ["@astrojs/cloudflare", "@cloudflare/workers-types"],
       });
     }
   }
