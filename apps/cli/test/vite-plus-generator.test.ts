@@ -153,5 +153,16 @@ describe("Vite+ config generator", () => {
 
     expect(d1Patterns).not.toContain("packages/db/local.db*");
     expect(d1Patterns).not.toContain("packages/db/prisma/**/*.db*");
+
+    const prismaD1Patterns = getVitePlusIgnorePatterns(
+      configWith({
+        dbSetup: "d1",
+        runtime: "workers",
+        orm: "prisma",
+      }),
+    );
+
+    expect(prismaD1Patterns).toContain("packages/db/local.db*");
+    expect(prismaD1Patterns).not.toContain("packages/db/prisma/**/*.db*");
   });
 });

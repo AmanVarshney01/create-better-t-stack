@@ -119,7 +119,6 @@ export async function displayPostInstallInstructions(
     webDeploy,
     serverDeploy,
     backend,
-    config,
   );
 
   const hasWeb = frontend?.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
@@ -160,6 +159,25 @@ export async function displayPostInstallInstructions(
     )}\n`;
   }
 
+  const hasAlchemyD1 =
+    dbSetup === "d1" &&
+    (serverDeploy === "cloudflare" || (isBackendSelf && webDeploy === "cloudflare"));
+  const hasLocalD1 =
+    isBackendSelf &&
+    webDeploy === "cloudflare" &&
+    dbSetup === "d1" &&
+    (["next", "nuxt", "svelte", "astro"] as const).some((value) => frontend.includes(value));
+
+  if (hasAlchemyD1 && orm !== "none") {
+    output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:generate\n`;
+    if (orm === "prisma") {
+      output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:migrate\n`;
+    }
+    if (hasLocalD1) {
+      output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:migrate:local\n`;
+    }
+  }
+
   if (isConvex) {
     output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev:setup\n${pc.dim(
       "   (this will guide you through Convex project setup)",
@@ -177,11 +195,6 @@ export async function displayPostInstallInstructions(
     }
 
     if (runtime === "workers") {
-      if (dbSetup === "d1") {
-        output += `${pc.yellow(
-          "IMPORTANT:",
-        )} Complete D1 database setup first\n   (see Database commands below)\n`;
-      }
       output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n`;
     }
   }
@@ -373,15 +386,6 @@ async function getDatabaseInstructions(
 
     if (dockerStatus.message) {
       notes.push(dockerStatus.message);
-    }
-  }
-
-  if (isD1Alchemy) {
-    if (orm === "drizzle") {
-      commands.push({ label: "Generate migrations", command: `${runCmd} db:generate` });
-    } else if (orm === "prisma") {
-      commands.push({ label: "Generate client", command: `${runCmd} db:generate` });
-      commands.push({ label: "Apply migrations", command: `${runCmd} db:migrate` });
     }
   }
 
@@ -660,18 +664,9 @@ function getAlchemyDeployInstructions(
   webDeploy: WebDeploy,
   serverDeploy: ServerDeploy,
   backend: Backend,
-  config: ProjectConfig,
 ) {
   const instructions: string[] = [];
   const isBackendSelf = backend === "self";
-  const hasLocalD1 =
-    isBackendSelf &&
-    webDeploy === "cloudflare" &&
-    config.dbSetup === "d1" &&
-    (["next", "nuxt", "svelte", "astro"] as const).some((f) => config.frontend.includes(f));
-  const localD1Line = hasLocalD1
-    ? `\n${pc.cyan("•")} Local dev DB: ${runCmd} db:generate, then ${runCmd} db:migrate:local`
-    : "";
 
   if (webDeploy === "cloudflare" && serverDeploy !== "cloudflare" && !isBackendSelf) {
     const cfDeploy = serverDeploy === "vercel" ? "deploy:web" : "deploy";
@@ -685,7 +680,7 @@ function getAlchemyDeployInstructions(
     );
   } else if (webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || isBackendSelf)) {
     instructions.push(
-      `${pc.bold("Deploy with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}${localD1Line}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}\n${pc.cyan("•")} First deploy prompts Cloudflare login (saved to ~/.alchemy)`,
+      `${pc.bold("Deploy with Cloudflare (Alchemy):")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}\n${pc.cyan("•")} First deploy prompts Cloudflare login (saved to ~/.alchemy)`,
     );
   }
 

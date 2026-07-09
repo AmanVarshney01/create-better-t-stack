@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import { Result } from "better-result";
+import fs from "fs-extra";
 
 import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
@@ -27,12 +28,17 @@ export async function setupCloudflareD1(
       const variables: EnvVariable[] = [
         {
           key: "DATABASE_URL",
-          value: `file:${path.join(projectDir, targetApp, "local.db")}`,
+          // Prisma resolves this URL from packages/db, where its config lives.
+          // D1 runtime access uses the DB binding; this file is tooling-only.
+          value: "file:./local.db",
           condition: true,
         },
       ];
 
       await addEnvVariablesToFile(envPath, variables);
+      // Prisma 7's SQLite schema engine expects the file to exist before the
+      // first `migrate dev` run. Keep it beside prisma.config.ts.
+      await fs.ensureFile(path.join(projectDir, "packages/db/local.db"));
 
       const serverDir = path.join(projectDir, backend === "self" ? "apps/web" : "apps/server");
       await addPackageDependency({

@@ -97,6 +97,7 @@ export const dependencyVersionMap = {
   nx: "^23.1.0",
   "vite-plus": "0.2.6",
   rolldown: "1.2.0",
+  "rolldown-plugin-wasm": "^0.3.2",
 
   ai: "^7.0.41",
   "@ai-sdk/google": "^4.0.27",
