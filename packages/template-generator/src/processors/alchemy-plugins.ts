@@ -3,7 +3,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { webDeploy, frontend } = config;
+  const { webDeploy, frontend, backend } = config;
 
   if (webDeploy !== "cloudflare") return;
 
@@ -11,6 +11,61 @@ export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectCon
     processNextAlchemy(vfs, config);
   } else if (frontend.includes("react-router")) {
     processReactRouterAlchemy(vfs);
+  } else if (frontend.includes("svelte")) {
+    // keep the adapter's worker internals out of the public asset upload
+    vfs.writeFile("apps/web/static/.assetsignore", "_worker.js\n_routes.json\n");
+    if (backend === "self") {
+      writeDevWranglerConfig(vfs, config);
+    }
+  } else if (backend === "self" && (frontend.includes("nuxt") || frontend.includes("astro"))) {
+    // framework dev servers read local bindings (miniflare D1) from this config
+    writeDevWranglerConfig(vfs, config);
+  }
+}
+
+function d1DatabasesBlock(config: ProjectConfig): string {
+  if (config.dbSetup !== "d1") return "";
+  const migrationsDir =
+    config.orm === "prisma"
+      ? "../../packages/db/prisma/migrations"
+      : "../../packages/db/src/migrations";
+  return `,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "${config.projectName}-db-local",
+      "database_id": "local",
+      "migrations_dir": "${migrationsDir}"
+    }
+  ]`;
+}
+
+function writeDevWranglerConfig(vfs: VirtualFileSystem, config: ProjectConfig) {
+  const wranglerConfigPath = "apps/web/wrangler.jsonc";
+  if (vfs.exists(wranglerConfigPath) || config.dbSetup !== "d1") return;
+  vfs.writeFile(
+    wranglerConfigPath,
+    `{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "${config.projectName}-web",
+  "compatibility_date": "2025-05-05",
+  "compatibility_flags": ["nodejs_compat"]${d1DatabasesBlock(config)}
+}
+`,
+  );
+  addLocalD1MigrateScript(vfs);
+}
+
+function addLocalD1MigrateScript(vfs: VirtualFileSystem) {
+  const webPkgPath = "apps/web/package.json";
+  if (!vfs.exists(webPkgPath)) return;
+  const raw = vfs.readFile(webPkgPath);
+  if (!raw) return;
+  const pkg = JSON.parse(raw);
+  pkg.scripts = pkg.scripts ?? {};
+  if (!pkg.scripts["db:migrate:local"]) {
+    pkg.scripts["db:migrate:local"] = "wrangler d1 migrations apply DB --local";
+    vfs.writeFile(webPkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
   }
 }
 
@@ -45,7 +100,8 @@ export default {
   if (!vfs.exists(entryServerPath)) {
     vfs.writeFile(
       entryServerPath,
-      `import { renderToReadableStream } from "react-dom/server";
+      `import { isbot } from "isbot";
+import { renderToReadableStream } from "react-dom/server";
 import type { EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
 
@@ -57,6 +113,7 @@ export default async function handleRequest(
 ) {
 	let statusCode = responseStatusCode;
 	let shellRendered = false;
+	const userAgent = request.headers.get("user-agent");
 
 	const body = await renderToReadableStream(
 		<ServerRouter context={routerContext} url={request.url} />,
@@ -73,7 +130,8 @@ export default async function handleRequest(
 	);
 	shellRendered = true;
 
-	if (routerContext.isSpaMode) {
+	// crawlers and SPA-mode prerenders need the full document before responding
+	if ((userAgent && isbot(userAgent)) || routerContext.isSpaMode) {
 		await body.allReady;
 	}
 
@@ -108,15 +166,18 @@ export default defineCloudflareConfig({});
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "${config.projectName}-web",
   "main": ".open-next/worker.js",
-  "compatibility_date": "2025-03-01",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_date": "2025-05-05",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
-  }
+  }${config.backend === "self" ? d1DatabasesBlock(config) : ""}
 }
 `;
     vfs.writeFile(wranglerConfigPath, wranglerConfigContent);
+    if (config.backend === "self" && config.dbSetup === "d1") {
+      addLocalD1MigrateScript(vfs);
+    }
   }
 
   const webPkgPath = `${webAppDir}/package.json`;

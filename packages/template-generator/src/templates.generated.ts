@@ -29721,12 +29721,28 @@ export default defineNuxtConfig({
     {{#if (eq backend "convex")}},
     'convex-nuxt'
     {{/if}}
+    {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}},
+    'nitro-cloudflare-dev'
+    {{/if}}
   ],
   css: ['~/assets/css/main.css'],
   devServer: {
     port: 3001
   },
   {{#if (eq webDeploy "cloudflare")}}
+  {{#if (eq backend "self")}}
+  vite: {
+    build: {
+      rollupOptions: {
+        // resolved by workerd at runtime; node builds cannot bundle it
+        external: ['cloudflare:workers']
+      }
+    }
+  },
+  nitro: {
+    preset: 'cloudflare-module'
+  },
+  {{else}}
   nitro: {
     preset: 'cloudflare-module',
     prerender: {
@@ -29734,6 +29750,7 @@ export default defineNuxtConfig({
       autoSubfolderIndex: false
     }
   },
+  {{/if}}
   {{/if}}
   {{#if (eq backend "convex")}}
   convex: {
@@ -31828,6 +31845,14 @@ export default defineConfig({
   server: {
     port: 3001,
   },
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
+  build: {
+    rollupOptions: {
+      // resolved by workerd at runtime; node builds cannot bundle it
+      external: ["cloudflare:workers"],
+    },
+  },
+{{/if}}
   resolve: {
     tsconfigPaths: true,
   },
@@ -33622,6 +33647,10 @@ export default Alchemy.Stack(
         {{else}}
         VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
         {{/if}}
+        {{/if}}
+        {{#if (eq auth "clerk")}}
+        CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+        VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),
         {{/if}}
       },
     });

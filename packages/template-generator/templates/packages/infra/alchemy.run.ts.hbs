@@ -523,6 +523,10 @@ export default Alchemy.Stack(
         VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
         {{/if}}
         {{/if}}
+        {{#if (eq auth "clerk")}}
+        CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+        VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),
+        {{/if}}
       },
     });
     {{else if (or (includes frontend "tanstack-router") (includes frontend "solid"))}}

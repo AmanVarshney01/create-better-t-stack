@@ -604,11 +604,19 @@ ${packageManagerRunCmd} db:migrate
 \`\`\``);
     }
 
+    const isFullstackStaticSite =
+      config.backend === "self" &&
+      config.webDeploy === "cloudflare" &&
+      ["next", "nuxt", "svelte", "astro"].some((f) => config.frontend.includes(f));
+    const localD1Note = isFullstackStaticSite
+      ? `\n\nDuring local development the framework dev server uses a local D1 database (via \`apps/web/wrangler.jsonc\`). Apply migrations to it with \`${packageManagerRunCmd} db:migrate:local\`.`
+      : "";
+
     return `${setup}This project uses Cloudflare D1 (SQLite)${ormDesc}.
 
 Runtime database access uses the Cloudflare \`DB\` binding from \`packages/infra/alchemy.run.ts\`. If a local \`DATABASE_URL\` is present, it is only for database tooling.
 
-Alchemy provisions the D1 database and applies migrations during \`dev\` and \`deploy\`.
+Alchemy provisions the D1 database and applies migrations during \`dev\` and \`deploy\`.${localD1Note}
 
 ${steps.join("\n\n")}
 `;
@@ -823,9 +831,13 @@ function generateDeploymentCommands(
       `- Deploy: ${packageManagerRunCmd} ${cfDeployScript}`,
       `- Destroy: ${packageManagerRunCmd} destroy`,
       "",
-      "The first deploy walks you through Cloudflare login (OAuth or API token) and saves the credentials under `~/.alchemy` — no environment variables required. Deploys are staged; use `--stage <name>` for isolated environments (defaults to your username in dev).",
+      "The first deploy walks you through Cloudflare login (OAuth or API token) and saves the credentials under `~/.alchemy` — no environment variables required.",
       "",
-      "For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).",
+      "Deploys are staged and default to a personal `dev_<username>` stage. For production, run the deploy with an explicit stage from `packages/infra`:",
+      "",
+      "```bash",
+      `cd packages/infra && ${packageManagerRunCmd.startsWith("npm") ? "npx" : packageManagerRunCmd.split(" ")[0]} alchemy deploy --stage production`,
+      "```",
     );
   }
 
