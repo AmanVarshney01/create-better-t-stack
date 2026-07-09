@@ -607,16 +607,20 @@ ${packageManagerRunCmd} db:migrate
     const isFullstackStaticSite =
       config.backend === "self" &&
       config.webDeploy === "cloudflare" &&
-      ["next", "nuxt", "svelte", "astro"].some((f) => config.frontend.includes(f));
-    const localD1Note = isFullstackStaticSite
-      ? `\n\nDuring local development the framework dev server uses a local D1 database (via \`apps/web/wrangler.jsonc\`). Apply migrations to it with \`${packageManagerRunCmd} db:migrate:local\`.`
-      : "";
+      (["next", "nuxt", "svelte", "astro"] as const).some((f) => config.frontend.includes(f));
+    if (isFullstackStaticSite) {
+      steps.push(`${steps.length + 1}. Apply the migrations to the local development database:
+\`\`\`bash
+${packageManagerRunCmd} db:migrate:local
+\`\`\`
+The framework dev server uses a local D1 database (via \`apps/web/wrangler.jsonc\`); the deployed database is migrated by Alchemy during \`deploy\`.`);
+    }
 
     return `${setup}This project uses Cloudflare D1 (SQLite)${ormDesc}.
 
 Runtime database access uses the Cloudflare \`DB\` binding from \`packages/infra/alchemy.run.ts\`. If a local \`DATABASE_URL\` is present, it is only for database tooling.
 
-Alchemy provisions the D1 database and applies migrations during \`dev\` and \`deploy\`.${localD1Note}
+Alchemy provisions the D1 database and applies migrations during \`deploy\`.
 
 ${steps.join("\n\n")}
 `;

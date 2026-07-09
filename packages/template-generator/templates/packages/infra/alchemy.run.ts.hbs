@@ -89,7 +89,7 @@ export const web = Cloudflare.Website.StaticSite(
       main: "../../apps/web/.open-next/worker.js",
       bundle: false,
       compatibility: {
-        flags: ["nodejs_compat"],
+        flags: ["nodejs_compat", "global_fetch_strictly_public"],
       },
       env: {
         {{#if (eq dbSetup "d1")}}
@@ -249,8 +249,9 @@ export const web = Cloudflare.Website.StaticSite(
         flags: ["nodejs_compat"],
       },
       env: {
-        // the astro cloudflare adapter expects a SESSION KV binding
+        // the astro cloudflare adapter expects SESSION (KV) and IMAGES bindings
         SESSION: Cloudflare.KV.Namespace("session"),
+        IMAGES: Cloudflare.Images.Images(),
         {{#if (eq dbSetup "d1")}}
         DB: db,
         {{else if (ne database "none")}}
@@ -355,7 +356,7 @@ export default Alchemy.Stack(
           main: "../../apps/web/.open-next/worker.js",
           bundle: false,
           compatibility: {
-            flags: ["nodejs_compat"],
+            flags: ["nodejs_compat", "global_fetch_strictly_public"],
           },
           env: {
             {{#if (eq backend "convex")}}

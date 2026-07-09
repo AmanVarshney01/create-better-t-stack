@@ -117,7 +117,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     const needsLocalD1 =
       isBackendSelf &&
       config.dbSetup === "d1" &&
-      ["nuxt", "svelte", "astro"].some((f) => frontend.includes(f));
+      (["nuxt", "svelte", "astro"] as const).some((f) => frontend.includes(f));
 
     if (frontend.includes("next")) {
       addPackageDependency({
@@ -127,14 +127,11 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
         devDependencies: ["wrangler", "@cloudflare/workers-types"],
       });
     } else if (frontend.includes("nuxt")) {
+      // wrangler powers the dev-time cloudflare:workers shim (getPlatformProxy)
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: isBackendSelf
-          ? needsLocalD1
-            ? ["nitro-cloudflare-dev", "wrangler"]
-            : ["nitro-cloudflare-dev"]
-          : [],
+        devDependencies: isBackendSelf ? ["nitro-cloudflare-dev", "wrangler"] : [],
       });
     } else if (frontend.includes("svelte")) {
       addPackageDependency({
