@@ -895,11 +895,12 @@ describe("Deployment Configurations", () => {
         devDependencies?: Record<string, string>;
       };
 
-      expect(infraFile).toContain('export const server = await Worker("server"');
-      expect(infraFile).toContain("url: true");
-      expect(infraFile).toContain("VITE_SERVER_URL: server.url!");
-      expect(infraFile!.indexOf('export const server = await Worker("server"')).toBeLessThan(
-        infraFile!.indexOf('export const web = await TanStackStart("web"'),
+      expect(infraFile).toContain('export const server = Cloudflare.Worker("server"');
+      expect(infraFile).toContain("export type ServerEnv = Cloudflare.InferEnv<typeof server>");
+      expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
+      expect(infraFile).toContain("export default Alchemy.Stack(");
+      expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
+        infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
       );
       expect(webPkg.devDependencies?.["@cloudflare/vite-plugin"]).toBe("1.48.0");
     });

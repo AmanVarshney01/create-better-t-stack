@@ -104,7 +104,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
       addPackageDependency({
         vfs,
         packagePath: serverPkgPath,
-        devDependencies: ["alchemy", "wrangler", "@types/node", "@cloudflare/workers-types"],
+        devDependencies: ["@types/node", "@cloudflare/workers-types"],
       });
     }
   }
@@ -118,44 +118,20 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
         vfs,
         packagePath: webPkgPath,
         dependencies: ["@opennextjs/cloudflare"],
-        devDependencies: ["alchemy", "wrangler", "@cloudflare/workers-types"],
-      });
-    } else if (frontend.includes("nuxt")) {
-      addPackageDependency({
-        vfs,
-        packagePath: webPkgPath,
-        devDependencies: ["alchemy", "nitro-cloudflare-dev", "wrangler"],
+        devDependencies: ["wrangler", "@cloudflare/workers-types"],
       });
     } else if (frontend.includes("svelte")) {
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: ["alchemy", "@sveltejs/adapter-cloudflare"],
-      });
-    } else if (frontend.includes("tanstack-start")) {
-      addPackageDependency({
-        vfs,
-        packagePath: webPkgPath,
-        devDependencies: ["alchemy", "@cloudflare/vite-plugin", "wrangler"],
+        devDependencies: ["@sveltejs/adapter-cloudflare"],
       });
     } else if (frontend.includes("astro")) {
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        dependencies: ["@astrojs/node"],
-        devDependencies: [
-          "alchemy",
-          "@astrojs/cloudflare",
-          "wrangler",
-          "@cloudflare/workers-types",
-        ],
+        devDependencies: ["@astrojs/cloudflare", "@cloudflare/workers-types"],
       });
-    } else if (
-      frontend.includes("tanstack-router") ||
-      frontend.includes("react-router") ||
-      frontend.includes("solid")
-    ) {
-      addPackageDependency({ vfs, packagePath: webPkgPath, devDependencies: ["alchemy"] });
     }
   }
 }
