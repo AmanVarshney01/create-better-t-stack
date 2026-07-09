@@ -33405,6 +33405,7 @@ export const web = Cloudflare.Website.Vite("web", {
     {{#if (ne api "none")}}
     CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),
     {{/if}}
+    VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),
     {{/if}}
     {{#if (includes examples "ai")}}
     GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
