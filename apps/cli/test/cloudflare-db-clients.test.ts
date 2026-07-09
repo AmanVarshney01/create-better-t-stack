@@ -213,6 +213,11 @@ describe("Cloudflare DB client generation", () => {
     const envFile = files.get("packages/env/src/server.ts");
     const routeFile = files.get("apps/web/src/app/api/auth/[...all]/route.ts");
     const contextFile = files.get("packages/api/src/context.ts");
+    const infraFile = files.get("packages/infra/alchemy.run.ts") ?? "";
+    const wranglerConfig = JSON.parse(files.get("apps/web/wrangler.jsonc") ?? "{}") as {
+      d1_databases?: Array<{ migrations_dir?: string; migrations_pattern?: string }>;
+      images?: { binding?: string };
+    };
 
     expect(dbFile).toContain('import { PrismaD1 } from "@prisma/adapter-d1";');
     expect(dbFile).toContain("const adapter = new PrismaD1(env.DB);");
@@ -224,6 +229,12 @@ describe("Cloudflare DB client generation", () => {
     expect(routeFile).toContain("toNextJsHandler(createAuth()).GET(request)");
     expect(routeFile).toContain("toNextJsHandler(createAuth()).POST(request)");
     expect(contextFile).toContain("createAuth().api.getSession");
+    expect(wranglerConfig.d1_databases?.[0]).toMatchObject({
+      migrations_dir: "../../packages/db/prisma/migrations",
+      migrations_pattern: "../../packages/db/prisma/migrations/*/migration.sql",
+    });
+    expect(wranglerConfig.images?.binding).toBe("IMAGES");
+    expect(infraFile.match(/IMAGES: Cloudflare\.Images\.Images\(\)/g)).toHaveLength(1);
   });
 
   it("uses maxUses=1 for Cloudflare-targeted Postgres pools", async () => {

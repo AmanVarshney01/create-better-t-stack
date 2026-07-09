@@ -14294,14 +14294,20 @@ next-env.d.ts
   }
 }
 `],
-  ["backend/server/base/tsdown.config.ts.hbs", `import { defineConfig } from 'tsdown';
+  ["backend/server/base/tsdown.config.ts.hbs", `import { defineConfig } from "tsdown";
+{{#if (and (eq runtime "workers") (eq orm "prisma"))}}
+import { wasm } from "rolldown-plugin-wasm";
+{{/if}}
 
 export default defineConfig({
-    entry: './src/index.ts',
-    format: 'esm',
-    outDir: './dist',
-    clean: true,
-    noExternal: [/@{{projectName}}\\/.*/]
+  entry: "./src/index.ts",
+  format: "esm",
+  outDir: "./dist",
+  clean: true,
+  {{#if (and (eq runtime "workers") (eq orm "prisma"))}}
+  plugins: [wasm()],
+  {{/if}}
+  noExternal: [/@{{projectName}}\\/.*/],
 });
 `],
   ["backend/server/elysia/src/index.ts.hbs", `import { env } from "@{{projectName}}/env/server";
@@ -33137,8 +33143,16 @@ export const env = createEnv({
 `],
   ["packages/infra/alchemy.run.ts.hbs", `import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
+{{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro") (includes frontend "tanstack-router") (includes frontend "solid")))}}
+import * as Command from "alchemy/Command";
+import * as Output from "alchemy/Output";
+{{/if}}
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+{{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro") (includes frontend "tanstack-router") (includes frontend "solid")))}}
+import { cast } from "effect/Function";
+import * as Redacted from "effect/Redacted";
+{{/if}}
 import { config } from "dotenv";
 
 {{#if (and (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
@@ -33151,6 +33165,74 @@ config({ path: "../../apps/web/.env" });
 {{else if (eq serverDeploy "cloudflare")}}
 config({ path: "./.env" });
 config({ path: "../../apps/server/.env" });
+{{/if}}
+
+{{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro") (includes frontend "tanstack-router") (includes frontend "solid")))}}
+// Alchemy beta.61 serializes StaticSite env values before resolving Outputs.
+// Keep its dev process behavior, but preserve deploy-time Outputs in Command.Build.
+const serializeBuildEnvValue = (value: unknown) =>
+  typeof value === "string" || Redacted.isRedacted(value) ? value : JSON.stringify(value);
+
+const serializeBuildEnv = (env: Record<string, unknown> | undefined) =>
+  Object.fromEntries(
+    Object.entries(env ?? {}).flatMap(([key, value]) => {
+      if (value === undefined) return [];
+      return [[
+        key,
+        Output.isOutput(value)
+          ? Output.map(value, serializeBuildEnvValue)
+          : serializeBuildEnvValue(value),
+      ]];
+    }),
+  ) as Alchemy.Input<Record<string, string | Redacted.Redacted<string>>>;
+
+const outputAwareStaticSite = <
+  const Bindings extends Cloudflare.WorkerBindingProps = {},
+  Req = never,
+>(
+  id: string,
+  propsEffect:
+    | Alchemy.InputProps<Cloudflare.Website.StaticSiteProps<Bindings>, "dev">
+    | Effect.Effect<
+        Alchemy.InputProps<Cloudflare.Website.StaticSiteProps<Bindings>, "dev">,
+        never,
+        Req
+      >,
+) =>
+  Effect.gen(function* () {
+    const context = yield* Alchemy.AlchemyContext;
+    if (context.dev) {
+      return yield* Cloudflare.Website.StaticSite(id, propsEffect);
+    }
+
+    return yield* Effect.gen(function* () {
+      const props = yield* (Effect.isEffect(propsEffect)
+        ? propsEffect
+        : Effect.succeed(propsEffect));
+      const build = yield* Command.Build("Build", {
+        command: props.command,
+        cwd: props.cwd,
+        memo: props.memo,
+        outdir: props.outdir,
+        env: serializeBuildEnv(props.env as Record<string, unknown> | undefined),
+      });
+      const fallbackScript =
+        props.main == null && props.script == null
+          ? "export default { fetch: (request, env) => env.ASSETS.fetch(request) };"
+          : undefined;
+
+      return yield* Cloudflare.Worker<Bindings, Cloudflare.WorkerAssetsConfig, Req>("Worker", {
+        ...props,
+        assets: cast({
+          directory: build.outdir,
+          hash: build.hash,
+          ...props.assets,
+        }),
+        dev: undefined,
+        script: fallbackScript ?? props.script,
+      });
+    }).pipe(Alchemy.push(id));
+  });
 {{/if}}
 
 {{#if (and (or (eq serverDeploy "cloudflare") (and (eq webDeploy "cloudflare") (eq backend "self"))) (eq dbSetup "d1"))}}
@@ -33229,6 +33311,7 @@ export const web = Cloudflare.Website.StaticSite(
         flags: ["nodejs_compat", "global_fetch_strictly_public"],
       },
       env: {
+        IMAGES: Cloudflare.Images.Images(),
         {{#if (eq dbSetup "d1")}}
         DB: db,
         {{else if (ne database "none")}}
@@ -33483,7 +33566,7 @@ export default Alchemy.Stack(
     const webWorker = yield* web;
     {{else if (eq webDeploy "cloudflare")}}
     {{#if (includes frontend "next")}}
-    const webWorker = yield* Cloudflare.Website.StaticSite(
+    const webWorker = yield* outputAwareStaticSite(
       "web",
       Effect.gen(function* () {
         return {
@@ -33496,6 +33579,7 @@ export default Alchemy.Stack(
             flags: ["nodejs_compat", "global_fetch_strictly_public"],
           },
           env: {
+            IMAGES: Cloudflare.Images.Images(),
             {{#if (eq backend "convex")}}
             NEXT_PUBLIC_CONVEX_URL: yield* Config.string("NEXT_PUBLIC_CONVEX_URL"),
             {{#if (eq auth "better-auth")}}
@@ -33521,7 +33605,7 @@ export default Alchemy.Stack(
       }).pipe(Effect.orDie),
     );
     {{else if (includes frontend "nuxt")}}
-    const webWorker = yield* Cloudflare.Website.StaticSite(
+    const webWorker = yield* outputAwareStaticSite(
       "web",
       Effect.gen(function* () {
         return {
@@ -33555,7 +33639,7 @@ export default Alchemy.Stack(
       }).pipe(Effect.orDie),
     );
     {{else if (includes frontend "svelte")}}
-    const webWorker = yield* Cloudflare.Website.StaticSite(
+    const webWorker = yield* outputAwareStaticSite(
       "web",
       // _worker.js is a shim importing outside its directory, so it must be bundled
       Effect.gen(function* () {
@@ -33589,7 +33673,7 @@ export default Alchemy.Stack(
       }).pipe(Effect.orDie),
     );
     {{else if (includes frontend "astro")}}
-    const webWorker = yield* Cloudflare.Website.StaticSite(
+    const webWorker = yield* outputAwareStaticSite(
       "web",
       Effect.gen(function* () {
         return {
@@ -33668,7 +33752,7 @@ export default Alchemy.Stack(
       },
     });
     {{else if (or (includes frontend "tanstack-router") (includes frontend "solid"))}}
-    const webWorker = yield* Cloudflare.Website.StaticSite(
+    const webWorker = yield* outputAwareStaticSite(
       "web",
       // Website.Vite skips pure-client builds on this alchemy beta; build directly
       Effect.gen(function* () {
