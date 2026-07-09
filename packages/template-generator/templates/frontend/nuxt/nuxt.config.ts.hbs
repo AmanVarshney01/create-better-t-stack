@@ -1,3 +1,6 @@
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
+import { fileURLToPath } from "node:url";
+{{/if}}
 import "@{{projectName}}/env/web";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -22,6 +25,15 @@ export default defineNuxtConfig({
   },
   {{#if (eq webDeploy "cloudflare")}}
   {{#if (eq backend "self")}}
+  $development: {
+    vite: {
+      resolve: {
+        alias: {
+          'cloudflare:workers': fileURLToPath(new URL('./cloudflare-workers.dev.ts', import.meta.url))
+        }
+      }
+    }
+  },
   vite: {
     build: {
       rollupOptions: {

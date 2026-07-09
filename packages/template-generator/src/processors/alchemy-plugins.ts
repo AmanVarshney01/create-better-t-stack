@@ -17,7 +17,28 @@ export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectCon
     if (backend === "self") {
       writeDevWranglerConfig(vfs, config);
     }
-  } else if (backend === "self" && (frontend.includes("nuxt") || frontend.includes("astro"))) {
+  } else if (frontend.includes("nuxt") && backend === "self") {
+    writeDevWranglerConfig(vfs, config);
+    // page SSR runs through vite-node, which cannot resolve workerd's
+    // cloudflare:workers module; nuxt.config aliases it to this proxy in dev
+    vfs.writeFile(
+      "apps/web/cloudflare-workers.dev.ts",
+      `import { getPlatformProxy } from "wrangler";
+
+const proxy = await getPlatformProxy();
+
+export const env: Record<string, unknown> = new Proxy(
+	{},
+	{
+		get(_target, prop) {
+			if (typeof prop !== "string") return undefined;
+			return (proxy.env as Record<string, unknown>)[prop] ?? process.env[prop];
+		},
+	},
+);
+`,
+    );
+  } else if (backend === "self" && frontend.includes("astro")) {
     // framework dev servers read local bindings (miniflare D1) from this config
     writeDevWranglerConfig(vfs, config);
   }
@@ -25,17 +46,19 @@ export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectCon
 
 function d1DatabasesBlock(config: ProjectConfig): string {
   if (config.dbSetup !== "d1") return "";
-  const migrationsDir =
-    config.orm === "prisma"
-      ? "../../packages/db/prisma/migrations"
-      : "../../packages/db/src/migrations";
+  const isPrisma = config.orm === "prisma";
+  const migrationsDir = isPrisma
+    ? "../../packages/db/prisma/migrations"
+    : "../../packages/db/src/migrations";
+  // prisma nests migrations as <timestamp>_<name>/migration.sql
+  const pattern = isPrisma ? `,\n      "migrations_pattern": "*/migration.sql"` : "";
   return `,
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "${config.projectName}-db-local",
       "database_id": "local",
-      "migrations_dir": "${migrationsDir}"
+      "migrations_dir": "${migrationsDir}"${pattern}
     }
   ]`;
 }

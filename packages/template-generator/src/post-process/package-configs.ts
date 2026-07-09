@@ -202,9 +202,9 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
       config.webDeploy === "cloudflare" &&
       config.backend === "self" &&
       dbSetup === "d1" &&
-      ["next", "nuxt", "svelte", "astro"].some((f) => config.frontend.includes(f));
+      (["next", "nuxt", "svelte", "astro"] as const).some((f) => config.frontend.includes(f));
     if (hasLocalD1) {
-      scripts["db:migrate:local"] = pmConfig.filter(`@${projectName}/web`, "db:migrate:local");
+      scripts["db:migrate:local"] = pmConfig.filter("web", "db:migrate:local");
     }
   }
 

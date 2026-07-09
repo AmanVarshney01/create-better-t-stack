@@ -948,7 +948,7 @@ export type CreateContextOptions = {
 {{/if}}
 };
 
-export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env: _env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions) {
+export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth({{#if (eq webDeploy "cloudflare")}}env{{/if}}){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
@@ -29707,7 +29707,10 @@ onServerPrefetch(async () => {
   </UContainer>
 </template>
 `],
-  ["frontend/nuxt/nuxt.config.ts.hbs", `import "@{{projectName}}/env/web";
+  ["frontend/nuxt/nuxt.config.ts.hbs", `{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
+import { fileURLToPath } from "node:url";
+{{/if}}
+import "@{{projectName}}/env/web";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -29731,6 +29734,15 @@ export default defineNuxtConfig({
   },
   {{#if (eq webDeploy "cloudflare")}}
   {{#if (eq backend "self")}}
+  $development: {
+    vite: {
+      resolve: {
+        alias: {
+          'cloudflare:workers': fileURLToPath(new URL('./cloudflare-workers.dev.ts', import.meta.url))
+        }
+      }
+    }
+  },
   vite: {
     build: {
       rollupOptions: {
@@ -33214,7 +33226,7 @@ export const web = Cloudflare.Website.StaticSite(
       main: "../../apps/web/.open-next/worker.js",
       bundle: false,
       compatibility: {
-        flags: ["nodejs_compat"],
+        flags: ["nodejs_compat", "global_fetch_strictly_public"],
       },
       env: {
         {{#if (eq dbSetup "d1")}}
@@ -33374,8 +33386,9 @@ export const web = Cloudflare.Website.StaticSite(
         flags: ["nodejs_compat"],
       },
       env: {
-        // the astro cloudflare adapter expects a SESSION KV binding
+        // the astro cloudflare adapter expects SESSION (KV) and IMAGES bindings
         SESSION: Cloudflare.KV.Namespace("session"),
+        IMAGES: Cloudflare.Images.Images(),
         {{#if (eq dbSetup "d1")}}
         DB: db,
         {{else if (ne database "none")}}
@@ -33480,7 +33493,7 @@ export default Alchemy.Stack(
           main: "../../apps/web/.open-next/worker.js",
           bundle: false,
           compatibility: {
-            flags: ["nodejs_compat"],
+            flags: ["nodejs_compat", "global_fetch_strictly_public"],
           },
           env: {
             {{#if (eq backend "convex")}}
