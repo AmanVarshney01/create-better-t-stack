@@ -823,6 +823,8 @@ function generateDeploymentCommands(
       `- Deploy: ${packageManagerRunCmd} ${cfDeployScript}`,
       `- Destroy: ${packageManagerRunCmd} destroy`,
       "",
+      "The first deploy walks you through Cloudflare login (OAuth or API token) and saves the credentials to `~/.alchemy/profiles.json` — no environment variables required. Deploys are staged; use `--stage <name>` for isolated environments (defaults to your username in dev).",
+      "",
       "For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).",
     );
   }

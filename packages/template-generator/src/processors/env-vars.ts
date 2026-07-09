@@ -705,23 +705,4 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     const envPath = "apps/server/.env";
     writeEnvFile(vfs, envPath, serverVars);
   }
-
-  // --- Alchemy Infra .env ---
-  const isUnifiedAlchemy = webDeploy === "cloudflare" && serverDeploy === "cloudflare";
-  const isIndividualAlchemy = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
-
-  if (isUnifiedAlchemy || isIndividualAlchemy) {
-    const infraDir = "packages/infra";
-    if (vfs.directoryExists(infraDir)) {
-      const envPath = `${infraDir}/.env`;
-      const infraAlchemyVars: EnvVariable[] = [
-        {
-          key: "ALCHEMY_PASSWORD",
-          value: "please-change-this",
-          condition: true,
-        },
-      ];
-      writeEnvFile(vfs, envPath, infraAlchemyVars);
-    }
-  }
 }

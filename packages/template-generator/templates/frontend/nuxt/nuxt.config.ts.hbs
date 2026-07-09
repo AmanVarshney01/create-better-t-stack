@@ -17,6 +17,15 @@ export default defineNuxtConfig({
   devServer: {
     port: 3001
   },
+  {{#if (eq webDeploy "cloudflare")}}
+  nitro: {
+    preset: 'cloudflare-module',
+    prerender: {
+      routes: ['/'],
+      autoSubfolderIndex: false
+    }
+  },
+  {{/if}}
   {{#if (eq backend "convex")}}
   convex: {
     url: process.env.NUXT_PUBLIC_CONVEX_URL,

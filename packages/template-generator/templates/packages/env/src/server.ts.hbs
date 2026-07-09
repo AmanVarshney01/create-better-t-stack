@@ -70,8 +70,13 @@ export const env = createEnvProxy(resolveEnvValue);
 import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
 
-config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
-config();
+// dotenv only applies in Node dev/build; workerd throws on file URLs and has no fs
+try {
+	config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
+	config();
+} catch {
+	// running in workerd: env comes from worker bindings via process.env
+}
 
 const runtimeEnv = typeof process === "undefined" ? {} : process.env;
 
