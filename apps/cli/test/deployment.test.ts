@@ -993,6 +993,7 @@ describe("Deployment Configurations", () => {
       expect(infraFile.match(/IMAGES: Cloudflare\.Images\.Images\(\)/g)).toHaveLength(1);
       expect(infraFile).toContain("const outputAwareStaticSite");
       expect(infraFile).toContain('const build = yield* Command.Build("Build"');
+      expect(infraFile).toContain("memo: props.memo ?? false");
       expect(infraFile).toContain("Output.isOutput(value)");
       expect(infraFile).toContain("NEXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>()");
       expect(infraFile).toContain("const webWorker = yield* outputAwareStaticSite(");
