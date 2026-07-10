@@ -229,6 +229,7 @@ describe("Cloudflare DB client generation", () => {
     expect(routeFile).toContain("toNextJsHandler(createAuth()).GET(request)");
     expect(routeFile).toContain("toNextJsHandler(createAuth()).POST(request)");
     expect(contextFile).toContain("createAuth().api.getSession");
+    expect(infraFile).toContain("memo: false");
     expect(wranglerConfig.d1_databases?.[0]).toMatchObject({
       migrations_dir: "../../packages/db/prisma/migrations",
       migrations_pattern: "../../packages/db/prisma/migrations/*/migration.sql",

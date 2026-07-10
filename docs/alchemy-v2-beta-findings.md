@@ -28,7 +28,7 @@ unless they explicitly say live-reverified. Registry and OAuth observations are 
 | A2  | `StaticSite` serializes `Config` values as `{"_id":"Config"}`       | Confirmed | Still present                                                           | Resolve Config values inside an `Effect.gen` props builder                       |
 | A3  | `Website.Vite` misses pure-client output                            | Confirmed | Fixed by [#795](https://github.com/alchemy-run/alchemy-effect/pull/795) | Use `StaticSite` for TanStack Router and Solid until a fixed version is released |
 | A4  | React Router builds a Worker with no registered handler             | Confirmed | Default remains; custom `main` added                                    | Generate an explicit Worker entry and workerd-compatible server rendering        |
-| A5  | Default `Command.Build` memo scope misses sibling workspace changes | Confirmed | Still present                                                           | Configure external include globs with `lockfile: true`, or deploy with `--force` |
+| A5  | Default `Command.Build` memo scope misses sibling workspace changes | Confirmed | Still present                                                           | Generated `StaticSite` builds disable memo reuse                                 |
 | A6  | A published test prerelease can satisfy beta caret ranges           | Confirmed | N/A; npm package deprecated                                             | Pin the exact Alchemy beta instead of using a caret range                        |
 
 ### A1: `StaticSite` drops deploy-time Outputs
@@ -114,12 +114,12 @@ Build/Memo source is unchanged on the inspected main commit.
 Alchemy accepts explicit `memo.include` globs that reach outside `cwd`. When using them, also set
 `lockfile: true`, because an explicit include disables lockfile hashing by default. Otherwise run
 `alchemy deploy --force` after changing shared packages. CI deployment jobs should prefer
-correctness over the default memo scope. Generated projects do not yet configure external includes
-or force deploys automatically, so they remain exposed unless the deploy workflow does one of these.
+correctness over the default memo scope. Better-T-Stack currently sets `memo: false` for generated
+`StaticSite` builds, ensuring shared-package changes rebuild at the cost of skipping this cache.
 
-Removal condition for `--force`: configure external memo includes and prove that editing an imported
-sibling workspace with no lockfile change makes the next normal deploy rebuild the frontend. Only a
-workspace-aware upstream default removes the need for special memo configuration entirely.
+Removal condition for `memo: false`: configure complete external memo includes or adopt a
+workspace-aware upstream default, then prove that editing an imported sibling workspace with no
+lockfile change makes the next normal deploy rebuild the frontend.
 
 ### A6: publication hazard from an incompatible test build
 

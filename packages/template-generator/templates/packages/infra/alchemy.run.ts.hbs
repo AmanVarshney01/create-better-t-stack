@@ -69,7 +69,8 @@ const outputAwareStaticSite = <
       const build = yield* Command.Build("Build", {
         command: props.command,
         cwd: props.cwd,
-        memo: props.memo,
+        // StaticSite's default memo only hashes cwd and misses sibling workspace packages.
+        memo: props.memo ?? false,
         outdir: props.outdir,
         env: serializeBuildEnv(props.env as Record<string, unknown> | undefined),
       });
@@ -161,6 +162,8 @@ export const web = Cloudflare.Website.StaticSite(
     return {
       cwd: "../../apps/web",
       command: "{{packageManager}} run build:cloudflare",
+      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+      memo: false,
       outdir: ".open-next/assets",
       main: "../../apps/web/.open-next/worker.js",
       bundle: false,
@@ -219,6 +222,8 @@ export const web = Cloudflare.Website.StaticSite(
     return {
       cwd: "../../apps/web",
       command: "{{packageManager}} run build",
+      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+      memo: false,
       outdir: ".output/public",
       main: "../../apps/web/.output/server/index.mjs",
       bundle: false,
@@ -270,6 +275,8 @@ export const web = Cloudflare.Website.StaticSite(
     return {
       cwd: "../../apps/web",
       command: "{{packageManager}} run build",
+      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+      memo: false,
       outdir: ".svelte-kit/cloudflare",
       main: "../../apps/web/.svelte-kit/cloudflare/_worker.js",
       compatibility: {
@@ -319,6 +326,8 @@ export const web = Cloudflare.Website.StaticSite(
     return {
       cwd: "../../apps/web",
       command: "{{packageManager}} run build",
+      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+      memo: false,
       outdir: "dist/client",
       main: "../../apps/web/dist/server/entry.mjs",
       bundle: false,
