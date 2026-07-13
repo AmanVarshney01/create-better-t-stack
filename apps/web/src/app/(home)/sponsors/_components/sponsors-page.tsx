@@ -264,101 +264,99 @@ export function SponsorsPage({
           />
         </div>
 
-        {activeCount === 0 ? (
+        {activeCount === 0 && (
           <div className="rounded border border-border p-8 text-center">
-            <p className="mb-4 font-mono text-muted-foreground">NO_SPONSORS_FOUND.NULL</p>
+            <p className="mb-4 font-mono text-muted-foreground">NO_ACTIVE_SPONSORS.NULL</p>
             <div className="flex items-center justify-center gap-2 text-sm">
               <span className="text-primary">$</span>
               <span className="text-muted-foreground">Be the first to support this project!</span>
             </div>
           </div>
-        ) : (
-          <>
-            {specialSponsors.length > 0 && (
-              <section className="space-y-4">
-                <SectionHeader
-                  icon={<Star className="h-4 w-4 text-yellow-500/90" />}
-                  title="SPECIAL_SPONSORS"
-                  count={specialSponsors.length}
-                />
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {specialSponsors.map((sponsor) => (
-                    <SpecialSponsorCard key={sponsor.githubId} sponsor={sponsor} />
-                  ))}
-                </div>
-              </section>
-            )}
+        )}
 
-            <section className="space-y-4">
-              <SectionHeader
-                icon={<VercelLogo className="h-4 w-4 text-foreground" />}
-                title="SUPPORTED_BY"
-                count={1}
-              />
-              <a
-                href="https://vercel.com/oss"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 rounded border border-border bg-fd-background p-4 transition-colors hover:border-primary/40"
-              >
-                <VercelLogo className="h-9 w-9 shrink-0 text-foreground" />
-                <div className="min-w-0">
-                  <h3 className="font-semibold text-foreground text-sm">Vercel OSS Program</h3>
-                  <p className="text-muted-foreground text-xs">
-                    Hosting and infrastructure for better-t-stack.dev
-                  </p>
-                </div>
-                <span className="ml-auto hidden font-mono text-muted-foreground text-xs sm:block">
-                  vercel.com/oss
-                </span>
-              </a>
-            </section>
+        {specialSponsors.length > 0 && (
+          <section className="space-y-4">
+            <SectionHeader
+              icon={<Star className="h-4 w-4 text-yellow-500/90" />}
+              title="SPECIAL_SPONSORS"
+              count={specialSponsors.length}
+            />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {specialSponsors.map((sponsor) => (
+                <SpecialSponsorCard key={sponsor.githubId} sponsor={sponsor} />
+              ))}
+            </div>
+          </section>
+        )}
 
-            {sponsors.length > 0 && (
-              <section className="space-y-4">
-                <SectionHeader
-                  icon={<Heart className="h-4 w-4 text-primary" />}
-                  title="ACTIVE_SPONSORS"
-                  count={sponsors.length}
-                />
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {sponsors.map((sponsor) => (
-                    <SponsorCard key={sponsor.githubId} sponsor={sponsor} />
-                  ))}
-                </div>
-              </section>
-            )}
+        <section className="space-y-4">
+          <SectionHeader
+            icon={<VercelLogo className="h-4 w-4 text-foreground" />}
+            title="SUPPORTED_BY"
+            count={1}
+          />
+          <a
+            href="https://vercel.com/oss"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 rounded border border-border bg-fd-background p-4 transition-colors hover:border-primary/40"
+          >
+            <VercelLogo className="h-9 w-9 shrink-0 text-foreground" />
+            <div className="min-w-0">
+              <h3 className="font-semibold text-foreground text-sm">Vercel OSS Program</h3>
+              <p className="text-muted-foreground text-xs">
+                Hosting and infrastructure for better-t-stack.dev
+              </p>
+            </div>
+            <span className="ml-auto hidden font-mono text-muted-foreground text-xs sm:block">
+              vercel.com/oss
+            </span>
+          </a>
+        </section>
 
-            {backers.length > 0 && (
-              <section className="space-y-4">
-                <SectionHeader
-                  icon={<Users className="h-4 w-4 text-muted-foreground" />}
-                  title="BACKERS"
-                  count={backers.length}
-                />
-                <div className="flex flex-wrap gap-3">
-                  {backers.map((sponsor) => (
-                    <BackerChip key={sponsor.githubId} sponsor={sponsor} />
-                  ))}
-                </div>
-              </section>
-            )}
+        {sponsors.length > 0 && (
+          <section className="space-y-4">
+            <SectionHeader
+              icon={<Heart className="h-4 w-4 text-primary" />}
+              title="ACTIVE_SPONSORS"
+              count={sponsors.length}
+            />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {sponsors.map((sponsor) => (
+                <SponsorCard key={sponsor.githubId} sponsor={sponsor} />
+              ))}
+            </div>
+          </section>
+        )}
 
-            {pastSponsors.length > 0 && (
-              <section className="space-y-4">
-                <SectionHeader
-                  icon={<Archive className="h-4 w-4 text-muted-foreground" />}
-                  title="PAST_SPONSORS.ARCHIVE"
-                  count={pastSponsors.length}
-                />
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {pastSponsors.map((sponsor) => (
-                    <PastSponsorRow key={sponsor.githubId} sponsor={sponsor} />
-                  ))}
-                </div>
-              </section>
-            )}
-          </>
+        {backers.length > 0 && (
+          <section className="space-y-4">
+            <SectionHeader
+              icon={<Users className="h-4 w-4 text-muted-foreground" />}
+              title="BACKERS"
+              count={backers.length}
+            />
+            <div className="flex flex-wrap gap-3">
+              {backers.map((sponsor) => (
+                <BackerChip key={sponsor.githubId} sponsor={sponsor} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {pastSponsors.length > 0 && (
+          <section className="space-y-4">
+            <SectionHeader
+              icon={<Archive className="h-4 w-4 text-muted-foreground" />}
+              title="PAST_SPONSORS.ARCHIVE"
+              count={pastSponsors.length}
+            />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {pastSponsors.map((sponsor) => (
+                <PastSponsorRow key={sponsor.githubId} sponsor={sponsor} />
+              ))}
+            </div>
+          </section>
         )}
 
         <div className="rounded border border-border p-6">
