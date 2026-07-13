@@ -33,6 +33,10 @@ export const links: LinkItemType[] = [
     url: "/showcase",
   },
   {
+    text: "Sponsors",
+    url: "/sponsors",
+  },
+  {
     text: "Demo",
     url: "https://my-better-t-app.amanv.cloud/",
     external: true,
