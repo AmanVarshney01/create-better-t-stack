@@ -37,5 +37,5 @@ export default async function Sponsors() {
     fetchSponsors(),
     fetchQuery(api.analytics.getStats, {}),
   ]);
-  return <SponsorsPage sponsorsData={sponsorsData} totalProjects={stats.totalProjects} />;
+  return <SponsorsPage sponsorsData={sponsorsData} totalProjects={stats?.totalProjects ?? 0} />;
 }

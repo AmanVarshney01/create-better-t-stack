@@ -369,28 +369,30 @@ export function SponsorsPage({
                 Sponsorship funds development and infrastructure for create-better-t-stack
               </span>
             </div>
-            <p className="text-muted-foreground text-sm">
-              Sponsors are featured in a CLI used to scaffold{" "}
-              <span className="font-mono text-foreground">
-                {totalProjects.toLocaleString("en-US")}
-              </span>{" "}
-              projects since Dec 2025 alone. See{" "}
-              <Link
-                href="/analytics"
-                className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
-              >
-                CLI analytics
-              </Link>{" "}
-              and{" "}
-              <a
-                href="https://umami.amanv.cloud/share/pHvqHleyOl9PBfaK"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
-              >
-                website traffic
-              </a>
-            </p>
+            {totalProjects > 0 && (
+              <p className="text-muted-foreground text-sm">
+                Sponsors are featured in a CLI used to scaffold{" "}
+                <span className="font-mono text-foreground">
+                  {totalProjects.toLocaleString("en-US")}
+                </span>{" "}
+                projects since Dec 2025 alone. See{" "}
+                <Link
+                  href="/analytics"
+                  className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
+                >
+                  CLI analytics
+                </Link>{" "}
+                and{" "}
+                <a
+                  href="https://umami.amanv.cloud/share/pHvqHleyOl9PBfaK"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
+                >
+                  website traffic
+                </a>
+              </p>
+            )}
             <a
               href="https://github.com/sponsors/AmanVarshney01"
               target="_blank"
