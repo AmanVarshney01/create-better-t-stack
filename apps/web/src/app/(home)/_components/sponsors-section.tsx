@@ -1,6 +1,7 @@
 "use client";
 import { ChevronDown, ChevronUp, Globe, Heart, Star, Terminal } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { FaGithub } from "react-icons/fa6";
 
@@ -29,9 +30,17 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
           <span className="font-bold font-mono text-lg sm:text-xl">SPONSORS_DATABASE.JSON</span>
         </div>
         <div className="hidden h-px flex-1 bg-border sm:block" />
-        <span className="w-full text-right font-mono text-muted-foreground text-xs sm:w-auto sm:text-left">
-          [{totalCurrentSponsors} RECORDS]
-        </span>
+        <div className="flex w-full items-center justify-end gap-3 sm:w-auto sm:justify-start">
+          <span className="font-mono text-muted-foreground text-xs">
+            [{totalCurrentSponsors} RECORDS]
+          </span>
+          <Link
+            href="/sponsors"
+            className="font-mono text-primary text-xs transition-colors hover:text-accent"
+          >
+            VIEW_ALL →
+          </Link>
+        </div>
       </div>
       {totalCurrentSponsors === 0 ? (
         <div className="space-y-4">

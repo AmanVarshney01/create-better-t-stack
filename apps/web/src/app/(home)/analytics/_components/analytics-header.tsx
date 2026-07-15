@@ -4,6 +4,10 @@ import { cn } from "@/lib/utils";
 
 import { formatCompactNumber } from "./analytics-helpers";
 
+// Feb-Nov 2025 PostHog era, estimated from npm downloads (92.8k) times the
+// tracked era's projects-per-download ratio (~0.64)
+const UNTRACKED_ERA_PROJECT_ESTIMATE = 59_000;
+
 const utcDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric",
@@ -104,6 +108,18 @@ export function AnalyticsHeader({
           value={trackingDays}
           detail="Calendar days represented in the live telemetry dataset."
         />
+      </div>
+
+      <div className="rounded border border-border bg-fd-background p-4">
+        <div className="flex items-start gap-2 text-sm">
+          <span className="text-primary">$</span>
+          <span className="text-muted-foreground">
+            These numbers undercount real usage. The CLI shipped in Feb 2025, but this dataset only
+            goes back to Dec 2025. Earlier telemetry lived in PostHog and isn't included. Counting
+            that period via npm download volume, estimated all-time usage is around{" "}
+            {formatCompactNumber(liveTotal + UNTRACKED_ERA_PROJECT_ESTIMATE)} projects.
+          </span>
+        </div>
       </div>
 
       <div className="rounded border border-border bg-fd-background p-4">
