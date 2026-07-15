@@ -894,6 +894,9 @@ describe("Deployment Configurations", () => {
       const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}") as {
         devDependencies?: Record<string, string>;
       };
+      const infraPackage = JSON.parse(files.get("packages/infra/package.json") ?? "{}") as {
+        devDependencies?: Record<string, string>;
+      };
       const serverBuildConfig = files.get("apps/server/tsdown.config.ts") ?? "";
       const serverPackage = JSON.parse(files.get("apps/server/package.json") ?? "{}") as {
         devDependencies?: Record<string, string>;
@@ -903,6 +906,12 @@ describe("Deployment Configurations", () => {
       expect(infraFile).toContain("export type ServerEnv = Cloudflare.InferEnv<typeof server>");
       expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
       expect(infraFile).toContain("export default Alchemy.Stack(");
+      expect(infraPackage.devDependencies).toMatchObject({
+        alchemy: "2.0.0-beta.62",
+        effect: "4.0.0-beta.97",
+        "@effect/platform-node": "4.0.0-beta.97",
+        "@effect/platform-bun": "4.0.0-beta.97",
+      });
       expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
         infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
       );

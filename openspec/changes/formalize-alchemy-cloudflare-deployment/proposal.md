@@ -32,4 +32,4 @@ None. This repository had no baseline OpenSpec capabilities before this proposal
 
 ## Impact
 
-This planning change adds only OpenSpec documentation. Future implementation work may affect `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs`, Alchemy dependency generation, framework adapters/plugins, generated environment/binding types, deployment tests, the external reproduction repository, live verification scripts, and `docs/alchemy-v2-beta-findings.md`. Existing generated application behavior and the current `alchemy@2.0.0-beta.61` pin remain unchanged by this change.
+This planning change adds only OpenSpec documentation. Future implementation work may affect `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs`, Alchemy dependency generation, framework adapters/plugins, generated environment/binding types, deployment tests, the external reproduction repository, live verification scripts, and `docs/alchemy-v2-beta-findings.md`. The accepted Alchemy version is tracked by the specification and may advance through the separately implemented upgrade workflow.
