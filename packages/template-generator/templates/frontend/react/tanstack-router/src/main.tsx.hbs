@@ -15,11 +15,14 @@ import { routeTree } from "./routeTree.gen";
   import { QueryClientProvider } from "@tanstack/react-query";
   import { queryClient, trpc } from "./utils/trpc";
 {{/if}}
-{{#if (or (eq backend "convex") (eq auth "clerk"))}}
+{{#if (or (eq backend "convex") (eq auth "clerk") (eq auth "descope"))}}
   import { env } from "@{{projectName}}/env/web";
 {{/if}}
 {{#if (eq auth "clerk")}}
   import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react";
+{{/if}}
+{{#if (eq auth "descope")}}
+  import { AuthProvider } from "@descope/react-sdk";
 {{/if}}
 {{#if (eq backend "convex")}}
   import { ConvexReactClient } from "convex/react";
@@ -66,6 +69,12 @@ const router = createRouter({
           {children}
         </QueryClientProvider>
       </ClerkProvider>
+      {{else if (eq auth "descope")}}
+      <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </AuthProvider>
       {{else}}
       <QueryClientProvider client={queryClient}>
         {children}
@@ -84,6 +93,12 @@ const router = createRouter({
           {children}
         </QueryClientProvider>
       </ClerkProvider>
+      {{else if (eq auth "descope")}}
+      <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </AuthProvider>
       {{else}}
       <QueryClientProvider client={queryClient}>
         {children}
@@ -114,6 +129,11 @@ const router = createRouter({
   context: {},
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>{children}</ClerkProvider>;
+  },
+  {{else if (eq auth "descope")}}
+  context: {},
+  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
+    return <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>{children}</AuthProvider>;
   },
   {{else}}
   context: {},

@@ -223,6 +223,13 @@ Clerk authentication requires:
 - Fullstack (`--backend self`) support with Next.js or TanStack Start
 - Not compatible with Nuxt, Svelte, Solid, or Astro
 
+### Descope Requirements
+
+Descope authentication requires:
+
+- Supported frontends: `next`, `react-router`, and `tanstack-router`
+- Supported backends: any backend except Convex (Hono, Express, Fastify, Elysia, or fullstack `self`)
+
 ### Payments Requirements
 
 Polar payments require:
@@ -245,6 +252,12 @@ create-better-t-stack --auth clerk --backend self --frontend next
 
 # ❌ Invalid - Clerk with Astro
 create-better-t-stack --auth clerk --backend self --frontend astro
+
+# ✅ Valid - Descope with React Router
+create-better-t-stack --auth descope --backend hono --frontend react-router
+
+# ❌ Invalid - Descope with Convex
+create-better-t-stack --auth descope --backend convex --frontend next
 ```
 
 ## Example Compatibility

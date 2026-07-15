@@ -1,0 +1,9 @@
+{{#if (includes frontend "next")}}
+import { getSessionToken } from "@descope/nextjs-sdk/client";
+{{else}}
+import { getSessionToken } from "@descope/react-sdk";
+{{/if}}
+
+export function getDescopeAuthToken(): string | null {
+	return getSessionToken() || null;
+}

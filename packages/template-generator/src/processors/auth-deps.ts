@@ -201,6 +201,26 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
         addPackageDependency({ vfs, packagePath: serverPath, dependencies: ["@clerk/fastify"] });
       }
     }
+  } else if (auth === "descope") {
+    if (webExists) {
+      if (hasNextJs) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["@descope/nextjs-sdk"],
+        });
+      } else if (hasReactRouter || hasTanStackRouter) {
+        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@descope/react-sdk"] });
+      }
+    }
+
+    if (apiExists) {
+      addPackageDependency({ vfs, packagePath: apiPath, dependencies: ["@descope/node-sdk"] });
+    }
+
+    if (serverExists) {
+      addPackageDependency({ vfs, packagePath: serverPath, dependencies: ["@descope/node-sdk"] });
+    }
   } else if (auth === "better-auth") {
     if (authExists) {
       const authDependencies: AvailableDependencies[] = ["better-auth"];

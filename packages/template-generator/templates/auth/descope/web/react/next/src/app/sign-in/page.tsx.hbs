@@ -1,0 +1,19 @@
+"use client";
+
+import { Descope } from "@descope/nextjs-sdk";
+import { useRouter } from "next/navigation";
+
+export default function SignInPage() {
+	const router = useRouter();
+
+	return (
+		<div className="mx-auto max-w-md p-6">
+			<Descope
+				flowId="sign-up-or-in"
+				onSuccess={() => {
+					router.push("/dashboard");
+				}}
+			/>
+		</div>
+	);
+}

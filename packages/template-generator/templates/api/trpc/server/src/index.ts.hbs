@@ -1,4 +1,4 @@
-import { initTRPC{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}, TRPCError{{/if}} } from "@trpc/server";
+import { initTRPC{{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}, TRPCError{{/if}} } from "@trpc/server";
 import type { Context } from "./context";
 
 export const t = initTRPC.context<Context>().create();
@@ -7,9 +7,9 @@ export const router = t.router;
 
 export const publicProcedure = t.procedure;
 
-{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+{{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  {{#if (eq auth "better-auth")}}
+  {{#if (or (eq auth "better-auth") (eq auth "descope"))}}
   if (!ctx.session) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
@@ -29,7 +29,7 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
-      {{#if (eq auth "better-auth")}}
+      {{#if (or (eq auth "better-auth") (eq auth "descope"))}}
       session: ctx.session,
       {{else}}
       auth: ctx.auth,

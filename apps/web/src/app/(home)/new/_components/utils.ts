@@ -77,6 +77,12 @@ const hasConvexBetterAuthCompatibleFrontend = (webFrontend: string[], nativeFron
 const convexBetterAuthFrontendRequirementMessage =
   "Better-Auth with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
 
+const descopeFrontendRequirementMessage =
+  "Descope requires Next.js, React Router, or TanStack Router, and is not compatible with the Convex backend";
+
+export const hasDescopeCompatibleFrontend = (webFrontend: string[]) =>
+  webFrontend.some((f) => ["react-router", "tanstack-router", "next"].includes(f));
+
 export const hasClerkCompatibleFrontend = (webFrontend: string[], nativeFrontend: string[]) =>
   webFrontend.some((f) =>
     ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
@@ -611,6 +617,17 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     }
   }
 
+  if (nextStack.auth === "descope") {
+    if (nextStack.backend === "convex" || !hasDescopeCompatibleFrontend(nextStack.webFrontend)) {
+      nextStack.auth = "none";
+      changed = true;
+      changes.push({
+        category: "auth",
+        message: `Auth set to 'None' (${descopeFrontendRequirementMessage})`,
+      });
+    }
+  }
+
   // ============================================
   // PAYMENTS CONSTRAINTS
   // ============================================
@@ -1116,6 +1133,14 @@ export const getDisabledReason = (
       }
       if (!hasClerkCompatibleFrontend(currentStack.webFrontend, currentStack.nativeFrontend)) {
         return clerkFrontendRequirementMessage;
+      }
+    }
+    if (optionId === "descope") {
+      if (
+        currentStack.backend === "convex" ||
+        !hasDescopeCompatibleFrontend(currentStack.webFrontend)
+      ) {
+        return descopeFrontendRequirementMessage;
       }
     }
   }

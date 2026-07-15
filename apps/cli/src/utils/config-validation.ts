@@ -404,6 +404,26 @@ export function validateBackendConstraints(
     }
   }
 
+  if (config.auth === "descope") {
+    if (config.backend === "convex") {
+      return validationErr(
+        "Descope authentication is not compatible with the Convex backend. Please choose a different backend or auth provider.",
+      );
+    }
+    if (config.frontend) {
+      const incompatibleFrontends = config.frontend.filter(
+        (f) => f !== "none" && !["react-router", "tanstack-router", "next"].includes(f),
+      );
+      if (incompatibleFrontends.length > 0) {
+        return validationErr(
+          `Descope authentication is not compatible with the following frontends: ${incompatibleFrontends.join(
+            ", ",
+          )}. Descope currently supports Next.js, TanStack Router, and React Router. Please choose a different frontend or auth provider.`,
+        );
+      }
+    }
+  }
+
   if (
     providedFlags.has("backend") &&
     backend &&

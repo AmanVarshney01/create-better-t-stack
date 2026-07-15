@@ -81,10 +81,16 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (eq auth "descope")}}
+		NEXT_PUBLIC_DESCOPE_PROJECT_ID: z.string().min(1),
+{{/if}}
 	},
 	runtimeEnv: {
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+{{/if}}
+{{#if (eq auth "descope")}}
+		NEXT_PUBLIC_DESCOPE_PROJECT_ID: process.env.NEXT_PUBLIC_DESCOPE_PROJECT_ID,
 {{/if}}
 	},
 {{else if (includes frontend "nuxt")}}
@@ -94,6 +100,9 @@ export const env = createEnv({
 	client: {
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
+{{#if (eq auth "descope")}}
+		VITE_DESCOPE_PROJECT_ID: z.string().min(1),
 {{/if}}
 	},
 	runtimeEnv: (import.meta as any).env,
@@ -105,11 +114,17 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (eq auth "descope")}}
+		NEXT_PUBLIC_DESCOPE_PROJECT_ID: z.string().min(1),
+{{/if}}
 	},
 	runtimeEnv: {
 		NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL,
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+{{/if}}
+{{#if (eq auth "descope")}}
+		NEXT_PUBLIC_DESCOPE_PROJECT_ID: process.env.NEXT_PUBLIC_DESCOPE_PROJECT_ID,
 {{/if}}
 	},
 {{else if (includes frontend "nuxt")}}
@@ -128,6 +143,9 @@ export const env = createEnv({
 		VITE_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
+{{#if (eq auth "descope")}}
+		VITE_DESCOPE_PROJECT_ID: z.string().min(1),
 {{/if}}
 	},
 	runtimeEnv: (import.meta as any).env,

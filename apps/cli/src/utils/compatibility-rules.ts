@@ -235,6 +235,12 @@ export function isFrontendAllowedWithBackend(
     if (incompatibleFrontends.includes(frontend)) return false;
   }
 
+  if (auth === "descope") {
+    if (backend === "convex") return false;
+    const compatibleFrontends = ["react-router", "tanstack-router", "next"];
+    if (!compatibleFrontends.includes(frontend)) return false;
+  }
+
   return true;
 }
 
