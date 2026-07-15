@@ -10,7 +10,7 @@
 
 ## 2. Exact Dependency and Generated Artifact Gates
 
-- [ ] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.61` output with no semver range.
+- [ ] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.62` output with no semver range.
 - [ ] 2.2 Generate npm, pnpm, and Bun projects and prove each resolves the exact accepted Alchemy package rather than an incompatible test prerelease.
 - [ ] 2.3 Add deterministic artifact assertions for web-only, server-only, combined, full-stack `self`, Convex-web, D1, and mixed single-plane Cloudflare topologies.
 - [ ] 2.4 Assert that every selected Cloudflare plane emits `packages/infra/alchemy.run.ts`, the infra package, scripts, framework adapter/configuration, bindings, inferred env types, and user guidance.
@@ -22,7 +22,7 @@
 - [ ] 3.1 Add a provider-free A1 test proving the real resolved server URL and server dependency edge reach the frontend `Command.Build` input through `outputAwareStaticSite`.
 - [ ] 3.2 Add A2 tests for `Config.string`, `Config.redacted`, missing configuration, and the exact boundary where descriptors become concrete/redacted build values.
 - [ ] 3.3 Assert that the Output-aware wrapper remains limited to supported top-level env shapes and does not claim recursive Input handling.
-- [ ] 3.4 Add A3 generation/build tests proving TanStack Router and Solid use the StaticSite fallback with SPA not-found behavior under beta.61.
+- [ ] 3.4 Add A3 generation/build tests proving TanStack Router and Solid retain the StaticSite fallback with SPA not-found behavior until beta.62 passes the targeted live removal gate.
 - [ ] 3.5 Add A4 tests proving React Router emits the explicit Worker entry, registers a fetch handler, and uses `renderToReadableStream` rather than Node pipeable streams.
 - [ ] 3.6 Add A5 tests that edit an imported sibling workspace without changing the lockfile and prove a normal generated build cannot reuse stale output.
 - [ ] 3.7 Add A6 package-manager tests proving the exact pin resolves identically under npm, pnpm, and Bun; retain exact pinning permanently rather than attempting to qualify an open-ended range.
@@ -69,7 +69,7 @@
 - [ ] 7.2 Run every applicable A1–A6 reproduction against the candidate before changing the generated dependency.
 - [ ] 7.3 Generate/install/typecheck/build the affected framework and topology matrix against the candidate under npm, pnpm, and Bun.
 - [ ] 7.4 Run every affected credentialed live scenario and cleanup audit against the candidate.
-- [ ] 7.5 Change the generated exact pin only when the full release gate passes; otherwise record the candidate regression and keep beta.61.
+- [ ] 7.5 Change the generated exact pin only when the full release gate passes; otherwise record the candidate regression and keep the previously accepted exact version.
 - [ ] 7.6 Remove at most one logically independent A1–A5 workaround or named integration shim per follow-up change and rerun its provider-free and live removal gates without it; A6 exact pinning is not removable.
 - [ ] 7.7 Update the findings ledger, generated assertions, comments, and user documentation in the same change that changes a pin or removes a shim.
 - [ ] 7.8 Re-evaluate Alchemy PRs #779, #795, #796 and cloudflare-tools PR #62 only after a containing exact package is published.

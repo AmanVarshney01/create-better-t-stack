@@ -2,12 +2,12 @@
 
 ### Requirement: Vetted exact Alchemy version
 
-Every generated Cloudflare project SHALL use the exact accepted Alchemy version. The currently accepted version SHALL be `alchemy@2.0.0-beta.61`; Alchemy version ranges SHALL NOT be generated. A replacement version SHALL pass every applicable Better-T-Stack offline and live gate before becoming accepted. A fix on main or in a pull request SHALL not be treated as available until a containing release is pinned and verified. Exact pinning is a permanent publication-safety policy, not a temporary beta shim.
+Every generated Cloudflare project SHALL use the exact accepted Alchemy version. The currently accepted version SHALL be `alchemy@2.0.0-beta.62`; Alchemy version ranges SHALL NOT be generated. A replacement version SHALL pass every applicable Better-T-Stack offline and live gate before becoming accepted. A fix on main or in a pull request SHALL not be treated as available until a containing release is pinned and verified. Exact pinning is a permanent publication-safety policy, not a temporary beta shim.
 
 #### Scenario: Generate a Cloudflare target
 
 - **WHEN** either deployment plane selects Cloudflare
-- **THEN** the infra package SHALL depend on exactly `alchemy@2.0.0-beta.61`
+- **THEN** the infra package SHALL depend on exactly `alchemy@2.0.0-beta.62`
 - **AND** the generated package manager SHALL resolve that exact version
 
 #### Scenario: Evaluate an upgrade

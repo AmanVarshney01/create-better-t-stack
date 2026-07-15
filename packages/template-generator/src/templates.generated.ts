@@ -33168,7 +33168,7 @@ config({ path: "../../apps/server/.env" });
 {{/if}}
 
 {{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro") (includes frontend "tanstack-router") (includes frontend "solid")))}}
-// Alchemy beta.61 serializes StaticSite env values before resolving Outputs.
+// Alchemy beta.62 serializes StaticSite env values before resolving Outputs.
 // Keep its dev process behavior, but preserve top-level deploy-time env Outputs in Command.Build.
 const serializeBuildEnvValue = (value: unknown) =>
   typeof value === "string" || Redacted.isRedacted(value) ? value : JSON.stringify(value);
