@@ -1,4 +1,6 @@
-import { describe, it } from "bun:test";
+import { expect, describe, it } from "bun:test";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import { expectError, expectSuccess, runTRPCTest } from "./test-utils";
 
@@ -151,6 +153,10 @@ describe("Example Configurations", () => {
       });
 
       expectSuccess(result);
+      const projectDir = result.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+      const aiPage = await readFile(join(projectDir, "apps/web/app/pages/ai.vue"), "utf-8");
+      expect(aiPage).toContain('@reload="() => regenerate()"');
     });
 
     it("should work with AI example + Svelte", async () => {

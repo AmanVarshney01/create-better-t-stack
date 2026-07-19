@@ -14355,7 +14355,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 });
 {{/if}}
 
-const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
+{{#if (eq serverDeploy "vercel")}}const app = {{/if}}{{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
 	.use(
 		cors({
 			origin: env.CORS_ORIGIN,
@@ -19856,7 +19856,7 @@ async function handleSubmit(e: Event) {
             class="ms-auto"
             :status="status"
             @stop="stop"
-            @reload="regenerate"
+            @reload="() => regenerate()"
           />
         </UChatPrompt>
 
