@@ -891,6 +891,9 @@ describe("Deployment Configurations", () => {
 
       const files = collectFiles(result.value.root, result.value.root.path);
       const infraFile = files.get("packages/infra/alchemy.run.ts");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}") as {
+        devDependencies?: Record<string, string>;
+      };
 
       expect(infraFile).toContain('export const server = await Worker("server"');
       expect(infraFile).toContain("url: true");
@@ -898,6 +901,7 @@ describe("Deployment Configurations", () => {
       expect(infraFile!.indexOf('export const server = await Worker("server"')).toBeLessThan(
         infraFile!.indexOf('export const web = await TanStackStart("web"'),
       );
+      expect(webPkg.devDependencies?.["@cloudflare/vite-plugin"]).toBe("1.43.0");
     });
 
     it("should keep native Metro from watching Alchemy state", async () => {
