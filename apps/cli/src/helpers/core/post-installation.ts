@@ -605,6 +605,17 @@ function getDescopeInstructionLines(frontend: Frontend[], backend: Backend) {
     lines.push("Set VITE_DESCOPE_PROJECT_ID in apps/web/.env");
   }
 
+  if (backend === "convex") {
+    lines.push(
+      'Create an "AWS API Gateway" User JWT template in the Descope Console (Project Settings → JWT Templates)',
+      "Apply it under Project Settings → Session Management → User JWT Token Format, then Save (this makes the token `iss` a full URL and adds an `aud` claim — Convex needs both)",
+      "Sign out and back in so a fresh token is minted with the new template",
+      "In the Convex dashboard (or via `npx convex env set`), set DESCOPE_PROJECT_ID to your Descope Project ID",
+      "See https://docs.descope.com/sessions/validation/jwt-authorizers/aws-jwt-authorizer",
+    );
+    return lines;
+  }
+
   if (backend !== "none") {
     const serverEnvPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
     lines.push(`Set DESCOPE_PROJECT_ID in ${serverEnvPath} for server-side session validation`);

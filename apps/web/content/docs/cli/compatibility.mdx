@@ -228,7 +228,7 @@ Clerk authentication requires:
 Descope authentication requires:
 
 - Supported frontends: `next`, `react-router`, and `tanstack-router`
-- Supported backends: any backend except Convex (Hono, Express, Fastify, Elysia, or fullstack `self`)
+- Supported backends: any backend including Convex (Hono, Express, Fastify, Elysia, fullstack `self`, or Convex)
 
 ### Payments Requirements
 
@@ -256,8 +256,11 @@ create-better-t-stack --auth clerk --backend self --frontend astro
 # ✅ Valid - Descope with React Router
 create-better-t-stack --auth descope --backend hono --frontend react-router
 
-# ❌ Invalid - Descope with Convex
+# ✅ Valid - Descope with Convex
 create-better-t-stack --auth descope --backend convex --frontend next
+
+# ✅ Valid - Descope with Convex on TanStack Router
+create-better-t-stack --auth descope --backend convex --frontend tanstack-router
 ```
 
 ## Example Compatibility

@@ -28,6 +28,9 @@ import { routeTree } from "./routeTree.gen";
   import { ConvexReactClient } from "convex/react";
   {{#if (eq auth "clerk")}}
   import { ConvexProviderWithClerk } from "convex/react-clerk";
+  {{else if (eq auth "descope")}}
+  import { ConvexProviderWithAuth } from "convex/react";
+  import { useAuthFromDescope } from "@/utils/convex-descope-auth";
   {{else if (eq auth "better-auth")}}
   import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
   import { authClient } from "@/lib/auth-client";
@@ -118,6 +121,14 @@ const router = createRouter({
           {children}
         </ConvexProviderWithClerk>
       </ClerkProvider>
+    );
+    {{else if (eq auth "descope")}}
+    return (
+      <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>
+        <ConvexProviderWithAuth client={convex} useAuth={useAuthFromDescope}>
+          {children}
+        </ConvexProviderWithAuth>
+      </AuthProvider>
     );
     {{else if (eq auth "better-auth")}}
     return <ConvexBetterAuthProvider client={convex} authClient={authClient}>{children}</ConvexBetterAuthProvider>;

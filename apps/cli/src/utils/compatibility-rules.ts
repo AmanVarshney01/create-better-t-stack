@@ -236,7 +236,7 @@ export function isFrontendAllowedWithBackend(
   }
 
   if (auth === "descope") {
-    if (backend === "convex") return false;
+    // Descope supports these frontends across all backends, including Convex.
     const compatibleFrontends = ["react-router", "tanstack-router", "next"];
     if (!compatibleFrontends.includes(frontend)) return false;
   }

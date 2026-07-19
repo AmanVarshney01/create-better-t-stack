@@ -30,6 +30,9 @@ import { AuthProvider } from "@descope/react-sdk";
 import { ConvexReactClient } from "convex/react";
   {{#if (eq auth "clerk")}}
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+  {{else if (eq auth "descope")}}
+import { ConvexProviderWithAuth } from "convex/react";
+import { useAuthFromDescope } from "@/utils/convex-descope-auth";
   {{else if (eq auth "better-auth")}}
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { authClient } from "@/lib/auth-client";
@@ -143,6 +146,25 @@ export default function App() {
         <Toaster richColors />
       </ThemeProvider>
     </ConvexBetterAuthProvider>
+  );
+  {{else if (eq auth "descope")}}
+  return (
+    <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>
+      <ConvexProviderWithAuth client={convex} useAuth={useAuthFromDescope}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          storageKey="vite-ui-theme"
+        >
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+        </ThemeProvider>
+      </ConvexProviderWithAuth>
+    </AuthProvider>
   );
   {{else}}
   return (

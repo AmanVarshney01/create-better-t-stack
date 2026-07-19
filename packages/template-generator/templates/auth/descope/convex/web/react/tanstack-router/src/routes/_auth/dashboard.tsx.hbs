@@ -1,0 +1,30 @@
+import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import { useDescope, useUser } from "@descope/react-sdk";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "convex/react";
+
+export const Route = createFileRoute("/_auth/dashboard")({
+	component: RouteComponent,
+});
+
+function RouteComponent() {
+	const { user } = useUser();
+	const sdk = useDescope();
+	const privateData = useQuery(api.privateData.get);
+	const displayName = user?.name || user?.email || user?.loginIds?.[0] || "User";
+
+	return (
+		<div className="space-y-4 p-6">
+			<h1 className="text-2xl font-semibold">Dashboard</h1>
+			<p>Welcome {displayName}</p>
+			<p>privateData: {privateData?.message}</p>
+			<button
+				type="button"
+				className="rounded-md border px-3 py-1"
+				onClick={() => sdk.logout()}
+			>
+				Sign out
+			</button>
+		</div>
+	);
+}

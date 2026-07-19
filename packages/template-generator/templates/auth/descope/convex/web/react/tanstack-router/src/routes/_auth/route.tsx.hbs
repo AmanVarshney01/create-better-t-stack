@@ -1,0 +1,25 @@
+import { Descope } from "@descope/react-sdk";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
+
+function AuthLayout() {
+	return (
+		<>
+			<Authenticated>
+				<Outlet />
+			</Authenticated>
+			<Unauthenticated>
+				<div className="mx-auto max-w-md p-6">
+					<Descope flowId="sign-up-or-in" />
+				</div>
+			</Unauthenticated>
+			<AuthLoading>
+				<div className="p-6">Loading...</div>
+			</AuthLoading>
+		</>
+	);
+}

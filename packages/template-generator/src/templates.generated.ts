@@ -14095,6 +14095,270 @@ export const startInstance = createStart(() => {
 	}
 })
 `],
+  ["auth/descope/convex/backend/convex/auth.config.ts.hbs", `export default {
+	providers: [
+		{
+			// Descope issues AWS API Gateway compliant JWTs. Enable the
+			// "AWS API Gateway" JWT template in your Descope project (Project
+			// Settings -> JWT Templates) so the \`iss\` claim becomes the fully
+			// qualified URL https://api.descope.com/<Your Descope Project ID>.
+			// The \`aud\` claim already matches your Project ID.
+			// Set DESCOPE_PROJECT_ID on the Convex Dashboard. \`domain\` must match
+			// the token's \`iss\` claim.
+			// See https://docs.descope.com/sessions/validation/jwt-authorizers/aws-jwt-authorizer
+			domain: \`https://api.descope.com/\${process.env.DESCOPE_PROJECT_ID}\`,
+			applicationID: process.env.DESCOPE_PROJECT_ID,
+		},
+	],
+};
+`],
+  ["auth/descope/convex/backend/convex/privateData.ts.hbs", `import { query } from "./_generated/server";
+
+export const get = query({
+	args: {},
+	handler: async (ctx) => {
+		const identity = await ctx.auth.getUserIdentity();
+		if (identity === null) {
+			return {
+				message: "Not authenticated",
+			};
+		}
+		return {
+			message: "This is private",
+		};
+	},
+});
+`],
+  ["auth/descope/convex/web/react/next/src/app/dashboard/page.tsx.hbs", `"use client";
+
+import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import { Descope } from "@descope/nextjs-sdk";
+import { useDescope, useUser } from "@descope/nextjs-sdk/client";
+import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
+
+export default function Dashboard() {
+  const { user } = useUser();
+  const sdk = useDescope();
+  const privateData = useQuery(api.privateData.get);
+  const displayName = user?.name || user?.email || user?.loginIds?.[0] || "User";
+
+  return (
+    <>
+      <Authenticated>
+        <div className="space-y-4 p-6">
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
+          <p>Welcome {displayName}</p>
+          <p>privateData: {privateData?.message}</p>
+          <button
+            type="button"
+            className="rounded-md border px-3 py-1"
+            onClick={() => sdk.logout()}
+          >
+            Sign out
+          </button>
+        </div>
+      </Authenticated>
+      <Unauthenticated>
+        <div className="mx-auto max-w-md p-6">
+          <Descope flowId="sign-up-or-in" />
+        </div>
+      </Unauthenticated>
+      <AuthLoading>
+        <div className="p-6">Loading...</div>
+      </AuthLoading>
+    </>
+  );
+}
+`],
+  ["auth/descope/convex/web/react/next/src/app/sign-in/page.tsx.hbs", `"use client";
+
+import { Descope } from "@descope/nextjs-sdk";
+import { useRouter } from "next/navigation";
+
+export default function SignInPage() {
+	const router = useRouter();
+
+	return (
+		<div className="mx-auto max-w-md p-6">
+			<Descope
+				flowId="sign-up-or-in"
+				onSuccess={() => {
+					router.push("/dashboard");
+				}}
+			/>
+		</div>
+	);
+}
+`],
+  ["auth/descope/convex/web/react/next/src/utils/convex-descope-auth.ts.hbs", `import { getSessionToken, useSession } from "@descope/nextjs-sdk/client";
+import { useCallback, useMemo } from "react";
+
+// Bridges Descope's session state into Convex's \`ConvexProviderWithAuth\`.
+// The Descope SDK automatically refreshes the token via \`getSessionToken()\`
+// while the refresh token is still active.
+export function useAuthFromDescope() {
+	const { isSessionLoading, isAuthenticated } = useSession();
+
+	const fetchAccessToken = useCallback(async () => {
+		return getSessionToken() ?? null;
+	}, []);
+
+	return useMemo(
+		() => ({
+			isLoading: isSessionLoading,
+			isAuthenticated: isAuthenticated ?? false,
+			fetchAccessToken,
+		}),
+		[isSessionLoading, isAuthenticated, fetchAccessToken],
+	);
+}
+`],
+  ["auth/descope/convex/web/react/react-router/src/routes/dashboard.tsx.hbs", `import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import { Descope, useDescope, useUser } from "@descope/react-sdk";
+import {
+	Authenticated,
+	AuthLoading,
+	Unauthenticated,
+	useQuery,
+} from "convex/react";
+
+export default function Dashboard() {
+	const { user } = useUser();
+	const sdk = useDescope();
+	const privateData = useQuery(api.privateData.get);
+	const displayName = user?.name || user?.email || user?.loginIds?.[0] || "User";
+
+	return (
+		<>
+			<Authenticated>
+				<div className="space-y-4 p-6">
+					<h1 className="text-2xl font-semibold">Dashboard</h1>
+					<p>Welcome {displayName}</p>
+					<p>privateData: {privateData?.message}</p>
+					<button
+						type="button"
+						className="rounded-md border px-3 py-1"
+						onClick={() => sdk.logout()}
+					>
+						Sign out
+					</button>
+				</div>
+			</Authenticated>
+			<Unauthenticated>
+				<div className="mx-auto max-w-md p-6">
+					<Descope flowId="sign-up-or-in" />
+				</div>
+			</Unauthenticated>
+			<AuthLoading>
+				<div className="p-6">Loading...</div>
+			</AuthLoading>
+		</>
+	);
+}
+`],
+  ["auth/descope/convex/web/react/react-router/src/utils/convex-descope-auth.ts.hbs", `import { getSessionToken, useSession } from "@descope/react-sdk";
+import { useCallback, useMemo } from "react";
+
+// Bridges Descope's session state into Convex's \`ConvexProviderWithAuth\`.
+// The Descope SDK automatically refreshes the token via \`getSessionToken()\`
+// while the refresh token is still active.
+export function useAuthFromDescope() {
+	const { isSessionLoading, isAuthenticated } = useSession();
+
+	const fetchAccessToken = useCallback(async () => {
+		return getSessionToken() ?? null;
+	}, []);
+
+	return useMemo(
+		() => ({
+			isLoading: isSessionLoading,
+			isAuthenticated: isAuthenticated ?? false,
+			fetchAccessToken,
+		}),
+		[isSessionLoading, isAuthenticated, fetchAccessToken],
+	);
+}
+`],
+  ["auth/descope/convex/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import { useDescope, useUser } from "@descope/react-sdk";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "convex/react";
+
+export const Route = createFileRoute("/_auth/dashboard")({
+	component: RouteComponent,
+});
+
+function RouteComponent() {
+	const { user } = useUser();
+	const sdk = useDescope();
+	const privateData = useQuery(api.privateData.get);
+	const displayName = user?.name || user?.email || user?.loginIds?.[0] || "User";
+
+	return (
+		<div className="space-y-4 p-6">
+			<h1 className="text-2xl font-semibold">Dashboard</h1>
+			<p>Welcome {displayName}</p>
+			<p>privateData: {privateData?.message}</p>
+			<button
+				type="button"
+				className="rounded-md border px-3 py-1"
+				onClick={() => sdk.logout()}
+			>
+				Sign out
+			</button>
+		</div>
+	);
+}
+`],
+  ["auth/descope/convex/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import { Descope } from "@descope/react-sdk";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
+
+function AuthLayout() {
+	return (
+		<>
+			<Authenticated>
+				<Outlet />
+			</Authenticated>
+			<Unauthenticated>
+				<div className="mx-auto max-w-md p-6">
+					<Descope flowId="sign-up-or-in" />
+				</div>
+			</Unauthenticated>
+			<AuthLoading>
+				<div className="p-6">Loading...</div>
+			</AuthLoading>
+		</>
+	);
+}
+`],
+  ["auth/descope/convex/web/react/tanstack-router/src/utils/convex-descope-auth.ts.hbs", `import { getSessionToken, useSession } from "@descope/react-sdk";
+import { useCallback, useMemo } from "react";
+
+// Bridges Descope's session state into Convex's \`ConvexProviderWithAuth\`.
+// The Descope SDK automatically refreshes the token via \`getSessionToken()\`
+// while the refresh token is still active.
+export function useAuthFromDescope() {
+	const { isSessionLoading, isAuthenticated } = useSession();
+
+	const fetchAccessToken = useCallback(async () => {
+		return getSessionToken() ?? null;
+	}, []);
+
+	return useMemo(
+		() => ({
+			isLoading: isSessionLoading,
+			isAuthenticated: isAuthenticated ?? false,
+			fetchAccessToken,
+		}),
+		[isSessionLoading, isAuthenticated, fetchAccessToken],
+	);
+}
+`],
   ["auth/descope/web/react/base/src/utils/descope-auth.ts.hbs", `{{#if (includes frontend "next")}}
 import { getSessionToken } from "@descope/nextjs-sdk/client";
 {{else}}
@@ -30456,6 +30720,10 @@ import { useAuth } from "@clerk/nextjs";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { env } from "@{{projectName}}/env/web";
+{{else if (eq auth "descope")}}
+import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
+import { useAuthFromDescope } from "@/utils/convex-descope-auth";
+import { env } from "@{{projectName}}/env/web";
 {{else if (eq auth "better-auth")}}
 import { ConvexReactClient } from "convex/react";
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
@@ -30523,6 +30791,10 @@ export default function Providers({
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         {children}
       </ConvexProviderWithClerk>
+      {{else if (eq auth "descope")}}
+      <ConvexProviderWithAuth client={convex} useAuth={useAuthFromDescope}>
+        {children}
+      </ConvexProviderWithAuth>
       {{else if (eq auth "better-auth")}}
       <ConvexBetterAuthProvider
         client={convex}
@@ -30740,6 +31012,9 @@ import { AuthProvider } from "@descope/react-sdk";
 import { ConvexReactClient } from "convex/react";
   {{#if (eq auth "clerk")}}
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+  {{else if (eq auth "descope")}}
+import { ConvexProviderWithAuth } from "convex/react";
+import { useAuthFromDescope } from "@/utils/convex-descope-auth";
   {{else if (eq auth "better-auth")}}
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { authClient } from "@/lib/auth-client";
@@ -30853,6 +31128,25 @@ export default function App() {
         <Toaster richColors />
       </ThemeProvider>
     </ConvexBetterAuthProvider>
+  );
+  {{else if (eq auth "descope")}}
+  return (
+    <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>
+      <ConvexProviderWithAuth client={convex} useAuth={useAuthFromDescope}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          storageKey="vite-ui-theme"
+        >
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+        </ThemeProvider>
+      </ConvexProviderWithAuth>
+    </AuthProvider>
   );
   {{else}}
   return (
@@ -31328,6 +31622,9 @@ import { routeTree } from "./routeTree.gen";
   import { ConvexReactClient } from "convex/react";
   {{#if (eq auth "clerk")}}
   import { ConvexProviderWithClerk } from "convex/react-clerk";
+  {{else if (eq auth "descope")}}
+  import { ConvexProviderWithAuth } from "convex/react";
+  import { useAuthFromDescope } from "@/utils/convex-descope-auth";
   {{else if (eq auth "better-auth")}}
   import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
   import { authClient } from "@/lib/auth-client";
@@ -31418,6 +31715,14 @@ const router = createRouter({
           {children}
         </ConvexProviderWithClerk>
       </ClerkProvider>
+    );
+    {{else if (eq auth "descope")}}
+    return (
+      <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>
+        <ConvexProviderWithAuth client={convex} useAuth={useAuthFromDescope}>
+          {children}
+        </ConvexProviderWithAuth>
+      </AuthProvider>
     );
     {{else if (eq auth "better-auth")}}
     return <ConvexBetterAuthProvider client={convex} authClient={authClient}>{children}</ConvexBetterAuthProvider>;
@@ -33460,6 +33765,9 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (eq auth "descope")}}
+		NEXT_PUBLIC_DESCOPE_PROJECT_ID: z.string().min(1),
+{{/if}}
 	},
 	runtimeEnv: {
 		NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
@@ -33468,6 +33776,9 @@ export const env = createEnv({
 {{/if}}
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+{{/if}}
+{{#if (eq auth "descope")}}
+		NEXT_PUBLIC_DESCOPE_PROJECT_ID: process.env.NEXT_PUBLIC_DESCOPE_PROJECT_ID,
 {{/if}}
 	},
 {{else if (includes frontend "nuxt")}}
@@ -33489,6 +33800,9 @@ export const env = createEnv({
 {{/if}}
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
+{{#if (eq auth "descope")}}
+		VITE_DESCOPE_PROJECT_ID: z.string().min(1),
 {{/if}}
 	},
 	runtimeEnv: (import.meta as any).env,
@@ -33569,7 +33883,10 @@ export const env = createEnv({
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
 {{/if}}
-	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+	// \`process\` is undefined in the browser (e.g. Vite SPA builds such as the
+	// Descope \`ssr: false\` setup), so guard the access to avoid a runtime crash.
+	skipValidation:
+		typeof process !== "undefined" && !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });
 `],
@@ -36025,4 +36342,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 513;
+export const TEMPLATE_COUNT = 523;

@@ -42,7 +42,9 @@ export function getAvailableAuthProviders(
     options.push("clerk");
   }
 
-  if (backend !== "convex" && hasDescopeCompatibleFrontends) {
+  if (hasDescopeCompatibleFrontends) {
+    // Descope supports Next.js, TanStack Router, and React Router across all
+    // backends, including Convex.
     options.push("descope");
   }
 

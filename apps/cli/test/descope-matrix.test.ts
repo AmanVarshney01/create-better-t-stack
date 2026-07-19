@@ -13,8 +13,13 @@ describe("Descope auth provider option", () => {
     }
   });
 
-  it("is not offered for the Convex backend or unsupported frontends", () => {
-    expect(getAvailableAuthProviders("convex", ["next"])).not.toContain("descope");
+  it("is offered for the Convex backend with all supported frontends", () => {
+    for (const frontend of ["next", "react-router", "tanstack-router"] as const) {
+      expect(getAvailableAuthProviders("convex", [frontend])).toContain("descope");
+    }
+  });
+
+  it("is not offered for unsupported frontends", () => {
     for (const frontend of ["svelte", "nuxt", "solid", "astro", "tanstack-start"] as const) {
       expect(getAvailableAuthProviders("hono", [frontend])).not.toContain("descope");
     }
@@ -193,7 +198,94 @@ describe("Descope matrix", () => {
     expect(failures).toEqual([]);
   }, 30_000);
 
-  it("should reject Descope with the Convex backend", async () => {
+  const convexFrontends = ["next", "react-router", "tanstack-router"] as const;
+  for (const frontend of convexFrontends) {
+    it(`should generate Descope with the Convex backend on ${frontend}`, async () => {
+      const config = {
+        projectName: `descope-convex-${frontend}`,
+        frontend: [frontend],
+        backend: "convex" as const,
+        runtime: "none" as const,
+        database: "none" as const,
+        orm: "none" as const,
+        auth: "descope" as const,
+        api: "none" as const,
+        addons: ["none" as const],
+        examples: ["none" as const],
+        dbSetup: "none" as const,
+        webDeploy: "none" as const,
+        serverDeploy: "none" as const,
+        install: false,
+        git: false,
+        packageManager: "bun" as const,
+        payments: "none" as const,
+      };
+
+      expect(validateConfigCompatibility(config).isOk()).toBe(true);
+
+      const result = await createVirtual(config);
+      expect(result.isOk()).toBe(true);
+      if (result.isErr()) return;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+
+      // Convex backend trusts Descope as an AWS API Gateway compliant JWT issuer.
+      const authConfig = files.get("packages/backend/convex/auth.config.ts");
+      expect(authConfig).toContain("https://api.descope.com/");
+      expect(authConfig).toContain("DESCOPE_PROJECT_ID");
+
+      // Private Convex query gating on the authenticated identity.
+      expect(files.get("packages/backend/convex/privateData.ts")).toContain("getUserIdentity");
+
+      // Descope → Convex auth bridge hook, using the right SDK per frontend.
+      const authBridge = files.get("apps/web/src/utils/convex-descope-auth.ts");
+      expect(authBridge).toContain("useAuthFromDescope");
+      expect(authBridge).toContain(
+        frontend === "next" ? "@descope/nextjs-sdk/client" : "@descope/react-sdk",
+      );
+
+      // The Convex client is wired to the Descope auth bridge.
+      const wiringFile =
+        frontend === "next"
+          ? "apps/web/src/components/providers.tsx"
+          : frontend === "tanstack-router"
+            ? "apps/web/src/main.tsx"
+            : "apps/web/src/root.tsx";
+      const wiring = files.get(wiringFile);
+      expect(wiring).toContain("ConvexProviderWithAuth");
+      expect(wiring).toContain("useAuthFromDescope");
+
+      // Descope AuthProvider wraps the app (layout.tsx for Next.js, the wiring
+      // file itself for the Vite frameworks).
+      const authProviderFile =
+        frontend === "next" ? files.get("apps/web/src/app/layout.tsx") : wiring;
+      expect(authProviderFile).toContain("AuthProvider");
+
+      // Web app depends on the correct Descope SDK and public project id env var.
+      if (frontend === "next") {
+        expect(files.get("apps/web/package.json")).toContain("@descope/nextjs-sdk");
+        expect(files.get("packages/env/src/web.ts")).toContain("NEXT_PUBLIC_DESCOPE_PROJECT_ID");
+      } else {
+        expect(files.get("apps/web/package.json")).toContain("@descope/react-sdk");
+        const webEnv = files.get("packages/env/src/web.ts");
+        expect(webEnv).toContain("VITE_DESCOPE_PROJECT_ID");
+        // Vite SPA (Descope forces ssr:false) evaluates env client-side where
+        // `process` is undefined, so the skipValidation check must be guarded.
+        expect(webEnv).toContain('typeof process !== "undefined"');
+      }
+
+      // Dashboard reads the private Convex query.
+      const dashboardPath =
+        frontend === "next"
+          ? "apps/web/src/app/dashboard/page.tsx"
+          : frontend === "tanstack-router"
+            ? "apps/web/src/routes/_auth/dashboard.tsx"
+            : "apps/web/src/routes/dashboard.tsx";
+      expect(files.get(dashboardPath)).toContain("api.privateData.get");
+    }, 30_000);
+  }
+
+  it("should reject Descope + Convex with an unsupported frontend (tanstack-start)", async () => {
     const result = await runTRPCTest({
       projectName: "descope-convex-fail",
       auth: "descope",
@@ -202,7 +294,7 @@ describe("Descope matrix", () => {
       database: "none",
       orm: "none",
       api: "none",
-      frontend: ["next"],
+      frontend: ["tanstack-start"],
       addons: ["none"],
       examples: ["none"],
       dbSetup: "none",
@@ -211,7 +303,7 @@ describe("Descope matrix", () => {
       expectError: true,
     });
 
-    expectError(result, "not compatible with the Convex backend");
+    expectError(result, "Descope authentication is not compatible");
   });
 
   const unsupportedFrontends = ["svelte", "nuxt", "solid", "astro", "tanstack-start"] as const;

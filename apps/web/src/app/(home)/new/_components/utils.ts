@@ -78,10 +78,15 @@ const convexBetterAuthFrontendRequirementMessage =
   "Better-Auth with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
 
 const descopeFrontendRequirementMessage =
-  "Descope requires Next.js, React Router, or TanStack Router, and is not compatible with the Convex backend";
+  "Descope requires Next.js, React Router, or TanStack Router";
 
 export const hasDescopeCompatibleFrontend = (webFrontend: string[]) =>
   webFrontend.some((f) => ["react-router", "tanstack-router", "next"].includes(f));
+
+// Descope supports Next.js, TanStack Router, and React Router across all
+// backends, including Convex.
+export const isDescopeAllowed = (_backend: string, webFrontend: string[]) =>
+  hasDescopeCompatibleFrontend(webFrontend);
 
 export const hasClerkCompatibleFrontend = (webFrontend: string[], nativeFrontend: string[]) =>
   webFrontend.some((f) =>
@@ -618,7 +623,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   }
 
   if (nextStack.auth === "descope") {
-    if (nextStack.backend === "convex" || !hasDescopeCompatibleFrontend(nextStack.webFrontend)) {
+    if (!isDescopeAllowed(nextStack.backend, nextStack.webFrontend)) {
       nextStack.auth = "none";
       changed = true;
       changes.push({
@@ -1136,10 +1141,7 @@ export const getDisabledReason = (
       }
     }
     if (optionId === "descope") {
-      if (
-        currentStack.backend === "convex" ||
-        !hasDescopeCompatibleFrontend(currentStack.webFrontend)
-      ) {
+      if (!isDescopeAllowed(currentStack.backend, currentStack.webFrontend)) {
         return descopeFrontendRequirementMessage;
       }
     }
