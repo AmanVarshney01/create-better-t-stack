@@ -891,13 +891,130 @@ describe("Deployment Configurations", () => {
 
       const files = collectFiles(result.value.root, result.value.root.path);
       const infraFile = files.get("packages/infra/alchemy.run.ts");
+      const infraPackage = JSON.parse(files.get("packages/infra/package.json") ?? "{}") as {
+        devDependencies?: Record<string, string>;
+      };
+      const serverBuildConfig = files.get("apps/server/tsdown.config.ts") ?? "";
+      const serverPackage = JSON.parse(files.get("apps/server/package.json") ?? "{}") as {
+        devDependencies?: Record<string, string>;
+      };
 
-      expect(infraFile).toContain('export const server = await Worker("server"');
-      expect(infraFile).toContain("url: true");
-      expect(infraFile).toContain("VITE_SERVER_URL: server.url!");
-      expect(infraFile!.indexOf('export const server = await Worker("server"')).toBeLessThan(
-        infraFile!.indexOf('export const web = await TanStackStart("web"'),
+      expect(infraFile).toContain('export const server = Cloudflare.Worker("server"');
+      expect(infraFile).toContain("export type ServerEnv = Cloudflare.InferEnv<typeof server>");
+      expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
+      expect(infraFile).toContain("export default Alchemy.Stack(");
+      expect(infraPackage.devDependencies).toMatchObject({
+        alchemy: "2.0.0-beta.62",
+        effect: "4.0.0-beta.97",
+        "@effect/platform-node": "4.0.0-beta.97",
+        "@effect/platform-bun": "4.0.0-beta.97",
+      });
+      expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
+        infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
       );
+      expect(serverBuildConfig).toContain('import { wasm } from "rolldown-plugin-wasm"');
+      expect(serverBuildConfig).toContain("plugins: [wasm()]");
+      expect(serverPackage.devDependencies?.["rolldown-plugin-wasm"]).toBe("^0.3.2");
+    });
+
+    it("should generate current Cloudflare integrations for React Router and Next", async () => {
+      const [reactRouterResult, nextResult, nextWebOnlyResult] = await Promise.all([
+        createVirtual({
+          projectName: "react-router-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["react-router"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+        createVirtual({
+          projectName: "next-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "trpc",
+          frontend: ["next"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+        createVirtual({
+          projectName: "next-cloudflare-web-only-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "none",
+          backend: "hono",
+          runtime: "bun",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "trpc",
+          frontend: ["next"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+      ]);
+
+      if (reactRouterResult.isErr()) throw reactRouterResult.error;
+      if (nextResult.isErr()) throw nextResult.error;
+      if (nextWebOnlyResult.isErr()) throw nextWebOnlyResult.error;
+
+      const reactRouterFiles = collectFiles(
+        reactRouterResult.value.root,
+        reactRouterResult.value.root.path,
+      );
+      const entryServer = reactRouterFiles.get("apps/web/src/entry.server.tsx") ?? "";
+      expect(entryServer).toContain("EntryContext, RouterContextProvider");
+      expect(entryServer).toContain("export const streamTimeout = 5_000");
+      expect(entryServer).toContain('request.method.toUpperCase() === "HEAD"');
+      expect(entryServer).toContain("return new Response(null");
+      expect(entryServer).toContain("AbortSignal.timeout(streamTimeout + 1000)");
+
+      const nextFiles = collectFiles(nextResult.value.root, nextResult.value.root.path);
+      const infraFile = nextFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      const wranglerConfig = JSON.parse(nextFiles.get("apps/web/wrangler.jsonc") ?? "{}") as {
+        images?: { binding?: string };
+      };
+      expect(wranglerConfig.images?.binding).toBe("IMAGES");
+      expect(infraFile.match(/IMAGES: Cloudflare\.Images\.Images\(\)/g)).toHaveLength(1);
+      expect(infraFile).toContain("const outputAwareStaticSite");
+      expect(infraFile).toContain('const build = yield* Command.Build("Build"');
+      expect(infraFile).toContain("memo: props.memo ?? false");
+      expect(infraFile).toContain("Output.isOutput(value)");
+      expect(infraFile).toContain("NEXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>()");
+      expect(infraFile).toContain("const webWorker = yield* outputAwareStaticSite(");
+
+      const nextWebOnlyFiles = collectFiles(
+        nextWebOnlyResult.value.root,
+        nextWebOnlyResult.value.root.path,
+      );
+      const nextWebOnlyInfra = nextWebOnlyFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      expect(nextWebOnlyInfra).toContain("const outputAwareStaticSite");
+      expect(nextWebOnlyInfra).toContain("const webWorker = yield* outputAwareStaticSite(");
+      expect(nextWebOnlyInfra).not.toContain("const serverWorker = yield* server");
     });
 
     it("should keep native Metro from watching Alchemy state", async () => {

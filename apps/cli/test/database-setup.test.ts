@@ -1,4 +1,6 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import { expectError, expectSuccess, runTRPCTest } from "./test-utils";
 
@@ -46,6 +48,32 @@ describe("Database Setup Configurations", () => {
       });
 
       expectSuccess(result);
+    });
+
+    it("should configure a package-local Prisma tooling database for D1", async () => {
+      const result = await runTRPCTest({
+        projectName: "d1-prisma-tooling-db",
+        database: "sqlite",
+        orm: "prisma",
+        dbSetup: "d1",
+        backend: "self",
+        runtime: "none",
+        auth: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        install: false,
+        git: false,
+      });
+
+      expectSuccess(result);
+      const envFile = await readFile(join(result.projectDir!, "apps/web/.env"), "utf8");
+      expect(envFile).toContain("DATABASE_URL=file:./local.db");
+      expect(envFile).not.toContain(`DATABASE_URL=file:${result.projectDir}`);
+      expect(await readFile(join(result.projectDir!, "packages/db/local.db"), "utf8")).toBe("");
     });
 
     it("should fail with Turso + non-SQLite database", async () => {

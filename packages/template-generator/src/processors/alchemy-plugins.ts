@@ -1,36 +1,195 @@
 import type { ProjectConfig } from "@better-t-stack/types";
-import { IndentationText, Node, Project, QuoteKind } from "ts-morph";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { webDeploy, frontend } = config;
+  const { webDeploy, frontend, backend } = config;
 
   if (webDeploy !== "cloudflare") return;
 
-  const isNext = frontend.includes("next");
-  const isNuxt = frontend.includes("nuxt");
-  const isSvelte = frontend.includes("svelte");
-  const isTanstackStart = frontend.includes("tanstack-start");
-  const isAstro = frontend.includes("astro");
+  if (frontend.includes("next")) {
+    processNextAlchemy(vfs, config);
+  } else if (frontend.includes("react-router")) {
+    processReactRouterAlchemy(vfs);
+  } else if (frontend.includes("svelte")) {
+    // keep the adapter's worker internals out of the public asset upload
+    vfs.writeFile("apps/web/static/.assetsignore", "_worker.js\n_routes.json\n");
+    if (backend === "self") {
+      writeDevWranglerConfig(vfs, config);
+    }
+  } else if (frontend.includes("nuxt") && backend === "self") {
+    writeDevWranglerConfig(vfs, config);
+    // page SSR runs through vite-node, which cannot resolve workerd's
+    // cloudflare:workers module; nuxt.config aliases it to this proxy in dev
+    vfs.writeFile(
+      "apps/web/cloudflare-workers.dev.ts",
+      `import { getPlatformProxy } from "wrangler";
 
-  if (isNext) {
-    processNextAlchemy(vfs);
-  } else if (isNuxt) {
-    processNuxtAlchemy(vfs);
-  } else if (isSvelte) {
-    processSvelteAlchemy(vfs);
-  } else if (isTanstackStart) {
-    processTanStackStartAlchemy(vfs);
-  } else if (isAstro) {
-    processAstroAlchemy(vfs);
+const proxy = await getPlatformProxy();
+
+export const env: Record<string, unknown> = new Proxy(
+	{},
+	{
+		get(_target, prop) {
+			if (typeof prop !== "string") return undefined;
+			return (proxy.env as Record<string, unknown>)[prop] ?? process.env[prop];
+		},
+	},
+);
+`,
+    );
+  } else if (backend === "self" && frontend.includes("astro")) {
+    // framework dev servers read local bindings (miniflare D1) from this config
+    writeDevWranglerConfig(vfs, config);
   }
 }
 
-function processNextAlchemy(vfs: VirtualFileSystem) {
-  const webAppDir = "apps/web";
-  const openNextConfigPath = `${webAppDir}/open-next.config.ts`;
+function d1DatabasesBlock(config: ProjectConfig): string {
+  if (config.dbSetup !== "d1") return "";
+  const isPrisma = config.orm === "prisma";
+  const migrationsDir = isPrisma
+    ? "../../packages/db/prisma/migrations"
+    : "../../packages/db/src/migrations";
+  // prisma nests migrations as <timestamp>_<name>/migration.sql
+  const pattern = isPrisma
+    ? `,\n      "migrations_pattern": "${migrationsDir}/*/migration.sql"`
+    : "";
+  return `,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "${config.projectName}-db-local",
+      "database_id": "local",
+      "migrations_dir": "${migrationsDir}"${pattern}
+    }
+  ]`;
+}
 
+function writeDevWranglerConfig(vfs: VirtualFileSystem, config: ProjectConfig) {
+  const wranglerConfigPath = "apps/web/wrangler.jsonc";
+  if (vfs.exists(wranglerConfigPath) || config.dbSetup !== "d1") return;
+  vfs.writeFile(
+    wranglerConfigPath,
+    `{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "${config.projectName}-web",
+  "compatibility_date": "2025-05-05",
+  "compatibility_flags": ["nodejs_compat"]${d1DatabasesBlock(config)}
+}
+`,
+  );
+  addLocalD1MigrateScript(vfs);
+}
+
+function addLocalD1MigrateScript(vfs: VirtualFileSystem) {
+  const webPkgPath = "apps/web/package.json";
+  if (!vfs.exists(webPkgPath)) return;
+  const raw = vfs.readFile(webPkgPath);
+  if (!raw) return;
+  const pkg = JSON.parse(raw);
+  pkg.scripts = pkg.scripts ?? {};
+  if (!pkg.scripts["db:migrate:local"]) {
+    pkg.scripts["db:migrate:local"] = "wrangler d1 migrations apply DB --local";
+    vfs.writeFile(webPkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+  }
+}
+
+// React Router's ssr build is a manifest, not a worker; these two files wrap it
+// into a fetch handler (workers/app.ts, wired as the ssr rollup input by the
+// vite config template) and render with web streams instead of node streams.
+function processReactRouterAlchemy(vfs: VirtualFileSystem) {
+  const webAppDir = "apps/web";
+
+  const workerEntryPath = `${webAppDir}/workers/app.ts`;
+  if (!vfs.exists(workerEntryPath)) {
+    vfs.writeFile(
+      workerEntryPath,
+      `import { createRequestHandler } from "react-router";
+
+const requestHandler = createRequestHandler(
+	// @ts-expect-error - virtual module provided by React Router at build time
+	() => import("virtual:react-router/server-build"),
+	import.meta.env.MODE,
+);
+
+export default {
+	fetch(request: Request) {
+		return requestHandler(request);
+	},
+};
+`,
+    );
+  }
+
+  const entryServerPath = `${webAppDir}/src/entry.server.tsx`;
+  if (!vfs.exists(entryServerPath)) {
+    vfs.writeFile(
+      entryServerPath,
+      `import type { EntryContext, RouterContextProvider } from "react-router";
+import { ServerRouter } from "react-router";
+import { isbot } from "isbot";
+import { renderToReadableStream } from "react-dom/server";
+
+export const streamTimeout = 5_000;
+
+export default async function handleRequest(
+	request: Request,
+	responseStatusCode: number,
+	responseHeaders: Headers,
+	routerContext: EntryContext,
+	_loadContext: RouterContextProvider,
+) {
+	// https://httpwg.org/specs/rfc9110.html#HEAD
+	if (request.method.toUpperCase() === "HEAD") {
+		return new Response(null, {
+			status: responseStatusCode,
+			headers: responseHeaders,
+		});
+	}
+
+	let shellRendered = false;
+	let userAgent = request.headers.get("user-agent");
+
+	const body = await renderToReadableStream(
+		<ServerRouter context={routerContext} url={request.url} />,
+		{
+			signal: AbortSignal.timeout(streamTimeout + 1000),
+			onError(error: unknown) {
+				responseStatusCode = 500;
+				// Log streaming rendering errors from inside the shell. Don't log
+				// errors encountered during initial shell rendering since they'll
+				// reject and get logged in handleDocumentRequest.
+				if (shellRendered) {
+					console.error(error);
+				}
+			},
+		},
+	);
+	shellRendered = true;
+
+	// Ensure requests from bots and SPA Mode renders wait for all content to load before responding
+	// https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
+	if ((userAgent && isbot(userAgent)) || routerContext.isSpaMode) {
+		await body.allReady;
+	}
+
+	responseHeaders.set("Content-Type", "text/html");
+	return new Response(body, {
+		headers: responseHeaders,
+		status: responseStatusCode,
+	});
+}
+`,
+    );
+  }
+}
+
+// OpenNext builds the Worker artifact that packages/infra deploys with
+// `bundle: false`; it reads wrangler.jsonc for the worker/assets layout.
+function processNextAlchemy(vfs: VirtualFileSystem, config: ProjectConfig) {
+  const webAppDir = "apps/web";
+
+  const openNextConfigPath = `${webAppDir}/open-next.config.ts`;
   if (!vfs.exists(openNextConfigPath)) {
     const openNextConfigContent = `import { defineCloudflareConfig } from "@opennextjs/cloudflare";
 
@@ -39,579 +198,39 @@ export default defineCloudflareConfig({});
     vfs.writeFile(openNextConfigPath, openNextConfigContent);
   }
 
-  const gitignorePath = `${webAppDir}/.gitignore`;
-  if (vfs.exists(gitignorePath)) {
-    let gitignoreContent = vfs.readFile(gitignorePath);
-    if (gitignoreContent && !gitignoreContent.includes("wrangler.jsonc")) {
-      gitignoreContent += "\nwrangler.jsonc\n";
-      vfs.writeFile(gitignorePath, gitignoreContent);
-    }
-  } else {
-    vfs.writeFile(gitignorePath, "wrangler.jsonc\n");
-  }
+  const wranglerConfigPath = `${webAppDir}/wrangler.jsonc`;
+  if (!vfs.exists(wranglerConfigPath)) {
+    const wranglerConfigContent = `{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "${config.projectName}-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-05-05",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "images": {
+    "binding": "IMAGES"
+  }${config.backend === "self" ? d1DatabasesBlock(config) : ""}
 }
-
-function processNuxtAlchemy(vfs: VirtualFileSystem) {
-  const nuxtConfigPath = "apps/web/nuxt.config.ts";
-  if (!vfs.exists(nuxtConfigPath)) return;
-
-  const content = vfs.readFile(nuxtConfigPath);
-  const project = new Project({
-    useInMemoryFileSystem: true,
-    manipulationSettings: {
-      indentationText: IndentationText.TwoSpaces,
-      quoteKind: QuoteKind.Double,
-    },
-  });
-
-  const sourceFile = project.createSourceFile("nuxt.config.ts", content);
-
-  const hasAlchemyImport = sourceFile
-    .getImportDeclarations()
-    .some((decl) => decl.getModuleSpecifierValue() === "alchemy/cloudflare/nuxt");
-  if (!hasAlchemyImport) {
-    sourceFile.addImportDeclaration({
-      moduleSpecifier: "alchemy/cloudflare/nuxt",
-      defaultImport: "alchemy",
-    });
-  }
-
-  const hasFsImport = sourceFile
-    .getImportDeclarations()
-    .some((decl) => decl.getModuleSpecifierValue() === "node:fs");
-  if (!hasFsImport) {
-    sourceFile.addImportDeclaration({
-      moduleSpecifier: "node:fs",
-      namedImports: ["existsSync"],
-    });
-  }
-
-  const hasUrlImport = sourceFile
-    .getImportDeclarations()
-    .some((decl) => decl.getModuleSpecifierValue() === "node:url");
-  if (!hasUrlImport) {
-    sourceFile.addImportDeclaration({
-      moduleSpecifier: "node:url",
-      namedImports: ["fileURLToPath"],
-    });
-  }
-
-  if (!sourceFile.getVariableDeclaration("alchemyConfigPath")) {
-    const firstExport = sourceFile
-      .getStatements()
-      .findIndex((statement) => Node.isExportAssignment(statement));
-    sourceFile.insertStatements(
-      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const alchemyConfigPath = fileURLToPath(new URL("./.alchemy/local/wrangler.jsonc", import.meta.url));
-const hasAlchemyConfig = existsSync(alchemyConfigPath);`,
-    );
-  }
-
-  if (!sourceFile.getVariableDeclaration("cloudflareWorkersShimPath")) {
-    const firstExport = sourceFile
-      .getStatements()
-      .findIndex((statement) => Node.isExportAssignment(statement));
-    sourceFile.insertStatements(
-      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const cloudflareWorkersShimPath = fileURLToPath(new URL("../../packages/env/src/cloudflare-local.ts", import.meta.url));`,
-    );
-  }
-
-  if (!sourceFile.getVariableDeclaration("isNuxtPrepare")) {
-    const firstExport = sourceFile
-      .getStatements()
-      .findIndex((statement) => Node.isExportAssignment(statement));
-    sourceFile.insertStatements(
-      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const isNuxtPrepare =
-  process.env.npm_lifecycle_event === "postinstall" ||
-  process.env.npm_lifecycle_script === "nuxt prepare" ||
-  process.argv.includes("prepare");`,
-    );
-  }
-
-  if (!sourceFile.getVariableDeclaration("shouldUseAlchemy")) {
-    const firstExport = sourceFile
-      .getStatements()
-      .findIndex((statement) => Node.isExportAssignment(statement));
-    sourceFile.insertStatements(
-      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const shouldUseAlchemy = !isNuxtPrepare && hasAlchemyConfig;`,
-    );
-  }
-
-  if (!sourceFile.getVariableDeclaration("cloudflareWorkersAlias")) {
-    const firstExport = sourceFile
-      .getStatements()
-      .findIndex((statement) => Node.isExportAssignment(statement));
-    sourceFile.insertStatements(
-      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const cloudflareWorkersAlias = shouldUseAlchemy
-  ? {}
-  : {
-      "cloudflare:workers": cloudflareWorkersShimPath,
-    };`,
-    );
-  }
-
-  if (!sourceFile.getVariableDeclaration("isNuxtDev")) {
-    const firstExport = sourceFile
-      .getStatements()
-      .findIndex((statement) => Node.isExportAssignment(statement));
-    sourceFile.insertStatements(
-      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const isNuxtDev =
-  !isNuxtPrepare &&
-  process.env.NODE_ENV !== "production" &&
-  !process.argv.some((arg) => arg === "build" || arg === "generate");`,
-    );
-  }
-
-  const exportAssignment = sourceFile.getExportAssignment((d) => !d.isExportEquals());
-
-  if (!exportAssignment) return;
-
-  const defineConfigCall = exportAssignment.getExpression();
-  if (
-    !Node.isCallExpression(defineConfigCall) ||
-    defineConfigCall.getExpression().getText() !== "defineNuxtConfig"
-  ) {
-    return;
-  }
-
-  let configObject = defineConfigCall.getArguments()[0];
-  if (!configObject) {
-    configObject = defineConfigCall.addArgument("{}");
-  }
-
-  if (Node.isObjectLiteralExpression(configObject)) {
-    if (!configObject.getProperty("nitro")) {
-      configObject.addPropertyAssignment({
-        name: "nitro",
-        initializer: `{
-    preset: "cloudflare-module",
-    ...(shouldUseAlchemy ? { cloudflare: alchemy({ dev: { configPath: alchemyConfigPath } }) } : {}),
-    alias: cloudflareWorkersAlias,
-    prerender: {
-      routes: ["/"],
-      autoSubfolderIndex: false,
-    },
-  }`,
-      });
+`;
+    vfs.writeFile(wranglerConfigPath, wranglerConfigContent);
+    if (config.backend === "self" && config.dbSetup === "d1") {
+      addLocalD1MigrateScript(vfs);
     }
+  }
 
-    if (!configObject.getProperty("vite")) {
-      configObject.addPropertyAssignment({
-        name: "vite",
-        initializer: `{
-    resolve: {
-      alias: cloudflareWorkersAlias,
-    },
-  }`,
-      });
-    }
-
-    const modulesProperty = configObject.getProperty("modules");
-    if (modulesProperty && Node.isPropertyAssignment(modulesProperty)) {
-      const initializer = modulesProperty.getInitializer();
-      if (Node.isArrayLiteralExpression(initializer)) {
-        const hasModule = initializer
-          .getElements()
-          .some(
-            (el) =>
-              el.getText() === '"nitro-cloudflare-dev"' ||
-              el.getText() === "'nitro-cloudflare-dev'",
-          );
-        if (!hasModule) {
-          initializer.addElement('"nitro-cloudflare-dev"');
-        }
+  const webPkgPath = `${webAppDir}/package.json`;
+  if (vfs.exists(webPkgPath)) {
+    const raw = vfs.readFile(webPkgPath);
+    if (raw) {
+      const pkg = JSON.parse(raw);
+      pkg.scripts = pkg.scripts ?? {};
+      if (!pkg.scripts["build:cloudflare"]) {
+        pkg.scripts["build:cloudflare"] = "opennextjs-cloudflare build";
       }
-    } else if (!modulesProperty) {
-      configObject.addPropertyAssignment({
-        name: "modules",
-        initializer: '["nitro-cloudflare-dev"]',
-      });
+      vfs.writeFile(webPkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
     }
   }
-
-  vfs.writeFile(nuxtConfigPath, sourceFile.getFullText());
-}
-
-function processSvelteAlchemy(vfs: VirtualFileSystem) {
-  const svelteConfigPath = "apps/web/svelte.config.js";
-  if (!vfs.exists(svelteConfigPath)) return;
-
-  const content = vfs.readFile(svelteConfigPath);
-  const project = new Project({
-    useInMemoryFileSystem: true,
-    manipulationSettings: {
-      indentationText: IndentationText.TwoSpaces,
-      quoteKind: QuoteKind.Single,
-    },
-  });
-
-  const sourceFile = project.createSourceFile("svelte.config.js", content);
-
-  if (
-    !sourceFile
-      .getImportDeclarations()
-      .some((imp) => imp.getModuleSpecifierValue() === "alchemy/cloudflare/sveltekit")
-  ) {
-    sourceFile.insertImportDeclaration(0, {
-      moduleSpecifier: "alchemy/cloudflare/sveltekit",
-      defaultImport: "alchemy",
-    });
-  }
-
-  if (
-    !sourceFile
-      .getImportDeclarations()
-      .some((imp) => imp.getModuleSpecifierValue() === "@sveltejs/adapter-auto")
-  ) {
-    sourceFile.insertImportDeclaration(0, {
-      moduleSpecifier: "@sveltejs/adapter-auto",
-      defaultImport: "adapter",
-    });
-  }
-
-  if (
-    !sourceFile.getImportDeclarations().some((decl) => decl.getModuleSpecifierValue() === "node:fs")
-  ) {
-    sourceFile.insertImportDeclaration(0, {
-      moduleSpecifier: "node:fs",
-      namedImports: ["existsSync"],
-    });
-  }
-
-  if (
-    !sourceFile
-      .getImportDeclarations()
-      .some((decl) => decl.getModuleSpecifierValue() === "node:url")
-  ) {
-    sourceFile.insertImportDeclaration(0, {
-      moduleSpecifier: "node:url",
-      namedImports: ["fileURLToPath"],
-    });
-  }
-
-  if (!sourceFile.getVariableDeclaration("alchemyConfigPath")) {
-    const configVariableIndex = sourceFile.getStatements().findIndex(
-      (statement) =>
-        Node.isVariableStatement(statement) &&
-        statement
-          .getDeclarationList()
-          .getDeclarations()
-          .some((decl) => decl.getName() === "config"),
-    );
-    sourceFile.insertStatements(
-      configVariableIndex === -1 ? sourceFile.getStatements().length : configVariableIndex,
-      `const alchemyConfigPath = fileURLToPath(new URL("./.alchemy/local/wrangler.jsonc", import.meta.url));
-const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
-    );
-  }
-
-  const configVariable = sourceFile.getVariableDeclaration("config");
-  if (configVariable) {
-    const initializer = configVariable.getInitializer();
-    if (Node.isObjectLiteralExpression(initializer)) {
-      const kitProperty = initializer.getProperty("kit");
-      if (kitProperty && Node.isPropertyAssignment(kitProperty)) {
-        const kitInitializer = kitProperty.getInitializer();
-        if (Node.isObjectLiteralExpression(kitInitializer)) {
-          const adapterProperty = kitInitializer.getProperty("adapter");
-          if (adapterProperty && Node.isPropertyAssignment(adapterProperty)) {
-            adapterProperty.setInitializer(
-              "shouldUseAlchemy ? alchemy({ platformProxy: { configPath: alchemyConfigPath } }) : adapter()",
-            );
-          }
-        }
-      }
-    }
-  }
-
-  vfs.writeFile(svelteConfigPath, sourceFile.getFullText());
-}
-
-function processTanStackStartAlchemy(vfs: VirtualFileSystem) {
-  const viteConfigPath = "apps/web/vite.config.ts";
-  if (!vfs.exists(viteConfigPath)) return;
-
-  const content = vfs.readFile(viteConfigPath);
-  const project = new Project({
-    useInMemoryFileSystem: true,
-    manipulationSettings: {
-      indentationText: IndentationText.TwoSpaces,
-      quoteKind: QuoteKind.Double,
-    },
-  });
-
-  const sourceFile = project.createSourceFile("vite.config.ts", content);
-
-  const alchemyImport = sourceFile.getImportDeclaration(
-    (decl) => decl.getModuleSpecifierValue() === "alchemy/cloudflare/tanstack-start",
-  );
-
-  if (!alchemyImport) {
-    sourceFile.addImportDeclaration({
-      moduleSpecifier: "alchemy/cloudflare/tanstack-start",
-      defaultImport: "alchemy",
-    });
-  }
-
-  const hasFsImport = sourceFile
-    .getImportDeclarations()
-    .some((decl) => decl.getModuleSpecifierValue() === "node:fs");
-  if (!hasFsImport) {
-    sourceFile.addImportDeclaration({
-      moduleSpecifier: "node:fs",
-      namedImports: ["existsSync"],
-    });
-  }
-
-  const hasUrlImport = sourceFile
-    .getImportDeclarations()
-    .some((decl) => decl.getModuleSpecifierValue() === "node:url");
-  if (!hasUrlImport) {
-    sourceFile.addImportDeclaration({
-      moduleSpecifier: "node:url",
-      namedImports: ["fileURLToPath"],
-    });
-  }
-
-  if (!sourceFile.getVariableDeclaration("alchemyConfigPath")) {
-    const firstExport = sourceFile
-      .getStatements()
-      .findIndex((statement) => Node.isExportAssignment(statement));
-    sourceFile.insertStatements(
-      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const alchemyConfigPath = fileURLToPath(new URL("./.alchemy/local/wrangler.jsonc", import.meta.url));
-const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
-    );
-  }
-
-  if (!sourceFile.getVariableDeclaration("cloudflareWorkersShimPath")) {
-    const firstExport = sourceFile
-      .getStatements()
-      .findIndex((statement) => Node.isExportAssignment(statement));
-    sourceFile.insertStatements(
-      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const cloudflareWorkersShimPath = fileURLToPath(new URL("../../packages/env/src/cloudflare-local.ts", import.meta.url));`,
-    );
-  }
-
-  if (!sourceFile.getVariableDeclaration("cloudflareWorkersAlias")) {
-    const firstExport = sourceFile
-      .getStatements()
-      .findIndex((statement) => Node.isExportAssignment(statement));
-    sourceFile.insertStatements(
-      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const cloudflareWorkersAlias = shouldUseAlchemy
-  ? {}
-  : {
-      "cloudflare:workers": cloudflareWorkersShimPath,
-    };`,
-    );
-  }
-
-  const exportAssignment = sourceFile.getExportAssignment((d) => !d.isExportEquals());
-  if (!exportAssignment) return;
-
-  const defineConfigCall = exportAssignment.getExpression();
-  if (
-    !Node.isCallExpression(defineConfigCall) ||
-    defineConfigCall.getExpression().getText() !== "defineConfig"
-  ) {
-    return;
-  }
-
-  let configObject = defineConfigCall.getArguments()[0];
-  if (!configObject) {
-    configObject = defineConfigCall.addArgument("{}");
-  }
-
-  if (Node.isObjectLiteralExpression(configObject)) {
-    const pluginsProperty = configObject.getProperty("plugins");
-    if (pluginsProperty && Node.isPropertyAssignment(pluginsProperty)) {
-      const initializer = pluginsProperty.getInitializer();
-      if (Node.isArrayLiteralExpression(initializer)) {
-        const hasAlchemy = initializer
-          .getElements()
-          .some((el) => el.getText().includes("alchemy("));
-        if (!hasAlchemy) {
-          initializer.addElement(
-            "...(shouldUseAlchemy ? [alchemy({ configPath: alchemyConfigPath })] : [])",
-          );
-        }
-      }
-    } else {
-      configObject.addPropertyAssignment({
-        name: "plugins",
-        initializer: "[...(shouldUseAlchemy ? [alchemy({ configPath: alchemyConfigPath })] : [])]",
-      });
-    }
-
-    const resolveProperty = configObject.getProperty("resolve");
-    if (resolveProperty && Node.isPropertyAssignment(resolveProperty)) {
-      const initializer = resolveProperty.getInitializer();
-      if (Node.isObjectLiteralExpression(initializer) && !initializer.getProperty("alias")) {
-        initializer.addPropertyAssignment({
-          name: "alias",
-          initializer: "cloudflareWorkersAlias",
-        });
-      }
-    } else if (!resolveProperty) {
-      configObject.addPropertyAssignment({
-        name: "resolve",
-        initializer: "{ alias: cloudflareWorkersAlias }",
-      });
-    }
-  }
-
-  vfs.writeFile(viteConfigPath, sourceFile.getFullText());
-}
-
-function processAstroAlchemy(vfs: VirtualFileSystem) {
-  const webAppDir = "apps/web";
-  const astroConfigPath = `${webAppDir}/astro.config.mjs`;
-
-  if (!vfs.exists(astroConfigPath)) return;
-
-  const content = vfs.readFile(astroConfigPath);
-  const project = new Project({
-    useInMemoryFileSystem: true,
-    manipulationSettings: {
-      indentationText: IndentationText.TwoSpaces,
-      quoteKind: QuoteKind.Double,
-    },
-  });
-
-  const sourceFile = project.createSourceFile("astro.config.mjs", content);
-
-  if (
-    !sourceFile
-      .getImportDeclarations()
-      .some((imp) => imp.getModuleSpecifierValue() === "alchemy/cloudflare/astro")
-  ) {
-    sourceFile.insertImportDeclaration(0, {
-      moduleSpecifier: "alchemy/cloudflare/astro",
-      defaultImport: "alchemy",
-    });
-  }
-
-  if (
-    !sourceFile
-      .getImportDeclarations()
-      .some((imp) => imp.getModuleSpecifierValue() === "@astrojs/node")
-  ) {
-    sourceFile.insertImportDeclaration(0, {
-      moduleSpecifier: "@astrojs/node",
-      defaultImport: "node",
-    });
-  }
-
-  if (
-    !sourceFile.getImportDeclarations().some((decl) => decl.getModuleSpecifierValue() === "node:fs")
-  ) {
-    sourceFile.insertImportDeclaration(0, {
-      moduleSpecifier: "node:fs",
-      namedImports: ["existsSync"],
-    });
-  }
-
-  if (
-    !sourceFile
-      .getImportDeclarations()
-      .some((decl) => decl.getModuleSpecifierValue() === "node:url")
-  ) {
-    sourceFile.insertImportDeclaration(0, {
-      moduleSpecifier: "node:url",
-      namedImports: ["fileURLToPath"],
-    });
-  }
-
-  if (!sourceFile.getVariableDeclaration("alchemyConfigPath")) {
-    const firstExport = sourceFile
-      .getStatements()
-      .findIndex((statement) => Node.isExportAssignment(statement));
-    sourceFile.insertStatements(
-      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const alchemyConfigPath = fileURLToPath(new URL("./.alchemy/local/wrangler.jsonc", import.meta.url));
-const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
-    );
-  }
-
-  if (!sourceFile.getVariableDeclaration("cloudflareWorkersShimPath")) {
-    const firstExport = sourceFile
-      .getStatements()
-      .findIndex((statement) => Node.isExportAssignment(statement));
-    sourceFile.insertStatements(
-      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const cloudflareWorkersShimPath = fileURLToPath(new URL("../../packages/env/src/cloudflare-local.ts", import.meta.url));`,
-    );
-  }
-
-  if (!sourceFile.getVariableDeclaration("cloudflareWorkersAlias")) {
-    const firstExport = sourceFile
-      .getStatements()
-      .findIndex((statement) => Node.isExportAssignment(statement));
-    sourceFile.insertStatements(
-      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const cloudflareWorkersAlias = shouldUseAlchemy
-  ? {}
-  : {
-      "cloudflare:workers": cloudflareWorkersShimPath,
-    };`,
-    );
-  }
-
-  const exportAssignment = sourceFile.getExportAssignment((d) => !d.isExportEquals());
-  if (exportAssignment) {
-    const defineConfigCall = exportAssignment.getExpression();
-    if (
-      Node.isCallExpression(defineConfigCall) &&
-      defineConfigCall.getExpression().getText() === "defineConfig"
-    ) {
-      const configObject = defineConfigCall.getArguments()[0];
-      if (Node.isObjectLiteralExpression(configObject)) {
-        const adapterProperty = configObject.getProperty("adapter");
-        if (adapterProperty && Node.isPropertyAssignment(adapterProperty)) {
-          adapterProperty.setInitializer(
-            'shouldUseAlchemy ? alchemy({ platformProxy: { configPath: alchemyConfigPath } }) : node({ mode: "standalone" })',
-          );
-        }
-
-        const viteProperty = configObject.getProperty("vite");
-        if (viteProperty && Node.isPropertyAssignment(viteProperty)) {
-          const viteInitializer = viteProperty.getInitializer();
-          if (Node.isObjectLiteralExpression(viteInitializer)) {
-            const resolveProperty = viteInitializer.getProperty("resolve");
-            if (resolveProperty && Node.isPropertyAssignment(resolveProperty)) {
-              const resolveInitializer = resolveProperty.getInitializer();
-              if (
-                Node.isObjectLiteralExpression(resolveInitializer) &&
-                !resolveInitializer.getProperty("alias")
-              ) {
-                resolveInitializer.addPropertyAssignment({
-                  name: "alias",
-                  initializer: "cloudflareWorkersAlias",
-                });
-              }
-            } else if (!resolveProperty) {
-              viteInitializer.addPropertyAssignment({
-                name: "resolve",
-                initializer: "{ alias: cloudflareWorkersAlias }",
-              });
-            }
-          }
-        } else if (!viteProperty) {
-          configObject.addPropertyAssignment({
-            name: "vite",
-            initializer: "{ resolve: { alias: cloudflareWorkersAlias } }",
-          });
-        }
-      }
-    }
-  }
-
-  vfs.writeFile(astroConfigPath, sourceFile.getFullText());
 }

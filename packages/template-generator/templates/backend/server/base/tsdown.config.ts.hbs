@@ -1,9 +1,15 @@
-import { defineConfig } from 'tsdown';
+import { defineConfig } from "tsdown";
+{{#if (and (eq runtime "workers") (eq orm "prisma"))}}
+import { wasm } from "rolldown-plugin-wasm";
+{{/if}}
 
 export default defineConfig({
-    entry: './src/index.ts',
-    format: 'esm',
-    outDir: './dist',
-    clean: true,
-    noExternal: [/@{{projectName}}\/.*/]
+  entry: "./src/index.ts",
+  format: "esm",
+  outDir: "./dist",
+  clean: true,
+  {{#if (and (eq runtime "workers") (eq orm "prisma"))}}
+  plugins: [wasm()],
+  {{/if}}
+  noExternal: [/@{{projectName}}\/.*/],
 });

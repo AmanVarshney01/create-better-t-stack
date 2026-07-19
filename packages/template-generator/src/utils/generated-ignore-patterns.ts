@@ -47,7 +47,11 @@ export function getStackGeneratedIgnorePatterns(config: ProjectConfig): string[]
     patterns.add("packages/db/dist/**");
   }
 
-  if (config.database === "sqlite" && config.dbSetup !== "d1" && config.orm !== "none") {
+  if (
+    config.database === "sqlite" &&
+    config.orm !== "none" &&
+    (config.dbSetup !== "d1" || config.orm === "prisma")
+  ) {
     patterns.add("packages/db/local.db*");
   }
 

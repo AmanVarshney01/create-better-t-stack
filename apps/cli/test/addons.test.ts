@@ -1192,16 +1192,7 @@ describe("Addon Configurations", () => {
 
       expect(nuxtConfig).toContain('"evlog/nuxt"');
       expect(nuxtConfig).toContain("nitro:");
-      expect(nuxtConfig).toContain('import { existsSync } from "node:fs";');
-      expect(nuxtConfig).toContain('import { fileURLToPath } from "node:url";');
-      expect(nuxtConfig).toContain("const alchemyConfigPath = fileURLToPath");
-      expect(nuxtConfig).toContain("const hasAlchemyConfig = existsSync(alchemyConfigPath);");
-      expect(nuxtConfig).toContain("const shouldUseAlchemy = !isNuxtPrepare && hasAlchemyConfig;");
-      expect(nuxtConfig).toContain("alchemy({ dev: { configPath: alchemyConfigPath } })");
-      expect(nuxtConfig).toContain("isNuxtDev");
-      expect(nuxtConfig).toContain("const cloudflareWorkersShimPath = fileURLToPath");
-      expect(nuxtConfig).toContain('"cloudflare:workers"');
-      expect(nuxtConfig).toContain("cloudflareWorkersShimPath");
+      expect(nuxtConfig).toContain("cloudflare-module");
       expect(nuxtConfig).toContain("evlog:");
       expectParseableTypeScript(nuxtConfig);
     });

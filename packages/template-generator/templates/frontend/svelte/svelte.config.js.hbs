@@ -1,7 +1,7 @@
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 import adapter from '@sveltejs/adapter-static';
 {{else if (eq webDeploy "cloudflare")}}
-import alchemy from 'alchemy/cloudflare/sveltekit';
+import adapter from '@sveltejs/adapter-cloudflare';
 {{else if (eq webDeploy "docker")}}
 import adapter from '@sveltejs/adapter-node';
 {{else if (eq webDeploy "vercel")}}
@@ -26,8 +26,7 @@ const config = {
 			fallback: 'index.html'
 		})
 {{else if (eq webDeploy "cloudflare")}}
-		// Alchemy's adapter wraps SvelteKit's Cloudflare adapter for local platform.env and Worker builds.
-		adapter: alchemy()
+		adapter: adapter()
 {{else if (eq webDeploy "docker")}}
 		// adapter-node builds a standalone Node server (run with `node build/index.js`).
 		adapter: adapter()
