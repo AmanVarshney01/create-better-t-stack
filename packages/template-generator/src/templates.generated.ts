@@ -30122,19 +30122,22 @@ export default defineNuxtConfig({
   "type": "module",
   "scripts": {
     "build": "nuxt build",
+    "check-types": "nuxt typecheck",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@nuxt/ui": "^4.9.0",
-    "nuxt": "^4.4.8",
-    "vue": "^3.5.39"
+    "@nuxt/ui": "^4.10.0",
+    "nuxt": "^4.5.0",
+    "vue": "^3.5.39",
+    "vue-router": "^5.2.0"
   },
   "devDependencies": {
     "tailwindcss": "^4.3.2",
-    "@iconify-json/lucide": "^1.2.115"
+    "@iconify-json/lucide": "^1.2.115",
+    "vue-tsc": "^3.3.7"
   }
 }
 `],
