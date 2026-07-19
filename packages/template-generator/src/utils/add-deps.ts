@@ -147,8 +147,6 @@ export const dependencyVersionMap = {
   "@tanstack/solid-router-devtools": "^1.167.0",
 
   wrangler: "^4.107.0",
-  // Alchemy 0.93.12 shares persisted Miniflare state with this plugin.
-  // Newer plugin releases use an incompatible workerd alarm-table schema.
   "@cloudflare/vite-plugin": "1.43.0",
   "@opennextjs/cloudflare": "^1.20.1",
   "nitro-cloudflare-dev": "^0.2.2",
