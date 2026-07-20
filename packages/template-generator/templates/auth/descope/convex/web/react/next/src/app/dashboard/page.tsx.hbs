@@ -1,0 +1,40 @@
+"use client";
+
+import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import { Descope } from "@descope/nextjs-sdk";
+import { useDescope, useUser } from "@descope/nextjs-sdk/client";
+import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
+
+export default function Dashboard() {
+  const { user } = useUser();
+  const sdk = useDescope();
+  const privateData = useQuery(api.privateData.get);
+  const displayName = user?.name || user?.email || user?.loginIds?.[0] || "User";
+
+  return (
+    <>
+      <Authenticated>
+        <div className="space-y-4 p-6">
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
+          <p>Welcome {displayName}</p>
+          <p>privateData: {privateData?.message}</p>
+          <button
+            type="button"
+            className="rounded-md border px-3 py-1"
+            onClick={() => sdk.logout()}
+          >
+            Sign out
+          </button>
+        </div>
+      </Authenticated>
+      <Unauthenticated>
+        <div className="mx-auto max-w-md p-6">
+          <Descope flowId="sign-up-or-in" />
+        </div>
+      </Unauthenticated>
+      <AuthLoading>
+        <div className="p-6">Loading...</div>
+      </AuthLoading>
+    </>
+  );
+}

@@ -26,6 +26,10 @@ export const dependencyVersionMap = {
   "@clerk/tanstack-react-start": "^1.4.12",
   "@clerk/expo": "^3.6.5",
 
+  "@descope/nextjs-sdk": "^0.15.52",
+  "@descope/react-sdk": "^2.30.3",
+  "@descope/node-sdk": "^2.12.0",
+
   "drizzle-orm": "^0.45.2",
   "drizzle-kit": "^0.31.10",
   "@planetscale/database": "^1.20.1",

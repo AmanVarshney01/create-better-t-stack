@@ -1,0 +1,24 @@
+import { Descope, useSession } from "@descope/react-sdk";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
+
+function AuthLayout() {
+	const { isAuthenticated, isSessionLoading } = useSession();
+
+	if (isSessionLoading) {
+		return <div className="p-6">Loading...</div>;
+	}
+
+	if (!isAuthenticated) {
+		return (
+			<div className="mx-auto max-w-md p-6">
+				<Descope flowId="sign-up-or-in" />
+			</div>
+		);
+	}
+
+	return <Outlet />;
+}

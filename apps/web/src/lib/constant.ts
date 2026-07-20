@@ -474,6 +474,13 @@ export const TECH_OPTIONS: Record<
       color: "from-blue-400 to-blue-600",
     },
     {
+      id: "descope",
+      name: "Descope",
+      description: "Drag-and-drop authentication and user management",
+      icon: "/descope.svg",
+      color: "from-teal-400 to-teal-600",
+    },
+    {
       id: "none",
       name: "No Auth",
       description: "Skip authentication",

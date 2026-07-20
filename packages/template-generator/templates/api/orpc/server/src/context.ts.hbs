@@ -33,6 +33,23 @@ async function authenticateClerkRequest(request: Request): Promise<ClerkContextA
 {{/if}}
 {{/if}}
 
+{{#if (eq auth "descope")}}
+import DescopeClient from "@descope/node-sdk";
+import { env } from "@{{projectName}}/env/server";
+
+const descopeClient = DescopeClient({ projectId: env.DESCOPE_PROJECT_ID });
+
+async function validateDescopeSession(authHeader: string | null | undefined) {
+	if (!authHeader) return null;
+	const token = authHeader.replace(/^Bearer\s+/i, "");
+	try {
+		return await descopeClient.validateSession(token);
+	} catch {
+		return null;
+	}
+}
+{{/if}}
+
 {{#if (and (eq backend 'self') (includes frontend "next"))}}
 import type { NextRequest } from "next/server";
 {{#if (eq auth "better-auth")}}
@@ -57,6 +74,12 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
 	return {
 		auth: clerkAuth,
 		session: null,
+	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(req.headers.get("authorization"));
+	return {
+		auth: null,
+		session,
 	};
 {{else}}
 	return {
@@ -223,6 +246,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 		auth: clerkAuth,
 		session: null,
 	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(context.req.header("Authorization"));
+	return {
+		auth: null,
+		session,
+	};
 {{else}}
 	return {
 		auth: null,
@@ -255,6 +284,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 	return {
 		auth: clerkAuth,
 		session: null,
+	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(context.request.headers.get("authorization"));
+	return {
+		auth: null,
+		session,
 	};
 {{else}}
 	return {
@@ -292,6 +327,12 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
 		auth: clerkAuth,
 		session: null,
 	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(opts.req.headers.authorization);
+	return {
+		auth: null,
+		session,
+	};
 {{else}}
 	return {
 		auth: null,
@@ -325,6 +366,12 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 	return {
 		auth: clerkAuth,
 		session: null,
+	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(req.authorization);
+	return {
+		auth: null,
+		session,
 	};
 {{else}}
 	void req;

@@ -75,6 +75,31 @@ export async function processAuthTemplates(
     return;
   }
 
+  if (config.backend === "convex" && authProvider === "descope") {
+    processTemplatesFromPrefix(
+      vfs,
+      templates,
+      "auth/descope/convex/backend",
+      "packages/backend",
+      config,
+    );
+
+    // Descope + Convex supports Next.js, TanStack Router, and React Router.
+    const reactFramework = config.frontend.find((f) =>
+      ["next", "tanstack-router", "react-router"].includes(f),
+    );
+    if (reactFramework) {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `auth/descope/convex/web/react/${reactFramework}`,
+        "apps/web",
+        config,
+      );
+    }
+    return;
+  }
+
   if (config.backend === "convex" && authProvider === "better-auth") {
     processTemplatesFromPrefix(
       vfs,

@@ -263,11 +263,13 @@ Choose authentication provider:
 
 - `better-auth`: Better-Auth authentication (default)
 - `clerk`: Clerk authentication
+- `descope`: Descope authentication
 - `none`: No authentication
 
 ```bash
 create-better-t-stack --auth better-auth
 create-better-t-stack --auth clerk
+create-better-t-stack --auth descope
 create-better-t-stack --auth none
 ```
 
@@ -278,6 +280,7 @@ create-better-t-stack --auth none
 - with `--backend convex`, `better-auth` supports `react-router`, `tanstack-router`, `tanstack-start`, `next`, and native Expo frontends
 - `clerk` requires a compatible frontend
 - Supported Clerk backends: `convex`, `hono`, `express`, `fastify`, `elysia`, and `self` with Next.js or TanStack Start
+- `descope` supports the `next`, `react-router`, and `tanstack-router` frontends across all backends, including Convex
 - Authentication is automatically set to `none` when using `--backend none`
 
 ## Payments

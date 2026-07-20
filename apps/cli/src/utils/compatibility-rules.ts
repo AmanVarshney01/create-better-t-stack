@@ -235,6 +235,14 @@ export function isFrontendAllowedWithBackend(
     if (incompatibleFrontends.includes(frontend)) return false;
   }
 
+  if (auth === "descope") {
+    // Descope supports these frontends across all backends, including Convex.
+    // "none" is allowed for parity with validateBackendConstraints (which permits
+    // no web frontend) and with how Clerk handles frontend validation.
+    const compatibleFrontends = ["react-router", "tanstack-router", "next", "none"];
+    if (!compatibleFrontends.includes(frontend)) return false;
+  }
+
   return true;
 }
 

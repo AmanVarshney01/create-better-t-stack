@@ -836,6 +836,23 @@ async function authenticateClerkRequest(request: Request): Promise<ClerkContextA
 {{/if}}
 {{/if}}
 
+{{#if (eq auth "descope")}}
+import DescopeClient from "@descope/node-sdk";
+import { env } from "@{{projectName}}/env/server";
+
+const descopeClient = DescopeClient({ projectId: env.DESCOPE_PROJECT_ID });
+
+async function validateDescopeSession(authHeader: string | null | undefined) {
+	if (!authHeader) return null;
+	const token = authHeader.replace(/^Bearer\\s+/i, "");
+	try {
+		return await descopeClient.validateSession(token);
+	} catch {
+		return null;
+	}
+}
+{{/if}}
+
 {{#if (and (eq backend 'self') (includes frontend "next"))}}
 import type { NextRequest } from "next/server";
 {{#if (eq auth "better-auth")}}
@@ -860,6 +877,12 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
 	return {
 		auth: clerkAuth,
 		session: null,
+	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(req.headers.get("authorization"));
+	return {
+		auth: null,
+		session,
 	};
 {{else}}
 	return {
@@ -1026,6 +1049,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 		auth: clerkAuth,
 		session: null,
 	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(context.req.header("Authorization"));
+	return {
+		auth: null,
+		session,
+	};
 {{else}}
 	return {
 		auth: null,
@@ -1058,6 +1087,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 	return {
 		auth: clerkAuth,
 		session: null,
+	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(context.request.headers.get("authorization"));
+	return {
+		auth: null,
+		session,
 	};
 {{else}}
 	return {
@@ -1095,6 +1130,12 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
 		auth: clerkAuth,
 		session: null,
 	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(opts.req.headers.authorization);
+	return {
+		auth: null,
+		session,
+	};
 {{else}}
 	return {
 		auth: null,
@@ -1129,6 +1170,12 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 		auth: clerkAuth,
 		session: null,
 	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(req.authorization);
+	return {
+		auth: null,
+		session,
+	};
 {{else}}
 	void req;
 	return {
@@ -1149,17 +1196,26 @@ export async function createContext() {
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
 `],
-  ["api/orpc/server/src/index.ts.hbs", `import { {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}ORPCError, {{/if}}os } from "@orpc/server";
+  ["api/orpc/server/src/index.ts.hbs", `import { {{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}ORPCError, {{/if}}os } from "@orpc/server";
 import type { Context } from "./context";
 
 export const o = os.$context<Context>();
 
 export const publicProcedure = o;
 
-{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+{{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}
 const requireAuth = o.middleware(async ({ context, next }) => {
   {{#if (eq auth "better-auth")}}
   if (!context.session?.user) {
+    throw new ORPCError("UNAUTHORIZED");
+  }
+  return next({
+    context: {
+      session: context.session,
+    },
+  });
+  {{else if (eq auth "descope")}}
+  if (!context.session) {
     throw new ORPCError("UNAUTHORIZED");
   }
   return next({
@@ -1408,6 +1464,9 @@ import { env } from "@{{projectName}}/env/web";
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
+{{#if (eq auth "descope")}}
+import { getDescopeAuthToken } from "@/utils/descope-auth";
+{{/if}}
 {{/if}}
 
 export function createQueryClient() {
@@ -1514,6 +1573,15 @@ export const link = new RPCLink({
 		const token = await getClerkAuthToken();
 		return token ? { Authorization: \`Bearer \${token}\` } : {};
 		{{/if}}
+	},
+{{/if}}
+{{#if (eq auth "descope")}}
+	headers: () => {
+		{{#if (includes frontend "next")}}
+		if (typeof window === "undefined") return {};
+		{{/if}}
+		const token = getDescopeAuthToken();
+		return token ? { Authorization: \`Bearer \${token}\` } : {};
 	},
 {{/if}}
 {{#if (eq auth "better-auth")}}
@@ -1801,6 +1869,23 @@ async function authenticateClerkRequest(request: Request): Promise<ClerkContextA
 }
 {{/if}}
 
+{{#if (eq auth "descope")}}
+import DescopeClient from "@descope/node-sdk";
+import { env } from "@{{projectName}}/env/server";
+
+const descopeClient = DescopeClient({ projectId: env.DESCOPE_PROJECT_ID });
+
+async function validateDescopeSession(authHeader: string | null | undefined) {
+	if (!authHeader) return null;
+	const token = authHeader.replace(/^Bearer\\s+/i, "");
+	try {
+		return await descopeClient.validateSession(token);
+	} catch {
+		return null;
+	}
+}
+{{/if}}
+
 {{#if (and (eq backend 'self') (includes frontend "next"))}}
 import type { NextRequest } from "next/server";
 {{#if (eq auth "better-auth")}}
@@ -1811,7 +1896,7 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 
-export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (or (eq auth "none"))}}_req{{else}}req{{/if}}: NextRequest){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
@@ -1825,6 +1910,12 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
 	return {
 		auth: clerkAuth,
 		session: null,
+	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(req.headers.get("authorization"));
+	return {
+		auth: null,
+		session,
 	};
 {{else}}
 	return {
@@ -1843,7 +1934,7 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+export async function createContext({{#if (or (eq auth "none") (eq auth "descope"))}}_options{{else}}{ req }{{/if}}: { req: Request }){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
@@ -1895,6 +1986,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 		auth: clerkAuth,
 		session: null,
 	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(context.req.header("Authorization"));
+	return {
+		auth: null,
+		session,
+	};
 {{else}}
 	return {
 		auth: null,
@@ -1928,6 +2025,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 		auth: clerkAuth,
 		session: null,
 	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(context.request.headers.get("authorization"));
+	return {
+		auth: null,
+		session,
+	};
 {{else}}
 	return {
 		auth: null,
@@ -1959,6 +2062,12 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
 	return {
 		auth: clerkAuth,
 		session: null,
+	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(opts.req.headers.authorization);
+	return {
+		auth: null,
+		session,
 	};
 {{else}}
 	return {
@@ -1992,6 +2101,12 @@ export async function createContext({ req }: CreateFastifyContextOptions){{#if (
 		auth: clerkAuth,
 		session: null,
 	};
+{{else if (eq auth "descope")}}
+	const session = await validateDescopeSession(req.headers.authorization);
+	return {
+		auth: null,
+		session,
+	};
 {{else}}
 	void req;
 	return {
@@ -2012,7 +2127,7 @@ export async function createContext() {
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
 `],
-  ["api/trpc/server/src/index.ts.hbs", `import { initTRPC{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}, TRPCError{{/if}} } from "@trpc/server";
+  ["api/trpc/server/src/index.ts.hbs", `import { initTRPC{{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}, TRPCError{{/if}} } from "@trpc/server";
 import type { Context } from "./context";
 
 export const t = initTRPC.context<Context>().create();
@@ -2021,9 +2136,9 @@ export const router = t.router;
 
 export const publicProcedure = t.procedure;
 
-{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+{{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  {{#if (eq auth "better-auth")}}
+  {{#if (or (eq auth "better-auth") (eq auth "descope"))}}
   if (!ctx.session) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
@@ -2043,7 +2158,7 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
-      {{#if (eq auth "better-auth")}}
+      {{#if (or (eq auth "better-auth") (eq auth "descope"))}}
       session: ctx.session,
       {{else}}
       auth: ctx.auth,
@@ -2054,7 +2169,7 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 {{/if}}
 `],
   ["api/trpc/server/src/routers/index.ts.hbs", `{{#if (eq api "orpc")}}
-import { {{#if (eq auth "better-auth")}}protectedProcedure, {{/if}}publicProcedure } from "../index";
+import { {{#if (or (eq auth "better-auth") (eq auth "descope"))}}protectedProcedure, {{/if}}publicProcedure } from "../index";
 import type { RouterClient } from "@orpc/server";
 {{#if (includes examples "todo")}}
 import { todoRouter } from "./todo";
@@ -2071,6 +2186,13 @@ export const appRouter = {
       user: context.session?.user,
     };
   }),
+  {{else if (eq auth "descope")}}
+  privateData: protectedProcedure.handler(({ context }) => {
+    return {
+      message: "This is private",
+      userId: context.session?.token?.sub,
+    };
+  }),
   {{/if}}
   {{#if (includes examples "todo")}}
   todo: todoRouter,
@@ -2080,7 +2202,7 @@ export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;
 {{else if (eq api "trpc")}}
 import {
-  {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}protectedProcedure, {{/if}}publicProcedure,
+  {{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}protectedProcedure, {{/if}}publicProcedure,
   router,
 } from "../index";
 {{#if (includes examples "todo")}}
@@ -2091,12 +2213,14 @@ export const appRouter = router({
   healthCheck: publicProcedure.query(() => {
     return "OK";
   }),
-  {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+  {{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}
   privateData: protectedProcedure.query(({ ctx }) => {
     return {
       message: "This is private",
       {{#if (eq auth "better-auth")}}
       user: ctx.session.user,
+      {{else if (eq auth "descope")}}
+      userId: ctx.session.token.sub,
       {{else}}
       userId: ctx.auth.userId,
       {{/if}}
@@ -2137,6 +2261,9 @@ import { env } from "@{{projectName}}/env/web";
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
+{{#if (eq auth "descope")}}
+import { getDescopeAuthToken } from "@/utils/descope-auth";
+{{/if}}
 
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
@@ -2175,6 +2302,13 @@ const trpcClient = createTRPCClient<AppRouter>({
 				return token ? { Authorization: \`Bearer \${token}\` } : {};
 			},
 {{/if}}
+{{#if (eq auth "descope")}}
+			headers: () => {
+				if (typeof window === "undefined") return {};
+				const token = getDescopeAuthToken();
+				return token ? { Authorization: \`Bearer \${token}\` } : {};
+			},
+{{/if}}
 {{#if (eq auth "better-auth")}}
 			fetch(url, options) {
 				return fetch(url, {
@@ -2209,6 +2343,9 @@ import { env } from "@{{projectName}}/env/web";
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
+{{#if (eq auth "descope")}}
+import { getDescopeAuthToken } from "@/utils/descope-auth";
+{{/if}}
 
 {{> getServerUrl}}
 
@@ -2234,6 +2371,12 @@ export const trpcClient = createTRPCClient<AppRouter>({
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();
+				return token ? { Authorization: \`Bearer \${token}\` } : {};
+			},
+{{/if}}
+{{#if (eq auth "descope")}}
+			headers: () => {
+				const token = getDescopeAuthToken();
 				return token ? { Authorization: \`Bearer \${token}\` } : {};
 			},
 {{/if}}
@@ -13951,6 +14094,507 @@ export const startInstance = createStart(() => {
 		requestMiddleware: [clerkMiddleware()],
 	}
 })
+`],
+  ["auth/descope/convex/backend/convex/auth.config.ts.hbs", `export default {
+	providers: [
+		{
+			// Descope issues AWS API Gateway compliant JWTs. Enable the
+			// "AWS API Gateway" JWT template in your Descope project (Project
+			// Settings -> JWT Templates) so the \`iss\` claim becomes the fully
+			// qualified URL https://api.descope.com/<Your Descope Project ID>.
+			// The \`aud\` claim already matches your Project ID.
+			// Set DESCOPE_PROJECT_ID on the Convex Dashboard. \`domain\` must match
+			// the token's \`iss\` claim.
+			// See https://docs.descope.com/sessions/validation/jwt-authorizers/aws-jwt-authorizer
+			domain: \`https://api.descope.com/\${process.env.DESCOPE_PROJECT_ID}\`,
+			applicationID: process.env.DESCOPE_PROJECT_ID,
+		},
+	],
+};
+`],
+  ["auth/descope/convex/backend/convex/privateData.ts.hbs", `import { query } from "./_generated/server";
+
+export const get = query({
+	args: {},
+	handler: async (ctx) => {
+		const identity = await ctx.auth.getUserIdentity();
+		if (identity === null) {
+			return {
+				message: "Not authenticated",
+			};
+		}
+		return {
+			message: "This is private",
+		};
+	},
+});
+`],
+  ["auth/descope/convex/web/react/next/src/app/dashboard/page.tsx.hbs", `"use client";
+
+import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import { Descope } from "@descope/nextjs-sdk";
+import { useDescope, useUser } from "@descope/nextjs-sdk/client";
+import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
+
+export default function Dashboard() {
+  const { user } = useUser();
+  const sdk = useDescope();
+  const privateData = useQuery(api.privateData.get);
+  const displayName = user?.name || user?.email || user?.loginIds?.[0] || "User";
+
+  return (
+    <>
+      <Authenticated>
+        <div className="space-y-4 p-6">
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
+          <p>Welcome {displayName}</p>
+          <p>privateData: {privateData?.message}</p>
+          <button
+            type="button"
+            className="rounded-md border px-3 py-1"
+            onClick={() => sdk.logout()}
+          >
+            Sign out
+          </button>
+        </div>
+      </Authenticated>
+      <Unauthenticated>
+        <div className="mx-auto max-w-md p-6">
+          <Descope flowId="sign-up-or-in" />
+        </div>
+      </Unauthenticated>
+      <AuthLoading>
+        <div className="p-6">Loading...</div>
+      </AuthLoading>
+    </>
+  );
+}
+`],
+  ["auth/descope/convex/web/react/next/src/app/sign-in/page.tsx.hbs", `"use client";
+
+import { Descope } from "@descope/nextjs-sdk";
+import { useRouter } from "next/navigation";
+
+export default function SignInPage() {
+	const router = useRouter();
+
+	return (
+		<div className="mx-auto max-w-md p-6">
+			<Descope
+				flowId="sign-up-or-in"
+				onSuccess={() => {
+					router.push("/dashboard");
+				}}
+			/>
+		</div>
+	);
+}
+`],
+  ["auth/descope/convex/web/react/next/src/utils/convex-descope-auth.ts.hbs", `import { getSessionToken, useSession } from "@descope/nextjs-sdk/client";
+import { useCallback, useMemo } from "react";
+
+// Bridges Descope's session state into Convex's \`ConvexProviderWithAuth\`.
+// The Descope SDK automatically refreshes the token via \`getSessionToken()\`
+// while the refresh token is still active.
+export function useAuthFromDescope() {
+	const { isSessionLoading, isAuthenticated } = useSession();
+
+	const fetchAccessToken = useCallback(async () => {
+		return getSessionToken() ?? null;
+	}, []);
+
+	return useMemo(
+		() => ({
+			isLoading: isSessionLoading,
+			isAuthenticated: isAuthenticated ?? false,
+			fetchAccessToken,
+		}),
+		[isSessionLoading, isAuthenticated, fetchAccessToken],
+	);
+}
+`],
+  ["auth/descope/convex/web/react/react-router/src/routes/dashboard.tsx.hbs", `import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import { Descope, useDescope, useUser } from "@descope/react-sdk";
+import {
+	Authenticated,
+	AuthLoading,
+	Unauthenticated,
+	useQuery,
+} from "convex/react";
+
+export default function Dashboard() {
+	const { user } = useUser();
+	const sdk = useDescope();
+	const privateData = useQuery(api.privateData.get);
+	const displayName = user?.name || user?.email || user?.loginIds?.[0] || "User";
+
+	return (
+		<>
+			<Authenticated>
+				<div className="space-y-4 p-6">
+					<h1 className="text-2xl font-semibold">Dashboard</h1>
+					<p>Welcome {displayName}</p>
+					<p>privateData: {privateData?.message}</p>
+					<button
+						type="button"
+						className="rounded-md border px-3 py-1"
+						onClick={() => sdk.logout()}
+					>
+						Sign out
+					</button>
+				</div>
+			</Authenticated>
+			<Unauthenticated>
+				<div className="mx-auto max-w-md p-6">
+					<Descope flowId="sign-up-or-in" />
+				</div>
+			</Unauthenticated>
+			<AuthLoading>
+				<div className="p-6">Loading...</div>
+			</AuthLoading>
+		</>
+	);
+}
+`],
+  ["auth/descope/convex/web/react/react-router/src/utils/convex-descope-auth.ts.hbs", `import { getSessionToken, useSession } from "@descope/react-sdk";
+import { useCallback, useMemo } from "react";
+
+// Bridges Descope's session state into Convex's \`ConvexProviderWithAuth\`.
+// The Descope SDK automatically refreshes the token via \`getSessionToken()\`
+// while the refresh token is still active.
+export function useAuthFromDescope() {
+	const { isSessionLoading, isAuthenticated } = useSession();
+
+	const fetchAccessToken = useCallback(async () => {
+		return getSessionToken() ?? null;
+	}, []);
+
+	return useMemo(
+		() => ({
+			isLoading: isSessionLoading,
+			isAuthenticated: isAuthenticated ?? false,
+			fetchAccessToken,
+		}),
+		[isSessionLoading, isAuthenticated, fetchAccessToken],
+	);
+}
+`],
+  ["auth/descope/convex/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import { useDescope, useUser } from "@descope/react-sdk";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "convex/react";
+
+export const Route = createFileRoute("/_auth/dashboard")({
+	component: RouteComponent,
+});
+
+function RouteComponent() {
+	const { user } = useUser();
+	const sdk = useDescope();
+	const privateData = useQuery(api.privateData.get);
+	const displayName = user?.name || user?.email || user?.loginIds?.[0] || "User";
+
+	return (
+		<div className="space-y-4 p-6">
+			<h1 className="text-2xl font-semibold">Dashboard</h1>
+			<p>Welcome {displayName}</p>
+			<p>privateData: {privateData?.message}</p>
+			<button
+				type="button"
+				className="rounded-md border px-3 py-1"
+				onClick={() => sdk.logout()}
+			>
+				Sign out
+			</button>
+		</div>
+	);
+}
+`],
+  ["auth/descope/convex/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import { Descope } from "@descope/react-sdk";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
+
+function AuthLayout() {
+	return (
+		<>
+			<Authenticated>
+				<Outlet />
+			</Authenticated>
+			<Unauthenticated>
+				<div className="mx-auto max-w-md p-6">
+					<Descope flowId="sign-up-or-in" />
+				</div>
+			</Unauthenticated>
+			<AuthLoading>
+				<div className="p-6">Loading...</div>
+			</AuthLoading>
+		</>
+	);
+}
+`],
+  ["auth/descope/convex/web/react/tanstack-router/src/utils/convex-descope-auth.ts.hbs", `import { getSessionToken, useSession } from "@descope/react-sdk";
+import { useCallback, useMemo } from "react";
+
+// Bridges Descope's session state into Convex's \`ConvexProviderWithAuth\`.
+// The Descope SDK automatically refreshes the token via \`getSessionToken()\`
+// while the refresh token is still active.
+export function useAuthFromDescope() {
+	const { isSessionLoading, isAuthenticated } = useSession();
+
+	const fetchAccessToken = useCallback(async () => {
+		return getSessionToken() ?? null;
+	}, []);
+
+	return useMemo(
+		() => ({
+			isLoading: isSessionLoading,
+			isAuthenticated: isAuthenticated ?? false,
+			fetchAccessToken,
+		}),
+		[isSessionLoading, isAuthenticated, fetchAccessToken],
+	);
+}
+`],
+  ["auth/descope/web/react/base/src/utils/descope-auth.ts.hbs", `{{#if (includes frontend "next")}}
+import { getSessionToken } from "@descope/nextjs-sdk/client";
+{{else}}
+import { getSessionToken } from "@descope/react-sdk";
+{{/if}}
+
+export function getDescopeAuthToken(): string | null {
+	return getSessionToken() || null;
+}
+`],
+  ["auth/descope/web/react/next/src/app/dashboard/page.tsx.hbs", `"use client";
+
+{{#if (eq api "orpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/utils/orpc";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+{{/if}}
+import { Descope } from "@descope/nextjs-sdk";
+import { useDescope, useSession, useUser } from "@descope/nextjs-sdk/client";
+
+export default function Dashboard() {
+  const { isAuthenticated, isSessionLoading } = useSession();
+  const { user } = useUser();
+  const sdk = useDescope();
+  const displayName = user?.name || user?.email || user?.loginIds?.[0] || "User";
+  {{#if (eq api "orpc")}}
+  const privateData = useQuery({
+    ...orpc.privateData.queryOptions(),
+    enabled: isAuthenticated,
+  });
+  {{/if}}
+  {{#if (eq api "trpc")}}
+  const privateData = useQuery({
+    ...trpc.privateData.queryOptions(),
+    enabled: isAuthenticated,
+  });
+  {{/if}}
+
+  if (isSessionLoading) {
+    return <div className="p-6">Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="mx-auto max-w-md p-6">
+        <Descope flowId="sign-up-or-in" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 p-6">
+      <h1 className="text-2xl font-semibold">Dashboard</h1>
+      <p>Welcome {displayName}</p>
+      {{#if (or (eq api "orpc") (eq api "trpc"))}}
+      <p>API: {privateData.data?.message}</p>
+      {{/if}}
+      <button
+        type="button"
+        className="rounded-md border px-3 py-1"
+        onClick={() => sdk.logout()}
+      >
+        Sign out
+      </button>
+    </div>
+  );
+}
+`],
+  ["auth/descope/web/react/next/src/app/sign-in/page.tsx.hbs", `"use client";
+
+import { Descope } from "@descope/nextjs-sdk";
+import { useRouter } from "next/navigation";
+
+export default function SignInPage() {
+	const router = useRouter();
+
+	return (
+		<div className="mx-auto max-w-md p-6">
+			<Descope
+				flowId="sign-up-or-in"
+				onSuccess={() => {
+					router.push("/dashboard");
+				}}
+			/>
+		</div>
+	);
+}
+`],
+  ["auth/descope/web/react/next/src/proxy.ts.hbs", `import { authMiddleware } from "@descope/nextjs-sdk/server";
+
+export default authMiddleware({
+	projectId: process.env.NEXT_PUBLIC_DESCOPE_PROJECT_ID,
+	// Route unauthenticated users to the sign-in flow
+	redirectUrl: "/sign-in",
+	// Routes that do not require authentication
+	publicRoutes: ["/", "/sign-in"],
+});
+
+export const config = {
+	matcher: [
+		// Skip Next.js internals and all static files, unless found in search params
+		"/((?!_next|[^?]*\\\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+		// Always run for API routes
+		"/(api|trpc)(.*)",
+	],
+};
+`],
+  ["auth/descope/web/react/react-router/src/routes/dashboard.tsx.hbs", `{{#if (eq api "orpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/utils/orpc";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+{{/if}}
+import { Descope, useDescope, useSession, useUser } from "@descope/react-sdk";
+
+export default function Dashboard() {
+  const { isAuthenticated, isSessionLoading } = useSession();
+  const { user } = useUser();
+  const sdk = useDescope();
+  const displayName = user?.name || user?.email || user?.loginIds?.[0] || "User";
+  {{#if (eq api "orpc")}}
+  const privateData = useQuery({
+    ...orpc.privateData.queryOptions(),
+    enabled: isAuthenticated,
+  });
+  {{/if}}
+  {{#if (eq api "trpc")}}
+  const privateData = useQuery({
+    ...trpc.privateData.queryOptions(),
+    enabled: isAuthenticated,
+  });
+  {{/if}}
+
+  if (isSessionLoading) {
+    return <div className="p-6">Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="mx-auto max-w-md p-6">
+        <Descope flowId="sign-up-or-in" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 p-6">
+      <h1 className="text-2xl font-semibold">Dashboard</h1>
+      <p>Welcome {displayName}</p>
+      {{#if (or (eq api "orpc") (eq api "trpc"))}}
+      <p>API: {privateData.data?.message}</p>
+      {{/if}}
+      <button
+        type="button"
+        className="rounded-md border px-3 py-1"
+        onClick={() => sdk.logout()}
+      >
+        Sign out
+      </button>
+    </div>
+  );
+}
+`],
+  ["auth/descope/web/react/tanstack-router/src/routes/_auth/dashboard.tsx.hbs", `{{#if (eq api "orpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/utils/orpc";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+{{/if}}
+import { useDescope, useUser } from "@descope/react-sdk";
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_auth/dashboard")({
+	component: RouteComponent,
+});
+
+function RouteComponent() {
+	const { user } = useUser();
+	const sdk = useDescope();
+	const displayName = user?.name || user?.email || user?.loginIds?.[0] || "User";
+	{{#if (eq api "orpc")}}
+	const privateData = useQuery(orpc.privateData.queryOptions());
+	{{/if}}
+	{{#if (eq api "trpc")}}
+	const privateData = useQuery(trpc.privateData.queryOptions());
+	{{/if}}
+
+	return (
+		<div className="space-y-4 p-6">
+			<h1 className="text-2xl font-semibold">Dashboard</h1>
+			<p>Welcome {displayName}</p>
+			{{#if (or (eq api "orpc") (eq api "trpc"))}}
+			<p>API: {privateData.data?.message}</p>
+			{{/if}}
+			<button
+				type="button"
+				className="rounded-md border px-3 py-1"
+				onClick={() => sdk.logout()}
+			>
+				Sign out
+			</button>
+		</div>
+	);
+}
+`],
+  ["auth/descope/web/react/tanstack-router/src/routes/_auth/route.tsx.hbs", `import { Descope, useSession } from "@descope/react-sdk";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_auth")({
+	component: AuthLayout,
+});
+
+function AuthLayout() {
+	const { isAuthenticated, isSessionLoading } = useSession();
+
+	if (isSessionLoading) {
+		return <div className="p-6">Loading...</div>;
+	}
+
+	if (!isAuthenticated) {
+		return (
+			<div className="mx-auto max-w-md p-6">
+				<Descope flowId="sign-up-or-in" />
+			</div>
+		);
+	}
+
+	return <Outlet />;
+}
 `],
   ["backend/convex/packages/backend/_gitignore", `
 .env.local
@@ -29862,6 +30506,8 @@ export default config;
 import { Geist, Geist_Mono } from "next/font/google";
 import "../index.css";
 {{#if (eq auth "clerk")}}import { ClerkProvider } from "@clerk/nextjs";
+{{/if}}{{#if (eq auth "descope")}}import { AuthProvider } from "@descope/nextjs-sdk";
+import { env } from "@{{projectName}}/env/web";
 {{/if}}{{#if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { getToken } from "@/lib/auth-server";
 {{/if}}
@@ -29923,7 +30569,14 @@ export default function RootLayout({
 							{children}
 						</div>
 					</Providers>
-				</ClerkProvider>{{else}}<Providers>
+				</ClerkProvider>{{else if (eq auth "descope")}}<AuthProvider projectId={env.NEXT_PUBLIC_DESCOPE_PROJECT_ID}>
+					<Providers>
+						<div className="grid grid-rows-[auto_1fr] h-svh">
+							<Header />
+							{children}
+						</div>
+					</Providers>
+				</AuthProvider>{{else}}<Providers>
 					<div className="grid grid-rows-[auto_1fr] h-svh">
 						<Header />
 						{children}
@@ -30067,6 +30720,10 @@ import { useAuth } from "@clerk/nextjs";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { env } from "@{{projectName}}/env/web";
+{{else if (eq auth "descope")}}
+import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
+import { useAuthFromDescope } from "@/utils/convex-descope-auth";
+import { env } from "@{{projectName}}/env/web";
 {{else if (eq auth "better-auth")}}
 import { ConvexReactClient } from "convex/react";
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
@@ -30134,6 +30791,10 @@ export default function Providers({
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         {children}
       </ConvexProviderWithClerk>
+      {{else if (eq auth "descope")}}
+      <ConvexProviderWithAuth client={convex} useAuth={useAuthFromDescope}>
+        {children}
+      </ConvexProviderWithAuth>
       {{else if (eq auth "better-auth")}}
       <ConvexBetterAuthProvider
         client={convex}
@@ -30270,6 +30931,9 @@ export default {
 {{#if (or (includes addons "tauri") (includes addons "electrobun"))}}
   // Desktop addons package static web assets; SSR output cannot be bundled
   ssr: false,
+{{else if (eq auth "descope")}}
+  // Descope's SDK is client-only; render as a SPA so its AuthProvider/hooks work
+  ssr: false,
 {{/if}}
   appDirectory: "src",
 } satisfies Config;
@@ -30337,12 +31001,20 @@ import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
+{{#if (or (eq backend "convex") (eq auth "descope"))}}
+import { env } from "@{{projectName}}/env/web";
+{{/if}}
+{{#if (eq auth "descope")}}
+import { AuthProvider } from "@descope/react-sdk";
+{{/if}}
 
 {{#if (eq backend "convex")}}
 import { ConvexReactClient } from "convex/react";
-import { env } from "@{{projectName}}/env/web";
   {{#if (eq auth "clerk")}}
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+  {{else if (eq auth "descope")}}
+import { ConvexProviderWithAuth } from "convex/react";
+import { useAuthFromDescope } from "@/utils/convex-descope-auth";
   {{else if (eq auth "better-auth")}}
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { authClient } from "@/lib/auth-client";
@@ -30457,6 +31129,25 @@ export default function App() {
       </ThemeProvider>
     </ConvexBetterAuthProvider>
   );
+  {{else if (eq auth "descope")}}
+  return (
+    <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>
+      <ConvexProviderWithAuth client={convex} useAuth={useAuthFromDescope}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          storageKey="vite-ui-theme"
+        >
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+        </ThemeProvider>
+      </ConvexProviderWithAuth>
+    </AuthProvider>
+  );
   {{else}}
   return (
     <ConvexProvider client={convex}>
@@ -30530,6 +31221,59 @@ export default function App({ loaderData }: Route.ComponentProps) {
       </ThemeProvider>
       {{/if}}
     </ClerkProvider>
+  );
+}
+{{else if (eq auth "descope")}}
+export default function App() {
+  return (
+    <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>
+      {{#if (eq api "orpc")}}
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          storageKey="vite-ui-theme"
+        >
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+        </ThemeProvider>
+        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+      </QueryClientProvider>
+      {{else if (eq api "trpc")}}
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          storageKey="vite-ui-theme"
+        >
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+        </ThemeProvider>
+        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+      </QueryClientProvider>
+      {{else}}
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        disableTransitionOnChange
+        storageKey="vite-ui-theme"
+      >
+        <div className="grid grid-rows-[auto_1fr] h-svh">
+          <Header />
+          <Outlet />
+        </div>
+        <Toaster richColors />
+      </ThemeProvider>
+      {{/if}}
+    </AuthProvider>
   );
 }
 {{else if (eq api "orpc")}}
@@ -30865,16 +31609,22 @@ import { routeTree } from "./routeTree.gen";
   import { QueryClientProvider } from "@tanstack/react-query";
   import { queryClient, trpc } from "./utils/trpc";
 {{/if}}
-{{#if (or (eq backend "convex") (eq auth "clerk"))}}
+{{#if (or (eq backend "convex") (eq auth "clerk") (eq auth "descope"))}}
   import { env } from "@{{projectName}}/env/web";
 {{/if}}
 {{#if (eq auth "clerk")}}
   import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react";
 {{/if}}
+{{#if (eq auth "descope")}}
+  import { AuthProvider } from "@descope/react-sdk";
+{{/if}}
 {{#if (eq backend "convex")}}
   import { ConvexReactClient } from "convex/react";
   {{#if (eq auth "clerk")}}
   import { ConvexProviderWithClerk } from "convex/react-clerk";
+  {{else if (eq auth "descope")}}
+  import { ConvexProviderWithAuth } from "convex/react";
+  import { useAuthFromDescope } from "@/utils/convex-descope-auth";
   {{else if (eq auth "better-auth")}}
   import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
   import { authClient } from "@/lib/auth-client";
@@ -30916,6 +31666,12 @@ const router = createRouter({
           {children}
         </QueryClientProvider>
       </ClerkProvider>
+      {{else if (eq auth "descope")}}
+      <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </AuthProvider>
       {{else}}
       <QueryClientProvider client={queryClient}>
         {children}
@@ -30934,6 +31690,12 @@ const router = createRouter({
           {children}
         </QueryClientProvider>
       </ClerkProvider>
+      {{else if (eq auth "descope")}}
+      <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </AuthProvider>
       {{else}}
       <QueryClientProvider client={queryClient}>
         {children}
@@ -30954,6 +31716,14 @@ const router = createRouter({
         </ConvexProviderWithClerk>
       </ClerkProvider>
     );
+    {{else if (eq auth "descope")}}
+    return (
+      <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>
+        <ConvexProviderWithAuth client={convex} useAuth={useAuthFromDescope}>
+          {children}
+        </ConvexProviderWithAuth>
+      </AuthProvider>
+    );
     {{else if (eq auth "better-auth")}}
     return <ConvexBetterAuthProvider client={convex} authClient={authClient}>{children}</ConvexBetterAuthProvider>;
     {{else}}
@@ -30964,6 +31734,11 @@ const router = createRouter({
   context: {},
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>{children}</ClerkProvider>;
+  },
+  {{else if (eq auth "descope")}}
+  context: {},
+  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
+    return <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>{children}</AuthProvider>;
   },
   {{else}}
   context: {},
@@ -31935,7 +32710,7 @@ import UserMenu from "./user-menu";
 export default function Header() {
   const links = [
     { to: "/", label: "Home" },
-    {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+    {{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}
       { to: "/dashboard", label: "Dashboard" },
     {{/if}}
     {{#if (includes examples "todo")}}
@@ -32930,6 +33705,9 @@ export const env = createEnv({
 		CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 {{/if}}
+{{#if (eq auth "descope")}}
+		DESCOPE_PROJECT_ID: z.string().min(1),
+{{/if}}
 {{#if (eq payments "polar")}}
 		POLAR_ACCESS_TOKEN: z.string().min(1),
 		POLAR_SUCCESS_URL: z.url(),
@@ -32987,6 +33765,9 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (eq auth "descope")}}
+		NEXT_PUBLIC_DESCOPE_PROJECT_ID: z.string().min(1),
+{{/if}}
 	},
 	runtimeEnv: {
 		NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
@@ -32995,6 +33776,9 @@ export const env = createEnv({
 {{/if}}
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+{{/if}}
+{{#if (eq auth "descope")}}
+		NEXT_PUBLIC_DESCOPE_PROJECT_ID: process.env.NEXT_PUBLIC_DESCOPE_PROJECT_ID,
 {{/if}}
 	},
 {{else if (includes frontend "nuxt")}}
@@ -33017,6 +33801,9 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (eq auth "descope")}}
+		VITE_DESCOPE_PROJECT_ID: z.string().min(1),
+{{/if}}
 	},
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
@@ -33026,10 +33813,16 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (eq auth "descope")}}
+		NEXT_PUBLIC_DESCOPE_PROJECT_ID: z.string().min(1),
+{{/if}}
 	},
 	runtimeEnv: {
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+{{/if}}
+{{#if (eq auth "descope")}}
+		NEXT_PUBLIC_DESCOPE_PROJECT_ID: process.env.NEXT_PUBLIC_DESCOPE_PROJECT_ID,
 {{/if}}
 	},
 {{else if (includes frontend "nuxt")}}
@@ -33039,6 +33832,9 @@ export const env = createEnv({
 	client: {
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
+{{#if (eq auth "descope")}}
+		VITE_DESCOPE_PROJECT_ID: z.string().min(1),
 {{/if}}
 	},
 	runtimeEnv: (import.meta as any).env,
@@ -33050,11 +33846,17 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (eq auth "descope")}}
+		NEXT_PUBLIC_DESCOPE_PROJECT_ID: z.string().min(1),
+{{/if}}
 	},
 	runtimeEnv: {
 		NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL,
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+{{/if}}
+{{#if (eq auth "descope")}}
+		NEXT_PUBLIC_DESCOPE_PROJECT_ID: process.env.NEXT_PUBLIC_DESCOPE_PROJECT_ID,
 {{/if}}
 	},
 {{else if (includes frontend "nuxt")}}
@@ -33074,11 +33876,17 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (eq auth "descope")}}
+		VITE_DESCOPE_PROJECT_ID: z.string().min(1),
+{{/if}}
 	},
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
 {{/if}}
-	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+	// \`process\` is undefined in the browser (e.g. Vite SPA builds such as the
+	// Descope \`ssr: false\` setup), so guard the access to avoid a runtime crash.
+	skipValidation:
+		typeof process !== "undefined" && !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });
 `],
@@ -35534,4 +36342,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 506;
+export const TEMPLATE_COUNT = 523;

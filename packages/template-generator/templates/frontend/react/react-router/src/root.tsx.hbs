@@ -19,12 +19,20 @@ import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
+{{#if (or (eq backend "convex") (eq auth "descope"))}}
+import { env } from "@{{projectName}}/env/web";
+{{/if}}
+{{#if (eq auth "descope")}}
+import { AuthProvider } from "@descope/react-sdk";
+{{/if}}
 
 {{#if (eq backend "convex")}}
 import { ConvexReactClient } from "convex/react";
-import { env } from "@{{projectName}}/env/web";
   {{#if (eq auth "clerk")}}
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+  {{else if (eq auth "descope")}}
+import { ConvexProviderWithAuth } from "convex/react";
+import { useAuthFromDescope } from "@/utils/convex-descope-auth";
   {{else if (eq auth "better-auth")}}
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { authClient } from "@/lib/auth-client";
@@ -139,6 +147,25 @@ export default function App() {
       </ThemeProvider>
     </ConvexBetterAuthProvider>
   );
+  {{else if (eq auth "descope")}}
+  return (
+    <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>
+      <ConvexProviderWithAuth client={convex} useAuth={useAuthFromDescope}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          storageKey="vite-ui-theme"
+        >
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+        </ThemeProvider>
+      </ConvexProviderWithAuth>
+    </AuthProvider>
+  );
   {{else}}
   return (
     <ConvexProvider client={convex}>
@@ -212,6 +239,59 @@ export default function App({ loaderData }: Route.ComponentProps) {
       </ThemeProvider>
       {{/if}}
     </ClerkProvider>
+  );
+}
+{{else if (eq auth "descope")}}
+export default function App() {
+  return (
+    <AuthProvider projectId={env.VITE_DESCOPE_PROJECT_ID}>
+      {{#if (eq api "orpc")}}
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          storageKey="vite-ui-theme"
+        >
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+        </ThemeProvider>
+        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+      </QueryClientProvider>
+      {{else if (eq api "trpc")}}
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          storageKey="vite-ui-theme"
+        >
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+        </ThemeProvider>
+        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+      </QueryClientProvider>
+      {{else}}
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        disableTransitionOnChange
+        storageKey="vite-ui-theme"
+      >
+        <div className="grid grid-rows-[auto_1fr] h-svh">
+          <Header />
+          <Outlet />
+        </div>
+        <Toaster richColors />
+      </ThemeProvider>
+      {{/if}}
+    </AuthProvider>
   );
 }
 {{else if (eq api "orpc")}}

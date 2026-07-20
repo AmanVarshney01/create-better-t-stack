@@ -58,6 +58,17 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
     if (nativeExists && hasNative) {
       addPackageDependency({ vfs, packagePath: nativePath, dependencies: ["@clerk/expo"] });
     }
+  } else if (auth === "descope") {
+    // Descope + Convex supports Next.js, TanStack Router, and React Router.
+    // Convex's `ConvexProviderWithAuth` ships with the `convex` package, so no
+    // extra backend dependency is needed.
+    if (webExists) {
+      if (hasNextJs) {
+        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@descope/nextjs-sdk"] });
+      } else if (hasReactRouter || hasTanStackRouter) {
+        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@descope/react-sdk"] });
+      }
+    }
   } else if (auth === "better-auth") {
     if (backendExists) {
       addPackageDependency({
@@ -200,6 +211,26 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
       } else if (backend === "fastify") {
         addPackageDependency({ vfs, packagePath: serverPath, dependencies: ["@clerk/fastify"] });
       }
+    }
+  } else if (auth === "descope") {
+    if (webExists) {
+      if (hasNextJs) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["@descope/nextjs-sdk"],
+        });
+      } else if (hasReactRouter || hasTanStackRouter) {
+        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@descope/react-sdk"] });
+      }
+    }
+
+    if (apiExists) {
+      addPackageDependency({ vfs, packagePath: apiPath, dependencies: ["@descope/node-sdk"] });
+    }
+
+    if (serverExists) {
+      addPackageDependency({ vfs, packagePath: serverPath, dependencies: ["@descope/node-sdk"] });
     }
   } else if (auth === "better-auth") {
     if (authExists) {

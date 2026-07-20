@@ -113,6 +113,8 @@ export async function displayPostInstallInstructions(
     : "";
   const clerkInstructions =
     config.auth === "clerk" ? getClerkInstructions(frontend || [], backend, api) : "";
+  const descopeInstructions =
+    config.auth === "descope" ? getDescopeInstructions(frontend || [], backend) : "";
   const alchemyDeployInstructions = getAlchemyDeployInstructions(
     runCmd,
     webDeploy,
@@ -233,6 +235,7 @@ export async function displayPostInstallInstructions(
   if (pwaInstructions) output += `\n${pwaInstructions.trim()}\n`;
   if (starlightInstructions) output += `\n${starlightInstructions.trim()}\n`;
   if (clerkInstructions) output += `\n${clerkInstructions.trim()}\n`;
+  if (descopeInstructions) output += `\n${descopeInstructions.trim()}\n`;
   if (betterAuthConvexInstructions) output += `\n${betterAuthConvexInstructions.trim()}\n`;
   if (polarInstructions) output += `\n${polarInstructions.trim()}\n`;
   // Deploy steps come last so env sync happens after auth/payment keys exist
@@ -571,6 +574,61 @@ function getClerkInstructions(frontend: Frontend[], backend: Backend, api: Proje
     `${pc.bold("Clerk Authentication Setup:")}`,
     `${pc.cyan("•")} Follow the guide: ${pc.underline(getClerkQuickstartUrl(frontend))}`,
     ...getClerkInstructionLines(frontend, backend, api).map((line) => `${pc.cyan("•")} ${line}`),
+  ];
+
+  return lines.join("\n");
+}
+
+function getDescopeQuickstartUrl(frontend: Frontend[]) {
+  if (frontend.includes("next")) {
+    return "https://docs.descope.com/getting-started/nextjs";
+  }
+  if (frontend.includes("react-router") || frontend.includes("tanstack-router")) {
+    return "https://docs.descope.com/getting-started/react";
+  }
+
+  return "https://docs.descope.com/getting-started";
+}
+
+function getDescopeInstructionLines(frontend: Frontend[], backend: Backend) {
+  const lines: string[] = [];
+
+  lines.push(
+    "Get your Project ID from the Descope Console: https://app.descope.com/settings/project",
+  );
+
+  if (frontend.includes("next")) {
+    lines.push("Set NEXT_PUBLIC_DESCOPE_PROJECT_ID in apps/web/.env");
+  }
+
+  if (frontend.some((value) => ["react-router", "tanstack-router"].includes(value))) {
+    lines.push("Set VITE_DESCOPE_PROJECT_ID in apps/web/.env");
+  }
+
+  if (backend === "convex") {
+    lines.push(
+      'Create an "AWS API Gateway" User JWT template in the Descope Console (Project Settings → JWT Templates)',
+      "Apply it under Project Settings → Session Management → User JWT Token Format, then Save (this makes the token `iss` a full URL and adds an `aud` claim — Convex needs both)",
+      "Sign out and back in so a fresh token is minted with the new template",
+      "In the Convex dashboard (or via `npx convex env set`), set DESCOPE_PROJECT_ID to your Descope Project ID",
+      "See https://docs.descope.com/sessions/validation/jwt-authorizers/aws-jwt-authorizer",
+    );
+    return lines;
+  }
+
+  if (backend !== "none") {
+    const serverEnvPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
+    lines.push(`Set DESCOPE_PROJECT_ID in ${serverEnvPath} for server-side session validation`);
+  }
+
+  return lines;
+}
+
+function getDescopeInstructions(frontend: Frontend[], backend: Backend) {
+  const lines = [
+    `${pc.bold("Descope Authentication Setup:")}`,
+    `${pc.cyan("•")} Follow the guide: ${pc.underline(getDescopeQuickstartUrl(frontend))}`,
+    ...getDescopeInstructionLines(frontend, backend).map((line) => `${pc.cyan("•")} ${line}`),
   ];
 
   return lines.join("\n");

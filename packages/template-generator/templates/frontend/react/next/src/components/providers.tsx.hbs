@@ -12,6 +12,10 @@ import { useAuth } from "@clerk/nextjs";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { env } from "@{{projectName}}/env/web";
+{{else if (eq auth "descope")}}
+import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
+import { useAuthFromDescope } from "@/utils/convex-descope-auth";
+import { env } from "@{{projectName}}/env/web";
 {{else if (eq auth "better-auth")}}
 import { ConvexReactClient } from "convex/react";
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
@@ -79,6 +83,10 @@ export default function Providers({
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         {children}
       </ConvexProviderWithClerk>
+      {{else if (eq auth "descope")}}
+      <ConvexProviderWithAuth client={convex} useAuth={useAuthFromDescope}>
+        {children}
+      </ConvexProviderWithAuth>
       {{else if (eq auth "better-auth")}}
       <ConvexBetterAuthProvider
         client={convex}

@@ -1,14 +1,23 @@
-import { {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}ORPCError, {{/if}}os } from "@orpc/server";
+import { {{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}ORPCError, {{/if}}os } from "@orpc/server";
 import type { Context } from "./context";
 
 export const o = os.$context<Context>();
 
 export const publicProcedure = o;
 
-{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+{{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}
 const requireAuth = o.middleware(async ({ context, next }) => {
   {{#if (eq auth "better-auth")}}
   if (!context.session?.user) {
+    throw new ORPCError("UNAUTHORIZED");
+  }
+  return next({
+    context: {
+      session: context.session,
+    },
+  });
+  {{else if (eq auth "descope")}}
+  if (!context.session) {
     throw new ORPCError("UNAUTHORIZED");
   }
   return next({

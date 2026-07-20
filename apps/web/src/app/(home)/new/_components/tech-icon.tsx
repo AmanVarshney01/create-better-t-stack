@@ -16,7 +16,7 @@ export function TechIcon({
 
   if (!icon) return null;
 
-  if (!icon.startsWith("https://")) {
+  if (!icon.startsWith("https://") && !icon.startsWith("/")) {
     return <span className={cn("inline-flex items-center text-lg", className)}>{icon}</span>;
   }
 
