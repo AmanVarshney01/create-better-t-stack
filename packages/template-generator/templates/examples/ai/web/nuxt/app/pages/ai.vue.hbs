@@ -130,7 +130,7 @@ async function handleSubmit(e: Event) {
             class="ms-auto"
             :status="status"
             @stop="stop"
-            @reload="regenerate"
+            @reload="() => regenerate()"
           />
         </UChatPrompt>
 

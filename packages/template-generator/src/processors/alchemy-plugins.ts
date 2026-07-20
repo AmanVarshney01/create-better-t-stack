@@ -146,7 +146,7 @@ const hasAlchemyConfig = existsSync(alchemyConfigPath);`,
       .findIndex((statement) => Node.isExportAssignment(statement));
     sourceFile.insertStatements(
       firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const cloudflareWorkersAlias = shouldUseAlchemy
+      `const cloudflareWorkersAlias: Record<string, string> = shouldUseAlchemy
   ? {}
   : {
       "cloudflare:workers": cloudflareWorkersShimPath,

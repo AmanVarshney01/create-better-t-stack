@@ -117,6 +117,38 @@ function getAuthExpression(config: ProjectConfig) {
   return usesCreateAuthFactory(config) ? "createAuth()" : "auth";
 }
 
+function addAiSdkEvlogTelemetry(content: string, loggerExpression: string) {
+  let nextContent = addNamedImport(content, "evlog/ai", [
+    "createAILogger",
+    "createEvlogIntegration",
+  ]);
+
+  if (!nextContent.includes("const ai = createAILogger(")) {
+    nextContent = nextContent.replace(
+      /^(\s*)const model = wrapLanguageModel\({/m,
+      (_match, indent: string) =>
+        `${indent}const ai = createAILogger(${loggerExpression});\n${indent}const model = wrapLanguageModel({`,
+    );
+  }
+
+  if (!nextContent.includes("model: ai.wrap(model)")) {
+    nextContent = nextContent.replace(
+      /(const result = streamText\({\n\s*)model,/,
+      "$1model: ai.wrap(model),",
+    );
+  }
+
+  if (!nextContent.includes("createEvlogIntegration(ai)")) {
+    nextContent = nextContent.replace(
+      /^(\s*)(messages:\s*await convertToModelMessages\([^)]+\),?)/m,
+      (_match, indent: string, messages: string) =>
+        `${indent}${messages.endsWith(",") ? messages : `${messages},`}\n${indent}telemetry: {\n${indent}\tisEnabled: true,\n${indent}\tintegrations: [createEvlogIntegration(ai)],\n${indent}},`,
+    );
+  }
+
+  return nextContent;
+}
+
 function addEvlogBetterAuthServerSetup(
   content: string,
   backend: EvlogBackend,
@@ -152,6 +184,7 @@ function addEvlogBetterAuthServerSetup(
   }
 
   if (backend === "express") {
+    nextContent = addNamedImport(nextContent, "evlog/express", ["useLogger"]);
     nextContent = insertBeforeOnce(
       nextContent,
       "const app = express();",
@@ -161,8 +194,8 @@ function addEvlogBetterAuthServerSetup(
     return insertAfterOnce(
       nextContent,
       "app.use(evlog());",
-      `\napp.use(async (req, _res, next) => {${identifyUserSetup}\n\tawait identifyUser(req.log, req.headers, req.path);\n\tnext();\n});`,
-      "identifyUser(req.log",
+      `\napp.use(async (req, _res, next) => {${identifyUserSetup}\n\tawait identifyUser(useLogger(), req.headers, req.path);\n\tnext();\n});`,
+      "identifyUser(useLogger()",
     );
   }
 
@@ -182,9 +215,12 @@ function addEvlogBetterAuthServerSetup(
     );
   }
 
+  const elysiaMarker = nextContent.includes("const app = new Elysia")
+    ? "const app = new Elysia"
+    : "new Elysia";
   nextContent = insertBeforeOnce(
     nextContent,
-    "new Elysia",
+    elysiaMarker,
     identifySnippet,
     "createAuthMiddleware(",
   );
@@ -267,7 +303,10 @@ export function addEvlogServerSetup(content: string, backend: EvlogBackend, serv
     'import { initLogger } from "evlog";',
     'import { evlog } from "evlog/elysia";',
   ]);
-  nextContent = insertBeforeOnce(nextContent, "new Elysia", initSnippet, "initLogger({");
+  const elysiaMarker = nextContent.includes("const app = new Elysia")
+    ? "const app = new Elysia"
+    : "new Elysia";
+  nextContent = insertBeforeOnce(nextContent, elysiaMarker, initSnippet, "initLogger({");
   for (const marker of ["new Elysia({ adapter: node() })", "new Elysia()"]) {
     nextContent = insertAfterOnce(nextContent, marker, "\n\t.use(evlog())", ".use(evlog())");
   }
@@ -474,7 +513,7 @@ function addNextRouteWrappers(content: string) {
 }
 
 function addNextAiEvlogSetup(content: string) {
-  let nextContent = addNamedImport(content, "@/lib/evlog", ["withEvlog"]);
+  let nextContent = addNamedImport(content, "@/lib/evlog", ["withEvlog", "useLogger"]);
 
   if (!nextContent.includes("withEvlog(async (req: Request)")) {
     nextContent = nextContent.replace(
@@ -486,7 +525,48 @@ function addNextAiEvlogSetup(content: string) {
     }
   }
 
-  return nextContent;
+  return addAiSdkEvlogTelemetry(nextContent, "useLogger()");
+}
+
+function addNuxtAiEvlogSetup(content: string) {
+  const nextContent = addNamedImport(content, "evlog/nitro", ["useLogger"]);
+  return addAiSdkEvlogTelemetry(nextContent, "useLogger(event)");
+}
+
+function addSvelteAiEvlogSetup(content: string) {
+  const nextContent = content.replace(
+    "export const POST: RequestHandler = async ({ request }) => {",
+    "export const POST: RequestHandler = async ({ request, locals }) => {",
+  );
+
+  return addAiSdkEvlogTelemetry(nextContent, "locals.log");
+}
+
+function addTanstackStartAiEvlogSetup(content: string) {
+  const nextContent = prependMissingImports(content, [
+    'import type { RequestLogger } from "evlog";',
+    'import { useRequest } from "nitro/context";',
+  ]);
+
+  return addAiSdkEvlogTelemetry(nextContent, "useRequest().context.log as RequestLogger");
+}
+
+function addBackendAiEvlogSetup(content: string, backend: EvlogBackend) {
+  if (backend === "hono") {
+    return addAiSdkEvlogTelemetry(content, 'c.get("log")');
+  }
+
+  if (backend === "express") {
+    const nextContent = addNamedImport(content, "evlog/express", ["useLogger"]);
+    return addAiSdkEvlogTelemetry(nextContent, "useLogger()");
+  }
+
+  if (backend === "fastify") {
+    const nextContent = addNamedImport(content, "evlog/fastify", ["useLogger"]);
+    return addAiSdkEvlogTelemetry(nextContent, "useLogger()");
+  }
+
+  return addAiSdkEvlogTelemetry(content, "context.log");
 }
 
 function addNextBetterAuthToRoute(content: string) {
@@ -854,6 +934,10 @@ async function setupNuxtEvlog(config: ProjectConfig, serviceName: string) {
       await writeFileIfChanged(authMiddlewarePath, getNuxtEvlogAuthMiddlewareFile(config));
     }
   }
+
+  if (config.examples.includes("ai")) {
+    await updateFileIfExists(path.join(webDir, "server/api/ai.post.ts"), addNuxtAiEvlogSetup);
+  }
 }
 
 async function setupSvelteEvlog(config: ProjectConfig, serviceName: string) {
@@ -882,6 +966,13 @@ export const { handle, handleError } = createEvlogHooks();
       addSvelteBetterAuthEvlogSetup(content, config),
     );
   }
+
+  if (config.examples.includes("ai")) {
+    await updateFileIfExists(
+      path.join(webDir, "src/routes/api/ai/+server.ts"),
+      addSvelteAiEvlogSetup,
+    );
+  }
 }
 
 async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: string) {
@@ -900,6 +991,13 @@ async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: strin
     if (!(await fs.pathExists(authPluginPath))) {
       await writeFileIfChanged(authPluginPath, getNitroEvlogAuthPluginFile(config));
     }
+  }
+
+  if (config.examples.includes("ai")) {
+    await updateFileIfExists(
+      path.join(webDir, "src/routes/api/ai/$.ts"),
+      addTanstackStartAiEvlogSetup,
+    );
   }
 }
 
@@ -966,6 +1064,10 @@ export async function setupEvlog(config: ProjectConfig): Promise<Result<void, Ad
               config.backend,
               getAuthExpression(config),
             );
+          }
+
+          if (config.examples.includes("ai")) {
+            nextContent = addBackendAiEvlogSetup(nextContent, config.backend);
           }
 
           if (nextContent !== content) {

@@ -151,7 +151,7 @@ export const dependencyVersionMap = {
   "@tanstack/solid-router-devtools": "^1.167.0",
 
   wrangler: "^4.107.0",
-  "@cloudflare/vite-plugin": "^1.43.0",
+  "@cloudflare/vite-plugin": "1.43.0",
   "@opennextjs/cloudflare": "^1.20.1",
   "nitro-cloudflare-dev": "^0.2.2",
   "@sveltejs/adapter-cloudflare": "^7.2.9",
@@ -178,7 +178,7 @@ export const dependencyVersionMap = {
   "@stripe/react-stripe-js": "^5.6.1",
   "@stripe/stripe-js": "^8.11.0",
 
-  evlog: "^2.19.2",
+  evlog: "^2.22.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
