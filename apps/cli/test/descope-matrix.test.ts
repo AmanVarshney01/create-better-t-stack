@@ -261,14 +261,12 @@ describe("Descope matrix", () => {
         frontend === "next" ? files.get("apps/web/src/app/layout.tsx") : wiring;
       expect(authProviderFile).toContain("AuthProvider");
 
-      // Web app depends on the correct Descope SDK and public project id env var.
-      if (frontend === "next") {
-        expect(files.get("apps/web/package.json")).toContain("@descope/nextjs-sdk");
-        expect(files.get("packages/env/src/web.ts")).toContain("NEXT_PUBLIC_DESCOPE_PROJECT_ID");
-      } else {
-        expect(files.get("apps/web/package.json")).toContain("@descope/react-sdk");
-        const webEnv = files.get("packages/env/src/web.ts");
-        expect(webEnv).toContain("VITE_DESCOPE_PROJECT_ID");
+      // Web app depends on the correct Descope SDK and public project id env var
+      // (reusing the shared per-frontend helpers so this can't diverge).
+      expect(files.get("apps/web/package.json")).toContain(webSdkFor(frontend));
+      const webEnv = files.get("packages/env/src/web.ts");
+      expect(webEnv).toContain(webEnvVarFor(frontend));
+      if (frontend !== "next") {
         // Vite SPA (Descope forces ssr:false) evaluates env client-side where
         // `process` is undefined, so the skipValidation check must be guarded.
         expect(webEnv).toContain('typeof process !== "undefined"');
