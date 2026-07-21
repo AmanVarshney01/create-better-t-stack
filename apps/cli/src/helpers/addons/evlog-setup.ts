@@ -7,10 +7,10 @@ import { ts } from "ts-morph";
 import type { Backend, Frontend, ProjectConfig } from "../../types";
 import { AddonSetupError } from "../../utils/errors";
 
-type EvlogBackend = Extract<Backend, "hono" | "express" | "fastify" | "elysia">;
+type EvlogBackend = Extract<Backend, "hono" | "express" | "fastify" | "elysia" | "nest">;
 type EvlogWebFrontend = Extract<Frontend, "next" | "nuxt" | "svelte" | "tanstack-start" | "astro">;
 
-const evlogBackends = ["hono", "express", "fastify", "elysia"] as const;
+const evlogBackends = ["hono", "express", "fastify", "elysia", "nest"] as const;
 const evlogWebFrontends = ["next", "nuxt", "svelte", "tanstack-start", "astro"] as const;
 const NODE_DEV_FS_DRAIN_EXPRESSION =
   'process.env.NODE_ENV === "production" ? undefined : createFsDrain()';
@@ -302,6 +302,11 @@ export function addEvlogServerSetup(
   const evlogMarker = getEvlogServerMiddlewareMarker(backend, fsDrain, axiom);
   const legacyEvlogMarker = getEvlogServerMiddlewareMarker(backend, false);
 
+  if (backend === "nest") {
+    const nextContent = prependMissingImports(content, ['import { initLogger } from "evlog";']);
+    return insertBeforeOnce(nextContent, "async function bootstrap()", initSnippet, "initLogger({");
+  }
+
   if (backend === "hono") {
     let nextContent = prependMissingImports(content, [
       'import { initLogger } from "evlog";',
@@ -397,6 +402,14 @@ export function addEvlogServerSetup(
   for (const marker of ["new Elysia({ adapter: node() })", "new Elysia()"]) {
     nextContent = insertAfterOnce(nextContent, marker, `\n\t${evlogMarker}`, evlogMarker);
   }
+  return nextContent;
+}
+
+function addEvlogNestModuleSetup(content: string) {
+  let nextContent = prependMissingImports(content, ['import { EvlogModule } from "evlog/nestjs";']);
+  if (nextContent.includes("EvlogModule.forRoot()")) return nextContent;
+
+  nextContent = nextContent.replace("imports: [", "imports: [EvlogModule.forRoot(), ");
   return nextContent;
 }
 
@@ -1316,9 +1329,12 @@ export async function setupEvlog(config: ProjectConfig): Promise<Result<void, Ad
   return Result.tryPromise({
     try: async () => {
       if (isEvlogBackend(config.backend)) {
-        const serverIndexPath = path.join(config.projectDir, "apps/server/src/index.ts");
-        if (await fs.pathExists(serverIndexPath)) {
-          const content = await fs.readFile(serverIndexPath, "utf-8");
+        const serverEntryPath = path.join(
+          config.projectDir,
+          `apps/server/src/${config.backend === "nest" ? "main" : "index"}.ts`,
+        );
+        if (await fs.pathExists(serverEntryPath)) {
+          const content = await fs.readFile(serverEntryPath, "utf-8");
           let nextContent = addEvlogServerSetup(
             content,
             config.backend,
@@ -1327,7 +1343,7 @@ export async function setupEvlog(config: ProjectConfig): Promise<Result<void, Ad
             usesAxiom(config),
           );
 
-          if (config.auth === "better-auth") {
+          if (config.auth === "better-auth" && config.backend !== "nest") {
             nextContent = addEvlogBetterAuthServerSetup(
               nextContent,
               config.backend,
@@ -1340,8 +1356,15 @@ export async function setupEvlog(config: ProjectConfig): Promise<Result<void, Ad
           }
 
           if (nextContent !== content) {
-            await fs.writeFile(serverIndexPath, nextContent);
+            await fs.writeFile(serverEntryPath, nextContent);
           }
+        }
+
+        if (config.backend === "nest") {
+          await updateFileIfExists(
+            path.join(config.projectDir, "apps/server/src/app.module.ts"),
+            addEvlogNestModuleSetup,
+          );
         }
       }
 
