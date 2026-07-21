@@ -1,0 +1,25 @@
+import { QueryClient } from "@tanstack/react-query";
+import { env } from "@{{projectName}}/env/native";
+
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+type Todo = { id: TodoId; text: string; completed: boolean };
+const serverUrl = env.EXPO_PUBLIC_SERVER_URL.replace(/\/$/, "");
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+	const response = await fetch(`${serverUrl}${path}`, { ...init, credentials: "include" });
+	if (!response.ok) throw new Error((await response.text()) || `Request failed: ${response.status}`);
+	return response.json() as Promise<T>;
+}
+
+const mutationOptions = <TInput, TOutput>(mutationFn: (input: TInput) => Promise<TOutput>, options: Record<string, unknown> = {}) => ({ mutationFn, ...options });
+
+export const queryClient = new QueryClient();
+export const orpc = {
+	healthCheck: { queryOptions: () => ({ queryKey: ["health"], queryFn: () => request("/health") }) },
+	todo: {
+		getAll: { queryOptions: () => ({ queryKey: ["todos"], queryFn: () => request<Todo[]>("/todos") }) },
+		create: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { text: string }) => request<Todo>("/todos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) }), options) },
+		toggle: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { id: TodoId; completed: boolean }) => request<Todo>(`/todos/${input.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ completed: input.completed }) }), options) },
+		delete: { mutationOptions: (options?: Record<string, unknown>) => mutationOptions((input: { id: TodoId }) => request<Todo>(`/todos/${input.id}`, { method: "DELETE" }), options) },
+	},
+};

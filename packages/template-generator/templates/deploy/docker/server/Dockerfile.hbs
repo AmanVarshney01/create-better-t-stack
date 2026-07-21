@@ -32,7 +32,7 @@ EXPOSE 3000
 
 WORKDIR /app/apps/server
 {{#if (eq runtime "bun")}}
-CMD ["bun", "dist/index.mjs"]
+CMD ["bun", "dist/{{#if (eq backend "nest")}}main{{else}}index{{/if}}.mjs"]
 {{else}}
-CMD ["node", "dist/index.mjs"]
+CMD ["node", "dist/{{#if (eq backend "nest")}}main{{else}}index{{/if}}.mjs"]
 {{/if}}

@@ -31,6 +31,16 @@ export function processBackendDeps(vfs: VirtualFileSystem, config: ProjectConfig
     devDeps.push("@types/express", "@types/cors");
   } else if (backend === "fastify") {
     deps.push("fastify", "@fastify/cors");
+  } else if (backend === "nest") {
+    deps.push(
+      "@nestjs/common",
+      "@nestjs/core",
+      "@nestjs/platform-express",
+      "reflect-metadata",
+      "rxjs",
+    );
+    if (auth === "better-auth") deps.push("@thallesp/nestjs-better-auth");
+    if (config.examples.includes("todo")) deps.push("class-transformer", "class-validator");
   }
 
   if (api === "trpc") {

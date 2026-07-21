@@ -1,0 +1,21 @@
+import { PUBLIC_SERVER_URL } from "astro:env/client";
+
+type TodoId = {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+type Todo = { id: TodoId; text: string; completed: boolean };
+const serverUrl = PUBLIC_SERVER_URL.replace(/\/$/, "");
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+	const response = await fetch(`${serverUrl}${path}`, { ...init, credentials: "include" });
+	if (!response.ok) throw new Error((await response.text()) || `Request failed: ${response.status}`);
+	return response.json() as Promise<T>;
+}
+
+export const orpc = {
+	healthCheck: () => request("/health"),
+	todo: {
+		getAll: () => request<Todo[]>("/todos"),
+		create: (input: { text: string }) => request<Todo>("/todos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) }),
+		toggle: (input: { id: TodoId; completed: boolean }) => request<Todo>(`/todos/${input.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ completed: input.completed }) }),
+		delete: (input: { id: TodoId }) => request<Todo>(`/todos/${input.id}`, { method: "DELETE" }),
+	},
+};

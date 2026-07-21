@@ -21,17 +21,60 @@ export function processExamplesDeps(vfs: VirtualFileSystem, config: ProjectConfi
 
 function setupTodoDependencies(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { orm, database, backend } = config;
-  const apiPkgPath = "packages/api/package.json";
-  if (!vfs.exists(apiPkgPath) || backend === "none") return;
+  if (backend !== "nest") {
+    const packagePath = "packages/api/package.json";
+    if (!vfs.exists(packagePath) || backend === "none") return;
 
-  if (orm === "drizzle") {
-    const deps: AvailableDependencies[] = ["drizzle-orm"];
-    if (database === "postgres") deps.push("@types/pg");
-    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: deps });
-  } else if (orm === "prisma") {
-    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["@prisma/client"] });
-  } else if (orm === "mongoose") {
-    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["mongoose"] });
+    if (orm === "drizzle") {
+      const deps: AvailableDependencies[] = ["drizzle-orm"];
+      if (database === "postgres") deps.push("@types/pg");
+      addPackageDependency({ vfs, packagePath, dependencies: deps });
+    } else if (orm === "prisma") {
+      addPackageDependency({ vfs, packagePath, dependencies: ["@prisma/client"] });
+    } else if (orm === "mongoose") {
+      addPackageDependency({ vfs, packagePath, dependencies: ["mongoose"] });
+    }
+  }
+
+  if (backend === "nest") {
+    const webPath = "apps/web/package.json";
+    const nativePath = "apps/native/package.json";
+    if (vfs.exists(webPath)) {
+      if (config.frontend.some((frontend) => ["nuxt"].includes(frontend))) {
+        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@tanstack/vue-query"] });
+      } else if (config.frontend.includes("svelte")) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["@tanstack/svelte-query"],
+          devDependencies: ["@tanstack/svelte-query-devtools"],
+        });
+      } else if (config.frontend.includes("solid")) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["@tanstack/solid-query"],
+        });
+      } else if (!config.frontend.includes("astro")) {
+        const dependencies: AvailableDependencies[] = ["@tanstack/react-query"];
+        if (config.frontend.includes("tanstack-start")) {
+          dependencies.push("@tanstack/react-router-ssr-query");
+        }
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies,
+          devDependencies: ["@tanstack/react-query-devtools"],
+        });
+      }
+    }
+    if (vfs.exists(nativePath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: nativePath,
+        dependencies: ["@tanstack/react-query"],
+      });
+    }
   }
 }
 
