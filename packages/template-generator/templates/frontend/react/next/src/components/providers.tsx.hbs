@@ -22,16 +22,16 @@ import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { env } from "@{{projectName}}/env/web";
 {{/if}}
 {{else}}
-{{#unless (eq api "none")}}
+{{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
 {{/if}}
-{{/unless}}
+{{/if}}
 {{/if}}
 import { ThemeProvider } from "./theme-provider";
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
@@ -91,12 +91,12 @@ export default function Providers({
       <ConvexProvider client={convex}>{children}</ConvexProvider>
       {{/if}}
       {{else}}
-      {{#unless (eq api "none")}}
+      {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
       <QueryClientProvider client={queryClient}>
         {{#if (eq auth "clerk")}}
         <ClerkApiAuthBridge />
         {{/if}}
-        {{#if (eq api "orpc")}}
+        {{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
         {children}
         {{/if}}
         {{#if (eq api "trpc")}}
@@ -106,7 +106,7 @@ export default function Providers({
       </QueryClientProvider>
       {{else}}
       {children}
-      {{/unless}}
+      {{/if}}
       {{/if}}
       <Toaster richColors />
     </ThemeProvider>
