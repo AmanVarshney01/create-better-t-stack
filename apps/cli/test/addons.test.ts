@@ -1045,12 +1045,13 @@ describe("Addon Configurations", () => {
       express: 'import { evlog } from "evlog/express";',
       fastify: 'import { evlog } from "evlog/fastify";',
       elysia: 'import { evlog } from "evlog/elysia";',
+      nest: 'import { EvlogModule } from "evlog/nestjs";',
       convex: "",
       self: "",
       none: "",
     };
 
-    for (const backend of ["hono", "express", "fastify", "elysia"] as const) {
+    for (const backend of ["hono", "express", "fastify", "elysia", "nest"] as const) {
       it(`should wire evlog middleware for ${backend}`, async () => {
         const result = await runTRPCTest({
           projectName: `evlog-${backend}`,
@@ -1059,9 +1060,9 @@ describe("Addon Configurations", () => {
           backend,
           runtime: "bun",
           database: "sqlite",
-          orm: "drizzle",
+          orm: backend === "nest" ? "prisma" : "drizzle",
           auth: "none",
-          api: "trpc",
+          api: backend === "nest" ? "none" : "trpc",
           examples: ["none"],
           dbSetup: "none",
           webDeploy: "none",
@@ -1073,15 +1074,27 @@ describe("Addon Configurations", () => {
         const projectDir = result.result?.projectDirectory;
         if (!projectDir) throw new Error("Expected generated project directory");
 
-        const serverIndex = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf-8");
+        const serverEntry = await readFile(
+          join(projectDir, `apps/server/src/${backend === "nest" ? "main" : "index"}.ts`),
+          "utf-8",
+        );
         const serverPackageJson = await readFile(
           join(projectDir, "apps/server/package.json"),
           "utf-8",
         );
 
-        expect(serverIndex).toContain('import { initLogger } from "evlog";');
-        expect(serverIndex).toContain(backendSnippets[backend]);
-        expect(serverIndex).toContain(`env: { service: "evlog-${backend}-server" }`);
+        expect(serverEntry).toContain('import { initLogger } from "evlog";');
+        expect(serverEntry).toContain(`env: { service: "evlog-${backend}-server" }`);
+        if (backend === "nest") {
+          const appModule = await readFile(
+            join(projectDir, "apps/server/src/app.module.ts"),
+            "utf-8",
+          );
+          expect(appModule).toContain(backendSnippets[backend]);
+          expect(appModule).toContain("EvlogModule.forRoot()");
+        } else {
+          expect(serverEntry).toContain(backendSnippets[backend]);
+        }
         expect(serverPackageJson).toContain('"evlog": "^2.22.0"');
       });
     }
@@ -1742,6 +1755,50 @@ describe("Addon Configurations", () => {
 
       expect(serverIndex).toContain('import { evlog, type EvlogVariables } from "evlog/hono";');
       expect(serverIndex).toContain("app.use(evlog());");
+      expect(serverPackageJson).toContain('"evlog": "^2.22.0"');
+    });
+
+    it("should patch an existing Nest server when evlog is added later", async () => {
+      const created = await runTRPCTest({
+        projectName: "evlog-add-existing-nest",
+        addons: ["none"],
+        frontend: ["none"],
+        backend: "nest",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "prisma",
+        auth: "better-auth",
+        api: "none",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        packageManager: "bun",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["evlog"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const serverMain = await readFile(join(projectDir, "apps/server/src/main.ts"), "utf-8");
+      const appModule = await readFile(join(projectDir, "apps/server/src/app.module.ts"), "utf-8");
+      const serverPackageJson = await readFile(
+        join(projectDir, "apps/server/package.json"),
+        "utf-8",
+      );
+
+      expect(serverMain).toContain('import { initLogger } from "evlog";');
+      expect(appModule).toContain('import { EvlogModule } from "evlog/nestjs";');
+      expect(appModule).toContain("EvlogModule.forRoot()");
       expect(serverPackageJson).toContain('"evlog": "^2.22.0"');
     });
 
