@@ -1,0 +1,37 @@
+import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
+{{#if (eq auth "better-auth")}}
+import { AllowAnonymous } from "@thallesp/nestjs-better-auth";
+{{/if}}
+
+import { CreateTodoDto } from "./dto/create-todo.dto";
+import { UpdateTodoDto } from "./dto/update-todo.dto";
+import type { TodoEntity } from "./entities/todo.entity";
+import { TodosService } from "./todos.service";
+
+@Controller("todos")
+{{#if (eq auth "better-auth")}}
+@AllowAnonymous()
+{{/if}}
+export class TodosController {
+	constructor(private readonly todosService: TodosService) {}
+
+	@Get()
+	findAll(): Promise<TodoEntity[]> {
+		return this.todosService.findAll();
+	}
+
+	@Post()
+	create(@Body() createTodoDto: CreateTodoDto): Promise<TodoEntity> {
+		return this.todosService.create(createTodoDto);
+	}
+
+	@Patch(":id")
+	update(@Param("id") id: string, @Body() updateTodoDto: UpdateTodoDto): Promise<TodoEntity> {
+		return this.todosService.update(id, updateTodoDto);
+	}
+
+	@Delete(":id")
+	remove(@Param("id") id: string): Promise<TodoEntity> {
+		return this.todosService.remove(id);
+	}
+}
