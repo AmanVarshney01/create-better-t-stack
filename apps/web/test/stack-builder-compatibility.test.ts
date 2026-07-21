@@ -24,6 +24,60 @@ function createStack(overrides: Partial<StackState> = {}): StackState {
 }
 
 describe("stack builder D1 compatibility", () => {
+  test("normalizes Nest.js to its supported stack", () => {
+    const stack = createStack({
+      backend: "nest",
+      runtime: "bun",
+      database: "postgres",
+      orm: "drizzle",
+      api: "trpc",
+      auth: "clerk",
+      payments: "polar",
+      packageManager: "bun",
+      serverDeploy: "vercel",
+      examples: ["todo", "ai"],
+    });
+
+    const result = analyzeStackCompatibility(stack);
+
+    expect(result.adjustedStack).toMatchObject({
+      backend: "nest",
+      runtime: "bun",
+      orm: "prisma",
+      api: "none",
+      auth: "none",
+      payments: "none",
+      packageManager: "bun",
+      serverDeploy: "vercel",
+      examples: ["todo"],
+    });
+  });
+
+  test("exposes only supported Nest.js choices", () => {
+    const stack = createStack({
+      backend: "nest",
+      runtime: "node",
+      database: "mongodb",
+      orm: "mongoose",
+      api: "none",
+      packageManager: "pnpm",
+      examples: ["todo"],
+    });
+
+    expect(getDisabledReason(stack, "orm", "mongoose")).toBeNull();
+    expect(getDisabledReason(stack, "api", "trpc")).not.toBeNull();
+    expect(getDisabledReason(stack, "runtime", "bun")).toBeNull();
+    expect(getDisabledReason(stack, "packageManager", "bun")).toBeNull();
+    expect(getDisabledReason(stack, "serverDeploy", "docker")).toBeNull();
+    expect(getDisabledReason(stack, "serverDeploy", "vercel")).toBeNull();
+    expect(getDisabledReason(stack, "examples", "todo")).toBeNull();
+    expect(getDisabledReason(stack, "examples", "ai")).not.toBeNull();
+    expect(getDisabledReason(stack, "addons", "evlog")).toBeNull();
+    expect(getDisabledReason({ ...stack, database: "none", orm: "none" }, "examples", "todo")).toBe(
+      "Todo example requires a database",
+    );
+  });
+
   test("keeps self fullstack backends on the D1 + Cloudflare path", () => {
     const stack = createStack({
       backend: "self-next",
@@ -264,7 +318,7 @@ describe("stack builder D1 compatibility", () => {
     });
 
     expect(getDisabledReason(stack, "addons", "evlog")).toBe(
-      "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend",
+      "evlog requires Hono, Express, Fastify, Elysia, Nest.js, or a fullstack backend",
     );
   });
 

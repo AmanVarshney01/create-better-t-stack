@@ -391,6 +391,9 @@ export function validateBackendConstraints(
 ): ValidationResult {
   const { backend } = config;
 
+  const nestResult = validateNestConstraints(config);
+  if (nestResult.isErr()) return nestResult;
+
   if (config.auth === "clerk" && config.frontend) {
     const incompatibleFrontends = config.frontend.filter((f) =>
       ["nuxt", "svelte", "solid", "astro"].includes(f),
@@ -427,6 +430,49 @@ export function validateBackendConstraints(
         )}. Please choose a different frontend or backend.`,
       );
     }
+  }
+
+  return Result.ok(undefined);
+}
+
+export function validateNestConstraints(config: Partial<ProjectConfig>): ValidationResult {
+  if (config.backend !== "nest") return Result.ok(undefined);
+
+  if (config.runtime && config.runtime !== "node" && config.runtime !== "bun") {
+    return validationErr(
+      "Nest.js requires the Bun or Node.js runtime. Please use '--runtime bun' or '--runtime node'.",
+    );
+  }
+
+  if (config.orm && config.orm !== "none" && config.orm !== "prisma" && config.orm !== "mongoose") {
+    return validationErr(
+      "Nest.js requires Prisma or Mongoose ORM. Please use '--orm prisma' or '--orm mongoose'.",
+    );
+  }
+
+  if (config.api && config.api !== "none") {
+    return validationErr("Nest.js does not support an API layer yet. Please use '--api none'.");
+  }
+
+  if (config.auth === "clerk") {
+    return validationErr(
+      "Nest.js only supports Better Auth at this time. Please use '--auth better-auth' or '--auth none'.",
+    );
+  }
+
+  if (config.payments && config.payments !== "none") {
+    return validationErr("Nest.js does not support payments yet. Please use '--payments none'.");
+  }
+
+  if (
+    config.serverDeploy &&
+    config.serverDeploy !== "none" &&
+    config.serverDeploy !== "docker" &&
+    config.serverDeploy !== "vercel"
+  ) {
+    return validationErr(
+      "Nest.js supports Docker or Vercel server deployment. Please use '--server-deploy docker', '--server-deploy vercel', or '--server-deploy none'.",
+    );
   }
 
   return Result.ok(undefined);
@@ -472,7 +518,8 @@ export function validateApiConstraints(
     if (
       options.examples?.includes("todo") &&
       options.backend !== "convex" &&
-      options.backend !== "none"
+      options.backend !== "none" &&
+      options.backend !== "nest"
     ) {
       return validationErr(
         "Cannot use '--examples todo' when '--api' is set to 'none'. The todo example requires an API layer. Please remove 'todo' from --examples or choose an API type.",
@@ -564,6 +611,7 @@ export function validateFullConfig(
 export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>): ValidationResult {
   return Result.gen(function* () {
     yield* validateDatabaseOrmAuth(config);
+    yield* validateNestConstraints(config);
 
     if (config.frontend && config.frontend.length > 0) {
       yield* ensureSingleWebAndNative(config.frontend);

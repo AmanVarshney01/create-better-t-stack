@@ -219,7 +219,7 @@ describe("Deployment Configurations", () => {
     });
 
     it("should work with server deploy + all compatible backends", async () => {
-      const backends = ["hono", "express", "fastify", "elysia"] as const;
+      const backends = ["hono", "express", "fastify", "elysia", "nest"] as const;
 
       for (const backend of backends) {
         const config: TestConfig = {
@@ -242,6 +242,12 @@ describe("Deployment Configurations", () => {
         if (backend === "hono") {
           config.runtime = "workers";
           config.serverDeploy = "cloudflare";
+        } else if (backend === "nest") {
+          config.runtime = "node";
+          config.orm = "prisma";
+          config.api = "none";
+          config.packageManager = "pnpm";
+          config.serverDeploy = "vercel";
         } else {
           config.runtime = "bun";
           config.serverDeploy = "none";
