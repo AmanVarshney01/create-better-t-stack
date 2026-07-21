@@ -1,0 +1,7 @@
+export class TodoEntity {
+	id!: {{#if (or (eq orm "mongoose") (eq database "mongodb"))}}string{{else}}number{{/if}};
+	text!: string;
+	completed!: boolean;
+	createdAt?: Date;
+	updatedAt?: Date;
+}

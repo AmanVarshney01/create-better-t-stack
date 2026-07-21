@@ -1,0 +1,29 @@
+import "reflect-metadata";
+{{#if (includes examples "todo")}}
+import { ValidationPipe } from "@nestjs/common";
+{{/if}}
+import { NestFactory } from "@nestjs/core";
+import { env } from "@{{projectName}}/env/server";
+
+import { AppModule } from "./app.module";
+
+async function bootstrap() {
+	const app = await NestFactory.create(AppModule, {
+{{#if (eq auth "better-auth")}}
+		bodyParser: false,
+{{/if}}
+	});
+	app.enableCors({
+		origin: env.CORS_ORIGIN,
+		methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+		allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+		credentials: true,
+	});
+{{#if (includes examples "todo")}}
+	app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+{{/if}}
+
+	await app.listen(process.env.PORT ?? 3000{{#if (eq serverDeploy "docker")}}, "0.0.0.0"{{/if}});
+}
+
+void bootstrap();

@@ -1,0 +1,18 @@
+import { Module } from "@nestjs/common";
+{{#if (eq auth "better-auth")}}
+import { AuthModule } from "@thallesp/nestjs-better-auth";
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+{{#if (includes examples "todo")}}
+import { TodosModule } from "./todos/todos.module";
+{{/if}}
+
+@Module({
+	imports: [{{#if (eq auth "better-auth")}}AuthModule.forRoot({ auth }){{#if (includes examples "todo")}}, {{/if}}{{/if}}{{#if (includes examples "todo")}}TodosModule{{/if}}],
+	controllers: [AppController],
+	providers: [AppService],
+})
+export class AppModule {}

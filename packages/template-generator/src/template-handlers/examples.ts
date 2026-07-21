@@ -21,6 +21,7 @@ export async function processExampleTemplates(
   const hasUniwind = config.frontend.includes("native-uniwind");
   const hasUnistyles = config.frontend.includes("native-unistyles");
   const hasNative = hasNativeBare || hasUniwind || hasUnistyles;
+  const frontendConfig = config.backend === "nest" ? { ...config, api: "orpc" as const } : config;
 
   for (const example of config.examples) {
     if (example === "none") continue;
@@ -33,6 +34,74 @@ export async function processExampleTemplates(
         "packages/backend",
         config,
       );
+    } else if (config.backend === "nest" && example === "todo") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        "examples/todo/nest/server",
+        "apps/server",
+        config,
+      );
+
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `examples/todo/server/${config.orm}/${config.database}`,
+        "packages/db",
+        config,
+      );
+
+      if (hasReactWeb) {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          "examples/todo/nest/web/react",
+          "apps/web",
+          config,
+        );
+      } else if (hasNuxtWeb) {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          "examples/todo/nest/web/nuxt",
+          "apps/web",
+          config,
+        );
+      } else if (hasSvelteWeb) {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          "examples/todo/nest/web/svelte",
+          "apps/web",
+          config,
+        );
+      } else if (hasSolidWeb) {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          "examples/todo/nest/web/solid",
+          "apps/web",
+          config,
+        );
+      } else if (hasAstroWeb) {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          "examples/todo/nest/web/astro",
+          "apps/web",
+          config,
+        );
+      }
+
+      if (hasNative) {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          "examples/todo/nest/native",
+          "apps/native",
+          config,
+        );
+      }
     } else if (config.backend !== "none" && config.api !== "none") {
       processTemplatesFromPrefix(
         vfs,
@@ -63,7 +132,7 @@ export async function processExampleTemplates(
           templates,
           `examples/${example}/web/react/${reactFramework}`,
           "apps/web",
-          config,
+          frontendConfig,
         );
 
         if (
@@ -94,7 +163,7 @@ export async function processExampleTemplates(
         templates,
         `examples/${example}/web/nuxt`,
         "apps/web",
-        config,
+        frontendConfig,
       );
     } else if (hasSvelteWeb) {
       if (config.backend === "self") {
@@ -111,7 +180,7 @@ export async function processExampleTemplates(
         templates,
         `examples/${example}/web/svelte`,
         "apps/web",
-        config,
+        frontendConfig,
       );
     } else if (hasSolidWeb) {
       processTemplatesFromPrefix(
@@ -119,7 +188,7 @@ export async function processExampleTemplates(
         templates,
         `examples/${example}/web/solid`,
         "apps/web",
-        config,
+        frontendConfig,
       );
     } else if (hasAstroWeb) {
       processTemplatesFromPrefix(
@@ -127,7 +196,7 @@ export async function processExampleTemplates(
         templates,
         `examples/${example}/web/astro`,
         "apps/web",
-        config,
+        frontendConfig,
       );
     }
 
@@ -143,7 +212,7 @@ export async function processExampleTemplates(
           templates,
           `examples/${example}/native/${nativeFramework}`,
           "apps/native",
-          config,
+          frontendConfig,
         );
       }
     }

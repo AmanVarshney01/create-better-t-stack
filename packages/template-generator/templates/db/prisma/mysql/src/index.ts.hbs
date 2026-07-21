@@ -1,6 +1,7 @@
 import type { DatabaseConfig } from "./config";
 {{#if (eq runtime "workers")}}
 import { PrismaClient } from "../prisma/generated/client";
+export { Prisma } from "../prisma/generated/client";
 
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
@@ -29,6 +30,7 @@ export function createPrismaClient(env: DatabaseConfig) {
 {{/if}}
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
+export { Prisma } from "../prisma/generated/client";
 
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
