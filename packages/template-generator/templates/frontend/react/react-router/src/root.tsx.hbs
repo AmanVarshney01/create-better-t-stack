@@ -32,16 +32,16 @@ import { authClient } from "@/lib/auth-client";
 import { ConvexProvider } from "convex/react";
   {{/if}}
 {{else}}
-  {{#unless (eq api "none")}}
+  {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-    {{#if (eq api "orpc")}}
+    {{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 import { queryClient } from "./utils/orpc";
     {{/if}}
     {{#if (eq api "trpc")}}
 import { queryClient } from "./utils/trpc";
     {{/if}}
-  {{/unless}}
+  {{/if}}
 {{/if}}
 
 {{#if (eq auth "clerk")}}
@@ -214,7 +214,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
     </ClerkProvider>
   );
 }
-{{else if (eq api "orpc")}}
+{{else if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
