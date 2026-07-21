@@ -57,6 +57,11 @@ export async function getBackendFrameworkChoice(
       label: "Elysia",
       hint: "Ergonomic web framework for building backend servers",
     },
+    {
+      value: "nest" as const,
+      label: "Nest.js",
+      hint: "Scalable Node.js server-side framework",
+    },
   );
 
   if (!hasIncompatibleFrontend) {

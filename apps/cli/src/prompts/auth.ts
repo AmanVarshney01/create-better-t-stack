@@ -26,6 +26,10 @@ export function getAvailableAuthProviders(
 
   const options: Auth[] = [];
 
+  if (backend === "nest") {
+    return ["better-auth", "none"];
+  }
+
   if (backend === "convex") {
     if (supportsConvexBetterAuth(frontend)) {
       options.push("better-auth");

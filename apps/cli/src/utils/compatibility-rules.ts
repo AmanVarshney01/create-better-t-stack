@@ -86,11 +86,11 @@ const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "astro",
 ] as const;
 
-const EVLOG_SERVER_BACKENDS: readonly Backend[] = ["hono", "express", "fastify", "elysia"];
+const EVLOG_SERVER_BACKENDS: readonly Backend[] = ["hono", "express", "fastify", "elysia", "nest"];
 const EVLOG_FULLSTACK_FRONTENDS: readonly Frontend[] = FULLSTACK_FRONTENDS;
 
 const evlogCompatibilityMessage =
-  "evlog addon supports Hono, Express, Fastify, Elysia, or backend self with Next.js, TanStack Start, Nuxt, SvelteKit, or Astro. Convex and backend none are not supported yet.";
+  "evlog addon supports Hono, Express, Fastify, Elysia, Nest.js, or backend self with Next.js, TanStack Start, Nuxt, SvelteKit, or Astro. Convex and backend none are not supported yet.";
 
 export function supportsEvlogAddon(
   frontend: Frontend[] = [],
@@ -265,13 +265,15 @@ export function isExampleTodoAllowed(
 ) {
   // Convex handles its own data layer, no need for database or API
   if (backend === "convex") return true;
+  // Nest exposes the example through its native REST controllers.
+  if (backend === "nest") return database !== "none";
   // Todo requires both database and API to communicate
   if (database === "none" || api === "none") return false;
   return true;
 }
 
 export function isExampleAIAllowed(backend?: ProjectConfig["backend"], frontends: Frontend[] = []) {
-  if (backend === "none") return false;
+  if (backend === "none" || backend === "nest") return false;
 
   const includesSolid = frontends.includes("solid");
   const includesAstro = frontends.includes("astro");
@@ -320,7 +322,7 @@ export function validateDockerServerDeploy(
 
   if (backend === "convex" || backend === "self") {
     return validationErr(
-      "'--server-deploy docker' requires a separate server backend (hono, express, fastify, elysia). For a fullstack 'self' backend, use '--web-deploy docker' instead.",
+      "'--server-deploy docker' requires a separate server backend (hono, express, fastify, elysia, nest). For a fullstack 'self' backend, use '--web-deploy docker' instead.",
     );
   }
 
@@ -342,7 +344,7 @@ export function validateVercelServerDeploy(
 
   if (backend === "convex" || backend === "self") {
     return validationErr(
-      "'--server-deploy vercel' requires a separate server backend (hono, express, fastify, elysia). For a fullstack 'self' backend, use '--web-deploy vercel' instead.",
+      "'--server-deploy vercel' requires a separate server backend (hono, express, fastify, elysia, nest). For a fullstack 'self' backend, use '--web-deploy vercel' instead.",
     );
   }
 
@@ -562,7 +564,7 @@ export function validateExamplesCompatibility(
         "The 'todo' example requires a database. Cannot use --examples todo when database is 'none'.",
       );
     }
-    if (api === "none") {
+    if (api === "none" && backend !== "nest") {
       return validationErr(
         "The 'todo' example requires an API layer (tRPC or oRPC). Cannot use --examples todo when api is 'none'.",
       );
@@ -579,6 +581,10 @@ export function validateExamplesCompatibility(
 
   if (examplesArr.includes("ai") && backend === "none") {
     return validationErr("The 'ai' example requires a backend.");
+  }
+
+  if (examplesArr.includes("ai") && backend === "nest") {
+    return validationErr("The 'ai' example is not supported with the Nest.js backend yet.");
   }
 
   // Convex AI example only supports React-based frontends
