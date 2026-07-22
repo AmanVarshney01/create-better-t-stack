@@ -19,7 +19,7 @@ export const TECH_OPTIONS: Record<
       id: "trpc",
       name: "tRPC",
       description: "End-to-end typesafe APIs",
-      icon: "/icon/trpc.svg",
+      icon: `${ICON_BASE_URL}/trpc.svg`,
       color: "from-blue-500 to-blue-700",
       default: true,
     },
@@ -27,7 +27,7 @@ export const TECH_OPTIONS: Record<
       id: "orpc",
       name: "oRPC",
       description: "Typesafe APIs Made Simple",
-      icon: "/icon/orpc.svg",
+      icon: `${ICON_BASE_URL}/orpc.svg`,
       color: "from-indigo-400 to-indigo-600",
     },
     {
