@@ -17,6 +17,10 @@ import { onError } from "@orpc/server";
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
+{{#if (eq api "grpc")}}
+import { fastifyConnectPlugin } from "@connectrpc/connect-fastify";
+import { routes } from "@{{projectName}}/api";
+{{/if}}
 
 {{#if (includes examples "ai")}}
 import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
@@ -71,10 +75,14 @@ const fastify = Fastify({
 {{else}}
 const fastify = Fastify({
 	logger: true,
+	{{#if (eq api "grpc")}}http2: true,{{/if}}
 });
 {{/if}}
 
 fastify.register(fastifyCors, baseCorsConfig);
+{{#if (eq api "grpc")}}
+await fastify.register(fastifyConnectPlugin, { routes });
+{{/if}}
 {{#if (eq auth "clerk")}}
 fastify.register(clerkPlugin, {
 	publishableKey: env.CLERK_PUBLISHABLE_KEY,

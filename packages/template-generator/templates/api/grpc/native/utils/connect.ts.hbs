@@ -1,0 +1,14 @@
+import { createConnectTransport } from "@connectrpc/connect-web";
+import { createClient } from "@connectrpc/connect";
+import { HealthService, ExampleService } from "@{{projectName}}/api/generated/service_connect";
+
+const transport = createConnectTransport({
+  baseUrl: process.env.EXPO_PUBLIC_SERVER_URL ?? "http://localhost:3000",
+  fetch,
+{{#if (eq auth "better-auth")}}
+  credentials: "include",
+{{/if}}
+});
+
+export const healthClient = createClient(HealthService, transport);
+export const exampleClient = createClient(ExampleService, transport);

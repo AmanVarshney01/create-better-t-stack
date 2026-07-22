@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">tRPC</title>
+  <desc id="desc">tRPC icon</desc>
+  <rect width="512" height="512" rx="112" fill="#398ccB"/>
+  <path fill="#fff" d="M256 72 105 159v174l151 87 151-87V159L256 72Zm0 42 114 66-114 66-114-66 114-66Zm-113 103 92 53v105l-92-53V217Zm134 158V270l92-53v105l-92 53Z"/>
+  <circle cx="256" cy="180" r="22" fill="#72b7f2"/>
+  <circle cx="143" cy="180" r="22" fill="#72b7f2"/>
+  <circle cx="369" cy="180" r="22" fill="#72b7f2"/>
+  <path fill="none" stroke="#72b7f2" stroke-linecap="round" stroke-width="14" d="m160 180 74 43m118-43-74 43"/>
+</svg>

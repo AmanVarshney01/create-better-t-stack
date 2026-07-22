@@ -23,6 +23,11 @@ import { onError } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 {{/if}}
+{{#if (eq api "grpc")}}
+import { createConnectRouter } from "@connectrpc/connect";
+import { createFetchHandler } from "@connectrpc/connect/protocol";
+import { routes } from "@{{projectName}}/api";
+{{/if}}
 {{#if (eq auth "better-auth")}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
@@ -47,6 +52,14 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 		}),
 	],
 });
+{{/if}}
+{{#if (eq api "grpc")}}
+const connectRouter = createConnectRouter();
+routes(connectRouter);
+const connectHandlers = connectRouter.handlers.map((handler) => ({
+  route: `/${handler.service.typeName}/${handler.method.name}`,
+  fetch: createFetchHandler(handler, { httpVersion: "1.1" }),
+}));
 {{/if}}
 
 {{#if (eq serverDeploy "vercel")}}const app = {{/if}}{{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
@@ -136,6 +149,8 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 		return res;
 	})
 {{/if}}
+{{#if (eq api "grpc")}}
+{{/if}}
 {{#if (includes examples "ai")}}
 	.post("/ai", async (context) => {
 		const body = (await context.request.json()) as { messages?: UIMessage[] };
@@ -155,6 +170,16 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	})
 {{/if}}
 	.get("/", () => "OK")
+{{#if (eq api "grpc")}}
+	.all("/*", async ({ request }) => {
+		for (const handler of connectHandlers) {
+			if (new URL(request.url).pathname !== handler.route) continue;
+			const response = await handler.fetch(request);
+			return response;
+		}
+		return new Response("Not Found", { status: 404 });
+	}, { parse: "none" })
+{{/if}}
 {{#if (eq serverDeploy "vercel")}};
 
 export default app;

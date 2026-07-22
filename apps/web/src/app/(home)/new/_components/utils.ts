@@ -587,6 +587,16 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       changed = true;
       changes.push({ category: "api", message: "API set to 'oRPC' (required for this frontend)" });
     }
+
+    // gRPC is not compatible with Workers runtime
+    if (nextStack.api === "grpc" && nextStack.runtime === "workers") {
+      nextStack.api = "none";
+      changed = true;
+      changes.push({
+        category: "api",
+        message: "API set to 'None' (gRPC incompatible with Workers runtime)",
+      });
+    }
   }
 
   // ============================================
@@ -1103,6 +1113,18 @@ export const getDisabledReason = (
         ["nuxt", "svelte", "solid", "astro"].includes(f),
       );
       return `${frontendName} requires oRPC, not tRPC`;
+    }
+  }
+  if (category === "api" && optionId === "grpc") {
+    if (currentStack.runtime === "workers") {
+      return "gRPC requires Node.js or Bun runtime (not Workers)";
+    }
+    if (
+      ["nuxt", "svelte", "solid", "astro"].some((frontend) =>
+        currentStack.webFrontend.includes(frontend),
+      )
+    ) {
+      return "gRPC currently supports React and native clients only";
     }
   }
 

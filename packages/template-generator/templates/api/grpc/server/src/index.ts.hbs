@@ -1,0 +1,20 @@
+import type { ConnectRouter } from "@connectrpc/connect";
+import { HealthService, ExampleService } from "./generated/service_connect";
+import type { Context } from "./context";
+
+export function routes(router: ConnectRouter, _ctx?: Context): void {
+  router.service(HealthService, {
+    health: async () => ({ status: "ok" }),
+  });
+
+  router.service(ExampleService, {
+    greet: async (req) => ({ greeting: `Hello, ${req.name}!` }),
+    async *listItems() {
+      for (let i = 0; i < 3; i++) {
+        yield { id: String(i + 1), name: `Item ${i + 1}` };
+      }
+    },
+  });
+}
+
+export type { Context } from "./context";

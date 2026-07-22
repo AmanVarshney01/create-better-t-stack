@@ -1,0 +1,22 @@
+{
+  "name": "@{{projectName}}/api",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    },
+    "./proto": {
+      "default": "./proto/service.proto"
+    }
+  },
+  "type": "module",
+  "scripts": {
+    "generate": "node scripts/generate.mjs",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@bufbuild/buf": "1.72.0"
+  }
+}
