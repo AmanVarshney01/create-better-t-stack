@@ -11,7 +11,7 @@ export async function getPackageManagerChoice(
 
   const detectedPackageManager = getUserPkgManager();
 
-  const options = [
+  const options: Array<{ value: PackageManager; label: string; hint: string }> = [
     { value: "npm", label: "npm", hint: "not recommended" },
     {
       value: "pnpm",
@@ -28,7 +28,7 @@ export async function getPackageManagerChoice(
   const response = await navigableSelect<PackageManager>({
     message: "Choose package manager",
     options,
-    initialValue: preferValidInitial(options, previousValue, detectedPackageManager, "pnpm"),
+    initialValue: preferValidInitial(options, previousValue, detectedPackageManager),
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
