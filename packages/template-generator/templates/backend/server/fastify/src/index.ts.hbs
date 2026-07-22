@@ -75,7 +75,6 @@ const fastify = Fastify({
 {{else}}
 const fastify = Fastify({
 	logger: true,
-	{{#if (eq api "grpc")}}http2: true,{{/if}}
 });
 {{/if}}
 

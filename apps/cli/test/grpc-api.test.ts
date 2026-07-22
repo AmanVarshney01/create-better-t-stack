@@ -6,6 +6,44 @@ import { join } from "node:path";
 import { expectError, expectSuccess, runTRPCTest } from "./test-utils";
 
 describe("gRPC API (Connect)", () => {
+  async function assertGeneratedGrpcProject(
+    projectDir: string,
+    backendMarker: string,
+  ): Promise<void> {
+    const requiredFiles = [
+      "packages/api/proto/api/v1/service.proto",
+      "packages/api/src/generated/api/v1/service_pb.ts",
+      "packages/api/src/generated/api/v1/service_connect.ts",
+      "packages/api/buf.gen.yaml",
+      "packages/api/buf.yaml",
+      "packages/api/scripts/generate.mjs",
+    ];
+
+    for (const file of requiredFiles) {
+      if (!existsSync(join(projectDir, file))) {
+        throw new Error(`${file} was not generated`);
+      }
+    }
+
+    const apiPackage = await readFile(join(projectDir, "packages/api/package.json"), "utf8");
+    const proto = await readFile(
+      join(projectDir, "packages/api/proto/api/v1/service.proto"),
+      "utf8",
+    );
+    const server = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf8");
+    if (!proto.includes("package api.v1;"))
+      throw new Error("versioned gRPC proto package was not generated");
+    if (!apiPackage.includes('"@connectrpc/protoc-gen-connect-es": "1.7.0"')) {
+      throw new Error("gRPC codegen dependency version is invalid");
+    }
+    if (!apiPackage.includes('"./proto/api/v1/service.proto"')) {
+      throw new Error("gRPC proto package export is invalid");
+    }
+    if (!server.includes(backendMarker)) {
+      throw new Error(`${backendMarker} was not generated for ${backendMarker} backend`);
+    }
+  }
+
   it("should work with Hono + Bun runtime", async () => {
     const result = await runTRPCTest({
       projectName: "grpc-hono-bun",
@@ -27,38 +65,7 @@ describe("gRPC API (Connect)", () => {
 
     expectSuccess(result);
 
-    const projectDir = result.projectDir!;
-    const hasPackagesApi = existsSync(join(projectDir, "packages/api"));
-    const hasConnectGenerated = existsSync(join(projectDir, "packages/api/src/generated"));
-    const hasProtoFile = existsSync(join(projectDir, "packages/api/proto/service.proto"));
-    const hasBufGen = existsSync(join(projectDir, "packages/api/buf.gen.yaml"));
-    const hasBufYaml = existsSync(join(projectDir, "packages/api/buf.yaml"));
-
-    if (!hasPackagesApi) {
-      throw new Error("packages/api directory was not generated");
-    }
-    if (!hasConnectGenerated) {
-      throw new Error("packages/api/src/generated directory was not generated");
-    }
-    if (!hasProtoFile) {
-      throw new Error("proto/service.proto was not generated");
-    }
-    if (!hasBufGen) {
-      throw new Error("buf.gen.yaml was not generated");
-    }
-    if (!hasBufYaml) {
-      throw new Error("buf.yaml was not generated");
-    }
-
-    const proto = await readFile(join(projectDir, "packages/api/proto/service.proto"), "utf8");
-    const apiPackage = await readFile(join(projectDir, "packages/api/package.json"), "utf8");
-    const server = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf8");
-    if (!proto.includes("package api;")) throw new Error("gRPC proto package was not generated");
-    if (!apiPackage.includes('"@connectrpc/protoc-gen-connect-es": "1.7.0"')) {
-      throw new Error("gRPC codegen dependency version is invalid");
-    }
-    if (!server.includes("createFetchHandler"))
-      throw new Error("gRPC Hono handler was not generated");
+    await assertGeneratedGrpcProject(result.projectDir!, "createFetchHandler");
   });
 
   it("should work with Express backend", async () => {
@@ -81,6 +88,7 @@ describe("gRPC API (Connect)", () => {
     });
 
     expectSuccess(result);
+    await assertGeneratedGrpcProject(result.projectDir!, "expressConnectMiddleware");
   });
 
   it("should work with Fastify backend", async () => {
@@ -103,6 +111,7 @@ describe("gRPC API (Connect)", () => {
     });
 
     expectSuccess(result);
+    await assertGeneratedGrpcProject(result.projectDir!, "fastifyConnectPlugin");
   });
 
   it("should work with Next.js self backend", async () => {
@@ -125,9 +134,10 @@ describe("gRPC API (Connect)", () => {
     });
 
     expectSuccess(result);
+    await assertGeneratedGrpcProject(result.projectDir!, "createFetchHandler");
   });
 
-  it("should work with TanStack Router frontend", async () => {
+  it("should work with React Router frontend", async () => {
     const result = await runTRPCTest({
       projectName: "grpc-react-router",
       api: "grpc",

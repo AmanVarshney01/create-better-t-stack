@@ -1,17 +1,19 @@
 {{#if (includes frontend 'next')}}
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { createClient } from "@connectrpc/connect";
-import { HealthService, ExampleService } from "@{{projectName}}/api/generated/service_connect";
+import { HealthService, ExampleService } from "@{{projectName}}/api/generated/api/v1/service_connect";
 import { env } from "@{{projectName}}/env/web";
 
 {{> getServerUrl}}
 
+{{#if (eq auth "better-auth")}}
+const fetchWithCredentials: typeof fetch = (input, init) =>
+  fetch(input, { ...init, credentials: "include" });
+{{/if}}
+
 const transport = createConnectTransport({
   baseUrl: {{#if (eq backend "self")}}typeof window !== "undefined" ? `${window.location.origin}/api/connect` : "/api/connect"{{else}}`${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}`{{/if}},
-  fetch,
-{{#if (eq auth "better-auth")}}
-  credentials: "include",
-{{/if}}
+  fetch: {{#if (eq auth "better-auth")}}fetchWithCredentials{{else}}fetch{{/if}},
 });
 
 export const healthClient = createClient(HealthService, transport);
@@ -20,17 +22,19 @@ export const exampleClient = createClient(ExampleService, transport);
 {{else}}
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { createClient } from "@connectrpc/connect";
-import { HealthService, ExampleService } from "@{{projectName}}/api/generated/service_connect";
+import { HealthService, ExampleService } from "@{{projectName}}/api/generated/api/v1/service_connect";
 import { env } from "@{{projectName}}/env/web";
 
 {{> getServerUrl}}
 
+{{#if (eq auth "better-auth")}}
+const fetchWithCredentials: typeof fetch = (input, init) =>
+  fetch(input, { ...init, credentials: "include" });
+{{/if}}
+
 const transport = createConnectTransport({
   baseUrl: {{#if (eq backend "self")}}""{{else}}`${getServerUrl(env.VITE_SERVER_URL)}`{{/if}},
-  fetch,
-{{#if (eq auth "better-auth")}}
-  credentials: "include",
-{{/if}}
+  fetch: {{#if (eq auth "better-auth")}}fetchWithCredentials{{else}}fetch{{/if}},
 });
 
 export const healthClient = createClient(HealthService, transport);

@@ -582,10 +582,14 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     const needsOrpc = nextStack.webFrontend.some((f) =>
       ["nuxt", "svelte", "solid", "astro"].includes(f),
     );
-    if (needsOrpc && nextStack.api === "trpc") {
+    if (needsOrpc && (nextStack.api === "trpc" || nextStack.api === "grpc")) {
+      const previousApi = nextStack.api;
       nextStack.api = "orpc";
       changed = true;
-      changes.push({ category: "api", message: "API set to 'oRPC' (required for this frontend)" });
+      changes.push({
+        category: "api",
+        message: `API set to 'oRPC' (${previousApi === "grpc" ? "gRPC client is not available" : "required for this frontend"})`,
+      });
     }
 
     // gRPC is not compatible with Workers runtime

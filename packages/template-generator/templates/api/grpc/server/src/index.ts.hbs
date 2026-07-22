@@ -1,5 +1,5 @@
 import type { ConnectRouter } from "@connectrpc/connect";
-import { HealthService, ExampleService } from "./generated/service_connect";
+import { HealthService, ExampleService } from "./generated/api/v1/service_connect";
 import type { Context } from "./context";
 
 export function routes(router: ConnectRouter, _ctx?: Context): void {
