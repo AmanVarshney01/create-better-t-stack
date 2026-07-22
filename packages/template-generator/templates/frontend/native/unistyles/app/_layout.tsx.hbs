@@ -2,12 +2,12 @@ import "@/unistyles";
 {{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
+import { ClerkProvider{{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { env } from "@{{projectName}}/env/native";
 {{/if}}
@@ -52,7 +52,7 @@ const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
 });
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 

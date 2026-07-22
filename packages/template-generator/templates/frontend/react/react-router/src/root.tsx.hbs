@@ -12,10 +12,10 @@ import Header from "./components/header";
 import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
 {{#if (eq auth "clerk")}}
-import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react-router";
+import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/react-router";
 import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 {{/if}}
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
@@ -50,7 +50,7 @@ export const middleware: Route.MiddlewareFunction[] = [clerkMiddleware()];
 export const loader = (args: Route.LoaderArgs) => rootAuthLoader(args);
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
@@ -162,10 +162,10 @@ export default function App() {
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <ClerkProvider loaderData={loaderData}>
-      {{#unless (eq api "none")}}
+      {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
       <ClerkApiAuthBridge />
-      {{/unless}}
-      {{#if (eq api "orpc")}}
+      {{/if}}
+      {{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
       <QueryClientProvider client={queryClient}>
         <ThemeProvider
           attribute="class"
