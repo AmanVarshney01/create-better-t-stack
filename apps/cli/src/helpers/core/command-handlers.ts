@@ -29,7 +29,6 @@ import { addToHistory } from "../../utils/project-history";
 import { validateProjectName } from "../../utils/project-name-validation";
 import { renderTitle } from "../../utils/render-title";
 import { getTemplateConfig, getTemplateDescription } from "../../utils/templates";
-import { cliConsola } from "../../utils/terminal-output";
 import {
   getProvidedFlags,
   processAndValidateFlags,
@@ -157,7 +156,7 @@ async function createProjectHandlerInternal(
     if (!isSilent()) intro(pc.magenta("Configure your new project"));
 
     if (!isSilent() && input.yolo) {
-      cliConsola.fatal("YOLO mode enabled - skipping checks. Things may break!");
+      log.warn(pc.yellow("YOLO mode enabled — compatibility checks are disabled."));
     }
 
     // Get project name
@@ -250,8 +249,9 @@ async function createProjectHandlerInternal(
         const templateName = input.template.toUpperCase();
         const templateDescription = getTemplateDescription(input.template);
         if (!isSilent()) {
-          log.message(pc.bold(pc.cyan(`Using template: ${pc.white(templateName)}`)));
-          log.message(pc.dim(`   ${templateDescription}`));
+          log.info(
+            `${pc.dim("Template")} ${pc.bold(pc.cyan(templateName))}\n${pc.dim(templateDescription)}`,
+          );
         }
         const userOverrides: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(originalInput)) {
@@ -309,16 +309,18 @@ async function createProjectHandlerInternal(
       const flagConfig = flagConfigResult.value;
       const { projectName: _projectNameFromFlags, ...otherFlags } = flagConfig;
 
-      if (!isSilent() && Object.keys(otherFlags).length > 0) {
-        log.info(pc.dim("Preselected from command-line flags:"));
-        log.message(displayConfig(otherFlags));
+      const isTemplateSetup = input.template && input.template !== "none";
+      if (!isSilent() && !isTemplateSetup && Object.keys(otherFlags).length > 0) {
+        log.info(pc.dim("Command-line options applied."));
       }
 
       // gatherConfig may throw UserCancelledError
       const gatherResult = yield* Result.await(
         Result.tryPromise({
           try: async () =>
-            gatherConfig(flagConfig, finalBaseName, finalResolvedPath, finalPathInput),
+            gatherConfig(flagConfig, finalBaseName, finalResolvedPath, finalPathInput, {
+              skipCompatibilityChecks: cliInput.yolo,
+            }),
           catch: (e: unknown) => {
             if (e instanceof UserCancelledError) return e;
             return new CLIError({
@@ -378,7 +380,7 @@ async function createProjectHandlerInternal(
             ),
           );
         }
-        log.success(pc.green("Dry run validation passed. No files were written."));
+        log.success(pc.green("Configuration ready. No files were written."));
         log.message(pc.dim(`Target directory: ${finalResolvedPath}`));
         log.message(pc.dim(`Run without --dry-run to create the project.`));
         outro(pc.magenta("Dry run complete."));

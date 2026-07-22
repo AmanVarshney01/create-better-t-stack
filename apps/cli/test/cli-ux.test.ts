@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { PassThrough } from "node:stream";
 
 import { formatHistoryEntry } from "../src/commands/history";
+import { gatherConfig } from "../src/prompts/config-prompts";
 import { isCancel, isGoBack, navigableSelect } from "../src/prompts/navigable";
 import { navigableGroup } from "../src/prompts/navigable-group";
 import type { ProjectConfig } from "../src/types";
@@ -107,6 +108,40 @@ describe("CLI flow presentation", () => {
         sectionTotal: 1,
       },
     ]);
+  });
+
+  it("keeps incompatible preselected values when YOLO validation is disabled", async () => {
+    const result = await runWithContextAsync({}, () =>
+      gatherConfig(
+        {
+          frontend: ["nuxt"],
+          backend: "hono",
+          runtime: "bun",
+          api: "trpc",
+          database: "mongodb",
+          orm: "drizzle",
+          dbSetup: "none",
+          auth: "none",
+          payments: "none",
+          addons: ["none"],
+          examples: ["none"],
+          webDeploy: "none",
+          serverDeploy: "none",
+          git: false,
+          packageManager: "bun",
+          install: false,
+        },
+        "yolo-app",
+        "/tmp/yolo-app",
+        "yolo-app",
+        { skipCompatibilityChecks: true },
+      ),
+    );
+
+    expect(result.frontend).toEqual(["nuxt"]);
+    expect(result.api).toBe("trpc");
+    expect(result.database).toBe("mongodb");
+    expect(result.orm).toBe("drizzle");
   });
 
   it("groups the selected stack and uses product-facing labels", () => {

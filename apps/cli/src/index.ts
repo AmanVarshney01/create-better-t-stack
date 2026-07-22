@@ -180,7 +180,7 @@ export const router = t.router({
       };
       const result = await createProjectHandler(combinedInput);
 
-      if (options.verbose || options.dryRun) {
+      if (options.verbose) {
         return result;
       }
     }),

@@ -30,6 +30,8 @@ export interface NavigablePromptGroupOptions<T> {
     label: string;
     prompts: ReadonlyArray<keyof T>;
   }>;
+  /** Values to accept without invoking their prompt resolvers. */
+  preselected?: Partial<PromptGroupAwaitedReturn<T>>;
 }
 
 export type NavigablePromptGroup<T> = {
@@ -83,11 +85,14 @@ export async function navigableGroup<T>(
       setIsFirstPrompt(currentIndex === 0);
       setLastPromptShownUI(false);
 
-      const pendingResult = prompt({
-        results,
-        previousAnswer: previousAnswers[name],
-      });
-      const result = pendingResult ? await pendingResult : undefined;
+      const presetResult = opts?.preselected?.[name];
+      const result =
+        presetResult !== undefined
+          ? presetResult
+          : await prompt({
+              results,
+              previousAnswer: previousAnswers[name],
+            });
 
       if (isGoBack(result)) {
         goingBack = true;

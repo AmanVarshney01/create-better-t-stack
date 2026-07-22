@@ -60,6 +60,7 @@ export async function gatherConfig(
   projectName: string,
   projectDir: string,
   relativePath: string,
+  options: { skipCompatibilityChecks?: boolean } = {},
 ) {
   if (isSilent()) {
     return {
@@ -168,6 +169,7 @@ export async function gatherConfig(
       install: ({ previousAnswer }) => getinstallChoice(flags.install, previousAnswer),
     },
     {
+      preselected: options.skipCompatibilityChecks ? flags : undefined,
       sections: [
         { label: "App", prompts: ["frontend", "backend", "runtime", "api"] },
         { label: "Data", prompts: ["database", "orm", "dbSetup"] },
