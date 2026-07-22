@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { PassThrough } from "node:stream";
+import { stripVTControlCharacters } from "node:util";
 
 import { formatHistoryEntry } from "../src/commands/history";
 import { gatherConfig } from "../src/prompts/config-prompts";
@@ -32,10 +33,11 @@ describe("CLI flow presentation", () => {
     input.write("b");
 
     expect(isGoBack(await resultPromise)).toBe(true);
-    expect(rendered).toContain("Pick a framework");
-    expect(rendered).toContain("back");
-    expect(rendered).toContain("↶  Pick a framework");
-    expect(rendered).not.toContain("■");
+    const plainRendered = stripVTControlCharacters(rendered);
+    expect(plainRendered).toContain("Pick a framework");
+    expect(plainRendered).toContain("back");
+    expect(plainRendered).toContain("↶  Pick a framework");
+    expect(plainRendered).not.toContain("■");
   });
 
   it("limits long lists and honors AbortSignal cancellation", async () => {

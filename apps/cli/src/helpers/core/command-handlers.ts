@@ -3,7 +3,6 @@ import path from "node:path";
 import { generateReproducibleCommand } from "@better-t-stack/template-generator";
 import { intro, log, outro } from "@clack/prompts";
 import { Result, UnhandledException } from "better-result";
-import fs from "fs-extra";
 import pc from "picocolors";
 
 import { getDefaultConfig } from "../../constants";
@@ -24,7 +23,13 @@ import {
   displayError,
 } from "../../utils/errors";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
-import { handleDirectoryConflict, setupProjectDirectory } from "../../utils/project-directory";
+import {
+  findAvailableIncrementedPath,
+  handleDirectoryConflict,
+  inspectProjectPath,
+  setupProjectDirectory,
+  validateSafeProjectDirectoryPath,
+} from "../../utils/project-directory";
 import { addToHistory } from "../../utils/project-history";
 import { validateProjectName } from "../../utils/project-name-validation";
 import { renderTitle } from "../../utils/render-title";
@@ -169,13 +174,11 @@ async function createProjectHandlerInternal(
     } else if (input.yes) {
       const defaultConfig = getDefaultConfig();
       let defaultName: string = defaultConfig.relativePath;
-      let counter = 1;
-      while (
-        (await fs.pathExists(path.resolve(process.cwd(), defaultName))) &&
-        (await fs.readdir(path.resolve(process.cwd(), defaultName))).length > 0
-      ) {
-        defaultName = `${defaultConfig.projectName}-${counter}`;
-        counter++;
+      const defaultPathState = yield* Result.await(
+        inspectProjectPath(path.resolve(process.cwd(), defaultName)),
+      );
+      if (defaultPathState !== "missing" && defaultPathState !== "empty-directory") {
+        defaultName = yield* Result.await(findAvailableIncrementedPath(defaultConfig.projectName));
       }
       currentPathInput = defaultName;
     } else {
@@ -207,6 +210,7 @@ async function createProjectHandlerInternal(
     finalPathInput = conflictResult.finalPathInput;
     shouldClearDirectory = conflictResult.shouldClearDirectory;
     yield* validateResolvedProjectPathInput(finalPathInput);
+    yield* Result.await(validateSafeProjectDirectoryPath(finalPathInput));
 
     let finalResolvedPath: string;
     let finalBaseName: string;
@@ -519,18 +523,35 @@ async function handleDirectoryConflictResult(
 async function handleDirectoryConflictProgrammatically(
   currentPathInput: string,
   strategy: DirectoryConflict,
-): Promise<Result<DirectoryConflictResult, DirectoryConflictError>> {
+): Promise<Result<DirectoryConflictResult, CLIError | DirectoryConflictError>> {
   const currentPath = path.resolve(process.cwd(), currentPathInput);
+  const pathStateResult = await inspectProjectPath(currentPath);
+  if (pathStateResult.isErr()) return Result.err(pathStateResult.error);
+  const pathState = pathStateResult.value;
 
-  if (!(await fs.pathExists(currentPath))) {
+  if (pathState === "missing" || pathState === "empty-directory") {
     return Result.ok({ finalPathInput: currentPathInput, shouldClearDirectory: false });
   }
 
-  const dirContents = await fs.readdir(currentPath);
-  const isNotEmpty = dirContents.length > 0;
+  if (strategy === "increment") {
+    const incrementResult = await findAvailableIncrementedPath(currentPathInput);
+    if (incrementResult.isErr()) return Result.err(incrementResult.error);
+    return Result.ok({ finalPathInput: incrementResult.value, shouldClearDirectory: false });
+  }
 
-  if (!isNotEmpty) {
-    return Result.ok({ finalPathInput: currentPathInput, shouldClearDirectory: false });
+  if (pathState === "symbolic-link") {
+    return Result.err(
+      new CLIError({
+        message: `Project path "${currentPathInput}" is a symbolic link. Choose a real directory or use directoryConflict: "increment".`,
+      }),
+    );
+  }
+  if (pathState === "non-directory") {
+    return Result.err(
+      new CLIError({
+        message: `Project path "${currentPathInput}" exists and is not a directory. Choose a different path or use directoryConflict: "increment".`,
+      }),
+    );
   }
 
   switch (strategy) {
@@ -539,22 +560,6 @@ async function handleDirectoryConflictProgrammatically(
 
     case "merge":
       return Result.ok({ finalPathInput: currentPathInput, shouldClearDirectory: false });
-
-    case "increment": {
-      let counter = 1;
-      const baseName = currentPathInput;
-      let finalPathInput = `${baseName}-${counter}`;
-
-      while (
-        (await fs.pathExists(path.resolve(process.cwd(), finalPathInput))) &&
-        (await fs.readdir(path.resolve(process.cwd(), finalPathInput))).length > 0
-      ) {
-        counter++;
-        finalPathInput = `${baseName}-${counter}`;
-      }
-
-      return Result.ok({ finalPathInput, shouldClearDirectory: false });
-    }
 
     case "error":
       return Result.err(new DirectoryConflictError({ directory: currentPathInput }));
