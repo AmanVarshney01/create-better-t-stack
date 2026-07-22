@@ -1,10 +1,10 @@
 "use client";
 
-{{#if (and (eq auth "clerk") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
-{{#if (and (eq auth "clerk") (or (eq backend "convex") (ne api "none")))}}
+{{#if (and (eq auth "clerk") (or (eq backend "convex") (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useAuth } from "@clerk/nextjs";
 {{/if}}
 {{#if (eq backend "convex")}}
@@ -40,7 +40,7 @@ import { Toaster } from "@{{projectName}}/ui/components/sonner";
 const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 

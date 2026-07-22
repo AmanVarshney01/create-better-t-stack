@@ -26289,12 +26289,12 @@ web-build/
   ["frontend/native/bare/app/_layout.tsx.hbs", `{{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
+import { ClerkProvider{{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { env } from "@{{projectName}}/env/native";
 {{/if}}
@@ -26359,7 +26359,7 @@ const styles = StyleSheet.create({
   },
 });
 
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
@@ -27508,12 +27508,12 @@ android
 {{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
+import { ClerkProvider{{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { env } from "@{{projectName}}/env/native";
 {{/if}}
@@ -27558,7 +27558,7 @@ const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
 });
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
@@ -28927,14 +28927,14 @@ uniwind-types.d.ts
   ["frontend/native/uniwind/app/_layout.tsx.hbs", `{{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
 
 import "@/global.css";
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
+import { ClerkProvider{{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { env } from "@{{projectName}}/env/native";
 {{/if}}
@@ -28984,7 +28984,7 @@ export const unstable_settings = {
   });
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
@@ -30465,11 +30465,11 @@ export function ModeToggle() {
 `],
   ["frontend/react/next/src/components/providers.tsx.hbs", `"use client";
 
-{{#if (and (eq auth "clerk") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
-{{#if (and (eq auth "clerk") (or (eq backend "convex") (ne api "none")))}}
+{{#if (and (eq auth "clerk") (or (eq backend "convex") (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useAuth } from "@clerk/nextjs";
 {{/if}}
 {{#if (eq backend "convex")}}
@@ -30505,7 +30505,7 @@ import { Toaster } from "@{{projectName}}/ui/components/sonner";
 const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
@@ -30740,10 +30740,10 @@ import Header from "./components/header";
 import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
 {{#if (eq auth "clerk")}}
-import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react-router";
+import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/react-router";
 import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 {{/if}}
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
@@ -30778,7 +30778,7 @@ export const middleware: Route.MiddlewareFunction[] = [clerkMiddleware()];
 export const loader = (args: Route.LoaderArgs) => rootAuthLoader(args);
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
@@ -30890,10 +30890,10 @@ export default function App() {
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <ClerkProvider loaderData={loaderData}>
-      {{#unless (eq api "none")}}
+      {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
       <ClerkApiAuthBridge />
-      {{/unless}}
-      {{#if (eq api "orpc")}}
+      {{/if}}
+      {{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
       <QueryClientProvider client={queryClient}>
         <ThemeProvider
           attribute="class"
@@ -31260,7 +31260,7 @@ export { useTheme } from "next-themes";
 `],
   ["frontend/react/tanstack-router/src/main.tsx.hbs", `import { RouterProvider, createRouter } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
@@ -31279,7 +31279,7 @@ import { routeTree } from "./routeTree.gen";
   import { env } from "@{{projectName}}/env/web";
 {{/if}}
 {{#if (eq auth "clerk")}}
-  import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react";
+  import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/react";
 {{/if}}
 {{#if (eq backend "convex")}}
   import { ConvexReactClient } from "convex/react";
@@ -31294,7 +31294,7 @@ import { routeTree } from "./routeTree.gen";
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 

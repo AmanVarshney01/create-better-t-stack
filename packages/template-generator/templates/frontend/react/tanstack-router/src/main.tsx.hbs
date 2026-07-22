@@ -1,6 +1,6 @@
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
@@ -19,7 +19,7 @@ import { routeTree } from "./routeTree.gen";
   import { env } from "@{{projectName}}/env/web";
 {{/if}}
 {{#if (eq auth "clerk")}}
-  import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react";
+  import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/react";
 {{/if}}
 {{#if (eq backend "convex")}}
   import { ConvexReactClient } from "convex/react";
@@ -34,7 +34,7 @@ import { routeTree } from "./routeTree.gen";
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
