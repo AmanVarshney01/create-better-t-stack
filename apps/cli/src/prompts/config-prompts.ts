@@ -95,6 +95,8 @@ export async function gatherConfig(
         getBackendFrameworkChoice(flags.backend, results.frontend, previousAnswer),
       runtime: ({ results, previousAnswer }) =>
         getRuntimeChoice(flags.runtime, results.backend, previousAnswer),
+      api: ({ results, previousAnswer }) =>
+        getApiChoice(flags.api, results.frontend, results.backend, previousAnswer) as Promise<API>,
       database: ({ results, previousAnswer }) =>
         getDatabaseChoice(flags.database, results.backend, results.runtime, previousAnswer),
       orm: ({ results, previousAnswer }) =>
@@ -106,8 +108,15 @@ export async function gatherConfig(
           results.runtime,
           previousAnswer,
         ),
-      api: ({ results, previousAnswer }) =>
-        getApiChoice(flags.api, results.frontend, results.backend, previousAnswer) as Promise<API>,
+      dbSetup: ({ results, previousAnswer }) =>
+        getDBSetupChoice(
+          results.database ?? "none",
+          flags.dbSetup,
+          results.orm,
+          results.backend,
+          results.runtime,
+          previousAnswer,
+        ),
       auth: ({ results, previousAnswer }) =>
         getAuthChoice(flags.auth, results.backend, results.frontend, previousAnswer),
       payments: ({ results, previousAnswer }) =>
@@ -136,15 +145,6 @@ export async function gatherConfig(
           results.api,
           previousAnswer,
         ) as Promise<Examples[]>,
-      dbSetup: ({ results, previousAnswer }) =>
-        getDBSetupChoice(
-          results.database ?? "none",
-          flags.dbSetup,
-          results.orm,
-          results.backend,
-          results.runtime,
-          previousAnswer,
-        ),
       webDeploy: ({ results, previousAnswer }) =>
         getDeploymentChoice(
           flags.webDeploy,
@@ -168,6 +168,15 @@ export async function gatherConfig(
       install: ({ previousAnswer }) => getinstallChoice(flags.install, previousAnswer),
     },
     {
+      sections: [
+        { label: "App", prompts: ["frontend", "backend", "runtime", "api"] },
+        { label: "Data", prompts: ["database", "orm", "dbSetup"] },
+        { label: "Product", prompts: ["auth", "payments", "addons", "examples"] },
+        {
+          label: "Ship",
+          prompts: ["webDeploy", "serverDeploy", "git", "packageManager", "install"],
+        },
+      ],
       onCancel: () => {
         throw new UserCancelledError({ message: "Operation cancelled" });
       },

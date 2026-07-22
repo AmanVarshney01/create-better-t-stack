@@ -1,3 +1,4 @@
+import { box, log } from "@clack/prompts";
 import pc from "picocolors";
 
 import type {
@@ -17,7 +18,7 @@ import {
   fetchSponsorsQuietly,
   formatPostInstallSpecialSponsorsSection,
 } from "../../utils/sponsors";
-import { cliConsola } from "../../utils/terminal-output";
+import { cliLog } from "../../utils/terminal-output";
 
 function getDesktopStaticBuildNote(frontend: Frontend[]): string {
   const staticBuildFrontends = new Map<Frontend, string>([
@@ -145,7 +146,7 @@ export async function displayPostInstallInstructions(
     packageManager === "bun" && hasNative && hasWeb ? getBunWebNativeWarning() : "";
   const noOrmWarning = !isConvex && database !== "none" && orm === "none" ? getNoOrmWarning() : "";
 
-  let output = `${pc.bold("Next steps")}\n${pc.cyan("1.")} ${cdCmd}\n`;
+  let output = `${pc.cyan("1.")} ${cdCmd}\n`;
   let stepCounter = 2;
 
   if (!depsInstalled) {
@@ -189,36 +190,53 @@ export async function displayPostInstallInstructions(
     hasWeb || hasStandaloneBackend || addons?.includes("starlight") || addons?.includes("fumadocs");
 
   if (hasAnyService) {
-    output += `${pc.bold("Your project will be available at:")}\n`;
+    const localServices: Array<{ label: string; url: string }> = [];
+    let localDevelopmentNote = "";
 
     if (hasWeb) {
-      output += `${pc.cyan("•")} Frontend: http://localhost:${webPort}\n`;
+      localServices.push({ label: "Frontend", url: `http://localhost:${webPort}` });
     } else if (!hasNative && !addons?.includes("starlight")) {
-      output += `${pc.yellow(
-        "NOTE:",
-      )} You are creating a backend-only app\n   (no frontend selected)\n`;
+      localDevelopmentNote = "Backend-only app — no frontend selected";
     }
 
     if (!isConvex && !isBackendSelf && hasStandaloneBackend) {
-      output += `${pc.cyan("•")} Backend API: http://localhost:3000\n`;
+      localServices.push({ label: "API", url: "http://localhost:3000" });
 
       if (api === "orpc") {
-        output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:3000/api-reference\n`;
+        localServices.push({
+          label: "API reference",
+          url: "http://localhost:3000/api-reference",
+        });
       }
     }
 
     if (isBackendSelf && api === "orpc") {
       const rpcPath =
         frontend?.includes("next") || frontend?.includes("tanstack-start") ? "/api/rpc" : "/rpc";
-      output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:${webPort}${rpcPath}/api-reference\n`;
+      localServices.push({
+        label: "API reference",
+        url: `http://localhost:${webPort}${rpcPath}/api-reference`,
+      });
     }
 
     if (addons?.includes("starlight")) {
-      output += `${pc.cyan("•")} Docs: http://localhost:4321\n`;
+      localServices.push({ label: "Docs", url: "http://localhost:4321" });
     }
 
     if (addons?.includes("fumadocs")) {
-      output += `${pc.cyan("•")} Fumadocs: http://localhost:4000\n`;
+      localServices.push({ label: "Fumadocs", url: "http://localhost:4000" });
+    }
+
+    output += `\n${pc.bold("Local development")}\n`;
+    if (localDevelopmentNote) {
+      output += `${pc.dim(localDevelopmentNote)}\n`;
+    }
+
+    if (localServices.length > 0) {
+      const labelWidth = Math.max(...localServices.map(({ label }) => label.length));
+      for (const { label, url } of localServices) {
+        output += `${pc.dim(label.padEnd(labelWidth))}  ${pc.cyan(url)}\n`;
+      }
     }
   }
 
@@ -246,16 +264,23 @@ export async function displayPostInstallInstructions(
     ? formatPostInstallSpecialSponsorsSection(sponsorsResult.value)
     : "";
 
+  log.message([], { spacing: 1 });
+  box(output.trimEnd(), pc.bold("Next steps"), {
+    contentPadding: 2,
+    formatBorder: pc.dim,
+    rounded: true,
+    width: "auto",
+  });
+
   if (specialSponsorsSection) {
-    output += `\n${specialSponsorsSection.trim()}\n`;
+    cliLog.message(specialSponsorsSection);
   }
 
-  output += `\n${pc.bold(
-    "Like Better-T-Stack?",
-  )} Please consider giving us a star\n   on GitHub:\n`;
-  output += pc.cyan("https://github.com/AmanVarshney01/create-better-t-stack");
-
-  cliConsola.box(output);
+  cliLog.message(
+    `${pc.bold("Like Better T Stack?")} ${pc.dim("Star the project on GitHub")}\n${pc.cyan(
+      "https://github.com/AmanVarshney01/create-better-t-stack",
+    )}`,
+  );
 }
 
 function getNativeInstructions(
@@ -336,7 +361,8 @@ async function getDatabaseInstructions(
   serverDeploy: ServerDeploy,
   backend: Backend,
 ) {
-  const instructions: string[] = [];
+  const notes: string[] = [];
+  const commands: Array<{ label: string; command: string }> = [];
   const isD1Alchemy =
     dbSetup === "d1" &&
     (serverDeploy === "cloudflare" || (backend === "self" && webDeploy === "cloudflare"));
@@ -345,28 +371,27 @@ async function getDatabaseInstructions(
     const dockerStatus = await getDockerStatus(database);
 
     if (dockerStatus.message) {
-      instructions.push(dockerStatus.message);
-      instructions.push("");
+      notes.push(dockerStatus.message);
     }
   }
 
   if (isD1Alchemy) {
     if (orm === "drizzle") {
-      instructions.push(`${pc.cyan("•")} Generate migrations: ${`${runCmd} db:generate`}`);
+      commands.push({ label: "Generate migrations", command: `${runCmd} db:generate` });
     } else if (orm === "prisma") {
-      instructions.push(`${pc.cyan("•")} Generate Prisma client: ${`${runCmd} db:generate`}`);
-      instructions.push(`${pc.cyan("•")} Apply migrations: ${`${runCmd} db:migrate`}`);
+      commands.push({ label: "Generate client", command: `${runCmd} db:generate` });
+      commands.push({ label: "Apply migrations", command: `${runCmd} db:migrate` });
     }
   }
 
   if (dbSetup === "planetscale") {
     if (database === "mysql" && orm === "drizzle") {
-      instructions.push(
+      notes.push(
         `${pc.yellow("NOTE:")} Enable foreign key constraints in PlanetScale database settings`,
       );
     }
     if (database === "mysql" && orm === "prisma") {
-      instructions.push(
+      notes.push(
         `${pc.yellow(
           "NOTE:",
         )} How to handle Prisma migrations with PlanetScale:\n   https://github.com/prisma/prisma/issues/7292`,
@@ -375,7 +400,7 @@ async function getDatabaseInstructions(
   }
 
   if (dbSetup === "turso" && orm === "prisma") {
-    instructions.push(
+    notes.push(
       `${pc.yellow(
         "NOTE:",
       )} Follow Turso's Prisma guide for migrations via the Turso CLI:\n   https://docs.turso.tech/sdk/ts/orm/prisma`,
@@ -384,39 +409,55 @@ async function getDatabaseInstructions(
 
   if (orm === "prisma") {
     if (database === "mongodb" && dbSetup === "docker") {
-      instructions.push(
+      notes.push(
         `${pc.yellow("WARNING:")} Prisma + MongoDB + Docker combination\n   may not work.`,
       );
     }
     if (dbSetup === "docker") {
-      instructions.push(`${pc.cyan("•")} Start docker container: ${`${runCmd} db:start`}`);
+      commands.push({ label: "Start database", command: `${runCmd} db:start` });
     }
     if (!isD1Alchemy) {
-      instructions.push(`${pc.cyan("•")} Generate Prisma Client: ${`${runCmd} db:generate`}`);
-      instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
+      commands.push({ label: "Generate client", command: `${runCmd} db:generate` });
+      commands.push({ label: "Apply schema", command: `${runCmd} db:push` });
     }
     if (!isD1Alchemy) {
-      instructions.push(`${pc.cyan("•")} Database UI: ${`${runCmd} db:studio`}`);
+      commands.push({ label: "Open studio", command: `${runCmd} db:studio` });
     }
   } else if (orm === "drizzle") {
     if (dbSetup === "docker") {
-      instructions.push(`${pc.cyan("•")} Start docker container: ${`${runCmd} db:start`}`);
+      commands.push({ label: "Start database", command: `${runCmd} db:start` });
     }
     if (!isD1Alchemy) {
-      instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
+      commands.push({ label: "Apply schema", command: `${runCmd} db:push` });
     }
     if (!isD1Alchemy) {
-      instructions.push(`${pc.cyan("•")} Database UI: ${`${runCmd} db:studio`}`);
+      commands.push({ label: "Open studio", command: `${runCmd} db:studio` });
     }
   } else if (orm === "mongoose") {
     if (dbSetup === "docker") {
-      instructions.push(`${pc.cyan("•")} Start docker container: ${`${runCmd} db:start`}`);
+      commands.push({ label: "Start database", command: `${runCmd} db:start` });
     }
   } else if (orm === "none") {
-    instructions.push(`${pc.yellow("NOTE:")} Manual database schema setup\n   required.`);
+    notes.push(`${pc.yellow("NOTE:")} Manual database schema setup required.`);
   }
 
-  return instructions.length ? `${pc.bold("Database commands:")}\n${instructions.join("\n")}` : "";
+  if (notes.length === 0 && commands.length === 0) {
+    return "";
+  }
+
+  const sections = [pc.bold("Database")];
+  if (notes.length > 0) {
+    sections.push(notes.join("\n"));
+  }
+  if (commands.length > 0) {
+    const labelWidth = Math.max(...commands.map(({ label }) => label.length));
+    const commandRows = commands.map(
+      ({ label, command }) => `${pc.dim(label.padEnd(labelWidth))}  ${pc.cyan(command)}`,
+    );
+    sections.push(commandRows.join("\n"));
+  }
+
+  return sections.join("\n");
 }
 
 function getTauriInstructions(runCmd: string, frontend: Frontend[]) {

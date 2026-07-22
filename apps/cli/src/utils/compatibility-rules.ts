@@ -20,11 +20,8 @@ import { ValidationError } from "./errors";
 type ValidationResult = Result<void, ValidationError>;
 type AddonCompatibilityConfig = Pick<ProjectConfig, "frontend" | "auth" | "backend" | "runtime">;
 const TASK_RUNNER_ADDONS = ["turborepo", "nx", "vite-plus"] as const satisfies readonly Addons[];
-const STATIC_DESKTOP_ADDONS = ["tauri", "electrobun"] as const satisfies readonly Addons[];
-const TAURI_STATIC_EXPORT_FRONTENDS = [
-  "next",
-  "tanstack-start",
-] as const satisfies readonly Frontend[];
+const STATIC_DESKTOP_ADDONS: readonly Addons[] = ["tauri", "electrobun"];
+const TAURI_STATIC_EXPORT_FRONTENDS: readonly Frontend[] = ["next", "tanstack-start"];
 
 export const CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS = [
   "nuxt",
@@ -356,12 +353,12 @@ export function validateVercelServerDeploy(
 }
 
 // Frontends whose docker image needs server output, which desktop addons replace with a static export
-const DOCKER_SERVER_OUTPUT_FRONTENDS = [
+const DOCKER_SERVER_OUTPUT_FRONTENDS: readonly Frontend[] = [
   "next",
   "svelte",
   "astro",
   "react-router",
-] as const satisfies readonly Frontend[];
+];
 
 export function validateDockerWebDeployDesktopAddons(
   webDeploy: WebDeploy | undefined,

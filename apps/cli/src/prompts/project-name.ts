@@ -56,7 +56,7 @@ export async function getProjectName(initialName?: string): Promise<string> {
 
   while (!isValid) {
     const response = await text({
-      message: "Enter your project name or path (relative to current directory)",
+      message: "Where should we create your project?",
       placeholder: defaultName,
       initialValue: initialName,
       defaultValue: defaultName,

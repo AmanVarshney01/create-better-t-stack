@@ -102,7 +102,7 @@ export async function getDBSetupChoice(
   }
 
   const response = await navigableSelect<DatabaseSetup>({
-    message: `Select ${databaseType} setup option`,
+    message: `Choose a ${databaseType} setup`,
     options,
     initialValue: preferValidInitial(options, previousValue, "none"),
   });

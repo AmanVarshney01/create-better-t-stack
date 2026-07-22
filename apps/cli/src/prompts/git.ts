@@ -6,7 +6,7 @@ export async function getGitChoice(git?: boolean, previousValue?: boolean) {
   if (git !== undefined) return git;
 
   const response = await navigableConfirm({
-    message: "Initialize git repository?",
+    message: "Initialize a Git repository?",
     initialValue: previousValue ?? DEFAULT_CONFIG.git,
   });
 

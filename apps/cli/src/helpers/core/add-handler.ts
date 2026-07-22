@@ -22,6 +22,7 @@ import type { AddInput, Addons, AddonOptions, ProjectConfig } from "../../types"
 import { updateBtsConfig } from "../../utils/bts-config";
 import { validateAddonsAgainstConfig } from "../../utils/compatibility-rules";
 import { isSilent, runWithContextAsync } from "../../utils/context";
+import { formatConfigValue } from "../../utils/display-config";
 import { CLIError, UserCancelledError, displayError } from "../../utils/errors";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
 import { renderTitle } from "../../utils/render-title";
@@ -209,7 +210,7 @@ async function addHandlerInternal(
 
   if (!isSilent()) {
     renderTitle();
-    intro(pc.magenta("Add addons to your Better-T-Stack project"));
+    intro(pc.magenta("Add to your project"));
   }
 
   // Detect existing project configuration
@@ -238,7 +239,8 @@ async function addHandlerInternal(
 
     if (addonsToAdd.length === 0) {
       if (!isSilent()) {
-        log.warn(pc.yellow("All specified addons are already installed or invalid."));
+        log.warn(pc.yellow("Nothing to add — those addons are already installed"));
+        outro(pc.dim("Project unchanged"));
       }
       return Result.ok({
         success: true,
@@ -273,8 +275,7 @@ async function addHandlerInternal(
 
     if (selectedAddons.length === 0) {
       if (!isSilent()) {
-        log.info(pc.dim("No addons selected."));
-        outro(pc.magenta("Nothing to add."));
+        outro(pc.dim("Nothing selected · project unchanged"));
       }
       return Result.ok({
         success: true,
@@ -294,7 +295,7 @@ async function addHandlerInternal(
   }
 
   if (!isSilent()) {
-    log.info(pc.cyan(`Adding addons: ${addonsToAdd.join(", ")}`));
+    log.info(`${pc.dim("Adding")} ${pc.cyan(formatConfigValue(addonsToAdd))}`);
   }
 
   const mergedAddonOptions = mergeAddonOptions(existingConfig.addonOptions, input.addonOptions);
@@ -327,7 +328,7 @@ async function addHandlerInternal(
 
   // Create VFS and process addon templates using template-generator's logic
   if (!isSilent()) {
-    log.info(pc.dim("Installing addon files..."));
+    log.info(pc.dim("Preparing addon files…"));
   }
 
   const vfs = new VirtualFileSystem();
@@ -392,9 +393,9 @@ async function addHandlerInternal(
 
   if (input.dryRun) {
     if (!isSilent()) {
-      log.success(pc.green("Dry run validation passed. No addon files were written."));
-      log.info(pc.dim(`Planned addon files: ${vfs.getFileCount()}`));
-      outro(pc.magenta("Dry run complete."));
+      log.success(pc.green("Dry run passed · no files written"));
+      log.message(pc.dim(`${vfs.getFileCount()} addon files planned`));
+      outro(pc.dim("Project unchanged"));
     }
 
     return Result.ok({
@@ -449,24 +450,19 @@ async function addHandlerInternal(
 
   // Install dependencies if requested
   if (input.install) {
-    if (!isSilent()) {
-      log.info(pc.dim("Installing dependencies..."));
-    }
     await installDependencies({ projectDir, packageManager: config.packageManager });
   }
 
   if (!isSilent()) {
-    log.success(pc.green(`Successfully added: ${addonsToAdd.join(", ")}`));
+    log.success(pc.green(`Added ${formatConfigValue(addonsToAdd)}`));
 
     if (!input.install) {
-      log.info(
-        pc.yellow(
-          `Run '${config.packageManager === "npm" ? "npm install" : `${config.packageManager} install`}' to install new dependencies.`,
-        ),
-      );
+      const installCommand =
+        config.packageManager === "npm" ? "npm install" : `${config.packageManager} install`;
+      log.message(`${pc.dim("Next step")}\n${pc.cyan(installCommand)}`);
     }
 
-    outro(pc.magenta("Addons added successfully!"));
+    outro(pc.magenta("Project updated"));
   }
 
   return Result.ok({

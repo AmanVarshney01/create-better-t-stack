@@ -231,6 +231,11 @@ export const router = t.router({
           .describe("Install dependencies after adding"),
         packageManager: PackageManagerSchema.optional().describe("Package manager to use"),
         projectDir: z.string().optional().describe("Project directory (defaults to current)"),
+        dryRun: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe("Preview addon changes without writing files"),
       }),
     )
     .mutation(async ({ input }) => {
