@@ -78,7 +78,7 @@ export async function getAuthChoice(
   });
 
   const response = await navigableSelect({
-    message: "Select authentication provider",
+    message: "Choose authentication",
     options,
     initialValue: preferValidInitial(
       options,

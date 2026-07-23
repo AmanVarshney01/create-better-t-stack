@@ -3,7 +3,6 @@ import path from "node:path";
 import { generateReproducibleCommand } from "@better-t-stack/template-generator";
 import { intro, log, outro } from "@clack/prompts";
 import { Result, UnhandledException } from "better-result";
-import fs from "fs-extra";
 import pc from "picocolors";
 
 import { getDefaultConfig } from "../../constants";
@@ -11,6 +10,7 @@ import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
 import type { CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
+import { getCliSubcommandCommand } from "../../utils/cli-invocation";
 import { validateAddonsAgainstFrontends } from "../../utils/compatibility-rules";
 import { isSilent, runWithContextAsync } from "../../utils/context";
 import { displayConfig } from "../../utils/display-config";
@@ -23,12 +23,17 @@ import {
   displayError,
 } from "../../utils/errors";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
-import { handleDirectoryConflict, setupProjectDirectory } from "../../utils/project-directory";
+import {
+  findAvailableIncrementedPath,
+  handleDirectoryConflict,
+  inspectProjectPath,
+  setupProjectDirectory,
+  validateSafeProjectDirectoryPath,
+} from "../../utils/project-directory";
 import { addToHistory } from "../../utils/project-history";
 import { validateProjectName } from "../../utils/project-name-validation";
 import { renderTitle } from "../../utils/render-title";
 import { getTemplateConfig, getTemplateDescription } from "../../utils/templates";
-import { cliConsola } from "../../utils/terminal-output";
 import {
   getProvidedFlags,
   processAndValidateFlags,
@@ -153,10 +158,10 @@ async function createProjectHandlerInternal(
     if (!isSilent() && input.renderTitle !== false) {
       renderTitle();
     }
-    if (!isSilent()) intro(pc.magenta("Creating a new Better-T-Stack project"));
+    if (!isSilent()) intro(pc.magenta("Configure your new project"));
 
     if (!isSilent() && input.yolo) {
-      cliConsola.fatal("YOLO mode enabled - skipping checks. Things may break!");
+      log.warn(pc.yellow("YOLO mode enabled — compatibility checks are disabled."));
     }
 
     // Get project name
@@ -169,13 +174,11 @@ async function createProjectHandlerInternal(
     } else if (input.yes) {
       const defaultConfig = getDefaultConfig();
       let defaultName: string = defaultConfig.relativePath;
-      let counter = 1;
-      while (
-        (await fs.pathExists(path.resolve(process.cwd(), defaultName))) &&
-        (await fs.readdir(path.resolve(process.cwd(), defaultName))).length > 0
-      ) {
-        defaultName = `${defaultConfig.projectName}-${counter}`;
-        counter++;
+      const defaultPathState = yield* Result.await(
+        inspectProjectPath(path.resolve(process.cwd(), defaultName)),
+      );
+      if (defaultPathState !== "missing" && defaultPathState !== "empty-directory") {
+        defaultName = yield* Result.await(findAvailableIncrementedPath(defaultConfig.projectName));
       }
       currentPathInput = defaultName;
     } else {
@@ -207,6 +210,7 @@ async function createProjectHandlerInternal(
     finalPathInput = conflictResult.finalPathInput;
     shouldClearDirectory = conflictResult.shouldClearDirectory;
     yield* validateResolvedProjectPathInput(finalPathInput);
+    yield* Result.await(validateSafeProjectDirectoryPath(finalPathInput));
 
     let finalResolvedPath: string;
     let finalBaseName: string;
@@ -249,8 +253,9 @@ async function createProjectHandlerInternal(
         const templateName = input.template.toUpperCase();
         const templateDescription = getTemplateDescription(input.template);
         if (!isSilent()) {
-          log.message(pc.bold(pc.cyan(`Using template: ${pc.white(templateName)}`)));
-          log.message(pc.dim(`   ${templateDescription}`));
+          log.info(
+            `${pc.dim("Template")} ${pc.bold(pc.cyan(templateName))}\n${pc.dim(templateDescription)}`,
+          );
         }
         const userOverrides: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(originalInput)) {
@@ -295,8 +300,7 @@ async function createProjectHandlerInternal(
       }
 
       if (!isSilent()) {
-        log.info(pc.yellow("Using default/flag options (config prompts skipped):"));
-        log.message(displayConfig(config));
+        log.info(pc.dim("Quick setup selected — using defaults and provided flags."));
       }
     } else {
       // Process and validate flags
@@ -309,17 +313,18 @@ async function createProjectHandlerInternal(
       const flagConfig = flagConfigResult.value;
       const { projectName: _projectNameFromFlags, ...otherFlags } = flagConfig;
 
-      if (!isSilent() && Object.keys(otherFlags).length > 0) {
-        log.info(pc.yellow("Using these pre-selected options:"));
-        log.message(displayConfig(otherFlags));
-        log.message("");
+      const isTemplateSetup = input.template && input.template !== "none";
+      if (!isSilent() && !isTemplateSetup && Object.keys(otherFlags).length > 0) {
+        log.info(pc.dim("Command-line options applied."));
       }
 
       // gatherConfig may throw UserCancelledError
       const gatherResult = yield* Result.await(
         Result.tryPromise({
           try: async () =>
-            gatherConfig(flagConfig, finalBaseName, finalResolvedPath, finalPathInput),
+            gatherConfig(flagConfig, finalBaseName, finalResolvedPath, finalPathInput, {
+              skipCompatibilityChecks: cliInput.yolo,
+            }),
           catch: (e: unknown) => {
             if (e instanceof UserCancelledError) return e;
             return new CLIError({
@@ -361,6 +366,11 @@ async function createProjectHandlerInternal(
       }
     }
 
+    if (!isSilent()) {
+      log.info(pc.magenta(pc.bold("Stack ready")));
+      log.message(displayConfig(config));
+    }
+
     const reproducibleCommand = generateReproducibleCommand(config);
 
     if (input.dryRun) {
@@ -374,7 +384,7 @@ async function createProjectHandlerInternal(
             ),
           );
         }
-        log.success(pc.green("Dry run validation passed. No files were written."));
+        log.success(pc.green("Configuration ready. No files were written."));
         log.message(pc.dim(`Target directory: ${finalResolvedPath}`));
         log.message(pc.dim(`Run without --dry-run to create the project.`));
         outro(pc.magenta("Dry run complete."));
@@ -399,26 +409,22 @@ async function createProjectHandlerInternal(
       }),
     );
 
-    if (!isSilent()) {
-      log.success(
-        pc.blue(`You can reproduce this setup with the following command:\n${reproducibleCommand}`),
-      );
-    }
-
     await trackProjectCreation(config, input.disableAnalytics);
 
     // Track locally in history.json (non-fatal)
     const historyResult = await addToHistory(config, reproducibleCommand);
     if (historyResult.isErr() && !isSilent()) {
       log.warn(pc.yellow(historyResult.error.message));
+      log.message(`${pc.dim("Recreate this stack")}\n${pc.cyan(reproducibleCommand)}`);
+    } else if (!isSilent()) {
+      const historyCommand = getCliSubcommandCommand("history", config.packageManager);
+      log.message(`${pc.dim("Setup saved to history")}\n${pc.cyan(historyCommand)}`);
     }
 
     const elapsedTimeMs = Date.now() - startTime;
     if (!isSilent()) {
-      const elapsedTimeInSeconds = (elapsedTimeMs / 1000).toFixed(2);
-      outro(
-        pc.magenta(`Project created successfully in ${pc.bold(elapsedTimeInSeconds)} seconds!`),
-      );
+      const elapsedTimeInSeconds = (elapsedTimeMs / 1000).toFixed(1);
+      outro(pc.magenta(`Project ready in ${pc.bold(`${elapsedTimeInSeconds}s`)}`));
     }
 
     return Result.ok({
@@ -517,18 +523,35 @@ async function handleDirectoryConflictResult(
 async function handleDirectoryConflictProgrammatically(
   currentPathInput: string,
   strategy: DirectoryConflict,
-): Promise<Result<DirectoryConflictResult, DirectoryConflictError>> {
+): Promise<Result<DirectoryConflictResult, CLIError | DirectoryConflictError>> {
   const currentPath = path.resolve(process.cwd(), currentPathInput);
+  const pathStateResult = await inspectProjectPath(currentPath);
+  if (pathStateResult.isErr()) return Result.err(pathStateResult.error);
+  const pathState = pathStateResult.value;
 
-  if (!(await fs.pathExists(currentPath))) {
+  if (pathState === "missing" || pathState === "empty-directory") {
     return Result.ok({ finalPathInput: currentPathInput, shouldClearDirectory: false });
   }
 
-  const dirContents = await fs.readdir(currentPath);
-  const isNotEmpty = dirContents.length > 0;
+  if (strategy === "increment") {
+    const incrementResult = await findAvailableIncrementedPath(currentPathInput);
+    if (incrementResult.isErr()) return Result.err(incrementResult.error);
+    return Result.ok({ finalPathInput: incrementResult.value, shouldClearDirectory: false });
+  }
 
-  if (!isNotEmpty) {
-    return Result.ok({ finalPathInput: currentPathInput, shouldClearDirectory: false });
+  if (pathState === "symbolic-link") {
+    return Result.err(
+      new CLIError({
+        message: `Project path "${currentPathInput}" is a symbolic link. Choose a real directory or use directoryConflict: "increment".`,
+      }),
+    );
+  }
+  if (pathState === "non-directory") {
+    return Result.err(
+      new CLIError({
+        message: `Project path "${currentPathInput}" exists and is not a directory. Choose a different path or use directoryConflict: "increment".`,
+      }),
+    );
   }
 
   switch (strategy) {
@@ -537,22 +560,6 @@ async function handleDirectoryConflictProgrammatically(
 
     case "merge":
       return Result.ok({ finalPathInput: currentPathInput, shouldClearDirectory: false });
-
-    case "increment": {
-      let counter = 1;
-      const baseName = currentPathInput;
-      let finalPathInput = `${baseName}-${counter}`;
-
-      while (
-        (await fs.pathExists(path.resolve(process.cwd(), finalPathInput))) &&
-        (await fs.readdir(path.resolve(process.cwd(), finalPathInput))).length > 0
-      ) {
-        counter++;
-        finalPathInput = `${baseName}-${counter}`;
-      }
-
-      return Result.ok({ finalPathInput, shouldClearDirectory: false });
-    }
 
     case "error":
       return Result.err(new DirectoryConflictError({ directory: currentPathInput }));

@@ -46,17 +46,31 @@ export async function getProjectName(initialName?: string): Promise<string> {
   let defaultName: string = DEFAULT_CONFIG.projectName;
   let counter = 1;
 
-  while (
-    (await fs.pathExists(path.resolve(process.cwd(), defaultName))) &&
-    (await fs.readdir(path.resolve(process.cwd(), defaultName))).length > 0
-  ) {
+  while (true) {
+    const defaultPath = path.resolve(process.cwd(), defaultName);
+    let stats;
+    try {
+      stats = await fs.lstat(defaultPath);
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        break;
+      }
+      throw error;
+    }
+
+    if (stats.isDirectory() && (await fs.readdir(defaultPath)).length === 0) break;
     defaultName = `${DEFAULT_CONFIG.projectName}-${counter}`;
     counter++;
   }
 
   while (!isValid) {
     const response = await text({
-      message: "Enter your project name or path (relative to current directory)",
+      message: "Where should we create your project?",
       placeholder: defaultName,
       initialValue: initialName,
       defaultValue: defaultName,

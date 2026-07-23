@@ -25,7 +25,7 @@ async function openExternalUrl(url: string, successMessage: string) {
 
 export async function showSponsorsCommand() {
   renderTitle();
-  intro(pc.magenta("Better-T-Stack Sponsors"));
+  intro(pc.magenta("Sponsors"));
 
   const sponsorsResult = await fetchSponsors();
   if (sponsorsResult.isErr()) {

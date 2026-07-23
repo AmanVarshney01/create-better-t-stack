@@ -474,7 +474,7 @@ describe("Addon Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Cannot combine 'turborepo', 'nx', and 'vite-plus' addons");
+      expectError(result, "`nx`, `turborepo`, and `vite-plus` cannot be used together");
     });
 
     it("should hide task runner addons when one is already installed", () => {

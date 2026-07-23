@@ -71,7 +71,7 @@ export async function getDeploymentChoice(
   });
 
   const response = await navigableSelect<WebDeploy>({
-    message: "Select web deployment",
+    message: "Choose web deployment",
     options,
     initialValue: preferValidInitial(options, previousValue, DEFAULT_CONFIG.webDeploy),
   });
