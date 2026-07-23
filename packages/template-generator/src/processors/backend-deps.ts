@@ -39,6 +39,10 @@ export function processBackendDeps(vfs: VirtualFileSystem, config: ProjectConfig
     else if (backend === "elysia") deps.push("@elysiajs/trpc");
   } else if (api === "orpc") {
     deps.push("@orpc/server", "@orpc/openapi", "@orpc/zod");
+  } else if (api === "grpc") {
+    deps.push("@connectrpc/connect", "@connectrpc/connect-node");
+    if (backend === "express") deps.push("@connectrpc/connect-express");
+    else if (backend === "fastify") deps.push("@connectrpc/connect-fastify");
   }
 
   if (auth === "better-auth") deps.push("better-auth");

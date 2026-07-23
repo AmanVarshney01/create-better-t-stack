@@ -31,6 +31,13 @@ export const TECH_OPTIONS: Record<
       color: "from-indigo-400 to-indigo-600",
     },
     {
+      id: "grpc",
+      name: "gRPC",
+      description: "High-performance RPC with Connect & Protocol Buffers",
+      icon: "/icon/grpc.svg",
+      color: "from-red-400 to-red-600",
+    },
+    {
       id: "none",
       name: "No API",
       description: "No API layer (API routes disabled)",

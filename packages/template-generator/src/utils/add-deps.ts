@@ -117,6 +117,16 @@ export const dependencyVersionMap = {
   "@trpc/server": "^11.18.0",
   "@trpc/client": "^11.18.0",
 
+  "@connectrpc/connect": "1.7.0",
+  "@connectrpc/connect-node": "1.7.0",
+  "@connectrpc/connect-web": "1.7.0",
+  "@connectrpc/connect-express": "1.7.0",
+  "@connectrpc/connect-fastify": "1.7.0",
+  "@bufbuild/protobuf": "^1.10.0",
+  "@bufbuild/buf": "1.72.0",
+  "@bufbuild/protoc-gen-es": "^1.10.0",
+  "@connectrpc/protoc-gen-connect-es": "1.7.0",
+
   next: "^16.2.0",
   nitro: "^3.0.260610-beta",
 

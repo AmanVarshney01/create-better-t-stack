@@ -1,0 +1,16 @@
+import { createConnectTransport } from "@connectrpc/connect-web";
+import { createClient } from "@connectrpc/connect";
+import { HealthService, ExampleService } from "@{{projectName}}/api/generated/api/v1/service_connect";
+
+{{#if (eq auth "better-auth")}}
+const fetchWithCredentials: typeof fetch = (input, init) =>
+  fetch(input, { ...init, credentials: "include" });
+{{/if}}
+
+const transport = createConnectTransport({
+  baseUrl: process.env.EXPO_PUBLIC_SERVER_URL ?? "http://localhost:3000",
+  fetch: {{#if (eq auth "better-auth")}}fetchWithCredentials{{else}}fetch{{/if}},
+});
+
+export const healthClient = createClient(HealthService, transport);
+export const exampleClient = createClient(ExampleService, transport);

@@ -1,0 +1,29 @@
+import type { NextRequest } from "next/server";
+import { createConnectRouter } from "@connectrpc/connect";
+import { createFetchHandler } from "@connectrpc/connect/protocol";
+import { routes } from "@{{projectName}}/api";
+
+const router = createConnectRouter();
+routes(router);
+const handlers = router.handlers.map((handler) => ({
+  route: `/${handler.service.typeName}/${handler.method.name}`,
+  fetch: createFetchHandler(handler, { httpVersion: "1.1" }),
+}));
+
+async function handle(req: NextRequest) {
+  const url = new URL(req.url);
+  url.pathname = url.pathname.replace(/^\/api\/connect/, "") || "/";
+  const connectRequest = new Request(url, req);
+  for (const handler of handlers) {
+    if (url.pathname !== handler.route) continue;
+    const response = await handler.fetch(connectRequest);
+    return response;
+  }
+  return new Response("Not Found", { status: 404 });
+}
+
+export const GET = handle;
+export const POST = handle;
+export const OPTIONS = handle;
+
+export const runtime = "nodejs";
