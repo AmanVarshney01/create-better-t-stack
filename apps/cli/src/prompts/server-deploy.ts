@@ -121,7 +121,7 @@ export async function getServerDeploymentToAdd(
   }
 
   const response = await navigableSelect<ServerDeploy>({
-    message: "Select server deployment",
+    message: "Choose server deployment",
     options,
     initialValue: DEFAULT_CONFIG.serverDeploy,
   });
