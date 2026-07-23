@@ -42,9 +42,13 @@ export async function getORMChoice(
   }
 
   const options =
-    database === "mongodb"
-      ? [ormOptions.prisma, ormOptions.mongoose]
-      : [ormOptions.drizzle, ormOptions.prisma];
+    backend === "nest"
+      ? database === "mongodb"
+        ? [ormOptions.prisma, ormOptions.mongoose]
+        : [ormOptions.prisma]
+      : database === "mongodb"
+        ? [ormOptions.prisma, ormOptions.mongoose]
+        : [ormOptions.drizzle, ormOptions.prisma];
 
   const response = await navigableSelect<ORM>({
     message: "Choose an ORM",

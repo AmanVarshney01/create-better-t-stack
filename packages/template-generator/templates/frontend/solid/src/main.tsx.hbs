@@ -2,7 +2,7 @@ import { RouterProvider, createRouter } from "@tanstack/solid-router";
 import { render } from "solid-js/web";
 import { routeTree } from "./routeTree.gen";
 import "./styles.css";
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { orpc, queryClient } from "./utils/orpc";
 {{/if}}
@@ -12,7 +12,7 @@ const router = createRouter({
   defaultPreload: "intent",
   scrollRestoration: true,
   defaultPreloadStaleTime: 0,
-  {{#if (eq api "orpc")}}
+  {{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
   context: { orpc, queryClient },
   {{/if}}
 });
@@ -25,11 +25,11 @@ declare module "@tanstack/solid-router" {
 
 function App() {
   return (
-    {{#if (eq api "orpc")}}
+    {{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
     <QueryClientProvider client={queryClient}>
     {{/if}}
       <RouterProvider router={router} />
-    {{#if (eq api "orpc")}}
+    {{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
     </QueryClientProvider>
     {{/if}}
   );

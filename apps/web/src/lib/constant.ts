@@ -211,6 +211,13 @@ export const TECH_OPTIONS: Record<
       color: "from-gray-500 to-gray-700",
     },
     {
+      id: "nest",
+      name: "Nest.js",
+      description: "Scalable Node.js server-side framework",
+      icon: "https://cdn.simpleicons.org/nestjs/E0234E",
+      color: "from-red-500 to-red-700",
+    },
+    {
       id: "convex",
       name: "Convex",
       description: "Reactive backend-as-a-service",

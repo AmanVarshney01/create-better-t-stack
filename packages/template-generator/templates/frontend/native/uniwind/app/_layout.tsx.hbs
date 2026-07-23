@@ -1,14 +1,14 @@
 {{#if (includes examples "ai")}}
 import "@/polyfills";
 {{/if}}
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 import { useEffect } from "react";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{/if}}
 
 import "@/global.css";
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
-import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
+import { ClerkProvider{{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}, useAuth{{/if}} } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { env } from "@{{projectName}}/env/native";
 {{/if}}
@@ -30,9 +30,9 @@ import { env } from "@{{projectName}}/env/native";
     import { tokenCache } from "@clerk/expo/token-cache";
   {{/if}}
 {{else}}
-  {{#unless (eq api "none")}}
+  {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
     import { QueryClientProvider } from "@tanstack/react-query";
-  {{/unless}}
+  {{/if}}
 {{/if}}
 
 import { Stack } from "expo-router";
@@ -44,7 +44,7 @@ import { AppThemeProvider } from "@/contexts/app-theme-context";
 {{#if (eq api "trpc")}}
   import { queryClient } from "@/utils/trpc";
 {{/if}}
-{{#if (eq api "orpc")}}
+{{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
   import { queryClient } from "@/utils/orpc";
 {{/if}}
 
@@ -58,7 +58,7 @@ export const unstable_settings = {
   });
 {{/if}}
 
-{{#if (and (eq auth "clerk") (ne api "none") (ne backend "convex"))}}
+{{#if (and (eq auth "clerk") (ne backend "convex") (or (ne api "none") (and (eq backend "nest") (includes examples "todo"))))}}
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
 
@@ -131,7 +131,7 @@ export default function Layout() {
     {{else}}
       {{#if (eq auth "clerk")}}
         <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
-          {{#unless (eq api "none")}}
+          {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
             <ClerkApiAuthBridge />
             <QueryClientProvider client={queryClient}>
               <GestureHandlerRootView style=\{{ flex: 1 }}>
@@ -154,10 +154,10 @@ export default function Layout() {
                 </AppThemeProvider>
               </KeyboardProvider>
             </GestureHandlerRootView>
-          {{/unless}}
+          {{/if}}
         </ClerkProvider>
       {{else}}
-        {{#unless (eq api "none")}}
+        {{#if (or (ne api "none") (and (eq backend "nest") (includes examples "todo")))}}
           <QueryClientProvider client={queryClient}>
             <GestureHandlerRootView style=\{{ flex: 1 }}>
               <KeyboardProvider>
@@ -179,7 +179,7 @@ export default function Layout() {
               </AppThemeProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>
-        {{/unless}}
+        {{/if}}
       {{/if}}
     {{/if}}
   );

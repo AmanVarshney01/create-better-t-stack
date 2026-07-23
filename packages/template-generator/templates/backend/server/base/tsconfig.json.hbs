@@ -3,10 +3,12 @@
   "compilerOptions": {
     "composite": true,
 		"outDir": "dist",
-		"paths": {
+    "paths": {
       "@/*": ["./src/*"]
     },
     "jsx": "react-jsx"{{#if (eq backend "hono")}},
-    "jsxImportSource": "hono/jsx"{{/if}}
+    "jsxImportSource": "hono/jsx"{{else if (eq backend "nest")}},
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true{{/if}}
   }
 }

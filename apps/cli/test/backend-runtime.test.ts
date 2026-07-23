@@ -18,6 +18,8 @@ describe("Backend and Runtime Combinations", () => {
       { backend: "fastify" as const, runtime: "node" as const },
 
       { backend: "elysia" as const, runtime: "bun" as const },
+      { backend: "nest" as const, runtime: "bun" as const },
+      { backend: "nest" as const, runtime: "node" as const },
 
       // Special cases
       { backend: "convex" as const, runtime: "none" as const },
@@ -57,6 +59,12 @@ describe("Backend and Runtime Combinations", () => {
           config.orm = "drizzle";
           config.auth = "better-auth";
           config.api = "trpc";
+        } else if (backend === "nest") {
+          config.database = "sqlite";
+          config.orm = "prisma";
+          config.auth = "none";
+          config.api = "none";
+          config.packageManager = "pnpm";
         } else {
           config.database = "sqlite";
           config.orm = "drizzle";
@@ -161,6 +169,11 @@ describe("Backend and Runtime Combinations", () => {
         error:
           "'--runtime none' is only supported with '--backend convex', '--backend none', or '--backend self'",
       },
+      {
+        backend: "nest",
+        runtime: "workers",
+        error: "Nest.js requires the Bun or Node.js runtime",
+      },
     ];
 
     for (const { backend, runtime, error, frontend } of invalidCombinations) {
@@ -196,6 +209,12 @@ describe("Backend and Runtime Combinations", () => {
           config.orm = "drizzle";
           config.auth = "better-auth";
           config.api = "trpc";
+        } else if (backend === "nest") {
+          config.database = "sqlite";
+          config.orm = "prisma";
+          config.auth = "none";
+          config.api = "none";
+          config.packageManager = "pnpm";
         } else {
           config.database = "sqlite";
           config.orm = "drizzle";

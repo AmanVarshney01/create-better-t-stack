@@ -21,9 +21,11 @@ export function processRuntimeDeps(vfs: VirtualFileSystem, config: ProjectConfig
 
   pkgJson.scripts = pkgJson.scripts || {};
 
+  const entrypoint = backend === "nest" ? "main" : "index";
+
   if (runtime === "bun") {
-    pkgJson.scripts.dev = "bun run --hot src/index.ts";
-    pkgJson.scripts.start = "bun run dist/index.mjs";
+    pkgJson.scripts.dev = `bun run --hot src/${entrypoint}.ts`;
+    pkgJson.scripts.start = `bun run dist/${entrypoint}.mjs`;
 
     addPackageDependency({
       vfs,
@@ -31,8 +33,8 @@ export function processRuntimeDeps(vfs: VirtualFileSystem, config: ProjectConfig
       devDependencies: ["@types/bun"],
     });
   } else if (runtime === "node") {
-    pkgJson.scripts.dev = "tsx watch src/index.ts";
-    pkgJson.scripts.start = "node dist/index.mjs";
+    pkgJson.scripts.dev = `tsx watch src/${entrypoint}.ts`;
+    pkgJson.scripts.start = `node dist/${entrypoint}.mjs`;
 
     addPackageDependency({
       vfs,

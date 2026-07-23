@@ -24,7 +24,7 @@ import { env } from "@{{projectName}}/env/web";
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
-{{else if (eq api "orpc")}}
+{{else if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { createQueryClient, orpc } from "./utils/orpc";
 {{/if}}
@@ -109,7 +109,7 @@ const trpcClient = createTRPCClient<AppRouter>({
 		}),
 	],
 });
-{{else if (eq api "orpc")}}
+{{else if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 {{/if}}
 
 export const getRouter = () => {
@@ -119,7 +119,7 @@ export const getRouter = () => {
 		client: trpcClient,
 		queryClient,
 	});
-{{else if (eq api "orpc")}}
+{{else if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 	const queryClient = createQueryClient();
 {{/if}}
 
@@ -129,7 +129,7 @@ export const getRouter = () => {
 		defaultPreloadStaleTime: 0,
 {{#if (eq api "trpc")}}
 		context: { trpc, queryClient },
-{{else if (eq api "orpc")}}
+{{else if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 		context: { orpc, queryClient },
 {{else}}
 		context: {},
@@ -144,7 +144,7 @@ export const getRouter = () => {
 		),
 {{/if}}
 	});
-{{#if (or (eq api "trpc") (eq api "orpc"))}}
+{{#if (or (eq api "trpc") (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 
 	setupRouterSsrQueryIntegration({
 		router,
