@@ -46,6 +46,7 @@ const VALUE_LABELS: Record<string, string> = {
   "better-auth": "Better Auth",
   clerk: "Clerk",
   polar: "Polar",
+  mollie: "Mollie",
   pwa: "PWA",
   tauri: "Tauri",
   electrobun: "Electrobun",

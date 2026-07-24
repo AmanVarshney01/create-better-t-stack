@@ -29,7 +29,7 @@ export function TechIcon({
       icon.includes("clerk") ||
       icon.includes("planetscale") ||
       icon.includes("nx") ||
-      icon.includes("polar") ||
+      icon.includes("polar") || icon.includes("mollie") ||
       icon.includes("astro") ||
       icon.includes("vercel"))
   ) {

@@ -11,6 +11,17 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
   const authPath = "packages/auth/package.json";
   const webPath = "apps/web/package.json";
 
+    if (payments === "mollie") {
+    if (vfs.exists(authPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: authPath,
+        dependencies: ["@mollie/api-client"],
+      });
+    }
+    return;
+  }
+
   if (payments === "polar") {
     if (backend === "convex") {
       if (vfs.exists(backendPath)) {
