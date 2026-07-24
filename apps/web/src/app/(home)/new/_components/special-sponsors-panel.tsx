@@ -56,7 +56,7 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
                   width={64}
                   height={64}
                   className={cn(
-                    "rounded-md border border-border/70 transition-colors hover:border-primary/40",
+                    "shrink-0 rounded-md border border-border/70 transition-colors hover:border-primary/40",
                     compact ? "h-9 w-9" : "h-10 w-10",
                   )}
                   unoptimized
