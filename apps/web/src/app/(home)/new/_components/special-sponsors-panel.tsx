@@ -33,7 +33,7 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
         </span>
       </div>
 
-      <div className="no-scrollbar flex items-center gap-2 overflow-x-auto pb-1">
+      <div className="flex flex-wrap items-center gap-2">
         {sponsors.map((entry) => {
           const sponsorUrl = getSponsorUrl(entry);
 
