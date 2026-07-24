@@ -46,7 +46,7 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={entry.name}
-                    className="inline-flex rounded-md"
+                    className="inline-flex shrink-0 rounded-md"
                   />
                 }
               >
@@ -128,7 +128,7 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
                 rel="noopener noreferrer"
                 aria-label="Become a sponsor"
                 className={cn(
-                  "builder-focus-ring inline-flex items-center justify-center rounded-md border border-dashed border-primary/40 bg-primary/10 text-primary transition-colors hover:border-primary/60 hover:bg-primary/16",
+                  "builder-focus-ring inline-flex shrink-0 items-center justify-center rounded-md border border-dashed border-primary/40 bg-primary/10 text-primary transition-colors hover:border-primary/60 hover:bg-primary/16",
                   compact ? "h-9 w-9" : "h-10 w-10",
                 )}
               />
