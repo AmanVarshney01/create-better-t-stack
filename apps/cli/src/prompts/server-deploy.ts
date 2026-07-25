@@ -70,7 +70,7 @@ export async function getServerDeploymentChoice(
   });
 
   const response = await navigableSelect<ServerDeploy>({
-    message: "Select server deployment",
+    message: "Choose server deployment",
     options,
     initialValue: preferValidInitial(options, previousValue, DEFAULT_CONFIG.serverDeploy),
   });
@@ -121,7 +121,7 @@ export async function getServerDeploymentToAdd(
   }
 
   const response = await navigableSelect<ServerDeploy>({
-    message: "Select server deployment",
+    message: "Choose server deployment",
     options,
     initialValue: DEFAULT_CONFIG.serverDeploy,
   });

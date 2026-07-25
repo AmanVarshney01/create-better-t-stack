@@ -18,20 +18,25 @@ If `bts.jsonc` is missing, the `add` command cannot run because the project cann
 
 ## Safe to delete (with a caveat)
 
-It’s safe to delete for normal development; the generated code in `apps/*` and `packages/*` remains the source of truth. However, if you plan to use the `add` command later, you must keep `bts.jsonc` (or recreate it) so the CLI can detect your project.
+It’s safe to delete for normal development; the generated code in `apps/*` and `packages/*` remains the source of truth. However, if you plan to use the `add` command later, you must keep `bts.jsonc` so the CLI can detect your project.
 
 ## Format
 
 The file is JSONC with comments enabled and includes a `$schema` URL for tooling.
 
 ```jsonc
-// Better-T-Stack configuration file
-// safe to delete
+// Better-T-Stack project metadata
+//
+// Keep this file to use the `add` command.
+// Add addons: bunx create-better-t-stack@latest add
+//
+// Docs: https://better-t-stack.dev/docs
+// Stack Builder: https://better-t-stack.dev/new
 {
   "$schema": "https://r2.better-t-stack.dev/schema.json",
   "version": "x.y.z",
   "createdAt": "2025-01-01T00:00:00.000Z",
-  "reproducibleCommand": "bun create better-t-stack@latest create-json --input '{...}'",
+  "reproducibleCommand": "bun create better-t-stack@latest my-app --frontend tanstack-router ...",
   "frontend": ["tanstack-router"],
   "backend": "hono",
   "runtime": "bun",
@@ -39,6 +44,7 @@ The file is JSONC with comments enabled and includes a `$schema` URL for tooling
   "orm": "drizzle",
   "api": "trpc",
   "auth": "better-auth",
+  "payments": "none",
   "addons": ["turborepo"],
   "addonOptions": {
     "wxt": {
@@ -59,8 +65,8 @@ The file is JSONC with comments enabled and includes a `$schema` URL for tooling
 Notes:
 
 - Values mirror what you selected during project creation
-- `reproducibleCommand` contains the exact command to recreate this project
-- When structured options are present, the reproducible command uses `create-json`
+- `reproducibleCommand` contains the normal CLI command generated when the project was created
+- Deeply nested structured options remain in `addonOptions` or `dbSetupOptions` and may not be fully represented in the one-line command
 - `addonOptions` stores nested configuration for prompt-driven addons
 - `dbSetupOptions` stores structured database setup behavior for automation
 - The file may be updated when you run `add` (addons and addon-specific config)

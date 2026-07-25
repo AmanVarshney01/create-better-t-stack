@@ -193,7 +193,7 @@ export async function getAddonsChoice(
   );
 
   const response = await navigableGroupMultiselect<Addons>({
-    message: "Select addons",
+    message: "Pick addons",
     options: groupedOptions,
     initialValues: initialValues,
     required: false,

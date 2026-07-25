@@ -51,7 +51,7 @@ export async function getDatabaseChoice(
   }
 
   const response = await navigableSelect<Database>({
-    message: "Select database",
+    message: "Choose a database",
     options: databaseOptions,
     initialValue: preferValidInitial(databaseOptions, previousValue, DEFAULT_CONFIG.database),
   });

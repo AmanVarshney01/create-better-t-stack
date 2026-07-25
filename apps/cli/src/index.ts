@@ -9,6 +9,7 @@ import { openBuilderCommand, openDocsCommand, showSponsorsCommand } from "./comm
 import { addHandler, type AddResult } from "./helpers/core/add-handler";
 import { createProjectHandler } from "./helpers/core/command-handlers";
 import {
+  type AddInput,
   type Addons,
   AddonsSchema,
   type AddonOptions,
@@ -43,6 +44,7 @@ import {
   type Payments,
   PaymentsSchema,
   type ProjectConfig,
+  ProjectConfigSchema,
   ProjectNameSchema,
   type Runtime,
   RuntimeSchema,
@@ -87,6 +89,13 @@ export const SchemaNameSchema = z
     "initResult",
   ])
   .default("all");
+
+const CreateVirtualInputSchema = ProjectConfigSchema.omit({
+  projectDir: true,
+  relativePath: true,
+})
+  .partial()
+  .strict();
 
 export type SchemaName = z.infer<typeof SchemaNameSchema>;
 
@@ -180,7 +189,7 @@ export const router = t.router({
       };
       const result = await createProjectHandler(combinedInput);
 
-      if (options.verbose || options.dryRun) {
+      if (options.verbose) {
         return result;
       }
     }),
@@ -231,6 +240,11 @@ export const router = t.router({
           .describe("Install dependencies after adding"),
         packageManager: PackageManagerSchema.optional().describe("Package manager to use"),
         projectDir: z.string().optional().describe("Project directory (defaults to current)"),
+        dryRun: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe("Preview addon changes without writing files"),
       }),
     )
     .mutation(async ({ input }) => {
@@ -284,6 +298,17 @@ export { Result } from "better-result";
  */
 export type CreateError = UserCancelledError | CLIError | ProjectCreationError;
 
+function formatInputValidationError(label: string, error: z.ZodError): string {
+  const details = error.issues
+    .map((issue) => {
+      const field = issue.path.join(".");
+      return field ? `${field}: ${issue.message}` : issue.message;
+    })
+    .join("; ");
+
+  return `Invalid ${label} input: ${details}`;
+}
+
 /**
  * Programmatic API to create a new Better-T-Stack project.
  * Returns a Result type - no console output, no interactive prompts.
@@ -313,13 +338,27 @@ export async function create(
   projectName?: string,
   options?: Partial<CreateInput>,
 ): Promise<Result<InitResult, CreateError>> {
+  const rawInput =
+    options === undefined || (typeof options === "object" && options !== null)
+      ? { ...options, projectName }
+      : options;
+  const parsedInput = CreateInputSchema.safeParse(rawInput);
+
+  if (!parsedInput.success) {
+    return Result.err(
+      new CLIError({
+        message: formatInputValidationError("create", parsedInput.error),
+        cause: parsedInput.error,
+      }),
+    );
+  }
+
   const input = {
-    ...options,
-    projectName,
+    ...parsedInput.data,
     renderTitle: false,
     verbose: true,
-    disableAnalytics: options?.disableAnalytics ?? true,
-    directoryConflict: options?.directoryConflict ?? "error",
+    disableAnalytics: parsedInput.data.disableAnalytics ?? true,
+    directoryConflict: parsedInput.data.directoryConflict ?? "error",
   } as CreateInput & { projectName?: string };
 
   return Result.tryPromise({
@@ -408,28 +447,40 @@ import {
 export async function createVirtual(
   options: Partial<Omit<ProjectConfig, "projectDir" | "relativePath">>,
 ): Promise<Result<VirtualFileTree, GeneratorError>> {
+  const parsedInput = CreateVirtualInputSchema.safeParse(options);
+  if (!parsedInput.success) {
+    return Result.err(
+      new GeneratorError({
+        message: formatInputValidationError("virtual create", parsedInput.error),
+        phase: "validation",
+        cause: parsedInput.error,
+      }),
+    );
+  }
+
+  const virtualOptions = parsedInput.data;
   const config: ProjectConfig = {
-    projectName: options.projectName || "my-project",
+    projectName: virtualOptions.projectName || "my-project",
     projectDir: "/virtual",
     relativePath: "./virtual",
-    addonOptions: options.addonOptions,
-    dbSetupOptions: options.dbSetupOptions,
-    database: options.database || "none",
-    orm: options.orm || "none",
-    backend: options.backend || "hono",
-    runtime: options.runtime || "bun",
-    frontend: options.frontend || ["tanstack-router"],
-    addons: options.addons || [],
-    examples: options.examples || [],
-    auth: options.auth || "none",
-    payments: options.payments || "none",
-    git: options.git ?? false,
-    packageManager: options.packageManager || "bun",
+    addonOptions: virtualOptions.addonOptions,
+    dbSetupOptions: virtualOptions.dbSetupOptions,
+    database: virtualOptions.database || "none",
+    orm: virtualOptions.orm || "none",
+    backend: virtualOptions.backend || "hono",
+    runtime: virtualOptions.runtime || "bun",
+    frontend: virtualOptions.frontend || ["tanstack-router"],
+    addons: virtualOptions.addons || [],
+    examples: virtualOptions.examples || [],
+    auth: virtualOptions.auth || "none",
+    payments: virtualOptions.payments || "none",
+    git: virtualOptions.git ?? false,
+    packageManager: virtualOptions.packageManager || "bun",
     install: false,
-    dbSetup: options.dbSetup || "none",
-    api: options.api || "trpc",
-    webDeploy: options.webDeploy || "none",
-    serverDeploy: options.serverDeploy || "none",
+    dbSetup: virtualOptions.dbSetup || "none",
+    api: virtualOptions.api || "trpc",
+    webDeploy: virtualOptions.webDeploy || "none",
+    serverDeploy: virtualOptions.serverDeploy || "none",
   };
 
   const providedFlags = new Set([
@@ -471,6 +522,7 @@ export async function createVirtual(
 export type {
   CreateInput,
   InitResult,
+  ProjectConfig,
   BetterTStackConfig,
   Database,
   ORM,
@@ -494,6 +546,11 @@ export type {
 
 export type { AddResult };
 
+export type AddOptions = Pick<
+  AddInput,
+  "addons" | "addonOptions" | "install" | "packageManager" | "projectDir" | "dryRun"
+>;
+
 /**
  * Programmatic API to add addons to an existing Better-T-Stack project.
  *
@@ -506,22 +563,31 @@ export type { AddResult };
  *   install: true,
  * });
  *
- * if (result?.success) {
+ * if (result.success) {
  *   console.log(`Added: ${result.addedAddons.join(", ")}`);
  * }
  * ```
  */
-export async function add(
-  options: {
-    addons?: Addons[];
-    addonOptions?: AddonOptions;
-    install?: boolean;
-    packageManager?: PackageManager;
-    projectDir?: string;
-    dryRun?: boolean;
-  } = {},
-): Promise<AddResult | undefined> {
-  return addHandler(options, { silent: true });
+export async function add(options: AddOptions = {}): Promise<AddResult> {
+  const parsedInput = AddInputSchema.safeParse(options);
+  if (!parsedInput.success) {
+    return {
+      success: false,
+      addedAddons: [],
+      projectDir: "",
+      error: formatInputValidationError("add", parsedInput.error),
+    };
+  }
+
+  const result = await addHandler(parsedInput.data, { silent: true });
+  return (
+    result ?? {
+      success: false,
+      addedAddons: [],
+      projectDir: parsedInput.data.projectDir ?? "",
+      error: "Operation cancelled",
+    }
+  );
 }
 
 // Re-export error types for consumers

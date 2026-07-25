@@ -12,11 +12,16 @@ type SilentCreateCase = {
   name: string;
   projectName: string;
   options: Record<string, unknown>;
+  existingFile?: string;
 };
 
 async function runSilentCreate(testCase: SilentCreateCase) {
   const projectPath = path.join(SMOKE_DIR, testCase.projectName);
   await fs.remove(projectPath);
+  if (testCase.existingFile) {
+    await fs.ensureDir(projectPath);
+    await fs.writeFile(path.join(projectPath, testCase.existingFile), "keep-me", "utf8");
+  }
 
   const script = `
     import { create } from ${JSON.stringify(CLI_INDEX_PATH)};
@@ -48,6 +53,17 @@ async function runSilentCreate(testCase: SilentCreateCase) {
 
 describe("silent create output", () => {
   const cases: SilentCreateCase[] = [
+    {
+      name: "stays quiet while overwriting an existing directory",
+      projectName: "silent-directory-overwrite",
+      existingFile: "remove-me.txt",
+      options: {
+        yes: true,
+        git: false,
+        install: false,
+        directoryConflict: "overwrite",
+      },
+    },
     {
       name: "stays quiet for oxlint addon setup",
       projectName: "silent-addon-oxlint",

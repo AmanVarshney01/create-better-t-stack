@@ -114,6 +114,37 @@ describe("Frontend Configurations", () => {
   });
 
   describe("Frontend Compatibility with API", () => {
+    it("should generate the current Nuxt dependency baseline", async () => {
+      const result = await runTRPCTest({
+        projectName: "nuxt-dependency-baseline",
+        frontend: ["nuxt"],
+        api: "orpc",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      const packageJson = await fs.readJson(path.join(result.projectDir!, "apps/web/package.json"));
+      expect(packageJson.dependencies).toMatchObject({
+        "@nuxt/ui": "^4.10.0",
+        nuxt: "^4.5.0",
+        vue: "^3.5.39",
+        "vue-router": "^5.2.0",
+      });
+      expect(packageJson.devDependencies["vue-tsc"]).toBe("^3.3.7");
+      expect(packageJson.scripts["check-types"]).toBe("nuxt typecheck");
+    });
+
     it("should work with React frontends + tRPC", async () => {
       const result = await runTRPCTest({
         projectName: "react-trpc",

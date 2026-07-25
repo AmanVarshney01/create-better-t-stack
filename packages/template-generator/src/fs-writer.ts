@@ -1,4 +1,5 @@
 import * as fs from "node:fs/promises";
+import path from "node:path";
 
 import { Result, TaggedError } from "better-result";
 import { join, dirname } from "pathe";
@@ -51,6 +52,7 @@ async function writeNodeInternal(
 
   if (node.type === "file") {
     const fileNode = node as VirtualFile;
+    await assertSafeWritePath(baseDir, fullPath);
     await fs.mkdir(dirname(fullPath), { recursive: true });
 
     if (fileNode.content === BINARY_FILE_MARKER && fileNode.sourcePath) {
@@ -59,6 +61,7 @@ async function writeNodeInternal(
       await fs.writeFile(fullPath, fileNode.content, "utf-8");
     }
   } else {
+    await assertSafeWritePath(baseDir, fullPath);
     await fs.mkdir(fullPath, { recursive: true });
     for (const child of (node as VirtualDirectory).children) {
       await writeNodeInternal(child, baseDir, nodePath);
@@ -103,6 +106,7 @@ async function writeSelectedNodeInternal(
   if (node.type === "file") {
     if (filter(nodePath)) {
       const fileNode = node as VirtualFile;
+      await assertSafeWritePath(baseDir, join(baseDir, nodePath));
       await fs.mkdir(dirname(join(baseDir, nodePath)), { recursive: true });
 
       if (fileNode.content === BINARY_FILE_MARKER && fileNode.sourcePath) {
@@ -124,4 +128,49 @@ async function copyBinaryFile(templatePath: string, destPath: string): Promise<v
   const sourcePath = join(templatesRoot, templatePath);
   // Let errors propagate - they'll be caught by the Result wrapper
   await fs.copyFile(sourcePath, destPath);
+}
+
+async function assertSafeWritePath(baseDir: string, destinationPath: string): Promise<void> {
+  const resolvedBase = path.resolve(baseDir);
+  const resolvedDestination = path.resolve(destinationPath);
+  const relativeDestination = path.relative(resolvedBase, resolvedDestination);
+
+  if (
+    relativeDestination === ".." ||
+    relativeDestination.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativeDestination)
+  ) {
+    throw new FileWriteError({
+      message: `Refusing to write outside project directory: ${resolvedDestination}`,
+      path: resolvedDestination,
+    });
+  }
+
+  let currentPath = resolvedBase;
+  const pathSegments = relativeDestination.split(path.sep).filter(Boolean);
+  for (const segment of ["", ...pathSegments]) {
+    if (segment) currentPath = path.join(currentPath, segment);
+
+    let stats;
+    try {
+      stats = await fs.lstat(currentPath);
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return;
+      }
+      throw error;
+    }
+
+    if (stats.isSymbolicLink()) {
+      throw new FileWriteError({
+        message: `Refusing to write through symbolic link: ${currentPath}`,
+        path: currentPath,
+      });
+    }
+  }
 }

@@ -40,7 +40,7 @@ export async function getRuntimeChoice(
   }
 
   const response = await navigableSelect<Runtime>({
-    message: "Select runtime",
+    message: "Choose a runtime",
     options: runtimeOptions,
     initialValue: preferValidInitial(runtimeOptions, previousValue, DEFAULT_CONFIG.runtime),
   });

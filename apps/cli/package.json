@@ -1,6 +1,6 @@
 {
   "name": "create-better-t-stack",
-  "version": "3.36.3",
+  "version": "3.37.0",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
   "keywords": [
     "better-auth",
@@ -71,8 +71,8 @@
   "dependencies": {
     "@better-t-stack/template-generator": "workspace:*",
     "@better-t-stack/types": "workspace:*",
-    "@clack/core": "^1.4.1",
-    "@clack/prompts": "^1.5.1",
+    "@clack/core": "^1.4.3",
+    "@clack/prompts": "^1.7.0",
     "@modelcontextprotocol/sdk": "1.29.0",
     "@trpc/server": "^11.17.0",
     "better-result": "^2.9.2",

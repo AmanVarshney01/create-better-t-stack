@@ -148,7 +148,7 @@ export const dependencyVersionMap = {
   "@tanstack/solid-router-devtools": "^1.167.0",
 
   wrangler: "^4.107.0",
-  "@cloudflare/vite-plugin": "^1.43.0",
+  "@cloudflare/vite-plugin": "1.43.0",
   "@opennextjs/cloudflare": "^1.20.1",
   "nitro-cloudflare-dev": "^0.2.2",
   "@sveltejs/adapter-cloudflare": "^7.2.9",
@@ -160,10 +160,10 @@ export const dependencyVersionMap = {
   "@astrojs/vercel": "^11.0.1",
 
   // exact pins: caret ranges on prereleases can resolve to stray npm test tags
-  alchemy: "2.0.0-beta.62",
-  effect: "4.0.0-beta.97",
-  "@effect/platform-node": "4.0.0-beta.97",
-  "@effect/platform-bun": "4.0.0-beta.97",
+  alchemy: "2.0.0-beta.64",
+  effect: "4.0.0-beta.101",
+  "@effect/platform-node": "4.0.0-beta.101",
+  "@effect/platform-bun": "4.0.0-beta.101",
   vercel: "^54.18.6",
 
   dotenv: "^17.4.2",
@@ -179,7 +179,7 @@ export const dependencyVersionMap = {
   "@stripe/react-stripe-js": "^5.6.1",
   "@stripe/stripe-js": "^8.11.0",
 
-  evlog: "^2.19.2",
+  evlog: "^2.22.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

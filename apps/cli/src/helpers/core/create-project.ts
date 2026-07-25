@@ -117,7 +117,7 @@ export async function createProject(
     // Format project
     yield* Result.await(formatProject(projectDir));
 
-    if (!isSilent()) log.success("Project template successfully scaffolded!");
+    if (!isSilent()) log.success("Project scaffolded");
 
     // Install dependencies if requested
     if (options.install) {

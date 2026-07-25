@@ -39,7 +39,7 @@ export async function installDependencies({
   });
 
   if (result.isOk()) {
-    s.stop("Dependencies installed successfully");
+    s.stop("Dependencies installed");
   } else {
     s.stop(pc.red("Failed to install dependencies"));
   }

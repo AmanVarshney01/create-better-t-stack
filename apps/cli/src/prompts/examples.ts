@@ -40,7 +40,7 @@ export async function getExamplesChoice(
   if (options.length === 0) return [];
 
   response = await navigableMultiselect<Examples>({
-    message: "Include examples",
+    message: "Include starter examples?",
     options: options,
     required: false,
     initialValues: (previousValue ?? DEFAULT_CONFIG.examples)?.filter((ex) =>

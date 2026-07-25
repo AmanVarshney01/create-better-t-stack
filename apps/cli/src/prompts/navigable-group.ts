@@ -2,7 +2,12 @@
  * Navigable group - a group of prompts that allows going back
  */
 
-import { didLastPromptShowUI, setIsFirstPrompt, setLastPromptShownUI } from "../utils/context";
+import {
+  didLastPromptShowUI,
+  setIsFirstPrompt,
+  setLastPromptShownUI,
+  setPromptProgress,
+} from "../utils/context";
 import { isGoBack } from "../utils/navigation";
 import { isCancel } from "./navigable";
 
@@ -20,6 +25,13 @@ export interface NavigablePromptGroupOptions<T> {
    * if one of the prompts is canceled.
    */
   onCancel?: (opts: { results: Prettify<Partial<PromptGroupAwaitedReturn<T>>> }) => void;
+  /** Group related questions into named stages shown in the prompt chrome. */
+  sections?: ReadonlyArray<{
+    label: string;
+    prompts: ReadonlyArray<keyof T>;
+  }>;
+  /** Values to accept without invoking their prompt resolvers. */
+  preselected?: Partial<PromptGroupAwaitedReturn<T>>;
 }
 
 export type NavigablePromptGroup<T> = {
@@ -53,51 +65,68 @@ export async function navigableGroup<T>(
     currentIndex--;
   };
 
-  while (currentIndex < promptNames.length) {
-    const name = promptNames[currentIndex];
-    const prompt = prompts[name];
+  try {
+    while (currentIndex < promptNames.length) {
+      const name = promptNames[currentIndex];
+      const prompt = prompts[name];
+      const section = opts?.sections?.find(({ prompts: sectionPrompts }) =>
+        sectionPrompts.includes(name),
+      );
+      const sectionPromptIndex = section?.prompts.indexOf(name) ?? -1;
 
-    setIsFirstPrompt(currentIndex === 0);
+      setPromptProgress({
+        current: currentIndex + 1,
+        total: promptNames.length,
+        section: section?.label ?? "Setup",
+        sectionCurrent: sectionPromptIndex + 1,
+        sectionTotal: section?.prompts.length ?? promptNames.length,
+      });
 
-    setLastPromptShownUI(false);
+      setIsFirstPrompt(currentIndex === 0);
+      setLastPromptShownUI(false);
 
-    const result = await prompt({ results, previousAnswer: previousAnswers[name] })?.catch((e) => {
-      throw e;
-    });
+      const presetResult = opts?.preselected?.[name];
+      const result =
+        presetResult !== undefined
+          ? presetResult
+          : await prompt({
+              results,
+              previousAnswer: previousAnswers[name],
+            });
 
-    if (isGoBack(result)) {
-      goingBack = true;
-      if (currentIndex > 0) {
-        stepBack();
+      if (isGoBack(result)) {
+        goingBack = true;
+        if (currentIndex > 0) {
+          stepBack();
+          continue;
+        }
+        goingBack = false;
         continue;
       }
+
+      if (isCancel(result)) {
+        if (typeof opts?.onCancel === "function") {
+          results[name] = "canceled";
+          opts.onCancel({ results });
+        }
+        return results;
+      }
+
+      if (goingBack && !didLastPromptShowUI()) {
+        if (currentIndex > 0) {
+          stepBack();
+          continue;
+        }
+      }
+
       goingBack = false;
-      continue;
+      results[name] = result;
+      currentIndex++;
     }
-
-    if (isCancel(result)) {
-      if (typeof opts?.onCancel === "function") {
-        results[name] = "canceled";
-        opts.onCancel({ results });
-      }
-      setIsFirstPrompt(false);
-      return results;
-    }
-
-    if (goingBack && !didLastPromptShowUI()) {
-      if (currentIndex > 0) {
-        stepBack();
-        continue;
-      }
-    }
-
-    goingBack = false;
-
-    results[name] = result;
-    currentIndex++;
+  } finally {
+    setIsFirstPrompt(false);
+    setPromptProgress(undefined);
   }
-
-  setIsFirstPrompt(false);
 
   return results;
 }

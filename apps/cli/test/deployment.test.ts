@@ -898,16 +898,15 @@ describe("Deployment Configurations", () => {
       const serverPackage = JSON.parse(files.get("apps/server/package.json") ?? "{}") as {
         devDependencies?: Record<string, string>;
       };
-
       expect(infraFile).toContain('export const server = Cloudflare.Worker("server"');
       expect(infraFile).toContain("export type ServerEnv = Cloudflare.InferEnv<typeof server>");
       expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
-        alchemy: "2.0.0-beta.62",
-        effect: "4.0.0-beta.97",
-        "@effect/platform-node": "4.0.0-beta.97",
-        "@effect/platform-bun": "4.0.0-beta.97",
+        alchemy: "2.0.0-beta.64",
+        effect: "4.0.0-beta.101",
+        "@effect/platform-node": "4.0.0-beta.101",
+        "@effect/platform-bun": "4.0.0-beta.101",
       });
       expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
         infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),

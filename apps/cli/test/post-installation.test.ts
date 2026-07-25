@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, mock, spyOn } from "bun:test";
 
 import { displayPostInstallInstructions } from "../src/helpers/core/post-installation";
 import type { ProjectConfig } from "../src/types";
-import { cliConsola } from "../src/utils/terminal-output";
 
 const baseConfig = {
   projectName: "cloudflare-d1-app",
@@ -47,7 +46,7 @@ describe("post-install instructions", () => {
     },
   ]) {
     it(`places ${testCase.orm} D1 setup before development`, async () => {
-      const box = spyOn(cliConsola, "box").mockImplementation(() => {});
+      const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
       spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline in test"));
 
       await displayPostInstallInstructions({
@@ -56,10 +55,10 @@ describe("post-install instructions", () => {
         depsInstalled: false,
       });
 
-      const output = String(box.mock.calls[0]?.[0] ?? "");
+      const output = stdout.mock.calls.map(([chunk]) => String(chunk)).join("");
       const nextSteps = output.slice(
         output.indexOf("Next steps"),
-        output.indexOf("Your project will be available at:"),
+        output.indexOf("Local development"),
       );
       const positions = testCase.commands.map((command) => nextSteps.indexOf(command));
 
@@ -74,7 +73,7 @@ describe("post-install instructions", () => {
   }
 
   it("places standalone Worker D1 schema setup before development", async () => {
-    const box = spyOn(cliConsola, "box").mockImplementation(() => {});
+    const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
     spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline in test"));
 
     await displayPostInstallInstructions({
@@ -86,10 +85,10 @@ describe("post-install instructions", () => {
       depsInstalled: false,
     });
 
-    const output = String(box.mock.calls[0]?.[0] ?? "");
+    const output = stdout.mock.calls.map(([chunk]) => String(chunk)).join("");
     const nextSteps = output.slice(
       output.indexOf("Next steps"),
-      output.indexOf("Your project will be available at:"),
+      output.indexOf("Local development"),
     );
     const commands = ["bun install", "bun run db:generate", "bun run db:migrate", "bun run dev"];
     const positions = commands.map((command) => nextSteps.indexOf(command));

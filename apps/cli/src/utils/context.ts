@@ -5,6 +5,15 @@ import type { PackageManager } from "../types";
 export type NavigationState = {
   isFirstPrompt: boolean;
   lastPromptShownUI: boolean;
+  promptProgress?: PromptProgress;
+};
+
+export type PromptProgress = {
+  current: number;
+  total: number;
+  section: string;
+  sectionCurrent: number;
+  sectionTotal: number;
 };
 
 export type CLIContext = {
@@ -61,6 +70,10 @@ export function didLastPromptShowUI(): boolean {
   return getContext().navigation.lastPromptShownUI;
 }
 
+export function getPromptProgress(): PromptProgress | undefined {
+  return getContext().navigation.promptProgress;
+}
+
 export function getProjectDir(): string | undefined {
   return getContext().projectDir;
 }
@@ -80,6 +93,13 @@ export function setLastPromptShownUI(value: boolean): void {
   const ctx = tryGetContext();
   if (ctx) {
     ctx.navigation.lastPromptShownUI = value;
+  }
+}
+
+export function setPromptProgress(value: PromptProgress | undefined): void {
+  const ctx = tryGetContext();
+  if (ctx) {
+    ctx.navigation.promptProgress = value;
   }
 }
 

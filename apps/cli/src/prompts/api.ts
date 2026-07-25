@@ -44,7 +44,7 @@ export async function getApiChoice(
   );
 
   const apiType = await navigableSelect<API>({
-    message: "Select API type",
+    message: "Choose an API layer",
     options: apiOptions,
     initialValue: preferValidInitial(apiOptions, previousValue, apiOptions[0].value),
   });

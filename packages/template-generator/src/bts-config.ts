@@ -45,21 +45,18 @@ export function writeBtsConfigToVfs(
 
   const addCommand =
     projectConfig.packageManager === "npm"
-      ? "npx create-better-t-stack add"
+      ? "npx create-better-t-stack@latest add"
       : projectConfig.packageManager === "pnpm"
-        ? "pnpm dlx create-better-t-stack add"
-        : "bun create better-t-stack add";
+        ? "pnpm dlx create-better-t-stack@latest add"
+        : "bunx create-better-t-stack@latest add";
 
-  const finalContent = `// Better-T-Stack
+  const finalContent = `// Better-T-Stack project metadata
 //
-// Website: https://www.better-t-stack.dev/
-// Stack Builder: https://www.better-t-stack.dev/new
-// Analytics: https://www.better-t-stack.dev/analytics
-// Showcase: https://www.better-t-stack.dev/showcase
-// Sponsor: https://github.com/sponsors/AmanVarshney01
+// Keep this file to use the \`add\` command.
+// Add addons: ${addCommand}
 //
-// Add new addons with: ${addCommand}
-// This file is safe to delete
+// Docs: https://better-t-stack.dev/docs
+// Stack Builder: https://better-t-stack.dev/new
 
 ${jsonContent}`;
 

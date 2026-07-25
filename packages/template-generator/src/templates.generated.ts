@@ -14361,7 +14361,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 });
 {{/if}}
 
-const app = {{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
+{{#if (eq serverDeploy "vercel")}}const app = {{/if}}{{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
 	.use(
 		cors({
 			origin: env.CORS_ORIGIN,
@@ -19862,7 +19862,7 @@ async function handleSubmit(e: Event) {
             class="ms-auto"
             :status="status"
             @stop="stop"
-            @reload="regenerate"
+            @reload="() => regenerate()"
           />
         </UChatPrompt>
 
@@ -25494,7 +25494,7 @@ import type { WebEnv as ServerEnv } from "@{{projectName}}/infra/alchemy.run";
 {{/if}}
 
 // This file infers types for the cloudflare:workers environment from your Alchemy Worker.
-// @see https://v2.alchemy.run/cloudflare/compute/workers
+// @see https://alchemy.run/cloudflare/compute/workers
 
 export type CloudflareEnv = ServerEnv;
 
@@ -29791,19 +29791,22 @@ export default defineNuxtConfig({
   "type": "module",
   "scripts": {
     "build": "nuxt build",
+    "check-types": "nuxt typecheck",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@nuxt/ui": "^4.9.0",
-    "nuxt": "^4.4.8",
-    "vue": "^3.5.39"
+    "@nuxt/ui": "^4.10.0",
+    "nuxt": "^4.5.0",
+    "vue": "^3.5.39",
+    "vue-router": "^5.2.0"
   },
   "devDependencies": {
     "tailwindcss": "^4.3.2",
-    "@iconify-json/lucide": "^1.2.115"
+    "@iconify-json/lucide": "^1.2.115",
+    "vue-tsc": "^3.3.7"
   }
 }
 `],
@@ -33168,7 +33171,7 @@ config({ path: "../../apps/server/.env" });
 {{/if}}
 
 {{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro") (includes frontend "tanstack-router") (includes frontend "solid")))}}
-// Alchemy beta.62 serializes StaticSite env values before resolving Outputs.
+// Alchemy beta.64 serializes StaticSite env values before resolving Outputs.
 // Keep its dev process behavior, but preserve top-level deploy-time env Outputs in Command.Build.
 const serializeBuildEnvValue = (value: unknown) =>
   typeof value === "string" || Redacted.isRedacted(value) ? value : JSON.stringify(value);

@@ -39,7 +39,7 @@ export async function getFrontendChoice(
     const wasFirstPrompt = isFirstPrompt();
 
     const frontendTypes = await navigableMultiselect({
-      message: "Select project type",
+      message: "What are you building?",
       options: [
         {
           value: "web",
@@ -115,7 +115,7 @@ export async function getFrontendChoice(
       );
 
       const webFramework = await navigableSelect<Frontend>({
-        message: "Choose web",
+        message: "Choose a web framework",
         options: webOptions,
         initialValue: preferValidInitial(webOptions, previousWeb, DEFAULT_CONFIG.frontend[0]),
       });
@@ -136,7 +136,7 @@ export async function getFrontendChoice(
 
     if (frontendTypes.includes("native")) {
       const nativeFramework = await navigableSelect<Frontend>({
-        message: "Choose native",
+        message: "Choose a native setup",
         options: [
           {
             value: "native-bare" as const,

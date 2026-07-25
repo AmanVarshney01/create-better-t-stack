@@ -74,7 +74,7 @@ export async function getBackendFrameworkChoice(
   });
 
   const response = await navigableSelect<Backend>({
-    message: "Select backend",
+    message: "Choose a backend",
     options: backendOptions,
     initialValue: preferValidInitial(
       backendOptions,

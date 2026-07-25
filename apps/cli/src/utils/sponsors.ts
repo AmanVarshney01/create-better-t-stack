@@ -1,10 +1,9 @@
-import { log, outro, spinner } from "@clack/prompts";
+import { box, log, outro, spinner } from "@clack/prompts";
 import { Result } from "better-result";
 import pc from "picocolors";
 import z from "zod";
 
 import { CLIError } from "./errors";
-import { cliConsola } from "./terminal-output";
 
 export const SPONSORS_JSON_URL = "https://sponsors.better-t-stack.dev/sponsors.json";
 export const GITHUB_SPONSOR_URL = "https://github.com/sponsors/AmanVarshney01";
@@ -113,19 +112,17 @@ export async function fetchSponsorsQuietly({
 export function displaySponsors(sponsors: SponsorEntry) {
   const { total_sponsors } = sponsors.summary;
   if (total_sponsors === 0) {
-    log.info("No sponsors found. You can be the first one! ✨");
-    outro(pc.cyan(`Visit ${GITHUB_SPONSOR_URL} to become a sponsor.`));
+    log.info("No sponsors found yet");
+    outro(`${pc.dim("Become the first sponsor ·")} ${pc.cyan(GITHUB_SPONSOR_URL)}`);
     return;
   }
 
   displaySponsorsBox(sponsors);
 
   if (total_sponsors - sponsors.specialSponsors.length > 0) {
-    log.message(
-      pc.blue(`+${total_sponsors - sponsors.specialSponsors.length} more amazing sponsors.\n`),
-    );
+    log.message(pc.dim(`+${total_sponsors - sponsors.specialSponsors.length} more sponsors`));
   }
-  outro(pc.magenta(`Visit ${GITHUB_SPONSOR_URL} to become a sponsor.`));
+  outro(`${pc.dim("Become a sponsor ·")} ${pc.cyan(GITHUB_SPONSOR_URL)}`);
 }
 
 function displaySponsorsBox(sponsors: SponsorEntry) {
@@ -133,26 +130,29 @@ function displaySponsorsBox(sponsors: SponsorEntry) {
     return;
   }
 
-  let output = `${pc.bold(pc.cyan("-> Special Sponsors"))}\n\n`;
+  box(formatSpecialSponsorsDetails(sponsors), pc.bold("Special sponsors"), {
+    contentPadding: 2,
+    formatBorder: pc.dim,
+    rounded: true,
+    width: "auto",
+  });
+}
 
-  sponsors.specialSponsors.forEach((sponsor: Sponsor, idx: number) => {
+export function formatSpecialSponsorsDetails(sponsors: SponsorEntry): string {
+  const blocks = sponsors.specialSponsors.map((sponsor) => {
     const displayName = sponsor.name ?? sponsor.githubId;
-    const tier = sponsor.tierName ? ` ${pc.yellow(`(${sponsor.tierName})`)}` : "";
+    const tier = sponsor.tierName ? pc.dim(` · ${sponsor.tierName}`) : "";
+    const links: string[] = [];
 
-    output += `${pc.green(`• ${displayName}`)}${tier}\n`;
-    output += `  ${pc.dim("GitHub:")} https://github.com/${sponsor.githubId}\n`;
-
-    const website = sponsor.websiteUrl ?? sponsor.githubUrl;
-    if (website) {
-      output += `  ${pc.dim("Website:")} ${website}\n`;
+    if (sponsor.websiteUrl) {
+      links.push(`${pc.dim("Website")}  ${pc.cyan(sponsor.websiteUrl)}`);
     }
+    links.push(`${pc.dim("GitHub ")}  ${pc.cyan(sponsor.githubUrl)}`);
 
-    if (idx < sponsors.specialSponsors.length - 1) {
-      output += "\n";
-    }
+    return `${pc.bold(displayName)}${tier}\n${links.join("\n")}`;
   });
 
-  cliConsola.box(output);
+  return blocks.join("\n\n");
 }
 
 export function formatPostInstallSpecialSponsorsSection(sponsors: SponsorEntry): string {
@@ -253,7 +253,7 @@ async function fetchSponsorsData({
     }
 
     if (s) {
-      s.stop("Sponsors fetched successfully!");
+      s.stop("Sponsors loaded");
     }
 
     return Result.ok(parseResult.data);

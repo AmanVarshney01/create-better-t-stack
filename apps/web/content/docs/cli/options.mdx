@@ -96,10 +96,14 @@ create-better-t-stack --no-render-title
 
 How to handle existing, non-empty target directories:
 
-- `merge`: Keep existing files and merge new ones
-- `overwrite`: Clear the directory before scaffolding
+- `merge`: Keep unrelated files and replace conflicting generated files
+- `overwrite`: Permanently clear the directory before scaffolding
 - `increment`: Create a suffixed directory (e.g., `my-app-1`)
 - `error`: Fail instead of prompting
+
+The interactive prompt recommends the first available suffixed directory and requires an extra
+confirmation before overwriting. Project targets and generated paths that pass through symbolic
+links are rejected instead of being followed.
 
 ```bash
 # Overwrite an existing directory without prompting

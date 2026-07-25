@@ -1,7 +1,10 @@
 import { describe, expect, it } from "bun:test";
 
 import type { SponsorEntry } from "../src/utils/sponsors";
-import { formatPostInstallSpecialSponsorsSection } from "../src/utils/sponsors";
+import {
+  formatPostInstallSpecialSponsorsSection,
+  formatSpecialSponsorsDetails,
+} from "../src/utils/sponsors";
 
 function createSponsorsFixture(): SponsorEntry {
   return {
@@ -74,5 +77,14 @@ describe("formatPostInstallSpecialSponsorsSection", () => {
     expect(output).not.toContain("Pro");
     expect(output).not.toContain("Starter");
     expect(output).not.toContain("Become a sponsor");
+  });
+
+  it("formats the dedicated sponsors view without the legacy arrow heading", () => {
+    const output = formatSpecialSponsorsDetails(createSponsorsFixture());
+
+    expect(output).toContain("Ada");
+    expect(output).toContain("· Pro");
+    expect(output).toContain("https://github.com/ada");
+    expect(output).not.toContain("-> Special Sponsors");
   });
 });

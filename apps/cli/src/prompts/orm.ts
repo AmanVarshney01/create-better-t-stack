@@ -47,7 +47,7 @@ export async function getORMChoice(
       : [ormOptions.drizzle, ormOptions.prisma];
 
   const response = await navigableSelect<ORM>({
-    message: "Select ORM",
+    message: "Choose an ORM",
     options,
     initialValue: preferValidInitial(
       options,

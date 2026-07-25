@@ -2,96 +2,160 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../types";
 
-export function displayConfig(config: Partial<ProjectConfig>) {
-  const configDisplay: string[] = [];
+export type ConfigDisplayRow = {
+  label: string;
+  value: string;
+};
 
-  if (config.projectName) {
-    configDisplay.push(`${pc.blue("Project Name:")} ${config.projectName}`);
+export type ConfigDisplaySection = {
+  title: string;
+  rows: ConfigDisplayRow[];
+};
+
+const VALUE_LABELS: Record<string, string> = {
+  none: "None",
+  "tanstack-router": "TanStack Router",
+  "react-router": "React Router",
+  "tanstack-start": "TanStack Start",
+  next: "Next.js",
+  nuxt: "Nuxt",
+  svelte: "SvelteKit",
+  solid: "SolidStart",
+  astro: "Astro",
+  "native-bare": "Expo (bare)",
+  "native-uniwind": "Expo + Uniwind",
+  "native-unistyles": "Expo + Unistyles",
+  hono: "Hono",
+  express: "Express",
+  fastify: "Fastify",
+  elysia: "Elysia",
+  convex: "Convex",
+  self: "Fullstack framework",
+  bun: "Bun",
+  node: "Node.js",
+  workers: "Cloudflare Workers",
+  trpc: "tRPC",
+  orpc: "oRPC",
+  sqlite: "SQLite",
+  postgres: "PostgreSQL",
+  mysql: "MySQL",
+  mongodb: "MongoDB",
+  drizzle: "Drizzle",
+  prisma: "Prisma",
+  mongoose: "Mongoose",
+  "better-auth": "Better Auth",
+  clerk: "Clerk",
+  polar: "Polar",
+  pwa: "PWA",
+  tauri: "Tauri",
+  electrobun: "Electrobun",
+  biome: "Biome",
+  oxlint: "Oxlint + Oxfmt",
+  ultracite: "Ultracite",
+  lefthook: "Lefthook",
+  husky: "Husky",
+  turborepo: "Turborepo",
+  nx: "Nx",
+  "vite-plus": "Vite+",
+  starlight: "Starlight",
+  fumadocs: "Fumadocs",
+  opentui: "OpenTUI",
+  wxt: "WXT",
+  skills: "Agent skills",
+  mcp: "MCP servers",
+  evlog: "evlog",
+  todo: "Todo app",
+  ai: "AI chat",
+  turso: "Turso",
+  neon: "Neon",
+  planetscale: "PlanetScale",
+  supabase: "Supabase",
+  "prisma-postgres": "Prisma Postgres",
+  "mongodb-atlas": "MongoDB Atlas",
+  d1: "Cloudflare D1",
+  docker: "Docker",
+  cloudflare: "Cloudflare",
+  vercel: "Vercel",
+  npm: "npm",
+  pnpm: "pnpm",
+};
+
+export function formatConfigValue(value: unknown): string {
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (Array.isArray(value)) {
+    return value.length > 0 ? value.map(formatConfigValue).join(", ") : "None";
   }
 
-  if (config.frontend !== undefined) {
-    const frontend = Array.isArray(config.frontend) ? config.frontend : [config.frontend];
-    const frontendText =
-      frontend.length > 0 && frontend[0] !== undefined ? frontend.join(", ") : "none";
-    configDisplay.push(`${pc.blue("Frontend:")} ${frontendText}`);
-  }
+  const text = String(value);
+  return (
+    VALUE_LABELS[text] ??
+    text
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ")
+  );
+}
 
-  if (config.backend !== undefined) {
-    configDisplay.push(`${pc.blue("Backend:")} ${String(config.backend)}`);
-  }
+function section(
+  title: string,
+  entries: Array<[label: string, value: unknown, format?: "raw"]>,
+): ConfigDisplaySection | undefined {
+  const rows = entries
+    .filter(([, value]) => value !== undefined)
+    .map(([label, value, format]) => ({
+      label,
+      value: format === "raw" ? String(value) : formatConfigValue(value),
+    }));
 
-  if (config.runtime !== undefined) {
-    configDisplay.push(`${pc.blue("Runtime:")} ${String(config.runtime)}`);
-  }
+  return rows.length > 0 ? { title, rows } : undefined;
+}
 
-  if (config.api !== undefined) {
-    configDisplay.push(`${pc.blue("API:")} ${String(config.api)}`);
-  }
+export function getConfigSections(config: Partial<ProjectConfig>): ConfigDisplaySection[] {
+  return [
+    section("Project", [
+      ["Name", config.projectName, "raw"],
+      ["Directory", config.relativePath, "raw"],
+    ]),
+    section("Application", [
+      ["Frontend", config.frontend],
+      ["Backend", config.backend],
+      ["Runtime", config.runtime],
+      ["API", config.api],
+    ]),
+    section("Data", [
+      ["Database", config.database],
+      ["ORM", config.orm],
+      ["Setup", config.dbSetup],
+    ]),
+    section("Product", [
+      ["Auth", config.auth],
+      ["Payments", config.payments],
+      ["Addons", config.addons],
+      ["Examples", config.examples],
+    ]),
+    section("Delivery", [
+      ["Web deploy", config.webDeploy],
+      ["Server deploy", config.serverDeploy],
+      ["Package manager", config.packageManager],
+      ["Git", config.git],
+      ["Install deps", config.install],
+    ]),
+  ].filter((value): value is ConfigDisplaySection => value !== undefined);
+}
 
-  if (config.database !== undefined) {
-    configDisplay.push(`${pc.blue("Database:")} ${String(config.database)}`);
-  }
-
-  if (config.orm !== undefined) {
-    configDisplay.push(`${pc.blue("ORM:")} ${String(config.orm)}`);
-  }
-
-  if (config.auth !== undefined) {
-    configDisplay.push(`${pc.blue("Auth:")} ${String(config.auth)}`);
-  }
-
-  if (config.payments !== undefined) {
-    configDisplay.push(`${pc.blue("Payments:")} ${String(config.payments)}`);
-  }
-
-  if (config.addons !== undefined) {
-    const addons = Array.isArray(config.addons) ? config.addons : [config.addons];
-    const addonsText = addons.length > 0 && addons[0] !== undefined ? addons.join(", ") : "none";
-    configDisplay.push(`${pc.blue("Addons:")} ${addonsText}`);
-  }
-
-  if (config.examples !== undefined) {
-    const examples = Array.isArray(config.examples) ? config.examples : [config.examples];
-    const examplesText =
-      examples.length > 0 && examples[0] !== undefined ? examples.join(", ") : "none";
-    configDisplay.push(`${pc.blue("Examples:")} ${examplesText}`);
-  }
-
-  if (config.git !== undefined) {
-    const gitText =
-      typeof config.git === "boolean" ? (config.git ? "Yes" : "No") : String(config.git);
-    configDisplay.push(`${pc.blue("Git Init:")} ${gitText}`);
-  }
-
-  if (config.packageManager !== undefined) {
-    configDisplay.push(`${pc.blue("Package Manager:")} ${String(config.packageManager)}`);
-  }
-
-  if (config.install !== undefined) {
-    const installText =
-      typeof config.install === "boolean"
-        ? config.install
-          ? "Yes"
-          : "No"
-        : String(config.install);
-    configDisplay.push(`${pc.blue("Install Dependencies:")} ${installText}`);
-  }
-
-  if (config.dbSetup !== undefined) {
-    configDisplay.push(`${pc.blue("Database Setup:")} ${String(config.dbSetup)}`);
-  }
-
-  if (config.webDeploy !== undefined) {
-    configDisplay.push(`${pc.blue("Web Deployment:")} ${String(config.webDeploy)}`);
-  }
-
-  if (config.serverDeploy !== undefined) {
-    configDisplay.push(`${pc.blue("Server Deployment:")} ${String(config.serverDeploy)}`);
-  }
-
-  if (configDisplay.length === 0) {
+export function displayConfig(config: Partial<ProjectConfig>): string {
+  const sections = getConfigSections(config);
+  if (sections.length === 0) {
     return pc.yellow("No configuration selected.");
   }
 
-  return configDisplay.join("\n");
+  return sections
+    .map(({ title, rows }) => {
+      const labelWidth = Math.max(...rows.map(({ label }) => label.length));
+      const renderedRows = rows
+        .map(({ label, value }) => `  ${pc.dim(label.padEnd(labelWidth))}  ${value}`)
+        .join("\n");
+      return `${pc.magenta(pc.bold(title))}\n${renderedRows}`;
+    })
+    .join("\n\n");
 }

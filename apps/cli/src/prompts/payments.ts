@@ -36,7 +36,7 @@ export async function getPaymentsChoice(
   ];
 
   const response = await navigableSelect<Payments>({
-    message: "Select payments provider",
+    message: "Add payments?",
     options,
     initialValue: preferValidInitial(options, previousValue, DEFAULT_CONFIG.payments),
   });

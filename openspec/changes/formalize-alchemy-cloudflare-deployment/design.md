@@ -1,6 +1,6 @@
 ## Context
 
-Better-T-Stack generates Cloudflare infrastructure through `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs`. The current integration pins `alchemy@2.0.0-beta.62` and emits paths for Cloudflare web, Hono Workers server, combined web/server, full-stack `self`, and D1 topologies. Generated paths are not automatically live-verified support claims; the accepted-version scoreboard defined below owns that distinction.
+Better-T-Stack generates Cloudflare infrastructure through `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs`. The current integration pins `alchemy@2.0.0-beta.64` and emits paths for Cloudflare web, Hono Workers server, combined web/server, full-stack `self`, and D1 topologies. Generated paths are not automatically live-verified support claims; the accepted-version scoreboard defined below owns that distinction.
 
 Alchemy v2 is still a prerelease API. Better-T-Stack currently needs six targeted workarounds because the published release does not correctly cover every generated framework and monorepo behavior. Several reviews also produced plausible but disproved claims. The design therefore treats source inspection, a provider-free plan, and a live deployment as different evidence levels.
 
@@ -16,12 +16,14 @@ The source of truth for observed behavior is [docs/alchemy-v2-beta-findings.md](
 
 Relevant upstream references include:
 
-- [Alchemy v2 documentation](https://v2.alchemy.run)
-- [Alchemy Cloudflare frontend support matrix](https://v2.alchemy.run/cloudflare/frontend/frontends/)
-- [Alchemy Effect repository](https://github.com/alchemy-run/alchemy-effect)
-- [Alchemy PR #779](https://github.com/alchemy-run/alchemy-effect/pull/779)
-- [Alchemy PR #795](https://github.com/alchemy-run/alchemy-effect/pull/795)
-- [Alchemy PR #796](https://github.com/alchemy-run/alchemy-effect/pull/796)
+- [Alchemy v2 documentation](https://alchemy.run)
+- [Alchemy Cloudflare frontend support matrix](https://alchemy.run/cloudflare/frontend/frontends/)
+- [Alchemy repository](https://github.com/alchemy-run/alchemy)
+- [Alchemy PR #779](https://github.com/alchemy-run/alchemy/pull/779)
+- [Alchemy PR #795](https://github.com/alchemy-run/alchemy/pull/795)
+- [Alchemy PR #796](https://github.com/alchemy-run/alchemy/pull/796)
+- [Alchemy PR #928](https://github.com/alchemy-run/alchemy/pull/928)
+- [Alchemy framework resources PR #886](https://github.com/alchemy-run/alchemy/pull/886)
 - [cloudflare-tools PR #62](https://github.com/alchemy-run/cloudflare-tools/pull/62)
 - [Better-T-Stack beta reproductions](https://github.com/AmanVarshney01/alchemy-v2-beta-repros)
 
@@ -72,7 +74,7 @@ Generated template snapshots in `packages/template-generator/src/templates.gener
 
 ### 1. Pin one exact Alchemy release
 
-Generated Cloudflare projects SHALL use exactly `alchemy@2.0.0-beta.62` until a replacement release passes this design's upgrade gate. No caret, tilde, tag, git SHA, or version range is accepted in generated packages.
+Generated Cloudflare projects SHALL use exactly `alchemy@2.0.0-beta.64` until a replacement release passes this design's upgrade gate. No caret, tilde, tag, git SHA, or version range is accepted in generated packages.
 
 The exact version SHALL live in one generator dependency source and be asserted in generated npm, pnpm, and Bun projects. An upstream merge, npm deprecation, or `next` tag movement does not change the accepted version automatically.
 
@@ -96,15 +98,15 @@ Cloudflare separate-server deployment requires Hono on the Workers runtime. Full
 
 Framework resource paths remain intentional:
 
-| Framework              | Current generated path                                                           |
-| ---------------------- | -------------------------------------------------------------------------------- |
-| TanStack Router, Solid | Output-aware `StaticSite` with SPA fallback while Alchemy PR #795 is unreleased  |
-| React Router           | `Website.Vite` plus an explicit registered Worker entry and web-stream SSR       |
-| TanStack Start         | `Website.Vite` with explicit Cloudflare compatibility and bindings               |
-| Next.js                | `StaticSite`/OpenNext assets plus Worker entry and explicit flags/bindings       |
-| Nuxt                   | `StaticSite` with Nitro public assets/server entry and a local development proxy |
-| SvelteKit              | `StaticSite` with the Cloudflare adapter Worker shim bundled                     |
-| Astro                  | `StaticSite` with Cloudflare server entry, session KV, and Images where required |
+| Framework              | Current generated path                                                                 |
+| ---------------------- | -------------------------------------------------------------------------------------- |
+| TanStack Router, Solid | Output-aware `StaticSite` with SPA fallback until beta.64 passes its live removal gate |
+| React Router           | `Website.Vite` plus an explicit registered Worker entry and web-stream SSR             |
+| TanStack Start         | `Website.Vite` with explicit Cloudflare compatibility and bindings                     |
+| Next.js                | `StaticSite`/OpenNext assets plus Worker entry and explicit flags/bindings             |
+| Nuxt                   | `StaticSite` with Nitro public assets/server entry and a local development proxy       |
+| SvelteKit              | `StaticSite` with the Cloudflare adapter Worker shim bundled                           |
+| Astro                  | `StaticSite` with Cloudflare server entry, session KV, and Images where required       |
 
 Alchemy's current framework matrix marks TanStack Start and React Router as supported, Astro only through `StaticSite` static output, and Nuxt as not yet supported. Better-T-Stack's custom Next.js, Nuxt, SvelteKit, and Astro server-entry paths do not inherit an upstream support claim merely because `StaticSite` accepts a build directory and custom `main`. Until the accepted-version scoreboard records each exact page/document live gate, those generated `self` cells SHALL remain experimental.
 
