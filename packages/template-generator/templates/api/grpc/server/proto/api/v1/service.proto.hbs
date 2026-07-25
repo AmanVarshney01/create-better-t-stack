@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package api.v1;
+
+service HealthService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+service ExampleService {
+  rpc Greet(GreetRequest) returns (GreetResponse);
+  rpc ListItems(ListItemsRequest) returns (stream ListItemsResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+}
+
+message GreetRequest {
+  string name = 1;
+}
+
+message GreetResponse {
+  string greeting = 1;
+}
+
+message ListItemsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListItemsResponse {
+  string id = 1;
+  string name = 2;
+}

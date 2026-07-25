@@ -124,11 +124,6 @@ export default function Layout({ children }: { children: ReactNode }) {
           strategy="afterInteractive"
         />
         <RootProvider
-          search={{
-            options: {
-              type: "static",
-            },
-          }}
           theme={{
             enableSystem: true,
             defaultTheme: "system",

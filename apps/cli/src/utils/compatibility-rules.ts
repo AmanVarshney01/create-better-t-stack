@@ -190,6 +190,12 @@ export function validateWorkersCompatibility(
     );
   }
 
+  if (providedFlags.has("api") && options.api === "grpc" && options.runtime === "workers") {
+    return validationErr(
+      "gRPC API is not compatible with Cloudflare Workers runtime. gRPC requires Node.js or Bun runtime. Please use '--runtime node', '--runtime bun', or '--api none'.",
+    );
+  }
+
   return Result.ok(undefined);
 }
 
@@ -206,6 +212,16 @@ export function validateApiFrontendCompatibility(
       `tRPC API is not supported with '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : includesSolid ? "solid" : "astro"}' frontend. Please use --api orpc or --api none or remove '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : includesSolid ? "solid" : "astro"}' from --frontend.`,
     );
   }
+
+  if (
+    api === "grpc" &&
+    frontends.some((frontend) => ["nuxt", "svelte", "solid", "astro"].includes(frontend))
+  ) {
+    return validationErr(
+      "gRPC API currently supports React and native clients only. Please use --api orpc or --api none with Nuxt, Svelte, Solid, or Astro.",
+    );
+  }
+
   return Result.ok(undefined);
 }
 
@@ -248,7 +264,7 @@ export function allowedApisForFrontends(frontends: Frontend[] = []) {
   const includesSvelte = frontends.includes("svelte");
   const includesSolid = frontends.includes("solid");
   const includesAstro = frontends.includes("astro");
-  const base: API[] = ["trpc", "orpc", "none"];
+  const base: API[] = ["trpc", "orpc", "grpc", "none"];
   if (includesNuxt || includesSvelte || includesSolid || includesAstro) {
     return ["orpc", "none"];
   }
@@ -369,10 +385,14 @@ export function validateDockerWebDeployDesktopAddons(
 ): ValidationResult {
   if (webDeploy !== "docker" || !addons || !frontend) return Result.ok(undefined);
 
-  const desktopAddons = addons.filter((addon) => STATIC_DESKTOP_ADDONS.includes(addon));
+  const desktopAddons = addons.filter((addon) =>
+    (STATIC_DESKTOP_ADDONS as readonly string[]).includes(addon),
+  );
   if (desktopAddons.length === 0) return Result.ok(undefined);
 
-  const affected = frontend.find((f) => DOCKER_SERVER_OUTPUT_FRONTENDS.includes(f));
+  const affected = frontend.find((f) =>
+    (DOCKER_SERVER_OUTPUT_FRONTENDS as readonly string[]).includes(f),
+  );
   if (!affected) return Result.ok(undefined);
 
   // next + electrobun keeps standalone output when Convex Better Auth forces server bootstrap
@@ -403,7 +423,7 @@ export function validateAddonCompatibility(
   }
 
   if (
-    STATIC_DESKTOP_ADDONS.includes(addon) &&
+    (STATIC_DESKTOP_ADDONS as readonly string[]).includes(addon) &&
     auth === "clerk" &&
     frontend.includes("react-router")
   ) {
@@ -413,7 +433,7 @@ export function validateAddonCompatibility(
     };
   }
 
-  if (backend === "self" && STATIC_DESKTOP_ADDONS.includes(addon)) {
+  if (backend === "self" && (STATIC_DESKTOP_ADDONS as readonly string[]).includes(addon)) {
     return {
       isCompatible: false,
       reason: `${addon} addon requires a separate backend or no backend because backend 'self' emits server routes that cannot be bundled as static desktop assets.`,
@@ -424,7 +444,7 @@ export function validateAddonCompatibility(
     addon === "tauri" &&
     backend === "convex" &&
     auth === "better-auth" &&
-    frontend.some((f) => TAURI_STATIC_EXPORT_FRONTENDS.includes(f))
+    frontend.some((f) => (TAURI_STATIC_EXPORT_FRONTENDS as readonly string[]).includes(f))
   ) {
     return {
       isCompatible: false,

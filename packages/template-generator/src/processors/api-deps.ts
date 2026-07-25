@@ -68,6 +68,17 @@ function addApiPackageDeps(
       packagePath: pkgPath,
       dependencies: ["@orpc/server", "@orpc/client", "@orpc/openapi", "@orpc/zod", "zod"],
     });
+  } else if (api === "grpc") {
+    addPackageDependency({
+      vfs,
+      packagePath: pkgPath,
+      dependencies: ["@connectrpc/connect", "@bufbuild/protobuf"],
+      devDependencies: [
+        "@bufbuild/buf",
+        "@bufbuild/protoc-gen-es",
+        "@connectrpc/protoc-gen-connect-es",
+      ],
+    });
   }
 
   // Add next dep for api package when backend is self and frontend includes next
@@ -114,6 +125,12 @@ function addServerDeps(vfs: VirtualFileSystem, api: API, backend: Backend): void
       packagePath: serverPath,
       dependencies: ["@orpc/server", "@orpc/openapi"],
     });
+  } else if (api === "grpc") {
+    addPackageDependency({
+      vfs,
+      packagePath: serverPath,
+      dependencies: ["@connectrpc/connect", "@connectrpc/connect-node"],
+    });
   }
 }
 
@@ -141,6 +158,12 @@ function addSelfBackendWebDeps(
       packagePath: webPath,
       dependencies: ["@orpc/server", "@orpc/client", "@orpc/openapi", "@orpc/zod"],
     });
+  } else if (api === "grpc") {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@connectrpc/connect", "@connectrpc/connect-web"],
+    });
   }
 }
 
@@ -167,6 +190,12 @@ function addWebClientDeps(
       vfs,
       packagePath: webPath,
       dependencies: deps,
+    });
+  } else if (api === "grpc" && frontendType.hasReactWeb) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@connectrpc/connect", "@connectrpc/connect-web"],
     });
   } else if (api === "orpc" && frontendType.hasReactWeb) {
     const deps: AvailableDependencies[] = ["@orpc/tanstack-query", "@orpc/client", "@orpc/server"];
@@ -236,6 +265,12 @@ function addNativeDeps(vfs: VirtualFileSystem, api: API, backend: Backend): void
       vfs,
       packagePath: nativePath,
       dependencies: ["@orpc/tanstack-query", "@orpc/client"],
+    });
+  } else if (api === "grpc") {
+    addPackageDependency({
+      vfs,
+      packagePath: nativePath,
+      dependencies: ["@connectrpc/connect", "@connectrpc/connect-web"],
     });
   }
 }

@@ -1,0 +1,22 @@
+{{#if (eq auth "better-auth")}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+
+export type Context = {
+  {{#if (eq auth "better-auth")}}
+  session: Awaited<ReturnType<typeof auth.api.getSession>>;
+  {{else}}
+  userId: string | null;
+  {{/if}}
+};
+
+{{#if (eq auth "better-auth")}}
+export async function createContext(headers: Headers): Promise<Context> {
+  const session = await auth.api.getSession({ headers });
+  return { session };
+}
+{{else}}
+export async function createContext(_headers: Headers): Promise<Context> {
+  return { userId: null };
+}
+{{/if}}

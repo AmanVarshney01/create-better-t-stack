@@ -13,6 +13,11 @@ import { trpcServer } from "@hono/trpc-server";
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
+{{#if (eq api "grpc")}}
+import { createConnectRouter } from "@connectrpc/connect";
+import { createFetchHandler } from "@connectrpc/connect/protocol";
+import { routes } from "@{{projectName}}/api";
+{{/if}}
 {{#if (eq auth "better-auth")}}
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 import { createAuth } from "@{{projectName}}/auth";
@@ -190,6 +195,24 @@ app.post("/ai", async (c) => {
 app.get("/", (c) => {
 	return c.text("OK");
 });
+
+{{#if (eq api "grpc")}}
+const connectRouter = createConnectRouter();
+routes(connectRouter);
+const connectHandlers = connectRouter.handlers.map((handler) => ({
+  route: `/${handler.service.typeName}/${handler.method.name}`,
+  fetch: createFetchHandler(handler, { httpVersion: "1.1" }),
+}));
+
+app.all("/*", async (c) => {
+  for (const handler of connectHandlers) {
+    if (new URL(c.req.url).pathname !== handler.route) continue;
+    const response = await handler.fetch(c.req.raw);
+    return response;
+  }
+  return c.notFound();
+});
+{{/if}}
 
 {{#if (eq runtime "node")}}
 import { serve } from "@hono/node-server";

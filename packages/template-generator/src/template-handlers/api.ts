@@ -95,4 +95,25 @@ export async function processApiTemplates(
       );
     }
   }
+
+  // gRPC (Connect) templates
+  if (config.api === "grpc") {
+    processTemplatesFromPrefix(vfs, templates, `api/grpc/server`, "packages/api", config);
+
+    if (hasReactWeb) {
+      const reactFramework = config.frontend.find((f) =>
+        ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+      );
+      processTemplatesFromPrefix(vfs, templates, "api/grpc/web/react/base", "apps/web", config);
+      if (config.backend === "self" && reactFramework === "next") {
+        processTemplatesFromPrefix(vfs, templates, "api/grpc/fullstack/next", "apps/web", config);
+      }
+    }
+
+    if (
+      config.frontend.some((f) => ["native-bare", "native-uniwind", "native-unistyles"].includes(f))
+    ) {
+      processTemplatesFromPrefix(vfs, templates, "api/grpc/native", "apps/native", config);
+    }
+  }
 }
