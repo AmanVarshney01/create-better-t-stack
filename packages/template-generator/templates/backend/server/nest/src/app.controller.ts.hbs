@@ -1,0 +1,19 @@
+import { Controller, Get } from "@nestjs/common";
+{{#if (eq auth "better-auth")}}
+import { AllowAnonymous } from "@thallesp/nestjs-better-auth";
+{{/if}}
+
+import { AppService } from "./app.service";
+
+@Controller()
+export class AppController {
+	constructor(private readonly appService: AppService) {}
+
+	@Get("health")
+{{#if (eq auth "better-auth")}}
+	@AllowAnonymous()
+{{/if}}
+	getHealth() {
+		return this.appService.getHealth();
+	}
+}

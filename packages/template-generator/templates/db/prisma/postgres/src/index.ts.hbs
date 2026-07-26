@@ -1,5 +1,6 @@
 {{#if (eq runtime "workers")}}
 import { PrismaClient } from "../prisma/generated/client";
+export { Prisma } from "../prisma/generated/client";
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
@@ -41,6 +42,7 @@ export function createPrismaClient() {
 {{/if}}
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
+export { Prisma } from "../prisma/generated/client";
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
 import type {} from "@{{projectName}}/env/server";
 {{else}}

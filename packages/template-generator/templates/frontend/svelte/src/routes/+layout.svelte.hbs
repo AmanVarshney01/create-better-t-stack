@@ -16,7 +16,7 @@
 	</main>
 </div>
 {{else}}
-  {{#if (eq api "orpc")}}
+  {{#if (or (eq api "orpc") (and (eq backend "nest") (includes examples "todo")))}}
 <script lang="ts">
     import { QueryClientProvider } from '@tanstack/svelte-query';
     import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools'

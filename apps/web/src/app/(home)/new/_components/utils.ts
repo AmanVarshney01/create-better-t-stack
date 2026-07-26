@@ -101,7 +101,9 @@ export const hasElectrobunCompatibleFrontend = (webFrontend: string[], backend =
   webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
 
 export const hasEvlogCompatibleBackend = (backend: string) =>
-  ["hono", "express", "fastify", "elysia", ...selfHostedFullstackBackends].includes(backend);
+  ["hono", "express", "fastify", "elysia", "nest", ...selfHostedFullstackBackends].includes(
+    backend,
+  );
 
 // Mirrors the CLI rule: Tauri static exports can't bundle Convex Better Auth on these frontends
 const tauriStaticExportFrontends = ["next", "tanstack-start"] as const;
@@ -258,6 +260,58 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       nextStack.examples = ["none"];
       changed = true;
       changes.push({ category: "backend", message: "Examples cleared (no backend)" });
+    }
+  }
+
+  if (nextStack.backend === "nest") {
+    const nestOverrides: Partial<StackState> = {
+      api: "none",
+      payments: "none",
+    };
+
+    if (nextStack.runtime !== "bun" && nextStack.runtime !== "node") {
+      nestOverrides.runtime = "bun";
+    }
+    if (nextStack.auth !== "better-auth" && nextStack.auth !== "none") {
+      nestOverrides.auth = "none";
+    }
+    if (
+      nextStack.serverDeploy !== "docker" &&
+      nextStack.serverDeploy !== "vercel" &&
+      nextStack.serverDeploy !== "none"
+    ) {
+      nestOverrides.serverDeploy = "none";
+    }
+    if (nextStack.dbSetup === "d1") {
+      nestOverrides.dbSetup = "none";
+    }
+    if (nextStack.database === "none") {
+      nestOverrides.orm = "none";
+    } else if (nextStack.database === "mongodb") {
+      if (nextStack.orm !== "prisma" && nextStack.orm !== "mongoose") {
+        nestOverrides.orm = "prisma";
+      }
+    } else if (nextStack.orm !== "prisma") {
+      nestOverrides.orm = "prisma";
+    }
+
+    for (const [key, value] of Object.entries(nestOverrides)) {
+      const catKey = key as keyof StackState;
+      if (nextStack[catKey] !== value) {
+        nextStack[catKey] = value as never;
+        changed = true;
+        changes.push({
+          category: "backend",
+          message: `${getCategoryDisplayName(catKey)} set to '${value}' (Nest.js constraint)`,
+        });
+      }
+    }
+
+    if (nextStack.examples.includes("ai")) {
+      nextStack.examples = nextStack.examples.filter((example) => example !== "ai");
+      if (nextStack.examples.length === 0) nextStack.examples = ["none"];
+      changed = true;
+      changes.push({ category: "examples", message: "AI removed (not supported by Nest.js)" });
     }
   }
 
@@ -692,9 +746,10 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // EXAMPLES CONSTRAINTS
   // ============================================
 
-  // Todo example requires database AND API (unless Convex)
+  // Nest.js exposes the Todo example through REST without a generated RPC layer.
   if (nextStack.examples.includes("todo") && nextStack.backend !== "convex") {
-    const needsRemoval = nextStack.database === "none" || nextStack.api === "none";
+    const needsRemoval =
+      nextStack.database === "none" || (nextStack.api === "none" && nextStack.backend !== "nest");
     if (needsRemoval) {
       const reason = nextStack.database === "none" ? "requires database" : "requires API layer";
       nextStack.examples = nextStack.examples.filter((e) => e !== "todo");
@@ -888,6 +943,44 @@ export const getDisabledReason = (
     }
   }
 
+  if (currentStack.backend === "nest") {
+    if (category === "runtime" && optionId !== "bun" && optionId !== "node") {
+      return "Nest.js currently requires the Bun or Node.js runtime";
+    }
+    if (category === "orm") {
+      if (optionId === "drizzle") return "Nest.js currently supports Prisma or Mongoose";
+      if (optionId === "mongoose" && currentStack.database !== "mongodb") {
+        return "Mongoose only works with MongoDB";
+      }
+      if (optionId === "none" && currentStack.database !== "none") {
+        return "Database requires an ORM";
+      }
+    }
+    if (category === "api" && optionId !== "none") {
+      return "Nest.js does not support a generated API layer yet";
+    }
+    if (category === "auth" && optionId === "clerk") {
+      return "Nest.js currently supports Better Auth only";
+    }
+    if (category === "payments" && optionId !== "none") {
+      return "Nest.js does not support payments yet";
+    }
+    if (category === "dbSetup" && optionId === "d1") {
+      return "D1 requires the Cloudflare Workers runtime";
+    }
+    if (
+      category === "serverDeploy" &&
+      optionId !== "none" &&
+      optionId !== "docker" &&
+      optionId !== "vercel"
+    ) {
+      return "Nest.js supports Docker or Vercel server deployment";
+    }
+    if (category === "examples" && optionId === "ai") {
+      return "The AI example is not supported by Nest.js yet";
+    }
+  }
+
   // ============================================
   // FULLSTACK BACKEND CONSTRAINTS
   // ============================================
@@ -990,7 +1083,12 @@ export const getDisabledReason = (
       return `Convex is not compatible with ${incompatible}`;
     }
     // Workers runtime only works with Hono backend
-    if (currentStack.runtime === "workers" && optionId !== "hono" && optionId !== "none") {
+    if (
+      currentStack.runtime === "workers" &&
+      optionId !== "hono" &&
+      optionId !== "nest" &&
+      optionId !== "none"
+    ) {
       return "Workers runtime only works with Hono";
     }
   }
@@ -1165,7 +1263,7 @@ export const getDisabledReason = (
       return "Electrobun requires a web frontend";
     }
     if (optionId === "evlog" && !hasEvlogCompatibleBackend(currentStack.backend)) {
-      return "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend";
+      return "evlog requires Hono, Express, Fastify, Elysia, Nest.js, or a fullstack backend";
     }
     // Task runners are mutually exclusive in the CLI, but the builder lets users swap them.
     // URL/state sanitization keeps only the latest selected runner before generating commands.
@@ -1179,7 +1277,7 @@ export const getDisabledReason = (
       if (currentStack.database === "none") {
         return "Todo example requires a database";
       }
-      if (currentStack.api === "none") {
+      if (currentStack.api === "none" && currentStack.backend !== "nest") {
         return "Todo example requires an API layer (tRPC or oRPC)";
       }
     }
