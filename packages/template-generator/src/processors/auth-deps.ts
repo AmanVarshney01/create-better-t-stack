@@ -3,6 +3,8 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
+// Intentional: keep Convex Better Auth on the latest Better Auth 1.6.x release
+// supported by @convex-dev/better-auth (>=1.6.11 <1.7.0).
 const CONVEX_BETTER_AUTH_VERSION = "1.6.25";
 
 export function processAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
