@@ -19,6 +19,7 @@ type SkillSource = {
 type AgentOption = {
   value: SkillAgent;
   label: string;
+  hint?: string;
 };
 
 type SkillsOptions = NonNullable<AddonOptions["skills"]>;
@@ -91,8 +92,10 @@ const SKILL_SOURCES = {
 
 type SourceKey = keyof typeof SKILL_SOURCES;
 
-// All available agents from the skills CLI
-const AVAILABLE_AGENTS: AgentOption[] = [
+// All explicit agent targets accepted by the skills CLI. Keep these for
+// persisted-config compatibility even when the interactive prompt consolidates
+// shared .agents/skills consumers under the universal target.
+const SKILLS_CLI_AGENT_OPTIONS: AgentOption[] = [
   { value: "adal", label: "AdaL" },
   { value: "aider-desk", label: "AiderDesk" },
   { value: "amp", label: "Amp" },
@@ -170,8 +173,59 @@ const AVAILABLE_AGENTS: AgentOption[] = [
   { value: "zenflow", label: "Zenflow" },
 ];
 
+// Mirrors skills@latest getUniversalAgents(): these targets all consume the
+// shared project-level .agents/skills directory. Expanding the group preserves
+// the skills CLI's agent-specific global directories when scope is global.
+export const UNIVERSAL_SKILLS_AGENTS = [
+  "amp",
+  "antigravity",
+  "antigravity-cli",
+  "cline",
+  "codex",
+  "cursor",
+  "deepagents",
+  "dexto",
+  "firebender",
+  "gemini-cli",
+  "github-copilot",
+  "kimi-code-cli",
+  "loaf",
+  "opencode",
+  "promptscript",
+  "warp",
+  "zed",
+] as const satisfies readonly SkillAgent[];
+
+const PROMPT_HIDDEN_AGENTS = new Set<SkillAgent>([
+  ...UNIVERSAL_SKILLS_AGENTS,
+  "universal",
+  // The upstream skills CLI omits these from its standard agent selector.
+  "eve",
+  "replit",
+]);
+
+export const SKILLS_AGENT_PROMPT_OPTIONS: AgentOption[] = [
+  {
+    value: "universal",
+    label: "Universal (.agents/skills)",
+    hint: "17 agents including Amp, Antigravity, Cline, Codex, Cursor, Gemini CLI, Copilot, OpenCode, Warp, and Zed",
+  },
+  // Keep the most common separate-directory target beside the universal group.
+  ...SKILLS_CLI_AGENT_OPTIONS.filter(({ value }) => value === "claude-code"),
+  ...SKILLS_CLI_AGENT_OPTIONS.filter(
+    ({ value }) => value !== "claude-code" && !PROMPT_HIDDEN_AGENTS.has(value),
+  ),
+];
+
+export function expandSkillsAgentTargets(agents: readonly SkillAgent[]): SkillAgent[] {
+  const expanded = agents.flatMap((agent) =>
+    agent === "universal" ? [...UNIVERSAL_SKILLS_AGENTS] : [agent],
+  );
+  return Array.from(new Set(expanded));
+}
+
 const DEFAULT_SCOPE: InstallScope = "project";
-const DEFAULT_AGENTS: SkillAgent[] = ["cursor", "claude-code", "github-copilot"];
+const DEFAULT_AGENTS: SkillAgent[] = ["universal", "claude-code"];
 
 function hasReactBasedFrontend(frontend: ProjectConfig["frontend"]): boolean {
   return (
@@ -500,7 +554,7 @@ export async function setupSkills(
         if (configuredAgents !== undefined) return [...configuredAgents];
         return navigableMultiselect<SkillAgent>({
           message: "Select agents to install skills to",
-          options: AVAILABLE_AGENTS,
+          options: SKILLS_AGENT_PROMPT_OPTIONS,
           required: false,
           initialValues: [...DEFAULT_AGENTS],
         });
@@ -539,6 +593,7 @@ export async function setupSkills(
 
   const runner = getPackageRunnerPrefix(packageManager);
   const globalFlags = scope === "global" ? ["-g"] : [];
+  const agentTargets = expandSkillsAgentTargets(selectedAgents);
 
   // Install skills grouped by source (project scope, no -g flag)
   for (const [source, skills] of Object.entries(skillsBySource)) {
@@ -553,7 +608,7 @@ export async function setupSkills(
           "--skill",
           ...skills,
           "--agent",
-          ...selectedAgents,
+          ...agentTargets,
           "-y",
         ];
         await $({ cwd: projectDir, env: { CI: "true" } })`${args}`;

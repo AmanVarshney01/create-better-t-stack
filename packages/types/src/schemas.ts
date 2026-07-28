@@ -213,6 +213,7 @@ export const SkillsSourceSchema = z
 
 export const SkillsAgentSchema = z
   .enum([
+    "universal",
     "adal",
     "aider-desk",
     "amp",
@@ -281,7 +282,6 @@ export const SkillsAgentSchema = z
     "tinycloud",
     "trae",
     "trae-cn",
-    "universal",
     "warp",
     "windsurf",
     "zcode",
@@ -289,7 +289,9 @@ export const SkillsAgentSchema = z
     "zencoder",
     "zenflow",
   ])
-  .describe("Agent target for skill installation");
+  .describe(
+    "Agent target for skill installation; prefer universal for agents that consume .agents/skills",
+  );
 
 export const SkillSelectionSchema = z.strictObject({
   source: SkillsSourceSchema.describe("Skill source to install from"),
