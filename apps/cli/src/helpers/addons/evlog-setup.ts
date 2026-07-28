@@ -11,6 +11,10 @@ type EvlogWebFrontend = Extract<Frontend, "next" | "nuxt" | "svelte" | "tanstack
 
 const evlogBackends = ["hono", "express", "fastify", "elysia"] as const;
 const evlogWebFrontends = ["next", "nuxt", "svelte", "tanstack-start", "astro"] as const;
+const NODE_DEV_FS_DRAIN_EXPRESSION =
+  'process.env.NODE_ENV === "production" ? undefined : createFsDrain()';
+const SVELTE_DEV_FS_DRAIN_EXPRESSION = "dev ? createFsDrain() : undefined";
+const ASTRO_DEV_FS_DRAIN_EXPRESSION = "import.meta.env.DEV ? createFsDrain() : undefined";
 
 function isEvlogBackend(backend: Backend): backend is EvlogBackend {
   return (evlogBackends as readonly Backend[]).includes(backend);
@@ -22,8 +26,43 @@ function getEvlogWebFrontend(frontends: Frontend[]): EvlogWebFrontend | undefine
   );
 }
 
+function shouldWireEvlogServerFsDrain(config: ProjectConfig) {
+  return (
+    isEvlogBackend(config.backend) &&
+    config.runtime !== "workers" &&
+    config.serverDeploy !== "cloudflare"
+  );
+}
+
+function shouldWireEvlogWebFsDrain(config: ProjectConfig) {
+  return getEvlogWebFrontend(config.frontend) !== undefined && config.webDeploy !== "cloudflare";
+}
+
+export function supportsEvlogLocalLogs(config: ProjectConfig) {
+  return shouldWireEvlogServerFsDrain(config) || shouldWireEvlogWebFsDrain(config);
+}
+
 function shouldIdentifyWebAuth(config: ProjectConfig) {
   return config.auth === "better-auth" && config.backend === "self";
+}
+
+function getEvlogServerMiddlewareMarker(backend: EvlogBackend, fsDrain: boolean) {
+  const options = fsDrain ? `{ drain: ${NODE_DEV_FS_DRAIN_EXPRESSION} }` : "";
+
+  if (backend === "hono" || backend === "express") {
+    return `app.use(evlog(${options}));`;
+  }
+  if (backend === "fastify") {
+    return `fastify.register(evlog${options ? `, ${options}` : ""});`;
+  }
+  return `.use(evlog(${options}))`;
+}
+
+function findEvlogServerMiddlewareMarker(content: string, backend: EvlogBackend) {
+  const fsDrainMarker = getEvlogServerMiddlewareMarker(backend, true);
+  return content.includes(fsDrainMarker)
+    ? fsDrainMarker
+    : getEvlogServerMiddlewareMarker(backend, false);
 }
 
 function prependMissingImports(content: string, imports: string[]) {
@@ -169,6 +208,7 @@ function addEvlogBetterAuthServerSetup(
     : "";
 
   if (backend === "hono") {
+    const evlogMarker = findEvlogServerMiddlewareMarker(nextContent, backend);
     nextContent = insertBeforeOnce(
       nextContent,
       "const app = new Hono",
@@ -177,13 +217,14 @@ function addEvlogBetterAuthServerSetup(
     );
     return insertAfterOnce(
       nextContent,
-      "app.use(evlog());",
+      evlogMarker,
       `\napp.use("*", async (c, next) => {${identifyUserSetup}\n\tawait identifyUser(c.get("log"), c.req.raw.headers, c.req.path);\n\tawait next();\n});`,
       'identifyUser(c.get("log")',
     );
   }
 
   if (backend === "express") {
+    const evlogMarker = findEvlogServerMiddlewareMarker(nextContent, backend);
     nextContent = addNamedImport(nextContent, "evlog/express", ["useLogger"]);
     nextContent = insertBeforeOnce(
       nextContent,
@@ -193,13 +234,14 @@ function addEvlogBetterAuthServerSetup(
     );
     return insertAfterOnce(
       nextContent,
-      "app.use(evlog());",
+      evlogMarker,
       `\napp.use(async (req, _res, next) => {${identifyUserSetup}\n\tawait identifyUser(useLogger(), req.headers, req.path);\n\tnext();\n});`,
       "identifyUser(useLogger()",
     );
   }
 
   if (backend === "fastify") {
+    const evlogMarker = findEvlogServerMiddlewareMarker(nextContent, backend);
     nextContent = addNamedImport(nextContent, "evlog/fastify", ["useLogger"]);
     nextContent = insertBeforeOnce(
       nextContent,
@@ -209,7 +251,7 @@ function addEvlogBetterAuthServerSetup(
     );
     return insertAfterOnce(
       nextContent,
-      "fastify.register(evlog);",
+      evlogMarker,
       `\nfastify.addHook("preHandler", async (request) => {${identifyUserSetup}\n\tawait identifyUser(useLogger(), request.headers, request.url);\n});`,
       "identifyUser(useLogger()",
     );
@@ -224,21 +266,30 @@ function addEvlogBetterAuthServerSetup(
     identifySnippet,
     "createAuthMiddleware(",
   );
+  const evlogMarker = findEvlogServerMiddlewareMarker(nextContent, backend);
   return insertAfterOnce(
     nextContent,
-    ".use(evlog())",
+    evlogMarker,
     `\n\t.derive(async ({ request, log }) => {${identifyUserSetup.replace(/\n\t/g, "\n\t\t")}\n\t\tawait identifyUser(log, request.headers, new URL(request.url).pathname);\n\t\treturn {};\n\t})`,
     "identifyUser(log",
   );
 }
 
-export function addEvlogServerSetup(content: string, backend: EvlogBackend, serviceName: string) {
+export function addEvlogServerSetup(
+  content: string,
+  backend: EvlogBackend,
+  serviceName: string,
+  fsDrain: boolean,
+) {
   const initSnippet = `initLogger({\n\tenv: { service: "${serviceName}" },\n});\n\n`;
+  const evlogMarker = getEvlogServerMiddlewareMarker(backend, fsDrain);
+  const legacyEvlogMarker = getEvlogServerMiddlewareMarker(backend, false);
 
   if (backend === "hono") {
     let nextContent = prependMissingImports(content, [
       'import { initLogger } from "evlog";',
       'import { evlog, type EvlogVariables } from "evlog/hono";',
+      ...(fsDrain ? ['import { createFsDrain } from "evlog/fs";'] : []),
     ]);
     nextContent = insertBeforeOnce(
       nextContent,
@@ -253,11 +304,14 @@ export function addEvlogServerSetup(content: string, backend: EvlogBackend, serv
     nextContent = nextContent
       .replace('import { logger } from "hono/logger";\n', "")
       .replace(/\napp\.use\(logger\(\)\);/, "");
+    if (fsDrain) {
+      nextContent = nextContent.replace(legacyEvlogMarker, evlogMarker);
+    }
     return insertAfterOnce(
       nextContent,
       "const app = new Hono<EvlogVariables>();",
-      "\n\napp.use(evlog());",
-      "app.use(evlog());",
+      `\n\n${evlogMarker}`,
+      evlogMarker,
     );
   }
 
@@ -265,6 +319,7 @@ export function addEvlogServerSetup(content: string, backend: EvlogBackend, serv
     let nextContent = prependMissingImports(content, [
       'import { initLogger } from "evlog";',
       'import { evlog } from "evlog/express";',
+      ...(fsDrain ? ['import { createFsDrain } from "evlog/fs";'] : []),
     ]);
     nextContent = insertBeforeOnce(
       nextContent,
@@ -272,11 +327,14 @@ export function addEvlogServerSetup(content: string, backend: EvlogBackend, serv
       initSnippet,
       "initLogger({",
     );
+    if (fsDrain) {
+      nextContent = nextContent.replace(legacyEvlogMarker, evlogMarker);
+    }
     return insertAfterOnce(
       nextContent,
       "const app = express();",
-      "\n\napp.use(evlog());",
-      "app.use(evlog());",
+      `\n\n${evlogMarker}`,
+      evlogMarker,
     );
   }
 
@@ -284,6 +342,7 @@ export function addEvlogServerSetup(content: string, backend: EvlogBackend, serv
     let nextContent = prependMissingImports(content, [
       'import { initLogger } from "evlog";',
       'import { evlog } from "evlog/fastify";',
+      ...(fsDrain ? ['import { createFsDrain } from "evlog/fs";'] : []),
     ]);
     nextContent = insertBeforeOnce(
       nextContent,
@@ -291,24 +350,31 @@ export function addEvlogServerSetup(content: string, backend: EvlogBackend, serv
       initSnippet,
       "initLogger({",
     );
+    if (fsDrain) {
+      nextContent = nextContent.replace(legacyEvlogMarker, evlogMarker);
+    }
     return insertBeforeOnce(
       nextContent,
       "fastify.register(fastifyCors",
-      "fastify.register(evlog);\n",
-      "fastify.register(evlog);",
+      `${evlogMarker}\n`,
+      evlogMarker,
     );
   }
 
   let nextContent = prependMissingImports(content, [
     'import { initLogger } from "evlog";',
     'import { evlog } from "evlog/elysia";',
+    ...(fsDrain ? ['import { createFsDrain } from "evlog/fs";'] : []),
   ]);
   const elysiaMarker = nextContent.includes("const app = new Elysia")
     ? "const app = new Elysia"
     : "new Elysia";
   nextContent = insertBeforeOnce(nextContent, elysiaMarker, initSnippet, "initLogger({");
+  if (fsDrain) {
+    nextContent = nextContent.replace(legacyEvlogMarker, evlogMarker);
+  }
   for (const marker of ["new Elysia({ adapter: node() })", "new Elysia()"]) {
-    nextContent = insertAfterOnce(nextContent, marker, "\n\t.use(evlog())", ".use(evlog())");
+    nextContent = insertAfterOnce(nextContent, marker, `\n\t${evlogMarker}`, evlogMarker);
   }
   return nextContent;
 }
@@ -340,14 +406,28 @@ function addSvelteViteEvlogSetup(content: string, serviceName: string) {
   );
 }
 
-function addSvelteHooksEvlogSetup(content: string) {
+function getSvelteEvlogHooksCall(fsDrain: boolean) {
+  return fsDrain
+    ? `createEvlogHooks({ drain: ${SVELTE_DEV_FS_DRAIN_EXPRESSION} })`
+    : "createEvlogHooks()";
+}
+
+function addSvelteHooksEvlogSetup(content: string, fsDrain: boolean) {
   let nextContent = prependMissingImports(content, [
     'import { createEvlogHooks } from "evlog/sveltekit";',
+    ...(fsDrain ? ['import { createFsDrain } from "evlog/fs";'] : []),
   ]);
+  if (fsDrain) {
+    nextContent = addNamedImport(nextContent, "$app/environment", ["dev"]);
+  }
+  const hooksCall = getSvelteEvlogHooksCall(fsDrain);
+  if (fsDrain) {
+    nextContent = nextContent.replaceAll("createEvlogHooks()", hooksCall);
+  }
 
   if (!nextContent.includes("export const handle") && !nextContent.includes("const authHandle")) {
-    if (!nextContent.includes("createEvlogHooks()")) {
-      nextContent = `${nextContent.trimEnd()}\n\nexport const { handle, handleError } = createEvlogHooks();\n`;
+    if (!nextContent.includes("createEvlogHooks(")) {
+      nextContent = `${nextContent.trimEnd()}\n\nexport const { handle, handleError } = ${hooksCall};\n`;
     }
     return nextContent;
   }
@@ -358,7 +438,7 @@ function addSvelteHooksEvlogSetup(content: string) {
   if (!nextContent.includes("const { handle: evlogHandle, handleError }")) {
     nextContent = nextContent.replace(
       /((?:import .+\n)+)/,
-      `$1\nconst { handle: evlogHandle, handleError } = createEvlogHooks();\n\n`,
+      `$1\nconst { handle: evlogHandle, handleError } = ${hooksCall};\n\n`,
     );
   }
   nextContent = nextContent.replace(
@@ -420,11 +500,17 @@ function addTanstackStartRootEvlogSetup(content: string) {
   );
 }
 
-function addAstroMiddlewareEvlogSetup(content: string, serviceName: string) {
+function getInitLoggerSnippet(serviceName: string, fsDrain: boolean, indent: string) {
+  const drain = fsDrain ? `\n${indent}drain: ${ASTRO_DEV_FS_DRAIN_EXPRESSION},` : "";
+  return `initLogger({\n${indent}env: { service: "${serviceName}" },${drain}\n});\n\n`;
+}
+
+function addAstroMiddlewareEvlogSetup(content: string, serviceName: string, fsDrain: boolean) {
   let nextContent = prependMissingImports(content, [
     'import { createRequestLogger, initLogger } from "evlog";',
+    ...(fsDrain ? ['import { createFsDrain } from "evlog/fs";'] : []),
   ]);
-  const initSnippet = `initLogger({\n  env: { service: "${serviceName}" },\n});\n\n`;
+  const initSnippet = getInitLoggerSnippet(serviceName, fsDrain, "  ");
 
   nextContent = insertBeforeOnce(
     nextContent,
@@ -432,6 +518,12 @@ function addAstroMiddlewareEvlogSetup(content: string, serviceName: string) {
     initSnippet,
     "initLogger({",
   );
+  if (fsDrain && !nextContent.includes("drain:")) {
+    nextContent = nextContent.replace(
+      /initLogger\(\{\n(\s+env: \{ service: "[^"]+" \},)/,
+      `initLogger({\n$1\n  drain: ${ASTRO_DEV_FS_DRAIN_EXPRESSION},`,
+    );
+  }
 
   if (nextContent.includes("createRequestLogger({")) return nextContent;
 
@@ -618,12 +710,17 @@ function addSvelteBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
       ? `const evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tif (building) {\n\t\treturn resolve(event);\n\t}\n\n\tconst authEnv = event.platform?.env ?? localEnv;\n\tconst identifyUser = createAuthMiddleware(createAuth(authEnv) as BetterAuthInstance, ${authOptions});\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`
       : `const identifyUser = createAuthMiddleware(${authExpression} as BetterAuthInstance, ${authOptions});\n\nconst evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`;
 
-  nextContent = insertAfterOnce(
-    nextContent,
-    "const { handle: evlogHandle, handleError } = createEvlogHooks();\n\n",
-    authHandleSnippet,
-    "evlogAuthHandle",
-  );
+  const evlogHandleDeclaration = nextContent.match(
+    /const \{ handle: evlogHandle, handleError \} = createEvlogHooks\([\s\S]*?\);\n\n/,
+  )?.[0];
+  if (evlogHandleDeclaration) {
+    nextContent = insertAfterOnce(
+      nextContent,
+      evlogHandleDeclaration,
+      authHandleSnippet,
+      "evlogAuthHandle",
+    );
+  }
 
   return nextContent
     .replace(
@@ -672,16 +769,27 @@ function addAstroBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
   return nextContent;
 }
 
-function getNextEvlogFile(serviceName: string) {
+function getNextEvlogFile(serviceName: string, fsDrain: boolean) {
   return `import { createEvlog } from "evlog/next";
 import { createInstrumentation } from "evlog/next/instrumentation/create";
+${fsDrain ? 'import { createFsDrain } from "evlog/fs";\n' : ""}
 
 export const { withEvlog, useLogger, log, createError } = createEvlog({
   service: "${serviceName}",
-});
+${fsDrain ? `  drain: ${NODE_DEV_FS_DRAIN_EXPRESSION},\n` : ""}});
 
 export const { register, onRequestError } = createInstrumentation({
   service: "${serviceName}",
+});
+`;
+}
+
+function getNitroEvlogDrainFile() {
+  return `import { createFsDrain } from "evlog/fs";
+
+export default defineNitroPlugin((nitroApp) => {
+  if (!import.meta.dev) return;
+  nitroApp.hooks.hook("evlog:drain", createFsDrain());
 });
 `;
 }
@@ -815,13 +923,12 @@ export default defineConfig({
 `;
 }
 
-function getAstroMiddlewareFile(serviceName: string) {
+function getAstroMiddlewareFile(serviceName: string, fsDrain: boolean) {
   return `import { defineMiddleware } from "astro:middleware";
 import { createRequestLogger, initLogger } from "evlog";
+${fsDrain ? 'import { createFsDrain } from "evlog/fs";\n' : ""}
 
-initLogger({
-  env: { service: "${serviceName}" },
-});
+${getInitLoggerSnippet(serviceName, fsDrain, "  ").trimEnd()}
 
 export const onRequest = defineMiddleware(async ({ request, locals }, next) => {
   const url = new URL(request.url);
@@ -860,10 +967,11 @@ declare namespace App {
 
 async function setupNextEvlog(config: ProjectConfig, serviceName: string) {
   const webDir = path.join(config.projectDir, "apps/web");
+  const fsDrain = shouldWireEvlogWebFsDrain(config);
 
   const evlogPath = path.join(webDir, "src/lib/evlog.ts");
   if (!(await fs.pathExists(evlogPath))) {
-    await writeFileIfChanged(evlogPath, getNextEvlogFile(serviceName));
+    await writeFileIfChanged(evlogPath, getNextEvlogFile(serviceName, fsDrain));
   }
 
   const identifyWebAuth = shouldIdentifyWebAuth(config);
@@ -916,9 +1024,17 @@ async function setupNextEvlog(config: ProjectConfig, serviceName: string) {
 
 async function setupNuxtEvlog(config: ProjectConfig, serviceName: string) {
   const webDir = path.join(config.projectDir, "apps/web");
+  const fsDrain = shouldWireEvlogWebFsDrain(config);
   await updateFileIfExists(path.join(webDir, "nuxt.config.ts"), (content) =>
     addNuxtEvlogSetup(content, serviceName),
   );
+
+  if (fsDrain) {
+    const drainPath = path.join(webDir, "server/plugins/evlog-drain.ts");
+    if (!(await fs.pathExists(drainPath))) {
+      await writeFileIfChanged(drainPath, getNitroEvlogDrainFile());
+    }
+  }
 
   if (shouldIdentifyWebAuth(config)) {
     const oldAuthPluginPath = path.join(webDir, "server/plugins/evlog-auth.ts");
@@ -942,19 +1058,22 @@ async function setupNuxtEvlog(config: ProjectConfig, serviceName: string) {
 
 async function setupSvelteEvlog(config: ProjectConfig, serviceName: string) {
   const webDir = path.join(config.projectDir, "apps/web");
+  const fsDrain = shouldWireEvlogWebFsDrain(config);
   await updateFileIfExists(path.join(webDir, "vite.config.ts"), (content) =>
     addSvelteViteEvlogSetup(content, serviceName),
   );
 
   const hooksPath = path.join(webDir, "src/hooks.server.ts");
   if (await fs.pathExists(hooksPath)) {
-    await updateFileIfExists(hooksPath, addSvelteHooksEvlogSetup);
+    await updateFileIfExists(hooksPath, (content) => addSvelteHooksEvlogSetup(content, fsDrain));
   } else {
     await writeFileIfChanged(
       hooksPath,
       `import { createEvlogHooks } from "evlog/sveltekit";
+${fsDrain ? 'import { createFsDrain } from "evlog/fs";\n' : ""}
+${fsDrain ? 'import { dev } from "$app/environment";\n' : ""}
 
-export const { handle, handleError } = createEvlogHooks();
+export const { handle, handleError } = ${getSvelteEvlogHooksCall(fsDrain)};
 `,
     );
   }
@@ -977,6 +1096,7 @@ export const { handle, handleError } = createEvlogHooks();
 
 async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: string) {
   const webDir = path.join(config.projectDir, "apps/web");
+  const fsDrain = shouldWireEvlogWebFsDrain(config);
   const nitroConfigPath = path.join(webDir, "nitro.config.ts");
   if (!(await fs.pathExists(nitroConfigPath))) {
     await writeFileIfChanged(nitroConfigPath, getTanstackNitroConfigFile(serviceName));
@@ -985,6 +1105,13 @@ async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: strin
     path.join(webDir, "src/routes/__root.tsx"),
     addTanstackStartRootEvlogSetup,
   );
+
+  if (fsDrain) {
+    const drainPath = path.join(webDir, "server/plugins/evlog-drain.ts");
+    if (!(await fs.pathExists(drainPath))) {
+      await writeFileIfChanged(drainPath, getNitroEvlogDrainFile());
+    }
+  }
 
   if (shouldIdentifyWebAuth(config)) {
     const authPluginPath = path.join(webDir, "server/plugins/evlog-auth.ts");
@@ -1003,12 +1130,13 @@ async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: strin
 
 async function setupAstroEvlog(config: ProjectConfig, serviceName: string) {
   const webDir = path.join(config.projectDir, "apps/web");
+  const fsDrain = shouldWireEvlogWebFsDrain(config);
   const middlewarePath = path.join(webDir, "src/middleware.ts");
   if (!(await fs.pathExists(middlewarePath))) {
-    await writeFileIfChanged(middlewarePath, getAstroMiddlewareFile(serviceName));
+    await writeFileIfChanged(middlewarePath, getAstroMiddlewareFile(serviceName, fsDrain));
   } else {
     await updateFileIfExists(middlewarePath, (content) =>
-      addAstroMiddlewareEvlogSetup(content, serviceName),
+      addAstroMiddlewareEvlogSetup(content, serviceName, fsDrain),
     );
   }
 
@@ -1056,6 +1184,7 @@ export async function setupEvlog(config: ProjectConfig): Promise<Result<void, Ad
             content,
             config.backend,
             `${config.projectName}-server`,
+            shouldWireEvlogServerFsDrain(config),
           );
 
           if (config.auth === "better-auth") {

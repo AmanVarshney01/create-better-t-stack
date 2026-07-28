@@ -196,7 +196,7 @@ export const router = t.router({
   createJson: t.procedure
     .meta({
       description: "Create a project from a raw JSON payload (agent-friendly)",
-      jsonInput: true,
+      jsonInput: "always",
     })
     .input(CreateInputSchema)
     .mutation(async ({ input }) => {
@@ -253,7 +253,7 @@ export const router = t.router({
   addJson: t.procedure
     .meta({
       description: "Add addons from a raw JSON payload (agent-friendly)",
-      jsonInput: true,
+      jsonInput: "always",
     })
     .input(AddInputSchema)
     .mutation(async ({ input }) => {
