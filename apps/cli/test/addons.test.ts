@@ -1080,11 +1080,45 @@ describe("Addon Configurations", () => {
         );
 
         expect(serverIndex).toContain('import { initLogger } from "evlog";');
+        expect(serverIndex).toContain('import { createFsDrain } from "evlog/fs";');
         expect(serverIndex).toContain(backendSnippets[backend]);
         expect(serverIndex).toContain(`env: { service: "evlog-${backend}-server" }`);
+        expect(serverIndex).toContain(
+          'drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain()',
+        );
         expect(serverPackageJson).toContain('"evlog": "^2.22.4"');
+        const gitignore = await readFile(join(projectDir, ".gitignore"), "utf-8");
+        expect(gitignore).toContain(".evlog/");
       });
     }
+
+    it("should keep the Node file system drain out of Cloudflare Workers", async () => {
+      const result = await runTRPCTest({
+        projectName: "evlog-hono-workers",
+        addons: ["evlog"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "workers",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "cloudflare",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const serverIndex = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf-8");
+      expect(serverIndex).toContain('import { evlog, type EvlogVariables } from "evlog/hono";');
+      expect(serverIndex).not.toContain("evlog/fs");
+      expect(serverIndex).toContain("app.use(evlog());");
+    });
 
     const webCases = [
       {
@@ -1092,6 +1126,7 @@ describe("Addon Configurations", () => {
         api: "trpc",
         files: [
           ["apps/web/src/lib/evlog.ts", "createEvlog"],
+          ["apps/web/src/lib/evlog.ts", "createFsDrain"],
           ["apps/web/src/lib/evlog.ts", 'from "evlog/next/instrumentation/create"'],
           ["apps/web/instrumentation.ts", "defineNodeInstrumentation"],
           ["apps/web/src/proxy.ts", "evlogMiddleware"],
@@ -1101,7 +1136,10 @@ describe("Addon Configurations", () => {
       {
         frontend: "nuxt",
         api: "orpc",
-        files: [["apps/web/nuxt.config.ts", '"evlog/nuxt"']],
+        files: [
+          ["apps/web/nuxt.config.ts", '"evlog/nuxt"'],
+          ["apps/web/server/plugins/evlog-drain.ts", "createFsDrain"],
+        ],
       },
       {
         frontend: "svelte",
@@ -1109,6 +1147,7 @@ describe("Addon Configurations", () => {
         files: [
           ["apps/web/vite.config.ts", "evlog({ service:"],
           ["apps/web/src/hooks.server.ts", "createEvlogHooks"],
+          ["apps/web/src/hooks.server.ts", "createFsDrain"],
           ["apps/web/src/app.d.ts", "log: RequestLogger"],
         ],
       },
@@ -1117,6 +1156,7 @@ describe("Addon Configurations", () => {
         api: "trpc",
         files: [
           ["apps/web/nitro.config.ts", 'evlog from "evlog/nitro/v3"'],
+          ["apps/web/server/plugins/evlog-drain.ts", "createFsDrain"],
           ["apps/web/src/routes/__root.tsx", "evlogErrorHandler"],
         ],
       },
@@ -1125,6 +1165,7 @@ describe("Addon Configurations", () => {
         api: "orpc",
         files: [
           ["apps/web/src/middleware.ts", "createRequestLogger"],
+          ["apps/web/src/middleware.ts", "createFsDrain"],
           ["apps/web/src/env.d.ts", "log: RequestLogger"],
         ],
       },
@@ -1163,6 +1204,8 @@ describe("Addon Configurations", () => {
         if (webCase.frontend === "tanstack-start") {
           expect(webPackageJson).toContain('"nitro": "^3.0.260610-beta"');
         }
+        const gitignore = await readFile(join(projectDir, ".gitignore"), "utf-8");
+        expect(gitignore).toContain(".evlog/");
       });
     }
 
@@ -1206,6 +1249,7 @@ describe("Addon Configurations", () => {
       expect(nuxtConfig).toContain('"cloudflare:workers"');
       expect(nuxtConfig).toContain("cloudflareWorkersShimPath");
       expect(nuxtConfig).toContain("evlog:");
+      expect(existsSync(join(projectDir, "apps/web/server/plugins/evlog-drain.ts"))).toBe(false);
       expectParseableTypeScript(nuxtConfig);
     });
 
@@ -1741,7 +1785,10 @@ describe("Addon Configurations", () => {
       );
 
       expect(serverIndex).toContain('import { evlog, type EvlogVariables } from "evlog/hono";');
-      expect(serverIndex).toContain("app.use(evlog());");
+      expect(serverIndex).toContain('import { createFsDrain } from "evlog/fs";');
+      expect(serverIndex).toContain(
+        'app.use(evlog({ drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain() }));',
+      );
       expect(serverPackageJson).toContain('"evlog": "^2.22.4"');
     });
 

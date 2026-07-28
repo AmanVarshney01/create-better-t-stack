@@ -15104,6 +15104,9 @@ apps/web/src/routeTree.gen.ts
 
 # Logs
 logs
+{{#if (includes addons "evlog")}}
+.evlog/
+{{/if}}
 *.log
 npm-debug.log*
 yarn-debug.log*

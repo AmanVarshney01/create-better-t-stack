@@ -11,6 +11,7 @@ import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
 import { cliLog, createSpinner } from "../../utils/terminal-output";
+import { supportsEvlogLocalLogs } from "./evlog-setup";
 
 type SkillSource = {
   label: string;
@@ -435,7 +436,11 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
   ],
   "msmps/opentui-skill": () => ["opentui"],
   "haydenbleasel/ultracite": () => ["ultracite"],
-  "https://www.evlog.dev": () => ["review-logging-patterns", "analyze-logs"],
+  "https://www.evlog.dev": (config) => [
+    "review-logging-patterns",
+    "build-audit-logs",
+    ...(supportsEvlogLocalLogs(config) ? ["analyze-logs"] : []),
+  ],
 };
 
 function getCuratedSkillNamesForSourceKey(sourceKey: SourceKey, config: ProjectConfig): string[] {
