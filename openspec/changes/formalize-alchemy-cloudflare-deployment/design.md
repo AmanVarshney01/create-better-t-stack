@@ -1,8 +1,8 @@
 ## Context
 
-Better-T-Stack generates Cloudflare infrastructure through `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs`. The current integration pins `alchemy@2.0.0-beta.62` and emits paths for Cloudflare web, Hono Workers server, combined web/server, full-stack `self`, and D1 topologies. Generated paths are not automatically live-verified support claims; the accepted-version scoreboard defined below owns that distinction.
+Better-T-Stack generates Cloudflare infrastructure through `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs`. The current integration pins `alchemy@2.0.0-beta.64` and emits paths for Cloudflare web, Hono Workers server, combined web/server, full-stack `self`, and D1 topologies. Generated paths are not automatically live-verified support claims; the accepted-version scoreboard defined below owns that distinction.
 
-Alchemy v2 is still a prerelease API. Better-T-Stack currently needs six targeted workarounds because the published release does not correctly cover every generated framework and monorepo behavior. Several reviews also produced plausible but disproved claims. The design therefore treats source inspection, a provider-free plan, and a live deployment as different evidence levels.
+Alchemy v2 is still a prerelease API. Better-T-Stack currently needs five active targeted safeguards because the published release does not correctly cover every generated framework and monorepo behavior; A3 was independently retired after its beta.64 removal gate passed. Several reviews also produced plausible but disproved claims. The design therefore treats source inspection, a provider-free plan, and a live deployment as different evidence levels.
 
 The source of truth for observed behavior is [docs/alchemy-v2-beta-findings.md](../../../docs/alchemy-v2-beta-findings.md). It records:
 
@@ -16,12 +16,14 @@ The source of truth for observed behavior is [docs/alchemy-v2-beta-findings.md](
 
 Relevant upstream references include:
 
-- [Alchemy v2 documentation](https://v2.alchemy.run)
-- [Alchemy Cloudflare frontend support matrix](https://v2.alchemy.run/cloudflare/frontend/frontends/)
-- [Alchemy Effect repository](https://github.com/alchemy-run/alchemy-effect)
-- [Alchemy PR #779](https://github.com/alchemy-run/alchemy-effect/pull/779)
-- [Alchemy PR #795](https://github.com/alchemy-run/alchemy-effect/pull/795)
-- [Alchemy PR #796](https://github.com/alchemy-run/alchemy-effect/pull/796)
+- [Alchemy v2 documentation](https://alchemy.run)
+- [Alchemy Cloudflare frontend support matrix](https://alchemy.run/cloudflare/frontend/frontends/)
+- [Alchemy repository](https://github.com/alchemy-run/alchemy)
+- [Alchemy PR #779](https://github.com/alchemy-run/alchemy/pull/779)
+- [Alchemy PR #795](https://github.com/alchemy-run/alchemy/pull/795)
+- [Alchemy PR #796](https://github.com/alchemy-run/alchemy/pull/796)
+- [Alchemy PR #928](https://github.com/alchemy-run/alchemy/pull/928)
+- [Alchemy framework resources PR #886](https://github.com/alchemy-run/alchemy/pull/886)
 - [cloudflare-tools PR #62](https://github.com/alchemy-run/cloudflare-tools/pull/62)
 - [Better-T-Stack beta reproductions](https://github.com/AmanVarshney01/alchemy-v2-beta-repros)
 
@@ -72,7 +74,7 @@ Generated template snapshots in `packages/template-generator/src/templates.gener
 
 ### 1. Pin one exact Alchemy release
 
-Generated Cloudflare projects SHALL use exactly `alchemy@2.0.0-beta.62` until a replacement release passes this design's upgrade gate. No caret, tilde, tag, git SHA, or version range is accepted in generated packages.
+Generated Cloudflare projects SHALL use exactly `alchemy@2.0.0-beta.64` until a replacement release passes this design's upgrade gate. No caret, tilde, tag, git SHA, or version range is accepted in generated packages.
 
 The exact version SHALL live in one generator dependency source and be asserted in generated npm, pnpm, and Bun projects. An upstream merge, npm deprecation, or `next` tag movement does not change the accepted version automatically.
 
@@ -96,15 +98,15 @@ Cloudflare separate-server deployment requires Hono on the Workers runtime. Full
 
 Framework resource paths remain intentional:
 
-| Framework              | Current generated path                                                           |
-| ---------------------- | -------------------------------------------------------------------------------- |
-| TanStack Router, Solid | Output-aware `StaticSite` with SPA fallback while Alchemy PR #795 is unreleased  |
-| React Router           | `Website.Vite` plus an explicit registered Worker entry and web-stream SSR       |
-| TanStack Start         | `Website.Vite` with explicit Cloudflare compatibility and bindings               |
-| Next.js                | `StaticSite`/OpenNext assets plus Worker entry and explicit flags/bindings       |
-| Nuxt                   | `StaticSite` with Nitro public assets/server entry and a local development proxy |
-| SvelteKit              | `StaticSite` with the Cloudflare adapter Worker shim bundled                     |
-| Astro                  | `StaticSite` with Cloudflare server entry, session KV, and Images where required |
+| Framework              | Current generated path                                                     |
+| ---------------------- | -------------------------------------------------------------------------- |
+| TanStack Router, Solid | `Website.Vite` with explicit single-page-application asset handling        |
+| React Router           | `Website.Vite` plus an explicit registered Worker entry and web-stream SSR |
+| TanStack Start         | `Website.Vite` with explicit Cloudflare compatibility and bindings         |
+| Next.js                | `StaticSite`/OpenNext assets plus Worker entry and explicit flags/bindings |
+| Nuxt                   | `StaticSite` with Nitro public assets/server entry and a local dev proxy   |
+| SvelteKit              | `StaticSite` with the Cloudflare adapter Worker shim bundled               |
+| Astro                  | `StaticSite` with server entry, session KV, and Images where required      |
 
 Alchemy's current framework matrix marks TanStack Start and React Router as supported, Astro only through `StaticSite` static output, and Nuxt as not yet supported. Better-T-Stack's custom Next.js, Nuxt, SvelteKit, and Astro server-entry paths do not inherit an upstream support claim merely because `StaticSite` accepts a build directory and custom `main`. Until the accepted-version scoreboard records each exact page/document live gate, those generated `self` cells SHALL remain experimental.
 
@@ -122,18 +124,18 @@ Every non-obvious Alchemy-related line SHALL be assigned one of these classes:
 
 Reviews and pull-request comments may propose a classification, but the findings ledger changes only with evidence at the appropriate level.
 
-### 4. Retain the six current safeguards independently
+### 4. Retain active safeguards and record retired safeguards independently
 
 | ID  | Current safeguard                                            | Classification                        | Removal gate                                                                                     |
 | --- | ------------------------------------------------------------ | ------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | A1  | `outputAwareStaticSite` resolves top-level build env Outputs | confirmed Alchemy defect workaround   | released `StaticSite` preserves the resolved value and dependency edge in a combined plan/deploy |
 | A2  | resolve Effect Config inside `Effect.gen` before StaticSite  | confirmed Alchemy defect workaround   | released `StaticSite` passes configured strings/redacted values rather than Config descriptors   |
-| A3  | use `StaticSite` for pure Vite SPAs                          | confirmed defect workaround           | release containing #795 plus live SPA build and deep-route request                               |
+| A3  | retired: use `StaticSite` for pure Vite SPAs                 | removed defect workaround             | satisfied on beta.64 with generated builds and live root/deep-route requests                     |
 | A4  | explicit React Router Worker entry and web-stream SSR        | defect workaround plus framework shim | released default uploads a registered handler and serves a real workerd document                 |
 | A5  | `memo: false` for workspace-dependent StaticSite builds      | correctness policy for upstream scope | published workspace-aware upstream default plus imported-sibling and root-input rebuild gates    |
 | A6  | exact Alchemy version pin                                    | permanent publication-safety policy   | never removed; upgrades replace one verified exact version with another exact version            |
 
-The removable safeguards A1–A5 SHALL be evaluated independently. A release fixing A3 does not justify removing A1, A2, A4, or A5. A6 is not a temporary shim: Better-T-Stack SHALL continue exact-pinning Alchemy even after a stable release and shall replace one verified exact version only with another verified exact version.
+The removable safeguards A1–A5 SHALL be evaluated independently. A3 was removed on 2026-07-26 after fresh TanStack Router and Solid projects passed install, build, infrastructure typecheck, live root/deep-route requests, and cleanup audits against beta.64. That result does not justify removing A1, A2, A4, or A5. A6 is not a temporary shim: Better-T-Stack SHALL continue exact-pinning Alchemy even after a stable release and shall replace one verified exact version only with another verified exact version.
 
 ### 5. Preserve deployment-time values and secret boundaries
 
@@ -250,7 +252,7 @@ If a candidate fixes one defect but regresses another supported topology, Better
 
 ## Migration Plan
 
-This is a planning-only change. Future work should proceed in this order:
+Implementation work should proceed in this order:
 
 1. Canonicalize the baseline ledger and missing one-off reproductions without changing templates.
 2. Add deterministic generated-artifact, dependency-pin, and typecheck gates around current behavior.
@@ -263,9 +265,11 @@ This is a planning-only change. Future work should proceed in this order:
 ## Open Questions
 
 1. Will a published release preserve StaticSite Output dependency edges and resolve Config values without the wrapper?
-2. After PR #795 is released, does `Website.Vite` serve both TanStack Router and Solid SPA deep links reliably?
-3. Will a released default React Router path select a registered workerd handler without a custom entry?
-4. What published upstream behavior and cross-workspace/root-input evidence is sufficient to classify Alchemy's default memo scope as workspace-aware and remove A5?
-5. Can Alchemy express OpenNext's self service binding without a resource dependency cycle, or must ISR remain partially unsupported?
-6. Does a freshly authenticated profile make both `alchemy logs` and `alchemy tail` work with the required scopes?
-7. Should the Output-aware serializer remain top-level-only, or is there a generated use case that requires a tested recursive Input traversal?
+2. Will a released default React Router path select a registered workerd handler without a custom entry?
+3. What published upstream behavior and cross-workspace/root-input evidence is sufficient to classify Alchemy's default memo scope as workspace-aware and remove A5?
+4. Can Alchemy express OpenNext's self service binding without a resource dependency cycle, or must ISR remain partially unsupported?
+5. Does a freshly authenticated profile make both `alchemy logs` and `alchemy tail` work with the required scopes?
+6. Should the Output-aware serializer remain top-level-only, or is there a generated use case that requires a tested recursive Input traversal?
+
+Resolved on 2026-07-26: beta.64 `Website.Vite` reliably served both TanStack Router and Solid root
+and direct deep-link requests, so the A3 `StaticSite` fallback was removed.

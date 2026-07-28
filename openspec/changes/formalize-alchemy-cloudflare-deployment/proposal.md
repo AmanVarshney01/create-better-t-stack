@@ -1,6 +1,6 @@
 ## Why
 
-Better-T-Stack's Cloudflare deployment path depends on the experimental Alchemy v2 API and currently carries six targeted compatibility safeguards. Upstream main, published releases, framework integration constraints, and disproved review claims have repeatedly been conflated. Without one normative contract and executable retention/removal gates, an Alchemy upgrade can either reintroduce a known failure or preserve obsolete compatibility code indefinitely.
+Better-T-Stack's Cloudflare deployment path depends on the experimental Alchemy v2 API and currently carries five active compatibility safeguards after independently retiring A3. Upstream main, published releases, framework integration constraints, and disproved review claims have repeatedly been conflated. Without one normative contract and executable retention/removal gates, an Alchemy upgrade can either reintroduce a known failure or preserve obsolete compatibility code indefinitely.
 
 ## What Changes
 
@@ -14,7 +14,7 @@ Better-T-Stack's Cloudflare deployment path depends on the experimental Alchemy 
 
 ### Non-goals
 
-- Implementing or removing any Alchemy workaround in this planning change.
+- Removing any Alchemy workaround other than the independently qualified A3 pure-SPA fallback.
 - Adding another deployment provider.
 - Refactoring all deployment providers behind a common lifecycle abstraction.
 - Treating a merged upstream pull request as usable before publication.
@@ -32,4 +32,4 @@ None. This repository had no baseline OpenSpec capabilities before this proposal
 
 ## Impact
 
-This planning change adds only OpenSpec documentation. Future implementation work may affect `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs`, Alchemy dependency generation, framework adapters/plugins, generated environment/binding types, deployment tests, the external reproduction repository, live verification scripts, and `docs/alchemy-v2-beta-findings.md`. The accepted Alchemy version is tracked by the specification and may advance through the separately implemented upgrade workflow.
+This change governs implementation in `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs`, Alchemy dependency generation, framework adapters/plugins, generated environment/binding types, deployment tests, the external reproduction repository, live verification scripts, and `docs/alchemy-v2-beta-findings.md`. The accepted Alchemy version is tracked by the specification and may advance through the separately implemented upgrade workflow.

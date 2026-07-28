@@ -1021,6 +1021,48 @@ describe("Deployment Configurations", () => {
       expect(nextWebOnlyInfra).not.toContain("const serverWorker = yield* server");
     });
 
+    it("should use released Website.Vite SPA support for TanStack Router and Solid", async () => {
+      const results = await Promise.all(
+        (["tanstack-router", "solid"] as const).map((frontend) =>
+          createVirtual({
+            projectName: `${frontend}-cloudflare-vite`,
+            webDeploy: "cloudflare",
+            serverDeploy: "cloudflare",
+            backend: "hono",
+            runtime: "workers",
+            database: "none",
+            orm: "none",
+            auth: "none",
+            payments: "none",
+            api: "orpc",
+            frontend: [frontend],
+            addons: ["none"],
+            examples: ["none"],
+            dbSetup: "none",
+            install: false,
+            git: false,
+            packageManager: "bun",
+          }),
+        ),
+      );
+
+      for (const result of results) {
+        if (result.isErr()) throw result.error;
+
+        const files = collectFiles(result.value.root, result.value.root.path);
+        const infraFile = files.get("packages/infra/alchemy.run.ts") ?? "";
+
+        expect(infraFile).toContain('const webWorker = yield* Cloudflare.Website.Vite("web", {');
+        expect(infraFile).toContain('rootDir: "../../apps/web"');
+        expect(infraFile).toContain('htmlHandling: "auto-trailing-slash"');
+        expect(infraFile).toContain('notFoundHandling: "single-page-application"');
+        expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
+        expect(infraFile).not.toContain("outputAwareStaticSite");
+        expect(infraFile).not.toContain('import * as Command from "alchemy/Command"');
+        expect(infraFile).not.toContain('import * as Output from "alchemy/Output"');
+      }
+    });
+
     it("should keep native Metro from watching Alchemy state", async () => {
       const result = await createVirtual({
         projectName: "native-astro-alchemy",

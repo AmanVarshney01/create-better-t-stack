@@ -4,12 +4,12 @@ This is the evidence log for upstream Alchemy issues found while integrating Clo
 in Better-T-Stack. Keep confirmed defects separate from limitations and disproved review claims so
 future upgrades do not remove workarounds prematurely or preserve them after upstream fixes.
 
-Last verified: 2026-07-15
+Last verified: 2026-07-26
 
-- Published dependency: `alchemy@2.0.0-beta.62`, tag commit
-  [`1133b97`](https://github.com/alchemy-run/alchemy-effect/commit/1133b97eafa81de4551d739c605aa4048f2e0202)
+- Published dependency: `alchemy@2.0.0-beta.64`, tag commit
+  [`31edd3c`](https://github.com/alchemy-run/alchemy/commit/31edd3c4b2f0f3310fad07f5423aee20cf72be8d)
 - Upstream main inspected: commit
-  [`3102604`](https://github.com/alchemy-run/alchemy-effect/commit/31026041888873b02198e22b8ffa523d361098f9)
+  [`1b5d5a7`](https://github.com/alchemy-run/alchemy/commit/1b5d5a71feb0861f790bfd9fd3baaa9f3a163e27)
 - Runnable beta.61 reproductions:
   [`AmanVarshney01/alchemy-v2-beta-repros@31b7a35`](https://github.com/AmanVarshney01/alchemy-v2-beta-repros/tree/31b7a35e66956131d0a81726e032290517f70862)
 
@@ -22,20 +22,21 @@ unless they explicitly say live-reverified. Registry and OAuth observations are 
 
 ## Confirmed defects and publication hazards
 
-| ID  | Finding                                                             | beta.62 status | Upstream status on 2026-07-15                                                                                                      | Current handling or required action                                               |
-| --- | ------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| A1  | `StaticSite` serializes unresolved `Output` values before `Build`   | Confirmed      | Still present; fixed by open [#796](https://github.com/alchemy-run/alchemy-effect/pull/796)                                        | `outputAwareStaticSite` maps Outputs before serialization                         |
-| A2  | `StaticSite` serializes `Config` values as `{"_id":"Config"}`       | Confirmed      | Still present; fixed by open [#796](https://github.com/alchemy-run/alchemy-effect/pull/796)                                        | Resolve Config values inside an `Effect.gen` props builder                        |
-| A3  | `Website.Vite` misses pure-client output                            | Fixed          | Released through merged [#795](https://github.com/alchemy-run/alchemy-effect/pull/795)                                             | Retain `StaticSite` until the targeted generated-project live removal gate passes |
-| A4  | React Router builds a Worker with no registered handler             | Partial        | Custom `main` shipped via [#779](https://github.com/alchemy-run/alchemy-effect/pull/779); default handler selection remains unsafe | Generate an explicit registered Worker entry                                      |
-| A5  | Default `Command.Build` memo scope misses sibling workspace changes | Confirmed      | Still present; #796 documents explicit external includes                                                                           | Generated `StaticSite` builds disable memo reuse                                  |
-| A6  | A published test prerelease can satisfy beta caret ranges           | Confirmed      | N/A; npm package deprecated                                                                                                        | Pin beta.62 and its Effect peers exactly                                          |
-| A7  | Worker Assets drops `_headers` and `_redirects`                     | Confirmed      | Still present; no matching issue or PR found                                                                                       | Do not claim Cloudflare Static Assets rule parity                                 |
-| A8  | Worker Assets assigns incomplete MIME types                         | Confirmed      | Still present; no matching issue or PR found                                                                                       | Do not claim full static-asset parity                                             |
+| ID  | Finding                                                             | beta.64 status           | Upstream status on 2026-07-26                                                                               | Current handling or required action                                             |
+| --- | ------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| A1  | `StaticSite` serializes unresolved `Output` values before `Build`   | Confirmed                | Still present; fixed by open [#796](https://github.com/alchemy-run/alchemy/pull/796)                        | `outputAwareStaticSite` maps Outputs before serialization                       |
+| A2  | `StaticSite` serializes `Config` values as `{"_id":"Config"}`       | Confirmed                | Still present; fixed by open [#796](https://github.com/alchemy-run/alchemy/pull/796)                        | Resolve Config values inside an `Effect.gen` props builder                      |
+| A3  | `Website.Vite` misses pure-client output                            | Fixed and live-qualified | Released through merged [#795](https://github.com/alchemy-run/alchemy/pull/795)                             | Removed the `StaticSite` fallback; TanStack Router and Solid use `Website.Vite` |
+| A4  | React Router builds a Worker with no registered handler             | Mitigated                | Custom `main`, relative resolution, and loud invalid-handler errors are released; no handler is synthesized | Generate an explicit registered Worker entry                                    |
+| A5  | Default `Command.Build` memo scope misses sibling workspace changes | Confirmed                | Still present; #796 documents explicit external includes                                                    | Generated `StaticSite` builds disable memo reuse                                |
+| A6  | A published test prerelease can satisfy beta caret ranges           | Confirmed                | N/A; npm package deprecated                                                                                 | Pin beta.64 and its Effect peers exactly                                        |
+| A7  | Worker Assets drops `_headers` and `_redirects`                     | Confirmed                | Fixed on main by merged [#928](https://github.com/alchemy-run/alchemy/pull/928), awaiting release           | Do not claim Cloudflare Static Assets rule parity until released and reverified |
+| A8  | Worker Assets assigns incomplete MIME types                         | Confirmed                | Still present; no matching issue or PR found                                                                | Do not claim full static-asset parity                                           |
+| A9  | Published Cloudflare packages have incompatible peer ranges         | Confirmed                | No matching fix found                                                                                       | Accept the non-fatal warning; do not add a template-level transitive override   |
 
 ### A1: `StaticSite` drops deploy-time Outputs
 
-The beta.62 [`StaticSite` implementation](https://github.com/alchemy-run/alchemy-effect/blob/v2.0.0-beta.62/packages/alchemy/src/Cloudflare/Website/StaticSite.ts)
+The beta.64 [`StaticSite` implementation](https://github.com/alchemy-run/alchemy/blob/v2.0.0-beta.64/packages/alchemy/src/Cloudflare/Website/StaticSite.ts)
 calls `serializeEnv(props.env)` before declaring `Command.Build`. Its serializer JSON-encodes every
 non-string, non-Redacted value. The tested property Output,
 `serverWorker.url.as<string>()`, therefore becomes `undefined`; other Output shapes are likewise
@@ -82,12 +83,19 @@ environment's `writeBundle` hook. Alchemy then reports `Vite build produced neit
 server output` even though Vite wrote the SPA assets. See
 [`1-vite-spa-no-output`](https://github.com/AmanVarshney01/alchemy-v2-beta-repros/tree/31b7a35e66956131d0a81726e032290517f70862/1-vite-spa-no-output).
 
-Beta.62 includes [PR #795](https://github.com/alchemy-run/alchemy-effect/pull/795), which reads
-collected output after `builder.buildApp()` resolves. Better-T-Stack keeps its `StaticSite` fallback
-until the fixed resource passes the targeted generated-project live removal gate.
+Beta.62 includes [PR #795](https://github.com/alchemy-run/alchemy/pull/795), which reads
+collected output after `builder.buildApp()` resolves. Beta.64 therefore contains the fix.
 
-Removal condition: upgrade to a release containing #795, then deploy and request a pure SPA using
-`Website.Vite` without the fallback.
+On 2026-07-26, fresh TanStack Router and Solid projects generated from the current template installed
+beta.64, passed their application builds and direct infrastructure typechecks, and deployed with
+`Website.Vite`. For both frameworks, `/` and `/direct/deep-route` returned `200 text/html`, proving
+the configured single-page-application fallback. The owned stages
+`a3-vite-tsr-20260726-01` and `a3-vite-solid-20260726-01` were destroyed from their originating
+directories; subsequent Cloudflare API inventory returned Worker-not-found (`10007`) for both
+generated Worker names.
+
+The removal gate is satisfied. Better-T-Stack now generates `Website.Vite` for TanStack Router and
+Solid and no longer applies the A1/A2 `StaticSite` compatibility wrapper to those pure SPA paths.
 
 ### A4: React Router handler and entrypoint integration
 
@@ -97,12 +105,11 @@ rejects the upload because it has no registered handler. The beta also lacks a c
 hatch, which makes the default-selection defect harder to work around. See
 [`4-react-router-handlerless-worker`](https://github.com/AmanVarshney01/alchemy-v2-beta-repros/tree/31b7a35e66956131d0a81726e032290517f70862/4-react-router-handlerless-worker).
 
-Beta.62 now plumbs a `main` option through `Website.Vite`, which supplies a custom-entry escape hatch.
-The default React Router entry selection is unchanged. Open PR #796 resolves a relative `main`
-against the Vite root, while the companion
-[cloudflare-tools PR #62](https://github.com/alchemy-run/cloudflare-tools/pull/62) addresses plugin
-entry resolution and the silent `{}` handler fallback, but beta.62 still pins those plugin packages
-at `0.13.5`. The older React Router 8.1 pipeable-stream
+Beta.64 plumbs a `main` option through `Website.Vite` and consumes `cloudflare-tools@0.13.8`,
+which includes [cloudflare-tools PR #62](https://github.com/alchemy-run/cloudflare-tools/pull/62).
+Relative custom entries resolve against the Vite root and an invalid entry fails loudly instead of
+silently producing an empty handler. Alchemy still does not synthesize a React Router request
+handler, so the explicit registered entry remains required. The older React Router 8.1 pipeable-stream
 failure is version-specific: React Router 8.2 added a Web Streams default, so a fresh unlocked
 install cannot be used to reproduce the earlier runtime behavior. Better-T-Stack still keeps an
 explicit registered request-handler entry until the released default path passes its live gate.
@@ -112,7 +119,7 @@ handler and successfully serve a document request without a generated custom ent
 
 ### A5: default build memoization misses monorepo dependencies
 
-[`Command.Build` memoization](https://github.com/alchemy-run/alchemy-effect/blob/v2.0.0-beta.61/packages/alchemy/src/Command/Memo.ts)
+[`Command.Build` memoization](https://github.com/alchemy-run/alchemy/blob/v2.0.0-beta.61/packages/alchemy/src/Command/Memo.ts)
 hashes files under `cwd` plus the nearest lockfile. Changing a sibling workspace package imported by
 the frontend does not change the default hash, so a deploy can reuse stale output. The relevant
 Build/Memo source is unchanged on the inspected main commit.
@@ -134,8 +141,8 @@ cause the next normal deploy to rebuild the frontend.
 `alchemy@2.0.0-pipeline-v2-test` sorts above `2.0.0-beta.x` under standard prerelease ordering and
 was observed satisfying a caret beta range under Bun despite lacking expected Cloudflare exports.
 The package is now deprecated on npm, but it remains published. Better-T-Stack pins
-`2.0.0-beta.62` exactly together with `effect`, `@effect/platform-node`, and
-`@effect/platform-bun` at `4.0.0-beta.97`.
+`2.0.0-beta.64` exactly together with `effect`, `@effect/platform-node`, and
+`@effect/platform-bun` at `4.0.0-beta.101`.
 
 Exact pinning is a permanent publication-safety policy, not a temporary workaround. Changing the
 accepted release means replacing one verified exact version with another verified exact version;
@@ -143,20 +150,22 @@ Better-T-Stack does not generate an open-ended Alchemy version range.
 
 ### A7: Worker Assets drops `_headers` and `_redirects`
 
-Beta.61, beta.62, and inspected main read `_headers` and `_redirects`, exclude them from the ordinary
+Beta.61 through beta.64 read `_headers` and `_redirects`, exclude them from the ordinary
 manifest, and include their contents in the asset hash. The Worker provider then uploads only the
 asset config and JWT; it never forwards the two parsed strings as Cloudflare asset configuration.
-See the beta.62 [`Assets` implementation](https://github.com/alchemy-run/alchemy-effect/blob/v2.0.0-beta.62/packages/alchemy/src/Cloudflare/Workers/Assets.ts)
-and current [`WorkerProvider`](https://github.com/alchemy-run/alchemy-effect/blob/31026041888873b02198e22b8ffa523d361098f9/packages/alchemy/src/Cloudflare/Workers/WorkerProvider.ts).
+See the beta.64 [`Assets` implementation](https://github.com/alchemy-run/alchemy/blob/v2.0.0-beta.64/packages/alchemy/src/Cloudflare/Workers/Assets.ts).
 
 The live
 [`10-assets-headers-redirects`](https://github.com/AmanVarshney01/alchemy-v2-beta-repros/tree/31b7a35e66956131d0a81726e032290517f70862/10-assets-headers-redirects)
 reproduction served the asset without its custom header and returned `404` for the configured
 redirect. Its owned Worker stage was destroyed after verification.
 
-There is no Better-T-Stack workaround that can restore arbitrary user/framework asset rules today.
-Closure condition: a published Alchemy release must forward both special files and the live repro
-must pass for create and update deployments.
+Merged [Alchemy PR #928](https://github.com/alchemy-run/alchemy/pull/928) now forwards both files in
+production and development, preserves them on a no-op/keep-assets deployment, and adds live HTTP
+coverage for create and update behavior. It landed after beta.64, so there is still no released
+Better-T-Stack dependency that restores arbitrary user/framework asset rules. Closure condition: a
+published Alchemy release must contain #928 and the canonical live repro must pass against that
+exact release before static-asset rule parity is claimed.
 
 ### A8: Worker Assets assigns incomplete MIME types
 
@@ -168,11 +177,26 @@ The live
 [`11-assets-mime-types`](https://github.com/AmanVarshney01/alchemy-v2-beta-repros/tree/31b7a35e66956131d0a81726e032290517f70862/11-assets-mime-types)
 reproduction observed `application/octet-stream` for `.avif`, `.jpg`, `.webp`, and `.woff2` on
 beta.61. Its owned Worker stage was destroyed after verification. Source inspection confirms the
-same fallback remains in beta.62 and inspected main.
+same fallback remains in beta.64 and inspected main.
 
 There is no generic Better-T-Stack workaround at the uploader boundary. Closure condition: a
 published Alchemy release must use a complete, charset-aware MIME resolver and the live fixture must
 serve every expected content type.
+
+### A9: published Cloudflare packages have incompatible peer ranges
+
+Alchemy beta.64 depends on `@distilled.cloud/cloudflare@0.30.1` together with
+`@distilled.cloud/cloudflare-runtime@0.13.8` and
+`@distilled.cloud/cloudflare-vite-plugin@0.13.8`. Both `0.13.8` packages declare
+`@distilled.cloud/cloudflare` as `^0.29.0`, which excludes `0.30.1` under semver rules. Fresh Bun
+installs of generated combined, Astro, Next.js, and React Router projects therefore report
+`incorrect peer dependency "@distilled.cloud/cloudflare@0.30.1"` even though installation and
+typechecking continue.
+
+This mismatch is wholly inside Alchemy's published dependency graph. Better-T-Stack must not pin or
+override the transitive Distilled packages independently because that can split the runtime/plugin
+protocol. Closure condition: an Alchemy release must consume Cloudflare packages whose dependency
+and peer ranges agree, and fresh generated installs must complete without this warning.
 
 ## Current limitations, not confirmed upstream defects
 
@@ -191,27 +215,29 @@ serve every expected content type.
   pinned dependency is upgraded.
 - Astro SSR can use the current `StaticSite` foundation with `dist/client`,
   `dist/server/entry.mjs`, and `bundle: false`; Alchemy's
-  [issue #621](https://github.com/alchemy-run/alchemy-effect/issues/621) live-proved that basic
+  [issue #621](https://github.com/alchemy-run/alchemy/issues/621) live-proved that basic
   shape. Alchemy still does not consume Astro's generated Wrangler/deploy metadata for the
   compatibility date, flags, custom entry, assets, conditional `SESSION`/`IMAGES` bindings, custom
   binding names, or auxiliary workers. This is an unsupported integration gap rather than proof
   that the `StaticSite` foundation should be removed.
-- Better-T-Stack independently needs to add `IMAGES` to its separate-backend Astro branch and align
-  Astro build/development/deployment compatibility dates. Those are generator defects or policy
-  gaps, not Alchemy core defects.
+  Draft [Alchemy PR #886](https://github.com/alchemy-run/alchemy/pull/886) proposes first-class
+  Astro, SvelteKit, and Waku resources, but remains conflicting and unreleased.
+- Better-T-Stack explicitly maps Astro's `SESSION` and `IMAGES` bindings in both relevant generated
+  paths. Build, development, and deployment compatibility dates still need an intentional alignment
+  policy; that is a generator policy gap rather than an Alchemy core defect.
 
 ## Disproved claims
 
 These were investigated and must not be filed as Alchemy bugs without new evidence:
 
-- **“Alchemy v2 reads D1 migration directories non-recursively.”** False. [`SqlFile`](https://github.com/alchemy-run/alchemy-effect/blob/v2.0.0-beta.61/packages/alchemy/src/Sql/SqlFile.ts)
+- **“Alchemy v2 reads D1 migration directories non-recursively.”** False. [`SqlFile`](https://github.com/alchemy-run/alchemy/blob/v2.0.0-beta.61/packages/alchemy/src/Sql/SqlFile.ts)
   calls `readDirectory(directory, { recursive: true })`. Prisma's local Wrangler integration needed
   a full nested `migrations_pattern`; that is separate from Alchemy's deploy path.
 - **“A pure `StaticSite` requires an explicit Worker entrypoint.”** False. `StaticSite` injects a
   fallback Worker that forwards requests to `env.ASSETS` when neither `main` nor `script` is set.
 - **“Implicit `nodejs_compat` is lost during upload.”** False for
   [the linked reproduction](https://github.com/AmanVarshney01/alchemy-v2-beta-repros/tree/31b7a35e66956131d0a81726e032290517f70862/2-nodejs-compat-default-lost).
-  [`Platform`](https://github.com/alchemy-run/alchemy-effect/blob/v2.0.0-beta.61/packages/alchemy/src/Platform.ts)
+  [`Platform`](https://github.com/alchemy-run/alchemy/blob/v2.0.0-beta.61/packages/alchemy/src/Platform.ts)
   intentionally marks a non-Effect Worker entrypoint as external, and compatibility defaults are
   only added to Effect-native Workers. The observed absence is real, but it is computed before
   upload rather than dropped by WorkerProvider. Open PR #796 proposes changing that default; until
