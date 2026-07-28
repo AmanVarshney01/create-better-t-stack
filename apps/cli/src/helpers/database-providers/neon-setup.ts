@@ -346,7 +346,6 @@ export async function setupNeonPostgres(
     return Result.ok(undefined);
   }
 
-  // "neondb" and "neonctl" remain accepted for config compatibility.
   const suggestedProjectName = path.basename(projectDir);
   let projectName =
     cliInput?.dbSetupOptions?.neon?.projectName ?? config.dbSetupOptions?.neon?.projectName;

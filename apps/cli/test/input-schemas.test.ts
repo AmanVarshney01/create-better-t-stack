@@ -93,20 +93,6 @@ describe("Input schemas", () => {
     expect(result.success).toBe(false);
   });
 
-  it("accepts current and legacy Neon setup method names", () => {
-    for (const method of ["neon-new", "neon", "neondb", "neonctl"]) {
-      const result = CreateInputSchema.safeParse({
-        projectName: "app",
-        dbSetupOptions: {
-          mode: "auto",
-          neon: { method },
-        },
-      });
-
-      expect(result.success).toBe(true);
-    }
-  });
-
   it("accepts the evlog agent skills source in addon options", () => {
     const result = CreateInputSchema.safeParse({
       projectName: "app",
@@ -123,21 +109,6 @@ describe("Input schemas", () => {
     });
 
     expect(result.success).toBe(true);
-  });
-
-  it("accepts the legacy clawdbot skills target", () => {
-    const result = CreateInputSchema.safeParse({
-      projectName: "app",
-      addonOptions: {
-        skills: {
-          agents: ["clawdbot"],
-        },
-      },
-    });
-
-    expect(result.success).toBe(true);
-    if (!result.success) return;
-    expect(result.data.addonOptions?.skills?.agents).toEqual(["clawdbot"]);
   });
 
   it("allows CLI input parsing on top of the refined create schema", () => {

@@ -93,9 +93,6 @@ const SKILL_SOURCES = {
 
 type SourceKey = keyof typeof SKILL_SOURCES;
 
-// All explicit agent targets accepted by the skills CLI. Keep these for
-// persisted-config compatibility even when the interactive prompt consolidates
-// shared .agents/skills consumers under the universal target.
 const SKILLS_CLI_AGENT_OPTIONS: AgentOption[] = [
   { value: "adal", label: "AdaL" },
   { value: "aider-desk", label: "AiderDesk" },
@@ -174,9 +171,6 @@ const SKILLS_CLI_AGENT_OPTIONS: AgentOption[] = [
   { value: "zenflow", label: "Zenflow" },
 ];
 
-// Mirrors skills@latest getUniversalAgents(): these targets all consume the
-// shared project-level .agents/skills directory. Expanding the group preserves
-// the skills CLI's agent-specific global directories when scope is global.
 export const UNIVERSAL_SKILLS_AGENTS = [
   "amp",
   "antigravity",
@@ -200,7 +194,6 @@ export const UNIVERSAL_SKILLS_AGENTS = [
 const PROMPT_HIDDEN_AGENTS = new Set<SkillAgent>([
   ...UNIVERSAL_SKILLS_AGENTS,
   "universal",
-  // The upstream skills CLI omits these from its standard agent selector.
   "eve",
   "replit",
 ]);
@@ -211,7 +204,6 @@ export const SKILLS_AGENT_PROMPT_OPTIONS: AgentOption[] = [
     label: "Universal (.agents/skills)",
     hint: "17 agents including Amp, Antigravity, Cline, Codex, Cursor, Gemini CLI, Copilot, OpenCode, Warp, and Zed",
   },
-  // Keep the most common separate-directory target beside the universal group.
   ...SKILLS_CLI_AGENT_OPTIONS.filter(({ value }) => value === "claude-code"),
   ...SKILLS_CLI_AGENT_OPTIONS.filter(
     ({ value }) => value !== "claude-code" && !PROMPT_HIDDEN_AGENTS.has(value),

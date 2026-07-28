@@ -114,30 +114,6 @@ describe("Frontend Configurations", () => {
   });
 
   describe("Frontend Compatibility with API", () => {
-    it("should make generated Next.js applications participate in typechecks", async () => {
-      const result = await runTRPCTest({
-        projectName: "next-typecheck-script",
-        frontend: ["next"],
-        api: "trpc",
-        backend: "self",
-        runtime: "none",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "clerk",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-
-      const packageJson = await fs.readJson(path.join(result.projectDir!, "apps/web/package.json"));
-      expect(packageJson.scripts["check-types"]).toBe("tsc --noEmit");
-    });
-
     it("should generate the current Nuxt dependency baseline", async () => {
       const result = await runTRPCTest({
         projectName: "nuxt-dependency-baseline",

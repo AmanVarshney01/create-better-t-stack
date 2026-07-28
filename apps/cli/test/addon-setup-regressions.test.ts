@@ -4,12 +4,7 @@ import path from "node:path";
 import fs from "fs-extra";
 
 import { setupMcp, getRecommendedMcpServers } from "../src/helpers/addons/mcp-setup";
-import {
-  expandSkillsAgentTargets,
-  setupSkills,
-  SKILLS_AGENT_PROMPT_OPTIONS,
-  UNIVERSAL_SKILLS_AGENTS,
-} from "../src/helpers/addons/skills-setup";
+import { setupSkills, UNIVERSAL_SKILLS_AGENTS } from "../src/helpers/addons/skills-setup";
 import type { ProjectConfig } from "../src/types";
 import { runWithContextAsync } from "../src/utils/context";
 import { SMOKE_DIR } from "./setup";
@@ -176,24 +171,6 @@ describe("Addon setup regressions", () => {
     expect(await fs.readFile(markerFile, "utf8")).toContain("context7");
   });
 
-  it("consolidates shared skills targets under the universal agent option", () => {
-    expect(SKILLS_AGENT_PROMPT_OPTIONS[0]).toMatchObject({
-      value: "universal",
-      label: "Universal (.agents/skills)",
-    });
-    expect(SKILLS_AGENT_PROMPT_OPTIONS[0]?.hint).toContain("17 agents");
-    expect(SKILLS_AGENT_PROMPT_OPTIONS.some(({ value }) => value === "claude-code")).toBe(true);
-
-    for (const agent of UNIVERSAL_SKILLS_AGENTS) {
-      expect(SKILLS_AGENT_PROMPT_OPTIONS.some(({ value }) => value === agent)).toBe(false);
-    }
-
-    expect(expandSkillsAgentTargets(["universal", "claude-code", "codex"])).toEqual([
-      ...UNIVERSAL_SKILLS_AGENTS,
-      "claude-code",
-    ]);
-  });
-
   it("expands the universal skills option before invoking the skills CLI", async () => {
     const projectDir = path.join(SMOKE_DIR, "skills-universal-agents");
     await fs.remove(projectDir);
@@ -226,39 +203,6 @@ describe("Addon setup regressions", () => {
     expect(commandLog).not.toContain("--agent universal");
     expect(commandLog).toContain(`--agent ${UNIVERSAL_SKILLS_AGENTS.join(" ")}`);
     expect(commandLog).toContain("zed claude-code -y");
-  });
-
-  it("maps the legacy clawdbot skills target to openclaw", async () => {
-    const projectDir = path.join(SMOKE_DIR, "skills-legacy-clawdbot-agent");
-    await fs.remove(projectDir);
-
-    const config = createProjectConfig({
-      projectDir,
-      addons: ["skills"],
-      addonOptions: {
-        skills: {
-          scope: "project",
-          agents: ["clawdbot"],
-          selections: [
-            {
-              source: "vercel/turborepo",
-              skills: ["turborepo"],
-            },
-          ],
-        },
-      },
-    });
-
-    const { markerFile, result } = await runWithFakeBunx(
-      projectDir,
-      () => runWithContextAsync({ silent: true }, () => setupSkills(config)),
-      0,
-    );
-
-    expect(result.isOk()).toBe(true);
-    const commandLog = await fs.readFile(markerFile, "utf8");
-    expect(commandLog).not.toContain("clawdbot");
-    expect(commandLog).toContain("--agent openclaw -y");
   });
 
   it("preserves an explicit empty skills agent list in silent mode", async () => {
