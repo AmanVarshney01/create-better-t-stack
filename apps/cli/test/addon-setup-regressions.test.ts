@@ -228,6 +228,39 @@ describe("Addon setup regressions", () => {
     expect(commandLog).toContain("zed claude-code -y");
   });
 
+  it("maps the legacy clawdbot skills target to openclaw", async () => {
+    const projectDir = path.join(SMOKE_DIR, "skills-legacy-clawdbot-agent");
+    await fs.remove(projectDir);
+
+    const config = createProjectConfig({
+      projectDir,
+      addons: ["skills"],
+      addonOptions: {
+        skills: {
+          scope: "project",
+          agents: ["clawdbot"],
+          selections: [
+            {
+              source: "vercel/turborepo",
+              skills: ["turborepo"],
+            },
+          ],
+        },
+      },
+    });
+
+    const { markerFile, result } = await runWithFakeBunx(
+      projectDir,
+      () => runWithContextAsync({ silent: true }, () => setupSkills(config)),
+      0,
+    );
+
+    expect(result.isOk()).toBe(true);
+    const commandLog = await fs.readFile(markerFile, "utf8");
+    expect(commandLog).not.toContain("clawdbot");
+    expect(commandLog).toContain("--agent openclaw -y");
+  });
+
   it("preserves an explicit empty skills agent list in silent mode", async () => {
     const projectDir = path.join(SMOKE_DIR, "skills-explicit-empty-agents");
     await fs.remove(projectDir);

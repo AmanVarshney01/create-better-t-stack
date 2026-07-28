@@ -125,6 +125,21 @@ describe("Input schemas", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts the legacy clawdbot skills target", () => {
+    const result = CreateInputSchema.safeParse({
+      projectName: "app",
+      addonOptions: {
+        skills: {
+          agents: ["clawdbot"],
+        },
+      },
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.addonOptions?.skills?.agents).toEqual(["clawdbot"]);
+  });
+
   it("allows CLI input parsing on top of the refined create schema", () => {
     const result = CLIInputSchema.safeParse({
       projectDirectory: ".",

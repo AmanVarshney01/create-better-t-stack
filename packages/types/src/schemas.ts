@@ -264,6 +264,7 @@ export const SkillsAgentSchema = z
     "mux",
     "neovate",
     "ona",
+    "clawdbot",
     "openclaw",
     "opencode",
     "openhands",

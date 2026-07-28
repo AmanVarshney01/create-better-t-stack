@@ -1770,6 +1770,10 @@ describe("Addon Configurations", () => {
       const projectDir = created.result?.projectDirectory;
       if (!projectDir) throw new Error("Expected generated project directory");
 
+      const initialGitignore = await readFile(join(projectDir, ".gitignore"), "utf-8");
+      expect(initialGitignore).toContain(".evlog/");
+      expect(initialGitignore).not.toContain("{{#if");
+
       const addResult = await add({
         projectDir,
         addons: ["evlog"],
@@ -1783,6 +1787,7 @@ describe("Addon Configurations", () => {
         join(projectDir, "apps/server/package.json"),
         "utf-8",
       );
+      const gitignore = await readFile(join(projectDir, ".gitignore"), "utf-8");
 
       expect(serverIndex).toContain('import { evlog, type EvlogVariables } from "evlog/hono";');
       expect(serverIndex).toContain('import { createFsDrain } from "evlog/fs";');
@@ -1790,6 +1795,8 @@ describe("Addon Configurations", () => {
         'app.use(evlog({ drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain() }));',
       );
       expect(serverPackageJson).toContain('"evlog": "^2.22.4"');
+      expect(gitignore).toContain(".evlog/");
+      expect(gitignore.match(/^\.evlog\/$/gm)).toHaveLength(1);
     });
 
     it("should reject evlog when added later to a Convex project", async () => {
