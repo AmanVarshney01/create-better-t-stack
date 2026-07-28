@@ -225,20 +225,22 @@ describe("Clerk matrix", () => {
           );
         }
 
-        if (combo.backend !== "convex") {
-          const proxyFile = files.get("apps/web/src/proxy.ts");
-          if (!proxyFile) {
-            failures.push(
-              `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing Next proxy file`,
-            );
-          } else if (
-            proxyFile.includes('/env/server"') ||
-            proxyFile.includes("env.CLERK_SECRET_KEY")
-          ) {
-            failures.push(
-              `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: Next proxy still imports shared server env`,
-            );
-          }
+        const proxyFile = files.get("apps/web/src/proxy.ts");
+        if (!proxyFile) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing Next proxy file`,
+          );
+        } else if (
+          proxyFile.includes('/env/server"') ||
+          proxyFile.includes("env.CLERK_SECRET_KEY")
+        ) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: Next proxy still imports shared server env`,
+          );
+        } else if (!proxyFile.includes('"/__clerk/(.*)"')) {
+          failures.push(
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: Next proxy is missing the Clerk frontend API matcher`,
+          );
         }
       }
 
@@ -341,7 +343,7 @@ describe("Clerk matrix", () => {
 
         if (!nativePackage?.includes('"@clerk/expo": "^4.1.0"')) {
           failures.push(
-            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: native package is missing @clerk/expo ^3.1.3`,
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: native package is missing @clerk/expo ^4.1.0`,
           );
         }
 

@@ -562,6 +562,7 @@ export async function setupSkills(
           options: SKILLS_AGENT_PROMPT_OPTIONS,
           required: false,
           initialValues: [...DEFAULT_AGENTS],
+          maxItems: 10,
         });
       },
     });
