@@ -1,12 +1,12 @@
 import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
-{{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro") (includes frontend "tanstack-router") (includes frontend "solid")))}}
+{{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro")))}}
 import * as Command from "alchemy/Command";
 import * as Output from "alchemy/Output";
 {{/if}}
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
-{{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro") (includes frontend "tanstack-router") (includes frontend "solid")))}}
+{{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro")))}}
 import { cast } from "effect/Function";
 import * as Redacted from "effect/Redacted";
 {{/if}}
@@ -24,7 +24,7 @@ config({ path: "./.env" });
 config({ path: "../../apps/server/.env" });
 {{/if}}
 
-{{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro") (includes frontend "tanstack-router") (includes frontend "solid")))}}
+{{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro")))}}
 // Alchemy beta.64 serializes StaticSite env values before resolving Outputs.
 // Keep its dev process behavior, but preserve top-level deploy-time env Outputs in Command.Build.
 const serializeBuildEnvValue = (value: unknown) =>
@@ -618,39 +618,27 @@ export default Alchemy.Stack(
       },
     });
     {{else if (or (includes frontend "tanstack-router") (includes frontend "solid"))}}
-    const webWorker = yield* outputAwareStaticSite(
-      "web",
-      // Website.Vite skips pure-client builds on this alchemy beta; build directly
-      Effect.gen(function* () {
-        return {
-          cwd: "../../apps/web",
-          command: "{{packageManager}} run build",
-          outdir: "dist",
-          assets: {
-            htmlHandling: "auto-trailing-slash" as const,
-            notFoundHandling: "single-page-application" as const,
-          },
-          env: {
-            {{#if (eq backend "convex")}}
-            VITE_CONVEX_URL: yield* Config.string("VITE_CONVEX_URL"),
-            {{#if (eq auth "better-auth")}}
-            VITE_CONVEX_SITE_URL: yield* Config.string("VITE_CONVEX_SITE_URL"),
-            {{/if}}
-            {{else}}
-            {{#if (eq serverDeploy "cloudflare")}}
-            VITE_SERVER_URL: serverWorker.url.as<string>(),
-            {{else}}
-            VITE_SERVER_URL: yield* Config.string("VITE_SERVER_URL"),
-            {{/if}}
-            {{/if}}
-          },
-          dev: {
-            command: "{{packageManager}} run dev:bare",
-            url: "http://localhost:3001",
-          },
-        };
-      }).pipe(Effect.orDie),
-    );
+    const webWorker = yield* Cloudflare.Website.Vite("web", {
+      rootDir: "../../apps/web",
+      assets: {
+        htmlHandling: "auto-trailing-slash",
+        notFoundHandling: "single-page-application",
+      },
+      env: {
+        {{#if (eq backend "convex")}}
+        VITE_CONVEX_URL: Config.string("VITE_CONVEX_URL"),
+        {{#if (eq auth "better-auth")}}
+        VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
+        {{/if}}
+        {{else}}
+        {{#if (eq serverDeploy "cloudflare")}}
+        VITE_SERVER_URL: serverWorker.url.as<string>(),
+        {{else}}
+        VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
+        {{/if}}
+        {{/if}}
+      },
+    });
     {{/if}}
     {{/if}}
 

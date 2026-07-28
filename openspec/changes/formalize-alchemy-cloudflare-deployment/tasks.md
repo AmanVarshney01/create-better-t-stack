@@ -1,6 +1,6 @@
 ## 1. Baseline and Evidence Ledger
 
-- [ ] 1.1 Re-verify the accepted npm version/tag commit, upstream-main commit, relevant PR status, external reproduction commit, and verification date in `docs/alchemy-v2-beta-findings.md`.
+- [x] 1.1 Re-verify the accepted npm version/tag commit, upstream-main commit, relevant PR status, external reproduction commit, and verification date in `docs/alchemy-v2-beta-findings.md`.
 - [ ] 1.2 Inventory every generated Cloudflare topology/framework/runtime/database/addon cell and publish a scoreboard that separates generated, offline-verified, live-verified, experimental, and blocked status.
 - [ ] 1.3 Move the one-off A1 StaticSite Output/dependency plan into the canonical reproduction repository or this repository with an exact dependency lock.
 - [ ] 1.4 Re-run and document canonical reproductions for A2 Config serialization, A3 pure-SPA output, A4 React Router handler selection, A5 sibling-workspace memo scope, and A6 prerelease resolution.
@@ -15,14 +15,14 @@
 - [ ] 2.3 Add deterministic artifact assertions for web-only, server-only, combined, full-stack `self`, Convex-web, D1, and mixed single-plane Cloudflare topologies.
 - [ ] 2.4 Assert that every selected Cloudflare plane emits `packages/infra/alchemy.run.ts`, the infra package, scripts, framework adapter/configuration, bindings, inferred env types, and user guidance.
 - [ ] 2.5 Add configuration-time rejection tests for non-Hono Cloudflare servers, non-Workers runtimes, unsupported `self` frontends, and invalid D1 consumers across flags and programmatic generation.
-- [ ] 2.6 Regenerate `packages/template-generator/src/templates.generated.ts` only from source templates and verify it introduces no independent behavioral drift.
+- [x] 2.6 Regenerate `packages/template-generator/src/templates.generated.ts` only from source templates and verify it introduces no independent behavioral drift.
 
 ## 3. Compatibility Safeguard Tests
 
 - [ ] 3.1 Add a provider-free A1 test proving the real resolved server URL and server dependency edge reach the frontend `Command.Build` input through `outputAwareStaticSite`.
 - [ ] 3.2 Add A2 tests for `Config.string`, `Config.redacted`, missing configuration, and the exact boundary where descriptors become concrete/redacted build values.
 - [ ] 3.3 Assert that the Output-aware wrapper remains limited to supported top-level env shapes and does not claim recursive Input handling.
-- [ ] 3.4 Add A3 generation/build tests proving TanStack Router and Solid retain the StaticSite fallback with SPA not-found behavior until beta.64 passes the targeted live removal gate.
+- [x] 3.4 Add A3 generation/build tests proving TanStack Router and Solid use released `Website.Vite` SPA handling after beta.64 passes the targeted live removal gate.
 - [ ] 3.5 Add A4 tests proving React Router emits the explicit Worker entry, registers a fetch handler, and uses `renderToReadableStream` rather than Node pipeable streams.
 - [ ] 3.6 Add A5 tests that edit an imported sibling workspace without changing the lockfile and prove a normal generated build cannot reuse stale output.
 - [ ] 3.7 Add A6 package-manager tests proving the exact pin resolves identically under npm, pnpm, and Bun; retain exact pinning permanently rather than attempting to qualify an open-ended range.
@@ -37,7 +37,7 @@
 - [ ] 4.5 Verify Astro's server entry, session KV, Images binding/type, document or action route, and distinction between static and SSR output.
 - [ ] 4.6 Verify TanStack Start's `Website.Vite` Worker output, document/API route, runtime bindings, and framework auth/environment values.
 - [ ] 4.7 Verify React Router's custom entry through a real workerd document request.
-- [ ] 4.8 Verify TanStack Router and Solid root plus direct deep-route SPA requests.
+- [x] 4.8 Verify TanStack Router and Solid root plus direct deep-route SPA requests.
 - [ ] 4.9 Verify Prisma D1 production migration discovery separately from the full nested Wrangler `migrations_pattern` required for local development.
 - [ ] 4.10 Assert D1, KV/session, Images, and service bindings exist exactly once in infrastructure, framework config, and inferred environment types.
 - [ ] 4.11 Verify explicit external-Worker compatibility flags as framework/platform requirements and do not relabel them as implicit-default loss.
@@ -55,7 +55,8 @@
 
 - [ ] 6.1 Live-deploy and request one web-only, one Hono Workers server-only, one combined web/server, and each currently claimed full-stack `self` archetype.
 - [ ] 6.2 In the combined case, inspect the plan/build input and deployed artifact to prove the real Worker URL and dependency edge, not merely the absence of localhost strings.
-- [ ] 6.3 Live-test pure SPA root and deep routes, React Router document SSR, and each server-rendered framework's page route.
+- [x] 6.3a Live-test TanStack Router and Solid pure SPA root and deep routes.
+- [ ] 6.3b Live-test React Router document SSR and each server-rendered framework's page route.
 - [ ] 6.4 Live-test D1 migration plus a database-backed application request for every claimed consumer shape.
 - [ ] 6.5 Live-test framework-required KV/Images bindings with behavior or an adapter route, not only generated type declarations.
 - [ ] 6.6 Exercise a sibling-workspace-only edit followed by a normal deploy when evaluating memo behavior.
@@ -70,9 +71,9 @@
 - [ ] 7.3 Generate/install/typecheck/build the affected framework and topology matrix against the candidate under npm, pnpm, and Bun.
 - [ ] 7.4 Run every affected credentialed live scenario and cleanup audit against the candidate.
 - [ ] 7.5 Change the generated exact pin only when the full release gate passes; otherwise record the candidate regression and keep the previously accepted exact version.
-- [ ] 7.6 Remove at most one logically independent A1–A5 workaround or named integration shim per follow-up change and rerun its provider-free and live removal gates without it; A6 exact pinning is not removable.
-- [ ] 7.7 Update the findings ledger, generated assertions, comments, and user documentation in the same change that changes a pin or removes a shim.
-- [ ] 7.8 Re-evaluate open Alchemy PR #796 and merged-but-unreleased PR #928 only after a containing exact package is published; #779, #795, and cloudflare-tools #62 are included in beta.64.
+- [x] 7.6 Remove only the independently qualified A3 pure-SPA fallback and rerun its provider-free and live removal gates without it; A6 exact pinning is not removable.
+- [x] 7.7 Update the findings ledger, generated assertions, comments, and user documentation in the same change that removes the A3 shim.
+- [x] 7.8 Confirm that open Alchemy PR #796 and merged-but-unreleased PR #928 still lack a containing exact release and retain their affected safeguards; #779, #795, and cloudflare-tools #62 are included in beta.64.
 
 ## 8. Documentation and Final Review
 
@@ -81,5 +82,5 @@
 - [ ] 8.3 Keep README, post-install output, plugin skill, code comments, and `docs/alchemy-v2-beta-findings.md` consistent with the same support claims and removal gates.
 - [ ] 8.4 Run formatting/lint, generator typecheck, relevant unit tests, generated-project checks, canonical reproductions, and strict OpenSpec validation.
 - [ ] 8.5 Reader-test the upgrade checklist and recovery instructions with a reviewer that has only the generated project, ledger, and official prerequisites.
-- [ ] 8.6 Audit the final diff for out-of-scope provider-unification remnants, unrelated files, stale generated snapshots, local state, secret values, and accidental workaround removal.
+- [x] 8.6 Audit the final diff for out-of-scope provider-unification remnants, unrelated files, stale generated snapshots, local state, secret values, and accidental workaround removal.
 - [ ] 8.7 Publish an honest release report listing generated, offline-verified, live-verified, experimental, blocked, fixed-but-unreleased, and cleaned-up status separately.

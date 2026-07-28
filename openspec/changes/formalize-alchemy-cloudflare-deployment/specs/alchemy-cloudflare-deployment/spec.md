@@ -99,7 +99,7 @@ Cloudflare resources SHALL preserve dependency ordering and pass resolved values
 
 ### Requirement: Framework-specific Cloudflare paths
 
-Each web framework SHALL use the intentional generated resource and runtime entry described by the accepted-version design: Output-aware StaticSite for TanStack Router/Solid SPAs, explicit-entry Website.Vite for React Router, Website.Vite for TanStack Start, and framework server/static outputs for Next.js, Nuxt, SvelteKit, and Astro. A framework path SHALL not change solely because another framework's gate passed.
+Each web framework SHALL use the intentional generated resource and runtime entry described by the accepted-version design: Website.Vite with single-page-application asset handling for TanStack Router/Solid SPAs, explicit-entry Website.Vite for React Router, Website.Vite for TanStack Start, and framework server/static outputs for Next.js, Nuxt, SvelteKit, and Astro. A framework path SHALL not change solely because another framework's gate passed.
 
 #### Scenario: Verify Nuxt support
 
@@ -115,7 +115,7 @@ Each web framework SHALL use the intentional generated resource and runtime entr
 
 ### Requirement: Sanctioned Alchemy compatibility shims
 
-Until their individual removal gates pass, the generator SHALL retain the Output-aware StaticSite wrapper, explicit Config resolution, workspace-safe memo policy, StaticSite pure-SPA fallback, React Router Worker entry with web-stream rendering, Nuxt development platform proxy, explicit external-Worker compatibility flags, and local Wrangler Prisma migration pattern. Integration shims SHALL not be mislabeled as confirmed Alchemy core defects.
+Until their individual removal gates pass, the generator SHALL retain the Output-aware StaticSite wrapper, explicit Config resolution, workspace-safe memo policy, React Router Worker entry with web-stream rendering, Nuxt development platform proxy, explicit external-Worker compatibility flags, and local Wrangler Prisma migration pattern. Integration shims SHALL not be mislabeled as confirmed Alchemy core defects.
 
 #### Scenario: Change a sibling workspace
 
@@ -125,7 +125,7 @@ Until their individual removal gates pass, the generator SHALL retain the Output
 #### Scenario: Deploy a pure Vite SPA
 
 - **WHEN** TanStack Router or Solid deploys with the accepted Alchemy version
-- **THEN** it SHALL use the current StaticSite compatibility path
+- **THEN** it SHALL use `Website.Vite` with single-page-application asset handling
 - **AND** a direct client-side route request SHALL receive the SPA fallback
 
 #### Scenario: Serve React Router
@@ -251,6 +251,7 @@ An A1–A5 safeguard SHALL be removed only when its named behavior is available 
 
 - **WHEN** a release containing Alchemy PR #795 is pinned
 - **THEN** a fresh live deployment and direct SPA-route request SHALL pass with Website.Vite before switching
+- **AND** after that gate passes the generated SPA path SHALL NOT retain the StaticSite fallback
 
 #### Scenario: Remove React Router entry
 
