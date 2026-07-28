@@ -369,7 +369,7 @@ export const UltraciteHookSchema = z
 export const DbSetupModeSchema = z.enum(["manual", "auto"]).describe("Database setup mode");
 
 export const NeonSetupMethodSchema = z
-  .enum(["neondb", "neonctl"])
+  .enum(["neon-new", "neon", "neondb", "neonctl"])
   .describe("Neon database provisioning method");
 
 export const AddonOptionsSchema = z

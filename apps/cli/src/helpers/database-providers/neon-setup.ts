@@ -16,7 +16,7 @@ import {
   userCancelled,
 } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
-import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { getPackageExecutionArgs, getPackageRunnerPrefix } from "../../utils/package-runner";
 import { cliLog, createSpinner } from "../../utils/terminal-output";
 import {
   type DatabaseSetupCliOptions,
@@ -37,6 +37,7 @@ type NeonRegion = {
 };
 
 type NeonSetupResult = Result<void, DatabaseSetupError | UserCancelledError>;
+type NeonSetupMethod = "neon-new" | "neon" | "neondb" | "neonctl";
 
 const NEON_REGIONS: NeonRegion[] = [
   { label: "AWS US East (N. Virginia)", value: "aws-us-east-1" },
@@ -49,18 +50,16 @@ const NEON_REGIONS: NeonRegion[] = [
 ];
 
 async function executeNeonCommand(
-  packageManager: PackageManager,
-  commandArgsString: string,
+  commandArgs: string[],
   spinnerText?: string,
 ): Promise<Result<{ stdout: string; stderr: string }, DatabaseSetupError>> {
   const s = createSpinner();
-  const args = getPackageExecutionArgs(packageManager, commandArgsString);
 
   if (spinnerText) s.start(spinnerText);
 
   return Result.tryPromise({
     try: async () => {
-      const result = await $`${args}`;
+      const result = await $`${commandArgs}`;
       if (spinnerText)
         s.stop(pc.green(spinnerText.replace("...", "").replace("ing ", "ed ").trim()));
       return result;
@@ -76,15 +75,32 @@ async function executeNeonCommand(
   });
 }
 
+export function getNeonProjectCreateArgs(
+  packageManager: PackageManager,
+  projectName: string,
+  regionId: string,
+) {
+  return [
+    ...getPackageRunnerPrefix(packageManager),
+    "neon@latest",
+    "projects",
+    "create",
+    "--name",
+    projectName,
+    "--region-id",
+    regionId,
+    "--output",
+    "json",
+  ];
+}
+
 async function createNeonProject(
   projectName: string,
   regionId: string,
   packageManager: PackageManager,
 ): Promise<Result<NeonConfig, DatabaseSetupError>> {
-  const commandArgsString = `neonctl@latest projects create --name ${projectName} --region-id ${regionId} --output json`;
   const execResult = await executeNeonCommand(
-    packageManager,
-    commandArgsString,
+    getNeonProjectCreateArgs(packageManager, projectName, regionId),
     `Creating Neon project "${projectName}"...`,
   );
 
@@ -280,28 +296,28 @@ export async function setupNeonPostgres(
     return Result.ok(undefined);
   }
 
-  let setupMethod: "neondb" | "neonctl" | undefined =
+  let setupMethod: NeonSetupMethod | undefined =
     cliInput?.dbSetupOptions?.neon?.method ?? config.dbSetupOptions?.neon?.method;
 
   if (!setupMethod) {
     if (isSilent()) {
-      setupMethod = "neondb";
+      setupMethod = "neon-new";
     } else {
-      const promptedSetupMethod = await select<"neondb" | "neonctl">({
+      const promptedSetupMethod = await select<"neon-new" | "neon">({
         message: "Choose your Neon setup method:",
         options: [
           {
             label: "Quick setup with neon-new",
-            value: "neondb",
+            value: "neon-new",
             hint: "fastest, no auth required",
           },
           {
-            label: "Custom setup with neonctl",
-            value: "neonctl",
+            label: "Custom setup with Neon CLI",
+            value: "neon",
             hint: "More control - choose project name and region",
           },
         ],
-        initialValue: "neondb",
+        initialValue: "neon-new",
       });
 
       if (isCancel(promptedSetupMethod)) {
@@ -312,7 +328,7 @@ export async function setupNeonPostgres(
     }
   }
 
-  if (setupMethod === "neondb") {
+  if (setupMethod === "neon-new" || setupMethod === "neondb") {
     const neonDbResult = await setupWithNeonDb(projectDir, packageManager, backend);
     if (neonDbResult.isErr()) {
       cliLog.error(pc.red(neonDbResult.error.message));
@@ -330,7 +346,7 @@ export async function setupNeonPostgres(
     return Result.ok(undefined);
   }
 
-  // neonctl setup path
+  // "neondb" and "neonctl" remain accepted for config compatibility.
   const suggestedProjectName = path.basename(projectDir);
   let projectName =
     cliInput?.dbSetupOptions?.neon?.projectName ?? config.dbSetupOptions?.neon?.projectName;

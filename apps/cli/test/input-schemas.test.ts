@@ -93,6 +93,20 @@ describe("Input schemas", () => {
     expect(result.success).toBe(false);
   });
 
+  it("accepts current and legacy Neon setup method names", () => {
+    for (const method of ["neon-new", "neon", "neondb", "neonctl"]) {
+      const result = CreateInputSchema.safeParse({
+        projectName: "app",
+        dbSetupOptions: {
+          mode: "auto",
+          neon: { method },
+        },
+      });
+
+      expect(result.success).toBe(true);
+    }
+  });
+
   it("accepts the evlog agent skills source in addon options", () => {
     const result = CreateInputSchema.safeParse({
       projectName: "app",

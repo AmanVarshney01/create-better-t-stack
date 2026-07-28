@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { getFumadocsAddonContext, getFumadocsLinter } from "../src/helpers/addons/fumadocs-setup";
 import { setupOxlint } from "../src/helpers/addons/oxlint-setup";
 import { installDependencies } from "../src/helpers/core/install-dependencies";
+import { getNeonProjectCreateArgs } from "../src/helpers/database-providers/neon-setup";
 import { getPackageExecutionArgs } from "../src/utils/package-runner";
 import { SMOKE_DIR } from "./setup";
 
@@ -23,6 +24,21 @@ describe("External Command Guards", () => {
       "sbA3tIe",
       "--env",
       "test db.env",
+    ]);
+  });
+
+  it("should use the current Neon CLI package and preserve project names as one argument", () => {
+    expect(getNeonProjectCreateArgs("bun", "test database", "aws-us-east-1")).toEqual([
+      "bunx",
+      "neon@latest",
+      "projects",
+      "create",
+      "--name",
+      "test database",
+      "--region-id",
+      "aws-us-east-1",
+      "--output",
+      "json",
     ]);
   });
 
