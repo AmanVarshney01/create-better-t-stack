@@ -11,7 +11,7 @@
     "deploy": "convex deploy"
   },
   "dependencies": {
-    "@convex-dev/crons": "^0.2.0",
+    "@convex-dev/crons": "^0.2.2",
     "@erquhart/convex-oss-stats": "catalog:",
     "convex": "catalog:",
     "convex-helpers": "catalog:"

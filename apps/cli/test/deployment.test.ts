@@ -901,7 +901,7 @@ describe("Deployment Configurations", () => {
       expect(infraFile!.indexOf('export const server = await Worker("server"')).toBeLessThan(
         infraFile!.indexOf('export const web = await TanStackStart("web"'),
       );
-      expect(webPkg.devDependencies?.["@cloudflare/vite-plugin"]).toBe("1.43.0");
+      expect(webPkg.devDependencies?.["@cloudflare/vite-plugin"]).toBe("1.48.0");
     });
 
     it("should keep native Metro from watching Alchemy state", async () => {

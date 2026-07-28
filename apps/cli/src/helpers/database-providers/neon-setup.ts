@@ -44,7 +44,6 @@ const NEON_REGIONS: NeonRegion[] = [
   { label: "AWS US West (Oregon)", value: "aws-us-west-2" },
   { label: "AWS Europe (Frankfurt)", value: "aws-eu-central-1" },
   { label: "AWS Asia Pacific (Singapore)", value: "aws-ap-southeast-1" },
-  { label: "AWS South America East 1 (São Paulo)", value: "aws-sa-east-1" },
   { label: "AWS Asia Pacific (Sydney)", value: "aws-ap-southeast-2" },
   { label: "Azure East US 2 region (Virginia)", value: "azure-eastus2" },
 ];
@@ -160,7 +159,7 @@ async function setupWithNeonDb(
   backend: ProjectConfig["backend"],
 ): Promise<Result<void, DatabaseSetupError>> {
   const s = createSpinner();
-  s.start("Creating Neon database using get-db...");
+  s.start("Creating Neon database using neon-new...");
 
   const targetApp = backend === "self" ? "apps/web" : "apps/server";
   const targetDir = path.join(projectDir, targetApp);
@@ -182,7 +181,7 @@ async function setupWithNeonDb(
 
   const packageArgs = getPackageExecutionArgs(
     packageManager,
-    `get-db@latest --yes --ref "sbA3tIe"`,
+    `neon-new@latest --yes --ref "sbA3tIe"`,
   );
 
   return Result.tryPromise({
@@ -191,10 +190,10 @@ async function setupWithNeonDb(
       s.stop(pc.green("Neon database created successfully!"));
     },
     catch: (e) => {
-      s.stop(pc.red("Failed to create database with get-db"));
+      s.stop(pc.red("Failed to create database with neon-new"));
       return new DatabaseSetupError({
         provider: "neon",
-        message: `Failed to create database with get-db: ${e instanceof Error ? e.message : String(e)}`,
+        message: `Failed to create database with neon-new: ${e instanceof Error ? e.message : String(e)}`,
         cause: e,
       });
     },
@@ -292,7 +291,7 @@ export async function setupNeonPostgres(
         message: "Choose your Neon setup method:",
         options: [
           {
-            label: "Quick setup with get-db",
+            label: "Quick setup with neon-new",
             value: "neondb",
             hint: "fastest, no auth required",
           },

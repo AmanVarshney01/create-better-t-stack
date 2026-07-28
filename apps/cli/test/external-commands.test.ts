@@ -12,17 +12,17 @@ describe("External Command Guards", () => {
   it("should split quoted args correctly", () => {
     const args = getPackageExecutionArgs(
       "bun",
-      `get-db@latest --yes --ref "sbA3tIe" --name test-db`,
+      `neon-new@latest --yes --ref "sbA3tIe" --env "test db.env"`,
     );
 
     expect(args).toEqual([
       "bunx",
-      "get-db@latest",
+      "neon-new@latest",
       "--yes",
       "--ref",
       "sbA3tIe",
-      "--name",
-      "test-db",
+      "--env",
+      "test db.env",
     ]);
   });
 
@@ -75,7 +75,7 @@ describe("External Command Guards", () => {
     const updated = await Bun.file(pkgJsonPath).json();
 
     expect(updated.scripts?.check).toBe("oxlint && oxfmt --write");
-    expect(updated.devDependencies?.oxlint).toBe("^1.72.0");
-    expect(updated.devDependencies?.oxfmt).toBe("^0.57.0");
+    expect(updated.devDependencies?.oxlint).toBe("^1.76.0");
+    expect(updated.devDependencies?.oxfmt).toBe("^0.61.0");
   });
 });

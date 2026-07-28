@@ -149,9 +149,9 @@ export default {
   },
   "devDependencies": {
     "@types/bun": "^1.3.14",
-    "@types/three": "^0.165.0",
-    "concurrently": "^10.0.3",
-    "typescript": "^6"
+    "@types/three": "^0.185.1",
+    "concurrently": "^10.0.4",
+    "typescript": "^6.0.3"
   }
 }
 `],
@@ -14202,7 +14202,7 @@ export default defineSchema({
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/node": "^24.3.0"
+    "@types/node": "^24.13.3"
   },
   "dependencies": {}
 }
@@ -25609,11 +25609,11 @@ export default defineConfig({
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.0.5"
+    "astro": "^7.1.5"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.2",
-    "tailwindcss": "^4.3.2"
+    "@tailwindcss/vite": "^4.3.3",
+    "tailwindcss": "^4.3.3"
   }
 }
 `],
@@ -26964,32 +26964,32 @@ module.exports = config;
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/ui": "~57.0.1",
+    "@expo/ui": "~57.0.7",
     "@expo/vector-icons": "^15.1.1",
-    "@tanstack/react-query": "^5.101.2",
+    "@tanstack/react-query": "^5.101.4",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
-    "@ungap/structured-clone": "^1.3.2",
+    "@ungap/structured-clone": "^1.3.3",
     {{/if}}
-    "expo": "~57.0.1",
-    "expo-constants": "~57.0.2",
-    "expo-crypto": "~57.0.0",
-    "expo-font": "~57.0.0",
-    "expo-linking": "~57.0.1",
-    "expo-network": "~57.0.0",
-    "expo-router": "~57.0.2",
-    "expo-secure-store": "~57.0.0",
-    "expo-splash-screen": "~57.0.1",
-    "expo-status-bar": "~57.0.0",
-    "expo-system-ui": "~57.0.0",
-    "expo-web-browser": "~57.0.0",
+    "expo": "~57.0.8",
+    "expo-constants": "~57.0.7",
+    "expo-crypto": "~57.0.1",
+    "expo-font": "~57.0.1",
+    "expo-linking": "~57.0.4",
+    "expo-network": "~57.0.1",
+    "expo-router": "~57.0.8",
+    "expo-secure-store": "~57.0.1",
+    "expo-splash-screen": "~57.0.5",
+    "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.1",
+    "expo-web-browser": "~57.0.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.0",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-reanimated": "4.5.0",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "4.25.2",
+    "react-native-screens": "~4.26.0",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.10.0"
   },
@@ -28296,31 +28296,31 @@ module.exports = config;
     "@expo/vector-icons": "^15.1.1",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
-    "@ungap/structured-clone": "^1.3.2",
+    "@ungap/structured-clone": "^1.3.3",
     {{/if}}
-    "babel-preset-expo": "~57.0.1",
-    "expo": "~57.0.1",
-    "expo-constants": "~57.0.2",
-    "expo-crypto": "~57.0.0",
-    "expo-dev-client": "~57.0.3",
-    "expo-font": "~57.0.0",
-    "expo-linking": "~57.0.1",
-    "expo-network": "~57.0.0",
-    "expo-router": "~57.0.2",
-    "expo-secure-store": "~57.0.0",
-    "expo-splash-screen": "~57.0.1",
-    "expo-status-bar": "~57.0.0",
-    "expo-system-ui": "~57.0.0",
-    "expo-web-browser": "~57.0.0",
+    "babel-preset-expo": "~57.0.4",
+    "expo": "~57.0.8",
+    "expo-constants": "~57.0.7",
+    "expo-crypto": "~57.0.1",
+    "expo-dev-client": "~57.0.8",
+    "expo-font": "~57.0.1",
+    "expo-linking": "~57.0.4",
+    "expo-network": "~57.0.1",
+    "expo-router": "~57.0.8",
+    "expo-secure-store": "~57.0.1",
+    "expo-splash-screen": "~57.0.5",
+    "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.1",
+    "expo-web-browser": "~57.0.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.0",
     "react-native-gesture-handler": "~2.32.0",
-    "react-native-nitro-modules": "0.36.1",
+    "react-native-nitro-modules": "0.36.3",
     "react-native-reanimated": "4.5.0",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "4.25.2",
-    "react-native-unistyles": "^3.2.5",
+    "react-native-screens": "~4.26.0",
+    "react-native-unistyles": "^3.3.0",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.10.0"
   },
@@ -29426,24 +29426,24 @@ module.exports = uniwindConfig;
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~57.0.2",
+    "@expo/metro-runtime": "~57.0.7",
     "@expo/vector-icons": "^15.1.1",
     "@gorhom/bottom-sheet": "^5.2.14",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
-    "@ungap/structured-clone": "^1.3.2",
+    "@ungap/structured-clone": "^1.3.3",
     {{/if}}
-    "expo": "~57.0.1",
-    "expo-constants": "~57.0.2",
-    "expo-font": "~57.0.0",
-    "expo-haptics": "~57.0.0",
-    "expo-linking": "~57.0.1",
-    "expo-network": "~57.0.0",
-    "expo-router": "~57.0.2",
-    "expo-secure-store": "~57.0.0",
-    "expo-status-bar": "~57.0.0",
-    "expo-web-browser": "~57.0.0",
-    "heroui-native": "^1.0.5",
+    "expo": "~57.0.8",
+    "expo-constants": "~57.0.7",
+    "expo-font": "~57.0.1",
+    "expo-haptics": "~57.0.1",
+    "expo-linking": "~57.0.4",
+    "expo-network": "~57.0.1",
+    "expo-router": "~57.0.8",
+    "expo-secure-store": "~57.0.1",
+    "expo-status-bar": "~57.0.1",
+    "expo-web-browser": "~57.0.2",
+    "heroui-native": "^1.0.7",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.0",
@@ -29451,17 +29451,17 @@ module.exports = uniwindConfig;
     "react-native-keyboard-controller": "1.21.9",
     "react-native-reanimated": "4.5.0",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "4.25.2",
+    "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.10.0",
     "tailwind-merge": "^3.6.0",
-    "tailwind-variants": "^3.2.2",
-    "tailwindcss": "^4.3.2",
+    "tailwind-variants": "^3.3.0",
+    "tailwindcss": "^4.3.3",
     "uniwind": "^1.10.0"
   },
   "devDependencies": {
-    "@types/node": "^26.0.1",
+    "@types/node": "^26.1.2",
     "@types/react": "~19.2.17",
     "typescript": "~6.0.3"
   }
@@ -29750,14 +29750,14 @@ export default defineNuxtConfig({
   },
   "dependencies": {
     "@nuxt/ui": "^4.10.0",
-    "nuxt": "^4.5.0",
-    "vue": "^3.5.39",
+    "nuxt": "^4.5.1",
+    "vue": "^3.5.40",
     "vue-router": "^5.2.0"
   },
   "devDependencies": {
-    "tailwindcss": "^4.3.2",
-    "@iconify-json/lucide": "^1.2.115",
-    "vue-tsc": "^3.3.7"
+    "tailwindcss": "^4.3.3",
+    "@iconify-json/lucide": "^1.2.120",
+    "vue-tsc": "^3.3.8"
   }
 }
 `],
@@ -29834,20 +29834,20 @@ initOpenNextCloudflareForDev();
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
     "@swc/helpers": "^0.5.23",
-    "lucide-react": "^1.23.0",
-    "next": "^16.2.0",
+    "lucide-react": "^1.27.0",
+    "next": "^16.2.12",
     "next-themes": "^0.4.6",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "sonner": "^2.0.7",
     "babel-plugin-react-compiler": "^1.0.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.2",
-    "@types/node": "^20",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^20.19.43",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.3.2"
+    "tailwindcss": "^4.3.3"
   }
 }
 `],
@@ -30236,26 +30236,26 @@ export function ThemeProvider({
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@react-router/fs-routes": "^8.1.0",
-    "@react-router/node": "^8.1.0",
-    "@react-router/serve": "^8.1.0",
-    "isbot": "^5.1.44",
-    "lucide-react": "^1.23.0",
+    "@react-router/fs-routes": "^8.3.0",
+    "@react-router/node": "^8.3.0",
+    "@react-router/serve": "^8.3.0",
+    "isbot": "^5.2.1",
+    "lucide-react": "^1.27.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "react-router": "^8.1.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router": "^8.3.0",
     "sonner": "^2.0.7"
   },
   "devDependencies": {
-    "@react-router/dev": "^8.1.0",
-    "@tailwindcss/vite": "^4.3.2",
-    "@types/node": "^22.13.14",
+    "@react-router/dev": "^8.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^22.20.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "react-router-devtools": "^6.2.1",
-    "tailwindcss": "^4.3.2",
-    "vite": "^7.3.6",
+    "react-router-devtools": "^6.2.3",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.1.5",
     "vite-tsconfig-paths": "^6.1.1"
   }
 }
@@ -30783,26 +30783,26 @@ export default defineConfig({
 		"check-types": "vite build && tsc --noEmit"
 	},
 	"dependencies": {
-        "@hookform/resolvers": "^5.4.0",
+        "@hookform/resolvers": "^5.5.7",
         "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-		"@tailwindcss/vite": "^4.3.2",
-		"@tanstack/react-router": "^1.170.17",
-		"lucide-react": "^1.23.0",
+		"@tailwindcss/vite": "^4.3.3",
+		"@tanstack/react-router": "^1.170.18",
+		"lucide-react": "^1.27.0",
         "next-themes": "^0.4.6",
-		"react": "^19.2.7",
-		"react-dom": "^19.2.7",
+		"react": "^19.2.8",
+		"react-dom": "^19.2.8",
         "sonner": "^2.0.7"
 	},
 	"devDependencies": {
 		"@tanstack/react-router-devtools": "^1.167.0",
-		"@tanstack/router-plugin": "^1.168.19",
-		"@types/node": "^22.13.14",
+		"@tanstack/router-plugin": "^1.168.23",
+		"@types/node": "^22.20.1",
 		"@types/react": "^19.2.17",
 		"@types/react-dom": "^19.2.3",
-		"@vitejs/plugin-react": "^6.0.3",
-		"postcss": "^8.5.16",
-		"tailwindcss": "^4.3.2",
-		"vite": "^8.1.3"
+		"@vitejs/plugin-react": "^6.0.4",
+		"postcss": "^8.5.24",
+		"tailwindcss": "^4.3.3",
+		"vite": "^8.1.5"
 	}
 }
 `],
@@ -31228,16 +31228,16 @@ export default defineConfig({
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@tailwindcss/vite": "^4.3.2",
-    "@tanstack/react-query": "^5.101.2",
-    "@tanstack/react-router": "^1.170.17",
-    "@tanstack/react-start": "^1.168.27",
-    "lucide-react": "^1.23.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-query": "^5.101.4",
+    "@tanstack/react-router": "^1.170.18",
+    "@tanstack/react-start": "^1.168.32",
+    "lucide-react": "^1.27.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "sonner": "^2.0.7",
-    "tailwindcss": "^4.3.2"
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.167.0",
@@ -31245,10 +31245,10 @@ export default defineConfig({
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.3",
-    "jsdom": "^29.1.1",
-    "vite": "^8.1.3",
-    "web-vitals": "^5.3.0"
+    "@vitejs/plugin-react": "^6.0.4",
+    "jsdom": "^30.0.0",
+    "vite": "^8.1.5",
+    "web-vitals": "^6.0.1"
   }
 }
 `],
@@ -32047,17 +32047,17 @@ dist-ssr
     "test": "vitest run"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.3.2",
-    "@tanstack/router-plugin": "^1.168.19",
-    "@tanstack/solid-router": "^1.170.17",
-    "lucide-solid": "^1.23.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/router-plugin": "^1.168.23",
+    "@tanstack/solid-router": "^1.170.18",
+    "lucide-solid": "^1.27.0",
     "solid-js": "^1.9.14",
-    "tailwindcss": "^4.3.2"
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@tanstack/solid-router-devtools": "^1.167.0",
-    "vite": "^8.1.3",
-    "vite-plugin-solid": "^2.11.12"
+    "vite": "^8.1.5",
+    "vite-plugin-solid": "^2.11.14"
   }
 }
 `],
@@ -32367,13 +32367,13 @@ vite.config.ts.timestamp-*
 		{{else}}
 		"@sveltejs/adapter-auto": "^7.0.1",
 		{{/if}}
-		"@sveltejs/kit": "^2.69.0",
-		"@sveltejs/vite-plugin-svelte": "^7.1.2",
-		"@tailwindcss/vite": "^4.3.2",
-		"svelte": "^5.56.4",
-		"svelte-check": "^4.7.1",
-		"tailwindcss": "^4.3.2",
-		"vite": "^8.1.3"
+		"@sveltejs/kit": "^2.70.1",
+		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"@tailwindcss/vite": "^4.3.3",
+		"svelte": "^5.56.8",
+		"svelte-check": "^4.7.4",
+		"tailwindcss": "^4.3.3",
+		"vite": "^8.1.5"
 	},
 	"dependencies": {}
 }
@@ -33566,23 +33566,23 @@ await app.finalize();
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
-    "@shadcn/react": "^0.2.0",
-    "shadcn": "^4.12.0",
+    "@shadcn/react": "^0.2.1",
+    "shadcn": "^4.16.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.23.0",
+    "lucide-react": "^1.27.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
     "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.2",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.3.2"
+    "tailwindcss": "^4.3.3"
   },
   "scripts": {
     "check-types": "tsc --noEmit"

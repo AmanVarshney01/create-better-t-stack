@@ -106,7 +106,12 @@ async function checkMatrixCase(matrixCase: MatrixCase, stats: MatrixRunStats) {
   if (matrixCase.expected.valid) stats.expectedValid++;
   else stats.expectedInvalid++;
 
-  const result = await createVirtual(matrixCase.config);
+  const {
+    projectDir: _projectDir,
+    relativePath: _relativePath,
+    ...virtualConfig
+  } = matrixCase.config;
+  const result = await createVirtual(virtualConfig);
 
   if (result.isOk()) {
     stats.actualValid++;
