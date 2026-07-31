@@ -55,6 +55,10 @@ export function getCompatibilityAdjustmentState(
   };
 }
 
+export function getLatestCompatibilityAdjustment(stack: StackState): Partial<StackState> {
+  return analyzeStackCompatibility(stack).adjustedStack ?? {};
+}
+
 export function useStackBuilder() {
   const [stack, setStack, viewMode, setViewMode, selectedFile, setSelectedFile] = useStackState();
 
@@ -122,7 +126,7 @@ export function useStackBuilder() {
       toast.info(message, { duration: 5000 });
     }
 
-    void setStack(adjustedStack);
+    void setStack((currentStack) => getLatestCompatibilityAdjustment(currentStack));
   }, [stack, compatibilityAnalysis.adjustedStack, compatibilityAnalysis.changes, setStack]);
 
   const command = useMemo(() => {

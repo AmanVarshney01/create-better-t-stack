@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import {
   getCompatibilityAdjustmentKey,
   getCompatibilityAdjustmentState,
+  getLatestCompatibilityAdjustment,
 } from "../src/app/(home)/new/_components/stack-builder/use-stack-builder";
 import {
   analyzeStackCompatibility,
@@ -236,15 +237,22 @@ describe("stack builder D1 compatibility", () => {
   });
 
   test("keeps Expo selected when Nuxt switches the API to oRPC", () => {
-    const stack = createStack({
+    const staleStack = createStack({
+      webFrontend: ["nuxt"],
+      nativeFrontend: ["none"],
+      api: "trpc",
+    });
+    const latestStack = createStack({
       webFrontend: ["nuxt"],
       nativeFrontend: ["native-bare"],
       api: "trpc",
     });
 
-    const result = analyzeStackCompatibility(stack);
-    const adjustedStack = result.adjustedStack ?? stack;
+    const staleAdjustment = analyzeStackCompatibility(staleStack).adjustedStack;
+    const latestAdjustment = getLatestCompatibilityAdjustment(latestStack);
+    const adjustedStack = { ...latestStack, ...latestAdjustment };
 
+    expect(staleAdjustment?.nativeFrontend).toEqual(["none"]);
     expect(adjustedStack).toMatchObject({
       webFrontend: ["nuxt"],
       nativeFrontend: ["native-bare"],
