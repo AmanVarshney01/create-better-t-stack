@@ -59,6 +59,31 @@ export function getLatestCompatibilityAdjustment(stack: StackState): Partial<Sta
   return analyzeStackCompatibility(stack).adjustedStack ?? {};
 }
 
+export function getSelectedTechRemovalUpdate(
+  stack: StackState,
+  category: TechCategory,
+  techId: string,
+): Partial<StackState> {
+  const effectiveStack = analyzeStackCompatibility(stack).adjustedStack ?? stack;
+  const categoryKey = category as keyof StackState;
+  const value = effectiveStack[categoryKey];
+  const options = TECH_OPTIONS[category] || [];
+  const hasNoneOption = options.some((option) => option.id === "none");
+  const forceNoneFallback = category === "addons" || category === "examples";
+
+  if (Array.isArray(value)) {
+    const next = value.filter((id) => id !== techId);
+    const fallback = next.length === 0 && (hasNoneOption || forceNoneFallback) ? ["none"] : next;
+    return { [categoryKey]: fallback } as Partial<StackState>;
+  }
+
+  if (value === techId && hasNoneOption) {
+    return { [categoryKey]: "none" } as Partial<StackState>;
+  }
+
+  return {};
+}
+
 export function useStackBuilder() {
   const [stack, setStack, viewMode, setViewMode, selectedFile, setSelectedFile] = useStackState();
 
@@ -311,26 +336,9 @@ export function useStackBuilder() {
   }
 
   function removeSelectedTech(category: TechCategory, techId: string) {
-    const categoryKey = category as keyof StackState;
-    const value = stack[categoryKey];
-    const options = TECH_OPTIONS[category] || [];
-    const hasNoneOption = options.some((option) => option.id === "none");
-    const forceNoneFallback = category === "addons" || category === "examples";
-
-    if (Array.isArray(value)) {
-      const next = value.filter((id) => id !== techId);
-      const fallback = next.length === 0 && (hasNoneOption || forceNoneFallback) ? ["none"] : next;
-      startTransition(() => {
-        setStack({ [categoryKey]: fallback } as Partial<StackState>);
-      });
-      return;
-    }
-
-    if (value === techId && hasNoneOption) {
-      startTransition(() => {
-        setStack({ [categoryKey]: "none" } as Partial<StackState>);
-      });
-    }
+    startTransition(() => {
+      setStack((currentStack) => getSelectedTechRemovalUpdate(currentStack, category, techId));
+    });
   }
 
   async function copyToClipboard() {

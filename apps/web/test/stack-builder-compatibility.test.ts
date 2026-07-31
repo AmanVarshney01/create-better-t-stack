@@ -4,6 +4,7 @@ import {
   getCompatibilityAdjustmentKey,
   getCompatibilityAdjustmentState,
   getLatestCompatibilityAdjustment,
+  getSelectedTechRemovalUpdate,
 } from "../src/app/(home)/new/_components/stack-builder/use-stack-builder";
 import {
   analyzeStackCompatibility,
@@ -260,6 +261,17 @@ describe("stack builder D1 compatibility", () => {
     });
     expect(getDisabledReason(adjustedStack, "nativeFrontend", "native-bare")).toBeNull();
     expect(generateStackCommand(adjustedStack)).toContain("--frontend nuxt native-bare");
+  });
+
+  test("removes a compatibility-adjusted badge against the effective stack", () => {
+    const rawStack = createStack({
+      webFrontend: ["nuxt"],
+      nativeFrontend: ["native-bare"],
+      api: "trpc",
+    });
+
+    expect(analyzeStackCompatibility(rawStack).adjustedStack?.api).toBe("orpc");
+    expect(getSelectedTechRemovalUpdate(rawStack, "api", "orpc")).toEqual({ api: "none" });
   });
 
   test("blocks the AI example for Astro frontends", () => {
