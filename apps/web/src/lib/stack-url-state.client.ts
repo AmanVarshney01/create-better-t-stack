@@ -62,34 +62,34 @@ export const stackQueryStatesOptions = {
   clearOnDefault: true,
 };
 
+function getStackFromQueryState(queryState: StackState): StackState {
+  return sanitizeStackState({
+    projectName: queryState.projectName,
+    webFrontend: queryState.webFrontend,
+    nativeFrontend: queryState.nativeFrontend,
+    runtime: queryState.runtime,
+    backend: queryState.backend,
+    api: queryState.api,
+    database: queryState.database,
+    orm: queryState.orm,
+    dbSetup: queryState.dbSetup,
+    auth: queryState.auth,
+    payments: queryState.payments,
+    packageManager: queryState.packageManager,
+    addons: queryState.addons,
+    examples: queryState.examples,
+    git: queryState.git,
+    install: queryState.install,
+    webDeploy: queryState.webDeploy,
+    serverDeploy: queryState.serverDeploy,
+    yolo: queryState.yolo,
+  });
+}
+
 export function useStackState() {
   const [queryState, setQueryState] = useQueryStates(stackParsers, stackQueryStatesOptions);
 
-  const stack = useMemo(
-    () =>
-      sanitizeStackState({
-        projectName: queryState.projectName,
-        webFrontend: queryState.webFrontend,
-        nativeFrontend: queryState.nativeFrontend,
-        runtime: queryState.runtime,
-        backend: queryState.backend,
-        api: queryState.api,
-        database: queryState.database,
-        orm: queryState.orm,
-        dbSetup: queryState.dbSetup,
-        auth: queryState.auth,
-        payments: queryState.payments,
-        packageManager: queryState.packageManager,
-        addons: queryState.addons,
-        examples: queryState.examples,
-        git: queryState.git,
-        install: queryState.install,
-        webDeploy: queryState.webDeploy,
-        serverDeploy: queryState.serverDeploy,
-        yolo: queryState.yolo,
-      }),
-    [queryState],
-  );
+  const stack = useMemo(() => getStackFromQueryState(queryState), [queryState]);
 
   const viewMode = queryState.viewMode;
   const selectedFile = queryState.selectedFile;
@@ -97,15 +97,11 @@ export function useStackState() {
   const updateStack = useCallback(
     async (updates: Partial<StackState> | ((prev: StackState) => Partial<StackState>)) => {
       await setQueryState((currentQueryState) => {
-        const currentStack = sanitizeStackState(currentQueryState);
+        const currentStack = getStackFromQueryState(currentQueryState);
         const newStack = typeof updates === "function" ? updates(currentStack) : updates;
         const finalStack = sanitizeStackState({ ...currentStack, ...newStack });
 
-        return {
-          ...finalStack,
-          viewMode: currentQueryState.viewMode,
-          selectedFile: currentQueryState.selectedFile,
-        };
+        return finalStack;
       });
     },
     [setQueryState],
@@ -113,10 +109,7 @@ export function useStackState() {
 
   const setViewMode = useCallback(
     async (mode: "command" | "preview") => {
-      await setQueryState((currentQueryState) => ({
-        viewMode: mode,
-        selectedFile: currentQueryState.selectedFile,
-      }));
+      await setQueryState({ viewMode: mode });
     },
     [setQueryState],
   );

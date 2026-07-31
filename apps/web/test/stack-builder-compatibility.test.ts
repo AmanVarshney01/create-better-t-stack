@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
 import {
-  getCompatibilityAdjustmentKey,
-  getCompatibilityAdjustmentState,
-  getLatestCompatibilityAdjustment,
+  applyStackUpdate,
   getSelectedTechRemovalUpdate,
+  getTechSelectionUpdate,
+  resolveStackCompatibility,
 } from "../src/app/(home)/new/_components/stack-builder/use-stack-builder";
 import {
   analyzeStackCompatibility,
@@ -126,51 +126,29 @@ describe("stack builder D1 compatibility", () => {
   });
 
   test("reapplies the same D1 adjustment after leaving and returning to it", () => {
-    const adjustedD1Stack = createStack({
+    const initialRawD1Stack = createStack({
       backend: "self-next",
       webFrontend: ["next"],
       runtime: "none",
       database: "sqlite",
       dbSetup: "d1",
-      webDeploy: "cloudflare",
+      webDeploy: "none",
       serverDeploy: "none",
     });
-    const initialRawD1Stack = createStack({
-      ...adjustedD1Stack,
-      webDeploy: "none",
-    });
-    const tursoStack = createStack({
-      backend: "self-next",
-      webFrontend: ["next"],
-      runtime: "none",
-      database: "sqlite",
+
+    const firstD1Selection = applyStackUpdate(initialRawD1Stack, {});
+    const tursoSelection = applyStackUpdate(firstD1Selection.stack, {
       dbSetup: "turso",
       webDeploy: "none",
-      serverDeploy: "none",
     });
+    const secondD1Selection = applyStackUpdate(tursoSelection.stack, { dbSetup: "d1" });
 
-    const firstAdjustment = getCompatibilityAdjustmentState("", initialRawD1Stack, adjustedD1Stack);
-    const settledState = getCompatibilityAdjustmentState(
-      firstAdjustment.adjustmentKey,
-      tursoStack,
-      null,
-    );
-    const secondAdjustment = getCompatibilityAdjustmentState(
-      settledState.adjustmentKey,
-      initialRawD1Stack,
-      adjustedD1Stack,
-    );
-
-    expect(firstAdjustment.adjustmentKey).toBe(
-      getCompatibilityAdjustmentKey(initialRawD1Stack, adjustedD1Stack),
-    );
-    expect(firstAdjustment.shouldApply).toBe(true);
-    expect(settledState.adjustmentKey).toBe("");
-    expect(settledState.shouldApply).toBe(false);
-    expect(secondAdjustment.adjustmentKey).toBe(
-      getCompatibilityAdjustmentKey(initialRawD1Stack, adjustedD1Stack),
-    );
-    expect(secondAdjustment.shouldApply).toBe(true);
+    expect(firstD1Selection.stack.webDeploy).toBe("cloudflare");
+    expect(tursoSelection.stack).toMatchObject({ dbSetup: "turso", webDeploy: "none" });
+    expect(secondD1Selection.stack).toMatchObject({
+      dbSetup: "d1",
+      webDeploy: "cloudflare",
+    });
   });
 
   test("allows Polar when there is no frontend at all", () => {
@@ -238,29 +216,20 @@ describe("stack builder D1 compatibility", () => {
   });
 
   test("keeps Expo selected when Nuxt switches the API to oRPC", () => {
-    const staleStack = createStack({
-      webFrontend: ["nuxt"],
-      nativeFrontend: ["none"],
-      api: "trpc",
-    });
-    const latestStack = createStack({
-      webFrontend: ["nuxt"],
-      nativeFrontend: ["native-bare"],
-      api: "trpc",
-    });
+    const nuxtStack = applyStackUpdate(createStack(), (currentStack) =>
+      getTechSelectionUpdate(currentStack, "webFrontend", "nuxt"),
+    ).stack;
+    const nuxtAndExpoStack = applyStackUpdate(nuxtStack, (currentStack) =>
+      getTechSelectionUpdate(currentStack, "nativeFrontend", "native-bare"),
+    ).stack;
 
-    const staleAdjustment = analyzeStackCompatibility(staleStack).adjustedStack;
-    const latestAdjustment = getLatestCompatibilityAdjustment(latestStack);
-    const adjustedStack = { ...latestStack, ...latestAdjustment };
-
-    expect(staleAdjustment?.nativeFrontend).toEqual(["none"]);
-    expect(adjustedStack).toMatchObject({
+    expect(nuxtAndExpoStack).toMatchObject({
       webFrontend: ["nuxt"],
       nativeFrontend: ["native-bare"],
       api: "orpc",
     });
-    expect(getDisabledReason(adjustedStack, "nativeFrontend", "native-bare")).toBeNull();
-    expect(generateStackCommand(adjustedStack)).toContain("--frontend nuxt native-bare");
+    expect(getDisabledReason(nuxtAndExpoStack, "nativeFrontend", "native-bare")).toBeNull();
+    expect(generateStackCommand(nuxtAndExpoStack)).toContain("--frontend nuxt native-bare");
   });
 
   test("removes a compatibility-adjusted badge against the effective stack", () => {
@@ -272,6 +241,27 @@ describe("stack builder D1 compatibility", () => {
 
     expect(analyzeStackCompatibility(rawStack).adjustedStack?.api).toBe("orpc");
     expect(getSelectedTechRemovalUpdate(rawStack, "api", "orpc")).toEqual({ api: "none" });
+
+    const adjustedStack = applyStackUpdate(rawStack, (currentStack) =>
+      getSelectedTechRemovalUpdate(currentStack, "api", "orpc"),
+    ).stack;
+
+    expect(adjustedStack).toMatchObject({
+      webFrontend: ["nuxt"],
+      nativeFrontend: ["native-bare"],
+      api: "none",
+    });
+  });
+
+  test("matches the CLI by disabling every ORM when no database is selected", () => {
+    const stack = resolveStackCompatibility(
+      createStack({ database: "none", orm: "none", dbSetup: "none" }),
+    ).stack;
+
+    expect(getDisabledReason(stack, "orm", "drizzle")).toBe("Select a database first");
+    expect(getDisabledReason(stack, "orm", "prisma")).toBe("Select a database first");
+    expect(getDisabledReason(stack, "orm", "mongoose")).toBe("Select a database first");
+    expect(getDisabledReason(stack, "orm", "none")).toBeNull();
   });
 
   test("blocks the AI example for Astro frontends", () => {
@@ -338,6 +328,39 @@ describe("stack builder D1 compatibility", () => {
 
     expect(getDisabledReason(serverStack, "addons", "evlog")).toBeNull();
     expect(getDisabledReason(fullstackStack, "addons", "evlog")).toBeNull();
+  });
+
+  test("does not let a native frontend hide Clerk-incompatible web frontends", () => {
+    const stack = createStack({
+      webFrontend: ["nuxt"],
+      nativeFrontend: ["native-bare"],
+      auth: "none",
+      api: "orpc",
+    });
+
+    expect(getDisabledReason(stack, "auth", "clerk")).toBe(
+      "Clerk requires React Router, TanStack Router, TanStack Start, Next.js, or React Native",
+    );
+    expect(resolveStackCompatibility({ ...stack, auth: "clerk" }).stack.auth).toBe("none");
+  });
+
+  test("does not let a native frontend hide Convex Better Auth incompatibilities", () => {
+    const stack = createStack({
+      webFrontend: ["nuxt"],
+      nativeFrontend: ["native-uniwind"],
+      backend: "convex",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      dbSetup: "none",
+      api: "none",
+      auth: "none",
+    });
+
+    expect(getDisabledReason(stack, "auth", "better-auth")).toBe(
+      "Better-Auth with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native",
+    );
+    expect(resolveStackCompatibility({ ...stack, auth: "better-auth" }).stack.auth).toBe("none");
   });
 });
 
@@ -408,6 +431,39 @@ describe("stack builder Docker deployment compatibility", () => {
     expect(result.adjustedStack).toMatchObject({
       serverDeploy: "none",
     });
+  });
+
+  test("blocks Docker web deploy when desktop addons require static server output", () => {
+    const stack = createStack({
+      webFrontend: ["next"],
+      addons: ["electrobun"],
+      webDeploy: "none",
+    });
+
+    expect(getDisabledReason(stack, "webDeploy", "docker")).toBe(
+      "Docker cannot serve the static output required by electrobun on next",
+    );
+    expect(resolveStackCompatibility({ ...stack, webDeploy: "docker" }).stack.webDeploy).toBe(
+      "none",
+    );
+  });
+
+  test("keeps the CLI exception for Convex Better Auth with Next.js and Electrobun", () => {
+    const stack = createStack({
+      webFrontend: ["next"],
+      backend: "convex",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      dbSetup: "none",
+      api: "none",
+      auth: "better-auth",
+      addons: ["electrobun"],
+      webDeploy: "docker",
+    });
+
+    expect(getDisabledReason(stack, "webDeploy", "docker")).toBeNull();
+    expect(resolveStackCompatibility(stack).stack.webDeploy).toBe("docker");
   });
 });
 
