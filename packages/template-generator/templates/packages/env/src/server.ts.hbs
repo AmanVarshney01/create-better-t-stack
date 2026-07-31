@@ -159,6 +159,9 @@ export const env = createEnv({
 		POLAR_ACCESS_TOKEN: z.string().min(1),
 		POLAR_SUCCESS_URL: z.url(),
 {{/if}}
+{{#if (eq payments "mollie")}}
+		MOLLIE_API_KEY: z.string().min(1),
+{{/if}}
 {{#if (ne backend "self")}}
 		CORS_ORIGIN: z.url(),
 {{/if}}
