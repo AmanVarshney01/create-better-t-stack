@@ -57,7 +57,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
     stack,
     viewMode,
   } = useStackBuilder();
-  const effectiveStack = compatibilityAnalysis.adjustedStack || stack;
+  const effectiveStack = compatibilityAnalysis.stack;
   const desktopBuildNote = getDesktopBuildNote(effectiveStack);
   const displayCommand = formatStackCommandForDisplay(command);
   const [commandExpanded, setCommandExpanded] = useState(false);
