@@ -235,6 +235,25 @@ describe("stack builder D1 compatibility", () => {
     expect(command).toContain("--payments polar");
   });
 
+  test("keeps Expo selected when Nuxt switches the API to oRPC", () => {
+    const stack = createStack({
+      webFrontend: ["nuxt"],
+      nativeFrontend: ["native-bare"],
+      api: "trpc",
+    });
+
+    const result = analyzeStackCompatibility(stack);
+    const adjustedStack = result.adjustedStack ?? stack;
+
+    expect(adjustedStack).toMatchObject({
+      webFrontend: ["nuxt"],
+      nativeFrontend: ["native-bare"],
+      api: "orpc",
+    });
+    expect(getDisabledReason(adjustedStack, "nativeFrontend", "native-bare")).toBeNull();
+    expect(generateStackCommand(adjustedStack)).toContain("--frontend nuxt native-bare");
+  });
+
   test("blocks the AI example for Astro frontends", () => {
     const stack = createStack({
       webFrontend: ["astro"],
