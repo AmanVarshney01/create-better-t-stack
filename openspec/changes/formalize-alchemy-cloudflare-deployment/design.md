@@ -2,7 +2,7 @@
 
 Better-T-Stack generates Cloudflare infrastructure through `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs`. The current integration pins `alchemy@2.0.0-beta.64` and emits paths for Cloudflare web, Hono Workers server, combined web/server, full-stack `self`, and D1 topologies. Generated paths are not automatically live-verified support claims; the accepted-version scoreboard defined below owns that distinction.
 
-Alchemy v2 is still a prerelease API. Better-T-Stack currently needs five active targeted safeguards because the published release does not correctly cover every generated framework and monorepo behavior; A3 was independently retired after its beta.64 removal gate passed. Several reviews also produced plausible but disproved claims. The design therefore treats source inspection, a provider-free plan, and a live deployment as different evidence levels.
+Alchemy v2 is still a prerelease API. Better-T-Stack currently needs five active targeted safeguards because the accepted release does not correctly cover every generated framework and monorepo behavior; A3 was independently retired after its beta.64 removal gate passed. Beta.66 contains fixes for A1, A2, and A7, but is rejected as a replacement because real local D1 migrations hit the A10 runtime regression. Several reviews also produced plausible but disproved claims. The design therefore treats source inspection, a provider-free plan, and a live deployment as different evidence levels.
 
 The source of truth for observed behavior is [docs/alchemy-v2-beta-findings.md](../../../docs/alchemy-v2-beta-findings.md). It records:
 
@@ -23,6 +23,7 @@ Relevant upstream references include:
 - [Alchemy PR #795](https://github.com/alchemy-run/alchemy/pull/795)
 - [Alchemy PR #796](https://github.com/alchemy-run/alchemy/pull/796)
 - [Alchemy PR #928](https://github.com/alchemy-run/alchemy/pull/928)
+- [Alchemy PR #1009](https://github.com/alchemy-run/alchemy/pull/1009)
 - [Alchemy framework resources PR #886](https://github.com/alchemy-run/alchemy/pull/886)
 - [cloudflare-tools PR #62](https://github.com/alchemy-run/cloudflare-tools/pull/62)
 - [Better-T-Stack beta reproductions](https://github.com/AmanVarshney01/alchemy-v2-beta-repros)
@@ -77,6 +78,8 @@ Generated template snapshots in `packages/template-generator/src/templates.gener
 Generated Cloudflare projects SHALL use exactly `alchemy@2.0.0-beta.64` until a replacement release passes this design's upgrade gate. No caret, tilde, tag, git SHA, or version range is accepted in generated packages.
 
 The exact version SHALL live in one generator dependency source and be asserted in generated npm, pnpm, and Bun projects. An upstream merge, npm deprecation, or `next` tag movement does not change the accepted version automatically.
+
+Beta.66 was evaluated and rejected on 2026-07-31: direct `StaticSite` Config/Output usage typechecked, but a generated Prisma D1 project with a real migration failed local `alchemy dev` because the release did not provide `cloudflare-runtime/Runtime` to the migration path. The fix in Alchemy #1009 landed after the beta.66 tag. Better-T-Stack SHALL not replace that regression with a git dependency, conditional Alchemy versions, or removal of production migration wiring.
 
 **Reason:** the published `2.0.0-pipeline-v2-test` prerelease was observed satisfying a beta caret range while lacking expected Cloudflare exports. Exact pinning makes generation reproducible and prevents an unrelated test publication from entering user projects.
 

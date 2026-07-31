@@ -552,8 +552,9 @@ export default Alchemy.Stack(
             flags: ["nodejs_compat"],
           },
           env: {
-            // the astro cloudflare adapter expects a SESSION KV binding
+            // the astro cloudflare adapter expects SESSION (KV) and IMAGES bindings
             SESSION: Cloudflare.KV.Namespace("session"),
+            IMAGES: Cloudflare.Images.Images(),
             {{#if (eq serverDeploy "cloudflare")}}
             PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
             {{else}}

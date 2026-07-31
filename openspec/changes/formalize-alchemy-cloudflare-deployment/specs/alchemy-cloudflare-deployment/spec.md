@@ -17,6 +17,12 @@ Every generated Cloudflare project SHALL use the exact accepted Alchemy version.
 - **AND** the exact pin SHALL change only after those checks pass
 - **AND** the replacement SHALL remain an exact version
 
+#### Scenario: A candidate fixes some safeguards but regresses another topology
+
+- **WHEN** a candidate release passes targeted workaround-removal checks but fails any supported Cloudflare topology gate
+- **THEN** the accepted exact pin and all safeguards required by that accepted version SHALL remain unchanged
+- **AND** the failed candidate and its upstream fix gate SHALL be recorded in the findings ledger
+
 ### Requirement: Experimental Alchemy disclosure
 
 Generated documentation and post-install output SHALL state that the accepted Alchemy v2 integration uses an exact prerelease, link the current findings ledger, and distinguish supported, experimental, blocked, and open-limitation behavior. Alchemy SHALL remain opt-in and SHALL not be presented as stable solely because a generated build succeeds.
