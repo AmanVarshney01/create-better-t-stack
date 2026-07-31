@@ -921,8 +921,8 @@ describe("Deployment Configurations", () => {
       expect(serverPackage.devDependencies?.["rolldown-plugin-wasm"]).toBe("^0.3.2");
     });
 
-    it("should generate current Cloudflare integrations for React Router and Next", async () => {
-      const [reactRouterResult, nextResult, nextWebOnlyResult] = await Promise.all([
+    it("should generate current Cloudflare integrations for React Router, Next, and Astro", async () => {
+      const [reactRouterResult, nextResult, nextWebOnlyResult, astroResult] = await Promise.all([
         createVirtual({
           projectName: "react-router-cloudflare-current",
           webDeploy: "cloudflare",
@@ -980,11 +980,31 @@ describe("Deployment Configurations", () => {
           git: false,
           packageManager: "bun",
         }),
+        createVirtual({
+          projectName: "astro-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["astro"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
       ]);
 
       if (reactRouterResult.isErr()) throw reactRouterResult.error;
       if (nextResult.isErr()) throw nextResult.error;
       if (nextWebOnlyResult.isErr()) throw nextWebOnlyResult.error;
+      if (astroResult.isErr()) throw astroResult.error;
 
       const reactRouterFiles = collectFiles(
         reactRouterResult.value.root,
@@ -1019,6 +1039,11 @@ describe("Deployment Configurations", () => {
       expect(nextWebOnlyInfra).toContain("const outputAwareStaticSite");
       expect(nextWebOnlyInfra).toContain("const webWorker = yield* outputAwareStaticSite(");
       expect(nextWebOnlyInfra).not.toContain("const serverWorker = yield* server");
+
+      const astroFiles = collectFiles(astroResult.value.root, astroResult.value.root.path);
+      const astroInfra = astroFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      expect(astroInfra).toContain('SESSION: Cloudflare.KV.Namespace("session")');
+      expect(astroInfra).toContain("IMAGES: Cloudflare.Images.Images()");
     });
 
     it("should use released Website.Vite SPA support for TanStack Router and Solid", async () => {

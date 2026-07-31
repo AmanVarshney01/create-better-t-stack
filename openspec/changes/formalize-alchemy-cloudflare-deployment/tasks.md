@@ -41,6 +41,7 @@
 - [ ] 4.9 Verify Prisma D1 production migration discovery separately from the full nested Wrangler `migrations_pattern` required for local development.
 - [ ] 4.10 Assert D1, KV/session, Images, and service bindings exist exactly once in infrastructure, framework config, and inferred environment types.
 - [ ] 4.11 Verify explicit external-Worker compatibility flags as framework/platform requirements and do not relabel them as implicit-default loss.
+- [x] 4.12 Assert the split-backend Astro Cloudflare path emits both adapter-required `SESSION` and `IMAGES` bindings.
 
 ## 5. Disposable Live Harness
 
@@ -73,7 +74,7 @@
 - [ ] 7.5 Change the generated exact pin only when the full release gate passes; otherwise record the candidate regression and keep the previously accepted exact version.
 - [x] 7.6 Remove only the independently qualified A3 pure-SPA fallback and rerun its provider-free and live removal gates without it; A6 exact pinning is not removable.
 - [x] 7.7 Update the findings ledger, generated assertions, comments, and user documentation in the same change that removes the A3 shim.
-- [x] 7.8 Confirm that open Alchemy PR #796 and merged-but-unreleased PR #928 still lack a containing exact release and retain their affected safeguards; #779, #795, and cloudflare-tools #62 are included in beta.64.
+- [x] 7.8 Evaluate beta.66: confirm #796 and #928 are released, reproduce the A10 local D1 migration regression, record post-tag fix #1009, and retain beta.64 plus the A1/A2/A7 safeguards.
 
 ## 8. Documentation and Final Review
 

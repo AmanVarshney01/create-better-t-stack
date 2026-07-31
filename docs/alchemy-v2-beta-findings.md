@@ -4,12 +4,15 @@ This is the evidence log for upstream Alchemy issues found while integrating Clo
 in Better-T-Stack. Keep confirmed defects separate from limitations and disproved review claims so
 future upgrades do not remove workarounds prematurely or preserve them after upstream fixes.
 
-Last verified: 2026-07-26
+Last verified: 2026-07-31
 
-- Published dependency: `alchemy@2.0.0-beta.64`, tag commit
+- Accepted dependency: `alchemy@2.0.0-beta.64`, tag commit
   [`31edd3c`](https://github.com/alchemy-run/alchemy/commit/31edd3c4b2f0f3310fad07f5423aee20cf72be8d)
+- Latest published candidate: `alchemy@2.0.0-beta.66`, tag commit
+  [`0c76c74`](https://github.com/alchemy-run/alchemy/commit/0c76c747ac454f4775c72b8272f692cf7988be70)
+  (rejected because local D1 migrations fail; see A10)
 - Upstream main inspected: commit
-  [`1b5d5a7`](https://github.com/alchemy-run/alchemy/commit/1b5d5a71feb0861f790bfd9fd3baaa9f3a163e27)
+  [`5001713`](https://github.com/alchemy-run/alchemy/commit/5001713c5f9355a0a1d0999477a5949867e4f459)
 - Runnable beta.61 reproductions:
   [`AmanVarshney01/alchemy-v2-beta-repros@31b7a35`](https://github.com/AmanVarshney01/alchemy-v2-beta-repros/tree/31b7a35e66956131d0a81726e032290517f70862)
 
@@ -22,17 +25,18 @@ unless they explicitly say live-reverified. Registry and OAuth observations are 
 
 ## Confirmed defects and publication hazards
 
-| ID  | Finding                                                             | beta.64 status           | Upstream status on 2026-07-26                                                                               | Current handling or required action                                             |
-| --- | ------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| A1  | `StaticSite` serializes unresolved `Output` values before `Build`   | Confirmed                | Still present; fixed by open [#796](https://github.com/alchemy-run/alchemy/pull/796)                        | `outputAwareStaticSite` maps Outputs before serialization                       |
-| A2  | `StaticSite` serializes `Config` values as `{"_id":"Config"}`       | Confirmed                | Still present; fixed by open [#796](https://github.com/alchemy-run/alchemy/pull/796)                        | Resolve Config values inside an `Effect.gen` props builder                      |
-| A3  | `Website.Vite` misses pure-client output                            | Fixed and live-qualified | Released through merged [#795](https://github.com/alchemy-run/alchemy/pull/795)                             | Removed the `StaticSite` fallback; TanStack Router and Solid use `Website.Vite` |
-| A4  | React Router builds a Worker with no registered handler             | Mitigated                | Custom `main`, relative resolution, and loud invalid-handler errors are released; no handler is synthesized | Generate an explicit registered Worker entry                                    |
-| A5  | Default `Command.Build` memo scope misses sibling workspace changes | Confirmed                | Still present; #796 documents explicit external includes                                                    | Generated `StaticSite` builds disable memo reuse                                |
-| A6  | A published test prerelease can satisfy beta caret ranges           | Confirmed                | N/A; npm package deprecated                                                                                 | Pin beta.64 and its Effect peers exactly                                        |
-| A7  | Worker Assets drops `_headers` and `_redirects`                     | Confirmed                | Fixed on main by merged [#928](https://github.com/alchemy-run/alchemy/pull/928), awaiting release           | Do not claim Cloudflare Static Assets rule parity until released and reverified |
-| A8  | Worker Assets assigns incomplete MIME types                         | Confirmed                | Still present; no matching issue or PR found                                                                | Do not claim full static-asset parity                                           |
-| A9  | Published Cloudflare packages have incompatible peer ranges         | Confirmed                | No matching fix found                                                                                       | Accept the non-fatal warning; do not add a template-level transitive override   |
+| ID  | Finding                                                             | Accepted beta.64 status  | Candidate/main status on 2026-07-31                                                                         | Current handling or required action                                                |
+| --- | ------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| A1  | `StaticSite` serializes unresolved `Output` values before `Build`   | Confirmed                | Fixed in beta.66 by merged [#796](https://github.com/alchemy-run/alchemy/pull/796)                          | Keep `outputAwareStaticSite` until an otherwise acceptable release passes its gate |
+| A2  | `StaticSite` serializes `Config` values as `{"_id":"Config"}`       | Confirmed                | Fixed in beta.66 by merged [#796](https://github.com/alchemy-run/alchemy/pull/796)                          | Keep resolving Config values until an otherwise acceptable release passes its gate |
+| A3  | `Website.Vite` misses pure-client output                            | Fixed and live-qualified | Released through merged [#795](https://github.com/alchemy-run/alchemy/pull/795)                             | Removed the `StaticSite` fallback; TanStack Router and Solid use `Website.Vite`    |
+| A4  | React Router builds a Worker with no registered handler             | Mitigated                | Custom `main`, relative resolution, and loud invalid-handler errors are released; no handler is synthesized | Generate an explicit registered Worker entry                                       |
+| A5  | Default `Command.Build` memo scope misses sibling workspace changes | Confirmed                | Still present; #796 documents explicit external includes                                                    | Generated `StaticSite` builds disable memo reuse                                   |
+| A6  | A published test prerelease can satisfy beta caret ranges           | Confirmed                | N/A; npm package deprecated                                                                                 | Pin beta.64 and its Effect peers exactly                                           |
+| A7  | Worker Assets drops `_headers` and `_redirects`                     | Confirmed                | Fixed in beta.66 by merged [#928](https://github.com/alchemy-run/alchemy/pull/928)                          | Reverify the live repro after a replacement release passes the full upgrade gate   |
+| A8  | Worker Assets assigns incomplete MIME types                         | Confirmed                | Still present in beta.66; no matching issue or PR found                                                     | Do not claim full static-asset parity                                              |
+| A9  | Published Cloudflare packages have incompatible peer ranges         | Confirmed                | Still present in beta.66                                                                                    | Accept the non-fatal warning; do not add a template-level transitive override      |
+| A10 | beta.66 local D1 migrations cannot open the Cloudflare runtime      | N/A                      | Reproduced in beta.66; fixed on main by merged [#1009](https://github.com/alchemy-run/alchemy/pull/1009)    | Reject beta.66 and wait for a containing release                                   |
 
 ### A1: `StaticSite` drops deploy-time Outputs
 
@@ -52,17 +56,18 @@ A provider-free plan test against the exact published package observed:
 The canonical live reproduction is
 [`9-output-in-staticsite-build-env`](https://github.com/AmanVarshney01/alchemy-v2-beta-repros/tree/31b7a35e66956131d0a81726e032290517f70862/9-output-in-staticsite-build-env).
 Against beta.61 its build logged `SERVER_URL = <missing>` and the deployed page contained the same
-missing value instead of the yielded API Worker's URL. Open PR #796 adds coverage for Output strings,
-objects, and null values, but remains unreleased.
+missing value instead of the yielded API Worker's URL. Merged PR #796 adds coverage for Output
+strings, objects, and null values and is published in beta.66. Beta.66 is not an acceptable
+replacement dependency because of A10, so the accepted beta.64 template still needs this wrapper.
 
 The current template delegates to upstream `StaticSite` during development and mirrors its
 `Build -> Worker` deploy path with `Output.map` during deployment. Resource identities remain
 `web/Build` and `web/Worker`. This workaround handles the top-level env Outputs used by the
 generated templates; it is not a general recursive Input serializer.
 
-Removal condition: upstream must preserve Output-valued env entries and their dependency edges
-while serializing build env values, and a both-Cloudflare plan/deploy must prove the real server URL
-reaches the frontend build.
+Removal condition: an otherwise acceptable published release must preserve Output-valued env
+entries and their dependency edges while serializing build env values, and a both-Cloudflare
+plan/deploy must prove the real server URL reaches the frontend build.
 
 ### A2: `StaticSite` stringifies Effect Config descriptors
 
@@ -73,8 +78,12 @@ the build subprocess, overriding a valid `process.env.MY_URL`. The runnable repr
 Resolve Config values in an `Effect.gen` props builder and terminate its configuration error channel
 with `Effect.orDie` before passing the props to `StaticSite` or the compatibility wrapper.
 
-Removal condition: a released `StaticSite` must pass the configured string—not the Config
-descriptor—to the build without requiring callers to resolve it manually.
+Beta.66 contains the #796 serializer fix and its direct `Config`/`Output` usage typechecks in fresh
+generated Next and Astro infrastructure. It is not adopted because A10 fails the same release's D1
+gate.
+
+Removal condition: an otherwise acceptable released `StaticSite` must pass the configured
+string—not the Config descriptor—to the build without requiring callers to resolve it manually.
 
 ### A3: `Website.Vite` misses pure-client output
 
@@ -162,10 +171,10 @@ redirect. Its owned Worker stage was destroyed after verification.
 
 Merged [Alchemy PR #928](https://github.com/alchemy-run/alchemy/pull/928) now forwards both files in
 production and development, preserves them on a no-op/keep-assets deployment, and adds live HTTP
-coverage for create and update behavior. It landed after beta.64, so there is still no released
-Better-T-Stack dependency that restores arbitrary user/framework asset rules. Closure condition: a
-published Alchemy release must contain #928 and the canonical live repro must pass against that
-exact release before static-asset rule parity is claimed.
+coverage for create and update behavior. Beta.66 contains the fix, but that release is rejected by
+the D1 gate in A10. Closure condition: an accepted Alchemy release must contain #928 and the
+canonical live repro must pass against that exact release before static-asset rule parity is
+claimed.
 
 ### A8: Worker Assets assigns incomplete MIME types
 
@@ -177,7 +186,7 @@ The live
 [`11-assets-mime-types`](https://github.com/AmanVarshney01/alchemy-v2-beta-repros/tree/31b7a35e66956131d0a81726e032290517f70862/11-assets-mime-types)
 reproduction observed `application/octet-stream` for `.avif`, `.jpg`, `.webp`, and `.woff2` on
 beta.61. Its owned Worker stage was destroyed after verification. Source inspection confirms the
-same fallback remains in beta.64 and inspected main.
+same fallback remains in beta.64 and beta.66 source.
 
 There is no generic Better-T-Stack workaround at the uploader boundary. Closure condition: a
 published Alchemy release must use a complete, charset-aware MIME resolver and the live fixture must
@@ -197,6 +206,32 @@ This mismatch is wholly inside Alchemy's published dependency graph. Better-T-St
 override the transitive Distilled packages independently because that can split the runtime/plugin
 protocol. Closure condition: an Alchemy release must consume Cloudflare packages whose dependency
 and peer ranges agree, and fresh generated installs must complete without this warning.
+
+Beta.66 updates the graph to `@distilled.cloud/cloudflare@0.30.3` with runtime and Vite plugin
+`0.15.0`; those packages still declare the incompatible `^0.29.0` peer range.
+
+### A10: beta.66 local D1 migrations cannot open the runtime
+
+Alchemy beta.66 moved Cloudflare providers behind an RPC provider proxy, but its local D1 migration
+path still opens `cloudflare-runtime/Runtime` in the main process. A generated Prisma D1 project
+with a real nested migration reached D1 creation and then failed in `alchemy dev` with:
+
+```text
+Service not found: cloudflare-runtime/Runtime
+```
+
+The same generated D1 resource succeeds when its migrations directory contains no SQL file, which
+is why generation, typechecking, or an empty-directory smoke test does not catch this regression.
+Merged [Alchemy PR #1009](https://github.com/alchemy-run/alchemy/pull/1009) provides the runtime for
+local D1 migrations on main at commit
+[`5001713`](https://github.com/alchemy-run/alchemy/commit/5001713c5f9355a0a1d0999477a5949867e4f459),
+after the beta.66 tag.
+
+There is no Better-T-Stack workaround: removing `migrationsDir` would silently stop Alchemy from
+applying production migrations, while using a git SHA or mixing Alchemy versions would violate the
+accepted exact-release policy. Beta.66 is therefore rejected. Closure condition: publish a release
+containing #1009, then pass local nested Prisma and Drizzle migration gates before reconsidering the
+A1/A2/A7 cleanup available in beta.66.
 
 ## Current limitations, not confirmed upstream defects
 
