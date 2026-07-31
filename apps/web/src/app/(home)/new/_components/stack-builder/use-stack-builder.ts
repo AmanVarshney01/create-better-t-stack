@@ -55,13 +55,40 @@ export function getCompatibilityAdjustmentState(
   };
 }
 
+export function getLatestCompatibilityAdjustment(stack: StackState): Partial<StackState> {
+  return analyzeStackCompatibility(stack).adjustedStack ?? {};
+}
+
+export function getSelectedTechRemovalUpdate(
+  stack: StackState,
+  category: TechCategory,
+  techId: string,
+): Partial<StackState> {
+  const effectiveStack = analyzeStackCompatibility(stack).adjustedStack ?? stack;
+  const categoryKey = category as keyof StackState;
+  const value = effectiveStack[categoryKey];
+  const options = TECH_OPTIONS[category] || [];
+  const hasNoneOption = options.some((option) => option.id === "none");
+  const forceNoneFallback = category === "addons" || category === "examples";
+
+  if (Array.isArray(value)) {
+    const next = value.filter((id) => id !== techId);
+    const fallback = next.length === 0 && (hasNoneOption || forceNoneFallback) ? ["none"] : next;
+    return { [categoryKey]: fallback } as Partial<StackState>;
+  }
+
+  if (value === techId && hasNoneOption) {
+    return { [categoryKey]: "none" } as Partial<StackState>;
+  }
+
+  return {};
+}
+
 export function useStackBuilder() {
   const [stack, setStack, viewMode, setViewMode, selectedFile, setSelectedFile] = useStackState();
 
-  const [command, setCommand] = useState("");
   const [copied, setCopied] = useState(false);
   const [lastSavedStack, setLastSavedStack] = useState<StackState | null>(null);
-  const [, setLastChanges] = useState<Array<{ category: string; message: string }>>([]);
   const [mobileTab, setMobileTab] = useState<MobileTab>("build");
 
   const contentRef = useRef<HTMLDivElement | null>(null);
@@ -105,33 +132,31 @@ export function useStackBuilder() {
       adjustedStack,
     );
 
-    if (!shouldApply) {
+    if (!adjustedStack || !shouldApply) {
       lastAppliedAdjustmentKey.current = adjustmentKey;
       return;
     }
 
-    startTransition(() => {
-      if (compatibilityAnalysis.changes.length === 1) {
-        toast.info(compatibilityAnalysis.changes[0].message, { duration: 4000 });
-      }
+    lastAppliedAdjustmentKey.current = adjustmentKey;
 
-      if (compatibilityAnalysis.changes.length > 1) {
-        const message = `${compatibilityAnalysis.changes.length} compatibility adjustments made:\n${compatibilityAnalysis.changes
-          .map((change) => `• ${change.message}`)
-          .join("\n")}`;
+    if (compatibilityAnalysis.changes.length === 1) {
+      toast.info(compatibilityAnalysis.changes[0].message, { duration: 4000 });
+    }
 
-        toast.info(message, { duration: 5000 });
-      }
+    if (compatibilityAnalysis.changes.length > 1) {
+      const message = `${compatibilityAnalysis.changes.length} compatibility adjustments made:\n${compatibilityAnalysis.changes
+        .map((change) => `• ${change.message}`)
+        .join("\n")}`;
 
-      setLastChanges(compatibilityAnalysis.changes);
-      setStack(adjustedStack!);
-      lastAppliedAdjustmentKey.current = adjustmentKey;
-    });
+      toast.info(message, { duration: 5000 });
+    }
+
+    void setStack((currentStack) => getLatestCompatibilityAdjustment(currentStack));
   }, [stack, compatibilityAnalysis.adjustedStack, compatibilityAnalysis.changes, setStack]);
 
-  useEffect(() => {
+  const command = useMemo(() => {
     const stackToUse = compatibilityAnalysis.adjustedStack || stack;
-    setCommand(generateStackCommand(withFormattedProjectName(stackToUse)));
+    return generateStackCommand(withFormattedProjectName(stackToUse));
   }, [stack, compatibilityAnalysis.adjustedStack]);
 
   const categoryProgress = useMemo<Array<CategoryProgressItem>>(() => {
@@ -311,26 +336,9 @@ export function useStackBuilder() {
   }
 
   function removeSelectedTech(category: TechCategory, techId: string) {
-    const categoryKey = category as keyof StackState;
-    const value = stack[categoryKey];
-    const options = TECH_OPTIONS[category] || [];
-    const hasNoneOption = options.some((option) => option.id === "none");
-    const forceNoneFallback = category === "addons" || category === "examples";
-
-    if (Array.isArray(value)) {
-      const next = value.filter((id) => id !== techId);
-      const fallback = next.length === 0 && (hasNoneOption || forceNoneFallback) ? ["none"] : next;
-      startTransition(() => {
-        setStack({ [categoryKey]: fallback } as Partial<StackState>);
-      });
-      return;
-    }
-
-    if (value === techId && hasNoneOption) {
-      startTransition(() => {
-        setStack({ [categoryKey]: "none" } as Partial<StackState>);
-      });
-    }
+    startTransition(() => {
+      setStack((currentStack) => getSelectedTechRemovalUpdate(currentStack, category, techId));
+    });
   }
 
   async function copyToClipboard() {

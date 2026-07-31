@@ -3,6 +3,8 @@ import { describe, expect, test } from "bun:test";
 import {
   getCompatibilityAdjustmentKey,
   getCompatibilityAdjustmentState,
+  getLatestCompatibilityAdjustment,
+  getSelectedTechRemovalUpdate,
 } from "../src/app/(home)/new/_components/stack-builder/use-stack-builder";
 import {
   analyzeStackCompatibility,
@@ -233,6 +235,43 @@ describe("stack builder D1 compatibility", () => {
     expect(command).toContain("--frontend next native-bare");
     expect(command).toContain("--backend convex");
     expect(command).toContain("--payments polar");
+  });
+
+  test("keeps Expo selected when Nuxt switches the API to oRPC", () => {
+    const staleStack = createStack({
+      webFrontend: ["nuxt"],
+      nativeFrontend: ["none"],
+      api: "trpc",
+    });
+    const latestStack = createStack({
+      webFrontend: ["nuxt"],
+      nativeFrontend: ["native-bare"],
+      api: "trpc",
+    });
+
+    const staleAdjustment = analyzeStackCompatibility(staleStack).adjustedStack;
+    const latestAdjustment = getLatestCompatibilityAdjustment(latestStack);
+    const adjustedStack = { ...latestStack, ...latestAdjustment };
+
+    expect(staleAdjustment?.nativeFrontend).toEqual(["none"]);
+    expect(adjustedStack).toMatchObject({
+      webFrontend: ["nuxt"],
+      nativeFrontend: ["native-bare"],
+      api: "orpc",
+    });
+    expect(getDisabledReason(adjustedStack, "nativeFrontend", "native-bare")).toBeNull();
+    expect(generateStackCommand(adjustedStack)).toContain("--frontend nuxt native-bare");
+  });
+
+  test("removes a compatibility-adjusted badge against the effective stack", () => {
+    const rawStack = createStack({
+      webFrontend: ["nuxt"],
+      nativeFrontend: ["native-bare"],
+      api: "trpc",
+    });
+
+    expect(analyzeStackCompatibility(rawStack).adjustedStack?.api).toBe("orpc");
+    expect(getSelectedTechRemovalUpdate(rawStack, "api", "orpc")).toEqual({ api: "none" });
   });
 
   test("blocks the AI example for Astro frontends", () => {
