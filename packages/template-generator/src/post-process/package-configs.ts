@@ -225,7 +225,7 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   if (config.api === "orpc" && config.frontend.includes("nuxt")) {
     pkgJson.overrides = {
       ...pkgJson.overrides,
-      "@vue/devtools-api": "^8.0.7",
+      "@vue/devtools-api": "^8.2.1",
     };
   }
 

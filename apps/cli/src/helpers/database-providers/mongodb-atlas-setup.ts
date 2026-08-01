@@ -57,7 +57,7 @@ async function initMongoDBAtlas(
 
   const deployResult = await Result.tryPromise({
     try: async () => {
-      await $({ cwd: serverDir, stdio: "inherit" })`atlas deployments setup`;
+      await $({ cwd: serverDir, stdio: "inherit" })`atlas setup`;
       cliLog.success("MongoDB Atlas deployment ready");
     },
     catch: (e) =>
@@ -128,7 +128,7 @@ ${pc.green("MongoDB Atlas Manual Setup Instructions:")}
    ${pc.blue("https://www.mongodb.com/docs/atlas/cli/stable/install-atlas-cli/")}
 
 2. Run the following command and follow the prompts:
-   ${pc.blue("atlas deployments setup")}
+   ${pc.blue("atlas setup")}
 
 3. Get your connection string from the Atlas dashboard:
    Format: ${pc.dim("mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/DATABASE_NAME")}

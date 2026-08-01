@@ -21,7 +21,8 @@ type FumadocsTemplate =
   | "react-router"
   | "react-router-spa"
   | "tanstack-start"
-  | "tanstack-start-spa";
+  | "tanstack-start-spa"
+  | "astro";
 
 type FumadocsSearch = "orama" | "orama-cloud";
 type FumadocsOgImage = "next-og" | "takumi";
@@ -59,6 +60,10 @@ const TEMPLATES = {
     label: "Tanstack Start SPA: Fumadocs MDX (not RSC)",
     hint: "SPA mode allows you to host the site statically, compatible with a CDN.",
     value: "tanstack-start-spa",
+  },
+  astro: {
+    label: "Astro: Fumadocs MDX",
+    value: "astro",
   },
 } as const;
 

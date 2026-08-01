@@ -11,6 +11,7 @@ import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
 import { cliLog, createSpinner } from "../../utils/terminal-output";
+import { supportsEvlogLocalLogs } from "./evlog-setup";
 
 type SkillSource = {
   label: string;
@@ -19,6 +20,7 @@ type SkillSource = {
 type AgentOption = {
   value: SkillAgent;
   label: string;
+  hint?: string;
 };
 
 type SkillsOptions = NonNullable<AddonOptions["skills"]>;
@@ -91,37 +93,134 @@ const SKILL_SOURCES = {
 
 type SourceKey = keyof typeof SKILL_SOURCES;
 
-// All available agents from add-skill CLI
-const AVAILABLE_AGENTS: AgentOption[] = [
-  { value: "cursor", label: "Cursor" },
+const SKILLS_CLI_AGENT_OPTIONS: AgentOption[] = [
+  { value: "adal", label: "AdaL" },
+  { value: "aider-desk", label: "AiderDesk" },
+  { value: "amp", label: "Amp" },
+  { value: "antigravity", label: "Antigravity" },
+  { value: "antigravity-cli", label: "Antigravity CLI" },
+  { value: "astrbot", label: "AstrBot" },
+  { value: "augment", label: "Augment" },
+  { value: "autohand-code", label: "Autohand Code CLI" },
+  { value: "bob", label: "IBM Bob" },
   { value: "claude-code", label: "Claude Code" },
   { value: "cline", label: "Cline" },
-  { value: "github-copilot", label: "GitHub Copilot" },
+  { value: "codearts-agent", label: "CodeArts Agent" },
+  { value: "codebuddy", label: "CodeBuddy" },
+  { value: "codemaker", label: "Codemaker" },
+  { value: "codestudio", label: "Code Studio" },
   { value: "codex", label: "Codex" },
-  { value: "opencode", label: "OpenCode" },
-  { value: "windsurf", label: "Windsurf" },
-  { value: "goose", label: "Goose" },
-  { value: "roo", label: "Roo Code" },
-  { value: "kilo", label: "Kilo Code" },
-  { value: "gemini-cli", label: "Gemini CLI" },
-  { value: "antigravity", label: "Antigravity" },
-  { value: "openhands", label: "OpenHands" },
-  { value: "trae", label: "Trae" },
-  { value: "amp", label: "Amp" },
-  { value: "pi", label: "Pi" },
-  { value: "qoder", label: "Qoder" },
-  { value: "qwen-code", label: "Qwen Code" },
-  { value: "kiro-cli", label: "Kiro CLI" },
-  { value: "droid", label: "Droid" },
   { value: "command-code", label: "Command Code" },
-  { value: "clawdbot", label: "Clawdbot" },
-  { value: "zencoder", label: "Zencoder" },
-  { value: "neovate", label: "Neovate" },
+  { value: "continue", label: "Continue" },
+  { value: "cortex", label: "Cortex Code" },
+  { value: "crush", label: "Crush" },
+  { value: "cursor", label: "Cursor" },
+  { value: "deepagents", label: "Deep Agents" },
+  { value: "devin", label: "Devin for Terminal" },
+  { value: "dexto", label: "Dexto" },
+  { value: "droid", label: "Droid" },
+  { value: "eve", label: "Eve" },
+  { value: "firebender", label: "Firebender" },
+  { value: "forgecode", label: "ForgeCode" },
+  { value: "gemini-cli", label: "Gemini CLI" },
+  { value: "github-copilot", label: "GitHub Copilot" },
+  { value: "goose", label: "Goose" },
+  { value: "grok", label: "Grok Build" },
+  { value: "hermes-agent", label: "Hermes Agent" },
+  { value: "iflow-cli", label: "iFlow CLI" },
+  { value: "inference-sh", label: "inference.sh" },
+  { value: "jazz", label: "Jazz" },
+  { value: "junie", label: "Junie" },
+  { value: "kilo", label: "Kilo Code" },
+  { value: "kimchi", label: "Kimchi" },
+  { value: "kimi-code-cli", label: "Kimi Code CLI" },
+  { value: "kiro-cli", label: "Kiro CLI" },
+  { value: "kode", label: "Kode" },
+  { value: "lingma", label: "Lingma" },
+  { value: "loaf", label: "Loaf" },
   { value: "mcpjam", label: "MCPJam" },
+  { value: "mistral-vibe", label: "Mistral Vibe" },
+  { value: "moxby", label: "Moxby" },
+  { value: "mux", label: "Mux" },
+  { value: "neovate", label: "Neovate" },
+  { value: "ona", label: "Ona" },
+  { value: "openclaw", label: "OpenClaw" },
+  { value: "opencode", label: "OpenCode" },
+  { value: "openhands", label: "OpenHands" },
+  { value: "pi", label: "Pi" },
+  { value: "pochi", label: "Pochi" },
+  { value: "promptscript", label: "PromptScript" },
+  { value: "qoder", label: "Qoder" },
+  { value: "qoder-cn", label: "Qoder CN" },
+  { value: "qwen-code", label: "Qwen Code" },
+  { value: "reasonix", label: "Reasonix" },
+  { value: "replit", label: "Replit" },
+  { value: "roo", label: "Roo Code" },
+  { value: "rovodev", label: "Rovo Dev" },
+  { value: "tabnine-cli", label: "Tabnine CLI" },
+  { value: "terramind", label: "Terramind" },
+  { value: "tinycloud", label: "Tinycloud" },
+  { value: "trae", label: "Trae" },
+  { value: "trae-cn", label: "Trae CN" },
+  { value: "universal", label: "Universal" },
+  { value: "warp", label: "Warp" },
+  { value: "windsurf", label: "Windsurf" },
+  { value: "zcode", label: "ZCode" },
+  { value: "zed", label: "Zed" },
+  { value: "zencoder", label: "Zencoder" },
+  { value: "zenflow", label: "Zenflow" },
 ];
 
+export const UNIVERSAL_SKILLS_AGENTS = [
+  "amp",
+  "antigravity",
+  "antigravity-cli",
+  "cline",
+  "codex",
+  "cursor",
+  "deepagents",
+  "dexto",
+  "firebender",
+  "gemini-cli",
+  "github-copilot",
+  "kimi-code-cli",
+  "loaf",
+  "opencode",
+  "promptscript",
+  "warp",
+  "zed",
+] as const satisfies readonly SkillAgent[];
+
+const PROMPT_HIDDEN_AGENTS = new Set<SkillAgent>([
+  ...UNIVERSAL_SKILLS_AGENTS,
+  "universal",
+  "eve",
+  "replit",
+]);
+
+export const SKILLS_AGENT_PROMPT_OPTIONS: AgentOption[] = [
+  {
+    value: "universal",
+    label: "Universal (.agents/skills)",
+    hint: "17 agents including Amp, Antigravity, Cline, Codex, Cursor, Gemini CLI, Copilot, OpenCode, Warp, and Zed",
+  },
+  ...SKILLS_CLI_AGENT_OPTIONS.filter(({ value }) => value === "claude-code"),
+  ...SKILLS_CLI_AGENT_OPTIONS.filter(
+    ({ value }) => value !== "claude-code" && !PROMPT_HIDDEN_AGENTS.has(value),
+  ),
+];
+
+export function expandSkillsAgentTargets(agents: readonly SkillAgent[]): SkillAgent[] {
+  const expanded = agents.flatMap((agent) => {
+    if (agent === "universal") return [...UNIVERSAL_SKILLS_AGENTS];
+    if (agent === "clawdbot") return ["openclaw"];
+    return [agent];
+  });
+  return Array.from(new Set(expanded));
+}
+
 const DEFAULT_SCOPE: InstallScope = "project";
-const DEFAULT_AGENTS: SkillAgent[] = ["cursor", "claude-code", "github-copilot"];
+const DEFAULT_AGENTS: SkillAgent[] = ["universal", "claude-code"];
 
 function hasReactBasedFrontend(frontend: ProjectConfig["frontend"]): boolean {
   return (
@@ -331,7 +430,11 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
   ],
   "msmps/opentui-skill": () => ["opentui"],
   "haydenbleasel/ultracite": () => ["ultracite"],
-  "https://www.evlog.dev": () => ["review-logging-patterns", "analyze-logs"],
+  "https://www.evlog.dev": (config) => [
+    "review-logging-patterns",
+    "build-audit-logs",
+    ...(supportsEvlogLocalLogs(config) ? ["analyze-logs"] : []),
+  ],
 };
 
 function getCuratedSkillNamesForSourceKey(sourceKey: SourceKey, config: ProjectConfig): string[] {
@@ -450,9 +553,10 @@ export async function setupSkills(
         if (configuredAgents !== undefined) return [...configuredAgents];
         return navigableMultiselect<SkillAgent>({
           message: "Select agents to install skills to",
-          options: AVAILABLE_AGENTS,
+          options: SKILLS_AGENT_PROMPT_OPTIONS,
           required: false,
           initialValues: [...DEFAULT_AGENTS],
+          maxItems: 10,
         });
       },
     });
@@ -489,6 +593,7 @@ export async function setupSkills(
 
   const runner = getPackageRunnerPrefix(packageManager);
   const globalFlags = scope === "global" ? ["-g"] : [];
+  const agentTargets = expandSkillsAgentTargets(selectedAgents);
 
   // Install skills grouped by source (project scope, no -g flag)
   for (const [source, skills] of Object.entries(skillsBySource)) {
@@ -503,7 +608,7 @@ export async function setupSkills(
           "--skill",
           ...skills,
           "--agent",
-          ...selectedAgents,
+          ...agentTargets,
           "-y",
         ];
         await $({ cwd: projectDir, env: { CI: "true" } })`${args}`;

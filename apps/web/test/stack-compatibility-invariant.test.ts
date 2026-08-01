@@ -1,15 +1,34 @@
 import { describe, expect, test } from "bun:test";
 
+import type { CLIInput, ProjectConfig } from "../../cli/src/types";
+import { validateFullConfig } from "../../cli/src/utils/config-validation";
 import {
-  analyzeStackCompatibility,
-  getDisabledReason,
-} from "../src/app/(home)/new/_components/utils";
+  applyStackUpdate,
+  getTechSelectionUpdate,
+  resolveStackCompatibility,
+} from "../src/app/(home)/new/_components/stack-builder/use-stack-builder";
+import { getDisabledReason } from "../src/app/(home)/new/_components/utils";
 import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "../src/lib/constant";
 import { sanitizeStackState } from "../src/lib/sanitize-stack-addons";
 import type { TechCategory } from "../src/lib/types";
 
-const MAX_ADJUST_PASSES = 10;
-const RANDOM_STACK_COUNT = 3000;
+const RANDOM_STACK_COUNT = 25_000;
+const TRANSITION_SEED_COUNT = 1000;
+const CLI_STACK_FLAGS = new Set([
+  "database",
+  "orm",
+  "backend",
+  "runtime",
+  "frontend",
+  "addons",
+  "examples",
+  "auth",
+  "dbSetup",
+  "payments",
+  "api",
+  "webDeploy",
+  "serverDeploy",
+]);
 
 function mulberry32(seed: number) {
   let a = seed;
@@ -58,18 +77,6 @@ function randomStack(rand: () => number): StackState {
   });
 }
 
-function adjustToFixpoint(stack: StackState) {
-  let current = stack;
-  for (let pass = 0; pass < MAX_ADJUST_PASSES; pass++) {
-    const result = analyzeStackCompatibility(current);
-    if (!result.adjustedStack) {
-      return { stack: current, converged: true, passes: pass };
-    }
-    current = sanitizeStackState(result.adjustedStack);
-  }
-  return { stack: current, converged: false, passes: MAX_ADJUST_PASSES };
-}
-
 function selectedEntries(stack: StackState): Array<{ category: TechCategory; id: string }> {
   const entries: Array<{ category: TechCategory; id: string }> = [];
   for (const category of Object.keys(TECH_OPTIONS) as TechCategory[]) {
@@ -85,30 +92,127 @@ function selectedEntries(stack: StackState): Array<{ category: TechCategory; id:
   return entries;
 }
 
+function toCliConfig(stack: StackState): ProjectConfig {
+  const combinedFrontends = [...stack.webFrontend, ...stack.nativeFrontend].filter(
+    (frontend) => frontend !== "none",
+  );
+
+  return {
+    projectName: stack.projectName ?? "invariant-test",
+    projectDir: "/virtual/invariant-test",
+    relativePath: "invariant-test",
+    database: stack.database,
+    orm: stack.orm,
+    backend: stack.backend.startsWith("self-") ? "self" : stack.backend,
+    runtime: stack.runtime,
+    frontend: combinedFrontends.length > 0 ? combinedFrontends : ["none"],
+    addons: stack.addons,
+    examples: stack.examples,
+    auth: stack.auth,
+    payments: stack.payments,
+    git: stack.git === "true",
+    packageManager: stack.packageManager,
+    install: stack.install === "true",
+    dbSetup: stack.dbSetup,
+    api: stack.api,
+    webDeploy: stack.webDeploy,
+    serverDeploy: stack.serverDeploy,
+  } as ProjectConfig;
+}
+
+function getCliCompatibilityError(stack: StackState): string | null {
+  const config = toCliConfig(stack);
+  const result = validateFullConfig(config, CLI_STACK_FLAGS, config as CLIInput);
+  return result.isErr() ? result.error.message : null;
+}
+
+function getResolvedSelectionErrors(stack: StackState): string[] {
+  const errors: string[] = [];
+
+  for (const { category, id } of selectedEntries(stack)) {
+    const reason = getDisabledReason(stack, category, id);
+    if (reason) {
+      errors.push(`${category}=${id} is disabled: ${reason}`);
+    }
+  }
+
+  const cliError = getCliCompatibilityError(stack);
+  if (cliError) {
+    errors.push(`CLI rejected generated stack: ${cliError}`);
+  }
+
+  return errors;
+}
+
 describe("compatibility adjustment invariants", () => {
+  test("exposes exactly the ORM choices offered by the CLI for every database", () => {
+    const expectedOrmChoices: Record<string, string[]> = {
+      none: ["none"],
+      sqlite: ["drizzle", "prisma"],
+      postgres: ["drizzle", "prisma"],
+      mysql: ["drizzle", "prisma"],
+      mongodb: ["prisma", "mongoose"],
+    };
+
+    for (const database of TECH_OPTIONS.database.map((option) => option.id)) {
+      const stack = applyStackUpdate(DEFAULT_STACK, { database }).stack;
+      const enabledOrms = TECH_OPTIONS.orm
+        .map((option) => option.id)
+        .filter((orm) => !getDisabledReason(stack, "orm", orm));
+
+      expect(enabledOrms).toEqual(expectedOrmChoices[database]);
+    }
+  });
+
   test("random stacks converge and contain no disabled selections after adjustment", () => {
     const rand = mulberry32(0xbe77e12);
     const failures: string[] = [];
 
     for (let i = 0; i < RANDOM_STACK_COUNT; i++) {
       const initial = randomStack(rand);
-      const { stack, converged } = adjustToFixpoint(initial);
+      const resolution = resolveStackCompatibility(initial);
+      const unresolvedAdjustment = resolveStackCompatibility(resolution.stack).adjustedStack;
 
-      if (!converged) {
+      if (unresolvedAdjustment) {
         failures.push(`did not converge: ${JSON.stringify(initial)}`);
-        continue;
       }
 
-      for (const { category, id } of selectedEntries(stack)) {
-        const reason = getDisabledReason(stack, category, id);
-        if (reason) {
-          failures.push(
-            `${category}=${id} disabled after adjust ("${reason}") for ${JSON.stringify(initial)}`,
+      for (const error of getResolvedSelectionErrors(resolution.stack)) {
+        failures.push(`${error} for ${JSON.stringify(initial)}`);
+      }
+    }
+
+    expect(failures.slice(0, 5)).toEqual([]);
+    expect(failures.length).toBe(0);
+  });
+
+  test("every stack-builder option stays valid across representative state transitions", () => {
+    const rand = mulberry32(0x51acced);
+    const failures: string[] = [];
+    let transitionsChecked = 0;
+
+    for (let i = 0; i < TRANSITION_SEED_COUNT; i++) {
+      const baseStack = resolveStackCompatibility(randomStack(rand)).stack;
+
+      for (const category of Object.keys(TECH_OPTIONS) as TechCategory[]) {
+        for (const option of TECH_OPTIONS[category]) {
+          if (getDisabledReason(baseStack, category, option.id)) {
+            continue;
+          }
+
+          const resolution = applyStackUpdate(baseStack, (currentStack) =>
+            getTechSelectionUpdate(currentStack, category, option.id),
           );
+          transitionsChecked++;
+
+          for (const error of getResolvedSelectionErrors(resolution.stack)) {
+            failures.push(`${category}=${option.id}: ${error} from ${JSON.stringify(baseStack)}`);
+          }
         }
       }
     }
 
+    expect(transitionsChecked).toBeGreaterThan(20_000);
     expect(failures.slice(0, 5)).toEqual([]);
     expect(failures.length).toBe(0);
   });
@@ -122,8 +226,7 @@ describe("compatibility adjustment invariants", () => {
       addons: ["tauri", "turborepo"],
     });
 
-    const { stack: adjusted, converged } = adjustToFixpoint(stack);
-    expect(converged).toBe(true);
+    const adjusted = resolveStackCompatibility(stack).stack;
     expect(adjusted.addons).not.toContain("tauri");
     expect(getDisabledReason(adjusted, "addons", "tauri")).toBe(
       "Tauri isn't compatible with Convex Better Auth on Next.js or TanStack Start",

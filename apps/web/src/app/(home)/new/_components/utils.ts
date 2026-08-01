@@ -50,6 +50,7 @@ const clerkBackendRequirementMessage =
   "Clerk requires Convex, Hono, Express, Fastify, Elysia, or Next.js/TanStack Start fullstack backend";
 const clerkFrontendRequirementMessage =
   "Clerk requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
+const clerkIncompatibleWebFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
 const convexBetterAuthSupportedWebFrontends = [
   "react-router",
   "tanstack-router",
@@ -61,6 +62,9 @@ const convexBetterAuthSupportedNativeFrontends = [
   "native-uniwind",
   "native-unistyles",
 ] as const;
+const convexBetterAuthIncompatibleWebFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
+const staticDesktopAddons = ["tauri", "electrobun"] as const;
+const dockerServerOutputFrontends = ["next", "svelte", "astro", "react-router"] as const;
 
 const hasConvexBetterAuthCompatibleFrontend = (webFrontend: string[], nativeFrontend: string[]) =>
   webFrontend.some((f) =>
@@ -74,6 +78,20 @@ const hasConvexBetterAuthCompatibleFrontend = (webFrontend: string[], nativeFron
     ),
   );
 
+const hasConvexBetterAuthIncompatibleFrontend = (webFrontend: string[]) =>
+  webFrontend.some((frontend) =>
+    convexBetterAuthIncompatibleWebFrontends.includes(
+      frontend as (typeof convexBetterAuthIncompatibleWebFrontends)[number],
+    ),
+  );
+
+const isConvexBetterAuthFrontendSelectionCompatible = (
+  webFrontend: string[],
+  nativeFrontend: string[],
+) =>
+  !hasConvexBetterAuthIncompatibleFrontend(webFrontend) &&
+  hasConvexBetterAuthCompatibleFrontend(webFrontend, nativeFrontend);
+
 const convexBetterAuthFrontendRequirementMessage =
   "Better-Auth with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
 
@@ -82,6 +100,17 @@ export const hasClerkCompatibleFrontend = (webFrontend: string[], nativeFrontend
     ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
   ) ||
   nativeFrontend.some((f) => ["native-bare", "native-uniwind", "native-unistyles"].includes(f));
+
+const hasClerkIncompatibleFrontend = (webFrontend: string[]) =>
+  webFrontend.some((frontend) =>
+    clerkIncompatibleWebFrontends.includes(
+      frontend as (typeof clerkIncompatibleWebFrontends)[number],
+    ),
+  );
+
+const isClerkFrontendSelectionCompatible = (webFrontend: string[], nativeFrontend: string[]) =>
+  !hasClerkIncompatibleFrontend(webFrontend) &&
+  hasClerkCompatibleFrontend(webFrontend, nativeFrontend);
 
 export const hasClerkCompatibleBackend = (backend: string) =>
   clerkSupportedBackends.includes(backend as (typeof clerkSupportedBackends)[number]);
@@ -102,6 +131,32 @@ export const hasElectrobunCompatibleFrontend = (webFrontend: string[], backend =
 
 export const hasEvlogCompatibleBackend = (backend: string) =>
   ["hono", "express", "fastify", "elysia", ...selfHostedFullstackBackends].includes(backend);
+
+const getDockerDesktopConflict = (
+  addons: string[],
+  webFrontend: string[],
+  backend: string,
+  auth: string,
+) => {
+  const selectedDesktopAddons = addons.filter((addon) =>
+    staticDesktopAddons.includes(addon as (typeof staticDesktopAddons)[number]),
+  );
+  const affectedFrontend = webFrontend.find((frontend) =>
+    dockerServerOutputFrontends.includes(frontend as (typeof dockerServerOutputFrontends)[number]),
+  );
+
+  if (selectedDesktopAddons.length === 0 || !affectedFrontend) {
+    return null;
+  }
+
+  const keepsServerOutput =
+    affectedFrontend === "next" &&
+    !selectedDesktopAddons.includes("tauri") &&
+    backend === "convex" &&
+    auth === "better-auth";
+
+  return keepsServerOutput ? null : { affectedFrontend, selectedDesktopAddons };
+};
 
 // Mirrors the CLI rule: Tauri static exports can't bundle Convex Better Auth on these frontends
 const tauriStaticExportFrontends = ["next", "tanstack-start"] as const;
@@ -203,7 +258,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
     // Auth constraints for Convex
     if (nextStack.auth === "clerk") {
-      if (!hasClerkCompatibleFrontend(nextStack.webFrontend, nextStack.nativeFrontend)) {
+      if (!isClerkFrontendSelectionCompatible(nextStack.webFrontend, nextStack.nativeFrontend)) {
         nextStack.auth = "none";
         changed = true;
         changes.push({
@@ -214,7 +269,12 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     }
 
     if (nextStack.auth === "better-auth") {
-      if (!hasConvexBetterAuthCompatibleFrontend(nextStack.webFrontend, nextStack.nativeFrontend)) {
+      if (
+        !isConvexBetterAuthFrontendSelectionCompatible(
+          nextStack.webFrontend,
+          nextStack.nativeFrontend,
+        )
+      ) {
         nextStack.auth = "none";
         changed = true;
         changes.push({
@@ -601,7 +661,9 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         category: "auth",
         message: `Auth set to 'None' (${clerkBackendRequirementMessage})`,
       });
-    } else if (!hasClerkCompatibleFrontend(nextStack.webFrontend, nextStack.nativeFrontend)) {
+    } else if (
+      !isClerkFrontendSelectionCompatible(nextStack.webFrontend, nextStack.nativeFrontend)
+    ) {
       nextStack.auth = "none";
       changed = true;
       changes.push({
@@ -678,6 +740,23 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         : "Electrobun removed (requires compatible frontend)",
     });
   }
+  if (nextStack.auth === "clerk" && nextStack.webFrontend.includes("react-router")) {
+    const incompatibleDesktopAddons = nextStack.addons.filter((addon) =>
+      staticDesktopAddons.includes(addon as (typeof staticDesktopAddons)[number]),
+    );
+
+    if (incompatibleDesktopAddons.length > 0) {
+      nextStack.addons = nextStack.addons.filter(
+        (addon) => !incompatibleDesktopAddons.includes(addon),
+      );
+      if (nextStack.addons.length === 0) nextStack.addons = ["none"];
+      changed = true;
+      changes.push({
+        category: "addons",
+        message: `${incompatibleDesktopAddons.join(" and ")} removed (Clerk on React Router requires SSR middleware)`,
+      });
+    }
+  }
   if (!evlogCompat && nextStack.addons.includes("evlog")) {
     nextStack.addons = nextStack.addons.filter((a) => a !== "evlog");
     if (nextStack.addons.length === 0) nextStack.addons = ["none"];
@@ -742,6 +821,24 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     nextStack.webDeploy = "none";
     changed = true;
     changes.push({ category: "webDeploy", message: "Web deploy set to 'None' (no web frontend)" });
+  }
+
+  if (nextStack.webDeploy === "docker") {
+    const dockerDesktopConflict = getDockerDesktopConflict(
+      nextStack.addons,
+      nextStack.webFrontend,
+      nextStack.backend,
+      nextStack.auth,
+    );
+
+    if (dockerDesktopConflict) {
+      nextStack.webDeploy = "none";
+      changed = true;
+      changes.push({
+        category: "webDeploy",
+        message: `Web deploy set to 'None' (${dockerDesktopConflict.selectedDesktopAddons.join(" and ")} requires a static ${dockerDesktopConflict.affectedFrontend} build)`,
+      });
+    }
   }
 
   // Server deploy constraints
@@ -831,7 +928,7 @@ export const getDisabledReason = (
     }
     if (category === "auth" && optionId === "better-auth") {
       if (
-        !hasConvexBetterAuthCompatibleFrontend(
+        !isConvexBetterAuthFrontendSelectionCompatible(
           currentStack.webFrontend,
           currentStack.nativeFrontend,
         )
@@ -1027,15 +1124,16 @@ export const getDisabledReason = (
   // ORM CONSTRAINTS
   // ============================================
   if (category === "orm") {
+    if (currentStack.database === "none" && optionId !== "none") {
+      return "Select a database first";
+    }
     if (optionId === "mongoose") {
       if (currentStack.runtime === "workers") {
         return "Mongoose requires MongoDB, which is incompatible with Workers";
       }
-      // Only block if a non-MongoDB database is EXPLICITLY selected
-      if (currentStack.database !== "none" && currentStack.database !== "mongodb") {
+      if (currentStack.database !== "mongodb") {
         return "Mongoose only works with MongoDB";
       }
-      // Allow when database is "none" - system will auto-select MongoDB
     }
     if (optionId === "drizzle" && currentStack.database === "mongodb") {
       return "Drizzle does not support MongoDB";
@@ -1114,7 +1212,9 @@ export const getDisabledReason = (
       if (!hasClerkCompatibleBackend(currentStack.backend)) {
         return clerkBackendRequirementMessage;
       }
-      if (!hasClerkCompatibleFrontend(currentStack.webFrontend, currentStack.nativeFrontend)) {
+      if (
+        !isClerkFrontendSelectionCompatible(currentStack.webFrontend, currentStack.nativeFrontend)
+      ) {
         return clerkFrontendRequirementMessage;
       }
     }
@@ -1154,6 +1254,13 @@ export const getDisabledReason = (
       )
     ) {
       return "Tauri isn't compatible with Convex Better Auth on Next.js or TanStack Start";
+    }
+    if (
+      staticDesktopAddons.includes(optionId as (typeof staticDesktopAddons)[number]) &&
+      currentStack.auth === "clerk" &&
+      currentStack.webFrontend.includes("react-router")
+    ) {
+      return `${optionId} requires a static React Router export, but Clerk requires SSR middleware`;
     }
     if (
       optionId === "electrobun" &&
@@ -1208,6 +1315,17 @@ export const getDisabledReason = (
   if (category === "webDeploy" && optionId !== "none") {
     if (!currentStack.webFrontend.some((f) => f !== "none")) {
       return "Web deployment requires a web frontend";
+    }
+    if (optionId === "docker") {
+      const dockerDesktopConflict = getDockerDesktopConflict(
+        currentStack.addons,
+        currentStack.webFrontend,
+        currentStack.backend,
+        currentStack.auth,
+      );
+      if (dockerDesktopConflict) {
+        return `Docker cannot serve the static output required by ${dockerDesktopConflict.selectedDesktopAddons.join(" and ")} on ${dockerDesktopConflict.affectedFrontend}`;
+      }
     }
   }
 

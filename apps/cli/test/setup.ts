@@ -3,7 +3,7 @@ import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 
 export const SMOKE_DIR = join(import.meta.dir, "..", ".smoke");
-const SMOKE_HOOK_TIMEOUT_MS = 30_000;
+const SMOKE_HOOK_TIMEOUT_MS = process.env.BTS_BUILD_SAMPLES === "1" ? 180_000 : 30_000;
 
 type VirtualFileNode = {
   type: "file";
