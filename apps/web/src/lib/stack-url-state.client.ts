@@ -1,5 +1,6 @@
 "use client";
 import { parseAsArrayOf, parseAsString, parseAsStringEnum, useQueryStates } from "nuqs";
+import { useCallback, useMemo } from "react";
 
 import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "@/lib/constant";
 
@@ -61,10 +62,8 @@ export const stackQueryStatesOptions = {
   clearOnDefault: true,
 };
 
-export function useStackState() {
-  const [queryState, setQueryState] = useQueryStates(stackParsers, stackQueryStatesOptions);
-
-  const stack = sanitizeStackState({
+function getStackFromQueryState(queryState: StackState): StackState {
+  return sanitizeStackState({
     projectName: queryState.projectName,
     webFrontend: queryState.webFrontend,
     nativeFrontend: queryState.nativeFrontend,
@@ -85,25 +84,42 @@ export function useStackState() {
     serverDeploy: queryState.serverDeploy,
     yolo: queryState.yolo,
   });
+}
+
+export function useStackState() {
+  const [queryState, setQueryState] = useQueryStates(stackParsers, stackQueryStatesOptions);
+
+  const stack = useMemo(() => getStackFromQueryState(queryState), [queryState]);
 
   const viewMode = queryState.viewMode;
   const selectedFile = queryState.selectedFile;
 
-  const updateStack = async (
-    updates: Partial<StackState> | ((prev: StackState) => Partial<StackState>),
-  ) => {
-    const newStack = typeof updates === "function" ? updates(stack) : updates;
-    const finalStack = sanitizeStackState({ ...stack, ...newStack });
-    await setQueryState({ ...finalStack, viewMode, selectedFile });
-  };
+  const updateStack = useCallback(
+    async (updates: Partial<StackState> | ((prev: StackState) => Partial<StackState>)) => {
+      await setQueryState((currentQueryState) => {
+        const currentStack = getStackFromQueryState(currentQueryState);
+        const newStack = typeof updates === "function" ? updates(currentStack) : updates;
+        const finalStack = sanitizeStackState({ ...currentStack, ...newStack });
 
-  const setViewMode = async (mode: "command" | "preview") => {
-    await setQueryState({ viewMode: mode, selectedFile });
-  };
+        return finalStack;
+      });
+    },
+    [setQueryState],
+  );
 
-  const setSelectedFile = async (filePath: string | null) => {
-    await setQueryState({ selectedFile: filePath || "" });
-  };
+  const setViewMode = useCallback(
+    async (mode: "command" | "preview") => {
+      await setQueryState({ viewMode: mode });
+    },
+    [setQueryState],
+  );
+
+  const setSelectedFile = useCallback(
+    async (filePath: string | null) => {
+      await setQueryState({ selectedFile: filePath || "" });
+    },
+    [setQueryState],
+  );
 
   return [stack, updateStack, viewMode, setViewMode, selectedFile, setSelectedFile] as const;
 }

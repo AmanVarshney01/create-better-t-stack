@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { getFumadocsAddonContext, getFumadocsLinter } from "../src/helpers/addons/fumadocs-setup";
 import { setupOxlint } from "../src/helpers/addons/oxlint-setup";
 import { installDependencies } from "../src/helpers/core/install-dependencies";
+import { getNeonProjectCreateArgs } from "../src/helpers/database-providers/neon-setup";
 import { getPackageExecutionArgs } from "../src/utils/package-runner";
 import { SMOKE_DIR } from "./setup";
 
@@ -12,17 +13,32 @@ describe("External Command Guards", () => {
   it("should split quoted args correctly", () => {
     const args = getPackageExecutionArgs(
       "bun",
-      `get-db@latest --yes --ref "sbA3tIe" --name test-db`,
+      `neon-new@latest --yes --ref "sbA3tIe" --env "test db.env"`,
     );
 
     expect(args).toEqual([
       "bunx",
-      "get-db@latest",
+      "neon-new@latest",
       "--yes",
       "--ref",
       "sbA3tIe",
+      "--env",
+      "test db.env",
+    ]);
+  });
+
+  it("should use the current Neon CLI package and preserve project names as one argument", () => {
+    expect(getNeonProjectCreateArgs("bun", "test database", "aws-us-east-1")).toEqual([
+      "bunx",
+      "neon@latest",
+      "projects",
+      "create",
       "--name",
-      "test-db",
+      "test database",
+      "--region-id",
+      "aws-us-east-1",
+      "--output",
+      "json",
     ]);
   });
 
@@ -75,7 +91,7 @@ describe("External Command Guards", () => {
     const updated = await Bun.file(pkgJsonPath).json();
 
     expect(updated.scripts?.check).toBe("oxlint && oxfmt --write");
-    expect(updated.devDependencies?.oxlint).toBe("^1.72.0");
-    expect(updated.devDependencies?.oxfmt).toBe("^0.57.0");
+    expect(updated.devDependencies?.oxlint).toBe("^1.76.0");
+    expect(updated.devDependencies?.oxfmt).toBe("^0.61.0");
   });
 });

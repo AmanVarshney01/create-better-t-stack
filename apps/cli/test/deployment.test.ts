@@ -894,6 +894,9 @@ describe("Deployment Configurations", () => {
       const infraPackage = JSON.parse(files.get("packages/infra/package.json") ?? "{}") as {
         devDependencies?: Record<string, string>;
       };
+      const webPackage = JSON.parse(files.get("apps/web/package.json") ?? "{}") as {
+        devDependencies?: Record<string, string>;
+      };
       const serverBuildConfig = files.get("apps/server/tsdown.config.ts") ?? "";
       const serverPackage = JSON.parse(files.get("apps/server/package.json") ?? "{}") as {
         devDependencies?: Record<string, string>;
@@ -914,6 +917,7 @@ describe("Deployment Configurations", () => {
       expect(serverBuildConfig).toContain('import { wasm } from "rolldown-plugin-wasm"');
       expect(serverBuildConfig).toContain("plugins: [wasm()]");
       expect(serverPackage.devDependencies?.["rolldown-plugin-wasm"]).toBe("^0.3.2");
+      expect(webPackage.devDependencies?.["@cloudflare/vite-plugin"]).toBe("1.48.0");
     });
 
     it("should generate current Cloudflare integrations for React Router, Next, and Astro", async () => {

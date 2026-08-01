@@ -105,7 +105,7 @@ describe("Database setup options", () => {
       dbSetupOptions: {
         mode: "auto",
         neon: {
-          method: "neondb",
+          method: "neon-new",
         },
       },
       disableAnalytics: true,

@@ -4,7 +4,7 @@ import path from "node:path";
 import fs from "fs-extra";
 
 import { setupMcp, getRecommendedMcpServers } from "../src/helpers/addons/mcp-setup";
-import { setupSkills } from "../src/helpers/addons/skills-setup";
+import { setupSkills, UNIVERSAL_SKILLS_AGENTS } from "../src/helpers/addons/skills-setup";
 import type { ProjectConfig } from "../src/types";
 import { runWithContextAsync } from "../src/utils/context";
 import { SMOKE_DIR } from "./setup";
@@ -171,6 +171,40 @@ describe("Addon setup regressions", () => {
     expect(await fs.readFile(markerFile, "utf8")).toContain("context7");
   });
 
+  it("expands the universal skills option before invoking the skills CLI", async () => {
+    const projectDir = path.join(SMOKE_DIR, "skills-universal-agents");
+    await fs.remove(projectDir);
+
+    const config = createProjectConfig({
+      projectDir,
+      addons: ["skills"],
+      addonOptions: {
+        skills: {
+          scope: "project",
+          agents: ["universal", "claude-code"],
+          selections: [
+            {
+              source: "vercel/turborepo",
+              skills: ["turborepo"],
+            },
+          ],
+        },
+      },
+    });
+
+    const { markerFile, result } = await runWithFakeBunx(
+      projectDir,
+      () => runWithContextAsync({ silent: true }, () => setupSkills(config)),
+      0,
+    );
+
+    expect(result.isOk()).toBe(true);
+    const commandLog = await fs.readFile(markerFile, "utf8");
+    expect(commandLog).not.toContain("--agent universal");
+    expect(commandLog).toContain(`--agent ${UNIVERSAL_SKILLS_AGENTS.join(" ")}`);
+    expect(commandLog).toContain("zed claude-code -y");
+  });
+
   it("preserves an explicit empty skills agent list in silent mode", async () => {
     const projectDir = path.join(SMOKE_DIR, "skills-explicit-empty-agents");
     await fs.remove(projectDir);
@@ -283,8 +317,39 @@ describe("Addon setup regressions", () => {
     expect(result.isOk()).toBe(true);
     const commandLog = await fs.readFile(markerFile, "utf8");
     expect(commandLog).toContain("skills@latest add https://www.evlog.dev");
-    expect(commandLog).toContain("--skill review-logging-patterns analyze-logs");
+    expect(commandLog).toContain("--skill review-logging-patterns build-audit-logs analyze-logs");
     expect(commandLog).toContain("--agent codex");
+  });
+
+  it("omits the local log analysis skill for edge-only evlog projects", async () => {
+    const projectDir = path.join(SMOKE_DIR, "skills-evlog-edge");
+    await fs.remove(projectDir);
+
+    const config = createProjectConfig({
+      projectDir,
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      webDeploy: "cloudflare",
+      addons: ["skills", "evlog"],
+      addonOptions: {
+        skills: {
+          scope: "project",
+          agents: ["codex"],
+        },
+      },
+    });
+
+    const { markerFile, result } = await runWithFakeBunx(
+      projectDir,
+      () => runWithContextAsync({ silent: true }, () => setupSkills(config)),
+      0,
+    );
+
+    expect(result.isOk()).toBe(true);
+    const commandLog = await fs.readFile(markerFile, "utf8");
+    expect(commandLog).toContain("--skill review-logging-patterns build-audit-logs");
+    expect(commandLog).not.toContain("analyze-logs");
   });
 
   it("does not install upgrade skills from the curated skills addon", async () => {

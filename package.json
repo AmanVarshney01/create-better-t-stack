@@ -10,14 +10,14 @@
     "catalog": {
       "@erquhart/convex-oss-stats": "^0.8.2",
       "@types/fs-extra": "^11.0.4",
-      "@types/node": "^25.7.0",
-      "better-result": "^2.9.2",
-      "convex": "^1.38.0",
-      "convex-helpers": "^0.1.116",
+      "@types/node": "^26.1.2",
+      "better-result": "^2.10.0",
+      "convex": "^1.42.3",
+      "convex-helpers": "^0.1.120",
       "handlebars": "^4.7.9",
-      "oxfmt": "^0.49.0",
+      "oxfmt": "^0.61.0",
       "ts-morph": "^28.0.0",
-      "tsdown": "^0.22.0",
+      "tsdown": "^0.22.14",
       "typescript": "^6.0.3",
       "yaml": "^2.9.0",
       "zod": "^4.4.3"
@@ -54,11 +54,11 @@
   "devDependencies": {
     "@types/bun": "^1.3.14",
     "changelogithub": "^14.0.0",
-    "lefthook": "^2.1.6",
-    "lint-staged": "^17.0.4",
+    "lefthook": "^2.1.10",
+    "lint-staged": "^17.2.0",
     "oxfmt": "catalog:",
-    "oxlint": "^1.64.0",
-    "turbo": "^2.10.6",
+    "oxlint": "^1.76.0",
+    "turbo": "^2.10.7",
     "typescript": "catalog:"
   },
   "lint-staged": {
@@ -69,5 +69,5 @@
   "engines": {
     "node": "24.x"
   },
-  "packageManager": "bun@1.3.13"
+  "packageManager": "bun@1.3.14"
 }

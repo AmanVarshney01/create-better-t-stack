@@ -57,7 +57,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
     stack,
     viewMode,
   } = useStackBuilder();
-  const effectiveStack = compatibilityAnalysis.adjustedStack || stack;
+  const effectiveStack = compatibilityAnalysis.stack;
   const desktopBuildNote = getDesktopBuildNote(effectiveStack);
   const displayCommand = formatStackCommandForDisplay(command);
   const [commandExpanded, setCommandExpanded] = useState(false);
@@ -228,7 +228,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                       </span>
                     </div>
                     <SelectedStackBadges
-                      stack={stack}
+                      stack={effectiveStack}
                       onRemove={removeSelectedTech}
                       onJump={(category) => {
                         if (viewMode !== "command") {
@@ -240,24 +240,6 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                       }}
                     />
                   </section>
-
-                  {compatibilityAnalysis.changes.length > 0 && (
-                    <section className="space-y-2 border-border/20 border-t px-3 py-3">
-                      <p className="font-mono text-[11px] text-primary uppercase tracking-wide">
-                        Compatibility Log
-                      </p>
-                      <ul className="space-y-1 rounded-lg bg-primary/7 px-2.5 py-2">
-                        {compatibilityAnalysis.changes.slice(0, 4).map((change, index) => (
-                          <li
-                            key={`${change.category}-${change.message}-${index}`}
-                            className="text-muted-foreground text-xs"
-                          >
-                            • {change.message}
-                          </li>
-                        ))}
-                      </ul>
-                    </section>
-                  )}
 
                   {desktopBuildNote && (
                     <section className="space-y-2 border-border/20 border-t px-3 py-3">
@@ -332,7 +314,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                   <main className="p-2 sm:p-4">
                     <TechCategories
                       mode="desktop"
-                      stack={stack}
+                      stack={effectiveStack}
                       compatibilityNotes={compatibilityAnalysis.notes}
                       onSelect={handleTechSelect}
                       showAllCategories
@@ -468,7 +450,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
 
                   <TechCategories
                     mode="mobile"
-                    stack={stack}
+                    stack={effectiveStack}
                     compatibilityNotes={compatibilityAnalysis.notes}
                     onSelect={handleTechSelect}
                     showAllCategories
