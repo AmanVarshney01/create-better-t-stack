@@ -21,6 +21,43 @@ describe("programmatic API input validation", () => {
     expect(result.error.message).toContain("runtime");
   });
 
+  it("rejects an invalid configuration after resolving omitted defaults", async () => {
+    const result = await create("invalid-defaulted-orm", {
+      database: "mongodb",
+      dryRun: true,
+      git: false,
+      install: false,
+      disableAnalytics: true,
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) {
+      throw new Error("Expected create() to reject MongoDB with the default Drizzle ORM");
+    }
+
+    expect(CLIError.is(result.error)).toBe(true);
+    expect(result.error.message).toContain("Drizzle ORM does not support MongoDB");
+  });
+
+  it("rejects incompatible overrides after applying a template", async () => {
+    const result = await create("invalid-template-orm", {
+      template: "mern",
+      orm: "drizzle",
+      dryRun: true,
+      git: false,
+      install: false,
+      disableAnalytics: true,
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) {
+      throw new Error("Expected create() to reject a Drizzle override for the MERN template");
+    }
+
+    expect(CLIError.is(result.error)).toBe(true);
+    expect(result.error.message).toContain("Drizzle ORM does not support MongoDB");
+  });
+
   it("returns a generator validation error for an invalid virtual input shape", async () => {
     const result = await createVirtual({
       runtime: "deno",

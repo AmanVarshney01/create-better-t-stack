@@ -8,10 +8,9 @@ import pc from "picocolors";
 import { getDefaultConfig } from "../../constants";
 import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
-import type { CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
+import type { CLIInput, CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
 import { getCliSubcommandCommand } from "../../utils/cli-invocation";
-import { validateAddonsAgainstFrontends } from "../../utils/compatibility-rules";
 import { isSilent, runWithContextAsync } from "../../utils/context";
 import { displayConfig } from "../../utils/display-config";
 import {
@@ -42,6 +41,22 @@ import {
 } from "../../validation";
 import { createProject } from "./create-project";
 import { mergeResolvedDbSetupOptions } from "./db-setup-options";
+
+const RESOLVED_CONFIG_FLAGS = new Set([
+  "database",
+  "orm",
+  "backend",
+  "runtime",
+  "frontend",
+  "addons",
+  "examples",
+  "auth",
+  "dbSetup",
+  "payments",
+  "api",
+  "webDeploy",
+  "serverDeploy",
+]);
 
 export interface CreateHandlerOptions {
   silent?: boolean;
@@ -354,15 +369,18 @@ async function createProjectHandlerInternal(
     }
 
     if (!input.yolo) {
-      const addonsValidationResult = validateAddonsAgainstFrontends(
-        config.addons,
-        config.frontend,
-        config.auth,
-        config.backend,
-        config.runtime,
+      const resolvedConfigValidationResult = validateConfigCompatibility(
+        config,
+        RESOLVED_CONFIG_FLAGS,
+        config as unknown as CLIInput,
       );
-      if (addonsValidationResult.isErr()) {
-        return Result.err(new CLIError({ message: addonsValidationResult.error.message }));
+      if (resolvedConfigValidationResult.isErr()) {
+        return Result.err(
+          new CLIError({
+            message: resolvedConfigValidationResult.error.message,
+            cause: resolvedConfigValidationResult.error,
+          }),
+        );
       }
     }
 
