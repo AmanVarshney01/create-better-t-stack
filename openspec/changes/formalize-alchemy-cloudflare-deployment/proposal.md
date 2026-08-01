@@ -1,6 +1,6 @@
 ## Why
 
-Better-T-Stack's Cloudflare deployment path depends on the experimental Alchemy v2 API and currently carries five active compatibility safeguards after independently retiring A3. Upstream main, published releases, framework integration constraints, and disproved review claims have repeatedly been conflated. Without one normative contract and executable retention/removal gates, an Alchemy upgrade can either reintroduce a known failure or preserve obsolete compatibility code indefinitely.
+Better-T-Stack's Cloudflare deployment path depends on the experimental Alchemy v2 API and currently carries three active safeguards after independently retiring A1, A2, and A3. Upstream main, published releases, framework integration constraints, and disproved review claims have repeatedly been conflated. Without one normative contract and executable retention/removal gates, an Alchemy upgrade can either reintroduce a known failure or preserve obsolete compatibility code indefinitely.
 
 ## What Changes
 
@@ -14,7 +14,7 @@ Better-T-Stack's Cloudflare deployment path depends on the experimental Alchemy 
 
 ### Non-goals
 
-- Removing any Alchemy workaround other than the independently qualified A3 pure-SPA fallback.
+- Removing A4, A5, or the permanent A6 exact-version policy without its named gate.
 - Adding another deployment provider.
 - Refactoring all deployment providers behind a common lifecycle abstraction.
 - Treating a merged upstream pull request as usable before publication.

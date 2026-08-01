@@ -2,12 +2,12 @@
 
 ### Requirement: Vetted exact Alchemy version
 
-Every generated Cloudflare project SHALL use the exact accepted Alchemy version. The currently accepted version SHALL be `alchemy@2.0.0-beta.62`; Alchemy version ranges SHALL NOT be generated. A replacement version SHALL pass every applicable Better-T-Stack offline and live gate before becoming accepted. A fix on main or in a pull request SHALL not be treated as available until a containing release is pinned and verified. Exact pinning is a permanent publication-safety policy, not a temporary beta shim.
+Every generated Cloudflare project SHALL use the exact accepted Alchemy version. The currently accepted version SHALL be `alchemy@2.0.0-beta.67`; Alchemy version ranges SHALL NOT be generated. A replacement version SHALL pass every applicable Better-T-Stack offline and live gate before becoming accepted. A fix on main or in a pull request SHALL not be treated as available until a containing release is pinned and verified. Exact pinning is a permanent publication-safety policy, not a temporary beta shim.
 
 #### Scenario: Generate a Cloudflare target
 
 - **WHEN** either deployment plane selects Cloudflare
-- **THEN** the infra package SHALL depend on exactly `alchemy@2.0.0-beta.62`
+- **THEN** the infra package SHALL depend on exactly `alchemy@2.0.0-beta.67`
 - **AND** the generated package manager SHALL resolve that exact version
 
 #### Scenario: Evaluate an upgrade
@@ -121,7 +121,7 @@ Each web framework SHALL use the intentional generated resource and runtime entr
 
 ### Requirement: Sanctioned Alchemy compatibility shims
 
-Until their individual removal gates pass, the generator SHALL retain the Output-aware StaticSite wrapper, explicit Config resolution, workspace-safe memo policy, React Router Worker entry with web-stream rendering, Nuxt development platform proxy, explicit external-Worker compatibility flags, and local Wrangler Prisma migration pattern. Integration shims SHALL not be mislabeled as confirmed Alchemy core defects.
+Until their individual removal gates pass, the generator SHALL retain the workspace-safe memo policy, React Router Worker entry with web-stream rendering, Nuxt development platform proxy, explicit external-Worker compatibility flags, and local Wrangler Prisma migration pattern. Native `StaticSite` SHALL receive Alchemy Outputs and Effect Config values directly. Integration shims SHALL not be mislabeled as confirmed Alchemy core defects.
 
 #### Scenario: Change a sibling workspace
 

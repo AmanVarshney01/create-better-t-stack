@@ -907,10 +907,10 @@ describe("Deployment Configurations", () => {
       expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
-        alchemy: "2.0.0-beta.62",
-        effect: "4.0.0-beta.97",
-        "@effect/platform-node": "4.0.0-beta.97",
-        "@effect/platform-bun": "4.0.0-beta.97",
+        alchemy: "2.0.0-beta.67",
+        effect: "4.0.0-beta.101",
+        "@effect/platform-node": "4.0.0-beta.101",
+        "@effect/platform-bun": "4.0.0-beta.101",
       });
       expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
         infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
@@ -1024,20 +1024,27 @@ describe("Deployment Configurations", () => {
       };
       expect(wranglerConfig.images?.binding).toBe("IMAGES");
       expect(infraFile.match(/IMAGES: Cloudflare\.Images\.Images\(\)/g)).toHaveLength(1);
-      expect(infraFile).toContain("const outputAwareStaticSite");
-      expect(infraFile).toContain('const build = yield* Command.Build("Build"');
-      expect(infraFile).toContain("memo: props.memo ?? false");
-      expect(infraFile).toContain("Output.isOutput(value)");
+      expect(infraFile).not.toContain("outputAwareStaticSite");
+      expect(infraFile).not.toContain('import * as Command from "alchemy/Command"');
+      expect(infraFile).not.toContain('import * as Output from "alchemy/Output"');
       expect(infraFile).toContain("NEXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>()");
-      expect(infraFile).toContain("const webWorker = yield* outputAwareStaticSite(");
+      expect(infraFile).toContain(
+        'const webWorker = yield* Cloudflare.Website.StaticSite("web", {',
+      );
+      expect(infraFile).toContain("memo: false");
 
       const nextWebOnlyFiles = collectFiles(
         nextWebOnlyResult.value.root,
         nextWebOnlyResult.value.root.path,
       );
       const nextWebOnlyInfra = nextWebOnlyFiles.get("packages/infra/alchemy.run.ts") ?? "";
-      expect(nextWebOnlyInfra).toContain("const outputAwareStaticSite");
-      expect(nextWebOnlyInfra).toContain("const webWorker = yield* outputAwareStaticSite(");
+      expect(nextWebOnlyInfra).not.toContain("outputAwareStaticSite");
+      expect(nextWebOnlyInfra).toContain(
+        'const webWorker = yield* Cloudflare.Website.StaticSite("web", {',
+      );
+      expect(nextWebOnlyInfra).toContain(
+        'NEXT_PUBLIC_SERVER_URL: Config.string("NEXT_PUBLIC_SERVER_URL")',
+      );
       expect(nextWebOnlyInfra).not.toContain("const serverWorker = yield* server");
 
       const astroFiles = collectFiles(astroResult.value.root, astroResult.value.root.path);

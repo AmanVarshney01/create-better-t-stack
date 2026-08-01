@@ -10,7 +10,7 @@
 
 ## 2. Exact Dependency and Generated Artifact Gates
 
-- [ ] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.64` output with no semver range.
+- [x] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.67` output with no semver range.
 - [ ] 2.2 Generate npm, pnpm, and Bun projects and prove each resolves the exact accepted Alchemy package rather than an incompatible test prerelease.
 - [ ] 2.3 Add deterministic artifact assertions for web-only, server-only, combined, full-stack `self`, Convex-web, D1, and mixed single-plane Cloudflare topologies.
 - [ ] 2.4 Assert that every selected Cloudflare plane emits `packages/infra/alchemy.run.ts`, the infra package, scripts, framework adapter/configuration, bindings, inferred env types, and user guidance.
@@ -19,9 +19,9 @@
 
 ## 3. Compatibility Safeguard Tests
 
-- [ ] 3.1 Add a provider-free A1 test proving the real resolved server URL and server dependency edge reach the frontend `Command.Build` input through `outputAwareStaticSite`.
-- [ ] 3.2 Add A2 tests for `Config.string`, `Config.redacted`, missing configuration, and the exact boundary where descriptors become concrete/redacted build values.
-- [ ] 3.3 Assert that the Output-aware wrapper remains limited to supported top-level env shapes and does not claim recursive Input handling.
+- [x] 3.1 Assert native `StaticSite` receives the combined server Output directly and live-prove the deployed URL reaches its build artifact.
+- [ ] 3.2 Complete the native `StaticSite` Config corpus for `Config.redacted` and missing configuration; direct `Config.string` generation and live binding behavior are verified.
+- [x] 3.3 Assert the retired Output-aware wrapper and its serializer are absent from generated infrastructure.
 - [x] 3.4 Add A3 generation/build tests proving TanStack Router and Solid use released `Website.Vite` SPA handling after beta.64 passes the targeted live removal gate.
 - [ ] 3.5 Add A4 tests proving React Router emits the explicit Worker entry, registers a fetch handler, and uses `renderToReadableStream` rather than Node pipeable streams.
 - [ ] 3.6 Add A5 tests that edit an imported sibling workspace without changing the lockfile and prove a normal generated build cannot reuse stale output.
@@ -33,7 +33,7 @@
 - [ ] 4.1 Generate, install, typecheck, and build the Cloudflare path for Next.js, Nuxt, SvelteKit, Astro, TanStack Start, React Router, TanStack Router, and Solid against the exact accepted release.
 - [ ] 4.2 Verify Next/OpenNext assets, Worker entry, explicit compatibility flags, Images binding, and normal request behavior.
 - [ ] 4.3 Verify Nuxt Nitro assets/server entry, page SSR path, development `getPlatformProxy` alias, and D1-backed request rather than probing only an API route.
-- [ ] 4.4 Verify SvelteKit's Cloudflare adapter output, bundled `_worker.js` shim, document request, and bindings.
+- [x] 4.4 Verify SvelteKit's Cloudflare adapter output, bundled `_worker.js` shim, document request, and bindings.
 - [ ] 4.5 Verify Astro's server entry, session KV, Images binding/type, document or action route, and distinction between static and SSR output.
 - [ ] 4.6 Verify TanStack Start's `Website.Vite` Worker output, document/API route, runtime bindings, and framework auth/environment values.
 - [ ] 4.7 Verify React Router's custom entry through a real workerd document request.
@@ -55,7 +55,7 @@
 ## 6. Accepted-Version Live Baseline
 
 - [ ] 6.1 Live-deploy and request one web-only, one Hono Workers server-only, one combined web/server, and each currently claimed full-stack `self` archetype.
-- [ ] 6.2 In the combined case, inspect the plan/build input and deployed artifact to prove the real Worker URL and dependency edge, not merely the absence of localhost strings.
+- [x] 6.2 In the combined case, inspect the plan/build input and deployed artifact to prove the real Worker URL and dependency edge, not merely the absence of localhost strings.
 - [x] 6.3a Live-test TanStack Router and Solid pure SPA root and deep routes.
 - [ ] 6.3b Live-test React Router document SSR and each server-rendered framework's page route.
 - [ ] 6.4 Live-test D1 migration plus a database-backed application request for every claimed consumer shape.
@@ -75,6 +75,8 @@
 - [x] 7.6 Remove only the independently qualified A3 pure-SPA fallback and rerun its provider-free and live removal gates without it; A6 exact pinning is not removable.
 - [x] 7.7 Update the findings ledger, generated assertions, comments, and user documentation in the same change that removes the A3 shim.
 - [x] 7.8 Evaluate beta.66: confirm #796 and #928 are released, reproduce the A10 local D1 migration regression, record post-tag fix #1009, and retain beta.64 plus the A1/A2/A7 safeguards.
+- [x] 7.9 Accept beta.67 after generated Next/Nuxt/SvelteKit/Astro builds and infra typechecks, a real local nested Prisma D1 migration, direct Config binding verification, combined Output live deployment, HTTP checks, and owned-stage cleanup.
+- [x] 7.10 Remove the independently qualified A1 Output wrapper and A2 caller-side Config resolution while retaining A4, A5, A6, and framework/platform shims.
 
 ## 8. Documentation and Final Review
 
