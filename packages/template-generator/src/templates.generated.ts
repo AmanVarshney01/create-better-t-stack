@@ -33150,16 +33150,8 @@ export const env = createEnv({
 `],
   ["packages/infra/alchemy.run.ts.hbs", `import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
-{{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro")))}}
-import * as Command from "alchemy/Command";
-import * as Output from "alchemy/Output";
-{{/if}}
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
-{{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro")))}}
-import { cast } from "effect/Function";
-import * as Redacted from "effect/Redacted";
-{{/if}}
 import { config } from "dotenv";
 
 {{#if (and (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
@@ -33172,75 +33164,6 @@ config({ path: "../../apps/web/.env" });
 {{else if (eq serverDeploy "cloudflare")}}
 config({ path: "./.env" });
 config({ path: "../../apps/server/.env" });
-{{/if}}
-
-{{#if (and (eq webDeploy "cloudflare") (ne backend "self") (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro")))}}
-// Alchemy beta.64 serializes StaticSite env values before resolving Outputs.
-// Keep its dev process behavior, but preserve top-level deploy-time env Outputs in Command.Build.
-const serializeBuildEnvValue = (value: unknown) =>
-  typeof value === "string" || Redacted.isRedacted(value) ? value : JSON.stringify(value);
-
-const serializeBuildEnv = (env: Record<string, unknown> | undefined) =>
-  Object.fromEntries(
-    Object.entries(env ?? {}).flatMap(([key, value]) => {
-      if (value === undefined) return [];
-      return [[
-        key,
-        Output.isOutput(value)
-          ? Output.map(value, serializeBuildEnvValue)
-          : serializeBuildEnvValue(value),
-      ]];
-    }),
-  ) as Alchemy.Input<Record<string, string | Redacted.Redacted<string>>>;
-
-const outputAwareStaticSite = <
-  const Bindings extends Cloudflare.WorkerBindingProps = {},
-  Req = never,
->(
-  id: string,
-  propsEffect:
-    | Alchemy.InputProps<Cloudflare.Website.StaticSiteProps<Bindings>, "dev">
-    | Effect.Effect<
-        Alchemy.InputProps<Cloudflare.Website.StaticSiteProps<Bindings>, "dev">,
-        never,
-        Req
-      >,
-) =>
-  Effect.gen(function* () {
-    const context = yield* Alchemy.AlchemyContext;
-    if (context.dev) {
-      return yield* Cloudflare.Website.StaticSite(id, propsEffect);
-    }
-
-    return yield* Effect.gen(function* () {
-      const props = yield* (Effect.isEffect(propsEffect)
-        ? propsEffect
-        : Effect.succeed(propsEffect));
-      const build = yield* Command.Build("Build", {
-        command: props.command,
-        cwd: props.cwd,
-        // StaticSite's default memo only hashes cwd and misses sibling workspace packages.
-        memo: props.memo ?? false,
-        outdir: props.outdir,
-        env: serializeBuildEnv(props.env as Record<string, unknown> | undefined),
-      });
-      const fallbackScript =
-        props.main == null && props.script == null
-          ? "export default { fetch: (request, env) => env.ASSETS.fetch(request) };"
-          : undefined;
-
-      return yield* Cloudflare.Worker<Bindings, Cloudflare.WorkerAssetsConfig, Req>("Worker", {
-        ...props,
-        assets: cast({
-          directory: build.outdir,
-          hash: build.hash,
-          ...props.assets,
-        }),
-        dev: undefined,
-        script: fallbackScript ?? props.script,
-      });
-    }).pipe(Alchemy.push(id));
-  });
 {{/if}}
 
 {{#if (and (or (eq serverDeploy "cloudflare") (and (eq webDeploy "cloudflare") (eq backend "self"))) (eq dbSetup "d1"))}}
@@ -33305,11 +33228,7 @@ export type ServerEnv = Cloudflare.InferEnv<typeof server>;
 
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
 {{#if (includes frontend "next")}}
-export const web = Cloudflare.Website.StaticSite(
-  "web",
-  // env values are resolved here so the build command receives real strings
-  Effect.gen(function* () {
-    return {
+export const web = Cloudflare.Website.StaticSite("web", {
       cwd: "../../apps/web",
       command: "{{packageManager}} run build:cloudflare",
       // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
@@ -33325,35 +33244,35 @@ export const web = Cloudflare.Website.StaticSite(
         {{#if (eq dbSetup "d1")}}
         DB: db,
         {{else if (ne database "none")}}
-        DATABASE_URL: yield* Config.redacted("DATABASE_URL"),
+        DATABASE_URL: Config.redacted("DATABASE_URL"),
         {{/if}}
-        CORS_ORIGIN: yield* Config.string("CORS_ORIGIN"),
+        CORS_ORIGIN: Config.string("CORS_ORIGIN"),
         {{#if (eq auth "better-auth")}}
-        BETTER_AUTH_SECRET: yield* Config.redacted("BETTER_AUTH_SECRET"),
-        BETTER_AUTH_URL: yield* Config.string("BETTER_AUTH_URL"),
+        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+        BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
         {{/if}}
         {{#if (eq auth "clerk")}}
-        CLERK_SECRET_KEY: yield* Config.redacted("CLERK_SECRET_KEY"),
+        CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
         {{#if (ne api "none")}}
-        CLERK_PUBLISHABLE_KEY: yield* Config.string("CLERK_PUBLISHABLE_KEY"),
+        CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),
         {{/if}}
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: yield* Config.string("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.string("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),
         {{/if}}
         {{#if (includes examples "ai")}}
-        GOOGLE_GENERATIVE_AI_API_KEY: yield* Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
+        GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
         {{/if}}
         {{#if (eq payments "polar")}}
-        POLAR_ACCESS_TOKEN: yield* Config.redacted("POLAR_ACCESS_TOKEN"),
-        POLAR_SUCCESS_URL: yield* Config.string("POLAR_SUCCESS_URL"),
+        POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+        POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
         {{/if}}
         {{#if (eq dbSetup "turso")}}
-        DATABASE_AUTH_TOKEN: yield* Config.redacted("DATABASE_AUTH_TOKEN"),
+        DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
         {{/if}}
         {{#if (eq database "mysql")}}
         {{#if (eq orm "drizzle")}}
-        DATABASE_HOST: yield* Config.string("DATABASE_HOST"),
-        DATABASE_USERNAME: yield* Config.string("DATABASE_USERNAME"),
-        DATABASE_PASSWORD: yield* Config.redacted("DATABASE_PASSWORD"),
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
         {{/if}}
         {{/if}}
       },
@@ -33361,15 +33280,9 @@ export const web = Cloudflare.Website.StaticSite(
         command: "{{packageManager}} run dev:bare",
         url: "http://localhost:3001",
       },
-    };
-  }).pipe(Effect.orDie),
-);
+});
 {{else if (includes frontend "nuxt")}}
-export const web = Cloudflare.Website.StaticSite(
-  "web",
-  // env values are resolved here so the build command receives real strings
-  Effect.gen(function* () {
-    return {
+export const web = Cloudflare.Website.StaticSite("web", {
       cwd: "../../apps/web",
       command: "{{packageManager}} run build",
       // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
@@ -33384,28 +33297,28 @@ export const web = Cloudflare.Website.StaticSite(
         {{#if (eq dbSetup "d1")}}
         DB: db,
         {{else if (ne database "none")}}
-        DATABASE_URL: yield* Config.redacted("DATABASE_URL"),
+        DATABASE_URL: Config.redacted("DATABASE_URL"),
         {{/if}}
-        CORS_ORIGIN: yield* Config.string("CORS_ORIGIN"),
+        CORS_ORIGIN: Config.string("CORS_ORIGIN"),
         {{#if (eq auth "better-auth")}}
-        BETTER_AUTH_SECRET: yield* Config.redacted("BETTER_AUTH_SECRET"),
-        BETTER_AUTH_URL: yield* Config.string("BETTER_AUTH_URL"),
+        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+        BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
         {{/if}}
         {{#if (includes examples "ai")}}
-        GOOGLE_GENERATIVE_AI_API_KEY: yield* Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
+        GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
         {{/if}}
         {{#if (eq payments "polar")}}
-        POLAR_ACCESS_TOKEN: yield* Config.redacted("POLAR_ACCESS_TOKEN"),
-        POLAR_SUCCESS_URL: yield* Config.string("POLAR_SUCCESS_URL"),
+        POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+        POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
         {{/if}}
         {{#if (eq dbSetup "turso")}}
-        DATABASE_AUTH_TOKEN: yield* Config.redacted("DATABASE_AUTH_TOKEN"),
+        DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
         {{/if}}
         {{#if (eq database "mysql")}}
         {{#if (eq orm "drizzle")}}
-        DATABASE_HOST: yield* Config.string("DATABASE_HOST"),
-        DATABASE_USERNAME: yield* Config.string("DATABASE_USERNAME"),
-        DATABASE_PASSWORD: yield* Config.redacted("DATABASE_PASSWORD"),
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
         {{/if}}
         {{/if}}
       },
@@ -33413,16 +33326,10 @@ export const web = Cloudflare.Website.StaticSite(
         command: "{{packageManager}} run dev:bare",
         url: "http://localhost:3001",
       },
-    };
-  }).pipe(Effect.orDie),
-);
+});
 {{else if (includes frontend "svelte")}}
-export const web = Cloudflare.Website.StaticSite(
-  "web",
-  // env values are resolved here so the build command receives real strings;
-  // _worker.js is a shim importing outside its directory, so it must be bundled
-  Effect.gen(function* () {
-    return {
+// _worker.js is a shim importing outside its directory, so it must be bundled
+export const web = Cloudflare.Website.StaticSite("web", {
       cwd: "../../apps/web",
       command: "{{packageManager}} run build",
       // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
@@ -33436,28 +33343,28 @@ export const web = Cloudflare.Website.StaticSite(
         {{#if (eq dbSetup "d1")}}
         DB: db,
         {{else if (ne database "none")}}
-        DATABASE_URL: yield* Config.redacted("DATABASE_URL"),
+        DATABASE_URL: Config.redacted("DATABASE_URL"),
         {{/if}}
-        CORS_ORIGIN: yield* Config.string("CORS_ORIGIN"),
+        CORS_ORIGIN: Config.string("CORS_ORIGIN"),
         {{#if (eq auth "better-auth")}}
-        BETTER_AUTH_SECRET: yield* Config.redacted("BETTER_AUTH_SECRET"),
-        BETTER_AUTH_URL: yield* Config.string("BETTER_AUTH_URL"),
+        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+        BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
         {{/if}}
         {{#if (includes examples "ai")}}
-        GOOGLE_GENERATIVE_AI_API_KEY: yield* Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
+        GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
         {{/if}}
         {{#if (eq payments "polar")}}
-        POLAR_ACCESS_TOKEN: yield* Config.redacted("POLAR_ACCESS_TOKEN"),
-        POLAR_SUCCESS_URL: yield* Config.string("POLAR_SUCCESS_URL"),
+        POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+        POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
         {{/if}}
         {{#if (eq dbSetup "turso")}}
-        DATABASE_AUTH_TOKEN: yield* Config.redacted("DATABASE_AUTH_TOKEN"),
+        DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
         {{/if}}
         {{#if (eq database "mysql")}}
         {{#if (eq orm "drizzle")}}
-        DATABASE_HOST: yield* Config.string("DATABASE_HOST"),
-        DATABASE_USERNAME: yield* Config.string("DATABASE_USERNAME"),
-        DATABASE_PASSWORD: yield* Config.redacted("DATABASE_PASSWORD"),
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
         {{/if}}
         {{/if}}
       },
@@ -33465,15 +33372,9 @@ export const web = Cloudflare.Website.StaticSite(
         command: "{{packageManager}} run dev:bare",
         url: "http://localhost:5173",
       },
-    };
-  }).pipe(Effect.orDie),
-);
+});
 {{else if (includes frontend "astro")}}
-export const web = Cloudflare.Website.StaticSite(
-  "web",
-  // env values are resolved here so the build command receives real strings
-  Effect.gen(function* () {
-    return {
+export const web = Cloudflare.Website.StaticSite("web", {
       cwd: "../../apps/web",
       command: "{{packageManager}} run build",
       // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
@@ -33491,25 +33392,25 @@ export const web = Cloudflare.Website.StaticSite(
         {{#if (eq dbSetup "d1")}}
         DB: db,
         {{else if (ne database "none")}}
-        DATABASE_URL: yield* Config.redacted("DATABASE_URL"),
+        DATABASE_URL: Config.redacted("DATABASE_URL"),
         {{/if}}
-        CORS_ORIGIN: yield* Config.string("CORS_ORIGIN"),
+        CORS_ORIGIN: Config.string("CORS_ORIGIN"),
         {{#if (eq auth "better-auth")}}
-        BETTER_AUTH_SECRET: yield* Config.redacted("BETTER_AUTH_SECRET"),
-        BETTER_AUTH_URL: yield* Config.string("BETTER_AUTH_URL"),
+        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+        BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
         {{/if}}
         {{#if (eq payments "polar")}}
-        POLAR_ACCESS_TOKEN: yield* Config.redacted("POLAR_ACCESS_TOKEN"),
-        POLAR_SUCCESS_URL: yield* Config.string("POLAR_SUCCESS_URL"),
+        POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+        POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
         {{/if}}
         {{#if (eq dbSetup "turso")}}
-        DATABASE_AUTH_TOKEN: yield* Config.redacted("DATABASE_AUTH_TOKEN"),
+        DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
         {{/if}}
         {{#if (eq database "mysql")}}
         {{#if (eq orm "drizzle")}}
-        DATABASE_HOST: yield* Config.string("DATABASE_HOST"),
-        DATABASE_USERNAME: yield* Config.string("DATABASE_USERNAME"),
-        DATABASE_PASSWORD: yield* Config.redacted("DATABASE_PASSWORD"),
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
         {{/if}}
         {{/if}}
       },
@@ -33517,9 +33418,7 @@ export const web = Cloudflare.Website.StaticSite(
         command: "{{packageManager}} run dev:bare",
         url: "http://localhost:4321",
       },
-    };
-  }).pipe(Effect.orDie),
-);
+});
 {{else if (includes frontend "tanstack-start")}}
 export const web = Cloudflare.Website.Vite("web", {
   rootDir: "../../apps/web",
@@ -33582,12 +33481,11 @@ export default Alchemy.Stack(
     const webWorker = yield* web;
     {{else if (eq webDeploy "cloudflare")}}
     {{#if (includes frontend "next")}}
-    const webWorker = yield* outputAwareStaticSite(
-      "web",
-      Effect.gen(function* () {
-        return {
+    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
           cwd: "../../apps/web",
           command: "{{packageManager}} run build:cloudflare",
+          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+          memo: false,
           outdir: ".open-next/assets",
           main: "../../apps/web/.open-next/worker.js",
           bundle: false,
@@ -33597,36 +33495,33 @@ export default Alchemy.Stack(
           env: {
             IMAGES: Cloudflare.Images.Images(),
             {{#if (eq backend "convex")}}
-            NEXT_PUBLIC_CONVEX_URL: yield* Config.string("NEXT_PUBLIC_CONVEX_URL"),
+            NEXT_PUBLIC_CONVEX_URL: Config.string("NEXT_PUBLIC_CONVEX_URL"),
             {{#if (eq auth "better-auth")}}
-            NEXT_PUBLIC_CONVEX_SITE_URL: yield* Config.string("NEXT_PUBLIC_CONVEX_SITE_URL"),
+            NEXT_PUBLIC_CONVEX_SITE_URL: Config.string("NEXT_PUBLIC_CONVEX_SITE_URL"),
             {{/if}}
             {{else}}
             {{#if (eq serverDeploy "cloudflare")}}
             NEXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
             {{else}}
-            NEXT_PUBLIC_SERVER_URL: yield* Config.string("NEXT_PUBLIC_SERVER_URL"),
+            NEXT_PUBLIC_SERVER_URL: Config.string("NEXT_PUBLIC_SERVER_URL"),
             {{/if}}
             {{/if}}
             {{#if (eq auth "clerk")}}
-            CLERK_SECRET_KEY: yield* Config.redacted("CLERK_SECRET_KEY"),
-            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: yield* Config.string("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),
+            CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.string("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),
             {{/if}}
           },
           dev: {
             command: "{{packageManager}} run dev:bare",
             url: "http://localhost:3001",
           },
-        };
-      }).pipe(Effect.orDie),
-    );
+    });
     {{else if (includes frontend "nuxt")}}
-    const webWorker = yield* outputAwareStaticSite(
-      "web",
-      Effect.gen(function* () {
-        return {
+    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
           cwd: "../../apps/web",
           command: "{{packageManager}} run build",
+          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+          memo: false,
           outdir: ".output/public",
           main: "../../apps/web/.output/server/index.mjs",
           bundle: false,
@@ -33635,15 +33530,15 @@ export default Alchemy.Stack(
           },
           env: {
             {{#if (eq backend "convex")}}
-            NUXT_PUBLIC_CONVEX_URL: yield* Config.string("NUXT_PUBLIC_CONVEX_URL"),
+            NUXT_PUBLIC_CONVEX_URL: Config.string("NUXT_PUBLIC_CONVEX_URL"),
             {{#if (eq auth "better-auth")}}
-            NUXT_PUBLIC_CONVEX_SITE_URL: yield* Config.string("NUXT_PUBLIC_CONVEX_SITE_URL"),
+            NUXT_PUBLIC_CONVEX_SITE_URL: Config.string("NUXT_PUBLIC_CONVEX_SITE_URL"),
             {{/if}}
             {{else}}
             {{#if (eq serverDeploy "cloudflare")}}
             NUXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
             {{else}}
-            NUXT_PUBLIC_SERVER_URL: yield* Config.string("NUXT_PUBLIC_SERVER_URL"),
+            NUXT_PUBLIC_SERVER_URL: Config.string("NUXT_PUBLIC_SERVER_URL"),
             {{/if}}
             {{/if}}
           },
@@ -33651,17 +33546,14 @@ export default Alchemy.Stack(
             command: "{{packageManager}} run dev:bare",
             url: "http://localhost:3001",
           },
-        };
-      }).pipe(Effect.orDie),
-    );
+    });
     {{else if (includes frontend "svelte")}}
-    const webWorker = yield* outputAwareStaticSite(
-      "web",
-      // _worker.js is a shim importing outside its directory, so it must be bundled
-      Effect.gen(function* () {
-        return {
+    // _worker.js is a shim importing outside its directory, so it must be bundled
+    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
           cwd: "../../apps/web",
           command: "{{packageManager}} run build",
+          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+          memo: false,
           outdir: ".svelte-kit/cloudflare",
           main: "../../apps/web/.svelte-kit/cloudflare/_worker.js",
           compatibility: {
@@ -33669,15 +33561,15 @@ export default Alchemy.Stack(
           },
           env: {
             {{#if (eq backend "convex")}}
-            PUBLIC_CONVEX_URL: yield* Config.string("PUBLIC_CONVEX_URL"),
+            PUBLIC_CONVEX_URL: Config.string("PUBLIC_CONVEX_URL"),
             {{#if (eq auth "better-auth")}}
-            PUBLIC_CONVEX_SITE_URL: yield* Config.string("PUBLIC_CONVEX_SITE_URL"),
+            PUBLIC_CONVEX_SITE_URL: Config.string("PUBLIC_CONVEX_SITE_URL"),
             {{/if}}
             {{else}}
             {{#if (eq serverDeploy "cloudflare")}}
             PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
             {{else}}
-            PUBLIC_SERVER_URL: yield* Config.string("PUBLIC_SERVER_URL"),
+            PUBLIC_SERVER_URL: Config.string("PUBLIC_SERVER_URL"),
             {{/if}}
             {{/if}}
           },
@@ -33685,16 +33577,13 @@ export default Alchemy.Stack(
             command: "{{packageManager}} run dev:bare",
             url: "http://localhost:5173",
           },
-        };
-      }).pipe(Effect.orDie),
-    );
+    });
     {{else if (includes frontend "astro")}}
-    const webWorker = yield* outputAwareStaticSite(
-      "web",
-      Effect.gen(function* () {
-        return {
+    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
           cwd: "../../apps/web",
           command: "{{packageManager}} run build",
+          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+          memo: false,
           outdir: "dist/client",
           main: "../../apps/web/dist/server/entry.mjs",
           bundle: false,
@@ -33708,16 +33597,14 @@ export default Alchemy.Stack(
             {{#if (eq serverDeploy "cloudflare")}}
             PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
             {{else}}
-            PUBLIC_SERVER_URL: yield* Config.string("PUBLIC_SERVER_URL"),
+            PUBLIC_SERVER_URL: Config.string("PUBLIC_SERVER_URL"),
             {{/if}}
           },
           dev: {
             command: "{{packageManager}} run dev:bare",
             url: "http://localhost:4321",
           },
-        };
-      }).pipe(Effect.orDie),
-    );
+    });
     {{else if (includes frontend "tanstack-start")}}
     const webWorker = yield* Cloudflare.Website.Vite("web", {
       rootDir: "../../apps/web",
