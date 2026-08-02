@@ -105,6 +105,13 @@ describe("programmatic API input validation", () => {
     });
 
     expect(result.isErr()).toBe(true);
+    if (result.isOk()) {
+      throw new Error("Expected create() to reject MongoDB with the default Drizzle ORM");
+    }
+
+    expect(CLIError.is(result.error)).toBe(true);
+    expect(result.error.message).toContain("Drizzle ORM does not support MongoDB");
+    expect(ValidationError.is(result.error.cause)).toBe(true);
     expect(await fs.pathExists(projectDir)).toBe(false);
   });
 
