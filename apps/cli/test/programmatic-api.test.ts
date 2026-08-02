@@ -3,7 +3,14 @@ import { join } from "node:path";
 
 import fs from "fs-extra";
 
-import { add, CLIError, create, createVirtual, ValidationError } from "../src/index";
+import {
+  add,
+  CLIError,
+  create,
+  createVirtual,
+  DirectoryConflictError,
+  ValidationError,
+} from "../src/index";
 import { SMOKE_DIR } from "./setup";
 
 describe("programmatic API input validation", () => {
@@ -99,6 +106,27 @@ describe("programmatic API input validation", () => {
 
     expect(result.isErr()).toBe(true);
     expect(await fs.pathExists(projectDir)).toBe(false);
+  });
+
+  it("preserves typed directory conflict errors", async () => {
+    const projectDir = join(SMOKE_DIR, "programmatic-directory-conflict");
+    await fs.ensureDir(projectDir);
+    await fs.writeFile(join(projectDir, "keep-me.txt"), "keep-me", "utf8");
+
+    const result = await create(projectDir, {
+      yes: true,
+      git: false,
+      install: false,
+      disableAnalytics: true,
+      directoryConflict: "error",
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) {
+      throw new Error("Expected create() to return a directory conflict");
+    }
+
+    expect(DirectoryConflictError.is(result.error)).toBe(true);
   });
 
   it("returns a generator validation error for an invalid virtual input shape", async () => {

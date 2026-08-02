@@ -55,7 +55,12 @@ import {
   type WebDeploy,
   WebDeploySchema,
 } from "./types";
-import { CLIError, ProjectCreationError, UserCancelledError } from "./utils/errors";
+import {
+  CLIError,
+  DirectoryConflictError,
+  ProjectCreationError,
+  UserCancelledError,
+} from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
 import { validateConfigCompatibility } from "./validation";
 
@@ -296,7 +301,11 @@ export { Result } from "better-result";
 /**
  * Error types that can be returned from create/createVirtual
  */
-export type CreateError = UserCancelledError | CLIError | ProjectCreationError;
+export type CreateError =
+  | UserCancelledError
+  | CLIError
+  | DirectoryConflictError
+  | ProjectCreationError;
 
 function formatInputValidationError(label: string, error: z.ZodError): string {
   const details = error.issues
@@ -372,6 +381,7 @@ export async function create(
     catch: (e: unknown) => {
       if (UserCancelledError.is(e)) return e;
       if (CLIError.is(e)) return e;
+      if (DirectoryConflictError.is(e)) return e;
       if (ProjectCreationError.is(e)) return e;
       return new CLIError({
         message: e instanceof Error ? e.message : String(e),
