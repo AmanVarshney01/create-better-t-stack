@@ -13,7 +13,7 @@ import { cliConsola } from "./terminal-output";
  */
 export class UserCancelledError extends TaggedError("UserCancelledError")<{
   message: string;
-}>() {
+}> {
   constructor(args?: { message?: string }) {
     super({ message: args?.message ?? "Operation cancelled" });
   }
@@ -25,7 +25,7 @@ export class UserCancelledError extends TaggedError("UserCancelledError")<{
 export class CLIError extends TaggedError("CLIError")<{
   message: string;
   cause?: unknown;
-}>() {}
+}> {}
 
 /**
  * Validation error for config/flag validation failures
@@ -34,7 +34,7 @@ export class ValidationError extends TaggedError("ValidationError")<{
   field?: string;
   value?: unknown;
   message: string;
-}>() {
+}> {
   constructor(args: { field?: string; value?: unknown; message: string }) {
     super(args);
   }
@@ -46,7 +46,7 @@ export class ValidationError extends TaggedError("ValidationError")<{
 export class CompatibilityError extends TaggedError("CompatibilityError")<{
   options: string[];
   message: string;
-}>() {
+}> {
   constructor(args: { options: string[]; message: string }) {
     super(args);
   }
@@ -58,7 +58,7 @@ export class CompatibilityError extends TaggedError("CompatibilityError")<{
 export class DirectoryConflictError extends TaggedError("DirectoryConflictError")<{
   directory: string;
   message: string;
-}>() {
+}> {
   constructor(args: { directory: string }) {
     super({
       directory: args.directory,
@@ -74,7 +74,7 @@ export class ProjectCreationError extends TaggedError("ProjectCreationError")<{
   phase: string;
   message: string;
   cause?: unknown;
-}>() {
+}> {
   constructor(args: { phase: string; message: string; cause?: unknown }) {
     super(args);
   }
@@ -87,7 +87,7 @@ export class DatabaseSetupError extends TaggedError("DatabaseSetupError")<{
   provider: string;
   message: string;
   cause?: unknown;
-}>() {
+}> {
   constructor(args: { provider: string; message: string; cause?: unknown }) {
     super(args);
   }
@@ -100,7 +100,7 @@ export class AddonSetupError extends TaggedError("AddonSetupError")<{
   addon: string;
   message: string;
   cause?: unknown;
-}>() {
+}> {
   constructor(args: { addon: string; message: string; cause?: unknown }) {
     super(args);
   }

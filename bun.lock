@@ -31,7 +31,7 @@
         "@clack/prompts": "^1.7.0",
         "@modelcontextprotocol/sdk": "1.30.0",
         "@trpc/server": "^11.18.0",
-        "better-result": "^2.10.0",
+        "better-result": "^3.0.0",
         "consola": "^3.4.2",
         "env-paths": "^4.0.0",
         "execa": "^10.0.0",
@@ -156,7 +156,7 @@
       "version": "3.38.0",
       "dependencies": {
         "@better-t-stack/types": "^3.38.0",
-        "better-result": "^2.10.0",
+        "better-result": "^3.0.0",
         "handlebars": "^4.7.9",
         "memfs": "^4.64.0",
         "pathe": "^2.0.3",
@@ -189,7 +189,7 @@
     "@erquhart/convex-oss-stats": "^0.8.2",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^26.1.2",
-    "better-result": "^2.10.0",
+    "better-result": "^3.0.0",
     "convex": "^1.42.3",
     "convex-helpers": "^0.1.120",
     "handlebars": "^4.7.9",
@@ -1137,7 +1137,7 @@
 
     "before-after-hook": ["before-after-hook@3.0.2", "", {}, "sha512-Nik3Sc0ncrMK4UUdXQmAnRtzmNQTAAXmXIopizwZ1W1t8QmfJj+zL4OA2I7XPTPW5z5TDqv4hRo/JzouDJnX3A=="],
 
-    "better-result": ["better-result@2.10.0", "", {}, "sha512-oQhh0y1qo2/ZKdAAEvHZAqKKiHOFU5k/bW96fE2ScgQOVkJRiHwB+nOS1SgFsYqRlxMDWvefXi9Q3px7QvgNDw=="],
+    "better-result": ["better-result@3.0.0", "", {}, "sha512-6aAtXzewlQYw6BrlKL164xDAsVJ+z2Au3Bwik27tXQBNs3OP3MDVDHznb8ovbqA3jtYxTWbchBikb/K3MjevZA=="],
 
     "binary-extensions": ["binary-extensions@3.1.0", "", {}, "sha512-Jvvd9hy1w+xUad8+ckQsWA/V1AoyubOvqn0aygjMOVM4BfIaRav1NFS3LsTSDaV4n4FtcCtQXvzep1E6MboqwQ=="],
 

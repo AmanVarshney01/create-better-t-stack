@@ -75,7 +75,7 @@
     "@clack/prompts": "^1.7.0",
     "@modelcontextprotocol/sdk": "1.30.0",
     "@trpc/server": "^11.18.0",
-    "better-result": "^2.10.0",
+    "better-result": "^3.0.0",
     "consola": "^3.4.2",
     "env-paths": "^4.0.0",
     "execa": "^10.0.0",
