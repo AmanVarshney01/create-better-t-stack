@@ -7,7 +7,7 @@ import z from "zod";
 import { historyHandler } from "./commands/history";
 import { openBuilderCommand, openDocsCommand, showSponsorsCommand } from "./commands/meta";
 import { addHandler, type AddResult } from "./helpers/core/add-handler";
-import { createProjectHandler } from "./helpers/core/command-handlers";
+import { createProjectHandler, createProjectHandlerResult } from "./helpers/core/command-handlers";
 import {
   type AddInput,
   type Addons,
@@ -55,7 +55,12 @@ import {
   type WebDeploy,
   WebDeploySchema,
 } from "./types";
-import { CLIError, ProjectCreationError, UserCancelledError } from "./utils/errors";
+import {
+  CLIError,
+  DirectoryConflictError,
+  ProjectCreationError,
+  UserCancelledError,
+} from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
 import { validateConfigCompatibility } from "./validation";
 
@@ -296,7 +301,11 @@ export { Result } from "better-result";
 /**
  * Error types that can be returned from create/createVirtual
  */
-export type CreateError = UserCancelledError | CLIError | ProjectCreationError;
+export type CreateError =
+  | UserCancelledError
+  | CLIError
+  | DirectoryConflictError
+  | ProjectCreationError;
 
 function formatInputValidationError(label: string, error: z.ZodError): string {
   const details = error.issues
@@ -363,22 +372,17 @@ export async function create(
 
   return Result.tryPromise({
     try: async () => {
-      const result = await createProjectHandler(input, { silent: true });
-      if (!result) {
-        // User cancelled (undefined return means cancellation in CLI mode)
-        throw new UserCancelledError({ message: "Operation cancelled" });
+      const result = await createProjectHandlerResult(input, { silent: true });
+      if (result.isErr()) {
+        throw result.error;
       }
-      if (!result.success) {
-        throw new CLIError({
-          message: result.error || "Unknown error occurred",
-        });
-      }
-      return result as InitResult;
+      return result.value as InitResult;
     },
     catch: (e: unknown) => {
-      if (e instanceof UserCancelledError) return e;
-      if (e instanceof CLIError) return e;
-      if (e instanceof ProjectCreationError) return e;
+      if (UserCancelledError.is(e)) return e;
+      if (CLIError.is(e)) return e;
+      if (DirectoryConflictError.is(e)) return e;
+      if (ProjectCreationError.is(e)) return e;
       return new CLIError({
         message: e instanceof Error ? e.message : String(e),
         cause: e,

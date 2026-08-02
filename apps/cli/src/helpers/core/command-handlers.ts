@@ -11,7 +11,6 @@ import { getProjectName } from "../../prompts/project-name";
 import type { CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
 import { getCliSubcommandCommand } from "../../utils/cli-invocation";
-import { validateAddonsAgainstFrontends } from "../../utils/compatibility-rules";
 import { isSilent, runWithContextAsync } from "../../utils/context";
 import { displayConfig } from "../../utils/display-config";
 import {
@@ -27,6 +26,7 @@ import {
   findAvailableIncrementedPath,
   handleDirectoryConflict,
   inspectProjectPath,
+  resolveProjectDirectoryPath,
   setupProjectDirectory,
   validateSafeProjectDirectoryPath,
 } from "../../utils/project-directory";
@@ -39,6 +39,7 @@ import {
   processAndValidateFlags,
   processProvidedFlagsWithoutValidation,
   validateConfigCompatibility,
+  validateResolvedConfigCompatibility,
 } from "../../validation";
 import { createProject } from "./create-project";
 import { mergeResolvedDbSetupOptions } from "./db-setup-options";
@@ -101,52 +102,75 @@ function createEmptyResult(
   };
 }
 
-type CreateHandlerError =
+export type CreateHandlerError =
   | UserCancelledError
   | CLIError
   | DirectoryConflictError
   | ProjectCreationError
   | UnhandledException;
 
-export async function createProjectHandler(
+interface CreateHandlerExecution {
+  result: Result<CreateProjectResult, CreateHandlerError>;
+  startTime: number;
+  timeScaffolded: string;
+}
+
+async function executeCreateProjectHandler(
   input: CreateInput & { projectName?: string },
-  options: CreateHandlerOptions = {},
-): Promise<CreateProjectResult | undefined> {
+  options: CreateHandlerOptions,
+): Promise<CreateHandlerExecution> {
   const { silent = false } = options;
 
   return runWithContextAsync({ silent }, async () => {
     const startTime = Date.now();
     const timeScaffolded = new Date().toISOString();
-
     const result = await createProjectHandlerInternal(input, startTime, timeScaffolded);
 
-    // Handle success case
-    if (result.isOk()) {
-      return result.value;
-    }
+    return { result, startTime, timeScaffolded };
+  });
+}
 
-    // Handle error cases
-    const error = result.error;
-    const elapsedTimeMs = Date.now() - startTime;
+export async function createProjectHandlerResult(
+  input: CreateInput & { projectName?: string },
+  options: CreateHandlerOptions = {},
+): Promise<Result<CreateProjectResult, CreateHandlerError>> {
+  const execution = await executeCreateProjectHandler(input, options);
+  return execution.result;
+}
 
-    // Handle user cancellation specially
-    if (UserCancelledError.is(error)) {
-      if (isSilent()) {
-        return createEmptyResult(timeScaffolded, elapsedTimeMs, error.message);
-      }
-      // In CLI mode, just return undefined (the cancel UI was already shown)
-      return undefined;
-    }
+export async function createProjectHandler(
+  input: CreateInput & { projectName?: string },
+  options: CreateHandlerOptions = {},
+): Promise<CreateProjectResult | undefined> {
+  const { silent = false } = options;
+  const { result, startTime, timeScaffolded } = await executeCreateProjectHandler(input, options);
 
-    // For silent mode, always return a failed result instead of throwing
-    if (isSilent()) {
+  // Handle success case
+  if (result.isOk()) {
+    return result.value;
+  }
+
+  // Handle error cases
+  const error = result.error;
+  const elapsedTimeMs = Date.now() - startTime;
+
+  // Handle user cancellation specially
+  if (UserCancelledError.is(error)) {
+    if (silent) {
       return createEmptyResult(timeScaffolded, elapsedTimeMs, error.message);
     }
+    // In CLI mode, just return undefined (the cancel UI was already shown)
+    return undefined;
+  }
 
-    // In CLI mode, display error and exit
-    displayError(error as AppError);
-    process.exit(1);
-  });
+  // For silent mode, always return a failed result instead of throwing
+  if (silent) {
+    return createEmptyResult(timeScaffolded, elapsedTimeMs, error.message);
+  }
+
+  // In CLI mode, display error and exit
+  displayError(error as AppError);
+  process.exit(1);
 }
 
 async function createProjectHandlerInternal(
@@ -212,30 +236,7 @@ async function createProjectHandlerInternal(
     yield* validateResolvedProjectPathInput(finalPathInput);
     yield* Result.await(validateSafeProjectDirectoryPath(finalPathInput));
 
-    let finalResolvedPath: string;
-    let finalBaseName: string;
-
-    if (input.dryRun) {
-      finalResolvedPath =
-        finalPathInput === "." ? process.cwd() : path.resolve(process.cwd(), finalPathInput);
-      finalBaseName = path.basename(finalResolvedPath);
-    } else {
-      // Setup project directory
-      const setupResult = yield* Result.await(
-        Result.tryPromise({
-          try: async () => setupProjectDirectory(finalPathInput, shouldClearDirectory),
-          catch: (e: unknown) => {
-            if (e instanceof UserCancelledError) return e;
-            return new CLIError({
-              message: e instanceof Error ? e.message : String(e),
-              cause: e,
-            });
-          },
-        }),
-      );
-      finalResolvedPath = setupResult.finalResolvedPath;
-      finalBaseName = setupResult.finalBaseName;
-    }
+    const { finalResolvedPath, finalBaseName } = resolveProjectDirectoryPath(finalPathInput);
 
     const originalInput = {
       ...input,
@@ -354,16 +355,30 @@ async function createProjectHandlerInternal(
     }
 
     if (!input.yolo) {
-      const addonsValidationResult = validateAddonsAgainstFrontends(
-        config.addons,
-        config.frontend,
-        config.auth,
-        config.backend,
-        config.runtime,
-      );
-      if (addonsValidationResult.isErr()) {
-        return Result.err(new CLIError({ message: addonsValidationResult.error.message }));
+      const resolvedConfigValidationResult = validateResolvedConfigCompatibility(config);
+      if (resolvedConfigValidationResult.isErr()) {
+        return Result.err(
+          new CLIError({
+            message: resolvedConfigValidationResult.error.message,
+            cause: resolvedConfigValidationResult.error,
+          }),
+        );
       }
+    }
+
+    if (!input.dryRun) {
+      yield* Result.await(
+        Result.tryPromise({
+          try: async () => setupProjectDirectory(finalPathInput, shouldClearDirectory),
+          catch: (e: unknown) => {
+            if (e instanceof UserCancelledError) return e;
+            return new CLIError({
+              message: e instanceof Error ? e.message : String(e),
+              cause: e,
+            });
+          },
+        }),
+      );
     }
 
     if (!isSilent()) {

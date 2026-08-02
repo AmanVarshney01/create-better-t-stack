@@ -1,7 +1,16 @@
 import { describe, expect, it } from "bun:test";
 import { join } from "node:path";
 
-import { add, CLIError, create, createVirtual } from "../src/index";
+import fs from "fs-extra";
+
+import {
+  add,
+  CLIError,
+  create,
+  createVirtual,
+  DirectoryConflictError,
+  ValidationError,
+} from "../src/index";
 import { SMOKE_DIR } from "./setup";
 
 describe("programmatic API input validation", () => {
@@ -19,6 +28,112 @@ describe("programmatic API input validation", () => {
     expect(CLIError.is(result.error)).toBe(true);
     expect(result.error.message).toContain("Invalid create input");
     expect(result.error.message).toContain("runtime");
+  });
+
+  it("rejects an invalid configuration after resolving omitted defaults", async () => {
+    const result = await create("invalid-defaulted-orm", {
+      database: "mongodb",
+      dryRun: true,
+      git: false,
+      install: false,
+      disableAnalytics: true,
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) {
+      throw new Error("Expected create() to reject MongoDB with the default Drizzle ORM");
+    }
+
+    expect(CLIError.is(result.error)).toBe(true);
+    expect(result.error.message).toContain("Drizzle ORM does not support MongoDB");
+    expect(ValidationError.is(result.error.cause)).toBe(true);
+  });
+
+  it("rejects incompatible overrides after applying a template", async () => {
+    const result = await create("invalid-template-orm", {
+      template: "mern",
+      orm: "drizzle",
+      dryRun: true,
+      git: false,
+      install: false,
+      disableAnalytics: true,
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) {
+      throw new Error("Expected create() to reject a Drizzle override for the MERN template");
+    }
+
+    expect(CLIError.is(result.error)).toBe(true);
+    expect(result.error.message).toContain("Drizzle ORM does not support MongoDB");
+    expect(ValidationError.is(result.error.cause)).toBe(true);
+  });
+
+  it("does not modify an overwrite target when the resolved configuration is invalid", async () => {
+    const projectDir = join(SMOKE_DIR, "invalid-resolved-config-overwrite");
+    const sentinelPath = join(projectDir, "keep-me.txt");
+    await fs.ensureDir(projectDir);
+    await fs.writeFile(sentinelPath, "keep-me", "utf8");
+
+    const result = await create(projectDir, {
+      database: "mongodb",
+      git: false,
+      install: false,
+      disableAnalytics: true,
+      directoryConflict: "overwrite",
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) {
+      throw new Error("Expected create() to reject MongoDB with the default Drizzle ORM");
+    }
+
+    expect(result.error.message).toContain("Drizzle ORM does not support MongoDB");
+    expect(await fs.readFile(sentinelPath, "utf8")).toBe("keep-me");
+    expect(await fs.pathExists(join(projectDir, "package.json"))).toBe(false);
+  });
+
+  it("does not create a target directory when the resolved configuration is invalid", async () => {
+    const projectDir = join(SMOKE_DIR, "invalid-resolved-config-new-directory");
+    await fs.remove(projectDir);
+
+    const result = await create(projectDir, {
+      database: "mongodb",
+      git: false,
+      install: false,
+      disableAnalytics: true,
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) {
+      throw new Error("Expected create() to reject MongoDB with the default Drizzle ORM");
+    }
+
+    expect(CLIError.is(result.error)).toBe(true);
+    expect(result.error.message).toContain("Drizzle ORM does not support MongoDB");
+    expect(ValidationError.is(result.error.cause)).toBe(true);
+    expect(await fs.pathExists(projectDir)).toBe(false);
+  });
+
+  it("preserves typed directory conflict errors", async () => {
+    const projectDir = join(SMOKE_DIR, "programmatic-directory-conflict");
+    await fs.ensureDir(projectDir);
+    await fs.writeFile(join(projectDir, "keep-me.txt"), "keep-me", "utf8");
+
+    const result = await create(projectDir, {
+      yes: true,
+      git: false,
+      install: false,
+      disableAnalytics: true,
+      directoryConflict: "error",
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) {
+      throw new Error("Expected create() to return a directory conflict");
+    }
+
+    expect(DirectoryConflictError.is(result.error)).toBe(true);
   });
 
   it("returns a generator validation error for an invalid virtual input shape", async () => {

@@ -8,7 +8,7 @@ import { extractAndValidateProjectName } from "./utils/project-name-validation";
 
 type ValidationResult<T> = Result<T, ValidationError>;
 
-const CORE_STACK_FLAGS = new Set([
+const coreStackFlags = new Set([
   "database",
   "orm",
   "backend",
@@ -35,7 +35,7 @@ function validateYesFlagCombination(
   }
 
   const coreStackFlagsProvided = Array.from(providedFlags).filter((flag) =>
-    CORE_STACK_FLAGS.has(flag),
+    coreStackFlags.has(flag),
   );
 
   if (coreStackFlagsProvided.length > 0) {
@@ -138,6 +138,10 @@ export function validateConfigCompatibility(
   } else {
     return validateConfigForProgrammaticUse(config);
   }
+}
+
+export function validateResolvedConfigCompatibility(config: ProjectConfig): ValidationResult<void> {
+  return validateFullConfig(config, coreStackFlags, config);
 }
 
 export { getProvidedFlags };
