@@ -1,7 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import { join } from "node:path";
 
-import { add, CLIError, create, createVirtual } from "../src/index";
+import fs from "fs-extra";
+
+import { add, CLIError, create, createVirtual, ValidationError } from "../src/index";
 import { SMOKE_DIR } from "./setup";
 
 describe("programmatic API input validation", () => {
@@ -37,6 +39,7 @@ describe("programmatic API input validation", () => {
 
     expect(CLIError.is(result.error)).toBe(true);
     expect(result.error.message).toContain("Drizzle ORM does not support MongoDB");
+    expect(ValidationError.is(result.error.cause)).toBe(true);
   });
 
   it("rejects incompatible overrides after applying a template", async () => {
@@ -56,6 +59,46 @@ describe("programmatic API input validation", () => {
 
     expect(CLIError.is(result.error)).toBe(true);
     expect(result.error.message).toContain("Drizzle ORM does not support MongoDB");
+    expect(ValidationError.is(result.error.cause)).toBe(true);
+  });
+
+  it("does not modify an overwrite target when the resolved configuration is invalid", async () => {
+    const projectDir = join(SMOKE_DIR, "invalid-resolved-config-overwrite");
+    const sentinelPath = join(projectDir, "keep-me.txt");
+    await fs.ensureDir(projectDir);
+    await fs.writeFile(sentinelPath, "keep-me", "utf8");
+
+    const result = await create(projectDir, {
+      database: "mongodb",
+      git: false,
+      install: false,
+      disableAnalytics: true,
+      directoryConflict: "overwrite",
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) {
+      throw new Error("Expected create() to reject MongoDB with the default Drizzle ORM");
+    }
+
+    expect(result.error.message).toContain("Drizzle ORM does not support MongoDB");
+    expect(await fs.readFile(sentinelPath, "utf8")).toBe("keep-me");
+    expect(await fs.pathExists(join(projectDir, "package.json"))).toBe(false);
+  });
+
+  it("does not create a target directory when the resolved configuration is invalid", async () => {
+    const projectDir = join(SMOKE_DIR, "invalid-resolved-config-new-directory");
+    await fs.remove(projectDir);
+
+    const result = await create(projectDir, {
+      database: "mongodb",
+      git: false,
+      install: false,
+      disableAnalytics: true,
+    });
+
+    expect(result.isErr()).toBe(true);
+    expect(await fs.pathExists(projectDir)).toBe(false);
   });
 
   it("returns a generator validation error for an invalid virtual input shape", async () => {
