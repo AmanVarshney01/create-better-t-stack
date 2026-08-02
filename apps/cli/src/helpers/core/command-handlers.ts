@@ -295,9 +295,10 @@ async function createProjectHandlerInternal(
       // Validate config compatibility
       const validationResult = validateConfigCompatibility(config, providedFlags, cliInput);
       if (validationResult.isErr()) {
-        return Result.err(
-          new CLIError({ message: validationResult.error.message, cause: validationResult.error }),
-        );
+        yield* new CLIError({
+          message: validationResult.error.message,
+          cause: validationResult.error,
+        });
       }
 
       if (!isSilent()) {
@@ -357,12 +358,10 @@ async function createProjectHandlerInternal(
     if (!input.yolo) {
       const resolvedConfigValidationResult = validateResolvedConfigCompatibility(config);
       if (resolvedConfigValidationResult.isErr()) {
-        return Result.err(
-          new CLIError({
-            message: resolvedConfigValidationResult.error.message,
-            cause: resolvedConfigValidationResult.error,
-          }),
-        );
+        yield* new CLIError({
+          message: resolvedConfigValidationResult.error.message,
+          cause: resolvedConfigValidationResult.error,
+        });
       }
     }
 
