@@ -65,9 +65,12 @@ export default function Pane({
         </span>
       </header>
 
+      {/* Scroll container only at md+. Unprefixed, mobile panes stay scroll
+          containers that cannot scroll, and overscroll-contain then swallows
+          the touch drag instead of letting it chain to the page. */}
       <div
         data-pane-scroll
-        className="fd-scroll-container flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain px-6 py-6 max-md:px-5 max-md:py-6"
+        className="fd-scroll-container flex min-h-0 flex-1 flex-col gap-4 px-6 py-6 max-md:px-5 max-md:py-6 md:overflow-y-auto md:overscroll-y-contain"
       >
         {children}
       </div>
