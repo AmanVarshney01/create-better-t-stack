@@ -2,7 +2,7 @@
 
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { GroupHeader } from "../chrome";
 
@@ -11,12 +11,16 @@ import { GroupHeader } from "../chrome";
 const FEED_LIMIT = 50;
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
-const timeFormatter = new Intl.DateTimeFormat("en-US", {
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-  hour12: false,
-});
+/** Relative, so the row never depends on the reader's timezone. */
+function ago(createdAt: number, now: number): string {
+  const seconds = Math.max(0, Math.round((now - createdAt) / 1000));
+  if (seconds < 60) return "just now";
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.round(hours / 24)}d ago`;
+}
 
 type FeedEvent = {
   _id: string;
@@ -66,22 +70,25 @@ export default function LiveFeed() {
     | FeedEvent[]
     | undefined;
 
-  // Events age out of the window without a new query result arriving, so recount
-  // on a timer as well as on render.
-  const [tick, setTick] = useState(0);
+  // The clock lives in state rather than being read during render: events age
+  // out without a new query arriving, and Date.now() is not a dependency the
+  // React Compiler can see, so it would happily cache a stale count.
+  // null until the effect runs, which also keeps hydration deterministic.
+  const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
-    const id = setInterval(() => setTick((value) => value + 1), 60_000);
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(id);
   }, []);
 
-  // Date.now() only runs once events resolve, which is client-only, so this
-  // cannot desync during hydration.
-  const lastHour = useMemo(() => {
-    if (!events) return null;
-    const count = events.filter((event) => Date.now() - event._creationTime < ONE_HOUR_MS).length;
-    // The query caps at FEED_LIMIT, so a saturated window is a floor, not a total.
-    return { count, saturated: count === events.length && events.length === FEED_LIMIT };
-  }, [events, tick]);
+  const inLastHour =
+    events && now !== null
+      ? events.filter((event) => now - event._creationTime < ONE_HOUR_MS).length
+      : null;
+  // Every fetched row falling inside the window means the query cap clipped it,
+  // so the number is a floor rather than a total.
+  const saturated =
+    inLastHour !== null && inLastHour === events?.length && inLastHour === FEED_LIMIT;
 
   return (
     /* Below ~820px tall the group header alone costs more room than the pane
@@ -95,9 +102,9 @@ export default function LiveFeed() {
               aria-hidden="true"
               className={events ? "size-1.5 bg-primary" : "size-1.5 bg-fd-muted-foreground/40"}
             />
-            {lastHour === null
+            {inLastHour === null
               ? "connecting"
-              : `${lastHour.count}${lastHour.saturated ? "+" : ""} in the last hour`}
+              : `${inLastHour}${saturated ? "+" : ""} in the last hour`}
           </span>
         }
       />
@@ -108,8 +115,8 @@ export default function LiveFeed() {
       >
         {events?.map((event) => (
           <li key={event._id} className="flex items-baseline gap-3 py-px">
-            <span className="shrink-0 text-fd-muted-foreground/60 tabular-nums">
-              {timeFormatter.format(event._creationTime)}
+            <span className="w-[7ch] shrink-0 text-right text-fd-muted-foreground/60 tabular-nums">
+              {now === null ? "" : ago(event._creationTime, now)}
             </span>
             {/* Wraps rather than truncates: a clipped stack hides the very picks
                 the feed exists to show. Fewer rows, none of them lying. */}
