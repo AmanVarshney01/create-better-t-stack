@@ -5,9 +5,9 @@ import { useQuery } from "convex/react";
 
 import { GroupHeader } from "../chrome";
 
-// Fetch well past what fits so the "last hour" count is accurate: at the current
-// ~227 projects/day (~9.5/hour) 60 rows covers a busy hour with headroom.
-const FEED_LIMIT = 60;
+// 50 is the server-side cap in getRecentEvents. At ~227 projects/day
+// (~9.5/hour) that still covers a busy hour for the last-hour count.
+const FEED_LIMIT = 50;
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 const timeFormatter = new Intl.DateTimeFormat("en-US", {
@@ -22,17 +22,42 @@ type FeedEvent = {
   _creationTime: number;
   frontend?: string[];
   backend?: string;
+  runtime?: string;
   database?: string;
+  orm?: string;
+  api?: string;
+  auth?: string;
+  dbSetup?: string;
+  webDeploy?: string;
+  serverDeploy?: string;
 };
 
-/** Same shape the analytics log uses, trimmed to what fits a 632px pane. */
+function pick(value: string | undefined): string | null {
+  return value && value !== "none" ? value : null;
+}
+
+/** The stack decisions worth reading at a glance, in the order someone would
+ *  say them out loud. "none" picks are dropped rather than printed. Runtime is
+ *  omitted deliberately: it is implied by the backend far more often than not. */
 function summarize(event: FeedEvent): string {
   const parts = [
     event.frontend?.length ? event.frontend.join("+") : null,
-    event.backend && event.backend !== "none" ? event.backend : null,
-    event.database && event.database !== "none" ? event.database : null,
-  ].filter(Boolean);
-  return parts.length > 0 ? parts.join(" + ") : "empty stack";
+    pick(event.backend),
+    pick(event.database),
+    pick(event.orm),
+    pick(event.api),
+    pick(event.auth),
+    pick(event.dbSetup),
+    pick(event.webDeploy),
+    pick(event.serverDeploy),
+  ].filter(Boolean) as string[];
+
+  // web and server deploy are usually the same provider, and printing
+  // "cloudflare + cloudflare" reads as a bug rather than as two choices.
+  const seen = new Set<string>();
+  const unique = parts.filter((part) => !seen.has(part) && seen.add(part));
+
+  return unique.length > 0 ? unique.join(" + ") : "empty stack";
 }
 
 export default function LiveFeed() {
@@ -68,11 +93,13 @@ export default function LiveFeed() {
         className="fd-scroll-container min-h-0 flex-1 overflow-hidden font-mono text-[11px] leading-[1.7]"
       >
         {events?.map((event) => (
-          <li key={event._id} className="flex items-baseline gap-3">
+          <li key={event._id} className="flex items-baseline gap-3 py-px">
             <span className="shrink-0 text-fd-muted-foreground/60 tabular-nums">
               {timeFormatter.format(event._creationTime)}
             </span>
-            <span className="truncate text-fd-muted-foreground">{summarize(event)}</span>
+            {/* Wraps rather than truncates: a clipped stack hides the very picks
+                the feed exists to show. Fewer rows, none of them lying. */}
+            <span className="min-w-0 text-fd-muted-foreground">{summarize(event)}</span>
           </li>
         ))}
       </ol>
