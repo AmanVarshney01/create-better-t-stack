@@ -17,79 +17,79 @@ import { GroupHeader } from "../chrome";
 
 type SponsorEntry = SponsorsData["sponsors"][number];
 
-function SponsorRow({
+function SponsorTile({
   entry,
+  size = "md",
   dim,
-  featured,
 }: {
   entry: SponsorEntry;
+  size?: "lg" | "md";
   dim?: boolean;
-  featured?: boolean;
 }) {
+  const large = size === "lg";
   const showTotal = shouldShowLifetimeTotal(entry);
   const wasSpecial = dim && isLifetimeSpecialSponsor(entry);
 
   return (
-    <li className={cn("flex items-start gap-3", featured ? "py-3" : "py-2")}>
-      <Image
-        src={entry.avatarUrl}
-        alt=""
-        width={featured ? 44 : 28}
-        height={featured ? 44 : 28}
-        className={cn(
-          "mt-0.5 shrink-0 rounded-[4px]",
-          featured ? "size-11 border" : "size-7",
-          dim && "opacity-60",
-        )}
-        unoptimized
-      />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-x-3 gap-y-0.5 max-sm:flex-col max-sm:items-start">
+    <li
+      className={cn(
+        "flex min-w-0 flex-col justify-between gap-3 rounded-[4px] border p-3 transition-colors duration-150 hover:border-fd-muted-foreground/40",
+        dim && "opacity-70",
+      )}
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <Image
+          src={entry.avatarUrl}
+          alt=""
+          width={large ? 48 : 36}
+          height={large ? 48 : 36}
+          className={cn("shrink-0 rounded-[4px] border", large ? "size-12" : "size-9")}
+          unoptimized
+        />
+        <div className="min-w-0 flex-1">
           <a
             href={entry.githubUrl}
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-              "builder-focus-ring wrap-anywhere font-mono leading-[1.55] transition-colors duration-150 hover:text-primary",
-              featured ? "text-[15px] tracking-[-0.01em]" : "text-[13px]",
-              dim && "text-fd-muted-foreground",
+              "builder-focus-ring block wrap-anywhere font-mono leading-[1.4] transition-colors duration-150 hover:text-primary",
+              large ? "text-[15px] tracking-[-0.01em]" : "text-[13px]",
             )}
           >
             {entry.name}
           </a>
-          <span
-            className={cn(
-              "shrink-0 font-mono text-[11px]",
-              featured ? "text-primary" : "text-fd-muted-foreground",
-            )}
-          >
-            {wasSpecial ? `special · ${entry.tierName}` : entry.tierName}
-          </span>
-        </div>
-
-        <div className="flex items-baseline justify-between gap-x-3 gap-y-0.5 font-mono text-[11px] text-fd-muted-foreground max-sm:flex-col max-sm:items-start">
-          <span className="wrap-anywhere">
+          <span className="block truncate font-mono text-[11px] text-fd-muted-foreground">
             @{entry.githubId}
-            {entry.websiteUrl && (
-              <>
-                {" · "}
-                <a
-                  href={getSponsorUrl(entry)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="builder-focus-ring transition-colors duration-150 hover:text-fd-foreground"
-                >
-                  {getSponsorUrlLabel(entry)}
-                </a>
-              </>
-            )}
-          </span>
-          <span className="shrink-0 tabular-nums">
-            {showTotal && `${entry.formattedAmount} · `}
-            {entry.sinceWhen}
           </span>
         </div>
       </div>
+
+      {/* Stacked, not justify-between: wrapping made tile heights inconsistent. */}
+      <div className="flex flex-col gap-0.5">
+        <span
+          className={cn(
+            "truncate font-mono text-[11px]",
+            large ? "text-primary" : "text-fd-muted-foreground",
+          )}
+        >
+          {wasSpecial ? `special \u00b7 ${entry.tierName}` : entry.tierName}
+        </span>
+        <span className="truncate font-mono text-[11px] text-fd-muted-foreground tabular-nums">
+          {showTotal && `${entry.formattedAmount} \u00b7 `}
+          {entry.sinceWhen}
+        </span>
+      </div>
+
+      {entry.websiteUrl && (
+        <a
+          href={getSponsorUrl(entry)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="builder-focus-ring -mt-1 truncate font-mono text-[11px] text-fd-muted-foreground transition-colors duration-150 hover:text-fd-foreground"
+        >
+          {getSponsorUrlLabel(entry)}
+        </a>
+      )}
     </li>
   );
 }
@@ -99,13 +99,13 @@ export default function SponsorsPane({ sponsorsData }: { sponsorsData: SponsorsD
   const { specialSponsors, sponsors, pastSponsors } = sponsorsData;
 
   return (
-    <>
+    <div className="@container flex flex-col gap-6">
       {specialSponsors.length > 0 && (
         <div>
           <GroupHeader label="special" count={specialSponsors.length} />
-          <ul className="divide-y">
+          <ul className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
             {specialSponsors.map((entry) => (
-              <SponsorRow key={entry.githubId} entry={entry} featured />
+              <SponsorTile key={entry.githubId} entry={entry} size="lg" />
             ))}
           </ul>
         </div>
@@ -114,9 +114,9 @@ export default function SponsorsPane({ sponsorsData }: { sponsorsData: SponsorsD
       {sponsors.length > 0 && (
         <div>
           <GroupHeader label="current" count={sponsors.length} />
-          <ul>
+          <ul className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
             {sponsors.map((entry) => (
-              <SponsorRow key={entry.githubId} entry={entry} />
+              <SponsorTile key={entry.githubId} entry={entry} />
             ))}
           </ul>
         </div>
@@ -142,15 +142,15 @@ export default function SponsorsPane({ sponsorsData }: { sponsorsData: SponsorsD
             </span>
           </button>
           {showPast && (
-            <ul>
+            <ul className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
               {pastSponsors.map((entry) => (
-                <SponsorRow key={entry.githubId} entry={entry} dim />
+                <SponsorTile key={entry.githubId} entry={entry} dim />
               ))}
             </ul>
           )}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
