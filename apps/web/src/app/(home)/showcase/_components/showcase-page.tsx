@@ -4,7 +4,7 @@ import { Terminal } from "lucide-react";
 
 import { PageHeader } from "../../_components/page-header";
 import { PageShell } from "../../_components/page-shell";
-import ShowcaseItem from "../_components/ShowcaseItem";
+import ShowcaseItem from "../_components/showcase-item";
 
 type ShowcaseProject = {
   _id: string;

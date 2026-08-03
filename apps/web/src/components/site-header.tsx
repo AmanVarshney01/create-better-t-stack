@@ -38,10 +38,19 @@ function Sep({ className }: { className?: string }) {
   return <span aria-hidden="true" className={cn("h-3 w-px shrink-0 bg-fd-border", className)} />;
 }
 
-function NavLink({ item, className }: { item: HrefItem; className?: string }) {
+function NavLink({
+  item,
+  className,
+  onClick,
+}: {
+  item: HrefItem;
+  className?: string;
+  onClick?: () => void;
+}) {
   return (
     <LinkItem
       item={item}
+      onClick={onClick}
       className={cn(
         labelClass,
         "text-fd-muted-foreground transition-colors hover:text-fd-foreground data-[active=true]:text-primary",
@@ -199,7 +208,12 @@ export function SiteHeader({ leading, trailing, className, ...props }: SiteHeade
           >
             <nav aria-label="Mobile" className="flex flex-col">
               {primaryItems.map((item) => (
-                <NavLink className="py-2.5" item={item} key={item.url} />
+                <NavLink
+                  className="py-2.5"
+                  item={item}
+                  key={item.url}
+                  onClick={() => setOpen(false)}
+                />
               ))}
             </nav>
             <div className="mt-1 flex items-center gap-1 border-t pt-2">

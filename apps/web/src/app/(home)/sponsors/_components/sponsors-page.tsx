@@ -74,12 +74,12 @@ function SponsorLinks({ sponsor, muted = false }: { sponsor: Sponsor; muted?: bo
   return (
     <div className="flex flex-col">
       <a href={sponsor.githubUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
-        <FaGithub className="size-3 shrink-0" />
+        <FaGithub aria-hidden="true" className="size-3 shrink-0" />
         <span className="wrap-anywhere">{sponsor.githubId}</span>
       </a>
       {sponsor.websiteUrl && (
         <a href={sponsorUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
-          <Globe className="size-3 shrink-0" />
+          <Globe aria-hidden="true" className="size-3 shrink-0" />
           <span className="wrap-anywhere">{getSponsorUrlLabel(sponsor)}</span>
         </a>
       )}
@@ -91,7 +91,7 @@ function SpecialSponsorCard({ sponsor }: { sponsor: Sponsor }) {
   return (
     <div className="@container flex flex-col rounded-[4px] border">
       <div className="flex items-center gap-2 border-b px-3 py-2">
-        <Star className="h-3 w-3 shrink-0 text-primary" />
+        <Star aria-hidden="true" className="h-3 w-3 shrink-0 text-primary" />
         <div className="ml-auto flex flex-wrap items-center justify-end gap-x-2 text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em]">
           <span>SPECIAL</span>
           <span aria-hidden="true">•</span>
@@ -220,7 +220,9 @@ function PastSponsorRow({ sponsor }: { sponsor: Sponsor }) {
           <span className="wrap-anywhere text-[13px] text-fd-muted-foreground leading-[1.55] transition-colors duration-150 group-hover:text-fd-foreground">
             {sponsor.name}
           </span>
-          {wasSpecial && <Star className="size-3 shrink-0 text-fd-muted-foreground/60" />}
+          {wasSpecial && (
+            <Star aria-hidden="true" className="size-3 shrink-0 text-fd-muted-foreground/60" />
+          )}
         </div>
         <span className="text-[10px] text-fd-muted-foreground/60 uppercase tracking-[0.10em] tabular-nums">
           {sponsor.formattedAmount}
@@ -255,7 +257,7 @@ export function SponsorsPage({
             rel="noopener noreferrer"
             className="builder-focus-ring flex min-h-8 items-center gap-2 rounded-[4px] border px-3 py-1.5 font-mono text-[10px] text-primary uppercase tracking-[0.10em] transition-colors duration-150 hover:text-fd-foreground"
           >
-            <Heart className="h-3 w-3" />
+            <Heart aria-hidden="true" className="h-3 w-3" />
             <span>BECOME_SPONSOR.SH</span>
           </a>
         }
@@ -299,7 +301,7 @@ export function SponsorsPage({
       {specialSponsors.length > 0 && (
         <section className="space-y-4">
           <SectionHeader
-            icon={<Star className="h-3 w-3" />}
+            icon={<Star aria-hidden="true" className="h-3 w-3" />}
             title="SPECIAL_SPONSORS"
             count={specialSponsors.length}
           />
@@ -337,7 +339,7 @@ export function SponsorsPage({
       {sponsors.length > 0 && (
         <section className="space-y-4">
           <SectionHeader
-            icon={<Heart className="h-3 w-3" />}
+            icon={<Heart aria-hidden="true" className="h-3 w-3" />}
             title="ACTIVE_SPONSORS"
             count={sponsors.length}
           />
@@ -352,7 +354,7 @@ export function SponsorsPage({
       {backers.length > 0 && (
         <section className="space-y-4">
           <SectionHeader
-            icon={<Users className="h-3 w-3" />}
+            icon={<Users aria-hidden="true" className="h-3 w-3" />}
             title="BACKERS"
             count={backers.length}
           />
@@ -367,7 +369,7 @@ export function SponsorsPage({
       {pastSponsors.length > 0 && (
         <section className="space-y-4">
           <SectionHeader
-            icon={<Archive className="h-3 w-3" />}
+            icon={<Archive aria-hidden="true" className="h-3 w-3" />}
             title="PAST_SPONSORS.ARCHIVE"
             count={pastSponsors.length}
           />
@@ -417,7 +419,7 @@ export function SponsorsPage({
             rel="noopener noreferrer"
             className="builder-focus-ring flex min-h-9 items-center gap-2 rounded-[4px] border px-4 py-2 text-[11px] text-primary uppercase tracking-[0.08em] transition-colors duration-150 hover:text-fd-foreground"
           >
-            <Heart className="h-3.5 w-3.5" />
+            <Heart aria-hidden="true" className="h-3.5 w-3.5" />
             <span>BECOME_SPONSOR.SH</span>
           </a>
           <p className="text-[13px] text-fd-muted-foreground leading-[1.55]">

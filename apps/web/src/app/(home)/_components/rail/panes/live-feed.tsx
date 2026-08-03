@@ -2,6 +2,7 @@
 
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
+import { useEffect, useMemo, useState } from "react";
 
 import { GroupHeader } from "../chrome";
 
@@ -65,11 +66,22 @@ export default function LiveFeed() {
     | FeedEvent[]
     | undefined;
 
+  // Events age out of the window without a new query result arriving, so recount
+  // on a timer as well as on render.
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((value) => value + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   // Date.now() only runs once events resolve, which is client-only, so this
   // cannot desync during hydration.
-  const lastHour = events
-    ? events.filter((event) => Date.now() - event._creationTime < ONE_HOUR_MS).length
-    : null;
+  const lastHour = useMemo(() => {
+    if (!events) return null;
+    const count = events.filter((event) => Date.now() - event._creationTime < ONE_HOUR_MS).length;
+    // The query caps at FEED_LIMIT, so a saturated window is a floor, not a total.
+    return { count, saturated: count === events.length && events.length === FEED_LIMIT };
+  }, [events, tick]);
 
   return (
     /* Below ~820px tall the group header alone costs more room than the pane
@@ -83,7 +95,9 @@ export default function LiveFeed() {
               aria-hidden="true"
               className={events ? "size-1.5 bg-primary" : "size-1.5 bg-fd-muted-foreground/40"}
             />
-            {lastHour === null ? "connecting" : `${lastHour} in the last hour`}
+            {lastHour === null
+              ? "connecting"
+              : `${lastHour.count}${lastHour.saturated ? "+" : ""} in the last hour`}
           </span>
         }
       />

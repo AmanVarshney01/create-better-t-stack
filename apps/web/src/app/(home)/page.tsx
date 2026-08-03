@@ -22,12 +22,21 @@ export default async function HomePage() {
   const videos = fetchedVideos.map((v) => ({ embedId: v.embedId, title: v.title }));
   const tweets = fetchedTweets.map((t) => ({ tweetId: t.tweetId }));
 
-  const content: Array<{ body: ReactNode; count?: number; footer?: ReactNode }> = [
-    { body: <InitPane /> },
-    { body: <SponsorsPane sponsorsData={sponsorsData} />, footer: <SponsorsPaneFooter /> },
-    { body: <VideosPane videos={videos} />, count: videos.length },
-    { body: <TweetsPane tweets={tweets} />, count: tweets.length, footer: <ColophonFooter /> },
-  ];
+  // Keyed by pane id, not array position: PANES lives in another file and
+  // reordering one list must not silently pair a title with the wrong body.
+  const content: Record<string, { body: ReactNode; count?: number; footer?: ReactNode }> = {
+    "pane-init": { body: <InitPane /> },
+    "pane-sponsors": {
+      body: <SponsorsPane sponsorsData={sponsorsData} />,
+      footer: <SponsorsPaneFooter />,
+    },
+    "pane-videos": { body: <VideosPane videos={videos} />, count: videos.length },
+    "pane-tweets": {
+      body: <TweetsPane tweets={tweets} />,
+      count: tweets.length,
+      footer: <ColophonFooter />,
+    },
+  };
 
   return (
     <Rail>
@@ -38,10 +47,10 @@ export default async function HomePage() {
           index={index}
           title={pane.title}
           width={pane.width}
-          count={content[index].count}
-          footer={content[index].footer}
+          count={content[pane.id]?.count}
+          footer={content[pane.id]?.footer}
         >
-          {content[index].body}
+          {content[pane.id]?.body}
         </Pane>
       ))}
     </Rail>

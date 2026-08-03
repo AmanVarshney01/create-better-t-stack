@@ -504,7 +504,6 @@
 .dark #nd-sidebar {
   --color-fd-muted: transparent;
   --color-fd-secondary: transparent;
-  --color-fd-muted-foreground: var(--color-fd-muted-foreground);
 }
 
 #nd-notebook-layout *:not(img),
