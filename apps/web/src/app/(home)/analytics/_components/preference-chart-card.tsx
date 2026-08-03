@@ -3,7 +3,12 @@
 import { cn } from "@/lib/utils";
 
 import { buildCompactCategoryLabels, formatCount, formatPercent } from "./analytics-helpers";
-import { CategoryBarChart } from "./bklit-charts";
+import {
+  CategoryBarChart,
+  resolveLabelCharBudget,
+  resolveLabelGutter,
+  useContainerWidth,
+} from "./bklit-charts";
 import { ChartCard } from "./chart-card";
 import type { ShareDistributionItem } from "./types";
 
@@ -16,6 +21,66 @@ function chunkItems<T>(items: T[], chunkCount: number) {
   });
 
   return chunks.filter((chunk) => chunk.length > 0);
+}
+
+/**
+ * One ranked column. Measures itself so the category labels are shortened to
+ * what actually fits the gutter (middle ellipsis keeps the distinguishing tail)
+ * instead of being clipped by CSS.
+ */
+function PreferenceChartColumn({
+  items,
+  color,
+  layout,
+  labelWidth,
+  compactLabelLength,
+  className,
+}: {
+  items: ShareDistributionItem[];
+  color: string;
+  layout: "horizontal" | "vertical";
+  labelWidth: number;
+  compactLabelLength: number;
+  className?: string;
+}) {
+  const [containerRef, containerWidth] = useContainerWidth();
+  const maxLabelLength =
+    layout === "horizontal"
+      ? Math.min(
+          compactLabelLength,
+          resolveLabelCharBudget(resolveLabelGutter(containerWidth, labelWidth)),
+        )
+      : compactLabelLength;
+
+  const labels = buildCompactCategoryLabels(
+    items.map((item) => item.name),
+    maxLabelLength,
+  );
+  const chartData = items.map((item, itemIndex) => ({
+    label: labels[itemIndex] ?? item.name,
+    value: item.value,
+    fullName: item.name,
+    formatted: `${formatCount(item.value)} (${formatPercent(item.share)})`,
+  }));
+  const height =
+    layout === "horizontal"
+      ? Math.max(180, chartData.length * 30 + 48)
+      : Math.max(240, chartData.length * 18 + 220);
+
+  return (
+    <div className={cn("min-w-0 overflow-hidden", className)} ref={containerRef}>
+      <CategoryBarChart
+        data={chartData}
+        xKey="label"
+        orientation={layout}
+        height={height}
+        labelWidth={labelWidth}
+        series={[{ key: "value", label: "Tracked setups", color }]}
+        tooltipLabelKey="fullName"
+        tooltipValueKey="formatted"
+      />
+    </div>
+  );
 }
 
 type PreferenceChartCardProps = {
@@ -77,37 +142,17 @@ export function PreferenceChartCard({
           : undefined
       }
     >
-      {chunks.map((chunk, index) => {
-        const labels = buildCompactCategoryLabels(
-          chunk.map((item) => item.name),
-          compactLabelLength,
-        );
-        const chartData = chunk.map((item, itemIndex) => ({
-          label: labels[itemIndex] ?? item.name,
-          value: item.value,
-          fullName: item.name,
-          formatted: `${formatCount(item.value)} (${formatPercent(item.share)})`,
-        }));
-        const height =
-          layout === "horizontal"
-            ? Math.max(180, chartData.length * 30 + 48)
-            : Math.max(240, chartData.length * 18 + 220);
-
-        return (
-          <div key={`${title}-${index}`} className={cn("min-w-0 overflow-hidden", chartClassName)}>
-            <CategoryBarChart
-              data={chartData}
-              xKey="label"
-              orientation={layout}
-              height={height}
-              labelWidth={labelWidth}
-              series={[{ key: "value", label: "Tracked setups", color }]}
-              tooltipLabelKey="fullName"
-              tooltipValueKey="formatted"
-            />
-          </div>
-        );
-      })}
+      {chunks.map((chunk, index) => (
+        <PreferenceChartColumn
+          className={chartClassName}
+          color={color}
+          compactLabelLength={compactLabelLength}
+          items={chunk}
+          key={`${title}-${index}`}
+          labelWidth={labelWidth}
+          layout={layout}
+        />
+      ))}
     </ChartCard>
   );
 }

@@ -23,7 +23,7 @@ type ActionButtonsProps = {
 };
 
 const mutedActionClasses =
-  "builder-focus-ring flex items-center justify-center gap-1.5 rounded-md bg-muted/20 px-2 py-1.5 font-mono font-medium text-muted-foreground text-xs transition-colors hover:bg-muted/35 hover:text-foreground";
+  "builder-focus-ring pointer-coarse:min-h-8 flex items-center justify-center gap-1.5 rounded-[4px] border px-2 py-1.5 font-mono text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em] transition-colors duration-150 hover:text-fd-foreground";
 
 export function ActionButtons({
   onReset,
@@ -38,13 +38,18 @@ export function ActionButtons({
   onYoloToggle,
 }: ActionButtonsProps) {
   return (
-    <div className="space-y-1.5">
-      <p className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">Actions</p>
+    <div className="space-y-2">
+      <div className="flex items-center gap-3">
+        <p className="font-mono text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
+          Actions
+        </p>
+        <span aria-hidden="true" className="h-px flex-1 bg-fd-border" />
+      </div>
       <div className="grid grid-cols-2 gap-1.5">
         <button
           type="button"
           onClick={onRandom}
-          className="builder-focus-ring flex items-center justify-center gap-1.5 rounded-md bg-primary/15 px-2 py-1.5 font-mono font-medium text-primary text-xs transition-colors hover:bg-primary/22"
+          className="builder-focus-ring pointer-coarse:min-h-8 flex items-center justify-center gap-1.5 rounded-[4px] border px-2 py-1.5 font-mono text-[10px] text-primary uppercase tracking-[0.10em] transition-colors duration-150 hover:border-primary"
           title="Generate a random stack"
         >
           <Shuffle className="h-3 w-3" />
@@ -80,7 +85,7 @@ export function ActionButtons({
           </button>
         )}
       </div>
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-2 gap-1.5 @xs:grid-cols-3">
         <ShareButton stackUrl={stackUrl} stackState={stackState} />
         <PresetDropdown onApplyPreset={onApplyPreset} />
         <Tooltip delay={100}>
@@ -91,10 +96,10 @@ export function ActionButtons({
                 onClick={() => onYoloToggle(yolo ? "false" : "true")}
                 aria-pressed={yolo}
                 className={cn(
-                  "builder-focus-ring flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 font-mono font-medium text-xs transition-colors",
+                  "builder-focus-ring pointer-coarse:min-h-8 flex items-center justify-center gap-1.5 rounded-[4px] border px-2 py-1.5 font-mono text-[10px] uppercase tracking-[0.10em] transition-colors duration-150",
                   yolo
-                    ? "bg-destructive/15 text-destructive hover:bg-destructive/25"
-                    : "bg-muted/20 text-muted-foreground hover:bg-muted/35 hover:text-foreground",
+                    ? "border-destructive text-destructive"
+                    : "text-fd-muted-foreground hover:text-fd-foreground",
                 )}
               />
             }

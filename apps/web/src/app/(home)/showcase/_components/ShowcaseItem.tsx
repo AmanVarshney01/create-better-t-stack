@@ -27,81 +27,76 @@ export default function ShowcaseItem({
   const projectId = `PROJECT_${String(index + 1).padStart(3, "0")}`;
 
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-xl bg-fd-background/85 ring-1 ring-border/35 transition-all duration-200 hover:-translate-y-0.5 hover:ring-primary/35">
-      <div className="px-4 py-3">
-        <div className="flex items-center gap-2">
-          <File className="h-3 w-3 text-primary" />
-          <span className="font-semibold font-mono text-foreground text-xs">
-            {projectId}.PROJECT
-          </span>
-          <div className="ml-auto flex items-center gap-2 text-muted-foreground text-xs">
-            <span>•</span>
-            <span className="font-mono">{tags.length} DEPS</span>
-          </div>
+    <div className="flex h-full flex-col rounded-[4px] border">
+      <div className="flex min-h-8 shrink-0 flex-wrap items-center gap-x-2 gap-y-0.5 border-b px-4 py-1">
+        <File aria-hidden="true" className="h-3 w-3 shrink-0 text-primary" />
+        <span className="font-mono text-[10px] uppercase tracking-[0.10em]">
+          {projectId}.PROJECT
+        </span>
+        <span
+          aria-hidden="true"
+          className="ml-auto text-[10px] leading-none text-fd-muted-foreground/40"
+        >
+          •
+        </span>
+        <span className="font-mono text-[10px] text-fd-muted-foreground uppercase tabular-nums tracking-[0.10em]">
+          {tags.length} DEPS
+        </span>
+      </div>
+
+      <div className="relative aspect-video w-full border-b">
+        <Image src={imageUrl} alt={title} fill className="object-cover" unoptimized />
+      </div>
+
+      <div className="flex flex-1 flex-col gap-4 px-4 py-4">
+        <div className="flex flex-col gap-2">
+          <h3 className="font-mono text-[13px] leading-[1.55]">{title}</h3>
+          <p className="font-mono text-[13px] text-fd-muted-foreground leading-[1.55]">
+            {description}
+          </p>
         </div>
-      </div>
 
-      <div className="relative aspect-video w-full overflow-hidden bg-muted/10">
-        <Image
-          src={imageUrl}
-          alt={title}
-          fill
-          className="object-cover transition-all duration-300 ease-in-out group-hover:scale-[1.03]"
-          unoptimized
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/45 via-transparent to-transparent" />
-      </div>
-
-      <div className="flex flex-1 flex-col p-4 pt-4">
-        <h3 className="mb-2 font-bold text-lg text-primary">{title}</h3>
-
-        <p className="mb-4 flex-grow text-muted-foreground text-sm leading-relaxed">
-          {description}
-        </p>
-
-        <div className="mb-4">
-          <div className="mb-2 flex items-center gap-2">
-            <span className="text-muted-foreground text-xs">DEPENDENCIES:</span>
+        <div className="mt-auto">
+          <div className="mb-2 flex items-center gap-3">
+            <span className="font-mono text-[10px] text-fd-muted-foreground/70 uppercase tracking-[0.10em]">
+              DEPENDENCIES:
+            </span>
+            <span aria-hidden="true" className="h-px flex-1 bg-fd-border" />
           </div>
           <div className="flex flex-wrap gap-1.5">
             {tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-md bg-muted/30 px-2 py-1 text-foreground text-xs transition-colors hover:bg-muted/45"
-              >
+              <span key={tag} className="rounded-[4px] border px-1.5 py-0.5 font-mono text-[11px]">
                 {tag}
               </span>
             ))}
           </div>
         </div>
-
-        <div className="mt-auto grid gap-2">
-          {liveUrl && (
-            <Link
-              href={liveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-md bg-primary/12 px-3 py-2 text-primary text-sm transition-colors hover:bg-primary/20"
-            >
-              <Monitor className="h-3 w-3" />
-              <span>LAUNCH_DEMO.SH</span>
-              <ExternalLink className="ml-auto h-3 w-3" />
-            </Link>
-          )}
-          {sourceUrl && (
-            <Link
-              href={sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-md bg-muted/30 px-3 py-2 text-muted-foreground text-sm transition-colors hover:bg-muted/45 hover:text-foreground"
-            >
-              <FaGithub className="h-3 w-3" />
-              <span>VIEW_SOURCE.GIT</span>
-              <ExternalLink className="ml-auto h-3 w-3" />
-            </Link>
-          )}
-        </div>
       </div>
+
+      {liveUrl && (
+        <Link
+          href={liveUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="builder-focus-ring flex items-center gap-2 border-t px-4 py-2.5 font-mono text-[11px] text-primary uppercase tracking-[0.08em] transition-colors duration-150 hover:text-primary/70"
+        >
+          <Monitor aria-hidden="true" className="h-3 w-3 shrink-0" />
+          <span>LAUNCH_DEMO.SH</span>
+          <ExternalLink aria-hidden="true" className="ml-auto h-3 w-3 shrink-0" />
+        </Link>
+      )}
+      {sourceUrl && (
+        <Link
+          href={sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="builder-focus-ring flex items-center gap-2 border-t px-4 py-2.5 font-mono text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em] transition-colors duration-150 hover:text-fd-foreground"
+        >
+          <FaGithub aria-hidden="true" className="h-3 w-3 shrink-0" />
+          <span>VIEW_SOURCE.GIT</span>
+          <ExternalLink aria-hidden="true" className="ml-auto h-3 w-3 shrink-0" />
+        </Link>
+      )}
     </div>
   );
 }

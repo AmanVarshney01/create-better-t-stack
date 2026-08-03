@@ -80,32 +80,38 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
 
   return (
     <TooltipProvider>
-      <div className="flex h-full w-full flex-col overflow-hidden bg-fd-background text-foreground">
-        <div className="sticky top-0 z-20 border-border border-b bg-fd-background/95 px-3 py-2 backdrop-blur-sm sm:hidden">
+      <div className="flex h-full w-full flex-col overflow-hidden bg-fd-background text-fd-foreground">
+        <div className="sticky top-0 z-20 border-b bg-fd-background px-3 py-2 sm:hidden">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 rounded-md bg-muted/20 p-1">
+            <div className="flex items-center gap-4">
               <button
                 type="button"
                 onClick={() => setMobileTab("build")}
                 className={cn(
-                  "builder-focus-ring rounded px-2 py-1 font-mono text-[11px] uppercase",
+                  "builder-focus-ring -m-2 flex items-center gap-1.5 p-2 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors duration-150",
                   mobileTab === "build"
-                    ? "bg-primary/12 text-primary"
-                    : "text-muted-foreground hover:bg-muted/30",
+                    ? "text-primary"
+                    : "text-fd-muted-foreground hover:text-fd-foreground",
                 )}
               >
+                <span aria-hidden="true" className="text-[10px] leading-none">
+                  {mobileTab === "build" ? "•" : "·"}
+                </span>
                 Build
               </button>
               <button
                 type="button"
                 onClick={() => setMobileTab("preview")}
                 className={cn(
-                  "builder-focus-ring rounded px-2 py-1 font-mono text-[11px] uppercase",
+                  "builder-focus-ring -m-2 flex items-center gap-1.5 p-2 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors duration-150",
                   mobileTab === "preview"
-                    ? "bg-primary/12 text-primary"
-                    : "text-muted-foreground hover:bg-muted/30",
+                    ? "text-primary"
+                    : "text-fd-muted-foreground hover:text-fd-foreground",
                 )}
               >
+                <span aria-hidden="true" className="text-[10px] leading-none">
+                  {mobileTab === "preview" ? "•" : "·"}
+                </span>
                 Preview
               </button>
             </div>
@@ -117,14 +123,14 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
           )}
         </div>
 
-        <div className="hidden h-full flex-1 grid-cols-[19rem_minmax(0,1fr)] overflow-hidden border-border sm:grid lg:grid-cols-[24rem_minmax(0,1fr)]">
-          <aside className="flex min-h-0 flex-col overflow-hidden border-border/50 border-r bg-fd-background">
+        <div className="hidden h-full flex-1 grid-cols-[16rem_minmax(0,1fr)] overflow-hidden sm:grid md:grid-cols-[19rem_minmax(0,1fr)] lg:grid-cols-[24rem_minmax(0,1fr)]">
+          <aside className="flex min-h-0 flex-col overflow-hidden border-r bg-fd-background">
             <ScrollArea className="min-h-0 flex-1">
               <div className="p-2">
-                <div className="overflow-hidden rounded-2xl bg-fd-background/80">
-                  <section className="space-y-2 border-b border-border/20 px-3 py-3">
+                <div className="overflow-hidden">
+                  <section className="space-y-2 border-b px-3 py-3">
                     <label className="flex flex-col">
-                      <span className="mb-1 font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+                      <span className="mb-1 font-mono text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
                         Project Name
                       </span>
                       <Input
@@ -136,32 +142,35 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                         aria-invalid={!!projectNameError}
                         aria-describedby={projectNameError ? "project-name-error" : undefined}
                         className={cn(
-                          "builder-focus-ring w-full rounded-lg px-2.5 py-1.5 font-mono text-sm focus:outline-none",
+                          "builder-focus-ring w-full border-fd-border px-2.5 py-1.5 font-mono text-[13px] focus:outline-none",
                           projectNameError
-                            ? "border-destructive bg-destructive/10 text-destructive-foreground"
-                            : "border-border/60 focus:border-primary",
+                            ? "border-destructive text-destructive"
+                            : "focus:border-primary",
                         )}
                         placeholder="my-better-t-app"
                       />
                       {projectNameError && (
-                        <p id="project-name-error" className="mt-1 text-destructive text-xs">
+                        <p
+                          id="project-name-error"
+                          className="mt-1 font-mono text-[11px] text-destructive"
+                        >
                           {projectNameError}
                         </p>
                       )}
                     </label>
                   </section>
 
-                  <section className="space-y-2 border-border/20 border-b px-3 py-3">
-                    <div className="flex items-center justify-between">
-                      <p className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+                  <section className="space-y-2 border-b px-3 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                      <p className="font-mono text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
                         CLI Command
                       </p>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         {isCommandMultiline && (
                           <button
                             type="button"
                             onClick={() => setCommandExpanded((prev) => !prev)}
-                            className="builder-focus-ring flex items-center gap-1 rounded-md bg-muted/20 px-2 py-1 font-mono text-[11px] text-muted-foreground uppercase transition-colors hover:bg-muted/35 hover:text-foreground"
+                            className="builder-focus-ring flex items-center gap-1 rounded-[4px] border px-2 py-1 font-mono text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em] transition-colors duration-150 hover:text-fd-foreground"
                             title={commandExpanded ? "Collapse command" : "Show full command"}
                           >
                             <ChevronDown
@@ -177,10 +186,10 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                           type="button"
                           onClick={copyToClipboard}
                           className={cn(
-                            "builder-focus-ring flex items-center gap-1 rounded-md px-2 py-1 font-mono text-[11px] uppercase transition-colors",
+                            "builder-focus-ring flex items-center gap-1 rounded-[4px] border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.10em] transition-colors duration-150",
                             copied
-                              ? "bg-primary/14 text-primary"
-                              : "bg-muted/20 text-muted-foreground hover:bg-muted/35 hover:text-foreground",
+                              ? "border-primary text-primary"
+                              : "text-fd-muted-foreground hover:text-fd-foreground",
                           )}
                           title={copied ? "Copied!" : "Copy command"}
                         >
@@ -205,25 +214,31 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                       }}
                       aria-label="Copy CLI command"
                       title="Click to copy command"
-                      className="builder-focus-ring cursor-pointer rounded-lg bg-muted/20 px-2.5 py-2"
+                      className="builder-focus-ring cursor-pointer rounded-[4px] border px-2.5 py-2 transition-colors duration-150 hover:border-primary/50"
                     >
-                      <code
-                        className={cn(
-                          "block font-mono text-muted-foreground text-xs",
-                          commandExpanded ? "whitespace-pre-wrap break-words" : "truncate",
-                        )}
-                      >
-                        {commandExpanded ? displayCommand : command}
-                      </code>
+                      <div className="flex min-w-0 items-start gap-1.5">
+                        <span aria-hidden="true" className="font-mono text-[13px] text-primary">
+                          $
+                        </span>
+                        <code
+                          className={cn(
+                            "block min-w-0 flex-1 font-mono text-[11px] text-fd-muted-foreground leading-[1.55]",
+                            commandExpanded ? "whitespace-pre-wrap break-words" : "truncate",
+                          )}
+                        >
+                          {commandExpanded ? displayCommand : command}
+                        </code>
+                      </div>
                     </div>
                   </section>
 
                   <section className="space-y-2 px-3 py-3">
-                    <div className="flex items-center justify-between">
-                      <p className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+                    <div className="flex items-center gap-3">
+                      <p className="font-mono text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
                         Selected stack
                       </p>
-                      <span className="font-mono text-[11px] text-muted-foreground uppercase">
+                      <span aria-hidden="true" className="h-px flex-1 bg-fd-border" />
+                      <span className="font-mono text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em] tabular-nums">
                         {selectedCount} picks
                       </span>
                     </div>
@@ -242,12 +257,12 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                   </section>
 
                   {desktopBuildNote && (
-                    <section className="space-y-2 border-border/20 border-t px-3 py-3">
-                      <div className="flex items-center gap-1.5 font-mono text-[11px] text-amber-600 uppercase tracking-wide dark:text-amber-400">
+                    <section className="space-y-2 border-t px-3 py-3">
+                      <div className="flex items-center gap-1.5 font-mono text-[11px] text-amber-600 uppercase tracking-[0.08em] dark:text-amber-400">
                         <AlertTriangle className="h-3.5 w-3.5" />
                         Desktop Build Note
                       </div>
-                      <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-2 text-muted-foreground text-xs">
+                      <div className="rounded-[4px] border px-2.5 py-2 font-mono text-[11px] text-fd-muted-foreground leading-[1.55]">
                         {desktopBuildNote}
                       </div>
                     </section>
@@ -256,18 +271,20 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
               </div>
             </ScrollArea>
 
-            <div className="border-border/35 border-t bg-fd-background/95 p-2">
-              <div className="rounded-2xl bg-fd-background/80 p-2">
+            <div className="border-t bg-fd-background p-2">
+              <div className="@container p-2">
                 <SpecialSponsorsPanel sponsors={specialSponsors} />
-                {specialSponsors.length > 0 ? <div className="my-2 h-px bg-border/25" /> : null}
+                {specialSponsors.length > 0 ? (
+                  <span aria-hidden="true" className="my-3 block h-px w-full bg-fd-border" />
+                ) : null}
                 {actionButtons}
               </div>
             </div>
           </aside>
 
           <section className="flex min-h-0 flex-col overflow-hidden">
-            <div className="sticky top-0 z-10 flex flex-col gap-2 border-border border-b bg-fd-background px-3 py-2">
-              <div className="flex w-fit items-center gap-1 rounded-md bg-muted/20 p-1">
+            <div className="sticky top-0 z-10 flex flex-col gap-2 border-b bg-fd-background px-3 py-2">
+              <div className="flex w-fit items-center gap-4">
                 <button
                   type="button"
                   onClick={() => {
@@ -276,10 +293,10 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                     });
                   }}
                   className={cn(
-                    "builder-focus-ring flex items-center gap-1.5 rounded px-2 py-1 font-mono text-[11px] uppercase tracking-wide",
+                    "builder-focus-ring -m-2 flex items-center gap-1.5 p-2 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors duration-150",
                     viewMode === "command"
-                      ? "bg-primary/12 text-primary"
-                      : "text-muted-foreground hover:bg-muted/30",
+                      ? "text-primary"
+                      : "text-fd-muted-foreground hover:text-fd-foreground",
                   )}
                 >
                   <Terminal className="h-3 w-3" />
@@ -293,10 +310,10 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                     });
                   }}
                   className={cn(
-                    "builder-focus-ring flex items-center gap-1.5 rounded px-2 py-1 font-mono text-[11px] uppercase tracking-wide",
+                    "builder-focus-ring -m-2 flex items-center gap-1.5 p-2 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors duration-150",
                     viewMode === "preview"
-                      ? "bg-primary/12 text-primary"
-                      : "text-muted-foreground hover:bg-muted/30",
+                      ? "text-primary"
+                      : "text-fd-muted-foreground hover:text-fd-foreground",
                   )}
                 >
                   <FolderTree className="h-3 w-3" />
@@ -311,7 +328,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
             {viewMode === "command" ? (
               <div ref={scrollAreaRef} className="min-h-0 flex-1">
                 <ScrollArea className="h-full overflow-hidden scroll-smooth">
-                  <main className="p-2 sm:p-4">
+                  <main className="@container p-2 sm:p-4">
                     <TechCategories
                       mode="desktop"
                       stack={effectiveStack}
@@ -337,9 +354,9 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
             <div className="flex min-h-0 flex-1 flex-col">
               <ScrollArea className="h-full overflow-hidden scroll-smooth">
                 <main className="p-2 pb-6">
-                  <div className="mb-4 space-y-2 rounded-xl bg-muted/10 p-2">
+                  <div className="mb-4 space-y-3 rounded-[4px] border p-3">
                     <label className="flex flex-col">
-                      <span className="mb-1 font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+                      <span className="mb-1 font-mono text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
                         Project Name
                       </span>
                       <Input
@@ -353,31 +370,34 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                           projectNameError ? "project-name-error-mobile" : undefined
                         }
                         className={cn(
-                          "builder-focus-ring w-full rounded-lg border bg-background/75 px-2.5 py-1.5 font-mono text-sm focus:outline-none",
+                          "builder-focus-ring w-full border-fd-border px-2.5 py-1.5 font-mono text-[13px] focus:outline-none",
                           projectNameError
-                            ? "border-destructive bg-destructive/10 text-destructive-foreground"
-                            : "border-border/60 focus:border-primary",
+                            ? "border-destructive text-destructive"
+                            : "focus:border-primary",
                         )}
                         placeholder="my-better-t-app"
                       />
                       {projectNameError && (
-                        <p id="project-name-error-mobile" className="mt-1 text-destructive text-xs">
+                        <p
+                          id="project-name-error-mobile"
+                          className="mt-1 font-mono text-[11px] text-destructive"
+                        >
                           {projectNameError}
                         </p>
                       )}
                     </label>
 
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide">
+                      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                        <span className="font-mono text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em]">
                           CLI Command
                         </span>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                           {isCommandMultiline && (
                             <button
                               type="button"
                               onClick={() => setCommandExpanded((prev) => !prev)}
-                              className="builder-focus-ring flex items-center gap-1 rounded-md bg-muted/20 px-2 py-1 font-mono text-[11px] text-muted-foreground uppercase"
+                              className="builder-focus-ring flex items-center gap-1 rounded-[4px] border px-2 py-1 font-mono text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em] transition-colors duration-150 hover:text-fd-foreground"
                               title={commandExpanded ? "Collapse command" : "Show full command"}
                             >
                               <ChevronDown
@@ -391,10 +411,8 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                           )}
                           <span
                             className={cn(
-                              "flex items-center gap-1 rounded-md px-2 py-1 font-mono text-[11px] uppercase",
-                              copied
-                                ? "bg-primary/14 text-primary"
-                                : "bg-muted/20 text-muted-foreground",
+                              "flex items-center gap-1 rounded-[4px] border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.10em]",
+                              copied ? "border-primary text-primary" : "text-fd-muted-foreground",
                             )}
                           >
                             {copied ? (
@@ -417,14 +435,16 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                           }
                         }}
                         className={cn(
-                          "builder-focus-ring rounded-lg bg-background/75 px-2.5 py-2 font-mono text-xs text-muted-foreground ring-1",
-                          copied ? "ring-primary/40" : "ring-border/45",
+                          "builder-focus-ring rounded-[4px] border px-2.5 py-2 font-mono text-[11px] text-fd-muted-foreground leading-[1.55] transition-colors duration-150",
+                          copied && "border-primary",
                         )}
                         aria-label="Copy command"
                         title="Click to copy command"
                       >
                         <div className="flex min-w-0 items-start gap-1.5">
-                          <span className="mt-0.5 text-chart-4">$</span>
+                          <span aria-hidden="true" className="text-primary">
+                            $
+                          </span>
                           <code
                             className={cn(
                               "min-w-0 flex-1",
@@ -438,12 +458,14 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                     </div>
 
                     {desktopBuildNote && (
-                      <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-2">
-                        <div className="mb-1 flex items-center gap-1.5 font-mono text-[10px] text-amber-600 uppercase tracking-wide dark:text-amber-400">
+                      <div className="rounded-[4px] border px-2.5 py-2">
+                        <div className="mb-1 flex items-center gap-1.5 font-mono text-[10px] text-amber-600 uppercase tracking-[0.10em] dark:text-amber-400">
                           <AlertTriangle className="h-3 w-3" />
                           Desktop Build Note
                         </div>
-                        <p className="text-muted-foreground text-xs">{desktopBuildNote}</p>
+                        <p className="font-mono text-[11px] text-fd-muted-foreground leading-[1.55]">
+                          {desktopBuildNote}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -458,10 +480,12 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                 </main>
               </ScrollArea>
 
-              <div className="border-border/35 border-t bg-fd-background/95 p-2 backdrop-blur-sm">
-                <div className="rounded-xl bg-fd-background/80 p-2">
+              <div className="border-t bg-fd-background p-2">
+                <div className="@container p-2">
                   <SpecialSponsorsPanel sponsors={specialSponsors} compact />
-                  {specialSponsors.length > 0 ? <div className="my-2 h-px bg-border/25" /> : null}
+                  {specialSponsors.length > 0 ? (
+                    <span aria-hidden="true" className="my-3 block h-px w-full bg-fd-border" />
+                  ) : null}
                   {actionButtons}
                 </div>
               </div>

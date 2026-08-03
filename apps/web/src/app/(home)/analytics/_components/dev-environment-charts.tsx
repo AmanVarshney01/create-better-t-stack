@@ -30,20 +30,28 @@ function SplitMeterCard({
   return (
     <ChartCard title={title} description={description}>
       <div className="grid gap-4 sm:grid-cols-[minmax(0,0.9fr)_minmax(180px,0.7fr)] sm:items-center">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded border border-primary/25 bg-fd-background p-4">
-            <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+        <div className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+          <div className="min-w-0 border-t pt-3">
+            <div className="text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
               Yes
             </div>
-            <div className="mt-2 font-semibold text-2xl">{formatCount(yesCount)}</div>
-            <div className="mt-1 text-muted-foreground text-xs">{formatPercent(yesShare)}</div>
+            <div className="mt-2 font-medium text-[20px] tabular-nums tracking-[-0.02em]">
+              {formatCount(yesCount)}
+            </div>
+            <div className="mt-1 text-[11px] text-fd-muted-foreground tabular-nums">
+              {formatPercent(yesShare)}
+            </div>
           </div>
-          <div className="rounded border border-border bg-fd-background p-4">
-            <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+          <div className="min-w-0 border-t pt-3">
+            <div className="text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
               No
             </div>
-            <div className="mt-2 font-semibold text-2xl">{formatCount(noCount)}</div>
-            <div className="mt-1 text-muted-foreground text-xs">{formatPercent(noShare)}</div>
+            <div className="mt-2 font-medium text-[20px] tabular-nums tracking-[-0.02em]">
+              {formatCount(noCount)}
+            </div>
+            <div className="mt-1 text-[11px] text-fd-muted-foreground tabular-nums">
+              {formatPercent(noShare)}
+            </div>
           </div>
         </div>
         <CategoryBarChart
@@ -81,10 +89,10 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
         title="Package manager, setup, deployment, and addon choices"
         description="The environment choices that shape generated projects after the stack options are selected."
         aside={
-          <div className="rounded border border-border bg-fd-background px-3 py-1.5 font-mono text-muted-foreground text-xs">
+          <span className="shrink-0 text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em]">
             packages {data.summary.mostPopularPackageManager} • runtime{" "}
             {data.summary.mostPopularRuntime}
-          </div>
+          </span>
         }
       />
 

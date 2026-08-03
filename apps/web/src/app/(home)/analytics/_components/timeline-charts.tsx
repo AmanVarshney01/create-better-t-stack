@@ -41,9 +41,9 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
         title="Project creation volume over time"
         description="Recent momentum, monthly totals, weekday averages, and UTC-hour concentration from live CLI telemetry."
         aside={
-          <div className="rounded border border-border bg-fd-background px-3 py-1.5 font-mono text-muted-foreground text-xs">
+          <span className="shrink-0 text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em] tabular-nums">
             peak {peakDayLabel} · hot hour {busiestHourLabel}
-          </div>
+          </span>
         }
       />
 
@@ -54,12 +54,12 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
           footer={
             <>
               Last 7 days:{" "}
-              <span className="text-foreground">
+              <span className="text-fd-foreground tabular-nums">
                 {formatCompactNumber(data.momentum.last7Days)}
               </span>
               {" · "}
               Previous 7 days:{" "}
-              <span className="text-foreground">
+              <span className="text-fd-foreground tabular-nums">
                 {formatCompactNumber(data.momentum.previous7Days)}
               </span>
             </>
@@ -81,7 +81,9 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
           footer={
             <>
               Live total:{" "}
-              <span className="text-foreground">{data.totalProjects.toLocaleString()}</span>
+              <span className="text-fd-foreground tabular-nums">
+                {data.totalProjects.toLocaleString()}
+              </span>
             </>
           }
         >
@@ -101,7 +103,9 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
           footer={
             <>
               Active days in the last 30:{" "}
-              <span className="text-foreground">{data.momentum.activeDaysLast30}</span>
+              <span className="text-fd-foreground tabular-nums">
+                {data.momentum.activeDaysLast30}
+              </span>
             </>
           }
         >
@@ -119,7 +123,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
           footer={
             <>
               Busiest hour:{" "}
-              <span className="text-foreground">
+              <span className="text-fd-foreground tabular-nums">
                 {data.momentum.busiestHour
                   ? `${formatHourLabel(data.momentum.busiestHour.hour)} UTC`
                   : "n/a"}
