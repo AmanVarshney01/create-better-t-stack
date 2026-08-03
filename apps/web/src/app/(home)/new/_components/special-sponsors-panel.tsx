@@ -23,12 +23,13 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <p className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
-          <Star className="h-3.5 w-3.5 text-yellow-500/90" />
+      <div className="flex items-center gap-3">
+        <p className="flex items-center gap-1.5 font-mono text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
+          <Star aria-hidden="true" className="h-3 w-3 text-fd-muted-foreground" />
           Special sponsors
         </p>
-        <span className="rounded-md bg-muted/20 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground uppercase">
+        <span aria-hidden="true" className="h-px flex-1 bg-fd-border" />
+        <span className="font-mono text-[10px] text-fd-muted-foreground tabular-nums">
           {sponsors.length}
         </span>
       </div>
@@ -46,7 +47,7 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={entry.name}
-                    className="inline-flex shrink-0 rounded-md"
+                    className="builder-focus-ring inline-flex shrink-0"
                   />
                 }
               >
@@ -56,7 +57,7 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
                   width={64}
                   height={64}
                   className={cn(
-                    "shrink-0 rounded-md border border-border/70 transition-colors hover:border-primary/40",
+                    "shrink-0 rounded-md border transition-colors duration-150 hover:border-primary",
                     compact ? "h-9 w-9" : "h-10 w-10",
                   )}
                   unoptimized
@@ -71,22 +72,28 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
                       alt={entry.name}
                       width={48}
                       height={48}
-                      className="h-11 w-11 rounded border border-border"
+                      className="h-11 w-11 rounded border"
                       unoptimized
                     />
                     <div className="min-w-0">
-                      <h3 className="truncate font-semibold text-sm">{entry.name}</h3>
+                      <h3 className="truncate font-mono text-[13px] leading-[1.55]">
+                        {entry.name}
+                      </h3>
                       {shouldShowLifetimeTotal(entry) ? (
                         <>
                           {entry.tierName && (
-                            <p className="text-primary text-xs">{entry.tierName}</p>
+                            <p className="font-mono text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
+                              {entry.tierName}
+                            </p>
                           )}
-                          <p className="text-muted-foreground text-xs">
+                          <p className="font-mono text-[11px] text-fd-muted-foreground tabular-nums">
                             Total: {entry.formattedAmount}
                           </p>
                         </>
                       ) : (
-                        <p className="text-primary text-xs">{entry.tierName}</p>
+                        <p className="font-mono text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
+                          {entry.tierName}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -96,7 +103,7 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
                       href={entry.githubUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
+                      className="group flex items-center gap-2 font-mono text-[11px] text-fd-muted-foreground transition-colors duration-150 hover:text-primary"
                     >
                       <FaGithub className="h-3.5 w-3.5" />
                       <span className="truncate">{entry.githubId}</span>
@@ -106,7 +113,7 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
                         href={sponsorUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
+                        className="group flex items-center gap-2 font-mono text-[11px] text-fd-muted-foreground transition-colors duration-150 hover:text-primary"
                       >
                         <Globe className="h-3.5 w-3.5" />
                         <span className="truncate">{getSponsorUrlLabel(entry)}</span>
@@ -128,7 +135,7 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
                 rel="noopener noreferrer"
                 aria-label="Become a sponsor"
                 className={cn(
-                  "builder-focus-ring inline-flex shrink-0 items-center justify-center rounded-md border border-dashed border-primary/40 bg-primary/10 text-primary transition-colors hover:border-primary/60 hover:bg-primary/16",
+                  "builder-focus-ring inline-flex shrink-0 items-center justify-center rounded-[4px] border border-dashed text-primary transition-colors duration-150 hover:border-primary",
                   compact ? "h-9 w-9" : "h-10 w-10",
                 )}
               />
@@ -138,8 +145,8 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
           </HoverCardTrigger>
           <HoverCardContent align="start" sideOffset={8} className="bg-fd-background">
             <div className="space-y-1.5">
-              <p className="font-semibold text-sm">Become a sponsor</p>
-              <p className="text-muted-foreground text-xs">
+              <p className="font-mono text-[13px] leading-[1.55]">Become a sponsor</p>
+              <p className="font-mono text-[11px] text-fd-muted-foreground leading-[1.5]">
                 Support the project and get featured in this special sponsors list.
               </p>
             </div>

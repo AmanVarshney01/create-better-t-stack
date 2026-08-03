@@ -1,6 +1,6 @@
 "use client";
 
-import Footer from "../../_components/footer";
+import { PageShell } from "../../_components/page-shell";
 import { AnalyticsHeader } from "./analytics-header";
 import { AnalyticsSources } from "./analytics-sources";
 import { DevToolsSection } from "./dev-environment-charts";
@@ -18,30 +18,27 @@ export default function AnalyticsPage({
   connectionStatus: "online" | "connecting" | "reconnecting" | "offline";
 }) {
   return (
-    <main className="container mx-auto min-h-svh">
-      <div className="mx-auto flex flex-col gap-8 px-4 pt-12">
-        <AnalyticsHeader
-          lastUpdated={data.lastUpdated}
-          liveTotal={data.totalProjects}
-          trackingDays={data.momentum.trackingDays}
-          connectionStatus={connectionStatus}
-        />
+    <PageShell>
+      <AnalyticsHeader
+        lastUpdated={data.lastUpdated}
+        liveTotal={data.totalProjects}
+        trackingDays={data.momentum.trackingDays}
+        connectionStatus={connectionStatus}
+      />
 
-        <LiveLogs />
+      <LiveLogs />
 
-        <MetricsCards data={data} />
+      <MetricsCards data={data} />
 
-        <TimelineSection data={data} />
+      <TimelineSection data={data} />
 
-        <StackSection data={data} />
+      <StackSection data={data} />
 
-        <DevToolsSection data={data} />
+      <DevToolsSection data={data} />
 
-        <div className="max-w-xl">
-          <AnalyticsSources />
-        </div>
+      <div className="max-w-xl">
+        <AnalyticsSources />
       </div>
-      <Footer />
-    </main>
+    </PageShell>
   );
 }

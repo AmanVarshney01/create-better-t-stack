@@ -142,9 +142,9 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
 
   if (isLoading && !tree) {
     return (
-      <div className="flex h-full items-center justify-center rounded-lg border border-border bg-fd-background">
-        <div className="flex items-center gap-2 rounded border border-border bg-muted/20 px-3 py-2 font-mono text-muted-foreground text-xs">
-          <Loader2 className="h-4 w-4 animate-spin" />
+      <div className="flex h-full items-center justify-center rounded-[4px] border bg-fd-background">
+        <div className="flex items-center gap-2 rounded-[4px] border px-3 py-2 font-mono text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Rendering file tree
         </div>
       </div>
@@ -153,8 +153,8 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
 
   if (error && !tree) {
     return (
-      <div className="flex h-full items-center justify-center rounded-lg border border-border bg-fd-background">
-        <p className="rounded border border-destructive/30 bg-destructive/10 px-3 py-2 font-mono text-destructive text-sm">
+      <div className="flex h-full items-center justify-center rounded-[4px] border bg-fd-background">
+        <p className="rounded-[4px] border border-destructive px-3 py-2 font-mono text-[13px] text-destructive">
           {error}
         </p>
       </div>
@@ -163,31 +163,31 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
 
   if (!tree) {
     return (
-      <div className="flex h-full items-center justify-center rounded-lg border border-border bg-fd-background text-muted-foreground">
-        <p className="font-mono text-sm">Generating preview...</p>
+      <div className="flex h-full items-center justify-center rounded-[4px] border bg-fd-background text-fd-muted-foreground">
+        <p className="font-mono text-[13px]">Generating preview...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border/80 bg-fd-background">
+    <div className="@container flex h-full flex-col overflow-hidden rounded-[4px] border bg-fd-background">
       {/* Stats bar */}
-      <div className="flex items-center gap-2 border-border border-b bg-muted/20 px-3 py-2 sm:gap-4">
-        {/* Mobile back button when viewing code */}
+      <div className="@lg:gap-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-3 py-2">
+        {/* Back button when the panel is too narrow for the split view */}
         {mobileView === "code" && selectedFile && (
           <button
             type="button"
             onClick={handleBackToTree}
-            className="builder-focus-ring flex items-center gap-1 rounded px-1 py-0.5 font-mono text-xs text-muted-foreground hover:text-foreground sm:hidden"
+            className="builder-focus-ring pointer-coarse:py-2 @lg:hidden flex items-center gap-1 py-0.5 font-mono text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em] transition-colors duration-150 hover:text-fd-foreground"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5" />
             <span>Files</span>
           </button>
         )}
         <div
           className={cn(
-            "flex items-center gap-1.5 text-xs text-muted-foreground",
-            mobileView === "code" && "hidden sm:flex",
+            "flex shrink-0 items-center gap-1.5 font-mono text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em] tabular-nums",
+            mobileView === "code" && "@lg:flex hidden",
           )}
         >
           <FolderTree className="h-3.5 w-3.5" />
@@ -195,8 +195,8 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
         </div>
         <div
           className={cn(
-            "flex items-center gap-1.5 text-xs text-muted-foreground",
-            mobileView === "code" && "hidden sm:flex",
+            "flex shrink-0 items-center gap-1.5 font-mono text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em] tabular-nums",
+            mobileView === "code" && "@lg:flex hidden",
           )}
         >
           <FileCode2 className="h-3.5 w-3.5" />
@@ -204,22 +204,22 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
         </div>
         <span
           className={cn(
-            "hidden rounded border border-border/70 bg-fd-background px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground uppercase tracking-wide sm:inline-flex",
+            "@lg:inline-flex hidden font-mono text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em]",
           )}
         >
           {mobileView === "code" ? "Code view" : "Tree view"}
         </span>
-        {/* Show current file name on mobile */}
+        {/* Current file name, shown when the tree is hidden */}
         {mobileView === "code" && selectedFile && (
-          <span className="truncate font-mono text-xs text-foreground sm:hidden">
+          <span className="@lg:hidden min-w-0 truncate font-mono text-[11px] text-fd-foreground">
             {selectedFile.path.split("/").pop()}
           </span>
         )}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           <Tooltip>
-            <TooltipTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+            <TooltipTrigger className="pointer-coarse:py-2 flex items-center gap-1 font-mono text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em] transition-colors duration-150 hover:text-fd-foreground">
               <Info className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Preview info</span>
+              <span className="@lg:inline hidden">Preview info</span>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-xs">
               <p>
@@ -229,18 +229,18 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
               </p>
             </TooltipContent>
           </Tooltip>
-          {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+          {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-fd-muted-foreground" />}
         </div>
       </div>
 
-      {/* Split view - side by side on desktop, toggle on mobile */}
+      {/* Split view once the panel is wide enough, toggle while it is narrow */}
       <div className="flex flex-1 overflow-hidden">
-        {/* File explorer - full width on mobile when tree view, hidden when code view */}
+        {/* File explorer - full width while narrow, fixed rail once split */}
         <div
           className={cn(
-            "shrink-0 overflow-hidden border-border sm:border-r",
-            "w-full sm:w-48 md:w-56 lg:w-64",
-            mobileView === "code" ? "hidden sm:block" : "block",
+            "@lg:border-r shrink-0 overflow-hidden",
+            "@lg:w-48 @xl:w-56 @3xl:w-64 w-full",
+            mobileView === "code" ? "@lg:block hidden" : "block",
           )}
         >
           <FileExplorer
@@ -250,11 +250,11 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
           />
         </div>
 
-        {/* Code viewer - full width on mobile when code view, hidden when tree view */}
+        {/* Code viewer - full width while narrow, right pane once split */}
         <div
           className={cn(
-            "flex-1 overflow-hidden bg-fd-background/80",
-            mobileView === "tree" ? "hidden sm:block" : "block",
+            "min-w-0 flex-1 overflow-hidden bg-fd-background",
+            mobileView === "tree" ? "@lg:block hidden" : "block",
           )}
         >
           {selectedFile ? (

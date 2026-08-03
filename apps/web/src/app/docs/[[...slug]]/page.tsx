@@ -21,7 +21,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       {page.data.author && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <span>by</span>
           {page.data.author.url ? (
             <Link
@@ -43,14 +43,14 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
           )}
         </div>
       )}
-      <div className="flex flex-row items-center gap-2 border-b pt-2 pb-6">
+      <div className="flex flex-row flex-wrap items-center gap-2 border-b pt-2 pb-6">
         <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
         <ViewOptions
           markdownUrl={`${page.url}.mdx`}
           githubUrl={`https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/web/content/docs/${page.path}`}
         />
       </div>
-      <DocsBody>
+      <DocsBody className="[&_:not(pre)>code]:wrap-break-word">
         <MDX components={{ ...defaultMdxComponents, ...TabsComponents, ...FilesComponents }} />
       </DocsBody>
     </DocsPage>
