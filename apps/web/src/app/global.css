@@ -401,20 +401,22 @@
   --font-ascii:
     ui-monospace, "SF Mono", "SFMono-Regular", Menlo, "DejaVu Sans Mono", "Liberation Mono",
     Consolas, "Courier New", monospace;
-  /* Catppuccin Latte, per-stop darkened to clear 3.2:1 on the light background. */
+  /* Catppuccin Latte at 55% saturation and a flat 42% lightness. Latte darkened
+     to hit contrast turns into a full-strength rainbow on white; muting the
+     chroma keeps the hue sequence while staying calm. Min contrast 3.33. */
   --bts-banner-gradient: linear-gradient(
     90deg,
-    #c965af 0%,
-    #8839ef 10%,
-    #d20f39 20%,
-    #e64553 30%,
-    #e85b0a 40%,
-    #bf7919 50%,
-    #3e9c2a 60%,
-    #179299 70%,
-    #0492cb 80%,
-    #1e95aa 90%,
-    #6c80f0 100%
+    #96407f 0%,
+    #64399d 10%,
+    #9e384e 20%,
+    #983e46 30%,
+    #a65b31 40%,
+    #98733e 50%,
+    #558d49 60%,
+    #409297 70%,
+    #3284a4 80%,
+    #428894 90%,
+    #3243a4 100%
   );
 }
 
