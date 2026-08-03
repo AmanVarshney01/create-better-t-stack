@@ -1,5 +1,6 @@
 import HeroPane from "./hero-pane";
 import InstallPane from "./install-pane";
+import LiveFeed from "./live-feed";
 import StatsPane from "./stats-pane";
 
 function Divider() {
@@ -14,6 +15,7 @@ export default function InitPane() {
       <InstallPane />
       <Divider />
       <StatsPane />
+      <LiveFeed />
     </>
   );
 }
