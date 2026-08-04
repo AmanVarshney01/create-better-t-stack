@@ -1,5 +1,5 @@
 {{#if (eq api "orpc")}}
-import { {{#if (eq auth "better-auth")}}protectedProcedure, {{/if}}publicProcedure } from "../index";
+import { {{#if (or (eq auth "better-auth") (eq auth "descope"))}}protectedProcedure, {{/if}}publicProcedure } from "../index";
 import type { RouterClient } from "@orpc/server";
 {{#if (includes examples "todo")}}
 import { todoRouter } from "./todo";
@@ -16,6 +16,13 @@ export const appRouter = {
       user: context.session?.user,
     };
   }),
+  {{else if (eq auth "descope")}}
+  privateData: protectedProcedure.handler(({ context }) => {
+    return {
+      message: "This is private",
+      userId: context.session?.token?.sub,
+    };
+  }),
   {{/if}}
   {{#if (includes examples "todo")}}
   todo: todoRouter,
@@ -25,7 +32,7 @@ export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;
 {{else if (eq api "trpc")}}
 import {
-  {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}protectedProcedure, {{/if}}publicProcedure,
+  {{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}protectedProcedure, {{/if}}publicProcedure,
   router,
 } from "../index";
 {{#if (includes examples "todo")}}
@@ -36,12 +43,14 @@ export const appRouter = router({
   healthCheck: publicProcedure.query(() => {
     return "OK";
   }),
-  {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+  {{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}
   privateData: protectedProcedure.query(({ ctx }) => {
     return {
       message: "This is private",
       {{#if (eq auth "better-auth")}}
       user: ctx.session.user,
+      {{else if (eq auth "descope")}}
+      userId: ctx.session.token.sub,
       {{else}}
       userId: ctx.auth.userId,
       {{/if}}

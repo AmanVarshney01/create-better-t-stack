@@ -95,6 +95,17 @@ const isConvexBetterAuthFrontendSelectionCompatible = (
 const convexBetterAuthFrontendRequirementMessage =
   "Better-Auth with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
 
+const descopeFrontendRequirementMessage =
+  "Descope requires Next.js, React Router, or TanStack Router";
+
+export const hasDescopeCompatibleFrontend = (webFrontend: string[]) =>
+  webFrontend.some((f) => ["react-router", "tanstack-router", "next"].includes(f));
+
+// Descope supports Next.js, TanStack Router, and React Router across all
+// backends, including Convex.
+export const isDescopeAllowed = (_backend: string, webFrontend: string[]) =>
+  hasDescopeCompatibleFrontend(webFrontend);
+
 export const hasClerkCompatibleFrontend = (webFrontend: string[], nativeFrontend: string[]) =>
   webFrontend.some((f) =>
     ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
@@ -673,6 +684,17 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     }
   }
 
+  if (nextStack.auth === "descope") {
+    if (!isDescopeAllowed(nextStack.backend, nextStack.webFrontend)) {
+      nextStack.auth = "none";
+      changed = true;
+      changes.push({
+        category: "auth",
+        message: `Auth set to 'None' (${descopeFrontendRequirementMessage})`,
+      });
+    }
+  }
+
   // ============================================
   // PAYMENTS CONSTRAINTS
   // ============================================
@@ -1216,6 +1238,11 @@ export const getDisabledReason = (
         !isClerkFrontendSelectionCompatible(currentStack.webFrontend, currentStack.nativeFrontend)
       ) {
         return clerkFrontendRequirementMessage;
+      }
+    }
+    if (optionId === "descope") {
+      if (!isDescopeAllowed(currentStack.backend, currentStack.webFrontend)) {
+        return descopeFrontendRequirementMessage;
       }
     }
   }

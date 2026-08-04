@@ -16,7 +16,7 @@ import UserMenu from "./user-menu";
 export default function Header() {
   const links = [
     { to: "/", label: "Home" },
-    {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+    {{#if (or (eq auth "better-auth") (eq auth "clerk") (eq auth "descope"))}}
       { to: "/dashboard", label: "Dashboard" },
     {{/if}}
     {{#if (includes examples "todo")}}

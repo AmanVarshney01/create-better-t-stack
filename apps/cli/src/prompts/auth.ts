@@ -24,6 +24,10 @@ export function getAvailableAuthProviders(
     ].includes(f),
   );
 
+  const hasDescopeCompatibleFrontends = frontend.some((f) =>
+    ["react-router", "tanstack-router", "next"].includes(f),
+  );
+
   const options: Auth[] = [];
 
   if (backend === "convex") {
@@ -36,6 +40,12 @@ export function getAvailableAuthProviders(
 
   if (hasClerkCompatibleFrontends) {
     options.push("clerk");
+  }
+
+  if (hasDescopeCompatibleFrontends) {
+    // Descope supports Next.js, TanStack Router, and React Router across all
+    // backends, including Convex.
+    options.push("descope");
   }
 
   if (options.length === 0) {
@@ -71,6 +81,12 @@ export async function getAuthChoice(
           value: "clerk",
           label: "Clerk",
           hint: "More than auth, Complete User Management",
+        };
+      case "descope":
+        return {
+          value: "descope",
+          label: "Descope",
+          hint: "drag-and-drop auth flows and user management",
         };
       default:
         return { value: "none", label: "None", hint: "No auth" };

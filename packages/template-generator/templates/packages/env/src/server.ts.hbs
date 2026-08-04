@@ -146,6 +146,9 @@ export const env = createEnv({
 		CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 {{/if}}
+{{#if (eq auth "descope")}}
+		DESCOPE_PROJECT_ID: z.string().min(1),
+{{/if}}
 {{#if (eq payments "polar")}}
 		POLAR_ACCESS_TOKEN: z.string().min(1),
 		POLAR_SUCCESS_URL: z.url(),

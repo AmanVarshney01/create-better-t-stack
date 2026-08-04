@@ -1,0 +1,16 @@
+export default {
+	providers: [
+		{
+			// Descope issues AWS API Gateway compliant JWTs. Enable the
+			// "AWS API Gateway" JWT template in your Descope project (Project
+			// Settings -> JWT Templates) so the `iss` claim becomes the fully
+			// qualified URL https://api.descope.com/<Your Descope Project ID>.
+			// The `aud` claim already matches your Project ID.
+			// Set DESCOPE_PROJECT_ID on the Convex Dashboard. `domain` must match
+			// the token's `iss` claim.
+			// See https://docs.descope.com/sessions/validation/jwt-authorizers/aws-jwt-authorizer
+			domain: `https://api.descope.com/${process.env.DESCOPE_PROJECT_ID}`,
+			applicationID: process.env.DESCOPE_PROJECT_ID,
+		},
+	],
+};

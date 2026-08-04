@@ -25,6 +25,9 @@ import { env } from "@{{projectName}}/env/web";
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
+{{#if (eq auth "descope")}}
+import { getDescopeAuthToken } from "@/utils/descope-auth";
+{{/if}}
 {{/if}}
 
 export function createQueryClient() {
@@ -131,6 +134,15 @@ export const link = new RPCLink({
 		const token = await getClerkAuthToken();
 		return token ? { Authorization: `Bearer ${token}` } : {};
 		{{/if}}
+	},
+{{/if}}
+{{#if (eq auth "descope")}}
+	headers: () => {
+		{{#if (includes frontend "next")}}
+		if (typeof window === "undefined") return {};
+		{{/if}}
+		const token = getDescopeAuthToken();
+		return token ? { Authorization: `Bearer ${token}` } : {};
 	},
 {{/if}}
 {{#if (eq auth "better-auth")}}

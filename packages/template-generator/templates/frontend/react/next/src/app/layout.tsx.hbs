@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../index.css";
 {{#if (eq auth "clerk")}}import { ClerkProvider } from "@clerk/nextjs";
+{{/if}}{{#if (eq auth "descope")}}import { AuthProvider } from "@descope/nextjs-sdk";
+import { env } from "@{{projectName}}/env/web";
 {{/if}}{{#if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { getToken } from "@/lib/auth-server";
 {{/if}}
@@ -63,7 +65,14 @@ export default function RootLayout({
 							{children}
 						</div>
 					</Providers>
-				</ClerkProvider>{{else}}<Providers>
+				</ClerkProvider>{{else if (eq auth "descope")}}<AuthProvider projectId={env.NEXT_PUBLIC_DESCOPE_PROJECT_ID}>
+					<Providers>
+						<div className="grid grid-rows-[auto_1fr] h-svh">
+							<Header />
+							{children}
+						</div>
+					</Providers>
+				</AuthProvider>{{else}}<Providers>
 					<div className="grid grid-rows-[auto_1fr] h-svh">
 						<Header />
 						{children}

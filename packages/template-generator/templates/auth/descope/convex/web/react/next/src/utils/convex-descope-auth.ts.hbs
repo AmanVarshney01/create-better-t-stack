@@ -1,0 +1,22 @@
+import { getSessionToken, useSession } from "@descope/nextjs-sdk/client";
+import { useCallback, useMemo } from "react";
+
+// Bridges Descope's session state into Convex's `ConvexProviderWithAuth`.
+// The Descope SDK automatically refreshes the token via `getSessionToken()`
+// while the refresh token is still active.
+export function useAuthFromDescope() {
+	const { isSessionLoading, isAuthenticated } = useSession();
+
+	const fetchAccessToken = useCallback(async () => {
+		return getSessionToken() ?? null;
+	}, []);
+
+	return useMemo(
+		() => ({
+			isLoading: isSessionLoading,
+			isAuthenticated: isAuthenticated ?? false,
+			fetchAccessToken,
+		}),
+		[isSessionLoading, isAuthenticated, fetchAccessToken],
+	);
+}
