@@ -1,3 +1,9 @@
+"use client";
+
+import { useRef } from "react";
+
+import { useFitText } from "./use-fit-text";
+
 // ANSI Shadow, same face as the CLI banner in apps/cli/src/utils/render-title.ts.
 // Two cuts: 72 columns for the rail, and a stacked 41-column one for phones,
 // where 72 columns would render the glyphs too small to read. Divisors in
@@ -45,13 +51,18 @@ const NARROW = `██████╗  ██████╗ ██╗     █�
 ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝`;
 
 export default function AsciiBanner() {
+  const wideRef = useRef<HTMLPreElement>(null);
+  const narrowRef = useRef<HTMLPreElement>(null);
+  useFitText(wideRef);
+  useFitText(narrowRef);
+
   return (
     <div className="bts-banner-fit">
       <h1 className="sr-only">Better T Stack: roll your own stack</h1>
-      <pre aria-hidden="true" className="bts-banner max-md:hidden">
+      <pre ref={wideRef} aria-hidden="true" className="bts-banner max-md:hidden">
         {WIDE}
       </pre>
-      <pre aria-hidden="true" className="bts-banner-narrow md:hidden">
+      <pre ref={narrowRef} aria-hidden="true" className="bts-banner-narrow md:hidden">
         {NARROW}
       </pre>
     </div>
