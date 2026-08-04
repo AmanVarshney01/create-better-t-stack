@@ -1,6 +1,8 @@
 // ANSI Shadow, same face as the CLI banner in apps/cli/src/utils/render-title.ts.
-// 13 lines, 72 columns: the divisor in .bts-banner depends on that column count.
-const TITLE_TEXT = `██████╗  ██████╗ ██╗     ██╗       ██╗   ██╗ ██████╗ ██╗   ██╗██████╗
+// Two cuts: 72 columns for the rail, and a stacked 41-column one for phones,
+// where 72 columns would render the glyphs too small to read. Divisors in
+// .bts-banner / .bts-banner-narrow depend on those column counts.
+const WIDE = `██████╗  ██████╗ ██╗     ██╗       ██╗   ██╗ ██████╗ ██╗   ██╗██████╗
 ██╔══██╗██╔═══██╗██║     ██║       ╚██╗ ██╔╝██╔═══██╗██║   ██║██╔══██╗
 ██████╔╝██║   ██║██║     ██║        ╚████╔╝ ██║   ██║██║   ██║██████╔╝
 ██╔══██╗██║   ██║██║     ██║         ╚██╔╝  ██║   ██║██║   ██║██╔══██╗
@@ -14,12 +16,43 @@ const TITLE_TEXT = `██████╗  ██████╗ ██╗     �
 ╚██████╔╝╚███╔███╔╝██║ ╚████║  ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
  ╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═══╝  ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝`;
 
+const NARROW = `██████╗  ██████╗ ██╗     ██╗
+██╔══██╗██╔═══██╗██║     ██║
+██████╔╝██║   ██║██║     ██║
+██╔══██╗██║   ██║██║     ██║
+██║  ██║╚██████╔╝███████╗███████╗
+╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝
+
+██╗   ██╗ ██████╗ ██╗   ██╗██████╗
+╚██╗ ██╔╝██╔═══██╗██║   ██║██╔══██╗
+ ╚████╔╝ ██║   ██║██║   ██║██████╔╝
+  ╚██╔╝  ██║   ██║██║   ██║██╔══██╗
+   ██║   ╚██████╔╝╚██████╔╝██║  ██║
+   ╚═╝    ╚═════╝  ╚═════╝ ╚═╝  ╚═╝
+
+ ██████╗ ██╗    ██╗███╗   ██╗
+██╔═══██╗██║    ██║████╗  ██║
+██║   ██║██║ █╗ ██║██╔██╗ ██║
+██║   ██║██║███╗██║██║╚██╗██║
+╚██████╔╝╚███╔███╔╝██║ ╚████║
+ ╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═══╝
+
+███████╗████████╗ █████╗  ██████╗██╗  ██╗
+██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+███████╗   ██║   ███████║██║     █████╔╝
+╚════██║   ██║   ██╔══██║██║     ██╔═██╗
+███████║   ██║   ██║  ██║╚██████╗██║  ██╗
+╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝`;
+
 export default function AsciiBanner() {
   return (
     <div className="bts-banner-fit">
       <h1 className="sr-only">Better T Stack: roll your own stack</h1>
-      <pre aria-hidden="true" className="bts-banner">
-        {TITLE_TEXT}
+      <pre aria-hidden="true" className="bts-banner max-md:hidden">
+        {WIDE}
+      </pre>
+      <pre aria-hidden="true" className="bts-banner-narrow md:hidden">
+        {NARROW}
       </pre>
     </div>
   );
