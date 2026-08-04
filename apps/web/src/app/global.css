@@ -451,6 +451,8 @@
   white-space: pre;
   width: max-content;
   margin: 0;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   background-image: var(--bts-banner-gradient);
   background-repeat: no-repeat;
   -webkit-background-clip: text;
