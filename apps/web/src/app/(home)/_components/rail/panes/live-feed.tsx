@@ -9,6 +9,7 @@ import { GroupHeader } from "../chrome";
 // 50 is the server-side cap in getRecentEvents. At ~227 projects/day
 // (~9.5/hour) that still covers a busy hour for the last-hour count.
 const FEED_LIMIT = 50;
+const VISIBLE_ROWS = 6;
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 /** Relative, so the row never depends on the reader's timezone. */
@@ -91,9 +92,7 @@ export default function LiveFeed() {
     inLastHour !== null && inLastHour === events?.length && inLastHour === FEED_LIMIT;
 
   return (
-    /* Below ~820px tall the group header alone costs more room than the pane
-       has spare, so the feed drops out entirely rather than forcing a scrollbar. */
-    <div className="flex min-h-0 flex-1 flex-col max-md:hidden [@media(max-height:820px)]:hidden">
+    <div className="flex flex-col max-md:hidden [@media(max-height:1080px)]:hidden">
       <GroupHeader
         label="live"
         count={
@@ -109,12 +108,8 @@ export default function LiveFeed() {
         }
       />
 
-      <ol
-        aria-label="Recent project starts"
-        data-pane-scroll
-        className="fd-scroll-container min-h-0 flex-1 overflow-y-auto overscroll-y-contain font-mono text-[11px] leading-[1.7]"
-      >
-        {events?.map((event) => (
+      <ol aria-label="Recent project starts" className="font-mono text-[11px] leading-[1.7]">
+        {events?.slice(0, VISIBLE_ROWS).map((event) => (
           <li key={event._id} className="flex items-baseline gap-3 py-px">
             <span className="w-[7ch] shrink-0 text-right text-fd-muted-foreground/60 tabular-nums">
               {now === null ? "" : ago(event._creationTime, now)}

@@ -9,34 +9,6 @@ const DESKTOP_QUERY = "(min-width: 768px)";
 // pane's top edge has to cross before that pane counts as the active one.
 const MOBILE_PROBE_PX = 56 + 32;
 
-/**
- * True when the wheel event originated inside a pane body that can still scroll
- * in the requested direction, meaning the rail must not hijack it.
- * Pure and exported so the seven edge cases can be unit tested directly.
- */
-/** The pane body the event started in, or null if it started outside one. */
-export function findPaneScroller(path: EventTarget[], rail: HTMLElement): HTMLElement | null {
-  for (const target of path) {
-    if (target === rail) return null;
-    const el = target as HTMLElement;
-    if (typeof el.hasAttribute !== "function") continue;
-    if (el.hasAttribute("data-pane-scroll")) return el;
-  }
-  return null;
-}
-
-export function canScrollVertically(path: EventTarget[], dy: number, rail: HTMLElement): boolean {
-  const el = findPaneScroller(path, rail);
-  if (!el) return false;
-  return dy < 0 ? el.scrollTop > 0 : el.scrollTop < el.scrollHeight - el.clientHeight - 1;
-}
-
-function normalize(delta: number, mode: number, pageSize: number): number {
-  if (mode === 1) return delta * 16;
-  if (mode === 2) return delta * pageSize;
-  return delta;
-}
-
 export function useRailNav(railRef: RefObject<HTMLDivElement | null>) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [atStart, setAtStart] = useState(true);
@@ -182,44 +154,6 @@ export function useRailNav(railRef: RefObject<HTMLDivElement | null>) {
       if (frame) cancelAnimationFrame(frame);
     };
   }, []);
-
-  useEffect(() => {
-    const rail = railRef.current;
-    if (!rail) return;
-
-    const options: AddEventListenerOptions = { passive: false };
-    // Axis lock. Without it a trackpad gesture, which is never purely on one
-    // axis, scrolls a pane vertically and drifts the rail horizontally at once.
-    const onWheel = (event: WheelEvent) => {
-      if (!window.matchMedia(DESKTOP_QUERY).matches) return;
-
-      const path = event.composedPath();
-      const vertical = Math.abs(event.deltaY) >= Math.abs(event.deltaX);
-      const dy = normalize(event.deltaY, event.deltaMode, rail.clientHeight);
-      const dx = normalize(event.deltaX, event.deltaMode, rail.clientWidth);
-
-      if (!vertical) {
-        event.preventDefault();
-        rail.scrollLeft += dx;
-        return;
-      }
-
-      const pane = findPaneScroller(path, rail);
-      const paneCanTake =
-        pane &&
-        (dy < 0 ? pane.scrollTop > 0 : pane.scrollTop < pane.scrollHeight - pane.clientHeight - 1);
-
-      event.preventDefault();
-      if (paneCanTake) {
-        pane.scrollTop += dy;
-      } else {
-        rail.scrollLeft += dy;
-      }
-    };
-
-    rail.addEventListener("wheel", onWheel, options);
-    return () => rail.removeEventListener("wheel", onWheel, options);
-  }, [railRef]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
