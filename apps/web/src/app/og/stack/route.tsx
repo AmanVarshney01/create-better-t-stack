@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 
 import type { StackState } from "@/lib/constant";
-import { OG_SIZE, OgShell, ogColors } from "@/lib/og";
+import { OG_SIZE, OgShell, ogColors, ogFonts } from "@/lib/og";
 import { loadStackParams } from "@/lib/stack-url-state";
 import { getSelectedTechs } from "@/lib/stack-utils";
 
@@ -60,11 +60,10 @@ export async function GET(req: NextRequest) {
             display: "flex",
             alignItems: "center",
             gap: "12px",
-            fontFamily: "monospace",
-            fontSize: "20px",
+            fontSize: "22px",
           }}
         >
-          <span style={{ color: ogColors.green, display: "flex" }}>$</span>
+          <span style={{ color: ogColors.accent, display: "flex" }}>$</span>
           <span style={{ color: ogColors.subtext, display: "flex" }}>
             {commandBase(stack.packageManager)} {projectName}
           </span>
@@ -72,8 +71,8 @@ export async function GET(req: NextRequest) {
 
         <div
           style={{
-            fontSize: "54px",
-            fontWeight: 700,
+            fontSize: "52px",
+            fontWeight: 500,
             color: ogColors.text,
             lineHeight: 1.1,
             letterSpacing: "-0.025em",
@@ -93,7 +92,7 @@ export async function GET(req: NextRequest) {
                   display: "flex",
                   alignItems: "center",
                   padding: "6px 16px",
-                  borderRadius: "9999px",
+                  borderRadius: "4px",
                   border: `1px solid ${color}4d`,
                   background: `${color}1a`,
                   color,
@@ -111,7 +110,7 @@ export async function GET(req: NextRequest) {
                 display: "flex",
                 alignItems: "center",
                 padding: "6px 16px",
-                borderRadius: "9999px",
+                borderRadius: "4px",
                 border: `1px solid ${ogColors.border}`,
                 color: ogColors.overlay,
                 fontSize: "20px",
@@ -123,6 +122,6 @@ export async function GET(req: NextRequest) {
         </div>
       </div>
     </OgShell>,
-    OG_SIZE,
+    { ...OG_SIZE, fonts: await ogFonts() },
   );
 }
