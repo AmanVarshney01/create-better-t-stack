@@ -443,20 +443,30 @@
   overflow: hidden;
 }
 
-.bts-banner {
+.bts-banner,
+.bts-banner-narrow {
   font-family: var(--font-ascii);
   line-height: 1;
   letter-spacing: 0;
   white-space: pre;
   width: max-content;
   margin: 0;
-  font-size: clamp(6px, calc(100cqw / 45), 22px);
   background-image: var(--bts-banner-gradient);
   background-repeat: no-repeat;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
+}
+
+/* 72 columns. */
+.bts-banner {
+  font-size: clamp(6px, calc(100cqw / 45), 22px);
+}
+
+/* 41 columns, stacked one word per line: phones only. */
+.bts-banner-narrow {
+  font-size: clamp(8px, calc(100cqw / 26), 20px);
 }
 
 /* On the desktop rail the banner also has to fit the viewport height, so the
@@ -468,7 +478,8 @@
 }
 
 @media (prefers-contrast: more), (forced-colors: active) {
-  .bts-banner {
+  .bts-banner,
+  .bts-banner-narrow {
     forced-color-adjust: none;
     background-image: none;
     color: var(--primary);
