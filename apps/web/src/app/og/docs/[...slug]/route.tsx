@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { ImageResponse } from "next/og";
 
-import { OG_SIZE, OgShell, ogColors } from "@/lib/og";
+import { OG_SIZE, OgShell, ogColors, ogFonts } from "@/lib/og";
 import { getPageImage, source } from "@/lib/source";
 
 export const revalidate = false;
@@ -25,11 +25,11 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
       >
         <div
           style={{
-            fontSize: "56px",
-            fontWeight: 700,
+            fontSize: "54px",
+            fontWeight: 500,
             color: ogColors.text,
             lineHeight: 1.15,
-            letterSpacing: "-0.025em",
+            letterSpacing: "-0.02em",
             display: "flex",
             flexWrap: "wrap",
           }}
@@ -52,7 +52,7 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
         )}
       </div>
     </OgShell>,
-    OG_SIZE,
+    { ...OG_SIZE, fonts: await ogFonts() },
   );
 }
 
