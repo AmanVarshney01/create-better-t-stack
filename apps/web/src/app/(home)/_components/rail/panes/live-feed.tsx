@@ -111,7 +111,8 @@ export default function LiveFeed() {
 
       <ol
         aria-label="Recent project starts"
-        className="fd-scroll-container min-h-0 flex-1 overflow-hidden font-mono text-[11px] leading-[1.7]"
+        data-pane-scroll
+        className="fd-scroll-container min-h-0 flex-1 overflow-y-auto overscroll-y-contain font-mono text-[11px] leading-[1.7]"
       >
         {events?.map((event) => (
           <li key={event._id} className="flex items-baseline gap-3 py-px">
