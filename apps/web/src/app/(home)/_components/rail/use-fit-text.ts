@@ -1,6 +1,10 @@
 "use client";
 
-import { type RefObject, useEffect } from "react";
+import { type RefObject, useEffect, useLayoutEffect } from "react";
+
+// Correct before paint on the client so a clipped frame is never shown,
+// without tripping the SSR warning.
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 /**
  * Shrinks a <pre> until it actually fits its parent.
@@ -12,7 +16,7 @@ import { type RefObject, useEffect } from "react";
  * only device-independent answer.
  */
 export function useFitText(ref: RefObject<HTMLPreElement | null>) {
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const el = ref.current;
     const parent = el?.parentElement;
     if (!el || !parent) return;
@@ -23,7 +27,8 @@ export function useFitText(ref: RefObject<HTMLPreElement | null>) {
       const natural = el.scrollWidth;
       if (!available || !natural || natural <= available) return;
       const current = Number.parseFloat(getComputedStyle(el).fontSize);
-      el.style.fontSize = `${(current * available) / natural}px`;
+      // 0.99 keeps a hair of margin instead of sitting flush against the clip.
+      el.style.fontSize = `${(current * available * 0.99) / natural}px`;
     };
 
     fit();
