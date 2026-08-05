@@ -1,20 +1,18 @@
-import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import solidPlugin from "vite-plugin-solid";
 import tailwindcss from "@tailwindcss/vite";
-import path from "node:path";
+import { solidStart } from "@solidjs/start/config";
+{{#unless (eq webDeploy "cloudflare")}}
+import { nitro } from "nitro/vite";
+{{/unless}}
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
 export default defineConfig({
   plugins: [
-    tanstackRouter({ target: "solid", autoCodeSplitting: true }),
-    solidPlugin(),
+    solidStart(),
     tailwindcss(),
+{{#unless (eq webDeploy "cloudflare")}}
+    nitro(),
+{{/unless}}
   ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
   server: {
     port: 3001,
   },

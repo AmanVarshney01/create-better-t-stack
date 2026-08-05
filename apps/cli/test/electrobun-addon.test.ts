@@ -144,12 +144,6 @@ describe("Electrobun addon scaffolding", () => {
         expectedWebConfig: ["@sveltejs/adapter-static", 'fallback: "index.html"'],
       },
       {
-        frontend: "solid",
-        api: "orpc",
-        expectedOutputDir: 'const webBuildDir = "../web/dist";',
-        expectedPort: "const DEV_SERVER_PORT = 3001;",
-      },
-      {
         frontend: "astro",
         api: "orpc",
         expectedOutputDir: 'const webBuildDir = "../web/dist";',

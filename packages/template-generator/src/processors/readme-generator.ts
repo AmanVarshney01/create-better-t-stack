@@ -274,7 +274,7 @@ function generateStackDescription(
     "tanstack-start": "React, TanStack Start",
     svelte: "SvelteKit",
     nuxt: "Nuxt",
-    solid: "SolidJS",
+    solid: "SolidStart",
     astro: "Astro",
     "native-bare": "React Native, Expo",
     "native-uniwind": "React Native, Expo",
@@ -382,7 +382,7 @@ function generateProjectStructure(config: ProjectConfig): string {
       "tanstack-start": "React + TanStack Start",
       svelte: "SvelteKit",
       nuxt: "Nuxt",
-      solid: "SolidJS",
+      solid: "SolidStart",
       astro: "Astro",
     };
     const frontendType = frontend.find((f) => frontendTypes[f])
@@ -470,7 +470,7 @@ function generateFeaturesList(
     "tanstack-start": "- **TanStack Start** - SSR framework with TanStack Router",
     svelte: "- **SvelteKit** - Web framework for building Svelte apps",
     nuxt: "- **Nuxt** - The Intuitive Vue Framework",
-    solid: "- **SolidJS** - Simple and performant reactivity",
+    solid: "- **SolidStart** - Full-stack Solid framework with file-based routing and SSR",
     astro: "- **Astro** - The web framework for content-driven websites",
   };
 

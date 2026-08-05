@@ -12,6 +12,7 @@ export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectCon
   const isNuxt = frontend.includes("nuxt");
   const isSvelte = frontend.includes("svelte");
   const isTanstackStart = frontend.includes("tanstack-start");
+  const isSolid = frontend.includes("solid");
   const isAstro = frontend.includes("astro");
 
   if (isNext) {
@@ -22,6 +23,8 @@ export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectCon
     processSvelteAlchemy(vfs);
   } else if (isTanstackStart) {
     processTanStackStartAlchemy(vfs);
+  } else if (isSolid) {
+    processSolidStartAlchemy(vfs);
   } else if (isAstro) {
     processAstroAlchemy(vfs);
   }
@@ -405,7 +408,7 @@ const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
       .findIndex((statement) => Node.isExportAssignment(statement));
     sourceFile.insertStatements(
       firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const cloudflareWorkersAlias = shouldUseAlchemy
+      `const cloudflareWorkersAlias: Record<string, string> = shouldUseAlchemy
   ? {}
   : {
       "cloudflare:workers": cloudflareWorkersShimPath,
@@ -448,6 +451,139 @@ const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
         name: "plugins",
         initializer: "[...(shouldUseAlchemy ? [alchemy({ configPath: alchemyConfigPath })] : [])]",
       });
+    }
+
+    const resolveProperty = configObject.getProperty("resolve");
+    if (resolveProperty && Node.isPropertyAssignment(resolveProperty)) {
+      const initializer = resolveProperty.getInitializer();
+      if (Node.isObjectLiteralExpression(initializer) && !initializer.getProperty("alias")) {
+        initializer.addPropertyAssignment({
+          name: "alias",
+          initializer: "cloudflareWorkersAlias",
+        });
+      }
+    } else if (!resolveProperty) {
+      configObject.addPropertyAssignment({
+        name: "resolve",
+        initializer: "{ alias: cloudflareWorkersAlias }",
+      });
+    }
+  }
+
+  vfs.writeFile(viteConfigPath, sourceFile.getFullText());
+}
+
+function processSolidStartAlchemy(vfs: VirtualFileSystem) {
+  const viteConfigPath = "apps/web/vite.config.ts";
+  if (!vfs.exists(viteConfigPath)) return;
+
+  const content = vfs.readFile(viteConfigPath);
+  const project = new Project({
+    useInMemoryFileSystem: true,
+    manipulationSettings: {
+      indentationText: IndentationText.TwoSpaces,
+      quoteKind: QuoteKind.Double,
+    },
+  });
+
+  const sourceFile = project.createSourceFile("vite.config.ts", content);
+
+  if (
+    !sourceFile
+      .getImportDeclarations()
+      .some((decl) => decl.getModuleSpecifierValue() === "alchemy/cloudflare/vite")
+  ) {
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: "alchemy/cloudflare/vite",
+      defaultImport: "alchemy",
+    });
+  }
+
+  if (
+    !sourceFile.getImportDeclarations().some((decl) => decl.getModuleSpecifierValue() === "node:fs")
+  ) {
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: "node:fs",
+      namedImports: ["existsSync"],
+    });
+  }
+
+  if (
+    !sourceFile
+      .getImportDeclarations()
+      .some((decl) => decl.getModuleSpecifierValue() === "node:url")
+  ) {
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: "node:url",
+      namedImports: ["fileURLToPath"],
+    });
+  }
+
+  if (!sourceFile.getVariableDeclaration("alchemyConfigPath")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const alchemyConfigPath = fileURLToPath(new URL("./.alchemy/local/wrangler.jsonc", import.meta.url));
+const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
+    );
+  }
+
+  if (!sourceFile.getVariableDeclaration("cloudflareWorkersShimPath")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const cloudflareWorkersShimPath = fileURLToPath(new URL("../../packages/env/src/cloudflare-local.ts", import.meta.url));`,
+    );
+  }
+
+  if (!sourceFile.getVariableDeclaration("cloudflareWorkersAlias")) {
+    const firstExport = sourceFile
+      .getStatements()
+      .findIndex((statement) => Node.isExportAssignment(statement));
+    sourceFile.insertStatements(
+      firstExport === -1 ? sourceFile.getStatements().length : firstExport,
+      `const cloudflareWorkersAlias: Record<string, string> = shouldUseAlchemy
+  ? {}
+  : {
+      "cloudflare:workers": cloudflareWorkersShimPath,
+    };`,
+    );
+  }
+
+  const exportAssignment = sourceFile.getExportAssignment((d) => !d.isExportEquals());
+  if (!exportAssignment) return;
+
+  const defineConfigCall = exportAssignment.getExpression();
+  if (
+    !Node.isCallExpression(defineConfigCall) ||
+    defineConfigCall.getExpression().getText() !== "defineConfig"
+  ) {
+    return;
+  }
+
+  let configObject = defineConfigCall.getArguments()[0];
+  if (!configObject) {
+    configObject = defineConfigCall.addArgument("{}");
+  }
+
+  if (Node.isObjectLiteralExpression(configObject)) {
+    const pluginsProperty = configObject.getProperty("plugins");
+    if (pluginsProperty && Node.isPropertyAssignment(pluginsProperty)) {
+      const initializer = pluginsProperty.getInitializer();
+      if (Node.isArrayLiteralExpression(initializer)) {
+        const hasAlchemy = initializer
+          .getElements()
+          .some((element) => element.getText().includes("alchemy("));
+        if (!hasAlchemy) {
+          initializer.addElement(
+            '...(shouldUseAlchemy ? [alchemy({ configPath: alchemyConfigPath, viteEnvironment: { name: "ssr" } })] : [])',
+          );
+        }
+      }
     }
 
     const resolveProperty = configObject.getProperty("resolve");
@@ -556,7 +692,7 @@ const shouldUseAlchemy = existsSync(alchemyConfigPath);`,
       .findIndex((statement) => Node.isExportAssignment(statement));
     sourceFile.insertStatements(
       firstExport === -1 ? sourceFile.getStatements().length : firstExport,
-      `const cloudflareWorkersAlias = shouldUseAlchemy
+      `const cloudflareWorkersAlias: Record<string, string> = shouldUseAlchemy
   ? {}
   : {
       "cloudflare:workers": cloudflareWorkersShimPath,

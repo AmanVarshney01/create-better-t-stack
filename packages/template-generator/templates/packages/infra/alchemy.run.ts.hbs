@@ -354,7 +354,17 @@ export const web = await ReactRouter("web", {
 {{else if (includes frontend "solid")}}
 export const web = await Vite("web", {
   cwd: "../../apps/web",
-  assets: "dist",
+  entrypoint: "dist/server/entry-server.js",
+  noBundle: true,
+  spa: false,
+  wrangler: {
+    main: "src/entry-server.tsx",
+  },
+  compatibility: "node",
+  assets: {
+    directory: "dist/client",
+    run_worker_first: true,
+  },
   bindings: {
     {{#if (eq backend "convex")}}
     VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
@@ -366,6 +376,35 @@ export const web = await Vite("web", {
     VITE_SERVER_URL: server.url!,
     {{else}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
+    {{/if}}
+    {{#if (eq backend "self")}}
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    {{/if}}
+    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    {{/if}}
+    {{#if (and (includes examples "ai") (ne backend "convex"))}}
+    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
+    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
+    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    {{/if}}
     {{/if}}
     {{/if}}
   }

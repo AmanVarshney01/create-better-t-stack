@@ -217,6 +217,15 @@ export async function processAuthTemplates(
       config,
     );
   } else if (hasSolidWeb) {
+    if (config.backend === "self" && authProvider === "better-auth") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `auth/${authProvider}/fullstack/solid`,
+        "apps/web",
+        config,
+      );
+    }
     processTemplatesFromPrefix(
       vfs,
       templates,

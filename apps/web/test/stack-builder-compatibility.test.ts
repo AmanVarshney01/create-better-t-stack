@@ -26,6 +26,29 @@ function createStack(overrides: Partial<StackState> = {}): StackState {
 }
 
 describe("stack builder D1 compatibility", () => {
+  test("supports SolidStart as a self-hosted fullstack backend", () => {
+    const stack = createStack({
+      webFrontend: ["solid"],
+      backend: "self-solid",
+      runtime: "none",
+      api: "orpc",
+      serverDeploy: "none",
+    });
+
+    expect(getDisabledReason(stack, "backend", "self-solid")).toBeNull();
+    expect(getDisabledReason(stack, "api", "trpc")).toBe(
+      "tRPC is not compatible with SolidStart (use oRPC)",
+    );
+    expect(getDisabledReason(stack, "addons", "evlog")).toBe(
+      "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend",
+    );
+    expect(analyzeStackCompatibility(stack).adjustedStack).toBeNull();
+
+    const command = generateStackCommand(stack);
+    expect(command).toContain("--frontend solid");
+    expect(command).toContain("--backend self");
+  });
+
   test("keeps self fullstack backends on the D1 + Cloudflare path", () => {
     const stack = createStack({
       backend: "self-next",

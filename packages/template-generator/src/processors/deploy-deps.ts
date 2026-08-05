@@ -150,12 +150,14 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
           "@cloudflare/workers-types",
         ],
       });
-    } else if (
-      frontend.includes("tanstack-router") ||
-      frontend.includes("react-router") ||
-      frontend.includes("solid")
-    ) {
+    } else if (frontend.includes("tanstack-router") || frontend.includes("react-router")) {
       addPackageDependency({ vfs, packagePath: webPkgPath, devDependencies: ["alchemy"] });
+    } else if (frontend.includes("solid")) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        devDependencies: ["alchemy", "@cloudflare/vite-plugin"],
+      });
     }
   }
 }
