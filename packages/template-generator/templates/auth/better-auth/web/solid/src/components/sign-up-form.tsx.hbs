@@ -1,13 +1,11 @@
-import { authClient } from "@/lib/auth-client";
+import { useNavigate } from "@solidjs/router";
 import { createForm } from "@tanstack/solid-form";
-import { useNavigate } from "@tanstack/solid-router";
-import z from "zod";
 import { For } from "solid-js";
+import { authClient } from "~/lib/auth-client";
+import z from "zod";
 
 export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
-  const navigate = useNavigate({
-    from: "/",
-  });
+  const navigate = useNavigate();
 
   const form = createForm(() => ({
     defaultValues: {
@@ -24,9 +22,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         },
         {
           onSuccess: () => {
-            navigate({
-              to: "/dashboard",
-            });
+            navigate("/dashboard");
             console.log("Sign up successful");
           },
           onError: (error) => {

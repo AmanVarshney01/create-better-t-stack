@@ -58,7 +58,7 @@ function generateTurboConfig(config: ProjectConfig): TurboConfig {
 
 function getBaseTasks(frontend: string[], addons: string[]): Record<string, TurboTask> {
   // Build outputs per framework:
-  // - Vite-based (tanstack-router, react-router, tanstack-start, solid, svelte): dist/**
+  // - Vite-based client apps: dist/**
   // - Next.js: .next/** excluding .next/cache/**
   // - Nuxt: .nuxt/**, .output/**
   const buildOutputs = ["dist/**"];
@@ -69,6 +69,10 @@ function getBaseTasks(frontend: string[], addons: string[]): Record<string, Turb
 
   if (frontend.includes("nuxt")) {
     buildOutputs.push(".nuxt/**", ".output/**");
+  }
+
+  if (frontend.includes("solid")) {
+    buildOutputs.push(".output/**", ".vinxi/**");
   }
 
   // SvelteKit outputs to .svelte-kit/** in addition to build/

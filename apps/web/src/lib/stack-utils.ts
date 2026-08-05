@@ -39,6 +39,7 @@ const selfHostedFullstackBackends = [
   "self-tanstack-start",
   "self-nuxt",
   "self-svelte",
+  "self-solid",
   "self-astro",
 ] as const;
 
@@ -167,6 +168,7 @@ export function generateStackCommand(stack: StackState) {
       backend === "self-tanstack-start" ||
       backend === "self-nuxt" ||
       backend === "self-svelte" ||
+      backend === "self-solid" ||
       backend === "self-astro"
     ) {
       return "self";
