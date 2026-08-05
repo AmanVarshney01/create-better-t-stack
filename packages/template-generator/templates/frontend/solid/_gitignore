@@ -1,7 +1,10 @@
 node_modules
 .DS_Store
 dist
-dist-ssr
+.output
+.vercel
+.netlify
+.vinxi
 *.local
 .env
 .env.*

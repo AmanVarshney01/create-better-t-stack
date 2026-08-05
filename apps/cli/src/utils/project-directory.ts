@@ -136,20 +136,24 @@ export async function handleDirectoryConflict(currentPathInput: string): Promise
   }
 }
 
+export function resolveProjectDirectoryPath(finalPathInput: string): {
+  finalResolvedPath: string;
+  finalBaseName: string;
+} {
+  const finalResolvedPath =
+    finalPathInput === "." ? process.cwd() : path.resolve(process.cwd(), finalPathInput);
+
+  return {
+    finalResolvedPath,
+    finalBaseName: path.basename(finalResolvedPath),
+  };
+}
+
 export async function setupProjectDirectory(
   finalPathInput: string,
   shouldClearDirectory: boolean,
 ): Promise<{ finalResolvedPath: string; finalBaseName: string }> {
-  let finalResolvedPath: string;
-  let finalBaseName: string;
-
-  if (finalPathInput === ".") {
-    finalResolvedPath = process.cwd();
-    finalBaseName = path.basename(finalResolvedPath);
-  } else {
-    finalResolvedPath = path.resolve(process.cwd(), finalPathInput);
-    finalBaseName = path.basename(finalResolvedPath);
-  }
+  const { finalResolvedPath, finalBaseName } = resolveProjectDirectoryPath(finalPathInput);
 
   const pathSafetyResult = await validateSafeProjectDirectoryPath(finalPathInput);
   if (pathSafetyResult.isErr()) throw pathSafetyResult.error;

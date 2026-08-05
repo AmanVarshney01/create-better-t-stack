@@ -106,6 +106,222 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
+    name: "solid-start-frontend-only",
+    packageManagers: ["bun", "npm", "pnpm"],
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "none",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: [],
+    },
+  },
+  {
+    name: "solid-start-hono-bun-auth-todo",
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "hono",
+      runtime: "bun",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["todo"],
+    },
+  },
+  {
+    name: "solid-start-express-node-mongoose",
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "express",
+      runtime: "node",
+      database: "mongodb",
+      orm: "mongoose",
+      api: "orpc",
+      auth: "none",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: [],
+    },
+  },
+  {
+    name: "solid-start-fastify-node-prisma-polar",
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "fastify",
+      runtime: "node",
+      database: "postgres",
+      orm: "prisma",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "polar",
+      addons: ["turborepo"],
+      examples: [],
+    },
+  },
+  {
+    name: "solid-start-elysia-bun",
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "elysia",
+      runtime: "bun",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "none",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: [],
+    },
+  },
+  {
+    name: "solid-start-hono-workers-cloudflare",
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "hono",
+      runtime: "workers",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "none",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: [],
+      serverDeploy: "cloudflare",
+    },
+  },
+  {
+    name: "solid-start-self-orpc-no-auth",
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "none",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: [],
+    },
+  },
+  {
+    name: "solid-start-self-orpc-auth-todo",
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["todo"],
+    },
+  },
+  {
+    name: "solid-start-self-cloudflare",
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["todo"],
+      dbSetup: "d1",
+      webDeploy: "cloudflare",
+    },
+  },
+  {
+    name: "solid-start-self-docker-pnpm",
+    packageManagers: ["pnpm"],
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "prisma",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: [],
+      webDeploy: "docker",
+    },
+  },
+  {
+    name: "solid-start-self-vercel-npm",
+    packageManagers: ["npm"],
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "self",
+      runtime: "none",
+      database: "postgres",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "polar",
+      addons: ["turborepo"],
+      examples: [],
+      webDeploy: "vercel",
+    },
+  },
+  {
+    name: "solid-start-pwa",
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "none",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["pwa"],
+      examples: [],
+    },
+  },
+  {
+    name: "solid-start-vite-plus",
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "none",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["vite-plus"],
+      examples: [],
+    },
+  },
+  {
     name: "convex-clerk-react",
     config: {
       ...baseConfig,
@@ -205,22 +421,6 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "mongo-mongoose-express",
-    config: {
-      ...baseConfig,
-      frontend: ["solid"],
-      backend: "express",
-      runtime: "node",
-      database: "mongodb",
-      orm: "mongoose",
-      api: "orpc",
-      auth: "none",
-      payments: "none",
-      addons: ["turborepo"],
-      examples: [],
-    },
-  },
-  {
     name: "mcp-addon-next",
     config: {
       ...baseConfig,
@@ -305,6 +505,7 @@ async function runCommand(sampleName: string, projectDir: string, command: strin
         BTS_TELEMETRY: "0",
         NEXT_TELEMETRY_DISABLED: "1",
         HUSKY: "0",
+        NODE_ENV: args.includes("build") ? "production" : process.env.NODE_ENV,
       },
     });
 
@@ -333,14 +534,125 @@ async function runCommand(sampleName: string, projectDir: string, command: strin
   }
 }
 
-function getPackageManagerCommand(
-  packageManager: PackageManager,
-  script: "install" | "build" | "check-types",
-) {
+function getPackageManagerCommand(packageManager: PackageManager, script: "install" | "build") {
   if (script === "install") {
     return { command: packageManager, args: ["install"] };
   }
   return { command: packageManager, args: ["run", script] };
+}
+
+async function runWorkspaceTypeChecks(
+  sampleName: string,
+  projectDir: string,
+  packageManager: PackageManager,
+) {
+  for (const workspaceRoot of ["apps", "packages"]) {
+    const rootDir = path.join(projectDir, workspaceRoot);
+    if (!(await fs.pathExists(rootDir))) continue;
+
+    const entries = await fs.readdir(rootDir, { withFileTypes: true });
+    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      if (!entry.isDirectory()) continue;
+
+      const workspaceDir = path.join(rootDir, entry.name);
+      const packageJsonPath = path.join(workspaceDir, "package.json");
+      if (!(await fs.pathExists(packageJsonPath))) continue;
+
+      const packageJson = await fs.readJson(packageJsonPath);
+      if (typeof packageJson.scripts?.["check-types"] !== "string") continue;
+
+      await runCommand(
+        `${sampleName}:${workspaceRoot}/${entry.name}`,
+        workspaceDir,
+        packageManager,
+        ["run", "check-types"],
+      );
+    }
+  }
+}
+
+async function validateSolidStartScaffold(sample: SelectedBuildSample, projectDir: string) {
+  if (!sample.config.frontend?.includes("solid")) return;
+
+  const webDir = path.join(projectDir, "apps/web");
+  const requiredFiles = [
+    "package.json",
+    "tsconfig.json",
+    "vite.config.ts",
+    "src/app.tsx",
+    "src/entry-client.tsx",
+    "src/entry-server.tsx",
+    "src/routes/index.tsx",
+    "src/routes/[...404].tsx",
+  ];
+  for (const file of requiredFiles) {
+    expect(await fs.pathExists(path.join(webDir, file))).toBe(true);
+  }
+
+  const legacyFiles = [
+    "index.html",
+    "src/main.tsx",
+    "src/routeTree.gen.ts",
+    "src/routes/__root.tsx",
+  ];
+  for (const file of legacyFiles) {
+    expect(await fs.pathExists(path.join(webDir, file))).toBe(false);
+  }
+
+  const webPackageJson = await fs.readJson(path.join(webDir, "package.json"));
+  expect(webPackageJson.dependencies?.["@solidjs/start"]).toBeDefined();
+  expect(webPackageJson.dependencies?.["@solidjs/router"]).toBeDefined();
+  expect(webPackageJson.dependencies?.["@tanstack/solid-router"]).toBeUndefined();
+  expect(webPackageJson.scripts?.["check-types"]).toBe("tsc --noEmit");
+
+  const viteConfig = await fs.readFile(path.join(webDir, "vite.config.ts"), "utf8");
+  expect(viteConfig).toContain("solidStart()");
+
+  if (sample.config.backend === "self" && sample.config.api === "orpc") {
+    for (const file of [
+      "src/routes/rpc/[...rest].ts",
+      "src/routes/rpc/index.ts",
+      "src/utils/orpc.ts",
+      "src/utils/orpc.server.ts",
+    ]) {
+      expect(await fs.pathExists(path.join(webDir, file))).toBe(true);
+    }
+
+    const orpcClient = await fs.readFile(path.join(webDir, "src/utils/orpc.ts"), "utf8");
+    expect(orpcClient).toContain("globalThis.$client");
+  }
+
+  if (sample.config.backend === "self" && sample.config.auth === "better-auth") {
+    const authRoute = path.join(webDir, "src/routes/api/auth/[...auth].ts");
+    expect(await fs.pathExists(authRoute)).toBe(true);
+    expect(await fs.readFile(authRoute, "utf8")).toContain("toSolidStartHandler");
+  }
+
+  if (sample.config.webDeploy === "cloudflare") {
+    expect(viteConfig).toContain("const cloudflareWorkersAlias: Record<string, string>");
+    const infra = await fs.readFile(path.join(projectDir, "packages/infra/alchemy.run.ts"), "utf8");
+    expect(infra).toContain('flags: ["nodejs_compat"]');
+    expect(infra).toContain("runWorkerFirst: true");
+  }
+
+  if (sample.config.webDeploy === "docker") {
+    expect(await fs.pathExists(path.join(webDir, "Dockerfile"))).toBe(true);
+  }
+
+  if (sample.config.payments === "polar") {
+    const authPackageJson = await fs.readJson(path.join(projectDir, "packages/auth/package.json"));
+    expect(authPackageJson.dependencies["@polar-sh/sdk"]).toBe("^0.47.0");
+  }
+}
+
+async function validateSolidStartBuildArtifacts(sample: SelectedBuildSample, projectDir: string) {
+  if (!sample.config.frontend?.includes("solid")) return;
+
+  const serverEntry =
+    sample.config.webDeploy === "cloudflare"
+      ? "apps/web/dist/server/entry-server.js"
+      : "apps/web/.output/server/index.mjs";
+  expect(await fs.pathExists(path.join(projectDir, serverEntry))).toBe(true);
 }
 
 describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples", () => {
@@ -353,11 +665,14 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
 
         const createResult = await create(projectDir, sample.config);
         expect(createResult.isOk()).toBe(true);
+        await validateSolidStartScaffold(sample, projectDir);
 
-        for (const script of ["install", "build", "check-types"] as const) {
+        for (const script of ["install", "build"] as const) {
           const { command, args } = getPackageManagerCommand(sample.packageManager, script);
           await runCommand(sample.name, projectDir, command, args);
         }
+        await validateSolidStartBuildArtifacts(sample, projectDir);
+        await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
       },
       sampleTimeoutMs,
     );

@@ -44,7 +44,7 @@ export function FileExplorer({ root, selectedPath, onSelectFile }: FileExplorerP
   const initialExpandedItems = useMemo(() => collectInitialExpandedItems(root), [root]);
 
   return (
-    <div className="h-full overflow-auto text-sm">
+    <div className="h-full overflow-auto font-mono text-[13px]">
       <Tree
         initialExpandedItems={initialExpandedItems}
         initialSelectedId={selectedPath ?? undefined}
@@ -80,8 +80,9 @@ function DirectoryContents({ node, selectedPath, onSelectFile }: DirectoryConten
             value={child.path}
             isSelect={selectedPath === child.path}
             onClick={() => onSelectFile(child)}
+            className="max-w-full text-left"
           >
-            <span className="truncate">{child.name}</span>
+            <span className="wrap-anywhere">{child.name}</span>
           </File>
         ),
       )}

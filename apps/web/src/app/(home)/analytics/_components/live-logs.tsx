@@ -6,7 +6,6 @@ import { Activity, ChevronRight, Radio } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
@@ -71,30 +70,29 @@ export function LiveLogs() {
   const events = useQuery(api.analytics.getRecentEvents, isOpen ? { limit: 25 } : "skip");
 
   return (
-    <div className="overflow-hidden rounded border border-border bg-fd-background">
-      <Button
-        variant="ghost"
-        className="group h-auto w-full rounded-none border-border border-b px-4 py-3 transition-colors hover:bg-muted/20"
+    <div className="rounded-[4px] border">
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        className="builder-focus-ring group flex w-full items-center justify-between gap-4 border-b px-4 py-2.5 text-left"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <div className="flex w-full items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <ChevronRight
-              className={cn(
-                "h-3.5 w-3.5 text-muted-foreground/70 transition-transform duration-200",
-                isOpen && "rotate-90",
-              )}
-            />
-            <Activity className="h-3.5 w-3.5 text-primary" />
-            <span className="font-mono font-medium text-[12px] text-foreground/90 uppercase tracking-wide">
-              Recent project starts
-            </span>
-          </div>
-          <span className="font-medium text-muted-foreground text-xs transition-colors group-hover:text-foreground/80">
-            {isOpen ? "Hide feed" : "Show feed"}
+        <span className="flex items-center gap-2.5">
+          <ChevronRight
+            className={cn(
+              "h-3 w-3 text-fd-muted-foreground/70 transition-transform duration-150",
+              isOpen && "rotate-90",
+            )}
+          />
+          <Activity className="h-3 w-3 text-primary" />
+          <span className="text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em] transition-colors duration-150 group-hover:text-fd-foreground">
+            Recent project starts
           </span>
-        </div>
-      </Button>
+        </span>
+        <span className="text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em] transition-colors duration-150 group-hover:text-fd-foreground">
+          {isOpen ? "Hide feed" : "Show feed"}
+        </span>
+      </button>
 
       <AnimatePresence initial={false}>
         {isOpen && (
@@ -106,37 +104,37 @@ export function LiveLogs() {
             style={{ overflow: "hidden" }}
           >
             {events === undefined ? (
-              <div className="flex h-[220px] flex-col items-center justify-center border-border/10 border-t">
-                <div className="flex items-center gap-2 font-mono text-muted-foreground text-xs">
-                  <Activity className="h-3.5 w-3.5 animate-pulse text-primary" />
+              <div className="flex h-[220px] flex-col items-center justify-center">
+                <div className="flex items-center gap-2 text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
+                  <Activity className="h-3 w-3 animate-pulse text-primary" />
                   Loading latest starts
                 </div>
               </div>
             ) : events.length === 0 ? (
-              <div className="flex h-[300px] flex-col items-center justify-center border-border/10 border-t">
-                <div className="flex flex-col items-center gap-3 opacity-70">
-                  <div className="rounded border border-border bg-muted/20 p-3">
-                    <Radio className="h-4 w-4 text-muted-foreground" />
-                  </div>
+              <div className="flex h-[300px] flex-col items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                  <Radio className="h-4 w-4 text-fd-muted-foreground/60" />
                   <div className="space-y-1 text-center">
-                    <p className="font-medium text-muted-foreground text-sm">No recent activity</p>
-                    <p className="text-muted-foreground/70 text-xs">
+                    <p className="text-[13px] text-fd-muted-foreground leading-[1.55]">
+                      No recent activity
+                    </p>
+                    <p className="text-[11px] text-fd-muted-foreground/70 leading-[1.5]">
                       The feed will populate as new anonymous CLI events arrive.
                     </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <ScrollArea className="h-[400px] border-border/10 border-t">
-                <div className="border-border/60 border-b bg-muted/10 px-4 py-2">
-                  <div className="flex items-center justify-between gap-3 font-mono text-[11px]">
-                    <span className="text-muted-foreground uppercase tracking-wide">
-                      stream: project.starts
+              <ScrollArea className="h-[400px]">
+                <div className="border-b px-4 py-2">
+                  <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.10em]">
+                    <span className="text-fd-muted-foreground">stream: project.starts</span>
+                    <span className="text-fd-muted-foreground/70 tabular-nums">
+                      {events.length} events
                     </span>
-                    <span className="text-muted-foreground">{events.length} events</span>
                   </div>
                 </div>
-                <div className="divide-y divide-border/35">
+                <div className="divide-y">
                   <AnimatePresence initial={false} mode="popLayout">
                     {events.map((event, index) => {
                       const time = eventTimeFormatter.format(new Date(event._creationTime));
@@ -151,44 +149,41 @@ export function LiveLogs() {
                       return (
                         <motion.div
                           key={event._id}
-                          initial={{ opacity: 0, y: 6 }}
-                          animate={{ opacity: 1, y: 0 }}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
                           transition={{ duration: 0.2, delay: Math.min(index * 0.035, 0.35) }}
-                          className="grid gap-3 px-4 py-3 transition-colors hover:bg-muted/20 sm:grid-cols-[104px_minmax(0,1fr)]"
+                          className="grid gap-3 px-4 py-3 sm:grid-cols-[104px_minmax(0,1fr)]"
                         >
                           <div className="flex items-start gap-2 sm:block">
                             <span
                               suppressHydrationWarning
-                              className="font-mono text-muted-foreground text-[11px] tabular-nums"
+                              className="text-[11px] text-fd-muted-foreground tabular-nums"
                             >
                               {time}
                             </span>
-                            <span className="hidden font-mono text-muted-foreground/60 text-[10px] sm:mt-1 sm:block">
+                            <span className="hidden text-[10px] text-fd-muted-foreground/50 tabular-nums sm:mt-1 sm:block">
                               #{String(events.length - index).padStart(2, "0")}
                             </span>
                           </div>
 
                           <div className="min-w-0 space-y-2">
                             <div className="flex min-w-0 flex-wrap items-center gap-2">
-                              <span className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[10px] text-primary uppercase tracking-wide">
+                              <span className="text-[10px] text-primary uppercase tracking-[0.10em]">
                                 project.start
                               </span>
-                              <span className="min-w-0 truncate font-mono text-[12px] text-foreground">
+                              <span className="min-w-0 break-words text-[13px] leading-[1.55]">
                                 {formatStackSummary(eventRecord)}
                               </span>
-                              <span className="font-mono text-muted-foreground/70 text-[10px]">
+                              <span className="text-[10px] text-fd-muted-foreground/70">
                                 id={eventId}
                               </span>
                             </div>
 
-                            <div className="flex min-w-0 flex-wrap gap-x-3 gap-y-1.5">
+                            <div className="flex min-w-0 flex-wrap gap-x-3 gap-y-1">
                               {logFields.map(({ key, value }) => (
-                                <code
-                                  key={key}
-                                  className="max-w-full rounded border border-border/70 bg-muted/15 px-1.5 py-0.5 font-mono text-[11px] leading-5"
-                                >
-                                  <span className="text-muted-foreground">{key}=</span>
-                                  <span className="break-all text-foreground/90">{value}</span>
+                                <code key={key} className="max-w-full text-[11px] leading-[1.5]">
+                                  <span className="text-fd-muted-foreground">{key}=</span>
+                                  <span className="break-all">{value}</span>
                                 </code>
                               ))}
                             </div>

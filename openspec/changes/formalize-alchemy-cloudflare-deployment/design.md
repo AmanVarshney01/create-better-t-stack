@@ -114,15 +114,16 @@ Cloudflare separate-server deployment requires Hono on the Workers runtime. Full
 
 Framework resource paths remain intentional:
 
-| Framework              | Accepted beta.67 path                                                      | Candidate first-class path | Adoption unit |
-| ---------------------- | -------------------------------------------------------------------------- | -------------------------- | ------------- |
-| TanStack Router, Solid | `Website.Vite` with explicit single-page-application asset handling        | unchanged                  | not affected  |
-| React Router           | `Website.Vite` plus an explicit registered Worker entry and web-stream SSR | unchanged                  | not affected  |
-| TanStack Start         | `Website.Vite` with explicit Cloudflare compatibility and bindings         | unchanged                  | not affected  |
-| Next.js                | `StaticSite`/OpenNext assets plus Worker entry and explicit flags/bindings | `Website.Nextjs`           | PR #923 gate  |
-| Nuxt                   | `StaticSite` with Nitro public assets/server entry and a local dev proxy   | `Website.Nuxt`             | PR #886 gate  |
-| SvelteKit              | `StaticSite` with the Cloudflare adapter Worker shim bundled               | `Website.SvelteKit`        | PR #886 gate  |
-| Astro                  | `StaticSite` with server entry, session KV, and Images where required      | `Website.Astro`            | PR #886 gate  |
+| Framework       | Accepted beta.67 path                                                      | Candidate first-class path | Adoption unit |
+| --------------- | -------------------------------------------------------------------------- | -------------------------- | ------------- |
+| TanStack Router | `Website.Vite` with explicit single-page-application asset handling        | unchanged                  | not affected  |
+| SolidStart v2   | `Website.Vite` SSR with worker-first asset routing                         | unchanged                  | not affected  |
+| React Router    | `Website.Vite` plus an explicit registered Worker entry and web-stream SSR | unchanged                  | not affected  |
+| TanStack Start  | `Website.Vite` with explicit Cloudflare compatibility and bindings         | unchanged                  | not affected  |
+| Next.js         | `StaticSite`/OpenNext assets plus Worker entry and explicit flags/bindings | `Website.Nextjs`           | PR #923 gate  |
+| Nuxt            | `StaticSite` with Nitro public assets/server entry and a local dev proxy   | `Website.Nuxt`             | PR #886 gate  |
+| SvelteKit       | `StaticSite` with the Cloudflare adapter Worker shim bundled               | `Website.SvelteKit`        | PR #886 gate  |
+| Astro           | `StaticSite` with server entry, session KV, and Images where required      | `Website.Astro`            | PR #886 gate  |
 
 Alchemy's current framework matrix marks TanStack Start and React Router as supported, Astro only through `StaticSite` static output, and Nuxt as not yet supported. Better-T-Stack's custom Next.js, Nuxt, SvelteKit, and Astro server-entry paths do not inherit an upstream support claim merely because `StaticSite` accepts a build directory and custom `main`. Until the accepted-version scoreboard records each exact page/document live gate, those generated `self` cells SHALL remain experimental.
 
@@ -232,7 +233,7 @@ Reviews and pull-request comments may propose a classification, but the findings
 | A5  | `memo: false` for workspace-dependent StaticSite builds | correctness policy for upstream scope | published workspace-aware upstream default plus imported-sibling and root-input rebuild gates               |
 | A6  | exact Alchemy version pin                               | permanent publication-safety policy   | never removed; upgrades replace one verified exact version with another exact version                       |
 
-The removable safeguards A1–A5 SHALL be evaluated independently. A3 was removed on 2026-07-26 after fresh TanStack Router and Solid projects passed install, build, infrastructure typecheck, live root/deep-route requests, and cleanup audits against beta.64. A1 and A2 were removed on 2026-08-01 after beta.67 passed their independent generated and live gates. Those results do not justify removing A4 or A5. A6 is not a temporary shim: Better-T-Stack SHALL continue exact-pinning Alchemy even after a stable release and shall replace one verified exact version only with another verified exact version.
+The removable safeguards A1–A5 SHALL be evaluated independently. A3 was removed on 2026-07-26 after fresh TanStack Router and then-current Solid SPA projects passed install, build, infrastructure typecheck, live root/deep-route requests, and cleanup audits against beta.64. SolidStart v2 subsequently replaced that Solid SPA path and requires its own SSR coverage. A1 and A2 were removed on 2026-08-01 after beta.67 passed their independent generated and live gates. Those results do not justify removing A4 or A5. A6 is not a temporary shim: Better-T-Stack SHALL continue exact-pinning Alchemy even after a stable release and shall replace one verified exact version only with another verified exact version.
 
 ### 5. Preserve deployment-time values and secret boundaries
 
@@ -382,7 +383,7 @@ Implementation work should proceed in this order:
 6. Will `Website.SvelteKit` support Better-T-Stack's selected stable SvelteKit major without forcing an unrelated framework migration?
 7. Will `Website.Astro` preserve Cloudflare Images behavior rather than the inspected draft's passthrough image service, while loading native Astro configuration as its source currently does?
 8. Can a first-class resource preserve the existing Worker and binding identities in the plan, or does any framework require an explicit state migration?
-   Resolved on 2026-07-26: beta.64 `Website.Vite` reliably served both TanStack Router and Solid root
+   Resolved on 2026-07-26: beta.64 `Website.Vite` reliably served both TanStack Router and the former Solid SPA root
    and direct deep-link requests, so the A3 `StaticSite` fallback was removed.
 
 Resolved on 2026-08-01: beta.67 native `StaticSite` Inputs preserved generated Config values and

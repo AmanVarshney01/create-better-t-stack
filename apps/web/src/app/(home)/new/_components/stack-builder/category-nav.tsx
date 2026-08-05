@@ -89,7 +89,7 @@ export function CategoryNav({ progress, idPrefix }: CategoryNavProps) {
   return (
     <div
       ref={railRef}
-      className="-my-1 flex items-center gap-1 overflow-x-auto px-0.5 py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="-my-1 flex items-center gap-1 overflow-x-auto overscroll-x-contain px-0.5 py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {progress.map(({ category, done, selected }) => {
         const isActive = category === activeCategory;
@@ -101,21 +101,17 @@ export function CategoryNav({ progress, idPrefix }: CategoryNavProps) {
             onClick={() => scrollToCategorySection(idPrefix, category)}
             title={`Jump to ${getCategoryDisplayName(category)}`}
             className={cn(
-              "builder-focus-ring flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide transition-colors",
-              done
-                ? "bg-primary/10 text-primary hover:bg-primary/18"
-                : "bg-muted/15 text-muted-foreground hover:bg-muted/30 hover:text-foreground",
-              isActive && "ring-1 ring-primary/60",
+              "builder-focus-ring pointer-coarse:min-h-8 flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[4px] border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.10em] transition-colors duration-150",
+              done ? "text-primary" : "text-fd-muted-foreground hover:text-fd-foreground",
+              isActive && "border-primary",
             )}
           >
             <span
-              className={cn(
-                "h-1 w-1 shrink-0 rounded-full",
-                done ? "bg-primary" : "bg-muted-foreground/40",
-              )}
+              aria-hidden="true"
+              className={cn("h-1 w-1 shrink-0", done ? "bg-primary" : "bg-fd-muted-foreground/40")}
             />
             {getCategoryDisplayName(category)}
-            {selected > 1 && <span>({selected})</span>}
+            {selected > 1 && <span className="tabular-nums">({selected})</span>}
           </button>
         );
       })}

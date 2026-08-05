@@ -105,7 +105,7 @@ Cloudflare resources SHALL preserve dependency ordering and pass resolved values
 
 ### Requirement: Framework-specific Cloudflare paths
 
-Each web framework SHALL use the intentional generated resource and runtime entry described by the accepted-version design: Website.Vite with single-page-application asset handling for TanStack Router/Solid SPAs, explicit-entry Website.Vite for React Router, Website.Vite for TanStack Start, and framework server/static outputs for Next.js, Nuxt, SvelteKit, and Astro. A framework path SHALL not change solely because another framework's gate passed.
+Each web framework SHALL use the intentional generated resource and runtime entry described by the accepted-version design: Website.Vite with single-page-application asset handling for TanStack Router, worker-first Website.Vite SSR for SolidStart v2, explicit-entry Website.Vite for React Router, Website.Vite for TanStack Start, and framework server/static outputs for Next.js, Nuxt, SvelteKit, and Astro. A framework path SHALL not change solely because another framework's gate passed.
 
 #### Scenario: Verify Nuxt support
 
@@ -301,11 +301,17 @@ Until their individual removal gates pass, the generator SHALL retain the worksp
 - **WHEN** a frontend-imported sibling package changes without a lockfile change
 - **THEN** a normal deploy SHALL rebuild the frontend rather than reuse stale output
 
-#### Scenario: Deploy a pure Vite SPA
+#### Scenario: Deploy the TanStack Router Vite SPA
 
-- **WHEN** TanStack Router or Solid deploys with the accepted Alchemy version
+- **WHEN** TanStack Router deploys with the accepted Alchemy version
 - **THEN** it SHALL use `Website.Vite` with single-page-application asset handling
 - **AND** a direct client-side route request SHALL receive the SPA fallback
+
+#### Scenario: Deploy SolidStart v2 SSR
+
+- **WHEN** SolidStart deploys with the accepted Alchemy version
+- **THEN** it SHALL use `Website.Vite` with worker-first asset routing and a server entry
+- **AND** document, Better Auth, and oRPC requests SHALL execute through the SSR Worker
 
 #### Scenario: Serve React Router
 

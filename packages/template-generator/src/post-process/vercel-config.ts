@@ -31,6 +31,7 @@ function getWebFramework(frontend: ProjectConfig["frontend"], isDesktop: boolean
   if (frontend.includes("svelte")) return "sveltekit";
   if (frontend.includes("astro")) return "astro";
   if (frontend.includes("tanstack-start")) return "tanstack-start";
+  if (frontend.includes("solid")) return "solidstart";
   // Desktop addons force React Router into a static export served as a plain vite app
   if (frontend.includes("react-router") && !isDesktop) return "react-router";
   return "vite";
@@ -52,9 +53,7 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
   const hasServer = serverDeploy === "vercel" && backend !== "self";
   const isDesktop = addons.includes("tauri") || addons.includes("electrobun");
   const isStaticSpa =
-    frontend.includes("tanstack-router") ||
-    frontend.includes("solid") ||
-    (frontend.includes("react-router") && isDesktop);
+    frontend.includes("tanstack-router") || (frontend.includes("react-router") && isDesktop);
   const installCommand = `cd ../.. && ${packageManager} install`;
 
   const services: Record<string, VercelService> = {};

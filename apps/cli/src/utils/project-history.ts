@@ -13,7 +13,7 @@ const HISTORY_FILE = "history.json";
 export class HistoryError extends TaggedError("HistoryError")<{
   message: string;
   cause?: unknown;
-}>() {}
+}> {}
 
 export type ProjectHistoryEntry = {
   id: string;

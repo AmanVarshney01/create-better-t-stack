@@ -43,6 +43,15 @@ const selfHostedFullstackBackends = [
   "self-tanstack-start",
   "self-nuxt",
   "self-svelte",
+  "self-solid",
+  "self-astro",
+] as const;
+
+const evlogSupportedFullstackBackends = [
+  "self-next",
+  "self-tanstack-start",
+  "self-nuxt",
+  "self-svelte",
   "self-astro",
 ] as const;
 
@@ -64,7 +73,7 @@ const convexBetterAuthSupportedNativeFrontends = [
 ] as const;
 const convexBetterAuthIncompatibleWebFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
 const staticDesktopAddons = ["tauri", "electrobun"] as const;
-const dockerServerOutputFrontends = ["next", "svelte", "astro", "react-router"] as const;
+const dockerServerOutputFrontends = ["next", "svelte", "solid", "astro", "react-router"] as const;
 
 const hasConvexBetterAuthCompatibleFrontend = (webFrontend: string[], nativeFrontend: string[]) =>
   webFrontend.some((f) =>
@@ -130,7 +139,7 @@ export const hasElectrobunCompatibleFrontend = (webFrontend: string[], backend =
   webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
 
 export const hasEvlogCompatibleBackend = (backend: string) =>
-  ["hono", "express", "fastify", "elysia", ...selfHostedFullstackBackends].includes(backend);
+  ["hono", "express", "fastify", "elysia", ...evlogSupportedFullstackBackends].includes(backend);
 
 const getDockerDesktopConflict = (
   addons: string[],
@@ -375,6 +384,14 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       changes.push({
         category: "backend",
         message: "Frontend set to 'SvelteKit' (required for SvelteKit fullstack)",
+      });
+    }
+    if (nextStack.backend === "self-solid" && !nextStack.webFrontend.includes("solid")) {
+      nextStack.webFrontend = ["solid"];
+      changed = true;
+      changes.push({
+        category: "backend",
+        message: "Frontend set to 'SolidStart' (required for SolidStart fullstack)",
       });
     }
     if (nextStack.backend === "self-astro" && !nextStack.webFrontend.includes("astro")) {
@@ -1042,6 +1059,21 @@ export const getDisabledReason = (
     }
   }
 
+  if (currentStack.backend === "self-solid") {
+    if (category === "runtime" && optionId !== "none") {
+      return "SolidStart fullstack uses built-in API routes";
+    }
+    if (category === "webFrontend" && optionId !== "solid") {
+      return "SolidStart fullstack requires SolidStart frontend";
+    }
+    if (category === "serverDeploy" && optionId !== "none") {
+      return "Fullstack uses frontend deployment";
+    }
+    if (category === "api" && optionId === "trpc") {
+      return "tRPC is not compatible with SolidStart (use oRPC)";
+    }
+  }
+
   if (currentStack.backend === "self-astro") {
     if (category === "runtime" && optionId !== "none") {
       return "Astro fullstack uses built-in API routes";
@@ -1075,6 +1107,9 @@ export const getDisabledReason = (
     }
     if (optionId === "self-svelte" && !currentStack.webFrontend.includes("svelte")) {
       return "Requires SvelteKit frontend";
+    }
+    if (optionId === "self-solid" && !currentStack.webFrontend.includes("solid")) {
+      return "Requires SolidStart frontend";
     }
     if (optionId === "self-astro" && !currentStack.webFrontend.includes("astro")) {
       return "Requires Astro frontend";

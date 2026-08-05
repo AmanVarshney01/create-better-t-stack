@@ -25,7 +25,7 @@
 - [x] 3.1 Assert native `StaticSite` receives the combined server Output directly and live-prove the deployed URL reaches its build artifact.
 - [ ] 3.2 Complete the native `StaticSite` Config corpus for `Config.redacted` and missing configuration; direct `Config.string` generation and live binding behavior are verified.
 - [x] 3.3 Assert the retired Output-aware wrapper and its serializer are absent from generated infrastructure.
-- [x] 3.4 Add A3 generation/build tests proving TanStack Router and Solid use released `Website.Vite` SPA handling after beta.64 passes the targeted live removal gate.
+- [x] 3.4 Add A3 generation/build tests proving TanStack Router and the former Solid SPA scaffold use released `Website.Vite` SPA handling after beta.64 passes the targeted live removal gate.
 - [ ] 3.5 Add A4 tests proving React Router emits the explicit Worker entry, registers a fetch handler, and uses `renderToReadableStream` rather than Node pipeable streams.
 - [ ] 3.6 Add A5 tests that edit an imported sibling workspace without changing the lockfile and prove a normal generated build cannot reuse stale output.
 - [ ] 3.7 Add A6 package-manager tests proving the exact pin resolves identically under npm, pnpm, and Bun; retain exact pinning permanently rather than attempting to qualify an open-ended range.
@@ -40,7 +40,7 @@
 - [ ] 4.5 Verify Astro's server entry, session KV, Images binding/type, document or action route, and distinction between static and SSR output.
 - [ ] 4.6 Verify TanStack Start's `Website.Vite` Worker output, document/API route, runtime bindings, and framework auth/environment values.
 - [ ] 4.7 Verify React Router's custom entry through a real workerd document request.
-- [x] 4.8 Verify TanStack Router and Solid root plus direct deep-route SPA requests.
+- [x] 4.8 Verify TanStack Router and the former Solid SPA scaffold through root plus direct deep-route requests.
 - [ ] 4.9 Verify Prisma D1 production migration discovery separately from the full nested Wrangler `migrations_pattern` required for local development.
 - [ ] 4.10 Assert D1, KV/session, Images, and service bindings exist exactly once in infrastructure, framework config, and inferred environment types.
 - [ ] 4.11 Verify explicit external-Worker compatibility flags as framework/platform requirements and do not relabel them as implicit-default loss.
@@ -60,7 +60,7 @@
 
 - [ ] 6.1 Live-deploy and request one web-only, one Hono Workers server-only, one combined web/server, and each currently claimed full-stack `self` archetype.
 - [x] 6.2 In the combined case, inspect the plan/build input and deployed artifact to prove the real Worker URL and dependency edge, not merely the absence of localhost strings.
-- [x] 6.3a Live-test TanStack Router and Solid pure SPA root and deep routes.
+- [x] 6.3a Live-test TanStack Router and the former Solid SPA scaffold through root and deep routes.
 - [ ] 6.3b Live-test React Router document SSR and each server-rendered framework's page route.
 - [ ] 6.4 Live-test D1 migration plus a database-backed application request for every claimed consumer shape.
 - [ ] 6.5 Live-test framework-required KV/Images bindings with behavior or an adapter route, not only generated type declarations.

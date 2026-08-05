@@ -34,7 +34,7 @@ export default async function FullScreenStackBuilder() {
 
   return (
     <Suspense>
-      <div className="grid h-[calc(100vh-64px)] w-full flex-1 grid-cols-1 overflow-hidden">
+      <div className="grid h-[calc(100svh-64px)] w-full flex-1 grid-cols-1 overflow-hidden">
         <StackBuilder specialSponsors={sponsorsData.specialSponsors} />
       </div>
     </Suspense>

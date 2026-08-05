@@ -1,21 +1,38 @@
-import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import solidPlugin from "vite-plugin-solid";
 import tailwindcss from "@tailwindcss/vite";
-import path from "node:path";
+import { solidStart } from "@solidjs/start/config";
+{{#if (eq webDeploy "cloudflare")}}
+import { fileURLToPath } from "node:url";
+{{/if}}
+{{#unless (eq webDeploy "cloudflare")}}
+import { nitro } from "nitro/vite";
+{{/unless}}
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
+{{#if (eq webDeploy "cloudflare")}}
+const cloudflareWorkersAlias: Record<string, string> =
+  process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
+    ? {}
+    : {
+        "cloudflare:workers": fileURLToPath(
+          new URL("./cloudflare-workers.dev.ts", import.meta.url),
+        ),
+      };
+
+{{/if}}
 export default defineConfig({
   plugins: [
-    tanstackRouter({ target: "solid", autoCodeSplitting: true }),
-    solidPlugin(),
+    solidStart(),
     tailwindcss(),
+{{#unless (eq webDeploy "cloudflare")}}
+    nitro(),
+{{/unless}}
   ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
   server: {
     port: 3001,
   },
+{{#if (eq webDeploy "cloudflare")}}
+  resolve: {
+    alias: cloudflareWorkersAlias,
+  },
+{{/if}}
 });

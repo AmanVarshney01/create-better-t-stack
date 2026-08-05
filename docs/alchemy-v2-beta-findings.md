@@ -22,18 +22,18 @@ unless they explicitly say live-reverified. Registry and OAuth observations are 
 
 ## Confirmed defects and publication hazards
 
-| ID  | Finding                                                             | Accepted beta.67 status     | Upstream status on 2026-08-01                                                                               | Current handling or required action                                             |
-| --- | ------------------------------------------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| A1  | `StaticSite` serializes unresolved `Output` values before `Build`   | Fixed and live-qualified    | Released through merged [#796](https://github.com/alchemy-run/alchemy/pull/796)                             | Removed `outputAwareStaticSite`; use native `StaticSite` Inputs                 |
-| A2  | `StaticSite` serializes `Config` values as `{"_id":"Config"}`       | Fixed and live-qualified    | Released through merged [#796](https://github.com/alchemy-run/alchemy/pull/796)                             | Removed caller-side Config resolution; pass Config directly                     |
-| A3  | `Website.Vite` misses pure-client output                            | Fixed and live-qualified    | Released through merged [#795](https://github.com/alchemy-run/alchemy/pull/795)                             | Removed the `StaticSite` fallback; TanStack Router and Solid use `Website.Vite` |
-| A4  | React Router builds a Worker with no registered handler             | Mitigated                   | Custom `main`, relative resolution, and loud invalid-handler errors are released; no handler is synthesized | Generate an explicit registered Worker entry                                    |
-| A5  | Default `Command.Build` memo scope misses sibling workspace changes | Confirmed                   | Generic `StaticSite` still requires explicit scope; #822 improves `Website.Vite`                            | Generated `StaticSite` builds disable memo reuse                                |
-| A6  | A published test prerelease can satisfy beta caret ranges           | Confirmed                   | N/A; npm package deprecated                                                                                 | Pin beta.67 and its Effect peers exactly                                        |
-| A7  | Worker Assets drops `_headers` and `_redirects`                     | Fixed in released source    | Released through merged [#928](https://github.com/alchemy-run/alchemy/pull/928)                             | Canonical live recheck remains before claiming complete rule parity             |
-| A8  | Worker Assets assigns incomplete MIME types                         | Confirmed                   | Still present in beta.67; no matching issue or PR found                                                     | Do not claim full static-asset parity                                           |
-| A9  | Published Cloudflare packages have incompatible peer ranges         | Confirmed                   | Still present in beta.67                                                                                    | Accept the non-fatal warning; do not add a template-level transitive override   |
-| A10 | beta.66 local D1 migrations cannot open the Cloudflare runtime      | Fixed and locally qualified | Released through merged [#1009](https://github.com/alchemy-run/alchemy/pull/1009)                           | beta.67 applies real nested Prisma migrations in `alchemy dev`                  |
+| ID  | Finding                                                             | Accepted beta.67 status     | Upstream status on 2026-08-01                                                                               | Current handling or required action                                            |
+| --- | ------------------------------------------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| A1  | `StaticSite` serializes unresolved `Output` values before `Build`   | Fixed and live-qualified    | Released through merged [#796](https://github.com/alchemy-run/alchemy/pull/796)                             | Removed `outputAwareStaticSite`; use native `StaticSite` Inputs                |
+| A2  | `StaticSite` serializes `Config` values as `{"_id":"Config"}`       | Fixed and live-qualified    | Released through merged [#796](https://github.com/alchemy-run/alchemy/pull/796)                             | Removed caller-side Config resolution; pass Config directly                    |
+| A3  | `Website.Vite` misses pure-client output                            | Fixed and live-qualified    | Released through merged [#795](https://github.com/alchemy-run/alchemy/pull/795)                             | TanStack Router uses the fixed SPA path; SolidStart v2 uses `Website.Vite` SSR |
+| A4  | React Router builds a Worker with no registered handler             | Mitigated                   | Custom `main`, relative resolution, and loud invalid-handler errors are released; no handler is synthesized | Generate an explicit registered Worker entry                                   |
+| A5  | Default `Command.Build` memo scope misses sibling workspace changes | Confirmed                   | Generic `StaticSite` still requires explicit scope; #822 improves `Website.Vite`                            | Generated `StaticSite` builds disable memo reuse                               |
+| A6  | A published test prerelease can satisfy beta caret ranges           | Confirmed                   | N/A; npm package deprecated                                                                                 | Pin beta.67 and its Effect peers exactly                                       |
+| A7  | Worker Assets drops `_headers` and `_redirects`                     | Fixed in released source    | Released through merged [#928](https://github.com/alchemy-run/alchemy/pull/928)                             | Canonical live recheck remains before claiming complete rule parity            |
+| A8  | Worker Assets assigns incomplete MIME types                         | Confirmed                   | Still present in beta.67; no matching issue or PR found                                                     | Do not claim full static-asset parity                                          |
+| A9  | Published Cloudflare packages have incompatible peer ranges         | Confirmed                   | Still present in beta.67                                                                                    | Accept the non-fatal warning; do not add a template-level transitive override  |
+| A10 | beta.66 local D1 migrations cannot open the Cloudflare runtime      | Fixed and locally qualified | Released through merged [#1009](https://github.com/alchemy-run/alchemy/pull/1009)                           | beta.67 applies real nested Prisma migrations in `alchemy dev`                 |
 
 ### A1: `StaticSite` drops deploy-time Outputs
 
@@ -95,16 +95,17 @@ server output` even though Vite wrote the SPA assets. See
 Beta.62 includes [PR #795](https://github.com/alchemy-run/alchemy/pull/795), which reads
 collected output after `builder.buildApp()` resolves. Beta.64 therefore contains the fix.
 
-On 2026-07-26, fresh TanStack Router and Solid projects generated from the current template installed
-beta.64, passed their application builds and direct infrastructure typechecks, and deployed with
-`Website.Vite`. For both frameworks, `/` and `/direct/deep-route` returned `200 text/html`, proving
-the configured single-page-application fallback. The owned stages
+On 2026-07-26, fresh TanStack Router and then-current Solid SPA projects installed beta.64, passed
+their application builds and direct infrastructure typechecks, and deployed with `Website.Vite`.
+For both projects, `/` and `/direct/deep-route` returned `200 text/html`, proving the configured
+single-page-application fallback. The owned stages
 `a3-vite-tsr-20260726-01` and `a3-vite-solid-20260726-01` were destroyed from their originating
 directories; subsequent Cloudflare API inventory returned Worker-not-found (`10007`) for both
 generated Worker names.
 
-The removal gate is satisfied. Better-T-Stack now generates `Website.Vite` for TanStack Router and
-Solid and no longer applies the A1/A2 `StaticSite` compatibility wrapper to those pure SPA paths.
+The removal gate remains satisfied for TanStack Router. The historical Solid SPA evidence is retained,
+but Solid now scaffolds SolidStart v2 SSR and uses `Website.Vite` with worker-first routing rather than
+the SPA fallback. Neither path uses the former A1/A2 `StaticSite` compatibility wrapper.
 
 ### A4: React Router handler and entrypoint integration
 

@@ -1,5 +1,4 @@
 import { CheckCircle2, InfoIcon, Terminal } from "lucide-react";
-import { motion } from "motion/react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { StackState } from "@/lib/constant";
@@ -58,23 +57,17 @@ export function TechCategories({
             id={isDesktop ? `section-${categoryKey}` : `section-mobile-${categoryKey}`}
             className={cn("mb-6 scroll-mt-4", isDesktop && "sm:mb-8")}
           >
-            <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
-              <Terminal
-                className={cn("mr-2 h-4 w-4 shrink-0 text-primary", isDesktop && "sm:h-5 sm:w-5")}
-              />
-              <h2
-                className={cn(
-                  "font-semibold font-mono text-foreground text-sm",
-                  isDesktop && "sm:text-base",
-                )}
-              >
+            <div className="mb-3 flex items-center gap-2 text-fd-muted-foreground">
+              <Terminal aria-hidden="true" className="h-3 w-3 shrink-0 text-primary" />
+              <h2 className="font-mono text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
                 {categoryDisplayName.toUpperCase()}
               </h2>
+              <span aria-hidden="true" className="h-px flex-1 bg-fd-border" />
               {compatibilityNotes[categoryKey]?.hasIssue && (
                 <Tooltip delay={100}>
                   <TooltipTrigger
                     render={
-                      <InfoIcon className="ml-2 h-4 w-4 shrink-0 cursor-help text-muted-foreground" />
+                      <InfoIcon className="h-3.5 w-3.5 shrink-0 cursor-help text-fd-muted-foreground transition-colors duration-150 hover:text-fd-foreground" />
                     }
                   />
                   <TooltipContent side="top" align="start">
@@ -91,7 +84,7 @@ export function TechCategories({
             <div
               className={cn(
                 "grid gap-2",
-                isDesktop ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" : "grid-cols-1",
+                isDesktop ? "grid-cols-1 @md:grid-cols-2 @min-[864px]:grid-cols-3" : "grid-cols-1",
                 isDesktop && "auto-rows-fr",
               )}
             >
@@ -106,23 +99,20 @@ export function TechCategories({
                 );
 
                 const card = (
-                  <motion.button
+                  <button
                     type="button"
                     disabled={isDisabled}
                     aria-disabled={isDisabled}
                     aria-pressed={isSelected}
                     aria-label={`${tech.name}${isDisabled && disabledReason ? `. ${disabledReason}` : ""}`}
                     className={cn(
-                      "builder-focus-ring relative h-full w-full text-left rounded-lg p-3 transition-colors",
-                      isDesktop && "p-2 sm:p-3",
+                      "builder-focus-ring relative h-full w-full rounded-[4px] border p-3 text-left transition-colors duration-150",
                       isSelected
-                        ? "bg-primary/12 ring-1 ring-primary"
+                        ? "border-primary"
                         : isDisabled
-                          ? "cursor-not-allowed bg-destructive/6 ring-1 ring-destructive/25 opacity-80"
-                          : "bg-muted/15 hover:bg-muted/25",
+                          ? "cursor-not-allowed border-dashed opacity-60"
+                          : "hover:border-primary/50",
                     )}
-                    whileHover={isDesktop && !isDisabled ? { scale: 1.01 } : undefined}
-                    whileTap={!isDisabled ? { scale: 0.98 } : undefined}
                     onClick={() => {
                       if (isDisabled) {
                         return;
@@ -131,47 +121,54 @@ export function TechCategories({
                     }}
                   >
                     <div className="flex items-start">
-                      <div className="grow">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center">
+                      <div className="min-w-0 grow">
+                        <div
+                          className={cn(
+                            "flex items-center justify-between gap-2",
+                            tech.default && !isSelected && "pr-14",
+                          )}
+                        >
+                          <div className="flex min-w-0 items-center">
                             {tech.icon !== "" && (
                               <TechIcon
                                 icon={tech.icon}
                                 name={tech.name}
-                                className={cn(
-                                  "mr-1.5 h-4 w-4",
-                                  isDesktop && "h-3 w-3 sm:h-4 sm:w-4",
-                                  tech.className,
-                                )}
+                                className={cn("mr-1.5 h-4 w-4 shrink-0", tech.className)}
                               />
                             )}
                             <span
                               className={cn(
-                                "font-medium text-sm",
-                                isDesktop && "text-xs sm:text-sm",
-                                isSelected ? "text-primary" : "text-foreground",
+                                "break-words font-mono text-[13px] leading-[1.55]",
+                                isSelected ? "text-primary" : "text-fd-foreground",
                               )}
                             >
                               {tech.name}
                             </span>
                           </div>
-                          {isSelected && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                          {isSelected && (
+                            <CheckCircle2
+                              aria-hidden="true"
+                              className="h-3.5 w-3.5 shrink-0 text-primary"
+                            />
+                          )}
                         </div>
-                        <p className="mt-0.5 text-muted-foreground text-xs">{tech.description}</p>
+                        <p className="mt-0.5 font-mono text-[11px] text-fd-muted-foreground leading-[1.5]">
+                          {tech.description}
+                        </p>
                         {isDesktop ? (
-                          <div className="mt-2 h-7">
+                          <div className="mt-2 min-h-7">
                             {isDisabled && disabledReason ? (
-                              <p className="h-full px-0.5 py-1 text-[11px] text-destructive/90 leading-tight line-clamp-1">
+                              <p className="py-1 font-mono text-[10px] text-destructive/90 leading-tight">
                                 {disabledReason}
                               </p>
                             ) : (
-                              <div aria-hidden className="h-full" />
+                              <div aria-hidden className="h-7" />
                             )}
                           </div>
                         ) : (
                           isDisabled &&
                           disabledReason && (
-                            <p className="mt-2 px-0.5 py-1 text-[11px] text-destructive/90">
+                            <p className="mt-2 py-1 font-mono text-[10px] text-destructive/90 leading-tight">
                               {disabledReason}
                             </p>
                           )
@@ -179,11 +176,11 @@ export function TechCategories({
                       </div>
                     </div>
                     {tech.default && !isSelected && (
-                      <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
+                      <span className="absolute top-2 right-2 ml-2 shrink-0 font-mono text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em]">
                         Default
                       </span>
                     )}
-                  </motion.button>
+                  </button>
                 );
 
                 if (isDesktop && disabledReason) {

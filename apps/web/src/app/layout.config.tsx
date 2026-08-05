@@ -75,7 +75,9 @@ export const baseOptions: BaseLayoutProps = {
     title: (
       <>
         {logo}
-        <span className="font-medium font-mono text-md tracking-tighter">Better T Stack</span>
+        <span className="inline shrink-0 whitespace-nowrap font-medium font-mono text-base tracking-tighter md:hidden xl:inline">
+          Better T Stack
+        </span>
       </>
     ),
   },

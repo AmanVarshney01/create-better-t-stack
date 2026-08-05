@@ -16,7 +16,7 @@ export class FileWriteError extends TaggedError("FileWriteError")<{
   message: string;
   path?: string;
   cause?: unknown;
-}>() {}
+}> {}
 
 /**
  * Writes a virtual file tree to the filesystem.

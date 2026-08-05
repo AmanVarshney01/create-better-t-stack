@@ -41,4 +41,4 @@ export class GeneratorError extends TaggedError("GeneratorError")<{
   message: string;
   phase?: string;
   cause?: unknown;
-}>() {}
+}> {}

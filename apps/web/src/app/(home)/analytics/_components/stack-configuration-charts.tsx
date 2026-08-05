@@ -13,9 +13,9 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
         title="Frameworks, runtimes, data layers, and auth"
         description="The most common stack decisions and pairings selected during project creation."
         aside={
-          <div className="rounded border border-border bg-fd-background px-3 py-1.5 font-mono text-muted-foreground text-xs">
+          <span className="shrink-0 text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em]">
             top stack {shortenLabel(data.summary.topStack, 28)}
-          </div>
+          </span>
         }
       />
 

@@ -7,7 +7,7 @@
 
 .react-tweet-theme {
   --tweet-container-margin: 0 !important;
-  @apply bg-fd-background! border-none! h-full! border-transparent! w-full!;
+  @apply bg-fd-background! border-none! h-auto! border-transparent! w-full!;
   max-width: 100% !important;
   min-width: 0 !important;
 }
@@ -28,34 +28,6 @@
   word-wrap: break-word !important;
   word-break: break-word !important;
   overflow-wrap: break-word !important;
-}
-
-.shiny-text {
-  background: linear-gradient(
-    120deg,
-    rgba(255, 255, 255, 0) 40%,
-    rgba(255, 255, 255, 0.8) 50%,
-    rgba(255, 255, 255, 0) 60%
-  );
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  display: inline-block;
-  animation: shine 5s linear infinite;
-}
-
-@keyframes shine {
-  0% {
-    background-position: 100%;
-  }
-
-  100% {
-    background-position: -100%;
-  }
-}
-
-.shiny-text.disabled {
-  animation: none;
 }
 
 @keyframes fadeInUp {
@@ -422,4 +394,218 @@
 
 .file-load-animation {
   animation: file-load 0.3s ease-out forwards;
+}
+
+:root {
+  /* Geist Mono ships without U+2500-259F: next/font/google exposes no symbols2 subset for it. */
+  --font-ascii:
+    ui-monospace, "SF Mono", "SFMono-Regular", Menlo, "DejaVu Sans Mono", "Liberation Mono",
+    Consolas, "Courier New", monospace;
+  /* Catppuccin Latte at 55% saturation and a flat 42% lightness. Latte darkened
+     to hit contrast turns into a full-strength rainbow on white; muting the
+     chroma keeps the hue sequence while staying calm. Min contrast 3.33. */
+  --bts-banner-gradient: linear-gradient(
+    90deg,
+    #96407f 0%,
+    #64399d 10%,
+    #9e384e 20%,
+    #983e46 30%,
+    #a65b31 40%,
+    #98733e 50%,
+    #558d49 60%,
+    #409297 70%,
+    #3284a4 80%,
+    #428894 90%,
+    #3243a4 100%
+  );
+}
+
+.dark {
+  /* Catppuccin Mocha, matching the gradient in apps/cli/src/utils/render-title.ts. */
+  --bts-banner-gradient: linear-gradient(
+    90deg,
+    #f5c2e7 0%,
+    #cba6f7 10%,
+    #f38ba8 20%,
+    #e78284 30%,
+    #fab387 40%,
+    #f9e2af 50%,
+    #a6e3a1 60%,
+    #94e2d5 70%,
+    #89dceb 80%,
+    #74c7ec 90%,
+    #b4befe 100%
+  );
+}
+
+.bts-banner-fit {
+  container-type: inline-size;
+  overflow: hidden;
+}
+
+.bts-banner,
+.bts-banner-narrow {
+  font-family: var(--font-ascii);
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: pre;
+  width: max-content;
+  margin: 0;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background-image: var(--bts-banner-gradient);
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 72 columns. */
+.bts-banner {
+  font-size: clamp(6px, calc(100cqw / 45), 22px);
+}
+
+/* 41 columns, stacked one word per line: phones only. */
+.bts-banner-narrow {
+  font-size: clamp(8px, calc(100cqw / 26), 20px);
+}
+
+/* On the desktop rail the banner also has to fit the viewport height, so the
+   first pane never needs an inner scrollbar. 620px is the rest of the pane. */
+@media (min-width: 768px) {
+  .bts-banner {
+    font-size: clamp(9px, min(calc(100cqw / 45), calc((100svh - 700px) / 13)), 22px);
+  }
+}
+
+@media (prefers-contrast: more), (forced-colors: active) {
+  .bts-banner,
+  .bts-banner-narrow {
+    forced-color-adjust: none;
+    background-image: none;
+    color: var(--primary);
+    -webkit-text-fill-color: currentColor;
+  }
+}
+
+@media (min-width: 768px) {
+  body:has(#bts-rail) {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body:has(#bts-rail) #nd-home-layout {
+    height: 100svh;
+    overflow: hidden;
+  }
+}
+
+/* Docs in the same flat mono language as the rail. Everything here is unlayered,
+   which beats fumadocs' @layer utilities without !important, and every selector is
+   scoped to the notebook layout so the home rail and other routes are untouched. */
+#nd-notebook-layout,
+#nd-subnav,
+#nd-sidebar-mobile {
+  --color-fd-card: transparent;
+  --color-fd-secondary: transparent;
+  --color-fd-muted: transparent;
+  --color-fd-accent: transparent;
+  --color-fd-accent-foreground: var(--color-fd-foreground);
+}
+
+/* neutral.css scopes muted/secondary to .dark #nd-sidebar, which outranks the above. */
+#nd-sidebar,
+.dark #nd-sidebar {
+  --color-fd-muted: transparent;
+  --color-fd-secondary: transparent;
+}
+
+#nd-notebook-layout *:not(img),
+#nd-subnav *:not(img),
+#nd-sidebar-mobile *:not(img) {
+  border-radius: 4px;
+  box-shadow: none;
+}
+
+#nd-notebook-layout :is(a, button):focus-visible,
+#nd-subnav :is(a, button):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+#nd-subnav a {
+  font-weight: 400;
+}
+
+/* Mono is kept for the micro labels only: prose stays Geist Sans for readability. */
+#nd-sidebar [aria-expanded],
+#nd-sidebar-mobile [aria-expanded],
+#toc-title {
+  font-family: var(--font-geist-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+#nd-sidebar a[data-active="true"],
+#nd-sidebar-mobile a[data-active="true"] {
+  background: transparent;
+  color: var(--color-fd-primary);
+}
+
+/* Drop fumadocs' 97rem cap so the sidebar and TOC sit flush to the viewport
+   edges, but keep a readable measure on the prose itself. */
+#nd-notebook-layout {
+  --fd-layout-width: 100%;
+}
+
+/* Cap the article, not its children: #nd-page is a flex column, so an auto
+   inline margin on a child makes it shrink-to-fit and centres the text block. */
+/* width:100% is load-bearing: an auto inline margin on a grid item makes it
+   size to fit-content, which overflowed the track on narrow screens. */
+#nd-page {
+  width: 100%;
+  max-width: 62rem;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+#nd-page > h1 {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+#nd-page .prose :is(h1, h2, h3, h4) {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+#nd-page .prose h2 {
+  border-bottom: 1px solid var(--color-fd-border);
+  padding-bottom: 0.35em;
+}
+
+/* Inline code only. Without the exclusion this boxes the code inside every block. */
+#nd-page .prose :where(code):not(pre code) {
+  background: transparent;
+  border: 1px solid var(--color-fd-border);
+}
+
+/* In-tab code blocks lack my-4 and carry their own border inside the tabs box. */
+#nd-page figure.shiki:not(.my-4) {
+  border: 0;
+}
+
+#nd-page .prose :where(strong) {
+  font-weight: 500;
+}
+
+#nd-page .prose :where(th) {
+  font-weight: 500;
+}
+
+#nd-page .prose :where(blockquote) {
+  font-style: normal;
+  font-weight: 400;
 }

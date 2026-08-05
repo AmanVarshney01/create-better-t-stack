@@ -1,14 +1,8 @@
-import { createFileRoute } from "@tanstack/solid-router";
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/solid-query";
-import { orpc } from "../utils/orpc";
+import { orpc } from "~/utils/orpc";
 import { Match, Switch } from "solid-js";
-{{else}}
 {{/if}}
-
-export const Route = createFileRoute("/")({
-  component: App,
-});
 
 const TITLE_TEXT = `
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -26,7 +20,7 @@ const TITLE_TEXT = `
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  `;
 
-function App() {
+export default function Home() {
   {{#if (eq api "orpc")}}
   const healthCheck = useQuery(() => orpc.healthCheck.queryOptions());
   {{/if}}
