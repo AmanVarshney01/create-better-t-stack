@@ -117,7 +117,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     const needsLocalD1 =
       isBackendSelf &&
       config.dbSetup === "d1" &&
-      (["nuxt", "svelte", "astro"] as const).some((f) => frontend.includes(f));
+      (["nuxt", "svelte", "solid", "astro"] as const).some((f) => frontend.includes(f));
 
     if (frontend.includes("next")) {
       addPackageDependency({
@@ -140,6 +140,12 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
         devDependencies: needsLocalD1
           ? ["@sveltejs/adapter-cloudflare", "wrangler"]
           : ["@sveltejs/adapter-cloudflare"],
+      });
+    } else if (frontend.includes("solid") && needsLocalD1) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        devDependencies: ["wrangler"],
       });
     } else if (frontend.includes("astro")) {
       addPackageDependency({

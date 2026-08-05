@@ -38,10 +38,44 @@ export const env: Record<string, unknown> = new Proxy(
 );
 `,
     );
+  } else if (frontend.includes("solid") && backend === "self") {
+    writeDevWranglerConfig(vfs, config);
+    writeSolidStartDevEnvProxy(vfs, config);
   } else if (backend === "self" && frontend.includes("astro")) {
     // framework dev servers read local bindings (miniflare D1) from this config
     writeDevWranglerConfig(vfs, config);
   }
+}
+
+function writeSolidStartDevEnvProxy(vfs: VirtualFileSystem, config: ProjectConfig) {
+  const proxyPath = "apps/web/cloudflare-workers.dev.ts";
+
+  if (config.dbSetup !== "d1") {
+    vfs.writeFile(
+      proxyPath,
+      `export const env = process.env as Record<string, string | undefined>;
+`,
+    );
+    return;
+  }
+
+  vfs.writeFile(
+    proxyPath,
+    `import { getPlatformProxy } from "wrangler";
+
+const proxy = await getPlatformProxy();
+
+export const env: Record<string, unknown> = new Proxy(
+	{},
+	{
+		get(_target, prop) {
+			if (typeof prop !== "string") return undefined;
+			return (proxy.env as Record<string, unknown>)[prop] ?? process.env[prop];
+		},
+	},
+);
+`,
+  );
 }
 
 function d1DatabasesBlock(config: ProjectConfig): string {

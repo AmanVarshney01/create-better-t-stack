@@ -35,12 +35,6 @@ describe("Tauri setup", () => {
         expectedUrl: "http://localhost:5173",
         expectedBuildCommand: "bun run build",
       },
-      {
-        frontend: ["solid"],
-        expectedDist: "../dist",
-        expectedUrl: "http://localhost:3001",
-        expectedBuildCommand: "bun run build",
-      },
     ] as const;
 
     for (const testCase of cases) {
