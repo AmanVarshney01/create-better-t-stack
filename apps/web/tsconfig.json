@@ -12,6 +12,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "types": ["bun"],
     "jsx": "react-jsx",
     "incremental": true,
     "paths": {
