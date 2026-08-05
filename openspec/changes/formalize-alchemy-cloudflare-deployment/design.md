@@ -4,6 +4,8 @@ Better-T-Stack generates Cloudflare infrastructure through `packages/template-ge
 
 Alchemy v2 is still a prerelease API. Better-T-Stack currently needs three active targeted safeguards because the accepted release does not correctly cover every generated framework and monorepo behavior. A3 was independently retired after its beta.64 removal gate passed; A1 and A2 were retired after beta.67 passed direct generated-project typechecks plus Config and Output live gates. Beta.67 also fixes beta.66's A10 local D1 runtime regression. Several reviews produced plausible but disproved claims. The design therefore treats source inspection, a provider-free plan, and a live deployment as different evidence levels.
 
+As inspected on 2026-08-01, Alchemy PR #886 proposes first-class Waku, Astro, SvelteKit, and Nuxt Cloudflare resources and PR #923 proposes `Website.Nextjs` on top of #886. Both pull requests are drafts and conflict with their bases. Neither resource family is contained in the accepted beta.67 release. Their draft implementations introduce a Worker `source` dispatch layer and dynamically load framework packages from `@distilled.cloud/*`; those packages, their peer graph, and their framework assumptions are therefore part of the candidate surface that must be released and qualified. Draft behavior is useful design input, not permission to generate it.
+
 The source of truth for observed behavior is [docs/alchemy-v2-beta-findings.md](../../../docs/alchemy-v2-beta-findings.md). It records:
 
 - the accepted published version and tag commit;
@@ -25,6 +27,8 @@ Relevant upstream references include:
 - [Alchemy PR #928](https://github.com/alchemy-run/alchemy/pull/928)
 - [Alchemy PR #1009](https://github.com/alchemy-run/alchemy/pull/1009)
 - [Alchemy framework resources PR #886](https://github.com/alchemy-run/alchemy/pull/886)
+- [Alchemy Next.js resource PR #923](https://github.com/alchemy-run/alchemy/pull/923)
+- [Alchemy cloudflare-tools repository](https://github.com/alchemy-run/cloudflare-tools)
 - [cloudflare-tools PR #62](https://github.com/alchemy-run/cloudflare-tools/pull/62)
 - [Better-T-Stack beta reproductions](https://github.com/AmanVarshney01/alchemy-v2-beta-repros)
 
@@ -45,15 +49,22 @@ Relevant upstream references include:
 - Keep secrets redacted and Effect Config values resolved before subprocess serialization.
 - Distinguish Alchemy defects from framework/platform shims and Better-T-Stack policy.
 - Give every safeguard an executable retention rule or release-based removal gate.
+- Replace generic framework deployment plumbing with first-class Cloudflare framework resources only where the released resource preserves Better-T-Stack's complete behavior.
+- Let Next.js, Nuxt, SvelteKit, and Astro qualify independently, including independent dependency, configuration, local-development, binding, memo, and live-route gates.
 - Make live verification disposable, ownership-safe, and leak-audited.
 - Prevent static review claims from overriding repeated live evidence.
 
 **Non-Goals:**
 
 - Adding a new deployment provider.
+- Adding Vercel, Railway, Prisma Compute, or Alchemy Prisma Postgres support.
+- Changing Docker or Compose behavior.
+- Adding Waku as a Better-T-Stack frontend.
 - Generalizing all deployment providers behind a new abstraction.
 - Replacing Alchemy with raw Wrangler configuration.
 - Removing a workaround during this planning change.
+- Adopting a draft branch, git dependency, or unpublished framework source package.
+- Requiring a framework major upgrade solely to consume an Alchemy resource; any framework-major migration needs its own product decision and compatibility work.
 - Treating all framework adapter constraints as Alchemy core defects.
 - Claiming full OpenNext ISR or `alchemy logs` authentication until their focused live gates pass.
 
@@ -63,8 +74,10 @@ Future implementation and verification work is concentrated in:
 
 - `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs` for resources, bindings, Inputs, framework entries, and memo behavior;
 - `packages/template-generator/src/utils/add-deps.ts` and `src/processors/infra-deps.ts` for the exact Alchemy dependency;
+- `packages/template-generator/src/processors/deploy-deps.ts` for framework adapters, Workers types, Wrangler, and any released `@distilled.cloud/*` source-provider dependency;
 - `packages/template-generator/src/processors/alchemy-plugins.ts` for Nuxt development, Wrangler compatibility flags, D1 migration patterns, and Images binding configuration;
 - `packages/template-generator/src/post-process/package-configs.ts` for generated Alchemy scripts;
+- framework configuration templates for Next.js, Nuxt, SvelteKit, and Astro, whose adapter and development responsibilities may move into a released first-class resource;
 - `packages/template-generator/src/processors/readme-generator.ts` and post-install output for user guidance;
 - `apps/cli/test/deployment.test.ts`, `cloudflare-db-clients.test.ts`, and generated-project smoke tests;
 - `docs/alchemy-v2-beta-findings.md` and the external reproduction repository.
@@ -101,19 +114,100 @@ Cloudflare separate-server deployment requires Hono on the Workers runtime. Full
 
 Framework resource paths remain intentional:
 
-| Framework              | Current generated path                                                     |
-| ---------------------- | -------------------------------------------------------------------------- |
-| TanStack Router, Solid | `Website.Vite` with explicit single-page-application asset handling        |
-| React Router           | `Website.Vite` plus an explicit registered Worker entry and web-stream SSR |
-| TanStack Start         | `Website.Vite` with explicit Cloudflare compatibility and bindings         |
-| Next.js                | `StaticSite`/OpenNext assets plus Worker entry and explicit flags/bindings |
-| Nuxt                   | `StaticSite` with Nitro public assets/server entry and a local dev proxy   |
-| SvelteKit              | `StaticSite` with the Cloudflare adapter Worker shim bundled               |
-| Astro                  | `StaticSite` with server entry, session KV, and Images where required      |
+| Framework              | Accepted beta.67 path                                                      | Candidate first-class path | Adoption unit |
+| ---------------------- | -------------------------------------------------------------------------- | -------------------------- | ------------- |
+| TanStack Router, Solid | `Website.Vite` with explicit single-page-application asset handling        | unchanged                  | not affected  |
+| React Router           | `Website.Vite` plus an explicit registered Worker entry and web-stream SSR | unchanged                  | not affected  |
+| TanStack Start         | `Website.Vite` with explicit Cloudflare compatibility and bindings         | unchanged                  | not affected  |
+| Next.js                | `StaticSite`/OpenNext assets plus Worker entry and explicit flags/bindings | `Website.Nextjs`           | PR #923 gate  |
+| Nuxt                   | `StaticSite` with Nitro public assets/server entry and a local dev proxy   | `Website.Nuxt`             | PR #886 gate  |
+| SvelteKit              | `StaticSite` with the Cloudflare adapter Worker shim bundled               | `Website.SvelteKit`        | PR #886 gate  |
+| Astro                  | `StaticSite` with server entry, session KV, and Images where required      | `Website.Astro`            | PR #886 gate  |
 
 Alchemy's current framework matrix marks TanStack Start and React Router as supported, Astro only through `StaticSite` static output, and Nuxt as not yet supported. Better-T-Stack's custom Next.js, Nuxt, SvelteKit, and Astro server-entry paths do not inherit an upstream support claim merely because `StaticSite` accepts a build directory and custom `main`. Until the accepted-version scoreboard records each exact page/document live gate, those generated `self` cells SHALL remain experimental.
 
 A framework path may change only after its generated build, typecheck, direct request, and affected binding checks pass.
+
+#### 2.1 Evidence boundary for first-class resources
+
+The upstream pull-request prose documents the intended zero-configuration calls and claims framework-owned builds, local development, asset collection, and input hashing. Inspection of the draft heads additionally shows a generic Worker `source` descriptor, dynamic imports of `@distilled.cloud/nextjs`, `nuxt`, `sveltekit`, and `astro`, and framework-specific compatibility defaults. Inspection also exposes unresolved product differences: the SvelteKit source package currently peers on a Kit 3 prerelease while Better-T-Stack uses Kit 2; the Astro source loads the project's config despite stale wrapper prose saying otherwise and currently selects passthrough images; the Next.js source still documents read-only ISR and no `WORKER_SELF_REFERENCE`; and source-package peer versions do not yet form a released Better-T-Stack dependency contract.
+
+It is reasonable to infer that a released first-class resource can eventually delete substantial generated plumbing. It is not reasonable to infer framework parity, package-manager resolution, state continuity, or binding behavior from the shorter call alone. Every claim below therefore remains a candidate requirement until a published exact release passes it.
+
+#### 2.2 Shared first-class resource contract
+
+The current generic pattern teaches Alchemy how to deploy framework output:
+
+```typescript
+Effect.gen(function* () {
+  const webWorker = yield* Cloudflare.Website.StaticSite("web", {
+    cwd: "../../apps/web",
+    command: "bun run build",
+    memo: false,
+    outdir: ".output/public",
+    main: "../../apps/web/.output/server/index.mjs",
+    bundle: false,
+    compatibility: { flags: ["nodejs_compat"] },
+    env: { PUBLIC_SERVER_URL: serverWorker.url.as<string>() },
+    dev: { command: "bun run dev:bare", url: "http://localhost:3001" },
+  });
+
+  return webWorker;
+});
+```
+
+The target shape delegates framework build knowledge while preserving application inputs:
+
+```typescript
+Effect.gen(function* () {
+  const webWorker = yield* Cloudflare.Website.Nuxt("web", {
+    rootDir: "../../apps/web",
+    env: { PUBLIC_SERVER_URL: serverWorker.url.as<string>() },
+  });
+
+  return webWorker;
+});
+```
+
+For each adopted resource, Better-T-Stack SHALL:
+
+- keep the logical Worker ID `web`, the same stack/stage semantics, and all application-facing Outputs;
+- preserve every generated `env` value and its dependency edge, including server URLs, Effect Config values, D1, secrets, auth, payments, and framework-public variables;
+- remove `command`, output directory, Worker entry, bundling mode, compatibility default, development command/URL, and `memo: false` only when the released resource demonstrably owns that concern;
+- install every dynamically loaded source-provider package in a location that resolves under strict npm, pnpm, and Bun installs, with a compatible and reproducible peer graph;
+- avoid version-detection branches or parallel generic/first-class paths inside one generated project; the exact accepted Alchemy version determines one generated path per framework;
+- prove through a provider-free plan that adopting the new wrapper does not unexpectedly replace or delete the existing Worker, D1 database, KV namespace, Images binding, or another stateful resource;
+- keep a framework on the accepted generic path when any one of its gates is blocked, even if sibling resources ship in the same Alchemy release.
+
+First-class source hashing may replace A5's `memo: false` only for the adopted framework after an unchanged redeploy skips its build and edits in imported sibling workspaces, root lockfiles, manifests, framework configuration, and relevant generated configuration each invalidate the memo. Passing Alchemy's Vite workspace test does not prove a distinct framework source provider's hashing.
+
+#### 2.3 Next.js adoption contract
+
+`Website.Nextjs` may replace the OpenNext `StaticSite` block only after a released resource builds the generated Next.js version and preserves normal SSR, static assets, route handlers, public build variables, runtime secrets, Images, and Cloudflare bindings. The initial migration SHALL retain `open-next.config.ts` and `@opennextjs/cloudflare` whenever the released source provider or generated runtime imports them. The generated `build:cloudflare` script, deployment-only Wrangler layout, `.open-next` paths, `bundle: false`, hard-coded dev URL, and flags may be removed independently only when the released resource owns and verifies each behavior.
+
+The gate SHALL include both preview-parity `alchemy dev` and the project's normal HMR workflow. It SHALL verify whether `global_fetch_strictly_public` is still required instead of assuming the resource's `nodejs_compat` default replaces it. It SHALL exercise a real image route or transformation before removing `IMAGES`. On-demand ISR remains unsupported until revalidation writes and `WORKER_SELF_REFERENCE` pass their existing focused live gate; adoption of `Website.Nextjs` alone does not close that limitation.
+
+#### 2.4 Nuxt adoption contract
+
+`Website.Nuxt` may replace the Nitro `StaticSite` block after its released source provider loads the generated `nuxt.config.ts`, injects the Cloudflare preset without overwriting Better-T-Stack's UI, runtime config, route rules, and other user configuration, and serves both page SSR and API behavior. If the resource owns the Nitro preset, the generated `nitro.preset` SHALL be removed rather than competing with it.
+
+The development-only `cloudflare:workers` alias, `nitro-cloudflare-dev`, Wrangler development configuration, hard-coded port, and `dev:bare` wiring SHALL remain until `alchemy dev` supplies real literal and resource bindings to page SSR. A local D1 migration and a D1-backed page/API operation must pass without each removed shim. Provider-owned `nodejs_compat` may replace the explicit flag only after direct workerd verification.
+
+#### 2.5 SvelteKit adoption contract
+
+`Website.SvelteKit` SHALL NOT force Better-T-Stack from its supported SvelteKit major to an upstream prerelease. Adoption waits for a released resource compatible with Better-T-Stack's selected stable SvelteKit version, or for a separately approved framework-major change that passes the complete non-Cloudflare and addon regression matrix.
+
+Once version-compatible, the resource must preserve preprocessing, aliases, route configuration, SSR, prerendering, `platform.env`, D1, and auth behavior. Only then may generation remove `@sveltejs/adapter-cloudflare`, the Cloudflare adapter block, the `_worker.js` bundling comment/path, `.assetsignore`, hard-coded dev URL, and related Wrangler dependency. Both HMR and a real local resource binding must work; literal-only `platform.env` stubs do not satisfy the gate.
+
+#### 2.6 Astro adoption contract
+
+`Website.Astro` may replace the Astro `StaticSite` block only if the released source and documentation agree that the native `astro.config.*` is loaded and merged. The generated Tailwind Vite plugin, environment schema, integrations, route configuration, SSR output, and user-defined Astro configuration SHALL survive. The Cloudflare adapter import/configuration may be removed only because the released resource injects an equivalent adapter; it may not be removed by discarding the rest of the config file.
+
+The initial adoption SHALL preserve explicit session and Images resource identity until separate binding-removal gates pass. A session-backed route must prove `SESSION` behavior. Because the inspected draft provider selects passthrough images, Astro adoption is blocked if it would silently regress the generated Cloudflare Images behavior; a real image transformation/serving test and inferred binding test must establish parity. SSR, prerendered assets, `_headers`, `_redirects`, 404 handling, and representative MIME types must also pass.
+
+#### 2.7 Cloudflare-only boundary
+
+This first-class framework work changes only Cloudflare web resources and the Cloudflare-specific adapter/configuration they own. It SHALL NOT add Alchemy Prisma resources, Prisma Compute, Vercel resources, Railway integration, Docker changes, or a generalized deployment interface. Existing Prisma ORM plus D1 remains in the matrix solely to prove that framework-resource adoption preserves Cloudflare D1 binding and nested migration behavior. Existing remote `DATABASE_URL` behavior remains unchanged.
 
 ### 3. Maintain an explicit compatibility-layer classification
 
@@ -146,11 +240,11 @@ In a combined Cloudflare stack, the server Worker resource SHALL be yielded befo
 
 `.as<string>()` is only a TypeScript cast and SHALL NOT be treated as Output resolution. A raw occurrence of `localhost:3000` in a bundle is also not proof that the active deployed value is wrong; verification must inspect the build input, dependency plan, and live artifact behavior.
 
-Effect `Config.string` and `Config.redacted` descriptors and Alchemy Outputs SHALL be passed directly as native `StaticSite` Inputs. Secrets SHALL remain redacted in plans, command output, generated documentation, and live-test diagnostics.
+Effect `Config.string` and `Config.redacted` descriptors and Alchemy Outputs SHALL be passed directly as native Website Inputs, whether the accepted framework path is generic `StaticSite` or a qualified first-class resource. Secrets SHALL remain redacted in plans, command output, generated documentation, and live-test diagnostics.
 
 ### 6. Treat framework bindings and development shims as explicit contracts
 
-The generated infrastructure and framework configuration SHALL agree on every binding exactly once, including D1, KV/session, Images, and Worker service bindings. `Cloudflare.InferEnv` output and generated application environment types SHALL expose the same names.
+The generated infrastructure and framework configuration SHALL agree on every binding exactly once, including D1, KV/session, Images, and Worker service bindings. `Cloudflare.InferEnv` output and generated application environment types SHALL expose the same names. Moving adapter or build ownership into a first-class resource does not authorize renaming, auto-replacing, or dropping a binding.
 
 The following remain integration shims unless their own targeted gate passes:
 
@@ -190,6 +284,9 @@ Provider-free gates SHALL cover:
 - React Router handler registration and entry selection;
 - sibling-workspace memo invalidation behavior;
 - D1 migration discovery and binding types;
+- first-class source-provider dependency resolution and peer compatibility under strict npm, pnpm, and Bun installs;
+- a non-destructive plan comparison between each generic resource and its candidate first-class replacement;
+- per-provider memo invalidation for imported sibling workspaces and root/framework configuration;
 - framework build outputs for Next, Nuxt, SvelteKit, Astro, TanStack Start, React Router, TanStack Router, and Solid.
 
 Credentialed live gates SHALL cover, at minimum:
@@ -201,6 +298,9 @@ Credentialed live gates SHALL cover, at minimum:
 - a Nuxt page request and D1-backed operation in development;
 - a production D1 migration and database-backed request;
 - framework-required KV/Images bindings where generated;
+- framework-native `alchemy dev`, normal HMR development, and resource-backed local bindings for every adopted first-class resource;
+- unchanged redeploy plus sibling-workspace-only change for each adopted source provider;
+- `_headers`, `_redirects`, 404 handling, and representative MIME responses through first-class asset collection;
 - a sibling-workspace-only change causing a normal rebuild when memo behavior is under review;
 - OpenNext on-demand revalidation before claiming `WORKER_SELF_REFERENCE` ISR;
 - fresh-login `alchemy logs` and `alchemy tail` behavior before classifying the authorization observation.
@@ -229,15 +329,17 @@ Credentialed CI SHALL run only from trusted code with protected secrets and isol
 
 An Alchemy upgrade follows this sequence:
 
-1. Identify a published exact candidate and its released tag commit.
+1. Identify a published exact candidate and its released tag commit, plus the exact published framework source packages it dynamically loads.
 2. Update a temporary candidate fixture without changing generated defaults.
 3. Re-run every applicable canonical reproduction against the released package.
-4. Generate, install, typecheck, and build the affected topology matrix.
-5. Run the credentialed live scenarios affected by the release.
-6. Change the exact generated pin only if the complete release gate passes.
-7. Remove only independently qualified A1–A5 safeguards or named integration shims; retain A6 exact pinning.
-8. Re-run that shim's provider-free and live removal gate without it.
-9. Update the findings ledger in the same change.
+4. Generate, install, typecheck, and build the affected topology matrix under npm, pnpm, and Bun without relying on accidental hoisting.
+5. Compare the resource plan and state identity before changing a framework's generated resource.
+6. Run the credentialed live scenarios affected by the release.
+7. Change the exact generated pin only if the complete release gate passes.
+8. Adopt each first-class framework resource independently; a failed framework remains on its generic path.
+9. Remove only independently qualified A1–A5 safeguards or named integration shims; retain A6 exact pinning.
+10. Re-run that shim's provider-free and live removal gate without it.
+11. Update the findings ledger in the same change.
 
 If a candidate fixes one defect but regresses another supported topology, Better-T-Stack keeps the current pin. Rollback means restoring the previous exact dependency and compatibility code; it never destroys user infrastructure.
 
@@ -246,6 +348,10 @@ If a candidate fixes one defect but regresses another supported topology, Better
 - **Exact prerelease pinning slows upgrades** → Prefer reproducibility; qualify published candidates deliberately.
 - **`memo: false` makes builds slower** → Accept the cost until a published workspace-aware default passes the defined imported-workspace and root-input corpus.
 - **Framework adapters evolve independently** → Verify each framework path and binding rather than treating one Cloudflare deploy as universal proof.
+- **First-class resources can shorten code while changing behavior** → Compare builds, state plans, framework configuration, bindings, local development, and live routes before deleting generic fields.
+- **Dynamic source packages add a second compatibility surface** → Pin or otherwise lock the released compatible graph and test resolution under every supported package manager without hoisting assumptions.
+- **A source provider may require a different framework major** → Keep that framework on `StaticSite`; do not couple an Alchemy adoption to an implicit framework-major upgrade.
+- **Provider-owned defaults may replace stateful bindings** → Preserve logical IDs and explicit bindings during initial adoption, and require a separate non-destructive removal gate for automatic resources.
 - **Live verification consumes Cloudflare resources** → Use owned stages, trusted credentials, cleanup reconciliation, and explicit leak audits.
 - **Merged fixes can remain unreleased** → Track both main and registry state, but generate only released exact packages.
 - **Static review can produce persuasive false positives** → Keep disproved claims in the ledger and require the evidence level appropriate to the assertion.
@@ -255,12 +361,16 @@ If a candidate fixes one defect but regresses another supported topology, Better
 Implementation work should proceed in this order:
 
 1. Canonicalize the baseline ledger and missing one-off reproductions without changing templates.
-2. Add deterministic generated-artifact, dependency-pin, and typecheck gates around current behavior.
-3. Harden the disposable live harness and cleanup reconciliation.
-4. Run the full accepted-version baseline and publish an honest support scoreboard.
-5. Evaluate a new Alchemy release only when it is published.
-6. Upgrade the exact pin if all applicable gates pass.
-7. Remove compatibility shims independently through their named gates.
+2. Record the current generic code, framework configuration, dependencies, bindings, development path, plan identity, and live behavior as the per-framework comparison baseline.
+3. Add deterministic generated-artifact, dependency-pin, and typecheck gates around current behavior.
+4. Harden the disposable live harness and cleanup reconciliation.
+5. Run the full accepted-version baseline and publish an honest support scoreboard.
+6. Track PRs #886 and #923 as unreleased candidates without generating their APIs.
+7. When a containing exact release exists, qualify the Worker source engine and every published `@distilled.cloud/*` dependency against unaffected Cloudflare paths first.
+8. Evaluate Next.js, Nuxt, SvelteKit, and Astro independently against their named offline, development, live, and cleanup gates.
+9. Upgrade the exact pin only if the release does not regress the supported Cloudflare matrix; adopt only the framework resources whose own gates pass.
+10. Remove generic resource fields, adapters, plugins, scripts, dependencies, flags, and bindings independently through their named gates.
+11. Retain the generic path for blocked frameworks and document why; never add a moving-version branch to generated code.
 
 ## Open Questions
 
@@ -268,6 +378,10 @@ Implementation work should proceed in this order:
 2. What published upstream behavior and cross-workspace/root-input evidence is sufficient to classify Alchemy's default memo scope as workspace-aware and remove A5?
 3. Can Alchemy express OpenNext's self service binding without a resource dependency cycle, or must ISR remain partially unsupported?
 4. Does a freshly authenticated profile make both `alchemy logs` and `alchemy tail` work with the required scopes?
+5. In what package location will released dynamic `@distilled.cloud/*` sources resolve consistently under strict npm, pnpm, and Bun workspaces?
+6. Will `Website.SvelteKit` support Better-T-Stack's selected stable SvelteKit major without forcing an unrelated framework migration?
+7. Will `Website.Astro` preserve Cloudflare Images behavior rather than the inspected draft's passthrough image service, while loading native Astro configuration as its source currently does?
+8. Can a first-class resource preserve the existing Worker and binding identities in the plan, or does any framework require an explicit state migration?
 
 Resolved on 2026-07-26: beta.64 `Website.Vite` reliably served both TanStack Router and Solid root
 and direct deep-link requests, so the A3 `StaticSite` fallback was removed.
