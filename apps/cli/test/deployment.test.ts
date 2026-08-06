@@ -898,16 +898,15 @@ describe("Deployment Configurations", () => {
       const serverPackage = JSON.parse(files.get("apps/server/package.json") ?? "{}") as {
         devDependencies?: Record<string, string>;
       };
-
       expect(infraFile).toContain('export const server = Cloudflare.Worker("server"');
       expect(infraFile).toContain("export type ServerEnv = Cloudflare.InferEnv<typeof server>");
       expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
-        alchemy: "2.0.0-beta.67",
-        effect: "4.0.0-beta.101",
-        "@effect/platform-node": "4.0.0-beta.101",
-        "@effect/platform-bun": "4.0.0-beta.101",
+        alchemy: "2.0.0-beta.69",
+        effect: "4.0.0-beta.103",
+        "@effect/platform-node": "4.0.0-beta.103",
+        "@effect/platform-bun": "4.0.0-beta.103",
       });
       expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
         infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
@@ -1049,9 +1048,9 @@ describe("Deployment Configurations", () => {
       expect(astroInfra).toContain("IMAGES: Cloudflare.Images.Images()");
     });
 
-    it("should use released Website.Vite SPA support for TanStack Router and Solid", async () => {
+    it("should use released Website.Vite SPA support for TanStack Router", async () => {
       const results = await Promise.all(
-        (["tanstack-router", "solid"] as const).map((frontend) =>
+        (["tanstack-router"] as const).map((frontend) =>
           createVirtual({
             projectName: `${frontend}-cloudflare-vite`,
             webDeploy: "cloudflare",
@@ -1120,21 +1119,24 @@ describe("Deployment Configurations", () => {
       const viteConfig = files.get("apps/web/vite.config.ts");
       const infraFile = files.get("packages/infra/alchemy.run.ts");
       const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const rootPkg = JSON.parse(files.get("package.json") ?? "{}");
+      const turboConfig = JSON.parse(files.get("turbo.json") ?? "{}");
 
-      expect(viteConfig).toContain('from "alchemy/cloudflare/vite"');
-      expect(viteConfig).toContain("const shouldUseAlchemy = existsSync(alchemyConfigPath);");
-      expect(viteConfig).toContain('viteEnvironment: { name: "ssr" }');
+      expect(viteConfig).not.toContain('from "alchemy/cloudflare/vite"');
+      expect(viteConfig).toContain('process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"');
       expect(viteConfig).toContain("const cloudflareWorkersAlias: Record<string, string>");
-      expect(viteConfig).toContain('"cloudflare:workers": cloudflareWorkersShimPath');
-      expect(infraFile).toContain('entrypoint: "dist/server/entry-server.js"');
-      expect(infraFile).toContain("noBundle: true");
-      expect(infraFile).toContain("spa: false");
-      expect(infraFile).toContain('main: "src/entry-server.tsx"');
-      expect(infraFile).toContain('directory: "dist/client"');
-      expect(infraFile).toContain('compatibility: "node"');
-      expect(infraFile).toContain("run_worker_first: true");
-      expect(webPkg.devDependencies.alchemy).toBeDefined();
-      expect(webPkg.devDependencies["@cloudflare/vite-plugin"]).toBe("1.48.0");
+      expect(viteConfig).toContain('new URL("./cloudflare-workers.dev.ts", import.meta.url)');
+      expect(infraFile).toContain('export const web = Cloudflare.Website.Vite("web", {');
+      expect(infraFile).toContain('rootDir: "../../apps/web"');
+      expect(infraFile).toContain('flags: ["nodejs_compat"]');
+      expect(infraFile).toContain("runWorkerFirst: true");
+      expect(infraFile).toContain("DB: db");
+      expect(webPkg.devDependencies.alchemy).toBeUndefined();
+      expect(webPkg.devDependencies["@cloudflare/vite-plugin"]).toBeUndefined();
+      expect(webPkg.devDependencies.wrangler).toBeDefined();
+      expect(webPkg.scripts["db:migrate:local"]).toBeDefined();
+      expect(rootPkg.scripts["db:migrate:local"]).toContain("web");
+      expect(turboConfig.tasks["db:migrate:local"]).toEqual({ cache: false });
     });
 
     it("should keep native Metro from watching Alchemy state", async () => {

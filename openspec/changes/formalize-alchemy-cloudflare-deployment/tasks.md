@@ -4,14 +4,14 @@
 - [ ] 1.2 Inventory every generated Cloudflare topology/framework/runtime/database/addon cell and publish a scoreboard that separates generated, offline-verified, live-verified, experimental, and blocked status.
 - [ ] 1.3 Move the one-off A1 StaticSite Output/dependency plan into the canonical reproduction repository or this repository with an exact dependency lock.
 - [ ] 1.4 Re-run and document canonical reproductions for A2 Config serialization, A3 pure-SPA output, A4 React Router handler selection, A5 sibling-workspace memo scope, and A6 prerelease resolution.
-- [ ] 1.5 Correct or annotate the external reproduction repository's misclassified `nodejs_compat` case so it cannot be cited as a confirmed Alchemy defect.
+- [x] 1.5 Delete the external reproduction repository's misclassified `nodejs_compat` case so it cannot be cited as a confirmed Alchemy defect.
 - [ ] 1.6 Record `alchemy logs` authorization and OpenNext `WORKER_SELF_REFERENCE` ISR as open limitations until their focused live tests pass.
 - [ ] 1.7 Add a ledger check requiring ID, classification, affected release, evidence, upstream status, current handling, removal condition, and last-verification date for every entry.
-- [ ] 1.8 Track Alchemy PRs #886 and #923 plus their cloudflare-tools source-package commits as draft candidates; record mergeability, publication, package peers, and framework limitations without treating them as accepted behavior.
+- [x] 1.8 Record merged Alchemy PRs #886 and #923, beta.69, published `@distilled.cloud/*@0.17.0` packages, package peers, and framework limitations without treating publication as accepted behavior.
 
 ## 2. Exact Dependency and Generated Artifact Gates
 
-- [x] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.67` output with no semver range.
+- [x] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.69` output with no semver range; pin Effect and both platform packages to compatible beta.103.
 - [ ] 2.2 Generate npm, pnpm, and Bun projects and prove each resolves the exact accepted Alchemy package rather than an incompatible test prerelease.
 - [ ] 2.3 Add deterministic artifact assertions for web-only, server-only, combined, full-stack `self`, Convex-web, D1, and mixed single-plane Cloudflare topologies.
 - [ ] 2.4 Assert that every selected Cloudflare plane emits `packages/infra/alchemy.run.ts`, the infra package, scripts, framework adapter/configuration, bindings, inferred env types, and user guidance.
@@ -29,7 +29,7 @@
 - [ ] 3.5 Add A4 tests proving React Router emits the explicit Worker entry, registers a fetch handler, and uses `renderToReadableStream` rather than Node pipeable streams.
 - [ ] 3.6 Add A5 tests that edit an imported sibling workspace without changing the lockfile and prove a normal generated build cannot reuse stale output.
 - [ ] 3.7 Add A6 package-manager tests proving the exact pin resolves identically under npm, pnpm, and Bun; retain exact pinning permanently rather than attempting to qualify an open-ended range.
-- [ ] 3.8 Add a one-to-one test mapping from A1–A6 to the generated line(s), reproduction, and retention/removal rule so no safeguard becomes orphaned.
+- [ ] 3.8 Add a one-to-one test mapping from A1–A12 to the generated line(s), reproduction, and retention/removal rule so no safeguard becomes orphaned.
 - [ ] 3.9 Add a deterministic secret sentinel and assert its cleartext is absent from plans, subprocess and cleanup diagnostics, generated documentation, and test failure output.
 
 ## 4. Framework, Binding, and Development Verification
@@ -97,12 +97,14 @@
 
 ## 9. First-Class Framework Release Intake
 
-- [ ] 9.1 Wait for PR #886 and/or #923 to merge into Alchemy and for a containing exact Alchemy release plus every referenced `@distilled.cloud/*` source package to be published; do not implement from draft heads.
-- [ ] 9.2 Record the released Alchemy tag commit, source-package versions/commits, documented props, inspected source behavior, peer ranges, and known limitations separately in the findings ledger.
+- [x] 9.1 Confirm PRs #886 and #923 are merged and beta.69 plus referenced `@distilled.cloud/*@0.17.0` source packages are published; do not treat publication as adoption.
+- [x] 9.2 Record beta.69's tag commit, source-package versions, documented props, inspected source behavior, peer ranges, and known limitations separately in the findings ledger.
 - [ ] 9.3 Generate candidate fixtures against the released packages without changing Better-T-Stack defaults, and direct-typecheck the candidate resource calls with native Outputs, Config, secrets, D1, KV, Images, and framework-public variables.
 - [ ] 9.4 Install the candidate dependency graph with npm, pnpm, and Bun in non-hoisted/strict workspace conditions and fail the candidate on missing dynamic imports or unresolved peer incompatibilities.
 - [ ] 9.5 Run existing Hono Worker, Website.Vite, generic StaticSite, D1, Config, Output, `_headers`, `_redirects`, and cleanup regressions against the changed source engine before evaluating framework-specific deletion.
 - [ ] 9.6 Keep the accepted exact Alchemy pin and generic framework paths when the released engine regresses any supported Cloudflare cell, even if a targeted first-class example passes upstream.
+- [x] 9.7 Publish minimal current reproductions for the Effect beta.104 startup crash and Nuxt injected-plugin parse failure; delete fixed beta.61 repros from the current-failures repository.
+- [x] 9.8 Record direct candidate results honestly: stable Kit 2 SvelteKit SSR returns HTTP 200 despite its peer warning, and Astro loads native project configuration; neither result alone completes its production adoption gate.
 
 ## 10. Shared Framework-Resource Migration Gates
 
