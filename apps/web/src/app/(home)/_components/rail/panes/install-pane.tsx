@@ -89,7 +89,7 @@ export default function InstallPane() {
             open builder -&gt;
           </Link>
           <Link
-            href="/docs/cli/agent-workflows"
+            href="/docs/cli/agent-workflows#mcp"
             className="builder-focus-ring font-mono text-[13px] text-fd-muted-foreground transition-colors duration-150 hover:text-primary"
           >
             or run it as an mcp server -&gt;
