@@ -903,10 +903,10 @@ describe("Deployment Configurations", () => {
       expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
-        alchemy: "2.0.0-beta.67",
-        effect: "4.0.0-beta.101",
-        "@effect/platform-node": "4.0.0-beta.101",
-        "@effect/platform-bun": "4.0.0-beta.101",
+        alchemy: "2.0.0-beta.69",
+        effect: "4.0.0-beta.103",
+        "@effect/platform-node": "4.0.0-beta.103",
+        "@effect/platform-bun": "4.0.0-beta.103",
       });
       expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
         infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
@@ -1119,6 +1119,8 @@ describe("Deployment Configurations", () => {
       const viteConfig = files.get("apps/web/vite.config.ts");
       const infraFile = files.get("packages/infra/alchemy.run.ts");
       const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const rootPkg = JSON.parse(files.get("package.json") ?? "{}");
+      const turboConfig = JSON.parse(files.get("turbo.json") ?? "{}");
 
       expect(viteConfig).not.toContain('from "alchemy/cloudflare/vite"');
       expect(viteConfig).toContain('process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"');
@@ -1132,6 +1134,9 @@ describe("Deployment Configurations", () => {
       expect(webPkg.devDependencies.alchemy).toBeUndefined();
       expect(webPkg.devDependencies["@cloudflare/vite-plugin"]).toBeUndefined();
       expect(webPkg.devDependencies.wrangler).toBeDefined();
+      expect(webPkg.scripts["db:migrate:local"]).toBeDefined();
+      expect(rootPkg.scripts["db:migrate:local"]).toContain("web");
+      expect(turboConfig.tasks["db:migrate:local"]).toEqual({ cache: false });
     });
 
     it("should keep native Metro from watching Alchemy state", async () => {

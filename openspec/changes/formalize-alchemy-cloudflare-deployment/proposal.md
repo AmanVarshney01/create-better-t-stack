@@ -1,6 +1,6 @@
 ## Why
 
-Better-T-Stack's Cloudflare deployment path depends on the experimental Alchemy v2 API and currently carries three active safeguards after independently retiring A1, A2, and A3. Next.js, Nuxt, SvelteKit, and Astro are currently deployed through generic `StaticSite` resources whose generated configuration owns each framework's build command, output paths, Worker entry, compatibility flags, bindings, and development server. Alchemy PRs #886 and #923 propose first-class Cloudflare resources that could move most of that ownership upstream, but both are draft, conflicting, unpublished, and have different framework-level compatibility gaps. Upstream main, published releases, framework integration constraints, and disproved review claims have repeatedly been conflated. Without one normative contract and executable retention/removal gates, an Alchemy upgrade can either reintroduce a known failure, preserve obsolete compatibility code indefinitely, or trade working framework behavior for superficially shorter infrastructure code.
+Better-T-Stack's Cloudflare deployment path depends on the experimental Alchemy v2 API and currently carries four targeted safeguards plus a permanent exact-version policy after independently retiring A1, A2, and A3. Next.js, Nuxt, SvelteKit, and Astro are currently deployed through generic `StaticSite` resources whose generated configuration owns each framework's build command, output paths, Worker entry, compatibility flags, bindings, and development server. Alchemy PRs #886 and #923 are merged and their first-class resources are published in beta.69, but publication exposed different framework-level compatibility gaps: the Nuxt development provider currently fails to parse its injected plugin, while SvelteKit, Astro, and Next.js still need their independent production, binding, memo, and version gates. Upstream source, published releases, framework integration constraints, and disproved review claims have repeatedly been conflated. Without one normative contract and executable retention/removal gates, an Alchemy upgrade can either reintroduce a known failure, preserve obsolete compatibility code indefinitely, or trade working framework behavior for superficially shorter infrastructure code.
 
 ## What Changes
 
@@ -25,7 +25,7 @@ Better-T-Stack's Cloudflare deployment path depends on the experimental Alchemy 
 - Adding Waku to Better-T-Stack merely because Alchemy PR #886 includes it.
 - Upgrading a frontend framework major version solely to satisfy an unreleased Alchemy source provider.
 - Treating a merged upstream pull request as usable before publication.
-- Installing a draft branch, git dependency, or unpublished `@distilled.cloud/*` package to bypass the release gate.
+- Installing a branch, git dependency, or unpublished `@distilled.cloud/*` package to bypass the release gate.
 - Claiming `alchemy logs` authentication or OpenNext on-demand ISR is fixed without a focused live reproduction.
 
 ## Capabilities

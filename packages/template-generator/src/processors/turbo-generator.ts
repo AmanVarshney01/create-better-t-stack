@@ -38,6 +38,13 @@ function generateTurboConfig(config: ProjectConfig): TurboConfig {
   const isDocker = dbSetup === "docker";
   const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
   const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const hasLocalD1 =
+    webDeploy === "cloudflare" &&
+    backend === "self" &&
+    dbSetup === "d1" &&
+    (["next", "nuxt", "svelte", "solid", "astro"] as const).some((framework) =>
+      frontend.includes(framework),
+    );
 
   const tasks: Record<string, TurboTask> = {
     ...getBaseTasks(frontend, config.addons),
@@ -46,6 +53,7 @@ function generateTurboConfig(config: ProjectConfig): TurboConfig {
     ...(!isConvex && hasDatabase ? getDatabaseTasks(dbSupport) : {}),
     ...(isDocker ? getDockerTasks() : {}),
     ...(isSqliteLocal ? getSqliteLocalTask() : {}),
+    ...(hasLocalD1 ? getLocalD1Task() : {}),
     ...(hasCloudflare ? getDeployTasks() : {}),
   };
 
@@ -180,6 +188,14 @@ function getDockerTasks(): Record<string, TurboTask> {
 function getSqliteLocalTask(): Record<string, TurboTask> {
   return {
     "db:local": {
+      cache: false,
+    },
+  };
+}
+
+function getLocalD1Task(): Record<string, TurboTask> {
+  return {
+    "db:migrate:local": {
       cache: false,
     },
   };
