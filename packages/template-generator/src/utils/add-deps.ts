@@ -160,10 +160,10 @@ export const dependencyVersionMap = {
   "@astrojs/vercel": "^11.0.4",
 
   // exact pins: caret ranges on prereleases can resolve to stray npm test tags
-  alchemy: "2.0.0-beta.67",
-  effect: "4.0.0-beta.101",
-  "@effect/platform-node": "4.0.0-beta.101",
-  "@effect/platform-bun": "4.0.0-beta.101",
+  alchemy: "2.0.0-beta.69",
+  effect: "4.0.0-beta.103",
+  "@effect/platform-node": "4.0.0-beta.103",
+  "@effect/platform-bun": "4.0.0-beta.103",
   vercel: "^58.1.0",
 
   dotenv: "^17.4.2",

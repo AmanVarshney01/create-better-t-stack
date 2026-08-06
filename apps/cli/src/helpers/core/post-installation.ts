@@ -166,7 +166,9 @@ export async function displayPostInstallInstructions(
     isBackendSelf &&
     webDeploy === "cloudflare" &&
     dbSetup === "d1" &&
-    (["next", "nuxt", "svelte", "astro"] as const).some((value) => frontend.includes(value));
+    (["next", "nuxt", "svelte", "solid", "astro"] as const).some((value) =>
+      frontend.includes(value),
+    );
 
   if (hasAlchemyD1 && orm !== "none") {
     output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:generate\n`;

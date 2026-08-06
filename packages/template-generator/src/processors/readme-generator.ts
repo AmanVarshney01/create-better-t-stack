@@ -607,7 +607,9 @@ ${packageManagerRunCmd} db:migrate
     const isFullstackStaticSite =
       config.backend === "self" &&
       config.webDeploy === "cloudflare" &&
-      (["next", "nuxt", "svelte", "astro"] as const).some((f) => config.frontend.includes(f));
+      (["next", "nuxt", "svelte", "solid", "astro"] as const).some((f) =>
+        config.frontend.includes(f),
+      );
     if (isFullstackStaticSite) {
       steps.push(`${steps.length + 1}. Apply the migrations to the local development database:
 \`\`\`bash
