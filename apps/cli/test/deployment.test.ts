@@ -891,17 +891,252 @@ describe("Deployment Configurations", () => {
 
       const files = collectFiles(result.value.root, result.value.root.path);
       const infraFile = files.get("packages/infra/alchemy.run.ts");
-      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}") as {
+      const infraPackage = JSON.parse(files.get("packages/infra/package.json") ?? "{}") as {
         devDependencies?: Record<string, string>;
       };
-
-      expect(infraFile).toContain('export const server = await Worker("server"');
-      expect(infraFile).toContain("url: true");
-      expect(infraFile).toContain("VITE_SERVER_URL: server.url!");
-      expect(infraFile!.indexOf('export const server = await Worker("server"')).toBeLessThan(
-        infraFile!.indexOf('export const web = await TanStackStart("web"'),
+      const serverBuildConfig = files.get("apps/server/tsdown.config.ts") ?? "";
+      const serverPackage = JSON.parse(files.get("apps/server/package.json") ?? "{}") as {
+        devDependencies?: Record<string, string>;
+      };
+      expect(infraFile).toContain('export const server = Cloudflare.Worker("server"');
+      expect(infraFile).toContain("export type ServerEnv = Cloudflare.InferEnv<typeof server>");
+      expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
+      expect(infraFile).toContain("export default Alchemy.Stack(");
+      expect(infraPackage.devDependencies).toMatchObject({
+        alchemy: "2.0.0-beta.69",
+        effect: "4.0.0-beta.103",
+        "@effect/platform-node": "4.0.0-beta.103",
+        "@effect/platform-bun": "4.0.0-beta.103",
+      });
+      expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
+        infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
       );
-      expect(webPkg.devDependencies?.["@cloudflare/vite-plugin"]).toBe("1.48.0");
+      expect(serverBuildConfig).toContain('import { wasm } from "rolldown-plugin-wasm"');
+      expect(serverBuildConfig).toContain("plugins: [wasm()]");
+      expect(serverPackage.devDependencies?.["rolldown-plugin-wasm"]).toBe("^0.3.2");
+    });
+
+    it("should generate current Cloudflare integrations for React Router, Next, and Astro", async () => {
+      const [reactRouterResult, nextResult, nextWebOnlyResult, astroResult] = await Promise.all([
+        createVirtual({
+          projectName: "react-router-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["react-router"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+        createVirtual({
+          projectName: "next-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "trpc",
+          frontend: ["next"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+        createVirtual({
+          projectName: "next-cloudflare-web-only-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "none",
+          backend: "hono",
+          runtime: "bun",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "trpc",
+          frontend: ["next"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+        createVirtual({
+          projectName: "astro-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["astro"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+      ]);
+
+      if (reactRouterResult.isErr()) throw reactRouterResult.error;
+      if (nextResult.isErr()) throw nextResult.error;
+      if (nextWebOnlyResult.isErr()) throw nextWebOnlyResult.error;
+      if (astroResult.isErr()) throw astroResult.error;
+
+      const reactRouterFiles = collectFiles(
+        reactRouterResult.value.root,
+        reactRouterResult.value.root.path,
+      );
+      const entryServer = reactRouterFiles.get("apps/web/src/entry.server.tsx") ?? "";
+      expect(entryServer).toContain("EntryContext, RouterContextProvider");
+      expect(entryServer).toContain("export const streamTimeout = 5_000");
+      expect(entryServer).toContain('request.method.toUpperCase() === "HEAD"');
+      expect(entryServer).toContain("return new Response(null");
+      expect(entryServer).toContain("AbortSignal.timeout(streamTimeout + 1000)");
+
+      const nextFiles = collectFiles(nextResult.value.root, nextResult.value.root.path);
+      const infraFile = nextFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      const wranglerConfig = JSON.parse(nextFiles.get("apps/web/wrangler.jsonc") ?? "{}") as {
+        images?: { binding?: string };
+      };
+      expect(wranglerConfig.images?.binding).toBe("IMAGES");
+      expect(infraFile.match(/IMAGES: Cloudflare\.Images\.Images\(\)/g)).toHaveLength(1);
+      expect(infraFile).not.toContain("outputAwareStaticSite");
+      expect(infraFile).not.toContain('import * as Command from "alchemy/Command"');
+      expect(infraFile).not.toContain('import * as Output from "alchemy/Output"');
+      expect(infraFile).toContain("NEXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>()");
+      expect(infraFile).toContain(
+        'const webWorker = yield* Cloudflare.Website.StaticSite("web", {',
+      );
+      expect(infraFile).toContain("memo: false");
+
+      const nextWebOnlyFiles = collectFiles(
+        nextWebOnlyResult.value.root,
+        nextWebOnlyResult.value.root.path,
+      );
+      const nextWebOnlyInfra = nextWebOnlyFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      expect(nextWebOnlyInfra).not.toContain("outputAwareStaticSite");
+      expect(nextWebOnlyInfra).toContain(
+        'const webWorker = yield* Cloudflare.Website.StaticSite("web", {',
+      );
+      expect(nextWebOnlyInfra).toContain(
+        'NEXT_PUBLIC_SERVER_URL: Config.string("NEXT_PUBLIC_SERVER_URL")',
+      );
+      expect(nextWebOnlyInfra).not.toContain("const serverWorker = yield* server");
+
+      const astroFiles = collectFiles(astroResult.value.root, astroResult.value.root.path);
+      const astroInfra = astroFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      expect(astroInfra).toContain('SESSION: Cloudflare.KV.Namespace("session")');
+      expect(astroInfra).toContain("IMAGES: Cloudflare.Images.Images()");
+    });
+
+    it("should use released Website.Vite SPA support for TanStack Router", async () => {
+      const results = await Promise.all(
+        (["tanstack-router"] as const).map((frontend) =>
+          createVirtual({
+            projectName: `${frontend}-cloudflare-vite`,
+            webDeploy: "cloudflare",
+            serverDeploy: "cloudflare",
+            backend: "hono",
+            runtime: "workers",
+            database: "none",
+            orm: "none",
+            auth: "none",
+            payments: "none",
+            api: "orpc",
+            frontend: [frontend],
+            addons: ["none"],
+            examples: ["none"],
+            dbSetup: "none",
+            install: false,
+            git: false,
+            packageManager: "bun",
+          }),
+        ),
+      );
+
+      for (const result of results) {
+        if (result.isErr()) throw result.error;
+
+        const files = collectFiles(result.value.root, result.value.root.path);
+        const infraFile = files.get("packages/infra/alchemy.run.ts") ?? "";
+
+        expect(infraFile).toContain('const webWorker = yield* Cloudflare.Website.Vite("web", {');
+        expect(infraFile).toContain('rootDir: "../../apps/web"');
+        expect(infraFile).toContain('htmlHandling: "auto-trailing-slash"');
+        expect(infraFile).toContain('notFoundHandling: "single-page-application"');
+        expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
+        expect(infraFile).not.toContain("outputAwareStaticSite");
+        expect(infraFile).not.toContain('import * as Command from "alchemy/Command"');
+        expect(infraFile).not.toContain('import * as Output from "alchemy/Output"');
+      }
+    });
+
+    it("should configure SolidStart SSR for Cloudflare and local Vite builds", async () => {
+      const result = await createVirtual({
+        projectName: "solid-start-cloudflare",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "orpc",
+        frontend: ["solid"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "d1",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const viteConfig = files.get("apps/web/vite.config.ts");
+      const infraFile = files.get("packages/infra/alchemy.run.ts");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const rootPkg = JSON.parse(files.get("package.json") ?? "{}");
+      const turboConfig = JSON.parse(files.get("turbo.json") ?? "{}");
+
+      expect(viteConfig).not.toContain('from "alchemy/cloudflare/vite"');
+      expect(viteConfig).toContain('process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"');
+      expect(viteConfig).toContain("const cloudflareWorkersAlias: Record<string, string>");
+      expect(viteConfig).toContain('new URL("./cloudflare-workers.dev.ts", import.meta.url)');
+      expect(infraFile).toContain('export const web = Cloudflare.Website.Vite("web", {');
+      expect(infraFile).toContain('rootDir: "../../apps/web"');
+      expect(infraFile).toContain('flags: ["nodejs_compat"]');
+      expect(infraFile).toContain("runWorkerFirst: true");
+      expect(infraFile).toContain("DB: db");
+      expect(webPkg.devDependencies.alchemy).toBeUndefined();
+      expect(webPkg.devDependencies["@cloudflare/vite-plugin"]).toBeUndefined();
+      expect(webPkg.devDependencies.wrangler).toBeDefined();
+      expect(webPkg.scripts["db:migrate:local"]).toBeDefined();
+      expect(rootPkg.scripts["db:migrate:local"]).toContain("web");
+      expect(turboConfig.tasks["db:migrate:local"]).toEqual({ cache: false });
     });
 
     it("should keep native Metro from watching Alchemy state", async () => {
@@ -1323,7 +1558,7 @@ describe("Deployment Configurations", () => {
       expect(serverDockerfile).toContain('CMD ["node", "dist/index.mjs"]');
     });
 
-    it("should keep Solid production builds resolvable without an API layer", async () => {
+    it("should deploy SolidStart production builds as an SSR server", async () => {
       const result = await createVirtual({
         projectName: "docker-solid-no-api",
         webDeploy: "docker",
@@ -1350,10 +1585,16 @@ describe("Deployment Configurations", () => {
 
       const files = collectFiles(result.value.root, result.value.root.path);
       const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const webDockerfile = files.get("apps/web/Dockerfile");
+      const compose = files.get("docker-compose.yml");
 
-      // __root.tsx imports the router devtools unconditionally
-      expect(webPkg.devDependencies["@tanstack/solid-router-devtools"]).toBeDefined();
-      expect(files.get("apps/web/Dockerfile")).toContain("FROM nginx:alpine");
+      expect(webPkg.dependencies["@solidjs/start"]).toBeDefined();
+      expect(webPkg.dependencies.nitro).toBeDefined();
+      expect(webPkg.devDependencies["@tanstack/solid-router-devtools"]).toBeUndefined();
+      expect(webDockerfile).toContain("FROM node:24-slim AS runner");
+      expect(webDockerfile).toContain('CMD ["node", ".output/server/index.mjs"]');
+      expect(webDockerfile).not.toContain("FROM nginx:alpine");
+      expect(compose).toContain('"3001:3001"');
     });
 
     it("should bind Fastify to all interfaces for Docker deploys", async () => {

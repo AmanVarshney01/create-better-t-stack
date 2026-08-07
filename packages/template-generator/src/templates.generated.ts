@@ -517,6 +517,86 @@ export default defineEventHandler(async (event) => {
 `],
   ["api/orpc/fullstack/nuxt/server/routes/rpc/index.ts.hbs", `export { default } from "./[...]";
 `],
+  ["api/orpc/fullstack/solid/src/routes/rpc/[...rest].ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { onError } from "@orpc/server";
+import { RPCHandler } from "@orpc/server/fetch";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import type { APIEvent } from "@solidjs/start/server";
+
+const rpcHandler = new RPCHandler(appRouter, {
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+const apiHandler = new OpenAPIHandler(appRouter, {
+	plugins: [
+		new OpenAPIReferencePlugin({
+			schemaConverters: [new ZodToJsonSchemaConverter()],
+		}),
+	],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+async function handle({ request }: APIEvent) {
+	const context = await createContext({ headers: request.headers });
+
+	const rpcResult = await rpcHandler.handle(request, {
+		prefix: "/rpc",
+		context,
+	});
+	if (rpcResult.response) return rpcResult.response;
+
+	const apiResult = await apiHandler.handle(request, {
+		prefix: "/rpc/api-reference",
+		context,
+	});
+	if (apiResult.response) return apiResult.response;
+
+	return new Response("Not found", { status: 404 });
+}
+
+export const HEAD = handle;
+export const GET = handle;
+export const POST = handle;
+export const PUT = handle;
+export const PATCH = handle;
+export const DELETE = handle;
+`],
+  ["api/orpc/fullstack/solid/src/routes/rpc/index.ts.hbs", `export {
+	DELETE,
+	GET,
+	HEAD,
+	PATCH,
+	POST,
+	PUT,
+} from "./[...rest]";
+`],
+  ["api/orpc/fullstack/solid/src/utils/orpc.server.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { createRouterClient } from "@orpc/server";
+import { getRequestEvent } from "solid-js/web";
+
+if (!import.meta.env.SSR) {
+  throw new Error("This file must only be imported on the server.");
+}
+
+globalThis.$client = createRouterClient(appRouter, {
+	context: async () => {
+		const headers = getRequestEvent()?.request.headers ?? new Headers();
+		return createContext({ headers });
+	},
+});
+`],
   ["api/orpc/fullstack/svelte/src/lib/orpc.server.ts.hbs", `import { getRequestEvent } from "$app/server";
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter, type AppRouterClient } from "@{{projectName}}/api/routers/index";
@@ -948,7 +1028,7 @@ export type CreateContextOptions = {
 {{/if}}
 };
 
-export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env: _env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions) {
+export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth({{#if (eq webDeploy "cloudflare")}}env{{/if}}){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
@@ -965,6 +1045,34 @@ export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy 
 {{#if (eq webDeploy "cloudflare")}}
 		env,
 {{/if}}
+	};
+{{/if}}
+}
+
+{{else if (and (eq backend 'self') (includes frontend "solid"))}}
+{{#if (eq auth "better-auth")}}
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{/if}}
+
+export type CreateContextOptions = {
+	headers: Headers;
+};
+
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) {
+{{#if (eq auth "better-auth")}}
+	const session = await {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
+	return {
+		auth: null,
+		session,
+	};
+{{else}}
+	return {
+		auth: null,
+		session: null,
 	};
 {{/if}}
 }
@@ -1545,21 +1653,29 @@ export const orpc = createTanstackQueryUtils(client)
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/solid-query";
+import { getRequestEvent } from "solid-js/web";
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+{{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
+{{/unless}}
 
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error) => {
-			console.error(\`Error: \${error.message}\`);
-		},
-	}),
-});
+{{#if (eq backend "self")}}
+if (import.meta.env.SSR) {
+  await import("./orpc.server");
+}
 
-{{> getServerUrl}}
+declare global {
+	var $client: AppRouterClient | undefined;
+}
 
-export const link = new RPCLink({
-	url: \`\${getServerUrl(env.VITE_SERVER_URL)}/rpc\`,
+const link = new RPCLink({
+	url: () => {
+    if (import.meta.env.SSR) {
+      throw new Error("RPCLink is not available on the server.");
+    }
+
+		return \`\${window.location.origin}/rpc\`;
+	},
 {{#if (eq auth "better-auth")}}
 	fetch(url, options) {
 		return fetch(url, {
@@ -1569,10 +1685,36 @@ export const link = new RPCLink({
 	},
 {{/if}}
 });
+{{else}}
+{{> getServerUrl}}
 
-export const client: AppRouterClient = createORPCClient(link);
+const link = new RPCLink({
+	url: \`\${getServerUrl(env.VITE_SERVER_URL)}/rpc\`,
+	headers: () => getRequestEvent()?.request.headers ?? {},
+{{#if (eq auth "better-auth")}}
+	fetch(url, options) {
+		return fetch(url, {
+			...options,
+			credentials: "include",
+		});
+	},
+{{/if}}
+});
+{{/if}}
+
+export const client: AppRouterClient = {{#if (eq backend "self")}}globalThis.$client ?? {{/if}}createORPCClient(link);
 
 export const orpc = createTanstackQueryUtils(client);
+
+export function createQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error) => {
+				console.error(\`Error: \${error.message}\`);
+			},
+		}),
+	});
+}
 `],
   ["api/orpc/web/svelte/src/lib/orpc.ts.hbs", `{{#unless (eq backend "self")}}
 import { PUBLIC_SERVER_URL } from "$env/static/public";
@@ -5563,6 +5705,26 @@ export default defineEventHandler((event) => {
 {{/if}}
   return auth.handler(toWebRequest(event));
 });
+`],
+  ["auth/better-auth/fullstack/solid/src/routes/api/auth/[...auth].ts.hbs", `{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+import { createAuth } from "@{{projectName}}/auth";
+import type { APIEvent } from "@solidjs/start/server";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import { toSolidStartHandler } from "better-auth/solid-start";
+
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+export function GET(event: APIEvent) {
+	return toSolidStartHandler(createAuth()).GET(event);
+}
+
+export function POST(event: APIEvent) {
+	return toSolidStartHandler(createAuth()).POST(event);
+}
+{{else}}
+export const { GET, POST } = toSolidStartHandler(auth);
+{{/if}}
 `],
   ["auth/better-auth/fullstack/svelte/src/hooks.server.ts.hbs", `{{#if (eq api "orpc")}}
 import "./lib/orpc.server";
@@ -11564,16 +11726,14 @@ function RouteComponent() {
   );
 }
 `],
-  ["auth/better-auth/web/solid/src/components/sign-in-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/solid/src/components/sign-in-form.tsx.hbs", `import { useNavigate } from "@solidjs/router";
 import { createForm } from "@tanstack/solid-form";
-import { useNavigate } from "@tanstack/solid-router";
-import z from "zod";
 import { For } from "solid-js";
+import { authClient } from "~/lib/auth-client";
+import z from "zod";
 
 export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
-  const navigate = useNavigate({
-    from: "/",
-  });
+  const navigate = useNavigate();
 
   const form = createForm(() => ({
     defaultValues: {
@@ -11588,9 +11748,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
         },
         {
           onSuccess: () => {
-            navigate({
-              to: "/dashboard",
-            });
+            navigate("/dashboard");
             console.log("Sign in successful");
           },
           onError: (error) => {
@@ -11689,16 +11847,14 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
   );
 }
 `],
-  ["auth/better-auth/web/solid/src/components/sign-up-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/solid/src/components/sign-up-form.tsx.hbs", `import { useNavigate } from "@solidjs/router";
 import { createForm } from "@tanstack/solid-form";
-import { useNavigate } from "@tanstack/solid-router";
-import z from "zod";
 import { For } from "solid-js";
+import { authClient } from "~/lib/auth-client";
+import z from "zod";
 
 export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
-  const navigate = useNavigate({
-    from: "/",
-  });
+  const navigate = useNavigate();
 
   const form = createForm(() => ({
     defaultValues: {
@@ -11715,9 +11871,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         },
         {
           onSuccess: () => {
-            navigate({
-              to: "/dashboard",
-            });
+            navigate("/dashboard");
             console.log("Sign up successful");
           },
           onError: (error) => {
@@ -11838,9 +11992,9 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
   );
 }
 `],
-  ["auth/better-auth/web/solid/src/components/user-menu.tsx.hbs", `import { authClient } from "@/lib/auth-client";
-import { useNavigate, Link } from "@tanstack/solid-router";
+  ["auth/better-auth/web/solid/src/components/user-menu.tsx.hbs", `import { A, useNavigate } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
+import { authClient } from "~/lib/auth-client";
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -11854,9 +12008,9 @@ export default function UserMenu() {
       </Show>
 
       <Show when={!session().isPending && !session().data}>
-        <Link to="/login" class="inline-block border rounded px-4  text-sm">
+        <A href="/login" class="inline-block border rounded px-4  text-sm">
           Sign In
-        </Link>
+        </A>
       </Show>
 
       <Show when={!session().isPending && session().data}>
@@ -11879,7 +12033,7 @@ export default function UserMenu() {
                 authClient.signOut({
                   fetchOptions: {
                     onSuccess: () => {
-                      navigate({ to: "/" });
+                      navigate("/", { replace: true });
                     },
                   },
                 });
@@ -11898,66 +12052,70 @@ export default function UserMenu() {
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
+{{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 
 {{> getServerUrl}}
+{{/unless}}
 
 export const authClient = createAuthClient({
+{{#unless (eq backend "self")}}
 	// better-auth derives its route-matching base from this URL's path, so the
 	// public auth path must equal the server-side mount (/api/auth everywhere)
-		baseURL: new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(),
+	baseURL: new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(),
+{{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
 {{/if}}
 });
 `],
-  ["auth/better-auth/web/solid/src/routes/dashboard.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+  ["auth/better-auth/web/solid/src/routes/dashboard.tsx.hbs", `import { useNavigate } from "@solidjs/router";
 {{#if (eq api "orpc")}}
-import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/solid-query";
+import { orpc } from "~/utils/orpc";
 {{/if}}
-import { createFileRoute, redirect } from "@tanstack/solid-router";
+import {
+	createEffect,
+{{#if (eq payments "polar")}}
+	createResource,
+{{/if}}
+	Show,
+} from "solid-js";
+import { authClient } from "~/lib/auth-client";
 
-export const Route = createFileRoute("/dashboard")({
-	component: RouteComponent,
-	beforeLoad: async () => {
-		const session = await authClient.getSession();
-		if (!session.data) {
-			redirect({
-				to: "/login",
-				throw: true,
-			});
-		}
-		{{#if (eq payments "polar")}}
-		const { data: customerState } = await authClient.customer.state();
-		return { session, customerState };
-		{{else}}
-		return { session };
-		{{/if}}
-	},
-});
-
-function RouteComponent() {
-	const context = Route.useRouteContext();
-
-	const session = context().session;
+export default function Dashboard() {
+	const navigate = useNavigate();
+	const session = authClient.useSession();
 	{{#if (eq payments "polar")}}
-	const customerState = context().customerState;
+	const [customerState] = createResource(
+		() => session().data?.user.id,
+		async () => (await authClient.customer.state()).data,
+	);
 	{{/if}}
 
+	createEffect(() => {
+		if (!session().isPending && !session().data) {
+			navigate("/login", { replace: true });
+		}
+	});
+
 	{{#if (eq api "orpc")}}
-	const privateData = useQuery(() => orpc.privateData.queryOptions());
+	const privateData = useQuery(() => ({
+		...orpc.privateData.queryOptions(),
+		enabled: Boolean(session().data),
+	}));
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
-		(customerState?.activeSubscriptions?.length ?? 0) > 0;
+		(customerState()?.activeSubscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
-		<div>
+		<Show when={!session().isPending && session().data} fallback={<p>Loading...</p>}>
+			<div>
 			<h1>Dashboard</h1>
-			<p>Welcome {session.data?.user.name}</p>
+			<p>Welcome {session().data?.user.name}</p>
 			{{#if (eq api "orpc")}}
 			<p>API: {privateData.data?.message}</p>
 			{{/if}}
@@ -11975,20 +12133,16 @@ function RouteComponent() {
 				</button>
 			)}
 			{{/if}}
-		</div>
+			</div>
+		</Show>
 	);
 }
 `],
-  ["auth/better-auth/web/solid/src/routes/login.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
-import SignUpForm from "@/components/sign-up-form";
-import { createFileRoute } from "@tanstack/solid-router";
-import { createSignal, Match, Switch } from "solid-js";
+  ["auth/better-auth/web/solid/src/routes/login.tsx.hbs", `import { createSignal, Match, Switch } from "solid-js";
+import SignInForm from "~/components/sign-in-form";
+import SignUpForm from "~/components/sign-up-form";
 
-export const Route = createFileRoute("/login")({
-  component: RouteComponent,
-});
-
-function RouteComponent() {
+export default function Login() {
   const [showSignIn, setShowSignIn] = createSignal(false);
 
   return (
@@ -14296,14 +14450,20 @@ next-env.d.ts
   }
 }
 `],
-  ["backend/server/base/tsdown.config.ts.hbs", `import { defineConfig } from 'tsdown';
+  ["backend/server/base/tsdown.config.ts.hbs", `import { defineConfig } from "tsdown";
+{{#if (and (eq runtime "workers") (eq orm "prisma"))}}
+import { wasm } from "rolldown-plugin-wasm";
+{{/if}}
 
 export default defineConfig({
-    entry: './src/index.ts',
-    format: 'esm',
-    outDir: './dist',
-    clean: true,
-    noExternal: [/@{{projectName}}\\/.*/]
+  entry: "./src/index.ts",
+  format: "esm",
+  outDir: "./dist",
+  clean: true,
+  {{#if (and (eq runtime "workers") (eq orm "prisma"))}}
+  plugins: [wasm()],
+  {{/if}}
+  noExternal: [/@{{projectName}}\\/.*/],
 });
 `],
   ["backend/server/elysia/src/index.ts.hbs", `import { env } from "@{{projectName}}/env/server";
@@ -15992,7 +16152,7 @@ services:
 {{/if}}
     init: true
     ports:
-{{#if (or (includes frontend "tanstack-router") (includes frontend "solid"))}}
+{{#if (includes frontend "tanstack-router")}}
       - "3001:80"
 {{else}}
       - "3001:3001"
@@ -16039,7 +16199,7 @@ services:
 {{/if}}
 {{/if}}
     healthcheck:
-{{#if (or (includes frontend "tanstack-router") (includes frontend "solid"))}}
+{{#if (includes frontend "tanstack-router")}}
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
 {{else}}
       test:
@@ -16570,31 +16730,25 @@ ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
 {{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
+ENV SKIP_ENV_VALIDATION=
+{{#if (and (eq backend "self") (eq auth "better-auth"))}}
+ENV BETTER_AUTH_SECRET=
+{{/if}}
+{{#if (eq orm "prisma")}}
+ENV DATABASE_URL=
+{{/if}}
 
-FROM nginx:alpine AS runner
-COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-`],
-  ["deploy/docker/web/solid/nginx.conf", `server {
-    listen 80;
-    server_name _;
-    root /usr/share/nginx/html;
-    index index.html;
+FROM node:24-slim AS runner
+WORKDIR /app/apps/web
+ENV NODE_ENV=production
 
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript image/svg+xml;
+COPY --from=builder /app/apps/web/.output ./.output
 
-    location /assets/ {
-        add_header Cache-Control "public, max-age=31536000, immutable";
-    }
+ENV HOST=0.0.0.0
+ENV PORT=3001
+EXPOSE 3001
 
-    # SPA fallback
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-}
+CMD ["node", ".output/server/index.mjs"]
 `],
   ["deploy/docker/web/svelte/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
 {{#if (eq packageManager "bun")}}
@@ -25028,17 +25182,12 @@ function TodosRoute() {
   );
 }
 `],
-  ["examples/todo/web/solid/src/routes/todos.tsx.hbs", `import { createFileRoute } from "@tanstack/solid-router";
-import { Loader2, Trash2 } from "lucide-solid";
+  ["examples/todo/web/solid/src/routes/todos.tsx.hbs", `import { Loader2, Trash2 } from "lucide-solid";
 import { createSignal, For, Show } from "solid-js";
-import { orpc } from "@/utils/orpc";
+import { orpc } from "~/utils/orpc";
 import { useQuery, useMutation } from "@tanstack/solid-query";
 
-export const Route = createFileRoute("/todos")({
-  component: TodosRoute,
-});
-
-function TodosRoute() {
+export default function Todos() {
   const [newTodoText, setNewTodoText] = createSignal("");
 
   const todos = useQuery(() => orpc.todo.getAll.queryOptions());
@@ -25485,15 +25634,15 @@ shamefully-hoist=true
 strict-peer-dependencies=false
 {{/if}}`],
   ["extras/env.d.ts.hbs", `{{#if (eq serverDeploy "cloudflare")}}
-import { type server } from "@{{projectName}}/infra/alchemy.run";
+import type { ServerEnv } from "@{{projectName}}/infra/alchemy.run";
 {{else}}
-import { type web as server } from "@{{projectName}}/infra/alchemy.run";
+import type { WebEnv as ServerEnv } from "@{{projectName}}/infra/alchemy.run";
 {{/if}}
 
 // This file infers types for the cloudflare:workers environment from your Alchemy Worker.
-// @see https://alchemy.run/concepts/bindings/#type-safe-bindings
+// @see https://alchemy.run/cloudflare/compute/workers
 
-export type CloudflareEnv = typeof server.Env;
+export type CloudflareEnv = ServerEnv;
 
 declare global {
   type Env = CloudflareEnv;
@@ -25569,6 +25718,8 @@ import { defineConfig, envField } from "astro/config";
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 {{else if (eq webDeploy "vercel")}}
 import vercel from "@astrojs/vercel";
+{{else if (eq webDeploy "cloudflare")}}
+import cloudflare from "@astrojs/cloudflare";
 {{else}}
 import node from "@astrojs/node";
 {{/if}}
@@ -25580,6 +25731,9 @@ export default defineConfig({
 {{else if (eq webDeploy "vercel")}}
   output: "server",
   adapter: vercel(),
+{{else if (eq webDeploy "cloudflare")}}
+  output: "server",
+  adapter: cloudflare(),
 {{else}}
   output: "server",
   adapter: node({ mode: "standalone" }),
@@ -29705,7 +29859,10 @@ onServerPrefetch(async () => {
   </UContainer>
 </template>
 `],
-  ["frontend/nuxt/nuxt.config.ts.hbs", `import "@{{projectName}}/env/web";
+  ["frontend/nuxt/nuxt.config.ts.hbs", `{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
+import { fileURLToPath } from "node:url";
+{{/if}}
+import "@{{projectName}}/env/web";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -29719,11 +29876,46 @@ export default defineNuxtConfig({
     {{#if (eq backend "convex")}},
     'convex-nuxt'
     {{/if}}
+    {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}},
+    'nitro-cloudflare-dev'
+    {{/if}}
   ],
   css: ['~/assets/css/main.css'],
   devServer: {
     port: 3001
   },
+  {{#if (eq webDeploy "cloudflare")}}
+  {{#if (eq backend "self")}}
+  $development: {
+    vite: {
+      resolve: {
+        alias: {
+          'cloudflare:workers': fileURLToPath(new URL('./cloudflare-workers.dev.ts', import.meta.url))
+        }
+      }
+    }
+  },
+  vite: {
+    build: {
+      rollupOptions: {
+        // resolved by workerd at runtime; node builds cannot bundle it
+        external: ['cloudflare:workers']
+      }
+    }
+  },
+  nitro: {
+    preset: 'cloudflare-module'
+  },
+  {{else}}
+  nitro: {
+    preset: 'cloudflare-module',
+    prerender: {
+      routes: ['/'],
+      autoSubfolderIndex: false
+    }
+  },
+  {{/if}}
+  {{/if}}
   {{#if (eq backend "convex")}}
   convex: {
     url: process.env.NUXT_PUBLIC_CONVEX_URL,
@@ -30751,7 +30943,10 @@ export default function Home() {
   }
 }
 `],
-  ["frontend/react/react-router/vite.config.ts.hbs", `import { reactRouter } from "@react-router/dev/vite";
+  ["frontend/react/react-router/vite.config.ts.hbs", `{{#if (and (eq webDeploy "cloudflare") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+import { fileURLToPath } from "node:url";
+{{/if}}
+import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -30766,6 +30961,18 @@ export default defineConfig({
   ssr: {
     // Vercel functions have no node_modules; bundle all deps into the server build
     noExternal: true,
+  },
+{{/if}}
+{{#if (and (eq webDeploy "cloudflare") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+  environments: {
+    ssr: {
+      build: {
+        rollupOptions: {
+          // Worker entry wrapping the React Router request handler; must be absolute
+          input: fileURLToPath(new URL("./workers/app.ts", import.meta.url)),
+        },
+      },
+    },
   },
 {{/if}}
 });
@@ -31816,6 +32023,14 @@ export default defineConfig({
   server: {
     port: 3001,
   },
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
+  build: {
+    rollupOptions: {
+      // resolved by workerd at runtime; node builds cannot bundle it
+      external: ["cloudflare:workers"],
+    },
+  },
+{{/if}}
   resolve: {
     tsconfigPaths: true,
   },
@@ -32028,27 +32243,17 @@ export default function Loader() {
   ["frontend/solid/_gitignore", `node_modules
 .DS_Store
 dist
-dist-ssr
+.output
+.vercel
+.netlify
+.vinxi
 *.local
 .env
 .env.*
 
 .wrangler
 .alchemy
-.dev.vars*`],
-  ["frontend/solid/index.html", `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="theme-color" content="#000000" />
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+.dev.vars*
 `],
   ["frontend/solid/package.json.hbs", `{
   "name": "web",
@@ -32057,21 +32262,23 @@ dist-ssr
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "serve": "vite preview",
-    "test": "vitest run"
+    "check-types": "tsc --noEmit",
+    "start": "node .output/server/index.mjs",
+    "preview": "vite preview"
   },
   "dependencies": {
+    "@solidjs/meta": "^0.29.4",
+    "@solidjs/router": "^1.0.0",
+    "@solidjs/start": "^2.0.0",
     "@tailwindcss/vite": "^4.3.3",
-    "@tanstack/router-plugin": "^1.168.23",
-    "@tanstack/solid-router": "^1.170.18",
     "lucide-solid": "^1.27.0",
+    "nitro": "^3.0.260610-beta",
     "solid-js": "^1.9.14",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.1.5"
   },
-  "devDependencies": {
-    "@tanstack/solid-router-devtools": "^1.167.0",
-    "vite": "^8.1.5",
-    "vite-plugin-solid": "^2.11.14"
+  "engines": {
+    "node": ">=24"
   }
 }
 `],
@@ -32079,7 +32286,48 @@ dist-ssr
 User-agent: *
 Disallow:
 `],
-  ["frontend/solid/src/components/header.tsx.hbs", `import { Link } from "@tanstack/solid-router";
+  ["frontend/solid/src/app.tsx.hbs", `import { MetaProvider, Title } from "@solidjs/meta";
+import { Router } from "@solidjs/router";
+import { FileRoutes } from "@solidjs/start/router";
+import { Suspense } from "solid-js";
+import Header from "~/components/header";
+{{#if (eq api "orpc")}}
+import { QueryClientProvider } from "@tanstack/solid-query";
+import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";
+import { createQueryClient } from "~/utils/orpc";
+{{/if}}
+import "./styles.css";
+
+export default function App() {
+{{#if (eq api "orpc")}}
+  const queryClient = createQueryClient();
+{{/if}}
+
+  return (
+{{#if (eq api "orpc")}}
+    <QueryClientProvider client={queryClient}>
+{{/if}}
+      <Router
+        root={(props) => (
+          <MetaProvider>
+            <Title>{{projectName}}</Title>
+            <div class="grid h-svh grid-rows-[auto_1fr]">
+              <Header />
+              <Suspense>{props.children}</Suspense>
+            </div>
+          </MetaProvider>
+        )}
+      >
+        <FileRoutes />
+      </Router>
+{{#if (eq api "orpc")}}
+      <SolidQueryDevtools />
+    </QueryClientProvider>
+{{/if}}
+  );
+}
+`],
+  ["frontend/solid/src/components/header.tsx.hbs", `import { A } from "@solidjs/router";
 {{#if (eq auth "better-auth")}}
 import UserMenu from "./user-menu";
 {{/if}}
@@ -32104,7 +32352,7 @@ export default function Header() {
       <div class="flex flex-row items-center justify-between px-2 py-1">
         <nav class="flex gap-4 text-lg">
           <For each={links}>
-            {(link) => <Link to={link.to}>{link.label}</Link>}
+            {(link) => <A href={link.to}>{link.label}</A>}
           </For>
         </nav>
         <div class="flex items-center gap-2">
@@ -32128,94 +32376,52 @@ export default function Loader() {
   );
 }
 `],
-  ["frontend/solid/src/main.tsx.hbs", `import { RouterProvider, createRouter } from "@tanstack/solid-router";
-import { render } from "solid-js/web";
-import { routeTree } from "./routeTree.gen";
-import "./styles.css";
-{{#if (eq api "orpc")}}
-import { QueryClientProvider } from "@tanstack/solid-query";
-import { orpc, queryClient } from "./utils/orpc";
-{{/if}}
+  ["frontend/solid/src/entry-client.tsx", `// @refresh reload
+import { mount, StartClient } from "@solidjs/start/client";
 
-const router = createRouter({
-  routeTree,
-  defaultPreload: "intent",
-  scrollRestoration: true,
-  defaultPreloadStaleTime: 0,
-  {{#if (eq api "orpc")}}
-  context: { orpc, queryClient },
-  {{/if}}
-});
-
-declare module "@tanstack/solid-router" {
-  interface Register {
-    router: typeof router;
-  }
-}
-
-function App() {
-  return (
-    {{#if (eq api "orpc")}}
-    <QueryClientProvider client={queryClient}>
-    {{/if}}
-      <RouterProvider router={router} />
-    {{#if (eq api "orpc")}}
-    </QueryClientProvider>
-    {{/if}}
-  );
-}
-
-const rootElement = document.getElementById("app");
-if (rootElement) {
-  render(() => <App />, rootElement);
-}
+mount(() => <StartClient />, document.getElementById("app")!);
 `],
-  ["frontend/solid/src/routes/__root.tsx.hbs", `import Header from "@/components/header";
-import { Outlet, createRootRouteWithContext } from "@tanstack/solid-router";
-import { TanStackRouterDevtools } from "@tanstack/solid-router-devtools";
-{{#if (eq api "orpc")}}
-import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";
-import type { QueryClient } from "@tanstack/solid-query";
-import type { orpc } from "../utils/orpc";
+  ["frontend/solid/src/entry-server.tsx", `// @refresh reload
+import { createHandler, StartServer } from "@solidjs/start/server";
 
-export interface RouterContext {
-  orpc: typeof orpc;
-  queryClient: QueryClient;
-}
-{{else}}
-export interface RouterContext {}
-{{/if}}
+export default createHandler(() => (
+  <StartServer
+    document={({ assets, children, scripts }) => (
+      <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          {assets}
+        </head>
+        <body>
+          <div id="app">{children}</div>
+          {scripts}
+        </body>
+      </html>
+    )}
+  />
+));
+`],
+  ["frontend/solid/src/global.d.ts", `/// <reference types="@solidjs/start/env" />
+`],
+  ["frontend/solid/src/routes/[...404].tsx", `import { Title } from "@solidjs/meta";
+import { HttpStatusCode } from "@solidjs/start";
 
-export const Route = createRootRouteWithContext<RouterContext>()({
-  component: RootComponent,
-});
-
-function RootComponent() {
+export default function NotFound() {
   return (
-    <>
-      <div class="grid grid-rows-[auto_1fr] h-svh">
-        <Header />
-        <Outlet />
-      </div>
-      {{#if (eq api "orpc")}}
-      <SolidQueryDevtools />
-      {{/if}}
-      <TanStackRouterDevtools />
-    </>
+    <main class="container mx-auto max-w-3xl px-4 py-10">
+      <Title>Not Found</Title>
+      <HttpStatusCode code={404} />
+      <h1 class="text-3xl font-bold">Page not found</h1>
+    </main>
   );
 }
 `],
-  ["frontend/solid/src/routes/index.tsx.hbs", `import { createFileRoute } from "@tanstack/solid-router";
-{{#if (eq api "orpc")}}
+  ["frontend/solid/src/routes/index.tsx.hbs", `{{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/solid-query";
-import { orpc } from "../utils/orpc";
+import { orpc } from "~/utils/orpc";
 import { Match, Switch } from "solid-js";
-{{else}}
 {{/if}}
-
-export const Route = createFileRoute("/")({
-  component: App,
-});
 
 const TITLE_TEXT = \`
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -32233,7 +32439,7 @@ const TITLE_TEXT = \`
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  \`;
 
-function App() {
+export default function Home() {
   {{#if (eq api "orpc")}}
   const healthCheck = useQuery(() => orpc.healthCheck.queryOptions());
   {{/if}}
@@ -32285,54 +32491,64 @@ body {
 }
 `],
   ["frontend/solid/tsconfig.json.hbs", `{
-  "include": ["**/*.ts", "**/*.tsx"],
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
-    "module": "ESNext",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
-
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "noEmit": true,
-
-    "skipLibCheck": true,
+    "allowJs": true,
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
-
-    "rootDirs": ["."],
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["@solidjs/start/env", "vite/client"],
+    "isolatedModules": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "~/*": ["./src/*"]
     }
-  }
+  },
+  "exclude": ["dist"]
 }
 `],
-  ["frontend/solid/vite.config.ts.hbs", `import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import solidPlugin from "vite-plugin-solid";
-import tailwindcss from "@tailwindcss/vite";
-import path from "node:path";
+  ["frontend/solid/vite.config.ts.hbs", `import tailwindcss from "@tailwindcss/vite";
+import { solidStart } from "@solidjs/start/config";
+{{#if (eq webDeploy "cloudflare")}}
+import { fileURLToPath } from "node:url";
+{{/if}}
+{{#unless (eq webDeploy "cloudflare")}}
+import { nitro } from "nitro/vite";
+{{/unless}}
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
+{{#if (eq webDeploy "cloudflare")}}
+const cloudflareWorkersAlias: Record<string, string> =
+  process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
+    ? {}
+    : {
+        "cloudflare:workers": fileURLToPath(
+          new URL("./cloudflare-workers.dev.ts", import.meta.url),
+        ),
+      };
+
+{{/if}}
 export default defineConfig({
   plugins: [
-    tanstackRouter({ target: "solid", autoCodeSplitting: true }),
-    solidPlugin(),
+    solidStart(),
     tailwindcss(),
+{{#unless (eq webDeploy "cloudflare")}}
+    nitro(),
+{{/unless}}
   ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
   server: {
     port: 3001,
   },
+{{#if (eq webDeploy "cloudflare")}}
+  resolve: {
+    alias: cloudflareWorkersAlias,
+  },
+{{/if}}
 });
 `],
   ["frontend/svelte/_gitignore", `node_modules
@@ -32631,7 +32847,7 @@ const TITLE_TEXT = \`
   ["frontend/svelte/svelte.config.js.hbs", `{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 import adapter from '@sveltejs/adapter-static';
 {{else if (eq webDeploy "cloudflare")}}
-import alchemy from 'alchemy/cloudflare/sveltekit';
+import adapter from '@sveltejs/adapter-cloudflare';
 {{else if (eq webDeploy "docker")}}
 import adapter from '@sveltejs/adapter-node';
 {{else if (eq webDeploy "vercel")}}
@@ -32656,8 +32872,7 @@ const config = {
 			fallback: 'index.html'
 		})
 {{else if (eq webDeploy "cloudflare")}}
-		// Alchemy's adapter wraps SvelteKit's Cloudflare adapter for local platform.env and Worker builds.
-		adapter: alchemy()
+		adapter: adapter()
 {{else if (eq webDeploy "docker")}}
 		// adapter-node builds a standalone Node server (run with \`node build/index.js\`).
 		adapter: adapter()
@@ -32749,24 +32964,6 @@ export default defineConfig({
 	"type": "module",
 	"exports": {}
 }`],
-  ["packages/env/src/cloudflare-local.ts.hbs", `import { config } from "dotenv";
-import { fileURLToPath } from "node:url";
-
-config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
-config();
-
-const runtimeEnv = typeof process === "undefined" ? {} : process.env;
-
-export const env = new Proxy({} as Env, {
-	get(_target, prop) {
-		if (typeof prop !== "string") {
-			return undefined;
-		}
-
-		return runtimeEnv[prop];
-	},
-});
-`],
   ["packages/env/src/native.ts.hbs", `import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
@@ -32868,8 +33065,13 @@ export const env = createEnvProxy(resolveEnvValue);
 import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
 
-config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
-config();
+// dotenv only applies in Node dev/build; workerd throws on file URLs and has no fs
+try {
+	config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
+	config();
+} catch {
+	// running in workerd: env comes from worker bindings via process.env
+}
 
 const runtimeEnv = typeof process === "undefined" ? {} : process.env;
 
@@ -33100,32 +33302,10 @@ export const env = createEnv({
   "extends": "@{{projectName}}/config/tsconfig.base.json",
 }
 `],
-  ["packages/infra/alchemy.run.ts.hbs", `import alchemy from "alchemy";
-{{#if (eq webDeploy "cloudflare")}}
-{{#if (includes frontend "next")}}
-import { Nextjs } from "alchemy/cloudflare";
-{{else if (includes frontend "nuxt")}}
-import { Nuxt } from "alchemy/cloudflare";
-{{else if (includes frontend "svelte")}}
-import { SvelteKit } from "alchemy/cloudflare";
-{{else if (includes frontend "tanstack-start")}}
-import { TanStackStart } from "alchemy/cloudflare";
-{{else if (includes frontend "tanstack-router")}}
-import { Vite } from "alchemy/cloudflare";
-{{else if (includes frontend "react-router")}}
-import { ReactRouter } from "alchemy/cloudflare";
-{{else if (includes frontend "solid")}}
-import { Vite } from "alchemy/cloudflare";
-{{else if (includes frontend "astro")}}
-import { Astro } from "alchemy/cloudflare";
-{{/if}}
-{{/if}}
-{{#if (eq serverDeploy "cloudflare")}}
-import { Worker } from "alchemy/cloudflare";
-{{/if}}
-{{#if (and (or (eq serverDeploy "cloudflare") (and (eq webDeploy "cloudflare") (eq backend "self"))) (eq dbSetup "d1"))}}
-import { D1Database } from "alchemy/cloudflare";
-{{/if}}
+  ["packages/infra/alchemy.run.ts.hbs", `import * as Alchemy from "alchemy";
+import * as Cloudflare from "alchemy/Cloudflare";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import { config } from "dotenv";
 
 {{#if (and (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
@@ -33140,10 +33320,8 @@ config({ path: "./.env" });
 config({ path: "../../apps/server/.env" });
 {{/if}}
 
-const app = await alchemy("{{projectName}}");
-
 {{#if (and (or (eq serverDeploy "cloudflare") (and (eq webDeploy "cloudflare") (eq backend "self"))) (eq dbSetup "d1"))}}
-const db = await D1Database("database", {
+export const db = Cloudflare.D1.Database("database", {
 	{{#if (eq orm "prisma")}}
 	migrationsDir: "../../packages/db/prisma/migrations",
 	{{else if (eq orm "drizzle")}}
@@ -33153,382 +33331,589 @@ const db = await D1Database("database", {
 {{/if}}
 
 {{#if (eq serverDeploy "cloudflare")}}
-export const server = await Worker("server", {
-  cwd: "../../apps/server",
-  entrypoint: "src/index.ts",
-  compatibility: "node",
-  url: true,
-  bindings: {
+export const server = Cloudflare.Worker("server", {
+  main: "../../apps/server/src/index.ts",
+  // User entrypoints are external Workers, so declare required compatibility flags explicitly.
+  compatibility: {
+    flags: ["nodejs_compat"],
+  },
+  env: {
     {{#if (eq dbSetup "d1")}}
     DB: db,
     {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    DATABASE_URL: Config.redacted("DATABASE_URL"),
     {{/if}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    CORS_ORIGIN: Config.string("CORS_ORIGIN"),
     {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+    BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
     {{/if}}
     {{#if (eq auth "clerk")}}
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
+    CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
     {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
+    CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),
     {{/if}}
     {{/if}}
     {{#if (includes examples "ai")}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+    GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
     {{/if}}
     {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+    POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
     {{/if}}
     {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
     {{/if}}
     {{#if (eq database "mysql")}}
     {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    DATABASE_HOST: Config.string("DATABASE_HOST"),
+    DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+    DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
     {{/if}}
     {{/if}}
   },
   dev: {
-		port: 3000,
-	},
+    port: 3000,
+  },
 });
+
+export type ServerEnv = Cloudflare.InferEnv<typeof server>;
 {{/if}}
 
-{{#if (eq webDeploy "cloudflare")}}
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
 {{#if (includes frontend "next")}}
-export const web = await Nextjs("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    NEXT_PUBLIC_CONVEX_URL: alchemy.env.NEXT_PUBLIC_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    NEXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NEXT_PUBLIC_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    NEXT_PUBLIC_SERVER_URL: server.url!,
-    {{else}}
-    NEXT_PUBLIC_SERVER_URL: alchemy.env.NEXT_PUBLIC_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    {{#if (ne backend "convex")}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq auth "clerk")}}
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
-    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
-    {{/if}}
-    {{/if}}
-    {{#if (and (includes examples "ai") (ne backend "convex"))}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-  },
-  dev: {
-    env: {
-      PORT: "3001",
-    },
-  },
+export const web = Cloudflare.Website.StaticSite("web", {
+      cwd: "../../apps/web",
+      command: "{{packageManager}} run build:cloudflare",
+      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+      memo: false,
+      outdir: ".open-next/assets",
+      main: "../../apps/web/.open-next/worker.js",
+      bundle: false,
+      compatibility: {
+        flags: ["nodejs_compat", "global_fetch_strictly_public"],
+      },
+      env: {
+        IMAGES: Cloudflare.Images.Images(),
+        {{#if (eq dbSetup "d1")}}
+        DB: db,
+        {{else if (ne database "none")}}
+        DATABASE_URL: Config.redacted("DATABASE_URL"),
+        {{/if}}
+        CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+        {{#if (eq auth "better-auth")}}
+        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+        BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+        {{/if}}
+        {{#if (eq auth "clerk")}}
+        CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+        {{#if (ne api "none")}}
+        CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),
+        {{/if}}
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.string("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),
+        {{/if}}
+        {{#if (includes examples "ai")}}
+        GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
+        {{/if}}
+        {{#if (eq payments "polar")}}
+        POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+        POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
+        {{/if}}
+        {{#if (eq dbSetup "turso")}}
+        DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
+        {{/if}}
+        {{#if (eq database "mysql")}}
+        {{#if (eq orm "drizzle")}}
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
+        {{/if}}
+        {{/if}}
+      },
+      dev: {
+        command: "{{packageManager}} run dev:bare",
+        url: "http://localhost:3001",
+      },
 });
 {{else if (includes frontend "nuxt")}}
-export const web = await Nuxt("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    NUXT_PUBLIC_CONVEX_URL: alchemy.env.NUXT_PUBLIC_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    NUXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NUXT_PUBLIC_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    NUXT_PUBLIC_SERVER_URL: server.url!,
-    {{else}}
-    NUXT_PUBLIC_SERVER_URL: alchemy.env.NUXT_PUBLIC_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq backend "self")}}
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    {{#if (ne backend "convex")}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq auth "clerk")}}
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
-    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
-    {{/if}}
-    {{/if}}
-    {{#if (and (includes examples "ai") (ne backend "convex"))}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-    {{/if}}
-  }
+export const web = Cloudflare.Website.StaticSite("web", {
+      cwd: "../../apps/web",
+      command: "{{packageManager}} run build",
+      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+      memo: false,
+      outdir: ".output/public",
+      main: "../../apps/web/.output/server/index.mjs",
+      bundle: false,
+      compatibility: {
+        flags: ["nodejs_compat"],
+      },
+      env: {
+        {{#if (eq dbSetup "d1")}}
+        DB: db,
+        {{else if (ne database "none")}}
+        DATABASE_URL: Config.redacted("DATABASE_URL"),
+        {{/if}}
+        CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+        {{#if (eq auth "better-auth")}}
+        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+        BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+        {{/if}}
+        {{#if (includes examples "ai")}}
+        GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
+        {{/if}}
+        {{#if (eq payments "polar")}}
+        POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+        POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
+        {{/if}}
+        {{#if (eq dbSetup "turso")}}
+        DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
+        {{/if}}
+        {{#if (eq database "mysql")}}
+        {{#if (eq orm "drizzle")}}
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
+        {{/if}}
+        {{/if}}
+      },
+      dev: {
+        command: "{{packageManager}} run dev:bare",
+        url: "http://localhost:3001",
+      },
 });
 {{else if (includes frontend "svelte")}}
-export const web = await SvelteKit("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    PUBLIC_CONVEX_URL: alchemy.env.PUBLIC_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    PUBLIC_CONVEX_SITE_URL: alchemy.env.PUBLIC_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    PUBLIC_SERVER_URL: server.url!,
-    {{else}}
-    PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq backend "self")}}
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{#if (and (includes examples "ai") (ne backend "convex"))}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-    {{/if}}
-  },
-  dev: {
-    domain: "localhost:5173",
-  },
-});
-{{else if (includes frontend "tanstack-start")}}
-export const web = await TanStackStart("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    VITE_SERVER_URL: server.url!,
-    {{else}}
-    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    {{#if (ne backend "convex")}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq auth "clerk")}}
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
-    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
-    {{/if}}
-    {{/if}}
-    {{#if (and (includes examples "ai") (ne backend "convex"))}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-  }
-});
-{{else if (includes frontend "tanstack-router")}}
-export const web = await Vite("web", {
-  cwd: "../../apps/web",
-  assets: "dist",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    VITE_SERVER_URL: server.url!,
-    {{else}}
-    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-  }
-});
-{{else if (includes frontend "react-router")}}
-export const web = await ReactRouter("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    VITE_SERVER_URL: server.url!,
-    {{else}}
-    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-  }
+// _worker.js is a shim importing outside its directory, so it must be bundled
+export const web = Cloudflare.Website.StaticSite("web", {
+      cwd: "../../apps/web",
+      command: "{{packageManager}} run build",
+      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+      memo: false,
+      outdir: ".svelte-kit/cloudflare",
+      main: "../../apps/web/.svelte-kit/cloudflare/_worker.js",
+      compatibility: {
+        flags: ["nodejs_compat"],
+      },
+      env: {
+        {{#if (eq dbSetup "d1")}}
+        DB: db,
+        {{else if (ne database "none")}}
+        DATABASE_URL: Config.redacted("DATABASE_URL"),
+        {{/if}}
+        CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+        {{#if (eq auth "better-auth")}}
+        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+        BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+        {{/if}}
+        {{#if (includes examples "ai")}}
+        GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
+        {{/if}}
+        {{#if (eq payments "polar")}}
+        POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+        POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
+        {{/if}}
+        {{#if (eq dbSetup "turso")}}
+        DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
+        {{/if}}
+        {{#if (eq database "mysql")}}
+        {{#if (eq orm "drizzle")}}
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
+        {{/if}}
+        {{/if}}
+      },
+      dev: {
+        command: "{{packageManager}} run dev:bare",
+        url: "http://localhost:5173",
+      },
 });
 {{else if (includes frontend "solid")}}
-export const web = await Vite("web", {
-  cwd: "../../apps/web",
-  assets: "dist",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    VITE_SERVER_URL: server.url!,
-    {{else}}
-    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-  }
-});
-{{else if (includes frontend "astro")}}
-export const web = await Astro("web", {
-  cwd: "../../apps/web",
-  entrypoint: "dist/server/entry.mjs",
-  assets: "dist/client",
-  {{#if (eq backend "self")}}
-  compatibility: "node",
-  {{/if}}
-  bindings: {
-    {{#if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    PUBLIC_SERVER_URL: server.url!,
-    {{else}}
-    PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq backend "self")}}
+export const web = Cloudflare.Website.Vite("web", {
+  rootDir: "../../apps/web",
+  compatibility: {
+    flags: ["nodejs_compat"],
+  },
+  assets: {
+    runWorkerFirst: true,
+  },
+  env: {
     {{#if (eq dbSetup "d1")}}
     DB: db,
     {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    DATABASE_URL: Config.redacted("DATABASE_URL"),
     {{/if}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    CORS_ORIGIN: Config.string("CORS_ORIGIN"),
     {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+    BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+    {{#if (ne api "none")}}
+    CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),
+    {{/if}}
+    VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),
+    {{/if}}
+    {{#if (includes examples "ai")}}
+    GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
     {{/if}}
     {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+    POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
     {{/if}}
     {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
     {{/if}}
     {{#if (eq database "mysql")}}
     {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    DATABASE_HOST: Config.string("DATABASE_HOST"),
+    DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+    DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
     {{/if}}
     {{/if}}
+  },
+});
+{{else if (includes frontend "astro")}}
+export const web = Cloudflare.Website.StaticSite("web", {
+      cwd: "../../apps/web",
+      command: "{{packageManager}} run build",
+      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+      memo: false,
+      outdir: "dist/client",
+      main: "../../apps/web/dist/server/entry.mjs",
+      bundle: false,
+      compatibility: {
+        flags: ["nodejs_compat"],
+      },
+      env: {
+        // the astro cloudflare adapter expects SESSION (KV) and IMAGES bindings
+        SESSION: Cloudflare.KV.Namespace("session"),
+        IMAGES: Cloudflare.Images.Images(),
+        {{#if (eq dbSetup "d1")}}
+        DB: db,
+        {{else if (ne database "none")}}
+        DATABASE_URL: Config.redacted("DATABASE_URL"),
+        {{/if}}
+        CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+        {{#if (eq auth "better-auth")}}
+        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+        BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+        {{/if}}
+        {{#if (eq payments "polar")}}
+        POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+        POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
+        {{/if}}
+        {{#if (eq dbSetup "turso")}}
+        DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
+        {{/if}}
+        {{#if (eq database "mysql")}}
+        {{#if (eq orm "drizzle")}}
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
+        {{/if}}
+        {{/if}}
+      },
+      dev: {
+        command: "{{packageManager}} run dev:bare",
+        url: "http://localhost:4321",
+      },
+});
+{{else if (includes frontend "tanstack-start")}}
+export const web = Cloudflare.Website.Vite("web", {
+  rootDir: "../../apps/web",
+  compatibility: {
+    flags: ["nodejs_compat"],
+  },
+  env: {
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: Config.redacted("DATABASE_URL"),
     {{/if}}
-  }
+    CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+    BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+    {{#if (ne api "none")}}
+    CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),
+    {{/if}}
+    VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),
+    {{/if}}
+    {{#if (includes examples "ai")}}
+    GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+    POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: Config.string("DATABASE_HOST"),
+    DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+    DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
+    {{/if}}
+    {{/if}}
+  },
 });
 {{/if}}
+
+export type WebEnv = Cloudflare.InferEnv<typeof web>;
 {{/if}}
 
-{{#if (and (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
-console.log(\`Web    -> \${web.url}\`);
-console.log(\`Server -> \${server.url}\`);
-{{else if (eq webDeploy "cloudflare")}}
-console.log(\`Web    -> \${web.url}\`);
-{{else if (eq serverDeploy "cloudflare")}}
-console.log(\`Server -> \${server.url}\`);
-{{/if}}
+export default Alchemy.Stack(
+  "{{projectName}}",
+  {
+    providers: Cloudflare.providers(),
+    state: Cloudflare.state(),
+  },
+  Effect.gen(function* () {
+    {{#if (eq serverDeploy "cloudflare")}}
+    const serverWorker = yield* server;
+    {{/if}}
+    {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
+    const webWorker = yield* web;
+    {{else if (eq webDeploy "cloudflare")}}
+    {{#if (includes frontend "next")}}
+    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
+          cwd: "../../apps/web",
+          command: "{{packageManager}} run build:cloudflare",
+          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+          memo: false,
+          outdir: ".open-next/assets",
+          main: "../../apps/web/.open-next/worker.js",
+          bundle: false,
+          compatibility: {
+            flags: ["nodejs_compat", "global_fetch_strictly_public"],
+          },
+          env: {
+            IMAGES: Cloudflare.Images.Images(),
+            {{#if (eq backend "convex")}}
+            NEXT_PUBLIC_CONVEX_URL: Config.string("NEXT_PUBLIC_CONVEX_URL"),
+            {{#if (eq auth "better-auth")}}
+            NEXT_PUBLIC_CONVEX_SITE_URL: Config.string("NEXT_PUBLIC_CONVEX_SITE_URL"),
+            {{/if}}
+            {{else}}
+            {{#if (eq serverDeploy "cloudflare")}}
+            NEXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
+            {{else}}
+            NEXT_PUBLIC_SERVER_URL: Config.string("NEXT_PUBLIC_SERVER_URL"),
+            {{/if}}
+            {{/if}}
+            {{#if (eq auth "clerk")}}
+            CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.string("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),
+            {{/if}}
+          },
+          dev: {
+            command: "{{packageManager}} run dev:bare",
+            url: "http://localhost:3001",
+          },
+    });
+    {{else if (includes frontend "nuxt")}}
+    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
+          cwd: "../../apps/web",
+          command: "{{packageManager}} run build",
+          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+          memo: false,
+          outdir: ".output/public",
+          main: "../../apps/web/.output/server/index.mjs",
+          bundle: false,
+          compatibility: {
+            flags: ["nodejs_compat"],
+          },
+          env: {
+            {{#if (eq backend "convex")}}
+            NUXT_PUBLIC_CONVEX_URL: Config.string("NUXT_PUBLIC_CONVEX_URL"),
+            {{#if (eq auth "better-auth")}}
+            NUXT_PUBLIC_CONVEX_SITE_URL: Config.string("NUXT_PUBLIC_CONVEX_SITE_URL"),
+            {{/if}}
+            {{else}}
+            {{#if (eq serverDeploy "cloudflare")}}
+            NUXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
+            {{else}}
+            NUXT_PUBLIC_SERVER_URL: Config.string("NUXT_PUBLIC_SERVER_URL"),
+            {{/if}}
+            {{/if}}
+          },
+          dev: {
+            command: "{{packageManager}} run dev:bare",
+            url: "http://localhost:3001",
+          },
+    });
+    {{else if (includes frontend "svelte")}}
+    // _worker.js is a shim importing outside its directory, so it must be bundled
+    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
+          cwd: "../../apps/web",
+          command: "{{packageManager}} run build",
+          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+          memo: false,
+          outdir: ".svelte-kit/cloudflare",
+          main: "../../apps/web/.svelte-kit/cloudflare/_worker.js",
+          compatibility: {
+            flags: ["nodejs_compat"],
+          },
+          env: {
+            {{#if (eq backend "convex")}}
+            PUBLIC_CONVEX_URL: Config.string("PUBLIC_CONVEX_URL"),
+            {{#if (eq auth "better-auth")}}
+            PUBLIC_CONVEX_SITE_URL: Config.string("PUBLIC_CONVEX_SITE_URL"),
+            {{/if}}
+            {{else}}
+            {{#if (eq serverDeploy "cloudflare")}}
+            PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
+            {{else}}
+            PUBLIC_SERVER_URL: Config.string("PUBLIC_SERVER_URL"),
+            {{/if}}
+            {{/if}}
+          },
+          dev: {
+            command: "{{packageManager}} run dev:bare",
+            url: "http://localhost:5173",
+          },
+    });
+    {{else if (includes frontend "astro")}}
+    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
+          cwd: "../../apps/web",
+          command: "{{packageManager}} run build",
+          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+          memo: false,
+          outdir: "dist/client",
+          main: "../../apps/web/dist/server/entry.mjs",
+          bundle: false,
+          compatibility: {
+            flags: ["nodejs_compat"],
+          },
+          env: {
+            // the astro cloudflare adapter expects SESSION (KV) and IMAGES bindings
+            SESSION: Cloudflare.KV.Namespace("session"),
+            IMAGES: Cloudflare.Images.Images(),
+            {{#if (eq serverDeploy "cloudflare")}}
+            PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
+            {{else}}
+            PUBLIC_SERVER_URL: Config.string("PUBLIC_SERVER_URL"),
+            {{/if}}
+          },
+          dev: {
+            command: "{{packageManager}} run dev:bare",
+            url: "http://localhost:4321",
+          },
+    });
+    {{else if (includes frontend "tanstack-start")}}
+    const webWorker = yield* Cloudflare.Website.Vite("web", {
+      rootDir: "../../apps/web",
+      compatibility: {
+        flags: ["nodejs_compat"],
+      },
+      env: {
+        {{#if (eq backend "convex")}}
+        VITE_CONVEX_URL: Config.string("VITE_CONVEX_URL"),
+        {{#if (eq auth "better-auth")}}
+        VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
+        {{/if}}
+        {{else}}
+        {{#if (eq serverDeploy "cloudflare")}}
+        VITE_SERVER_URL: serverWorker.url.as<string>(),
+        {{else}}
+        VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
+        {{/if}}
+        {{/if}}
+        {{#if (eq auth "clerk")}}
+        CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+        VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),
+        {{/if}}
+      },
+    });
+    {{else if (includes frontend "react-router")}}
+    const webWorker = yield* Cloudflare.Website.Vite("web", {
+      rootDir: "../../apps/web",
+      compatibility: {
+        flags: ["nodejs_compat"],
+      },
+      env: {
+        {{#if (eq backend "convex")}}
+        VITE_CONVEX_URL: Config.string("VITE_CONVEX_URL"),
+        {{#if (eq auth "better-auth")}}
+        VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
+        {{/if}}
+        {{else}}
+        {{#if (eq serverDeploy "cloudflare")}}
+        VITE_SERVER_URL: serverWorker.url.as<string>(),
+        {{else}}
+        VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
+        {{/if}}
+        {{/if}}
+        {{#if (eq auth "clerk")}}
+        CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+        VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),
+        {{/if}}
+      },
+    });
+    {{else if (includes frontend "solid")}}
+    const webWorker = yield* Cloudflare.Website.Vite("web", {
+      rootDir: "../../apps/web",
+      compatibility: {
+        flags: ["nodejs_compat"],
+      },
+      assets: {
+        runWorkerFirst: true,
+      },
+      env: {
+        {{#if (eq backend "convex")}}
+        VITE_CONVEX_URL: Config.string("VITE_CONVEX_URL"),
+        {{#if (eq auth "better-auth")}}
+        VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
+        {{/if}}
+        {{else}}
+        {{#if (eq serverDeploy "cloudflare")}}
+        VITE_SERVER_URL: serverWorker.url.as<string>(),
+        {{else}}
+        VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
+        {{/if}}
+        {{/if}}
+      },
+    });
+    {{else if (includes frontend "tanstack-router")}}
+    const webWorker = yield* Cloudflare.Website.Vite("web", {
+      rootDir: "../../apps/web",
+      assets: {
+        htmlHandling: "auto-trailing-slash",
+        notFoundHandling: "single-page-application",
+      },
+      env: {
+        {{#if (eq backend "convex")}}
+        VITE_CONVEX_URL: Config.string("VITE_CONVEX_URL"),
+        {{#if (eq auth "better-auth")}}
+        VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
+        {{/if}}
+        {{else}}
+        {{#if (eq serverDeploy "cloudflare")}}
+        VITE_SERVER_URL: serverWorker.url.as<string>(),
+        {{else}}
+        VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
+        {{/if}}
+        {{/if}}
+      },
+    });
+    {{/if}}
+    {{/if}}
 
-await app.finalize();
+    return {
+      {{#if (eq webDeploy "cloudflare")}}
+      web: webWorker.url,
+      {{/if}}
+      {{#if (eq serverDeploy "cloudflare")}}
+      server: serverWorker.url,
+      {{/if}}
+    };
+  }),
+);
 `],
   ["packages/infra/package.json.hbs", `{
   "name": "@{{projectName}}/infra",
@@ -35509,25 +35894,18 @@ function SuccessPage() {
 	);
 }
 `],
-  ["payments/polar/web/solid/src/routes/success.tsx.hbs", `import { createFileRoute } from "@tanstack/solid-router";
+  ["payments/polar/web/solid/src/routes/success.tsx.hbs", `import { useSearchParams } from "@solidjs/router";
 import { Show } from "solid-js";
 
-export const Route = createFileRoute("/success")({
-	component: SuccessPage,
-	validateSearch: (search) => ({
-		checkout_id: search.checkout_id as string,
-	}),
-});
-
-function SuccessPage() {
-	const searchParams = Route.useSearch();
-	const checkout_id = searchParams().checkout_id;
+export default function Success() {
+	const [searchParams] = useSearchParams();
+	const checkoutId = () => searchParams.checkout_id;
 
 	return (
 		<div class="container mx-auto px-4 py-8">
 			<h1>Payment Successful!</h1>
-			<Show when={checkout_id}>
-				<p>Checkout ID: {checkout_id}</p>
+			<Show when={checkoutId()}>
+				<p>Checkout ID: {checkoutId()}</p>
 			</Show>
 		</div>
 	);
@@ -35548,4 +35926,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 507;
+export const TEMPLATE_COUNT = 511;

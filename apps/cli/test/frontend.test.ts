@@ -114,6 +114,73 @@ describe("Frontend Configurations", () => {
   });
 
   describe("Frontend Compatibility with API", () => {
+    it("should generate the SolidStart v2 project structure", async () => {
+      const result = await runTRPCTest({
+        projectName: "solid-start-v2",
+        frontend: ["solid"],
+        api: "none",
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const webDir = path.join(result.projectDir, "apps/web");
+      const packageJson = await fs.readJson(path.join(webDir, "package.json"));
+      const rootPackageJson = await fs.readJson(path.join(result.projectDir, "package.json"));
+      const envPackageJson = await fs.readJson(
+        path.join(result.projectDir, "packages/env/package.json"),
+      );
+      const appFile = await fs.readFile(path.join(webDir, "src/app.tsx"), "utf8");
+      const tsconfig = await fs.readJson(path.join(webDir, "tsconfig.json"));
+      const viteConfig = await fs.readFile(path.join(webDir, "vite.config.ts"), "utf8");
+
+      expect(packageJson.dependencies).toMatchObject({
+        "@solidjs/meta": "^0.29.4",
+        "@solidjs/router": "^1.0.0",
+        "@solidjs/start": "^2.0.0",
+        nitro: "^3.0.260610-beta",
+      });
+      expect(packageJson.dependencies["@tanstack/solid-router"]).toBeUndefined();
+      expect(packageJson.devDependencies["@tanstack/solid-router-devtools"]).toBeUndefined();
+      expect(packageJson.devDependencies["@tanstack/router-plugin"]).toBeUndefined();
+      expect(packageJson.devDependencies["vite-plugin-solid"]).toBeUndefined();
+      expect(packageJson.engines.node).toBe(">=24");
+      expect(packageJson.scripts["check-types"]).toBe("tsc --noEmit");
+      expect(tsconfig.exclude).toContain("dist");
+      expect(rootPackageJson.scripts["dev:web"]).toBeDefined();
+      expect(envPackageJson.exports["./web"]).toBe("./src/web.ts");
+      expect(appFile).toContain('import { FileRoutes } from "@solidjs/start/router";');
+      expect(appFile).toContain("<FileRoutes />");
+      expect(viteConfig).toContain("solidStart()");
+      expect(viteConfig).toContain("nitro()");
+
+      for (const file of [
+        "src/app.tsx",
+        "src/entry-client.tsx",
+        "src/entry-server.tsx",
+        "src/routes/index.tsx",
+      ]) {
+        expect(await fs.pathExists(path.join(webDir, file))).toBe(true);
+      }
+
+      for (const legacyFile of ["index.html", "src/main.tsx", "src/routes/__root.tsx"]) {
+        expect(await fs.pathExists(path.join(webDir, legacyFile))).toBe(false);
+      }
+    });
+
     it("should generate the current Nuxt dependency baseline", async () => {
       const result = await runTRPCTest({
         projectName: "nuxt-dependency-baseline",
@@ -276,6 +343,27 @@ describe("Frontend Configurations", () => {
   });
 
   describe("Frontend Compatibility with Backend", () => {
+    it("should work with the SolidStart self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "solid-start-self",
+        frontend: ["solid"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "orpc",
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
     it("should fail Solid + Convex", async () => {
       const result = await runTRPCTest({
         projectName: "solid-convex-fail",

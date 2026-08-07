@@ -1,6 +1,6 @@
-import { authClient } from "@/lib/auth-client";
-import { useNavigate, Link } from "@tanstack/solid-router";
+import { A, useNavigate } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
+import { authClient } from "~/lib/auth-client";
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -14,9 +14,9 @@ export default function UserMenu() {
       </Show>
 
       <Show when={!session().isPending && !session().data}>
-        <Link to="/login" class="inline-block border rounded px-4  text-sm">
+        <A href="/login" class="inline-block border rounded px-4  text-sm">
           Sign In
-        </Link>
+        </A>
       </Show>
 
       <Show when={!session().isPending && session().data}>
@@ -39,7 +39,7 @@ export default function UserMenu() {
                 authClient.signOut({
                   fetchOptions: {
                     onSuccess: () => {
-                      navigate({ to: "/" });
+                      navigate("/", { replace: true });
                     },
                   },
                 });

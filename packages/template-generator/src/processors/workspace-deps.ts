@@ -8,6 +8,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     projectName,
     packageManager,
     runtime,
+    orm,
     backend,
     database,
     auth,
@@ -127,6 +128,10 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   }
 
   if (packages.server) {
+    const serverDevDependencies: AvailableDependencies[] = ["typescript", "tsdown"];
+    if (runtime === "workers" && orm === "prisma") {
+      serverDevDependencies.push("rolldown-plugin-wasm");
+    }
     const serverDeps: Record<string, string> = { ...envDep };
     if (api !== "none" && packages.api) serverDeps[`@${projectName}/api`] = workspaceVersion;
     if (auth !== "none" && packages.auth) serverDeps[`@${projectName}/auth`] = workspaceVersion;
@@ -135,7 +140,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
       vfs,
       packagePath: "apps/server/package.json",
       dependencies: commonDeps,
-      devDependencies: ["typescript", "tsdown"],
+      devDependencies: serverDevDependencies,
       customDependencies: serverDeps,
       customDevDependencies: configDep,
     });

@@ -142,7 +142,6 @@ describe("Addon Configurations", () => {
         "next",
         "nuxt",
         "svelte",
-        "solid",
         "astro",
       ];
 
@@ -164,7 +163,7 @@ describe("Addon Configurations", () => {
             install: false,
           };
 
-          if (["nuxt", "svelte", "solid", "astro"].includes(frontend)) {
+          if (["nuxt", "svelte", "astro"].includes(frontend)) {
             config.api = "orpc";
           } else {
             config.api = "trpc";
@@ -175,7 +174,12 @@ describe("Addon Configurations", () => {
         });
       }
 
-      const tauriIncompatibleFrontends = ["native-bare", "native-uniwind", "native-unistyles"];
+      const tauriIncompatibleFrontends = [
+        "solid",
+        "native-bare",
+        "native-uniwind",
+        "native-unistyles",
+      ];
 
       for (const frontend of tauriIncompatibleFrontends) {
         it(`should fail with Tauri + ${frontend}`, async () => {
@@ -188,7 +192,7 @@ describe("Addon Configurations", () => {
             database: "sqlite",
             orm: "drizzle",
             auth: "none",
-            api: "trpc",
+            api: frontend === "solid" ? "orpc" : "trpc",
             examples: ["none"],
             dbSetup: "none",
             webDeploy: "none",
@@ -253,7 +257,6 @@ describe("Addon Configurations", () => {
         "next",
         "nuxt",
         "svelte",
-        "solid",
         "astro",
       ];
 
@@ -275,14 +278,19 @@ describe("Addon Configurations", () => {
             install: false,
           };
 
-          config.api = ["nuxt", "svelte", "solid", "astro"].includes(frontend) ? "orpc" : "trpc";
+          config.api = ["nuxt", "svelte", "astro"].includes(frontend) ? "orpc" : "trpc";
 
           const result = await runTRPCTest(config);
           expectSuccess(result);
         });
       }
 
-      const electrobunIncompatibleFrontends = ["native-bare", "native-uniwind", "native-unistyles"];
+      const electrobunIncompatibleFrontends = [
+        "solid",
+        "native-bare",
+        "native-uniwind",
+        "native-unistyles",
+      ];
 
       for (const frontend of electrobunIncompatibleFrontends) {
         it(`should fail with Electrobun + ${frontend}`, async () => {
@@ -302,7 +310,7 @@ describe("Addon Configurations", () => {
             expectError: true,
           };
 
-          config.api = "trpc";
+          config.api = frontend === "solid" ? "orpc" : "trpc";
 
           const result = await runTRPCTest(config);
           expectError(result, "electrobun addon requires one of these frontends");
@@ -1235,19 +1243,7 @@ describe("Addon Configurations", () => {
 
       expect(nuxtConfig).toContain('"evlog/nuxt"');
       expect(nuxtConfig).toContain("nitro:");
-      expect(nuxtConfig).toContain('import { existsSync } from "node:fs";');
-      expect(nuxtConfig).toContain('import { fileURLToPath } from "node:url";');
-      expect(nuxtConfig).toContain("const alchemyConfigPath = fileURLToPath");
-      expect(nuxtConfig).toContain("const hasAlchemyConfig = existsSync(alchemyConfigPath);");
-      expect(nuxtConfig).toContain("const shouldUseAlchemy = !isNuxtPrepare && hasAlchemyConfig;");
-      expect(nuxtConfig).toContain("alchemy({ dev: { configPath: alchemyConfigPath } })");
-      expect(nuxtConfig).toContain("isNuxtDev");
-      expect(nuxtConfig).toContain("const cloudflareWorkersShimPath = fileURLToPath");
-      expect(nuxtConfig).toContain(
-        "const cloudflareWorkersAlias: Record<string, string> = shouldUseAlchemy",
-      );
-      expect(nuxtConfig).toContain('"cloudflare:workers"');
-      expect(nuxtConfig).toContain("cloudflareWorkersShimPath");
+      expect(nuxtConfig).toContain("cloudflare-module");
       expect(nuxtConfig).toContain("evlog:");
       expect(existsSync(join(projectDir, "apps/web/server/plugins/evlog-drain.ts"))).toBe(false);
       expectParseableTypeScript(nuxtConfig);

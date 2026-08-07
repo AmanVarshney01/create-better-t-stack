@@ -274,7 +274,7 @@ function generateStackDescription(
     "tanstack-start": "React, TanStack Start",
     svelte: "SvelteKit",
     nuxt: "Nuxt",
-    solid: "SolidJS",
+    solid: "SolidStart",
     astro: "Astro",
     "native-bare": "React Native, Expo",
     "native-uniwind": "React Native, Expo",
@@ -382,7 +382,7 @@ function generateProjectStructure(config: ProjectConfig): string {
       "tanstack-start": "React + TanStack Start",
       svelte: "SvelteKit",
       nuxt: "Nuxt",
-      solid: "SolidJS",
+      solid: "SolidStart",
       astro: "Astro",
     };
     const frontendType = frontend.find((f) => frontendTypes[f])
@@ -470,7 +470,7 @@ function generateFeaturesList(
     "tanstack-start": "- **TanStack Start** - SSR framework with TanStack Router",
     svelte: "- **SvelteKit** - Web framework for building Svelte apps",
     nuxt: "- **Nuxt** - The Intuitive Vue Framework",
-    solid: "- **SolidJS** - Simple and performant reactivity",
+    solid: "- **SolidStart** - Full-stack Solid framework with file-based routing and SSR",
     astro: "- **Astro** - The web framework for content-driven websites",
   };
 
@@ -604,11 +604,25 @@ ${packageManagerRunCmd} db:migrate
 \`\`\``);
     }
 
+    const isFullstackStaticSite =
+      config.backend === "self" &&
+      config.webDeploy === "cloudflare" &&
+      (["next", "nuxt", "svelte", "solid", "astro"] as const).some((f) =>
+        config.frontend.includes(f),
+      );
+    if (isFullstackStaticSite) {
+      steps.push(`${steps.length + 1}. Apply the migrations to the local development database:
+\`\`\`bash
+${packageManagerRunCmd} db:migrate:local
+\`\`\`
+The framework dev server uses a local D1 database (via \`apps/web/wrangler.jsonc\`); the deployed database is migrated by Alchemy during \`deploy\`.`);
+    }
+
     return `${setup}This project uses Cloudflare D1 (SQLite)${ormDesc}.
 
 Runtime database access uses the Cloudflare \`DB\` binding from \`packages/infra/alchemy.run.ts\`. If a local \`DATABASE_URL\` is present, it is only for database tooling.
 
-Alchemy provisions the D1 database and applies migrations during \`dev\` and \`deploy\`.
+Alchemy provisions the D1 database and applies migrations during \`deploy\`.
 
 ${steps.join("\n\n")}
 `;
@@ -823,7 +837,13 @@ function generateDeploymentCommands(
       `- Deploy: ${packageManagerRunCmd} ${cfDeployScript}`,
       `- Destroy: ${packageManagerRunCmd} destroy`,
       "",
-      "For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).",
+      "The first deploy walks you through Cloudflare login (OAuth or API token) and saves the credentials under `~/.alchemy` — no environment variables required.",
+      "",
+      "Deploys are staged and default to a personal `dev_<username>` stage. For production, run the deploy with an explicit stage from `packages/infra`:",
+      "",
+      "```bash",
+      `cd packages/infra && ${packageManagerRunCmd.startsWith("npm") ? "npx" : packageManagerRunCmd.split(" ")[0]} alchemy deploy --stage production`,
+      "```",
     );
   }
 

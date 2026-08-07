@@ -12,7 +12,7 @@ const FRONTEND_GENERATED_PATTERNS = {
   next: ["apps/web/.next/**", "apps/web/out/**"],
   nuxt: ["apps/web/.nuxt/**", "apps/web/.output/**", "apps/web/.data/**", "apps/web/.nitro/**"],
   svelte: ["apps/web/.svelte-kit/**", "apps/web/build/**", "apps/web/.output/**"],
-  solid: ["apps/web/dist/**", "apps/web/.tanstack/**", "apps/web/src/routeTree.gen.ts"],
+  solid: ["apps/web/dist/**", "apps/web/.output/**", "apps/web/.vinxi/**"],
   astro: ["apps/web/dist/**", "apps/web/.astro/**"],
   "native-bare": ["apps/native/.expo/**", "apps/native/dist/**", "apps/native/web-build/**"],
   "native-uniwind": ["apps/native/.expo/**", "apps/native/dist/**", "apps/native/web-build/**"],
@@ -47,7 +47,11 @@ export function getStackGeneratedIgnorePatterns(config: ProjectConfig): string[]
     patterns.add("packages/db/dist/**");
   }
 
-  if (config.database === "sqlite" && config.dbSetup !== "d1" && config.orm !== "none") {
+  if (
+    config.database === "sqlite" &&
+    config.orm !== "none" &&
+    (config.dbSetup !== "d1" || config.orm === "prisma")
+  ) {
     patterns.add("packages/db/local.db*");
   }
 

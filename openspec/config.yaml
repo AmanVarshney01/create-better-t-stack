@@ -1,0 +1,23 @@
+schema: spec-driven
+
+context: |
+  Better-T-Stack is a strict-TypeScript Bun/Turborepo monorepo that generates
+  npm, pnpm, and Bun projects across multiple frontend, backend, runtime,
+  database, ORM, authentication, and deployment combinations. Generated
+  deployment behavior lives primarily in packages/template-generator and is
+  exposed through apps/cli and packages/types. Templates use Handlebars.
+  Deployment changes require deterministic bun:test coverage, generator
+  typechecking, formatting/linting, and disposable live-provider verification.
+
+rules:
+  proposal:
+    - State non-goals and release-gating assumptions when a provider API is experimental.
+  design:
+    - Separate documented provider behavior, inspected upstream code behavior, and inferences.
+    - Include the supported combination matrix and operational failure boundaries.
+  specs:
+    - Every requirement must include at least one testable scenario.
+    - Provider compatibility must fail during configuration, not after generation.
+  tasks:
+    - Keep implementation tasks provider-scoped and independently verifiable.
+    - Include disposable live-deploy tests and cleanup requirements.

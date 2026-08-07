@@ -2,21 +2,29 @@ import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/solid-query";
+import { getRequestEvent } from "solid-js/web";
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+{{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
+{{/unless}}
 
-export const queryClient = new QueryClient({
-	queryCache: new QueryCache({
-		onError: (error) => {
-			console.error(`Error: ${error.message}`);
-		},
-	}),
-});
+{{#if (eq backend "self")}}
+if (import.meta.env.SSR) {
+  await import("./orpc.server");
+}
 
-{{> getServerUrl}}
+declare global {
+	var $client: AppRouterClient | undefined;
+}
 
-export const link = new RPCLink({
-	url: `${getServerUrl(env.VITE_SERVER_URL)}/rpc`,
+const link = new RPCLink({
+	url: () => {
+    if (import.meta.env.SSR) {
+      throw new Error("RPCLink is not available on the server.");
+    }
+
+		return `${window.location.origin}/rpc`;
+	},
 {{#if (eq auth "better-auth")}}
 	fetch(url, options) {
 		return fetch(url, {
@@ -26,7 +34,33 @@ export const link = new RPCLink({
 	},
 {{/if}}
 });
+{{else}}
+{{> getServerUrl}}
 
-export const client: AppRouterClient = createORPCClient(link);
+const link = new RPCLink({
+	url: `${getServerUrl(env.VITE_SERVER_URL)}/rpc`,
+	headers: () => getRequestEvent()?.request.headers ?? {},
+{{#if (eq auth "better-auth")}}
+	fetch(url, options) {
+		return fetch(url, {
+			...options,
+			credentials: "include",
+		});
+	},
+{{/if}}
+});
+{{/if}}
+
+export const client: AppRouterClient = {{#if (eq backend "self")}}globalThis.$client ?? {{/if}}createORPCClient(link);
 
 export const orpc = createTanstackQueryUtils(client);
+
+export function createQueryClient() {
+	return new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error) => {
+				console.error(`Error: ${error.message}`);
+			},
+		}),
+	});
+}

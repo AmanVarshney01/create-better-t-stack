@@ -156,6 +156,44 @@ describe("Authentication Configurations", () => {
       expect(authFile).toContain("tanstackStartCookies()");
     });
 
+    it("should add the Better Auth SolidStart handler for the self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "better-auth-solid-start-self",
+        auth: "better-auth",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "orpc",
+        frontend: ["solid"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const authRoute = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/routes/api/auth/[...auth].ts"),
+        "utf8",
+      );
+      const authClient = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/lib/auth-client.ts"),
+        "utf8",
+      );
+
+      expect(authRoute).toContain('import { toSolidStartHandler } from "better-auth/solid-start";');
+      expect(authRoute).toContain("toSolidStartHandler(auth)");
+      expect(authClient).toContain("createAuthClient({");
+      expect(authClient).not.toContain("VITE_SERVER_URL");
+    });
+
     it("should guard TanStack Start self dashboard before loading Polar payment state", async () => {
       const result = await runTRPCTest({
         projectName: "better-auth-tanstack-start-self-polar-guard",
@@ -184,6 +222,9 @@ describe("Authentication Configurations", () => {
         path.join(result.projectDir, "apps/web/src/routes/_auth/route.tsx"),
         "utf8",
       );
+      const authPackageJson = await fs.readJson(
+        path.join(result.projectDir, "packages/auth/package.json"),
+      );
 
       expect(authRouteFile).toContain('createFileRoute("/_auth")');
       const guardIndex = authRouteFile.indexOf("if (!session)");
@@ -192,6 +233,7 @@ describe("Authentication Configurations", () => {
       expect(guardIndex).toBeGreaterThanOrEqual(0);
       expect(paymentIndex).toBeGreaterThanOrEqual(0);
       expect(guardIndex).toBeLessThan(paymentIndex);
+      expect(authPackageJson.dependencies["@polar-sh/sdk"]).toBe("^0.47.0");
     });
 
     it("should work with better-auth + convex backend (tanstack-router)", async () => {

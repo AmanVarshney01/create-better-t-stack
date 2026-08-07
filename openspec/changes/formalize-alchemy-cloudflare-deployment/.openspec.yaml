@@ -1,0 +1,6 @@
+schema: spec-driven
+created: 2026-07-12
+goal: Generated Cloudflare projects remain correct against one exact Alchemy
+  release, every compatibility safeguard has an evidence-backed removal gate,
+  and first-class Cloudflare framework resources replace generic deployment
+  plumbing only after framework-specific parity gates pass.
