@@ -81,12 +81,20 @@ export default function InstallPane() {
         <p className="mb-3 font-mono text-[13px] text-fd-muted-foreground leading-[1.55]">
           Configure every option in the browser, then copy the generated command.
         </p>
-        <Link
-          href="/new"
-          className="builder-focus-ring font-mono text-[13px] text-primary transition-colors duration-150 hover:text-primary/70"
-        >
-          open builder -&gt;
-        </Link>
+        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+          <Link
+            href="/new"
+            className="builder-focus-ring font-mono text-[13px] text-primary transition-colors duration-150 hover:text-primary/70"
+          >
+            open builder -&gt;
+          </Link>
+          <Link
+            href="/docs/cli/agent-workflows#mcp"
+            className="builder-focus-ring font-mono text-[13px] text-fd-muted-foreground transition-colors duration-150 hover:text-primary"
+          >
+            or run it as an MCP server -&gt;
+          </Link>
+        </div>
       </div>
     </>
   );
