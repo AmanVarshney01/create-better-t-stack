@@ -601,7 +601,7 @@ function generateDatabaseSetup(config: ProjectConfig, packageManagerRunCmd: stri
         : `Generate and commit migration SQL with \`${packageManagerRunCmd} db:generate\`. Deployment applies checked-in migrations after provisioning the database.`;
     const costNote =
       dbSetup === "planetscale"
-        ? "\n\nThe generated PlanetScale resource uses the `PS_DEV` size. PlanetScale may charge for this database; adjust `clusterSize` in `packages/infra/database.ts` before deployment if needed."
+        ? "\n\nThe generated PlanetScale resource uses the `PS_DEV` size. PlanetScale may charge for this database; adjust `clusterSize` in `packages/infra/alchemy.run.ts` before deployment if needed."
         : "";
 
     return `${setup}Alchemy provisions ${provider}, passes its connection credentials directly to the deployed application, and manages database deployment in the same stack as the consuming app. You do not need to copy a hosted \`DATABASE_URL\` into the app environment.
@@ -634,9 +634,7 @@ ${packageManagerRunCmd} db:migrate
     const isFullstackStaticSite =
       config.backend === "self" &&
       config.webDeploy === "cloudflare" &&
-      (["next", "nuxt", "svelte", "solid", "astro"] as const).some((f) =>
-        config.frontend.includes(f),
-      );
+      (["next", "svelte", "solid"] as const).some((f) => config.frontend.includes(f));
     if (isFullstackStaticSite) {
       steps.push(`${steps.length + 1}. Apply the migrations to the local development database:
 \`\`\`bash

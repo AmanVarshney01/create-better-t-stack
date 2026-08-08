@@ -916,8 +916,16 @@ describe("Deployment Configurations", () => {
       expect(serverPackage.devDependencies?.unwasm).toBe("^0.6.0");
     });
 
-    it("should generate current Cloudflare integrations for React Router, Next, and Astro", async () => {
-      const [reactRouterResult, nextResult, nextWebOnlyResult, astroResult] = await Promise.all([
+    it("should generate current Cloudflare integrations for every framework family", async () => {
+      const [
+        reactRouterResult,
+        nextResult,
+        nextWebOnlyResult,
+        nuxtResult,
+        astroResult,
+        svelteResult,
+        tanstackStartResult,
+      ] = await Promise.all([
         createVirtual({
           projectName: "react-router-cloudflare-current",
           webDeploy: "cloudflare",
@@ -976,6 +984,25 @@ describe("Deployment Configurations", () => {
           packageManager: "bun",
         }),
         createVirtual({
+          projectName: "nuxt-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["nuxt"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "pnpm",
+        }),
+        createVirtual({
           projectName: "astro-cloudflare-current",
           webDeploy: "cloudflare",
           serverDeploy: "cloudflare",
@@ -994,12 +1021,53 @@ describe("Deployment Configurations", () => {
           git: false,
           packageManager: "bun",
         }),
+        createVirtual({
+          projectName: "svelte-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["svelte"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+        createVirtual({
+          projectName: "tanstack-start-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["tanstack-start"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
       ]);
 
       if (reactRouterResult.isErr()) throw reactRouterResult.error;
       if (nextResult.isErr()) throw nextResult.error;
       if (nextWebOnlyResult.isErr()) throw nextWebOnlyResult.error;
+      if (nuxtResult.isErr()) throw nuxtResult.error;
       if (astroResult.isErr()) throw astroResult.error;
+      if (svelteResult.isErr()) throw svelteResult.error;
+      if (tanstackStartResult.isErr()) throw tanstackStartResult.error;
 
       const reactRouterFiles = collectFiles(
         reactRouterResult.value.root,
@@ -1042,10 +1110,55 @@ describe("Deployment Configurations", () => {
       );
       expect(nextWebOnlyInfra).not.toContain("const serverWorker = yield* server");
 
+      const nuxtFiles = collectFiles(nuxtResult.value.root, nuxtResult.value.root.path);
+      const nuxtInfra = nuxtFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      const nuxtConfig = nuxtFiles.get("apps/web/nuxt.config.ts") ?? "";
+      const nuxtPackage = JSON.parse(nuxtFiles.get("apps/web/package.json") ?? "{}") as {
+        devDependencies?: Record<string, string>;
+      };
+      const nuxtRootPackage = JSON.parse(nuxtFiles.get("package.json") ?? "{}") as {
+        scripts?: Record<string, string>;
+      };
+      expect(nuxtInfra).toContain('Cloudflare.Website.Nuxt("web", {');
+      expect(nuxtInfra).not.toContain('Cloudflare.Website.StaticSite("web", {');
+      expect(nuxtConfig).not.toContain("nitro-cloudflare-dev");
+      expect(nuxtConfig).not.toContain("preset: 'cloudflare-module'");
+      expect(nuxtPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBe("0.17.1");
+      expect(nuxtPackage.devDependencies?.["nitro-cloudflare-dev"]).toBeUndefined();
+      expect(nuxtPackage.devDependencies?.wrangler).toBeUndefined();
+      expect((nuxtPackage as { scripts?: Record<string, string> }).scripts?.build).toBeUndefined();
+      expect(nuxtRootPackage.scripts?.build).toBe("pnpm -r --if-present build");
+      expect(nuxtFiles.has("apps/web/cloudflare-workers.dev.ts")).toBe(false);
+      expect(nuxtFiles.has("apps/web/wrangler.jsonc")).toBe(false);
+
       const astroFiles = collectFiles(astroResult.value.root, astroResult.value.root.path);
       const astroInfra = astroFiles.get("packages/infra/alchemy.run.ts") ?? "";
-      expect(astroInfra).toContain('SESSION: Cloudflare.KV.Namespace("session")');
+      const astroConfig = astroFiles.get("apps/web/astro.config.mjs") ?? "";
+      const astroPackage = JSON.parse(astroFiles.get("apps/web/package.json") ?? "{}") as {
+        devDependencies?: Record<string, string>;
+      };
+      expect(astroInfra).toContain('Cloudflare.Website.Astro("web", {');
+      expect(astroInfra).not.toContain('Cloudflare.Website.StaticSite("web", {');
+      expect(astroInfra.match(/SESSION: Cloudflare\.KV\.Namespace\("session"\)/g)).toHaveLength(1);
       expect(astroInfra).toContain("IMAGES: Cloudflare.Images.Images()");
+      expect(astroConfig).not.toContain("@astrojs/cloudflare");
+      expect(astroConfig).not.toContain("adapter: cloudflare()");
+      expect(astroPackage.devDependencies?.["@distilled.cloud/astro"]).toBe("0.17.1");
+      expect(astroPackage.devDependencies?.["@astrojs/cloudflare"]).toBeUndefined();
+      expect((astroPackage as { scripts?: Record<string, string> }).scripts?.build).toBeUndefined();
+
+      const svelteFiles = collectFiles(svelteResult.value.root, svelteResult.value.root.path);
+      const svelteInfra = svelteFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      expect(svelteInfra).toContain('Cloudflare.Website.StaticSite("web", {');
+      expect(svelteInfra).not.toContain('Cloudflare.Website.SvelteKit("web", {');
+
+      const tanstackStartFiles = collectFiles(
+        tanstackStartResult.value.root,
+        tanstackStartResult.value.root.path,
+      );
+      const tanstackStartInfra = tanstackStartFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      expect(tanstackStartInfra).toContain('Cloudflare.Website.Vite("web", {');
+      expect(tanstackStartInfra).not.toContain('Cloudflare.Website.StaticSite("web", {');
     });
 
     it("should use released Website.Vite SPA support for TanStack Router", async () => {

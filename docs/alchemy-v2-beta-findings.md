@@ -4,7 +4,7 @@ This is the evidence log for upstream Alchemy issues found while integrating Clo
 in Better-T-Stack. Keep confirmed defects separate from limitations and disproved review claims so
 future upgrades do not remove workarounds prematurely or preserve them after upstream fixes.
 
-Last verified: 2026-08-08
+Last verified: 2026-08-09
 
 - Accepted dependency and current `next` tag: `alchemy@2.0.0-beta.70`, tag commit
   [`b71b685`](https://github.com/alchemy-run/alchemy/commit/b71b68572410bc75ecf4aad84fcf357486931254)
@@ -20,20 +20,20 @@ unless they explicitly say live-reverified. Registry and OAuth observations are 
 
 ## Confirmed defects and publication hazards
 
-| ID  | Finding                                                             | Accepted beta.70 status     | Upstream status on 2026-08-08                                                                               | Current handling or required action                                            |
-| --- | ------------------------------------------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| A1  | `StaticSite` serializes unresolved `Output` values before `Build`   | Fixed and live-qualified    | Released through merged [#796](https://github.com/alchemy-run/alchemy/pull/796)                             | Removed `outputAwareStaticSite`; use native `StaticSite` Inputs                |
-| A2  | `StaticSite` serializes `Config` values as `{"_id":"Config"}`       | Fixed and live-qualified    | Released through merged [#796](https://github.com/alchemy-run/alchemy/pull/796)                             | Removed caller-side Config resolution; pass Config directly                    |
-| A3  | `Website.Vite` misses pure-client output                            | Fixed and live-qualified    | Released through merged [#795](https://github.com/alchemy-run/alchemy/pull/795)                             | TanStack Router uses the fixed SPA path; SolidStart v2 uses `Website.Vite` SSR |
-| A4  | React Router builds a Worker with no registered handler             | Mitigated                   | Custom `main`, relative resolution, and loud invalid-handler errors are released; no handler is synthesized | Generate an explicit registered Worker entry                                   |
-| A5  | Default `Command.Build` memo scope misses sibling workspace changes | Confirmed                   | Generic `StaticSite` still requires explicit scope; #822 improves `Website.Vite`                            | Generated `StaticSite` builds disable memo reuse                               |
-| A6  | A published test prerelease can satisfy beta caret ranges           | Confirmed                   | N/A; npm package deprecated                                                                                 | Pin beta.70 and compatible Effect peers exactly                                |
-| A7  | Worker Assets drops `_headers` and `_redirects`                     | Fixed in released source    | Released through merged [#928](https://github.com/alchemy-run/alchemy/pull/928)                             | Fixed reproduction removed from the current-failures repository                |
-| A8  | Worker Assets assigns incomplete MIME types                         | Confirmed                   | Still present in beta.70; no matching issue or PR found                                                     | Do not claim full static-asset parity                                          |
-| A9  | Published Cloudflare packages have incompatible peer ranges         | Confirmed warning           | Still emitted by fresh beta.70 installs                                                                     | Ignore the non-fatal warning; do not add a template-level transitive override  |
-| A10 | beta.66 local D1 migrations cannot open the Cloudflare runtime      | Fixed and locally qualified | Released through merged [#1009](https://github.com/alchemy-run/alchemy/pull/1009)                           | beta.70 applies real nested Prisma migrations in `alchemy dev`                 |
-| A11 | Alchemy's Effect range accepted incompatible Effect beta.104        | Fixed and locally qualified | beta.70 with Effect beta.106 starts and generated infrastructure typechecks                                 | Keep exact coordinated version pins as publication policy                      |
-| A12 | `Website.Nuxt` injected raw TypeScript that Nitro could not parse   | Pending executable retest   | `@distilled.cloud/nuxt@0.17.1` ships both raw source and compiled dist plugins                              | Retain the qualified generic `StaticSite` Nuxt path until its full gate passes |
+| ID  | Finding                                                             | Accepted beta.70 status       | Upstream status on 2026-08-09                                                                               | Current handling or required action                                            |
+| --- | ------------------------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| A1  | `StaticSite` serializes unresolved `Output` values before `Build`   | Fixed and live-qualified      | Released through merged [#796](https://github.com/alchemy-run/alchemy/pull/796)                             | Removed `outputAwareStaticSite`; use native `StaticSite` Inputs                |
+| A2  | `StaticSite` serializes `Config` values as `{"_id":"Config"}`       | Fixed and live-qualified      | Released through merged [#796](https://github.com/alchemy-run/alchemy/pull/796)                             | Removed caller-side Config resolution; pass Config directly                    |
+| A3  | `Website.Vite` misses pure-client output                            | Fixed and live-qualified      | Released through merged [#795](https://github.com/alchemy-run/alchemy/pull/795)                             | TanStack Router uses the fixed SPA path; SolidStart v2 uses `Website.Vite` SSR |
+| A4  | React Router builds a Worker with no registered handler             | Mitigated                     | Custom `main`, relative resolution, and loud invalid-handler errors are released; no handler is synthesized | Generate an explicit registered Worker entry                                   |
+| A5  | Default `Command.Build` memo scope misses sibling workspace changes | Confirmed                     | Generic `StaticSite` still requires explicit scope; #822 improves `Website.Vite`                            | Generated `StaticSite` builds disable memo reuse                               |
+| A6  | A published test prerelease can satisfy beta caret ranges           | Confirmed                     | N/A; npm package deprecated                                                                                 | Pin the selected Alchemy and latest Effect beta exactly                        |
+| A7  | Worker Assets drops `_headers` and `_redirects`                     | Fixed in released source      | Released through merged [#928](https://github.com/alchemy-run/alchemy/pull/928)                             | Fixed reproduction removed from the current-failures repository                |
+| A8  | Worker Assets assigns incomplete MIME types                         | Confirmed                     | Still present in beta.70; no matching issue or PR found                                                     | Do not claim full static-asset parity                                          |
+| A9  | Published Cloudflare packages have incompatible peer ranges         | Confirmed warning             | Still emitted by fresh beta.70 installs                                                                     | Ignore the non-fatal warning; do not add a template-level transitive override  |
+| A10 | beta.66 local D1 migrations cannot open the Cloudflare runtime      | Fixed and locally qualified   | Released through merged [#1009](https://github.com/alchemy-run/alchemy/pull/1009)                           | beta.70 applies real nested Prisma migrations in `alchemy dev`                 |
+| A11 | Alchemy calls removed `Schema.TaggedErrorClass` with latest Effect  | Confirmed startup blocker     | Fixed on main by merged [#1132](https://github.com/alchemy-run/alchemy/pull/1132); no release contains it   | Keep latest exact peers; wait for an Alchemy release instead of overriding     |
+| A12 | `Website.Nuxt` injected raw TypeScript that Nitro could not parse   | Fix published; retest blocked | `@distilled.cloud/nuxt@0.17.1` ships and selects its compiled development plugin                            | First-class generation is staged; complete its live gate after A11 is released |
 
 ### A1: `StaticSite` drops deploy-time Outputs
 
@@ -151,8 +151,10 @@ cause the next normal deploy to rebuild the frontend.
 `alchemy@2.0.0-pipeline-v2-test` sorts above `2.0.0-beta.x` under standard prerelease ordering and
 was observed satisfying a caret beta range under Bun despite lacking expected Cloudflare exports.
 The package is now deprecated on npm, but it remains published. Better-T-Stack pins
-`2.0.0-beta.70` exactly together with `effect`, `@effect/platform-node`, and
-`@effect/platform-bun` at the verified compatible release, `4.0.0-beta.106`.
+`2.0.0-beta.70` exactly together with the latest `effect`, `@effect/platform-node`, and
+`@effect/platform-bun` beta, currently `4.0.0-beta.106`. This is publication-safe resolution, not
+a compatibility claim: A11 records that the resulting latest-version set cannot start until
+Alchemy publishes its merged Effect API update.
 
 Exact pinning is a permanent publication-safety policy, not a temporary workaround. Changing the
 accepted release means replacing one verified exact version with another verified exact version;
@@ -235,7 +237,7 @@ local migration through the root command, passed its production build and direct
 typecheck, served page SSR with HTTP 200 under `alchemy dev`, and completed a Better Auth D1 signup
 with HTTP 200. This requalifies the currently accepted release on the generic Nuxt path.
 
-### A11: Effect compatibility is restored in beta.70
+### A11: beta.70 cannot start with the latest Effect beta
 
 Alchemy beta.69 declared `effect >=4.0.0-beta.102 || >=4.0.0`, which accepted beta.104. A clean
 install using that historical resolution crashed even for `alchemy --help`:
@@ -245,12 +247,19 @@ TypeError: Schema.TaggedErrorClass is not a function
 at alchemy/src/Auth/AuthProvider.ts:43:39
 ```
 
-The historical reproduction is
+The original reproduction is
 [`1-effect-beta104-startup`](https://github.com/AmanVarshney01/alchemy-v2-beta-repros/tree/63f3fb2df985fda1a82545eb2733beb417381821/1-effect-beta104-startup).
-Alchemy beta.70 with Effect beta.106 starts successfully, and freshly generated infrastructure
-using the same exact versions typechecks. The temporary beta.103 compatibility pin is therefore
-retired. Better-T-Stack still pins Alchemy, Effect, and both Effect platform packages exactly as a
-permanent publication-safety policy.
+The same API is absent from Effect beta.104 through the current beta.106. On 2026-08-09, a clean
+generated beta.70 + beta.106 project reproduced the crash with `bun alchemy --help` before any
+provider or framework code ran. Infrastructure still typechecks because beta.70's declaration
+files accept the broad peer range; typechecking does not prove CLI startup.
+
+Merged [Alchemy PR #1132](https://github.com/alchemy-run/alchemy/pull/1132) replaces
+`Schema.TaggedErrorClass` with `Schema.TaggedError` and raises the Effect floor on main. That fix is
+not present in beta.70, and no newer Alchemy release exists yet. Better-T-Stack does not add a root
+override, hoisted linker, transitive patch, or older-Effect pin. The generated latest exact set is
+therefore intentionally blocked until Alchemy publishes the merged compatibility fix, at which
+point the complete matrix must be rerun.
 
 ### A12: the first-class Nuxt provider injects untranspiled TypeScript
 
@@ -267,12 +276,12 @@ import type * as ConnectClient from
 The beta.69 reproduction is
 [`2-nuxt-dev-plugin-parse`](https://github.com/AmanVarshney01/alchemy-v2-beta-repros/tree/63f3fb2df985fda1a82545eb2733beb417381821/2-nuxt-dev-plugin-parse).
 
-Source inspection of `@distilled.cloud/nuxt@0.17.1` shows that it still publishes the raw TypeScript
-plugin, but it also publishes a compiled `dist/dev/plugin.js` and contains logic intended to choose
-the compiled file when running from the package distribution. That source shape alone neither
-reproduces nor closes the runtime defect. Better-T-Stack retains its generated generic `StaticSite`
-plus `nitro-cloudflare-dev` path until the first-class resource passes page SSR, API, D1, HMR, and
-shutdown gates in an executable generated-project test.
+Source inspection of `@distilled.cloud/nuxt@0.17.1` shows that it publishes both source and compiled
+plugins and selects the compiled `dist/dev/plugin.js` from the package distribution. Generated
+Nuxt projects install, typecheck, and complete an ordinary Nuxt production build without the old
+`nitro-cloudflare-dev`, Wrangler, or `cloudflare:workers` alias wiring. Better-T-Stack now stages
+`Website.Nuxt` generation against that released package. Its executable `alchemy dev` and deploy
+gates remain pending because A11 crashes the Alchemy CLI before the Nuxt provider can load.
 
 ## Current limitations, not confirmed upstream defects
 
@@ -289,23 +298,24 @@ shutdown gates in an executable generated-project test.
   [#923](https://github.com/alchemy-run/alchemy/pull/923) are published in beta.70 with
   `@distilled.cloud/*@0.17.1`. Publication closes the intake gate, not each framework's adoption
   gate:
-  - `Website.Nuxt` remains behind A12's executable qualification gate.
+  - `Website.Nuxt` is generated with `@distilled.cloud/nuxt@0.17.1`; its executable qualification
+    remains blocked by A11 rather than the old raw-plugin path.
   - `Website.SvelteKit` declares a Kit 3 peer while Better-T-Stack uses stable Kit 2. A direct
     beta.69 development check nevertheless served a real Kit 2 SSR document with HTTP 200, so the
     warning alone is not filed as a runtime bug. Production, bindings, and build-memo gates remain.
-  - `Website.Astro` loaded the project's native `astro.config.mjs` in an actual beta.69 development
-    run, disproving the stale wrapper comments that say config is ignored. Session, Images,
-    production, and asset gates remain before adoption.
+  - `Website.Astro` is generated with `@distilled.cloud/astro@0.17.1`. Released source loads the
+    native config and injects the Cloudflare adapter in memory, so the checked-in adapter is removed
+    and Alchemy owns the build/dev lifecycle. The wrapper can auto-provision a default session KV,
+    but its return type does not add that implicit binding to `InferEnv` and its generated logical ID
+    differs from the existing resource. Better-T-Stack therefore retains explicit `SESSION` and
+    `IMAGES` resources so the wrapper reuses the binding and preserves state identity and types.
+    Executable gates remain blocked by A11.
   - `Website.Nextjs` has an exact OpenNext 1.20.1 peer while 1.20.2 is current. That warning alone is
     not a runtime verdict; the existing OpenNext/binding/live gates remain.
-- Astro SSR can use the current `StaticSite` foundation with `dist/client`,
-  `dist/server/entry.mjs`, and `bundle: false`; Alchemy's
-  [issue #621](https://github.com/alchemy-run/alchemy/issues/621) live-proved that basic shape. The
-  working generated path keeps its explicit `SESSION`/`IMAGES` bindings until the published
-  first-class resource passes the equivalent behavior gates.
-- Better-T-Stack explicitly maps Astro's `SESSION` and `IMAGES` bindings in both relevant generated
-  paths. Build, development, and deployment compatibility dates still need an intentional alignment
-  policy; that is a generator policy gap rather than an Alchemy core defect.
+- `Website.Astro` deliberately owns the Astro build. Alchemy's own current example therefore has no
+  standalone framework `build` script, and Better-T-Stack follows that model for Cloudflare Astro.
+  Running `astro build` directly with `output: "server"` and no adapter fails by design; configuring
+  `@astrojs/cloudflare` instead conflicts with the adapter injected by the source provider.
 - OpenNext Cloudflare currently omits `pg-cloudflare`'s workerd condition files while tracing a
   Prisma `@prisma/adapter-pg` Next.js build. The build then fails to resolve
   `pg-cloudflare/dist/index.js`; the upstream packaging report remains open as

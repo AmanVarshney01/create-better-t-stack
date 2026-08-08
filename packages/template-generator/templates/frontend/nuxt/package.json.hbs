@@ -3,11 +3,15 @@
   "private": true,
   "type": "module",
   "scripts": {
+{{#unless (eq webDeploy "cloudflare")}}
     "build": "nuxt build",
+{{/unless}}
     "check-types": "nuxt typecheck",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
+{{#unless (eq webDeploy "cloudflare")}}
     "preview": "nuxt preview",
+{{/unless}}
     "postinstall": "nuxt prepare"
   },
   "dependencies": {

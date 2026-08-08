@@ -1,10 +1,10 @@
 ## Context
 
-Better-T-Stack generates Alchemy infrastructure through `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs` and `database.ts.hbs`. The current integration pins `alchemy@2.0.0-beta.70` with Effect beta.106 and emits Cloudflare, Prisma, managed-database, mixed-provider, full-stack `self`, and separate-server topologies. Generated paths are not automatically live-verified support claims; the accepted-version scoreboard defined below owns that distinction.
+Better-T-Stack generates all Alchemy infrastructure through one `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs`. The current integration pins `alchemy@2.0.0-beta.70` with Effect beta.106 and emits Cloudflare, Prisma, managed-database, mixed-provider, full-stack `self`, and separate-server topologies. Generated paths are not automatically live-verified support claims; the accepted-version scoreboard defined below owns that distinction.
 
 Alchemy v2 is still a prerelease API. Better-T-Stack currently needs four active targeted safeguards plus a permanent exact-version policy because the accepted release does not correctly cover every generated framework and monorepo behavior. A3 was independently retired after its beta.64 removal gate passed; A1 and A2 were retired after beta.67 passed direct generated-project typechecks plus Config and Output live gates. Beta.67 also fixes beta.66's A10 local D1 runtime regression. Several reviews produced plausible but disproved claims. The design therefore treats source inspection, a provider-free plan, and a live deployment as different evidence levels.
 
-As verified on 2026-08-06, Alchemy PR #886's Waku, Astro, SvelteKit, and Nuxt Cloudflare resources and PR #923's `Website.Nextjs` resource are merged and published in beta.69 with `@distilled.cloud/*@0.17.0`. Their Worker `source` dispatch layer and dynamically loaded framework packages are now released candidate surfaces, not automatically accepted Better-T-Stack paths. A minimal beta.69 `Website.Nuxt` development run fails while parsing the provider's injected raw TypeScript. SvelteKit serves stable Kit 2 locally despite its Kit 3 peer warning, and Astro loads native project configuration despite stale wrapper comments. Each framework therefore remains on its working generic path until its independent production, binding, memo, state, and live-route gates pass.
+As verified on 2026-08-09, beta.70 contains the first-class framework resources and the published `@distilled.cloud/nuxt@0.17.1` and `@distilled.cloud/astro@0.17.1` source providers. Nuxt's package now selects its compiled development plugin, while Astro intentionally owns its build and injects its adapter in memory. The generated Nuxt and Astro paths therefore use `Website.Nuxt` and `Website.Astro`; Next.js remains generic because the released provider requires OpenNext 1.20.1 while 1.20.2 is current, and SvelteKit remains generic because its provider requires Kit 3 while stable Kit is 2.70.x. Executable qualification is currently blocked before provider loading: beta.70 calls `Schema.TaggedErrorClass`, removed from the latest Effect beta.106. Merged PR #1132 fixes that API on main but has not been released.
 
 The source of truth for observed behavior is [docs/alchemy-v2-beta-findings.md](../../../docs/alchemy-v2-beta-findings.md). It records:
 
@@ -62,7 +62,7 @@ Relevant upstream references include:
 - Adding Waku as a Better-T-Stack frontend.
 - Generalizing all deployment providers behind a new abstraction.
 - Replacing Alchemy with raw Wrangler configuration.
-- Removing a workaround during this planning change.
+- Adding dependency overrides, hoisted installs, or older transitive pins to bypass a published Alchemy compatibility failure.
 - Adopting a branch, git dependency, or unpublished framework source package.
 - Requiring a framework major upgrade solely to consume an Alchemy resource; any framework-major migration needs its own product decision and compatibility work.
 - Treating all framework adapter constraints as Alchemy core defects.
@@ -88,11 +88,11 @@ Generated template snapshots in `packages/template-generator/src/templates.gener
 
 ### 1. Pin one exact Alchemy release
 
-Generated Alchemy projects SHALL use exactly `alchemy@2.0.0-beta.70` until a replacement release passes this design's upgrade gate. No caret, tilde, tag, git SHA, or version range is accepted in generated packages. Generated projects SHALL also pin `effect`, `@effect/platform-node`, and `@effect/platform-bun` exactly to beta.106 as the verified compatible set.
+Generated Alchemy projects SHALL use exactly `alchemy@2.0.0-beta.70` until a replacement release passes this design's upgrade gate. No caret, tilde, tag, git SHA, or version range is accepted in generated packages. Generated projects SHALL also pin the latest `effect`, `@effect/platform-node`, and `@effect/platform-bun` beta exactly. The beta.70 + beta.106 set typechecks but cannot start; it remains an explicit release blocker rather than being hidden with an override or older Effect pin.
 
 The exact version SHALL live in one generator dependency source and be asserted in generated npm, pnpm, and Bun projects. An upstream merge, npm deprecation, or `next` tag movement does not change the accepted version automatically.
 
-Beta.67 was accepted on 2026-08-01 after direct native `StaticSite` Config/Output usage typechecked across fresh Next, Nuxt, SvelteKit, and Astro projects; a combined SvelteKit + Hono deployment embedded the exact deployed server URL and served both Workers; a web-only SvelteKit deployment preserved a direct `Config.string` value; and a generated Prisma D1 project applied a real nested migration in local `alchemy dev`. Beta.69 retains those released fixes and publishes the first-class framework candidates. Better-T-Stack SHALL continue to reject git dependencies, conditional Alchemy versions, incompatible Effect resolutions, and removal of production migration wiring as substitutes for a released gate.
+Beta.67 was accepted on 2026-08-01 after direct native `StaticSite` Config/Output usage typechecked across fresh projects and the affected live gates passed. Beta.70 retains those fixes and publishes the first-class providers, but its broad Effect peer range accepts beta.106 even though beta.70 still calls a removed Schema API. Better-T-Stack SHALL continue to reject git dependencies, conditional Alchemy versions, dependency overrides, hoisted-linker assumptions, and removal of production migration wiring as substitutes for a compatible release.
 
 **Reason:** the published `2.0.0-pipeline-v2-test` prerelease was observed satisfying a beta caret range while lacking expected Cloudflare exports. Exact pinning makes generation reproducible and prevents an unrelated test publication from entering user projects.
 
@@ -114,24 +114,24 @@ Cloudflare separate-server deployment requires Hono on the Workers runtime. Full
 
 Framework resource paths remain intentional:
 
-| Framework       | Accepted beta.69 path                                                      | Candidate first-class path | Adoption unit           |
-| --------------- | -------------------------------------------------------------------------- | -------------------------- | ----------------------- |
-| TanStack Router | `Website.Vite` with explicit single-page-application asset handling        | unchanged                  | not affected            |
-| SolidStart v2   | `Website.Vite` SSR with worker-first asset routing                         | unchanged                  | not affected            |
-| React Router    | `Website.Vite` plus an explicit registered Worker entry and web-stream SSR | unchanged                  | not affected            |
-| TanStack Start  | `Website.Vite` with explicit Cloudflare compatibility and bindings         | unchanged                  | not affected            |
-| Next.js         | `StaticSite`/OpenNext assets plus Worker entry and explicit flags/bindings | `Website.Nextjs`           | released candidate gate |
-| Nuxt            | `StaticSite` with Nitro public assets/server entry and a local dev proxy   | `Website.Nuxt`             | blocked by A12          |
-| SvelteKit       | `StaticSite` with the Cloudflare adapter Worker shim bundled               | `Website.SvelteKit`        | released candidate gate |
-| Astro           | `StaticSite` with server entry, session KV, and Images where required      | `Website.Astro`            | released candidate gate |
+| Framework       | Generated beta.70 path                                                                                | Current decision                                     | Verification status                     |
+| --------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------- |
+| TanStack Router | `Website.Vite` with explicit single-page-application asset handling                                   | keep                                                 | generated and previously live-qualified |
+| SolidStart v2   | `Website.Vite` SSR with worker-first asset routing                                                    | keep                                                 | generated/build-verified                |
+| React Router    | `Website.Vite` plus an explicit registered Worker entry and web-stream SSR                            | keep                                                 | generated/build-verified                |
+| TanStack Start  | `Website.Vite` with explicit Cloudflare compatibility and bindings                                    | keep                                                 | generated/build-verified                |
+| Next.js         | `StaticSite`/OpenNext assets plus Worker entry and explicit flags/bindings                            | wait for latest OpenNext-compatible `Website.Nextjs` | generated/build-verified                |
+| Nuxt            | `Website.Nuxt` with provider-owned build, dev, preset, and asset collection                           | adopt released 0.17.1 provider                       | generated/typechecked; A11 blocked      |
+| SvelteKit       | `StaticSite` with the Cloudflare adapter Worker shim bundled                                          | wait for stable-Kit-compatible `Website.SvelteKit`   | generated/build-verified                |
+| Astro           | `Website.Astro` with provider-owned build, dev, adapter, and assets; explicit session/Images bindings | adopt released 0.17.1 provider                       | generated/typechecked; A11 blocked      |
 
-Alchemy's current framework matrix marks TanStack Start and React Router as supported, Astro only through `StaticSite` static output, and Nuxt as not yet supported. Better-T-Stack's custom Next.js, Nuxt, SvelteKit, and Astro server-entry paths do not inherit an upstream support claim merely because `StaticSite` accepts a build directory and custom `main`. Until the accepted-version scoreboard records each exact page/document live gate, those generated `self` cells SHALL remain experimental.
+Generated Nuxt and Astro projects follow the first-class resources' intended lifecycle: the web package retains typechecking and framework development commands but omits a standalone production `build` script because Alchemy invokes the framework programmatically. Until a release containing PR #1132 passes each exact page/document live gate, those generated cells remain blocked rather than live-supported.
 
 A framework path may change only after its generated build, typecheck, direct request, and affected binding checks pass.
 
 #### 2.1 Evidence boundary for first-class resources
 
-The released wrappers document the intended zero-configuration calls and claim framework-owned builds, local development, asset collection, and input hashing. Released-source inspection shows a generic Worker `source` descriptor, dynamic imports of `@distilled.cloud/nextjs`, `nuxt`, `sveltekit`, and `astro`, and framework-specific compatibility defaults. Verification also exposes unresolved product differences: the Nuxt development plugin fails before SSR; the SvelteKit source package peers on Kit 3 while Better-T-Stack uses Kit 2, although a direct Kit 2 SSR document returned HTTP 200; the Astro source loads the project's config despite stale wrapper prose saying otherwise and currently selects passthrough images; the Next.js source has an exact OpenNext peer and still documents read-only ISR without `WORKER_SELF_REFERENCE`; and the published Distilled dependency graph emits non-fatal peer warnings.
+The released wrappers document zero-configuration calls and own framework builds, local development, asset collection, and input hashing. Released-source inspection shows dynamic imports of the framework providers and confirms that Nuxt 0.17.1 selects compiled development code and Astro 0.17.1 loads native configuration and injects its adapter. Astro can auto-provision a session KV, but that implicit binding is not represented in the wrapper's inferred return type and would use a different logical ID from the existing generated resource. Better-T-Stack therefore passes explicit `SESSION` and `IMAGES` bindings. Remaining product differences are explicit: SvelteKit peers on Kit 3 while Better-T-Stack uses stable Kit 2; Astro selects passthrough image behavior; Next.js requires OpenNext 1.20.1 while 1.20.2 is current; and beta.70 cannot execute with current Effect beta.106.
 
 It is reasonable to infer that a released first-class resource can eventually delete substantial generated plumbing. It is not reasonable to infer framework parity, package-manager resolution, state continuity, or binding behavior from the shorter call alone. Every claim below therefore remains a candidate requirement until a published exact release passes it.
 
@@ -190,9 +190,9 @@ The gate SHALL include both preview-parity `alchemy dev` and the project's norma
 
 #### 2.4 Nuxt adoption contract
 
-`Website.Nuxt` is currently blocked by A12: its released development plugin is injected as raw TypeScript and Nitro/Rollup fails on `import type *` before page SSR can complete. It may replace the Nitro `StaticSite` block only after a published fix loads the generated `nuxt.config.ts`, injects the Cloudflare preset without overwriting Better-T-Stack's UI, runtime config, route rules, and other user configuration, and serves both page SSR and API behavior. If the resource owns the Nitro preset, the generated `nitro.preset` SHALL be removed rather than competing with it.
+`Website.Nuxt` replaces the Nitro `StaticSite` block with the released `@distilled.cloud/nuxt@0.17.1` provider. Released source loads the native `nuxt.config.ts`, owns the `cloudflare_module` target, externalizes `cloudflare:` imports, injects a compiled development plugin, and proxies real bindings without Wrangler. The generated Cloudflare preset, `nitro-cloudflare-dev`, `cloudflare:workers` alias, development Wrangler file, manual output paths, and hard-coded resource dev command are therefore removed; Prisma-specific WASM and `pg-native` configuration remains application-owned.
 
-The development-only `cloudflare:workers` alias, `nitro-cloudflare-dev`, Wrangler development configuration, hard-coded port, and `dev:bare` wiring SHALL remain until `alchemy dev` supplies real literal and resource bindings to page SSR. A local D1 migration and a D1-backed page/API operation must pass without each removed shim. Provider-owned `nodejs_compat` may replace the explicit flag only after direct workerd verification.
+Generation, strict dependency installation, infrastructure typechecking, and an ordinary Nuxt build pass. The resource's own build/dev and page/API/D1 gates remain blocked by A11 until Alchemy publishes PR #1132; no success is inferred from source inspection alone.
 
 #### 2.5 SvelteKit adoption contract
 
@@ -202,9 +202,9 @@ Once version-compatible, the resource must preserve preprocessing, aliases, rout
 
 #### 2.6 Astro adoption contract
 
-`Website.Astro` loaded native `astro.config.mjs` in a direct beta.69 development run, so stale wrapper comments claiming the file is ignored are not a blocker. It may replace the Astro `StaticSite` block only after the remaining production and binding gates prove that the generated Tailwind Vite plugin, environment schema, integrations, route configuration, SSR output, and user-defined Astro configuration survive. The Cloudflare adapter import/configuration may be removed only because the released resource injects an equivalent adapter; it may not be removed by discarding the rest of the config file.
+`Website.Astro` replaces the Astro `StaticSite` block with the released `@distilled.cloud/astro@0.17.1` provider. Released source loads and merges native `astro.config.*`, preserves its Vite plugins, injects the Cloudflare adapter in memory, owns development and production builds, and reuses a caller-provided session namespace. The generated Cloudflare adapter, manual `dist` entries, bundling/compatibility fields, generic memo override, hard-coded resource dev command, and standalone production build script are therefore removed. Explicit `SESSION` and `IMAGES` resources remain so `Cloudflare.InferEnv` exposes both bindings and the existing session resource identity is preserved.
 
-The initial adoption SHALL preserve explicit session and Images resource identity until separate binding-removal gates pass. A session-backed route must prove `SESSION` behavior. Because the inspected draft provider selects passthrough images, Astro adoption is blocked if it would silently regress the generated Cloudflare Images behavior; a real image transformation/serving test and inferred binding test must establish parity. SSR, prerendered assets, `_headers`, `_redirects`, 404 handling, and representative MIME types must also pass.
+This lifecycle intentionally differs from direct `astro build`: server output without a checked-in adapter cannot build standalone, while configuring `@astrojs/cloudflare` conflicts with the provider-owned adapter. Alchemy's own first-class Astro example likewise exposes only Alchemy lifecycle scripts. Generation, dependency installation, and typechecking pass; SSR, session, Images, prerendered assets, `_headers`, `_redirects`, 404, MIME, and live cleanup gates remain blocked by A11 and must be completed after the compatible Alchemy release.
 
 #### 2.7 Cloudflare framework-resource boundary
 
@@ -224,16 +224,16 @@ Reviews and pull-request comments may propose a classification, but the findings
 
 ### 4. Retain active safeguards and record retired safeguards independently
 
-| ID  | Current safeguard                                       | Classification                        | Removal gate                                                                                                  |
-| --- | ------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| A1  | retired: custom Output-aware `StaticSite` wrapper       | removed defect workaround             | satisfied on beta.67 with native Inputs, generated typechecks, built artifact, and live combined deployment   |
-| A2  | retired: caller-side Effect Config resolution           | removed defect workaround             | satisfied on beta.67 with direct Config generation, live binding metadata, and HTTP request                   |
-| A3  | retired: use `StaticSite` for pure Vite SPAs            | removed defect workaround             | satisfied on beta.64 with generated builds and live root/deep-route requests                                  |
-| A4  | explicit React Router Worker entry and web-stream SSR   | defect workaround plus framework shim | released default uploads a registered handler and serves a real workerd document                              |
-| A5  | `memo: false` for workspace-dependent StaticSite builds | correctness policy for upstream scope | published workspace-aware upstream default plus imported-sibling and root-input rebuild gates                 |
-| A6  | exact Alchemy version pin                               | permanent publication-safety policy   | never removed; upgrades replace one verified exact version with another exact version                         |
-| A11 | retired: Effect beta.103 compatibility pin              | removed dependency workaround         | satisfied by beta.70 with the verified Effect beta.106 set                                                    |
-| A12 | retain Nuxt's generic `StaticSite` development path     | confirmed provider workaround         | published `Website.Nuxt` passes SSR, API, D1, HMR, and shutdown gates without the injected-plugin parse error |
+| ID  | Current safeguard                                          | Classification                        | Removal gate                                                                                                |
+| --- | ---------------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| A1  | retired: custom Output-aware `StaticSite` wrapper          | removed defect workaround             | satisfied on beta.67 with native Inputs, generated typechecks, built artifact, and live combined deployment |
+| A2  | retired: caller-side Effect Config resolution              | removed defect workaround             | satisfied on beta.67 with direct Config generation, live binding metadata, and HTTP request                 |
+| A3  | retired: use `StaticSite` for pure Vite SPAs               | removed defect workaround             | satisfied on beta.64 with generated builds and live root/deep-route requests                                |
+| A4  | explicit React Router Worker entry and web-stream SSR      | defect workaround plus framework shim | released default uploads a registered handler and serves a real workerd document                            |
+| A5  | `memo: false` for workspace-dependent StaticSite builds    | correctness policy for upstream scope | published workspace-aware upstream default plus imported-sibling and root-input rebuild gates               |
+| A6  | exact Alchemy version pin                                  | permanent publication-safety policy   | never removed; upgrades replace one verified exact version with another exact version                       |
+| A11 | no template workaround; latest peer set is startup-blocked | confirmed upstream release blocker    | publish merged #1132, then pass CLI startup and the complete generated/live matrix                          |
+| A12 | retired: Nuxt raw-plugin/generic development path          | removed provider workaround           | 0.17.1 selects compiled code; executable parity remains coupled to the separate A11 release gate            |
 
 The removable safeguards A1–A5 SHALL be evaluated independently. A3 was removed on 2026-07-26 after fresh TanStack Router and then-current Solid SPA projects passed install, build, infrastructure typecheck, live root/deep-route requests, and cleanup audits against beta.64. SolidStart v2 subsequently replaced that Solid SPA path and requires its own SSR coverage. A1 and A2 were removed on 2026-08-01 after beta.67 passed their independent generated and live gates. Those results do not justify removing A4 or A5. A6 is not a temporary shim: Better-T-Stack SHALL continue exact-pinning Alchemy even after a stable release and shall replace one verified exact version only with another verified exact version.
 
@@ -253,11 +253,10 @@ The following remain integration shims unless their own targeted gate passes:
 
 | Integration shim                                                                       | Retention/removal gate                                                                                                          |
 | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Nuxt development-only `getPlatformProxy` alias for `cloudflare:workers`                | remove only when a Nuxt page and D1-backed request work in development without the alias                                        |
 | explicit `nodejs_compat` and `global_fetch_strictly_public` flags for external entries | remove a flag only when the exact framework entry no longer requires it and a direct workerd request passes                     |
 | Prisma's full nested Wrangler `migrations_pattern`                                     | remove only when local Wrangler discovers and applies nested Prisma migrations without it                                       |
 | framework adapter/entrypoint and workerd-compatible rendering                          | remove only when the released framework/Alchemy default builds, uploads, and serves the same document/API behavior              |
-| Astro/Next Images bindings and Astro session KV                                        | remove a binding only when the framework adapter no longer declares/uses it and binding types plus the affected live route pass |
+| Astro/Next Images bindings                                                             | remove a binding only when the framework adapter no longer declares/uses it and binding types plus the affected live route pass |
 
 Development and deployment are separate evidence paths. A working literal local `.env` URL does not prove that upstream development serialization resolves Outputs, and a passing API route does not prove a framework page SSR route.
 
@@ -398,7 +397,7 @@ Resolved on 2026-08-06: PRs #886 and #923 and `@distilled.cloud/*@0.17.0` are pu
 
 Database ownership follows the process that opens the connection, not whichever deployment prompt happens to run first. `backend: self` assigns ownership to the web plane; every separate backend assigns it to the server plane. This keeps mixed provider stacks honest: Alchemy provisions a hosted database only when it also controls the consuming plane.
 
-`database.ts` isolates provider construction, migration credentials, runtime credentials, and provider layers from application deployment. It exports an Effect-shaped `databaseEnv` for Prisma resources and statically shaped `databaseBindings` whose individual values are Effects for Cloudflare. The second form is intentional: passing the entire Worker props object through an Effect widens Alchemy's Worker binding generic, while individual binding Effects retain precise `Cloudflare.InferEnv` output.
+The single `alchemy.run.ts` co-locates provider construction, migration credentials, runtime credentials, provider layers, and application deployment. It defines an Effect-shaped `databaseEnv` for Prisma resources and statically shaped `databaseBindings` whose individual values are Effects for Cloudflare. The second form is intentional: passing the entire Worker props object through an Effect widens Alchemy's Worker binding generic, while individual binding Effects retain precise `Cloudflare.InferEnv` output.
 
 Runtime credentials are pooled or least privilege. Migration credentials are direct or elevated and never reach the application resource. Prisma migrations run through `Command.Exec` because schema history belongs in the repository; Drizzle uses native Neon/PlanetScale `migrationsDir` support and a command for Prisma Postgres. PlanetScale defaults to `PS_DEV`, with an explicit cost warning in generated guidance.
 
@@ -407,6 +406,7 @@ Runtime credentials are pooled or least privilege. Migration credentials are dir
 The product surface calls the target **Prisma**; `Prisma.Compute` is the Alchemy resource used in generated code. Supported automatic framework builds are Next.js, Nuxt, Astro, and TanStack Start. SolidStart uses its verified `.output/server/index.mjs` artifact. Server apps use the Bun auto-build surface for Hono, Express, Fastify, and Elysia on Bun or Node.
 
 One `Prisma.Project` is reused by all Prisma application resources and, when selected, Prisma Postgres. Mixed Cloudflare/Prisma stacks remain one Alchemy graph, so the server resource is yielded before the web and its URL remains an Output rather than a copied configuration string.
-The release-intake wait is over, but the resources remain independent candidates: Nuxt is blocked
-by A12, SvelteKit served stable Kit 2 locally despite its peer warning, and Astro loaded native
-configuration while still requiring production and binding qualification.
+Nuxt and Astro now use their released first-class resources. Next.js and SvelteKit remain on
+qualified generic paths because their current provider peers do not match the latest generated
+framework dependencies. All first-class executable gates are waiting on an Alchemy release that
+contains merged Effect compatibility PR #1132.

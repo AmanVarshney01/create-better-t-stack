@@ -1240,11 +1240,17 @@ describe("Addon Configurations", () => {
       if (!projectDir) throw new Error("Expected generated project directory");
 
       const nuxtConfig = await readFile(join(projectDir, "apps/web/nuxt.config.ts"), "utf-8");
+      const infra = await readFile(join(projectDir, "packages/infra/alchemy.run.ts"), "utf-8");
+      const webPackage = JSON.parse(
+        await readFile(join(projectDir, "apps/web/package.json"), "utf-8"),
+      ) as { devDependencies?: Record<string, string> };
 
       expect(nuxtConfig).toContain('"evlog/nuxt"');
-      expect(nuxtConfig).toContain("nitro:");
-      expect(nuxtConfig).toContain("cloudflare-module");
+      expect(nuxtConfig).not.toContain("nitro:");
+      expect(nuxtConfig).not.toContain("cloudflare-module");
       expect(nuxtConfig).toContain("evlog:");
+      expect(infra).toContain('Cloudflare.Website.Nuxt("web", {');
+      expect(webPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBe("0.17.1");
       expect(existsSync(join(projectDir, "apps/web/server/plugins/evlog-drain.ts"))).toBe(false);
       expectParseableTypeScript(nuxtConfig);
     });

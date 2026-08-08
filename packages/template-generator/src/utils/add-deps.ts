@@ -157,7 +157,8 @@ export const dependencyVersionMap = {
   "@sveltejs/adapter-node": "^5.5.7",
   "@sveltejs/adapter-vercel": "^6.3.4",
   "@cloudflare/workers-types": "^5.20260728.1",
-  "@astrojs/cloudflare": "^14.1.6",
+  "@distilled.cloud/nuxt": "0.17.1",
+  "@distilled.cloud/astro": "0.17.1",
   "@astrojs/node": "^11.0.3",
   "@astrojs/vercel": "^11.0.4",
 

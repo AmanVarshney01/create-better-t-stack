@@ -1,6 +1,3 @@
-{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
-import { fileURLToPath } from "node:url";
-{{/if}}
 import "@{{projectName}}/env/web";
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
 import { defineNuxtModule } from "nuxt/kit";
@@ -30,35 +27,13 @@ export default defineNuxtConfig({
     {{#if (eq backend "convex")}},
     'convex-nuxt'
     {{/if}}
-    {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}},
-    'nitro-cloudflare-dev'
-    {{/if}}
   ],
   css: ['~/assets/css/main.css'],
   devServer: {
     port: 3001
   },
-  {{#if (eq webDeploy "cloudflare")}}
-  {{#if (eq backend "self")}}
-  $development: {
-    vite: {
-      resolve: {
-        alias: {
-          'cloudflare:workers': fileURLToPath(new URL('./cloudflare-workers.dev.ts', import.meta.url))
-        }
-      }
-    }
-  },
-  vite: {
-    build: {
-      rollupOptions: {
-        // resolved by workerd at runtime; node builds cannot bundle it
-        external: ['cloudflare:workers']
-      }
-    }
-  },
+  {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
   nitro: {
-    preset: 'cloudflare-module'{{#if (eq orm "prisma")}},
     {{#if (eq database "postgres")}}
     alias: {
       // pg-native is optional and unavailable in Workers; pg uses its JavaScript driver.
@@ -71,17 +46,6 @@ export default defineNuxtConfig({
     wasm: {
       esmImport: true
     }
-    {{/if}}
-  },
-  {{else}}
-  nitro: {
-    preset: 'cloudflare-module',
-    prerender: {
-      routes: ['/'],
-      autoSubfolderIndex: false
-    }
-  },
-  {{/if}}
   {{/if}}
   {{#if (eq backend "convex")}}
   convex: {

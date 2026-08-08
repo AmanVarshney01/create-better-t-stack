@@ -25935,7 +25935,6 @@ import { defineConfig, envField } from "astro/config";
 {{else if (eq webDeploy "vercel")}}
 import vercel from "@astrojs/vercel";
 {{else if (eq webDeploy "cloudflare")}}
-import cloudflare from "@astrojs/cloudflare";
 {{else}}
 import node from "@astrojs/node";
 {{/if}}
@@ -25949,7 +25948,6 @@ export default defineConfig({
   adapter: vercel(),
 {{else if (eq webDeploy "cloudflare")}}
   output: "server",
-  adapter: cloudflare(),
 {{else}}
   output: "server",
   adapter: node({ mode: "standalone" }),
@@ -25977,9 +25975,14 @@ export default defineConfig({
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
+{{#unless (eq webDeploy "cloudflare")}}
     "build": "astro build",
+
+{{/unless}}
 		"check-types": "astro check",
+{{#unless (eq webDeploy "cloudflare")}}
     "preview": "astro preview",
+{{/unless}}
     "astro": "astro"
   },
   "dependencies": {
@@ -30077,10 +30080,7 @@ onServerPrefetch(async () => {
   </UContainer>
 </template>
 `],
-  ["frontend/nuxt/nuxt.config.ts.hbs", `{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
-import { fileURLToPath } from "node:url";
-{{/if}}
-import "@{{projectName}}/env/web";
+  ["frontend/nuxt/nuxt.config.ts.hbs", `import "@{{projectName}}/env/web";
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
 import { defineNuxtModule } from "nuxt/kit";
 import { unwasm } from "unwasm/plugin";
@@ -30109,35 +30109,13 @@ export default defineNuxtConfig({
     {{#if (eq backend "convex")}},
     'convex-nuxt'
     {{/if}}
-    {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}},
-    'nitro-cloudflare-dev'
-    {{/if}}
   ],
   css: ['~/assets/css/main.css'],
   devServer: {
     port: 3001
   },
-  {{#if (eq webDeploy "cloudflare")}}
-  {{#if (eq backend "self")}}
-  $development: {
-    vite: {
-      resolve: {
-        alias: {
-          'cloudflare:workers': fileURLToPath(new URL('./cloudflare-workers.dev.ts', import.meta.url))
-        }
-      }
-    }
-  },
-  vite: {
-    build: {
-      rollupOptions: {
-        // resolved by workerd at runtime; node builds cannot bundle it
-        external: ['cloudflare:workers']
-      }
-    }
-  },
+  {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
   nitro: {
-    preset: 'cloudflare-module'{{#if (eq orm "prisma")}},
     {{#if (eq database "postgres")}}
     alias: {
       // pg-native is optional and unavailable in Workers; pg uses its JavaScript driver.
@@ -30150,17 +30128,6 @@ export default defineNuxtConfig({
     wasm: {
       esmImport: true
     }
-    {{/if}}
-  },
-  {{else}}
-  nitro: {
-    preset: 'cloudflare-module',
-    prerender: {
-      routes: ['/'],
-      autoSubfolderIndex: false
-    }
-  },
-  {{/if}}
   {{/if}}
   {{#if (eq backend "convex")}}
   convex: {
@@ -30182,11 +30149,15 @@ export default defineNuxtConfig({
   "private": true,
   "type": "module",
   "scripts": {
+{{#unless (eq webDeploy "cloudflare")}}
     "build": "nuxt build",
+{{/unless}}
     "check-types": "nuxt typecheck",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
+{{#unless (eq webDeploy "cloudflare")}}
     "preview": "nuxt preview",
+{{/unless}}
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
@@ -33583,32 +33554,33 @@ export const env = createEnv({
 }
 `],
   ["packages/infra/alchemy.run.ts.hbs", `import * as Alchemy from "alchemy";
-{{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma"))}}
+{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (or (eq orm "prisma") (eq dbSetup "prisma-postgres")))}}
+import * as Command from "alchemy/Command";
+{{/if}}
+{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (eq dbSetup "neon"))}}
+import * as Neon from "alchemy/Neon";
+{{/if}}
+{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (eq dbSetup "planetscale"))}}
+import * as Planetscale from "alchemy/Planetscale";
+{{/if}}
+{{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma") (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (eq dbSetup "prisma-postgres")))}}
 import * as Prisma from "alchemy/Prisma";
+{{/if}}
+{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (or (eq dbSetup "neon") (and (eq dbSetup "planetscale") (eq database "mysql") (eq orm "prisma")) (eq dbSetup "prisma-postgres")))}}
+import * as Output from "alchemy/Output";
 {{/if}}
 {{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
 import * as Cloudflare from "alchemy/Cloudflare";
 {{/if}}
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
-{{#if (and (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare")) (or (eq webDeploy "prisma") (eq serverDeploy "prisma") (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)))}}
+{{#if (or (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (and (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare")) (or (eq webDeploy "prisma") (eq serverDeploy "prisma"))))}}
 import * as Layer from "effect/Layer";
 {{/if}}
+{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (or (eq dbSetup "neon") (and (eq dbSetup "planetscale") (eq database "mysql"))))}}
+import * as Redacted from "effect/Redacted";
+{{/if}}
 import { config } from "dotenv";
-import {
-  {{#if (or (eq serverDeploy "prisma") (and (eq webDeploy "prisma") (eq backend "self")))}}
-  databaseEnv,
-  {{/if}}
-  {{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (or (eq serverDeploy "cloudflare") (and (eq webDeploy "cloudflare") (eq backend "self"))))}}
-  databaseBindings,
-  {{/if}}
-  {{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma") (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy))}}
-  databaseProviders,
-  {{/if}}
-  {{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma"))}}
-  prismaProject,
-  {{/if}}
-} from "./database";
 
 {{#if (and (isAlchemyDeploy webDeploy) (isAlchemyDeploy serverDeploy))}}
 config({ path: "./.env" });
@@ -33620,6 +33592,180 @@ config({ path: "../../apps/web/.env" });
 {{else if (isAlchemyDeploy serverDeploy)}}
 config({ path: "./.env" });
 config({ path: "../../apps/server/.env" });
+{{/if}}
+
+{{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma") (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (eq dbSetup "prisma-postgres")))}}
+export const prismaProject = Prisma.Project("project", {
+  createDatabase: false,
+  region: "us-east-1",
+});
+{{/if}}
+
+{{#if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
+const managedDatabase = Effect.gen(function* () {
+  {{#if (eq dbSetup "neon")}}
+  const database = yield* Neon.Project("database", {
+    {{#if (eq orm "drizzle")}}
+    migrationsDir: "../../packages/db/src/migrations",
+    {{/if}}
+  });
+  const runtimeUrl = database.pooledConnectionUri.pipe(Output.map(Redacted.make));
+  {{#if (eq orm "prisma")}}
+  const migrationUrl = database.connectionUri.pipe(Output.map(Redacted.make));
+  {{/if}}
+  {{else if (eq dbSetup "planetscale")}}
+  {{#if (eq database "postgres")}}
+  const database = yield* Planetscale.PostgresDatabase("database", {
+    clusterSize: "PS_DEV",
+    {{#if (eq orm "drizzle")}}
+    migrationsDir: "../../packages/db/src/migrations",
+    {{/if}}
+  });
+  const role = yield* Planetscale.PostgresRole("database-role", {
+    database,
+    inheritedRoles: ["pg_read_all_data", "pg_write_all_data"],
+  });
+  const runtimeUrl = role.connectionUrlPooled;
+  {{#if (eq orm "prisma")}}
+  const migrationRole = yield* Planetscale.PostgresRole("database-migration-role", {
+    database,
+    inheritedRoles: ["postgres"],
+    ttl: 600,
+  });
+  const migrationUrl = migrationRole.connectionUrl;
+  {{/if}}
+  {{else}}
+  const database = yield* Planetscale.MySQLDatabase("database", {
+    clusterSize: "PS_DEV",
+    {{#if (eq orm "drizzle")}}
+    migrationsDir: "../../packages/db/src/migrations",
+    {{/if}}
+  });
+  const password = yield* Planetscale.MySQLPassword("database-password", {
+    database,
+    role: "readwriter",
+  });
+  {{#if (eq orm "prisma")}}
+  const runtimeUrl = Output.all(
+    password.username,
+    password.password,
+    password.host,
+    password.database,
+  ).pipe(
+    Output.map(([username, secret, host, databaseName]) =>
+      Redacted.make(
+        \`mysql://\${encodeURIComponent(username)}:\${encodeURIComponent(Redacted.value(secret))}@\${host}/\${databaseName}?sslaccept=strict\`,
+      ),
+    ),
+  );
+  const migrationPassword = yield* Planetscale.MySQLPassword("database-migration-password", {
+    database,
+    role: "admin",
+    ttl: 600,
+  });
+  const migrationUrl = Output.all(
+    migrationPassword.username,
+    migrationPassword.password,
+    migrationPassword.host,
+    migrationPassword.database,
+  ).pipe(
+    Output.map(([username, secret, host, databaseName]) =>
+      Redacted.make(
+        \`mysql://\${encodeURIComponent(username)}:\${encodeURIComponent(Redacted.value(secret))}@\${host}/\${databaseName}?sslaccept=strict\`,
+      ),
+    ),
+  );
+  {{/if}}
+  {{/if}}
+  {{else}}
+  const project = yield* prismaProject;
+  const database = yield* Prisma.Postgres("database", { project });
+  const connection = yield* Prisma.Connection("database-connection", { database });
+  const runtimeUrl = Output.all(connection.directConnectionString, connection.databaseUrl).pipe(
+    Output.map(([directUrl, fallbackUrl]) => {
+      const url = directUrl ?? fallbackUrl;
+      if (!url) {
+        throw new Error("Prisma did not return a database connection URL");
+      }
+      return url;
+    }),
+  );
+  const migrationUrl = runtimeUrl;
+  {{/if}}
+
+  {{#if (or (eq orm "prisma") (eq dbSetup "prisma-postgres"))}}
+  yield* Command.Exec("database-migrations", {
+    command: "{{packageManager}} run db:migrate:deploy",
+    cwd: "../../packages/db",
+    env: { DATABASE_URL: migrationUrl },
+    memo: {
+      include: [
+        {{#if (eq orm "prisma")}}
+        "prisma/migrations/**",
+        "prisma/schema/**",
+        {{else}}
+        "src/migrations/**",
+        "src/schema/**",
+        {{/if}}
+      ],
+    },
+  });
+  {{/if}}
+
+  return {
+    {{#if (and (eq dbSetup "planetscale") (eq database "mysql") (eq orm "drizzle"))}}
+    runtimeEnv: {
+      DATABASE_HOST: password.host,
+      DATABASE_USERNAME: password.username,
+      DATABASE_PASSWORD: password.password,
+    },
+    {{else}}
+    runtimeEnv: { DATABASE_URL: runtimeUrl },
+    {{/if}}
+  };
+});
+
+export const databaseEnv = managedDatabase.pipe(Effect.map(({ runtimeEnv }) => runtimeEnv));
+
+export const databaseBindings = {
+  {{#if (and (eq dbSetup "planetscale") (eq database "mysql") (eq orm "drizzle"))}}
+  DATABASE_HOST: databaseEnv.pipe(Effect.map(({ DATABASE_HOST }) => DATABASE_HOST)),
+  DATABASE_USERNAME: databaseEnv.pipe(Effect.map(({ DATABASE_USERNAME }) => DATABASE_USERNAME)),
+  DATABASE_PASSWORD: databaseEnv.pipe(Effect.map(({ DATABASE_PASSWORD }) => DATABASE_PASSWORD)),
+  {{else}}
+  DATABASE_URL: databaseEnv.pipe(Effect.map(({ DATABASE_URL }) => DATABASE_URL)),
+  {{/if}}
+};
+
+export const databaseProviders = Layer.mergeAll(
+  {{#if (or (eq orm "prisma") (eq dbSetup "prisma-postgres"))}}
+  Command.providers(),
+  {{/if}}
+  {{#if (eq dbSetup "neon")}}
+  Neon.providers(),
+  {{else if (eq dbSetup "planetscale")}}
+  Planetscale.providers(),
+  {{else}}
+  Prisma.providers(),
+  {{/if}}
+  {{#if (and (or (eq webDeploy "prisma") (eq serverDeploy "prisma")) (ne dbSetup "prisma-postgres"))}}
+  Prisma.providers(),
+  {{/if}}
+);
+{{else if (or (eq webDeploy "prisma") (eq serverDeploy "prisma"))}}
+export const databaseEnv = Effect.succeed({
+  {{#if (eq dbSetup "d1")}}
+  // D1 is a native Worker binding and is added below.
+  {{else if (and (ne database "none") (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
+  DATABASE_HOST: Config.string("DATABASE_HOST"),
+  DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+  DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
+  {{else if (ne database "none")}}
+  DATABASE_URL: Config.redacted("DATABASE_URL"),
+  {{/if}}
+});
+
+export const databaseProviders = Prisma.providers();
 {{/if}}
 
 {{#if (and (or (eq serverDeploy "cloudflare") (and (eq webDeploy "cloudflare") (eq backend "self"))) (eq dbSetup "d1"))}}
@@ -33892,17 +34038,8 @@ export const web = Cloudflare.Website.StaticSite("web", {
       },
       });
 {{else if (includes frontend "nuxt")}}
-export const web = Cloudflare.Website.StaticSite("web", {
-      cwd: "../../apps/web",
-      command: "{{packageManager}} run build",
-      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
-      memo: false,
-      outdir: ".output/public",
-      main: "../../apps/web/.output/server/index.mjs",
-      bundle: false,
-      compatibility: {
-        flags: ["nodejs_compat"],
-      },
+export const web = Cloudflare.Website.Nuxt("web", {
+      rootDir: "../../apps/web",
       env: {
         {{#if (eq dbSetup "d1")}}
         DB: db,
@@ -33930,10 +34067,6 @@ export const web = Cloudflare.Website.StaticSite("web", {
         {{#if (eq dbSetup "turso")}}
         DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
         {{/if}}
-      },
-      dev: {
-        command: "{{packageManager}} run dev:bare",
-        url: "http://localhost:3001",
       },
       });
 {{else if (includes frontend "svelte")}}
@@ -34027,50 +34160,36 @@ export const web = Cloudflare.Website.Vite("web", {
   },
   });
 {{else if (includes frontend "astro")}}
-export const web = Cloudflare.Website.StaticSite("web", {
-      cwd: "../../apps/web",
-      command: "{{packageManager}} run build",
-      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
-      memo: false,
-      outdir: "dist/client",
-      main: "../../apps/web/dist/server/entry.mjs",
-      bundle: false,
-      compatibility: {
-        flags: ["nodejs_compat"],
-      },
-      env: {
-        // the astro cloudflare adapter expects SESSION (KV) and IMAGES bindings
-        SESSION: Cloudflare.KV.Namespace("session"),
-        IMAGES: Cloudflare.Images.Images(),
-        {{#if (eq dbSetup "d1")}}
-        DB: db,
-        {{else if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
-        ...databaseBindings,
-        {{else if (and (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
-        DATABASE_HOST: Config.string("DATABASE_HOST"),
-        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
-        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
-        {{else if (ne database "none")}}
-        DATABASE_URL: Config.redacted("DATABASE_URL"),
-        {{/if}}
-        CORS_ORIGIN: Config.string("CORS_ORIGIN"),
-        {{#if (eq auth "better-auth")}}
-        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
-        BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
-        {{/if}}
-        {{#if (eq payments "polar")}}
-        POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
-        POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
-        {{/if}}
-        {{#if (eq dbSetup "turso")}}
-        DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
-        {{/if}}
-      },
-      dev: {
-        command: "{{packageManager}} run dev:bare",
-        url: "http://localhost:4321",
-      },
-      });
+export const web = Cloudflare.Website.Astro("web", {
+  rootDir: "../../apps/web",
+  env: {
+    SESSION: Cloudflare.KV.Namespace("session"),
+    IMAGES: Cloudflare.Images.Images(),
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
+    ...databaseBindings,
+    {{else if (and (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
+    DATABASE_HOST: Config.string("DATABASE_HOST"),
+    DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+    DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
+    {{else if (ne database "none")}}
+    DATABASE_URL: Config.redacted("DATABASE_URL"),
+    {{/if}}
+    CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+    BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+    POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
+    {{/if}}
+  },
+});
 {{else if (includes frontend "tanstack-start")}}
 export const web = Cloudflare.Website.Vite("web", {
   rootDir: "../../apps/web",
@@ -34178,17 +34297,8 @@ export default Alchemy.Stack(
           },
     });
     {{else if (includes frontend "nuxt")}}
-    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
-          cwd: "../../apps/web",
-          command: "{{packageManager}} run build",
-          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
-          memo: false,
-          outdir: ".output/public",
-          main: "../../apps/web/.output/server/index.mjs",
-          bundle: false,
-          compatibility: {
-            flags: ["nodejs_compat"],
-          },
+    const webWorker = yield* Cloudflare.Website.Nuxt("web", {
+          rootDir: "../../apps/web",
           env: {
             {{#if (eq backend "convex")}}
             NUXT_PUBLIC_CONVEX_URL: Config.string("NUXT_PUBLIC_CONVEX_URL"),
@@ -34202,10 +34312,6 @@ export default Alchemy.Stack(
             NUXT_PUBLIC_SERVER_URL: Config.string("NUXT_PUBLIC_SERVER_URL"),
             {{/if}}
             {{/if}}
-          },
-          dev: {
-            command: "{{packageManager}} run dev:bare",
-            url: "http://localhost:3001",
           },
     });
     {{else if (includes frontend "svelte")}}
@@ -34240,31 +34346,17 @@ export default Alchemy.Stack(
           },
     });
     {{else if (includes frontend "astro")}}
-    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
-          cwd: "../../apps/web",
-          command: "{{packageManager}} run build",
-          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
-          memo: false,
-          outdir: "dist/client",
-          main: "../../apps/web/dist/server/entry.mjs",
-          bundle: false,
-          compatibility: {
-            flags: ["nodejs_compat"],
-          },
-          env: {
-            // the astro cloudflare adapter expects SESSION (KV) and IMAGES bindings
-            SESSION: Cloudflare.KV.Namespace("session"),
-            IMAGES: Cloudflare.Images.Images(),
-            {{#if (isAlchemyDeploy serverDeploy)}}
-            PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
-            {{else}}
-            PUBLIC_SERVER_URL: Config.string("PUBLIC_SERVER_URL"),
-            {{/if}}
-          },
-          dev: {
-            command: "{{packageManager}} run dev:bare",
-            url: "http://localhost:4321",
-          },
+    const webWorker = yield* Cloudflare.Website.Astro("web", {
+      rootDir: "../../apps/web",
+      env: {
+        SESSION: Cloudflare.KV.Namespace("session"),
+        IMAGES: Cloudflare.Images.Images(),
+        {{#if (isAlchemyDeploy serverDeploy)}}
+        PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
+        {{else}}
+        PUBLIC_SERVER_URL: Config.string("PUBLIC_SERVER_URL"),
+        {{/if}}
+      },
     });
     {{else if (includes frontend "tanstack-start")}}
     const webWorker = yield* Cloudflare.Website.Vite("web", {
@@ -34378,210 +34470,6 @@ export default Alchemy.Stack(
   }),
 );
 `],
-  ["packages/infra/database.ts.hbs", `{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (or (eq orm "prisma") (eq dbSetup "prisma-postgres")))}}
-import * as Command from "alchemy/Command";
-{{/if}}
-{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (eq dbSetup "neon"))}}
-import * as Neon from "alchemy/Neon";
-{{/if}}
-{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (eq dbSetup "planetscale"))}}
-import * as Planetscale from "alchemy/Planetscale";
-{{/if}}
-{{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma") (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (eq dbSetup "prisma-postgres")))}}
-import * as Prisma from "alchemy/Prisma";
-{{/if}}
-{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (or (eq dbSetup "neon") (and (eq dbSetup "planetscale") (eq database "mysql") (eq orm "prisma")) (eq dbSetup "prisma-postgres")))}}
-import * as Output from "alchemy/Output";
-{{/if}}
-{{#unless (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
-{{#if (and (ne dbSetup "d1") (ne database "none"))}}
-import * as Config from "effect/Config";
-{{/if}}
-{{/unless}}
-import * as Effect from "effect/Effect";
-{{#if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
-import * as Layer from "effect/Layer";
-{{/if}}
-{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (or (eq dbSetup "neon") (and (eq dbSetup "planetscale") (eq database "mysql"))))}}
-import * as Redacted from "effect/Redacted";
-{{/if}}
-
-{{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma") (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (eq dbSetup "prisma-postgres")))}}
-export const prismaProject = Prisma.Project("project", {
-  createDatabase: false,
-  region: "us-east-1",
-});
-{{/if}}
-
-{{#if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
-const managedDatabase = Effect.gen(function* () {
-  {{#if (eq dbSetup "neon")}}
-  const database = yield* Neon.Project("database", {
-    {{#if (eq orm "drizzle")}}
-    migrationsDir: "../../packages/db/src/migrations",
-    {{/if}}
-  });
-  const runtimeUrl = database.pooledConnectionUri.pipe(Output.map(Redacted.make));
-  {{#if (eq orm "prisma")}}
-  const migrationUrl = database.connectionUri.pipe(Output.map(Redacted.make));
-  {{/if}}
-  {{else if (eq dbSetup "planetscale")}}
-  {{#if (eq database "postgres")}}
-  const database = yield* Planetscale.PostgresDatabase("database", {
-    clusterSize: "PS_DEV",
-    {{#if (eq orm "drizzle")}}
-    migrationsDir: "../../packages/db/src/migrations",
-    {{/if}}
-  });
-  const role = yield* Planetscale.PostgresRole("database-role", {
-    database,
-    inheritedRoles: ["pg_read_all_data", "pg_write_all_data"],
-  });
-  const runtimeUrl = role.connectionUrlPooled;
-  {{#if (eq orm "prisma")}}
-  const migrationRole = yield* Planetscale.PostgresRole("database-migration-role", {
-    database,
-    inheritedRoles: ["postgres"],
-    ttl: 600,
-  });
-  const migrationUrl = migrationRole.connectionUrl;
-  {{/if}}
-  {{else}}
-  const database = yield* Planetscale.MySQLDatabase("database", {
-    clusterSize: "PS_DEV",
-    {{#if (eq orm "drizzle")}}
-    migrationsDir: "../../packages/db/src/migrations",
-    {{/if}}
-  });
-  const password = yield* Planetscale.MySQLPassword("database-password", {
-    database,
-    role: "readwriter",
-  });
-  {{#if (eq orm "prisma")}}
-  const runtimeUrl = Output.all(
-    password.username,
-    password.password,
-    password.host,
-    password.database,
-  ).pipe(
-    Output.map(([username, secret, host, databaseName]) =>
-      Redacted.make(
-        \`mysql://\${encodeURIComponent(username)}:\${encodeURIComponent(Redacted.value(secret))}@\${host}/\${databaseName}?sslaccept=strict\`,
-      ),
-    ),
-  );
-  const migrationPassword = yield* Planetscale.MySQLPassword("database-migration-password", {
-    database,
-    role: "admin",
-    ttl: 600,
-  });
-  const migrationUrl = Output.all(
-    migrationPassword.username,
-    migrationPassword.password,
-    migrationPassword.host,
-    migrationPassword.database,
-  ).pipe(
-    Output.map(([username, secret, host, databaseName]) =>
-      Redacted.make(
-        \`mysql://\${encodeURIComponent(username)}:\${encodeURIComponent(Redacted.value(secret))}@\${host}/\${databaseName}?sslaccept=strict\`,
-      ),
-    ),
-  );
-  {{/if}}
-  {{/if}}
-  {{else}}
-  const project = yield* prismaProject;
-  const database = yield* Prisma.Postgres("database", { project });
-  const connection = yield* Prisma.Connection("database-connection", { database });
-  const runtimeUrl = Output.all(connection.directConnectionString, connection.databaseUrl).pipe(
-    Output.map(([directUrl, fallbackUrl]) => {
-      const url = directUrl ?? fallbackUrl;
-      if (!url) {
-        throw new Error("Prisma did not return a database connection URL");
-      }
-      return url;
-    }),
-  );
-  const migrationUrl = runtimeUrl;
-  {{/if}}
-
-  {{#if (or (eq orm "prisma") (eq dbSetup "prisma-postgres"))}}
-  yield* Command.Exec("database-migrations", {
-    command: "{{packageManager}} run db:migrate:deploy",
-    cwd: "../../packages/db",
-    env: { DATABASE_URL: migrationUrl },
-    memo: {
-      include: [
-        {{#if (eq orm "prisma")}}
-        "prisma/migrations/**",
-        "prisma/schema/**",
-        {{else}}
-        "src/migrations/**",
-        "src/schema/**",
-        {{/if}}
-      ],
-    },
-  });
-  {{/if}}
-
-  return {
-    {{#if (and (eq dbSetup "planetscale") (eq database "mysql") (eq orm "drizzle"))}}
-    runtimeEnv: {
-      DATABASE_HOST: password.host,
-      DATABASE_USERNAME: password.username,
-      DATABASE_PASSWORD: password.password,
-    },
-    {{else}}
-    runtimeEnv: { DATABASE_URL: runtimeUrl },
-    {{/if}}
-  };
-});
-
-export const databaseEnv = managedDatabase.pipe(Effect.map(({ runtimeEnv }) => runtimeEnv));
-
-export const databaseBindings = {
-  {{#if (and (eq dbSetup "planetscale") (eq database "mysql") (eq orm "drizzle"))}}
-  DATABASE_HOST: databaseEnv.pipe(Effect.map(({ DATABASE_HOST }) => DATABASE_HOST)),
-  DATABASE_USERNAME: databaseEnv.pipe(Effect.map(({ DATABASE_USERNAME }) => DATABASE_USERNAME)),
-  DATABASE_PASSWORD: databaseEnv.pipe(Effect.map(({ DATABASE_PASSWORD }) => DATABASE_PASSWORD)),
-  {{else}}
-  DATABASE_URL: databaseEnv.pipe(Effect.map(({ DATABASE_URL }) => DATABASE_URL)),
-  {{/if}}
-};
-
-export const databaseProviders = Layer.mergeAll(
-  {{#if (or (eq orm "prisma") (eq dbSetup "prisma-postgres"))}}
-  Command.providers(),
-  {{/if}}
-  {{#if (eq dbSetup "neon")}}
-  Neon.providers(),
-  {{else if (eq dbSetup "planetscale")}}
-  Planetscale.providers(),
-  {{else}}
-  Prisma.providers(),
-  {{/if}}
-  {{#if (and (or (eq webDeploy "prisma") (eq serverDeploy "prisma")) (ne dbSetup "prisma-postgres"))}}
-  Prisma.providers(),
-  {{/if}}
-);
-{{else}}
-export const databaseEnv = Effect.succeed({
-  {{#if (eq dbSetup "d1")}}
-  // D1 is a native Worker binding and is added by alchemy.run.ts.
-  {{else if (and (ne database "none") (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
-  DATABASE_HOST: Config.string("DATABASE_HOST"),
-  DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
-  DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
-  {{else if (ne database "none")}}
-  DATABASE_URL: Config.redacted("DATABASE_URL"),
-  {{/if}}
-});
-
-{{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma"))}}
-export const databaseProviders = Prisma.providers();
-{{/if}}
-{{/if}}
-`],
   ["packages/infra/package.json.hbs", `{
   "name": "@{{projectName}}/infra",
   "private": true,
@@ -34596,7 +34484,7 @@ export const databaseProviders = Prisma.providers();
 `],
   ["packages/infra/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
-  "include": ["alchemy.run.ts", "database.ts"]
+  "include": ["alchemy.run.ts"]
 }
 `],
   ["packages/ui/components.json.hbs", `{
@@ -36599,4 +36487,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 521;
+export const TEMPLATE_COUNT = 520;

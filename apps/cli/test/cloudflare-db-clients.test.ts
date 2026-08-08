@@ -194,6 +194,24 @@ describe("Cloudflare DB client generation", () => {
       }
       expect(contextFile).toContain("createAuth().api.getSession");
       expect(todoRouterFile).toContain("createDb()");
+
+      if (scenario.frontend === "astro") {
+        const infraFile = files.get("packages/infra/alchemy.run.ts") ?? "";
+        const rootPackage = JSON.parse(files.get("package.json") ?? "{}") as {
+          scripts?: Record<string, string>;
+        };
+        expect(infraFile).toContain('Cloudflare.Website.Astro("web", {');
+        expect(infraFile.match(/SESSION: Cloudflare\.KV\.Namespace\("session"\)/g)).toHaveLength(1);
+        expect(infraFile.match(/IMAGES: Cloudflare\.Images\.Images\(\)/g)).toHaveLength(1);
+        expect(rootPackage.scripts?.["db:migrate:local"]).toBeUndefined();
+      }
+
+      if (scenario.frontend === "nuxt") {
+        const rootPackage = JSON.parse(files.get("package.json") ?? "{}") as {
+          scripts?: Record<string, string>;
+        };
+        expect(rootPackage.scripts?.["db:migrate:local"]).toBeUndefined();
+      }
     });
   }
 
