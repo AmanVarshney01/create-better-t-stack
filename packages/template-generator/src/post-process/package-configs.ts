@@ -3,7 +3,7 @@
  * Updates package names, scripts, and workspaces after template generation
  */
 
-import { webFrontends, type ProjectConfig } from "@better-t-stack/types";
+import { getLocalD1Owner, webFrontends, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { dependencyVersionMap } from "../utils/add-deps";
@@ -197,14 +197,7 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     scripts[alchemyDeployScript] = pmConfig.filter(infraPackageName, "deploy");
     scripts.destroy = pmConfig.filter(infraPackageName, "destroy");
 
-    // Generic framework paths use a Wrangler-managed local D1; first-class providers own theirs.
-    const hasWranglerLocalD1 =
-      config.webDeploy === "cloudflare" &&
-      config.backend === "self" &&
-      dbSetup === "d1" &&
-      (["next", "svelte", "solid"] as const).some((framework) =>
-        config.frontend.includes(framework),
-      );
+    const hasWranglerLocalD1 = getLocalD1Owner(config) === "wrangler";
     if (hasWranglerLocalD1) {
       scripts["db:migrate:local"] = pmConfig.filter("web", "db:migrate:local");
     }

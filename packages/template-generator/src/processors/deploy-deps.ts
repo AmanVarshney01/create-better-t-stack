@@ -1,4 +1,4 @@
-import type { ProjectConfig } from "@better-t-stack/types";
+import { getLocalD1Owner, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency } from "../utils/add-deps";
@@ -145,11 +145,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     const webPkgPath = "apps/web/package.json";
     if (!vfs.exists(webPkgPath)) return;
 
-    // These generic framework paths still use Wrangler for local D1 migrations and bindings.
-    const needsWranglerLocalD1 =
-      isBackendSelf &&
-      config.dbSetup === "d1" &&
-      (["svelte", "solid"] as const).some((framework) => frontend.includes(framework));
+    const needsWranglerLocalD1 = getLocalD1Owner(config) === "wrangler";
 
     if (frontend.includes("next")) {
       addPackageDependency({

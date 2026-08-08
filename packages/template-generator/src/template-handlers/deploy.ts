@@ -1,6 +1,7 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
+import { processAlchemyRun } from "../generators/alchemy/render";
 import { type TemplateData, processTemplatesFromPrefix } from "./utils";
 
 export async function processDeployTemplates(
@@ -15,6 +16,7 @@ export async function processDeployTemplates(
     ["cloudflare", "prisma"].includes(config.serverDeploy)
   ) {
     processTemplatesFromPrefix(vfs, templates, "packages/infra", "packages/infra", config);
+    processAlchemyRun(vfs, config);
   }
 
   if (config.webDeploy === "docker" || config.serverDeploy === "docker") {
