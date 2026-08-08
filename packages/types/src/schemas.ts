@@ -91,7 +91,7 @@ export const AuthSchema = z
   .enum(["better-auth", "clerk", "none"])
   .describe("Authentication provider");
 
-export const PaymentsSchema = z.enum(["polar", "none"]).describe("Payments provider");
+export const PaymentsSchema = z.enum(["polar", "mollie", "none"]).describe("Payments provider");
 
 export const WebDeploySchema = z
   .enum(["cloudflare", "docker", "vercel", "none"])
@@ -124,7 +124,6 @@ export const FumadocsTemplateSchema = z
     "react-router-spa",
     "tanstack-start",
     "tanstack-start-spa",
-    "astro",
   ])
   .describe("Fumadocs template");
 
@@ -176,10 +175,8 @@ export const McpAgentSchema = z
     "opencode",
     "gemini-cli",
     "github-copilot-cli",
-    "grok-build",
     "mcporter",
     "vscode",
-    "windsurf",
     "zed",
     "claude-desktop",
     "goose",
@@ -213,86 +210,33 @@ export const SkillsSourceSchema = z
 
 export const SkillsAgentSchema = z
   .enum([
-    "universal",
-    "adal",
-    "aider-desk",
-    "amp",
-    "antigravity",
-    "antigravity-cli",
-    "astrbot",
-    "augment",
-    "autohand-code",
-    "bob",
+    "cursor",
     "claude-code",
     "cline",
-    "codearts-agent",
-    "codebuddy",
-    "codemaker",
-    "codestudio",
-    "codex",
-    "command-code",
-    "continue",
-    "cortex",
-    "crush",
-    "cursor",
-    "deepagents",
-    "devin",
-    "dexto",
-    "droid",
-    "eve",
-    "firebender",
-    "forgecode",
-    "gemini-cli",
     "github-copilot",
-    "goose",
-    "grok",
-    "hermes-agent",
-    "iflow-cli",
-    "inference-sh",
-    "jazz",
-    "junie",
-    "kilo",
-    "kimchi",
-    "kimi-code-cli",
-    "kiro-cli",
-    "kode",
-    "lingma",
-    "loaf",
-    "mcpjam",
-    "mistral-vibe",
-    "moxby",
-    "mux",
-    "neovate",
-    "ona",
-    "clawdbot",
-    "openclaw",
+    "codex",
     "opencode",
-    "openhands",
-    "pi",
-    "pochi",
-    "promptscript",
-    "qoder",
-    "qoder-cn",
-    "qwen-code",
-    "reasonix",
-    "replit",
-    "roo",
-    "rovodev",
-    "tabnine-cli",
-    "terramind",
-    "tinycloud",
-    "trae",
-    "trae-cn",
-    "warp",
     "windsurf",
-    "zcode",
-    "zed",
+    "goose",
+    "roo",
+    "kilo",
+    "gemini-cli",
+    "antigravity",
+    "openhands",
+    "trae",
+    "amp",
+    "pi",
+    "qoder",
+    "qwen-code",
+    "kiro-cli",
+    "droid",
+    "command-code",
+    "clawdbot",
     "zencoder",
-    "zenflow",
+    "neovate",
+    "mcpjam",
   ])
-  .describe(
-    "Agent target for skill installation; prefer universal for agents that consume .agents/skills",
-  );
+  .describe("Agent target for skill installation");
 
 export const SkillSelectionSchema = z.strictObject({
   source: SkillsSourceSchema.describe("Skill source to install from"),
@@ -370,7 +314,7 @@ export const UltraciteHookSchema = z
 export const DbSetupModeSchema = z.enum(["manual", "auto"]).describe("Database setup mode");
 
 export const NeonSetupMethodSchema = z
-  .enum(["neon-new", "neon", "neondb", "neonctl"])
+  .enum(["neondb", "neonctl"])
   .describe("Neon database provisioning method");
 
 export const AddonOptionsSchema = z

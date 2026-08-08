@@ -491,6 +491,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "mollie",
+      name: "Mollie",
+      description: "Effortless payments for European businesses & beyond.",
+      icon: `${ICON_BASE_URL}/mollie.svg`,
+      color: "from-blue-400 to-blue-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Payments",
       description: "Skip payments integration",
