@@ -14,6 +14,7 @@ interface TurboTask {
   outputs?: string[];
   cache?: boolean;
   persistent?: boolean;
+  passThroughEnv?: string[];
 }
 
 interface TurboConfig {
@@ -100,6 +101,12 @@ function getBaseTasks(frontend: string[], addons: string[]): Record<string, Turb
     dev: {
       cache: false,
       persistent: true,
+    },
+    start: {
+      dependsOn: ["build"],
+      cache: false,
+      persistent: true,
+      passThroughEnv: ["*"],
     },
   };
 }
