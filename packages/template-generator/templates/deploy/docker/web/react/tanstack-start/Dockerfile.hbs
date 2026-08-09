@@ -1,6 +1,10 @@
-FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
+{{#if (and (eq packageManager "bun") (not (includes addons "vite-plus")))}}
+FROM oven/bun:1 AS builder
+{{else}}
+FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
 RUN npm install -g pnpm@11
@@ -47,10 +51,23 @@ ENV BETTER_AUTH_SECRET=
 ENV DATABASE_URL=
 {{/if}}
 
+{{#if (eq runtime "bun")}}
+FROM oven/bun:1 AS runner
+{{else}}
+FROM node:24-slim AS runner
+{{/if}}
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app /app
+
 ENV HOST=0.0.0.0
 ENV PORT=3001
 EXPOSE 3001
 
-# SSR chunks require() externals at runtime; must run from the workspace
+# SSR chunks require workspace dependencies at runtime
 WORKDIR /app/apps/web
+{{#if (eq runtime "bun")}}
+CMD ["bun", ".output/server/index.mjs"]
+{{else}}
 CMD ["node", ".output/server/index.mjs"]
+{{/if}}

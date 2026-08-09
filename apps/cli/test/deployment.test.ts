@@ -604,6 +604,46 @@ describe("Deployment Configurations", () => {
       expect(syncScript).toContain('"CORS_ORIGIN"');
     });
 
+    for (const packageManager of ["bun", "npm", "pnpm"] as const) {
+      it(`should use the Bun runtime for Vercel web deploys with ${packageManager}`, async () => {
+        const result = await createVirtual({
+          projectName: `tanstack-start-vercel-bun-${packageManager}`,
+          webDeploy: "vercel",
+          serverDeploy: "none",
+          backend: "hono",
+          runtime: "bun",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["tanstack-start"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager,
+        });
+
+        if (result.isErr()) {
+          throw result.error;
+        }
+
+        const files = collectFiles(result.value.root, result.value.root.path);
+        const vercelConfig = JSON.parse(files.get("vercel.json") ?? "{}");
+
+        expect(vercelConfig.bunVersion).toBe("1.x");
+        expect(vercelConfig.services.web).toMatchObject({
+          root: "apps/web",
+          framework: "tanstack-start",
+          installCommand: `cd ../.. && ${packageManager} install`,
+        });
+        expect(vercelConfig.services.server).toBeUndefined();
+        expect(files.get("apps/web/vite.config.ts")).toContain("nitro(),");
+      });
+    }
+
     it("should skip origin-derived envs for server-only Vercel deploys", async () => {
       const result = await createVirtual({
         projectName: "native-hono-vercel",
@@ -1426,6 +1466,7 @@ describe("Deployment Configurations", () => {
       expect(compose).toContain("dockerfile: apps/server/Dockerfile");
       expect(compose).toContain('"3001:80"');
       expect(compose).toContain('"3000:3000"');
+      expect(compose).toContain('"http://127.0.0.1:80/"');
       expect(compose).toContain("CORS_ORIGIN: http://localhost:3001");
       expect(compose).toContain(
         // biome-ignore format: compose interpolation syntax
@@ -1437,7 +1478,8 @@ describe("Deployment Configurations", () => {
       expect(webDockerfile).toContain("ARG VITE_SERVER_URL");
       expect(files.get(".dockerignore")).toContain("**/.env");
       expect(webDockerfile).toContain("FROM node:24-slim AS builder");
-      expect(serverDockerfile).toContain("FROM node:24-slim AS base");
+      expect(serverDockerfile).toContain("FROM oven/bun:1 AS builder");
+      expect(serverDockerfile).toContain("FROM oven/bun:1 AS runner");
 
       // SPA frontend builds static assets served by nginx with an SPA fallback
       expect(webDockerfile).toContain("FROM nginx:alpine");
@@ -1535,7 +1577,7 @@ describe("Deployment Configurations", () => {
       expect(webDockerfile).toContain('CMD ["node", "build/index.js"]');
     });
 
-    it("should add the nitro plugin for TanStack Start Docker web deploys", async () => {
+    it("should not infer the TanStack Start runtime from the package manager", async () => {
       const result = await createVirtual({
         projectName: "docker-tanstack-start",
         webDeploy: "docker",
@@ -1564,14 +1606,17 @@ describe("Deployment Configurations", () => {
       const viteConfig = files.get("apps/web/vite.config.ts");
       const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
       const webDockerfile = files.get("apps/web/Dockerfile");
+      const compose = files.get("docker-compose.yml");
 
       expect(viteConfig).toContain('import { nitro } from "nitro/vite"');
-      expect(viteConfig).toContain("nitro(),");
+      expect(viteConfig).toContain('nitro({ preset: "node-server" }),');
       expect(webPkg.dependencies.nitro).toBeDefined();
       // SSR chunks require() externals at runtime, so the app runs from the workspace
-      expect(webDockerfile).toContain("FROM node:24-slim AS base");
+      expect(webDockerfile).toContain("FROM oven/bun:1 AS builder");
+      expect(webDockerfile).toContain("FROM node:24-slim AS runner");
       expect(webDockerfile).toContain("WORKDIR /app/apps/web");
       expect(webDockerfile).toContain('CMD ["node", ".output/server/index.mjs"]');
+      expect(compose).toContain('"node",\n          "-e"');
     });
 
     it("should use the full Node 24 image for Vite+ Docker web builds", async () => {
@@ -1602,11 +1647,86 @@ describe("Deployment Configurations", () => {
       const files = collectFiles(result.value.root, result.value.root.path);
       const webDockerfile = files.get("apps/web/Dockerfile");
       const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const viteConfig = files.get("apps/web/vite.config.ts");
+      const compose = files.get("docker-compose.yml");
 
       expect(webPkg.scripts.build).toBe("vp build");
-      expect(webDockerfile).toContain("FROM node:24 AS base");
+      expect(viteConfig).toContain('nitro({ preset: "bun" }),');
+      expect(webDockerfile).toContain("FROM node:24 AS builder");
+      expect(webDockerfile).toContain("FROM oven/bun:1 AS runner");
       expect(webDockerfile).not.toContain("ca-certificates");
+      expect(webDockerfile).toContain('CMD ["bun", ".output/server/index.mjs"]');
+      expect(compose).toContain('"bun",\n          "-e"');
     });
+
+    for (const runtime of ["bun", "node"] as const) {
+      for (const packageManager of ["bun", "npm", "pnpm"] as const) {
+        for (const useVitePlus of [false, true]) {
+          it(`should use the ${runtime} runtime with ${packageManager}${useVitePlus ? " and Vite+" : ""}`, async () => {
+            const result = await createVirtual({
+              projectName: `docker-${runtime}-${packageManager}${useVitePlus ? "-vite-plus" : ""}`,
+              webDeploy: "docker",
+              serverDeploy: "docker",
+              backend: "hono",
+              runtime,
+              database: "none",
+              orm: "none",
+              auth: "none",
+              payments: "none",
+              api: "orpc",
+              frontend: ["tanstack-start"],
+              addons: useVitePlus ? ["vite-plus"] : ["none"],
+              examples: ["none"],
+              dbSetup: "none",
+              install: false,
+              git: false,
+              packageManager,
+            });
+
+            if (result.isErr()) {
+              throw result.error;
+            }
+
+            const files = collectFiles(result.value.root, result.value.root.path);
+            const viteConfig = files.get("apps/web/vite.config.ts");
+            const webDockerfile = files.get("apps/web/Dockerfile");
+            const serverDockerfile = files.get("apps/server/Dockerfile");
+            const compose = files.get("docker-compose.yml");
+
+            expect(viteConfig).toContain(
+              runtime === "bun" ? 'nitro({ preset: "bun" }),' : 'nitro({ preset: "node-server" }),',
+            );
+            expect(webDockerfile).toContain(
+              packageManager === "bun" && !useVitePlus
+                ? "FROM oven/bun:1 AS builder"
+                : `FROM node:24${useVitePlus ? "" : "-slim"} AS builder`,
+            );
+            expect(webDockerfile).toContain(
+              runtime === "bun" ? "FROM oven/bun:1 AS runner" : "FROM node:24-slim AS runner",
+            );
+            expect(webDockerfile).toContain(
+              runtime === "bun"
+                ? 'CMD ["bun", ".output/server/index.mjs"]'
+                : 'CMD ["node", ".output/server/index.mjs"]',
+            );
+            expect(serverDockerfile).toContain(
+              packageManager === "bun"
+                ? "FROM oven/bun:1 AS builder"
+                : "FROM node:24-slim AS builder",
+            );
+            expect(serverDockerfile).toContain(
+              runtime === "bun" ? "FROM oven/bun:1 AS runner" : "FROM node:24-slim AS runner",
+            );
+            expect(serverDockerfile).toContain(
+              runtime === "bun"
+                ? 'CMD ["bun", "dist/index.mjs"]'
+                : 'CMD ["node", "dist/index.mjs"]',
+            );
+            expect(compose?.match(new RegExp(`"${runtime}",`, "g"))?.length).toBe(2);
+          });
+        }
+      }
+    }
 
     it("should serve React Router SSR builds with a node runner", async () => {
       const result = await createVirtual({

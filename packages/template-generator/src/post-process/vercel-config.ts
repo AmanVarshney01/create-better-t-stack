@@ -111,7 +111,7 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
 
   vfs.writeJson("vercel.json", {
     $schema: "https://openapi.vercel.sh/vercel.json",
-    ...(hasServer && runtime === "bun" ? { bunVersion: "1.x" } : {}),
+    ...(runtime === "bun" ? { bunVersion: "1.x" } : {}),
     services,
     rewrites,
   });

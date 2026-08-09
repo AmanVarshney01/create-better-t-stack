@@ -1,6 +1,7 @@
-FROM node:24-slim AS base
-{{#if (or (eq packageManager "bun") (eq runtime "bun"))}}
-COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{#if (eq packageManager "bun")}}
+FROM oven/bun:1 AS builder
+{{else}}
+FROM node:24-slim AS builder
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
 RUN npm install -g pnpm@11
@@ -23,10 +24,15 @@ RUN --mount=type=cache,target=/root/.npm npm install
 
 ENV NODE_ENV=production
 RUN cd apps/server && {{packageManager}} run build
-ENV SKIP_ENV_VALIDATION=
-{{#if (eq orm "prisma")}}
-ENV DATABASE_URL=
+
+{{#if (eq runtime "bun")}}
+FROM oven/bun:1 AS runner
+{{else}}
+FROM node:24-slim AS runner
 {{/if}}
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app /app
 
 EXPOSE 3000
 

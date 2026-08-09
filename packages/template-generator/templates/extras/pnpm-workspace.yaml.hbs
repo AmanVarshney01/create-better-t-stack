@@ -21,6 +21,7 @@ allowBuilds:
   workerd: true
 {{/if}}
 {{#if (eq orm "prisma")}}
+  "@prisma/client": true
   "@prisma/engines": true
   prisma: true
 {{/if}}

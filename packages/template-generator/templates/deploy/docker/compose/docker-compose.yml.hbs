@@ -69,12 +69,16 @@ services:
 {{/if}}
     healthcheck:
 {{#if (includes frontend "tanstack-router")}}
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/"]
 {{else}}
       test:
         [
           "CMD",
+{{#if (and (includes frontend "tanstack-start") (eq runtime "bun"))}}
+          "bun",
+{{else}}
           "node",
+{{/if}}
           "-e",
           "fetch('http://localhost:3001/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
         ]
@@ -116,7 +120,11 @@ services:
       test:
         [
           "CMD",
+{{#if (eq runtime "bun")}}
+          "bun",
+{{else}}
           "node",
+{{/if}}
           "-e",
           "fetch('http://localhost:3000/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
         ]

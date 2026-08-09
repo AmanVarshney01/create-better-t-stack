@@ -109,7 +109,7 @@ Each Dockerfile is a multi-stage build with the monorepo root as build context:
 
 1. A base stage installs the workspace with your package manager (with a mounted dependency cache, so rebuilds are fast).
 2. The app is built with `SKIP_ENV_VALIDATION=1`, so t3-env doesn't require real secrets at image-build time. Prisma projects get a placeholder `DATABASE_URL` for `prisma generate`; the real value arrives at runtime from compose.
-3. A slim runtime stage copies only the built output. SPA frontends are copied into an nginx image; SSR frontends and servers run on `node:24-slim` (with the Bun binary added when needed).
+3. A separate runtime stage copies the built output. SPA frontends are copied into an nginx image; SSR frontends and servers use `oven/bun:1` for the Bun runtime or `node:24-slim` for the Node.js runtime.
 
 ## Environment Variables
 
