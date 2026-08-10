@@ -1,0 +1,18 @@
+import "../instrument.server.mjs";
+import { createReadableStreamFromReadable } from "@react-router/node";
+import * as Sentry from "@sentry/react-router";
+import { renderToPipeableStream } from "react-dom/server";
+import { ServerRouter, type HandleErrorFunction } from "react-router";
+
+const abortDelay = 5_000;
+
+export default Sentry.createSentryHandleRequest({
+	streamTimeout: abortDelay,
+	ServerRouter,
+	renderToPipeableStream,
+	createReadableStreamFromReadable,
+});
+
+export const handleError: HandleErrorFunction = Sentry.createSentryHandleError({
+	logErrors: true,
+});

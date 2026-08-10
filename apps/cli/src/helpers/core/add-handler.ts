@@ -6,6 +6,7 @@ import {
   processAddonsDeps,
   processNxConfig,
   processPackageConfigs,
+  processSentryPlugins,
   processTurboConfig,
   processVitePlusConfig,
   processTemplateString,
@@ -351,6 +352,8 @@ async function addHandlerInternal(
 
   // Process addon templates
   await processAddonTemplates(vfs, EMBEDDED_TEMPLATES, config);
+
+  processSentryPlugins(vfs, config);
 
   // Process addon dependencies (adds deps to package.json files in VFS)
   processAddonsDeps(vfs, config);

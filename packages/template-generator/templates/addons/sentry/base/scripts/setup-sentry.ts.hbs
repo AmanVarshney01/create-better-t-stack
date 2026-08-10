@@ -1,0 +1,278 @@
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+
+type ProjectSpec = {
+	kind: "web" | "server" | "native";
+	platform: string;
+	envTargets: Array<{
+		file: string;
+		keys: string[];
+		projectKey: "SENTRY_WEB_PROJECT" | "SENTRY_SERVER_PROJECT" | "SENTRY_NATIVE_PROJECT";
+	}>;
+};
+
+type CreatedProject = {
+	project?: { slug?: string };
+	dsn?: string;
+	orgSlug?: string;
+};
+
+type ExistingProject = {
+	slug?: string;
+	dsn?: string;
+};
+
+type AuthStatus = {
+	authenticated?: boolean;
+	verification?: {
+		success?: boolean;
+		organizations?: Array<{
+			slug: string;
+			name: string;
+		}>;
+	};
+};
+
+const specs: ProjectSpec[] = [
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid") (includes frontend "astro"))}}
+	{
+		kind: "web",
+		platform: "{{#if (includes frontend "next")}}javascript-nextjs{{else if (includes frontend "nuxt")}}javascript-nuxt{{else if (includes frontend "svelte")}}javascript-sveltekit{{else if (includes frontend "solid")}}javascript-solidstart{{else if (includes frontend "astro")}}javascript-astro{{else if (includes frontend "react-router")}}javascript-react-router{{else if (includes frontend "tanstack-start")}}javascript-tanstackstart-react{{else}}javascript-react{{/if}}",
+		envTargets: [
+			{
+				file: "apps/web/.env",
+					keys: [
+					"{{#if (includes frontend "next")}}NEXT_PUBLIC_SENTRY_DSN{{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SENTRY_DSN{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SENTRY_DSN{{else}}VITE_SENTRY_DSN{{/if}}",
+	{{#unless (includes frontend "tanstack-router")}}
+						"SENTRY_DSN",
+						"SENTRY_WEB_DSN",
+	{{/unless}}
+					],
+					projectKey: "SENTRY_WEB_PROJECT",
+				},
+{{#if (eq webDeploy "docker")}}
+			{
+				file: ".env",
+					keys: ["{{#if (includes frontend "next")}}NEXT_PUBLIC_SENTRY_DSN{{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SENTRY_DSN{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SENTRY_DSN{{else}}VITE_SENTRY_DSN{{/if}}"],
+					projectKey: "SENTRY_WEB_PROJECT",
+			},
+{{/if}}
+		],
+	},
+{{/if}}
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+	{
+		kind: "native",
+		platform: "react-native",
+		envTargets: [
+			{
+				file: "apps/native/.env",
+				keys: ["EXPO_PUBLIC_SENTRY_DSN"],
+				projectKey: "SENTRY_NATIVE_PROJECT",
+			},
+		],
+	},
+{{/if}}
+{{#if (or (eq backend "hono") (eq backend "express") (eq backend "fastify") (eq backend "elysia"))}}
+	{
+		kind: "server",
+		platform: "{{#if (eq backend "express")}}{{#if (eq runtime "bun")}}bun{{else}}node-express{{/if}}{{else if (eq backend "fastify")}}{{#if (eq runtime "bun")}}bun{{else}}node-fastify{{/if}}{{else if (eq backend "hono")}}node-hono{{else}}bun{{/if}}",
+		envTargets: [
+			{
+				file: "apps/server/.env",
+				keys: ["SENTRY_DSN", "SENTRY_SERVER_DSN"],
+				projectKey: "SENTRY_SERVER_PROJECT",
+			},
+		],
+	},
+{{/if}}
+];
+
+function parseArgs(args: string[]) {
+	const values: { org?: string; team?: string; prefix: string; dryRun: boolean } = {
+		prefix: "{{projectName}}",
+		dryRun: false,
+	};
+
+	for (let index = 0; index < args.length; index += 1) {
+		const arg = args[index];
+		if (arg === "--dry-run") {
+			values.dryRun = true;
+			continue;
+		}
+		if (arg === "--help" || arg === "-h") {
+			console.log(
+				"Usage: sentry:setup [--org slug] [--team slug] [--prefix name] [--dry-run]",
+			);
+			process.exit(0);
+		}
+		if (arg === "--org" || arg === "--team" || arg === "--prefix") {
+			const value = args[index + 1];
+			if (!value) throw new Error(`Missing value for ${arg}`);
+			if (arg === "--org") values.org = value;
+			if (arg === "--team") values.team = value;
+			if (arg === "--prefix") values.prefix = value;
+			index += 1;
+			continue;
+		}
+		throw new Error(`Unknown argument: ${arg}`);
+	}
+
+	return values;
+}
+
+function runSentry(args: string[], options: { inherit?: boolean; allowFailure?: boolean } = {}) {
+	const result = spawnSync("sentry", args, {
+		cwd: process.cwd(),
+		encoding: "utf8",
+		stdio: options.inherit ? "inherit" : ["inherit", "pipe", "pipe"],
+	});
+
+	if (result.error) throw result.error;
+	if (result.status !== 0 && !options.allowFailure) {
+		throw new Error(result.stderr?.trim() || `sentry ${args.join(" ")} failed`);
+	}
+
+	return result;
+}
+
+function parseJson<T>(value: string | null | undefined, command: string): T {
+	try {
+		return JSON.parse(value || "") as T;
+	} catch {
+		throw new Error(`Could not parse JSON from ${command}`);
+	}
+}
+
+function getOrganization(requestedOrg?: string) {
+	let status = runSentry(["auth", "status", "--json"], { allowFailure: true });
+	let auth =
+		status.status === 0 ? parseJson<AuthStatus>(status.stdout, "sentry auth status") : undefined;
+
+	if (!auth?.authenticated || !auth?.verification?.success) {
+		console.log("Opening Sentry device login…");
+		runSentry(["auth", "login"], { inherit: true });
+		status = runSentry(["auth", "status", "--json"]);
+		auth = parseJson<AuthStatus>(status.stdout, "sentry auth status");
+	}
+
+	const organizations = (auth.verification?.organizations ?? []) as Array<{
+		slug: string;
+		name: string;
+	}>;
+	if (requestedOrg) {
+		if (!organizations.some((organization) => organization.slug === requestedOrg)) {
+			throw new Error(`The authenticated account cannot access Sentry organization '${requestedOrg}'.`);
+		}
+		return requestedOrg;
+	}
+	if (organizations.length === 1) return organizations[0]!.slug;
+	if (organizations.length === 0) throw new Error("The authenticated account has no Sentry organization.");
+
+	throw new Error(
+		`Multiple Sentry organizations are available. Re-run with --org <slug>:\n${organizations
+			.map((organization) => `- ${organization.slug} (${organization.name})`)
+			.join("\n")}`,
+	);
+}
+
+function getExistingProject(org: string, slug: string): ExistingProject | undefined {
+	const result = runSentry(["project", "view", `${org}/${slug}`, "--fresh", "--json"], {
+		allowFailure: true,
+	});
+	if (result.status !== 0) return undefined;
+
+	const projects = parseJson<ExistingProject[]>(result.stdout, "sentry project view");
+	return projects.find((project) => project.slug === slug && project.dsn);
+}
+
+function updateEnvFile(file: string, values: Record<string, string>) {
+	const absolutePath = path.resolve(file);
+	let content = fs.existsSync(absolutePath) ? fs.readFileSync(absolutePath, "utf8") : "";
+
+	for (const [key, value] of Object.entries(values)) {
+		const line = `${key}=${value}`;
+		const pattern = new RegExp(`^\\s*#?\\s*${key}=.*$`, "m");
+		content = pattern.test(content)
+			? content.replace(pattern, line)
+			: `${content.trimEnd()}${content.trim() ? "\n" : ""}${line}\n`;
+	}
+
+	fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+	fs.writeFileSync(absolutePath, `${content.trimEnd()}\n`);
+}
+
+function main() {
+	if (specs.length === 0) throw new Error("This stack has no Sentry-compatible application.");
+
+	const options = parseArgs(process.argv.slice(2));
+	const org = getOrganization(options.org);
+	const projects = specs.map((spec) => ({
+		...spec,
+		slug: `${options.prefix}-${spec.kind}`,
+	}));
+	const resolved = new Map<string, { dsn: string; org: string }>();
+	const missing = [] as typeof projects;
+
+	for (const project of projects) {
+		const existing = getExistingProject(org, project.slug);
+		if (existing?.dsn) {
+			resolved.set(project.slug, { dsn: existing.dsn, org });
+		} else {
+			missing.push(project);
+		}
+	}
+
+	if (options.dryRun && missing.length === 0) {
+		console.log(`Sentry setup dry run passed for ${projects.length} existing project(s).`);
+		return;
+	}
+
+	if (missing.length > 0) {
+		const createArgs = [
+			"project",
+			"create",
+			...missing.map((project) => `${org}/${project.slug}:${project.platform}`),
+			...(options.team ? ["--team", options.team] : []),
+			...(options.dryRun ? ["--dry-run"] : []),
+			"--json",
+		];
+		const created = parseJson<CreatedProject[]>(
+			runSentry(createArgs).stdout,
+			"sentry project create",
+		);
+
+		if (options.dryRun) {
+			console.log(`Sentry setup dry run passed for ${projects.length} project(s).`);
+			return;
+		}
+
+		for (const project of created) {
+			const slug = project.project?.slug;
+			if (slug && project.dsn) {
+				resolved.set(slug, { dsn: project.dsn, org: project.orgSlug ?? org });
+			}
+		}
+	}
+
+	for (const project of projects) {
+		const sentryProject = resolved.get(project.slug);
+		if (!sentryProject) throw new Error(`Sentry did not return a DSN for ${project.slug}.`);
+
+		for (const target of project.envTargets) {
+				updateEnvFile(target.file, {
+					...Object.fromEntries(target.keys.map((key) => [key, sentryProject.dsn])),
+					SENTRY_ORG: sentryProject.org,
+					SENTRY_PROJECT: project.slug,
+					[target.projectKey]: project.slug,
+				});
+		}
+	}
+
+	console.log(`Sentry is configured for ${projects.length} project(s):`);
+	for (const project of projects) console.log(`- ${org}/${project.slug}`);
+	console.log("Add SENTRY_AUTH_TOKEN to deployment secrets to upload production source maps.");
+}
+
+main();

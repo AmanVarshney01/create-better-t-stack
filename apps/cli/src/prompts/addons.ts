@@ -100,6 +100,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "evlog";
       hint = "Request logging with Better Auth context and AI SDK telemetry";
       break;
+    case "sentry":
+      label = "Sentry";
+      hint = "Error monitoring, tracing, and source maps";
+      break;
     default:
       label = addon;
       hint = `Add ${addon}`;
@@ -113,7 +117,7 @@ const ADDON_GROUPS = {
   "Code Quality": ["biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
   "Platform Extensions": ["pwa", "tauri", "electrobun", "opentui", "wxt"],
-  Observability: ["evlog"],
+  Observability: ["evlog", "sentry"],
   "AI & Agent Tools": ["skills", "mcp"],
 };
 

@@ -180,6 +180,22 @@ export const dependencyVersionMap = {
   "@stripe/stripe-js": "^9.12.1",
 
   evlog: "^2.22.4",
+
+  "@sentry/nextjs": "^10.69.0",
+  "@sentry/nuxt": "^10.69.0",
+  "@sentry/sveltekit": "^10.69.0",
+  "@sentry/solidstart": "^11.0.0-alpha.0",
+  "@sentry/astro": "^10.69.0",
+  "@sentry/react": "^10.69.0",
+  "@sentry/react-router": "^10.69.0",
+  "@sentry/tanstackstart-react": "^10.69.0",
+  "@sentry/react-native": "^8.22.0",
+  "@sentry/node": "^10.69.0",
+  "@sentry/bun": "^10.69.0",
+  "@sentry/cloudflare": "^10.69.0",
+  "@sentry/hono": "^10.69.0",
+  "@sentry/elysia": "^10.69.0",
+  sentry: "^0.42.2",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

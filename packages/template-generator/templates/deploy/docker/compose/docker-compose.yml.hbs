@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-{{#if (and (not (includes frontend "nuxt")) (or (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start")))))}}
+{{#if (or (includes addons "sentry") (and (not (includes frontend "nuxt")) (or (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start"))))))}}
       args:
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
         {{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}}: http://localhost:3000
@@ -16,6 +16,11 @@ services:
 {{/if}}
 {{#if (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start")))}}
         {{#if (includes frontend "next")}}NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}{{else}}VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY:-}{{/if}}
+{{/if}}
+{{#if (includes addons "sentry")}}
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}{{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SENTRY_DSN: ${NUXT_PUBLIC_SENTRY_DSN:-}{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SENTRY_DSN: ${PUBLIC_SENTRY_DSN:-}{{else}}VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}{{/if}}
+        SENTRY_ORG: ${SENTRY_ORG:-}
+        SENTRY_WEB_PROJECT: ${SENTRY_WEB_PROJECT:-}
 {{/if}}
 {{/if}}
     init: true

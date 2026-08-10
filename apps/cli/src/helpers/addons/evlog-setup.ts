@@ -425,6 +425,35 @@ function addSvelteHooksEvlogSetup(content: string, fsDrain: boolean) {
     nextContent = nextContent.replaceAll("createEvlogHooks()", hooksCall);
   }
 
+  if (nextContent.includes('from "@sentry/sveltekit"')) {
+    nextContent = prependMissingImports(nextContent, [
+      'import { sequence } from "@sveltejs/kit/hooks";',
+    ]);
+    if (!nextContent.includes("handle: evlogHandle")) {
+      nextContent = nextContent.replace(
+        /((?:import .+\n)+)/,
+        `$1\nconst { handle: evlogHandle, handleError: evlogHandleError } = ${hooksCall};\n\n`,
+      );
+    }
+    nextContent = nextContent.replace(
+      "const { handle: evlogHandle, handleError } =",
+      "const { handle: evlogHandle, handleError: evlogHandleError } =",
+    );
+    nextContent = nextContent.replace(
+      /export const handle = sequence\(sentryHandle,\s*([^;]+)\);/,
+      "export const handle = sequence(sentryHandle, evlogHandle, $1);",
+    );
+    nextContent = nextContent.replace(
+      "export const handle = Sentry.sentryHandle();",
+      "const sentryHandle = Sentry.sentryHandle();\nexport const handle = sequence(sentryHandle, evlogHandle);",
+    );
+    nextContent = nextContent.replace(
+      "export const handleError = Sentry.handleErrorWithSentry();",
+      "export const handleError = Sentry.handleErrorWithSentry(evlogHandleError);",
+    );
+    return nextContent;
+  }
+
   if (!nextContent.includes("export const handle") && !nextContent.includes("const authHandle")) {
     if (!nextContent.includes("createEvlogHooks(")) {
       nextContent = `${nextContent.trimEnd()}\n\nexport const { handle, handleError } = ${hooksCall};\n`;

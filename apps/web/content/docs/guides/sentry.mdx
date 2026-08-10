@@ -1,0 +1,44 @@
+---
+title: Sentry observability
+description: Configure Sentry projects, DSNs, tracing, and production source maps in a generated Better-T-Stack project
+date: Aug 8, 2026
+---
+
+Select the `sentry` addon when creating a project, or add it later with `bts add sentry`.
+
+Better-T-Stack configures the official Sentry SDK for the selected frontend, native app, and supported server. It supports Next.js, Nuxt, SvelteKit, SolidStart, Astro, React Router, TanStack Start, TanStack Router, Expo, Hono, Express, Fastify, and Elysia. SolidStart v2 currently uses Sentry's v11 prerelease because v10 does not support SolidStart v2.
+
+## Create or connect Sentry projects
+
+Install dependencies, then run:
+
+```bash
+bun run sentry:setup
+```
+
+Use `npm run` or `pnpm run` instead when the project uses that package manager.
+
+The command uses Sentry's device login, creates one project per generated application, and writes each DSN to the correct `.env` file. Existing projects are reused, so the command is safe to rerun. Useful options include:
+
+```bash
+bun run sentry:setup --org my-org --team my-team --prefix my-app
+bun run sentry:setup --dry-run
+```
+
+Public DSNs are not secrets. Do not commit `SENTRY_AUTH_TOKEN`.
+
+## Deploy
+
+Run Sentry setup before the deployment environment sync or deployment command:
+
+- Cloudflare with Alchemy: `bun run sentry:setup`, then `bun run deploy`
+- Vercel: `bun run sentry:setup`, then `bun run env:production`, then `bun run deploy:prod`
+- Docker Compose: `bun run sentry:setup`, then `bun run docker:up`
+
+Cloudflare deployments use the generated Alchemy worker bindings. The integration does not require an Alchemy Sentry provider.
+
+## Production source maps
+
+Create a Sentry organization auth token with project and release permissions and set it as `SENTRY_AUTH_TOKEN` in the deployment environment. Framework build integrations then upload production source maps. The device-login credential used by `sentry:setup` remains in Sentry's local CLI credential store and is not copied into generated projects.
+
+For monorepos with separate web and server Sentry projects, generated service-specific project variables prevent one deployment target from uploading artifacts to the other target's project.

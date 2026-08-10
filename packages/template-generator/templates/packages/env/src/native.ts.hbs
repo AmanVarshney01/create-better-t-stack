@@ -22,6 +22,9 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (includes addons "sentry")}}
+		EXPO_PUBLIC_SENTRY_DSN: z.url().optional(),
+{{/if}}
 	},
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,

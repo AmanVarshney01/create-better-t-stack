@@ -55,6 +55,97 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     }
   }
 
+  if (config.addons.includes("sentry")) {
+    addPackageDependency({
+      vfs,
+      packagePath: "package.json",
+      devDependencies: ["sentry", "tsx"],
+    });
+
+    const rootPkg = vfs.readJson<PackageJson>("package.json");
+    if (rootPkg) {
+      rootPkg.scripts = {
+        ...rootPkg.scripts,
+        "sentry:setup": "tsx scripts/setup-sentry.ts",
+      };
+      vfs.writeJson("package.json", rootPkg);
+    }
+
+    const webPkgPath = "apps/web/package.json";
+    if (vfs.exists(webPkgPath)) {
+      const webDependencies: Array<
+        | "@sentry/nextjs"
+        | "@sentry/nuxt"
+        | "@sentry/sveltekit"
+        | "@sentry/solidstart"
+        | "@sentry/astro"
+        | "@sentry/react"
+        | "@sentry/react-router"
+        | "@sentry/tanstackstart-react"
+        | "@sentry/cloudflare"
+      > = [];
+
+      if (config.frontend.includes("next")) webDependencies.push("@sentry/nextjs");
+      if (config.frontend.includes("nuxt")) webDependencies.push("@sentry/nuxt");
+      if (config.frontend.includes("svelte")) webDependencies.push("@sentry/sveltekit");
+      if (config.frontend.includes("solid")) webDependencies.push("@sentry/solidstart");
+      if (config.frontend.includes("astro")) webDependencies.push("@sentry/astro");
+      if (config.frontend.includes("tanstack-router")) webDependencies.push("@sentry/react");
+      if (config.frontend.includes("react-router")) webDependencies.push("@sentry/react-router");
+      if (config.frontend.includes("tanstack-start")) {
+        webDependencies.push("@sentry/tanstackstart-react");
+      }
+      if (
+        config.webDeploy === "cloudflare" &&
+        config.frontend.some((frontend) =>
+          ["nuxt", "astro", "react-router", "tanstack-start"].includes(frontend),
+        )
+      ) {
+        webDependencies.push("@sentry/cloudflare");
+      }
+
+      addPackageDependency({ vfs, packagePath: webPkgPath, dependencies: webDependencies });
+    }
+
+    const nativePkgPath = "apps/native/package.json";
+    if (vfs.exists(nativePkgPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: nativePkgPath,
+        dependencies: ["@sentry/react-native"],
+      });
+    }
+
+    const serverPkgPath = "apps/server/package.json";
+    if (vfs.exists(serverPkgPath)) {
+      if (config.backend === "hono") {
+        const runtimeDependency =
+          config.runtime === "workers"
+            ? "@sentry/cloudflare"
+            : config.runtime === "bun"
+              ? "@sentry/bun"
+              : "@sentry/node";
+        addPackageDependency({
+          vfs,
+          packagePath: serverPkgPath,
+          dependencies: ["@sentry/hono", runtimeDependency],
+        });
+      } else if (config.backend === "elysia") {
+        addPackageDependency({
+          vfs,
+          packagePath: serverPkgPath,
+          dependencies: ["@sentry/elysia"],
+        });
+      } else if (config.backend === "express" || config.backend === "fastify") {
+        addPackageDependency({
+          vfs,
+          packagePath: serverPkgPath,
+          dependencies: [config.runtime === "bun" ? "@sentry/bun" : "@sentry/node"],
+        });
+      }
+    }
+  }
+
   if (config.addons.includes("pwa") && hasPwaCompatibleFrontend) {
     const webPkgPath = "apps/web/package.json";
     if (vfs.exists(webPkgPath)) {

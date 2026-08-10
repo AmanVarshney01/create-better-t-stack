@@ -153,6 +153,12 @@ export async function displayPostInstallInstructions(
     output += `${pc.cyan(`${stepCounter++}.`)} ${packageManager} install\n`;
   }
 
+  if (addons?.includes("sentry")) {
+    output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} sentry:setup\n${pc.dim(
+      "   (signs in, creates or reuses projects, and writes DSNs)",
+    )}\n`;
+  }
+
   if (database === "sqlite" && dbSetup !== "d1") {
     output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:local\n${pc.dim(
       "   (optional - starts local SQLite database)",
@@ -269,6 +275,9 @@ export async function displayPostInstallInstructions(
   if (clerkInstructions) output += `\n${clerkInstructions.trim()}\n`;
   if (betterAuthConvexInstructions) output += `\n${betterAuthConvexInstructions.trim()}\n`;
   if (polarInstructions) output += `\n${polarInstructions.trim()}\n`;
+  if (addons?.includes("sentry")) {
+    output += `\n${pc.bold("Sentry source maps:")}\n${pc.cyan("•")} Add SENTRY_AUTH_TOKEN to your deployment secrets for production source-map uploads\n`;
+  }
   // Deploy steps come last so env sync happens after auth/payment keys exist
   if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
 

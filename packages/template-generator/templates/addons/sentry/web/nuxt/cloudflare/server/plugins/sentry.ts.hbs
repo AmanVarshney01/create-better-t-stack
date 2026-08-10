@@ -1,0 +1,8 @@
+import { sentryCloudflareNitroPlugin } from "@sentry/nuxt/module/plugins";
+
+export default defineNitroPlugin(
+	sentryCloudflareNitroPlugin({
+		dsn: process.env.SENTRY_DSN,
+		tracesSampleRate: 0.1,
+	}),
+);

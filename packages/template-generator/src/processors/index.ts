@@ -19,6 +19,7 @@ import { processPaymentsDeps } from "./payments-deps";
 import { processPwaPlugins } from "./pwa-plugins";
 import { processReadme } from "./readme-generator";
 import { processRuntimeDeps } from "./runtime-deps";
+import { processSentryPlugins } from "./sentry-plugins";
 import { processTurboConfig } from "./turbo-generator";
 import { processVitePlusConfig } from "./vite-plus-generator";
 import { processWorkspaceDeps } from "./workspace-deps";
@@ -64,4 +65,5 @@ export {
   processAlchemyPlugins,
   processPwaPlugins,
   processEnvVariables,
+  processSentryPlugins,
 };

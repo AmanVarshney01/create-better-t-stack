@@ -156,7 +156,10 @@ export const env = createEnv({
 		POLAR_SUCCESS_URL: z.url(),
 {{/if}}
 		CORS_ORIGIN: z.url(),
-		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+	{{#if (includes addons "sentry")}}
+			SENTRY_DSN: z.url().optional(),
+	{{/if}}
+			NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
 	runtimeEnv: {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}runtimeEnv{{else}}process.env{{/if}},
 	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
