@@ -32514,11 +32514,25 @@ body {
 `],
   ["frontend/solid/vite.config.ts.hbs", `import tailwindcss from "@tailwindcss/vite";
 import { solidStart } from "@solidjs/start/config";
+{{#if (eq webDeploy "cloudflare")}}
+import { fileURLToPath } from "node:url";
+{{/if}}
 {{#unless (eq webDeploy "cloudflare")}}
 import { nitro } from "nitro/vite";
 {{/unless}}
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
+{{#if (eq webDeploy "cloudflare")}}
+const cloudflareWorkersAlias: Record<string, string> =
+  process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
+    ? {}
+    : {
+        "cloudflare:workers": fileURLToPath(
+          new URL("./cloudflare-workers.dev.ts", import.meta.url),
+        ),
+      };
+
+{{/if}}
 export default defineConfig({
   plugins: [
     solidStart(),
@@ -32530,6 +32544,11 @@ export default defineConfig({
   server: {
     port: 3001,
   },
+{{#if (eq webDeploy "cloudflare")}}
+  resolve: {
+    alias: cloudflareWorkersAlias,
+  },
+{{/if}}
 });
 `],
   ["frontend/svelte/_gitignore", `node_modules
