@@ -130,7 +130,7 @@ const runtimeEnv = {
 export const env = createEnv({
 	server: {
 {{#if (ne database "none")}}
-{{#if (eq dbSetup "planetscale")}}
+{{#if (and (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
 		DATABASE_HOST: z.string().min(1),
 		DATABASE_USERNAME: z.string().min(1),
 		DATABASE_PASSWORD: z.string().min(1),

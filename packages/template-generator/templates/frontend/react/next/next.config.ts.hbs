@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
 	reactCompiler: true,
 	{{#if (or (includes addons "tauri") (and (includes addons "electrobun") (or (ne backend "convex") (ne auth "better-auth"))))}}
 	output: "export",
-	{{else if (eq webDeploy "docker")}}
+	{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
 	output: "standalone",
 	{{/if}}
 	{{#if (includes examples "ai")}}

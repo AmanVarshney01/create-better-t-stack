@@ -1,0 +1,203 @@
+{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (or (eq orm "prisma") (eq dbSetup "prisma-postgres")))}}
+import * as Command from "alchemy/Command";
+{{/if}}
+{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (eq dbSetup "neon"))}}
+import * as Neon from "alchemy/Neon";
+{{/if}}
+{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (eq dbSetup "planetscale"))}}
+import * as Planetscale from "alchemy/Planetscale";
+{{/if}}
+{{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma") (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (eq dbSetup "prisma-postgres")))}}
+import * as Prisma from "alchemy/Prisma";
+{{/if}}
+{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (or (eq dbSetup "neon") (and (eq dbSetup "planetscale") (eq database "mysql") (eq orm "prisma")) (eq dbSetup "prisma-postgres")))}}
+import * as Output from "alchemy/Output";
+{{/if}}
+{{#unless (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
+{{#if (and (ne dbSetup "d1") (ne database "none"))}}
+import * as Config from "effect/Config";
+{{/if}}
+{{/unless}}
+import * as Effect from "effect/Effect";
+{{#if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
+import * as Layer from "effect/Layer";
+{{/if}}
+{{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (or (eq dbSetup "neon") (and (eq dbSetup "planetscale") (eq database "mysql"))))}}
+import * as Redacted from "effect/Redacted";
+{{/if}}
+
+{{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma") (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (eq dbSetup "prisma-postgres")))}}
+export const prismaProject = Prisma.Project("project", {
+  createDatabase: false,
+  region: "us-east-1",
+});
+{{/if}}
+
+{{#if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
+const managedDatabase = Effect.gen(function* () {
+  {{#if (eq dbSetup "neon")}}
+  const database = yield* Neon.Project("database", {
+    {{#if (eq orm "drizzle")}}
+    migrationsDir: "../../packages/db/src/migrations",
+    {{/if}}
+  });
+  const runtimeUrl = database.pooledConnectionUri.pipe(Output.map(Redacted.make));
+  {{#if (eq orm "prisma")}}
+  const migrationUrl = database.connectionUri.pipe(Output.map(Redacted.make));
+  {{/if}}
+  {{else if (eq dbSetup "planetscale")}}
+  {{#if (eq database "postgres")}}
+  const database = yield* Planetscale.PostgresDatabase("database", {
+    clusterSize: "PS_DEV",
+    {{#if (eq orm "drizzle")}}
+    migrationsDir: "../../packages/db/src/migrations",
+    {{/if}}
+  });
+  const role = yield* Planetscale.PostgresRole("database-role", {
+    database,
+    inheritedRoles: ["pg_read_all_data", "pg_write_all_data"],
+  });
+  const runtimeUrl = role.connectionUrlPooled;
+  {{#if (eq orm "prisma")}}
+  const migrationRole = yield* Planetscale.PostgresRole("database-migration-role", {
+    database,
+    inheritedRoles: ["postgres"],
+    ttl: 600,
+  });
+  const migrationUrl = migrationRole.connectionUrl;
+  {{/if}}
+  {{else}}
+  const database = yield* Planetscale.MySQLDatabase("database", {
+    clusterSize: "PS_DEV",
+    {{#if (eq orm "drizzle")}}
+    migrationsDir: "../../packages/db/src/migrations",
+    {{/if}}
+  });
+  const password = yield* Planetscale.MySQLPassword("database-password", {
+    database,
+    role: "readwriter",
+  });
+  {{#if (eq orm "prisma")}}
+  const runtimeUrl = Output.all(
+    password.username,
+    password.password,
+    password.host,
+    password.database,
+  ).pipe(
+    Output.map(([username, secret, host, databaseName]) =>
+      Redacted.make(
+        `mysql://${encodeURIComponent(username)}:${encodeURIComponent(Redacted.value(secret))}@${host}/${databaseName}?sslaccept=strict`,
+      ),
+    ),
+  );
+  const migrationPassword = yield* Planetscale.MySQLPassword("database-migration-password", {
+    database,
+    role: "admin",
+    ttl: 600,
+  });
+  const migrationUrl = Output.all(
+    migrationPassword.username,
+    migrationPassword.password,
+    migrationPassword.host,
+    migrationPassword.database,
+  ).pipe(
+    Output.map(([username, secret, host, databaseName]) =>
+      Redacted.make(
+        `mysql://${encodeURIComponent(username)}:${encodeURIComponent(Redacted.value(secret))}@${host}/${databaseName}?sslaccept=strict`,
+      ),
+    ),
+  );
+  {{/if}}
+  {{/if}}
+  {{else}}
+  const project = yield* prismaProject;
+  const database = yield* Prisma.Postgres("database", { project });
+  const connection = yield* Prisma.Connection("database-connection", { database });
+  const runtimeUrl = Output.all(connection.directConnectionString, connection.databaseUrl).pipe(
+    Output.map(([directUrl, fallbackUrl]) => {
+      const url = directUrl ?? fallbackUrl;
+      if (!url) {
+        throw new Error("Prisma did not return a database connection URL");
+      }
+      return url;
+    }),
+  );
+  const migrationUrl = runtimeUrl;
+  {{/if}}
+
+  {{#if (or (eq orm "prisma") (eq dbSetup "prisma-postgres"))}}
+  yield* Command.Exec("database-migrations", {
+    command: "{{packageManager}} run db:migrate:deploy",
+    cwd: "../../packages/db",
+    env: { DATABASE_URL: migrationUrl },
+    memo: {
+      include: [
+        {{#if (eq orm "prisma")}}
+        "prisma/migrations/**",
+        "prisma/schema/**",
+        {{else}}
+        "src/migrations/**",
+        "src/schema/**",
+        {{/if}}
+      ],
+    },
+  });
+  {{/if}}
+
+  return {
+    {{#if (and (eq dbSetup "planetscale") (eq database "mysql") (eq orm "drizzle"))}}
+    runtimeEnv: {
+      DATABASE_HOST: password.host,
+      DATABASE_USERNAME: password.username,
+      DATABASE_PASSWORD: password.password,
+    },
+    {{else}}
+    runtimeEnv: { DATABASE_URL: runtimeUrl },
+    {{/if}}
+  };
+});
+
+export const databaseEnv = managedDatabase.pipe(Effect.map(({ runtimeEnv }) => runtimeEnv));
+
+export const databaseBindings = {
+  {{#if (and (eq dbSetup "planetscale") (eq database "mysql") (eq orm "drizzle"))}}
+  DATABASE_HOST: databaseEnv.pipe(Effect.map(({ DATABASE_HOST }) => DATABASE_HOST)),
+  DATABASE_USERNAME: databaseEnv.pipe(Effect.map(({ DATABASE_USERNAME }) => DATABASE_USERNAME)),
+  DATABASE_PASSWORD: databaseEnv.pipe(Effect.map(({ DATABASE_PASSWORD }) => DATABASE_PASSWORD)),
+  {{else}}
+  DATABASE_URL: databaseEnv.pipe(Effect.map(({ DATABASE_URL }) => DATABASE_URL)),
+  {{/if}}
+};
+
+export const databaseProviders = Layer.mergeAll(
+  {{#if (or (eq orm "prisma") (eq dbSetup "prisma-postgres"))}}
+  Command.providers(),
+  {{/if}}
+  {{#if (eq dbSetup "neon")}}
+  Neon.providers(),
+  {{else if (eq dbSetup "planetscale")}}
+  Planetscale.providers(),
+  {{else}}
+  Prisma.providers(),
+  {{/if}}
+  {{#if (and (or (eq webDeploy "prisma") (eq serverDeploy "prisma")) (ne dbSetup "prisma-postgres"))}}
+  Prisma.providers(),
+  {{/if}}
+);
+{{else}}
+export const databaseEnv = Effect.succeed({
+  {{#if (eq dbSetup "d1")}}
+  // D1 is a native Worker binding and is added by alchemy.run.ts.
+  {{else if (and (ne database "none") (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
+  DATABASE_HOST: Config.string("DATABASE_HOST"),
+  DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+  DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
+  {{else if (ne database "none")}}
+  DATABASE_URL: Config.redacted("DATABASE_URL"),
+  {{/if}}
+});
+
+{{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma"))}}
+export const databaseProviders = Prisma.providers();
+{{/if}}
+{{/if}}

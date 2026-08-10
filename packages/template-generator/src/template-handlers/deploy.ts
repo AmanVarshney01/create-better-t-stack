@@ -10,7 +10,10 @@ export async function processDeployTemplates(
 ): Promise<void> {
   const isBackendSelf = config.backend === "self";
 
-  if (config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare") {
+  if (
+    ["cloudflare", "prisma"].includes(config.webDeploy) ||
+    ["cloudflare", "prisma"].includes(config.serverDeploy)
+  ) {
     processTemplatesFromPrefix(vfs, templates, "packages/infra", "packages/infra", config);
   }
 
@@ -25,6 +28,7 @@ export async function processDeployTemplates(
   if (
     config.webDeploy !== "none" &&
     config.webDeploy !== "cloudflare" &&
+    config.webDeploy !== "prisma" &&
     config.webDeploy !== "vercel"
   ) {
     const templateMap: Record<string, string> = {
@@ -54,6 +58,7 @@ export async function processDeployTemplates(
   if (
     config.serverDeploy !== "none" &&
     config.serverDeploy !== "cloudflare" &&
+    config.serverDeploy !== "prisma" &&
     config.serverDeploy !== "vercel" &&
     !isBackendSelf
   ) {

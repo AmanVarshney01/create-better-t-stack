@@ -2,13 +2,13 @@
 
 ### Requirement: Vetted exact Alchemy version
 
-Every generated Cloudflare project SHALL use the exact accepted Alchemy version. The currently accepted version SHALL be `alchemy@2.0.0-beta.69`; Alchemy version ranges SHALL NOT be generated. Because beta.69's declared Effect range admits an incompatible beta.104, the generated `effect`, `@effect/platform-node`, and `@effect/platform-bun` versions SHALL be pinned exactly to beta.103. A replacement version SHALL pass every applicable Better-T-Stack offline and live gate before becoming accepted. A fix on main or in a pull request SHALL not be treated as available until a containing release is pinned and verified. Exact pinning is a permanent publication-safety policy, not a temporary beta shim.
+Every generated Alchemy project SHALL use the exact accepted Alchemy version. The currently accepted version SHALL be `alchemy@2.0.0-beta.70`; Alchemy version ranges SHALL NOT be generated. The generated `effect`, `@effect/platform-node`, and `@effect/platform-bun` versions SHALL be pinned exactly to beta.106 as the verified compatible set. A replacement version SHALL pass every applicable Better-T-Stack offline and live gate before becoming accepted. A fix on main or in a pull request SHALL not be treated as available until a containing release is pinned and verified. Exact pinning is a permanent publication-safety policy, not a temporary beta shim.
 
 #### Scenario: Generate a Cloudflare target
 
 - **WHEN** either deployment plane selects Cloudflare
-- **THEN** the infra package SHALL depend on exactly `alchemy@2.0.0-beta.69`
-- **AND** its Effect and Effect platform dependencies SHALL be pinned exactly to `4.0.0-beta.103`
+- **THEN** the infra package SHALL depend on exactly `alchemy@2.0.0-beta.70`
+- **AND** its Effect and Effect platform dependencies SHALL be pinned exactly to `4.0.0-beta.106`
 - **AND** the generated package manager SHALL resolve that exact version
 
 #### Scenario: Evaluate an upgrade
@@ -283,15 +283,15 @@ First-class framework resources SHALL be adopted in framework-scoped changes aft
 - **THEN** that framework SHALL remain on its generic path while independently passing frameworks may migrate
 - **AND** generated code SHALL contain no runtime version switch between the paths
 
-### Requirement: Cloudflare-only framework scope
+### Requirement: Cloudflare framework-resource scope
 
-This design SHALL change only Alchemy-managed Cloudflare web resources and the Cloudflare-specific framework configuration they replace. It SHALL NOT add Vercel, Railway, Docker, Prisma Compute, Alchemy Prisma Postgres, Waku, or a cross-provider deployment abstraction.
+Cloudflare framework-resource adoption SHALL change only Alchemy-managed Cloudflare web resources and the Cloudflare-specific framework configuration they replace. It SHALL NOT add or redesign Vercel, Railway, Docker, Waku, or a cross-provider deployment abstraction. Separate managed-database and Prisma deployment capabilities SHALL be evaluated by their own requirements.
 
 #### Scenario: Implement the framework-resource design
 
 - **WHEN** implementation tasks from this specification are completed
-- **THEN** deployment enums and templates for non-Cloudflare providers SHALL be unchanged
-- **AND** Prisma SHALL appear only in existing Cloudflare D1 and database-client regression coverage, not as a newly generated Alchemy provider
+- **THEN** Vercel, Railway, and Docker deployment behavior SHALL be unchanged
+- **AND** managed databases and Prisma deployment SHALL remain governed by their separate specifications
 
 ### Requirement: Sanctioned Alchemy compatibility shims
 

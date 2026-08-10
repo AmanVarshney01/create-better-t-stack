@@ -1,17 +1,39 @@
 import * as Alchemy from "alchemy";
+{{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma"))}}
+import * as Prisma from "alchemy/Prisma";
+{{/if}}
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
 import * as Cloudflare from "alchemy/Cloudflare";
+{{/if}}
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+{{#if (and (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare")) (or (eq webDeploy "prisma") (eq serverDeploy "prisma") (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)))}}
+import * as Layer from "effect/Layer";
+{{/if}}
 import { config } from "dotenv";
+import {
+  {{#if (or (eq serverDeploy "prisma") (and (eq webDeploy "prisma") (eq backend "self")))}}
+  databaseEnv,
+  {{/if}}
+  {{#if (and (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy) (or (eq serverDeploy "cloudflare") (and (eq webDeploy "cloudflare") (eq backend "self"))))}}
+  databaseBindings,
+  {{/if}}
+  {{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma") (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy))}}
+  databaseProviders,
+  {{/if}}
+  {{#if (or (eq webDeploy "prisma") (eq serverDeploy "prisma"))}}
+  prismaProject,
+  {{/if}}
+} from "./database";
 
-{{#if (and (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
+{{#if (and (isAlchemyDeploy webDeploy) (isAlchemyDeploy serverDeploy))}}
 config({ path: "./.env" });
 config({ path: "../../apps/web/.env" });
 config({ path: "../../apps/server/.env" });
-{{else if (eq webDeploy "cloudflare")}}
+{{else if (isAlchemyDeploy webDeploy)}}
 config({ path: "./.env" });
 config({ path: "../../apps/web/.env" });
-{{else if (eq serverDeploy "cloudflare")}}
+{{else if (isAlchemyDeploy serverDeploy)}}
 config({ path: "./.env" });
 config({ path: "../../apps/server/.env" });
 {{/if}}
@@ -36,6 +58,12 @@ export const server = Cloudflare.Worker("server", {
   env: {
     {{#if (eq dbSetup "d1")}}
     DB: db,
+    {{else if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
+    ...databaseBindings,
+    {{else if (and (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
+    DATABASE_HOST: Config.string("DATABASE_HOST"),
+    DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+    DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
     {{else if (ne database "none")}}
     DATABASE_URL: Config.redacted("DATABASE_URL"),
     {{/if}}
@@ -60,20 +88,194 @@ export const server = Cloudflare.Worker("server", {
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
     {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: Config.string("DATABASE_HOST"),
-    DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
-    DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
-    {{/if}}
-    {{/if}}
   },
   dev: {
     port: 3000,
   },
-});
+  });
 
 export type ServerEnv = Cloudflare.InferEnv<typeof server>;
+{{/if}}
+
+{{#if (eq serverDeploy "prisma")}}
+export const server = Prisma.Compute("server", Effect.gen(function* () {
+  const project = yield* prismaProject;
+  const resolvedDatabaseEnv = yield* databaseEnv;
+
+  return {
+    project,
+    path: "../../apps/server",
+    build: {
+      type: "auto" as const,
+      framework: "bun" as const,
+    },
+    entrypoint: "src/index.ts",
+    port: 3000,
+    env: {
+      ...resolvedDatabaseEnv,
+      CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+      {{#if (includes addons "sentry")}}
+      SENTRY_DSN: Config.string("SENTRY_SERVER_DSN"),
+      {{/if}}
+      {{#if (eq auth "better-auth")}}
+      BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+      BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+      {{/if}}
+      {{#if (eq auth "clerk")}}
+      CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+      {{#if (or (eq backend "express") (eq backend "fastify") (and (ne api "none") (or (eq backend "hono") (eq backend "elysia"))))}}
+      CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),
+      {{/if}}
+      {{/if}}
+      {{#if (includes examples "ai")}}
+      GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
+      {{/if}}
+      {{#if (eq payments "polar")}}
+      POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+      POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
+      {{/if}}
+      {{#if (eq dbSetup "turso")}}
+      DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
+      {{/if}}
+    },
+    healthCheck: { path: "/" },
+    destroyOldDeployment: true,
+    dev: {
+      command: "{{packageManager}} run dev:bare",
+      port: 3000,
+    },
+  };
+}));
+{{/if}}
+
+{{#if (eq webDeploy "prisma")}}
+export const web = Prisma.Compute("web", Effect.gen(function* () {
+  const project = yield* prismaProject;
+  {{#if (eq backend "self")}}
+  const resolvedDatabaseEnv = yield* databaseEnv;
+  {{else}}
+  {{#if (isAlchemyDeploy serverDeploy)}}
+  const deployedServer = yield* server;
+  {{/if}}
+  {{/if}}
+
+  const webEnv = {
+    {{#if (includes addons "sentry")}}
+    SENTRY_DSN: Config.string("SENTRY_WEB_DSN"),
+    {{#if (includes frontend "next")}}
+    NEXT_PUBLIC_SENTRY_DSN: Config.string("NEXT_PUBLIC_SENTRY_DSN"),
+    {{else if (includes frontend "nuxt")}}
+    NUXT_PUBLIC_SENTRY_DSN: Config.string("NUXT_PUBLIC_SENTRY_DSN"),
+    {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
+    PUBLIC_SENTRY_DSN: Config.string("PUBLIC_SENTRY_DSN"),
+    {{else}}
+    VITE_SENTRY_DSN: Config.string("VITE_SENTRY_DSN"),
+    {{/if}}
+    {{/if}}
+    {{#if (eq backend "self")}}
+    ...resolvedDatabaseEnv,
+    CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+    BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+    {{#if (ne api "none")}}
+    CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),
+    {{/if}}
+    {{/if}}
+    {{#if (includes examples "ai")}}
+    GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+    POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
+    {{/if}}
+    {{/if}}
+    {{#if (includes frontend "next")}}
+    {{#if (eq backend "convex")}}
+    NEXT_PUBLIC_CONVEX_URL: Config.string("NEXT_PUBLIC_CONVEX_URL"),
+    {{#if (eq auth "better-auth")}}
+    NEXT_PUBLIC_CONVEX_SITE_URL: Config.string("NEXT_PUBLIC_CONVEX_SITE_URL"),
+    {{/if}}
+    {{else if (ne backend "self")}}
+    NEXT_PUBLIC_SERVER_URL: {{#if (isAlchemyDeploy serverDeploy)}}deployedServer.url{{else}}Config.string("NEXT_PUBLIC_SERVER_URL"){{/if}},
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.string("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),
+    {{/if}}
+    {{else if (includes frontend "nuxt")}}
+    {{#if (eq backend "convex")}}
+    NUXT_PUBLIC_CONVEX_URL: Config.string("NUXT_PUBLIC_CONVEX_URL"),
+    {{#if (eq auth "better-auth")}}
+    NUXT_PUBLIC_CONVEX_SITE_URL: Config.string("NUXT_PUBLIC_CONVEX_SITE_URL"),
+    {{/if}}
+    {{else if (ne backend "self")}}
+    NUXT_PUBLIC_SERVER_URL: {{#if (isAlchemyDeploy serverDeploy)}}deployedServer.url{{else}}Config.string("NUXT_PUBLIC_SERVER_URL"){{/if}},
+    {{/if}}
+    {{else if (includes frontend "astro")}}
+    {{#if (ne backend "self")}}
+    PUBLIC_SERVER_URL: {{#if (isAlchemyDeploy serverDeploy)}}deployedServer.url{{else}}Config.string("PUBLIC_SERVER_URL"){{/if}},
+    {{/if}}
+    {{else}}
+    {{#if (eq backend "convex")}}
+    VITE_CONVEX_URL: Config.string("VITE_CONVEX_URL"),
+    {{#if (eq auth "better-auth")}}
+    VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
+    {{/if}}
+    {{else if (ne backend "self")}}
+    VITE_SERVER_URL: {{#if (isAlchemyDeploy serverDeploy)}}deployedServer.url{{else}}Config.string("VITE_SERVER_URL"){{/if}},
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),
+    {{/if}}
+    {{/if}}
+  };
+
+  {{#if (includes addons "sentry")}}
+  const webBuildEnv = {
+    ...webEnv,
+    SENTRY_ORG: Config.string("SENTRY_ORG"),
+    SENTRY_PROJECT: Config.string("SENTRY_PROJECT"),
+    SENTRY_WEB_PROJECT: Config.string("SENTRY_WEB_PROJECT"),
+    SENTRY_AUTH_TOKEN: Config.redacted("SENTRY_AUTH_TOKEN"),
+  };
+  {{/if}}
+
+  return {
+    project,
+    path: "../../apps/web",
+    {{#if (includes frontend "next")}}
+    build: { type: "auto" as const, framework: "nextjs" as const, env: {{#if (includes addons "sentry")}}webBuildEnv{{else}}webEnv{{/if}} },
+    {{else if (includes frontend "nuxt")}}
+    build: { type: "auto" as const, framework: "nuxt" as const, env: {{#if (includes addons "sentry")}}webBuildEnv{{else}}webEnv{{/if}} },
+    {{else if (includes frontend "astro")}}
+    build: { type: "auto" as const, framework: "astro" as const, env: {{#if (includes addons "sentry")}}webBuildEnv{{else}}webEnv{{/if}} },
+    {{else if (includes frontend "tanstack-start")}}
+    build: { type: "auto" as const, framework: "tanstack-start" as const, env: {{#if (includes addons "sentry")}}webBuildEnv{{else}}webEnv{{/if}} },
+    {{else}}
+    build: {
+      command: "{{packageManager}} run build",
+      outdir: ".output",
+      entrypoint: "server/index.mjs",
+      env: {{#if (includes addons "sentry")}}webBuildEnv{{else}}webEnv{{/if}},
+    },
+    port: 3000,
+    {{/if}}
+    env: webEnv,
+    healthCheck: { path: "/" },
+    destroyOldDeployment: true,
+    dev: {
+      command: "{{packageManager}} run dev:bare",
+      port: {{#if (includes frontend "astro")}}4321{{else}}3001{{/if}},
+      env: webEnv,
+    },
+  };
+}));
 {{/if}}
 
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
@@ -93,6 +295,12 @@ export const web = Cloudflare.Website.StaticSite("web", {
         IMAGES: Cloudflare.Images.Images(),
         {{#if (eq dbSetup "d1")}}
         DB: db,
+        {{else if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
+        ...databaseBindings,
+        {{else if (and (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
         {{else if (ne database "none")}}
         DATABASE_URL: Config.redacted("DATABASE_URL"),
         {{/if}}
@@ -118,19 +326,12 @@ export const web = Cloudflare.Website.StaticSite("web", {
         {{#if (eq dbSetup "turso")}}
         DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
         {{/if}}
-        {{#if (eq database "mysql")}}
-        {{#if (eq orm "drizzle")}}
-        DATABASE_HOST: Config.string("DATABASE_HOST"),
-        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
-        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
-        {{/if}}
-        {{/if}}
       },
       dev: {
         command: "{{packageManager}} run dev:bare",
         url: "http://localhost:3001",
       },
-});
+      });
 {{else if (includes frontend "nuxt")}}
 export const web = Cloudflare.Website.StaticSite("web", {
       cwd: "../../apps/web",
@@ -146,6 +347,12 @@ export const web = Cloudflare.Website.StaticSite("web", {
       env: {
         {{#if (eq dbSetup "d1")}}
         DB: db,
+        {{else if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
+        ...databaseBindings,
+        {{else if (and (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
         {{else if (ne database "none")}}
         DATABASE_URL: Config.redacted("DATABASE_URL"),
         {{/if}}
@@ -164,19 +371,12 @@ export const web = Cloudflare.Website.StaticSite("web", {
         {{#if (eq dbSetup "turso")}}
         DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
         {{/if}}
-        {{#if (eq database "mysql")}}
-        {{#if (eq orm "drizzle")}}
-        DATABASE_HOST: Config.string("DATABASE_HOST"),
-        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
-        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
-        {{/if}}
-        {{/if}}
       },
       dev: {
         command: "{{packageManager}} run dev:bare",
         url: "http://localhost:3001",
       },
-});
+      });
 {{else if (includes frontend "svelte")}}
 // _worker.js is a shim importing outside its directory, so it must be bundled
 export const web = Cloudflare.Website.StaticSite("web", {
@@ -192,6 +392,12 @@ export const web = Cloudflare.Website.StaticSite("web", {
       env: {
         {{#if (eq dbSetup "d1")}}
         DB: db,
+        {{else if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
+        ...databaseBindings,
+        {{else if (and (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
         {{else if (ne database "none")}}
         DATABASE_URL: Config.redacted("DATABASE_URL"),
         {{/if}}
@@ -210,19 +416,12 @@ export const web = Cloudflare.Website.StaticSite("web", {
         {{#if (eq dbSetup "turso")}}
         DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
         {{/if}}
-        {{#if (eq database "mysql")}}
-        {{#if (eq orm "drizzle")}}
-        DATABASE_HOST: Config.string("DATABASE_HOST"),
-        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
-        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
-        {{/if}}
-        {{/if}}
       },
       dev: {
         command: "{{packageManager}} run dev:bare",
         url: "http://localhost:5173",
       },
-});
+      });
 {{else if (includes frontend "solid")}}
 export const web = Cloudflare.Website.Vite("web", {
   rootDir: "../../apps/web",
@@ -235,6 +434,12 @@ export const web = Cloudflare.Website.Vite("web", {
   env: {
     {{#if (eq dbSetup "d1")}}
     DB: db,
+    {{else if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
+    ...databaseBindings,
+    {{else if (and (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
+    DATABASE_HOST: Config.string("DATABASE_HOST"),
+    DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+    DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
     {{else if (ne database "none")}}
     DATABASE_URL: Config.redacted("DATABASE_URL"),
     {{/if}}
@@ -260,15 +465,8 @@ export const web = Cloudflare.Website.Vite("web", {
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
     {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: Config.string("DATABASE_HOST"),
-    DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
-    DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
-    {{/if}}
-    {{/if}}
   },
-});
+  });
 {{else if (includes frontend "astro")}}
 export const web = Cloudflare.Website.StaticSite("web", {
       cwd: "../../apps/web",
@@ -287,6 +485,12 @@ export const web = Cloudflare.Website.StaticSite("web", {
         IMAGES: Cloudflare.Images.Images(),
         {{#if (eq dbSetup "d1")}}
         DB: db,
+        {{else if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
+        ...databaseBindings,
+        {{else if (and (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
         {{else if (ne database "none")}}
         DATABASE_URL: Config.redacted("DATABASE_URL"),
         {{/if}}
@@ -302,19 +506,12 @@ export const web = Cloudflare.Website.StaticSite("web", {
         {{#if (eq dbSetup "turso")}}
         DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
         {{/if}}
-        {{#if (eq database "mysql")}}
-        {{#if (eq orm "drizzle")}}
-        DATABASE_HOST: Config.string("DATABASE_HOST"),
-        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
-        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
-        {{/if}}
-        {{/if}}
       },
       dev: {
         command: "{{packageManager}} run dev:bare",
         url: "http://localhost:4321",
       },
-});
+      });
 {{else if (includes frontend "tanstack-start")}}
 export const web = Cloudflare.Website.Vite("web", {
   rootDir: "../../apps/web",
@@ -324,6 +521,12 @@ export const web = Cloudflare.Website.Vite("web", {
   env: {
     {{#if (eq dbSetup "d1")}}
     DB: db,
+    {{else if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
+    ...databaseBindings,
+    {{else if (and (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
+    DATABASE_HOST: Config.string("DATABASE_HOST"),
+    DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+    DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
     {{else if (ne database "none")}}
     DATABASE_URL: Config.redacted("DATABASE_URL"),
     {{/if}}
@@ -349,15 +552,8 @@ export const web = Cloudflare.Website.Vite("web", {
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
     {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: Config.string("DATABASE_HOST"),
-    DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
-    DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
-    {{/if}}
-    {{/if}}
   },
-});
+  });
 {{/if}}
 
 export type WebEnv = Cloudflare.InferEnv<typeof web>;
@@ -366,11 +562,21 @@ export type WebEnv = Cloudflare.InferEnv<typeof web>;
 export default Alchemy.Stack(
   "{{projectName}}",
   {
+    {{#if (and (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare")) (or (eq webDeploy "prisma") (eq serverDeploy "prisma") (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)))}}
+    providers: Layer.mergeAll(Cloudflare.providers(), databaseProviders),
+    {{else if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
     providers: Cloudflare.providers(),
+    {{else}}
+    providers: databaseProviders,
+    {{/if}}
+    {{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
     state: Cloudflare.state(),
+    {{else}}
+    state: Alchemy.localState(),
+    {{/if}}
   },
   Effect.gen(function* () {
-    {{#if (eq serverDeploy "cloudflare")}}
+    {{#if (isAlchemyDeploy serverDeploy)}}
     const serverWorker = yield* server;
     {{/if}}
     {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
@@ -396,7 +602,7 @@ export default Alchemy.Stack(
             NEXT_PUBLIC_CONVEX_SITE_URL: Config.string("NEXT_PUBLIC_CONVEX_SITE_URL"),
             {{/if}}
             {{else}}
-            {{#if (eq serverDeploy "cloudflare")}}
+            {{#if (isAlchemyDeploy serverDeploy)}}
             NEXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
             {{else}}
             NEXT_PUBLIC_SERVER_URL: Config.string("NEXT_PUBLIC_SERVER_URL"),
@@ -431,7 +637,7 @@ export default Alchemy.Stack(
             NUXT_PUBLIC_CONVEX_SITE_URL: Config.string("NUXT_PUBLIC_CONVEX_SITE_URL"),
             {{/if}}
             {{else}}
-            {{#if (eq serverDeploy "cloudflare")}}
+            {{#if (isAlchemyDeploy serverDeploy)}}
             NUXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
             {{else}}
             NUXT_PUBLIC_SERVER_URL: Config.string("NUXT_PUBLIC_SERVER_URL"),
@@ -462,7 +668,7 @@ export default Alchemy.Stack(
             PUBLIC_CONVEX_SITE_URL: Config.string("PUBLIC_CONVEX_SITE_URL"),
             {{/if}}
             {{else}}
-            {{#if (eq serverDeploy "cloudflare")}}
+            {{#if (isAlchemyDeploy serverDeploy)}}
             PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
             {{else}}
             PUBLIC_SERVER_URL: Config.string("PUBLIC_SERVER_URL"),
@@ -490,7 +696,7 @@ export default Alchemy.Stack(
             // the astro cloudflare adapter expects SESSION (KV) and IMAGES bindings
             SESSION: Cloudflare.KV.Namespace("session"),
             IMAGES: Cloudflare.Images.Images(),
-            {{#if (eq serverDeploy "cloudflare")}}
+            {{#if (isAlchemyDeploy serverDeploy)}}
             PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
             {{else}}
             PUBLIC_SERVER_URL: Config.string("PUBLIC_SERVER_URL"),
@@ -514,7 +720,7 @@ export default Alchemy.Stack(
         VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
         {{/if}}
         {{else}}
-        {{#if (eq serverDeploy "cloudflare")}}
+        {{#if (isAlchemyDeploy serverDeploy)}}
         VITE_SERVER_URL: serverWorker.url.as<string>(),
         {{else}}
         VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
@@ -539,7 +745,7 @@ export default Alchemy.Stack(
         VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
         {{/if}}
         {{else}}
-        {{#if (eq serverDeploy "cloudflare")}}
+        {{#if (isAlchemyDeploy serverDeploy)}}
         VITE_SERVER_URL: serverWorker.url.as<string>(),
         {{else}}
         VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
@@ -567,7 +773,7 @@ export default Alchemy.Stack(
         VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
         {{/if}}
         {{else}}
-        {{#if (eq serverDeploy "cloudflare")}}
+        {{#if (isAlchemyDeploy serverDeploy)}}
         VITE_SERVER_URL: serverWorker.url.as<string>(),
         {{else}}
         VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
@@ -589,7 +795,7 @@ export default Alchemy.Stack(
         VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
         {{/if}}
         {{else}}
-        {{#if (eq serverDeploy "cloudflare")}}
+        {{#if (isAlchemyDeploy serverDeploy)}}
         VITE_SERVER_URL: serverWorker.url.as<string>(),
         {{else}}
         VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
@@ -598,13 +804,15 @@ export default Alchemy.Stack(
       },
     });
     {{/if}}
+    {{else if (eq webDeploy "prisma")}}
+    const webWorker = yield* web;
     {{/if}}
 
     return {
-      {{#if (eq webDeploy "cloudflare")}}
+      {{#if (isAlchemyDeploy webDeploy)}}
       web: webWorker.url,
       {{/if}}
-      {{#if (eq serverDeploy "cloudflare")}}
+      {{#if (isAlchemyDeploy serverDeploy)}}
       server: serverWorker.url,
       {{/if}}
     };

@@ -71,6 +71,30 @@ describe("pnpm workspace", () => {
     });
   });
 
+  it("adds Alchemy build approvals for Prisma deployment", async () => {
+    const workspace = await readPnpmWorkspace({
+      projectName: "pnpm-prisma-deploy",
+      frontend: ["solid"],
+      backend: "self",
+      runtime: "none",
+      api: "orpc",
+      database: "postgres",
+      orm: "drizzle",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["none"],
+      examples: ["todo"],
+      dbSetup: "neon",
+      webDeploy: "prisma",
+      serverDeploy: "none",
+    });
+
+    expect(workspace.allowBuilds).toMatchObject({
+      "msgpackr-extract": true,
+      workerd: true,
+    });
+  });
+
   it("adds build approvals for node runtime and workspace addons", async () => {
     const workspace = await readPnpmWorkspace({
       projectName: "pnpm-node-addons",

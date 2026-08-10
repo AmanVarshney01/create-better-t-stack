@@ -15,19 +15,18 @@ export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflar
 	return drizzle(sql, { schema });
 }
 {{else}}
-import { drizzle } from "drizzle-orm/node-postgres";
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
-import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+{{else}}
+import { drizzle } from "drizzle-orm/node-postgres";
 {{/if}}
 
 export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
-	const pool = new Pool({
-		connectionString: env.DATABASE_URL,
-		maxUses: 1,
-	});
+	const client = postgres(env.DATABASE_URL, { max: 1 });
 
-	return drizzle({ client: pool, schema });
+	return drizzle({ client, schema });
 {{else}}
 	return drizzle(env.DATABASE_URL, { schema });
 {{/if}}
@@ -52,17 +51,14 @@ export function createDb() {
 	return drizzle(sql, { schema });
 }
 {{else}}
-import { drizzle } from "drizzle-orm/node-postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 import { env } from "@{{projectName}}/env/server";
-import { Pool } from "pg";
+import postgres from "postgres";
 
 export function createDb() {
-	const pool = new Pool({
-		connectionString: env.DATABASE_URL || "",
-		maxUses: 1,
-	});
+	const client = postgres(env.DATABASE_URL || "", { max: 1 });
 
-	return drizzle({ client: pool, schema });
+	return drizzle({ client, schema });
 }
 {{/if}}
 {{/if}}

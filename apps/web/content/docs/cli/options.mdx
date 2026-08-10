@@ -351,6 +351,7 @@ Web deployment configuration:
 
 - `none`: No deployment setup
 - `cloudflare`: Cloudflare Workers deployment (via Alchemy infrastructure as code)
+- `prisma`: Prisma deployment via Alchemy (Next.js, Nuxt, Astro, TanStack Start, or SolidStart)
 - `docker`: Self-hosted deployment with a Dockerfile and a root `docker-compose.yml`
 - `vercel`: Vercel Services deployment with a root `vercel.json`
 
@@ -358,7 +359,7 @@ Web deployment configuration:
 create-better-t-stack --web-deploy docker
 ```
 
-**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Deploying to Cloudflare with Alchemy Guide](/docs/guides/cloudflare-alchemy) for details.
+When the app that consumes Neon, PlanetScale, or Prisma Postgres is deployed with Alchemy, the generated stack provisions the database, injects runtime credentials, and applies checked-in migrations. Run `alchemy login --configure` from `packages/infra`; no separate provider setup step is required. See the [Alchemy deployment guide](/docs/guides/cloudflare-alchemy) for details.
 
 ## Automation Surfaces
 
@@ -379,6 +380,7 @@ Server deployment configuration:
 
 - `none`: No deployment setup
 - `cloudflare`: Cloudflare Workers deployment (when runtime is workers, via Alchemy infrastructure as code)
+- `prisma`: Prisma deployment via Alchemy (requires the Bun or Node runtime)
 - `docker`: Self-hosted deployment with a Dockerfile and a root `docker-compose.yml` (requires the bun or node runtime)
 - `vercel`: Vercel Services deployment (requires the bun or node runtime)
 
@@ -386,7 +388,7 @@ Server deployment configuration:
 create-better-t-stack --server-deploy docker
 ```
 
-**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Deploying to Cloudflare with Alchemy Guide](/docs/guides/cloudflare-alchemy) for details.
+**Note:** The CLI displays this target simply as **Prisma**. The generated infrastructure uses Alchemy's Prisma provider. See the [Alchemy deployment guide](/docs/guides/cloudflare-alchemy) for details.
 
 ## History
 

@@ -153,6 +153,9 @@ export async function gatherConfig(
           results.backend,
           results.frontend,
           results.dbSetup,
+          results.database,
+          results.orm,
+          results.addons,
           previousAnswer,
         ),
       serverDeploy: ({ results, previousAnswer }) =>

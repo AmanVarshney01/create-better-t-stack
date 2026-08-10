@@ -22,7 +22,7 @@ describe("Deployment Configurations", () => {
             projectName: `${webDeploy}-web-deploy`,
             webDeploy: webDeploy,
             serverDeploy: "none",
-            frontend: ["tanstack-router"],
+            frontend: [webDeploy === "prisma" ? "next" : "tanstack-router"],
             backend: "hono",
             runtime: "bun",
             database: "sqlite",
@@ -903,17 +903,17 @@ describe("Deployment Configurations", () => {
       expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
-        alchemy: "2.0.0-beta.69",
-        effect: "4.0.0-beta.103",
-        "@effect/platform-node": "4.0.0-beta.103",
-        "@effect/platform-bun": "4.0.0-beta.103",
+        alchemy: "2.0.0-beta.70",
+        effect: "4.0.0-beta.106",
+        "@effect/platform-node": "4.0.0-beta.106",
+        "@effect/platform-bun": "4.0.0-beta.106",
       });
       expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
         infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
       );
-      expect(serverBuildConfig).toContain('import { wasm } from "rolldown-plugin-wasm"');
-      expect(serverBuildConfig).toContain("plugins: [wasm()]");
-      expect(serverPackage.devDependencies?.["rolldown-plugin-wasm"]).toBe("^0.3.2");
+      expect(serverBuildConfig).toContain('import { unwasm } from "unwasm/plugin"');
+      expect(serverBuildConfig).toContain("plugins: [unwasm({ esmImport: true })]");
+      expect(serverPackage.devDependencies?.unwasm).toBe("^0.6.0");
     });
 
     it("should generate current Cloudflare integrations for React Router, Next, and Astro", async () => {

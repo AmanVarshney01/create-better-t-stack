@@ -1,10 +1,18 @@
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel"))}}
+{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma"))}}
 import { nitro } from "nitro/vite";
 {{/if}}
 import tailwindcss from "@tailwindcss/vite";
 import viteReact from "@vitejs/plugin-react";
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+import { unwasm } from "unwasm/plugin";
+
+const prismaWasm =
+  process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
+    ? null
+    : unwasm({ esmImport: true });
+{{/if}}
 
 export default defineConfig({
   server: {
@@ -22,6 +30,9 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+    prismaWasm,
+{{/if}}
     tailwindcss(),
     tanstackStart({{#if (or (includes addons "tauri") (and (includes addons "electrobun") (or (ne backend "convex") (ne auth "better-auth"))))}}
       {
@@ -30,7 +41,7 @@ export default defineConfig({
         },
       },
 {{/if}}),
-{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel"))}}
+{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma"))}}
     nitro(),
 {{/if}}
     viteReact(),

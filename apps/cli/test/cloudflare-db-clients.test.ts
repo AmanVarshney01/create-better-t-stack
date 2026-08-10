@@ -62,7 +62,7 @@ describe("Cloudflare DB client generation", () => {
       auth: "better-auth",
       addons: ["none"],
       examples: ["todo"],
-      dbSetup: "none",
+      dbSetup: "neon",
       webDeploy: "cloudflare",
       serverDeploy: "none",
       install: false,
@@ -93,7 +93,6 @@ describe("Cloudflare DB client generation", () => {
     expect(envFile).toContain("export const env = createEnvProxy(resolveEnvValue);");
     expect(envFile).not.toContain('export { env } from "cloudflare:workers";');
     expect(envPackageFile).toContain('"@opennextjs/cloudflare"');
-    expect(dbFile).toContain("maxUses: 1");
     expect(routeFile).toContain("toNextJsHandler(createAuth()).GET(request)");
     expect(routeFile).toContain("toNextJsHandler(createAuth()).POST(request)");
     expect(dashboardFile).toContain("createAuth().api.getSession");
@@ -252,7 +251,7 @@ describe("Cloudflare DB client generation", () => {
     expect(infraFile.match(/IMAGES: Cloudflare\.Images\.Images\(\)/g)).toHaveLength(1);
   });
 
-  it("uses maxUses=1 for Cloudflare-targeted Postgres pools", async () => {
+  it("uses a single connection for Cloudflare-targeted Postgres clients", async () => {
     const files = await createVirtualFiles({
       projectName: "workers-postgres-pool-config",
       frontend: ["tanstack-router"],
@@ -274,9 +273,9 @@ describe("Cloudflare DB client generation", () => {
     });
     const dbFile = files.get("packages/db/src/index.ts");
 
-    expect(dbFile).toContain('import { Pool } from "pg";');
-    expect(dbFile).toContain("maxUses: 1");
-    expect(dbFile).toContain("return drizzle({ client: pool, schema });");
+    expect(dbFile).toContain('import postgres from "postgres";');
+    expect(dbFile).toContain("{ max: 1 }");
+    expect(dbFile).toContain("return drizzle({ client, schema });");
   });
 
   it("keeps Better Auth MongoDB templates factory-only for Cloudflare Next deployments", async () => {

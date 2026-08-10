@@ -1,6 +1,6 @@
 ## Context
 
-Better-T-Stack generates Cloudflare infrastructure through `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs`. The current integration pins `alchemy@2.0.0-beta.69` and emits paths for Cloudflare web, Hono Workers server, combined web/server, full-stack `self`, and D1 topologies. Generated paths are not automatically live-verified support claims; the accepted-version scoreboard defined below owns that distinction.
+Better-T-Stack generates Alchemy infrastructure through `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs` and `database.ts.hbs`. The current integration pins `alchemy@2.0.0-beta.70` with Effect beta.106 and emits Cloudflare, Prisma, managed-database, mixed-provider, full-stack `self`, and separate-server topologies. Generated paths are not automatically live-verified support claims; the accepted-version scoreboard defined below owns that distinction.
 
 Alchemy v2 is still a prerelease API. Better-T-Stack currently needs four active targeted safeguards plus a permanent exact-version policy because the accepted release does not correctly cover every generated framework and monorepo behavior. A3 was independently retired after its beta.64 removal gate passed; A1 and A2 were retired after beta.67 passed direct generated-project typechecks plus Config and Output live gates. Beta.67 also fixes beta.66's A10 local D1 runtime regression. Several reviews produced plausible but disproved claims. The design therefore treats source inspection, a provider-free plan, and a live deployment as different evidence levels.
 
@@ -57,7 +57,7 @@ Relevant upstream references include:
 **Non-Goals:**
 
 - Adding a new deployment provider.
-- Adding Vercel, Railway, Prisma Compute, or Alchemy Prisma Postgres support.
+- Adding or redesigning Vercel, Railway, or Docker support.
 - Changing Docker or Compose behavior.
 - Adding Waku as a Better-T-Stack frontend.
 - Generalizing all deployment providers behind a new abstraction.
@@ -88,7 +88,7 @@ Generated template snapshots in `packages/template-generator/src/templates.gener
 
 ### 1. Pin one exact Alchemy release
 
-Generated Cloudflare projects SHALL use exactly `alchemy@2.0.0-beta.69` until a replacement release passes this design's upgrade gate. No caret, tilde, tag, git SHA, or version range is accepted in generated packages. Because beta.69's declared Effect range accepts an incompatible beta.104, generated projects SHALL also pin `effect`, `@effect/platform-node`, and `@effect/platform-bun` exactly to beta.103 until Alchemy's compatibility gate advances.
+Generated Alchemy projects SHALL use exactly `alchemy@2.0.0-beta.70` until a replacement release passes this design's upgrade gate. No caret, tilde, tag, git SHA, or version range is accepted in generated packages. Generated projects SHALL also pin `effect`, `@effect/platform-node`, and `@effect/platform-bun` exactly to beta.106 as the verified compatible set.
 
 The exact version SHALL live in one generator dependency source and be asserted in generated npm, pnpm, and Bun projects. An upstream merge, npm deprecation, or `next` tag movement does not change the accepted version automatically.
 
@@ -206,9 +206,9 @@ Once version-compatible, the resource must preserve preprocessing, aliases, rout
 
 The initial adoption SHALL preserve explicit session and Images resource identity until separate binding-removal gates pass. A session-backed route must prove `SESSION` behavior. Because the inspected draft provider selects passthrough images, Astro adoption is blocked if it would silently regress the generated Cloudflare Images behavior; a real image transformation/serving test and inferred binding test must establish parity. SSR, prerendered assets, `_headers`, `_redirects`, 404 handling, and representative MIME types must also pass.
 
-#### 2.7 Cloudflare-only boundary
+#### 2.7 Cloudflare framework-resource boundary
 
-This first-class framework work changes only Cloudflare web resources and the Cloudflare-specific adapter/configuration they own. It SHALL NOT add Alchemy Prisma resources, Prisma Compute, Vercel resources, Railway integration, Docker changes, or a generalized deployment interface. Existing Prisma ORM plus D1 remains in the matrix solely to prove that framework-resource adoption preserves Cloudflare D1 binding and nested migration behavior. Existing remote `DATABASE_URL` behavior remains unchanged.
+The first-class Cloudflare framework-resource migration changes only Cloudflare web resources and the Cloudflare-specific adapter/configuration they own. It does not authorize Vercel, Railway, Docker, or generalized deployment refactors. Prisma deployment and managed databases are separate capabilities in this change and SHALL pass their own topology and ownership requirements rather than being inferred from Cloudflare framework-resource tests.
 
 ### 3. Maintain an explicit compatibility-layer classification
 
@@ -232,7 +232,7 @@ Reviews and pull-request comments may propose a classification, but the findings
 | A4  | explicit React Router Worker entry and web-stream SSR   | defect workaround plus framework shim | released default uploads a registered handler and serves a real workerd document                              |
 | A5  | `memo: false` for workspace-dependent StaticSite builds | correctness policy for upstream scope | published workspace-aware upstream default plus imported-sibling and root-input rebuild gates                 |
 | A6  | exact Alchemy version pin                               | permanent publication-safety policy   | never removed; upgrades replace one verified exact version with another exact version                         |
-| A11 | exact Effect beta.103 compatibility pin                 | confirmed dependency workaround       | published Alchemy release starts with every allowed Effect resolution, including the selected latest          |
+| A11 | retired: Effect beta.103 compatibility pin              | removed dependency workaround         | satisfied by beta.70 with the verified Effect beta.106 set                                                    |
 | A12 | retain Nuxt's generic `StaticSite` development path     | confirmed provider workaround         | published `Website.Nuxt` passes SSR, API, D1, HMR, and shutdown gates without the injected-plugin parse error |
 
 The removable safeguards A1–A5 SHALL be evaluated independently. A3 was removed on 2026-07-26 after fresh TanStack Router and then-current Solid SPA projects passed install, build, infrastructure typecheck, live root/deep-route requests, and cleanup audits against beta.64. SolidStart v2 subsequently replaced that Solid SPA path and requires its own SSR coverage. A1 and A2 were removed on 2026-08-01 after beta.67 passed their independent generated and live gates. Those results do not justify removing A4 or A5. A6 is not a temporary shim: Better-T-Stack SHALL continue exact-pinning Alchemy even after a stable release and shall replace one verified exact version only with another verified exact version.
@@ -393,6 +393,20 @@ Resolved on 2026-08-01: beta.67 native `StaticSite` Inputs preserved generated C
 the combined server Output dependency, so the A1 wrapper and A2 caller-side resolution were removed.
 
 Resolved on 2026-08-06: PRs #886 and #923 and `@distilled.cloud/*@0.17.0` are published in beta.69.
+
+## 10. Managed database architecture
+
+Database ownership follows the process that opens the connection, not whichever deployment prompt happens to run first. `backend: self` assigns ownership to the web plane; every separate backend assigns it to the server plane. This keeps mixed provider stacks honest: Alchemy provisions a hosted database only when it also controls the consuming plane.
+
+`database.ts` isolates provider construction, migration credentials, runtime credentials, and provider layers from application deployment. It exports an Effect-shaped `databaseEnv` for Prisma resources and statically shaped `databaseBindings` whose individual values are Effects for Cloudflare. The second form is intentional: passing the entire Worker props object through an Effect widens Alchemy's Worker binding generic, while individual binding Effects retain precise `Cloudflare.InferEnv` output.
+
+Runtime credentials are pooled or least privilege. Migration credentials are direct or elevated and never reach the application resource. Prisma migrations run through `Command.Exec` because schema history belongs in the repository; Drizzle uses native Neon/PlanetScale `migrationsDir` support and a command for Prisma Postgres. PlanetScale defaults to `PS_DEV`, with an explicit cost warning in generated guidance.
+
+## 11. Prisma deployment architecture
+
+The product surface calls the target **Prisma**; `Prisma.Compute` is the Alchemy resource used in generated code. Supported automatic framework builds are Next.js, Nuxt, Astro, and TanStack Start. SolidStart uses its verified `.output/server/index.mjs` artifact. Server apps use the Bun auto-build surface for Hono, Express, Fastify, and Elysia on Bun or Node.
+
+One `Prisma.Project` is reused by all Prisma application resources and, when selected, Prisma Postgres. Mixed Cloudflare/Prisma stacks remain one Alchemy graph, so the server resource is yielded before the web and its URL remains an Output rather than a copied configuration string. Sentry's public DSN participates in build and runtime environments, while organization/project metadata and the redacted auth token are build-only.
 The release-intake wait is over, but the resources remain independent candidates: Nuxt is blocked
 by A12, SvelteKit served stable Kit 2 locally despite its peer warning, and Astro loaded native
 configuration while still requiring production and binding qualification.

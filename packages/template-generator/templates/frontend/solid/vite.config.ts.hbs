@@ -1,5 +1,8 @@
 import tailwindcss from "@tailwindcss/vite";
 import { solidStart } from "@solidjs/start/config";
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+import { unwasm } from "unwasm/plugin";
+{{/if}}
 {{#if (eq webDeploy "cloudflare")}}
 import { fileURLToPath } from "node:url";
 {{/if}}
@@ -18,9 +21,19 @@ const cloudflareWorkersAlias: Record<string, string> =
         ),
       };
 
+{{#if (eq orm "prisma")}}
+const prismaWasm =
+  process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
+    ? null
+    : unwasm({ esmImport: true });
+{{/if}}
+
 {{/if}}
 export default defineConfig({
   plugins: [
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+    prismaWasm,
+{{/if}}
     solidStart(),
     tailwindcss(),
 {{#unless (eq webDeploy "cloudflare")}}

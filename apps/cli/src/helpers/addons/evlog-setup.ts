@@ -401,8 +401,8 @@ function addSvelteViteEvlogSetup(content: string, serviceName: string) {
   if (nextContent.includes("evlog({")) return nextContent;
 
   return nextContent.replace(
-    "plugins: [tailwindcss(), sveltekit()],",
-    `plugins: [\n    tailwindcss(),\n    sveltekit(),\n    evlog({ service: "${serviceName}" }),\n  ],`,
+    "sveltekit(),",
+    `sveltekit(),\n    evlog({ service: "${serviceName}" }),`,
   );
 }
 

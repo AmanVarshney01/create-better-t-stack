@@ -1,4 +1,8 @@
-import type { ProjectConfig } from "@better-t-stack/types";
+import {
+  isAlchemyDeployTarget,
+  type ProjectConfig,
+  usesAlchemyManagedDatabase,
+} from "@better-t-stack/types";
 import Handlebars from "handlebars";
 import isBinaryPath from "is-binary-path";
 
@@ -8,6 +12,10 @@ Handlebars.registerHelper("and", (...args) => args.slice(0, -1).every(Boolean));
 Handlebars.registerHelper("or", (...args) => args.slice(0, -1).some(Boolean));
 Handlebars.registerHelper("not", (a) => !a);
 Handlebars.registerHelper("includes", (arr, val) => Array.isArray(arr) && arr.includes(val));
+Handlebars.registerHelper("isAlchemyDeploy", isAlchemyDeployTarget);
+Handlebars.registerHelper("usesAlchemyDatabase", (backend, dbSetup, webDeploy, serverDeploy) =>
+  usesAlchemyManagedDatabase({ backend, dbSetup, webDeploy, serverDeploy }),
+);
 
 // Shared across every web client template (oRPC/tRPC/better-auth) so the
 // same-origin URL normalization for Vercel deploys has one source of truth.

@@ -6,6 +6,7 @@
 
 import path from "node:path";
 
+import { usesAlchemyManagedDatabase } from "@better-t-stack/types";
 import { Result } from "better-result";
 import fs from "fs-extra";
 import pc from "picocolors";
@@ -42,6 +43,12 @@ export async function setupDatabase(
 
   const dbPackageDir = path.join(projectDir, "packages/db");
   if (!(await fs.pathExists(dbPackageDir))) {
+    return;
+  }
+
+  // Alchemy owns provisioning and runtime credentials when the database
+  // consumer itself deploys through an Alchemy provider.
+  if (usesAlchemyManagedDatabase(config)) {
     return;
   }
 

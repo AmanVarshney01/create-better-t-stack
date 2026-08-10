@@ -1,3 +1,3 @@
 # formalize-alchemy-cloudflare-deployment
 
-Formalize Better-T-Stack's Alchemy/Cloudflare support matrix, evidence ledger, compatibility safeguards, first-class framework-resource adoption, verification gates, cleanup, and upgrade process.
+Formalize Better-T-Stack's Alchemy support matrix: Cloudflare compatibility, Prisma deployment, managed Neon/PlanetScale/Prisma Postgres resources, evidence, verification, cleanup, and upgrades.

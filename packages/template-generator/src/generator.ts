@@ -2,7 +2,12 @@ import { Result } from "better-result";
 
 import { writeBtsConfigToVfs } from "./bts-config";
 import { VirtualFileSystem } from "./core/virtual-fs";
-import { processCatalogs, processPackageConfigs, processVercelConfig } from "./post-process";
+import {
+  finalizeAlchemyDevScripts,
+  processCatalogs,
+  processPackageConfigs,
+  processVercelConfig,
+} from "./post-process";
 import {
   processDependencies,
   processReadme,
@@ -80,6 +85,7 @@ export async function generate(
 
       processPackageConfigs(vfs, config);
       processDependencies(vfs, config);
+      finalizeAlchemyDevScripts(vfs, config);
       processEnvVariables(vfs, config);
       processAuthPlugins(vfs, config);
       processAlchemyPlugins(vfs, config);

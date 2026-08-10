@@ -11,7 +11,7 @@
 
 ## 2. Exact Dependency and Generated Artifact Gates
 
-- [x] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.69` output with no semver range; pin Effect and both platform packages to compatible beta.103.
+- [x] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.70` output with no semver range; pin Effect and both platform packages to compatible beta.106.
 - [ ] 2.2 Generate npm, pnpm, and Bun projects and prove each resolves the exact accepted Alchemy package rather than an incompatible test prerelease.
 - [ ] 2.3 Add deterministic artifact assertions for web-only, server-only, combined, full-stack `self`, Convex-web, D1, and mixed single-plane Cloudflare topologies.
 - [ ] 2.4 Assert that every selected Cloudflare plane emits `packages/infra/alchemy.run.ts`, the infra package, scripts, framework adapter/configuration, bindings, inferred env types, and user guidance.
@@ -151,11 +151,35 @@
 - [ ] 14.5 Verify SSR, prerendered content, static assets, 404 behavior, `_headers`, `_redirects`, and representative MIME responses in local workerd and a live deployment.
 - [ ] 14.6 Remove `@astrojs/cloudflare`, its adapter import/call, manual `dist` entries, `bundle: false`, hard-coded dev URL, explicit compatibility flag, and `memo: false` independently only after their replacement gates pass.
 
-## 15. Cloudflare-Only Rollout and Documentation
+## 15. Cloudflare Framework Rollout and Documentation
 
 - [ ] 15.1 Land each passing framework migration as an independently reviewable change with its generated assertions, package-manager checks, plan comparison, live evidence, cleanup result, ledger update, and rollback instructions.
 - [ ] 15.2 Keep blocked frameworks on the generic resource in the same accepted release and make generated documentation explain the mixed resource matrix without presenting blocked cells as failures of working generic deployment.
 - [ ] 15.3 Update README, post-install output, plugin skills, source comments, support scoreboard, and findings ledger with the exact provider-owned responsibilities and remaining framework limitations.
-- [ ] 15.4 Diff all non-Cloudflare deployment templates, deployment enums, Docker/Compose output, and database-provider setup to prove this work adds no Vercel, Railway, Prisma Compute, Alchemy Prisma Postgres, Waku, or provider-abstraction changes.
+- [ ] 15.4 Diff Vercel, Railway, and unrelated Docker/Compose behavior to prove the Alchemy work does not alter those providers or introduce a generalized deployment abstraction.
 - [ ] 15.5 Retain existing Prisma ORM plus Cloudflare D1 nested-migration and request tests only as database-binding regressions for adopted framework resources.
 - [ ] 15.6 Run strict OpenSpec validation, formatting/lint, generator typecheck, the full CLI suite, fresh generated-project builds, every affected live route, destroy, and resource-leak audit before marking a framework task complete.
+
+## 16. Alchemy-Managed Databases
+
+- [x] 16.1 Add consumer-plane ownership helpers and skip provider-specific CLI setup only when that plane uses Alchemy.
+- [x] 16.2 Generate Neon pooled runtime and direct migration URLs as redacted Outputs.
+- [x] 16.3 Generate PlanetScale Postgres and MySQL runtime/migration roles with `PS_DEV` cost guidance.
+- [x] 16.4 Generate Prisma project, Postgres database, connection, required URL narrowing, and provider layers.
+- [x] 16.5 Apply Prisma and Prisma-Postgres Drizzle migrations with `Command.Exec`; pass Drizzle migration directories to Neon and PlanetScale.
+- [x] 16.6 Emit initial Prisma migrations for generated models only when Alchemy owns the database.
+- [x] 16.7 Preserve precise Cloudflare inferred env types through individual binding Effects.
+- [ ] 16.8 Generate, install, typecheck, and build the complete provider/ORM/deployment ownership matrix under Bun, npm, and pnpm.
+- [ ] 16.9 Live-provision one disposable database per provider family, run a database-backed request, destroy it from the owning stage, and audit for leaks.
+
+## 17. Prisma Deployment
+
+- [x] 17.1 Add Prisma web/server deployment enums, prompts, validation, infra generation, scripts, and exact dependencies.
+- [x] 17.2 Support Next.js, Nuxt, Astro, TanStack Start, and SolidStart web artifacts.
+- [x] 17.3 Support Hono, Express, Fastify, and Elysia servers on Bun or Node.
+- [x] 17.4 Support Cloudflare-web/Prisma-server and Prisma-web/Cloudflare-server URL wiring in one Alchemy graph.
+- [x] 17.5 Keep the user-facing label and generated topology summary as `Prisma`.
+- [x] 17.6 Pass managed database and Sentry values through the correct build/runtime boundaries.
+- [ ] 17.7 Run fresh package-manager installs, infrastructure typechecks, production builds, health checks, and disposable deploy/destroy verification for every supported framework family.
+- [x] 17.8 Reject the current Next.js + Cloudflare combinations blocked by OpenNext instrumentation or `pg-cloudflare` tracing without disabling unaffected targets.
+- [x] 17.9 Keep Nuxt Cloudflare Prisma SSR calls inside Nitro through `event.fetch`, emit one Prisma WASM module, and dry-run below the 3 MiB compressed limit.

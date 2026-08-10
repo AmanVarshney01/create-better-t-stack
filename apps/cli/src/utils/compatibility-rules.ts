@@ -359,6 +359,75 @@ export function validateVercelServerDeploy(
   return Result.ok(undefined);
 }
 
+export function validatePrismaServerDeploy(
+  serverDeploy: ServerDeploy | undefined,
+  backend: Backend | undefined,
+  runtime: Runtime | undefined,
+): ValidationResult {
+  if (serverDeploy !== "prisma") return Result.ok(undefined);
+
+  if (backend === "convex" || backend === "self") {
+    return validationErr(
+      "'--server-deploy prisma' requires a separate server backend (hono, express, fastify, elysia). For a fullstack 'self' backend, use '--web-deploy prisma' instead.",
+    );
+  }
+
+  if (runtime !== "bun" && runtime !== "node") {
+    return validationErr(
+      "'--server-deploy prisma' requires '--runtime bun' or '--runtime node'. Use '--server-deploy cloudflare' for Workers.",
+    );
+  }
+
+  return Result.ok(undefined);
+}
+
+const PRISMA_COMPUTE_WEB_FRONTENDS: readonly Frontend[] = [
+  "next",
+  "nuxt",
+  "astro",
+  "tanstack-start",
+  "solid",
+];
+
+export function validatePrismaWebDeploy(
+  webDeploy: WebDeploy | undefined,
+  frontend: Frontend[] | undefined,
+): ValidationResult {
+  if (webDeploy !== "prisma" || !frontend) return Result.ok(undefined);
+
+  if (!frontend.some((value) => PRISMA_COMPUTE_WEB_FRONTENDS.includes(value))) {
+    return validationErr(
+      "'--web-deploy prisma' requires Next.js, Nuxt, Astro, TanStack Start, or SolidStart. Choose a supported SSR frontend or another deployment target.",
+    );
+  }
+
+  return Result.ok(undefined);
+}
+
+export function validateCloudflareWebDeployKnownIssues(
+  config: Partial<
+    Pick<ProjectConfig, "database" | "dbSetup" | "frontend" | "orm" | "webDeploy">
+  >,
+): ValidationResult {
+  if (config.webDeploy !== "cloudflare" || !config.frontend?.includes("next")) {
+    return Result.ok(undefined);
+  }
+
+  const usesNodePostgres =
+    config.database === "postgres" &&
+    config.orm === "prisma" &&
+    config.dbSetup !== "neon" &&
+    config.dbSetup !== "prisma-postgres";
+
+  if (usesNodePostgres) {
+    return validationErr(
+      "This Prisma PostgreSQL setup with Next.js on Cloudflare is temporarily unavailable because OpenNext does not preserve pg-cloudflare's workerd files. Use Neon or Prisma Postgres, choose another Cloudflare frontend, or choose Prisma, Docker, or Vercel deployment.",
+    );
+  }
+
+  return Result.ok(undefined);
+}
+
 // Frontends whose docker image needs server output, which desktop addons replace with a static export
 const DOCKER_SERVER_OUTPUT_FRONTENDS: readonly Frontend[] = [
   "next",

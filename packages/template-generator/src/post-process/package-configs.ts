@@ -14,6 +14,7 @@ type PackageJson = {
   scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+  allowScripts?: Record<string, boolean>;
   overrides?: Record<string, string>;
   workspaces?: string[] | { packages?: string[]; catalog?: Record<string, string> };
   packageManager?: string;
@@ -42,7 +43,6 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   updateUiPackageJson(vfs, config);
   updateInfraPackageJson(vfs, config);
   updateDesktopPackageJson(vfs, config);
-  renameDevScriptsForAlchemy(vfs, config);
   updateVitePlusPackageScripts(vfs, config);
 
   if (config.backend === "convex") {
@@ -178,21 +178,23 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     }
   }
 
-  // Add deploy/destroy scripts when using alchemy (cloudflare deployment)
+  // Add deploy/destroy scripts when using an Alchemy deployment provider.
   const infraPackageName = `@${projectName}/infra`;
   const hasCloudflareDeploy =
     config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare";
+  const hasPrismaDeploy = config.webDeploy === "prisma" || config.serverDeploy === "prisma";
+  const hasAlchemyDeploy = hasCloudflareDeploy || hasPrismaDeploy;
   const hasVercelDeploy = config.webDeploy === "vercel" || config.serverDeploy === "vercel";
   // When web and server deploy to different cloud platforms, deploy scripts
   // are named by target (deploy:web / deploy:server); otherwise plain deploy
-  const isMixedCloud = hasCloudflareDeploy && hasVercelDeploy;
-  if (hasCloudflareDeploy) {
-    const cfDeployScript = isMixedCloud
-      ? config.webDeploy === "cloudflare"
+  const isMixedCloud = hasAlchemyDeploy && hasVercelDeploy;
+  if (hasAlchemyDeploy) {
+    const alchemyDeployScript = isMixedCloud
+      ? ["cloudflare", "prisma"].includes(config.webDeploy)
         ? "deploy:web"
         : "deploy:server"
       : "deploy";
-    scripts[cfDeployScript] = pmConfig.filter(infraPackageName, "deploy");
+    scripts[alchemyDeployScript] = pmConfig.filter(infraPackageName, "deploy");
     scripts.destroy = pmConfig.filter(infraPackageName, "destroy");
 
     // fullstack D1 apps use a local miniflare D1 in dev; migrations apply via wrangler
@@ -232,6 +234,15 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   // For preview purposes, we just show the configured package manager
   pkgJson.packageManager = `${packageManager}@latest`;
 
+  if (packageManager === "npm") {
+    const allowScripts = getNpmAllowedScripts(config);
+    if (Object.keys(allowScripts).length > 0) {
+      pkgJson.allowScripts = allowScripts;
+    } else {
+      delete pkgJson.allowScripts;
+    }
+  }
+
   if (config.api === "orpc" && config.frontend.includes("nuxt")) {
     pkgJson.overrides = {
       ...pkgJson.overrides,
@@ -266,6 +277,63 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
 
   pkgJson.workspaces = getUpdatedWorkspaces(existingWorkspaces, workspaces);
   vfs.writeJson("package.json", pkgJson);
+}
+
+function getNpmAllowedScripts(config: ProjectConfig): Record<string, boolean> {
+  const allowed: Record<string, boolean> = {};
+  const hasCloudflareDeploy =
+    config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare";
+  const hasPrismaDeploy = config.webDeploy === "prisma" || config.serverDeploy === "prisma";
+
+  if (
+    config.runtime === "node" ||
+    hasCloudflareDeploy ||
+    config.webDeploy === "docker" ||
+    config.serverDeploy === "docker" ||
+    config.webDeploy === "vercel" ||
+    config.serverDeploy === "vercel" ||
+    config.addons.includes("turborepo") ||
+    config.addons.includes("vite-plus") ||
+    config.frontend.includes("react-router") ||
+    config.frontend.includes("nuxt")
+  ) {
+    allowed.esbuild = true;
+  }
+
+  if (config.frontend.includes("nuxt")) {
+    allowed["@parcel/watcher"] = true;
+    allowed["vue-demi"] = true;
+  }
+
+  if (
+    hasCloudflareDeploy ||
+    config.webDeploy === "docker" ||
+    config.webDeploy === "vercel" ||
+    config.addons.includes("pwa") ||
+    config.frontend.includes("next")
+  ) {
+    allowed.sharp = true;
+  }
+
+  if (hasCloudflareDeploy || hasPrismaDeploy) {
+    allowed["msgpackr-extract"] = true;
+    allowed.workerd = true;
+  }
+
+  if (config.orm === "prisma") {
+    allowed["@prisma/engines"] = true;
+    allowed.prisma = true;
+  }
+
+  if (config.addons.includes("lefthook")) {
+    allowed.lefthook = true;
+  }
+
+  if (config.addons.includes("nx")) {
+    allowed.nx = true;
+  }
+
+  return allowed;
 }
 
 function getWorkspacePackages(workspaces: PackageJson["workspaces"]): string[] {
@@ -521,6 +589,7 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
       }
       scripts["db:generate"] = "prisma generate";
       scripts["db:migrate"] = "prisma migrate dev";
+      scripts["db:migrate:deploy"] = "prisma migrate deploy";
       scripts.postinstall ??= "prisma generate";
       if (!isD1Alchemy) {
         scripts["db:studio"] = "prisma studio";
@@ -530,6 +599,7 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
         scripts["db:push"] = "drizzle-kit push";
       }
       scripts["db:generate"] = "drizzle-kit generate";
+      scripts["db:migrate:deploy"] = "drizzle-kit migrate";
       if (!isD1Alchemy) {
         scripts["db:studio"] = "drizzle-kit studio";
         scripts["db:migrate"] = "drizzle-kit migrate";
@@ -629,11 +699,13 @@ function updateConvexPackageJson(vfs: VirtualFileSystem, config: ProjectConfig):
   vfs.writeJson("packages/backend/package.json", pkgJson);
 }
 
-function renameDevScriptsForAlchemy(vfs: VirtualFileSystem, config: ProjectConfig): void {
+export function finalizeAlchemyDevScripts(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { serverDeploy, webDeploy, backend } = config;
+  const rootPkgPath = "package.json";
+  const rootPkg = vfs.readJson<PackageJson>(rootPkgPath);
 
-  // Rename server dev script to dev:bare when serverDeploy is cloudflare
-  if (serverDeploy === "cloudflare" && backend !== "self") {
+  // Alchemy owns the selected app's development process.
+  if (["cloudflare", "prisma"].includes(serverDeploy) && backend !== "self") {
     const serverPkgPath = "apps/server/package.json";
     const serverPkg = vfs.readJson<PackageJson>(serverPkgPath);
     if (serverPkg?.scripts?.dev) {
@@ -641,10 +713,12 @@ function renameDevScriptsForAlchemy(vfs: VirtualFileSystem, config: ProjectConfi
       delete serverPkg.scripts.dev;
       vfs.writeJson(serverPkgPath, serverPkg);
     }
+    if (rootPkg?.scripts?.["dev:server"]) {
+      rootPkg.scripts["dev:server"] = rootPkg.scripts["dev:server"].replace(/\bdev$/, "dev:bare");
+    }
   }
 
-  // Rename web dev script to dev:bare when webDeploy is cloudflare
-  if (webDeploy === "cloudflare") {
+  if (["cloudflare", "prisma"].includes(webDeploy)) {
     const webPkgPath = "apps/web/package.json";
     const webPkg = vfs.readJson<PackageJson>(webPkgPath);
     if (webPkg?.scripts?.dev) {
@@ -652,6 +726,13 @@ function renameDevScriptsForAlchemy(vfs: VirtualFileSystem, config: ProjectConfi
       delete webPkg.scripts.dev;
       vfs.writeJson(webPkgPath, webPkg);
     }
+    if (rootPkg?.scripts?.["dev:web"]) {
+      rootPkg.scripts["dev:web"] = rootPkg.scripts["dev:web"].replace(/\bdev$/, "dev:bare");
+    }
+  }
+
+  if (rootPkg) {
+    vfs.writeJson(rootPkgPath, rootPkg);
   }
 }
 

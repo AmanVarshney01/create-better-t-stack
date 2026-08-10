@@ -1,9 +1,11 @@
-import type { ProjectConfig } from "@better-t-stack/types";
+import { usesAlchemyManagedDatabase, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { webDeploy, frontend, backend } = config;
+
+  processManagedPrismaMigrations(vfs, config);
 
   if (webDeploy !== "cloudflare") return;
 
@@ -45,6 +47,23 @@ export const env: Record<string, unknown> = new Proxy(
     // framework dev servers read local bindings (miniflare D1) from this config
     writeDevWranglerConfig(vfs, config);
   }
+}
+
+function processManagedPrismaMigrations(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  if (config.orm !== "prisma" || !["postgres", "mysql"].includes(config.database)) return;
+
+  const migrationRoot = "packages/db/prisma/migrations";
+  const generatedMigration = `${migrationRoot}/0000_init/migration.sql`;
+  const migrationLock = `${migrationRoot}/migration_lock.toml`;
+  const hasInitialModels = config.auth === "better-auth" || config.examples.includes("todo");
+
+  if (!usesAlchemyManagedDatabase(config) || !hasInitialModels) {
+    vfs.deleteFile(generatedMigration);
+    vfs.deleteFile(migrationLock);
+    return;
+  }
+
+  vfs.deleteFile(`${migrationRoot}/.gitkeep`);
 }
 
 function writeSolidStartDevEnvProxy(vfs: VirtualFileSystem, config: ProjectConfig) {

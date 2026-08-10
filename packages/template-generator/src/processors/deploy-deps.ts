@@ -4,17 +4,50 @@ import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency } from "../utils/add-deps";
 
 export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { webDeploy, serverDeploy, frontend, backend, addons } = config;
+  const { webDeploy, serverDeploy, frontend, backend, addons, orm } = config;
 
   const isCloudflareWeb = webDeploy === "cloudflare";
   const isCloudflareServer = serverDeploy === "cloudflare";
+  const isPrismaWeb = webDeploy === "prisma";
+  const isPrismaServer = serverDeploy === "prisma";
   const isDockerWeb = webDeploy === "docker";
   const isVercelWeb = webDeploy === "vercel";
   const isVercelServer = serverDeploy === "vercel";
   const isBackendSelf = backend === "self";
 
-  if (!isCloudflareWeb && !isCloudflareServer && !isDockerWeb && !isVercelWeb && !isVercelServer) {
+  if (
+    !isCloudflareWeb &&
+    !isCloudflareServer &&
+    !isPrismaWeb &&
+    !isPrismaServer &&
+    !isDockerWeb &&
+    !isVercelWeb &&
+    !isVercelServer
+  ) {
     return;
+  }
+
+  if (isPrismaWeb && frontend.includes("solid")) {
+    addPackageDependency({
+      vfs,
+      packagePath: "apps/web/package.json",
+      dependencies: ["nitro"],
+    });
+  }
+
+  if (
+    isCloudflareWeb &&
+    isBackendSelf &&
+    orm === "prisma" &&
+    (["nuxt", "svelte", "solid", "tanstack-start"] as const).some((framework) =>
+      frontend.includes(framework),
+    )
+  ) {
+    addPackageDependency({
+      vfs,
+      packagePath: "apps/web/package.json",
+      devDependencies: ["unwasm"],
+    });
   }
 
   if (isVercelWeb || isVercelServer) {
@@ -26,9 +59,8 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     });
   }
 
-  if (isVercelWeb && frontend.includes("tanstack-start")) {
-    // Nitro emits Vercel's Build Output API; without it the Start build is a
-    // plain node server the platform cannot serve
+  if ((isVercelWeb || isPrismaWeb) && frontend.includes("tanstack-start")) {
+    // Nitro emits the standalone server artifact consumed by both deployment providers.
     const webPkgPath = "apps/web/package.json";
     if (vfs.exists(webPkgPath)) {
       addPackageDependency({ vfs, packagePath: webPkgPath, dependencies: ["nitro"] });
