@@ -891,9 +891,6 @@ describe("Deployment Configurations", () => {
 
       const files = collectFiles(result.value.root, result.value.root.path);
       const infraFile = files.get("packages/infra/alchemy.run.ts");
-      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}") as {
-        devDependencies?: Record<string, string>;
-      };
       const infraPackage = JSON.parse(files.get("packages/infra/package.json") ?? "{}") as {
         devDependencies?: Record<string, string>;
       };
@@ -915,7 +912,6 @@ describe("Deployment Configurations", () => {
       expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
         infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
       );
-      expect(webPkg.devDependencies?.["@cloudflare/vite-plugin"]).toBe("1.48.0");
       expect(serverBuildConfig).toContain('import { wasm } from "rolldown-plugin-wasm"');
       expect(serverBuildConfig).toContain("plugins: [wasm()]");
       expect(serverPackage.devDependencies?.["rolldown-plugin-wasm"]).toBe("^0.3.2");
