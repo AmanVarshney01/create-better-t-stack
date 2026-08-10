@@ -631,8 +631,8 @@ async function validateSolidStartScaffold(sample: SelectedBuildSample, projectDi
   if (sample.config.webDeploy === "cloudflare") {
     expect(viteConfig).toContain("const cloudflareWorkersAlias: Record<string, string>");
     const infra = await fs.readFile(path.join(projectDir, "packages/infra/alchemy.run.ts"), "utf8");
-    expect(infra).toContain('compatibility: "node"');
-    expect(infra).toContain("run_worker_first: true");
+    expect(infra).toContain('flags: ["nodejs_compat"]');
+    expect(infra).toContain("runWorkerFirst: true");
   }
 
   if (sample.config.webDeploy === "docker") {
