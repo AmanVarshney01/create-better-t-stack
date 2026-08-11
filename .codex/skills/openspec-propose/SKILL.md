@@ -41,7 +41,7 @@ When ready to implement, run /opsx:apply
 2. **Create the change directory**
 
    ```bash
-   openspec new change "<name>"
+   openspec new change "<name>" --store "<store-id>"
    ```
 
    This creates a scaffolded change in the planning home resolved by the CLI with `.openspec.yaml`.
@@ -49,7 +49,7 @@ When ready to implement, run /opsx:apply
 3. **Get the artifact build order**
 
    ```bash
-   openspec status --change "<name>" --json
+   openspec status --change "<name>" --json --store "<store-id>"
    ```
 
    Parse the JSON to get:
@@ -66,7 +66,7 @@ When ready to implement, run /opsx:apply
    a. **For each artifact that is `ready` (dependencies satisfied)**:
    - Get instructions:
      ```bash
-     openspec instructions <artifact-id> --change "<name>" --json
+     openspec instructions <artifact-id> --change "<name>" --json --store "<store-id>"
      ```
    - The instructions JSON includes:
      - `context`: Project background (constraints for you - do NOT include in output)
@@ -76,12 +76,13 @@ When ready to implement, run /opsx:apply
      - `resolvedOutputPath`: Resolved path or pattern to write the artifact
      - `dependencies`: Completed artifacts to read for context
    - Read any completed dependency files for context
-   - Create the artifact file using `template` as the structure and write it to `resolvedOutputPath`
+   - If `resolvedOutputPath` is a concrete file, create it using `template` as the structure
+   - If `resolvedOutputPath` is a glob/pattern, never write to the pattern. Resolve an existing concrete path from `artifactPaths.<artifact-id>.existingOutputPaths`, or derive and confirm the required concrete path from the artifact instruction and pattern under `changeRoot`; re-run status after writing
    - Apply `context` and `rules` as constraints - but do NOT copy them into the file
    - Show brief progress: "Created <artifact-id>"
 
    b. **Continue until all `applyRequires` artifacts are complete**
-   - After creating each artifact, re-run `openspec status --change "<name>" --json`
+   - After creating each artifact, re-run `openspec status --change "<name>" --json --store "<store-id>"`
    - Check if every artifact ID in `applyRequires` has `status: "done"` in the artifacts array
    - Stop when all `applyRequires` artifacts are done
 
@@ -91,7 +92,7 @@ When ready to implement, run /opsx:apply
 
 5. **Show final status**
    ```bash
-   openspec status --change "<name>"
+   openspec status --change "<name>" --store "<store-id>"
    ```
 
 **Output**

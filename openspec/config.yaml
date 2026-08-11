@@ -20,4 +20,8 @@ rules:
     - Provider compatibility must fail during configuration, not after generation.
   tasks:
     - Keep implementation tasks provider-scoped and independently verifiable.
-    - Include disposable live-deploy tests and cleanup requirements.
+    - Give every live test a unique stage and persisted ownership marker before it creates resources.
+    - Track owned child processes and ports, terminate them in finally paths, and never kill an unowned process.
+    - Destroy from the original directory with the exact stage and retained Alchemy state, then audit owned Workers, D1, KV, and related resources for leaks.
+    - Include an independent marker-matched reconciliation path for interrupted runs; never delete an unowned resource.
+    - Record bounded time/resource limits and redact secrets from cleanup, diagnostics, and recovery output.

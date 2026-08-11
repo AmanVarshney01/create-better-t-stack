@@ -23,14 +23,14 @@ Implement tasks from an OpenSpec change.
    If a name is provided, use it. Otherwise:
    - Infer from conversation context if the user mentioned a change
    - Auto-select if only one active change exists
-   - If ambiguous, run `openspec list --json` to get available changes and use the **AskUserQuestion tool** to let the user select
+   - If ambiguous, run `openspec list --json --store "<store-id>"` (omit the store option for repo-local work) to get available changes and use the **AskUserQuestion tool** to let the user select
 
    Always announce: "Using change: <name>" and how to override (e.g., `/opsx:apply <other>`).
 
 2. **Check status to understand the schema**
 
    ```bash
-   openspec status --change "<name>" --json
+   openspec status --change "<name>" --json --store "<store-id>"
    ```
 
    Parse the JSON to understand:
@@ -41,7 +41,7 @@ Implement tasks from an OpenSpec change.
 3. **Get apply instructions**
 
    ```bash
-   openspec instructions apply --change "<name>" --json
+   openspec instructions apply --change "<name>" --json --store "<store-id>"
    ```
 
    This returns:
@@ -72,11 +72,13 @@ Implement tasks from an OpenSpec change.
 
 6. **Implement tasks (loop until done or blocked)**
 
-   For each pending task:
+   For each pending task returned by `openspec instructions apply --json`:
    - Show which task is being worked on
    - Make the code changes required
    - Keep changes minimal and focused
-   - Mark task complete in the tasks file: `- [ ]` → `- [x]`
+   - Resolve the task artifact from the status/instructions output instead of assuming `tasks.md`
+   - Update completion using that artifact's schema-defined representation. For the spec-driven schema's Markdown checklist, mark `- [ ]` → `- [x]`; do not impose checkbox semantics on another schema
+   - Re-run the apply instructions with the selected store after each update so progress and the next pending task come from the CLI
    - Continue to next task
 
    **Pause if:**
@@ -108,6 +110,8 @@ Working on task 4/7: <task description>
 ```
 
 **Output On Completion**
+
+Use the Markdown checkbox summary below only when the active schema represents tasks as a Markdown checklist. For other schemas, report the completed task IDs and descriptions returned by the apply instructions.
 
 ```
 ## Implementation Complete
@@ -151,7 +155,7 @@ What would you like to do?
 - If task is ambiguous, pause and ask before implementing
 - If implementation reveals issues, pause and suggest artifact updates
 - Keep code changes minimal and scoped to each task
-- Update task checkbox immediately after completing each task
+- Update task state through the schema-resolved task artifact immediately after completing each task
 - Pause on errors, blockers, or unclear requirements - don't guess
 - Use contextFiles from CLI output, don't assume specific file names
 

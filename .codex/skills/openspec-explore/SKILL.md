@@ -92,7 +92,7 @@ You have full context of the OpenSpec system. Use it naturally, don't force it.
 At the start, quickly check what exists:
 
 ```bash
-openspec list --json
+openspec list --json --store "<store-id>"
 ```
 
 This tells you:
@@ -113,7 +113,7 @@ Think freely. When insights crystallize, you might offer:
 If the user mentions a change or you detect one is relevant:
 
 1. **Resolve and read existing artifacts for context**
-   - Run `openspec status --change "<name>" --json`.
+   - Run `openspec status --change "<name>" --json --store "<store-id>"`.
    - Use `changeRoot`, `artifactPaths`, and `actionContext` from the status JSON.
    - Read existing files from `artifactPaths.<artifact>.existingOutputPaths`.
 
@@ -123,19 +123,12 @@ If the user mentions a change or you detect one is relevant:
 
 3. **Offer to capture when decisions are made**
 
-   | Insight Type               | Where to Capture             |
-   | -------------------------- | ---------------------------- |
-   | New requirement discovered | `specs/<capability>/spec.md` |
-   | Requirement changed        | `specs/<capability>/spec.md` |
-   | Design decision made       | `design.md`                  |
-   | Scope changed              | `proposal.md`                |
-   | New work identified        | `tasks.md`                   |
-   | Assumption invalidated     | Relevant artifact            |
+   Resolve capture targets from `artifactPaths.<artifact-id>.existingOutputPaths` and the active schema's instructions. Do not assume spec-driven IDs or filenames. For a glob artifact with multiple concrete paths, identify the matching capability from those paths; if no concrete path exists, use the artifact instructions to propose one and confirm it before writing.
 
    Example offers:
-   - "That's a design decision. Capture it in design.md?"
-   - "This is a new requirement. Add it to specs?"
-   - "This changes scope. Update the proposal?"
+   - "That's a design decision. Capture it in the schema's design artifact?"
+   - "This is a new requirement. Add it to the matching concrete spec artifact?"
+   - "This changes scope. Update the schema's proposal artifact?"
 
 4. **The user decides** - Offer and move on. Don't pressure. Don't auto-capture.
 

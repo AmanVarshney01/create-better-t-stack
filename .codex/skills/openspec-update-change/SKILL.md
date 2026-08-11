@@ -20,7 +20,7 @@ Revise a change's existing planning artifacts and keep them coherent. Never edit
 
 1. **If no change name provided, prompt for selection**
 
-   Run `openspec list --json` to get available changes sorted by most recently modified. Then use the **AskUserQuestion tool** to let the user select which change to update.
+   Run `openspec list --json --store "<store-id>"` (omit the store option for repo-local work) to get available changes sorted by most recently modified. Then use the **AskUserQuestion tool** to let the user select which change to update.
 
    Present the top 3-4 most recently modified changes as options, showing:
    - Change name
@@ -35,7 +35,7 @@ Revise a change's existing planning artifacts and keep them coherent. Never edit
 2. **Get the change's artifacts**
 
    ```bash
-   openspec status --change "<name>" --json
+   openspec status --change "<name>" --json --store "<store-id>"
    ```
 
    Parse the JSON to understand current state. The response includes:
@@ -64,7 +64,7 @@ Revise a change's existing planning artifacts and keep them coherent. Never edit
    - If the user rejects a revision, do not write it - leave that artifact unchanged.
    - When a substantial rewrite is needed, get that artifact's rules and template first:
      ```bash
-     openspec instructions <artifact-id> --change "<name>" --json
+     openspec instructions <artifact-id> --change "<name>" --json --store "<store-id>"
      ```
 
 6. **Point to the next step (guidance only - NEVER act on it)**

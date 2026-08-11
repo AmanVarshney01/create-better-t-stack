@@ -20,7 +20,7 @@ Archive a completed change in the experimental workflow.
 
 1. **If no change name provided, prompt for selection**
 
-   Run `openspec list --json` to get available changes. Use the **AskUserQuestion tool** to let the user select.
+   Run `openspec list --json --store "<store-id>"` (omit the store option for repo-local work) to get available changes. Use the **AskUserQuestion tool** to let the user select.
 
    Show only active changes (not already archived).
    Include the schema used for each change if available.
@@ -29,7 +29,7 @@ Archive a completed change in the experimental workflow.
 
 2. **Check artifact completion status**
 
-   Run `openspec status --change "<name>" --json` to check artifact completion.
+   Run `openspec status --change "<name>" --json --store "<store-id>"` to check artifact completion.
 
    Parse the JSON to understand:
    - `schemaName`: The workflow being used
@@ -41,25 +41,23 @@ Archive a completed change in the experimental workflow.
    - Use **AskUserQuestion tool** to confirm user wants to proceed
    - Proceed if user confirms
 
-3. **Check task completion status**
+3. **Check schema-resolved task completion status**
 
-   Read the tasks file (typically `tasks.md`) to check for incomplete tasks.
+   Run `openspec instructions apply --change "<name>" --json --store "<store-id>"` and use its `progress` and `tasks` fields. Do not assume a `tasks.md` path or Markdown checkbox syntax; the active schema controls the task artifact and representation.
 
-   Count tasks marked with `- [ ]` (incomplete) vs `- [x]` (complete).
-
-   **If incomplete tasks found:**
+   **If the apply instructions report incomplete tasks:**
    - Display warning showing count of incomplete tasks
    - Use **AskUserQuestion tool** to confirm user wants to proceed
    - Proceed if user confirms
 
-   **If no tasks file exists:** Proceed without task-related warning.
+   **If the schema exposes no tasks:** Proceed without a task-related warning.
 
 4. **Assess delta spec sync state**
 
-   Use `artifactPaths.specs.existingOutputPaths` from status JSON to check for delta specs. If none exist, proceed without sync prompt.
+   Use `artifactPaths.specs.existingOutputPaths` from status JSON to check for delta specs. If none exist, proceed without sync prompt. Resolve every delta and main-spec path from the selected store's status/root metadata; never substitute a repository-local `openspec/specs` path when a store is active.
 
    **If delta specs exist:**
-   - Compare each delta spec with its corresponding main spec at `openspec/specs/<capability>/spec.md`
+   - Compare each concrete delta path with its corresponding main spec under the selected OpenSpec root returned by the CLI
    - Determine what changes would be applied (adds, modifications, removals, renames)
    - Show a combined summary before prompting
 
@@ -67,7 +65,7 @@ Archive a completed change in the experimental workflow.
    - If changes needed: "Sync now (recommended)", "Archive without syncing"
    - If already synced: "Archive now", "Sync anyway", "Cancel"
 
-   If user chooses sync, use Task tool (subagent_type: "general-purpose", prompt: "Use Skill tool to invoke openspec-sync-specs for change '<name>'. Delta spec analysis: <include the analyzed delta spec summary>"). Proceed to archive regardless of choice.
+   If the user chooses sync, invoke openspec-sync-specs for the same change and store. Archive only after that sync succeeds and its result has been verified. If the user chooses "Archive without syncing", ask for explicit confirmation and archive only after confirmation. If the user chooses "Cancel", or synchronization fails, stop immediately without moving the change.
 
 5. **Perform the archive**
 

@@ -22,7 +22,7 @@ This is an **agent-driven** operation - you will read delta specs and directly e
 
 1. **If no change name provided, prompt for selection**
 
-   Run `openspec list --json` to get available changes. Use the **AskUserQuestion tool** to let the user select.
+   Run `openspec list --json --store "<store-id>"` (omit the store option for repo-local work) to get available changes. Use the **AskUserQuestion tool** to let the user select.
 
    Show changes that have delta specs (under `specs/` directory).
 
@@ -33,7 +33,7 @@ This is an **agent-driven** operation - you will read delta specs and directly e
    Run:
 
    ```bash
-   openspec status --change "<name>" --json
+   openspec status --change "<name>" --json --store "<store-id>"
    ```
 
 3. **Find delta specs**
@@ -50,24 +50,23 @@ This is an **agent-driven** operation - you will read delta specs and directly e
 
 4. **For each delta spec, apply changes to main specs**
 
-   For each repo-local capability delta spec path returned by the CLI:
+   For each concrete capability delta spec path returned by the selected store's status output:
 
    a. **Read the delta spec** to understand the intended changes
 
-   b. **Read the main spec** at `openspec/specs/<capability>/spec.md` (may not exist yet)
+   b. **Resolve and read the corresponding main spec** from the selected OpenSpec root returned by the CLI (it may not exist yet). Never assume the current repository's `openspec/specs` directory when a store is active.
 
    c. **Apply changes intelligently**:
 
    **ADDED Requirements:**
    - If requirement doesn't exist in main spec → add it
-   - If requirement already exists → update it to match (treat as implicit MODIFIED)
+   - If a requirement with the same normalized heading/identity already exists → merge only descriptions or scenarios explicitly changed by the delta; preserve all unmentioned content
 
    **MODIFIED Requirements:**
    - Find the requirement in main spec
-   - Apply the changes - this can be:
-     - Adding new scenarios (don't need to copy existing ones)
-     - Modifying existing scenarios
-     - Changing the requirement description
+   - Match scenarios by normalized scenario heading/identity
+   - Add only scenarios that do not exist; update an existing scenario only when the delta explicitly changes that scenario
+   - Change the requirement description only when the delta supplies a replacement description
    - Preserve scenarios/content not mentioned in the delta
 
    **REMOVED Requirements:**
@@ -77,9 +76,13 @@ This is an **agent-driven** operation - you will read delta specs and directly e
    - Find the FROM requirement, rename to TO
 
    d. **Create new main spec** if capability doesn't exist yet:
-   - Create `openspec/specs/<capability>/spec.md`
+   - Create the concrete capability path under the selected root returned by the CLI
    - Add Purpose section (can be brief, mark as TBD)
-   - Add Requirements section with the ADDED requirements
+   - Add Requirements section with only ADDED requirements that are not already present
+
+   e. **Verify idempotence**:
+   - Re-read the merged main spec and compare requirement/scenario identities
+   - Confirm no duplicate headings were introduced and that applying the same delta again would produce no diff
 
 5. **Show summary**
 
@@ -124,7 +127,7 @@ The system SHALL do something new.
 
 Unlike programmatic merging, you can apply **partial updates**:
 
-- To add a scenario, just include that scenario under MODIFIED - don't copy existing scenarios
+- To add a scenario, include that scenario under MODIFIED; identity matching ensures an existing scenario is updated or skipped rather than duplicated
 - The delta represents _intent_, not a wholesale replacement
 - Use your judgment to merge changes sensibly
 
@@ -150,6 +153,8 @@ Main specs are now updated. The change remains active - archive when implementat
 
 - Read both delta and main specs before making changes
 - Preserve existing content not mentioned in delta
+- Match requirements and scenarios by stable heading identity and never replace unmentioned descriptions or scenarios
+- Add only missing requirements/scenarios; rerunning the same sync must produce no diff
 - If something is unclear, ask for clarification
 - Show what you're changing as you go
 - The operation should be idempotent - running twice should give same result
