@@ -18,7 +18,10 @@ import { WEB_FRAMEWORKS } from "./compatibility";
 import { ValidationError } from "./errors";
 
 type ValidationResult = Result<void, ValidationError>;
-type AddonCompatibilityConfig = Pick<ProjectConfig, "frontend" | "auth" | "backend" | "runtime">;
+type AddonCompatibilityConfig = Pick<
+  ProjectConfig,
+  "frontend" | "auth" | "backend" | "runtime" | "webDeploy"
+>;
 const TASK_RUNNER_ADDONS: readonly Addons[] = ["turborepo", "nx", "vite-plus"];
 const STATIC_DESKTOP_ADDONS: readonly Addons[] = ["tauri", "electrobun"];
 const TAURI_STATIC_EXPORT_FRONTENDS: readonly Frontend[] = ["next", "tanstack-start"];
@@ -557,13 +560,28 @@ export function validateAddonsAgainstConfig(
   addons: Addons[] = [],
   config: Partial<AddonCompatibilityConfig>,
 ): ValidationResult {
-  return validateAddonsAgainstFrontends(
+  const addonResult = validateAddonsAgainstFrontends(
     addons,
     config.frontend ?? [],
     config.auth,
     config.backend,
     config.runtime,
   );
+  if (addonResult.isErr()) return addonResult;
+
+  const cloudflareResult = validateCloudflareWebDeployKnownIssues({ ...config, addons });
+  if (cloudflareResult.isErr()) return cloudflareResult;
+
+  const dockerResult = validateDockerWebDeployDesktopAddons(
+    config.webDeploy,
+    addons,
+    config.frontend,
+    config.backend,
+    config.auth,
+  );
+  if (dockerResult.isErr()) return dockerResult;
+
+  return Result.ok(undefined);
 }
 
 export function validatePaymentsCompatibility(

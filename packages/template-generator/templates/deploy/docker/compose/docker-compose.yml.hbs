@@ -6,6 +6,10 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+{{#if (includes addons "sentry")}}
+      secrets:
+        - SENTRY_AUTH_TOKEN
+{{/if}}
 {{#if (or (includes addons "sentry") (and (not (includes frontend "nuxt")) (or (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start"))))))}}
       args:
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
@@ -199,4 +203,10 @@ services:
 
 volumes:
   {{projectName}}_{{database}}_data:
+{{/if}}
+{{#if (and (eq webDeploy "docker") (includes addons "sentry"))}}
+
+secrets:
+  SENTRY_AUTH_TOKEN:
+    environment: SENTRY_AUTH_TOKEN
 {{/if}}

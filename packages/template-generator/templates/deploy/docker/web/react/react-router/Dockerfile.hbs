@@ -46,7 +46,11 @@ ARG SENTRY_WEB_PROJECT
 ENV SENTRY_WEB_PROJECT=${SENTRY_WEB_PROJECT}
 {{/if}}
 ENV NODE_ENV=production
+{{#if (includes addons "sentry")}}
+RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN cd apps/web && {{packageManager}} run build
+{{else}}
 RUN cd apps/web && {{packageManager}} run build
+{{/if}}
 
 FROM node:24-slim AS runner
 WORKDIR /app

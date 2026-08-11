@@ -146,6 +146,7 @@ function buildClientVars(
   backend: ProjectConfig["backend"],
   auth: ProjectConfig["auth"],
   addons: ProjectConfig["addons"],
+  webDeploy: ProjectConfig["webDeploy"],
 ): EnvVariable[] {
   const hasNextJs = frontend.includes("next");
   const hasReactRouter = frontend.includes("react-router");
@@ -230,7 +231,7 @@ function buildClientVars(
       {
         key: "SENTRY_AUTH_TOKEN",
         value: "",
-        condition: true,
+        condition: webDeploy !== "docker",
         comment: "Optional: enables production source-map uploads",
       },
     );
@@ -676,7 +677,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     const clientDir = "apps/web";
     if (vfs.directoryExists(clientDir)) {
       const envPath = `${clientDir}/.env`;
-      const clientVars = buildClientVars(frontend, backend, auth, addons);
+      const clientVars = buildClientVars(frontend, backend, auth, addons, webDeploy);
       writeEnvFile(vfs, envPath, clientVars);
     }
   }
@@ -723,6 +724,12 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
         key: "SENTRY_WEB_PROJECT",
         value: "",
         condition: addons.includes("sentry"),
+      },
+      {
+        key: "SENTRY_AUTH_TOKEN",
+        value: "",
+        condition: addons.includes("sentry"),
+        comment: "BuildKit secret for production source-map uploads",
       },
     ];
     if (rootComposeVars.some((v) => v.condition)) {
