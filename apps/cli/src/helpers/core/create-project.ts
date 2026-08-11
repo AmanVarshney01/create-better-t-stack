@@ -1,11 +1,9 @@
-import os from "node:os";
 import path from "node:path";
 
 import { generate, EMBEDDED_TEMPLATES } from "@better-t-stack/template-generator";
 import { writeTree } from "@better-t-stack/template-generator/fs-writer";
 import { log } from "@clack/prompts";
 import { Result } from "better-result";
-import { $ } from "execa";
 import fs from "fs-extra";
 
 import type { DbSetupOptions, ProjectConfig } from "../../types";
@@ -22,6 +20,7 @@ import { displayPostInstallInstructions } from "./post-installation";
 export interface CreateProjectOptions {
   manualDb?: boolean;
   dbSetupOptions?: DbSetupOptions;
+  packageManagerVersion: string;
 }
 
 /**
@@ -30,7 +29,7 @@ export interface CreateProjectOptions {
  */
 export async function createProject(
   options: ProjectConfig,
-  cliInput: CreateProjectOptions = {},
+  cliInput: CreateProjectOptions,
 ): Promise<Result<string, ProjectCreationError>> {
   return Result.gen(async function* () {
     const projectDir = options.projectDir;
@@ -82,7 +81,9 @@ export async function createProject(
     );
 
     // Set package manager version
-    yield* Result.await(setPackageManagerVersion(projectDir, options.packageManager));
+    yield* Result.await(
+      setPackageManagerVersion(projectDir, options.packageManager, cliInput.packageManagerVersion),
+    );
 
     // Setup database if needed
     if (!isConvex && options.database !== "none") {
@@ -147,6 +148,7 @@ export async function createProject(
 async function setPackageManagerVersion(
   projectDir: string,
   packageManager: ProjectConfig["packageManager"],
+  version: string,
 ): Promise<Result<void, ProjectCreationError>> {
   const pkgJsonPath = path.join(projectDir, "package.json");
 
@@ -154,28 +156,10 @@ async function setPackageManagerVersion(
     return Result.ok(undefined);
   }
 
-  // First, try to get the version
-  const versionResult = await Result.tryPromise({
-    try: async () => {
-      // Run in a neutral directory to avoid local package manager shims affecting lookup.
-      const { stdout } = await $({ cwd: os.tmpdir() })`${packageManager} -v`;
-      return stdout.trim();
-    },
-    catch: () => null, // Return null if we can't get version
-  });
-
-  // Now update the package.json
   return Result.tryPromise({
     try: async () => {
       const pkgJson = await fs.readJson(pkgJsonPath);
-
-      if (versionResult.isOk() && versionResult.value) {
-        pkgJson.packageManager = `${packageManager}@${versionResult.value}`;
-      } else {
-        // If we can't get the version, just remove the packageManager field
-        delete pkgJson.packageManager;
-      }
-
+      pkgJson.packageManager = `${packageManager}@${version}`;
       await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
     },
     catch: (e) =>

@@ -27,6 +27,17 @@ npx create-better-t-stack@latest
 
 Follow the prompts to configure your project or use the `--yes` flag for defaults.
 
+## Requirements
+
+- Node.js 22 or newer to run the CLI with Node.js. The selected framework may require a newer release; the CLI checks the exact stack before writing files.
+- Bun 1.2.14 or newer when using Bun (dependency catalogs).
+- pnpm 10.26.0 or newer when using pnpm (catalogs and `allowBuilds`).
+- npm 11.16.0 or newer when using npm (`allowScripts`).
+
+Docker Compose 2.24 or newer is required by generated Docker stacks. Git, Rust, Docker,
+and platform SDKs otherwise remain optional and are only needed when you use their corresponding
+generated commands.
+
 ## Features
 
 | Category                 | Options                                                                                                                                                                                                                                                                                                                                                                                                                                   |

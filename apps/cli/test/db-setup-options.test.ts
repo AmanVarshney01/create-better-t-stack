@@ -136,6 +136,7 @@ describe("Database setup options", () => {
       dbSetup: "d1",
       webDeploy: "none",
       serverDeploy: "cloudflare",
+      packageManager: "bun",
       install: false,
       disableAnalytics: true,
     });

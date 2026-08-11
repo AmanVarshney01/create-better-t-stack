@@ -26,6 +26,7 @@ import { formatConfigValue } from "../../utils/display-config";
 import { CLIError, UserCancelledError, displayError } from "../../utils/errors";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
 import { renderTitle } from "../../utils/render-title";
+import { checkLocalRequirements } from "../../utils/requirements";
 import { setupAddons } from "../addons/addons-setup";
 import { detectProjectConfig } from "./detect-project-config";
 import { installDependencies } from "./install-dependencies";
@@ -325,6 +326,11 @@ async function addHandlerInternal(
     ...config,
     addons: updatedAddons,
   };
+
+  const requirementsResult = await checkLocalRequirements(updatedConfig);
+  if (requirementsResult.isErr()) {
+    return Result.err(requirementsResult.error);
+  }
 
   // Create VFS and process addon templates using template-generator's logic
   if (!isSilent()) {

@@ -33,6 +33,7 @@ import {
 import { addToHistory } from "../../utils/project-history";
 import { validateProjectName } from "../../utils/project-name-validation";
 import { renderTitle } from "../../utils/render-title";
+import { checkLocalRequirements } from "../../utils/requirements";
 import { getTemplateConfig, getTemplateDescription } from "../../utils/templates";
 import {
   getProvidedFlags,
@@ -365,6 +366,8 @@ async function createProjectHandlerInternal(
       }
     }
 
+    const localRequirements = yield* Result.await(checkLocalRequirements(config));
+
     if (!input.dryRun) {
       yield* Result.await(
         Result.tryPromise({
@@ -420,6 +423,7 @@ async function createProjectHandlerInternal(
       createProject(config, {
         manualDb: cliInput.manualDb ?? input.manualDb,
         dbSetupOptions: effectiveDbSetupOptions,
+        packageManagerVersion: localRequirements.packageManagerVersion,
       }),
     );
 
