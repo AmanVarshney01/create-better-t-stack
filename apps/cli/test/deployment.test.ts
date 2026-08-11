@@ -1597,6 +1597,38 @@ describe("Deployment Configurations", () => {
       expect(compose).toContain('"3001:3001"');
     });
 
+    it("should route SolidStart SSR requests through the internal Docker server URL", async () => {
+      const result = await createVirtual({
+        projectName: "docker-solid-external-server",
+        webDeploy: "docker",
+        serverDeploy: "docker",
+        backend: "hono",
+        runtime: "node",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["solid"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) throw result.error;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml") ?? "";
+      const orpcClient = files.get("apps/web/src/utils/orpc.ts") ?? "";
+
+      expect(compose).toContain("SERVER_URL: http://server:3000");
+      expect(compose).toContain("VITE_SERVER_URL: http://localhost:3000");
+      expect(orpcClient).toContain('typeof window === "undefined" && processEnv?.SERVER_URL');
+    });
+
     it("should bind Fastify to all interfaces for Docker deploys", async () => {
       const result = await createVirtual({
         projectName: "docker-fastify-host",
