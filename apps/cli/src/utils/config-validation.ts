@@ -18,6 +18,7 @@ import {
   validateVercelServerDeploy,
   validatePrismaServerDeploy,
   validatePrismaWebDeploy,
+  validatePrismaWebDeployDesktopAddons,
   validateCloudflareWebDeployKnownIssues,
   validateWebDeployRequiresWebFrontend,
   validateWorkersCompatibility,
@@ -517,6 +518,7 @@ export function validateFullConfig(
       config.backend,
       config.auth,
     );
+    yield* validatePrismaWebDeployDesktopAddons(config.webDeploy, config.addons, config.frontend);
 
     yield* validateSelfBackendCompatibility(providedFlags, options, config);
     yield* validateWorkersCompatibility(providedFlags, options, config);

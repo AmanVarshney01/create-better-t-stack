@@ -17075,93 +17075,6 @@ app.listen(port, "0.0.0.0", () => {
   console.log(\`React Router server listening on port \${port}\`);
 });
 `],
-  ["deploy/prisma/web/react/tanstack-router/prisma.server.mjs", `import { createServer } from "node:http";
-import { fileURLToPath } from "node:url";
-
-import sirv from "sirv";
-
-const serve = sirv(fileURLToPath(new URL("./dist/", import.meta.url)), {
-  dev: false,
-  etag: true,
-  single: true,
-});
-
-const port = Number(process.env.PORT ?? 3000);
-createServer((request, response) => serve(request, response)).listen(port, "0.0.0.0", () => {
-  console.log(\`TanStack Router server listening on port \${port}\`);
-});
-`],
-  ["deploy/prisma/web/react/tanstack-router/vite.prisma.config.ts", `import { cpSync } from "node:fs";
-import { resolve } from "node:path";
-
-import { defineConfig, type Plugin } from "vite";
-
-function copyClientBuild(): Plugin {
-  return {
-    name: "prisma-copy-vite-client",
-    closeBundle() {
-      cpSync(resolve("dist"), resolve(".prisma/dist"), { recursive: true });
-    },
-  };
-}
-
-export default defineConfig({
-  plugins: [copyClientBuild()],
-  build: {
-    ssr: "prisma.server.mjs",
-    outDir: ".prisma",
-    emptyOutDir: true,
-    copyPublicDir: false,
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        entryFileNames: "server.mjs",
-        chunkFileNames: "chunks/[name]-[hash].mjs",
-      },
-    },
-  },
-  ssr: {
-    noExternal: true,
-  },
-});
-`],
-  ["deploy/prisma/web/svelte/vite.prisma.config.ts", `import { cpSync, existsSync } from "node:fs";
-import { resolve } from "node:path";
-
-import { defineConfig, type Plugin } from "vite";
-
-function copySvelteKitAssets(): Plugin {
-  return {
-    name: "prisma-copy-sveltekit-assets",
-    closeBundle() {
-      cpSync(resolve("build/client"), resolve(".prisma/client"), { recursive: true });
-      if (existsSync(resolve("build/prerendered"))) {
-        cpSync(resolve("build/prerendered"), resolve(".prisma/prerendered"), { recursive: true });
-      }
-    },
-  };
-}
-
-export default defineConfig({
-  plugins: [copySvelteKitAssets()],
-  build: {
-    ssr: "build/index.js",
-    outDir: ".prisma",
-    emptyOutDir: true,
-    copyPublicDir: false,
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        entryFileNames: "server.mjs",
-        chunkFileNames: "chunks/[name]-[hash].mjs",
-      },
-    },
-  },
-  ssr: {
-    noExternal: true,
-  },
-});
-`],
   ["deploy/vercel/_vercelignore", `# Local env files must never ship in deployments: Vercel project env vars are
 # the source of truth (bun env:vercel:*), and frameworks like Next.js would
 # otherwise load these localhost values at runtime.
@@ -33339,6 +33252,13 @@ export default defineConfig({
     tailwindcss(),
     sveltekit(),
   ],
+{{#if (eq webDeploy "prisma")}}
+  // Prisma Compute uploads only the build artifact, so keep the official
+  // adapter-node output self-contained instead of requiring node_modules.
+  ssr: {
+    noExternal: true,
+  },
+{{/if}}
 });
 `],
   ["packages/config/package.json.hbs", `{
@@ -35744,4 +35664,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 523;
+export const TEMPLATE_COUNT = 520;

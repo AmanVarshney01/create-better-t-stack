@@ -357,24 +357,6 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "prisma-tanstack-router-web",
-    packageManagers: ["bun"],
-    config: {
-      ...baseConfig,
-      frontend: ["tanstack-router"],
-      backend: "none",
-      runtime: "none",
-      database: "none",
-      orm: "none",
-      api: "none",
-      auth: "none",
-      payments: "none",
-      addons: ["none"],
-      examples: [],
-      webDeploy: "prisma",
-    },
-  },
-  {
     name: "prisma-sveltekit-web",
     packageManagers: ["pnpm"],
     config: {
@@ -722,18 +704,10 @@ async function buildAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pr
   if (sample.config.webDeploy !== "prisma") return;
 
   const webDir = path.join(projectDir, "apps/web");
-  const webPackage = await fs.readJson(path.join(webDir, "package.json"));
-  if (typeof webPackage.scripts?.["build:prisma"] === "string") {
-    await runCommand(`${sample.name}:prisma-artifact`, webDir, sample.packageManager, [
-      "run",
-      "build:prisma",
-    ]);
-  }
-
   const entrypoint = sample.config.frontend?.includes("react-router")
     ? "build/server/index.js"
-    : sample.config.frontend?.some((frontend) => ["tanstack-router", "svelte"].includes(frontend))
-      ? ".prisma/server.mjs"
+    : sample.config.frontend?.includes("svelte")
+      ? "build/index.js"
       : undefined;
 
   if (entrypoint) {
@@ -768,8 +742,8 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   const frontend = sample.config.frontend ?? [];
   const entrypoint = frontend.includes("react-router")
     ? "build/server/index.js"
-    : frontend.some((value) => ["tanstack-router", "svelte"].includes(value))
-      ? ".prisma/server.mjs"
+    : frontend.includes("svelte")
+      ? "build/index.js"
       : undefined;
   if (!entrypoint) return;
 
@@ -789,8 +763,7 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
 
   let failure: unknown;
   try {
-    const paths = frontend.includes("tanstack-router") ? ["/", "/client-side-route"] : ["/"];
-    for (const pathname of paths) {
+    for (const pathname of ["/"]) {
       let response: Response | undefined;
       for (let attempt = 0; attempt < 100; attempt++) {
         try {

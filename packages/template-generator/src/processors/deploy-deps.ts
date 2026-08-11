@@ -3,21 +3,6 @@ import { getLocalD1Owner, type ProjectConfig } from "@better-t-stack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency } from "../utils/add-deps";
 
-type PackageJson = {
-  scripts?: Record<string, string>;
-};
-
-function addPrismaWebBuildScript(vfs: VirtualFileSystem, usesVitePlus: boolean): void {
-  const webPkgPath = "apps/web/package.json";
-  const webPkg = vfs.readJson<PackageJson>(webPkgPath);
-  if (!webPkg) return;
-
-  const viteBuild = usesVitePlus ? "vp build" : "vite build";
-  webPkg.scripts = webPkg.scripts ?? {};
-  webPkg.scripts["build:prisma"] = `${viteBuild} && ${viteBuild} --config vite.prisma.config.ts`;
-  vfs.writeJson(webPkgPath, webPkg);
-}
-
 export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { webDeploy, serverDeploy, frontend, backend, addons, orm } = config;
 
@@ -50,25 +35,12 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     });
   }
 
-  if (
-    isPrismaWeb &&
-    (["tanstack-router", "svelte"] as const).some((framework) => frontend.includes(framework))
-  ) {
-    addPrismaWebBuildScript(vfs, addons.includes("vite-plus"));
-  }
-
   if (isPrismaWeb && frontend.includes("react-router")) {
     addPackageDependency({
       vfs,
       packagePath: "apps/web/package.json",
       dependencies: ["@react-router/express", "express"],
       devDependencies: ["@types/express"],
-    });
-  } else if (isPrismaWeb && frontend.includes("tanstack-router")) {
-    addPackageDependency({
-      vfs,
-      packagePath: "apps/web/package.json",
-      dependencies: ["sirv"],
     });
   } else if (isPrismaWeb && frontend.includes("svelte")) {
     addPackageDependency({

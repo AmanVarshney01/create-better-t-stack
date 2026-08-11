@@ -29,9 +29,7 @@ export async function processDeployTemplates(
 
   if (config.webDeploy === "prisma") {
     const templateMap: Partial<Record<ProjectConfig["frontend"][number], string>> = {
-      "tanstack-router": "react/tanstack-router",
       "react-router": "react/react-router",
-      svelte: "svelte",
     };
 
     for (const frontend of config.frontend) {

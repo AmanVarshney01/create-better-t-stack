@@ -12,7 +12,7 @@ The CLI and generated user guidance SHALL label the target **Prisma**. The gener
 
 ### Requirement: Prisma web support uses verified production artifacts
 
-Prisma web deployment SHALL support Next.js, Nuxt, Astro, React Router, TanStack Router, TanStack Start, SvelteKit, and SolidStart. Automatic Alchemy framework builds SHALL be used where available; every other framework SHALL emit an explicit production server artifact that listens on the configured port.
+Prisma web deployment SHALL support Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, and SolidStart. Automatic Alchemy framework builds SHALL be used where available; every other supported framework SHALL emit an official production server artifact that listens on the configured port.
 
 #### Scenario: SolidStart custom artifact
 
@@ -27,19 +27,19 @@ Prisma web deployment SHALL support Next.js, Nuxt, Astro, React Router, TanStack
 - **AND** the deployable `build/server/index.js` SHALL include the Express request handler
 - **AND** client assets SHALL remain available from the sibling `build/client` directory
 
-#### Scenario: TanStack Router production server
+#### Scenario: Static SPA without a native Prisma resource
 
-- **WHEN** the TanStack Router SPA is deployed to Prisma
-- **THEN** Vite SHALL build the static client into `dist`
-- **AND** a production static server with SPA fallback SHALL be bundled into `.prisma/server.mjs`
-- **AND** the deployment SHALL NOT use Vite's development or preview server
+- **WHEN** Prisma deployment is selected for the TanStack Router SPA
+- **THEN** validation SHALL reject the combination before files are written
+- **AND** the CLI SHALL explain that Prisma Compute requires an executable server artifact
+- **AND** the generator SHALL NOT synthesize a static-file server
 
 #### Scenario: SvelteKit adapter-node artifact
 
 - **WHEN** SvelteKit is deployed to Prisma
 - **THEN** SvelteKit SHALL build with `adapter-node`
-- **AND** its server dependencies and client assets SHALL be packaged into `.prisma`
-- **AND** the deployment entrypoint SHALL be `.prisma/server.mjs`
+- **AND** its official build output SHALL be self-contained without a second adapter-specific build
+- **AND** the deployment entrypoint SHALL be `build/index.js`
 
 ### Requirement: Prisma server support uses container-compatible runtimes
 

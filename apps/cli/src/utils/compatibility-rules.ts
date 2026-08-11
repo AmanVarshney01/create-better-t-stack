@@ -18,7 +18,10 @@ import { WEB_FRAMEWORKS } from "./compatibility";
 import { ValidationError } from "./errors";
 
 type ValidationResult = Result<void, ValidationError>;
-type AddonCompatibilityConfig = Pick<ProjectConfig, "frontend" | "auth" | "backend" | "runtime">;
+type AddonCompatibilityConfig = Pick<
+  ProjectConfig,
+  "frontend" | "auth" | "backend" | "runtime" | "webDeploy" | "database" | "orm" | "dbSetup"
+>;
 const TASK_RUNNER_ADDONS: readonly Addons[] = ["turborepo", "nx", "vite-plus"];
 const STATIC_DESKTOP_ADDONS: readonly Addons[] = ["tauri", "electrobun"];
 const TAURI_STATIC_EXPORT_FRONTENDS: readonly Frontend[] = ["next", "tanstack-start"];
@@ -381,16 +384,19 @@ export function validatePrismaServerDeploy(
   return Result.ok(undefined);
 }
 
-const PRISMA_COMPUTE_WEB_FRONTENDS: readonly Frontend[] = [
+export const PRISMA_COMPUTE_WEB_FRONTENDS: readonly Frontend[] = [
   "next",
   "nuxt",
   "astro",
   "react-router",
-  "tanstack-router",
   "tanstack-start",
   "svelte",
   "solid",
 ];
+
+export function supportsPrismaWebDeploy(frontend: Frontend[]): boolean {
+  return frontend.some((value) => PRISMA_COMPUTE_WEB_FRONTENDS.includes(value));
+}
 
 export function validatePrismaWebDeploy(
   webDeploy: WebDeploy | undefined,
@@ -398,9 +404,9 @@ export function validatePrismaWebDeploy(
 ): ValidationResult {
   if (webDeploy !== "prisma" || !frontend) return Result.ok(undefined);
 
-  if (!frontend.some((value) => PRISMA_COMPUTE_WEB_FRONTENDS.includes(value))) {
+  if (!supportsPrismaWebDeploy(frontend)) {
     return validationErr(
-      "'--web-deploy prisma' requires a supported web frontend. Choose Next.js, Nuxt, Astro, React Router, TanStack Router, TanStack Start, SvelteKit, or SolidStart.",
+      "'--web-deploy prisma' requires a supported server frontend. Choose Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or SolidStart. TanStack Router is a static SPA, while Prisma Compute requires an executable server artifact.",
     );
   }
 
@@ -429,8 +435,8 @@ export function validateCloudflareWebDeployKnownIssues(
   return Result.ok(undefined);
 }
 
-// Frontends whose docker image needs server output, which desktop addons replace with a static export
-const DOCKER_SERVER_OUTPUT_FRONTENDS: readonly Frontend[] = [
+// Frontends whose desktop build replaces the deployable server output with a static export.
+const DESKTOP_STATIC_EXPORT_FRONTENDS: readonly Frontend[] = [
   "next",
   "svelte",
   "astro",
@@ -449,7 +455,7 @@ export function validateDockerWebDeployDesktopAddons(
   const desktopAddons = addons.filter((addon) => STATIC_DESKTOP_ADDONS.includes(addon));
   if (desktopAddons.length === 0) return Result.ok(undefined);
 
-  const affected = frontend.find((f) => DOCKER_SERVER_OUTPUT_FRONTENDS.includes(f));
+  const affected = frontend.find((f) => DESKTOP_STATIC_EXPORT_FRONTENDS.includes(f));
   if (!affected) return Result.ok(undefined);
 
   // next + electrobun keeps standalone output when Convex Better Auth forces server bootstrap
@@ -462,6 +468,24 @@ export function validateDockerWebDeployDesktopAddons(
 
   return validationErr(
     `'--web-deploy docker' is not compatible with the ${desktopAddons.join(", ")} addon on '${affected}' because desktop addons switch the web build to a static export, which the docker image cannot serve. Remove the addon or use the static-serving tanstack-router frontend.`,
+  );
+}
+
+export function validatePrismaWebDeployDesktopAddons(
+  webDeploy: WebDeploy | undefined,
+  addons: Addons[] | undefined,
+  frontend: Frontend[] | undefined,
+): ValidationResult {
+  if (webDeploy !== "prisma" || !addons || !frontend) return Result.ok(undefined);
+
+  const desktopAddons = addons.filter((addon) => STATIC_DESKTOP_ADDONS.includes(addon));
+  if (desktopAddons.length === 0) return Result.ok(undefined);
+
+  const affected = frontend.find((value) => DESKTOP_STATIC_EXPORT_FRONTENDS.includes(value));
+  if (!affected) return Result.ok(undefined);
+
+  return validationErr(
+    `'--web-deploy prisma' is not compatible with the ${desktopAddons.join(", ")} addon on '${affected}' because desktop addons replace its executable server output with a static export, while Prisma Compute requires an executable server artifact. Remove the addon or choose a server deployment that supports this desktop build.`,
   );
 }
 
@@ -592,13 +616,28 @@ export function validateAddonsAgainstConfig(
   addons: Addons[] = [],
   config: Partial<AddonCompatibilityConfig>,
 ): ValidationResult {
-  return validateAddonsAgainstFrontends(
+  const addonResult = validateAddonsAgainstFrontends(
     addons,
     config.frontend ?? [],
     config.auth,
     config.backend,
     config.runtime,
   );
+  if (addonResult.isErr()) return addonResult;
+
+  const cloudflareResult = validateCloudflareWebDeployKnownIssues(config);
+  if (cloudflareResult.isErr()) return cloudflareResult;
+
+  const dockerResult = validateDockerWebDeployDesktopAddons(
+    config.webDeploy,
+    addons,
+    config.frontend,
+    config.backend,
+    config.auth,
+  );
+  if (dockerResult.isErr()) return dockerResult;
+
+  return validatePrismaWebDeployDesktopAddons(config.webDeploy, addons, config.frontend);
 }
 
 export function validatePaymentsCompatibility(

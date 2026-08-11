@@ -362,7 +362,7 @@ describe("Alchemy providers", () => {
     expect(infra).toContain('export const server = Prisma.Compute("server"');
   });
 
-  it("packages every Vite-family web framework for Prisma", async () => {
+  it("packages supported custom web framework artifacts for Prisma", async () => {
     const standalone = {
       serverDeploy: "none",
       backend: "none",
@@ -404,61 +404,76 @@ describe("Alchemy providers", () => {
       express: "^5.2.1",
     });
 
-    const tanstackRouter = await generate({
-      ...standalone,
-      projectName: "prisma-tanstack-router",
-      webDeploy: "prisma",
-      frontend: ["tanstack-router"],
-    });
-    const tanstackInfra = tanstackRouter.get("packages/infra/alchemy.run.ts") ?? "";
-    const tanstackPackage = JSON.parse(tanstackRouter.get("apps/web/package.json") ?? "{}") as {
-      scripts?: Record<string, string>;
-      dependencies?: Record<string, string>;
-    };
-
-    expect(tanstackInfra).toContain('command: "bun run build:prisma"');
-    expect(tanstackInfra).toContain('outdir: ".prisma"');
-    expect(tanstackInfra).toContain('entrypoint: "server.mjs"');
-    expect(tanstackRouter.has("apps/web/prisma.server.mjs")).toBe(true);
-    expect(tanstackRouter.has("apps/web/vite.prisma.config.ts")).toBe(true);
-    expect(tanstackPackage.scripts?.["build:prisma"]).toBe(
-      "vite build && vite build --config vite.prisma.config.ts",
-    );
-    expect(tanstackPackage.dependencies?.sirv).toBe("^3.0.2");
-
-    const tanstackVitePlus = await generate({
-      ...standalone,
-      projectName: "prisma-tanstack-router-vite-plus",
-      webDeploy: "prisma",
-      frontend: ["tanstack-router"],
-      addons: ["vite-plus"],
-    });
-    const tanstackVitePlusPackage = JSON.parse(
-      tanstackVitePlus.get("apps/web/package.json") ?? "{}",
-    ) as { scripts?: Record<string, string> };
-    expect(tanstackVitePlusPackage.scripts?.["build:prisma"]).toBe(
-      "vp build && vp build --config vite.prisma.config.ts",
-    );
-
     const svelte = await generate({
       ...standalone,
       projectName: "prisma-sveltekit",
       webDeploy: "prisma",
       frontend: ["svelte"],
     });
+    const svelteInfra = svelte.get("packages/infra/alchemy.run.ts") ?? "";
     const svelteConfig = svelte.get("apps/web/svelte.config.js") ?? "";
+    const svelteVite = svelte.get("apps/web/vite.config.ts") ?? "";
     const sveltePackage = JSON.parse(svelte.get("apps/web/package.json") ?? "{}") as {
       scripts?: Record<string, string>;
       devDependencies?: Record<string, string>;
     };
 
+    expect(svelteInfra).toContain('command: "bun run build"');
+    expect(svelteInfra).toContain('outdir: "build"');
+    expect(svelteInfra).toContain('entrypoint: "index.js"');
     expect(svelteConfig).toContain("@sveltejs/adapter-node");
-    expect(svelte.has("apps/web/vite.prisma.config.ts")).toBe(true);
-    expect(sveltePackage.scripts?.["build:prisma"]).toBe(
-      "vite build && vite build --config vite.prisma.config.ts",
-    );
+    expect(svelteVite).toContain("noExternal: true");
+    expect(svelte.has("apps/web/vite.prisma.config.ts")).toBe(false);
+    expect(sveltePackage.scripts?.["build:prisma"]).toBeUndefined();
     expect(sveltePackage.devDependencies?.["@sveltejs/adapter-node"]).toBe("^5.5.7");
     expect(sveltePackage.devDependencies?.["@sveltejs/adapter-auto"]).toBeUndefined();
+  });
+
+  it("rejects static SPAs for Prisma Compute instead of generating a server shim", async () => {
+    const result = await createVirtual({
+      ...baseConfig,
+      projectName: "prisma-tanstack-router",
+      webDeploy: "prisma",
+      serverDeploy: "none",
+      backend: "none",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      api: "none",
+      frontend: ["tanstack-router"],
+      dbSetup: "none",
+    });
+
+    expect(result.isErr()).toBe(true);
+    expect(result.isErr() && result.error.message).toContain(
+      "TanStack Router is a static SPA, while Prisma Compute requires an executable server artifact",
+    );
+  });
+
+  it("rejects desktop builds that replace Prisma server artifacts with static exports", async () => {
+    for (const frontend of ["next", "react-router", "svelte", "astro"] as const) {
+      const result = await createVirtual({
+        ...baseConfig,
+        projectName: `prisma-${frontend}-tauri`,
+        webDeploy: "prisma",
+        serverDeploy: "none",
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        frontend: [frontend],
+        addons: ["tauri"],
+        dbSetup: "none",
+      });
+
+      expect(result.isErr()).toBe(true);
+      expect(result.isErr() && result.error.message).toContain(
+        "Prisma Compute requires an executable server artifact",
+      );
+    }
   });
 
   it("approves required npm install scripts for Alchemy and Prisma", async () => {

@@ -87,12 +87,5 @@ export function getStackGeneratedIgnorePatterns(config: ProjectConfig): string[]
     patterns.add(".vercel/**");
   }
 
-  if (
-    config.webDeploy === "prisma" &&
-    (config.frontend.includes("tanstack-router") || config.frontend.includes("svelte"))
-  ) {
-    patterns.add("apps/web/.prisma/**");
-  }
-
   return [...patterns];
 }

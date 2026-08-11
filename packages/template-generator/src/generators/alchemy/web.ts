@@ -199,9 +199,9 @@ function prismaFramework(framework: DeployedWebFramework): string | undefined {
 }
 
 function prismaCustomBuild(framework: DeployedWebFramework): {
-  script: "build" | "build:prisma";
-  outdir: ".output" | ".prisma" | "build";
-  entrypoint: "server/index.mjs" | "server/index.js" | "server.mjs";
+  script: "build";
+  outdir: ".output" | "build";
+  entrypoint: "server/index.mjs" | "server/index.js" | "index.js";
 } {
   switch (framework) {
     case "solid":
@@ -216,13 +216,16 @@ function prismaCustomBuild(framework: DeployedWebFramework): {
         outdir: "build",
         entrypoint: "server/index.js",
       };
-    case "tanstack-router":
     case "svelte":
       return {
-        script: "build:prisma",
-        outdir: ".prisma",
-        entrypoint: "server.mjs",
+        script: "build",
+        outdir: "build",
+        entrypoint: "index.js",
       };
+    case "tanstack-router":
+      throw new Error(
+        "TanStack Router is a static SPA and Prisma Compute requires an executable server artifact",
+      );
     case "next":
     case "nuxt":
     case "astro":

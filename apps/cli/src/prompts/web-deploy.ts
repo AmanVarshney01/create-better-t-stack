@@ -10,7 +10,10 @@ import type {
   WebDeploy,
 } from "../types";
 import { WEB_FRAMEWORKS } from "../utils/compatibility";
-import { validateCloudflareWebDeployKnownIssues } from "../utils/compatibility-rules";
+import {
+  supportsPrismaWebDeploy,
+  validateCloudflareWebDeployKnownIssues,
+} from "../utils/compatibility-rules";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
@@ -78,9 +81,7 @@ export async function getDeploymentChoice(
     return "cloudflare";
   }
 
-  const supportsPrismaCompute = frontend.some((value) =>
-    ["next", "nuxt", "astro", "tanstack-start", "solid"].includes(value),
-  );
+  const supportsPrismaCompute = supportsPrismaWebDeploy(frontend);
   const supportsCloudflare = validateCloudflareWebDeployKnownIssues({
     webDeploy: "cloudflare",
     frontend,
@@ -127,9 +128,7 @@ export async function getDeploymentToAdd(frontend: Frontend[], existingDeploymen
     return "none";
   }
 
-  const supportsPrismaCompute = frontend.some((value) =>
-    ["next", "nuxt", "astro", "tanstack-start", "solid"].includes(value),
-  );
+  const supportsPrismaCompute = supportsPrismaWebDeploy(frontend);
   const deployments = [
     "cloudflare",
     ...(supportsPrismaCompute ? (["prisma"] as const) : []),
