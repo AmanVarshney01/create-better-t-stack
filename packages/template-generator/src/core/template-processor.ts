@@ -12,6 +12,15 @@ Handlebars.registerHelper("includes", (arr, val) => Array.isArray(arr) && arr.in
 // Shared across every web client template (oRPC/tRPC/better-auth) so the
 // same-origin URL normalization for Vercel deploys has one source of truth.
 const getServerUrlSource = `function getServerUrl(url: string) {
+	const processEnv = (globalThis as {
+		process?: { env?: Record<string, string | undefined> };
+	}).process?.env;
+	if (typeof window === "undefined" && processEnv?.SERVER_URL) {
+		return processEnv.SERVER_URL.endsWith("/")
+			? processEnv.SERVER_URL.slice(0, -1)
+			: processEnv.SERVER_URL;
+	}
+
 	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
 
 	if (!normalized.startsWith("/")) {
@@ -22,9 +31,6 @@ const getServerUrlSource = `function getServerUrl(url: string) {
 		return \`\${window.location.origin}\${normalized}\`;
 	}
 
-	const processEnv = (globalThis as {
-		process?: { env?: Record<string, string | undefined> };
-	}).process?.env;
 	const vercelUrl =
 		processEnv?.VERCEL_ENV === "production"
 			? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
