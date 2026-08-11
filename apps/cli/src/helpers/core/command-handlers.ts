@@ -367,6 +367,11 @@ async function createProjectHandlerInternal(
     }
 
     const localRequirements = yield* Result.await(checkLocalRequirements(config));
+    if (!isSilent()) {
+      for (const warning of localRequirements.warnings) {
+        log.warn(pc.yellow(warning));
+      }
+    }
 
     if (!input.dryRun) {
       yield* Result.await(

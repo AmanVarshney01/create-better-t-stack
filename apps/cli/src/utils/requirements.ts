@@ -34,6 +34,7 @@ export type LocalToolVersions = Partial<Record<Tool, string>>;
 
 export type LocalRequirements = {
   packageManagerVersion: string;
+  warnings: string[];
 };
 
 export const PACKAGE_MANAGER_VERSION_RANGES = {
@@ -41,6 +42,8 @@ export const PACKAGE_MANAGER_VERSION_RANGES = {
   npm: ">=11.16.0",
   pnpm: ">=10.26.0",
 } as const satisfies Record<PackageManager, string>;
+
+export const RECOMMENDED_BUN_VERSION_RANGE = ">=1.3.0";
 
 const PACKAGE_MANAGER_REASONS = {
   bun: "generated Bun workspaces use dependency catalogs",
@@ -235,6 +238,29 @@ export function validateLocalToolVersions(
   );
 }
 
+export function getLocalToolRecommendations(
+  config: RequirementConfig,
+  versions: LocalToolVersions,
+): string[] {
+  if (config.packageManager !== "bun") return [];
+
+  const rawVersion = versions.bun;
+  if (!rawVersion) return [];
+
+  const version = normalizeVersion(rawVersion);
+  if (
+    !version ||
+    !satisfies(version, PACKAGE_MANAGER_VERSION_RANGES.bun, { includePrerelease: true }) ||
+    satisfies(version, RECOMMENDED_BUN_VERSION_RANGE, { includePrerelease: true })
+  ) {
+    return [];
+  }
+
+  return [
+    `Bun ${version} meets the minimum requirement, but Bun 1.3 or newer is recommended. Run \`bun upgrade\`.`,
+  ];
+}
+
 async function readToolVersion(tool: Tool): Promise<string | null> {
   const result = await Result.tryPromise({
     try: async () => {
@@ -278,5 +304,6 @@ export async function checkLocalRequirements(
 
   return Result.ok({
     packageManagerVersion: packageManagerVersion ?? "latest",
+    warnings: getLocalToolRecommendations(config, versions),
   });
 }

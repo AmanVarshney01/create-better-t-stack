@@ -331,6 +331,11 @@ async function addHandlerInternal(
   if (requirementsResult.isErr()) {
     return Result.err(requirementsResult.error);
   }
+  if (!isSilent()) {
+    for (const warning of requirementsResult.value.warnings) {
+      log.warn(pc.yellow(warning));
+    }
+  }
 
   // Create VFS and process addon templates using template-generator's logic
   if (!isSilent()) {

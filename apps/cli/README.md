@@ -30,7 +30,7 @@ Follow the prompts to configure your project or use the `--yes` flag for default
 ## Requirements
 
 - Node.js 22 or newer to run the CLI with Node.js. The selected framework may require a newer release; the CLI checks the exact stack before writing files.
-- Bun 1.2.14 or newer when using Bun (dependency catalogs).
+- Bun 1.3 or newer is recommended. Bun 1.2.14 remains the minimum because generated workspaces use dependency catalogs.
 - pnpm 10.26.0 or newer when using pnpm (catalogs and `allowBuilds`).
 - npm 11.16.0 or newer when using npm (`allowScripts`).
 
