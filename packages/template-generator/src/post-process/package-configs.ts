@@ -300,6 +300,7 @@ function getNpmAllowedScripts(config: ProjectConfig): Record<string, boolean> {
 
   if (
     hasCloudflareDeploy ||
+    hasPrismaDeploy ||
     config.webDeploy === "docker" ||
     config.webDeploy === "vercel" ||
     config.addons.includes("pwa") ||

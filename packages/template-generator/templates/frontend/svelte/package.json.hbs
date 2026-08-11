@@ -15,6 +15,8 @@
 	"devDependencies": {
 		{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 		"@sveltejs/adapter-static": "^3.0.10",
+		{{else if (eq webDeploy "prisma")}}
+		"@sveltejs/adapter-node": "^5.5.7",
 		{{else}}
 		"@sveltejs/adapter-auto": "^7.0.1",
 		{{/if}}

@@ -2,7 +2,7 @@
 import adapter from '@sveltejs/adapter-static';
 {{else if (eq webDeploy "cloudflare")}}
 import adapter from '@sveltejs/adapter-cloudflare';
-{{else if (eq webDeploy "docker")}}
+{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
 import adapter from '@sveltejs/adapter-node';
 {{else if (eq webDeploy "vercel")}}
 import adapter from '@sveltejs/adapter-vercel';
@@ -27,7 +27,7 @@ const config = {
 		})
 {{else if (eq webDeploy "cloudflare")}}
 		adapter: adapter()
-{{else if (eq webDeploy "docker")}}
+{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
 		// adapter-node builds a standalone Node server (run with `node build/index.js`).
 		adapter: adapter()
 {{else if (eq webDeploy "vercel")}}

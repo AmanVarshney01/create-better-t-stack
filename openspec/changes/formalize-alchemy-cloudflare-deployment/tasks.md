@@ -175,7 +175,7 @@
 ## 17. Prisma Deployment
 
 - [x] 17.1 Add Prisma web/server deployment enums, prompts, validation, infra generation, scripts, and exact dependencies.
-- [x] 17.2 Support Next.js, Nuxt, Astro, TanStack Start, and SolidStart web artifacts.
+- [x] 17.2 Support Next.js, Nuxt, Astro, React Router, TanStack Router, TanStack Start, SvelteKit, and SolidStart web artifacts.
 - [x] 17.3 Support Hono, Express, Fastify, and Elysia servers on Bun or Node.
 - [x] 17.4 Support Cloudflare-web/Prisma-server and Prisma-web/Cloudflare-server URL wiring in one Alchemy graph.
 - [x] 17.5 Keep the user-facing label and generated topology summary as `Prisma`.
@@ -183,3 +183,4 @@
 - [ ] 17.7 Run fresh package-manager installs, infrastructure typechecks, production builds, health checks, and disposable deploy/destroy verification for every supported framework family.
 - [x] 17.8 Reject the current Next.js + Cloudflare combination blocked by `pg-cloudflare` tracing without disabling unaffected targets.
 - [x] 17.9 Keep Nuxt Cloudflare Prisma SSR calls inside Nitro through `event.fetch`, emit one Prisma WASM module, and dry-run below the 3 MiB compressed limit.
+- [x] 17.10 Build and boot the exact React Router, TanStack Router, and SvelteKit custom artifacts and verify root plus SPA-fallback HTTP responses.

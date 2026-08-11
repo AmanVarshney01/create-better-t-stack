@@ -385,7 +385,10 @@ const PRISMA_COMPUTE_WEB_FRONTENDS: readonly Frontend[] = [
   "next",
   "nuxt",
   "astro",
+  "react-router",
+  "tanstack-router",
   "tanstack-start",
+  "svelte",
   "solid",
 ];
 
@@ -397,7 +400,7 @@ export function validatePrismaWebDeploy(
 
   if (!frontend.some((value) => PRISMA_COMPUTE_WEB_FRONTENDS.includes(value))) {
     return validationErr(
-      "'--web-deploy prisma' requires Next.js, Nuxt, Astro, TanStack Start, or SolidStart. Choose a supported SSR frontend or another deployment target.",
+      "'--web-deploy prisma' requires a supported web frontend. Choose Next.js, Nuxt, Astro, React Router, TanStack Router, TanStack Start, SvelteKit, or SolidStart.",
     );
   }
 

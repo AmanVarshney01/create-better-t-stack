@@ -23,6 +23,7 @@ export const dependencyVersionMap = {
   "@clerk/nextjs": "^7.6.2",
   "@clerk/react": "^6.12.8",
   "@clerk/react-router": "^3.6.1",
+  "@react-router/express": "^8.3.0",
   "@clerk/tanstack-react-start": "^1.4.24",
   "@clerk/expo": "^4.1.0",
 
@@ -90,6 +91,7 @@ export const dependencyVersionMap = {
   cors: "^2.8.6",
   express: "^5.2.1",
   "@types/express": "^5.0.6",
+  sirv: "^3.0.2",
   "@types/cors": "^2.8.19",
 
   fastify: "^5.10.0",

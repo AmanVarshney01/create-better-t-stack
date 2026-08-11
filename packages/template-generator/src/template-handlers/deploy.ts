@@ -27,6 +27,27 @@ export async function processDeployTemplates(
     processTemplatesFromPrefix(vfs, templates, "deploy/vercel", "", config);
   }
 
+  if (config.webDeploy === "prisma") {
+    const templateMap: Partial<Record<ProjectConfig["frontend"][number], string>> = {
+      "tanstack-router": "react/tanstack-router",
+      "react-router": "react/react-router",
+      svelte: "svelte",
+    };
+
+    for (const frontend of config.frontend) {
+      const templatePath = templateMap[frontend];
+      if (templatePath) {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          `deploy/prisma/web/${templatePath}`,
+          "apps/web",
+          config,
+        );
+      }
+    }
+  }
+
   if (
     config.webDeploy !== "none" &&
     config.webDeploy !== "cloudflare" &&

@@ -10,9 +10,9 @@ The CLI and generated user guidance SHALL label the target **Prisma**. The gener
 - **THEN** Prisma SHALL appear as a deployment option
 - **AND** its hint SHALL explain that Alchemy performs the deployment
 
-### Requirement: Prisma web support is limited to verified SSR outputs
+### Requirement: Prisma web support uses verified production artifacts
 
-Prisma web deployment SHALL support Next.js, Nuxt, Astro, TanStack Start, and SolidStart. Unsupported static/router frontends SHALL be rejected before templates are emitted.
+Prisma web deployment SHALL support Next.js, Nuxt, Astro, React Router, TanStack Router, TanStack Start, SvelteKit, and SolidStart. Automatic Alchemy framework builds SHALL be used where available; every other framework SHALL emit an explicit production server artifact that listens on the configured port.
 
 #### Scenario: SolidStart custom artifact
 
@@ -20,10 +20,26 @@ Prisma web deployment SHALL support Next.js, Nuxt, Astro, TanStack Start, and So
 - **THEN** the generated build SHALL produce `.output/server/index.mjs`
 - **AND** the deployment SHALL use that entrypoint on port 3000
 
-#### Scenario: Unsupported web framework
+#### Scenario: React Router custom server
 
-- **WHEN** Prisma web deployment is requested with React Router, TanStack Router, or SvelteKit
-- **THEN** configuration validation SHALL fail with the supported framework list
+- **WHEN** React Router is deployed to Prisma
+- **THEN** the framework build SHALL use its custom-server Vite entry
+- **AND** the deployable `build/server/index.js` SHALL include the Express request handler
+- **AND** client assets SHALL remain available from the sibling `build/client` directory
+
+#### Scenario: TanStack Router production server
+
+- **WHEN** the TanStack Router SPA is deployed to Prisma
+- **THEN** Vite SHALL build the static client into `dist`
+- **AND** a production static server with SPA fallback SHALL be bundled into `.prisma/server.mjs`
+- **AND** the deployment SHALL NOT use Vite's development or preview server
+
+#### Scenario: SvelteKit adapter-node artifact
+
+- **WHEN** SvelteKit is deployed to Prisma
+- **THEN** SvelteKit SHALL build with `adapter-node`
+- **AND** its server dependencies and client assets SHALL be packaged into `.prisma`
+- **AND** the deployment entrypoint SHALL be `.prisma/server.mjs`
 
 ### Requirement: Prisma server support uses container-compatible runtimes
 

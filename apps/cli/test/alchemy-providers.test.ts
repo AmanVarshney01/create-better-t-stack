@@ -362,6 +362,105 @@ describe("Alchemy providers", () => {
     expect(infra).toContain('export const server = Prisma.Compute("server"');
   });
 
+  it("packages every Vite-family web framework for Prisma", async () => {
+    const standalone = {
+      serverDeploy: "none",
+      backend: "none",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      payments: "none",
+      api: "none",
+      addons: ["none"],
+      examples: ["none"],
+      dbSetup: "none",
+    } satisfies Partial<CreateOptions>;
+
+    const reactRouter = await generate({
+      ...standalone,
+      projectName: "prisma-react-router",
+      webDeploy: "prisma",
+      frontend: ["react-router"],
+    });
+    const reactRouterInfra = reactRouter.get("packages/infra/alchemy.run.ts") ?? "";
+    const reactRouterVite = reactRouter.get("apps/web/vite.config.ts") ?? "";
+    const reactRouterPackage = JSON.parse(reactRouter.get("apps/web/package.json") ?? "{}") as {
+      scripts?: Record<string, string>;
+      dependencies?: Record<string, string>;
+    };
+
+    expect(reactRouterInfra).toContain('command: "bun run build"');
+    expect(reactRouterInfra).toContain('outdir: "build"');
+    expect(reactRouterInfra).toContain('entrypoint: "server/index.js"');
+    expect(reactRouterVite).toContain('input: "./prisma.server.ts"');
+    expect(reactRouterVite).toContain("noExternal: true");
+    expect(reactRouter.get("apps/web/prisma.server.ts")).toContain(
+      'import("virtual:react-router/server-build")',
+    );
+    expect(reactRouterPackage.scripts?.["build:prisma"]).toBeUndefined();
+    expect(reactRouterPackage.dependencies).toMatchObject({
+      "@react-router/express": "^8.3.0",
+      express: "^5.2.1",
+    });
+
+    const tanstackRouter = await generate({
+      ...standalone,
+      projectName: "prisma-tanstack-router",
+      webDeploy: "prisma",
+      frontend: ["tanstack-router"],
+    });
+    const tanstackInfra = tanstackRouter.get("packages/infra/alchemy.run.ts") ?? "";
+    const tanstackPackage = JSON.parse(tanstackRouter.get("apps/web/package.json") ?? "{}") as {
+      scripts?: Record<string, string>;
+      dependencies?: Record<string, string>;
+    };
+
+    expect(tanstackInfra).toContain('command: "bun run build:prisma"');
+    expect(tanstackInfra).toContain('outdir: ".prisma"');
+    expect(tanstackInfra).toContain('entrypoint: "server.mjs"');
+    expect(tanstackRouter.has("apps/web/prisma.server.mjs")).toBe(true);
+    expect(tanstackRouter.has("apps/web/vite.prisma.config.ts")).toBe(true);
+    expect(tanstackPackage.scripts?.["build:prisma"]).toBe(
+      "vite build && vite build --config vite.prisma.config.ts",
+    );
+    expect(tanstackPackage.dependencies?.sirv).toBe("^3.0.2");
+
+    const tanstackVitePlus = await generate({
+      ...standalone,
+      projectName: "prisma-tanstack-router-vite-plus",
+      webDeploy: "prisma",
+      frontend: ["tanstack-router"],
+      addons: ["vite-plus"],
+    });
+    const tanstackVitePlusPackage = JSON.parse(
+      tanstackVitePlus.get("apps/web/package.json") ?? "{}",
+    ) as { scripts?: Record<string, string> };
+    expect(tanstackVitePlusPackage.scripts?.["build:prisma"]).toBe(
+      "vp build && vp build --config vite.prisma.config.ts",
+    );
+
+    const svelte = await generate({
+      ...standalone,
+      projectName: "prisma-sveltekit",
+      webDeploy: "prisma",
+      frontend: ["svelte"],
+    });
+    const svelteConfig = svelte.get("apps/web/svelte.config.js") ?? "";
+    const sveltePackage = JSON.parse(svelte.get("apps/web/package.json") ?? "{}") as {
+      scripts?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+
+    expect(svelteConfig).toContain("@sveltejs/adapter-node");
+    expect(svelte.has("apps/web/vite.prisma.config.ts")).toBe(true);
+    expect(sveltePackage.scripts?.["build:prisma"]).toBe(
+      "vite build && vite build --config vite.prisma.config.ts",
+    );
+    expect(sveltePackage.devDependencies?.["@sveltejs/adapter-node"]).toBe("^5.5.7");
+    expect(sveltePackage.devDependencies?.["@sveltejs/adapter-auto"]).toBeUndefined();
+  });
+
   it("approves required npm install scripts for Alchemy and Prisma", async () => {
     const files = await generate({
       projectName: "npm-alchemy-prisma",
