@@ -1,7 +1,7 @@
 import { getAllJsonSchemas } from "@better-t-stack/types/json-schema";
 import { initTRPC } from "@trpc/server";
 import { Result } from "better-result";
-import { createCli, type TrpcCliMeta } from "trpc-cli";
+import { createCli, type TrpcCli, type TrpcCliMeta } from "trpc-cli";
 import z from "zod";
 
 import { historyHandler } from "./commands/history";
@@ -287,7 +287,7 @@ export const router = t.router({
     }),
 });
 
-export function createBtsCli(): ReturnType<typeof createCli> {
+export function createBtsCli(): TrpcCli {
   return createCli({
     router,
     name: "create-better-t-stack",
