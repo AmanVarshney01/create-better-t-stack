@@ -1246,11 +1246,15 @@ describe("Addon Configurations", () => {
       ) as { devDependencies?: Record<string, string> };
 
       expect(nuxtConfig).toContain('"evlog/nuxt"');
-      expect(nuxtConfig).not.toContain("nitro:");
-      expect(nuxtConfig).not.toContain("cloudflare-module");
+      expect(nuxtConfig).toContain("nitro:");
+      expect(nuxtConfig).toContain("cloudflare-module");
+      expect(nuxtConfig).toContain("nitro-cloudflare-dev");
+      expect(nuxtConfig).toContain("cloudflare-workers.dev.ts");
       expect(nuxtConfig).toContain("evlog:");
-      expect(infra).toContain('Cloudflare.Website.Nuxt("web", {');
-      expect(webPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBe("0.17.1");
+      expect(infra).toContain('Cloudflare.Website.StaticSite("web", {');
+      expect(webPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBeUndefined();
+      expect(webPackage.devDependencies?.["nitro-cloudflare-dev"]).toBe("^0.2.2");
+      expect(webPackage.devDependencies?.wrangler).toBeDefined();
       expect(existsSync(join(projectDir, "apps/web/server/plugins/evlog-drain.ts"))).toBe(false);
       expectParseableTypeScript(nuxtConfig);
     });

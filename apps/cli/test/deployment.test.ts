@@ -1119,14 +1119,18 @@ describe("Deployment Configurations", () => {
       const nuxtRootPackage = JSON.parse(nuxtFiles.get("package.json") ?? "{}") as {
         scripts?: Record<string, string>;
       };
-      expect(nuxtInfra).toContain('Cloudflare.Website.Nuxt("web", {');
-      expect(nuxtInfra).not.toContain('Cloudflare.Website.StaticSite("web", {');
+      expect(nuxtInfra).toContain('Cloudflare.Website.StaticSite("web", {');
+      expect(nuxtInfra).not.toContain('Cloudflare.Website.Nuxt("web", {');
+      expect(nuxtInfra).toContain('outdir: ".output/public"');
+      expect(nuxtInfra).toContain('main: "../../apps/web/.output/server/index.mjs"');
       expect(nuxtConfig).not.toContain("nitro-cloudflare-dev");
-      expect(nuxtConfig).not.toContain("preset: 'cloudflare-module'");
-      expect(nuxtPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBe("0.17.1");
+      expect(nuxtConfig).toContain("preset: 'cloudflare-module'");
+      expect(nuxtPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBeUndefined();
       expect(nuxtPackage.devDependencies?.["nitro-cloudflare-dev"]).toBeUndefined();
       expect(nuxtPackage.devDependencies?.wrangler).toBeUndefined();
-      expect((nuxtPackage as { scripts?: Record<string, string> }).scripts?.build).toBeUndefined();
+      expect((nuxtPackage as { scripts?: Record<string, string> }).scripts?.build).toBe(
+        "nuxt build",
+      );
       expect(nuxtRootPackage.scripts?.build).toBe("pnpm -r --if-present build");
       expect(nuxtFiles.has("apps/web/cloudflare-workers.dev.ts")).toBe(false);
       expect(nuxtFiles.has("apps/web/wrangler.jsonc")).toBe(false);

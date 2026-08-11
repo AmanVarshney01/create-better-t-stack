@@ -483,8 +483,17 @@ export const web = Cloudflare.Website.StaticSite("web", {
       },
       });
 {{else if (includes frontend "nuxt")}}
-export const web = Cloudflare.Website.Nuxt("web", {
-      rootDir: "../../apps/web",
+export const web = Cloudflare.Website.StaticSite("web", {
+      cwd: "../../apps/web",
+      command: "{{packageManager}} run build",
+      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+      memo: false,
+      outdir: ".output/public",
+      main: "../../apps/web/.output/server/index.mjs",
+      bundle: false,
+      compatibility: {
+        flags: ["nodejs_compat"],
+      },
       env: {
         {{#if (eq dbSetup "d1")}}
         DB: db,
@@ -512,6 +521,10 @@ export const web = Cloudflare.Website.Nuxt("web", {
         {{#if (eq dbSetup "turso")}}
         DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
         {{/if}}
+      },
+      dev: {
+        command: "{{packageManager}} run dev:bare",
+        url: "http://localhost:3001",
       },
       });
 {{else if (includes frontend "svelte")}}
@@ -742,8 +755,17 @@ export default Alchemy.Stack(
           },
     });
     {{else if (includes frontend "nuxt")}}
-    const webWorker = yield* Cloudflare.Website.Nuxt("web", {
-          rootDir: "../../apps/web",
+    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
+          cwd: "../../apps/web",
+          command: "{{packageManager}} run build",
+          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+          memo: false,
+          outdir: ".output/public",
+          main: "../../apps/web/.output/server/index.mjs",
+          bundle: false,
+          compatibility: {
+            flags: ["nodejs_compat"],
+          },
           env: {
             {{#if (eq backend "convex")}}
             NUXT_PUBLIC_CONVEX_URL: Config.string("NUXT_PUBLIC_CONVEX_URL"),
@@ -757,6 +779,10 @@ export default Alchemy.Stack(
             NUXT_PUBLIC_SERVER_URL: Config.string("NUXT_PUBLIC_SERVER_URL"),
             {{/if}}
             {{/if}}
+          },
+          dev: {
+            command: "{{packageManager}} run dev:bare",
+            url: "http://localhost:3001",
           },
     });
     {{else if (includes frontend "svelte")}}

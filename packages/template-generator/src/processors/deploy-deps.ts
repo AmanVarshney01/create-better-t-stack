@@ -162,7 +162,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: ["@distilled.cloud/nuxt"],
+        devDependencies: isBackendSelf ? ["nitro-cloudflare-dev", "wrangler"] : [],
       });
     } else if (frontend.includes("svelte")) {
       addPackageDependency({
