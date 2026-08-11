@@ -13,7 +13,7 @@ function writeEnv(writer: AlchemyWriter, entries: readonly string[]): void {
 function writeStaticSite(
   writer: AlchemyWriter,
   plan: AlchemyDeploymentPlan,
-  framework: "next" | "svelte",
+  framework: "next" | "nuxt" | "svelte",
   declaration: string,
   entries: readonly string[],
 ): void {
@@ -34,15 +34,21 @@ function writeStaticSite(
         "// Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.",
       );
       writer.writeLine("memo: false,");
-      if (framework === "next") {
-        writer.writeLine('outdir: ".open-next/assets",');
-        writer.writeLine('main: "../../apps/web/.open-next/worker.js",');
+      if (framework !== "svelte") {
+        writer.writeLine(
+          `outdir: "${framework === "next" ? ".open-next/assets" : ".output/public"}",`,
+        );
+        writer.writeLine(
+          `main: "../../apps/web/${framework === "next" ? ".open-next/worker.js" : ".output/server/index.mjs"}",`,
+        );
         writer.writeLine("bundle: false,");
         writeObject(
           writer,
           "compatibility: {",
           () => {
-            writer.writeLine('flags: ["nodejs_compat", "global_fetch_strictly_public"],');
+            writer.writeLine(
+              `flags: ["nodejs_compat"${framework === "next" ? ', "global_fetch_strictly_public"' : ""}],`,
+            );
           },
           "},",
         );
@@ -64,22 +70,10 @@ function writeStaticSite(
         "dev: {",
         () => {
           writer.writeLine(`command: "${plan.config.packageManager} run dev:bare",`);
-          writer.writeLine(`url: "http://localhost:${framework === "next" ? "3001" : "5173"}",`);
+          writer.writeLine(`url: "http://localhost:${framework === "svelte" ? "5173" : "3001"}",`);
         },
         "},",
       );
-    },
-    "});",
-  );
-}
-
-function writeNuxt(writer: AlchemyWriter, declaration: string, entries: readonly string[]): void {
-  writeObject(
-    writer,
-    `${declaration} Cloudflare.Website.Nuxt("web", {`,
-    () => {
-      writer.writeLine('rootDir: "../../apps/web",');
-      writeEnv(writer, entries);
     },
     "});",
   );
@@ -158,11 +152,9 @@ function writeCloudflareWeb(
 
   switch (framework) {
     case "next":
+    case "nuxt":
     case "svelte":
       writeStaticSite(writer, plan, framework, declaration, entries);
-      break;
-    case "nuxt":
-      writeNuxt(writer, declaration, entries);
       break;
     case "astro":
       writeAstro(writer, declaration, entries);
