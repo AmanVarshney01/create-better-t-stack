@@ -12,10 +12,21 @@ export default defineConfig({
     reactRouter(),
     tsconfigPaths(),
   ],
-{{#if (and (eq webDeploy "vercel") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+{{#if (and (or (eq webDeploy "vercel") (eq webDeploy "prisma")) (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
   ssr: {
-    // Vercel functions have no node_modules; bundle all deps into the server build
+    // The deployment artifact has no node_modules; bundle all server dependencies.
     noExternal: true,
+  },
+{{/if}}
+{{#if (and (eq webDeploy "prisma") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+  environments: {
+    ssr: {
+      build: {
+        rollupOptions: {
+          input: "./prisma.server.ts",
+        },
+      },
+    },
   },
 {{/if}}
 {{#if (and (eq webDeploy "cloudflare") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}

@@ -107,12 +107,12 @@ Cloudflare resources SHALL preserve dependency ordering and pass resolved values
 
 ### Requirement: Framework-specific Cloudflare paths
 
-Each web framework SHALL use the intentional generated resource and runtime entry described by the accepted-version design: `Website.Vite` with single-page-application asset handling for TanStack Router, worker-first `Website.Vite` SSR for SolidStart v2, explicit-entry `Website.Vite` for React Router, `Website.Vite` for TanStack Start, `Website.Nuxt` for Nuxt, `Website.Astro` for Astro, and qualified generic `StaticSite` paths for Next.js and SvelteKit until their first-class providers accept the generated stable framework versions. A framework path SHALL not change solely because another framework's gate passed.
+Each web framework SHALL use the intentional generated resource and runtime entry described by the accepted-version design: `Website.Vite` with single-page-application asset handling for TanStack Router, worker-first `Website.Vite` SSR for SolidStart v2, explicit-entry `Website.Vite` for React Router, `Website.Vite` for TanStack Start, `Website.Astro` for Astro, and qualified generic `StaticSite` paths for Next.js, Nuxt, and SvelteKit until their first-class providers pass the generated framework's independent gates. A framework path SHALL not change solely because another framework's gate passed.
 
 #### Scenario: Verify Nuxt support
 
 - **WHEN** Nuxt uses Cloudflare full-stack or web deployment
-- **THEN** generated verification SHALL exercise a page SSR request and provider-owned development with real local bindings
+- **THEN** generated verification SHALL exercise a page SSR request and the selected path's development binding contract
 - **AND** an API-route-only probe SHALL not establish page support
 
 #### Scenario: Verify Astro support
@@ -195,7 +195,7 @@ Adopting a first-class framework resource SHALL preserve the `web` Worker identi
 
 ### Requirement: Nuxt first-class parity
 
-`Website.Nuxt` SHALL replace the Nitro `StaticSite` path when the released resource loads and preserves the generated Nuxt configuration, owns a compatible Cloudflare preset and build lifecycle, serves page SSR and API routes, propagates public and private values, and provides real local resource bindings. The generated project SHALL use the published source package selected by the accepted Alchemy release and SHALL NOT retain duplicate Nitro Cloudflare adapter, Wrangler, alias, or production-build plumbing.
+`Website.Nuxt` SHALL replace the Nitro `StaticSite` path only when a released resource containing the compiled development-plugin fix loads and preserves the generated Nuxt configuration, owns a compatible Cloudflare preset and build lifecycle, serves page SSR and API routes, propagates public and private values, and provides real local resource bindings. Until then, the generated project SHALL retain its qualified Nitro, Wrangler, alias, build, and `StaticSite` plumbing and SHALL NOT install a provider fork or unpublished package.
 
 #### Scenario: Adopt Website.Nuxt
 
@@ -308,7 +308,7 @@ Cloudflare framework-resource adoption SHALL change only Alchemy-managed Cloudfl
 
 ### Requirement: Sanctioned Alchemy compatibility shims
 
-Until their individual removal gates pass, the generator SHALL retain the workspace-safe memo policy for generic `StaticSite`, React Router Worker entry with web-stream rendering, explicit external-Worker compatibility flags, and local Wrangler Prisma migration pattern. Native `StaticSite` SHALL receive Alchemy Outputs and Effect Config values directly. Adopted `Website.Nuxt` and `Website.Astro` paths SHALL rely on their provider-owned development/build lifecycles instead of retaining duplicate generated shims. Integration shims SHALL not be mislabeled as confirmed Alchemy core defects.
+Until their individual removal gates pass, the generator SHALL retain the workspace-safe memo policy for generic `StaticSite`, React Router Worker entry with web-stream rendering, Nuxt development binding proxy, explicit external-Worker compatibility flags, and local Wrangler Prisma migration pattern. Native `StaticSite` SHALL receive Alchemy Outputs and Effect Config values directly. The adopted `Website.Astro` path SHALL rely on its provider-owned development/build lifecycle instead of retaining duplicate generated shims. Integration shims SHALL not be mislabeled as confirmed Alchemy core defects.
 
 #### Scenario: Change a sibling workspace
 
@@ -336,7 +336,7 @@ Until their individual removal gates pass, the generator SHALL retain the worksp
 #### Scenario: Run Nuxt with D1 locally
 
 - **WHEN** a Nuxt self-backend D1 project runs a page in development
-- **THEN** `Website.Nuxt` SHALL provide the real local `cloudflare:workers` binding contract
+- **THEN** the retained development proxy SHALL provide the real local `cloudflare:workers` binding contract
 - **AND** a D1-backed request SHALL succeed
 
 #### Scenario: Remove a development or migration shim

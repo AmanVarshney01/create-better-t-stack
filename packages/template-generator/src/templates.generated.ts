@@ -17046,6 +17046,35 @@ EXPOSE 3001
 WORKDIR /app/apps/web
 CMD ["node", "build/index.js"]
 `],
+  ["deploy/prisma/web/react/react-router/prisma.server.ts", `import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { createRequestHandler } from "@react-router/express";
+import express from "express";
+
+const app = express();
+const clientDirectory = fileURLToPath(new URL("../client/", import.meta.url));
+
+app.disable("x-powered-by");
+app.use(
+  "/assets",
+  express.static(path.join(clientDirectory, "assets"), {
+    immutable: true,
+    maxAge: "1y",
+  }),
+);
+app.use(express.static(clientDirectory));
+app.use(
+  createRequestHandler({
+    build: () => import("virtual:react-router/server-build"),
+  }),
+);
+
+const port = Number(process.env.PORT ?? 3000);
+app.listen(port, "0.0.0.0", () => {
+  console.log(\`React Router server listening on port \${port}\`);
+});
+`],
   ["deploy/vercel/_vercelignore", `# Local env files must never ship in deployments: Vercel project env vars are
 # the source of truth (bun env:vercel:*), and frameworks like Next.js would
 # otherwise load these localhost values at runtime.
@@ -25913,7 +25942,7 @@ allowBuilds:
   "@parcel/watcher": true
   vue-demi: true
 {{/if}}
-{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "docker") (eq webDeploy "vercel") (includes addons "pwa") (includes frontend "next"))}}
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "prisma") (eq serverDeploy "prisma") (eq webDeploy "docker") (eq webDeploy "vercel") (includes addons "pwa") (includes frontend "next"))}}
   sharp: true
 {{/if}}
 {{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "prisma") (eq serverDeploy "prisma"))}}
@@ -31200,10 +31229,21 @@ export default defineConfig({
     reactRouter(),
     tsconfigPaths(),
   ],
-{{#if (and (eq webDeploy "vercel") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+{{#if (and (or (eq webDeploy "vercel") (eq webDeploy "prisma")) (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
   ssr: {
-    // Vercel functions have no node_modules; bundle all deps into the server build
+    // The deployment artifact has no node_modules; bundle all server dependencies.
     noExternal: true,
+  },
+{{/if}}
+{{#if (and (eq webDeploy "prisma") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+  environments: {
+    ssr: {
+      build: {
+        rollupOptions: {
+          input: "./prisma.server.ts",
+        },
+      },
+    },
   },
 {{/if}}
 {{#if (and (eq webDeploy "cloudflare") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
@@ -31247,7 +31287,6 @@ export default defineConfig({
 		"check-types": "vite build && tsc --noEmit"
 	},
 	"dependencies": {
-        "@hookform/resolvers": "^5.5.7",
         "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
 		"@tailwindcss/vite": "^4.3.3",
 		"@tanstack/react-router": "^1.170.18",
@@ -32880,6 +32919,8 @@ vite.config.ts.timestamp-*
 	"devDependencies": {
 		{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 		"@sveltejs/adapter-static": "^3.0.10",
+		{{else if (eq webDeploy "prisma")}}
+		"@sveltejs/adapter-node": "^5.5.7",
 		{{else}}
 		"@sveltejs/adapter-auto": "^7.0.1",
 		{{/if}}
@@ -33134,7 +33175,7 @@ const TITLE_TEXT = \`
 import adapter from '@sveltejs/adapter-static';
 {{else if (eq webDeploy "cloudflare")}}
 import adapter from '@sveltejs/adapter-cloudflare';
-{{else if (eq webDeploy "docker")}}
+{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
 import adapter from '@sveltejs/adapter-node';
 {{else if (eq webDeploy "vercel")}}
 import adapter from '@sveltejs/adapter-vercel';
@@ -33159,7 +33200,7 @@ const config = {
 		})
 {{else if (eq webDeploy "cloudflare")}}
 		adapter: adapter()
-{{else if (eq webDeploy "docker")}}
+{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
 		// adapter-node builds a standalone Node server (run with \`node build/index.js\`).
 		adapter: adapter()
 {{else if (eq webDeploy "vercel")}}
@@ -33211,6 +33252,13 @@ export default defineConfig({
     tailwindcss(),
     sveltekit(),
   ],
+{{#if (eq webDeploy "prisma")}}
+  // Prisma Compute uploads only the build artifact, so keep the official
+  // adapter-node output self-contained instead of requiring node_modules.
+  ssr: {
+    noExternal: true,
+  },
+{{/if}}
 });
 `],
   ["packages/config/package.json.hbs", `{
@@ -35616,4 +35664,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 519;
+export const TEMPLATE_COUNT = 520;

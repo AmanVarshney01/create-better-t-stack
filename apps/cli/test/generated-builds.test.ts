@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { createServer } from "node:net";
 import path from "node:path";
 
 import { execa } from "execa";
@@ -338,6 +339,42 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
+    name: "prisma-react-router-web",
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["react-router"],
+      backend: "none",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: [],
+      webDeploy: "prisma",
+    },
+  },
+  {
+    name: "prisma-sveltekit-web",
+    packageManagers: ["pnpm"],
+    config: {
+      ...baseConfig,
+      frontend: ["svelte"],
+      backend: "none",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: [],
+      webDeploy: "prisma",
+    },
+  },
+  {
     name: "react-router-clerk-fastify",
     config: {
       ...baseConfig,
@@ -559,13 +596,19 @@ async function runWorkspaceTypeChecks(
       if (!(await fs.pathExists(packageJsonPath))) continue;
 
       const packageJson = await fs.readJson(packageJsonPath);
-      if (typeof packageJson.scripts?.["check-types"] !== "string") continue;
+      const typecheckScript =
+        typeof packageJson.scripts?.["check-types"] === "string"
+          ? "check-types"
+          : typeof packageJson.scripts?.typecheck === "string"
+            ? "typecheck"
+            : undefined;
+      if (!typecheckScript) continue;
 
       await runCommand(
         `${sampleName}:${workspaceRoot}/${entry.name}`,
         workspaceDir,
         packageManager,
-        ["run", "check-types"],
+        ["run", typecheckScript],
       );
     }
   }
@@ -657,6 +700,97 @@ async function validateSolidStartBuildArtifacts(sample: SelectedBuildSample, pro
   expect(await fs.pathExists(path.join(projectDir, serverEntry))).toBe(true);
 }
 
+async function buildAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
+  if (sample.config.webDeploy !== "prisma") return;
+
+  const webDir = path.join(projectDir, "apps/web");
+  const entrypoint = sample.config.frontend?.includes("react-router")
+    ? "build/server/index.js"
+    : sample.config.frontend?.includes("svelte")
+      ? "build/index.js"
+      : undefined;
+
+  if (entrypoint) {
+    expect(await fs.pathExists(path.join(webDir, entrypoint))).toBe(true);
+  }
+}
+
+async function getAvailablePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = createServer();
+    server.unref();
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        server.close();
+        reject(new Error("Could not allocate a port for the generated runtime probe"));
+        return;
+      }
+
+      server.close((error) => {
+        if (error) reject(error);
+        else resolve(address.port);
+      });
+    });
+  });
+}
+
+async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
+  if (sample.config.webDeploy !== "prisma") return;
+
+  const frontend = sample.config.frontend ?? [];
+  const entrypoint = frontend.includes("react-router")
+    ? "build/server/index.js"
+    : frontend.includes("svelte")
+      ? "build/index.js"
+      : undefined;
+  if (!entrypoint) return;
+
+  const webDir = path.join(projectDir, "apps/web");
+  const port = await getAvailablePort();
+  const runtime = execa("bun", [entrypoint], {
+    cwd: webDir,
+    all: true,
+    reject: false,
+    env: {
+      ...process.env,
+      HOST: "127.0.0.1",
+      NODE_ENV: "production",
+      PORT: String(port),
+    },
+  });
+
+  let failure: unknown;
+  try {
+    for (const pathname of ["/"]) {
+      let response: Response | undefined;
+      for (let attempt = 0; attempt < 100; attempt++) {
+        try {
+          response = await fetch(`http://127.0.0.1:${port}${pathname}`);
+          break;
+        } catch {
+          await Bun.sleep(100);
+        }
+      }
+      expect(response?.status).toBe(200);
+    }
+  } catch (error) {
+    failure = error;
+  } finally {
+    runtime.kill("SIGTERM");
+  }
+
+  const result = await runtime;
+  if (failure) {
+    throw new Error(
+      [`Generated Prisma runtime probe failed: ${String(failure)}`, formatOutput(result.all)]
+        .filter(Boolean)
+        .join("\n\n"),
+    );
+  }
+}
+
 describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples", () => {
   for (const sample of getSelectedBuildSamples()) {
     it(
@@ -673,6 +807,8 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
           const { command, args } = getPackageManagerCommand(sample.packageManager, script);
           await runCommand(sample.name, projectDir, command, args);
         }
+        await buildAndValidatePrismaWebArtifact(sample, projectDir);
+        await bootAndValidatePrismaWebArtifact(sample, projectDir);
         await validateSolidStartBuildArtifacts(sample, projectDir);
         await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
       },

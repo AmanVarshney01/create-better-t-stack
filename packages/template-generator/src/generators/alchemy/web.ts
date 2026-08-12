@@ -198,6 +198,44 @@ function prismaFramework(framework: DeployedWebFramework): string | undefined {
   }
 }
 
+function prismaCustomBuild(framework: DeployedWebFramework): {
+  script: "build";
+  outdir: ".output" | "build";
+  entrypoint: "server/index.mjs" | "server/index.js" | "index.js";
+} {
+  switch (framework) {
+    case "solid":
+      return {
+        script: "build",
+        outdir: ".output",
+        entrypoint: "server/index.mjs",
+      };
+    case "react-router":
+      return {
+        script: "build",
+        outdir: "build",
+        entrypoint: "server/index.js",
+      };
+    case "svelte":
+      return {
+        script: "build",
+        outdir: "build",
+        entrypoint: "index.js",
+      };
+    case "tanstack-router":
+      throw new Error(
+        "TanStack Router is a static SPA and Prisma Compute requires an executable server artifact",
+      );
+    case "next":
+    case "nuxt":
+    case "astro":
+    case "tanstack-start":
+      throw new Error(`${framework} uses Prisma Compute's automatic framework build`);
+    default:
+      return assertNever(framework);
+  }
+}
+
 function writePrismaWeb(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void {
   if (plan.web.target !== "prisma") return;
   const { framework, topology } = plan.web;
@@ -231,13 +269,14 @@ function writePrismaWeb(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): voi
           `build: { type: "auto" as const, framework: "${frameworkName}" as const, env: webEnv },`,
         );
       } else {
+        const customBuild = prismaCustomBuild(framework);
         writeObject(
           writer,
           "build: {",
           () => {
-            writer.writeLine(`command: "${plan.config.packageManager} run build",`);
-            writer.writeLine('outdir: ".output",');
-            writer.writeLine('entrypoint: "server/index.mjs",');
+            writer.writeLine(`command: "${plan.config.packageManager} run ${customBuild.script}",`);
+            writer.writeLine(`outdir: "${customBuild.outdir}",`);
+            writer.writeLine(`entrypoint: "${customBuild.entrypoint}",`);
             writer.writeLine("env: webEnv,");
           },
           "},",

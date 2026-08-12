@@ -35,6 +35,21 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     });
   }
 
+  if (isPrismaWeb && frontend.includes("react-router")) {
+    addPackageDependency({
+      vfs,
+      packagePath: "apps/web/package.json",
+      dependencies: ["@react-router/express", "express"],
+      devDependencies: ["@types/express"],
+    });
+  } else if (isPrismaWeb && frontend.includes("svelte")) {
+    addPackageDependency({
+      vfs,
+      packagePath: "apps/web/package.json",
+      devDependencies: ["@sveltejs/adapter-node"],
+    });
+  }
+
   if (
     isCloudflareWeb &&
     isBackendSelf &&

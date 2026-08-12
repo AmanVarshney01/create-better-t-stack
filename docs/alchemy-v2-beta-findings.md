@@ -409,3 +409,13 @@ When changing the pinned Alchemy version:
 13. Recheck exact-version resolution with every supported generated-project package manager; do not
     replace the pin with a range.
 14. Remove a workaround only after its specific removal gate passes without it.
+15. Before mutation, assign a unique stage and persist an ownership marker, expected resource
+    inventory, source digest, originating directory, and state location outside the runner.
+16. Track every child process and reserved port. In `finally`, terminate only owned processes,
+    release owned ports, and fail visibly rather than killing an unrelated listener.
+17. Destroy from the originating directory with the exact stage and retained `.alchemy` state,
+    then audit owned Workers, D1 databases, KV namespaces, and related resources for leaks.
+18. After an interruption, run an independent reconciler that uses provider APIs and deletes only
+    resources matching the persisted marker; print exact recovery commands for anything retained.
+19. Keep time, resource-count, and concurrency ceilings active, and verify cleanup/diagnostic output
+    never contains secret sentinel values.
