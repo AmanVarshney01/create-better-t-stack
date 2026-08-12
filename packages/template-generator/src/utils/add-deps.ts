@@ -97,6 +97,7 @@ export const dependencyVersionMap = {
   nx: "^23.1.0",
   "vite-plus": "0.2.6",
   rolldown: "1.2.0",
+  "rolldown-plugin-wasm": "^0.3.2",
 
   ai: "^7.0.41",
   "@ai-sdk/google": "^4.0.27",
@@ -158,7 +159,11 @@ export const dependencyVersionMap = {
   "@astrojs/node": "^11.0.3",
   "@astrojs/vercel": "^11.0.4",
 
-  alchemy: "^0.93.12",
+  // exact pins: caret ranges on prereleases can resolve to stray npm test tags
+  alchemy: "2.0.0-beta.67",
+  effect: "4.0.0-beta.101",
+  "@effect/platform-node": "4.0.0-beta.101",
+  "@effect/platform-bun": "4.0.0-beta.101",
   vercel: "^58.1.0",
 
   dotenv: "^17.4.2",

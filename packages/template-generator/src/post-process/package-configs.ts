@@ -196,6 +196,16 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
       : "deploy";
     scripts[cfDeployScript] = pmConfig.filter(infraPackageName, "deploy");
     scripts.destroy = pmConfig.filter(infraPackageName, "destroy");
+
+    // fullstack D1 apps use a local miniflare D1 in dev; migrations apply via wrangler
+    const hasLocalD1 =
+      config.webDeploy === "cloudflare" &&
+      config.backend === "self" &&
+      dbSetup === "d1" &&
+      (["next", "nuxt", "svelte", "astro"] as const).some((f) => config.frontend.includes(f));
+    if (hasLocalD1) {
+      scripts["db:migrate:local"] = pmConfig.filter("web", "db:migrate:local");
+    }
   }
 
   if (hasVercelDeploy) {

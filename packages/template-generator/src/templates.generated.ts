@@ -948,7 +948,7 @@ export type CreateContextOptions = {
 {{/if}}
 };
 
-export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env: _env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions) {
+export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
 	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth({{#if (eq webDeploy "cloudflare")}}env{{/if}}){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
@@ -14296,14 +14296,20 @@ next-env.d.ts
   }
 }
 `],
-  ["backend/server/base/tsdown.config.ts.hbs", `import { defineConfig } from 'tsdown';
+  ["backend/server/base/tsdown.config.ts.hbs", `import { defineConfig } from "tsdown";
+{{#if (and (eq runtime "workers") (eq orm "prisma"))}}
+import { wasm } from "rolldown-plugin-wasm";
+{{/if}}
 
 export default defineConfig({
-    entry: './src/index.ts',
-    format: 'esm',
-    outDir: './dist',
-    clean: true,
-    noExternal: [/@{{projectName}}\\/.*/]
+  entry: "./src/index.ts",
+  format: "esm",
+  outDir: "./dist",
+  clean: true,
+  {{#if (and (eq runtime "workers") (eq orm "prisma"))}}
+  plugins: [wasm()],
+  {{/if}}
+  noExternal: [/@{{projectName}}\\/.*/],
 });
 `],
   ["backend/server/elysia/src/index.ts.hbs", `import { env } from "@{{projectName}}/env/server";
@@ -25485,15 +25491,15 @@ shamefully-hoist=true
 strict-peer-dependencies=false
 {{/if}}`],
   ["extras/env.d.ts.hbs", `{{#if (eq serverDeploy "cloudflare")}}
-import { type server } from "@{{projectName}}/infra/alchemy.run";
+import type { ServerEnv } from "@{{projectName}}/infra/alchemy.run";
 {{else}}
-import { type web as server } from "@{{projectName}}/infra/alchemy.run";
+import type { WebEnv as ServerEnv } from "@{{projectName}}/infra/alchemy.run";
 {{/if}}
 
 // This file infers types for the cloudflare:workers environment from your Alchemy Worker.
-// @see https://alchemy.run/concepts/bindings/#type-safe-bindings
+// @see https://v2.alchemy.run/cloudflare/compute/workers
 
-export type CloudflareEnv = typeof server.Env;
+export type CloudflareEnv = ServerEnv;
 
 declare global {
   type Env = CloudflareEnv;
@@ -25569,6 +25575,8 @@ import { defineConfig, envField } from "astro/config";
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 {{else if (eq webDeploy "vercel")}}
 import vercel from "@astrojs/vercel";
+{{else if (eq webDeploy "cloudflare")}}
+import cloudflare from "@astrojs/cloudflare";
 {{else}}
 import node from "@astrojs/node";
 {{/if}}
@@ -25580,6 +25588,9 @@ export default defineConfig({
 {{else if (eq webDeploy "vercel")}}
   output: "server",
   adapter: vercel(),
+{{else if (eq webDeploy "cloudflare")}}
+  output: "server",
+  adapter: cloudflare(),
 {{else}}
   output: "server",
   adapter: node({ mode: "standalone" }),
@@ -29705,7 +29716,10 @@ onServerPrefetch(async () => {
   </UContainer>
 </template>
 `],
-  ["frontend/nuxt/nuxt.config.ts.hbs", `import "@{{projectName}}/env/web";
+  ["frontend/nuxt/nuxt.config.ts.hbs", `{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
+import { fileURLToPath } from "node:url";
+{{/if}}
+import "@{{projectName}}/env/web";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -29719,11 +29733,46 @@ export default defineNuxtConfig({
     {{#if (eq backend "convex")}},
     'convex-nuxt'
     {{/if}}
+    {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}},
+    'nitro-cloudflare-dev'
+    {{/if}}
   ],
   css: ['~/assets/css/main.css'],
   devServer: {
     port: 3001
   },
+  {{#if (eq webDeploy "cloudflare")}}
+  {{#if (eq backend "self")}}
+  $development: {
+    vite: {
+      resolve: {
+        alias: {
+          'cloudflare:workers': fileURLToPath(new URL('./cloudflare-workers.dev.ts', import.meta.url))
+        }
+      }
+    }
+  },
+  vite: {
+    build: {
+      rollupOptions: {
+        // resolved by workerd at runtime; node builds cannot bundle it
+        external: ['cloudflare:workers']
+      }
+    }
+  },
+  nitro: {
+    preset: 'cloudflare-module'
+  },
+  {{else}}
+  nitro: {
+    preset: 'cloudflare-module',
+    prerender: {
+      routes: ['/'],
+      autoSubfolderIndex: false
+    }
+  },
+  {{/if}}
+  {{/if}}
   {{#if (eq backend "convex")}}
   convex: {
     url: process.env.NUXT_PUBLIC_CONVEX_URL,
@@ -30751,7 +30800,10 @@ export default function Home() {
   }
 }
 `],
-  ["frontend/react/react-router/vite.config.ts.hbs", `import { reactRouter } from "@react-router/dev/vite";
+  ["frontend/react/react-router/vite.config.ts.hbs", `{{#if (and (eq webDeploy "cloudflare") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+import { fileURLToPath } from "node:url";
+{{/if}}
+import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -30766,6 +30818,18 @@ export default defineConfig({
   ssr: {
     // Vercel functions have no node_modules; bundle all deps into the server build
     noExternal: true,
+  },
+{{/if}}
+{{#if (and (eq webDeploy "cloudflare") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+  environments: {
+    ssr: {
+      build: {
+        rollupOptions: {
+          // Worker entry wrapping the React Router request handler; must be absolute
+          input: fileURLToPath(new URL("./workers/app.ts", import.meta.url)),
+        },
+      },
+    },
   },
 {{/if}}
 });
@@ -31816,6 +31880,14 @@ export default defineConfig({
   server: {
     port: 3001,
   },
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
+  build: {
+    rollupOptions: {
+      // resolved by workerd at runtime; node builds cannot bundle it
+      external: ["cloudflare:workers"],
+    },
+  },
+{{/if}}
   resolve: {
     tsconfigPaths: true,
   },
@@ -32631,7 +32703,7 @@ const TITLE_TEXT = \`
   ["frontend/svelte/svelte.config.js.hbs", `{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 import adapter from '@sveltejs/adapter-static';
 {{else if (eq webDeploy "cloudflare")}}
-import alchemy from 'alchemy/cloudflare/sveltekit';
+import adapter from '@sveltejs/adapter-cloudflare';
 {{else if (eq webDeploy "docker")}}
 import adapter from '@sveltejs/adapter-node';
 {{else if (eq webDeploy "vercel")}}
@@ -32656,8 +32728,7 @@ const config = {
 			fallback: 'index.html'
 		})
 {{else if (eq webDeploy "cloudflare")}}
-		// Alchemy's adapter wraps SvelteKit's Cloudflare adapter for local platform.env and Worker builds.
-		adapter: alchemy()
+		adapter: adapter()
 {{else if (eq webDeploy "docker")}}
 		// adapter-node builds a standalone Node server (run with \`node build/index.js\`).
 		adapter: adapter()
@@ -32749,24 +32820,6 @@ export default defineConfig({
 	"type": "module",
 	"exports": {}
 }`],
-  ["packages/env/src/cloudflare-local.ts.hbs", `import { config } from "dotenv";
-import { fileURLToPath } from "node:url";
-
-config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
-config();
-
-const runtimeEnv = typeof process === "undefined" ? {} : process.env;
-
-export const env = new Proxy({} as Env, {
-	get(_target, prop) {
-		if (typeof prop !== "string") {
-			return undefined;
-		}
-
-		return runtimeEnv[prop];
-	},
-});
-`],
   ["packages/env/src/native.ts.hbs", `import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
@@ -32868,8 +32921,13 @@ export const env = createEnvProxy(resolveEnvValue);
 import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
 
-config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
-config();
+// dotenv only applies in Node dev/build; workerd throws on file URLs and has no fs
+try {
+	config({ path: fileURLToPath(new URL("../../../.env", import.meta.url)) });
+	config();
+} catch {
+	// running in workerd: env comes from worker bindings via process.env
+}
 
 const runtimeEnv = typeof process === "undefined" ? {} : process.env;
 
@@ -33100,32 +33158,10 @@ export const env = createEnv({
   "extends": "@{{projectName}}/config/tsconfig.base.json",
 }
 `],
-  ["packages/infra/alchemy.run.ts.hbs", `import alchemy from "alchemy";
-{{#if (eq webDeploy "cloudflare")}}
-{{#if (includes frontend "next")}}
-import { Nextjs } from "alchemy/cloudflare";
-{{else if (includes frontend "nuxt")}}
-import { Nuxt } from "alchemy/cloudflare";
-{{else if (includes frontend "svelte")}}
-import { SvelteKit } from "alchemy/cloudflare";
-{{else if (includes frontend "tanstack-start")}}
-import { TanStackStart } from "alchemy/cloudflare";
-{{else if (includes frontend "tanstack-router")}}
-import { Vite } from "alchemy/cloudflare";
-{{else if (includes frontend "react-router")}}
-import { ReactRouter } from "alchemy/cloudflare";
-{{else if (includes frontend "solid")}}
-import { Vite } from "alchemy/cloudflare";
-{{else if (includes frontend "astro")}}
-import { Astro } from "alchemy/cloudflare";
-{{/if}}
-{{/if}}
-{{#if (eq serverDeploy "cloudflare")}}
-import { Worker } from "alchemy/cloudflare";
-{{/if}}
-{{#if (and (or (eq serverDeploy "cloudflare") (and (eq webDeploy "cloudflare") (eq backend "self"))) (eq dbSetup "d1"))}}
-import { D1Database } from "alchemy/cloudflare";
-{{/if}}
+  ["packages/infra/alchemy.run.ts.hbs", `import * as Alchemy from "alchemy";
+import * as Cloudflare from "alchemy/Cloudflare";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import { config } from "dotenv";
 
 {{#if (and (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
@@ -33140,10 +33176,8 @@ config({ path: "./.env" });
 config({ path: "../../apps/server/.env" });
 {{/if}}
 
-const app = await alchemy("{{projectName}}");
-
 {{#if (and (or (eq serverDeploy "cloudflare") (and (eq webDeploy "cloudflare") (eq backend "self"))) (eq dbSetup "d1"))}}
-const db = await D1Database("database", {
+export const db = Cloudflare.D1.Database("database", {
 	{{#if (eq orm "prisma")}}
 	migrationsDir: "../../packages/db/prisma/migrations",
 	{{else if (eq orm "drizzle")}}
@@ -33153,382 +33187,519 @@ const db = await D1Database("database", {
 {{/if}}
 
 {{#if (eq serverDeploy "cloudflare")}}
-export const server = await Worker("server", {
-  cwd: "../../apps/server",
-  entrypoint: "src/index.ts",
-  compatibility: "node",
-  url: true,
-  bindings: {
+export const server = Cloudflare.Worker("server", {
+  main: "../../apps/server/src/index.ts",
+  // User entrypoints are external Workers, so declare required compatibility flags explicitly.
+  compatibility: {
+    flags: ["nodejs_compat"],
+  },
+  env: {
     {{#if (eq dbSetup "d1")}}
     DB: db,
     {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    DATABASE_URL: Config.redacted("DATABASE_URL"),
     {{/if}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    CORS_ORIGIN: Config.string("CORS_ORIGIN"),
     {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+    BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
     {{/if}}
     {{#if (eq auth "clerk")}}
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
+    CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
     {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
+    CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),
     {{/if}}
     {{/if}}
     {{#if (includes examples "ai")}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+    GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
     {{/if}}
     {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+    POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
     {{/if}}
     {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
     {{/if}}
     {{#if (eq database "mysql")}}
     {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    DATABASE_HOST: Config.string("DATABASE_HOST"),
+    DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+    DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
     {{/if}}
     {{/if}}
   },
   dev: {
-		port: 3000,
-	},
+    port: 3000,
+  },
 });
+
+export type ServerEnv = Cloudflare.InferEnv<typeof server>;
 {{/if}}
 
-{{#if (eq webDeploy "cloudflare")}}
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
 {{#if (includes frontend "next")}}
-export const web = await Nextjs("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    NEXT_PUBLIC_CONVEX_URL: alchemy.env.NEXT_PUBLIC_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    NEXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NEXT_PUBLIC_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    NEXT_PUBLIC_SERVER_URL: server.url!,
-    {{else}}
-    NEXT_PUBLIC_SERVER_URL: alchemy.env.NEXT_PUBLIC_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    {{#if (ne backend "convex")}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq auth "clerk")}}
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
-    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
-    {{/if}}
-    {{/if}}
-    {{#if (and (includes examples "ai") (ne backend "convex"))}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-  },
-  dev: {
-    env: {
-      PORT: "3001",
-    },
-  },
+export const web = Cloudflare.Website.StaticSite("web", {
+      cwd: "../../apps/web",
+      command: "{{packageManager}} run build:cloudflare",
+      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+      memo: false,
+      outdir: ".open-next/assets",
+      main: "../../apps/web/.open-next/worker.js",
+      bundle: false,
+      compatibility: {
+        flags: ["nodejs_compat", "global_fetch_strictly_public"],
+      },
+      env: {
+        IMAGES: Cloudflare.Images.Images(),
+        {{#if (eq dbSetup "d1")}}
+        DB: db,
+        {{else if (ne database "none")}}
+        DATABASE_URL: Config.redacted("DATABASE_URL"),
+        {{/if}}
+        CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+        {{#if (eq auth "better-auth")}}
+        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+        BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+        {{/if}}
+        {{#if (eq auth "clerk")}}
+        CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+        {{#if (ne api "none")}}
+        CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),
+        {{/if}}
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.string("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),
+        {{/if}}
+        {{#if (includes examples "ai")}}
+        GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
+        {{/if}}
+        {{#if (eq payments "polar")}}
+        POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+        POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
+        {{/if}}
+        {{#if (eq dbSetup "turso")}}
+        DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
+        {{/if}}
+        {{#if (eq database "mysql")}}
+        {{#if (eq orm "drizzle")}}
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
+        {{/if}}
+        {{/if}}
+      },
+      dev: {
+        command: "{{packageManager}} run dev:bare",
+        url: "http://localhost:3001",
+      },
 });
 {{else if (includes frontend "nuxt")}}
-export const web = await Nuxt("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    NUXT_PUBLIC_CONVEX_URL: alchemy.env.NUXT_PUBLIC_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    NUXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NUXT_PUBLIC_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    NUXT_PUBLIC_SERVER_URL: server.url!,
-    {{else}}
-    NUXT_PUBLIC_SERVER_URL: alchemy.env.NUXT_PUBLIC_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq backend "self")}}
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    {{#if (ne backend "convex")}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq auth "clerk")}}
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
-    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
-    {{/if}}
-    {{/if}}
-    {{#if (and (includes examples "ai") (ne backend "convex"))}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-    {{/if}}
-  }
+export const web = Cloudflare.Website.StaticSite("web", {
+      cwd: "../../apps/web",
+      command: "{{packageManager}} run build",
+      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+      memo: false,
+      outdir: ".output/public",
+      main: "../../apps/web/.output/server/index.mjs",
+      bundle: false,
+      compatibility: {
+        flags: ["nodejs_compat"],
+      },
+      env: {
+        {{#if (eq dbSetup "d1")}}
+        DB: db,
+        {{else if (ne database "none")}}
+        DATABASE_URL: Config.redacted("DATABASE_URL"),
+        {{/if}}
+        CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+        {{#if (eq auth "better-auth")}}
+        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+        BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+        {{/if}}
+        {{#if (includes examples "ai")}}
+        GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
+        {{/if}}
+        {{#if (eq payments "polar")}}
+        POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+        POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
+        {{/if}}
+        {{#if (eq dbSetup "turso")}}
+        DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
+        {{/if}}
+        {{#if (eq database "mysql")}}
+        {{#if (eq orm "drizzle")}}
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
+        {{/if}}
+        {{/if}}
+      },
+      dev: {
+        command: "{{packageManager}} run dev:bare",
+        url: "http://localhost:3001",
+      },
 });
 {{else if (includes frontend "svelte")}}
-export const web = await SvelteKit("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    PUBLIC_CONVEX_URL: alchemy.env.PUBLIC_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    PUBLIC_CONVEX_SITE_URL: alchemy.env.PUBLIC_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    PUBLIC_SERVER_URL: server.url!,
-    {{else}}
-    PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq backend "self")}}
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{#if (and (includes examples "ai") (ne backend "convex"))}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-    {{/if}}
-  },
-  dev: {
-    domain: "localhost:5173",
-  },
-});
-{{else if (includes frontend "tanstack-start")}}
-export const web = await TanStackStart("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    VITE_SERVER_URL: server.url!,
-    {{else}}
-    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq dbSetup "d1")}}
-    DB: db,
-    {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
-    {{/if}}
-    {{#if (ne backend "convex")}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq auth "clerk")}}
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
-    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
-    {{/if}}
-    {{/if}}
-    {{#if (and (includes examples "ai") (ne backend "convex"))}}
-    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
-    {{/if}}
-    {{#if (eq database "mysql")}}
-    {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
-    {{/if}}
-    {{/if}}
-  }
-});
-{{else if (includes frontend "tanstack-router")}}
-export const web = await Vite("web", {
-  cwd: "../../apps/web",
-  assets: "dist",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    VITE_SERVER_URL: server.url!,
-    {{else}}
-    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-  }
-});
-{{else if (includes frontend "react-router")}}
-export const web = await ReactRouter("web", {
-  cwd: "../../apps/web",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    VITE_SERVER_URL: server.url!,
-    {{else}}
-    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-  }
-});
-{{else if (includes frontend "solid")}}
-export const web = await Vite("web", {
-  cwd: "../../apps/web",
-  assets: "dist",
-  bindings: {
-    {{#if (eq backend "convex")}}
-    VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL!,
-    {{#if (eq auth "better-auth")}}
-    VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL!,
-    {{/if}}
-    {{else if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    VITE_SERVER_URL: server.url!,
-    {{else}}
-    VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-  }
+// _worker.js is a shim importing outside its directory, so it must be bundled
+export const web = Cloudflare.Website.StaticSite("web", {
+      cwd: "../../apps/web",
+      command: "{{packageManager}} run build",
+      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+      memo: false,
+      outdir: ".svelte-kit/cloudflare",
+      main: "../../apps/web/.svelte-kit/cloudflare/_worker.js",
+      compatibility: {
+        flags: ["nodejs_compat"],
+      },
+      env: {
+        {{#if (eq dbSetup "d1")}}
+        DB: db,
+        {{else if (ne database "none")}}
+        DATABASE_URL: Config.redacted("DATABASE_URL"),
+        {{/if}}
+        CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+        {{#if (eq auth "better-auth")}}
+        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+        BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+        {{/if}}
+        {{#if (includes examples "ai")}}
+        GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
+        {{/if}}
+        {{#if (eq payments "polar")}}
+        POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+        POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
+        {{/if}}
+        {{#if (eq dbSetup "turso")}}
+        DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
+        {{/if}}
+        {{#if (eq database "mysql")}}
+        {{#if (eq orm "drizzle")}}
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
+        {{/if}}
+        {{/if}}
+      },
+      dev: {
+        command: "{{packageManager}} run dev:bare",
+        url: "http://localhost:5173",
+      },
 });
 {{else if (includes frontend "astro")}}
-export const web = await Astro("web", {
-  cwd: "../../apps/web",
-  entrypoint: "dist/server/entry.mjs",
-  assets: "dist/client",
-  {{#if (eq backend "self")}}
-  compatibility: "node",
-  {{/if}}
-  bindings: {
-    {{#if (ne backend "self")}}
-    {{#if (eq serverDeploy "cloudflare")}}
-    PUBLIC_SERVER_URL: server.url!,
-    {{else}}
-    PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
-    {{/if}}
-    {{/if}}
-    {{#if (eq backend "self")}}
+export const web = Cloudflare.Website.StaticSite("web", {
+      cwd: "../../apps/web",
+      command: "{{packageManager}} run build",
+      // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+      memo: false,
+      outdir: "dist/client",
+      main: "../../apps/web/dist/server/entry.mjs",
+      bundle: false,
+      compatibility: {
+        flags: ["nodejs_compat"],
+      },
+      env: {
+        // the astro cloudflare adapter expects SESSION (KV) and IMAGES bindings
+        SESSION: Cloudflare.KV.Namespace("session"),
+        IMAGES: Cloudflare.Images.Images(),
+        {{#if (eq dbSetup "d1")}}
+        DB: db,
+        {{else if (ne database "none")}}
+        DATABASE_URL: Config.redacted("DATABASE_URL"),
+        {{/if}}
+        CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+        {{#if (eq auth "better-auth")}}
+        BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+        BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+        {{/if}}
+        {{#if (eq payments "polar")}}
+        POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+        POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
+        {{/if}}
+        {{#if (eq dbSetup "turso")}}
+        DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
+        {{/if}}
+        {{#if (eq database "mysql")}}
+        {{#if (eq orm "drizzle")}}
+        DATABASE_HOST: Config.string("DATABASE_HOST"),
+        DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+        DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
+        {{/if}}
+        {{/if}}
+      },
+      dev: {
+        command: "{{packageManager}} run dev:bare",
+        url: "http://localhost:4321",
+      },
+});
+{{else if (includes frontend "tanstack-start")}}
+export const web = Cloudflare.Website.Vite("web", {
+  rootDir: "../../apps/web",
+  compatibility: {
+    flags: ["nodejs_compat"],
+  },
+  env: {
     {{#if (eq dbSetup "d1")}}
     DB: db,
     {{else if (ne database "none")}}
-    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    DATABASE_URL: Config.redacted("DATABASE_URL"),
     {{/if}}
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    CORS_ORIGIN: Config.string("CORS_ORIGIN"),
     {{#if (eq auth "better-auth")}}
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+    BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+    {{#if (ne api "none")}}
+    CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),
+    {{/if}}
+    VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),
+    {{/if}}
+    {{#if (includes examples "ai")}}
+    GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
     {{/if}}
     {{#if (eq payments "polar")}}
-    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
-    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+    POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
     {{/if}}
     {{#if (eq dbSetup "turso")}}
-    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
     {{/if}}
     {{#if (eq database "mysql")}}
     {{#if (eq orm "drizzle")}}
-    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
-    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
-    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    DATABASE_HOST: Config.string("DATABASE_HOST"),
+    DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+    DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
     {{/if}}
     {{/if}}
-    {{/if}}
-  }
+  },
 });
 {{/if}}
+
+export type WebEnv = Cloudflare.InferEnv<typeof web>;
 {{/if}}
 
-{{#if (and (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
-console.log(\`Web    -> \${web.url}\`);
-console.log(\`Server -> \${server.url}\`);
-{{else if (eq webDeploy "cloudflare")}}
-console.log(\`Web    -> \${web.url}\`);
-{{else if (eq serverDeploy "cloudflare")}}
-console.log(\`Server -> \${server.url}\`);
-{{/if}}
+export default Alchemy.Stack(
+  "{{projectName}}",
+  {
+    providers: Cloudflare.providers(),
+    state: Cloudflare.state(),
+  },
+  Effect.gen(function* () {
+    {{#if (eq serverDeploy "cloudflare")}}
+    const serverWorker = yield* server;
+    {{/if}}
+    {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
+    const webWorker = yield* web;
+    {{else if (eq webDeploy "cloudflare")}}
+    {{#if (includes frontend "next")}}
+    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
+          cwd: "../../apps/web",
+          command: "{{packageManager}} run build:cloudflare",
+          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+          memo: false,
+          outdir: ".open-next/assets",
+          main: "../../apps/web/.open-next/worker.js",
+          bundle: false,
+          compatibility: {
+            flags: ["nodejs_compat", "global_fetch_strictly_public"],
+          },
+          env: {
+            IMAGES: Cloudflare.Images.Images(),
+            {{#if (eq backend "convex")}}
+            NEXT_PUBLIC_CONVEX_URL: Config.string("NEXT_PUBLIC_CONVEX_URL"),
+            {{#if (eq auth "better-auth")}}
+            NEXT_PUBLIC_CONVEX_SITE_URL: Config.string("NEXT_PUBLIC_CONVEX_SITE_URL"),
+            {{/if}}
+            {{else}}
+            {{#if (eq serverDeploy "cloudflare")}}
+            NEXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
+            {{else}}
+            NEXT_PUBLIC_SERVER_URL: Config.string("NEXT_PUBLIC_SERVER_URL"),
+            {{/if}}
+            {{/if}}
+            {{#if (eq auth "clerk")}}
+            CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.string("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),
+            {{/if}}
+          },
+          dev: {
+            command: "{{packageManager}} run dev:bare",
+            url: "http://localhost:3001",
+          },
+    });
+    {{else if (includes frontend "nuxt")}}
+    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
+          cwd: "../../apps/web",
+          command: "{{packageManager}} run build",
+          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+          memo: false,
+          outdir: ".output/public",
+          main: "../../apps/web/.output/server/index.mjs",
+          bundle: false,
+          compatibility: {
+            flags: ["nodejs_compat"],
+          },
+          env: {
+            {{#if (eq backend "convex")}}
+            NUXT_PUBLIC_CONVEX_URL: Config.string("NUXT_PUBLIC_CONVEX_URL"),
+            {{#if (eq auth "better-auth")}}
+            NUXT_PUBLIC_CONVEX_SITE_URL: Config.string("NUXT_PUBLIC_CONVEX_SITE_URL"),
+            {{/if}}
+            {{else}}
+            {{#if (eq serverDeploy "cloudflare")}}
+            NUXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
+            {{else}}
+            NUXT_PUBLIC_SERVER_URL: Config.string("NUXT_PUBLIC_SERVER_URL"),
+            {{/if}}
+            {{/if}}
+          },
+          dev: {
+            command: "{{packageManager}} run dev:bare",
+            url: "http://localhost:3001",
+          },
+    });
+    {{else if (includes frontend "svelte")}}
+    // _worker.js is a shim importing outside its directory, so it must be bundled
+    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
+          cwd: "../../apps/web",
+          command: "{{packageManager}} run build",
+          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+          memo: false,
+          outdir: ".svelte-kit/cloudflare",
+          main: "../../apps/web/.svelte-kit/cloudflare/_worker.js",
+          compatibility: {
+            flags: ["nodejs_compat"],
+          },
+          env: {
+            {{#if (eq backend "convex")}}
+            PUBLIC_CONVEX_URL: Config.string("PUBLIC_CONVEX_URL"),
+            {{#if (eq auth "better-auth")}}
+            PUBLIC_CONVEX_SITE_URL: Config.string("PUBLIC_CONVEX_SITE_URL"),
+            {{/if}}
+            {{else}}
+            {{#if (eq serverDeploy "cloudflare")}}
+            PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
+            {{else}}
+            PUBLIC_SERVER_URL: Config.string("PUBLIC_SERVER_URL"),
+            {{/if}}
+            {{/if}}
+          },
+          dev: {
+            command: "{{packageManager}} run dev:bare",
+            url: "http://localhost:5173",
+          },
+    });
+    {{else if (includes frontend "astro")}}
+    const webWorker = yield* Cloudflare.Website.StaticSite("web", {
+          cwd: "../../apps/web",
+          command: "{{packageManager}} run build",
+          // Rebuild shared workspace dependencies until Alchemy has a workspace-aware default memo.
+          memo: false,
+          outdir: "dist/client",
+          main: "../../apps/web/dist/server/entry.mjs",
+          bundle: false,
+          compatibility: {
+            flags: ["nodejs_compat"],
+          },
+          env: {
+            // the astro cloudflare adapter expects SESSION (KV) and IMAGES bindings
+            SESSION: Cloudflare.KV.Namespace("session"),
+            IMAGES: Cloudflare.Images.Images(),
+            {{#if (eq serverDeploy "cloudflare")}}
+            PUBLIC_SERVER_URL: serverWorker.url.as<string>(),
+            {{else}}
+            PUBLIC_SERVER_URL: Config.string("PUBLIC_SERVER_URL"),
+            {{/if}}
+          },
+          dev: {
+            command: "{{packageManager}} run dev:bare",
+            url: "http://localhost:4321",
+          },
+    });
+    {{else if (includes frontend "tanstack-start")}}
+    const webWorker = yield* Cloudflare.Website.Vite("web", {
+      rootDir: "../../apps/web",
+      compatibility: {
+        flags: ["nodejs_compat"],
+      },
+      env: {
+        {{#if (eq backend "convex")}}
+        VITE_CONVEX_URL: Config.string("VITE_CONVEX_URL"),
+        {{#if (eq auth "better-auth")}}
+        VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
+        {{/if}}
+        {{else}}
+        {{#if (eq serverDeploy "cloudflare")}}
+        VITE_SERVER_URL: serverWorker.url.as<string>(),
+        {{else}}
+        VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
+        {{/if}}
+        {{/if}}
+        {{#if (eq auth "clerk")}}
+        CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+        VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),
+        {{/if}}
+      },
+    });
+    {{else if (includes frontend "react-router")}}
+    const webWorker = yield* Cloudflare.Website.Vite("web", {
+      rootDir: "../../apps/web",
+      compatibility: {
+        flags: ["nodejs_compat"],
+      },
+      env: {
+        {{#if (eq backend "convex")}}
+        VITE_CONVEX_URL: Config.string("VITE_CONVEX_URL"),
+        {{#if (eq auth "better-auth")}}
+        VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
+        {{/if}}
+        {{else}}
+        {{#if (eq serverDeploy "cloudflare")}}
+        VITE_SERVER_URL: serverWorker.url.as<string>(),
+        {{else}}
+        VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
+        {{/if}}
+        {{/if}}
+        {{#if (eq auth "clerk")}}
+        CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+        VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),
+        {{/if}}
+      },
+    });
+    {{else if (or (includes frontend "tanstack-router") (includes frontend "solid"))}}
+    const webWorker = yield* Cloudflare.Website.Vite("web", {
+      rootDir: "../../apps/web",
+      assets: {
+        htmlHandling: "auto-trailing-slash",
+        notFoundHandling: "single-page-application",
+      },
+      env: {
+        {{#if (eq backend "convex")}}
+        VITE_CONVEX_URL: Config.string("VITE_CONVEX_URL"),
+        {{#if (eq auth "better-auth")}}
+        VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
+        {{/if}}
+        {{else}}
+        {{#if (eq serverDeploy "cloudflare")}}
+        VITE_SERVER_URL: serverWorker.url.as<string>(),
+        {{else}}
+        VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
+        {{/if}}
+        {{/if}}
+      },
+    });
+    {{/if}}
+    {{/if}}
 
-await app.finalize();
+    return {
+      {{#if (eq webDeploy "cloudflare")}}
+      web: webWorker.url,
+      {{/if}}
+      {{#if (eq serverDeploy "cloudflare")}}
+      server: serverWorker.url,
+      {{/if}}
+    };
+  }),
+);
 `],
   ["packages/infra/package.json.hbs", `{
   "name": "@{{projectName}}/infra",
@@ -35548,4 +35719,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 507;
+export const TEMPLATE_COUNT = 506;

@@ -10,6 +10,14 @@ export default defineConfig({
   server: {
     port: 3001,
   },
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
+  build: {
+    rollupOptions: {
+      // resolved by workerd at runtime; node builds cannot bundle it
+      external: ["cloudflare:workers"],
+    },
+  },
+{{/if}}
   resolve: {
     tsconfigPaths: true,
   },
