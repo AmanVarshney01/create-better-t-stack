@@ -17,6 +17,7 @@ import {
   useMemo,
 } from "react";
 
+import type { ChartDatum } from "./chart-data";
 import type { ChartPhase, ChartStatus } from "./chart-phase";
 import type { ReferenceAreaConfig } from "./reference-area-config";
 import type { ChartSelection } from "./use-chart-interaction";
@@ -64,7 +65,7 @@ export interface Margin {
 
 export interface TooltipData {
   /** The data point being hovered */
-  point: Record<string, unknown>;
+  point: ChartDatum;
   /** Index in the data array */
   index: number;
   /** X position in pixels (relative to chart area) */
@@ -114,9 +115,9 @@ export interface ChartHoverContextValue {
 
 export interface ChartContextValue extends ChartHoverContextValue {
   // Data
-  data: Record<string, unknown>[];
+  data: ChartDatum[];
   /** Decimated subset for SVG path rendering; equals `data` when no decimation is needed. */
-  renderData: Record<string, unknown>[];
+  renderData: ChartDatum[];
 
   // Scales
   xScale: ScaleTime<number, number>;
@@ -169,7 +170,7 @@ export interface ChartContextValue extends ChartHoverContextValue {
   notifyLoadingPulseComplete?: () => void;
 
   // X accessor - how to get the x value from data points
-  xAccessor: (d: Record<string, unknown>) => Date;
+  xAccessor: (d: ChartDatum) => Date;
 
   // Pre-computed date labels for ticker animation
   dateLabels: string[];
@@ -185,7 +186,7 @@ export interface ChartContextValue extends ChartHoverContextValue {
   /** Width of each bar band */
   bandWidth?: number;
   /** X accessor for bar charts (returns string instead of Date) */
-  barXAccessor?: (d: Record<string, unknown>) => string;
+  barXAccessor?: (d: ChartDatum) => string;
   /** Bar chart orientation */
   orientation?: "vertical" | "horizontal";
   /** Whether bars are stacked */

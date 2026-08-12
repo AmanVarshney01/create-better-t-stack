@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 
 import { Area, type AreaProps } from "./area";
 import type { LineConfig, Margin } from "./chart-context";
+import type { ChartDatum } from "./chart-data";
+import { getChartChildComponentName } from "./chart-defs";
 import { ChartLoadingLabel } from "./chart-loading-label";
 import {
   type ChartPhase,
@@ -31,7 +33,7 @@ import { TimeSeriesChartInner } from "./time-series-chart-shell";
 
 export interface AreaChartProps {
   /** Data array - each item should have a date field and numeric values */
-  data: Record<string, unknown>[];
+  data: ChartDatum[];
   /** Key in data for the x-axis (date). Default: "date" */
   xDataKey?: string;
   /** Chart margins */
@@ -80,19 +82,14 @@ function extractAreaConfigs(children: ReactNode): LineConfig[] {
       return;
     }
 
-    const childType = child.type as {
-      displayName?: string;
-      name?: string;
-    };
-    const componentName =
-      typeof child.type === "function" ? childType.displayName || childType.name || "" : "";
+    const componentName = getChartChildComponentName(child);
 
     const props = child.props as AreaProps | undefined;
     const isPatternArea = componentName === "PatternArea" || child.type === PatternArea;
     const isAreaComponent =
       componentName === "Area" ||
       child.type === Area ||
-      (props && typeof props.dataKey === "string" && props.dataKey.length > 0 && !isPatternArea);
+      (Boolean(props?.dataKey) && !isPatternArea);
 
     if (isAreaComponent && props?.dataKey) {
       configs.push({
@@ -110,7 +107,7 @@ function extractAreaConfigs(children: ReactNode): LineConfig[] {
 interface ChartInnerProps {
   width: number;
   height: number;
-  data: Record<string, unknown>[];
+  data: ChartDatum[];
   xDataKey: string;
   margin: Margin;
   animationDuration: number;

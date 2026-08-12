@@ -2,13 +2,14 @@
  * Add dependencies to a package.json in the virtual filesystem
  */
 
+import type { JsonValue } from "../core/json-types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 type PackageJson = {
   name?: string;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
-  [key: string]: unknown;
+  [key: string]: JsonValue | undefined;
 };
 
 export const dependencyVersionMap = {
@@ -64,8 +65,8 @@ export const dependencyVersionMap = {
 
   "@biomejs/biome": "^2.5.6",
 
-  oxlint: "^1.76.0",
-  oxfmt: "^0.61.0",
+  oxlint: "^1.78.0",
+  oxfmt: "^0.63.0",
 
   husky: "^9.1.7",
   lefthook: "^2.1.10",

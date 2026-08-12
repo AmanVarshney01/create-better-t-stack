@@ -1,5 +1,6 @@
 "use client";
 
+import type { SelectRootProps } from "@base-ui/react/select";
 import { useControlled } from "@base-ui/utils/useControlled";
 import {
   transformerNotationDiff,
@@ -383,17 +384,17 @@ export const CodeBlockFilename = ({
   );
 };
 
-export type CodeBlockSelectProps = ComponentProps<typeof Select>;
+export type CodeBlockSelectProps = SelectRootProps<string>;
 
 export const CodeBlockSelect = (props: CodeBlockSelectProps) => {
   const { value, onValueChange } = useContext(CodeBlockContext);
 
   return (
-    <Select
+    <Select<string>
       onValueChange={
         onValueChange
-          ? (newValue: unknown) => {
-              onValueChange(newValue as string);
+          ? (newValue) => {
+              if (newValue !== null) onValueChange(newValue);
             }
           : undefined
       }
@@ -453,7 +454,7 @@ export const CodeBlockCopyButton = ({
   const code = data.find((item) => item.language === value)?.code;
 
   const copyToClipboard = () => {
-    if (typeof window === "undefined" || !navigator.clipboard.writeText || !code) {
+    if (!navigator.clipboard?.writeText || !code) {
       return;
     }
 

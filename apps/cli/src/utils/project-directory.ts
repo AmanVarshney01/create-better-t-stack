@@ -8,6 +8,7 @@ import pc from "picocolors";
 import { getProjectName } from "../prompts/project-name";
 import { isSilent } from "./context";
 import { CLIError, UserCancelledError } from "./errors";
+import { isMissingPathError } from "./fs-error";
 
 export type ProjectPathState =
   | "missing"
@@ -136,10 +137,12 @@ export async function handleDirectoryConflict(currentPathInput: string): Promise
   }
 }
 
-export function resolveProjectDirectoryPath(finalPathInput: string): {
+export interface ProjectDirectoryResolution {
   finalResolvedPath: string;
   finalBaseName: string;
-} {
+}
+
+export function resolveProjectDirectoryPath(finalPathInput: string): ProjectDirectoryResolution {
   const finalResolvedPath =
     finalPathInput === "." ? process.cwd() : path.resolve(process.cwd(), finalPathInput);
 
@@ -210,12 +213,7 @@ export async function validateSafeProjectDirectoryPath(
         try {
           stats = await fs.lstat(candidatePath);
         } catch (error) {
-          if (
-            typeof error === "object" &&
-            error !== null &&
-            "code" in error &&
-            error.code === "ENOENT"
-          ) {
+          if (isMissingPathError(error)) {
             break;
           }
           throw error;
@@ -269,12 +267,7 @@ export async function inspectProjectPath(
       try {
         stats = await fs.lstat(targetPath);
       } catch (error) {
-        if (
-          typeof error === "object" &&
-          error !== null &&
-          "code" in error &&
-          error.code === "ENOENT"
-        ) {
+        if (isMissingPathError(error)) {
           return "missing" as const;
         }
         throw error;

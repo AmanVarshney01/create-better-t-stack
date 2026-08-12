@@ -1,8 +1,9 @@
 import { Children, isValidElement, type ReactElement, type ReactNode } from "react";
 
 export function getChartChildComponentName(child: ReactElement): string {
-  const childType = child.type as { displayName?: string; name?: string };
-  return typeof child.type === "function" ? childType.displayName || childType.name || "" : "";
+  if (!(child.type instanceof Function)) return "";
+  const displayName = Reflect.get(child.type, "displayName");
+  return displayName == null ? child.type.name : String(displayName);
 }
 
 const VISX_PATTERN_COMPONENT_NAMES = new Set([
@@ -13,6 +14,11 @@ const VISX_PATTERN_COMPONENT_NAMES = new Set([
   "Path",
   "Pattern",
 ]);
+
+export interface PartitionedChartDefNodes {
+  patternDefNodes: ReactElement[];
+  gradientDefNodes: ReactElement[];
+}
 
 /** @visx/pattern default exports use short names (e.g. `Lines`); also match *Pattern* displayNames. */
 export function isPatternDefComponent(child: ReactElement): boolean {
@@ -30,10 +36,7 @@ export function isChartDefsComponent(child: ReactElement): boolean {
 }
 
 /** Split hoisted defs: @visx/pattern nodes already wrap `<defs>` and render at the svg root. */
-export function partitionChartDefNodes(defNodes: ReactElement[]): {
-  patternDefNodes: ReactElement[];
-  gradientDefNodes: ReactElement[];
-} {
+export function partitionChartDefNodes(defNodes: ReactElement[]): PartitionedChartDefNodes {
   const patternDefNodes: ReactElement[] = [];
   const gradientDefNodes: ReactElement[] = [];
 

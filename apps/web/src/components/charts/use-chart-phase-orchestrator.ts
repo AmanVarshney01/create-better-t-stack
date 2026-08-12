@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import type { ChartDatum } from "./chart-data";
 import { type ChartPhase, type ChartStatus, resolveRestingChartPhase } from "./chart-phase";
 
 export interface UseChartPhaseOrchestratorOptions {
   chartStatus: ChartStatus;
-  targetData: Record<string, unknown>[];
-  skeletonData: Record<string, unknown>[];
+  targetData: ChartDatum[];
+  skeletonData: ChartDatum[];
   animationDuration: number;
   yDomainTweenDuration: number;
   /** Signature of motion URL state — replays clip reveal in Studio. */
@@ -28,7 +29,7 @@ export function useChartPhaseOrchestrator({
   const [chartPhase, setChartPhase] = useState<ChartPhase>(() =>
     resolveRestingChartPhase(chartStatus),
   );
-  const [plotData, setPlotData] = useState<Record<string, unknown>[]>(() =>
+  const [plotData, setPlotData] = useState<ChartDatum[]>(() =>
     chartStatus === "loading" ? skeletonData : targetData,
   );
   const [revealEpoch, setRevealEpoch] = useState(0);

@@ -1,6 +1,7 @@
 import { scaleLinear } from "@visx/scale";
 
 import type { LineConfig } from "./chart-context";
+import type { ChartDatum } from "./chart-data";
 
 /** Default axis id when `yAxisId` is omitted (Recharts-style `0` / primary left axis). */
 export const DEFAULT_Y_AXIS_ID = "left";
@@ -27,6 +28,8 @@ export function groupLinesByYAxisId(lines: LineConfig[]): Map<string, LineConfig
 
 type YScale = ReturnType<typeof scaleLinear<number>>;
 
+export interface YScaleMap extends Record<string, YScale> {}
+
 export function getPrimaryYScale(yScales: Record<string, YScale>, fallback: YScale): YScale {
   const primary = yScales[DEFAULT_Y_AXIS_ID];
   if (primary) {
@@ -43,12 +46,12 @@ export function buildYScalesForLines({
 }: {
   lines: LineConfig[];
   /** Passed by callers; domain is resolved via `resolveDomain`. */
-  data?: Record<string, unknown>[];
+  data?: ChartDatum[];
   innerHeight: number;
   resolveDomain: (dataKeys: string[]) => [number, number];
-}): Record<string, YScale> {
+}): YScaleMap {
   const groups = groupLinesByYAxisId(lines);
-  const scales: Record<string, YScale> = {};
+  const scales: YScaleMap = {};
 
   for (const [axisId, axisLines] of groups) {
     const dataKeys = axisLines.map((line) => line.dataKey);
@@ -80,9 +83,9 @@ export function buildYScalesFromDomains({
   lines: LineConfig[];
   innerHeight: number;
   domainsByAxis: Record<string, [number, number]>;
-}): Record<string, YScale> {
+}): YScaleMap {
   const groups = groupLinesByYAxisId(lines);
-  const scales: Record<string, YScale> = {};
+  const scales: YScaleMap = {};
 
   for (const [axisId] of groups) {
     const domain =
@@ -104,6 +107,6 @@ export function buildYScalesFromDomains({
 }
 
 /** Single-axis charts (bar, scatter, candlestick, live line). */
-export function wrapSingleYScale(yScale: YScale): Record<string, YScale> {
+export function wrapSingleYScale(yScale: YScale): YScaleMap {
   return { [DEFAULT_Y_AXIS_ID]: yScale };
 }

@@ -6,7 +6,7 @@ import { isTelemetryEnabled } from "./telemetry";
 
 const CONVEX_INGEST_URL = process.env.CONVEX_INGEST_URL;
 
-async function sendConvexEvent(payload: Record<string, unknown>): Promise<void> {
+async function sendConvexEvent(payload: AnalyticsEvent): Promise<void> {
   if (!CONVEX_INGEST_URL) return;
 
   await Result.tryPromise({

@@ -198,11 +198,13 @@ function prismaFramework(framework: DeployedWebFramework): string | undefined {
   }
 }
 
-function prismaCustomBuild(framework: DeployedWebFramework): {
+interface PrismaCustomBuild {
   script: "build";
   outdir: ".output" | "build";
   entrypoint: "server/index.mjs" | "server/index.js" | "index.js";
-} {
+}
+
+function prismaCustomBuild(framework: DeployedWebFramework): PrismaCustomBuild {
   switch (framework) {
     case "solid":
       return {

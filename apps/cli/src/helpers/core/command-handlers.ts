@@ -211,11 +211,11 @@ async function createProjectHandlerInternal(
       const projectNameResult = yield* Result.await(
         Result.tryPromise({
           try: async () => getProjectName(input.projectName),
-          catch: (e: unknown) => {
-            if (e instanceof UserCancelledError) return e;
+          catch: (cause: unknown) => {
+            if (cause instanceof UserCancelledError) return cause;
             return new CLIError({
-              message: e instanceof Error ? e.message : String(e),
-              cause: e,
+              message: cause instanceof Error ? cause.message : String(cause),
+              cause: cause,
             });
           },
         }),
@@ -259,12 +259,9 @@ async function createProjectHandlerInternal(
             `${pc.dim("Template")} ${pc.bold(pc.cyan(templateName))}\n${pc.dim(templateDescription)}`,
           );
         }
-        const userOverrides: Record<string, unknown> = {};
-        for (const [key, value] of Object.entries(originalInput)) {
-          if (value !== undefined) {
-            userOverrides[key] = value;
-          }
-        }
+        const userOverrides = Object.fromEntries(
+          Object.entries(originalInput).filter(([, value]) => value !== undefined),
+        );
         cliInput = {
           ...templateConfig,
           ...userOverrides,
@@ -328,11 +325,11 @@ async function createProjectHandlerInternal(
             gatherConfig(flagConfig, finalBaseName, finalResolvedPath, finalPathInput, {
               skipCompatibilityChecks: cliInput.yolo,
             }),
-          catch: (e: unknown) => {
-            if (e instanceof UserCancelledError) return e;
+          catch: (cause: unknown) => {
+            if (cause instanceof UserCancelledError) return cause;
             return new CLIError({
-              message: e instanceof Error ? e.message : String(e),
-              cause: e,
+              message: cause instanceof Error ? cause.message : String(cause),
+              cause: cause,
             });
           },
         }),
@@ -377,11 +374,11 @@ async function createProjectHandlerInternal(
       yield* Result.await(
         Result.tryPromise({
           try: async () => setupProjectDirectory(finalPathInput, shouldClearDirectory),
-          catch: (e: unknown) => {
-            if (e instanceof UserCancelledError) return e;
+          catch: (cause: unknown) => {
+            if (cause instanceof UserCancelledError) return cause;
             return new CLIError({
-              message: e instanceof Error ? e.message : String(e),
-              cause: e,
+              message: cause instanceof Error ? cause.message : String(cause),
+              cause: cause,
             });
           },
         }),
@@ -532,12 +529,12 @@ async function handleDirectoryConflictResult(
   // Use interactive handler
   return Result.tryPromise({
     try: async () => handleDirectoryConflict(currentPathInput),
-    catch: (e: unknown) => {
-      if (e instanceof UserCancelledError) return e;
-      if (e instanceof CLIError) return e;
+    catch: (cause: unknown) => {
+      if (cause instanceof UserCancelledError) return cause;
+      if (cause instanceof CLIError) return cause;
       return new CLIError({
-        message: e instanceof Error ? e.message : String(e),
-        cause: e,
+        message: cause instanceof Error ? cause.message : String(cause),
+        cause: cause,
       });
     },
   });

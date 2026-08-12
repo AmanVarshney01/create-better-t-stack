@@ -64,6 +64,6 @@ export function mergeResolvedDbSetupOptions(
 
   return {
     ...dbSetupOptions,
-    ...(resolvedMode ? { mode: resolvedMode } : {}),
+    mode: resolvedMode,
   };
 }

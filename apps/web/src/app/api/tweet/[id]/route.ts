@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
 import { fetchTweet, TwitterApiError, type Tweet } from "react-tweet/api";
+import { z } from "zod";
 
 export const revalidate = 86_400;
 
-type TweetEntityArrays = {
-  hashtags?: unknown[];
-  media?: unknown[];
-  symbols?: unknown[];
-  urls?: unknown[];
-  user_mentions?: unknown[];
-};
+type TweetEntityArrays = Partial<NonNullable<Tweet["entities"]>>;
+
+const entityWithIndicesSchema = z.object({
+  indices: z.tuple([z.number(), z.number()]),
+});
 
 type TweetWithEntities = {
   entities?: TweetEntityArrays;
@@ -72,18 +71,6 @@ function normalizeEntities(entities?: TweetEntityArrays): Tweet["entities"] {
   } as Tweet["entities"];
 }
 
-function normalizeEntityArray(entities?: unknown[]) {
-  if (!Array.isArray(entities)) return [];
-
-  return entities.filter((entity) => {
-    if (!entity || typeof entity !== "object" || !("indices" in entity)) return false;
-
-    const indices = entity.indices;
-    return (
-      Array.isArray(indices) &&
-      indices.length === 2 &&
-      typeof indices[0] === "number" &&
-      typeof indices[1] === "number"
-    );
-  });
+function normalizeEntityArray<T>(entities?: T[]): T[] {
+  return entities?.filter((entity) => entityWithIndicesSchema.safeParse(entity).success) ?? [];
 }

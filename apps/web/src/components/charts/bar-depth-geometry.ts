@@ -3,6 +3,11 @@ export const BAR_DEPTH_MAX_PX = 7;
  * subtle head-on perspective slope. */
 export const BAR_DEPTH_PERSPECTIVE_RATIO = 0.45;
 
+export interface BarDepthGeometry {
+  depth: number;
+  perspectiveRise: number;
+}
+
 /**
  * Maximum side-face depth in px for a chart, clamped so depth never spills past
  * the gap between bars. `stepWidth` is d3-scaleBand's `step()` (bandwidth +
@@ -26,7 +31,7 @@ export function barDepthAndRise(
   absOffset: number,
   naturalHeight: number,
   maxDepth: number,
-): { depth: number; perspectiveRise: number } {
+): BarDepthGeometry {
   const offset = Math.min(1, Math.max(0, absOffset));
   const cappedMaxDepth = Math.min(maxDepth, Math.max(0, naturalHeight));
   const depth = offset * cappedMaxDepth;

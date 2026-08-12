@@ -5,11 +5,22 @@ import type { scaleLinear, scaleTime } from "@visx/scale";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { LineConfig, Margin, TooltipData } from "./chart-context";
+import { parseChartNumber, type ChartDatum } from "./chart-data";
 import { useScheduledTooltip } from "./use-scheduled-tooltip";
 import { normalizeYAxisId } from "./y-axis-scales";
 
 type ScaleTime = ReturnType<typeof scaleTime<number>>;
 type ScaleLinear = ReturnType<typeof scaleLinear<number>>;
+
+function getLocalTouchPoint(
+  svg: SVGSVGElement,
+  touch: React.Touch,
+): { x: number; y: number } | null {
+  const screenMatrix = svg.getScreenCTM();
+  if (!screenMatrix) return null;
+  const point = new DOMPoint(touch.clientX, touch.clientY).matrixTransform(screenMatrix.inverse());
+  return { x: point.x, y: point.y };
+}
 
 export interface ChartSelection {
   startX: number;
@@ -23,11 +34,11 @@ interface UseChartInteractionParams {
   xScale: ScaleTime;
   yScale: ScaleLinear;
   yScales: Record<string, ScaleLinear>;
-  data: Record<string, unknown>[];
+  data: ChartDatum[];
   lines: LineConfig[];
   margin: Margin;
-  xAccessor: (d: Record<string, unknown>) => Date;
-  bisectDate: (data: Record<string, unknown>[], date: Date, lo: number) => number;
+  xAccessor: (d: ChartDatum) => Date;
+  bisectDate: (data: ChartDatum[], date: Date, lo: number) => number;
   canInteract: boolean;
 }
 
@@ -91,8 +102,8 @@ export function useChartInteraction({
 
       const yPositions: Record<string, number> = {};
       for (const line of lines) {
-        const value = d[line.dataKey];
-        if (typeof value === "number") {
+        const value = parseChartNumber(d[line.dataKey]);
+        if (value !== null) {
           const axisScale = yScales[normalizeYAxisId(line.yAxisId)] ?? yScale;
           yPositions[line.dataKey] = axisScale(value) ?? 0;
         }
@@ -145,7 +156,7 @@ export function useChartInteraction({
         if (!svg) {
           return null;
         }
-        point = localPoint(svg, touch as unknown as MouseEvent);
+        point = getLocalTouchPoint(svg, touch);
       } else {
         point = localPoint(event);
       }

@@ -27,10 +27,12 @@ type DeploymentOption = {
   hint: string;
 };
 
-function getDeploymentDisplay(deployment: WebDeploy): {
+interface DeploymentDisplay {
   label: string;
   hint: string;
-} {
+}
+
+function getDeploymentDisplay(deployment: WebDeploy): DeploymentDisplay {
   if (deployment === "cloudflare") {
     return {
       label: "Cloudflare",
@@ -88,7 +90,6 @@ export async function getDeploymentChoice(
     dbSetup,
     database,
     orm,
-    addons,
   }).isOk();
   const availableDeployments = [
     ...(supportsCloudflare ? (["cloudflare"] as const) : []),

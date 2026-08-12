@@ -195,7 +195,7 @@ export const getDailyStats = query({
     const today = new Date(now).toISOString().slice(0, 10);
     const requestedDays = args.days;
     const sanitizedDays =
-      typeof requestedDays === "number" && Number.isFinite(requestedDays) && requestedDays > 0
+      requestedDays !== undefined && Number.isFinite(requestedDays) && requestedDays > 0
         ? Math.min(Math.floor(requestedDays), MAX_DAILY_STATS_WINDOW)
         : 30;
     const cutoffDate = new Date(now - (sanitizedDays - 1) * 24 * 60 * 60 * 1000)
@@ -288,7 +288,7 @@ export const getRecentEvents = query({
   ),
   handler: async (ctx, args) => {
     const limit =
-      typeof args.limit === "number" && Number.isFinite(args.limit) && args.limit > 0
+      args.limit !== undefined && Number.isFinite(args.limit) && args.limit > 0
         ? Math.min(Math.floor(args.limit), 50)
         : 20;
 

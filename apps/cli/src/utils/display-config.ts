@@ -12,7 +12,15 @@ export type ConfigDisplaySection = {
   rows: ConfigDisplayRow[];
 };
 
-const VALUE_LABELS: Record<string, string> = {
+type ConfigDisplayValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | readonly ConfigDisplayValue[];
+
+const VALUE_LABELS = {
   none: "None",
   "tanstack-router": "TanStack Router",
   "react-router": "React Router",
@@ -78,27 +86,30 @@ const VALUE_LABELS: Record<string, string> = {
   vercel: "Vercel",
   npm: "npm",
   pnpm: "pnpm",
-};
+} satisfies Record<string, string>;
 
-export function formatConfigValue(value: unknown): string {
-  if (typeof value === "boolean") return value ? "Yes" : "No";
+function isKnownValueLabel(value: string): value is keyof typeof VALUE_LABELS {
+  return Object.hasOwn(VALUE_LABELS, value);
+}
+
+export function formatConfigValue(value: ConfigDisplayValue): string {
+  if (value === true) return "Yes";
+  if (value === false) return "No";
   if (Array.isArray(value)) {
     return value.length > 0 ? value.map(formatConfigValue).join(", ") : "None";
   }
 
   const text = String(value);
-  return (
-    VALUE_LABELS[text] ??
-    text
-      .split("-")
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(" ")
-  );
+  if (isKnownValueLabel(text)) return VALUE_LABELS[text];
+  return text
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 function section(
   title: string,
-  entries: Array<[label: string, value: unknown, format?: "raw"]>,
+  entries: Array<[label: string, value: ConfigDisplayValue, format?: "raw"]>,
 ): ConfigDisplaySection | undefined {
   const rows = entries
     .filter(([, value]) => value !== undefined)

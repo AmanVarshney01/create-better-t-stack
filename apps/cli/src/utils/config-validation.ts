@@ -131,10 +131,7 @@ export function validateDatabaseSetup(
     );
   }
 
-  const setupValidations: Record<
-    DatabaseSetup,
-    { database?: Database; runtime?: Runtime; errorMessage: string }
-  > = {
+  const setupValidations = {
     turso: {
       database: "sqlite",
       errorMessage:
@@ -173,7 +170,10 @@ export function validateDatabaseSetup(
         "Docker setup is not compatible with SQLite database or Cloudflare Workers runtime.",
     },
     none: { errorMessage: "" },
-  };
+  } satisfies Record<
+    DatabaseSetup,
+    { database?: Database; runtime?: Runtime; errorMessage: string }
+  >;
 
   if (dbSetup && dbSetup !== "none") {
     const validation = setupValidations[dbSetup];
@@ -183,12 +183,12 @@ export function validateDatabaseSetup(
         return validationErr(validation.errorMessage);
       }
     } else {
-      if (validation.database && database !== validation.database) {
+      if ("database" in validation && validation.database && database !== validation.database) {
         return validationErr(validation.errorMessage);
       }
     }
 
-    if (validation.runtime && runtime !== validation.runtime) {
+    if ("runtime" in validation && validation.runtime && runtime !== validation.runtime) {
       return validationErr(validation.errorMessage);
     }
 

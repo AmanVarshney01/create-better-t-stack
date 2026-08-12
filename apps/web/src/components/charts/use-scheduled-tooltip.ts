@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export interface ScheduledTooltipControls<T> {
+interface TooltipIdentity {
+  index: number;
+  x?: number;
+}
+
+export interface ScheduledTooltipControls<T extends TooltipIdentity> {
   tooltipData: T | null;
   setTooltipData: React.Dispatch<React.SetStateAction<T | null>>;
   scheduleTooltip: (tooltip: T, dedupeKey?: string) => void;
@@ -10,23 +15,13 @@ export interface ScheduledTooltipControls<T> {
   resetTooltipDedupe: () => void;
 }
 
-function defaultDedupeKey<T>(tooltip: T): string {
-  if (
-    typeof tooltip === "object" &&
-    tooltip !== null &&
-    "index" in tooltip &&
-    typeof (tooltip as { index: unknown }).index === "number"
-  ) {
-    const { index, x } = tooltip as { index: number; x?: number };
-    if (typeof x === "number") {
-      return `${index}:${Math.round(x)}`;
-    }
-    return String(index);
-  }
-  return JSON.stringify(tooltip);
+function defaultDedupeKey<T extends TooltipIdentity>(tooltip: T): string {
+  return tooltip.x === undefined
+    ? String(tooltip.index)
+    : `${tooltip.index}:${Math.round(tooltip.x)}`;
 }
 
-export function useScheduledTooltip<T>(): ScheduledTooltipControls<T> {
+export function useScheduledTooltip<T extends TooltipIdentity>(): ScheduledTooltipControls<T> {
   const [tooltipData, setTooltipData] = useState<T | null>(null);
   const lastKeyRef = useRef<string | null>(null);
   const pendingRef = useRef<T | null>(null);

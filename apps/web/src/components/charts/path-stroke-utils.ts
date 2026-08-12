@@ -1,5 +1,7 @@
 import { type RefObject, useEffect, useState } from "react";
 
+import type { ChartDatum } from "./chart-data";
+
 export function findPathLengthAtX(
   path: SVGPathElement | null,
   pathLength: number,
@@ -69,10 +71,10 @@ export function resolveDashTailBounds(
 }
 
 export function resolveDashStartX(
-  data: Record<string, unknown>[],
+  data: ChartDatum[],
   dashFromIndex: number,
   xScale: (value: Date | number) => number | undefined,
-  xAccessor: (datum: Record<string, unknown>) => Date | number,
+  xAccessor: (datum: ChartDatum) => Date | number,
 ): number {
   const dashFromPoint = data[dashFromIndex];
   if (!dashFromPoint) {

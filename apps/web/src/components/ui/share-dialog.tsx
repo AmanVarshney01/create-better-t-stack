@@ -89,7 +89,7 @@ export function ShareDialog({ children, stackUrl, stackState }: ShareDialogProps
   const selectedTechs = getSelectedTechs(stackState);
 
   useEffect(() => {
-    setCanNativeShare(typeof navigator !== "undefined" && !!navigator.share);
+    setCanNativeShare(Boolean(navigator.share));
     return () => {
       if (copyResetTimer.current) clearTimeout(copyResetTimer.current);
     };

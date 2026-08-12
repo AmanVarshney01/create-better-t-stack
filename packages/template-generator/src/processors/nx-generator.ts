@@ -16,10 +16,12 @@ type NxTargetDefaults = {
   continuous?: boolean;
 };
 
+interface NxTargetMap extends Record<string, NxTargetDefaults> {}
+
 type NxConfig = {
   $schema: string;
   namedInputs: Record<string, string[]>;
-  targetDefaults: Record<string, NxTargetDefaults>;
+  targetDefaults: NxTargetMap;
 };
 
 export function processNxConfig(vfs: VirtualFileSystem, config: ProjectConfig): void {
@@ -39,7 +41,7 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
   const hasAlchemy = isAlchemyDeployTarget(webDeploy) || isAlchemyDeployTarget(serverDeploy);
   const hasLocalD1 = getLocalD1Owner(config) === "wrangler";
 
-  const targetDefaults: Record<string, NxTargetDefaults> = {
+  const targetDefaults: NxTargetMap = {
     build: {
       dependsOn: ["^build"],
       inputs: ["production", "^production"],
@@ -52,14 +54,15 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
       cache: false,
       continuous: true,
     },
-    ...(config.addons.includes("electrobun") ? getElectrobunTargets() : {}),
-    ...(isConvex ? getConvexTargets() : {}),
-    ...(!isConvex && hasDatabase ? getDatabaseTargets(dbSupport) : {}),
-    ...(isDocker ? getDockerTargets() : {}),
-    ...(isSqliteLocal ? getSqliteLocalTarget() : {}),
-    ...(hasLocalD1 ? getLocalD1Target() : {}),
-    ...(hasAlchemy ? getDeployTargets() : {}),
   };
+
+  if (config.addons.includes("electrobun")) Object.assign(targetDefaults, getElectrobunTargets());
+  if (isConvex) Object.assign(targetDefaults, getConvexTargets());
+  if (!isConvex && hasDatabase) Object.assign(targetDefaults, getDatabaseTargets(dbSupport));
+  if (isDocker) Object.assign(targetDefaults, getDockerTargets());
+  if (isSqliteLocal) Object.assign(targetDefaults, getSqliteLocalTarget());
+  if (hasLocalD1) Object.assign(targetDefaults, getLocalD1Target());
+  if (hasAlchemy) Object.assign(targetDefaults, getDeployTargets());
 
   return {
     $schema: "./node_modules/nx/schemas/nx-schema.json",
@@ -77,7 +80,7 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
   };
 }
 
-function getElectrobunTargets(): Record<string, NxTargetDefaults> {
+function getElectrobunTargets(): NxTargetMap {
   return {
     "dev:hmr": {
       cache: false,
@@ -90,7 +93,7 @@ export function getNxProductionInputExclusions(config: ProjectConfig): string[] 
   return getStackGeneratedIgnorePatterns(config).map((pattern) => `!{workspaceRoot}/${pattern}`);
 }
 
-function getConvexTargets(): Record<string, NxTargetDefaults> {
+function getConvexTargets(): NxTargetMap {
   return {
     "dev:setup": {
       cache: false,
@@ -98,8 +101,8 @@ function getConvexTargets(): Record<string, NxTargetDefaults> {
   };
 }
 
-function getDatabaseTargets(dbSupport: DbScriptSupport): Record<string, NxTargetDefaults> {
-  const targets: Record<string, NxTargetDefaults> = {};
+function getDatabaseTargets(dbSupport: DbScriptSupport): NxTargetMap {
+  const targets: NxTargetMap = {};
 
   if (dbSupport.hasDbPush) {
     targets["db:push"] = { cache: false };
@@ -120,7 +123,7 @@ function getDatabaseTargets(dbSupport: DbScriptSupport): Record<string, NxTarget
   return targets;
 }
 
-function getDockerTargets(): Record<string, NxTargetDefaults> {
+function getDockerTargets(): NxTargetMap {
   return {
     "db:start": { cache: false },
     "db:stop": { cache: false },
@@ -129,19 +132,19 @@ function getDockerTargets(): Record<string, NxTargetDefaults> {
   };
 }
 
-function getSqliteLocalTarget(): Record<string, NxTargetDefaults> {
+function getSqliteLocalTarget(): NxTargetMap {
   return {
     "db:local": { cache: false, continuous: true },
   };
 }
 
-function getLocalD1Target(): Record<string, NxTargetDefaults> {
+function getLocalD1Target(): NxTargetMap {
   return {
     "db:migrate:local": { cache: false },
   };
 }
 
-function getDeployTargets(): Record<string, NxTargetDefaults> {
+function getDeployTargets(): NxTargetMap {
   return {
     deploy: { cache: false },
     destroy: { cache: false },

@@ -124,7 +124,7 @@ describe("Input schemas", () => {
   it("imports the MCP module without schema-construction crashes", async () => {
     const module = await import("../src/mcp");
 
-    expect(typeof module.createBtsMcpServer).toBe("function");
+    expect(module.createBtsMcpServer).toBeInstanceOf(Function);
   });
 
   it("exposes the Better T Stack config file JSON schema by name", () => {

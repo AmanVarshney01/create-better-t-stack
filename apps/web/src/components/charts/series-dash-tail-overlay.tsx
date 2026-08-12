@@ -2,13 +2,14 @@
 
 import { memo, useMemo } from "react";
 
+import type { ChartDatum } from "./chart-data";
 import { DashTailStroke } from "./dash-tail-stroke";
 import { resolveDashStartX, resolveDashTailBounds } from "./path-stroke-utils";
 
 interface SeriesDashTailOverlayProps {
   dashFromIndex?: number;
   dashArray: string;
-  data: Record<string, unknown>[];
+  data: ChartDatum[];
   pathD: string | null;
   pathLength: number;
   innerWidth: number;
@@ -16,7 +17,7 @@ interface SeriesDashTailOverlayProps {
   stroke: string;
   strokeWidth: number;
   xScale: (value: Date | number) => number | undefined;
-  xAccessor: (datum: Record<string, unknown>) => Date | number;
+  xAccessor: (datum: ChartDatum) => Date | number;
 }
 
 function SeriesDashTailOverlayImpl({

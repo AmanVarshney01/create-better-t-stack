@@ -1,8 +1,10 @@
+import type { ChartDatum } from "./chart-data";
+
 export function filterDataByXDomain(
-  data: Record<string, unknown>[],
+  data: ChartDatum[],
   xDomain: [Date, Date],
-  xAccessor: (d: Record<string, unknown>) => Date,
-): Record<string, unknown>[] {
+  xAccessor: (d: ChartDatum) => Date,
+): ChartDatum[] {
   const start = xDomain[0].getTime();
   const end = xDomain[1].getTime();
   const minTime = Math.min(start, end);
@@ -15,8 +17,8 @@ export function filterDataByXDomain(
 }
 
 export function resolveDataXExtent(
-  data: Record<string, unknown>[],
-  xAccessor: (d: Record<string, unknown>) => Date,
+  data: ChartDatum[],
+  xAccessor: (d: ChartDatum) => Date,
 ): [Date, Date] | null {
   if (data.length === 0) {
     return null;
@@ -44,8 +46,8 @@ export function resolveDataXExtent(
 
 /** Brush track extent — optionally extends past the last data row (e.g. projections). */
 export function resolveBrushTrackXExtent(
-  data: Record<string, unknown>[],
-  xAccessor: (d: Record<string, unknown>) => Date,
+  data: ChartDatum[],
+  xAccessor: (d: ChartDatum) => Date,
   xExtentMax?: Date,
 ): [Date, Date] | null {
   const extent = resolveDataXExtent(data, xAccessor);

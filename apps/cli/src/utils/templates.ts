@@ -1,6 +1,6 @@
 import type { CreateInput, Template } from "../types";
 
-export const TEMPLATE_PRESETS: Record<Template, CreateInput | null> = {
+export const TEMPLATE_PRESETS = {
   mern: {
     database: "mongodb",
     orm: "mongoose",
@@ -62,7 +62,7 @@ export const TEMPLATE_PRESETS: Record<Template, CreateInput | null> = {
     serverDeploy: "none",
   },
   none: null,
-};
+} satisfies Record<Template, CreateInput | null>;
 
 export function getTemplateConfig(template: Template) {
   if (template === "none" || !template) {
@@ -78,13 +78,13 @@ export function getTemplateConfig(template: Template) {
 }
 
 export function getTemplateDescription(template: Template) {
-  const descriptions: Record<Template, string> = {
+  const descriptions = {
     mern: "MongoDB + Express + React + Node.js - Classic MERN stack",
     pern: "PostgreSQL + Express + React + Node.js - Popular PERN stack",
     t3: "T3 Stack - Next.js + tRPC + Prisma + PostgreSQL + Better Auth",
     uniwind: "Expo + Uniwind native app with no backend services",
     none: "No template - Full customization",
-  };
+  } satisfies Record<Template, string>;
 
   return descriptions[template] || "";
 }

@@ -91,10 +91,10 @@ async function main(): Promise<void> {
     return;
   }
 
-  const selected = (await multiselect({
+  const selected = await multiselect({
     message: "Select PR tags to clean up:",
     options: tagOptions,
-  })) as unknown as string[] | symbol;
+  });
 
   if (isCancel(selected) || !Array.isArray(selected) || selected.length === 0) {
     console.log("\nNo selections made. Aborting.");

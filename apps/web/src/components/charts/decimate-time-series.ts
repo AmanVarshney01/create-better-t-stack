@@ -1,4 +1,6 @@
-export function decimateTimeSeries<T extends Record<string, unknown>>(
+import { parseChartNumber, type ChartDatum } from "./chart-data";
+
+export function decimateTimeSeries<T extends ChartDatum>(
   data: T[],
   maxPoints: number,
   valueKeys: string[] = [],
@@ -11,8 +13,9 @@ export function decimateTimeSeries<T extends Record<string, unknown>>(
   const getY = (point: T, index: number): number => {
     if (valueKeys.length === 0) {
       for (const val of Object.values(point)) {
-        if (typeof val === "number") {
-          return val;
+        const numericValue = parseChartNumber(val);
+        if (numericValue !== null) {
+          return numericValue;
         }
       }
       return index;
@@ -21,9 +24,9 @@ export function decimateTimeSeries<T extends Record<string, unknown>>(
     let sum = 0;
     let count = 0;
     for (const key of valueKeys) {
-      const val = point[key];
-      if (typeof val === "number") {
-        sum += val;
+      const value = parseChartNumber(point[key]);
+      if (value !== null) {
+        sum += value;
         count++;
       }
     }
@@ -85,10 +88,7 @@ export function maxRenderPointsForWidth(innerWidth: number): number {
 }
 
 /** Bucket OHLC rows into fewer candles while preserving high/low extremes. */
-export function decimateOhlcData<T extends Record<string, unknown>>(
-  data: T[],
-  maxPoints: number,
-): T[] {
+export function decimateOhlcData<T extends ChartDatum>(data: T[], maxPoints: number): T[] {
   const len = data.length;
   if (maxPoints >= len || maxPoints < 2) {
     return data;
@@ -111,12 +111,12 @@ export function decimateOhlcData<T extends Record<string, unknown>>(
     let high = Number.NEGATIVE_INFINITY;
     let low = Number.POSITIVE_INFINITY;
     for (const row of bucket) {
-      const rowHigh = row.high;
-      const rowLow = row.low;
-      if (typeof rowHigh === "number" && rowHigh > high) {
+      const rowHigh = parseChartNumber(row.high);
+      const rowLow = parseChartNumber(row.low);
+      if (rowHigh !== null && rowHigh > high) {
         high = rowHigh;
       }
-      if (typeof rowLow === "number" && rowLow < low) {
+      if (rowLow !== null && rowLow < low) {
         low = rowLow;
       }
     }

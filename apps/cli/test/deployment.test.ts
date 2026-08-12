@@ -376,7 +376,10 @@ describe("Deployment Configurations", () => {
             framework?: string;
             entrypoint?: string;
             buildCommand?: string;
-            routes?: Array<Record<string, unknown>>;
+            routes?: Array<{
+              src?: string;
+              transforms?: Array<{ type?: string; op?: string; args?: string }>;
+            }>;
           }
         >;
         rewrites?: Array<{
@@ -779,7 +782,10 @@ describe("Deployment Configurations", () => {
       const files = collectFiles(result.value.root, result.value.root.path);
       const web = (
         JSON.parse(files.get("vercel.json") ?? "{}") as {
-          services?: Record<string, Record<string, unknown>>;
+          services?: Record<
+            string,
+            { framework?: string; outputDirectory?: string; rewrites?: Array<{ source: string }> }
+          >;
         }
       ).services?.web;
 

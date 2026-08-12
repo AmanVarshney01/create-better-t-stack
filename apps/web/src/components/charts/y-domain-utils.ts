@@ -6,6 +6,8 @@ import { groupLinesByYAxisId, normalizeYAxisId } from "./y-axis-scales";
 
 export type YDomain = [number, number];
 
+export interface YDomainMap extends Record<string, YDomain> {}
+
 /** Apply visx `nice()` to raw domain endpoints for stable grid ticks. */
 export function niceYDomain(domain: YDomain): YDomain {
   const scale = scaleLinear({ domain, range: [0, 1], nice: true });
@@ -70,9 +72,9 @@ export function computeYDomainsByAxis({
 }: {
   lines: LineConfig[];
   resolveDomain: (dataKeys: string[]) => YDomain;
-}): Record<string, YDomain> {
+}): YDomainMap {
   const groups = groupLinesByYAxisId(lines);
-  const domains: Record<string, YDomain> = {};
+  const domains: YDomainMap = {};
 
   for (const [axisId, axisLines] of groups) {
     const dataKeys = axisLines.map((line) => line.dataKey);
@@ -87,10 +89,8 @@ export function computeYDomainsByAxis({
 }
 
 /** Merge domain maps, normalizing axis ids to strings. */
-export function mergeYDomainRecords(
-  ...records: Record<string, YDomain>[]
-): Record<string, YDomain> {
-  const merged: Record<string, YDomain> = {};
+export function mergeYDomainRecords(...records: YDomainMap[]): YDomainMap {
+  const merged: YDomainMap = {};
   for (const record of records) {
     for (const [axisId, domain] of Object.entries(record)) {
       merged[normalizeYAxisId(axisId)] = domain;

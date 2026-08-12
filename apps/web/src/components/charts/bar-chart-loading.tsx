@@ -2,8 +2,9 @@
 
 import { BarChart } from "./bar-chart";
 import type { Margin } from "./chart-context";
+import type { ChartDatum } from "./chart-data";
 
-const EMPTY_DATA: Record<string, unknown>[] = [];
+const EMPTY_DATA: ChartDatum[] = [];
 
 export interface BarChartLoadingProps {
   /** Chart margins. */

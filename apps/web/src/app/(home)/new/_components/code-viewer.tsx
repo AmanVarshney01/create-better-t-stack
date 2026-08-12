@@ -20,9 +20,13 @@ interface CodeViewerProps {
   extension: string;
 }
 
+function hasOwnKey<T extends object>(object: T, key: PropertyKey): key is keyof T {
+  return Object.hasOwn(object, key);
+}
+
 // Map file extensions to Shiki language IDs
-function getLanguage(extension: string): BundledLanguage {
-  const languageMap: Record<string, BundledLanguage> = {
+function getLanguage(extension: string): BundledLanguage | null {
+  const languageMap = {
     ts: "typescript",
     tsx: "tsx",
     js: "javascript",
@@ -49,8 +53,9 @@ function getLanguage(extension: string): BundledLanguage {
     dockerfile: "dockerfile",
     env: "shellscript",
     hbs: "handlebars",
-  };
-  return languageMap[extension.toLowerCase()] || "text";
+  } satisfies Record<string, BundledLanguage>;
+  const normalizedExtension = extension.toLowerCase();
+  return hasOwnKey(languageMap, normalizedExtension) ? languageMap[normalizedExtension] : null;
 }
 
 export const CodeViewer = memo(function CodeViewer({
@@ -59,17 +64,18 @@ export const CodeViewer = memo(function CodeViewer({
   extension,
 }: CodeViewerProps) {
   const language = useMemo(() => getLanguage(extension), [extension]);
+  const languageId = language ?? "text";
   const filename = useMemo(() => filePath.split("/").pop() || filePath, [filePath]);
 
   const codeData = useMemo(
     () => [
       {
-        language,
+        language: languageId,
         filename,
         code: content,
       },
     ],
-    [language, filename, content],
+    [languageId, filename, content],
   );
 
   return (
@@ -77,7 +83,7 @@ export const CodeViewer = memo(function CodeViewer({
       <CodeBlock
         key={filePath}
         data={codeData}
-        defaultValue={language}
+        defaultValue={languageId}
         className="flex h-full flex-col rounded-[4px] bg-fd-background"
       >
         <CodeBlockHeader>
@@ -94,7 +100,8 @@ export const CodeViewer = memo(function CodeViewer({
           {(item) => (
             <CodeBlockItem key={item.language} value={item.language}>
               <CodeBlockContent
-                language={item.language as BundledLanguage}
+                language={language ?? undefined}
+                syntaxHighlighting={language !== null}
                 themes={{
                   light: "catppuccin-latte",
                   dark: "catppuccin-mocha",

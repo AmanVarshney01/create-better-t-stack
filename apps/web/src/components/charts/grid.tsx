@@ -144,9 +144,9 @@ export function Grid({
     yScale,
   });
   const columnTickValuesResolved =
-    vertical && columnScale && typeof columnScale === "function" && hideVerticalEdgeLines
+    vertical && hideVerticalEdgeLines
       ? (() => {
-          const ticks = columnScale.ticks?.(numTicksColumns) ?? [];
+          const ticks = columnScale.ticks(numTicksColumns);
           const filtered = hideEdgeTicks<number | Date>(ticks, true);
           return filtered.length > 0 ? filtered : undefined;
         })()
@@ -277,7 +277,7 @@ export function Grid({
           })}
         </g>
       ) : null}
-      {vertical && columnScale && typeof columnScale === "function" && (
+      {vertical && columnScale && (
         <g mask={fadeVertical ? `url(#${vMaskId})` : undefined}>
           <GridColumns
             height={innerHeight}

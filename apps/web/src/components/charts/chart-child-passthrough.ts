@@ -7,13 +7,16 @@ import {
   type ReactNode,
 } from "react";
 
+import { getChartChildComponentName } from "./chart-defs";
+
 /** Marker on wrapper components whose single child should inherit clip classification. */
 export const CHART_CLIP_PASSTHROUGH = "__chartClipPassthrough" as const;
 
-export function isChartClipPassthrough(type: unknown): boolean {
+export function isChartClipPassthrough(type: ReactElement["type"]): boolean {
   return (
-    typeof type === "function" &&
-    (type as { [CHART_CLIP_PASSTHROUGH]?: boolean })[CHART_CLIP_PASSTHROUGH] === true
+    type instanceof Function &&
+    Object.hasOwn(type, CHART_CLIP_PASSTHROUGH) &&
+    Reflect.get(type, CHART_CLIP_PASSTHROUGH) === true
   );
 }
 
@@ -65,19 +68,15 @@ const UNDERLAY_COMPONENT_NAMES = new Set(["ReferenceArea"]);
 
 /** Markers render after the interaction overlay so they stay clickable. */
 export function isPostOverlayComponent(child: ReactElement): boolean {
-  const childType = child.type as {
-    displayName?: string;
-    name?: string;
-    __isChartMarkers?: boolean;
-    __isPostOverlay?: boolean;
-  };
-
-  if (childType.__isChartMarkers || childType.__isPostOverlay) {
+  if (
+    child.type instanceof Function &&
+    (Reflect.get(child.type, "__isChartMarkers") === true ||
+      Reflect.get(child.type, "__isPostOverlay") === true)
+  ) {
     return true;
   }
 
-  const componentName =
-    typeof child.type === "function" ? childType.displayName || childType.name || "" : "";
+  const componentName = getChartChildComponentName(child);
 
   return (
     componentName === "ChartMarkers" ||
@@ -88,18 +87,12 @@ export function isPostOverlayComponent(child: ReactElement): boolean {
 
 /** Renders above grid/axes but below series; excluded from grow-clip reveal. */
 export function isUnderlayComponent(child: ReactElement): boolean {
-  const childType = child.type as { displayName?: string; name?: string };
-  const componentName =
-    typeof child.type === "function" ? childType.displayName || childType.name || "" : "";
-  return UNDERLAY_COMPONENT_NAMES.has(componentName);
+  return UNDERLAY_COMPONENT_NAMES.has(getChartChildComponentName(child));
 }
 
 /** Grid and axes stay visible during series clip reveal (e.g. loading → ready). */
 export function isClipExcludedComponent(child: ReactElement): boolean {
-  const childType = child.type as { displayName?: string; name?: string };
-  const componentName =
-    typeof child.type === "function" ? childType.displayName || childType.name || "" : "";
-  return CLIP_EXCLUDED_COMPONENT_NAMES.has(componentName);
+  return CLIP_EXCLUDED_COMPONENT_NAMES.has(getChartChildComponentName(child));
 }
 
 /** SVG layer lists from chart shells need stable keys when rendered as arrays. */

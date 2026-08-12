@@ -1,5 +1,6 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
+import type { JsonValue } from "../core/json-types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency } from "../utils/add-deps";
 
@@ -9,7 +10,7 @@ type PackageJson = {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   "lint-staged"?: Record<string, string | string[]>;
-  [key: string]: unknown;
+  [key: string]: JsonValue | undefined;
 };
 
 export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {

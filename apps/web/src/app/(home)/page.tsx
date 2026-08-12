@@ -24,35 +24,44 @@ export default async function HomePage() {
 
   // Keyed by pane id, not array position: PANES lives in another file and
   // reordering one list must not silently pair a title with the wrong body.
-  const content: Record<string, { body: ReactNode; count?: number; footer?: ReactNode }> = {
-    "pane-init": { body: <InitPane /> },
-    "pane-sponsors": {
-      body: <SponsorsPane sponsorsData={sponsorsData} />,
-      footer: <SponsorsPaneFooter />,
-    },
-    "pane-videos": { body: <VideosPane videos={videos} />, count: videos.length },
-    "pane-tweets": {
-      body: <TweetsPane tweets={tweets} />,
-      count: tweets.length,
-      footer: <ColophonFooter />,
-    },
-  };
+  const content = new Map<string, { body: ReactNode; count?: number; footer?: ReactNode }>([
+    ["pane-init", { body: <InitPane /> }],
+    [
+      "pane-sponsors",
+      {
+        body: <SponsorsPane sponsorsData={sponsorsData} />,
+        footer: <SponsorsPaneFooter />,
+      },
+    ],
+    ["pane-videos", { body: <VideosPane videos={videos} />, count: videos.length }],
+    [
+      "pane-tweets",
+      {
+        body: <TweetsPane tweets={tweets} />,
+        count: tweets.length,
+        footer: <ColophonFooter />,
+      },
+    ],
+  ]);
 
   return (
     <Rail>
-      {PANES.map((pane, index) => (
-        <Pane
-          key={pane.id}
-          id={pane.id}
-          index={index}
-          title={pane.title}
-          width={pane.width}
-          count={content[pane.id]?.count}
-          footer={content[pane.id]?.footer}
-        >
-          {content[pane.id]?.body}
-        </Pane>
-      ))}
+      {PANES.map((pane, index) => {
+        const paneContent = content.get(pane.id);
+        return (
+          <Pane
+            key={pane.id}
+            id={pane.id}
+            index={index}
+            title={pane.title}
+            width={pane.width}
+            count={paneContent?.count}
+            footer={paneContent?.footer}
+          >
+            {paneContent?.body}
+          </Pane>
+        );
+      })}
     </Rail>
   );
 }

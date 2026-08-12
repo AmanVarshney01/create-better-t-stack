@@ -11,6 +11,8 @@ import { useCallback, useId, useMemo, useRef, useState } from "react";
 
 import { AreaGradientDefs } from "./area-gradient-defs";
 import { chartCssVars, useChartStable, useYScale } from "./chart-context";
+import { parseChartNumber } from "./chart-data";
+import type { ChartDatum } from "./chart-data";
 import type { ChartPhase, LoadingStyle } from "./chart-phase";
 import { type FadeEdges, resolveFadeSides } from "./fade-edges";
 import {
@@ -202,9 +204,9 @@ export function Area({
   const resolvedStroke = stroke || (isPatternFill ? chartCssVars.linePrimary : fill);
 
   const getY = useCallback(
-    (d: Record<string, unknown>) => {
-      const value = d[dataKey];
-      return typeof value === "number" ? (yScale(value) ?? 0) : 0;
+    (d: ChartDatum) => {
+      const value = parseChartNumber(d[dataKey]);
+      return value === null ? 0 : (yScale(value) ?? 0);
     },
     [dataKey, yScale],
   );

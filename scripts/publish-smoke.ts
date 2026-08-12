@@ -16,6 +16,15 @@ import { join, resolve } from "node:path";
 
 import { $ } from "bun";
 
+interface PackageFixture {
+  name: string;
+  private: boolean;
+  version: string;
+  dependencies: Record<string, string>;
+  pnpm?: { overrides: Record<string, string> };
+  overrides?: Record<string, string>;
+}
+
 const ROOT = resolve(import.meta.dir, "..");
 
 type Publishable = {
@@ -83,11 +92,11 @@ async function installAndRun(
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
 
-  const overrides: Record<string, string> = {
+  const overrides = {
     "@better-t-stack/types": `file:${tarballs["@better-t-stack/types"]}`,
     "@better-t-stack/template-generator": `file:${tarballs["@better-t-stack/template-generator"]}`,
-  };
-  const fixture: Record<string, unknown> = {
+  } satisfies Record<string, string>;
+  const fixture: PackageFixture = {
     name: `smoke-${pm}`,
     private: true,
     version: "0.0.0",

@@ -154,24 +154,24 @@ const DEFAULT_HOOKS: UltraciteHook[] = [];
 
 function getFrameworksFromFrontend(frontend: string[]): string[] {
   // Tags mirror ultracite's own package.json detection (react-router -> remix rules)
-  const frameworkMap: Record<string, string[]> = {
-    "tanstack-router": ["react", "tanstack"],
-    "react-router": ["react", "remix"],
-    "tanstack-start": ["react", "tanstack"],
-    next: ["react", "next"],
-    nuxt: ["vue"],
-    "native-bare": ["react"],
-    "native-uniwind": ["react"],
-    "native-unistyles": ["react"],
-    svelte: ["svelte"],
-    solid: ["solid"],
-    astro: ["astro"],
-  };
+  const frameworkMap = new Map<string, string[]>([
+    ["tanstack-router", ["react", "tanstack"]],
+    ["react-router", ["react", "remix"]],
+    ["tanstack-start", ["react", "tanstack"]],
+    ["next", ["react", "next"]],
+    ["nuxt", ["vue"]],
+    ["native-bare", ["react"]],
+    ["native-uniwind", ["react"]],
+    ["native-unistyles", ["react"]],
+    ["svelte", ["svelte"]],
+    ["solid", ["solid"]],
+    ["astro", ["astro"]],
+  ]);
 
   const frameworks = new Set<string>();
 
   for (const f of frontend) {
-    for (const framework of frameworkMap[f] ?? []) {
+    for (const framework of frameworkMap.get(f) ?? []) {
       frameworks.add(framework);
     }
   }

@@ -1,5 +1,6 @@
 import { Children, isValidElement, type ReactElement, type ReactNode } from "react";
 
+import { getChartChildComponentName } from "./chart-defs";
 import { normalizeYAxisId } from "./y-axis-scales";
 
 export interface ReferenceAreaConfig {
@@ -17,8 +18,7 @@ interface ReferenceAreaConfigProps {
 }
 
 function getChildComponentName(child: ReactElement) {
-  const childType = child.type as { displayName?: string; name?: string };
-  return typeof child.type === "function" ? childType.displayName || childType.name || "" : "";
+  return getChartChildComponentName(child);
 }
 
 function isReferenceAreaElement(child: ReactElement): boolean {

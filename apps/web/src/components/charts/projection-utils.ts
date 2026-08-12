@@ -1,3 +1,5 @@
+import { parseChartDate, parseChartNumber, type ChartDatum } from "./chart-data";
+
 export type ProjectionMode = "auto" | "target" | "manual";
 export type ProjectionAutoMethod = "linearRegression" | "lastSegment";
 /** How the projection segment is drawn between anchor and horizon. */
@@ -11,7 +13,7 @@ export interface ProjectionPoint {
 }
 
 export interface BuildProjectionPathOptions {
-  sourceData: Record<string, unknown>[];
+  sourceData: ChartDatum[];
   seriesKey: string;
   xDataKey?: string;
   mode: ProjectionMode;
@@ -28,31 +30,15 @@ export interface BuildProjectionPathOptions {
   points?: ProjectionPoint[];
 }
 
-function readDate(row: Record<string, unknown>, xDataKey: string): Date | null {
-  const raw = row[xDataKey];
-  if (raw instanceof Date && !Number.isNaN(raw.getTime())) {
-    return raw;
-  }
-  if (typeof raw === "number" && Number.isFinite(raw)) {
-    const date = new Date(raw);
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-  if (typeof raw === "string") {
-    const date = new Date(raw);
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-  return null;
+function readDate(row: ChartDatum, xDataKey: string): Date | null {
+  return parseChartDate(row[xDataKey]);
 }
 
-function readValue(row: Record<string, unknown>, seriesKey: string): number | null {
-  const raw = row[seriesKey];
-  return typeof raw === "number" && Number.isFinite(raw) ? raw : null;
+function readValue(row: ChartDatum, seriesKey: string): number | null {
+  return parseChartNumber(row[seriesKey]);
 }
 
-function resolveStartIndex(
-  sourceData: Record<string, unknown>[],
-  startIndex: number | undefined,
-): number {
+function resolveStartIndex(sourceData: ChartDatum[], startIndex: number | undefined): number {
   if (startIndex == null || !Number.isFinite(startIndex)) {
     return Math.max(0, sourceData.length - 1);
   }
@@ -60,7 +46,7 @@ function resolveStartIndex(
 }
 
 function intervalFromAdjacentRows(
-  sourceData: Record<string, unknown>[],
+  sourceData: ChartDatum[],
   xDataKey: string,
   startIndex: number,
 ): number | null {
@@ -78,10 +64,7 @@ function intervalFromAdjacentRows(
   return delta > 0 ? delta : null;
 }
 
-function intervalFromSeriesSpan(
-  sourceData: Record<string, unknown>[],
-  xDataKey: string,
-): number | null {
+function intervalFromSeriesSpan(sourceData: ChartDatum[], xDataKey: string): number | null {
   if (sourceData.length < 2) {
     return null;
   }
@@ -96,11 +79,7 @@ function intervalFromSeriesSpan(
   return span > 0 ? span / (sourceData.length - 1) : null;
 }
 
-function resolveIntervalMs(
-  sourceData: Record<string, unknown>[],
-  xDataKey: string,
-  startIndex: number,
-): number {
+function resolveIntervalMs(sourceData: ChartDatum[], xDataKey: string, startIndex: number): number {
   return (
     intervalFromAdjacentRows(sourceData, xDataKey, startIndex) ??
     intervalFromSeriesSpan(sourceData, xDataKey) ??
@@ -184,7 +163,7 @@ function buildAutoFutureValues(options: {
 
 /** Slope (value change per ms) at the projection anchor from the last data segment. */
 export function computeProjectionAnchorTangentSlope(
-  sourceData: Record<string, unknown>[],
+  sourceData: ChartDatum[],
   seriesKey: string,
   xDataKey = "date",
   startIndexProp?: number,

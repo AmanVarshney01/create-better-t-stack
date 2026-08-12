@@ -270,29 +270,29 @@ async function fetchSponsorsData({
   }
 }
 
-function normalizeSponsorFetchError(error: unknown): CLIError {
-  if (error instanceof Error && error.name === "AbortError") {
+function normalizeSponsorFetchError(cause: unknown): CLIError {
+  if (cause instanceof Error && cause.name === "AbortError") {
     return new CLIError({
       message: "Failed to fetch sponsors: request timed out",
-      cause: error,
+      cause: cause,
     });
   }
 
-  if (CLIError.is(error)) {
-    return error;
+  if (CLIError.is(cause)) {
+    return cause;
   }
 
-  if (error instanceof Error) {
+  if (cause instanceof Error) {
     return new CLIError({
-      message: error.message.startsWith("Failed to fetch sponsors:")
-        ? error.message
-        : `Failed to fetch sponsors: ${error.message}`,
-      cause: error,
+      message: cause.message.startsWith("Failed to fetch sponsors:")
+        ? cause.message
+        : `Failed to fetch sponsors: ${cause.message}`,
+      cause: cause,
     });
   }
 
   return new CLIError({
-    message: `Failed to fetch sponsors: ${String(error)}`,
-    cause: error,
+    message: `Failed to fetch sponsors: ${String(cause)}`,
+    cause: cause,
   });
 }

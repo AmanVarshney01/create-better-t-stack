@@ -7,6 +7,7 @@ import { memo, useId, useMemo } from "react";
 
 import { barDepthAndRise, barDepthMaxDepth } from "./bar-depth-geometry";
 import { chartCssVars, useChart, useChartStable, useYScale } from "./chart-context";
+import { parseChartNumber, type ChartDatum } from "./chart-data";
 import { useChartLegendHover } from "./chart-legend-hover";
 import { transitionWithDelay } from "./motion-utils";
 
@@ -25,9 +26,9 @@ export type BarAnimationType = "grow" | "fade";
 function barDepthPerspectiveRise(
   barScale: ScaleBand<string>,
   bandWidth: number,
-  barXAccessor: (d: Record<string, unknown>) => string,
+  barXAccessor: (d: ChartDatum) => string,
   innerWidth: number,
-  datum: Record<string, unknown>,
+  datum: ChartDatum,
   topY: number,
   baselineY: number,
 ): number {
@@ -35,7 +36,7 @@ function barDepthPerspectiveRise(
   if (centerX <= 0) {
     return 0;
   }
-  const step = (barScale as unknown as { step?: () => number }).step?.() ?? bandWidth;
+  const step = barScale.step();
   const maxDepth = barDepthMaxDepth(step, bandWidth);
   const bandX = barScale(barXAccessor(datum)) ?? 0;
   const cx = bandX + bandWidth / 2;
@@ -81,7 +82,7 @@ export interface BarProps {
 interface BarInnerProps extends BarProps {
   barScale: ScaleBand<string>;
   bandWidth: number;
-  barXAccessor: (d: Record<string, unknown>) => string;
+  barXAccessor: (d: ChartDatum) => string;
 }
 
 interface AnimatedBarProps {
@@ -244,8 +245,9 @@ const BarInner = memo(function BarInner({
     if (perspective) {
       return 0;
     }
-    if (typeof lineCap === "number") {
-      return lineCap;
+    const numericLineCap = parseChartNumber(lineCap);
+    if (numericLineCap !== null) {
+      return numericLineCap;
     }
     if (lineCap === "round" && barWidth) {
       return Math.min(barWidth / 2, 8);
@@ -256,8 +258,8 @@ const BarInner = memo(function BarInner({
   return (
     <g className={`bar-series-${uniqueId}`}>
       {data.map((d, i) => {
-        const value = d[dataKey];
-        if (typeof value !== "number") {
+        const value = parseChartNumber(d[dataKey]);
+        if (value === null) {
           return null;
         }
 

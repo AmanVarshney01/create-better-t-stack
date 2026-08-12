@@ -108,7 +108,7 @@ function LoadingSweepMask({
 
   const handleUpdate = useCallback(
     (latest: { x?: number }) => {
-      const xValue = typeof latest.x === "number" ? latest.x : SWEEP_START_X;
+      const xValue = latest.x ?? SWEEP_START_X;
       // Re-roll once the band has cleared the visible area (crossed past 1),
       // so the silhouette never changes shape under the user's eye.
       if (xValue >= 1 && lastXRef.current < 1) {

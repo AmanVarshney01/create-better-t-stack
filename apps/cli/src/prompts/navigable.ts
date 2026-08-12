@@ -101,7 +101,7 @@ function resolvedPrompt(message: string, value: string, state: "submit" | "cance
   return `${symbol(state)}  ${promptMessage} ${pc.dim("›")} ${value}`;
 }
 
-function canceledPrompt(prompt: object, message: string, value: string): string {
+function canceledPrompt<T extends object>(prompt: T, message: string, value: string): string {
   if (promptsNavigatingBack.has(prompt)) {
     return `${pc.cyan(S_STEP_BACK)}  ${pc.dim(message)}`;
   }
@@ -427,7 +427,7 @@ export async function navigableGroupMultiselect<T>(
     options: (GroupMultiSelectOption<T> & { group: string | boolean })[] = [],
   ) => {
     const label = option.label ?? String(option.value);
-    const isItem = typeof option.group === "string";
+    const isItem = option.group !== true && option.group !== false;
     const next = isItem && (options[options.indexOf(option) + 1] ?? { group: true });
     const isLast = isItem && next && next.group === true;
     const prefix = isItem ? `${isLast ? S_BAR_END : S_BAR} ` : "";
@@ -484,7 +484,8 @@ export async function navigableGroupMultiselect<T>(
           (option.group === true && this.isGroupSelected(`${option.value}`));
         const groupActive =
           !active &&
-          typeof option.group === "string" &&
+          option.group !== true &&
+          option.group !== false &&
           this.options[this.cursor]?.value === option.group;
         if (groupActive) {
           return opt(option, selected ? "group-active-selected" : "group-active", this.options);
