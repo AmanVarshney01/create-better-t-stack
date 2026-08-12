@@ -32,7 +32,7 @@ function commonRuntimeEntries(plan: AlchemyDeploymentPlan): string[] {
   if (auth === "better-auth") {
     entries.push(
       'BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),',
-      'BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),',
+      "BETTER_AUTH_URL: Cloudflare.Worker.URL,",
     );
   }
   if (hasExample(plan, "ai")) {

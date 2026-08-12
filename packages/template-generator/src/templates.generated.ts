@@ -30765,8 +30765,7 @@ export function ThemeProvider({
     "@types/react-dom": "^19.2.3",
     "react-router-devtools": "^6.2.3",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.1.5",
-    "vite-tsconfig-paths": "^6.1.1"
+    "vite": "^8.1.5"
   }
 }
 `],
@@ -31253,13 +31252,14 @@ import { fileURLToPath } from "node:url";
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     tailwindcss(),
     reactRouter(),
-    tsconfigPaths(),
   ],
 {{#if (and (or (eq webDeploy "vercel") (eq webDeploy "prisma")) (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
   ssr: {

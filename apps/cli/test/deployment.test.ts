@@ -941,6 +941,8 @@ describe("Deployment Configurations", () => {
       expect(infraFile).toContain('export const server = Cloudflare.Worker("server"');
       expect(infraFile).toContain("export type ServerEnv = Cloudflare.InferEnv<typeof server>");
       expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
+      expect(infraFile).toContain("BETTER_AUTH_URL: Cloudflare.Worker.URL");
+      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
         alchemy: "2.0.0-beta.72",
@@ -954,6 +956,104 @@ describe("Deployment Configurations", () => {
       expect(serverBuildConfig).toContain('import { unwasm } from "unwasm/plugin"');
       expect(serverBuildConfig).toContain("plugins: [unwasm({ esmImport: true })]");
       expect(serverPackage.devDependencies?.unwasm).toBe("^0.6.0");
+    });
+
+    it("should bind self-hosted Cloudflare auth to the deployed Worker URL", async () => {
+      const result = await createVirtual({
+        projectName: "svelte-cloudflare-auth-url",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "orpc",
+        frontend: ["svelte"],
+        addons: ["none"],
+        examples: ["todo"],
+        dbSetup: "d1",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) throw result.error;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const infraFile = files.get("packages/infra/alchemy.run.ts") ?? "";
+      const authFile = files.get("packages/auth/src/index.ts") ?? "";
+
+      expect(infraFile).toContain("BETTER_AUTH_URL: Cloudflare.Worker.URL");
+      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
+      expect(authFile).toContain("baseURL: env.BETTER_AUTH_URL");
+    });
+
+    it("should preserve deployment arguments through npm and Turborepo", async () => {
+      const [npmResult, turboResult] = await Promise.all([
+        createVirtual({
+          projectName: "npm-deploy-args",
+          webDeploy: "cloudflare",
+          serverDeploy: "none",
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["nuxt"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "npm",
+        }),
+        createVirtual({
+          projectName: "turbo-deploy-args",
+          webDeploy: "cloudflare",
+          serverDeploy: "none",
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["astro"],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "pnpm",
+        }),
+      ]);
+
+      if (npmResult.isErr()) throw npmResult.error;
+      if (turboResult.isErr()) throw turboResult.error;
+
+      const npmFiles = collectFiles(npmResult.value.root, npmResult.value.root.path);
+      const turboFiles = collectFiles(turboResult.value.root, turboResult.value.root.path);
+      const npmPackage = JSON.parse(npmFiles.get("package.json") ?? "{}") as {
+        scripts?: Record<string, string>;
+      };
+      const turboPackage = JSON.parse(turboFiles.get("package.json") ?? "{}") as {
+        scripts?: Record<string, string>;
+      };
+
+      expect(npmPackage.scripts?.deploy).toBe(
+        "npm run deploy --workspace @npm-deploy-args/infra --",
+      );
+      expect(npmPackage.scripts?.destroy).toBe(
+        "npm run destroy --workspace @npm-deploy-args/infra --",
+      );
+      expect(turboPackage.scripts?.deploy).toBe("turbo run deploy -F @turbo-deploy-args/infra --");
+      expect(turboPackage.scripts?.destroy).toBe(
+        "turbo run destroy -F @turbo-deploy-args/infra --",
+      );
     });
 
     it("should generate current Cloudflare integrations for every framework family", async () => {
@@ -1114,11 +1214,18 @@ describe("Deployment Configurations", () => {
         reactRouterResult.value.root.path,
       );
       const entryServer = reactRouterFiles.get("apps/web/src/entry.server.tsx") ?? "";
+      const reactRouterViteConfig = reactRouterFiles.get("apps/web/vite.config.ts") ?? "";
+      const reactRouterPackage = JSON.parse(
+        reactRouterFiles.get("apps/web/package.json") ?? "{}",
+      ) as { devDependencies?: Record<string, string> };
       expect(entryServer).toContain("EntryContext, RouterContextProvider");
       expect(entryServer).toContain("export const streamTimeout = 5_000");
       expect(entryServer).toContain('request.method.toUpperCase() === "HEAD"');
       expect(entryServer).toContain("return new Response(null");
       expect(entryServer).toContain("AbortSignal.timeout(streamTimeout + 1000)");
+      expect(reactRouterViteConfig).toContain("tsconfigPaths: true");
+      expect(reactRouterViteConfig).not.toContain("vite-tsconfig-paths");
+      expect(reactRouterPackage.devDependencies?.["vite-tsconfig-paths"]).toBeUndefined();
 
       const nextFiles = collectFiles(nextResult.value.root, nextResult.value.root.path);
       const infraFile = nextFiles.get("packages/infra/alchemy.run.ts") ?? "";

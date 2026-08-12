@@ -368,7 +368,7 @@ describe("Addon Configurations", () => {
           "utf8",
         );
 
-        expect(rootPackageJson.scripts["dev:desktop"]).toBe("turbo run dev:hmr -F desktop");
+        expect(rootPackageJson.scripts["dev:desktop"]).toBe("turbo run dev:hmr -F desktop --");
         expect(nextConfig).not.toContain('output: "export"');
       });
     });
