@@ -268,8 +268,9 @@ Implementation work should proceed in this order:
 2. What published upstream behavior and cross-workspace/root-input evidence is sufficient to classify Alchemy's default memo scope as workspace-aware and remove A5?
 3. Can Alchemy express OpenNext's self service binding without a resource dependency cycle, or must ISR remain partially unsupported?
 4. Does a freshly authenticated profile make both `alchemy logs` and `alchemy tail` work with the required scopes?
-   Resolved on 2026-07-26: beta.64 `Website.Vite` reliably served both TanStack Router and Solid root
-   and direct deep-link requests, so the A3 `StaticSite` fallback was removed.
+
+Resolved on 2026-07-26: beta.64 `Website.Vite` reliably served both TanStack Router and Solid root
+and direct deep-link requests, so the A3 `StaticSite` fallback was removed.
 
 Resolved on 2026-08-01: beta.67 native `StaticSite` Inputs preserved generated Config values and
 the combined server Output dependency, so the A1 wrapper and A2 caller-side resolution were removed.

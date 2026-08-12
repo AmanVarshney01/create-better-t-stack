@@ -27,6 +27,7 @@
 - [ ] 3.6 Add A5 tests that edit an imported sibling workspace without changing the lockfile and prove a normal generated build cannot reuse stale output.
 - [ ] 3.7 Add A6 package-manager tests proving the exact pin resolves identically under npm, pnpm, and Bun; retain exact pinning permanently rather than attempting to qualify an open-ended range.
 - [ ] 3.8 Add a one-to-one test mapping from A1–A6 to the generated line(s), reproduction, and retention/removal rule so no safeguard becomes orphaned.
+- [ ] 3.9 Add a deterministic secret sentinel and assert its cleartext is absent from plans, subprocess and cleanup diagnostics, generated documentation, and test failure output.
 
 ## 4. Framework, Binding, and Development Verification
 

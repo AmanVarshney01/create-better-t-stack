@@ -76,6 +76,7 @@ When ready to implement, run /opsx:apply
      - `resolvedOutputPath`: Resolved path or pattern to write the artifact
      - `dependencies`: Completed artifacts to read for context
    - Read any completed dependency files for context
+   - Before writing any concrete target, normalize `changeRoot` and the target, then verify the relative path from `changeRoot` to the target is neither absolute nor starts with `..`; reject absolute or traversal paths that escape `changeRoot`. Apply this check to both concrete `resolvedOutputPath` values and paths derived from glob patterns.
    - If `resolvedOutputPath` is a concrete file, create it using `template` as the structure
    - If `resolvedOutputPath` is a glob/pattern, never write to the pattern. Resolve an existing concrete path from `artifactPaths.<artifact-id>.existingOutputPaths`, or derive and confirm the required concrete path from the artifact instruction and pattern under `changeRoot`; re-run status after writing
    - Apply `context` and `rules` as constraints - but do NOT copy them into the file
