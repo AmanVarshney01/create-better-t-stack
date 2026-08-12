@@ -1,9 +1,9 @@
-import { AnalyticsEventSchema } from "@better-t-stack/types";
+import { AnalyticsEventSchema, normalizeAnalyticsSelection } from "@better-t-stack/types";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
-import { internalAction, internalMutation, query } from "./_generated/server";
+import { internalAction, internalMutation, internalQuery, query } from "./_generated/server";
 import { buildDailyWindow } from "./analytics_date_utils";
 import {
   adjustAnalyticsStats,
@@ -13,6 +13,12 @@ import {
 
 const MAX_DAILY_STATS_WINDOW = 366;
 const ANALYTICS_REPAIR_BATCH_SIZE = 512;
+
+function incrementDistribution(distribution: Record<string, number>, keys: string[]): void {
+  for (const key of keys) {
+    distribution[key] = (distribution[key] || 0) + 1;
+  }
+}
 
 function normalizeStats(stats: {
   totalProjects: number;
@@ -291,6 +297,133 @@ export const getRecentEvents = query({
       .withIndex("by_quarantined", (q) => q.eq("quarantinedAt", undefined))
       .order("desc")
       .take(limit);
+  },
+});
+
+export const getSelectionDistributionsBatch = internalQuery({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: v.object({
+    continueCursor: v.string(),
+    isDone: v.boolean(),
+    scanned: v.number(),
+    frontend: distributionValidator,
+    addons: distributionValidator,
+    examples: distributionValidator,
+  }),
+  handler: async (ctx, args) => {
+    const page = await ctx.db
+      .query("analyticsEvents")
+      .withIndex("by_quarantined", (q) => q.eq("quarantinedAt", undefined))
+      .order("asc")
+      .paginate(args.paginationOpts);
+    const frontend: Record<string, number> = {};
+    const addons: Record<string, number> = {};
+    const examples: Record<string, number> = {};
+
+    for (const event of page.page) {
+      incrementDistribution(frontend, normalizeAnalyticsSelection(event.frontend));
+      incrementDistribution(addons, normalizeAnalyticsSelection(event.addons));
+      incrementDistribution(examples, normalizeAnalyticsSelection(event.examples));
+    }
+
+    return {
+      continueCursor: page.continueCursor,
+      isDone: page.isDone,
+      scanned: page.page.length,
+      frontend,
+      addons,
+      examples,
+    };
+  },
+});
+
+export const replaceSelectionDistributions = internalMutation({
+  args: {
+    expectedTotal: v.number(),
+    frontend: distributionValidator,
+    addons: distributionValidator,
+    examples: distributionValidator,
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const stats = await ctx.db.query("analyticsStats").first();
+    if (!stats) {
+      throw new Error("Cannot rebuild missing analytics stats");
+    }
+    if (stats.totalProjects !== args.expectedTotal) {
+      throw new Error(
+        `Expected ${args.expectedTotal} active events, stats contain ${stats.totalProjects}`,
+      );
+    }
+
+    await ctx.db.patch(stats._id, {
+      frontend: args.frontend,
+      addons: args.addons,
+      examples: args.examples,
+    });
+    return null;
+  },
+});
+
+export const rebuildSelectionDistributions = internalAction({
+  args: {
+    dryRun: v.boolean(),
+  },
+  returns: v.object({
+    scanned: v.number(),
+    frontend: distributionValidator,
+    addons: distributionValidator,
+    examples: distributionValidator,
+  }),
+  handler: async (ctx, args) => {
+    let cursor: string | null = null;
+    let scanned = 0;
+    const frontend: Record<string, number> = {};
+    const addons: Record<string, number> = {};
+    const examples: Record<string, number> = {};
+
+    while (true) {
+      const result: {
+        continueCursor: string;
+        isDone: boolean;
+        scanned: number;
+        frontend: Record<string, number>;
+        addons: Record<string, number>;
+        examples: Record<string, number>;
+      } = await ctx.runQuery(internal.analytics.getSelectionDistributionsBatch, {
+        paginationOpts: {
+          numItems: ANALYTICS_REPAIR_BATCH_SIZE,
+          cursor,
+        },
+      });
+
+      scanned += result.scanned;
+      for (const [key, count] of Object.entries(result.frontend)) {
+        frontend[key] = (frontend[key] || 0) + count;
+      }
+      for (const [key, count] of Object.entries(result.addons)) {
+        addons[key] = (addons[key] || 0) + count;
+      }
+      for (const [key, count] of Object.entries(result.examples)) {
+        examples[key] = (examples[key] || 0) + count;
+      }
+
+      if (result.isDone) break;
+      cursor = result.continueCursor;
+    }
+
+    if (!args.dryRun) {
+      await ctx.runMutation(internal.analytics.replaceSelectionDistributions, {
+        expectedTotal: scanned,
+        frontend,
+        addons,
+        examples,
+      });
+    }
+
+    return { scanned, frontend, addons, examples };
   },
 });
 

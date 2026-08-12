@@ -185,7 +185,7 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
         {data.examplesDistribution.length > 0 ? (
           <PreferenceChartCard
             title="Examples"
-            description="How often each example was included."
+            description="Selected examples and projects created without an example."
             data={data.examplesDistribution}
             colorKey="chart4"
             layout="vertical"
@@ -196,7 +196,7 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
       {data.addonsDistribution.length > 0 ? (
         <PreferenceChartCard
           title="Addons"
-          description="How often each addon was selected."
+          description="Selected addons and projects created without addons."
           data={data.addonsDistribution}
           colorKey="chart1"
           columnCount={2}

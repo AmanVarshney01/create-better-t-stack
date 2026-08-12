@@ -113,4 +113,17 @@ describe("AnalyticsEventSchema", () => {
     expect(normalizeAnalyticsCLIVersion("3.38.2-canary.1")).toBe("3.38.2");
     expect(normalizeAnalyticsNodeVersion("v24.5.0")).toBe("v24");
   });
+
+  test("normalizes empty multi-select choices to none", () => {
+    const parsed = AnalyticsEventSchema.parse({
+      ...validEvent,
+      frontend: [],
+      addons: [],
+      examples: [],
+    });
+
+    expect(parsed.frontend).toEqual(["none"]);
+    expect(parsed.addons).toEqual(["none"]);
+    expect(parsed.examples).toEqual(["none"]);
+  });
 });

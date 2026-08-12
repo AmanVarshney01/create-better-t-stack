@@ -1,4 +1,8 @@
-import { normalizeAnalyticsCLIVersion, normalizeAnalyticsNodeVersion } from "@better-t-stack/types";
+import {
+  normalizeAnalyticsCLIVersion,
+  normalizeAnalyticsNodeVersion,
+  normalizeAnalyticsSelection,
+} from "@better-t-stack/types";
 
 export type AnalyticsStatsFields = {
   totalProjects: number;
@@ -165,7 +169,10 @@ export function adjustAnalyticsStats(
 
   for (const { event, creationTime } of events) {
     const hourKey = String(new Date(creationTime).getUTCHours()).padStart(2, "0");
-    const frontend = event.frontend?.[0] || "none";
+    const frontendSelections = normalizeAnalyticsSelection(event.frontend);
+    const addonSelections = normalizeAnalyticsSelection(event.addons);
+    const exampleSelections = normalizeAnalyticsSelection(event.examples);
+    const frontend = frontendSelections[0] || "none";
     const backend = event.backend || "none";
     const database = event.database || "none";
     const orm = event.orm || "none";
@@ -176,7 +183,7 @@ export function adjustAnalyticsStats(
     }
 
     adjustKey(next, "backend", event.backend, delta);
-    adjustKeys(next, "frontend", event.frontend, delta);
+    adjustKeys(next, "frontend", frontendSelections, delta);
     adjustKey(next, "database", event.database, delta);
     adjustKey(next, "orm", event.orm, delta);
     adjustKey(next, "api", event.api, delta);
@@ -184,8 +191,8 @@ export function adjustAnalyticsStats(
     adjustKey(next, "runtime", event.runtime, delta);
     adjustKey(next, "packageManager", event.packageManager, delta);
     adjustKey(next, "platform", event.platform, delta);
-    adjustKeys(next, "addons", event.addons, delta);
-    adjustKeys(next, "examples", event.examples, delta);
+    adjustKeys(next, "addons", addonSelections, delta);
+    adjustKeys(next, "examples", exampleSelections, delta);
     adjustKey(next, "dbSetup", event.dbSetup, delta);
     adjustKey(next, "webDeploy", event.webDeploy, delta);
     adjustKey(next, "serverDeploy", event.serverDeploy, delta);
