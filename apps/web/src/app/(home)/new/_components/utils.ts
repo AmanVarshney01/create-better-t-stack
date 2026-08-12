@@ -74,6 +74,8 @@ const convexBetterAuthSupportedNativeFrontends = [
 const convexBetterAuthIncompatibleWebFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
 const staticDesktopAddons = ["tauri", "electrobun"] as const;
 const dockerServerOutputFrontends = ["next", "svelte", "solid", "astro", "react-router"] as const;
+const prismaComputeWebFrontends = ["next", "nuxt", "astro", "tanstack-start", "solid"] as const;
+const sentryServerBackends = ["hono", "express", "fastify", "elysia"] as const;
 
 const hasConvexBetterAuthCompatibleFrontend = (webFrontend: string[], nativeFrontend: string[]) =>
   webFrontend.some((f) =>
@@ -140,6 +142,34 @@ export const hasElectrobunCompatibleFrontend = (webFrontend: string[], backend =
 
 export const hasEvlogCompatibleBackend = (backend: string) =>
   ["hono", "express", "fastify", "elysia", ...evlogSupportedFullstackBackends].includes(backend);
+
+const hasSentryCompatibleTarget = (
+  webFrontend: string[],
+  nativeFrontend: string[],
+  backend: string,
+) =>
+  webFrontend.some((frontend) => frontend !== "none") ||
+  nativeFrontend.some((frontend) => frontend !== "none") ||
+  sentryServerBackends.includes(backend as (typeof sentryServerBackends)[number]);
+
+const getCloudflareNextIssue = (stack: StackState) => {
+  if (stack.webDeploy !== "cloudflare" || !stack.webFrontend.includes("next")) return null;
+
+  if (stack.addons.includes("sentry")) {
+    return "Sentry with Next.js is temporarily unavailable on Cloudflare";
+  }
+
+  if (
+    stack.database === "postgres" &&
+    stack.orm === "prisma" &&
+    stack.dbSetup !== "neon" &&
+    stack.dbSetup !== "prisma-postgres"
+  ) {
+    return "This Prisma PostgreSQL setup with Next.js is temporarily unavailable on Cloudflare";
+  }
+
+  return null;
+};
 
 const getDockerDesktopConflict = (
   addons: string[],
@@ -716,6 +746,11 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     nextStack.backend,
   );
   const evlogCompat = hasEvlogCompatibleBackend(nextStack.backend);
+  const sentryCompat = hasSentryCompatibleTarget(
+    nextStack.webFrontend,
+    nextStack.nativeFrontend,
+    nextStack.backend,
+  );
 
   if (!pwaCompat && nextStack.addons.includes("pwa")) {
     nextStack.addons = nextStack.addons.filter((a) => a !== "pwa");
@@ -781,6 +816,15 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     changes.push({
       category: "addons",
       message: "evlog removed (requires a server or fullstack backend)",
+    });
+  }
+  if (!sentryCompat && nextStack.addons.includes("sentry")) {
+    nextStack.addons = nextStack.addons.filter((addon) => addon !== "sentry");
+    if (nextStack.addons.length === 0) nextStack.addons = ["none"];
+    changed = true;
+    changes.push({
+      category: "addons",
+      message: "Sentry removed (requires a frontend or supported server backend)",
     });
   }
 
@@ -858,6 +902,40 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     }
   }
 
+  if (
+    nextStack.webDeploy === "prisma" &&
+    !nextStack.webFrontend.some((frontend) =>
+      prismaComputeWebFrontends.includes(frontend as (typeof prismaComputeWebFrontends)[number]),
+    )
+  ) {
+    nextStack.webDeploy = "none";
+    changed = true;
+    changes.push({
+      category: "webDeploy",
+      message: "Web deploy set to 'None' (Prisma requires a supported SSR frontend)",
+    });
+  }
+
+  const cloudflareNextIssue = getCloudflareNextIssue(nextStack);
+  if (cloudflareNextIssue) {
+    const removesSentry = nextStack.addons.includes("sentry");
+    if (removesSentry) {
+      nextStack.addons = nextStack.addons.filter((addon) => addon !== "sentry");
+      if (nextStack.addons.length === 0) nextStack.addons = ["none"];
+    } else {
+      nextStack.webDeploy = "none";
+    }
+    changed = true;
+    changes.push(
+      removesSentry
+        ? { category: "addons", message: `Sentry removed (${cloudflareNextIssue})` }
+        : {
+            category: "webDeploy",
+            message: `Web deploy set to 'None' (${cloudflareNextIssue})`,
+          },
+    );
+  }
+
   // Server deploy constraints
   if (nextStack.serverDeploy === "cloudflare") {
     if (nextStack.runtime !== "workers" || nextStack.backend !== "hono") {
@@ -885,6 +963,26 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     changes.push({
       category: "serverDeploy",
       message: "Server deploy set to 'Cloudflare' (Workers runtime deploys via Cloudflare)",
+    });
+  }
+
+  if (nextStack.serverDeploy === "prisma" && nextStack.runtime === "workers") {
+    nextStack.serverDeploy = "cloudflare";
+    changed = true;
+    changes.push({
+      category: "serverDeploy",
+      message: "Server deploy set to 'Cloudflare' (Workers runtime deploys via Cloudflare)",
+    });
+  } else if (
+    nextStack.serverDeploy === "prisma" &&
+    nextStack.runtime !== "bun" &&
+    nextStack.runtime !== "node"
+  ) {
+    nextStack.serverDeploy = "none";
+    changed = true;
+    changes.push({
+      category: "serverDeploy",
+      message: "Server deploy set to 'None' (Prisma requires the Bun or Node runtime)",
     });
   }
 
@@ -1309,6 +1407,23 @@ export const getDisabledReason = (
     if (optionId === "evlog" && !hasEvlogCompatibleBackend(currentStack.backend)) {
       return "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend";
     }
+    if (
+      optionId === "sentry" &&
+      !hasSentryCompatibleTarget(
+        currentStack.webFrontend,
+        currentStack.nativeFrontend,
+        currentStack.backend,
+      )
+    ) {
+      return "Sentry requires a frontend or Hono, Express, Fastify, or Elysia server";
+    }
+    if (
+      optionId === "sentry" &&
+      currentStack.webDeploy === "cloudflare" &&
+      currentStack.webFrontend.includes("next")
+    ) {
+      return "Sentry with Next.js is temporarily unavailable on Cloudflare";
+    }
     // Task runners are mutually exclusive in the CLI, but the builder lets users swap them.
     // URL/state sanitization keeps only the latest selected runner before generating commands.
   }
@@ -1362,6 +1477,18 @@ export const getDisabledReason = (
         return `Docker cannot serve the static output required by ${dockerDesktopConflict.selectedDesktopAddons.join(" and ")} on ${dockerDesktopConflict.affectedFrontend}`;
       }
     }
+    if (
+      optionId === "prisma" &&
+      !currentStack.webFrontend.some((frontend) =>
+        prismaComputeWebFrontends.includes(frontend as (typeof prismaComputeWebFrontends)[number]),
+      )
+    ) {
+      return "Prisma requires Next.js, Nuxt, Astro, TanStack Start, or SolidStart";
+    }
+    if (optionId === "cloudflare") {
+      const issue = getCloudflareNextIssue({ ...currentStack, webDeploy: "cloudflare" });
+      if (issue) return issue;
+    }
   }
 
   if (
@@ -1383,6 +1510,13 @@ export const getDisabledReason = (
     }
     if (optionId === "vercel" && currentStack.runtime === "workers") {
       return "Vercel server deployment requires the Bun or Node runtime";
+    }
+    if (
+      optionId === "prisma" &&
+      currentStack.runtime !== "bun" &&
+      currentStack.runtime !== "node"
+    ) {
+      return "Prisma server deployment requires the Bun or Node runtime";
     }
     if (optionId !== "none") {
       if (
