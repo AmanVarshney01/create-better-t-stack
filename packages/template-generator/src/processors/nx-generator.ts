@@ -3,7 +3,7 @@
  * Generates a minimal nx.json for workspace orchestration when the Nx addon is selected.
  */
 
-import type { ProjectConfig } from "@better-t-stack/types";
+import { isAlchemyDeployTarget, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { getDbScriptSupport, type DbScriptSupport } from "../utils/db-scripts";
@@ -36,7 +36,7 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
   const hasDatabase = dbSupport.hasDbScripts;
   const isDocker = dbSetup === "docker";
   const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
-  const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const hasAlchemy = isAlchemyDeployTarget(webDeploy) || isAlchemyDeployTarget(serverDeploy);
   const hasLocalD1 =
     webDeploy === "cloudflare" &&
     backend === "self" &&
@@ -64,7 +64,7 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
     ...(isDocker ? getDockerTargets() : {}),
     ...(isSqliteLocal ? getSqliteLocalTarget() : {}),
     ...(hasLocalD1 ? getLocalD1Target() : {}),
-    ...(hasCloudflare ? getDeployTargets() : {}),
+    ...(hasAlchemy ? getDeployTargets() : {}),
   };
 
   return {
