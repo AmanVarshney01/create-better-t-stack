@@ -3,7 +3,7 @@
  * Replaces the previous Handlebars template with type-safe TypeScript generation
  */
 
-import { isAlchemyDeployTarget, type ProjectConfig } from "@better-t-stack/types";
+import { getLocalD1Owner, isAlchemyDeployTarget, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { getDbScriptSupport, type DbScriptSupport } from "../utils/db-scripts";
@@ -39,13 +39,7 @@ export function generateTurboConfig(config: ProjectConfig): TurboConfig {
   const isDocker = dbSetup === "docker";
   const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
   const hasAlchemy = isAlchemyDeployTarget(webDeploy) || isAlchemyDeployTarget(serverDeploy);
-  const hasLocalD1 =
-    webDeploy === "cloudflare" &&
-    backend === "self" &&
-    dbSetup === "d1" &&
-    (["next", "nuxt", "svelte", "solid", "astro"] as const).some((framework) =>
-      frontend.includes(framework),
-    );
+  const hasLocalD1 = getLocalD1Owner(config) === "wrangler";
 
   const tasks: Record<string, TurboTask> = {
     ...getBaseTasks(frontend, config.addons),
@@ -198,6 +192,7 @@ function getLocalD1Task(): Record<string, TurboTask> {
   return {
     "db:migrate:local": {
       cache: false,
+      interactive: true,
     },
   };
 }

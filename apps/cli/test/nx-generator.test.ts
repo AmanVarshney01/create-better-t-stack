@@ -157,18 +157,38 @@ describe("Nx config generator", () => {
     expect(nextCloudflareInputs).not.toContain("!{workspaceRoot}/packages/db/dist/**");
   });
 
-  it("registers the local D1 migration target for full-stack Cloudflare web apps", () => {
-    const cloudflareTargets = generateNxConfig(
-      configWith({
-        frontend: ["solid"],
+  it("registers local D1 tasks only when Wrangler owns local migrations", () => {
+    for (const frontend of ["next", "svelte", "solid"] as const) {
+      const config = configWith({
+        frontend: [frontend],
         backend: "self",
         dbSetup: "d1",
         webDeploy: "cloudflare",
-      }),
-    ).targetDefaults;
+      });
 
-    expect(cloudflareTargets["db:migrate:local"]).toEqual({ cache: false });
+      expect(generateNxConfig(config).targetDefaults["db:migrate:local"]).toEqual({
+        cache: false,
+      });
+      expect(generateTurboConfig(config).tasks["db:migrate:local"]).toEqual({
+        cache: false,
+        interactive: true,
+      });
+    }
+
+    for (const frontend of ["nuxt", "astro"] as const) {
+      const config = configWith({
+        frontend: [frontend],
+        backend: "self",
+        dbSetup: "d1",
+        webDeploy: "cloudflare",
+      });
+
+      expect(generateNxConfig(config).targetDefaults["db:migrate:local"]).toBeUndefined();
+      expect(generateTurboConfig(config).tasks["db:migrate:local"]).toBeUndefined();
+    }
+
     expect(generateNxConfig(baseConfig).targetDefaults["db:migrate:local"]).toBeUndefined();
+    expect(generateTurboConfig(baseConfig).tasks["db:migrate:local"]).toBeUndefined();
   });
 });
 

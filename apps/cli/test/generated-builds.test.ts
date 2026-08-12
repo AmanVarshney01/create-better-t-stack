@@ -630,6 +630,8 @@ async function validateSolidStartScaffold(sample: SelectedBuildSample, projectDi
 
   if (sample.config.webDeploy === "cloudflare") {
     expect(viteConfig).toContain("const cloudflareWorkersAlias: Record<string, string>");
+    expect(viteConfig).toContain('command === "serve"');
+    expect(viteConfig).toContain('external: ["cloudflare:workers"]');
     const infra = await fs.readFile(path.join(projectDir, "packages/infra/alchemy.run.ts"), "utf8");
     expect(infra).toContain('flags: ["nodejs_compat"]');
     expect(infra).toContain("runWorkerFirst: true");

@@ -12,7 +12,12 @@ import type {
   ServerDeploy,
   WebDeploy,
 } from "../../types";
-import { isAlchemyDeployTarget, usesAlchemyManagedDatabase, webFrontends } from "../../types";
+import {
+  getLocalD1Owner,
+  isAlchemyDeployTarget,
+  usesAlchemyManagedDatabase,
+  webFrontends,
+} from "../../types";
 import { getDockerStatus } from "../../utils/docker-utils";
 import {
   fetchSponsorsQuietly,
@@ -162,11 +167,7 @@ export async function displayPostInstallInstructions(
   const hasAlchemyD1 =
     dbSetup === "d1" &&
     (serverDeploy === "cloudflare" || (isBackendSelf && webDeploy === "cloudflare"));
-  const hasWranglerLocalD1 =
-    isBackendSelf &&
-    webDeploy === "cloudflare" &&
-    dbSetup === "d1" &&
-    (["next", "svelte", "solid"] as const).some((framework) => frontend.includes(framework));
+  const hasWranglerLocalD1 = getLocalD1Owner(config) === "wrangler";
 
   if (hasAlchemyD1 && orm !== "none") {
     output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:generate\n`;

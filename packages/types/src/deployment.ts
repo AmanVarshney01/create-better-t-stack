@@ -1,8 +1,27 @@
-import type { Backend, DatabaseSetup, ServerDeploy, WebDeploy } from "./types";
+import type {
+  Backend,
+  DatabaseSetup,
+  Frontend,
+  ProjectConfig,
+  ServerDeploy,
+  WebDeploy,
+} from "./types";
 
 export const ALCHEMY_DEPLOY_TARGETS = ["cloudflare", "prisma"] as const;
 
 export const ALCHEMY_DATABASE_SETUPS = ["neon", "planetscale", "prisma-postgres"] as const;
+
+export type LocalD1Owner = "wrangler" | "alchemy-provider" | "none";
+
+const WRANGLER_LOCAL_D1_FRONTENDS = [
+  "next",
+  "svelte",
+  "solid",
+] as const satisfies readonly Frontend[];
+const ALCHEMY_PROVIDER_LOCAL_D1_FRONTENDS = [
+  "nuxt",
+  "astro",
+] as const satisfies readonly Frontend[];
 
 export function isAlchemyDeployTarget(
   target: WebDeploy | ServerDeploy | undefined,
@@ -27,4 +46,24 @@ export function usesAlchemyManagedDatabase(config: {
   return config.backend === "self"
     ? isAlchemyDeployTarget(config.webDeploy)
     : isAlchemyDeployTarget(config.serverDeploy);
+}
+
+export function getLocalD1Owner(
+  config: Pick<ProjectConfig, "backend" | "dbSetup" | "frontend" | "webDeploy">,
+): LocalD1Owner {
+  if (config.backend !== "self" || config.dbSetup !== "d1" || config.webDeploy !== "cloudflare") {
+    return "none";
+  }
+
+  if (WRANGLER_LOCAL_D1_FRONTENDS.some((framework) => config.frontend.includes(framework))) {
+    return "wrangler";
+  }
+
+  if (
+    ALCHEMY_PROVIDER_LOCAL_D1_FRONTENDS.some((framework) => config.frontend.includes(framework))
+  ) {
+    return "alchemy-provider";
+  }
+
+  return "none";
 }

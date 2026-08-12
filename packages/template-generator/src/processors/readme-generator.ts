@@ -1,4 +1,5 @@
 import {
+  getLocalD1Owner,
   isAlchemyDeployTarget,
   usesAlchemyManagedDatabase,
   type ProjectConfig,
@@ -631,11 +632,7 @@ ${packageManagerRunCmd} db:migrate
 \`\`\``);
     }
 
-    const isFullstackStaticSite =
-      config.backend === "self" &&
-      config.webDeploy === "cloudflare" &&
-      (["next", "svelte", "solid"] as const).some((f) => config.frontend.includes(f));
-    if (isFullstackStaticSite) {
+    if (getLocalD1Owner(config) === "wrangler") {
       steps.push(`${steps.length + 1}. Apply the migrations to the local development database:
 \`\`\`bash
 ${packageManagerRunCmd} db:migrate:local

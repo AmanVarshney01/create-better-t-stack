@@ -3,7 +3,7 @@
  * Generates a minimal nx.json for workspace orchestration when the Nx addon is selected.
  */
 
-import { isAlchemyDeployTarget, type ProjectConfig } from "@better-t-stack/types";
+import { getLocalD1Owner, isAlchemyDeployTarget, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { getDbScriptSupport, type DbScriptSupport } from "../utils/db-scripts";
@@ -30,20 +30,14 @@ export function processNxConfig(vfs: VirtualFileSystem, config: ProjectConfig): 
 }
 
 export function generateNxConfig(config: ProjectConfig): NxConfig {
-  const { backend, database, dbSetup, frontend, webDeploy, serverDeploy } = config;
+  const { backend, database, dbSetup, webDeploy, serverDeploy } = config;
   const isConvex = backend === "convex";
   const dbSupport = getDbScriptSupport(config);
   const hasDatabase = dbSupport.hasDbScripts;
   const isDocker = dbSetup === "docker";
   const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
   const hasAlchemy = isAlchemyDeployTarget(webDeploy) || isAlchemyDeployTarget(serverDeploy);
-  const hasLocalD1 =
-    webDeploy === "cloudflare" &&
-    backend === "self" &&
-    dbSetup === "d1" &&
-    (["next", "nuxt", "svelte", "solid", "astro"] as const).some((framework) =>
-      frontend.includes(framework),
-    );
+  const hasLocalD1 = getLocalD1Owner(config) === "wrangler";
 
   const targetDefaults: Record<string, NxTargetDefaults> = {
     build: {
