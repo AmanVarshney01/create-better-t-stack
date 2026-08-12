@@ -3,11 +3,7 @@
  * Replaces the previous Handlebars template with type-safe TypeScript generation
  */
 
-import {
-  getLocalD1Owner,
-  isAlchemyDeployTarget,
-  type ProjectConfig,
-} from "@better-t-stack/types";
+import { getLocalD1Owner, isAlchemyDeployTarget, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { getDbScriptSupport, type DbScriptSupport } from "../utils/db-scripts";
