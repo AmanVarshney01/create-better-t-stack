@@ -5,7 +5,7 @@ description: What we collect, how to disable it, and where to view aggregated in
 
 ## What is collected
 
-On successful project creation, the CLI sends a single event (`project_created`) with:
+On successful project creation, the CLI sends one anonymous event with:
 
 - Selected options (stack choices), including: `frontend`, `backend`, `runtime`, `database`, `orm`, `api`, `auth`, `payments`, `addons`, `examples`, `dbSetup`, `webDeploy`, `serverDeploy`, `packageManager`, `git`, `install`
 - Environment data: `cli_version`, `node_version`, `platform`
@@ -13,7 +13,9 @@ On successful project creation, the CLI sends a single event (`project_created`)
 Not collected:
 
 - Project name, path, or file contents (explicitly omitted)
+- Nested addon or database provisioning options
 - Secrets or environment variables from your machine
+- IP addresses or persistent project/user identifiers
 
 ## Disable telemetry
 
@@ -31,12 +33,13 @@ Add `export BTS_TELEMETRY_DISABLED=1` to your shell profile to make it permanent
 
 - Charts: [`/analytics`](/analytics)
 - Shared website analytics: [Umami dashboard](https://umami.amanv.cloud/share/pHvqHleyOl9PBfaK) (self-hosted on a Hostinger VPS)
-- Raw JSON snapshot: `https://r2.better-t-stack.dev/analytics-data.json`
-- CSV export: `https://r2.better-t-stack.dev/export.csv`
+- Aggregate JSON snapshot: `https://r2.better-t-stack.dev/analytics-data.json`
+- Aggregate CSV export: `https://r2.better-t-stack.dev/export.csv`
 
 Notes:
 
-- Aggregates are periodically regenerated from incoming events
+- Aggregates are updated atomically with each accepted event
+- Incoming values are checked against a bounded schema before storage
 - Raw data is not publicly exposed; the `/analytics` page presents only summary statistics
 
 ## Full transparency

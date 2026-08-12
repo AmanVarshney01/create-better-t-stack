@@ -43,20 +43,6 @@ export type WeekdayPoint = {
   averageDailyProjects: number;
 };
 
-export type ComboMatrixPoint = {
-  x: string;
-  y: string;
-  count: number;
-  share: number;
-};
-
-export type ComboMatrix = {
-  data: ComboMatrixPoint[];
-  xDomain: string[];
-  yDomain: string[];
-  maxValue: number;
-};
-
 export type MomentumSnapshot = {
   trackingDays: number;
   last7Days: number;
@@ -97,8 +83,6 @@ export type AggregatedAnalyticsData = {
   cliVersionDistribution: VersionDistribution;
   stackCombinationDistribution: ShareDistributionItem[];
   databaseORMCombinationDistribution: ShareDistributionItem[];
-  stackMatrix: ComboMatrix;
-  databaseOrmMatrix: ComboMatrix;
   summary: {
     mostPopularFrontend: string;
     mostPopularBackend: string;

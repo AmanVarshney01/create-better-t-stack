@@ -1,7 +1,6 @@
 import { format } from "date-fns";
 
 import type {
-  ComboMatrix,
   Distribution,
   ShareDistributionItem,
   TimeSeriesPoint,
@@ -175,77 +174,6 @@ export function buildWeekdayDistribution(timeSeries: TimeSeriesPoint[]): Weekday
     ...day,
     averageDailyProjects: dayCount > 0 ? day.count / dayCount : 0,
   }));
-}
-
-type MatrixOptions = {
-  distribution: ShareDistributionItem[];
-  total: number;
-  xFromLabel: (name: string) => string;
-  yFromLabel: (name: string) => string;
-  xLimit?: number;
-  yLimit?: number;
-};
-
-export function buildComboMatrix({
-  distribution,
-  total,
-  xFromLabel,
-  yFromLabel,
-  xLimit,
-  yLimit,
-}: MatrixOptions): ComboMatrix {
-  const pairs = distribution
-    .map((item) => ({
-      x: xFromLabel(item.name),
-      y: yFromLabel(item.name),
-      count: item.value,
-    }))
-    .filter((item) => item.x && item.y);
-
-  const xTotals = new Map<string, number>();
-  const yTotals = new Map<string, number>();
-  const counts = new Map<string, number>();
-
-  for (const pair of pairs) {
-    xTotals.set(pair.x, (xTotals.get(pair.x) || 0) + pair.count);
-    yTotals.set(pair.y, (yTotals.get(pair.y) || 0) + pair.count);
-    counts.set(`${pair.x}:::${pair.y}`, (counts.get(`${pair.x}:::${pair.y}`) || 0) + pair.count);
-  }
-
-  const rankedXDomain = Array.from(xTotals.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([name]) => name);
-
-  const rankedYDomain = Array.from(yTotals.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([name]) => name);
-
-  const xDomain = typeof xLimit === "number" ? rankedXDomain.slice(0, xLimit) : rankedXDomain;
-  const yDomain = typeof yLimit === "number" ? rankedYDomain.slice(0, yLimit) : rankedYDomain;
-
-  const data = yDomain.flatMap((y) =>
-    xDomain.map((x) => {
-      const count = counts.get(`${x}:::${y}`) || 0;
-      return {
-        x,
-        y,
-        count,
-        share: total > 0 ? count / total : 0,
-      };
-    }),
-  );
-
-  return {
-    data,
-    xDomain,
-    yDomain,
-    maxValue: Math.max(...data.map((item) => item.count), 0),
-  };
-}
-
-export function splitComboLabel(value: string): [string, string] {
-  const [left = "none", ...rest] = value.split(" + ");
-  return [left.trim(), rest.join(" + ").trim() || "none"];
 }
 
 export function getTrendTone(deltaPercentage: number | null): "up" | "down" | "flat" {
