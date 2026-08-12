@@ -448,6 +448,9 @@ import { createRouterClient } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 {{/if}}
+{{#if (eq webDeploy "cloudflare")}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
+{{/if}}
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
 {{#if (and (eq webDeploy "cloudflare") (eq orm "prisma"))}}
@@ -472,6 +475,9 @@ export default defineNuxtPlugin(async () => {
 
   const context = await createContext({
     headers: event?.headers ?? new Headers(),
+    {{#if (eq webDeploy "cloudflare")}}
+    env: (event?.context.cloudflare as { env: CloudflareEnv }).env,
+    {{/if}}
   });
 
   const client = createRouterClient(appRouter, {
@@ -496,6 +502,9 @@ import { BatchHandlerPlugin } from "@orpc/server/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
+{{#if (eq webDeploy "cloudflare")}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
+{{/if}}
 
 const rpcHandler = new RPCHandler(appRouter, {
   interceptors: [
@@ -521,7 +530,12 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 export default defineEventHandler(async (event) => {
   const request = toWebRequest(event);
-  const context = await createContext({ headers: request.headers });
+  const context = await createContext({
+    headers: request.headers,
+    {{#if (eq webDeploy "cloudflare")}}
+    env: (event.context.cloudflare as { env: CloudflareEnv }).env,
+    {{/if}}
+  });
 
   const rpcResult = await rpcHandler.handle(request, {
     prefix: "/rpc",
@@ -921,7 +935,7 @@ function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContex
 {{/if}}
 
 {{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 {{else}}
 import { createClerkClient } from "@clerk/backend";
 import { env } from "@{{projectName}}/env/server";
@@ -1013,22 +1027,34 @@ import { createAuth } from "@{{projectName}}/auth";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
+{{#if (eq webDeploy "cloudflare")}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
+{{/if}}
 
 export type CreateContextOptions = {
 	headers: Headers;
+{{#if (eq webDeploy "cloudflare")}}
+	env: CloudflareEnv;
+{{/if}}
 };
 
-export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions) {
+export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth({{#if (eq webDeploy "cloudflare")}}env{{/if}}){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
 		auth: null,
 		session,
+{{#if (eq webDeploy "cloudflare")}}
+		env,
+{{/if}}
 	};
 {{else}}
 	return {
 		auth: null,
 		session: null,
+{{#if (eq webDeploy "cloudflare")}}
+		env,
+{{/if}}
 	};
 {{/if}}
 }
@@ -1042,13 +1068,13 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 {{/if}}
 {{#if (eq webDeploy "cloudflare")}}
-import type {} from "@{{projectName}}/env/server";
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{/if}}
 
 export type CreateContextOptions = {
 	headers: Headers;
 {{#if (eq webDeploy "cloudflare")}}
-	env: Env;
+	env: CloudflareEnv;
 {{/if}}
 };
 
@@ -5722,10 +5748,13 @@ import { createAuth } from "@{{projectName}}/auth";
 {{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
+{{#if (eq webDeploy "cloudflare")}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
+{{/if}}
 
 export default defineEventHandler((event) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-  const auth = createAuth();
+  const auth = createAuth({{#if (eq webDeploy "cloudflare")}}(event.context.cloudflare as { env: CloudflareEnv }).env{{/if}});
 {{/if}}
   return auth.handler(toWebRequest(event));
 });
@@ -7978,14 +8007,14 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   ["auth/better-auth/server/base/src/index.ts.hbs", `{{#if (eq orm "prisma")}}
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type {} from "@{{projectName}}/env/server";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import { createPolarClient } from "./lib/payments";
 {{else}}
 import { polarClient } from "./lib/payments";
@@ -7993,8 +8022,8 @@ import { polarClient } from "./lib/payments";
 {{/if}}
 import { createPrismaClient } from "@{{projectName}}/db";
 
-export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
-	const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env{{/if}});
+export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
+	const prisma = createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
 
 	return betterAuth({
 		database: prismaAdapter(prisma, {
@@ -8029,7 +8058,7 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 		plugins: [
 {{#if (eq payments "polar")}}
 			polar({
-				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
+				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -8060,14 +8089,14 @@ export const auth = createAuth();
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type {} from "@{{projectName}}/env/server";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import { createPolarClient } from "./lib/payments";
 {{else}}
 import { polarClient } from "./lib/payments";
@@ -8077,8 +8106,8 @@ import { createDb } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
 
-export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
-	const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env{{/if}});
+export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
+	const db = createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
 
 	return betterAuth({
 		database: drizzleAdapter(db, {
@@ -8112,7 +8141,7 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 		plugins: [
 {{#if (eq payments "polar")}}
 			polar({
-				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
+				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -8224,14 +8253,14 @@ export function createAuth() {
 {{#if (eq orm "mongoose")}}
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type {} from "@{{projectName}}/env/server";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import { createPolarClient } from "./lib/payments";
 {{else}}
 import { polarClient } from "./lib/payments";
@@ -8239,7 +8268,7 @@ import { polarClient } from "./lib/payments";
 {{/if}}
 import { client } from "@{{projectName}}/db";
 
-export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	return betterAuth({
 		database: mongodbAdapter(client),
 		trustedOrigins: [
@@ -8267,7 +8296,7 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 {{#if (eq payments "polar")}}
 		plugins: [
 			polar({
-				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
+				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -8296,14 +8325,14 @@ export const auth = createAuth();
 
 {{#if (eq orm "none")}}
 import { betterAuth } from "better-auth";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type {} from "@{{projectName}}/env/server";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import { createPolarClient } from "./lib/payments";
 {{else}}
 import { polarClient } from "./lib/payments";
@@ -8311,7 +8340,7 @@ import { polarClient } from "./lib/payments";
 {{/if}}
 
 
-export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	return betterAuth({
 		database: "", // Invalid configuration
 		trustedOrigins: [
@@ -8339,7 +8368,7 @@ export function createAuth({{#if (and (eq backend "self") (eq webDeploy "cloudfl
 {{#if (eq payments "polar")}}
 		plugins: [
 			polar({
-				client: {{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}createPolarClient(env){{else}}polarClient{{/if}},
+				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
 				enableCustomerPortal: true,
 				use: [
@@ -15494,8 +15523,8 @@ export default defineConfig({
 });
 `],
   ["db/drizzle/mysql/src/index.ts.hbs", `{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type {} from "@{{projectName}}/env/server";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
@@ -15504,7 +15533,7 @@ import * as schema from "./schema";
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	return drizzle({
 		connection: {
 			host: env.DATABASE_HOST,
@@ -15517,7 +15546,7 @@ export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflar
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	return drizzle({
 		connection: {
 			uri: env.DATABASE_URL,
@@ -15589,8 +15618,8 @@ export default defineConfig({
 });
 `],
   ["db/drizzle/postgres/src/index.ts.hbs", `{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type {} from "@{{projectName}}/env/server";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
@@ -15600,7 +15629,7 @@ import * as schema from "./schema";
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	const sql = neon(env.DATABASE_URL);
 	return drizzle(sql, { schema });
 }
@@ -15612,7 +15641,7 @@ import postgres from "postgres";
 import { drizzle } from "drizzle-orm/node-postgres";
 {{/if}}
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 	const client = postgres(env.DATABASE_URL, { max: 1 });
 
@@ -15687,18 +15716,18 @@ export default defineConfig({
   ["db/drizzle/sqlite/src/index.ts.hbs", `{{#if (eq dbSetup "d1")}}
 import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/d1";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type {} from "@{{projectName}}/env/server";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	return drizzle(env.DB, { schema });
 }
 {{else if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type {} from "@{{projectName}}/env/server";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
@@ -15706,7 +15735,7 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
-export function createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	const client = createClient({
 		url: env.DATABASE_URL,
 {{#if (eq dbSetup "turso")}}
@@ -15950,8 +15979,8 @@ export function createPrismaClient() {
 {{/if}}
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type {} from "@{{projectName}}/env/server";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
@@ -15959,14 +15988,14 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
@@ -16179,15 +16208,15 @@ export function createPrismaClient() {
 {{/if}}
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type {} from "@{{projectName}}/env/server";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	const adapter = new PrismaNeon({
 		connectionString: env.DATABASE_URL,
 	});
@@ -16198,7 +16227,7 @@ export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy 
 {{else if (eq dbSetup "prisma-postgres")}}
 import { PrismaPostgresAdapter } from "@prisma/adapter-ppg";
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	const adapter = new PrismaPostgresAdapter({
 		connectionString: env.DATABASE_URL,
 	});
@@ -16209,7 +16238,7 @@ export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy 
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	const adapter = new PrismaPg({
 		connectionString: env.DATABASE_URL,
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
@@ -16275,13 +16304,13 @@ datasource db {
 
 {{#if (eq dbSetup "d1")}}
 import { PrismaD1 } from "@prisma/adapter-d1";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type {} from "@{{projectName}}/env/server";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	const adapter = new PrismaD1(env.DB);
 	return new PrismaClient({ adapter });
 }
@@ -16292,13 +16321,13 @@ export default prisma;
 {{/if}}
 {{else}}
 import { PrismaLibSql } from "@prisma/adapter-libsql";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type {} from "@{{projectName}}/env/server";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
-export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+export function createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
 	const adapter = new PrismaLibSql({
 		url: env.DATABASE_URL,
 {{#if (eq dbSetup "turso")}}
@@ -23580,18 +23609,18 @@ import { todo } from "@{{projectName}}/db/schema/todo";
 import { publicProcedure } from "../index";
 
 export const todoRouter = {
-  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) => {
+  getAll: publicProcedure.handler(async ({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}{ context }{{/if}}) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-    const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+    const db = createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}context.env{{/if}});
 {{/if}}
     return await db.select().from(todo);
   }),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+    .handler(async ({ input{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}, context{{/if}} }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+      const db = createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}context.env{{/if}});
 {{/if}}
       return await db
         .insert(todo)
@@ -23602,9 +23631,9 @@ export const todoRouter = {
 
   toggle: publicProcedure
     .input(z.object({ id: z.number(), completed: z.boolean() }))
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+    .handler(async ({ input{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}, context{{/if}} }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+      const db = createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}context.env{{/if}});
 {{/if}}
       return await db
         .update(todo)
@@ -23614,9 +23643,9 @@ export const todoRouter = {
 
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+    .handler(async ({ input{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}, context{{/if}} }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+      const db = createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}context.env{{/if}});
 {{/if}}
       return await db.delete(todo).where(eq(todo.id, input.id));
     }),
@@ -23810,9 +23839,9 @@ import prisma from "@{{projectName}}/db";
 import { publicProcedure } from "../index";
 
 export const todoRouter = {
-  getAll: publicProcedure.handler(async ({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}{ context }{{/if}}) => {
+  getAll: publicProcedure.handler(async ({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}{ context }{{/if}}) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-    const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+    const prisma = createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}context.env{{/if}});
 {{/if}}
     return await prisma.todo.findMany({
       orderBy: {
@@ -23823,9 +23852,9 @@ export const todoRouter = {
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+    .handler(async ({ input{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}, context{{/if}} }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+      const prisma = createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}context.env{{/if}});
 {{/if}}
       return await prisma.todo.create({
         data: {
@@ -23840,9 +23869,9 @@ export const todoRouter = {
     {{else}}
     .input(z.object({ id: z.number(), completed: z.boolean() }))
     {{/if}}
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+    .handler(async ({ input{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}, context{{/if}} }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+      const prisma = createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}context.env{{/if}});
 {{/if}}
       return await prisma.todo.update({
         where: { id: input.id },
@@ -23856,9 +23885,9 @@ export const todoRouter = {
     {{else}}
     .input(z.object({ id: z.number() }))
     {{/if}}
-    .handler(async ({ input{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}, context{{/if}} }) => {
+    .handler(async ({ input{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}, context{{/if}} }) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const prisma = createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}context.env{{/if}});
+      const prisma = createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}context.env{{/if}});
 {{/if}}
       return await prisma.todo.delete({
         where: { id: input.id },
@@ -30128,6 +30157,7 @@ export default defineNuxtConfig({
     wasm: {
       esmImport: true
     }
+  },
   {{/if}}
   {{#if (eq backend "convex")}}
   convex: {
@@ -30149,15 +30179,11 @@ export default defineNuxtConfig({
   "private": true,
   "type": "module",
   "scripts": {
-{{#unless (eq webDeploy "cloudflare")}}
     "build": "nuxt build",
-{{/unless}}
     "check-types": "nuxt typecheck",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-{{#unless (eq webDeploy "cloudflare")}}
     "preview": "nuxt preview",
-{{/unless}}
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
@@ -33311,10 +33337,12 @@ export async function getEnvAsync() {
 }
 
 export const env = createEnvProxy(resolveEnvValue);
-{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-/// <reference path="../env.d.ts" />
+{{else if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
+import type { CloudflareEnv } from "../env.d.ts";
+
+export type { CloudflareEnv } from "../env.d.ts";
 
 // dotenv only applies in Node dev/build; workerd throws on file URLs and has no fs
 try {
@@ -33326,7 +33354,7 @@ try {
 
 const runtimeEnv = typeof process === "undefined" ? {} : process.env;
 
-export const env = new Proxy({} as Env, {
+export const env = new Proxy({} as CloudflareEnv, {
 	get(_target, prop) {
 		if (typeof prop !== "string") {
 			return undefined;
@@ -34039,8 +34067,8 @@ export const web = Cloudflare.Website.StaticSite("web", {
       });
 {{else if (includes frontend "nuxt")}}
 export const web = Cloudflare.Website.Nuxt("web", {
-      rootDir: "../../apps/web",
-      env: {
+  rootDir: "../../apps/web",
+  env: {
         {{#if (eq dbSetup "d1")}}
         DB: db,
         {{else if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}
@@ -34067,8 +34095,8 @@ export const web = Cloudflare.Website.Nuxt("web", {
         {{#if (eq dbSetup "turso")}}
         DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
         {{/if}}
-      },
-      });
+  },
+});
 {{else if (includes frontend "svelte")}}
 // _worker.js is a shim importing outside its directory, so it must be bundled
 export const web = Cloudflare.Website.StaticSite("web", {
@@ -34298,8 +34326,8 @@ export default Alchemy.Stack(
     });
     {{else if (includes frontend "nuxt")}}
     const webWorker = yield* Cloudflare.Website.Nuxt("web", {
-          rootDir: "../../apps/web",
-          env: {
+      rootDir: "../../apps/web",
+      env: {
             {{#if (eq backend "convex")}}
             NUXT_PUBLIC_CONVEX_URL: Config.string("NUXT_PUBLIC_CONVEX_URL"),
             {{#if (eq auth "better-auth")}}
@@ -34312,7 +34340,7 @@ export default Alchemy.Stack(
             NUXT_PUBLIC_SERVER_URL: Config.string("NUXT_PUBLIC_SERVER_URL"),
             {{/if}}
             {{/if}}
-          },
+      },
     });
     {{else if (includes frontend "svelte")}}
     // _worker.js is a shim importing outside its directory, so it must be bundled
@@ -36337,14 +36365,14 @@ export const syncProducts = action({
 });
 `],
   ["payments/polar/server/base/src/lib/payments.ts.hbs", `import { Polar } from "@polar-sh/sdk";
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-import type {} from "@{{projectName}}/env/server";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
 import { env } from "@{{projectName}}/env/server";
 {{/if}}
 
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-export function createPolarClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+export function createPolarClient(env: CloudflareEnv) {
 	return new Polar({
 		accessToken: env.POLAR_ACCESS_TOKEN,
 		server: "sandbox",

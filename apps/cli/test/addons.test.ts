@@ -1246,15 +1246,17 @@ describe("Addon Configurations", () => {
       ) as { devDependencies?: Record<string, string> };
 
       expect(nuxtConfig).toContain('"evlog/nuxt"');
-      expect(nuxtConfig).toContain("nitro:");
-      expect(nuxtConfig).toContain("cloudflare-module");
-      expect(nuxtConfig).toContain("nitro-cloudflare-dev");
-      expect(nuxtConfig).toContain("cloudflare-workers.dev.ts");
+      expect(nuxtConfig).not.toContain("cloudflare-module");
+      expect(nuxtConfig).not.toContain("nitro-cloudflare-dev");
+      expect(nuxtConfig).not.toContain("cloudflare-workers.dev.ts");
       expect(nuxtConfig).toContain("evlog:");
-      expect(infra).toContain('Cloudflare.Website.StaticSite("web", {');
+      expect(infra).toContain('Cloudflare.Website.Nuxt("web", {');
       expect(webPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBeUndefined();
-      expect(webPackage.devDependencies?.["nitro-cloudflare-dev"]).toBe("^0.2.2");
-      expect(webPackage.devDependencies?.wrangler).toBeDefined();
+      expect(webPackage.devDependencies?.["@alchemy.run/cloudflare-frameworks"]).toBe(
+        "2.0.0-beta.72",
+      );
+      expect(webPackage.devDependencies?.["nitro-cloudflare-dev"]).toBeUndefined();
+      expect(webPackage.devDependencies?.wrangler).toBeUndefined();
       expect(existsSync(join(projectDir, "apps/web/server/plugins/evlog-drain.ts"))).toBe(false);
       expectParseableTypeScript(nuxtConfig);
     });
@@ -1296,7 +1298,7 @@ describe("Addon Configurations", () => {
         'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
       );
       expect(authMiddleware).toContain(
-        "const identify = createAuthMiddleware(createAuth() as BetterAuthInstance, {",
+        "createAuth((event.context.cloudflare as { env: CloudflareEnv }).env) as BetterAuthInstance",
       );
       expect(authMiddleware).toContain('exclude: ["/api/auth/**"]');
       expect(authMiddleware).toContain("maskEmail: true");
@@ -1312,7 +1314,9 @@ describe("Addon Configurations", () => {
       expect(authClient).not.toContain("as string");
       expectParseableTypeScript(authClient);
 
-      expect(envServer).toContain('/// <reference types="@cloudflare/workers-types" />');
+      expect(envServer).toContain('import type { CloudflareEnv } from "../env.d.ts";');
+      expect(envServer).toContain('export type { CloudflareEnv } from "../env.d.ts";');
+      expect(envServer).not.toContain('from "cloudflare:workers"');
       expectParseableTypeScript(envServer);
     });
 
@@ -1403,7 +1407,8 @@ describe("Addon Configurations", () => {
         frontend: "nuxt",
         api: "orpc",
         path: "apps/web/server/middleware/evlog-auth.ts",
-        expected: "createAuthMiddleware(createAuth() as BetterAuthInstance",
+        expected:
+          "createAuth((event.context.cloudflare as { env: CloudflareEnv }).env) as BetterAuthInstance",
         insideMarker: "export default defineEventHandler",
       },
       {

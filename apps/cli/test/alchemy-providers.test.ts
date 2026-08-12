@@ -102,10 +102,10 @@ describe("Alchemy providers", () => {
     expect(files.has("packages/db/prisma/migrations/0000_init/migration.sql")).toBe(true);
     expect(infraPackage.scripts?.["check-types"]).toBe("tsc --noEmit");
     expect(infraPackage.devDependencies).toMatchObject({
-      alchemy: "2.0.0-beta.70",
-      effect: "4.0.0-beta.106",
-      "@effect/platform-node": "4.0.0-beta.106",
-      "@effect/platform-bun": "4.0.0-beta.106",
+      alchemy: "2.0.0-beta.72",
+      effect: "4.0.0-beta.107",
+      "@effect/platform-node": "4.0.0-beta.107",
+      "@effect/platform-bun": "4.0.0-beta.107",
     });
   });
 
@@ -261,6 +261,37 @@ describe("Alchemy providers", () => {
         expect(nuxtServerPlugin).not.toContain("createRouterClient");
       }
     }
+  });
+
+  it("uses Nuxt request context for native Alchemy bindings", async () => {
+    const files = await generate({
+      projectName: "nuxt-native-cloudflare-bindings",
+      webDeploy: "cloudflare",
+      serverDeploy: "none",
+      backend: "self",
+      runtime: "none",
+      dbSetup: "prisma-postgres",
+      frontend: ["nuxt"],
+    });
+    const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
+    const auth = files.get("packages/auth/src/index.ts") ?? "";
+    const db = files.get("packages/db/src/index.ts") ?? "";
+    const context = files.get("packages/api/src/context.ts") ?? "";
+    const authRoute = files.get("apps/web/server/api/auth/[...all].ts") ?? "";
+    const rpcRoute = files.get("apps/web/server/routes/rpc/[...].ts") ?? "";
+    const todoRouter = files.get("packages/api/src/routers/todo.ts") ?? "";
+
+    expect(infra).toContain('Cloudflare.Website.Nuxt("web", {');
+    expect(auth).toContain("createAuth(env: CloudflareEnv)");
+    expect(auth).toContain("createPrismaClient(env)");
+    expect(db).toContain("createPrismaClient(env: CloudflareEnv)");
+    expect(context).toContain("env: CloudflareEnv;");
+    expect(context).toContain("createAuth(env)");
+    expect(authRoute).toContain("event.context.cloudflare as { env: CloudflareEnv }");
+    expect(rpcRoute).toContain("event.context.cloudflare as { env: CloudflareEnv }");
+    expect(todoRouter).toContain("createPrismaClient(context.env)");
+    expect(files.has("apps/web/cloudflare-workers.dev.ts")).toBe(false);
+    expect(files.has("apps/web/wrangler.jsonc")).toBe(false);
   });
 
   it("preserves Prisma WASM modules in standalone Cloudflare server builds", async () => {

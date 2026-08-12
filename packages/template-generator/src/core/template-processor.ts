@@ -16,6 +16,14 @@ Handlebars.registerHelper("isAlchemyDeploy", isAlchemyDeployTarget);
 Handlebars.registerHelper("usesAlchemyDatabase", (backend, dbSetup, webDeploy, serverDeploy) =>
   usesAlchemyManagedDatabase({ backend, dbSetup, webDeploy, serverDeploy }),
 );
+Handlebars.registerHelper(
+  "usesRequestScopedCloudflareEnv",
+  (backend, webDeploy, frontend) =>
+    backend === "self" &&
+    webDeploy === "cloudflare" &&
+    Array.isArray(frontend) &&
+    (frontend.includes("nuxt") || frontend.includes("svelte")),
+);
 
 // Shared across every web client template (oRPC/tRPC/better-auth) so the
 // same-origin URL normalization for Vercel deploys has one source of truth.

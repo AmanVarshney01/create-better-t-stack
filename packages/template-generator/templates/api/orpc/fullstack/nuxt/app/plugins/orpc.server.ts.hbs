@@ -7,6 +7,9 @@ import { createRouterClient } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 {{/if}}
+{{#if (eq webDeploy "cloudflare")}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
+{{/if}}
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
 {{#if (and (eq webDeploy "cloudflare") (eq orm "prisma"))}}
@@ -31,6 +34,9 @@ export default defineNuxtPlugin(async () => {
 
   const context = await createContext({
     headers: event?.headers ?? new Headers(),
+    {{#if (eq webDeploy "cloudflare")}}
+    env: (event?.context.cloudflare as { env: CloudflareEnv }).env,
+    {{/if}}
   });
 
   const client = createRouterClient(appRouter, {

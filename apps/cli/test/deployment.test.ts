@@ -903,10 +903,10 @@ describe("Deployment Configurations", () => {
       expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
-        alchemy: "2.0.0-beta.70",
-        effect: "4.0.0-beta.106",
-        "@effect/platform-node": "4.0.0-beta.106",
-        "@effect/platform-bun": "4.0.0-beta.106",
+        alchemy: "2.0.0-beta.72",
+        effect: "4.0.0-beta.107",
+        "@effect/platform-node": "4.0.0-beta.107",
+        "@effect/platform-bun": "4.0.0-beta.107",
       });
       expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
         infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
@@ -1119,13 +1119,16 @@ describe("Deployment Configurations", () => {
       const nuxtRootPackage = JSON.parse(nuxtFiles.get("package.json") ?? "{}") as {
         scripts?: Record<string, string>;
       };
-      expect(nuxtInfra).toContain('Cloudflare.Website.StaticSite("web", {');
-      expect(nuxtInfra).not.toContain('Cloudflare.Website.Nuxt("web", {');
-      expect(nuxtInfra).toContain('outdir: ".output/public"');
-      expect(nuxtInfra).toContain('main: "../../apps/web/.output/server/index.mjs"');
+      expect(nuxtInfra).toContain('Cloudflare.Website.Nuxt("web", {');
+      expect(nuxtInfra).not.toContain('Cloudflare.Website.StaticSite("web", {');
+      expect(nuxtInfra).not.toContain('outdir: ".output/public"');
+      expect(nuxtInfra).not.toContain('main: "../../apps/web/.output/server/index.mjs"');
       expect(nuxtConfig).not.toContain("nitro-cloudflare-dev");
-      expect(nuxtConfig).toContain("preset: 'cloudflare-module'");
+      expect(nuxtConfig).not.toContain("preset: 'cloudflare-module'");
       expect(nuxtPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBeUndefined();
+      expect(nuxtPackage.devDependencies?.["@alchemy.run/cloudflare-frameworks"]).toBe(
+        "2.0.0-beta.72",
+      );
       expect(nuxtPackage.devDependencies?.["nitro-cloudflare-dev"]).toBeUndefined();
       expect(nuxtPackage.devDependencies?.wrangler).toBeUndefined();
       expect((nuxtPackage as { scripts?: Record<string, string> }).scripts?.build).toBe(
@@ -1147,7 +1150,10 @@ describe("Deployment Configurations", () => {
       expect(astroInfra).toContain("IMAGES: Cloudflare.Images.Images()");
       expect(astroConfig).not.toContain("@astrojs/cloudflare");
       expect(astroConfig).not.toContain("adapter: cloudflare()");
-      expect(astroPackage.devDependencies?.["@distilled.cloud/astro"]).toBe("0.17.1");
+      expect(astroPackage.devDependencies?.["@distilled.cloud/astro"]).toBeUndefined();
+      expect(astroPackage.devDependencies?.["@alchemy.run/cloudflare-frameworks"]).toBe(
+        "2.0.0-beta.72",
+      );
       expect(astroPackage.devDependencies?.["@astrojs/cloudflare"]).toBeUndefined();
       expect((astroPackage as { scripts?: Record<string, string> }).scripts?.build).toBeUndefined();
 

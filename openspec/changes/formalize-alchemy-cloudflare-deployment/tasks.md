@@ -11,13 +11,13 @@
 
 ## 2. Exact Dependency and Generated Artifact Gates
 
-- [x] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.70` output with no semver range; pin current Effect and both platform packages to beta.106 and record the unreleased #1132 startup fix as a blocker.
+- [x] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.72` output with no semver range; pin Effect and both platform packages to beta.107 and verify the released #1132 startup fix without a downgrade.
 - [ ] 2.2 Generate npm, pnpm, and Bun projects and prove each resolves the exact accepted Alchemy package rather than an incompatible test prerelease.
 - [ ] 2.3 Add deterministic artifact assertions for web-only, server-only, combined, full-stack `self`, Convex-web, D1, and mixed single-plane Cloudflare topologies.
 - [ ] 2.4 Assert that every selected Cloudflare plane emits `packages/infra/alchemy.run.ts`, the infra package, scripts, framework adapter/configuration, bindings, inferred env types, and user guidance.
 - [ ] 2.5 Add configuration-time rejection tests for non-Hono Cloudflare servers, non-Workers runtimes, unsupported `self` frontends, and invalid D1 consumers across flags and programmatic generation.
 - [x] 2.6 Regenerate `packages/template-generator/src/templates.generated.ts` only from source templates and verify it introduces no independent behavioral drift.
-- [ ] 2.7 For a release containing first-class framework resources, prove every dynamic `@distilled.cloud/*` source resolves from its generated package location under fresh npm, pnpm, and Bun installs without accidental hoisting.
+- [x] 2.7 Prove `@alchemy.run/cloudflare-frameworks` resolves from the generated web workspace under fresh npm, pnpm, and Bun installs without accidental hoisting.
 - [ ] 2.8 Assert that no generated project uses a git dependency, pull-request branch, moving dist-tag, or unpublished framework source package.
 
 ## 3. Compatibility Safeguard Tests
@@ -34,9 +34,9 @@
 
 ## 4. Framework, Binding, and Development Verification
 
-- [x] 4.1 Generate and install fresh Cloudflare projects for Next.js, Nuxt, SvelteKit, Astro, TanStack Start, React Router, TanStack Router, and Solid against beta.70/latest Effect; typecheck every workspace and run the ordinary root build contract. Nuxt and Astro intentionally omit duplicate web build scripts, so their provider-owned production builds remain under 4.3 and 4.5 after A11 is released.
+- [x] 4.1 Generate and install fresh Cloudflare projects for Next.js, Nuxt, SvelteKit, Astro, TanStack Start, React Router, TanStack Router, and Solid against beta.72/Effect beta.107; typecheck every workspace and run the ordinary root build contract. Provider-owned Nuxt and Astro production builds remain under 4.3 and 4.5.
 - [ ] 4.2 Verify Next/OpenNext assets, Worker entry, explicit compatibility flags, Images binding, and normal request behavior.
-- [ ] 4.3 Verify `Website.Nuxt` page SSR, API, assets, provider-owned binding proxy, and a D1-backed request after A11 is released; the removed `getPlatformProxy` alias is no longer the target path.
+- [ ] 4.3 Verify `Website.Nuxt` page SSR, API, assets, provider-owned binding proxy, and a D1-backed request; the removed `getPlatformProxy` alias is no longer the target path.
 - [x] 4.4 Verify SvelteKit's Cloudflare adapter output, bundled `_worker.js` shim, document request, and bindings.
 - [ ] 4.5 Verify Astro's server entry, session KV, Images binding/type, document or action route, and distinction between static and SSR output.
 - [ ] 4.6 Verify TanStack Start's `Website.Vite` Worker output, document/API route, runtime bindings, and framework auth/environment values.
@@ -131,8 +131,8 @@
 - [x] 12.1 Generate and typecheck `Website.Nuxt` with the current Nuxt version and native `nuxt.config.ts`, preserving Nuxt UI, runtime config, route rules, public server Outputs, auth values, and database bindings.
 - [ ] 12.2 Verify a real page SSR request, API route, static asset, public value, private binding, and production D1-backed operation; an API-only probe does not pass.
 - [x] 12.3 Remove the generated Cloudflare `nitro.preset` because released source owns and enforces the `cloudflare_module` target while loading the rest of native Nuxt configuration.
-- [ ] 12.4 Verify the generated removal of `nitro-cloudflare-dev`, the `cloudflare:workers` alias, dev Wrangler config, hard-coded resource dev wiring, and explicit resource compatibility flags through `alchemy dev`, HMR, local nested D1 migration, page SSR, and a D1 operation after A11 is released.
-- [ ] 12.5 Verify the generated removal of Nuxt's generic `command`, `.output` paths, `bundle: false`, and `memo: false` through provider-owned build, asset, plan, and workspace-memo gates after A11 is released.
+- [ ] 12.4 Verify the generated removal of `nitro-cloudflare-dev`, the `cloudflare:workers` alias, dev Wrangler config, hard-coded resource dev wiring, and explicit resource compatibility flags through `alchemy dev`, HMR, local nested D1 migration, page SSR, and a D1 operation.
+- [ ] 12.5 Verify the generated removal of Nuxt's generic `command`, `.output` paths, `bundle: false`, and `memo: false` through provider-owned build, asset, plan, and workspace-memo gates.
 
 ## 13. Website.SvelteKit Adoption
 
@@ -145,8 +145,8 @@
 ## 14. Website.Astro Adoption
 
 - [x] 14.1 Reconcile released `Website.Astro` wrapper comments, provider source, and Alchemy's own example: native config loads, the provider injects its adapter, and Alchemy owns build/dev.
-- [ ] 14.2 Verify Tailwind's Vite plugin, environment schema, integrations, route configuration, SSR, prerendering, and user Astro configuration through the provider after A11 is released.
-- [ ] 14.3 Verify the retained explicit `SESSION` and `IMAGES` bindings, inferred types, a session-backed route, and real image behavior after A11 is released; do not replace the session resource with the wrapper's differently identified implicit namespace.
+- [ ] 14.2 Verify Tailwind's Vite plugin, environment schema, integrations, route configuration, SSR, prerendering, and user Astro configuration through the provider.
+- [ ] 14.3 Verify the retained explicit `SESSION` and `IMAGES` bindings, inferred types, a session-backed route, and real image behavior; do not replace the session resource with the wrapper's differently identified implicit namespace.
 - [x] 14.4 Document that the released provider selects passthrough image handling while retaining the explicit `IMAGES` resource pending a focused production image gate.
 - [ ] 14.5 Verify SSR, prerendered content, static assets, 404 behavior, `_headers`, `_redirects`, and representative MIME responses in local workerd and a live deployment.
 - [x] 14.6 Remove `@astrojs/cloudflare`, its adapter import/call, manual `dist` entries, `bundle: false`, hard-coded resource dev URL, explicit compatibility flag, generic `memo: false`, and standalone Cloudflare production build script because released source owns those concerns.

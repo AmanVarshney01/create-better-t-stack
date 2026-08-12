@@ -162,7 +162,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: isBackendSelf ? ["nitro-cloudflare-dev", "wrangler"] : [],
+        devDependencies: ["@alchemy.run/cloudflare-frameworks"],
       });
     } else if (frontend.includes("svelte")) {
       addPackageDependency({
@@ -182,7 +182,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: ["@distilled.cloud/astro", "@cloudflare/workers-types"],
+        devDependencies: ["@alchemy.run/cloudflare-frameworks", "@cloudflare/workers-types"],
       });
     }
   }

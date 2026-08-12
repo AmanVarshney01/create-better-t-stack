@@ -122,16 +122,15 @@ bun run destroy
 
 `bun run dev` starts Alchemy development alongside the generated applications. Application packages expose `dev:bare` internally so the root command does not recursively start Alchemy again.
 
-For Nuxt and Astro on Cloudflare, Alchemy owns the framework build and injects its Cloudflare
-integration in memory. Those web packages intentionally omit a standalone `build` script; use the
-root `deploy` command for the actual Cloudflare build.
+For Nuxt and Astro on Cloudflare, Alchemy owns the deployment build and injects its Cloudflare
+integration in memory. Nuxt keeps its ordinary framework `build` command for local verification;
+Astro's Cloudflare scaffold relies on the Alchemy lifecycle because a standalone server build would
+need a competing checked-in adapter.
 
-<Callout type="warn">
-  The currently published `alchemy@2.0.0-beta.70` cannot start with the latest Effect beta because
-  it calls an Effect API removed in beta.104. The fix is merged upstream but not released, so this
-  integration remains blocked until a containing Alchemy release passes the full generated-project
-  and live matrix. Better-T-Stack does not downgrade Effect, patch dependencies, or rely on hoisting
-  to hide the incompatibility.
+<Callout type="info">
+  Generated projects pin `alchemy@2.0.0-beta.72` with Effect beta.107 exactly. The framework source
+  package is installed in the web workspace that Alchemy loads it from, so Bun, npm, and pnpm can
+  resolve the same graph without overrides or hoisting assumptions.
 </Callout>
 
 Deployments are staged. For an explicit production stage:
