@@ -14,6 +14,7 @@ interface TurboTask {
   outputs?: string[];
   cache?: boolean;
   persistent?: boolean;
+  interactive?: boolean;
 }
 
 interface TurboConfig {
@@ -29,7 +30,7 @@ export function processTurboConfig(vfs: VirtualFileSystem, config: ProjectConfig
   vfs.writeFile("turbo.json", JSON.stringify(turboConfig, null, "\t"));
 }
 
-function generateTurboConfig(config: ProjectConfig): TurboConfig {
+export function generateTurboConfig(config: ProjectConfig): TurboConfig {
   const { backend, database, dbSetup, webDeploy, serverDeploy, frontend } = config;
 
   const isConvex = backend === "convex";
@@ -185,9 +186,11 @@ function getDeployTasks(): Record<string, TurboTask> {
   return {
     deploy: {
       cache: false,
+      interactive: true,
     },
     destroy: {
       cache: false,
+      interactive: true,
     },
   };
 }

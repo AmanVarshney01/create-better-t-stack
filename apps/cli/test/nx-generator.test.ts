@@ -3,6 +3,7 @@ import { describe, expect, it } from "bun:test";
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import { generateNxConfig } from "../../../packages/template-generator/src/processors/nx-generator";
+import { generateTurboConfig } from "../../../packages/template-generator/src/processors/turbo-generator";
 
 const baseConfig: ProjectConfig = {
   projectName: "nx-test",
@@ -92,5 +93,19 @@ describe("Nx config generator", () => {
     expect(nextCloudflareInputs).toContain("!{workspaceRoot}/.wrangler/**");
     expect(nextCloudflareInputs).not.toContain("!{workspaceRoot}/apps/server/dist/**");
     expect(nextCloudflareInputs).not.toContain("!{workspaceRoot}/packages/db/dist/**");
+  });
+});
+
+describe("Turbo config generator", () => {
+  it("forwards terminal input to Alchemy deployment tasks", () => {
+    const config = generateTurboConfig(
+      configWith({
+        addons: ["turborepo"],
+        webDeploy: "cloudflare",
+      }),
+    );
+
+    expect(config.tasks.deploy).toEqual({ cache: false, interactive: true });
+    expect(config.tasks.destroy).toEqual({ cache: false, interactive: true });
   });
 });
