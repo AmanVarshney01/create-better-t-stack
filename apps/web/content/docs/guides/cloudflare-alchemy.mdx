@@ -26,12 +26,9 @@ Prisma supports:
 
 The CLI rejects unsupported framework/runtime combinations before writing files.
 
-Two Next.js combinations are temporarily unavailable on Cloudflare because of current OpenNext
-packaging bugs:
-
-- Sentry, until OpenNext Cloudflare includes the instrumentation tracing fix
-- Prisma with a generic `node-postgres` connection, including PlanetScale Postgres and Supabase,
-  until OpenNext preserves `pg-cloudflare`'s workerd runtime files
+Prisma with a generic `node-postgres` connection, including PlanetScale Postgres and Supabase, is
+temporarily unavailable with Next.js on Cloudflare until OpenNext preserves `pg-cloudflare`'s
+workerd runtime files.
 
 Next.js with Neon or Prisma Postgres remains supported on Cloudflare. The same PlanetScale
 Postgres Prisma setup remains supported with the other Cloudflare SSR frontends or with Prisma,
@@ -138,8 +135,6 @@ bunx alchemy destroy --stage production
 The stack loads `packages/infra/.env` plus the relevant app `.env` files. Public configuration uses `Config.string`; secrets use `Config.redacted`. Alchemy Outputs, such as a deployed server URL or database credential, are passed directly so resource dependency ordering is preserved.
 
 For Cloudflare, generated `Cloudflare.InferEnv` types flow into `packages/env/env.d.ts`. Managed database bindings are individual Effect inputs, which keeps each runtime property precisely typed.
-
-For Sentry, runtime DSNs go to the deployed app while organization, project, and auth-token values are available only to the web build that uploads source maps. See the [Sentry guide](/docs/guides/sentry).
 
 ## Generated infrastructure
 

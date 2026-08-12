@@ -406,7 +406,7 @@ Runtime credentials are pooled or least privilege. Migration credentials are dir
 
 The product surface calls the target **Prisma**; `Prisma.Compute` is the Alchemy resource used in generated code. Supported automatic framework builds are Next.js, Nuxt, Astro, and TanStack Start. SolidStart uses its verified `.output/server/index.mjs` artifact. Server apps use the Bun auto-build surface for Hono, Express, Fastify, and Elysia on Bun or Node.
 
-One `Prisma.Project` is reused by all Prisma application resources and, when selected, Prisma Postgres. Mixed Cloudflare/Prisma stacks remain one Alchemy graph, so the server resource is yielded before the web and its URL remains an Output rather than a copied configuration string. Sentry's public DSN participates in build and runtime environments, while organization/project metadata and the redacted auth token are build-only.
+One `Prisma.Project` is reused by all Prisma application resources and, when selected, Prisma Postgres. Mixed Cloudflare/Prisma stacks remain one Alchemy graph, so the server resource is yielded before the web and its URL remains an Output rather than a copied configuration string.
 The release-intake wait is over, but the resources remain independent candidates: Nuxt is blocked
 by A12, SvelteKit served stable Kit 2 locally despite its peer warning, and Astro loaded native
 configuration while still requiring production and binding qualification.

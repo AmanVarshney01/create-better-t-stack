@@ -62,14 +62,7 @@ Cloudflare and Prisma planes SHALL be composable in either direction. The web bu
 
 ### Requirement: Prisma deployment preserves build-time and runtime environment boundaries
 
-Application secrets and database values SHALL be runtime environment values. Framework-public values required during compilation SHALL be provided to both build and runtime as appropriate. Sentry source-map credentials SHALL be build-only.
-
-#### Scenario: Sentry on a Prisma web deployment
-
-- **WHEN** Sentry is enabled
-- **THEN** the public DSN SHALL reach the framework build and runtime
-- **AND** `SENTRY_ORG`, project identifiers, and `SENTRY_AUTH_TOKEN` SHALL reach the build environment
-- **AND** the auth token SHALL remain redacted
+Application secrets and database values SHALL be runtime environment values. Framework-public values required during compilation SHALL be provided to both build and runtime as appropriate.
 
 ### Requirement: Prisma deployment uses the common Alchemy lifecycle
 
@@ -87,12 +80,6 @@ Generated Prisma projects SHALL expose the same root `dev`, `deploy`, and `destr
 The CLI SHALL reject a Cloudflare web combination when its released framework packager cannot
 produce a deployable artifact. The rejection SHALL be scoped to the broken combination and SHALL
 not disable a database provider or addon for unaffected frontends and deployment targets.
-
-#### Scenario: Next.js instrumentation is not traceable
-
-- **WHEN** Sentry is selected with Next.js on Cloudflare while the accepted OpenNext release cannot trace the generated instrumentation output
-- **THEN** configuration validation SHALL fail before files are written
-- **AND** Sentry SHALL remain available for Prisma, Docker, Vercel, and other supported Cloudflare frontends
 
 #### Scenario: Next.js omits node-postgres runtime files
 

@@ -114,9 +114,6 @@ export const server = Prisma.Compute("server", Effect.gen(function* () {
     env: {
       ...resolvedDatabaseEnv,
       CORS_ORIGIN: Config.string("CORS_ORIGIN"),
-      {{#if (includes addons "sentry")}}
-      SENTRY_DSN: Config.string("SENTRY_SERVER_DSN"),
-      {{/if}}
       {{#if (eq auth "better-auth")}}
       BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
       BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
@@ -160,18 +157,6 @@ export const web = Prisma.Compute("web", Effect.gen(function* () {
   {{/if}}
 
   const webEnv = {
-    {{#if (includes addons "sentry")}}
-    SENTRY_DSN: Config.string("SENTRY_WEB_DSN"),
-    {{#if (includes frontend "next")}}
-    NEXT_PUBLIC_SENTRY_DSN: Config.string("NEXT_PUBLIC_SENTRY_DSN"),
-    {{else if (includes frontend "nuxt")}}
-    NUXT_PUBLIC_SENTRY_DSN: Config.string("NUXT_PUBLIC_SENTRY_DSN"),
-    {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
-    PUBLIC_SENTRY_DSN: Config.string("PUBLIC_SENTRY_DSN"),
-    {{else}}
-    VITE_SENTRY_DSN: Config.string("VITE_SENTRY_DSN"),
-    {{/if}}
-    {{/if}}
     {{#if (eq backend "self")}}
     ...resolvedDatabaseEnv,
     CORS_ORIGIN: Config.string("CORS_ORIGIN"),
@@ -236,33 +221,23 @@ export const web = Prisma.Compute("web", Effect.gen(function* () {
     {{/if}}
   };
 
-  {{#if (includes addons "sentry")}}
-  const webBuildEnv = {
-    ...webEnv,
-    SENTRY_ORG: Config.string("SENTRY_ORG"),
-    SENTRY_PROJECT: Config.string("SENTRY_PROJECT"),
-    SENTRY_WEB_PROJECT: Config.string("SENTRY_WEB_PROJECT"),
-    SENTRY_AUTH_TOKEN: Config.redacted("SENTRY_AUTH_TOKEN"),
-  };
-  {{/if}}
-
   return {
     project,
     path: "../../apps/web",
     {{#if (includes frontend "next")}}
-    build: { type: "auto" as const, framework: "nextjs" as const, env: {{#if (includes addons "sentry")}}webBuildEnv{{else}}webEnv{{/if}} },
+    build: { type: "auto" as const, framework: "nextjs" as const, env: webEnv },
     {{else if (includes frontend "nuxt")}}
-    build: { type: "auto" as const, framework: "nuxt" as const, env: {{#if (includes addons "sentry")}}webBuildEnv{{else}}webEnv{{/if}} },
+    build: { type: "auto" as const, framework: "nuxt" as const, env: webEnv },
     {{else if (includes frontend "astro")}}
-    build: { type: "auto" as const, framework: "astro" as const, env: {{#if (includes addons "sentry")}}webBuildEnv{{else}}webEnv{{/if}} },
+    build: { type: "auto" as const, framework: "astro" as const, env: webEnv },
     {{else if (includes frontend "tanstack-start")}}
-    build: { type: "auto" as const, framework: "tanstack-start" as const, env: {{#if (includes addons "sentry")}}webBuildEnv{{else}}webEnv{{/if}} },
+    build: { type: "auto" as const, framework: "tanstack-start" as const, env: webEnv },
     {{else}}
     build: {
       command: "{{packageManager}} run build",
       outdir: ".output",
       entrypoint: "server/index.mjs",
-      env: {{#if (includes addons "sentry")}}webBuildEnv{{else}}webEnv{{/if}},
+      env: webEnv,
     },
     port: 3000,
     {{/if}}

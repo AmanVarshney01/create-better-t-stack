@@ -641,44 +641,8 @@ describe("stack builder Prisma deployment compatibility", () => {
       ).stack.serverDeploy,
     ).toBe("cloudflare");
   });
-});
 
-describe("stack builder Sentry compatibility", () => {
-  test("generates Sentry addon commands", () => {
-    expect(generateStackCommand(createStack({ addons: ["sentry"] }))).toContain("--addons sentry");
-  });
-
-  test("requires a frontend or supported server backend", () => {
-    const emptyStack = createStack({
-      webFrontend: ["none"],
-      nativeFrontend: ["none"],
-      backend: "none",
-      runtime: "none",
-      database: "none",
-      orm: "none",
-      api: "none",
-      auth: "none",
-    });
-    const serverStack = createStack({
-      webFrontend: ["none"],
-      nativeFrontend: ["none"],
-      backend: "hono",
-    });
-
-    expect(getDisabledReason(emptyStack, "addons", "sentry")).toBe(
-      "Sentry requires a frontend or Hono, Express, Fastify, or Elysia server",
-    );
-    expect(getDisabledReason(serverStack, "addons", "sentry")).toBeNull();
-  });
-
-  test("blocks the known Next.js Cloudflare conflicts", () => {
-    const sentryStack = createStack({
-      webFrontend: ["next"],
-      backend: "self-next",
-      runtime: "none",
-      addons: ["sentry"],
-      webDeploy: "cloudflare",
-    });
+  test("blocks the known Next.js Cloudflare PostgreSQL conflict", () => {
     const postgresStack = createStack({
       webFrontend: ["next"],
       backend: "self-next",
@@ -688,17 +652,8 @@ describe("stack builder Sentry compatibility", () => {
       dbSetup: "none",
     });
 
-    expect(getDisabledReason(sentryStack, "addons", "sentry")).toBe(
-      "Sentry with Next.js is temporarily unavailable on Cloudflare",
-    );
-    expect(getDisabledReason(sentryStack, "webDeploy", "cloudflare")).toBe(
-      "Sentry with Next.js is temporarily unavailable on Cloudflare",
-    );
     expect(getDisabledReason(postgresStack, "webDeploy", "cloudflare")).toBe(
       "This Prisma PostgreSQL setup with Next.js is temporarily unavailable on Cloudflare",
     );
-    const resolved = resolveStackCompatibility(sentryStack).stack;
-    expect(resolved.webDeploy).toBe("cloudflare");
-    expect(resolved.addons).not.toContain("sentry");
   });
 });

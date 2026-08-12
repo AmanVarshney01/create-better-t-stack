@@ -405,9 +405,7 @@ export function validatePrismaWebDeploy(
 }
 
 export function validateCloudflareWebDeployKnownIssues(
-  config: Partial<
-    Pick<ProjectConfig, "database" | "dbSetup" | "frontend" | "orm" | "webDeploy">
-  >,
+  config: Partial<Pick<ProjectConfig, "database" | "dbSetup" | "frontend" | "orm" | "webDeploy">>,
 ): ValidationResult {
   if (config.webDeploy !== "cloudflare" || !config.frontend?.includes("next")) {
     return Result.ok(undefined);

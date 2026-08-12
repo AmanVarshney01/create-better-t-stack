@@ -306,11 +306,6 @@ shutdown gates in an executable generated-project test.
 - Better-T-Stack explicitly maps Astro's `SESSION` and `IMAGES` bindings in both relevant generated
   paths. Build, development, and deployment compatibility dates still need an intentional alignment
   policy; that is a generator policy gap rather than an Alchemy core defect.
-- OpenNext Cloudflare 1.20.2 embeds OpenNext AWS 4.1.0, whose Next.js 16 instrumentation tracer
-  rejects Sentry's generated `server/instrumentation.js` path. The AWS fix is merged in
-  [#1195](https://github.com/opennextjs/opennextjs-aws/pull/1195), but it is not yet available in the
-  current Cloudflare package. Better-T-Stack rejects Next.js + Sentry + Cloudflare until a released
-  OpenNext Cloudflare package passes the generated `build:cloudflare` gate.
 - OpenNext Cloudflare currently omits `pg-cloudflare`'s workerd condition files while tracing a
   Prisma `@prisma/adapter-pg` Next.js build. The build then fails to resolve
   `pg-cloudflare/dist/index.js`; the upstream packaging report remains open as

@@ -43,22 +43,9 @@ describe("Alchemy providers", () => {
       serverDeploy: "none",
       dbSetup: "planetscale",
     });
-    const nextSentry = await createVirtual({
-      ...baseConfig,
-      projectName: "next-sentry-blocked",
-      backend: "self",
-      runtime: "none",
-      serverDeploy: "none",
-      addons: ["sentry"],
-    });
-
     expect(nextPlanetScalePostgres.isErr()).toBe(true);
     expect(nextPlanetScalePostgres.isErr() && nextPlanetScalePostgres.error.message).toContain(
       "OpenNext does not preserve pg-cloudflare's workerd files",
-    );
-    expect(nextSentry.isErr()).toBe(true);
-    expect(nextSentry.isErr() && nextSentry.error.message).toContain(
-      "current OpenNext release cannot trace Next.js 16 instrumentation output",
     );
   });
 
@@ -329,26 +316,6 @@ describe("Alchemy providers", () => {
     expect(infra).not.toContain("databaseBindings,");
     expect(infra).toContain("databaseEnv,");
     expect(infra).toContain('export const server = Prisma.Compute("server"');
-  });
-
-  it("passes Sentry build and runtime values to Prisma deployments", async () => {
-    const files = await generate({
-      projectName: "prisma-sentry",
-      webDeploy: "prisma",
-      serverDeploy: "prisma",
-      backend: "hono",
-      runtime: "bun",
-      addons: ["sentry"],
-    });
-    const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
-
-    expect(infra).toContain('SENTRY_DSN: Config.string("SENTRY_SERVER_DSN")');
-    expect(infra).toContain('NEXT_PUBLIC_SENTRY_DSN: Config.string("NEXT_PUBLIC_SENTRY_DSN")');
-    expect(infra).toContain('SENTRY_AUTH_TOKEN: Config.redacted("SENTRY_AUTH_TOKEN")');
-    expect(infra).toContain(
-      'build: { type: "auto" as const, framework: "nextjs" as const, env: webBuildEnv }',
-    );
-    expect(infra).toContain("env: webEnv");
   });
 
   it("approves required npm install scripts for Alchemy and Prisma", async () => {

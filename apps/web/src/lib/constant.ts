@@ -692,14 +692,6 @@ export const TECH_OPTIONS: Record<
       color: "from-sky-500 to-slate-700",
       default: false,
     },
-    {
-      id: "sentry",
-      name: "Sentry",
-      description: "Error monitoring and performance tracing",
-      icon: "",
-      color: "from-purple-500 to-indigo-700",
-      default: false,
-    },
   ],
   examples: [
     {
