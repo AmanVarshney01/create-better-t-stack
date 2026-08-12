@@ -408,5 +408,6 @@ The product surface calls the target **Prisma**; `Prisma.Compute` is the Alchemy
 One `Prisma.Project` is reused by all Prisma application resources and, when selected, Prisma Postgres. Mixed Cloudflare/Prisma stacks remain one Alchemy graph, so the server resource is yielded before the web and its URL remains an Output rather than a copied configuration string.
 Nuxt and Astro now use their released first-class resources. Next.js and SvelteKit remain on
 qualified generic paths because their current provider peers do not match the latest generated
-framework dependencies. All first-class executable gates are waiting on an Alchemy release that
-contains merged Effect compatibility PR #1132.
+framework dependencies. Beta.72 contains the Effect compatibility fix; the remaining Nuxt and Astro
+work is provider-owned live build, development, binding, and request verification rather than a
+dependency-startup blocker.
