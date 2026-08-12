@@ -8,9 +8,6 @@ function writeCloudflareServer(writer: AlchemyWriter, plan: AlchemyDeploymentPla
     'export const server = Cloudflare.Worker("server", {',
     () => {
       writer.writeLine('main: "../../apps/server/src/index.ts",');
-      writer.writeLine(
-        "// User entrypoints are external Workers, so declare required compatibility flags explicitly.",
-      );
       writeObject(
         writer,
         "compatibility: {",

@@ -296,9 +296,9 @@ function writeExternalDatabaseEnv(writer: AlchemyWriter, plan: AlchemyDeployment
     writer,
     "export const databaseEnv = Effect.succeed({",
     () => {
-      if (config.dbSetup === "d1") {
-        writer.writeLine("// D1 is a native Worker binding and is added below.");
-      } else if (
+      if (config.dbSetup === "d1") return;
+
+      if (
         config.database === "mysql" &&
         config.orm === "drizzle" &&
         config.dbSetup === "planetscale"
