@@ -74,7 +74,16 @@ const convexBetterAuthSupportedNativeFrontends = [
 const convexBetterAuthIncompatibleWebFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
 const staticDesktopAddons = ["tauri", "electrobun"] as const;
 const dockerServerOutputFrontends = ["next", "svelte", "solid", "astro", "react-router"] as const;
-const prismaComputeWebFrontends = ["next", "nuxt", "astro", "tanstack-start", "solid"] as const;
+const prismaComputeWebFrontends = [
+  "next",
+  "nuxt",
+  "astro",
+  "react-router",
+  "tanstack-start",
+  "svelte",
+  "solid",
+] as const;
+const prismaDesktopStaticFrontends = ["next", "svelte", "astro", "react-router"] as const;
 
 const hasConvexBetterAuthCompatibleFrontend = (webFrontend: string[], nativeFrontend: string[]) =>
   webFrontend.some((f) =>
@@ -181,6 +190,21 @@ const getDockerDesktopConflict = (
     auth === "better-auth";
 
   return keepsServerOutput ? null : { affectedFrontend, selectedDesktopAddons };
+};
+
+const getPrismaDesktopConflict = (addons: string[], webFrontend: string[]) => {
+  const selectedDesktopAddons = addons.filter((addon) =>
+    staticDesktopAddons.includes(addon as (typeof staticDesktopAddons)[number]),
+  );
+  const affectedFrontend = webFrontend.find((frontend) =>
+    prismaDesktopStaticFrontends.includes(
+      frontend as (typeof prismaDesktopStaticFrontends)[number],
+    ),
+  );
+
+  return selectedDesktopAddons.length > 0 && affectedFrontend
+    ? { affectedFrontend, selectedDesktopAddons }
+    : null;
 };
 
 // Mirrors the CLI rule: Tauri static exports can't bundle Convex Better Auth on these frontends
@@ -888,6 +912,18 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     });
   }
 
+  if (nextStack.webDeploy === "prisma") {
+    const prismaDesktopConflict = getPrismaDesktopConflict(nextStack.addons, nextStack.webFrontend);
+    if (prismaDesktopConflict) {
+      nextStack.webDeploy = "none";
+      changed = true;
+      changes.push({
+        category: "webDeploy",
+        message: `Web deploy set to 'None' (${prismaDesktopConflict.selectedDesktopAddons.join(" and ")} requires a static ${prismaDesktopConflict.affectedFrontend} build)`,
+      });
+    }
+  }
+
   const cloudflareNextIssue = getCloudflareNextIssue(nextStack);
   if (cloudflareNextIssue) {
     nextStack.webDeploy = "none";
@@ -1358,6 +1394,13 @@ export const getDisabledReason = (
       return `${optionId} requires a static React Router export, but Clerk requires SSR middleware`;
     }
     if (
+      staticDesktopAddons.includes(optionId as (typeof staticDesktopAddons)[number]) &&
+      currentStack.webDeploy === "prisma" &&
+      getPrismaDesktopConflict([optionId], currentStack.webFrontend)
+    ) {
+      return `${optionId} requires a static web build, but Prisma requires an executable server artifact`;
+    }
+    if (
       optionId === "electrobun" &&
       !hasElectrobunCompatibleFrontend(currentStack.webFrontend, currentStack.backend)
     ) {
@@ -1428,7 +1471,16 @@ export const getDisabledReason = (
         prismaComputeWebFrontends.includes(frontend as (typeof prismaComputeWebFrontends)[number]),
       )
     ) {
-      return "Prisma requires Next.js, Nuxt, Astro, TanStack Start, or SolidStart";
+      return "Prisma requires Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or SolidStart";
+    }
+    if (optionId === "prisma") {
+      const prismaDesktopConflict = getPrismaDesktopConflict(
+        currentStack.addons,
+        currentStack.webFrontend,
+      );
+      if (prismaDesktopConflict) {
+        return `Prisma cannot deploy the static output required by ${prismaDesktopConflict.selectedDesktopAddons.join(" and ")} on ${prismaDesktopConflict.affectedFrontend}`;
+      }
     }
     if (optionId === "cloudflare") {
       const issue = getCloudflareNextIssue({ ...currentStack, webDeploy: "cloudflare" });

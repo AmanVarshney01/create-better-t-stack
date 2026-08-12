@@ -581,17 +581,42 @@ describe("stack builder option parity", () => {
 
 describe("stack builder Prisma deployment compatibility", () => {
   test("allows Prisma web deployment only for supported SSR frontends", () => {
-    for (const frontend of ["next", "nuxt", "astro", "tanstack-start", "solid"]) {
+    for (const frontend of [
+      "next",
+      "nuxt",
+      "astro",
+      "react-router",
+      "tanstack-start",
+      "svelte",
+      "solid",
+    ]) {
       expect(
         getDisabledReason(createStack({ webFrontend: [frontend] }), "webDeploy", "prisma"),
       ).toBeNull();
     }
 
-    for (const frontend of ["tanstack-router", "react-router", "svelte"]) {
+    for (const frontend of ["tanstack-router"]) {
       expect(
         getDisabledReason(createStack({ webFrontend: [frontend] }), "webDeploy", "prisma"),
-      ).toBe("Prisma requires Next.js, Nuxt, Astro, TanStack Start, or SolidStart");
+      ).toBe(
+        "Prisma requires Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or SolidStart",
+      );
     }
+  });
+
+  test("blocks Prisma web deploy when desktop addons replace its server artifact", () => {
+    const stack = createStack({
+      webFrontend: ["react-router"],
+      addons: ["tauri"],
+      webDeploy: "none",
+    });
+
+    expect(getDisabledReason(stack, "webDeploy", "prisma")).toBe(
+      "Prisma cannot deploy the static output required by tauri on react-router",
+    );
+    expect(resolveStackCompatibility({ ...stack, webDeploy: "prisma" }).stack.webDeploy).toBe(
+      "none",
+    );
   });
 
   test("generates Prisma web and server deployment flags", () => {
