@@ -9,6 +9,16 @@ export function processInfraDeps(vfs: VirtualFileSystem, config: ProjectConfig):
 
   const { serverDeploy, webDeploy } = config;
   if (serverDeploy === "cloudflare" || webDeploy === "cloudflare") {
-    addPackageDependency({ vfs, packagePath: infraPath, devDependencies: ["alchemy"] });
+    addPackageDependency({
+      vfs,
+      packagePath: infraPath,
+      devDependencies: [
+        "alchemy",
+        "effect",
+        "@effect/platform-node",
+        "@effect/platform-bun",
+        "dotenv",
+      ],
+    });
   }
 }

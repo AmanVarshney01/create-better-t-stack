@@ -13,6 +13,7 @@ type NxTargetDefaults = {
   dependsOn?: string[];
   inputs?: string[];
   cache?: boolean;
+  continuous?: boolean;
 };
 
 type NxConfig = {
@@ -48,7 +49,9 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
     },
     dev: {
       cache: false,
+      continuous: true,
     },
+    ...(config.addons.includes("electrobun") ? getElectrobunTargets() : {}),
     ...(isConvex ? getConvexTargets() : {}),
     ...(!isConvex && hasDatabase ? getDatabaseTargets(dbSupport) : {}),
     ...(isDocker ? getDockerTargets() : {}),
@@ -69,6 +72,15 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
       sharedGlobals: [],
     },
     targetDefaults,
+  };
+}
+
+function getElectrobunTargets(): Record<string, NxTargetDefaults> {
+  return {
+    "dev:hmr": {
+      cache: false,
+      continuous: true,
+    },
   };
 }
 
@@ -100,7 +112,7 @@ function getDatabaseTargets(dbSupport: DbScriptSupport): Record<string, NxTarget
   }
 
   if (dbSupport.hasDbStudio) {
-    targets["db:studio"] = { cache: false };
+    targets["db:studio"] = { cache: false, continuous: true };
   }
 
   return targets;
@@ -110,14 +122,14 @@ function getDockerTargets(): Record<string, NxTargetDefaults> {
   return {
     "db:start": { cache: false },
     "db:stop": { cache: false },
-    "db:watch": { cache: false },
+    "db:watch": { cache: false, continuous: true },
     "db:down": { cache: false },
   };
 }
 
 function getSqliteLocalTarget(): Record<string, NxTargetDefaults> {
   return {
-    "db:local": { cache: false },
+    "db:local": { cache: false, continuous: true },
   };
 }
 

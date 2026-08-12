@@ -624,7 +624,8 @@ export const TECH_OPTIONS: Record<
     {
       id: "ultracite",
       name: "Ultracite",
-      description: "A zero-config preset for ESLint, Biome, and Oxlint that helps AI write better code",
+      description:
+        "A zero-config preset for ESLint, Biome, and Oxlint that helps AI write better code",
       icon: `${ICON_BASE_URL}/ultracite.svg`,
       color: "from-blue-500 to-blue-700",
       className: "invert-0 dark:invert",
