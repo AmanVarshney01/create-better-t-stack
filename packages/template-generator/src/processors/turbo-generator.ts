@@ -128,7 +128,7 @@ function getConvexTasks(): Record<string, TurboTask> {
   return {
     "dev:setup": {
       cache: false,
-      persistent: true,
+      interactive: true,
     },
   };
 }
@@ -137,15 +137,15 @@ function getDatabaseTasks(dbSupport: DbScriptSupport): Record<string, TurboTask>
   const tasks: Record<string, TurboTask> = {};
 
   if (dbSupport.hasDbPush) {
-    tasks["db:push"] = { cache: false };
+    tasks["db:push"] = { cache: false, interactive: true };
   }
 
   if (dbSupport.hasDbGenerate) {
-    tasks["db:generate"] = { cache: false };
+    tasks["db:generate"] = { cache: false, interactive: true };
   }
 
   if (dbSupport.hasDbMigrate) {
-    tasks["db:migrate"] = { cache: false, persistent: true };
+    tasks["db:migrate"] = { cache: false, interactive: true };
   }
 
   if (dbSupport.hasDbStudio) {
@@ -159,7 +159,6 @@ function getDockerTasks(): Record<string, TurboTask> {
   return {
     "db:start": {
       cache: false,
-      persistent: true,
     },
     "db:stop": {
       cache: false,
@@ -178,6 +177,7 @@ function getSqliteLocalTask(): Record<string, TurboTask> {
   return {
     "db:local": {
       cache: false,
+      persistent: true,
     },
   };
 }

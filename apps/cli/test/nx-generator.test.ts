@@ -4,6 +4,8 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import { generateNxConfig } from "../../../packages/template-generator/src/processors/nx-generator";
 import { generateTurboConfig } from "../../../packages/template-generator/src/processors/turbo-generator";
+import { createVirtual } from "../src/index";
+import { collectFiles } from "./setup";
 
 const baseConfig: ProjectConfig = {
   projectName: "nx-test",
@@ -32,6 +34,66 @@ function configWith(overrides: Partial<ProjectConfig>): ProjectConfig {
 }
 
 describe("Nx config generator", () => {
+  it("marks only long-running tasks as continuous", () => {
+    const config = generateNxConfig(baseConfig);
+
+    expect(config.targetDefaults.dev).toEqual({ cache: false, continuous: true });
+    expect(config.targetDefaults["db:push"]).toEqual({ cache: false });
+    expect(config.targetDefaults["db:generate"]).toEqual({ cache: false });
+    expect(config.targetDefaults["db:migrate"]).toEqual({ cache: false });
+    expect(config.targetDefaults["db:studio"]).toEqual({ cache: false, continuous: true });
+    expect(config.targetDefaults["db:local"]).toEqual({ cache: false, continuous: true });
+
+    const dockerConfig = generateNxConfig(configWith({ dbSetup: "docker" }));
+    expect(dockerConfig.targetDefaults["db:start"]).toEqual({ cache: false });
+    expect(dockerConfig.targetDefaults["db:watch"]).toEqual({
+      cache: false,
+      continuous: true,
+    });
+
+    const desktopConfig = generateNxConfig(
+      configWith({ addons: ["nx", "electrobun"], frontend: ["tanstack-router"] }),
+    );
+    expect(desktopConfig.targetDefaults["dev:hmr"]).toEqual({
+      cache: false,
+      continuous: true,
+    });
+  });
+
+  it("keeps prompt-driven tasks in the interactive Nx TUI", async () => {
+    const result = await createVirtual({
+      projectName: "nx-interactive",
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      database: "postgres",
+      orm: "drizzle",
+      auth: "none",
+      payments: "none",
+      addons: ["nx"],
+      examples: [],
+      git: false,
+      packageManager: "bun",
+      install: false,
+      dbSetup: "none",
+      webDeploy: "cloudflare",
+      serverDeploy: "none",
+      api: "trpc",
+    });
+
+    if (result.isErr()) throw result.error;
+
+    const files = collectFiles(result.value.root, result.value.root.path);
+    const packageJson = JSON.parse(files.get("package.json") ?? "{}") as {
+      scripts?: Record<string, string>;
+    };
+
+    for (const script of ["db:push", "db:generate", "db:migrate", "deploy", "destroy"]) {
+      expect(packageJson.scripts?.[script]).toStartWith("nx run-many");
+      expect(packageJson.scripts?.[script]).not.toContain("--no-tui");
+    }
+  });
+
   it("excludes stack-generated frontend, backend, and database paths from production inputs", () => {
     const productionInputs = generateNxConfig(baseConfig).namedInputs.production;
 
@@ -97,6 +159,32 @@ describe("Nx config generator", () => {
 });
 
 describe("Turbo config generator", () => {
+  it("distinguishes prompt-driven and long-running tasks", () => {
+    const config = generateTurboConfig(configWith({ addons: ["turborepo"] }));
+
+    expect(config.tasks["db:push"]).toEqual({ cache: false, interactive: true });
+    expect(config.tasks["db:generate"]).toEqual({ cache: false, interactive: true });
+    expect(config.tasks["db:migrate"]).toEqual({ cache: false, interactive: true });
+    expect(config.tasks["db:studio"]).toEqual({ cache: false, persistent: true });
+    expect(config.tasks["db:local"]).toEqual({ cache: false, persistent: true });
+
+    const dockerConfig = generateTurboConfig(
+      configWith({ addons: ["turborepo"], dbSetup: "docker" }),
+    );
+    expect(dockerConfig.tasks["db:start"]).toEqual({ cache: false });
+    expect(dockerConfig.tasks["db:watch"]).toEqual({ cache: false, persistent: true });
+
+    const convexConfig = generateTurboConfig(
+      configWith({
+        addons: ["turborepo"],
+        backend: "convex",
+        database: "none",
+        orm: "none",
+      }),
+    );
+    expect(convexConfig.tasks["dev:setup"]).toEqual({ cache: false, interactive: true });
+  });
+
   it("forwards terminal input to Alchemy deployment tasks", () => {
     const config = generateTurboConfig(
       configWith({
