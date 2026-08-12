@@ -25,8 +25,20 @@ RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
 RUN --mount=type=cache,target=/root/.npm npm install
 {{/if}}
 
+{{#if (includes addons "sentry")}}
+ARG NUXT_PUBLIC_SENTRY_DSN
+ENV NUXT_PUBLIC_SENTRY_DSN=${NUXT_PUBLIC_SENTRY_DSN}
+ARG SENTRY_ORG
+ENV SENTRY_ORG=${SENTRY_ORG}
+ARG SENTRY_WEB_PROJECT
+ENV SENTRY_WEB_PROJECT=${SENTRY_WEB_PROJECT}
+{{/if}}
 ENV NODE_ENV=production
+{{#if (includes addons "sentry")}}
+RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN cd apps/web && {{packageManager}} run build
+{{else}}
 RUN cd apps/web && {{packageManager}} run build
+{{/if}}
 
 FROM node:24-slim AS runner
 WORKDIR /app

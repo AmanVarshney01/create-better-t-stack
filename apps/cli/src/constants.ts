@@ -69,5 +69,6 @@ export const ADDON_COMPATIBILITY = {
   wxt: [],
   skills: [],
   evlog: [],
+  sentry: [],
   none: [],
 } as const;

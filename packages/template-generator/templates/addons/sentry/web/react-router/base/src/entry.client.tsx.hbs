@@ -1,0 +1,20 @@
+import * as Sentry from "@sentry/react-router";
+import { StrictMode, startTransition } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { HydratedRouter } from "react-router/dom";
+
+Sentry.init({
+	dsn: import.meta.env.VITE_SENTRY_DSN,
+	integrations: [Sentry.reactRouterTracingIntegration()],
+	tracesSampleRate: 0.1,
+	tracePropagationTargets: [/^\//],
+});
+
+startTransition(() => {
+	hydrateRoot(
+		document,
+		<StrictMode>
+			<HydratedRouter onError={Sentry.sentryOnError} />
+		</StrictMode>,
+	);
+});

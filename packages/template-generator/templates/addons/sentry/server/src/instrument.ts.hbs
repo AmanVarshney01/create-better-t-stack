@@ -1,0 +1,6 @@
+import * as Sentry from "{{#if (eq backend "hono")}}@sentry/hono/{{#if (eq runtime "bun")}}bun{{else}}node{{/if}}{{else if (eq runtime "bun")}}@sentry/bun{{else}}@sentry/node{{/if}}";
+
+Sentry.init({
+	dsn: process.env.SENTRY_DSN,
+	tracesSampleRate: 0.1,
+});

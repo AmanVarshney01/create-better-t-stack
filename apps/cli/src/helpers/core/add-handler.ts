@@ -6,6 +6,7 @@ import {
   processAddonsDeps,
   processNxConfig,
   processPackageConfigs,
+  processSentryPlugins,
   processTurboConfig,
   processVitePlusConfig,
   processTemplateString,
@@ -61,7 +62,26 @@ const ADD_PACKAGE_JSON_PATHS = [
   "packages/ui/package.json",
 ];
 
-const ADD_TEXT_FILE_PATHS = ["apps/web/vite.config.ts", "lefthook.yml"];
+const ADD_TEXT_FILE_PATHS = [
+  "apps/web/vite.config.ts",
+  "apps/web/next.config.ts",
+  "apps/web/nuxt.config.ts",
+  "apps/web/astro.config.mjs",
+  "apps/web/src/root.tsx",
+  "apps/web/src/router.tsx",
+  "apps/web/src/main.tsx",
+  "apps/web/src/entry-client.tsx",
+  "apps/web/src/entry-server.tsx",
+  "apps/web/src/entry.server.tsx",
+  "apps/web/src/hooks.server.ts",
+  "apps/web/workers/app.ts",
+  "apps/native/app.json",
+  "apps/native/metro.config.js",
+  "apps/native/app/_layout.tsx",
+  "apps/server/src/index.ts",
+  "packages/infra/alchemy.run.ts",
+  "lefthook.yml",
+];
 
 const HOOK_ADDONS = ["husky", "lefthook"] as const satisfies readonly Addons[];
 const HOOK_LINTER_ADDONS = ["biome", "oxlint", "vite-plus"] as const satisfies readonly Addons[];
@@ -351,6 +371,8 @@ async function addHandlerInternal(
 
   // Process addon templates
   await processAddonTemplates(vfs, EMBEDDED_TEMPLATES, config);
+
+  processSentryPlugins(vfs, config);
 
   // Process addon dependencies (adds deps to package.json files in VFS)
   processAddonsDeps(vfs, config);

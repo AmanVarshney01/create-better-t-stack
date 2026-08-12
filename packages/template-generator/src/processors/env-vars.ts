@@ -77,6 +77,13 @@ function getConvexVar(frontend: string[]) {
   return "VITE_CONVEX_URL";
 }
 
+function getSentryClientVar(frontend: string[]) {
+  if (frontend.includes("next")) return "NEXT_PUBLIC_SENTRY_DSN";
+  if (frontend.includes("nuxt")) return "NUXT_PUBLIC_SENTRY_DSN";
+  if (frontend.includes("svelte") || frontend.includes("astro")) return "PUBLIC_SENTRY_DSN";
+  return "VITE_SENTRY_DSN";
+}
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -138,6 +145,8 @@ function buildClientVars(
   frontend: string[],
   backend: ProjectConfig["backend"],
   auth: ProjectConfig["auth"],
+  addons: ProjectConfig["addons"],
+  webDeploy: ProjectConfig["webDeploy"],
 ): EnvVariable[] {
   const hasNextJs = frontend.includes("next");
   const hasReactRouter = frontend.includes("react-router");
@@ -202,6 +211,32 @@ function buildClientVars(
     }
   }
 
+  if (addons.includes("sentry")) {
+    vars.push(
+      {
+        key: getSentryClientVar(frontend),
+        value: "",
+        condition: true,
+        comment: "Public Sentry DSN (run your package manager's sentry:setup script)",
+      },
+      {
+        key: "SENTRY_DSN",
+        value: "",
+        condition: true,
+      },
+      { key: "SENTRY_WEB_DSN", value: "", condition: true },
+      { key: "SENTRY_ORG", value: "", condition: true },
+      { key: "SENTRY_PROJECT", value: "", condition: true },
+      { key: "SENTRY_WEB_PROJECT", value: "", condition: true },
+      {
+        key: "SENTRY_AUTH_TOKEN",
+        value: "",
+        condition: webDeploy !== "docker",
+        comment: "Optional: enables production source-map uploads",
+      },
+    );
+  }
+
   return vars;
 }
 
@@ -209,6 +244,7 @@ function buildNativeVars(
   frontend: string[],
   backend: ProjectConfig["backend"],
   auth: ProjectConfig["auth"],
+  addons: ProjectConfig["addons"],
 ): EnvVariable[] {
   const hasAstro = frontend.includes("astro");
   const hasSvelte = frontend.includes("svelte");
@@ -252,6 +288,26 @@ function buildNativeVars(
       value: CONVEX_SITE_URL_PLACEHOLDER,
       condition: true,
     });
+  }
+
+  if (addons.includes("sentry")) {
+    vars.push(
+      {
+        key: "EXPO_PUBLIC_SENTRY_DSN",
+        value: "",
+        condition: true,
+        comment: "Public Sentry DSN (run your package manager's sentry:setup script)",
+      },
+      { key: "SENTRY_ORG", value: "", condition: true },
+      { key: "SENTRY_PROJECT", value: "", condition: true },
+      { key: "SENTRY_NATIVE_PROJECT", value: "", condition: true },
+      {
+        key: "SENTRY_AUTH_TOKEN",
+        value: "",
+        condition: true,
+        comment: "Optional: enables production source-map uploads",
+      },
+    );
   }
 
   return vars;
@@ -441,6 +497,7 @@ function buildServerVars(
   serverDeploy: ProjectConfig["serverDeploy"],
   payments: ProjectConfig["payments"],
   examples: ProjectConfig["examples"],
+  addons: ProjectConfig["addons"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
@@ -553,6 +610,30 @@ function buildServerVars(
       value: databaseUrl,
       condition: database !== "none" && dbSetup === "none",
     },
+    {
+      key: "SENTRY_DSN",
+      value: "",
+      condition: addons.includes("sentry"),
+      comment: "Sentry DSN (run your package manager's sentry:setup script)",
+    },
+    { key: "SENTRY_ORG", value: "", condition: addons.includes("sentry") },
+    { key: "SENTRY_PROJECT", value: "", condition: addons.includes("sentry") },
+    {
+      key: backend === "self" ? "SENTRY_WEB_PROJECT" : "SENTRY_SERVER_PROJECT",
+      value: "",
+      condition: addons.includes("sentry"),
+    },
+    {
+      key: backend === "self" ? "SENTRY_WEB_DSN" : "SENTRY_SERVER_DSN",
+      value: "",
+      condition: addons.includes("sentry"),
+    },
+    {
+      key: "SENTRY_AUTH_TOKEN",
+      value: "",
+      condition: addons.includes("sentry"),
+      comment: "Optional: enables production source-map uploads",
+    },
   ];
 }
 
@@ -570,6 +651,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     serverDeploy,
     runtime,
     payments,
+    addons,
   } = config;
 
   const hasReactRouter = frontend.includes("react-router");
@@ -595,7 +677,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     const clientDir = "apps/web";
     if (vfs.directoryExists(clientDir)) {
       const envPath = `${clientDir}/.env`;
-      const clientVars = buildClientVars(frontend, backend, auth);
+      const clientVars = buildClientVars(frontend, backend, auth, addons, webDeploy);
       writeEnvFile(vfs, envPath, clientVars);
     }
   }
@@ -627,6 +709,28 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
         condition: auth === "clerk" && hasClerkBuildArgFrontend,
         comment: "Baked into the web image at docker compose build time",
       },
+      {
+        key: getSentryClientVar(frontend),
+        value: "",
+        condition: addons.includes("sentry"),
+        comment: "Baked into the web image at docker compose build time",
+      },
+      {
+        key: "SENTRY_ORG",
+        value: "",
+        condition: addons.includes("sentry"),
+      },
+      {
+        key: "SENTRY_WEB_PROJECT",
+        value: "",
+        condition: addons.includes("sentry"),
+      },
+      {
+        key: "SENTRY_AUTH_TOKEN",
+        value: "",
+        condition: addons.includes("sentry"),
+        comment: "BuildKit secret for production source-map uploads",
+      },
     ];
     if (rootComposeVars.some((v) => v.condition)) {
       writeEnvFile(vfs, ".env", rootComposeVars);
@@ -642,7 +746,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     const nativeDir = "apps/native";
     if (vfs.directoryExists(nativeDir)) {
       const envPath = `${nativeDir}/.env`;
-      const nativeVars = buildNativeVars(frontend, backend, auth);
+      const nativeVars = buildNativeVars(frontend, backend, auth, addons);
       writeEnvFile(vfs, envPath, nativeVars);
     }
   }
@@ -693,6 +797,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     serverDeploy,
     payments,
     examples,
+    addons,
   );
 
   if (backend === "self") {

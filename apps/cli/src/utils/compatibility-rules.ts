@@ -18,7 +18,10 @@ import { WEB_FRAMEWORKS } from "./compatibility";
 import { ValidationError } from "./errors";
 
 type ValidationResult = Result<void, ValidationError>;
-type AddonCompatibilityConfig = Pick<ProjectConfig, "frontend" | "auth" | "backend" | "runtime">;
+type AddonCompatibilityConfig = Pick<
+  ProjectConfig,
+  "frontend" | "auth" | "backend" | "runtime" | "webDeploy"
+>;
 const TASK_RUNNER_ADDONS: readonly Addons[] = ["turborepo", "nx", "vite-plus"];
 const STATIC_DESKTOP_ADDONS: readonly Addons[] = ["tauri", "electrobun"];
 const TAURI_STATIC_EXPORT_FRONTENDS: readonly Frontend[] = ["next", "tanstack-start"];
@@ -96,6 +99,9 @@ const EVLOG_FULLSTACK_FRONTENDS: readonly Frontend[] = [
 const evlogCompatibilityMessage =
   "evlog addon supports Hono, Express, Fastify, Elysia, or backend self with Next.js, TanStack Start, Nuxt, SvelteKit, or Astro. Convex and backend none are not supported yet.";
 
+const sentryCompatibilityMessage =
+  "Sentry requires a web or native frontend, or a Hono, Express, Fastify, or Elysia server.";
+
 export function supportsEvlogAddon(
   frontend: Frontend[] = [],
   backend?: Backend,
@@ -113,6 +119,15 @@ export function supportsEvlogAddon(
   }
 
   return false;
+}
+
+export function supportsSentryAddon(frontend: Frontend[] = [], backend?: Backend) {
+  if (!backend) return true;
+
+  const hasFrontend = frontend.some((value) => value !== "none");
+  const hasServer = ["hono", "express", "fastify", "elysia"].includes(backend);
+
+  return hasFrontend || hasServer;
 }
 
 export function validateSelfBackendCompatibility(
@@ -359,6 +374,22 @@ export function validateVercelServerDeploy(
   return Result.ok(undefined);
 }
 
+export function validateCloudflareWebDeployKnownIssues(
+  config: Partial<Pick<ProjectConfig, "addons" | "frontend" | "webDeploy">>,
+): ValidationResult {
+  if (config.webDeploy !== "cloudflare" || !config.frontend?.includes("next")) {
+    return Result.ok(undefined);
+  }
+
+  if (config.addons?.includes("sentry")) {
+    return validationErr(
+      "Sentry with Next.js on Cloudflare is temporarily unavailable because the current OpenNext release cannot trace Next.js 16 instrumentation output. Remove Sentry or choose Prisma, Docker, or Vercel deployment.",
+    );
+  }
+
+  return Result.ok(undefined);
+}
+
 // Frontends whose docker image needs server output, which desktop addons replace with a static export
 const DOCKER_SERVER_OUTPUT_FRONTENDS: readonly Frontend[] = [
   "next",
@@ -406,6 +437,13 @@ export function validateAddonCompatibility(
     return {
       isCompatible: false,
       reason: evlogCompatibilityMessage,
+    };
+  }
+
+  if (addon === "sentry" && !supportsSentryAddon(frontend, backend)) {
+    return {
+      isCompatible: false,
+      reason: sentryCompatibilityMessage,
     };
   }
 
@@ -522,13 +560,28 @@ export function validateAddonsAgainstConfig(
   addons: Addons[] = [],
   config: Partial<AddonCompatibilityConfig>,
 ): ValidationResult {
-  return validateAddonsAgainstFrontends(
+  const addonResult = validateAddonsAgainstFrontends(
     addons,
     config.frontend ?? [],
     config.auth,
     config.backend,
     config.runtime,
   );
+  if (addonResult.isErr()) return addonResult;
+
+  const cloudflareResult = validateCloudflareWebDeployKnownIssues({ ...config, addons });
+  if (cloudflareResult.isErr()) return cloudflareResult;
+
+  const dockerResult = validateDockerWebDeployDesktopAddons(
+    config.webDeploy,
+    addons,
+    config.frontend,
+    config.backend,
+    config.auth,
+  );
+  if (dockerResult.isErr()) return dockerResult;
+
+  return Result.ok(undefined);
 }
 
 export function validatePaymentsCompatibility(

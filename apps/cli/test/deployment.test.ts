@@ -1253,6 +1253,56 @@ describe("Deployment Configurations", () => {
   });
 
   describe("Docker Deployment", () => {
+    for (const frontend of [
+      "next",
+      "nuxt",
+      "svelte",
+      "solid",
+      "astro",
+      "react-router",
+      "tanstack-router",
+      "tanstack-start",
+    ] as const) {
+      it(`should pass Sentry auth to the ${frontend} build as a BuildKit secret`, async () => {
+        const result = await createVirtual({
+          projectName: `docker-sentry-${frontend}`,
+          webDeploy: "docker",
+          serverDeploy: "none",
+          backend: "none",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "none",
+          frontend: [frontend],
+          addons: ["sentry"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        });
+
+        if (result.isErr()) throw result.error;
+
+        const files = collectFiles(result.value.root, result.value.root.path);
+        const compose = files.get("docker-compose.yml") ?? "";
+        const dockerfile = files.get("apps/web/Dockerfile") ?? "";
+        const rootEnv = files.get(".env") ?? "";
+        const webEnv = files.get("apps/web/.env") ?? "";
+
+        expect(compose).toContain("secrets:\n        - SENTRY_AUTH_TOKEN");
+        expect(compose).toContain("SENTRY_AUTH_TOKEN:\n    environment: SENTRY_AUTH_TOKEN");
+        expect(dockerfile).toContain(
+          "RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN",
+        );
+        expect(dockerfile).not.toContain("ARG SENTRY_AUTH_TOKEN");
+        expect(rootEnv).toContain("SENTRY_AUTH_TOKEN=");
+        expect(webEnv).not.toContain("SENTRY_AUTH_TOKEN=");
+      });
+    }
+
     it("should generate a full Docker Compose stack (web + server + db)", async () => {
       const result = await createVirtual({
         projectName: "docker-full-stack",

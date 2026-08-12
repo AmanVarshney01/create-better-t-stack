@@ -16,6 +16,7 @@ import {
   validateDockerWebDeployDesktopAddons,
   validateServerDeployRequiresBackend,
   validateVercelServerDeploy,
+  validateCloudflareWebDeployKnownIssues,
   validateWebDeployRequiresWebFrontend,
   validateWorkersCompatibility,
 } from "./compatibility-rules";
@@ -504,6 +505,7 @@ export function validateFullConfig(
     yield* validateServerDeployRequiresBackend(config.serverDeploy, config.backend);
     yield* validateDockerServerDeploy(config.serverDeploy, config.backend, config.runtime);
     yield* validateVercelServerDeploy(config.serverDeploy, config.backend, config.runtime);
+    yield* validateCloudflareWebDeployKnownIssues(config);
     yield* validateDockerWebDeployDesktopAddons(
       config.webDeploy,
       config.addons,

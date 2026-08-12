@@ -311,6 +311,507 @@ export default defineConfig({
   images: ["public/logo.png"],
 });
 `],
+  ["addons/sentry/base/scripts/setup-sentry.ts.hbs", `import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+
+type ProjectSpec = {
+	kind: "web" | "server" | "native";
+	platform: string;
+	envTargets: Array<{
+		file: string;
+		keys: string[];
+		projectKey: "SENTRY_WEB_PROJECT" | "SENTRY_SERVER_PROJECT" | "SENTRY_NATIVE_PROJECT";
+	}>;
+};
+
+type CreatedProject = {
+	project?: { slug?: string };
+	dsn?: string;
+	orgSlug?: string;
+};
+
+type ExistingProject = {
+	slug?: string;
+	dsn?: string;
+};
+
+type AuthStatus = {
+	authenticated?: boolean;
+	verification?: {
+		success?: boolean;
+		organizations?: Array<{
+			slug: string;
+			name: string;
+		}>;
+	};
+};
+
+const specs: ProjectSpec[] = [
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid") (includes frontend "astro"))}}
+	{
+		kind: "web",
+		platform: "{{#if (includes frontend "next")}}javascript-nextjs{{else if (includes frontend "nuxt")}}javascript-nuxt{{else if (includes frontend "svelte")}}javascript-sveltekit{{else if (includes frontend "solid")}}javascript-solidstart{{else if (includes frontend "astro")}}javascript-astro{{else if (includes frontend "react-router")}}javascript-react-router{{else if (includes frontend "tanstack-start")}}javascript-tanstackstart-react{{else}}javascript-react{{/if}}",
+		envTargets: [
+			{
+				file: "apps/web/.env",
+					keys: [
+					"{{#if (includes frontend "next")}}NEXT_PUBLIC_SENTRY_DSN{{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SENTRY_DSN{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SENTRY_DSN{{else}}VITE_SENTRY_DSN{{/if}}",
+	{{#unless (includes frontend "tanstack-router")}}
+						"SENTRY_DSN",
+						"SENTRY_WEB_DSN",
+	{{/unless}}
+					],
+					projectKey: "SENTRY_WEB_PROJECT",
+				},
+{{#if (eq webDeploy "docker")}}
+			{
+				file: ".env",
+					keys: ["{{#if (includes frontend "next")}}NEXT_PUBLIC_SENTRY_DSN{{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SENTRY_DSN{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SENTRY_DSN{{else}}VITE_SENTRY_DSN{{/if}}"],
+					projectKey: "SENTRY_WEB_PROJECT",
+			},
+{{/if}}
+		],
+	},
+{{/if}}
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+	{
+		kind: "native",
+		platform: "react-native",
+		envTargets: [
+			{
+				file: "apps/native/.env",
+				keys: ["EXPO_PUBLIC_SENTRY_DSN"],
+				projectKey: "SENTRY_NATIVE_PROJECT",
+			},
+		],
+	},
+{{/if}}
+{{#if (or (eq backend "hono") (eq backend "express") (eq backend "fastify") (eq backend "elysia"))}}
+	{
+		kind: "server",
+		platform: "{{#if (eq backend "express")}}{{#if (eq runtime "bun")}}bun{{else}}node-express{{/if}}{{else if (eq backend "fastify")}}{{#if (eq runtime "bun")}}bun{{else}}node-fastify{{/if}}{{else if (eq backend "hono")}}node-hono{{else}}bun{{/if}}",
+		envTargets: [
+			{
+				file: "apps/server/.env",
+				keys: ["SENTRY_DSN", "SENTRY_SERVER_DSN"],
+				projectKey: "SENTRY_SERVER_PROJECT",
+			},
+		],
+	},
+{{/if}}
+];
+
+function parseArgs(args: string[]) {
+	const values: { org?: string; team?: string; prefix: string; dryRun: boolean } = {
+		prefix: "{{projectName}}",
+		dryRun: false,
+	};
+
+	for (let index = 0; index < args.length; index += 1) {
+		const arg = args[index];
+		if (arg === "--dry-run") {
+			values.dryRun = true;
+			continue;
+		}
+		if (arg === "--help" || arg === "-h") {
+			console.log(
+				"Usage: sentry:setup [--org slug] [--team slug] [--prefix name] [--dry-run]",
+			);
+			process.exit(0);
+		}
+		if (arg === "--org" || arg === "--team" || arg === "--prefix") {
+			const value = args[index + 1];
+			if (!value) throw new Error(\`Missing value for \${arg}\`);
+			if (arg === "--org") values.org = value;
+			if (arg === "--team") values.team = value;
+			if (arg === "--prefix") values.prefix = value;
+			index += 1;
+			continue;
+		}
+		throw new Error(\`Unknown argument: \${arg}\`);
+	}
+
+	return values;
+}
+
+function runSentry(args: string[], options: { inherit?: boolean; allowFailure?: boolean } = {}) {
+	const result = spawnSync("sentry", args, {
+		cwd: process.cwd(),
+		encoding: "utf8",
+		stdio: options.inherit ? "inherit" : ["inherit", "pipe", "pipe"],
+	});
+
+	if (result.error) throw result.error;
+	if (result.status !== 0 && !options.allowFailure) {
+		throw new Error(result.stderr?.trim() || \`sentry \${args.join(" ")} failed\`);
+	}
+
+	return result;
+}
+
+function parseJson<T>(value: string | null | undefined, command: string): T {
+	try {
+		return JSON.parse(value || "") as T;
+	} catch {
+		throw new Error(\`Could not parse JSON from \${command}\`);
+	}
+}
+
+function getOrganization(requestedOrg?: string) {
+	let status = runSentry(["auth", "status", "--json"], { allowFailure: true });
+	let auth =
+		status.status === 0 ? parseJson<AuthStatus>(status.stdout, "sentry auth status") : undefined;
+
+	if (!auth?.authenticated || !auth?.verification?.success) {
+		console.log("Opening Sentry device login…");
+		runSentry(["auth", "login"], { inherit: true });
+		status = runSentry(["auth", "status", "--json"]);
+		auth = parseJson<AuthStatus>(status.stdout, "sentry auth status");
+	}
+
+	const organizations = (auth.verification?.organizations ?? []) as Array<{
+		slug: string;
+		name: string;
+	}>;
+	if (requestedOrg) {
+		if (!organizations.some((organization) => organization.slug === requestedOrg)) {
+			throw new Error(\`The authenticated account cannot access Sentry organization '\${requestedOrg}'.\`);
+		}
+		return requestedOrg;
+	}
+	if (organizations.length === 1) return organizations[0]!.slug;
+	if (organizations.length === 0) throw new Error("The authenticated account has no Sentry organization.");
+
+	throw new Error(
+		\`Multiple Sentry organizations are available. Re-run with --org <slug>:\\n\${organizations
+			.map((organization) => \`- \${organization.slug} (\${organization.name})\`)
+			.join("\\n")}\`,
+	);
+}
+
+function getExistingProject(org: string, slug: string): ExistingProject | undefined {
+	const result = runSentry(["project", "view", \`\${org}/\${slug}\`, "--fresh", "--json"], {
+		allowFailure: true,
+	});
+	if (result.status !== 0) return undefined;
+
+	const projects = parseJson<ExistingProject[]>(result.stdout, "sentry project view");
+	return projects.find((project) => project.slug === slug && project.dsn);
+}
+
+function updateEnvFile(file: string, values: Record<string, string>) {
+	const absolutePath = path.resolve(file);
+	let content = fs.existsSync(absolutePath) ? fs.readFileSync(absolutePath, "utf8") : "";
+
+	for (const [key, value] of Object.entries(values)) {
+		const line = \`\${key}=\${value}\`;
+		const pattern = new RegExp(\`^\\\\s*#?\\\\s*\${key}=.*$\`, "m");
+		content = pattern.test(content)
+			? content.replace(pattern, line)
+			: \`\${content.trimEnd()}\${content.trim() ? "\\n" : ""}\${line}\\n\`;
+	}
+
+	fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+	fs.writeFileSync(absolutePath, \`\${content.trimEnd()}\\n\`);
+}
+
+function main() {
+	if (specs.length === 0) throw new Error("This stack has no Sentry-compatible application.");
+
+	const options = parseArgs(process.argv.slice(2));
+	const org = getOrganization(options.org);
+	const projects = specs.map((spec) => ({
+		...spec,
+		slug: \`\${options.prefix}-\${spec.kind}\`,
+	}));
+	const resolved = new Map<string, { dsn: string; org: string }>();
+	const missing = [] as typeof projects;
+
+	for (const project of projects) {
+		const existing = getExistingProject(org, project.slug);
+		if (existing?.dsn) {
+			resolved.set(project.slug, { dsn: existing.dsn, org });
+		} else {
+			missing.push(project);
+		}
+	}
+
+	if (options.dryRun && missing.length === 0) {
+		console.log(\`Sentry setup dry run passed for \${projects.length} existing project(s).\`);
+		return;
+	}
+
+	if (missing.length > 0) {
+		const createArgs = [
+			"project",
+			"create",
+			...missing.map((project) => \`\${org}/\${project.slug}:\${project.platform}\`),
+			...(options.team ? ["--team", options.team] : []),
+			...(options.dryRun ? ["--dry-run"] : []),
+			"--json",
+		];
+		const created = parseJson<CreatedProject[]>(
+			runSentry(createArgs).stdout,
+			"sentry project create",
+		);
+
+		if (options.dryRun) {
+			console.log(\`Sentry setup dry run passed for \${projects.length} project(s).\`);
+			return;
+		}
+
+		for (const project of created) {
+			const slug = project.project?.slug;
+			if (slug && project.dsn) {
+				resolved.set(slug, { dsn: project.dsn, org: project.orgSlug ?? org });
+			}
+		}
+	}
+
+	for (const project of projects) {
+		const sentryProject = resolved.get(project.slug);
+		if (!sentryProject) throw new Error(\`Sentry did not return a DSN for \${project.slug}.\`);
+
+		for (const target of project.envTargets) {
+				updateEnvFile(target.file, {
+					...Object.fromEntries(target.keys.map((key) => [key, sentryProject.dsn])),
+					SENTRY_ORG: sentryProject.org,
+					SENTRY_PROJECT: project.slug,
+					[target.projectKey]: project.slug,
+				});
+		}
+	}
+
+	console.log(\`Sentry is configured for \${projects.length} project(s):\`);
+	for (const project of projects) console.log(\`- \${org}/\${project.slug}\`);
+	console.log("Add SENTRY_AUTH_TOKEN to deployment secrets to upload production source maps.");
+}
+
+main();
+`],
+  ["addons/sentry/server/src/instrument.ts.hbs", `import * as Sentry from "{{#if (eq backend "hono")}}@sentry/hono/{{#if (eq runtime "bun")}}bun{{else}}node{{/if}}{{else if (eq runtime "bun")}}@sentry/bun{{else}}@sentry/node{{/if}}";
+
+Sentry.init({
+	dsn: process.env.SENTRY_DSN,
+	tracesSampleRate: 0.1,
+});
+`],
+  ["addons/sentry/web/astro/sentry.client.config.js.hbs", `import * as Sentry from "@sentry/astro";
+
+Sentry.init({
+	dsn: import.meta.env.PUBLIC_SENTRY_DSN,
+	tracesSampleRate: 0.1,
+});
+`],
+  ["addons/sentry/web/astro/sentry.server.config.js.hbs", `import * as Sentry from "@sentry/astro";
+
+Sentry.init({
+	dsn: import.meta.env.SENTRY_DSN,
+	tracesSampleRate: 0.1,
+});
+`],
+  ["addons/sentry/web/next/instrumentation-client.ts.hbs", `import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+	dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+	tracesSampleRate: 0.1,
+});
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+`],
+  ["addons/sentry/web/next/instrumentation.ts.hbs", `import * as Sentry from "@sentry/nextjs";
+
+export async function register() {
+	if (process.env.NEXT_RUNTIME === "nodejs") {
+		await import("./sentry.server.config");
+	}
+
+	if (process.env.NEXT_RUNTIME === "edge") {
+		await import("./sentry.edge.config");
+	}
+}
+
+export const onRequestError = Sentry.captureRequestError;
+`],
+  ["addons/sentry/web/next/sentry.edge.config.ts.hbs", `import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+	dsn: process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN,
+	tracesSampleRate: 0.1,
+});
+`],
+  ["addons/sentry/web/next/sentry.server.config.ts.hbs", `import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+	dsn: process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN,
+	tracesSampleRate: 0.1,
+});
+`],
+  ["addons/sentry/web/next/src/app/global-error.tsx.hbs", `"use client";
+
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
+
+export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
+	useEffect(() => {
+		Sentry.captureException(error);
+	}, [error]);
+
+	return (
+		<html lang="en">
+			<body>
+				<h1>Something went wrong</h1>
+			</body>
+		</html>
+	);
+}
+`],
+  ["addons/sentry/web/nuxt/base/sentry.client.config.ts.hbs", `import * as Sentry from "@sentry/nuxt";
+
+const config = useRuntimeConfig();
+
+Sentry.init({
+	dsn: config.public.sentryDsn,
+	tracesSampleRate: 0.1,
+});
+`],
+  ["addons/sentry/web/nuxt/cloudflare/server/plugins/sentry.ts.hbs", `import { sentryCloudflareNitroPlugin } from "@sentry/nuxt/module/plugins";
+
+export default defineNitroPlugin(
+	sentryCloudflareNitroPlugin({
+		dsn: process.env.SENTRY_DSN,
+		tracesSampleRate: 0.1,
+	}),
+);
+`],
+  ["addons/sentry/web/nuxt/node/sentry.server.config.ts.hbs", `import * as Sentry from "@sentry/nuxt";
+
+Sentry.init({
+	dsn: process.env.SENTRY_DSN,
+	tracesSampleRate: 0.1,
+});
+`],
+  ["addons/sentry/web/react-router/base/src/entry.client.tsx.hbs", `import * as Sentry from "@sentry/react-router";
+import { StrictMode, startTransition } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { HydratedRouter } from "react-router/dom";
+
+Sentry.init({
+	dsn: import.meta.env.VITE_SENTRY_DSN,
+	integrations: [Sentry.reactRouterTracingIntegration()],
+	tracesSampleRate: 0.1,
+	tracePropagationTargets: [/^\\//],
+});
+
+startTransition(() => {
+	hydrateRoot(
+		document,
+		<StrictMode>
+			<HydratedRouter onError={Sentry.sentryOnError} />
+		</StrictMode>,
+	);
+});
+`],
+  ["addons/sentry/web/react-router/node/instrument.server.mjs.hbs", `import * as Sentry from "@sentry/react-router";
+
+Sentry.init({
+	dsn: process.env.SENTRY_DSN,
+	tracesSampleRate: 0.1,
+});
+`],
+  ["addons/sentry/web/react-router/node/src/entry.server.tsx.hbs", `import "../instrument.server.mjs";
+import { createReadableStreamFromReadable } from "@react-router/node";
+import * as Sentry from "@sentry/react-router";
+import { renderToPipeableStream } from "react-dom/server";
+import { ServerRouter, type HandleErrorFunction } from "react-router";
+
+const abortDelay = 5_000;
+
+export default Sentry.createSentryHandleRequest({
+	streamTimeout: abortDelay,
+	ServerRouter,
+	renderToPipeableStream,
+	createReadableStreamFromReadable,
+});
+
+export const handleError: HandleErrorFunction = Sentry.createSentryHandleError({
+	logErrors: true,
+});
+`],
+  ["addons/sentry/web/solid/server/plugins/sentry.ts.hbs", `import * as Sentry from "@sentry/solidstart";
+import { definePlugin } from "nitro";
+
+export default definePlugin(() => {
+	Sentry.init({
+		dsn: process.env.SENTRY_DSN,
+		tracesSampleRate: 0.1,
+	});
+});
+`],
+  ["addons/sentry/web/solid/src/middleware.ts.hbs", `import { sentryBeforeResponseMiddleware } from "@sentry/solidstart";
+import { createMiddleware } from "@solidjs/start/middleware";
+
+export default createMiddleware({
+	onBeforeResponse: [sentryBeforeResponseMiddleware()],
+});
+`],
+  ["addons/sentry/web/svelte/src/hooks.client.ts.hbs", `import * as Sentry from "@sentry/sveltekit";
+import { PUBLIC_SENTRY_DSN } from "$env/static/public";
+
+Sentry.init({
+	dsn: PUBLIC_SENTRY_DSN,
+	tracesSampleRate: 0.1,
+});
+
+export const handleError = Sentry.handleErrorWithSentry();
+`],
+  ["addons/sentry/web/tanstack-start/base/src/client.tsx.hbs", `import "./instrument.client";
+import { StartClient } from "@tanstack/react-start/client";
+import { StrictMode, startTransition } from "react";
+import { hydrateRoot } from "react-dom/client";
+
+startTransition(() => {
+	hydrateRoot(
+		document,
+		<StrictMode>
+			<StartClient />
+		</StrictMode>,
+	);
+});
+`],
+  ["addons/sentry/web/tanstack-start/base/src/instrument.client.ts.hbs", `import * as Sentry from "@sentry/tanstackstart-react";
+
+Sentry.init({
+	dsn: import.meta.env.VITE_SENTRY_DSN,
+	tracesSampleRate: 0.1,
+});
+`],
+  ["addons/sentry/web/tanstack-start/cloudflare/src/server.ts.hbs", `import * as Sentry from "@sentry/cloudflare";
+import { wrapFetchWithSentry } from "@sentry/tanstackstart-react";
+import handler from "@tanstack/react-start/server-entry";
+
+export default Sentry.withSentry(
+	(env: Env) => ({
+		dsn: env.SENTRY_DSN,
+		tracesSampleRate: 0.1,
+	}),
+	wrapFetchWithSentry(handler),
+);
+`],
+  ["addons/sentry/web/tanstack-start/node/src/instrument.server.ts.hbs", `import * as Sentry from "@sentry/tanstackstart-react";
+
+Sentry.init({
+	dsn: process.env.SENTRY_DSN,
+	tracesSampleRate: 0.1,
+});
+`],
+  ["addons/sentry/web/tanstack-start/node/src/server.ts.hbs", `import "./instrument.server";
+import { wrapFetchWithSentry } from "@sentry/tanstackstart-react";
+import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
+
+export default createServerEntry(wrapFetchWithSentry(handler));
+`],
   ["api/orpc/fullstack/astro/src/pages/rpc/[...rest].ts.hbs", `import type { APIRoute } from "astro";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -16138,7 +16639,7 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-{{#if (and (not (includes frontend "nuxt")) (or (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start")))))}}
+{{#if (or (includes addons "sentry") (and (not (includes frontend "nuxt")) (or (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start"))))))}}
       args:
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
         {{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}}: http://localhost:3000
@@ -16148,6 +16649,11 @@ services:
 {{/if}}
 {{#if (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start")))}}
         {{#if (includes frontend "next")}}NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: \${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}{{else}}VITE_CLERK_PUBLISHABLE_KEY: \${VITE_CLERK_PUBLISHABLE_KEY:-}{{/if}}
+{{/if}}
+{{#if (includes addons "sentry")}}
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_SENTRY_DSN: \${NEXT_PUBLIC_SENTRY_DSN:-}{{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SENTRY_DSN: \${NUXT_PUBLIC_SENTRY_DSN:-}{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SENTRY_DSN: \${PUBLIC_SENTRY_DSN:-}{{else}}VITE_SENTRY_DSN: \${VITE_SENTRY_DSN:-}{{/if}}
+        SENTRY_ORG: \${SENTRY_ORG:-}
+        SENTRY_WEB_PROJECT: \${SENTRY_WEB_PROJECT:-}
 {{/if}}
 {{/if}}
     init: true
@@ -16401,6 +16907,14 @@ ENV PUBLIC_SERVER_URL=\${PUBLIC_SERVER_URL}
 ARG PUBLIC_CONVEX_URL
 ENV PUBLIC_CONVEX_URL=\${PUBLIC_CONVEX_URL}
 {{/if}}
+{{#if (includes addons "sentry")}}
+ARG PUBLIC_SENTRY_DSN
+ENV PUBLIC_SENTRY_DSN=\${PUBLIC_SENTRY_DSN}
+ARG SENTRY_ORG
+ENV SENTRY_ORG=\${SENTRY_ORG}
+ARG SENTRY_WEB_PROJECT
+ENV SENTRY_WEB_PROJECT=\${SENTRY_WEB_PROJECT}
+{{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
 ENV SKIP_ENV_VALIDATION=
@@ -16445,6 +16959,14 @@ RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
 RUN --mount=type=cache,target=/root/.npm npm install
 {{/if}}
 
+{{#if (includes addons "sentry")}}
+ARG NUXT_PUBLIC_SENTRY_DSN
+ENV NUXT_PUBLIC_SENTRY_DSN=\${NUXT_PUBLIC_SENTRY_DSN}
+ARG SENTRY_ORG
+ENV SENTRY_ORG=\${SENTRY_ORG}
+ARG SENTRY_WEB_PROJECT
+ENV SENTRY_WEB_PROJECT=\${SENTRY_WEB_PROJECT}
+{{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
 
@@ -16498,6 +17020,14 @@ ENV NEXT_PUBLIC_CONVEX_URL=\${NEXT_PUBLIC_CONVEX_URL}
 {{#if (eq auth "clerk")}}
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=\${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+{{/if}}
+{{#if (includes addons "sentry")}}
+ARG NEXT_PUBLIC_SENTRY_DSN
+ENV NEXT_PUBLIC_SENTRY_DSN=\${NEXT_PUBLIC_SENTRY_DSN}
+ARG SENTRY_ORG
+ENV SENTRY_ORG=\${SENTRY_ORG}
+ARG SENTRY_WEB_PROJECT
+ENV SENTRY_WEB_PROJECT=\${SENTRY_WEB_PROJECT}
 {{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
@@ -16557,6 +17087,14 @@ ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
 ARG VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
 {{/if}}
+{{#if (includes addons "sentry")}}
+ARG VITE_SENTRY_DSN
+ENV VITE_SENTRY_DSN=\${VITE_SENTRY_DSN}
+ARG SENTRY_ORG
+ENV SENTRY_ORG=\${SENTRY_ORG}
+ARG SENTRY_WEB_PROJECT
+ENV SENTRY_WEB_PROJECT=\${SENTRY_WEB_PROJECT}
+{{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
 
@@ -16607,6 +17145,14 @@ ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
 {{#if (eq auth "clerk")}}
 ARG VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
+{{/if}}
+{{#if (includes addons "sentry")}}
+ARG VITE_SENTRY_DSN
+ENV VITE_SENTRY_DSN=\${VITE_SENTRY_DSN}
+ARG SENTRY_ORG
+ENV SENTRY_ORG=\${SENTRY_ORG}
+ARG SENTRY_WEB_PROJECT
+ENV SENTRY_WEB_PROJECT=\${SENTRY_WEB_PROJECT}
 {{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
@@ -16675,6 +17221,14 @@ ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
 ARG VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
 {{/if}}
+{{#if (includes addons "sentry")}}
+ARG VITE_SENTRY_DSN
+ENV VITE_SENTRY_DSN=\${VITE_SENTRY_DSN}
+ARG SENTRY_ORG
+ENV SENTRY_ORG=\${SENTRY_ORG}
+ARG SENTRY_WEB_PROJECT
+ENV SENTRY_WEB_PROJECT=\${SENTRY_WEB_PROJECT}
+{{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
 ENV SKIP_ENV_VALIDATION=
@@ -16727,6 +17281,14 @@ ENV VITE_SERVER_URL=\${VITE_SERVER_URL}
 {{#if (eq backend "convex")}}
 ARG VITE_CONVEX_URL
 ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
+{{/if}}
+{{#if (includes addons "sentry")}}
+ARG VITE_SENTRY_DSN
+ENV VITE_SENTRY_DSN=\${VITE_SENTRY_DSN}
+ARG SENTRY_ORG
+ENV SENTRY_ORG=\${SENTRY_ORG}
+ARG SENTRY_WEB_PROJECT
+ENV SENTRY_WEB_PROJECT=\${SENTRY_WEB_PROJECT}
 {{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
@@ -16784,6 +17346,14 @@ ENV PUBLIC_SERVER_URL=\${PUBLIC_SERVER_URL}
 {{#if (eq backend "convex")}}
 ARG PUBLIC_CONVEX_URL
 ENV PUBLIC_CONVEX_URL=\${PUBLIC_CONVEX_URL}
+{{/if}}
+{{#if (includes addons "sentry")}}
+ARG PUBLIC_SENTRY_DSN
+ENV PUBLIC_SENTRY_DSN=\${PUBLIC_SENTRY_DSN}
+ARG SENTRY_ORG
+ENV SENTRY_ORG=\${SENTRY_ORG}
+ARG SENTRY_WEB_PROJECT
+ENV SENTRY_WEB_PROJECT=\${SENTRY_WEB_PROJECT}
 {{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
@@ -32988,6 +33558,9 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (includes addons "sentry")}}
+		EXPO_PUBLIC_SENTRY_DSN: z.url().optional(),
+{{/if}}
 	},
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,
@@ -33151,7 +33724,10 @@ export const env = createEnv({
 		POLAR_SUCCESS_URL: z.url(),
 {{/if}}
 		CORS_ORIGIN: z.url(),
-		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+	{{#if (includes addons "sentry")}}
+			SENTRY_DSN: z.url().optional(),
+	{{/if}}
+			NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
 	runtimeEnv: {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}runtimeEnv{{else}}process.env{{/if}},
 	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
@@ -33203,6 +33779,9 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (includes addons "sentry")}}
+		NEXT_PUBLIC_SENTRY_DSN: z.url().optional(),
+{{/if}}
 	},
 	runtimeEnv: {
 		NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
@@ -33212,15 +33791,24 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
 {{/if}}
+{{#if (includes addons "sentry")}}
+		NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+{{/if}}
 	},
 {{else if (includes frontend "nuxt")}}
 	client: {
 		NUXT_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
+{{#if (includes addons "sentry")}}
+		NUXT_PUBLIC_SENTRY_DSN: z.url().optional(),
+{{/if}}
 	},
 {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
 	clientPrefix: "PUBLIC_",
 	client: {
 		PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
+{{#if (includes addons "sentry")}}
+		PUBLIC_SENTRY_DSN: z.url().optional(),
+{{/if}}
 	},
 	runtimeEnv: (import.meta as any).env,
 {{else}}
@@ -33233,6 +33821,9 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (includes addons "sentry")}}
+		VITE_SENTRY_DSN: z.url().optional(),
+{{/if}}
 	},
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
@@ -33242,19 +33833,32 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (includes addons "sentry")}}
+		NEXT_PUBLIC_SENTRY_DSN: z.url().optional(),
+{{/if}}
 	},
 	runtimeEnv: {
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
 {{/if}}
+{{#if (includes addons "sentry")}}
+		NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+{{/if}}
 	},
 {{else if (includes frontend "nuxt")}}
-	client: {},
+	client: {
+{{#if (includes addons "sentry")}}
+		NUXT_PUBLIC_SENTRY_DSN: z.url().optional(),
+{{/if}}
+	},
 {{else}}
 	clientPrefix: "VITE_",
 	client: {
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
+{{#if (includes addons "sentry")}}
+		VITE_SENTRY_DSN: z.url().optional(),
 {{/if}}
 	},
 	runtimeEnv: (import.meta as any).env,
@@ -33266,21 +33870,33 @@ export const env = createEnv({
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
+{{#if (includes addons "sentry")}}
+		NEXT_PUBLIC_SENTRY_DSN: z.url().optional(),
+{{/if}}
 	},
 	runtimeEnv: {
 		NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL,
 {{#if (eq auth "clerk")}}
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
 {{/if}}
+{{#if (includes addons "sentry")}}
+		NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+{{/if}}
 	},
 {{else if (includes frontend "nuxt")}}
 	client: {
 		NUXT_PUBLIC_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
+{{#if (includes addons "sentry")}}
+		NUXT_PUBLIC_SENTRY_DSN: z.url().optional(),
+{{/if}}
 	},
 {{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
 	clientPrefix: "PUBLIC_",
 	client: {
 		PUBLIC_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
+{{#if (includes addons "sentry")}}
+		PUBLIC_SENTRY_DSN: z.url().optional(),
+{{/if}}
 	},
 	runtimeEnv: (import.meta as any).env,
 {{else}}
@@ -33289,6 +33905,9 @@ export const env = createEnv({
 		VITE_SERVER_URL: {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}serverUrlSchema{{else}}z.url(){{/if}},
 {{#if (eq auth "clerk")}}
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
+{{#if (includes addons "sentry")}}
+		VITE_SENTRY_DSN: z.url().optional(),
 {{/if}}
 	},
 	runtimeEnv: (import.meta as any).env,
@@ -35926,4 +36545,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 511;
+export const TEMPLATE_COUNT = 534;

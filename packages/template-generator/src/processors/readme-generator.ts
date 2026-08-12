@@ -239,6 +239,7 @@ ${packageManagerRunCmd} dev
 
 ${generateRunningInstructions(frontend, backend, webPort, hasNative, isConvex)}
 ${generateReactUiSection(hasReactWeb, projectName)}
+${generateSentrySection(packageManagerRunCmd, addons)}
 ${
   addons.includes("pwa") && hasReactRouter
     ? "\n## PWA Support with React Router v7\n\nThere is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809\n"
@@ -554,6 +555,7 @@ function generateFeaturesList(
     nx: "- **Nx** - Smart monorepo task orchestration and caching",
     "vite-plus":
       "- **Vite+** - Unified Vite toolchain, workspace task runner, linting, and formatting",
+    sentry: "- **Sentry** - Error monitoring, tracing, and production source maps",
   };
 
   for (const addon of addons) {
@@ -945,6 +947,15 @@ function generateGitHooksSection(
   }
 
   return `${lines.join("\n")}\n\n`;
+}
+
+function generateSentrySection(
+  packageManagerRunCmd: string,
+  addons: ProjectConfig["addons"],
+): string {
+  if (!addons.includes("sentry")) return "";
+
+  return `## Sentry\n\nRun \`${packageManagerRunCmd} sentry:setup\` to sign in with Sentry, create or reuse one project per generated application, and write each DSN to the correct app environment file. The command is safe to rerun.\n\nAdd \`SENTRY_AUTH_TOKEN\` to your deployment secrets to upload production source maps. Public DSNs are not secrets.\n\n`;
 }
 
 function getVercelScriptNames(

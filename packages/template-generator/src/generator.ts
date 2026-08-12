@@ -9,6 +9,7 @@ import {
   processAuthPlugins,
   processAlchemyPlugins,
   processPwaPlugins,
+  processSentryPlugins,
   processEnvVariables,
 } from "./processors";
 import {
@@ -84,6 +85,7 @@ export async function generate(
       processAuthPlugins(vfs, config);
       processAlchemyPlugins(vfs, config);
       processPwaPlugins(vfs, config);
+      processSentryPlugins(vfs, config);
       processCatalogs(vfs, config);
       processVercelConfig(vfs, config);
       processReadme(vfs, config);
