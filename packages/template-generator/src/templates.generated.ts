@@ -16444,12 +16444,16 @@ services:
 {{/if}}
     healthcheck:
 {{#if (includes frontend "tanstack-router")}}
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/"]
 {{else}}
       test:
         [
           "CMD",
+{{#if (and (includes frontend "tanstack-start") (eq runtime "bun"))}}
+          "bun",
+{{else}}
           "node",
+{{/if}}
           "-e",
           "fetch('http://localhost:3001/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
         ]
@@ -16491,7 +16495,11 @@ services:
       test:
         [
           "CMD",
+{{#if (eq runtime "bun")}}
+          "bun",
+{{else}}
           "node",
+{{/if}}
           "-e",
           "fetch('http://localhost:3000/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
         ]
@@ -16571,9 +16579,10 @@ volumes:
   {{projectName}}_{{database}}_data:
 {{/if}}
 `],
-  ["deploy/docker/server/Dockerfile.hbs", `FROM node:24-slim AS base
-{{#if (or (eq packageManager "bun") (eq runtime "bun"))}}
-COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+  ["deploy/docker/server/Dockerfile.hbs", `{{#if (eq packageManager "bun")}}
+FROM oven/bun:1 AS builder
+{{else}}
+FROM node:24-slim AS builder
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
 RUN npm install -g pnpm@11
@@ -16596,10 +16605,15 @@ RUN --mount=type=cache,target=/root/.npm npm install
 
 ENV NODE_ENV=production
 RUN cd apps/server && {{packageManager}} run build
-ENV SKIP_ENV_VALIDATION=
-{{#if (eq orm "prisma")}}
-ENV DATABASE_URL=
+
+{{#if (eq runtime "bun")}}
+FROM oven/bun:1 AS runner
+{{else}}
+FROM node:24-slim AS runner
 {{/if}}
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app /app
 
 EXPOSE 3000
 
@@ -16880,9 +16894,13 @@ CMD ["nginx", "-g", "daemon off;"]
     }
 }
 `],
-  ["deploy/docker/web/react/tanstack-start/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS base
+  ["deploy/docker/web/react/tanstack-start/Dockerfile.hbs", `{{#if (and (eq packageManager "bun") (not (includes addons "vite-plus")))}}
+FROM oven/bun:1 AS builder
+{{else}}
+FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
 {{/if}}
 {{#if (eq packageManager "pnpm")}}
 RUN npm install -g pnpm@11
@@ -16929,13 +16947,26 @@ ENV BETTER_AUTH_SECRET=
 ENV DATABASE_URL=
 {{/if}}
 
+{{#if (eq runtime "bun")}}
+FROM oven/bun:1 AS runner
+{{else}}
+FROM node:24-slim AS runner
+{{/if}}
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app /app
+
 ENV HOST=0.0.0.0
 ENV PORT=3001
 EXPOSE 3001
 
-# SSR chunks require() externals at runtime; must run from the workspace
+# SSR chunks require workspace dependencies at runtime
 WORKDIR /app/apps/web
+{{#if (eq runtime "bun")}}
+CMD ["bun", ".output/server/index.mjs"]
+{{else}}
 CMD ["node", ".output/server/index.mjs"]
+{{/if}}
 `],
   ["deploy/docker/web/solid/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
 {{#if (eq packageManager "bun")}}
@@ -25950,6 +25981,7 @@ allowBuilds:
   workerd: true
 {{/if}}
 {{#if (eq orm "prisma")}}
+  "@prisma/client": true
   "@prisma/engines": true
   prisma: true
 {{/if}}
@@ -30731,10 +30763,8 @@ export function ThemeProvider({
     "@types/node": "^22.20.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "react-router-devtools": "^6.2.3",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.1.5",
-    "vite-tsconfig-paths": "^6.1.1"
+    "vite": "^8.1.5"
   }
 }
 `],
@@ -31221,13 +31251,14 @@ import { fileURLToPath } from "node:url";
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     tailwindcss(),
     reactRouter(),
-    tsconfigPaths(),
   ],
 {{#if (and (or (eq webDeploy "vercel") (eq webDeploy "prisma")) (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
   ssr: {
@@ -32337,7 +32368,7 @@ export default defineConfig({
       },
 {{/if}}),
 {{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma"))}}
-    nitro(),
+    nitro({{#if (eq webDeploy "docker")}}{ preset: "{{#if (eq runtime "bun")}}bun{{else}}node-server{{/if}}" }{{/if}}),
 {{/if}}
     viteReact(),
   ],

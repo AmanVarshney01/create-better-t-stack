@@ -66,6 +66,7 @@ describe("pnpm workspace", () => {
     });
 
     expect(workspace.allowBuilds).toMatchObject({
+      "@prisma/client": true,
       "@prisma/engines": true,
       prisma: true,
     });

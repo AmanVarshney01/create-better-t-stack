@@ -211,7 +211,7 @@ export const SKILLS_AGENT_PROMPT_OPTIONS: AgentOption[] = [
 ];
 
 export function expandSkillsAgentTargets(agents: readonly SkillAgent[]): SkillAgent[] {
-  const expanded = agents.flatMap((agent) => {
+  const expanded = agents.flatMap<SkillAgent>((agent) => {
     if (agent === "universal") return [...UNIVERSAL_SKILLS_AGENTS];
     if (agent === "clawdbot") return ["openclaw"];
     return [agent];

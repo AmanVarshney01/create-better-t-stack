@@ -114,6 +114,31 @@ describe("Frontend Configurations", () => {
   });
 
   describe("Frontend Compatibility with API", () => {
+    it("should keep React Router on the app's Vite version", async () => {
+      const result = await runTRPCTest({
+        projectName: "react-router-vite",
+        frontend: ["react-router"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      const packageJson = await fs.readJson(path.join(result.projectDir!, "apps/web/package.json"));
+      expect(packageJson.devDependencies.vite).toBe("^8.1.5");
+      expect(packageJson.devDependencies["react-router-devtools"]).toBeUndefined();
+    });
+
     it("should generate the SolidStart v2 project structure", async () => {
       const result = await runTRPCTest({
         projectName: "solid-start-v2",

@@ -604,6 +604,46 @@ describe("Deployment Configurations", () => {
       expect(syncScript).toContain('"CORS_ORIGIN"');
     });
 
+    for (const packageManager of ["bun", "npm", "pnpm"] as const) {
+      it(`should use the Bun runtime for Vercel web deploys with ${packageManager}`, async () => {
+        const result = await createVirtual({
+          projectName: `tanstack-start-vercel-bun-${packageManager}`,
+          webDeploy: "vercel",
+          serverDeploy: "none",
+          backend: "hono",
+          runtime: "bun",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["tanstack-start"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager,
+        });
+
+        if (result.isErr()) {
+          throw result.error;
+        }
+
+        const files = collectFiles(result.value.root, result.value.root.path);
+        const vercelConfig = JSON.parse(files.get("vercel.json") ?? "{}");
+
+        expect(vercelConfig.bunVersion).toBe("1.x");
+        expect(vercelConfig.services.web).toMatchObject({
+          root: "apps/web",
+          framework: "tanstack-start",
+          installCommand: `cd ../.. && ${packageManager} install`,
+        });
+        expect(vercelConfig.services.server).toBeUndefined();
+        expect(files.get("apps/web/vite.config.ts")).toContain("nitro(),");
+      });
+    }
+
     it("should skip origin-derived envs for server-only Vercel deploys", async () => {
       const result = await createVirtual({
         projectName: "native-hono-vercel",
@@ -901,6 +941,8 @@ describe("Deployment Configurations", () => {
       expect(infraFile).toContain('export const server = Cloudflare.Worker("server"');
       expect(infraFile).toContain("export type ServerEnv = Cloudflare.InferEnv<typeof server>");
       expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
+      expect(infraFile).toContain("BETTER_AUTH_URL: Cloudflare.Worker.URL");
+      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
         alchemy: "2.0.0-beta.72",
@@ -914,6 +956,104 @@ describe("Deployment Configurations", () => {
       expect(serverBuildConfig).toContain('import { unwasm } from "unwasm/plugin"');
       expect(serverBuildConfig).toContain("plugins: [unwasm({ esmImport: true })]");
       expect(serverPackage.devDependencies?.unwasm).toBe("^0.6.0");
+    });
+
+    it("should bind self-hosted Cloudflare auth to the deployed Worker URL", async () => {
+      const result = await createVirtual({
+        projectName: "svelte-cloudflare-auth-url",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "orpc",
+        frontend: ["svelte"],
+        addons: ["none"],
+        examples: ["todo"],
+        dbSetup: "d1",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) throw result.error;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const infraFile = files.get("packages/infra/alchemy.run.ts") ?? "";
+      const authFile = files.get("packages/auth/src/index.ts") ?? "";
+
+      expect(infraFile).toContain("BETTER_AUTH_URL: Cloudflare.Worker.URL");
+      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
+      expect(authFile).toContain("baseURL: env.BETTER_AUTH_URL");
+    });
+
+    it("should preserve deployment arguments through npm and Turborepo", async () => {
+      const [npmResult, turboResult] = await Promise.all([
+        createVirtual({
+          projectName: "npm-deploy-args",
+          webDeploy: "cloudflare",
+          serverDeploy: "none",
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["nuxt"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "npm",
+        }),
+        createVirtual({
+          projectName: "turbo-deploy-args",
+          webDeploy: "cloudflare",
+          serverDeploy: "none",
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["astro"],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "pnpm",
+        }),
+      ]);
+
+      if (npmResult.isErr()) throw npmResult.error;
+      if (turboResult.isErr()) throw turboResult.error;
+
+      const npmFiles = collectFiles(npmResult.value.root, npmResult.value.root.path);
+      const turboFiles = collectFiles(turboResult.value.root, turboResult.value.root.path);
+      const npmPackage = JSON.parse(npmFiles.get("package.json") ?? "{}") as {
+        scripts?: Record<string, string>;
+      };
+      const turboPackage = JSON.parse(turboFiles.get("package.json") ?? "{}") as {
+        scripts?: Record<string, string>;
+      };
+
+      expect(npmPackage.scripts?.deploy).toBe(
+        "npm run deploy --workspace @npm-deploy-args/infra --",
+      );
+      expect(npmPackage.scripts?.destroy).toBe(
+        "npm run destroy --workspace @npm-deploy-args/infra --",
+      );
+      expect(turboPackage.scripts?.deploy).toBe("turbo run deploy -F @turbo-deploy-args/infra --");
+      expect(turboPackage.scripts?.destroy).toBe(
+        "turbo run destroy -F @turbo-deploy-args/infra --",
+      );
     });
 
     it("should generate current Cloudflare integrations for every framework family", async () => {
@@ -1074,11 +1214,18 @@ describe("Deployment Configurations", () => {
         reactRouterResult.value.root.path,
       );
       const entryServer = reactRouterFiles.get("apps/web/src/entry.server.tsx") ?? "";
+      const reactRouterViteConfig = reactRouterFiles.get("apps/web/vite.config.ts") ?? "";
+      const reactRouterPackage = JSON.parse(
+        reactRouterFiles.get("apps/web/package.json") ?? "{}",
+      ) as { devDependencies?: Record<string, string> };
       expect(entryServer).toContain("EntryContext, RouterContextProvider");
       expect(entryServer).toContain("export const streamTimeout = 5_000");
       expect(entryServer).toContain('request.method.toUpperCase() === "HEAD"');
       expect(entryServer).toContain("return new Response(null");
       expect(entryServer).toContain("AbortSignal.timeout(streamTimeout + 1000)");
+      expect(reactRouterViteConfig).toContain("tsconfigPaths: true");
+      expect(reactRouterViteConfig).not.toContain("vite-tsconfig-paths");
+      expect(reactRouterPackage.devDependencies?.["vite-tsconfig-paths"]).toBeUndefined();
 
       const nextFiles = collectFiles(nextResult.value.root, nextResult.value.root.path);
       const infraFile = nextFiles.get("packages/infra/alchemy.run.ts") ?? "";
@@ -1426,6 +1573,7 @@ describe("Deployment Configurations", () => {
       expect(compose).toContain("dockerfile: apps/server/Dockerfile");
       expect(compose).toContain('"3001:80"');
       expect(compose).toContain('"3000:3000"');
+      expect(compose).toContain('"http://127.0.0.1:80/"');
       expect(compose).toContain("CORS_ORIGIN: http://localhost:3001");
       expect(compose).toContain(
         // biome-ignore format: compose interpolation syntax
@@ -1437,7 +1585,8 @@ describe("Deployment Configurations", () => {
       expect(webDockerfile).toContain("ARG VITE_SERVER_URL");
       expect(files.get(".dockerignore")).toContain("**/.env");
       expect(webDockerfile).toContain("FROM node:24-slim AS builder");
-      expect(serverDockerfile).toContain("FROM node:24-slim AS base");
+      expect(serverDockerfile).toContain("FROM oven/bun:1 AS builder");
+      expect(serverDockerfile).toContain("FROM oven/bun:1 AS runner");
 
       // SPA frontend builds static assets served by nginx with an SPA fallback
       expect(webDockerfile).toContain("FROM nginx:alpine");
@@ -1535,7 +1684,7 @@ describe("Deployment Configurations", () => {
       expect(webDockerfile).toContain('CMD ["node", "build/index.js"]');
     });
 
-    it("should add the nitro plugin for TanStack Start Docker web deploys", async () => {
+    it("should not infer the TanStack Start runtime from the package manager", async () => {
       const result = await createVirtual({
         projectName: "docker-tanstack-start",
         webDeploy: "docker",
@@ -1564,14 +1713,17 @@ describe("Deployment Configurations", () => {
       const viteConfig = files.get("apps/web/vite.config.ts");
       const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
       const webDockerfile = files.get("apps/web/Dockerfile");
+      const compose = files.get("docker-compose.yml");
 
       expect(viteConfig).toContain('import { nitro } from "nitro/vite"');
-      expect(viteConfig).toContain("nitro(),");
+      expect(viteConfig).toContain('nitro({ preset: "node-server" }),');
       expect(webPkg.dependencies.nitro).toBeDefined();
       // SSR chunks require() externals at runtime, so the app runs from the workspace
-      expect(webDockerfile).toContain("FROM node:24-slim AS base");
+      expect(webDockerfile).toContain("FROM oven/bun:1 AS builder");
+      expect(webDockerfile).toContain("FROM node:24-slim AS runner");
       expect(webDockerfile).toContain("WORKDIR /app/apps/web");
       expect(webDockerfile).toContain('CMD ["node", ".output/server/index.mjs"]');
+      expect(compose).toContain('"node",\n          "-e"');
     });
 
     it("should use the full Node 24 image for Vite+ Docker web builds", async () => {
@@ -1602,11 +1754,86 @@ describe("Deployment Configurations", () => {
       const files = collectFiles(result.value.root, result.value.root.path);
       const webDockerfile = files.get("apps/web/Dockerfile");
       const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const viteConfig = files.get("apps/web/vite.config.ts");
+      const compose = files.get("docker-compose.yml");
 
       expect(webPkg.scripts.build).toBe("vp build");
-      expect(webDockerfile).toContain("FROM node:24 AS base");
+      expect(viteConfig).toContain('nitro({ preset: "bun" }),');
+      expect(webDockerfile).toContain("FROM node:24 AS builder");
+      expect(webDockerfile).toContain("FROM oven/bun:1 AS runner");
       expect(webDockerfile).not.toContain("ca-certificates");
+      expect(webDockerfile).toContain('CMD ["bun", ".output/server/index.mjs"]');
+      expect(compose).toContain('"bun",\n          "-e"');
     });
+
+    for (const runtime of ["bun", "node"] as const) {
+      for (const packageManager of ["bun", "npm", "pnpm"] as const) {
+        for (const useVitePlus of [false, true]) {
+          it(`should use the ${runtime} runtime with ${packageManager}${useVitePlus ? " and Vite+" : ""}`, async () => {
+            const result = await createVirtual({
+              projectName: `docker-${runtime}-${packageManager}${useVitePlus ? "-vite-plus" : ""}`,
+              webDeploy: "docker",
+              serverDeploy: "docker",
+              backend: "hono",
+              runtime,
+              database: "none",
+              orm: "none",
+              auth: "none",
+              payments: "none",
+              api: "orpc",
+              frontend: ["tanstack-start"],
+              addons: useVitePlus ? ["vite-plus"] : ["none"],
+              examples: ["none"],
+              dbSetup: "none",
+              install: false,
+              git: false,
+              packageManager,
+            });
+
+            if (result.isErr()) {
+              throw result.error;
+            }
+
+            const files = collectFiles(result.value.root, result.value.root.path);
+            const viteConfig = files.get("apps/web/vite.config.ts");
+            const webDockerfile = files.get("apps/web/Dockerfile");
+            const serverDockerfile = files.get("apps/server/Dockerfile");
+            const compose = files.get("docker-compose.yml");
+
+            expect(viteConfig).toContain(
+              runtime === "bun" ? 'nitro({ preset: "bun" }),' : 'nitro({ preset: "node-server" }),',
+            );
+            expect(webDockerfile).toContain(
+              packageManager === "bun" && !useVitePlus
+                ? "FROM oven/bun:1 AS builder"
+                : `FROM node:24${useVitePlus ? "" : "-slim"} AS builder`,
+            );
+            expect(webDockerfile).toContain(
+              runtime === "bun" ? "FROM oven/bun:1 AS runner" : "FROM node:24-slim AS runner",
+            );
+            expect(webDockerfile).toContain(
+              runtime === "bun"
+                ? 'CMD ["bun", ".output/server/index.mjs"]'
+                : 'CMD ["node", ".output/server/index.mjs"]',
+            );
+            expect(serverDockerfile).toContain(
+              packageManager === "bun"
+                ? "FROM oven/bun:1 AS builder"
+                : "FROM node:24-slim AS builder",
+            );
+            expect(serverDockerfile).toContain(
+              runtime === "bun" ? "FROM oven/bun:1 AS runner" : "FROM node:24-slim AS runner",
+            );
+            expect(serverDockerfile).toContain(
+              runtime === "bun"
+                ? 'CMD ["bun", "dist/index.mjs"]'
+                : 'CMD ["node", "dist/index.mjs"]',
+            );
+            expect(compose?.match(new RegExp(`"${runtime}",`, "g"))?.length).toBe(2);
+          });
+        }
+      }
+    }
 
     it("should serve React Router SSR builds with a node runner", async () => {
       const result = await createVirtual({

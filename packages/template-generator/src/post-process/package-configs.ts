@@ -370,7 +370,7 @@ function getPackageManagerConfig(
       dev: "turbo run dev",
       build: "turbo run build",
       checkTypes: "turbo run check-types",
-      filter: (workspace, script) => `turbo run ${script} -F ${workspace}`,
+      filter: (workspace, script) => `turbo run ${script} -F ${workspace} --`,
     };
   }
 
@@ -410,7 +410,7 @@ function getPackageManagerConfig(
         dev: "npm run dev --workspaces --if-present",
         build: "npm run build --workspaces --if-present",
         checkTypes: "npm run check-types --workspaces --if-present",
-        filter: (workspace, script) => `npm run ${script} --workspace ${workspace}`,
+        filter: (workspace, script) => `npm run ${script} --workspace ${workspace} --`,
       };
     case "bun":
     default:

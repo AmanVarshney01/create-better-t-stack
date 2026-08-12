@@ -4,13 +4,14 @@ import { fileURLToPath } from "node:url";
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     tailwindcss(),
     reactRouter(),
-    tsconfigPaths(),
   ],
 {{#if (and (or (eq webDeploy "vercel") (eq webDeploy "prisma")) (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
   ssr: {

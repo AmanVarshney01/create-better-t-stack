@@ -42,7 +42,7 @@ export default defineConfig({
       },
 {{/if}}),
 {{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma"))}}
-    nitro(),
+    nitro({{#if (eq webDeploy "docker")}}{ preset: "{{#if (eq runtime "bun")}}bun{{else}}node-server{{/if}}" }{{/if}}),
 {{/if}}
     viteReact(),
   ],

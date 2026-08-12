@@ -63,5 +63,8 @@
   },
   "dependencies": {
     "create-better-t-stack": "^3.38.2"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }
