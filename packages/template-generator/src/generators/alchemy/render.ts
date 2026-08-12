@@ -25,7 +25,9 @@ function usesOutput(plan: AlchemyDeploymentPlan): boolean {
 
 function usesRedacted(plan: AlchemyDeploymentPlan): boolean {
   const database = plan.managedDatabase;
-  return database.kind === "neon" || database.kind === "planetscale-mysql";
+  return (
+    database.kind === "neon" || (database.kind === "planetscale-mysql" && database.orm === "prisma")
+  );
 }
 
 function usesLayer(plan: AlchemyDeploymentPlan): boolean {

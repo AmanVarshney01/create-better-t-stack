@@ -1246,9 +1246,11 @@ describe("Deployment Configurations", () => {
       const turboConfig = JSON.parse(files.get("turbo.json") ?? "{}");
 
       expect(viteConfig).not.toContain('from "alchemy/cloudflare/vite"');
-      expect(viteConfig).toContain('process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"');
+      expect(viteConfig).toContain('process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED !== "1"');
+      expect(viteConfig).toContain('command === "serve"');
       expect(viteConfig).toContain("const cloudflareWorkersAlias: Record<string, string>");
       expect(viteConfig).toContain('new URL("./cloudflare-workers.dev.ts", import.meta.url)');
+      expect(viteConfig).toContain('external: ["cloudflare:workers"]');
       expect(infraFile).toContain('export const web = Cloudflare.Website.Vite("web", {');
       expect(infraFile).toContain('rootDir: "../../apps/web"');
       expect(infraFile).toContain('flags: ["nodejs_compat"]');

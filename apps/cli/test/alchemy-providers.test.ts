@@ -153,6 +153,21 @@ describe("Alchemy providers", () => {
     expect(infra).not.toContain("migrationUrl");
   });
 
+  it("does not import Prisma-only Redacted helpers for PlanetScale MySQL with Drizzle", async () => {
+    const files = await generate({
+      projectName: "planetscale-mysql-drizzle",
+      database: "mysql",
+      orm: "drizzle",
+      dbSetup: "planetscale",
+      frontend: ["tanstack-router"],
+    });
+    const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
+
+    expect(infra).toContain('Planetscale.MySQLDatabase("database"');
+    expect(infra).not.toContain('import * as Redacted from "effect/Redacted"');
+    expect(infra).not.toContain("migrationUrl");
+  });
+
   it("creates separate PlanetScale MySQL runtime and migration credentials", async () => {
     const files = await generate({
       projectName: "planetscale-mysql-prisma",

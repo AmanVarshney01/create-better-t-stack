@@ -32780,15 +32780,6 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
 {{#if (eq webDeploy "cloudflare")}}
-const cloudflareWorkersAlias: Record<string, string> =
-  process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
-    ? {}
-    : {
-        "cloudflare:workers": fileURLToPath(
-          new URL("./cloudflare-workers.dev.ts", import.meta.url),
-        ),
-      };
-
 {{#if (eq orm "prisma")}}
 const prismaWasm =
   process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
@@ -32797,7 +32788,21 @@ const prismaWasm =
 {{/if}}
 
 {{/if}}
+{{#if (eq webDeploy "cloudflare")}}
+export default defineConfig(({ command }) => {
+  const cloudflareWorkersAlias: Record<string, string> =
+    command === "serve" && process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED !== "1"
+      ? {
+          "cloudflare:workers": fileURLToPath(
+            new URL("./cloudflare-workers.dev.ts", import.meta.url),
+          ),
+        }
+      : {};
+
+  return {
+{{else}}
 export default defineConfig({
+{{/if}}
   plugins: [
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     prismaWasm,
@@ -32812,11 +32817,24 @@ export default defineConfig({
     port: 3001,
   },
 {{#if (eq webDeploy "cloudflare")}}
+  build: {
+    rollupOptions: {
+      // resolved by workerd at runtime; local production builds must not bundle it
+      external: ["cloudflare:workers"],
+    },
+  },
   resolve: {
     alias: cloudflareWorkersAlias,
   },
 {{/if}}
+{{#if (eq webDeploy "cloudflare")}}
+  };
+{{else}}
 });
+{{/if}}
+{{#if (eq webDeploy "cloudflare")}}
+});
+{{/if}}
 `],
   ["frontend/svelte/_gitignore", `node_modules
 
