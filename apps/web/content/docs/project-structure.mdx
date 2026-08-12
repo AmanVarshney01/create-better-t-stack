@@ -36,7 +36,7 @@ Notes:
 - `turbo.json` exists only if you picked the Turborepo addon.
 - `nx.json` exists only if you picked the Nx addon.
 - `pnpm-workspace.yaml`, `bunfig.toml`, and `.npmrc` are added based on the package manager you choose.
-- `packages/infra` is created only when Cloudflare deployment is enabled.
+- `packages/infra` is created when a Cloudflare or Prisma deployment is enabled.
 
 ## Monorepo structure by backend
 
@@ -505,7 +505,7 @@ Better-T-Stack always creates `packages/config`. Other packages are added based 
 - `packages/auth`: when `--auth` is not `none` (non-Convex)
 - `packages/db`: when both `--database` and `--orm` are selected (non-Convex)
 - `packages/backend`: Convex backend only
-- `packages/infra`: Cloudflare deployment only
+- `packages/infra`: Alchemy infrastructure for Cloudflare and/or Prisma deployments
 
 ## Development Scripts
 
@@ -588,6 +588,6 @@ Notes:
   - `clerk`: Clerk provider setup and authentication components
 - **ORM/DB**: Drizzle/Prisma/Mongoose files added only when selected
 - **Extras**: `pnpm-workspace.yaml`, `bunfig.toml`, or `.npmrc` added based on package manager and choices
-- **Deploy**: Cloudflare deployment adds `packages/infra/alchemy.run.ts` and related infra files
+- **Deploy**: Cloudflare or Prisma deployment adds `packages/infra/alchemy.run.ts`, `database.ts`, and related infrastructure files
 
 This reflects the actual files written by the CLI so new projects match what's documented here.

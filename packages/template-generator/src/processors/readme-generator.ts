@@ -1,4 +1,8 @@
-import type { ProjectConfig } from "@better-t-stack/types";
+import {
+  isAlchemyDeployTarget,
+  usesAlchemyManagedDatabase,
+  type ProjectConfig,
+} from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { getDbScriptSupport } from "../utils/db-scripts";
@@ -580,8 +584,31 @@ function generateDatabaseSetup(config: ProjectConfig, packageManagerRunCmd: stri
   const ormDesc = orm === "none" ? "" : ` with ${ormLabels[orm] || orm}`;
   const dbSupport = getDbScriptSupport(config);
   const isD1Alchemy = dbSupport.isD1Alchemy;
+  const isAlchemyManagedDatabase = usesAlchemyManagedDatabase(config);
 
   let setup = "## Database Setup\n\n";
+
+  if (isAlchemyManagedDatabase) {
+    const provider =
+      dbSetup === "prisma-postgres"
+        ? "Prisma Postgres"
+        : dbSetup === "planetscale"
+          ? "PlanetScale"
+          : "Neon";
+    const migrationWorkflow =
+      orm === "prisma"
+        ? `The scaffold includes an initial Prisma migration when generated models need one. Create and commit later migrations with \`${packageManagerRunCmd} db:migrate\`; deployment applies checked-in migrations with \`prisma migrate deploy\`.`
+        : `Generate and commit migration SQL with \`${packageManagerRunCmd} db:generate\`. Deployment applies checked-in migrations after provisioning the database.`;
+    const costNote =
+      dbSetup === "planetscale"
+        ? "\n\nThe generated PlanetScale resource uses the `PS_DEV` size. PlanetScale may charge for this database; adjust `clusterSize` in `packages/infra/database.ts` before deployment if needed."
+        : "";
+
+    return `${setup}Alchemy provisions ${provider}, passes its connection credentials directly to the deployed application, and manages database deployment in the same stack as the consuming app. You do not need to copy a hosted \`DATABASE_URL\` into the app environment.
+
+${migrationWorkflow}${costNote}
+`;
+  }
 
   if (isD1Alchemy) {
     const steps: string[] = [];
@@ -806,43 +833,53 @@ function generateDeploymentCommands(
   backend: ProjectConfig["backend"],
 ): string {
   const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const hasPrismaCompute = webDeploy === "prisma" || serverDeploy === "prisma";
+  const hasAlchemy = hasCloudflare || hasPrismaCompute;
   const hasDocker = webDeploy === "docker" || serverDeploy === "docker";
   const hasVercel = webDeploy === "vercel" || serverDeploy === "vercel";
 
-  if (!hasCloudflare && !hasDocker && !hasVercel) {
+  if (!hasAlchemy && !hasDocker && !hasVercel) {
     return "";
   }
 
   const lines: string[] = ["## Deployment"];
 
-  if (hasCloudflare) {
-    const targetLabel =
-      webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || backend === "self")
-        ? "web + server"
-        : webDeploy === "cloudflare"
-          ? "web"
-          : "server";
-    const cfDeployScript = hasVercel
-      ? webDeploy === "cloudflare"
+  if (hasAlchemy) {
+    const targetLabel = [
+      ...(isAlchemyDeployTarget(webDeploy)
+        ? [`web on ${webDeploy === "cloudflare" ? "Cloudflare" : "Prisma"}`]
+        : []),
+      ...(isAlchemyDeployTarget(serverDeploy) && backend !== "self"
+        ? [`server on ${serverDeploy === "cloudflare" ? "Cloudflare" : "Prisma"}`]
+        : []),
+    ].join(" + ");
+    const alchemyDeployScript = hasVercel
+      ? isAlchemyDeployTarget(webDeploy)
         ? "deploy:web"
         : "deploy:server"
       : "deploy";
+    const alchemyExec = packageManagerRunCmd.startsWith("npm")
+      ? "npx"
+      : packageManagerRunCmd.startsWith("pnpm")
+        ? "pnpm exec"
+        : "bunx";
 
     lines.push(
       "",
-      "### Cloudflare via Alchemy",
+      "### Alchemy",
       "",
       `- Target: ${targetLabel}`,
+      `- Configure provider login: \`cd packages/infra && ${alchemyExec} alchemy login --configure\``,
       `- Dev: ${packageManagerRunCmd} dev`,
-      `- Deploy: ${packageManagerRunCmd} ${cfDeployScript}`,
+      `- Deploy: ${packageManagerRunCmd} ${alchemyDeployScript}`,
       `- Destroy: ${packageManagerRunCmd} destroy`,
       "",
-      "The first deploy walks you through Cloudflare login (OAuth or API token) and saves the credentials under `~/.alchemy` — no environment variables required.",
+      "`alchemy login --configure` stores the selected Cloudflare, Neon, PlanetScale, and/or Prisma provider profiles under `~/.alchemy`; no provider-specific setup command is required by this scaffold.",
       "",
       "Deploys are staged and default to a personal `dev_<username>` stage. For production, run the deploy with an explicit stage from `packages/infra`:",
       "",
       "```bash",
-      `cd packages/infra && ${packageManagerRunCmd.startsWith("npm") ? "npx" : packageManagerRunCmd.split(" ")[0]} alchemy deploy --stage production`,
+      `cd packages/infra && ${alchemyExec} alchemy deploy --stage production`,
       "```",
     );
   }
@@ -951,7 +988,7 @@ function getVercelScriptNames(
   webDeploy: ProjectConfig["webDeploy"] | undefined,
   serverDeploy: ProjectConfig["serverDeploy"] | undefined,
 ) {
-  const mixedCloud = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const mixedCloud = isAlchemyDeployTarget(webDeploy) || isAlchemyDeployTarget(serverDeploy);
   const target = webDeploy === "vercel" ? "web" : "server";
   const deploy = mixedCloud ? `deploy:${target}` : "deploy";
   return {

@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  ADDONS_VALUES,
+  SERVER_DEPLOY_VALUES,
+  WEB_DEPLOY_VALUES,
+} from "../../../packages/types/src/schemas";
+import {
   applyStackUpdate,
   getSelectedTechRemovalUpdate,
   getTechSelectionUpdate,
@@ -10,7 +15,7 @@ import {
   analyzeStackCompatibility,
   getDisabledReason,
 } from "../src/app/(home)/new/_components/utils";
-import { DEFAULT_STACK, type StackState } from "../src/lib/constant";
+import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "../src/lib/constant";
 import { sanitizeAddons } from "../src/lib/sanitize-stack-addons";
 import { formatStackCommandForDisplay, generateStackCommand } from "../src/lib/stack-utils";
 
@@ -557,5 +562,98 @@ describe("stack builder Vercel deployment compatibility", () => {
     expect(result.adjustedStack).toMatchObject({
       serverDeploy: "none",
     });
+  });
+});
+
+describe("stack builder option parity", () => {
+  test("exposes every CLI addon and deployment option", () => {
+    expect(TECH_OPTIONS.addons.map((option) => option.id).sort()).toEqual(
+      ADDONS_VALUES.filter((value) => value !== "none").sort(),
+    );
+    expect(TECH_OPTIONS.webDeploy.map((option) => option.id).sort()).toEqual(
+      [...WEB_DEPLOY_VALUES].sort(),
+    );
+    expect(TECH_OPTIONS.serverDeploy.map((option) => option.id).sort()).toEqual(
+      [...SERVER_DEPLOY_VALUES].sort(),
+    );
+  });
+});
+
+describe("stack builder Prisma deployment compatibility", () => {
+  test("allows Prisma web deployment only for supported SSR frontends", () => {
+    for (const frontend of ["next", "nuxt", "astro", "tanstack-start", "solid"]) {
+      expect(
+        getDisabledReason(createStack({ webFrontend: [frontend] }), "webDeploy", "prisma"),
+      ).toBeNull();
+    }
+
+    for (const frontend of ["tanstack-router", "react-router", "svelte"]) {
+      expect(
+        getDisabledReason(createStack({ webFrontend: [frontend] }), "webDeploy", "prisma"),
+      ).toBe("Prisma requires Next.js, Nuxt, Astro, TanStack Start, or SolidStart");
+    }
+  });
+
+  test("generates Prisma web and server deployment flags", () => {
+    const command = generateStackCommand(
+      createStack({
+        webFrontend: ["next"],
+        backend: "hono",
+        runtime: "bun",
+        webDeploy: "prisma",
+        serverDeploy: "prisma",
+      }),
+    );
+
+    expect(command).toContain("--web-deploy prisma");
+    expect(command).toContain("--server-deploy prisma");
+  });
+
+  test("requires Bun or Node for Prisma server deployment", () => {
+    expect(
+      getDisabledReason(createStack({ backend: "hono", runtime: "bun" }), "serverDeploy", "prisma"),
+    ).toBeNull();
+    expect(
+      getDisabledReason(
+        createStack({ backend: "hono", runtime: "workers" }),
+        "serverDeploy",
+        "prisma",
+      ),
+    ).toBe("Prisma server deployment requires the Bun or Node runtime");
+  });
+
+  test("repairs invalid Prisma deployment state", () => {
+    expect(
+      resolveStackCompatibility(
+        createStack({ webFrontend: ["tanstack-router"], webDeploy: "prisma" }),
+      ).stack.webDeploy,
+    ).toBe("none");
+    expect(
+      resolveStackCompatibility(
+        createStack({
+          backend: "hono",
+          runtime: "workers",
+          serverDeploy: "prisma",
+          database: "sqlite",
+          orm: "drizzle",
+          dbSetup: "d1",
+        }),
+      ).stack.serverDeploy,
+    ).toBe("cloudflare");
+  });
+
+  test("blocks the known Next.js Cloudflare PostgreSQL conflict", () => {
+    const postgresStack = createStack({
+      webFrontend: ["next"],
+      backend: "self-next",
+      runtime: "none",
+      database: "postgres",
+      orm: "prisma",
+      dbSetup: "none",
+    });
+
+    expect(getDisabledReason(postgresStack, "webDeploy", "cloudflare")).toBe(
+      "This Prisma PostgreSQL setup with Next.js is temporarily unavailable on Cloudflare",
+    );
   });
 });

@@ -1,6 +1,6 @@
 import { defineConfig } from "tsdown";
 {{#if (and (eq runtime "workers") (eq orm "prisma"))}}
-import { wasm } from "rolldown-plugin-wasm";
+import { unwasm } from "unwasm/plugin";
 {{/if}}
 
 export default defineConfig({
@@ -9,7 +9,12 @@ export default defineConfig({
   outDir: "./dist",
   clean: true,
   {{#if (and (eq runtime "workers") (eq orm "prisma"))}}
-  plugins: [wasm()],
+  plugins: [unwasm({ esmImport: true })],
   {{/if}}
-  noExternal: [/@{{projectName}}\/.*/],
+  deps: {
+    alwaysBundle: [/@{{projectName}}\/.*/],
+    {{#if (eq runtime "workers")}}
+    neverBundle: ["cloudflare:workers"],
+    {{/if}}
+  },
 });

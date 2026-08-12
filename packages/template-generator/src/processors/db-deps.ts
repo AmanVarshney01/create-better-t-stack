@@ -63,8 +63,7 @@ function processPrismaDeps(
     if (dbSetup === "neon") {
       deps.push("@prisma/adapter-neon", "@neondatabase/serverless");
     } else if (dbSetup === "prisma-postgres") {
-      deps.push("@prisma/adapter-pg", "pg");
-      devDeps.push("@types/pg");
+      deps.push("@prisma/adapter-ppg");
     } else {
       deps.push("@prisma/adapter-pg", "pg");
       devDeps.push("@types/pg");
@@ -90,7 +89,9 @@ function processDrizzleDeps(
   webPkgPath: string,
   webExists: boolean,
 ): void {
-  const { database, dbSetup } = config;
+  const { database, dbSetup, backend, webDeploy, serverDeploy } = config;
+  const databaseRunsOnCloudflare =
+    backend === "self" ? webDeploy === "cloudflare" : serverDeploy === "cloudflare";
 
   if (database === "sqlite") {
     addPackageDependency({
@@ -112,6 +113,8 @@ function processDrizzleDeps(
 
     if (dbSetup === "neon") {
       deps.push("@neondatabase/serverless");
+    } else if (databaseRunsOnCloudflare) {
+      deps.push("postgres");
     } else {
       deps.push("pg");
       devDeps.push("@types/pg");

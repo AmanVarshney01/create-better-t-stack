@@ -16,12 +16,11 @@ export function createPrismaClient() {
 }
 
 {{else if (eq dbSetup "prisma-postgres")}}
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaPostgresAdapter } from "@prisma/adapter-ppg";
 
 export function createPrismaClient() {
-	const adapter = new PrismaPg({
+	const adapter = new PrismaPostgresAdapter({
 		connectionString: env.DATABASE_URL,
-		maxUses: 1,
 	});
 
 	return new PrismaClient({ adapter });
@@ -58,14 +57,11 @@ export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy 
 }
 
 {{else if (eq dbSetup "prisma-postgres")}}
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaPostgresAdapter } from "@prisma/adapter-ppg";
 
 export function createPrismaClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
-	const adapter = new PrismaPg({
+	const adapter = new PrismaPostgresAdapter({
 		connectionString: env.DATABASE_URL,
-{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
-		maxUses: 1,
-{{/if}}
 	});
 
 	return new PrismaClient({ adapter });

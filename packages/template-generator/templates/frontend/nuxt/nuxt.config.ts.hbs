@@ -2,6 +2,18 @@
 import { fileURLToPath } from "node:url";
 {{/if}}
 import "@{{projectName}}/env/web";
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+import { defineNuxtModule } from "nuxt/kit";
+import { unwasm } from "unwasm/plugin";
+
+const prismaWasm = defineNuxtModule({
+  setup(_options, nuxt) {
+    nuxt.hook("vite:extendConfig", (viteConfig) => {
+      viteConfig.plugins?.unshift(unwasm({ esmImport: true }));
+    });
+  },
+});
+{{/if}}
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -11,6 +23,9 @@ export default defineNuxtConfig({
     payloadExtraction: 'client',
   },
   modules: [
+    {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+    prismaWasm,
+    {{/if}}
     '@nuxt/ui'
     {{#if (eq backend "convex")}},
     'convex-nuxt'
@@ -43,7 +58,20 @@ export default defineNuxtConfig({
     }
   },
   nitro: {
-    preset: 'cloudflare-module'
+    preset: 'cloudflare-module'{{#if (eq orm "prisma")}},
+    {{#if (eq database "postgres")}}
+    alias: {
+      // pg-native is optional and unavailable in Workers; pg uses its JavaScript driver.
+      'pg-native': 'unenv/mock/proxy'
+    },
+    {{/if}}
+    experimental: {
+      wasm: true
+    },
+    wasm: {
+      esmImport: true
+    }
+    {{/if}}
   },
   {{else}}
   nitro: {

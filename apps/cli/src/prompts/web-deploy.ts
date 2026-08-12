@@ -1,6 +1,16 @@
 import { DEFAULT_CONFIG } from "../constants";
-import type { Backend, DatabaseSetup, Frontend, Runtime, WebDeploy } from "../types";
+import type {
+  Addons,
+  Backend,
+  Database,
+  DatabaseSetup,
+  Frontend,
+  ProjectConfig,
+  Runtime,
+  WebDeploy,
+} from "../types";
 import { WEB_FRAMEWORKS } from "../utils/compatibility";
+import { validateCloudflareWebDeployKnownIssues } from "../utils/compatibility-rules";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
@@ -30,6 +40,12 @@ function getDeploymentDisplay(deployment: WebDeploy): {
       hint: "Self-host with a Dockerfile and docker-compose.yml",
     };
   }
+  if (deployment === "prisma") {
+    return {
+      label: "Prisma",
+      hint: "Deploy with Prisma using Alchemy",
+    };
+  }
   if (deployment === "vercel") {
     return {
       label: "Vercel",
@@ -48,6 +64,9 @@ export async function getDeploymentChoice(
   backend?: Backend,
   frontend: Frontend[] = [],
   dbSetup?: DatabaseSetup,
+  database?: Database,
+  orm?: ProjectConfig["orm"],
+  addons: Addons[] = [],
   previousValue?: WebDeploy,
 ) {
   if (deployment !== undefined) return deployment;
@@ -59,7 +78,24 @@ export async function getDeploymentChoice(
     return "cloudflare";
   }
 
-  const availableDeployments = ["cloudflare", "docker", "vercel", "none"];
+  const supportsPrismaCompute = frontend.some((value) =>
+    ["next", "nuxt", "astro", "tanstack-start", "solid"].includes(value),
+  );
+  const supportsCloudflare = validateCloudflareWebDeployKnownIssues({
+    webDeploy: "cloudflare",
+    frontend,
+    dbSetup,
+    database,
+    orm,
+    addons,
+  }).isOk();
+  const availableDeployments = [
+    ...(supportsCloudflare ? (["cloudflare"] as const) : []),
+    ...(supportsPrismaCompute ? (["prisma"] as const) : []),
+    "docker",
+    "vercel",
+    "none",
+  ];
 
   const options: DeploymentOption[] = availableDeployments.map((deploy) => {
     const { label, hint } = getDeploymentDisplay(deploy as WebDeploy);
@@ -91,12 +127,19 @@ export async function getDeploymentToAdd(frontend: Frontend[], existingDeploymen
     return "none";
   }
 
-  const options: DeploymentOption[] = (["cloudflare", "docker", "vercel"] as const).map(
-    (deploy) => {
-      const { label, hint } = getDeploymentDisplay(deploy);
-      return { value: deploy, label, hint };
-    },
+  const supportsPrismaCompute = frontend.some((value) =>
+    ["next", "nuxt", "astro", "tanstack-start", "solid"].includes(value),
   );
+  const deployments = [
+    "cloudflare",
+    ...(supportsPrismaCompute ? (["prisma"] as const) : []),
+    "docker",
+    "vercel",
+  ] as const;
+  const options: DeploymentOption[] = deployments.map((deploy) => {
+    const { label, hint } = getDeploymentDisplay(deploy);
+    return { value: deploy, label, hint };
+  });
 
   options.push({
     value: "none",

@@ -199,15 +199,19 @@ describe("Turbo config generator", () => {
     expect(convexConfig.tasks["dev:setup"]).toEqual({ cache: false, interactive: true });
   });
 
-  it("forwards terminal input to Alchemy deployment tasks", () => {
-    const config = generateTurboConfig(
-      configWith({
+  it("configures Alchemy deployment tasks for every provider", () => {
+    for (const webDeploy of ["cloudflare", "prisma"] as const) {
+      const projectConfig = configWith({ webDeploy });
+      const turboConfig = generateTurboConfig({
+        ...projectConfig,
         addons: ["turborepo"],
-        webDeploy: "cloudflare",
-      }),
-    );
+      });
+      const nxConfig = generateNxConfig(projectConfig);
 
-    expect(config.tasks.deploy).toEqual({ cache: false, interactive: true });
-    expect(config.tasks.destroy).toEqual({ cache: false, interactive: true });
+      expect(turboConfig.tasks.deploy).toEqual({ cache: false, interactive: true });
+      expect(turboConfig.tasks.destroy).toEqual({ cache: false, interactive: true });
+      expect(nxConfig.targetDefaults.deploy).toEqual({ cache: false });
+      expect(nxConfig.targetDefaults.destroy).toEqual({ cache: false });
+    }
   });
 });

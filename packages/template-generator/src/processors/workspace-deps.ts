@@ -35,7 +35,8 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   const configDep = packages.config ? { [`@${projectName}/config`]: workspaceVersion } : {};
   const envDep = packages.env ? { [`@${projectName}/env`]: workspaceVersion } : {};
   const uiDep = packages.ui ? { [`@${projectName}/ui`]: workspaceVersion } : {};
-  const isCloudflare = serverDeploy === "cloudflare" || webDeploy === "cloudflare";
+  const isAlchemy =
+    ["cloudflare", "prisma"].includes(serverDeploy) || ["cloudflare", "prisma"].includes(webDeploy);
   const runtimeDevDeps = getRuntimeDevDeps(runtime);
   const commonDeps: AvailableDependencies[] = ["dotenv", "zod"];
   const commonDevDeps: AvailableDependencies[] = ["typescript", ...runtimeDevDeps];
@@ -51,7 +52,11 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
 
   if (packages.env) {
     const envDevDeps: Record<string, string> = { ...configDep };
-    if (isCloudflare && packages.infra) {
+    if (
+      isAlchemy &&
+      packages.infra &&
+      (serverDeploy === "cloudflare" || webDeploy === "cloudflare")
+    ) {
       envDevDeps[`@${projectName}/infra`] = workspaceVersion;
     }
     addPackageDependency({
@@ -130,7 +135,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   if (packages.server) {
     const serverDevDependencies: AvailableDependencies[] = ["typescript", "tsdown"];
     if (runtime === "workers" && orm === "prisma") {
-      serverDevDependencies.push("rolldown-plugin-wasm");
+      serverDevDependencies.push("unwasm");
     }
     const serverDeps: Record<string, string> = { ...envDep };
     if (api !== "none" && packages.api) serverDeps[`@${projectName}/api`] = workspaceVersion;

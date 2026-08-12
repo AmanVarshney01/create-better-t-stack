@@ -35,6 +35,7 @@ export const dependencyVersionMap = {
 
   "@neondatabase/serverless": "^1.1.0",
   pg: "^8.22.0",
+  postgres: "^3.4.9",
   "@types/pg": "^8.20.0",
   "@types/ws": "^8.18.1",
   ws: "^8.21.1",
@@ -49,6 +50,7 @@ export const dependencyVersionMap = {
   "@prisma/adapter-libsql": "^7.9.1",
   "@prisma/adapter-better-sqlite3": "^7.9.1",
   "@prisma/adapter-pg": "^7.9.1",
+  "@prisma/adapter-ppg": "^7.9.1",
   "@prisma/adapter-planetscale": "^7.9.1",
 
   mongoose: "^9.8.1",
@@ -97,7 +99,7 @@ export const dependencyVersionMap = {
   nx: "^23.1.0",
   "vite-plus": "0.2.6",
   rolldown: "1.2.0",
-  "rolldown-plugin-wasm": "^0.3.2",
+  unwasm: "^0.6.0",
 
   ai: "^7.0.41",
   "@ai-sdk/google": "^4.0.27",
@@ -160,10 +162,10 @@ export const dependencyVersionMap = {
   "@astrojs/vercel": "^11.0.4",
 
   // exact pins: caret ranges on prereleases can resolve to stray npm test tags
-  alchemy: "2.0.0-beta.69",
-  effect: "4.0.0-beta.103",
-  "@effect/platform-node": "4.0.0-beta.103",
-  "@effect/platform-bun": "4.0.0-beta.103",
+  alchemy: "2.0.0-beta.70",
+  effect: "4.0.0-beta.106",
+  "@effect/platform-node": "4.0.0-beta.106",
+  "@effect/platform-bun": "4.0.0-beta.106",
   vercel: "^58.1.0",
 
   dotenv: "^17.4.2",

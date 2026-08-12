@@ -74,6 +74,7 @@ const convexBetterAuthSupportedNativeFrontends = [
 const convexBetterAuthIncompatibleWebFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
 const staticDesktopAddons = ["tauri", "electrobun"] as const;
 const dockerServerOutputFrontends = ["next", "svelte", "solid", "astro", "react-router"] as const;
+const prismaComputeWebFrontends = ["next", "nuxt", "astro", "tanstack-start", "solid"] as const;
 
 const hasConvexBetterAuthCompatibleFrontend = (webFrontend: string[], nativeFrontend: string[]) =>
   webFrontend.some((f) =>
@@ -140,6 +141,21 @@ export const hasElectrobunCompatibleFrontend = (webFrontend: string[], backend =
 
 export const hasEvlogCompatibleBackend = (backend: string) =>
   ["hono", "express", "fastify", "elysia", ...evlogSupportedFullstackBackends].includes(backend);
+
+const getCloudflareNextIssue = (stack: StackState) => {
+  if (stack.webDeploy !== "cloudflare" || !stack.webFrontend.includes("next")) return null;
+
+  if (
+    stack.database === "postgres" &&
+    stack.orm === "prisma" &&
+    stack.dbSetup !== "neon" &&
+    stack.dbSetup !== "prisma-postgres"
+  ) {
+    return "This Prisma PostgreSQL setup with Next.js is temporarily unavailable on Cloudflare";
+  }
+
+  return null;
+};
 
 const getDockerDesktopConflict = (
   addons: string[],
@@ -858,6 +874,30 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     }
   }
 
+  if (
+    nextStack.webDeploy === "prisma" &&
+    !nextStack.webFrontend.some((frontend) =>
+      prismaComputeWebFrontends.includes(frontend as (typeof prismaComputeWebFrontends)[number]),
+    )
+  ) {
+    nextStack.webDeploy = "none";
+    changed = true;
+    changes.push({
+      category: "webDeploy",
+      message: "Web deploy set to 'None' (Prisma requires a supported SSR frontend)",
+    });
+  }
+
+  const cloudflareNextIssue = getCloudflareNextIssue(nextStack);
+  if (cloudflareNextIssue) {
+    nextStack.webDeploy = "none";
+    changed = true;
+    changes.push({
+      category: "webDeploy",
+      message: `Web deploy set to 'None' (${cloudflareNextIssue})`,
+    });
+  }
+
   // Server deploy constraints
   if (nextStack.serverDeploy === "cloudflare") {
     if (nextStack.runtime !== "workers" || nextStack.backend !== "hono") {
@@ -885,6 +925,26 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     changes.push({
       category: "serverDeploy",
       message: "Server deploy set to 'Cloudflare' (Workers runtime deploys via Cloudflare)",
+    });
+  }
+
+  if (nextStack.serverDeploy === "prisma" && nextStack.runtime === "workers") {
+    nextStack.serverDeploy = "cloudflare";
+    changed = true;
+    changes.push({
+      category: "serverDeploy",
+      message: "Server deploy set to 'Cloudflare' (Workers runtime deploys via Cloudflare)",
+    });
+  } else if (
+    nextStack.serverDeploy === "prisma" &&
+    nextStack.runtime !== "bun" &&
+    nextStack.runtime !== "node"
+  ) {
+    nextStack.serverDeploy = "none";
+    changed = true;
+    changes.push({
+      category: "serverDeploy",
+      message: "Server deploy set to 'None' (Prisma requires the Bun or Node runtime)",
     });
   }
 
@@ -1362,6 +1422,18 @@ export const getDisabledReason = (
         return `Docker cannot serve the static output required by ${dockerDesktopConflict.selectedDesktopAddons.join(" and ")} on ${dockerDesktopConflict.affectedFrontend}`;
       }
     }
+    if (
+      optionId === "prisma" &&
+      !currentStack.webFrontend.some((frontend) =>
+        prismaComputeWebFrontends.includes(frontend as (typeof prismaComputeWebFrontends)[number]),
+      )
+    ) {
+      return "Prisma requires Next.js, Nuxt, Astro, TanStack Start, or SolidStart";
+    }
+    if (optionId === "cloudflare") {
+      const issue = getCloudflareNextIssue({ ...currentStack, webDeploy: "cloudflare" });
+      if (issue) return issue;
+    }
   }
 
   if (
@@ -1383,6 +1455,13 @@ export const getDisabledReason = (
     }
     if (optionId === "vercel" && currentStack.runtime === "workers") {
       return "Vercel server deployment requires the Bun or Node runtime";
+    }
+    if (
+      optionId === "prisma" &&
+      currentStack.runtime !== "bun" &&
+      currentStack.runtime !== "node"
+    ) {
+      return "Prisma server deployment requires the Bun or Node runtime";
     }
     if (optionId !== "none") {
       if (

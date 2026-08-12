@@ -94,11 +94,11 @@ export const AuthSchema = z
 export const PaymentsSchema = z.enum(["polar", "none"]).describe("Payments provider");
 
 export const WebDeploySchema = z
-  .enum(["cloudflare", "docker", "vercel", "none"])
+  .enum(["cloudflare", "prisma", "docker", "vercel", "none"])
   .describe("Web deployment");
 
 export const ServerDeploySchema = z
-  .enum(["cloudflare", "docker", "vercel", "none"])
+  .enum(["cloudflare", "prisma", "docker", "vercel", "none"])
   .describe("Server deployment");
 
 export const DirectoryConflictSchema = z

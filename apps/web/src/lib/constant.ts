@@ -411,6 +411,13 @@ export const TECH_OPTIONS: Record<
       color: "from-orange-400 to-orange-600",
     },
     {
+      id: "prisma",
+      name: "Prisma",
+      description: "Deploy with Prisma using Alchemy",
+      icon: `${ICON_BASE_URL}/prisma.svg`,
+      color: "from-indigo-400 to-indigo-600",
+    },
+    {
       id: "docker",
       name: "Docker",
       description: "Self-host with a Dockerfile and docker-compose.yml",
@@ -440,6 +447,13 @@ export const TECH_OPTIONS: Record<
       description: "Deploy to Cloudflare Workers using Alchemy",
       icon: `${ICON_BASE_URL}/workers.svg`,
       color: "from-orange-400 to-orange-600",
+    },
+    {
+      id: "prisma",
+      name: "Prisma",
+      description: "Deploy with Prisma using Alchemy",
+      icon: `${ICON_BASE_URL}/prisma.svg`,
+      color: "from-indigo-400 to-indigo-600",
     },
     {
       id: "docker",
