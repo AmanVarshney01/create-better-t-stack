@@ -1,6 +1,6 @@
 import { Result } from "better-result";
 
-import type { ProjectConfig } from "../types";
+import { AnalyticsEventSchema, type AnalyticsEvent, type ProjectConfig } from "../types";
 import { getLatestCLIVersion } from "./get-latest-cli-version";
 import { isTelemetryEnabled } from "./telemetry";
 
@@ -22,27 +22,38 @@ async function sendConvexEvent(payload: Record<string, unknown>): Promise<void> 
   });
 }
 
+export function buildAnalyticsEvent(config: ProjectConfig): AnalyticsEvent {
+  return AnalyticsEventSchema.parse({
+    database: config.database,
+    orm: config.orm,
+    backend: config.backend,
+    runtime: config.runtime,
+    frontend: config.frontend,
+    addons: config.addons,
+    examples: config.examples,
+    auth: config.auth,
+    payments: config.payments,
+    git: config.git,
+    packageManager: config.packageManager,
+    install: config.install,
+    dbSetup: config.dbSetup,
+    api: config.api,
+    webDeploy: config.webDeploy,
+    serverDeploy: config.serverDeploy,
+    cli_version: getLatestCLIVersion(),
+    node_version: process.version,
+    platform: process.platform,
+  });
+}
+
 export async function trackProjectCreation(
   config: ProjectConfig,
   disableAnalytics = false,
 ): Promise<void> {
   if (!isTelemetryEnabled() || disableAnalytics) return;
 
-  const {
-    projectName: _projectName,
-    projectDir: _projectDir,
-    relativePath: _relativePath,
-    ...safeConfig
-  } = config;
-
   await Result.tryPromise({
-    try: () =>
-      sendConvexEvent({
-        ...safeConfig,
-        cli_version: getLatestCLIVersion(),
-        node_version: typeof process !== "undefined" ? process.version : "",
-        platform: typeof process !== "undefined" ? process.platform : "",
-      }),
+    try: () => sendConvexEvent(buildAnalyticsEvent(config)),
     catch: () => undefined, // Silent failure
   });
 }

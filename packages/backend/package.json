@@ -6,11 +6,14 @@
   "license": "ISC",
   "author": "",
   "scripts": {
+    "predev": "(cd ../types && bun run build)",
     "dev": "convex dev",
     "dev:setup": "convex dev --configure --until-success",
+    "predeploy": "(cd ../types && bun run build)",
     "deploy": "convex deploy"
   },
   "dependencies": {
+    "@better-t-stack/types": "workspace:*",
     "@convex-dev/crons": "^0.2.2",
     "@erquhart/convex-oss-stats": "catalog:",
     "convex": "catalog:",

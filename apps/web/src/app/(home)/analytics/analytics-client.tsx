@@ -5,9 +5,7 @@ import { type Preloaded, useConvexConnectionState, usePreloadedQuery } from "con
 import { useEffect, useState } from "react";
 
 import {
-  buildComboMatrix,
   buildWeekdayDistribution,
-  splitComboLabel,
   versionWithShare,
   withShare,
 } from "./_components/analytics-helpers";
@@ -259,18 +257,6 @@ function buildFromPrecomputed(
     cliVersionDistribution,
     stackCombinationDistribution,
     databaseORMCombinationDistribution,
-    stackMatrix: buildComboMatrix({
-      distribution: stackCombinationDistribution,
-      total: totalProjects,
-      xFromLabel: (name) => splitComboLabel(name)[1],
-      yFromLabel: (name) => splitComboLabel(name)[0],
-    }),
-    databaseOrmMatrix: buildComboMatrix({
-      distribution: databaseORMCombinationDistribution,
-      total: totalProjects,
-      xFromLabel: (name) => splitComboLabel(name)[1],
-      yFromLabel: (name) => splitComboLabel(name)[0],
-    }),
     summary: {
       mostPopularFrontend: getMostPopular(frontendDistribution),
       mostPopularBackend: getMostPopular(backendDistribution),
@@ -325,8 +311,6 @@ const emptyData: AggregatedAnalyticsData = {
   cliVersionDistribution: [],
   stackCombinationDistribution: [],
   databaseORMCombinationDistribution: [],
-  stackMatrix: { data: [], xDomain: [], yDomain: [], maxValue: 0 },
-  databaseOrmMatrix: { data: [], xDomain: [], yDomain: [], maxValue: 0 },
   summary: {
     mostPopularFrontend: "none",
     mostPopularBackend: "none",
