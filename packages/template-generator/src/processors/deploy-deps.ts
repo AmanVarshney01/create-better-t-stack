@@ -145,11 +145,11 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     const webPkgPath = "apps/web/package.json";
     if (!vfs.exists(webPkgPath)) return;
 
-    // framework dev servers need wrangler for local D1 (bindings proxy + migrations)
-    const needsLocalD1 =
+    // These generic framework paths still use Wrangler for local D1 migrations and bindings.
+    const needsWranglerLocalD1 =
       isBackendSelf &&
       config.dbSetup === "d1" &&
-      (["nuxt", "svelte", "solid", "astro"] as const).some((f) => frontend.includes(f));
+      (["svelte", "solid"] as const).some((framework) => frontend.includes(framework));
 
     if (frontend.includes("next")) {
       addPackageDependency({
@@ -159,21 +159,20 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
         devDependencies: ["wrangler", "@cloudflare/workers-types"],
       });
     } else if (frontend.includes("nuxt")) {
-      // wrangler powers the dev-time cloudflare:workers shim (getPlatformProxy)
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: isBackendSelf ? ["nitro-cloudflare-dev", "wrangler"] : [],
+        devDependencies: ["@alchemy.run/cloudflare-frameworks"],
       });
     } else if (frontend.includes("svelte")) {
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: needsLocalD1
+        devDependencies: needsWranglerLocalD1
           ? ["@sveltejs/adapter-cloudflare", "wrangler"]
           : ["@sveltejs/adapter-cloudflare"],
       });
-    } else if (frontend.includes("solid") && needsLocalD1) {
+    } else if (frontend.includes("solid") && needsWranglerLocalD1) {
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
@@ -183,9 +182,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: needsLocalD1
-          ? ["@astrojs/cloudflare", "@cloudflare/workers-types", "wrangler"]
-          : ["@astrojs/cloudflare", "@cloudflare/workers-types"],
+        devDependencies: ["@alchemy.run/cloudflare-frameworks", "@cloudflare/workers-types"],
       });
     }
   }

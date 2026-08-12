@@ -5,9 +5,14 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
+{{#unless (eq webDeploy "cloudflare")}}
     "build": "astro build",
+
+{{/unless}}
 		"check-types": "astro check",
+{{#unless (eq webDeploy "cloudflare")}}
     "preview": "astro preview",
+{{/unless}}
     "astro": "astro"
   },
   "dependencies": {

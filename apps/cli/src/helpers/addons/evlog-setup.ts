@@ -877,12 +877,17 @@ export default defineNitroPlugin((nitroApp) => {
 
 function getNuxtEvlogAuthMiddlewareFile(config: ProjectConfig) {
   if (usesCreateAuthFactory(config)) {
+    const usesCloudflareRequestEnv = config.backend === "self" && config.webDeploy === "cloudflare";
+    const authExpression = usesCloudflareRequestEnv
+      ? "createAuth((event.context.cloudflare as { env: CloudflareEnv }).env)"
+      : getAuthExpression(config);
     return `${getAuthImportLine(config)}
+${usesCloudflareRequestEnv ? `import type { CloudflareEnv } from "@${config.projectName}/env/server";\n` : ""}
 import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
 
 export default defineEventHandler(async (event) => {
   if (!event.context.log) return;
-  const identify = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
+  const identify = createAuthMiddleware(${authExpression} as BetterAuthInstance, {
     exclude: ["/api/auth/**"],
     maskEmail: true,
   });

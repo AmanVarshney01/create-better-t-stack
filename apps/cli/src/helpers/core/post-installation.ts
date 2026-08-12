@@ -162,20 +162,18 @@ export async function displayPostInstallInstructions(
   const hasAlchemyD1 =
     dbSetup === "d1" &&
     (serverDeploy === "cloudflare" || (isBackendSelf && webDeploy === "cloudflare"));
-  const hasLocalD1 =
+  const hasWranglerLocalD1 =
     isBackendSelf &&
     webDeploy === "cloudflare" &&
     dbSetup === "d1" &&
-    (["next", "nuxt", "svelte", "solid", "astro"] as const).some((value) =>
-      frontend.includes(value),
-    );
+    (["next", "svelte", "solid"] as const).some((framework) => frontend.includes(framework));
 
   if (hasAlchemyD1 && orm !== "none") {
     output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:generate\n`;
     if (orm === "prisma") {
       output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:migrate\n`;
     }
-    if (hasLocalD1) {
+    if (hasWranglerLocalD1) {
       output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:migrate:local\n`;
     }
   }

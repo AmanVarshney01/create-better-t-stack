@@ -100,4 +100,29 @@ describe("post-install instructions", () => {
     expect(output.match(/bun run db:generate/g)).toHaveLength(1);
     expect(output.match(/bun run db:migrate(?!:)/g)).toHaveLength(1);
   });
+
+  for (const frontend of ["nuxt", "astro"] as const) {
+    it(`uses Alchemy-owned local D1 setup for ${frontend}`, async () => {
+      const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
+      spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline in test"));
+
+      await displayPostInstallInstructions({
+        ...baseConfig,
+        frontend: [frontend],
+        api: "orpc",
+        orm: "drizzle",
+        depsInstalled: false,
+      });
+
+      const output = stdout.mock.calls.map(([chunk]) => String(chunk)).join("");
+      const nextSteps = output.slice(
+        output.indexOf("Next steps"),
+        output.indexOf("Local development"),
+      );
+
+      expect(nextSteps).toContain("bun run db:generate");
+      expect(nextSteps).toContain("bun run dev");
+      expect(nextSteps).not.toContain("db:migrate:local");
+    });
+  }
 });

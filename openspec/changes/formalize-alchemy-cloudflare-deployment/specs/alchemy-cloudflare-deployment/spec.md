@@ -2,14 +2,15 @@
 
 ### Requirement: Vetted exact Alchemy version
 
-Every generated Alchemy project SHALL use the exact accepted Alchemy version. The currently accepted version SHALL be `alchemy@2.0.0-beta.70`; Alchemy version ranges SHALL NOT be generated. The generated `effect`, `@effect/platform-node`, and `@effect/platform-bun` versions SHALL be pinned exactly to beta.106 as the verified compatible set. A replacement version SHALL pass every applicable Better-T-Stack offline and live gate before becoming accepted. A fix on main or in a pull request SHALL not be treated as available until a containing release is pinned and verified. Exact pinning is a permanent publication-safety policy, not a temporary beta shim.
+Every generated Alchemy project SHALL use the exact accepted Alchemy version. The currently selected release SHALL be `alchemy@2.0.0-beta.72`; Alchemy version ranges SHALL NOT be generated. The generated `effect`, `@effect/platform-node`, and `@effect/platform-bun` versions SHALL use the exact latest selected Effect beta, currently beta.107. This combination contains Alchemy's released `Schema.TaggedError` migration and SHALL be verified without an older Effect pin, dependency patch, override, or hoisted linker. A replacement version SHALL pass every applicable Better-T-Stack offline and live gate before becoming accepted. A fix on main or in a pull request SHALL not be treated as available until a containing release is pinned and verified. Exact pinning is a permanent publication-safety policy, not a temporary beta shim.
 
 #### Scenario: Generate a Cloudflare target
 
 - **WHEN** either deployment plane selects Cloudflare
-- **THEN** the infra package SHALL depend on exactly `alchemy@2.0.0-beta.70`
-- **AND** its Effect and Effect platform dependencies SHALL be pinned exactly to `4.0.0-beta.106`
+- **THEN** the infra package SHALL depend on exactly `alchemy@2.0.0-beta.72`
+- **AND** its Effect and Effect platform dependencies SHALL be pinned exactly to `4.0.0-beta.107`
 - **AND** the generated package manager SHALL resolve that exact version
+- **AND** the generated dependency graph SHALL install without an Effect downgrade or package-manager restriction
 
 #### Scenario: Evaluate an upgrade
 
@@ -106,12 +107,12 @@ Cloudflare resources SHALL preserve dependency ordering and pass resolved values
 
 ### Requirement: Framework-specific Cloudflare paths
 
-Each web framework SHALL use the intentional generated resource and runtime entry described by the accepted-version design: Website.Vite with single-page-application asset handling for TanStack Router/Solid SPAs, explicit-entry Website.Vite for React Router, Website.Vite for TanStack Start, and framework server/static outputs for Next.js, Nuxt, SvelteKit, and Astro. A framework path SHALL not change solely because another framework's gate passed.
+Each web framework SHALL use the intentional generated resource and runtime entry described by the accepted-version design: `Website.Vite` with single-page-application asset handling for TanStack Router, worker-first `Website.Vite` SSR for SolidStart v2, explicit-entry `Website.Vite` for React Router, `Website.Vite` for TanStack Start, `Website.Nuxt` for Nuxt, `Website.Astro` for Astro, and qualified generic `StaticSite` paths for Next.js and SvelteKit until their first-class providers accept the generated stable framework versions. A framework path SHALL not change solely because another framework's gate passed.
 
 #### Scenario: Verify Nuxt support
 
 - **WHEN** Nuxt uses Cloudflare full-stack or web deployment
-- **THEN** generated verification SHALL exercise a page SSR request and the development platform proxy when applicable
+- **THEN** generated verification SHALL exercise a page SSR request and provider-owned development with real local bindings
 - **AND** an API-route-only probe SHALL not establish page support
 
 #### Scenario: Verify Astro support
@@ -138,7 +139,7 @@ Better-T-Stack SHALL generate `Website.Nextjs`, `Website.Nuxt`, `Website.SvelteK
 
 #### Scenario: Resolve a framework source under strict workspaces
 
-- **WHEN** an adopted resource dynamically loads an `@distilled.cloud/*` source package
+- **WHEN** an adopted resource dynamically loads `@alchemy.run/cloudflare-frameworks` from Alchemy beta.72
 - **THEN** fresh npm, pnpm, and Bun projects SHALL resolve that package without accidental global installation or hoisting
 - **AND** the generated framework and Effect/Alchemy versions SHALL satisfy its released peer contract
 
@@ -194,7 +195,7 @@ Adopting a first-class framework resource SHALL preserve the `web` Worker identi
 
 ### Requirement: Nuxt first-class parity
 
-`Website.Nuxt` SHALL replace the Nitro `StaticSite` path only after the released resource loads and preserves the generated Nuxt configuration, owns a compatible Cloudflare preset, serves page SSR and API routes, propagates public and private values, and provides real local resource bindings.
+`Website.Nuxt` SHALL replace the Nitro `StaticSite` path when the released resource loads and preserves the generated Nuxt configuration, owns a compatible Cloudflare preset and build lifecycle, serves page SSR and API routes, propagates public and private values, and provides real local resource bindings. The generated project SHALL use the published source package selected by the accepted Alchemy release and SHALL NOT retain duplicate Nitro Cloudflare adapter, Wrangler, alias, or production-build plumbing.
 
 #### Scenario: Adopt Website.Nuxt
 
@@ -204,9 +205,15 @@ Adopting a first-class framework resource SHALL preserve the `web` Worker identi
 
 #### Scenario: Remove the Nuxt development shim
 
-- **WHEN** provider-owned Nuxt development is proposed to replace `nitro-cloudflare-dev`, the `cloudflare:workers` alias, Wrangler development config, or `dev:bare`
+- **WHEN** provider-owned Nuxt development replaces `nitro-cloudflare-dev`, the `cloudflare:workers` alias, Wrangler development config, or `dev:bare`
 - **THEN** `alchemy dev` SHALL serve a page and a D1-backed operation through real local bindings without each removed shim
 - **AND** normal Nuxt HMR SHALL remain usable
+
+#### Scenario: Delegate the Nuxt production build
+
+- **WHEN** a generated Cloudflare Nuxt project uses `Website.Nuxt`
+- **THEN** the web package SHALL NOT expose a duplicate standalone production build or preview script
+- **AND** the Alchemy source provider SHALL load Nuxt and inject the deployment adapter during its owned build lifecycle
 
 ### Requirement: SvelteKit first-class parity
 
@@ -226,13 +233,19 @@ Adopting a first-class framework resource SHALL preserve the `web` Worker identi
 
 ### Requirement: Astro first-class parity
 
-`Website.Astro` SHALL replace the Astro `StaticSite` path only when the released resource loads and merges the native Astro configuration, injects an equivalent Cloudflare adapter, and preserves Tailwind/Vite plugins, environment schema, integrations, SSR, prerendering, sessions, Cloudflare Images behavior, asset metadata, and generated binding types.
+`Website.Astro` SHALL replace the Astro `StaticSite` path when the released resource loads and merges the native Astro configuration, injects the Cloudflare adapter during its owned build, and preserves Tailwind/Vite plugins, environment schema, integrations, SSR, prerendering, sessions, Cloudflare Images behavior, asset metadata, and generated binding types. The generated Astro config SHALL NOT install or call a competing checked-in `@astrojs/cloudflare` adapter. The generated resource SHALL retain explicit `SESSION` and `IMAGES` bindings so the wrapper reuses the existing namespace, `Cloudflare.InferEnv` exposes both names, and first-class adoption does not replace state solely because the wrapper also supports an implicit default namespace.
 
 #### Scenario: Preserve native Astro configuration
 
 - **WHEN** `Website.Astro` builds the generated project
 - **THEN** the Tailwind Vite plugin, environment schema, integrations, and route configuration from `astro.config.*` SHALL remain active
 - **AND** stale documentation that contradicts released source behavior SHALL block adoption until corrected or conclusively qualified
+
+#### Scenario: Delegate the Astro production build
+
+- **WHEN** a generated Cloudflare Astro project uses `Website.Astro`
+- **THEN** the web package SHALL NOT expose a duplicate standalone production build or preview script
+- **AND** the source provider SHALL load Astro programmatically and inject its deployment adapter during the Alchemy-owned build
 
 #### Scenario: Preserve Astro session and image behavior
 
@@ -295,18 +308,24 @@ Cloudflare framework-resource adoption SHALL change only Alchemy-managed Cloudfl
 
 ### Requirement: Sanctioned Alchemy compatibility shims
 
-Until their individual removal gates pass, the generator SHALL retain the workspace-safe memo policy, React Router Worker entry with web-stream rendering, Nuxt development platform proxy, explicit external-Worker compatibility flags, and local Wrangler Prisma migration pattern. Native `StaticSite` SHALL receive Alchemy Outputs and Effect Config values directly. Integration shims SHALL not be mislabeled as confirmed Alchemy core defects.
+Until their individual removal gates pass, the generator SHALL retain the workspace-safe memo policy for generic `StaticSite`, React Router Worker entry with web-stream rendering, explicit external-Worker compatibility flags, and local Wrangler Prisma migration pattern. Native `StaticSite` SHALL receive Alchemy Outputs and Effect Config values directly. Adopted `Website.Nuxt` and `Website.Astro` paths SHALL rely on their provider-owned development/build lifecycles instead of retaining duplicate generated shims. Integration shims SHALL not be mislabeled as confirmed Alchemy core defects.
 
 #### Scenario: Change a sibling workspace
 
 - **WHEN** a frontend-imported sibling package changes without a lockfile change
 - **THEN** a normal deploy SHALL rebuild the frontend rather than reuse stale output
 
-#### Scenario: Deploy a pure Vite SPA
+#### Scenario: Deploy the TanStack Router Vite SPA
 
-- **WHEN** TanStack Router or Solid deploys with the accepted Alchemy version
+- **WHEN** TanStack Router deploys with the accepted Alchemy version
 - **THEN** it SHALL use `Website.Vite` with single-page-application asset handling
 - **AND** a direct client-side route request SHALL receive the SPA fallback
+
+#### Scenario: Deploy SolidStart v2 SSR
+
+- **WHEN** SolidStart deploys with the accepted Alchemy version
+- **THEN** it SHALL use `Website.Vite` with worker-first asset routing and a server entry
+- **AND** document, Better Auth, and oRPC requests SHALL execute through the SSR Worker
 
 #### Scenario: Serve React Router
 
@@ -317,13 +336,13 @@ Until their individual removal gates pass, the generator SHALL retain the worksp
 #### Scenario: Run Nuxt with D1 locally
 
 - **WHEN** a Nuxt self-backend D1 project runs a page in development
-- **THEN** `cloudflare:workers` SHALL resolve through the development proxy
+- **THEN** `Website.Nuxt` SHALL provide the real local `cloudflare:workers` binding contract
 - **AND** a D1-backed request SHALL succeed
 
 #### Scenario: Remove a development or migration shim
 
-- **WHEN** maintainers propose removing the Nuxt development proxy or Prisma Wrangler migration pattern
-- **THEN** the same page/D1 request or nested local migration SHALL pass without that exact shim
+- **WHEN** maintainers propose removing the Prisma Wrangler migration pattern or another remaining development shim
+- **THEN** the corresponding nested local migration or binding-backed request SHALL pass without that exact shim
 - **AND** the change SHALL not be classified as an Alchemy fix unless released-source evidence supports that classification
 
 #### Scenario: Remove a compatibility flag or binding

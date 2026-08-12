@@ -6,6 +6,9 @@ import { BatchHandlerPlugin } from "@orpc/server/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
+{{#if (eq webDeploy "cloudflare")}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
+{{/if}}
 
 const rpcHandler = new RPCHandler(appRouter, {
   interceptors: [
@@ -31,7 +34,12 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 export default defineEventHandler(async (event) => {
   const request = toWebRequest(event);
-  const context = await createContext({ headers: request.headers });
+  const context = await createContext({
+    headers: request.headers,
+    {{#if (eq webDeploy "cloudflare")}}
+    env: (event.context.cloudflare as { env: CloudflareEnv }).env,
+    {{/if}}
+  });
 
   const rpcResult = await rpcHandler.handle(request, {
     prefix: "/rpc",

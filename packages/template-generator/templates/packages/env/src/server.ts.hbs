@@ -65,10 +65,12 @@ export async function getEnvAsync() {
 }
 
 export const env = createEnvProxy(resolveEnvValue);
-{{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
-/// <reference path="../env.d.ts" />
+{{else if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
+import type { CloudflareEnv } from "../env.d.ts";
+
+export type { CloudflareEnv } from "../env.d.ts";
 
 // dotenv only applies in Node dev/build; workerd throws on file URLs and has no fs
 try {
@@ -80,7 +82,7 @@ try {
 
 const runtimeEnv = typeof process === "undefined" ? {} : process.env;
 
-export const env = new Proxy({} as Env, {
+export const env = new Proxy({} as CloudflareEnv, {
 	get(_target, prop) {
 		if (typeof prop !== "string") {
 			return undefined;

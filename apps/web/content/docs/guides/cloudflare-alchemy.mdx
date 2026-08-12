@@ -7,9 +7,8 @@ description: Deploy Better-T-Stack projects to Cloudflare or Prisma and manage h
 
 [Alchemy](https://alchemy.run) is the infrastructure-as-code layer generated when you choose **Cloudflare** or **Prisma** as a deployment target. The CLI writes a `packages/infra` workspace containing:
 
-- `alchemy.run.ts` for web and server applications
-- `database.ts` for Alchemy-managed database resources and migrations
-- exact Alchemy and Effect versions verified by Better-T-Stack
+- one `alchemy.run.ts` for applications, managed databases, and migrations
+- exact selected Alchemy and latest Effect beta versions
 - root `dev`, `deploy`, and `destroy` commands
 
 The CLI calls the deployment choice **Prisma**. In the generated TypeScript, that target uses Alchemy's `Prisma.Compute` resource.
@@ -25,6 +24,12 @@ Prisma supports:
 - mixed stacks, such as Cloudflare web + Prisma server or Prisma web + Cloudflare server
 
 The CLI rejects unsupported framework/runtime combinations before writing files.
+
+Cloudflare web deployment uses Alchemy's released framework resources where they match the
+generated stable framework: `Website.Nuxt` for Nuxt, `Website.Astro` for Astro, and `Website.Vite`
+for React Router, TanStack Router, TanStack Start, and SolidStart. Next.js and stable SvelteKit keep
+their qualified `StaticSite` paths until the released first-class resources accept the latest
+OpenNext and stable SvelteKit versions.
 
 Prisma with a generic `node-postgres` connection, including PlanetScale Postgres and Supabase, is
 temporarily unavailable with Next.js on Cloudflare until OpenNext preserves `pg-cloudflare`'s
@@ -87,7 +92,7 @@ This distinction matters in mixed stacks. A Prisma web app with a Vercel server,
 
 <Callout type="warn">
   PlanetScale can charge for `PS_DEV` databases. Review `clusterSize` in
-  `packages/infra/database.ts` before deploying.
+  `packages/infra/alchemy.run.ts` before deploying.
 </Callout>
 
 ## Migration workflow
@@ -116,6 +121,17 @@ bun run destroy
 ```
 
 `bun run dev` starts Alchemy development alongside the generated applications. Application packages expose `dev:bare` internally so the root command does not recursively start Alchemy again.
+
+For Nuxt and Astro on Cloudflare, Alchemy owns the deployment build and injects its Cloudflare
+integration in memory. Nuxt keeps its ordinary framework `build` command for local verification;
+Astro's Cloudflare scaffold relies on the Alchemy lifecycle because a standalone server build would
+need a competing checked-in adapter.
+
+<Callout type="info">
+  Generated projects pin `alchemy@2.0.0-beta.72` with Effect beta.107 exactly. The framework source
+  package is installed in the web workspace that Alchemy loads it from, so Bun, npm, and pnpm can
+  resolve the same graph without overrides or hoisting assumptions.
+</Callout>
 
 Deployments are staged. For an explicit production stage:
 
@@ -167,4 +183,7 @@ compressed free-plan limit.
 
 ## Version policy
 
-Alchemy v2 is still a beta. Better-T-Stack pins one exact Alchemy version together with exact compatible Effect packages, because open prerelease ranges can select incompatible publications. Upgrade these packages as a verified set rather than changing one dependency independently.
+Alchemy v2 is still a beta. Better-T-Stack pins one exact Alchemy version together with the exact
+latest Effect beta because open prerelease ranges can select unintended publications. A pinned set
+is not called compatible until the CLI starts and the complete generated-project and live gates
+pass. Upgrade these packages as one verified set rather than changing one dependency independently.

@@ -47,7 +47,7 @@ Managed Prisma Postgres SHALL create one Prisma project, one database, and one c
 #### Scenario: Prisma Postgres URL resolution
 
 - **WHEN** the Prisma connection resolves
-- **THEN** its optional provider output SHALL be narrowed once in `database.ts`
+- **THEN** its optional provider output SHALL be narrowed once in `alchemy.run.ts`
 - **AND** Cloudflare and Prisma application resources SHALL receive a required typed value
 
 ### Requirement: Deployments apply source-controlled migrations

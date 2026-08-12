@@ -19,33 +19,9 @@ export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectCon
     if (backend === "self") {
       writeDevWranglerConfig(vfs, config);
     }
-  } else if (frontend.includes("nuxt") && backend === "self") {
-    writeDevWranglerConfig(vfs, config);
-    // page SSR runs through vite-node, which cannot resolve workerd's
-    // cloudflare:workers module; nuxt.config aliases it to this proxy in dev
-    vfs.writeFile(
-      "apps/web/cloudflare-workers.dev.ts",
-      `import { getPlatformProxy } from "wrangler";
-
-const proxy = await getPlatformProxy();
-
-export const env: Record<string, unknown> = new Proxy(
-	{},
-	{
-		get(_target, prop) {
-			if (typeof prop !== "string") return undefined;
-			return (proxy.env as Record<string, unknown>)[prop] ?? process.env[prop];
-		},
-	},
-);
-`,
-    );
   } else if (frontend.includes("solid") && backend === "self") {
     writeDevWranglerConfig(vfs, config);
     writeSolidStartDevEnvProxy(vfs, config);
-  } else if (backend === "self" && frontend.includes("astro")) {
-    // framework dev servers read local bindings (miniflare D1) from this config
-    writeDevWranglerConfig(vfs, config);
   }
 }
 

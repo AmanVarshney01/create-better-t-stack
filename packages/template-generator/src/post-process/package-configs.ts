@@ -197,15 +197,15 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     scripts[alchemyDeployScript] = pmConfig.filter(infraPackageName, "deploy");
     scripts.destroy = pmConfig.filter(infraPackageName, "destroy");
 
-    // fullstack D1 apps use a local miniflare D1 in dev; migrations apply via wrangler
-    const hasLocalD1 =
+    // Generic framework paths use a Wrangler-managed local D1; first-class providers own theirs.
+    const hasWranglerLocalD1 =
       config.webDeploy === "cloudflare" &&
       config.backend === "self" &&
       dbSetup === "d1" &&
-      (["next", "nuxt", "svelte", "solid", "astro"] as const).some((f) =>
-        config.frontend.includes(f),
+      (["next", "svelte", "solid"] as const).some((framework) =>
+        config.frontend.includes(framework),
       );
-    if (hasLocalD1) {
+    if (hasWranglerLocalD1) {
       scripts["db:migrate:local"] = pmConfig.filter("web", "db:migrate:local");
     }
   }
@@ -402,7 +402,10 @@ function getPackageManagerConfig(
     case "pnpm":
       return {
         dev: "pnpm -r dev",
-        build: "pnpm -r build",
+        // Some deployment providers own the production build and intentionally
+        // omit workspace build scripts. Match npm/Bun by treating that as a
+        // successful no-op instead of pnpm's recursive-run error.
+        build: "pnpm -r --if-present build",
         checkTypes: "pnpm -r check-types",
         filter: (workspace, script) => `pnpm --filter ${workspace} ${script}`,
       };

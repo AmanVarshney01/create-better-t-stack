@@ -84,28 +84,28 @@ describe("Alchemy providers", () => {
       backend: "hono",
       runtime: "bun",
     });
-    const database = files.get("packages/infra/database.ts") ?? "";
     const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
     const infraPackage = JSON.parse(files.get("packages/infra/package.json") ?? "{}") as {
       scripts?: Record<string, string>;
       devDependencies?: Record<string, string>;
     };
 
-    expect(database).toContain('Neon.Project("database"');
-    expect(database).toContain("database.pooledConnectionUri.pipe(Output.map(Redacted.make))");
-    expect(database).toContain('Command.Exec("database-migrations"');
-    expect(database).toContain('command: "bun run db:migrate:deploy"');
-    expect(database).toContain('"prisma/migrations/**"');
+    expect(infra).toContain('Neon.Project("database"');
+    expect(infra).toContain("database.pooledConnectionUri.pipe(Output.map(Redacted.make))");
+    expect(infra).toContain('Command.Exec("database-migrations"');
+    expect(infra).toContain('command: "bun run db:migrate:deploy"');
+    expect(infra).toContain('"prisma/migrations/**"');
     expect(infra).toContain('export const server = Prisma.Compute("server"');
     expect(infra).toContain('yield* Cloudflare.Website.StaticSite("web"');
     expect(infra).toContain("NEXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>()");
+    expect(files.has("packages/infra/database.ts")).toBe(false);
     expect(files.has("packages/db/prisma/migrations/0000_init/migration.sql")).toBe(true);
     expect(infraPackage.scripts?.["check-types"]).toBe("tsc --noEmit");
     expect(infraPackage.devDependencies).toMatchObject({
-      alchemy: "2.0.0-beta.70",
-      effect: "4.0.0-beta.106",
-      "@effect/platform-node": "4.0.0-beta.106",
-      "@effect/platform-bun": "4.0.0-beta.106",
+      alchemy: "2.0.0-beta.72",
+      effect: "4.0.0-beta.107",
+      "@effect/platform-node": "4.0.0-beta.107",
+      "@effect/platform-bun": "4.0.0-beta.107",
     });
   });
 
@@ -116,18 +116,18 @@ describe("Alchemy providers", () => {
       dbSetup: "planetscale",
       frontend: ["tanstack-router"],
     });
-    const database = files.get("packages/infra/database.ts") ?? "";
+    const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
     const dbSource = files.get("packages/db/src/index.ts") ?? "";
     const dbPackage = JSON.parse(files.get("packages/db/package.json") ?? "{}") as {
       dependencies?: Record<string, string>;
     };
     const readme = files.get("README.md") ?? "";
 
-    expect(database).toContain('Planetscale.PostgresDatabase("database"');
-    expect(database).toContain('clusterSize: "PS_DEV"');
-    expect(database).toContain('migrationsDir: "../../packages/db/src/migrations"');
-    expect(database).toContain('inheritedRoles: ["pg_read_all_data", "pg_write_all_data"]');
-    expect(database).not.toContain('Command.Exec("database-migrations"');
+    expect(infra).toContain('Planetscale.PostgresDatabase("database"');
+    expect(infra).toContain('clusterSize: "PS_DEV"');
+    expect(infra).toContain('migrationsDir: "../../packages/db/src/migrations"');
+    expect(infra).toContain('inheritedRoles: ["pg_read_all_data", "pg_write_all_data"]');
+    expect(infra).not.toContain('Command.Exec("database-migrations"');
     expect(dbSource).toContain("drizzle-orm/postgres-js");
     expect(dbSource).toContain('from "postgres"');
     expect(dbPackage.dependencies?.postgres).toBe("^3.4.9");
@@ -146,11 +146,11 @@ describe("Alchemy providers", () => {
       orm: "drizzle",
       frontend: ["solid"],
     });
-    const database = files.get("packages/infra/database.ts") ?? "";
+    const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
 
-    expect(database).toContain("database.pooledConnectionUri.pipe(Output.map(Redacted.make))");
-    expect(database).not.toContain("database.connectionUri");
-    expect(database).not.toContain("migrationUrl");
+    expect(infra).toContain("database.pooledConnectionUri.pipe(Output.map(Redacted.make))");
+    expect(infra).not.toContain("database.connectionUri");
+    expect(infra).not.toContain("migrationUrl");
   });
 
   it("creates separate PlanetScale MySQL runtime and migration credentials", async () => {
@@ -165,17 +165,16 @@ describe("Alchemy providers", () => {
       dbSetup: "planetscale",
       frontend: ["solid"],
     });
-    const database = files.get("packages/infra/database.ts") ?? "";
     const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
     const readme = files.get("README.md") ?? "";
 
-    expect(database).toContain('Planetscale.MySQLDatabase("database"');
-    expect(database).toContain('role: "readwriter"');
-    expect(database).toContain('role: "admin"');
-    expect(database).toContain("ttl: 600");
-    expect(database).toContain("Output.all(");
-    expect(database).toContain("Redacted.value(secret)");
-    expect(database).toContain("?sslaccept=strict");
+    expect(infra).toContain('Planetscale.MySQLDatabase("database"');
+    expect(infra).toContain('role: "readwriter"');
+    expect(infra).toContain('role: "admin"');
+    expect(infra).toContain("ttl: 600");
+    expect(infra).toContain("Output.all(");
+    expect(infra).toContain("Redacted.value(secret)");
+    expect(infra).toContain("?sslaccept=strict");
     expect(infra).toContain('export const web = Prisma.Compute("web"');
     expect(infra).toContain('entrypoint: "server/index.mjs"');
     expect(files.has("packages/db/prisma/migrations/0000_init/migration.sql")).toBe(true);
@@ -193,7 +192,6 @@ describe("Alchemy providers", () => {
       dbSetup: "prisma-postgres",
       frontend: ["solid"],
     });
-    const database = files.get("packages/infra/database.ts") ?? "";
     const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
     const webVite = files.get("apps/web/vite.config.ts") ?? "";
     const dbSource = files.get("packages/db/src/index.ts") ?? "";
@@ -204,13 +202,13 @@ describe("Alchemy providers", () => {
       devDependencies?: Record<string, string>;
     };
 
-    expect(database).toContain('Prisma.Project("project"');
-    expect(database).toContain('Prisma.Postgres("database"');
-    expect(database).toContain('Prisma.Connection("database-connection"');
-    expect(database).toContain("Prisma did not return a database connection URL");
-    expect(database).toContain("directUrl ?? fallbackUrl");
-    expect(database).toContain("const migrationUrl = runtimeUrl");
-    expect(database).toContain("export const databaseBindings = {");
+    expect(infra).toContain('Prisma.Project("project"');
+    expect(infra).toContain('Prisma.Postgres("database"');
+    expect(infra).toContain('Prisma.Connection("database-connection"');
+    expect(infra).toContain("Prisma did not return a database connection URL");
+    expect(infra).toContain("directUrl ?? fallbackUrl");
+    expect(infra).toContain("const migrationUrl = runtimeUrl");
+    expect(infra).toContain("export const databaseBindings = {");
     expect(infra).toContain("...databaseBindings");
     expect(infra).not.toContain("...resolvedDatabaseEnv");
     expect(webVite).toContain('import { unwasm } from "unwasm/plugin"');
@@ -265,6 +263,37 @@ describe("Alchemy providers", () => {
     }
   });
 
+  it("uses Nuxt request context for native Alchemy bindings", async () => {
+    const files = await generate({
+      projectName: "nuxt-native-cloudflare-bindings",
+      webDeploy: "cloudflare",
+      serverDeploy: "none",
+      backend: "self",
+      runtime: "none",
+      dbSetup: "prisma-postgres",
+      frontend: ["nuxt"],
+    });
+    const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
+    const auth = files.get("packages/auth/src/index.ts") ?? "";
+    const db = files.get("packages/db/src/index.ts") ?? "";
+    const context = files.get("packages/api/src/context.ts") ?? "";
+    const authRoute = files.get("apps/web/server/api/auth/[...all].ts") ?? "";
+    const rpcRoute = files.get("apps/web/server/routes/rpc/[...].ts") ?? "";
+    const todoRouter = files.get("packages/api/src/routers/todo.ts") ?? "";
+
+    expect(infra).toContain('Cloudflare.Website.Nuxt("web", {');
+    expect(auth).toContain("createAuth(env: CloudflareEnv)");
+    expect(auth).toContain("createPrismaClient(env)");
+    expect(db).toContain("createPrismaClient(env: CloudflareEnv)");
+    expect(context).toContain("env: CloudflareEnv;");
+    expect(context).toContain("createAuth(env)");
+    expect(authRoute).toContain("event.context.cloudflare as { env: CloudflareEnv }");
+    expect(rpcRoute).toContain("event.context.cloudflare as { env: CloudflareEnv }");
+    expect(todoRouter).toContain("createPrismaClient(context.env)");
+    expect(files.has("apps/web/cloudflare-workers.dev.ts")).toBe(false);
+    expect(files.has("apps/web/wrangler.jsonc")).toBe(false);
+  });
+
   it("preserves Prisma WASM modules in standalone Cloudflare server builds", async () => {
     const files = await generate({
       projectName: "cloudflare-server-prisma",
@@ -293,16 +322,16 @@ describe("Alchemy providers", () => {
       runtime: "bun",
       dbSetup: "neon",
     });
-    const database = files.get("packages/infra/database.ts") ?? "";
+    const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
 
-    expect(database).not.toContain('Neon.Project("database"');
-    expect(database).not.toContain('Command.Exec("database-migrations"');
-    expect(database).toContain('DATABASE_URL: Config.redacted("DATABASE_URL")');
-    expect(database).toContain("export const databaseProviders = Prisma.providers()");
+    expect(infra).not.toContain('Neon.Project("database"');
+    expect(infra).not.toContain('Command.Exec("database-migrations"');
+    expect(infra).toContain('DATABASE_URL: Config.redacted("DATABASE_URL")');
+    expect(infra).toContain("export const databaseProviders = Prisma.providers()");
     expect(files.has("packages/db/prisma/migrations/0000_init/migration.sql")).toBe(false);
   });
 
-  it("imports Cloudflare database bindings only when the Cloudflare plane consumes them", async () => {
+  it("injects Cloudflare database bindings only when the Cloudflare plane consumes them", async () => {
     const files = await generate({
       projectName: "cloudflare-web-prisma-server",
       webDeploy: "cloudflare",
@@ -313,8 +342,8 @@ describe("Alchemy providers", () => {
     });
     const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
 
-    expect(infra).not.toContain("databaseBindings,");
-    expect(infra).toContain("databaseEnv,");
+    expect(infra.match(/\.\.\.databaseBindings/g) ?? []).toHaveLength(0);
+    expect(infra).toContain("export const databaseEnv =");
     expect(infra).toContain('export const server = Prisma.Compute("server"');
   });
 

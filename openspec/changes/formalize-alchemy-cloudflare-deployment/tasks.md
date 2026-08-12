@@ -7,17 +7,17 @@
 - [x] 1.5 Delete the external reproduction repository's misclassified `nodejs_compat` case so it cannot be cited as a confirmed Alchemy defect.
 - [ ] 1.6 Record `alchemy logs` authorization and OpenNext `WORKER_SELF_REFERENCE` ISR as open limitations until their focused live tests pass.
 - [ ] 1.7 Add a ledger check requiring ID, classification, affected release, evidence, upstream status, current handling, removal condition, and last-verification date for every entry.
-- [x] 1.8 Record merged Alchemy PRs #886 and #923, beta.69, published `@distilled.cloud/*@0.17.0` packages, package peers, and framework limitations without treating publication as accepted behavior.
+- [x] 1.8 Record merged Alchemy PRs #886 and #923, beta.70, published `@distilled.cloud/*@0.17.1` packages, package peers, and framework limitations without treating publication as live verification.
 
 ## 2. Exact Dependency and Generated Artifact Gates
 
-- [x] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.70` output with no semver range; pin Effect and both platform packages to compatible beta.106.
+- [x] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.72` output with no semver range; pin Effect and both platform packages to beta.107 and verify the released #1132 startup fix without a downgrade.
 - [ ] 2.2 Generate npm, pnpm, and Bun projects and prove each resolves the exact accepted Alchemy package rather than an incompatible test prerelease.
 - [ ] 2.3 Add deterministic artifact assertions for web-only, server-only, combined, full-stack `self`, Convex-web, D1, and mixed single-plane Cloudflare topologies.
 - [ ] 2.4 Assert that every selected Cloudflare plane emits `packages/infra/alchemy.run.ts`, the infra package, scripts, framework adapter/configuration, bindings, inferred env types, and user guidance.
 - [ ] 2.5 Add configuration-time rejection tests for non-Hono Cloudflare servers, non-Workers runtimes, unsupported `self` frontends, and invalid D1 consumers across flags and programmatic generation.
 - [x] 2.6 Regenerate `packages/template-generator/src/templates.generated.ts` only from source templates and verify it introduces no independent behavioral drift.
-- [ ] 2.7 For a release containing first-class framework resources, prove every dynamic `@distilled.cloud/*` source resolves from its generated package location under fresh npm, pnpm, and Bun installs without accidental hoisting.
+- [x] 2.7 Prove `@alchemy.run/cloudflare-frameworks` resolves from the generated web workspace under fresh npm, pnpm, and Bun installs without accidental hoisting.
 - [ ] 2.8 Assert that no generated project uses a git dependency, pull-request branch, moving dist-tag, or unpublished framework source package.
 
 ## 3. Compatibility Safeguard Tests
@@ -34,9 +34,9 @@
 
 ## 4. Framework, Binding, and Development Verification
 
-- [ ] 4.1 Generate, install, typecheck, and build the Cloudflare path for Next.js, Nuxt, SvelteKit, Astro, TanStack Start, React Router, TanStack Router, and Solid against the exact accepted release.
+- [x] 4.1 Generate and install fresh Cloudflare projects for Next.js, Nuxt, SvelteKit, Astro, TanStack Start, React Router, TanStack Router, and Solid against beta.72/Effect beta.107; typecheck every workspace and run the ordinary root build contract. Provider-owned Nuxt and Astro production builds remain under 4.3 and 4.5.
 - [ ] 4.2 Verify Next/OpenNext assets, Worker entry, explicit compatibility flags, Images binding, and normal request behavior.
-- [ ] 4.3 Verify Nuxt Nitro assets/server entry, page SSR path, development `getPlatformProxy` alias, and D1-backed request rather than probing only an API route.
+- [ ] 4.3 Verify `Website.Nuxt` page SSR, API, assets, provider-owned binding proxy, and a D1-backed request; the removed `getPlatformProxy` alias is no longer the target path.
 - [x] 4.4 Verify SvelteKit's Cloudflare adapter output, bundled `_worker.js` shim, document request, and bindings.
 - [ ] 4.5 Verify Astro's server entry, session KV, Images binding/type, document or action route, and distinction between static and SSR output.
 - [ ] 4.6 Verify TanStack Start's `Website.Vite` Worker output, document/API route, runtime bindings, and framework auth/environment values.
@@ -45,7 +45,7 @@
 - [ ] 4.9 Verify Prisma D1 production migration discovery separately from the full nested Wrangler `migrations_pattern` required for local development.
 - [ ] 4.10 Assert D1, KV/session, Images, and service bindings exist exactly once in infrastructure, framework config, and inferred environment types.
 - [ ] 4.11 Verify explicit external-Worker compatibility flags as framework/platform requirements and do not relabel them as implicit-default loss.
-- [x] 4.12 Assert the split-backend Astro Cloudflare path emits both adapter-required `SESSION` and `IMAGES` bindings.
+- [x] 4.12 Assert the split-backend Astro path uses `Website.Astro` and retains explicit `SESSION` and `IMAGES` bindings exactly once so inferred types and existing resource identity are preserved.
 - [ ] 4.13 Capture the accepted generic Next.js, Nuxt, SvelteKit, and Astro resource props, framework config, dependencies, plan identity, development behavior, bindings, and live routes as the comparison baseline for first-class adoption.
 
 ## 5. Disposable Live Harness
@@ -97,14 +97,14 @@
 
 ## 9. First-Class Framework Release Intake
 
-- [x] 9.1 Confirm PRs #886 and #923 are merged and beta.69 plus referenced `@distilled.cloud/*@0.17.0` source packages are published; do not treat publication as adoption.
-- [x] 9.2 Record beta.69's tag commit, source-package versions, documented props, inspected source behavior, peer ranges, and known limitations separately in the findings ledger.
+- [x] 9.1 Confirm PRs #886 and #923 are merged and beta.70 plus referenced `@distilled.cloud/*@0.17.1` source packages are published; do not treat publication as live qualification.
+- [x] 9.2 Record beta.70's tag commit, source-package versions, documented props, inspected source behavior, peer ranges, and known limitations separately in the findings ledger.
 - [ ] 9.3 Generate candidate fixtures against the released packages without changing Better-T-Stack defaults, and direct-typecheck the candidate resource calls with native Outputs, Config, secrets, D1, KV, Images, and framework-public variables.
 - [ ] 9.4 Install the candidate dependency graph with npm, pnpm, and Bun in non-hoisted/strict workspace conditions and fail the candidate on missing dynamic imports or unresolved peer incompatibilities.
 - [ ] 9.5 Run existing Hono Worker, Website.Vite, generic StaticSite, D1, Config, Output, `_headers`, `_redirects`, and cleanup regressions against the changed source engine before evaluating framework-specific deletion.
 - [ ] 9.6 Keep the accepted exact Alchemy pin and generic framework paths when the released engine regresses any supported Cloudflare cell, even if a targeted first-class example passes upstream.
-- [x] 9.7 Publish minimal current reproductions for the Effect beta.104 startup crash and Nuxt injected-plugin parse failure; delete fixed beta.61 repros from the current-failures repository.
-- [x] 9.8 Record direct candidate results honestly: stable Kit 2 SvelteKit SSR returns HTTP 200 despite its peer warning, and Astro loads native project configuration; neither result alone completes its production adoption gate.
+- [x] 9.7 Publish the historical Effect/Nuxt reproductions and record the fresh beta.70 + Effect beta.106 startup reproduction; do not hide it with a dependency override.
+- [x] 9.8 Record direct candidate results honestly: stable Kit 2 is outside the SvelteKit provider peer, Nuxt 0.17.1 selects compiled development code, and Astro owns its adapter/build lifecycle; none substitutes for the A11-blocked executable gates.
 
 ## 10. Shared Framework-Resource Migration Gates
 
@@ -128,11 +128,11 @@
 
 ## 12. Website.Nuxt Adoption
 
-- [ ] 12.1 Generate and typecheck `Website.Nuxt` with the current Nuxt version and native `nuxt.config.ts`, preserving Nuxt UI, runtime config, route rules, public server Outputs, auth values, and database bindings.
+- [x] 12.1 Generate and typecheck `Website.Nuxt` with the current Nuxt version and native `nuxt.config.ts`, preserving Nuxt UI, runtime config, route rules, public server Outputs, auth values, and database bindings.
 - [ ] 12.2 Verify a real page SSR request, API route, static asset, public value, private binding, and production D1-backed operation; an API-only probe does not pass.
-- [ ] 12.3 Remove the generated `nitro.preset` only when the released resource owns the Cloudflare preset and rejects or supersedes the project value without losing other Nuxt configuration.
-- [ ] 12.4 Remove `nitro-cloudflare-dev`, the `cloudflare:workers` alias file, dev Wrangler config, `dev:bare`, hard-coded port, and explicit `nodejs_compat` independently only after `alchemy dev`, normal HMR, local nested D1 migration, page SSR, and D1 operation pass without each item.
-- [ ] 12.5 Remove Nuxt's generic `command`, `.output` assets/server paths, `bundle: false`, and `memo: false` only after shared provider-owned build, assets, plan, and workspace-memo gates pass.
+- [x] 12.3 Remove the generated Cloudflare `nitro.preset` because released source owns and enforces the `cloudflare_module` target while loading the rest of native Nuxt configuration.
+- [ ] 12.4 Verify the generated removal of `nitro-cloudflare-dev`, the `cloudflare:workers` alias, dev Wrangler config, hard-coded resource dev wiring, and explicit resource compatibility flags through `alchemy dev`, HMR, local nested D1 migration, page SSR, and a D1 operation.
+- [ ] 12.5 Verify the generated removal of Nuxt's generic `command`, `.output` paths, `bundle: false`, and `memo: false` through provider-owned build, asset, plan, and workspace-memo gates.
 
 ## 13. Website.SvelteKit Adoption
 
@@ -144,16 +144,16 @@
 
 ## 14. Website.Astro Adoption
 
-- [ ] 14.1 Reconcile released `Website.Astro` documentation with released source and prove the native `astro.config.*` loads and merges before adopting the resource.
-- [ ] 14.2 Preserve and verify Tailwind's Vite plugin, environment schema, integrations, route configuration, SSR, prerendering, and user Astro configuration while removing only the Cloudflare adapter ownership that moves upstream.
-- [ ] 14.3 Preserve explicit `SESSION` and `IMAGES` identities during initial evaluation; separately verify a session-backed route, inferred types, and a real Cloudflare image route/transformation before allowing either binding to change or disappear.
-- [ ] 14.4 Block adoption while the released provider would replace Cloudflare Images behavior with passthrough-only serving, unless Better-T-Stack explicitly approves and documents that product regression in a separate change.
+- [x] 14.1 Reconcile released `Website.Astro` wrapper comments, provider source, and Alchemy's own example: native config loads, the provider injects its adapter, and Alchemy owns build/dev.
+- [ ] 14.2 Verify Tailwind's Vite plugin, environment schema, integrations, route configuration, SSR, prerendering, and user Astro configuration through the provider.
+- [ ] 14.3 Verify the retained explicit `SESSION` and `IMAGES` bindings, inferred types, a session-backed route, and real image behavior; do not replace the session resource with the wrapper's differently identified implicit namespace.
+- [x] 14.4 Document that the released provider selects passthrough image handling while retaining the explicit `IMAGES` resource pending a focused production image gate.
 - [ ] 14.5 Verify SSR, prerendered content, static assets, 404 behavior, `_headers`, `_redirects`, and representative MIME responses in local workerd and a live deployment.
-- [ ] 14.6 Remove `@astrojs/cloudflare`, its adapter import/call, manual `dist` entries, `bundle: false`, hard-coded dev URL, explicit compatibility flag, and `memo: false` independently only after their replacement gates pass.
+- [x] 14.6 Remove `@astrojs/cloudflare`, its adapter import/call, manual `dist` entries, `bundle: false`, hard-coded resource dev URL, explicit compatibility flag, generic `memo: false`, and standalone Cloudflare production build script because released source owns those concerns.
 
 ## 15. Cloudflare Framework Rollout and Documentation
 
-- [ ] 15.1 Land each passing framework migration as an independently reviewable change with its generated assertions, package-manager checks, plan comparison, live evidence, cleanup result, ledger update, and rollback instructions.
+- [ ] 15.1 Keep each framework migration independently reviewable within this combined PR, with separate generated assertions, package-manager checks, plan comparison, live evidence, cleanup result, ledger update, and rollback instructions.
 - [ ] 15.2 Keep blocked frameworks on the generic resource in the same accepted release and make generated documentation explain the mixed resource matrix without presenting blocked cells as failures of working generic deployment.
 - [ ] 15.3 Update README, post-install output, plugin skills, source comments, support scoreboard, and findings ledger with the exact provider-owned responsibilities and remaining framework limitations.
 - [ ] 15.4 Diff Vercel, Railway, and unrelated Docker/Compose behavior to prove the Alchemy work does not alter those providers or introduce a generalized deployment abstraction.
