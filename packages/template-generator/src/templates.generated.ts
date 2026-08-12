@@ -30763,7 +30763,6 @@ export function ThemeProvider({
     "@types/node": "^22.20.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "react-router-devtools": "^6.2.3",
     "tailwindcss": "^4.3.3",
     "vite": "^8.1.5"
   }
