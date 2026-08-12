@@ -69,23 +69,30 @@ function hasNoMixedNone(values: string[]): boolean {
   return values.length <= 1 || !values.includes("none");
 }
 
+export function normalizeAnalyticsSelection<T extends string>(values: T[] | undefined): T[] {
+  return values && values.length > 0 ? values : (["none"] as T[]);
+}
+
 const AnalyticsFrontendListSchema = z
   .array(FrontendSchema)
   .max(FRONTEND_VALUES.length)
   .refine(hasUniqueValues)
-  .refine(hasNoMixedNone);
+  .refine(hasNoMixedNone)
+  .transform(normalizeAnalyticsSelection);
 
 const AnalyticsAddonListSchema = z
   .array(AnalyticsAddonSchema)
   .max(ANALYTICS_ADDON_VALUES.length)
   .refine(hasUniqueValues)
-  .refine(hasNoMixedNone);
+  .refine(hasNoMixedNone)
+  .transform(normalizeAnalyticsSelection);
 
 const AnalyticsExampleListSchema = z
   .array(ExamplesSchema)
   .max(EXAMPLES_VALUES.length)
   .refine(hasUniqueValues)
-  .refine(hasNoMixedNone);
+  .refine(hasNoMixedNone)
+  .transform(normalizeAnalyticsSelection);
 
 export function normalizeAnalyticsCLIVersion(version: string): string {
   const match = /^(\d+)\.(\d+)\.(\d+)/.exec(version);

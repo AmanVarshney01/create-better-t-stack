@@ -38,6 +38,29 @@ const poisonedEvent: AnalyticsEventFields = {
 };
 
 describe("adjustAnalyticsStats", () => {
+  test("counts empty and missing selections as none", () => {
+    const stats = adjustAnalyticsStats(
+      createEmptyAnalyticsStats(),
+      [
+        {
+          event: {
+            ...legitimateEvent,
+            frontend: [],
+            addons: [],
+            examples: undefined,
+          },
+          creationTime: Date.UTC(2026, 7, 10, 4),
+        },
+      ],
+      1,
+    );
+
+    expect(stats.frontend).toEqual({ none: 1 });
+    expect(stats.addons).toEqual({ none: 1 });
+    expect(stats.examples).toEqual({ none: 1 });
+    expect(stats.stackCombinations).toEqual({ "hono + none": 1 });
+  });
+
   test("normalizes version keys during ingestion", () => {
     const stats = adjustAnalyticsStats(
       createEmptyAnalyticsStats(),

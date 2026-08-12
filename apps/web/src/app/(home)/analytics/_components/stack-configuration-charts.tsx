@@ -39,7 +39,7 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
       <div className="grid gap-4 xl:grid-cols-2">
         <PreferenceChartCard
           title="Frontend"
-          description="How often each frontend was selected."
+          description="Selected frontends and projects created without a frontend."
           data={data.frontendDistribution}
           colorKey="chart1"
         />

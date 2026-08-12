@@ -54,4 +54,17 @@ describe("buildAnalyticsEvent", () => {
       node_version: process.version,
     });
   });
+
+  test("sends none for empty multi-select choices", () => {
+    const event = buildAnalyticsEvent({
+      ...projectConfig,
+      frontend: [],
+      addons: [],
+      examples: [],
+    });
+
+    expect(event.frontend).toEqual(["none"]);
+    expect(event.addons).toEqual(["none"]);
+    expect(event.examples).toEqual(["none"]);
+  });
 });
