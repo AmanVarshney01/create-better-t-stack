@@ -3,7 +3,7 @@
  * Replaces the previous Handlebars template with type-safe TypeScript generation
  */
 
-import type { ProjectConfig } from "@better-t-stack/types";
+import { isAlchemyDeployTarget, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { getDbScriptSupport, type DbScriptSupport } from "../utils/db-scripts";
@@ -38,7 +38,7 @@ export function generateTurboConfig(config: ProjectConfig): TurboConfig {
   const hasDatabase = dbSupport.hasDbScripts;
   const isDocker = dbSetup === "docker";
   const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
-  const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const hasAlchemy = isAlchemyDeployTarget(webDeploy) || isAlchemyDeployTarget(serverDeploy);
   const hasLocalD1 =
     webDeploy === "cloudflare" &&
     backend === "self" &&
@@ -55,7 +55,7 @@ export function generateTurboConfig(config: ProjectConfig): TurboConfig {
     ...(isDocker ? getDockerTasks() : {}),
     ...(isSqliteLocal ? getSqliteLocalTask() : {}),
     ...(hasLocalD1 ? getLocalD1Task() : {}),
-    ...(hasCloudflare ? getDeployTasks() : {}),
+    ...(hasAlchemy ? getDeployTasks() : {}),
   };
 
   return {

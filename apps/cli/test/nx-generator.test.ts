@@ -200,14 +200,16 @@ describe("Turbo config generator", () => {
   });
 
   it("forwards terminal input to Alchemy deployment tasks", () => {
-    const config = generateTurboConfig(
-      configWith({
-        addons: ["turborepo"],
-        webDeploy: "cloudflare",
-      }),
-    );
+    for (const webDeploy of ["cloudflare", "prisma"] as const) {
+      const config = generateTurboConfig(
+        configWith({
+          addons: ["turborepo"],
+          webDeploy,
+        }),
+      );
 
-    expect(config.tasks.deploy).toEqual({ cache: false, interactive: true });
-    expect(config.tasks.destroy).toEqual({ cache: false, interactive: true });
+      expect(config.tasks.deploy).toEqual({ cache: false, interactive: true });
+      expect(config.tasks.destroy).toEqual({ cache: false, interactive: true });
+    }
   });
 });
