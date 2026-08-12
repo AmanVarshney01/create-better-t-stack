@@ -12,7 +12,7 @@ import type {
   ServerDeploy,
   WebDeploy,
 } from "../../types";
-import { desktopWebFrontends } from "../../types";
+import { webFrontends } from "../../types";
 import { getDockerStatus } from "../../utils/docker-utils";
 import {
   fetchSponsorsQuietly,
@@ -121,7 +121,7 @@ export async function displayPostInstallInstructions(
     backend,
   );
 
-  const hasWeb = frontend?.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
+  const hasWeb = frontend?.some((f) => (webFrontends as readonly string[]).includes(f));
   const hasNative =
     frontend?.includes("native-bare") ||
     frontend?.includes("native-uniwind") ||
@@ -166,7 +166,9 @@ export async function displayPostInstallInstructions(
     isBackendSelf &&
     webDeploy === "cloudflare" &&
     dbSetup === "d1" &&
-    (["next", "nuxt", "svelte", "astro"] as const).some((value) => frontend.includes(value));
+    (["next", "nuxt", "svelte", "solid", "astro"] as const).some((value) =>
+      frontend.includes(value),
+    );
 
   if (hasAlchemyD1 && orm !== "none") {
     output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:generate\n`;

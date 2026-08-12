@@ -131,6 +131,17 @@ describe("Cloudflare DB client generation", () => {
       envNeedle: 'export { env } from "cloudflare:workers";',
     },
     {
+      name: "SolidStart",
+      frontend: "solid",
+      api: "orpc",
+      routePath: "apps/web/src/routes/api/auth/[...auth].ts",
+      routeNeedles: [
+        "return toSolidStartHandler(createAuth()).GET(event);",
+        "return toSolidStartHandler(createAuth()).POST(event);",
+      ],
+      envNeedle: 'export { env } from "cloudflare:workers";',
+    },
+    {
       name: "Astro",
       frontend: "astro",
       api: "orpc",

@@ -1,14 +1,9 @@
-import { createFileRoute } from "@tanstack/solid-router";
 import { Loader2, Trash2 } from "lucide-solid";
 import { createSignal, For, Show } from "solid-js";
-import { orpc } from "@/utils/orpc";
+import { orpc } from "~/utils/orpc";
 import { useQuery, useMutation } from "@tanstack/solid-query";
 
-export const Route = createFileRoute("/todos")({
-  component: TodosRoute,
-});
-
-function TodosRoute() {
+export default function Todos() {
   const [newTodoText, setNewTodoText] = createSignal("");
 
   const todos = useQuery(() => orpc.todo.getAll.queryOptions());

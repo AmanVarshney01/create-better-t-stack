@@ -69,7 +69,7 @@ export type WebFrontend = Extract<
   | "none"
 >;
 
-export type DesktopWebFrontend = Exclude<WebFrontend, "none">;
+export type DesktopWebFrontend = Exclude<WebFrontend, "none" | "solid">;
 
 export type NativeFrontend = Extract<
   Frontend,

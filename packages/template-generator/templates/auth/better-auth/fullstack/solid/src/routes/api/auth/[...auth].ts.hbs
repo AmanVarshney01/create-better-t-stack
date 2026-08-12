@@ -1,0 +1,19 @@
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+import { createAuth } from "@{{projectName}}/auth";
+import type { APIEvent } from "@solidjs/start/server";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import { toSolidStartHandler } from "better-auth/solid-start";
+
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+export function GET(event: APIEvent) {
+	return toSolidStartHandler(createAuth()).GET(event);
+}
+
+export function POST(event: APIEvent) {
+	return toSolidStartHandler(createAuth()).POST(event);
+}
+{{else}}
+export const { GET, POST } = toSolidStartHandler(auth);
+{{/if}}

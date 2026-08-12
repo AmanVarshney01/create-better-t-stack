@@ -898,16 +898,15 @@ describe("Deployment Configurations", () => {
       const serverPackage = JSON.parse(files.get("apps/server/package.json") ?? "{}") as {
         devDependencies?: Record<string, string>;
       };
-
       expect(infraFile).toContain('export const server = Cloudflare.Worker("server"');
       expect(infraFile).toContain("export type ServerEnv = Cloudflare.InferEnv<typeof server>");
       expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
-        alchemy: "2.0.0-beta.67",
-        effect: "4.0.0-beta.101",
-        "@effect/platform-node": "4.0.0-beta.101",
-        "@effect/platform-bun": "4.0.0-beta.101",
+        alchemy: "2.0.0-beta.69",
+        effect: "4.0.0-beta.103",
+        "@effect/platform-node": "4.0.0-beta.103",
+        "@effect/platform-bun": "4.0.0-beta.103",
       });
       expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
         infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
@@ -1049,9 +1048,9 @@ describe("Deployment Configurations", () => {
       expect(astroInfra).toContain("IMAGES: Cloudflare.Images.Images()");
     });
 
-    it("should use released Website.Vite SPA support for TanStack Router and Solid", async () => {
+    it("should use released Website.Vite SPA support for TanStack Router", async () => {
       const results = await Promise.all(
-        (["tanstack-router", "solid"] as const).map((frontend) =>
+        (["tanstack-router"] as const).map((frontend) =>
           createVirtual({
             projectName: `${frontend}-cloudflare-vite`,
             webDeploy: "cloudflare",
@@ -1089,6 +1088,55 @@ describe("Deployment Configurations", () => {
         expect(infraFile).not.toContain('import * as Command from "alchemy/Command"');
         expect(infraFile).not.toContain('import * as Output from "alchemy/Output"');
       }
+    });
+
+    it("should configure SolidStart SSR for Cloudflare and local Vite builds", async () => {
+      const result = await createVirtual({
+        projectName: "solid-start-cloudflare",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "orpc",
+        frontend: ["solid"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "d1",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const viteConfig = files.get("apps/web/vite.config.ts");
+      const infraFile = files.get("packages/infra/alchemy.run.ts");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const rootPkg = JSON.parse(files.get("package.json") ?? "{}");
+      const turboConfig = JSON.parse(files.get("turbo.json") ?? "{}");
+
+      expect(viteConfig).not.toContain('from "alchemy/cloudflare/vite"');
+      expect(viteConfig).toContain('process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"');
+      expect(viteConfig).toContain("const cloudflareWorkersAlias: Record<string, string>");
+      expect(viteConfig).toContain('new URL("./cloudflare-workers.dev.ts", import.meta.url)');
+      expect(infraFile).toContain('export const web = Cloudflare.Website.Vite("web", {');
+      expect(infraFile).toContain('rootDir: "../../apps/web"');
+      expect(infraFile).toContain('flags: ["nodejs_compat"]');
+      expect(infraFile).toContain("runWorkerFirst: true");
+      expect(infraFile).toContain("DB: db");
+      expect(webPkg.devDependencies.alchemy).toBeUndefined();
+      expect(webPkg.devDependencies["@cloudflare/vite-plugin"]).toBeUndefined();
+      expect(webPkg.devDependencies.wrangler).toBeDefined();
+      expect(webPkg.scripts["db:migrate:local"]).toBeDefined();
+      expect(rootPkg.scripts["db:migrate:local"]).toContain("web");
+      expect(turboConfig.tasks["db:migrate:local"]).toEqual({ cache: false });
     });
 
     it("should keep native Metro from watching Alchemy state", async () => {
@@ -1510,7 +1558,7 @@ describe("Deployment Configurations", () => {
       expect(serverDockerfile).toContain('CMD ["node", "dist/index.mjs"]');
     });
 
-    it("should keep Solid production builds resolvable without an API layer", async () => {
+    it("should deploy SolidStart production builds as an SSR server", async () => {
       const result = await createVirtual({
         projectName: "docker-solid-no-api",
         webDeploy: "docker",
@@ -1537,10 +1585,48 @@ describe("Deployment Configurations", () => {
 
       const files = collectFiles(result.value.root, result.value.root.path);
       const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const webDockerfile = files.get("apps/web/Dockerfile");
+      const compose = files.get("docker-compose.yml");
 
-      // __root.tsx imports the router devtools unconditionally
-      expect(webPkg.devDependencies["@tanstack/solid-router-devtools"]).toBeDefined();
-      expect(files.get("apps/web/Dockerfile")).toContain("FROM nginx:alpine");
+      expect(webPkg.dependencies["@solidjs/start"]).toBeDefined();
+      expect(webPkg.dependencies.nitro).toBeDefined();
+      expect(webPkg.devDependencies["@tanstack/solid-router-devtools"]).toBeUndefined();
+      expect(webDockerfile).toContain("FROM node:24-slim AS runner");
+      expect(webDockerfile).toContain('CMD ["node", ".output/server/index.mjs"]');
+      expect(webDockerfile).not.toContain("FROM nginx:alpine");
+      expect(compose).toContain('"3001:3001"');
+    });
+
+    it("should route SolidStart SSR requests through the internal Docker server URL", async () => {
+      const result = await createVirtual({
+        projectName: "docker-solid-external-server",
+        webDeploy: "docker",
+        serverDeploy: "docker",
+        backend: "hono",
+        runtime: "node",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["solid"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) throw result.error;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml") ?? "";
+      const orpcClient = files.get("apps/web/src/utils/orpc.ts") ?? "";
+
+      expect(compose).toContain("SERVER_URL: http://server:3000");
+      expect(compose).toContain("VITE_SERVER_URL: http://localhost:3000");
+      expect(orpcClient).toContain('typeof window === "undefined" && processEnv?.SERVER_URL');
     });
 
     it("should bind Fastify to all interfaces for Docker deploys", async () => {

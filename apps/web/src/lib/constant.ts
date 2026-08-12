@@ -58,7 +58,7 @@ export const TECH_OPTIONS: Record<
     {
       id: "tanstack-start",
       name: "TanStack Start",
-      description: "Full-stack React and Solid framework powered by TanStack Router",
+      description: "Full-stack React framework powered by TanStack Router",
       icon: `${ICON_BASE_URL}/tanstack.svg`,
       color: "from-purple-400 to-purple-600",
       default: false,
@@ -89,8 +89,8 @@ export const TECH_OPTIONS: Record<
     },
     {
       id: "solid",
-      name: "Solid",
-      description: "Simple and performant reactivity for building UIs",
+      name: "SolidStart",
+      description: "SolidStart v2 full-stack framework with SSR",
       icon: `${ICON_BASE_URL}/solid.svg`,
       color: "from-blue-600 to-blue-800",
       default: false,
@@ -244,6 +244,13 @@ export const TECH_OPTIONS: Record<
       description: "Use SvelteKit's built-in server routes",
       icon: `${ICON_BASE_URL}/svelte.svg`,
       color: "from-orange-500 to-orange-700",
+    },
+    {
+      id: "self-solid",
+      name: "Fullstack SolidStart",
+      description: "Use SolidStart's built-in API routes",
+      icon: `${ICON_BASE_URL}/solidjs.svg`,
+      color: "from-blue-400 to-blue-700",
     },
     {
       id: "self-astro",

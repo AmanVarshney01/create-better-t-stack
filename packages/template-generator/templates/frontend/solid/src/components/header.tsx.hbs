@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/solid-router";
+import { A } from "@solidjs/router";
 {{#if (eq auth "better-auth")}}
 import UserMenu from "./user-menu";
 {{/if}}
@@ -23,7 +23,7 @@ export default function Header() {
       <div class="flex flex-row items-center justify-between px-2 py-1">
         <nav class="flex gap-4 text-lg">
           <For each={links}>
-            {(link) => <Link to={link.to}>{link.label}</Link>}
+            {(link) => <A href={link.to}>{link.label}</A>}
           </For>
         </nav>
         <div class="flex items-center gap-2">

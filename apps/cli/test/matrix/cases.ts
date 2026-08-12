@@ -390,12 +390,15 @@ export function createSmokeMatrixCases(): MatrixCase[] {
     });
   }
 
-  for (const frontend of ["next", "tanstack-start", "nuxt", "svelte", "astro"] as const) {
+  for (const frontend of ["next", "tanstack-start", "nuxt", "svelte", "solid", "astro"] as const) {
     pushUnique(configs, seen, {
       backend: "self",
       runtime: "none",
       frontend: [frontend],
-      api: frontend === "nuxt" || frontend === "svelte" || frontend === "astro" ? "orpc" : "trpc",
+      api:
+        frontend === "nuxt" || frontend === "svelte" || frontend === "solid" || frontend === "astro"
+          ? "orpc"
+          : "trpc",
       auth: "better-auth",
     });
     pushUnique(configs, seen, {
