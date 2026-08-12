@@ -169,7 +169,10 @@ describe("Nx config generator", () => {
       expect(generateNxConfig(config).targetDefaults["db:migrate:local"]).toEqual({
         cache: false,
       });
-      expect(generateTurboConfig(config).tasks["db:migrate:local"]).toEqual({ cache: false });
+      expect(generateTurboConfig(config).tasks["db:migrate:local"]).toEqual({
+        cache: false,
+        interactive: true,
+      });
     }
 
     for (const frontend of ["nuxt", "astro"] as const) {

@@ -192,6 +192,7 @@ function getLocalD1Task(): Record<string, TurboTask> {
   return {
     "db:migrate:local": {
       cache: false,
+      interactive: true,
     },
   };
 }

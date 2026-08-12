@@ -3,11 +3,7 @@
  * Generates a minimal nx.json for workspace orchestration when the Nx addon is selected.
  */
 
-import {
-  getLocalD1Owner,
-  isAlchemyDeployTarget,
-  type ProjectConfig,
-} from "@better-t-stack/types";
+import { getLocalD1Owner, isAlchemyDeployTarget, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { getDbScriptSupport, type DbScriptSupport } from "../utils/db-scripts";

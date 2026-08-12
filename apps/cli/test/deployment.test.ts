@@ -1261,7 +1261,10 @@ describe("Deployment Configurations", () => {
       expect(webPkg.devDependencies.wrangler).toBeDefined();
       expect(webPkg.scripts["db:migrate:local"]).toBeDefined();
       expect(rootPkg.scripts["db:migrate:local"]).toContain("web");
-      expect(turboConfig.tasks["db:migrate:local"]).toEqual({ cache: false });
+      expect(turboConfig.tasks["db:migrate:local"]).toEqual({
+        cache: false,
+        interactive: true,
+      });
     });
 
     it("should keep native Metro from watching Alchemy state", async () => {
