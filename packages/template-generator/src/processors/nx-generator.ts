@@ -30,13 +30,20 @@ export function processNxConfig(vfs: VirtualFileSystem, config: ProjectConfig): 
 }
 
 export function generateNxConfig(config: ProjectConfig): NxConfig {
-  const { backend, database, dbSetup, webDeploy, serverDeploy } = config;
+  const { backend, database, dbSetup, frontend, webDeploy, serverDeploy } = config;
   const isConvex = backend === "convex";
   const dbSupport = getDbScriptSupport(config);
   const hasDatabase = dbSupport.hasDbScripts;
   const isDocker = dbSetup === "docker";
   const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
   const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
+  const hasLocalD1 =
+    webDeploy === "cloudflare" &&
+    backend === "self" &&
+    dbSetup === "d1" &&
+    (["next", "nuxt", "svelte", "solid", "astro"] as const).some((framework) =>
+      frontend.includes(framework),
+    );
 
   const targetDefaults: Record<string, NxTargetDefaults> = {
     build: {
@@ -56,6 +63,7 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
     ...(!isConvex && hasDatabase ? getDatabaseTargets(dbSupport) : {}),
     ...(isDocker ? getDockerTargets() : {}),
     ...(isSqliteLocal ? getSqliteLocalTarget() : {}),
+    ...(hasLocalD1 ? getLocalD1Target() : {}),
     ...(hasCloudflare ? getDeployTargets() : {}),
   };
 
@@ -130,6 +138,12 @@ function getDockerTargets(): Record<string, NxTargetDefaults> {
 function getSqliteLocalTarget(): Record<string, NxTargetDefaults> {
   return {
     "db:local": { cache: false, continuous: true },
+  };
+}
+
+function getLocalD1Target(): Record<string, NxTargetDefaults> {
+  return {
+    "db:migrate:local": { cache: false },
   };
 }
 

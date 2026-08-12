@@ -81,6 +81,15 @@ export async function processApiTemplates(
     }
   } else if (hasSolidWeb && config.api === "orpc") {
     processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/solid`, "apps/web", config);
+    if (config.backend === "self") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `api/${config.api}/fullstack/solid`,
+        "apps/web",
+        config,
+      );
+    }
   } else if (hasAstroWeb && config.api === "orpc") {
     // Always include the orpc client (handles both self and external backend)
     processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/astro`, "apps/web", config);

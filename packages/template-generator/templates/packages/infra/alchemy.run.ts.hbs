@@ -223,6 +223,52 @@ export const web = Cloudflare.Website.StaticSite("web", {
         url: "http://localhost:5173",
       },
 });
+{{else if (includes frontend "solid")}}
+export const web = Cloudflare.Website.Vite("web", {
+  rootDir: "../../apps/web",
+  compatibility: {
+    flags: ["nodejs_compat"],
+  },
+  assets: {
+    runWorkerFirst: true,
+  },
+  env: {
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: Config.redacted("DATABASE_URL"),
+    {{/if}}
+    CORS_ORIGIN: Config.string("CORS_ORIGIN"),
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+    BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),
+    {{#if (ne api "none")}}
+    CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),
+    {{/if}}
+    VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),
+    {{/if}}
+    {{#if (includes examples "ai")}}
+    GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),
+    POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: Config.string("DATABASE_HOST"),
+    DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),
+    DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),
+    {{/if}}
+    {{/if}}
+  },
+});
 {{else if (includes frontend "astro")}}
 export const web = Cloudflare.Website.StaticSite("web", {
       cwd: "../../apps/web",
@@ -505,7 +551,31 @@ export default Alchemy.Stack(
         {{/if}}
       },
     });
-    {{else if (or (includes frontend "tanstack-router") (includes frontend "solid"))}}
+    {{else if (includes frontend "solid")}}
+    const webWorker = yield* Cloudflare.Website.Vite("web", {
+      rootDir: "../../apps/web",
+      compatibility: {
+        flags: ["nodejs_compat"],
+      },
+      assets: {
+        runWorkerFirst: true,
+      },
+      env: {
+        {{#if (eq backend "convex")}}
+        VITE_CONVEX_URL: Config.string("VITE_CONVEX_URL"),
+        {{#if (eq auth "better-auth")}}
+        VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),
+        {{/if}}
+        {{else}}
+        {{#if (eq serverDeploy "cloudflare")}}
+        VITE_SERVER_URL: serverWorker.url.as<string>(),
+        {{else}}
+        VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
+        {{/if}}
+        {{/if}}
+      },
+    });
+    {{else if (includes frontend "tanstack-router")}}
     const webWorker = yield* Cloudflare.Website.Vite("web", {
       rootDir: "../../apps/web",
       assets: {

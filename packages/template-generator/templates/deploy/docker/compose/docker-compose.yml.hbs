@@ -20,7 +20,7 @@ services:
 {{/if}}
     init: true
     ports:
-{{#if (or (includes frontend "tanstack-router") (includes frontend "solid"))}}
+{{#if (includes frontend "tanstack-router")}}
       - "3001:80"
 {{else}}
       - "3001:3001"
@@ -52,22 +52,23 @@ services:
 {{/if}}
 {{else}}
 {{#if (eq serverDeploy "docker")}}
-{{#if (or (includes frontend "next") (includes frontend "nuxt"))}}
+{{#unless (includes frontend "tanstack-router")}}
     environment:
+      SERVER_URL: http://server:3000
 {{#if (includes frontend "next")}}
       NEXT_PUBLIC_SERVER_URL: http://server:3000
 {{/if}}
 {{#if (includes frontend "nuxt")}}
       NUXT_SERVER_URL: http://server:3000
 {{/if}}
-{{/if}}
+{{/unless}}
     depends_on:
       server:
         condition: service_healthy
 {{/if}}
 {{/if}}
     healthcheck:
-{{#if (or (includes frontend "tanstack-router") (includes frontend "solid"))}}
+{{#if (includes frontend "tanstack-router")}}
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
 {{else}}
       test:

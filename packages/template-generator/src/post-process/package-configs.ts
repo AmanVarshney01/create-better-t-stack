@@ -3,7 +3,7 @@
  * Updates package names, scripts, and workspaces after template generation
  */
 
-import { desktopWebFrontends, type ProjectConfig } from "@better-t-stack/types";
+import { webFrontends, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { dependencyVersionMap } from "../utils/add-deps";
@@ -66,9 +66,7 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
 
   const scripts = pkgJson.scripts;
   const { projectName, packageManager, backend, database, orm, dbSetup, addons, frontend } = config;
-  const hasWebApp = frontend.some((item) =>
-    (desktopWebFrontends as readonly string[]).includes(item),
-  );
+  const hasWebApp = frontend.some((item) => (webFrontends as readonly string[]).includes(item));
   const hasNativeApp = frontend.some((item) =>
     ["native-bare", "native-uniwind", "native-unistyles"].includes(item),
   );
@@ -202,7 +200,9 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
       config.webDeploy === "cloudflare" &&
       config.backend === "self" &&
       dbSetup === "d1" &&
-      (["next", "nuxt", "svelte", "astro"] as const).some((f) => config.frontend.includes(f));
+      (["next", "nuxt", "svelte", "solid", "astro"] as const).some((f) =>
+        config.frontend.includes(f),
+      );
     if (hasLocalD1) {
       scripts["db:migrate:local"] = pmConfig.filter("web", "db:migrate:local");
     }
@@ -580,7 +580,7 @@ function updateEnvPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): vo
 
   // Set exports based on which env files exist
   const hasWebFrontend = config.frontend.some((f: string) =>
-    (desktopWebFrontends as readonly string[]).includes(f),
+    (webFrontends as readonly string[]).includes(f),
   );
   const hasNative = config.frontend.some((f: string) =>
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),

@@ -1,22 +1,15 @@
-import { createFileRoute } from "@tanstack/solid-router";
+import { useSearchParams } from "@solidjs/router";
 import { Show } from "solid-js";
 
-export const Route = createFileRoute("/success")({
-	component: SuccessPage,
-	validateSearch: (search) => ({
-		checkout_id: search.checkout_id as string,
-	}),
-});
-
-function SuccessPage() {
-	const searchParams = Route.useSearch();
-	const checkout_id = searchParams().checkout_id;
+export default function Success() {
+	const [searchParams] = useSearchParams();
+	const checkoutId = () => searchParams.checkout_id;
 
 	return (
 		<div class="container mx-auto px-4 py-8">
 			<h1>Payment Successful!</h1>
-			<Show when={checkout_id}>
-				<p>Checkout ID: {checkout_id}</p>
+			<Show when={checkoutId()}>
+				<p>Checkout ID: {checkoutId()}</p>
 			</Show>
 		</div>
 	);

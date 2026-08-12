@@ -9,6 +9,7 @@ const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "tanstack-start",
   "nuxt",
   "svelte",
+  "solid",
   "astro",
 ] as const;
 

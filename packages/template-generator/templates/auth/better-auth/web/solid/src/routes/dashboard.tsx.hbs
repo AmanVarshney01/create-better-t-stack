@@ -1,50 +1,50 @@
-import { authClient } from "@/lib/auth-client";
+import { useNavigate } from "@solidjs/router";
 {{#if (eq api "orpc")}}
-import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/solid-query";
+import { orpc } from "~/utils/orpc";
 {{/if}}
-import { createFileRoute, redirect } from "@tanstack/solid-router";
+import {
+	createEffect,
+{{#if (eq payments "polar")}}
+	createResource,
+{{/if}}
+	Show,
+} from "solid-js";
+import { authClient } from "~/lib/auth-client";
 
-export const Route = createFileRoute("/dashboard")({
-	component: RouteComponent,
-	beforeLoad: async () => {
-		const session = await authClient.getSession();
-		if (!session.data) {
-			redirect({
-				to: "/login",
-				throw: true,
-			});
-		}
-		{{#if (eq payments "polar")}}
-		const { data: customerState } = await authClient.customer.state();
-		return { session, customerState };
-		{{else}}
-		return { session };
-		{{/if}}
-	},
-});
-
-function RouteComponent() {
-	const context = Route.useRouteContext();
-
-	const session = context().session;
+export default function Dashboard() {
+	const navigate = useNavigate();
+	const session = authClient.useSession();
 	{{#if (eq payments "polar")}}
-	const customerState = context().customerState;
+	const [customerState] = createResource(
+		() => session().data?.user.id,
+		async () => (await authClient.customer.state()).data,
+	);
 	{{/if}}
 
+	createEffect(() => {
+		if (!session().isPending && !session().data) {
+			navigate("/login", { replace: true });
+		}
+	});
+
 	{{#if (eq api "orpc")}}
-	const privateData = useQuery(() => orpc.privateData.queryOptions());
+	const privateData = useQuery(() => ({
+		...orpc.privateData.queryOptions(),
+		enabled: Boolean(session().data),
+	}));
 	{{/if}}
 
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
-		(customerState?.activeSubscriptions?.length ?? 0) > 0;
+		(customerState()?.activeSubscriptions?.length ?? 0) > 0;
 	{{/if}}
 
 	return (
-		<div>
+		<Show when={!session().isPending && session().data} fallback={<p>Loading...</p>}>
+			<div>
 			<h1>Dashboard</h1>
-			<p>Welcome {session.data?.user.name}</p>
+			<p>Welcome {session().data?.user.name}</p>
 			{{#if (eq api "orpc")}}
 			<p>API: {privateData.data?.message}</p>
 			{{/if}}
@@ -62,6 +62,7 @@ function RouteComponent() {
 				</button>
 			)}
 			{{/if}}
-		</div>
+			</div>
+		</Show>
 	);
 }
