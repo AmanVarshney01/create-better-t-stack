@@ -78,7 +78,11 @@ function processPrismaDeps(
   });
 
   if (webExists) {
-    addPackageDependency({ vfs, packagePath: webPkgPath, dependencies: ["@prisma/client"] });
+    const webDeps: AvailableDependencies[] = ["@prisma/client"];
+    if (database === "sqlite" && dbSetup !== "d1") {
+      webDeps.push("libsql");
+    }
+    addPackageDependency({ vfs, packagePath: webPkgPath, dependencies: webDeps });
   }
 }
 

@@ -1958,6 +1958,35 @@ describe("Deployment Configurations", () => {
       expect(compose).toContain('"3001:3001"');
     });
 
+    it("should expose SolidStart Prisma SQLite native dependencies to Nitro", async () => {
+      const result = await createVirtual({
+        projectName: "docker-solid-prisma-sqlite",
+        webDeploy: "docker",
+        serverDeploy: "none",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "prisma",
+        auth: "better-auth",
+        payments: "none",
+        api: "orpc",
+        frontend: ["solid"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "pnpm",
+      });
+
+      if (result.isErr()) throw result.error;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+
+      expect(webPkg.dependencies.libsql).toBeDefined();
+    });
+
     it("should route SolidStart SSR requests through the internal Docker server URL", async () => {
       const result = await createVirtual({
         projectName: "docker-solid-external-server",
