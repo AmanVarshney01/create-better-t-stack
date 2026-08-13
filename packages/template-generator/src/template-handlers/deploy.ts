@@ -2,6 +2,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { processAlchemyRun } from "../generators/alchemy/render";
+import { isDatabaseConsumedByDocker } from "../utils/docker-database";
 import { type TemplateData, processTemplatesFromPrefix } from "./utils";
 
 function hasOwnKey<T extends object>(object: T, key: PropertyKey): key is keyof T {
@@ -25,6 +26,13 @@ export async function processDeployTemplates(
 
   if (config.webDeploy === "docker" || config.serverDeploy === "docker") {
     processTemplatesFromPrefix(vfs, templates, "deploy/docker/compose", "", config);
+    if (
+      config.database === "sqlite" &&
+      config.dbSetup === "none" &&
+      isDatabaseConsumedByDocker(config)
+    ) {
+      vfs.writeFile(".data/.gitignore", "*\n!.gitignore\n");
+    }
   }
 
   if (config.webDeploy === "vercel" || config.serverDeploy === "vercel") {

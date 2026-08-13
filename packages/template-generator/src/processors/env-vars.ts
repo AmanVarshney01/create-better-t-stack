@@ -1,6 +1,7 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
+import { isDatabaseConsumedByDocker } from "../utils/docker-database";
 
 export interface EnvVariable {
   key: string;
@@ -480,7 +481,16 @@ function buildServerVars(
         databaseUrl = "mongodb://localhost:27017/mydatabase";
         break;
       case "sqlite":
-        if (runtime === "workers" || webDeploy === "cloudflare" || serverDeploy === "cloudflare") {
+        if (
+          isDatabaseConsumedByDocker({ backend, serverDeploy, webDeploy }) &&
+          dbSetup === "none"
+        ) {
+          databaseUrl = "file:../../.data/local.db";
+        } else if (
+          runtime === "workers" ||
+          webDeploy === "cloudflare" ||
+          serverDeploy === "cloudflare"
+        ) {
           databaseUrl = "http://127.0.0.1:8080";
         } else {
           databaseUrl = "file:../../local.db";

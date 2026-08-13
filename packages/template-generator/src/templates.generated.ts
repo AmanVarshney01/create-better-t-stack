@@ -16377,6 +16377,7 @@ docker-compose.yml
 
 local.db
 local.db-*
+.data
 `],
   ["deploy/docker/compose/docker-compose.yml.hbs", `name: {{projectName}}
 
@@ -16435,8 +16436,8 @@ services:
 {{else if (and (eq database "sqlite") (eq dbSetup "none"))}}
     volumes:
       - type: bind
-        source: ./local.db
-        target: /data/local.db
+        source: ./.data
+        target: /data
         bind:
           create_host_path: false
 {{/if}}
@@ -16532,8 +16533,8 @@ services:
 {{else if (and (eq database "sqlite") (eq dbSetup "none"))}}
     volumes:
       - type: bind
-        source: ./local.db
-        target: /data/local.db
+        source: ./.data
+        target: /data
         bind:
           create_host_path: false
 {{/if}}

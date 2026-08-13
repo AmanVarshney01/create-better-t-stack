@@ -7,6 +7,7 @@ import {
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { getDbScriptSupport } from "../utils/db-scripts";
+import { isDatabaseConsumedByDocker } from "../utils/docker-database";
 
 function getDesktopStaticBuildNote(frontend: ProjectConfig["frontend"]): string {
   const staticBuildFrontends = new Map([
@@ -917,10 +918,14 @@ function generateDeploymentCommands(
       "Environment variables are read from each app's `.env` file (baked into web builds for public variables) and overridden in `docker-compose.yml` for container networking.",
     );
 
-    if (database === "sqlite" && dbSetup === "none") {
+    if (
+      database === "sqlite" &&
+      dbSetup === "none" &&
+      isDatabaseConsumedByDocker({ backend, serverDeploy, webDeploy })
+    ) {
       lines.push(
         "",
-        `Docker Compose uses the local \`./local.db\` file. Run \`${packageManagerRunCmd} db:push\` before starting the stack.`,
+        `Docker Compose uses the local \`./.data/local.db\` file. Run \`${packageManagerRunCmd} db:push\` before starting the stack.`,
       );
     }
 
