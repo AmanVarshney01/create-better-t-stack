@@ -1404,6 +1404,7 @@ describe("Deployment Configurations", () => {
       expect(viteConfig).toContain("const cloudflareWorkersAlias: Record<string, string>");
       expect(viteConfig).toContain('new URL("./cloudflare-workers.dev.ts", import.meta.url)');
       expect(viteConfig).toContain('external: ["cloudflare:workers"]');
+      expect(viteConfig).toContain("tsconfigPaths: true");
       expect(infraFile).toContain('export const web = Cloudflare.Website.Vite("web", {');
       expect(infraFile).toContain('rootDir: "../../apps/web"');
       expect(infraFile).toContain('flags: ["nodejs_compat"]');
@@ -1994,6 +1995,7 @@ describe("Deployment Configurations", () => {
       expect(webPkg.dependencies["solid-js"]).toBe("^2.0.0-rc.0");
       expect(webPkg.devDependencies.nitro).toBeDefined();
       expect(webPkg.devDependencies["@tanstack/solid-router-devtools"]).toBeUndefined();
+      expect(files.get("apps/web/vite.config.ts")).toContain("tsconfigPaths: true");
       expect(webDockerfile).toContain("FROM node:24-slim AS runner");
       expect(webDockerfile).toContain('CMD ["node", ".output/server/index.mjs"]');
       expect(webDockerfile).not.toContain("FROM nginx:alpine");

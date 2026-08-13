@@ -32858,9 +32858,14 @@ export default defineConfig({
       external: ["cloudflare:workers"],
     },
   },
+{{/if}}
   resolve: {
+    tsconfigPaths: true,
+{{#if (eq webDeploy "cloudflare")}}
     alias: cloudflareWorkersAlias,
+{{/if}}
   },
+{{#if (eq webDeploy "cloudflare")}}
   };
 {{else}}
 });

@@ -685,6 +685,7 @@ async function validateSolidScaffold(sample: SelectedBuildSample, projectDir: st
   const viteConfig = await fs.readFile(path.join(webDir, "vite.config.ts"), "utf8");
   expect(viteConfig).toContain("solid({");
   expect(viteConfig).toContain("fileRoutes({ httpMethods: true })");
+  expect(viteConfig).toContain("tsconfigPaths: true");
 
   if (sample.config.backend === "self" && sample.config.api === "orpc") {
     for (const file of [
@@ -903,6 +904,58 @@ async function bootAndValidateSolidRuntime(sample: SelectedBuildSample, projectD
   }
 }
 
+async function bootAndValidateSolidDevRuntime(sample: SelectedBuildSample, projectDir: string) {
+  if (sample.name !== "solid-v2-self-orpc-no-auth") return;
+
+  const webDir = path.join(projectDir, "apps/web");
+  const port = await getAvailablePort();
+  const runtime = execa(
+    sample.packageManager,
+    ["run", "dev", "--", "--host", "127.0.0.1", "--port", String(port)],
+    {
+      cwd: webDir,
+      all: true,
+      reject: false,
+      env: {
+        ...process.env,
+        CORS_ORIGIN: `http://127.0.0.1:${port}`,
+        DATABASE_URL: "file:./local.db",
+      },
+    },
+  );
+
+  let failure: unknown;
+  try {
+    const root = await fetchWhenReady(`http://127.0.0.1:${port}/`);
+    expect(root?.status).toBe(200);
+    expect(await root?.text()).toContain("Connected");
+
+    const health = await fetchWhenReady(`http://127.0.0.1:${port}/rpc/healthCheck`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ json: null }),
+    });
+    expect(health?.status).toBe(200);
+    expect(await health?.json()).toEqual({ json: "OK" });
+
+    const missing = await fetchWhenReady(`http://127.0.0.1:${port}/missing-page`);
+    expect(missing?.status).toBe(404);
+  } catch (error) {
+    failure = error;
+  } finally {
+    runtime.kill("SIGTERM");
+  }
+
+  const result = await runtime;
+  if (failure) {
+    throw new Error(
+      [`Generated Solid dev probe failed: ${String(failure)}`, formatOutput(result.all)]
+        .filter(Boolean)
+        .join("\n\n"),
+    );
+  }
+}
+
 describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples", () => {
   for (const sample of getSelectedBuildSamples()) {
     it(
@@ -921,6 +974,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
         }
         await buildAndValidatePrismaWebArtifact(sample, projectDir);
         await bootAndValidatePrismaWebArtifact(sample, projectDir);
+        await bootAndValidateSolidDevRuntime(sample, projectDir);
         await bootAndValidateSolidRuntime(sample, projectDir);
         await validateSolidBuildArtifacts(sample, projectDir);
         await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
