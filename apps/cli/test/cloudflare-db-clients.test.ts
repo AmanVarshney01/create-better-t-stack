@@ -138,7 +138,11 @@ describe("Cloudflare DB client generation", () => {
       frontend: "solid",
       api: "orpc",
       routePath: "apps/web/src/routes/api/auth/[...auth].ts",
-      routeNeedles: ["createAuth().handler(request)"],
+      routeNeedles: [
+        "createAuth().handler(request)",
+        "export const GET = handle",
+        "export const POST = handle",
+      ],
       envNeedle: 'export { env } from "cloudflare:workers";',
     },
     {

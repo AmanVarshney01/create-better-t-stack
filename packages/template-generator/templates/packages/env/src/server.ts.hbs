@@ -125,7 +125,9 @@ const runtimeEnv = {
 	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? vercelOrigin,
 {{/if}}
 {{/if}}
+{{#if (ne backend "self")}}
 	CORS_ORIGIN: process.env.CORS_ORIGIN ?? vercelOrigin,
+{{/if}}
 };
 
 {{/if}}
@@ -157,7 +159,9 @@ export const env = createEnv({
 		POLAR_ACCESS_TOKEN: z.string().min(1),
 		POLAR_SUCCESS_URL: z.url(),
 {{/if}}
+{{#if (ne backend "self")}}
 		CORS_ORIGIN: z.url(),
+{{/if}}
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
 	runtimeEnv: {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}runtimeEnv{{else}}process.env{{/if}},

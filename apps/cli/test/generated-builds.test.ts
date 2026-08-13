@@ -795,7 +795,7 @@ async function getAvailablePort(): Promise<number> {
 async function fetchWhenReady(url: string, init?: RequestInit) {
   for (let attempt = 0; attempt < 100; attempt++) {
     try {
-      return await fetch(url, init);
+      return await fetch(url, { ...init, signal: AbortSignal.timeout(1000) });
     } catch {
       await Bun.sleep(100);
     }

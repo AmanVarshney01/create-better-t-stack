@@ -23,13 +23,16 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 
     setIsSubmitting(true);
     setError();
-    await authClient.signIn.email(result.data, {
-      onSuccess: () => navigate("/dashboard"),
-      onError: ({ error }) => {
-        setError(error.message);
-      },
-    });
-    setIsSubmitting(false);
+    try {
+      await authClient.signIn.email(result.data, {
+        onSuccess: () => navigate("/dashboard"),
+        onError: ({ error }) => {
+          setError(error.message);
+        },
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

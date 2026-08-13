@@ -191,6 +191,15 @@ describe("Authentication Configurations", () => {
         path.join(result.projectDir, "packages/auth/src/client.ts"),
         "utf8",
       );
+      const authConfig = await fs.readFile(
+        path.join(result.projectDir, "packages/auth/src/index.ts"),
+        "utf8",
+      );
+      const serverEnv = await fs.readFile(
+        path.join(result.projectDir, "packages/env/src/server.ts"),
+        "utf8",
+      );
+      const webEnv = await fs.readFile(path.join(result.projectDir, "apps/web/.env"), "utf8");
       const webPackageJson = await fs.readJson(
         path.join(result.projectDir, "apps/web/package.json"),
       );
@@ -205,6 +214,10 @@ describe("Authentication Configurations", () => {
       expect(authClient).not.toContain("VITE_SERVER_URL");
       expect(sharedAuthClient).toContain('from "better-auth/client"');
       expect(sharedAuthClient).not.toContain("VITE_SERVER_URL");
+      expect(authConfig).toContain("trustedOrigins: [env.BETTER_AUTH_URL]");
+      expect(authConfig).not.toContain("env.CORS_ORIGIN");
+      expect(serverEnv).not.toContain("CORS_ORIGIN");
+      expect(webEnv).not.toContain("CORS_ORIGIN");
       expect(webPackageJson.dependencies?.["better-auth"]).toBeUndefined();
       expect(webPackageJson.dependencies?.["@better-auth-solid-self/auth"]).toBeDefined();
       expect(authPackageJson.dependencies?.["better-auth"]).toBeDefined();

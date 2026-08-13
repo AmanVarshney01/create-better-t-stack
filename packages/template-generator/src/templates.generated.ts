@@ -8051,7 +8051,7 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 		}),
 
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -8134,7 +8134,7 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			schema: schema,
 		}),
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -8208,7 +8208,7 @@ export function createAuth() {
 			schema: schema,
 		}),
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -8289,7 +8289,7 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 	return betterAuth({
 		database: mongodbAdapter(client),
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -8361,7 +8361,7 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 	return betterAuth({
 		database: "", // Invalid configuration
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -11821,13 +11821,16 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 
     setIsSubmitting(true);
     setError();
-    await authClient.signIn.email(result.data, {
-      onSuccess: () => navigate("/dashboard"),
-      onError: ({ error }) => {
-        setError(error.message);
-      },
-    });
-    setIsSubmitting(false);
+    try {
+      await authClient.signIn.email(result.data, {
+        onSuccess: () => navigate("/dashboard"),
+        onError: ({ error }) => {
+          setError(error.message);
+        },
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -11897,13 +11900,16 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
 
     setIsSubmitting(true);
     setError();
-    await authClient.signUp.email(result.data, {
-      onSuccess: () => navigate("/dashboard"),
-      onError: ({ error }) => {
-        setError(error.message);
-      },
-    });
-    setIsSubmitting(false);
+    try {
+      await authClient.signUp.email(result.data, {
+        onSuccess: () => navigate("/dashboard"),
+        onError: ({ error }) => {
+          setError(error.message);
+        },
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -25514,14 +25520,22 @@ export default function Todos() {
               class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
             >
               <Show when={createMutation.isPending} fallback="Add">
-                <span class="block h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+                <span
+                  aria-hidden="true"
+                  class="block h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent"
+                />
+                <span class="sr-only">Adding todo</span>
               </Show>
             </button>
           </form>
 
           <Show when={todos.isLoading}>
-            <div class="flex justify-center py-4">
-              <span class="h-6 w-6 animate-spin rounded-full border-2 border-current border-r-transparent" />
+            <div class="flex justify-center py-4" role="status">
+              <span
+                aria-hidden="true"
+                class="h-6 w-6 animate-spin rounded-full border-2 border-current border-r-transparent"
+              />
+              <span class="sr-only">Loading todos</span>
             </div>
           </Show>
 
@@ -33462,7 +33476,9 @@ const runtimeEnv = {
 	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? vercelOrigin,
 {{/if}}
 {{/if}}
+{{#if (ne backend "self")}}
 	CORS_ORIGIN: process.env.CORS_ORIGIN ?? vercelOrigin,
+{{/if}}
 };
 
 {{/if}}
@@ -33494,7 +33510,9 @@ export const env = createEnv({
 		POLAR_ACCESS_TOKEN: z.string().min(1),
 		POLAR_SUCCESS_URL: z.url(),
 {{/if}}
+{{#if (ne backend "self")}}
 		CORS_ORIGIN: z.url(),
+{{/if}}
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
 	runtimeEnv: {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}runtimeEnv{{else}}process.env{{/if}},

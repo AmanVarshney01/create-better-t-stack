@@ -107,7 +107,7 @@ Cloudflare resources SHALL preserve dependency ordering and pass resolved values
 
 ### Requirement: Framework-specific Cloudflare paths
 
-Each web framework SHALL use the intentional generated resource and runtime entry described by the accepted-version design: `Website.Vite` with single-page-application asset handling for TanStack Router, worker-first `Website.Vite` SSR for Solid 2, explicit-entry `Website.Vite` for React Router, `Website.Vite` for TanStack Start, `Website.Astro` for Astro, and qualified generic `StaticSite` paths for Next.js, Nuxt, and SvelteKit until their first-class providers pass the generated framework's independent gates. A framework path SHALL not change solely because another framework's gate passed.
+Each web framework SHALL use the intentional generated resource and runtime entry described by the accepted-version design: `Website.Vite` with single-page-application asset handling for TanStack Router, worker-first `Website.Vite` SSR for Solid 2, explicit-entry `Website.Vite` for React Router, `Website.Vite` for TanStack Start, `Website.Nuxt` for Nuxt, `Website.Astro` for Astro, and qualified generic `StaticSite` paths for Next.js and SvelteKit until their first-class providers pass the generated framework's independent gates. A framework path SHALL not change solely because another framework's gate passed.
 
 #### Scenario: Verify Nuxt support
 

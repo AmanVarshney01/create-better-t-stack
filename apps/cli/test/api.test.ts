@@ -141,7 +141,11 @@ describe("API Configurations", () => {
       expect(homeRoute).toContain('healthCheck.data === "OK"');
       expect(homeRoute).toContain("healthCheck.isPending");
       expect(homeRoute).toContain("deferStream: true");
-      expect(appFile.indexOf("<QueryClientProvider")).toBeLessThan(appFile.indexOf("<Router>"));
+      const queryClientProviderIndex = appFile.indexOf("<QueryClientProvider");
+      const routerIndex = appFile.indexOf("<Router>");
+      expect(queryClientProviderIndex).toBeGreaterThanOrEqual(0);
+      expect(routerIndex).toBeGreaterThanOrEqual(0);
+      expect(queryClientProviderIndex).toBeLessThan(routerIndex);
     });
 
     const frontends = [

@@ -28,7 +28,7 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 		}),
 
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -111,7 +111,7 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			schema: schema,
 		}),
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -185,7 +185,7 @@ export function createAuth() {
 			schema: schema,
 		}),
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -266,7 +266,7 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 	return betterAuth({
 		database: mongodbAdapter(client),
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -338,7 +338,7 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 	return betterAuth({
 		database: "", // Invalid configuration
 		trustedOrigins: [
-			env.CORS_ORIGIN,
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",

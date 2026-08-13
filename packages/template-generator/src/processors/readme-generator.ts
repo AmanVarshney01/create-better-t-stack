@@ -255,6 +255,8 @@ ${generateDeploymentCommands(
   webDeploy,
   serverDeploy,
   backend,
+  auth,
+  frontend,
   database,
   dbSetup,
 )}
@@ -841,6 +843,8 @@ function generateDeploymentCommands(
   webDeploy: ProjectConfig["webDeploy"],
   serverDeploy: ProjectConfig["serverDeploy"],
   backend: ProjectConfig["backend"],
+  auth: ProjectConfig["auth"],
+  frontend: ProjectConfig["frontend"],
   database: ProjectConfig["database"],
   dbSetup: ProjectConfig["dbSetup"],
 ): string {
@@ -894,6 +898,29 @@ function generateDeploymentCommands(
       `cd packages/infra && ${alchemyExec} alchemy deploy --stage production`,
       "```",
     );
+
+    const hasWeb = hasWebFrontend(frontend);
+    const needsCorsOrigin = backend !== "self" && isAlchemyDeployTarget(serverDeploy) && hasWeb;
+    const prismaAuthTarget =
+      auth === "better-auth" && backend === "self" && webDeploy === "prisma"
+        ? { envPath: "apps/web/.env", label: "web" }
+        : auth === "better-auth" && backend !== "self" && serverDeploy === "prisma"
+          ? { envPath: "apps/server/.env", label: "server" }
+          : undefined;
+
+    if (needsCorsOrigin || prismaAuthTarget) {
+      lines.push("", "### Production origins", "");
+    }
+    if (needsCorsOrigin) {
+      lines.push(
+        "- After the first deploy, set `CORS_ORIGIN` in `apps/server/.env` to the exact deployed web origin, such as `https://app.example.com`, then deploy the server again.",
+      );
+    }
+    if (prismaAuthTarget) {
+      lines.push(
+        `- Prisma + Better Auth: after the first deploy, set \`BETTER_AUTH_URL\` in \`${prismaAuthTarget.envPath}\` to the returned ${prismaAuthTarget.label} URL, then deploy again.`,
+      );
+    }
   }
 
   if (hasDocker) {

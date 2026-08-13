@@ -151,4 +151,54 @@ describe("post-install instructions", () => {
     expect(output).toContain("bun run db:push");
     expect(output).toContain("bun run db:studio");
   });
+
+  it("shows the production origin handshake for split Alchemy deployments", async () => {
+    const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
+    spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline in test"));
+
+    await displayPostInstallInstructions({
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "hono",
+      runtime: "bun",
+      database: "postgres",
+      orm: "drizzle",
+      dbSetup: "none",
+      auth: "better-auth",
+      api: "orpc",
+      webDeploy: "cloudflare",
+      serverDeploy: "prisma",
+      depsInstalled: true,
+    });
+
+    const output = stdout.mock.calls.map(([chunk]) => String(chunk)).join("");
+
+    expect(output).toContain("CORS_ORIGIN in apps/server/.env");
+    expect(output).toContain("BETTER_AUTH_URL in apps/server/.env");
+  });
+
+  it("only requests the Prisma Better Auth URL for a self deployment", async () => {
+    const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
+    spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline in test"));
+
+    await displayPostInstallInstructions({
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "self",
+      runtime: "none",
+      database: "postgres",
+      orm: "drizzle",
+      dbSetup: "none",
+      auth: "better-auth",
+      api: "orpc",
+      webDeploy: "prisma",
+      serverDeploy: "none",
+      depsInstalled: true,
+    });
+
+    const output = stdout.mock.calls.map(([chunk]) => String(chunk)).join("");
+
+    expect(output).not.toContain("CORS_ORIGIN");
+    expect(output).toContain("BETTER_AUTH_URL in apps/web/.env");
+  });
 });
