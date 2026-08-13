@@ -92,6 +92,7 @@ export function TechCategories({
                 const category = categoryKey as keyof StackState;
                 const isSelected = getIsSelected(stack, category, tech.id);
                 const isDisabled = !isOptionCompatible(stack, categoryKey as TechCategory, tech.id);
+                const isExperimental = "experimental" in tech && tech.experimental;
                 const disabledReason = getDisabledReason(
                   stack,
                   categoryKey as TechCategory,
@@ -104,7 +105,7 @@ export function TechCategories({
                     disabled={isDisabled}
                     aria-disabled={isDisabled}
                     aria-pressed={isSelected}
-                    aria-label={`${tech.name}${isDisabled && disabledReason ? `. ${disabledReason}` : ""}`}
+                    aria-label={`${tech.name}${isExperimental ? ". Experimental" : ""}${isDisabled && disabledReason ? `. ${disabledReason}` : ""}`}
                     className={cn(
                       "builder-focus-ring relative h-full w-full rounded-[4px] border p-3 text-left transition-colors duration-150",
                       isSelected
@@ -147,7 +148,7 @@ export function TechCategories({
                             >
                               {tech.name}
                             </span>
-                            {"experimental" in tech && tech.experimental && (
+                            {isExperimental && (
                               <span className="ml-1.5 shrink-0 rounded-[3px] border border-amber-500/30 bg-amber-500/10 px-1 py-0.5 font-mono text-[9px] text-amber-700 uppercase leading-none tracking-[0.08em] dark:text-amber-300">
                                 Experimental
                               </span>
