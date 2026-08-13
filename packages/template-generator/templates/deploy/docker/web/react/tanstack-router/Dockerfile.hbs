@@ -6,7 +6,6 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
-ENV SKIP_ENV_VALIDATION=1
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 # the build evaluates the auth config; the real secret comes from compose at runtime
 ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime

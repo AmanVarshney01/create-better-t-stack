@@ -1589,6 +1589,7 @@ describe("Deployment Configurations", () => {
       // public client values are baked via build args, not .env files in the context
       expect(compose).toContain("VITE_SERVER_URL: http://localhost:3000");
       expect(webDockerfile).toContain("ARG VITE_SERVER_URL");
+      expect(webDockerfile).not.toContain("SKIP_ENV_VALIDATION");
       expect(files.get(".dockerignore")).toContain("**/.env");
       expect(webDockerfile).toContain("FROM node:24-slim AS builder");
       expect(serverDockerfile).toContain("FROM oven/bun:1 AS builder");
@@ -1648,6 +1649,7 @@ describe("Deployment Configurations", () => {
         "DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-password}@postgres:5432/docker-self-next",
       );
       expect(webDockerfile).toContain("npm install -g pnpm");
+      expect(webDockerfile).toContain("ENV SKIP_ENV_VALIDATION=1");
       // Next.js Docker deploys use standalone output for a minimal runtime image
       expect(webDockerfile).toContain(".next/standalone");
       expect(webDockerfile).toContain('CMD ["node", "apps/web/server.js"]');
@@ -1688,6 +1690,45 @@ describe("Deployment Configurations", () => {
       expect(svelteConfig).not.toContain("@sveltejs/adapter-auto");
       expect(webPkg.devDependencies["@sveltejs/adapter-node"]).toBeDefined();
       expect(webDockerfile).toContain('CMD ["node", "build/index.js"]');
+    });
+
+    it("should validate Nuxt public variables during Docker builds", async () => {
+      const result = await createVirtual({
+        projectName: "docker-nuxt",
+        webDeploy: "docker",
+        serverDeploy: "docker",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["nuxt"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml") ?? "";
+      const webDockerfile = files.get("apps/web/Dockerfile") ?? "";
+
+      expect(compose).toContain("NUXT_PUBLIC_SERVER_URL: http://localhost:3000");
+      expect(webDockerfile).toContain("ARG NUXT_PUBLIC_SERVER_URL");
+      expect(webDockerfile).toContain("ENV NUXT_PUBLIC_SERVER_URL=${NUXT_PUBLIC_SERVER_URL}");
+      expect(webDockerfile.indexOf("ARG NUXT_PUBLIC_SERVER_URL")).toBeLessThan(
+        webDockerfile.indexOf("bun install"),
+      );
+      expect(webDockerfile).not.toContain("SKIP_ENV_VALIDATION");
+      expect(files.get("packages/env/src/web.ts")).not.toContain("SKIP_ENV_VALIDATION");
     });
 
     it("should not infer the TanStack Start runtime from the package manager", async () => {

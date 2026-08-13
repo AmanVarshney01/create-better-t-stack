@@ -168,6 +168,10 @@ describe("Frontend Configurations", () => {
       const envPackageJson = await fs.readJson(
         path.join(result.projectDir, "packages/env/package.json"),
       );
+      const webEnv = await fs.readFile(
+        path.join(result.projectDir, "packages/env/src/web.ts"),
+        "utf8",
+      );
       const appFile = await fs.readFile(path.join(webDir, "src/app.tsx"), "utf8");
       const tsconfig = await fs.readJson(path.join(webDir, "tsconfig.json"));
       const viteConfig = await fs.readFile(path.join(webDir, "vite.config.ts"), "utf8");
@@ -187,6 +191,7 @@ describe("Frontend Configurations", () => {
       expect(tsconfig.exclude).toContain("dist");
       expect(rootPackageJson.scripts["dev:web"]).toBeDefined();
       expect(envPackageJson.exports["./web"]).toBe("./src/web.ts");
+      expect(webEnv).not.toContain("SKIP_ENV_VALIDATION");
       expect(appFile).toContain('import { FileRoutes } from "@solidjs/start/router";');
       expect(appFile).toContain("<FileRoutes />");
       expect(viteConfig).toContain("solidStart()");

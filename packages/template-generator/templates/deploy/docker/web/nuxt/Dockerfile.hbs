@@ -6,7 +6,13 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
+{{#if (eq backend "self")}}
 ENV SKIP_ENV_VALIDATION=1
+{{/if}}
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG NUXT_PUBLIC_SERVER_URL
+ENV NUXT_PUBLIC_SERVER_URL=${NUXT_PUBLIC_SERVER_URL}
+{{/if}}
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 # the build evaluates the auth config; the real secret comes from compose at runtime
 ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime

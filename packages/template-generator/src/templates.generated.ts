@@ -16387,10 +16387,10 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-{{#if (and (not (includes frontend "nuxt")) (or (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start")))))}}
+{{#if (or (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start"))))}}
       args:
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
-        {{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}}: http://localhost:3000
+        {{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else if (includes frontend "nuxt")}}NUXT_PUBLIC_SERVER_URL{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}}: http://localhost:3000
 {{/if}}
 {{#if (eq backend "convex")}}
         {{#if (includes frontend "next")}}NEXT_PUBLIC_CONVEX_URL: \${NEXT_PUBLIC_CONVEX_URL:-}{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}PUBLIC_CONVEX_URL: \${PUBLIC_CONVEX_URL:-}{{else}}VITE_CONVEX_URL: \${VITE_CONVEX_URL:-}{{/if}}
@@ -16658,7 +16658,9 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
+{{#if (eq backend "self")}}
 ENV SKIP_ENV_VALIDATION=1
+{{/if}}
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 # the build evaluates the auth config; the real secret comes from compose at runtime
 ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
@@ -16687,7 +16689,9 @@ ENV PUBLIC_CONVEX_URL=\${PUBLIC_CONVEX_URL}
 {{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
+{{#if (eq backend "self")}}
 ENV SKIP_ENV_VALIDATION=
+{{/if}}
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 ENV BETTER_AUTH_SECRET=
 {{/if}}
@@ -16710,7 +16714,13 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
+{{#if (eq backend "self")}}
 ENV SKIP_ENV_VALIDATION=1
+{{/if}}
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+ARG NUXT_PUBLIC_SERVER_URL
+ENV NUXT_PUBLIC_SERVER_URL=\${NUXT_PUBLIC_SERVER_URL}
+{{/if}}
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 # the build evaluates the auth config; the real secret comes from compose at runtime
 ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
@@ -16752,7 +16762,9 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
+{{#if (eq backend "self")}}
 ENV SKIP_ENV_VALIDATION=1
+{{/if}}
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 # the build evaluates the auth config; the real secret comes from compose at runtime
 ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
@@ -16810,7 +16822,6 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
-ENV SKIP_ENV_VALIDATION=1
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 # the build evaluates the auth config; the real secret comes from compose at runtime
 ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
@@ -16861,7 +16872,6 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
-ENV SKIP_ENV_VALIDATION=1
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 # the build evaluates the auth config; the real secret comes from compose at runtime
 ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
@@ -16932,7 +16942,9 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
+{{#if (eq backend "self")}}
 ENV SKIP_ENV_VALIDATION=1
+{{/if}}
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 # the build evaluates the auth config; the real secret comes from compose at runtime
 ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
@@ -16965,7 +16977,9 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=\${VITE_CLERK_PUBLISHABLE_KEY}
 {{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
+{{#if (eq backend "self")}}
 ENV SKIP_ENV_VALIDATION=
+{{/if}}
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 ENV BETTER_AUTH_SECRET=
 {{/if}}
@@ -17002,7 +17016,9 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
+{{#if (eq backend "self")}}
 ENV SKIP_ENV_VALIDATION=1
+{{/if}}
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 # the build evaluates the auth config; the real secret comes from compose at runtime
 ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
@@ -17031,7 +17047,9 @@ ENV VITE_CONVEX_URL=\${VITE_CONVEX_URL}
 {{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
+{{#if (eq backend "self")}}
 ENV SKIP_ENV_VALIDATION=
+{{/if}}
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 ENV BETTER_AUTH_SECRET=
 {{/if}}
@@ -17059,7 +17077,9 @@ COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 RUN npm install -g pnpm@11
 {{/if}}
 WORKDIR /app
+{{#if (eq backend "self")}}
 ENV SKIP_ENV_VALIDATION=1
+{{/if}}
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 # the build evaluates the auth config; the real secret comes from compose at runtime
 ENV BETTER_AUTH_SECRET=build-time-placeholder-secret-not-used-at-runtime
@@ -17088,7 +17108,9 @@ ENV PUBLIC_CONVEX_URL=\${PUBLIC_CONVEX_URL}
 {{/if}}
 ENV NODE_ENV=production
 RUN cd apps/web && {{packageManager}} run build
+{{#if (eq backend "self")}}
 ENV SKIP_ENV_VALIDATION=
+{{/if}}
 {{#if (and (eq backend "self") (eq auth "better-auth"))}}
 ENV BETTER_AUTH_SECRET=
 {{/if}}
@@ -33690,7 +33712,6 @@ export const env = createEnv({
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
 {{/if}}
-	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });
 `],
