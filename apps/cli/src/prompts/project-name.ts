@@ -7,6 +7,7 @@ import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import { ProjectNameSchema } from "../types";
 import { UserCancelledError } from "../utils/errors";
+import { isMissingPathError } from "../utils/fs-error";
 import { cliConsola } from "../utils/terminal-output";
 
 function isPathWithinCwd(targetPath: string) {
@@ -52,12 +53,7 @@ export async function getProjectName(initialName?: string): Promise<string> {
     try {
       stats = await fs.lstat(defaultPath);
     } catch (error) {
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "code" in error &&
-        error.code === "ENOENT"
-      ) {
+      if (isMissingPathError(error)) {
         break;
       }
       throw error;

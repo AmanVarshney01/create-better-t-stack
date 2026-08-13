@@ -98,7 +98,7 @@ export function useStackState() {
     async (updates: Partial<StackState> | ((prev: StackState) => Partial<StackState>)) => {
       await setQueryState((currentQueryState) => {
         const currentStack = getStackFromQueryState(currentQueryState);
-        const newStack = typeof updates === "function" ? updates(currentStack) : updates;
+        const newStack = updates instanceof Function ? updates(currentStack) : updates;
         const finalStack = sanitizeStackState({ ...currentStack, ...newStack });
 
         return finalStack;

@@ -4,12 +4,19 @@ import path from "node:path";
 
 import { execa } from "execa";
 import fs from "fs-extra";
+import { z } from "zod";
 
 import type { CreateInput } from "../src";
 import { create } from "../src";
 import { SMOKE_DIR } from "./setup";
 
 type PackageManager = NonNullable<CreateInput["packageManager"]>;
+
+const packageScriptsSchema = z.object({
+  scripts: z.record(z.string(), z.string()).optional(),
+});
+
+const serverAddressSchema = z.object({ port: z.number().int().positive() });
 
 const shouldRunBuildSamples = process.env.BTS_BUILD_SAMPLES === "1";
 const sampleFilter = process.env.BTS_BUILD_SAMPLE_FILTER;
@@ -595,13 +602,12 @@ async function runWorkspaceTypeChecks(
       const packageJsonPath = path.join(workspaceDir, "package.json");
       if (!(await fs.pathExists(packageJsonPath))) continue;
 
-      const packageJson = await fs.readJson(packageJsonPath);
-      const typecheckScript =
-        typeof packageJson.scripts?.["check-types"] === "string"
-          ? "check-types"
-          : typeof packageJson.scripts?.typecheck === "string"
-            ? "typecheck"
-            : undefined;
+      const packageJson = packageScriptsSchema.parse(await fs.readJson(packageJsonPath));
+      const typecheckScript = packageJson.scripts?.["check-types"]
+        ? "check-types"
+        : packageJson.scripts?.typecheck
+          ? "typecheck"
+          : undefined;
       if (!typecheckScript) continue;
 
       await runCommand(
@@ -721,8 +727,8 @@ async function getAvailablePort(): Promise<number> {
     server.unref();
     server.once("error", reject);
     server.listen(0, "127.0.0.1", () => {
-      const address = server.address();
-      if (!address || typeof address === "string") {
+      const address = serverAddressSchema.safeParse(server.address());
+      if (!address.success) {
         server.close();
         reject(new Error("Could not allocate a port for the generated runtime probe"));
         return;
@@ -730,7 +736,7 @@ async function getAvailablePort(): Promise<number> {
 
       server.close((error) => {
         if (error) reject(error);
-        else resolve(address.port);
+        else resolve(address.data.port);
       });
     });
   });

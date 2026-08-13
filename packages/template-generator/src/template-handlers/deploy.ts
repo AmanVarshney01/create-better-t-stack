@@ -4,6 +4,10 @@ import type { VirtualFileSystem } from "../core/virtual-fs";
 import { processAlchemyRun } from "../generators/alchemy/render";
 import { type TemplateData, processTemplatesFromPrefix } from "./utils";
 
+function hasOwnKey<T extends object>(object: T, key: PropertyKey): key is keyof T {
+  return Object.hasOwn(object, key);
+}
+
 export async function processDeployTemplates(
   vfs: VirtualFileSystem,
   templates: TemplateData,
@@ -28,13 +32,13 @@ export async function processDeployTemplates(
   }
 
   if (config.webDeploy === "prisma") {
-    const templateMap: Partial<Record<ProjectConfig["frontend"][number], string>> = {
+    const templateMap = {
       "react-router": "react/react-router",
-    };
+    } satisfies Partial<Record<ProjectConfig["frontend"][number], string>>;
 
     for (const frontend of config.frontend) {
-      const templatePath = templateMap[frontend];
-      if (templatePath) {
+      if (hasOwnKey(templateMap, frontend)) {
+        const templatePath = templateMap[frontend];
         processTemplatesFromPrefix(
           vfs,
           templates,
@@ -52,7 +56,7 @@ export async function processDeployTemplates(
     config.webDeploy !== "prisma" &&
     config.webDeploy !== "vercel"
   ) {
-    const templateMap: Record<string, string> = {
+    const templateMap = {
       "tanstack-router": "react/tanstack-router",
       "tanstack-start": "react/tanstack-start",
       "react-router": "react/react-router",
@@ -61,10 +65,10 @@ export async function processDeployTemplates(
       nuxt: "nuxt",
       svelte: "svelte",
       astro: "astro",
-    };
+    } satisfies Record<string, string>;
 
     for (const f of config.frontend) {
-      if (templateMap[f]) {
+      if (hasOwnKey(templateMap, f)) {
         processTemplatesFromPrefix(
           vfs,
           templates,

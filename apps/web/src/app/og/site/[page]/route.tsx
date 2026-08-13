@@ -5,10 +5,7 @@ import { OG_SIZE, OgShell, ogColors, ogFonts } from "@/lib/og";
 
 export const revalidate = false;
 
-const PAGES: Record<
-  string,
-  { path: string; section: string; title: string; description: string; command?: string }
-> = {
+const PAGES = {
   home: {
     path: "~",
     section: "home",
@@ -41,12 +38,20 @@ const PAGES: Record<
     title: "Sponsors",
     description: "The companies and developers funding Better-T-Stack development",
   },
-};
+} satisfies Record<
+  string,
+  { path: string; section: string; title: string; description: string; command?: string }
+>;
+
+function isPageKey(page: string): page is keyof typeof PAGES {
+  return Object.hasOwn(PAGES, page);
+}
 
 export async function GET(_req: Request, { params }: RouteContext<"/og/site/[page]">) {
   const { page: pageParam } = await params;
-  const page = PAGES[pageParam.replace(/\.png$/, "")];
-  if (!page) notFound();
+  const pageKey = pageParam.replace(/\.png$/, "");
+  if (!isPageKey(pageKey)) notFound();
+  const page = PAGES[pageKey];
 
   return new ImageResponse(
     <OgShell path={page.path} section={page.section}>
@@ -60,7 +65,7 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/site/[pag
           gap: "20px",
         }}
       >
-        {page.command && (
+        {"command" in page && page.command && (
           <div
             style={{
               display: "flex",

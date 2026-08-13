@@ -18,12 +18,17 @@ type AddonOption = {
   hint: string;
 };
 
+interface AddonDisplay {
+  label: string;
+  hint: string;
+}
+
 type AddonProjectConfig = Pick<
   ProjectConfig,
   "frontend" | "addons" | "auth" | "backend" | "runtime"
 >;
 
-function getAddonDisplay(addon: Addons): { label: string; hint: string } {
+function getAddonDisplay(addon: Addons): AddonDisplay {
   let label: string;
   let hint: string;
 

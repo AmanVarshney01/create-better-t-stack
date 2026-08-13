@@ -10,6 +10,7 @@ import {
   useChartConfig,
 } from "../chart-config-context";
 import { chartCssVars, type LineConfig, useChart, useChartStable } from "../chart-context";
+import { parseChartNumber, type ChartDatum } from "../chart-data";
 import { weekdayDateFmt } from "../chart-formatters";
 import type { IndicatorFadeEdges } from "../indicator-fade";
 import { DateTicker } from "./date-ticker";
@@ -29,16 +30,16 @@ export interface ChartTooltipProps {
    * Color for the crosshair/indicator line. When a function, receives the hovered point
    * (e.g. for candlestick: match candle color from close vs open). Default: --chart-crosshair.
    */
-  indicatorColor?: string | ((point: Record<string, unknown>) => string);
+  indicatorColor?: string | ((point: ChartDatum) => string);
   /** Custom content renderer for the tooltip box */
-  content?: (props: { point: Record<string, unknown>; index: number }) => React.ReactNode;
+  content?: (props: { point: ChartDatum; index: number }) => React.ReactNode;
   /** Custom row renderer - return array of TooltipRow */
-  rows?: (point: Record<string, unknown>) => TooltipRow[];
+  rows?: (point: ChartDatum) => TooltipRow[];
   /**
    * Override tooltip dot fill. When omitted and `rows` is set, dot colors match row colors.
    * When a function, receives the hovered point and line config.
    */
-  dotColor?: string | ((point: Record<string, unknown>, line: LineConfig) => string);
+  dotColor?: string | ((point: ChartDatum, line: LineConfig) => string);
   /** Additional content to show below rows (e.g., markers) */
   children?: React.ReactNode;
   /** Custom class name */
@@ -153,7 +154,7 @@ const ChartTooltipInner = memo(function ChartTooltipInner({
     return lines.map((line) => ({
       color: line.stroke,
       label: line.dataKey,
-      value: (tooltipData.point[line.dataKey] as number) ?? 0,
+      value: parseChartNumber(tooltipData.point[line.dataKey]) ?? 0,
     }));
   }, [tooltipData, lines, rowsRenderer]);
 
@@ -163,12 +164,10 @@ const ChartTooltipInner = memo(function ChartTooltipInner({
         return tooltipRows[index].color;
       }
       if (dotColorProp != null) {
-        if (typeof dotColorProp === "function" && tooltipData) {
-          return dotColorProp(tooltipData.point, line);
+        if (dotColorProp instanceof Function) {
+          return tooltipData ? dotColorProp(tooltipData.point, line) : line.stroke;
         }
-        if (typeof dotColorProp === "string") {
-          return dotColorProp;
-        }
+        return dotColorProp;
       }
       return line.stroke;
     };
@@ -179,7 +178,7 @@ const ChartTooltipInner = memo(function ChartTooltipInner({
     if (indicatorColorProp == null) {
       return chartCssVars.crosshair;
     }
-    if (typeof indicatorColorProp === "function") {
+    if (indicatorColorProp instanceof Function) {
       return tooltipData ? indicatorColorProp(tooltipData.point) : chartCssVars.crosshair;
     }
     return indicatorColorProp;

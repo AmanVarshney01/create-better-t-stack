@@ -80,13 +80,10 @@ function randomStack(rand: () => number): StackState {
 function selectedEntries(stack: StackState): Array<{ category: TechCategory; id: string }> {
   const entries: Array<{ category: TechCategory; id: string }> = [];
   for (const category of Object.keys(TECH_OPTIONS) as TechCategory[]) {
-    const value = stack[category as keyof StackState];
-    if (value === undefined) continue;
+    const value = stack[category];
     const ids = Array.isArray(value) ? value : [value];
     for (const id of ids) {
-      if (typeof id === "string") {
-        entries.push({ category, id });
-      }
+      entries.push({ category, id });
     }
   }
   return entries;
@@ -146,21 +143,23 @@ function getResolvedSelectionErrors(stack: StackState): string[] {
 
 describe("compatibility adjustment invariants", () => {
   test("exposes exactly the ORM choices offered by the CLI for every database", () => {
-    const expectedOrmChoices: Record<string, string[]> = {
-      none: ["none"],
-      sqlite: ["drizzle", "prisma"],
-      postgres: ["drizzle", "prisma"],
-      mysql: ["drizzle", "prisma"],
-      mongodb: ["prisma", "mongoose"],
-    };
+    const expectedOrmChoices = new Map<string, string[]>([
+      ["none", ["none"]],
+      ["sqlite", ["drizzle", "prisma"]],
+      ["postgres", ["drizzle", "prisma"]],
+      ["mysql", ["drizzle", "prisma"]],
+      ["mongodb", ["prisma", "mongoose"]],
+    ]);
 
     for (const database of TECH_OPTIONS.database.map((option) => option.id)) {
       const stack = applyStackUpdate(DEFAULT_STACK, { database }).stack;
       const enabledOrms = TECH_OPTIONS.orm
         .map((option) => option.id)
         .filter((orm) => !getDisabledReason(stack, "orm", orm));
+      const expectedOrms = expectedOrmChoices.get(database);
+      if (!expectedOrms) throw new Error(`Missing expected ORM choices for ${database}`);
 
-      expect(enabledOrms).toEqual(expectedOrmChoices[database]);
+      expect(enabledOrms).toEqual(expectedOrms);
     }
   });
 

@@ -24,6 +24,7 @@ import {
   resolveChartChildElement,
 } from "./chart-child-passthrough";
 import { ChartProvider, type LineConfig, type Margin } from "./chart-context";
+import { parseChartNumber, type ChartDatum } from "./chart-data";
 import { isGradientDefComponent, isPatternDefComponent } from "./chart-defs";
 import { shortDateFmt } from "./chart-formatters";
 import {
@@ -60,14 +61,14 @@ import {
 } from "./y-axis-scales";
 import { computeYDomainsByAxis } from "./y-domain-utils";
 
-function collectNumericExtents(data: Record<string, unknown>[], dataKeys: string[]) {
+function collectNumericExtents(data: ChartDatum[], dataKeys: string[]) {
   let minValue = Number.POSITIVE_INFINITY;
   let maxValue = Number.NEGATIVE_INFINITY;
 
   for (const d of data) {
     for (const key of dataKeys) {
-      const value = d[key];
-      if (typeof value === "number") {
+      const value = parseChartNumber(d[key]);
+      if (value !== null) {
         if (value < minValue) {
           minValue = value;
         }
@@ -86,7 +87,7 @@ function collectNumericExtents(data: Record<string, unknown>[], dataKeys: string
 }
 
 function resolveTimeSeriesYDomain(
-  data: Record<string, unknown>[],
+  data: ChartDatum[],
   dataKeys: string[],
   yScaleDomainMax: number | undefined,
 ): [number, number] {
@@ -115,7 +116,7 @@ function ensureChildKey(child: ReactElement, index: number): ReactElement {
 export interface TimeSeriesChartInnerProps {
   width: number;
   height: number;
-  data: Record<string, unknown>[];
+  data: ChartDatum[];
   xDataKey: string;
   margin: Margin;
   animationDuration: number;
@@ -198,7 +199,7 @@ const TimeSeriesChartCore = memo(function TimeSeriesChartCore({
   const innerHeight = height - margin.top - margin.bottom;
 
   const resolveYDomain = useCallback(
-    (sourceData: Record<string, unknown>[], dataKeys: string[]) => {
+    (sourceData: ChartDatum[], dataKeys: string[]) => {
       const axisGroups = groupLinesByYAxisId(lines);
       const usesDefaultOnly = axisGroups.size === 1 && axisGroups.has(DEFAULT_Y_AXIS_ID);
       const domainMax = usesDefaultOnly && yScaleDomainMax != null ? yScaleDomainMax : undefined;
@@ -239,7 +240,7 @@ const TimeSeriesChartCore = memo(function TimeSeriesChartCore({
   }, [chartPhase, onPhaseChange]);
 
   const xAccessor = useCallback(
-    (d: Record<string, unknown>): Date => {
+    (d: ChartDatum): Date => {
       const value = d[xDataKey];
       return value instanceof Date ? value : new Date(value as string | number);
     },
@@ -247,7 +248,7 @@ const TimeSeriesChartCore = memo(function TimeSeriesChartCore({
   );
 
   const bisectDate = useMemo(
-    () => bisector<Record<string, unknown>, Date>((d) => xAccessor(d)).left,
+    () => bisector<ChartDatum, Date>((d) => xAccessor(d)).left,
     [xAccessor],
   );
 
@@ -315,7 +316,7 @@ const TimeSeriesChartCore = memo(function TimeSeriesChartCore({
     if (projectionConfigs.length === 0) {
       return base;
     }
-    const merged: Record<string, [number, number]> = { ...base };
+    const merged = { ...base } satisfies Record<string, [number, number]>;
     for (const axisId of Object.keys(base)) {
       merged[axisId] = mergeProjectionYDomain(base[axisId] ?? [0, 100], projectionConfigs, axisId);
     }

@@ -331,7 +331,7 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
   return sources;
 }
 
-const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => string[]> = {
+const CURATED_SKILLS_BY_SOURCE = {
   "vercel-labs/agent-skills": (config) => {
     const skills: string[] = [];
     if (hasReactBasedFrontend(config.frontend)) {
@@ -435,7 +435,7 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
     "build-audit-logs",
     ...(supportsEvlogLocalLogs(config) ? ["analyze-logs"] : []),
   ],
-};
+} satisfies Record<SourceKey, (config: ProjectConfig) => string[]>;
 
 function getCuratedSkillNamesForSourceKey(sourceKey: SourceKey, config: ProjectConfig): string[] {
   return CURATED_SKILLS_BY_SOURCE[sourceKey](config);

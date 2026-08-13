@@ -264,6 +264,10 @@ ${generateScriptsList(packageManagerRunCmd, options, hasNative)}
 `;
 }
 
+function hasOwnKey<T extends object>(object: T, key: PropertyKey): key is keyof T {
+  return Object.hasOwn(object, key);
+}
+
 function generateStackDescription(
   frontend: ProjectConfig["frontend"],
   backend: ProjectConfig["backend"],
@@ -272,7 +276,7 @@ function generateStackDescription(
 ): string {
   const parts: string[] = [];
 
-  const frontendMap: Record<string, string> = {
+  const frontendMap = {
     "tanstack-router": "React, TanStack Router",
     "react-router": "React, React Router",
     next: "Next.js",
@@ -284,10 +288,10 @@ function generateStackDescription(
     "native-bare": "React Native, Expo",
     "native-uniwind": "React Native, Expo",
     "native-unistyles": "React Native, Expo",
-  };
+  } satisfies Record<string, string>;
 
   for (const fe of frontend) {
-    if (frontendMap[fe]) {
+    if (hasOwnKey(frontendMap, fe)) {
       parts.push(frontendMap[fe]);
       break;
     }
@@ -380,7 +384,7 @@ function generateProjectStructure(config: ProjectConfig): string {
   const hasDbPackage = !isConvex && database !== "none" && orm !== "none";
 
   if (hasAppWebFrontend) {
-    const frontendTypes: Record<string, string> = {
+    const frontendTypes = {
       "tanstack-router": "React + TanStack Router",
       "react-router": "React + React Router",
       next: "Next.js",
@@ -389,10 +393,14 @@ function generateProjectStructure(config: ProjectConfig): string {
       nuxt: "Nuxt",
       solid: "SolidStart",
       astro: "Astro",
-    };
-    const frontendType = frontend.find((f) => frontendTypes[f])
-      ? frontendTypes[frontend.find((f) => frontendTypes[f]) || ""]
-      : "";
+    } satisfies Record<string, string>;
+    let frontendType = "";
+    for (const selectedFrontend of frontend) {
+      if (hasOwnKey(frontendTypes, selectedFrontend)) {
+        frontendType = frontendTypes[selectedFrontend];
+        break;
+      }
+    }
 
     const prefix = isBackendSelf ? "└──" : "├──";
     const desc = isBackendSelf ? "Fullstack application" : "Frontend application";
@@ -468,7 +476,7 @@ function generateFeaturesList(
 
   const features = ["- **TypeScript** - For type safety and improved developer experience"];
 
-  const frontendFeatures: Record<string, string> = {
+  const frontendFeatures = {
     "tanstack-router": "- **TanStack Router** - File-based routing with full type safety",
     "react-router": "- **React Router** - Declarative routing for React",
     next: "- **Next.js** - Full-stack React framework",
@@ -477,10 +485,10 @@ function generateFeaturesList(
     nuxt: "- **Nuxt** - The Intuitive Vue Framework",
     solid: "- **SolidStart** - Full-stack Solid framework with file-based routing and SSR",
     astro: "- **Astro** - The web framework for content-driven websites",
-  };
+  } satisfies Record<string, string>;
 
   for (const fe of frontend) {
-    if (frontendFeatures[fe]) {
+    if (hasOwnKey(frontendFeatures, fe)) {
       features.push(frontendFeatures[fe]);
       break;
     }
@@ -501,15 +509,15 @@ function generateFeaturesList(
     features.push("- **Shared UI package** - shadcn/ui primitives live in `packages/ui`");
   }
 
-  const backendFeatures: Record<string, string> = {
+  const backendFeatures = {
     convex: "- **Convex** - Reactive backend-as-a-service platform",
     hono: "- **Hono** - Lightweight, performant server framework",
     express: "- **Express** - Fast, unopinionated web framework",
     fastify: "- **Fastify** - Fast, low-overhead web framework",
     elysia: "- **Elysia** - Type-safe, high-performance framework",
-  };
+  } satisfies Record<string, string>;
 
-  if (backendFeatures[backend]) {
+  if (hasOwnKey(backendFeatures, backend)) {
     features.push(backendFeatures[backend]);
   }
 
@@ -525,21 +533,20 @@ function generateFeaturesList(
   }
 
   if (database !== "none" && !isConvex) {
-    const ormNames: Record<string, string> = {
+    const ormNames = {
       drizzle: "Drizzle",
       prisma: "Prisma",
       mongoose: "Mongoose",
-    };
-    const dbNames: Record<string, string> = {
+    } satisfies Record<string, string>;
+    const dbNames = {
       sqlite: dbSetup === "d1" ? "Cloudflare D1" : "SQLite/Turso",
       postgres: "PostgreSQL",
       mysql: "MySQL",
       mongodb: "MongoDB",
-    };
-    features.push(
-      `- **${ormNames[orm] || "ORM"}** - TypeScript-first ORM`,
-      `- **${dbNames[database] || "Database"}** - Database engine`,
-    );
+    } satisfies Record<string, string>;
+    const ormName = hasOwnKey(ormNames, orm) ? ormNames[orm] : "ORM";
+    const dbName = hasOwnKey(dbNames, database) ? dbNames[database] : "Database";
+    features.push(`- **${ormName}** - TypeScript-first ORM`, `- **${dbName}** - Database engine`);
   }
 
   if (auth !== "none") {
@@ -547,7 +554,7 @@ function generateFeaturesList(
     features.push(`- **Authentication** - ${authLabel}`);
   }
 
-  const addonFeatures: Record<string, string> = {
+  const addonFeatures = {
     pwa: "- **PWA** - Progressive Web App support",
     tauri: "- **Tauri** - Build native desktop applications",
     electrobun: "- **Electrobun** - Lightweight desktop shell for web frontends",
@@ -559,10 +566,10 @@ function generateFeaturesList(
     nx: "- **Nx** - Smart monorepo task orchestration and caching",
     "vite-plus":
       "- **Vite+** - Unified Vite toolchain, workspace task runner, linting, and formatting",
-  };
+  } satisfies Record<string, string>;
 
   for (const addon of addons) {
-    if (addonFeatures[addon]) {
+    if (hasOwnKey(addonFeatures, addon)) {
       features.push(addonFeatures[addon]);
     }
   }
@@ -576,12 +583,12 @@ function generateDatabaseSetup(config: ProjectConfig, packageManagerRunCmd: stri
 
   const isBackendSelf = backend === "self";
   const envPath = isBackendSelf ? "apps/web/.env" : "apps/server/.env";
-  const ormLabels: Record<ProjectConfig["orm"], string> = {
+  const ormLabels = {
     drizzle: "Drizzle ORM",
     prisma: "Prisma",
     mongoose: "Mongoose",
     none: "ORM",
-  };
+  } satisfies Record<ProjectConfig["orm"], string>;
   const ormDesc = orm === "none" ? "" : ` with ${ormLabels[orm] || orm}`;
   const dbSupport = getDbScriptSupport(config);
   const isD1Alchemy = dbSupport.isD1Alchemy;
@@ -650,7 +657,7 @@ ${steps.join("\n\n")}
 `;
   }
 
-  const dbDescriptions: Record<string, string> = {
+  const dbDescriptions = {
     sqlite: `This project uses SQLite${ormDesc}.
 
 1. Start the local SQLite database (optional):
@@ -678,7 +685,7 @@ ${packageManagerRunCmd} db:local
 
 1. Make sure you have MongoDB set up.
 2. Update your \`${envPath}\` file with your MongoDB connection URI.`,
-  };
+  } satisfies Record<string, string>;
 
   setup += dbDescriptions[database] || "";
 

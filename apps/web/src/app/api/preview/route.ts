@@ -52,7 +52,24 @@ export async function POST(request: Request) {
 /**
  * Transform VirtualFileTree format to web's expected tree format
  */
-function transformTree(node: VirtualNode): Record<string, unknown> {
+interface PreviewFileNode {
+  name: string;
+  path: string;
+  type: "file";
+  content: string;
+  extension: string;
+}
+
+interface PreviewDirectoryNode {
+  name: string;
+  path: string;
+  type: "directory";
+  children: PreviewNode[];
+}
+
+type PreviewNode = PreviewFileNode | PreviewDirectoryNode;
+
+function transformTree(node: VirtualNode): PreviewNode {
   if (node.type === "file") {
     return {
       name: node.name,
@@ -72,9 +89,8 @@ function transformTree(node: VirtualNode): Record<string, unknown> {
 }
 
 function normalizeBoolean(value: boolean | string | undefined, fallback: boolean): boolean {
-  if (typeof value === "boolean") return value;
-  if (typeof value === "string") return value === "true";
-  return fallback;
+  if (value === true || value === false) return value;
+  return value === undefined ? fallback : value === "true";
 }
 
 function normalizeBackend(value?: string): ProjectConfig["backend"] {

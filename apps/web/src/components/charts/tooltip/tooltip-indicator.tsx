@@ -5,6 +5,7 @@ import { useEffect } from "react";
 
 import { type SpringConfig, useChartConfig } from "../chart-config-context";
 import { chartCssVars } from "../chart-context";
+import { parseChartNumber } from "../chart-data";
 import {
   type IndicatorFadeEdges,
   indicatorFadeGradientStops,
@@ -56,9 +57,8 @@ export interface TooltipIndicatorProps {
 }
 
 function resolveWidth(width: IndicatorWidth): number {
-  if (typeof width === "number") {
-    return width;
-  }
+  const numericWidth = parseChartNumber(width);
+  if (numericWidth !== null) return numericWidth;
   switch (width) {
     case "line":
       return 1;

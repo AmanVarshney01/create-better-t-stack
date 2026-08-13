@@ -51,7 +51,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   });
 
   if (packages.env) {
-    const envDevDeps: Record<string, string> = { ...configDep };
+    const envDevDeps = { ...configDep } satisfies Record<string, string>;
     if (
       isAlchemy &&
       packages.infra &&
@@ -90,7 +90,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   }
 
   if (packages.auth) {
-    const authDeps: Record<string, string> = { ...envDep };
+    const authDeps = { ...envDep } satisfies Record<string, string>;
     if (database !== "none" && packages.db) {
       authDeps[`@${projectName}/db`] = workspaceVersion;
     }
@@ -105,7 +105,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   }
 
   if (packages.api) {
-    const apiPackageDeps: Record<string, string> = { ...envDep };
+    const apiPackageDeps = { ...envDep } satisfies Record<string, string>;
     if (auth !== "none" && packages.auth) {
       apiPackageDeps[`@${projectName}/auth`] = workspaceVersion;
     }
@@ -137,7 +137,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     if (runtime === "workers" && orm === "prisma") {
       serverDevDependencies.push("unwasm");
     }
-    const serverDeps: Record<string, string> = { ...envDep };
+    const serverDeps = { ...envDep } satisfies Record<string, string>;
     if (api !== "none" && packages.api) serverDeps[`@${projectName}/api`] = workspaceVersion;
     if (auth !== "none" && packages.auth) serverDeps[`@${projectName}/auth`] = workspaceVersion;
     if (database !== "none" && packages.db) serverDeps[`@${projectName}/db`] = workspaceVersion;
@@ -152,7 +152,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   }
 
   if (packages.web) {
-    const webPackageDeps: Record<string, string> = { ...envDep, ...uiDep };
+    const webPackageDeps = { ...envDep, ...uiDep } satisfies Record<string, string>;
 
     if (api !== "none" && packages.api) webPackageDeps[`@${projectName}/api`] = workspaceVersion;
     if (backend === "self" && auth !== "none" && packages.auth) {
@@ -181,7 +181,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   }
 
   if (packages.native) {
-    const nativeDeps: Record<string, string> = { ...envDep };
+    const nativeDeps = { ...envDep } satisfies Record<string, string>;
     if (api !== "none" && packages.api) nativeDeps[`@${projectName}/api`] = workspaceVersion;
     if (backend === "convex" && packages.backend)
       nativeDeps[`@${projectName}/backend`] = workspaceVersion;

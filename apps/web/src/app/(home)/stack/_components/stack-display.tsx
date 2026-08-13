@@ -27,10 +27,8 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
   const [editUrl, setEditUrl] = useState<string>("");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setStackUrl(generateStackSharingUrl(stackState, window.location.origin));
-      setEditUrl(generateStackUrlFromState(stackState, window.location.origin));
-    }
+    setStackUrl(generateStackSharingUrl(stackState, window.location.origin));
+    setEditUrl(generateStackUrlFromState(stackState, window.location.origin));
   }, [stackState]);
 
   const stack = stackState;

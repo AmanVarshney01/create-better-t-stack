@@ -79,9 +79,11 @@ export type ChartSeries = {
   line?: boolean;
 };
 
-type Row = Record<string, unknown>;
+type RowValue = string | number | boolean | Date | null | undefined;
 
-const num = (value: unknown) => Number(value ?? 0);
+interface Row extends Record<string, RowValue> {}
+
+const num = (value: RowValue) => Number(value ?? 0);
 
 /**
  * Time-series area chart (x is a `Date`). Filled series plus optional overlay

@@ -11,6 +11,11 @@ import { createBtsMcpServer } from "../src/mcp";
 import { readBtsConfig } from "../src/utils/bts-config";
 import { SMOKE_DIR } from "./setup";
 
+interface JsonSchemaView {
+  type?: string;
+  properties?: Record<string, JsonSchemaView>;
+}
+
 async function connectInMemoryClient() {
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const server = createBtsMcpServer();
@@ -180,7 +185,7 @@ describe("MCP server", () => {
 
     const payload = result.structuredContent as {
       ok: boolean;
-      data?: { cli?: unknown; schemas?: Record<string, unknown> };
+      data?: { cli?: JsonSchemaView; schemas?: Record<string, JsonSchemaView> };
     };
 
     expect(payload.ok).toBe(true);
@@ -201,7 +206,7 @@ describe("MCP server", () => {
 
     const payload = result.structuredContent as {
       ok: boolean;
-      data?: { type?: string; properties?: Record<string, unknown> };
+      data?: JsonSchemaView;
     };
 
     expect(payload.ok).toBe(true);

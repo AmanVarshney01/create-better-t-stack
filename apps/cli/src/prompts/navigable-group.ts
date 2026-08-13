@@ -105,7 +105,7 @@ export async function navigableGroup<T>(
       }
 
       if (isCancel(result)) {
-        if (typeof opts?.onCancel === "function") {
+        if (opts?.onCancel) {
           results[name] = "canceled";
           opts.onCancel({ results });
         }

@@ -4,6 +4,7 @@ import { curveMonotoneX } from "@visx/curve";
 import { AreaClosed } from "@visx/shape";
 
 import { useChartStable } from "./chart-context";
+import { parseChartNumber } from "./chart-data";
 
 // biome-ignore lint/suspicious/noExplicitAny: d3 curve factory type
 type CurveFactory = any;
@@ -33,8 +34,8 @@ export function PatternArea({ dataKey, fill, curve = curveMonotoneX }: PatternAr
       fill={fill}
       x={(d) => xScale(xAccessor(d)) ?? 0}
       y={(d) => {
-        const v = d[dataKey];
-        return typeof v === "number" ? (yScale(v) ?? 0) : 0;
+        const value = parseChartNumber(d[dataKey]);
+        return value === null ? 0 : (yScale(value) ?? 0);
       }}
       yScale={yScale}
     />

@@ -75,7 +75,7 @@ export function applyStackUpdate(
   update: StackUpdate,
 ): ResolvedStackCompatibility {
   const resolvedCurrentStack = resolveStackCompatibility(currentStack).stack;
-  const partialUpdate = typeof update === "function" ? update(resolvedCurrentStack) : update;
+  const partialUpdate = update instanceof Function ? update(resolvedCurrentStack) : update;
   const requestedStack = sanitizeStackState({ ...resolvedCurrentStack, ...partialUpdate });
   return resolveStackCompatibility(requestedStack);
 }

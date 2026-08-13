@@ -18,26 +18,15 @@ const CONVEX_SITE_URL_PLACEHOLDER = "https://example.convex.site";
 
 function generateRandomString(length: number, charset: string) {
   let result = "";
-  if (
-    typeof globalThis.crypto !== "undefined" &&
-    typeof globalThis.crypto.getRandomValues === "function"
-  ) {
-    const values = new Uint8Array(length);
-    globalThis.crypto.getRandomValues(values);
-    for (let i = 0; i < length; i++) {
-      const value = values[i];
-      if (value !== undefined) {
-        result += charset[value % charset.length];
-      }
+  const values = new Uint8Array(length);
+  globalThis.crypto.getRandomValues(values);
+  for (let i = 0; i < length; i++) {
+    const value = values[i];
+    if (value !== undefined) {
+      result += charset[value % charset.length];
     }
-    return result;
-  } else {
-    // Fallback for environments without crypto
-    for (let i = 0; i < length; i++) {
-      result += charset[Math.floor(Math.random() * charset.length)];
-    }
-    return result;
   }
+  return result;
 }
 
 function generateAuthSecret() {

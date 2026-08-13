@@ -573,11 +573,9 @@ export const BetterTStackConfigSchema = z.object({
   serverDeploy: ServerDeploySchema,
 });
 
-export const BetterTStackConfigFileSchema = z
-  .object({
-    $schema: z.string().optional().describe("JSON Schema reference for validation"),
-  })
-  .extend(BetterTStackConfigSchema.shape)
+export const BetterTStackConfigFileSchema = BetterTStackConfigSchema.safeExtend({
+  $schema: z.string().optional().describe("JSON Schema reference for validation"),
+})
   .strict()
   .meta({
     id: "https://r2.better-t-stack.dev/schema.json",

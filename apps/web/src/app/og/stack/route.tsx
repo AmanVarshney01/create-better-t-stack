@@ -8,7 +8,7 @@ import { getSelectedTechs } from "@/lib/stack-utils";
 
 const MAX_CHIPS = 15;
 
-const categoryChipColors: Partial<Record<string, string>> = {
+const categoryChipColors = {
   webFrontend: "#89b4fa",
   nativeFrontend: "#89b4fa",
   runtime: "#fab387",
@@ -22,7 +22,11 @@ const categoryChipColors: Partial<Record<string, string>> = {
   packageManager: "#f9e2af",
   addons: "#cba6f7",
   examples: "#94e2d5",
-};
+} satisfies Partial<Record<string, string>>;
+
+function hasCategoryColor(category: string): category is keyof typeof categoryChipColors {
+  return Object.hasOwn(categoryChipColors, category);
+}
 
 function commandBase(packageManager: StackState["packageManager"]) {
   if (packageManager === "npm") return "npx create-better-t-stack@latest";
@@ -84,7 +88,9 @@ export async function GET(req: NextRequest) {
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", maxWidth: "1020px" }}>
           {visible.map((tech) => {
-            const color = categoryChipColors[tech.category] ?? "#a6adc8";
+            const color = hasCategoryColor(tech.category)
+              ? categoryChipColors[tech.category]
+              : "#a6adc8";
             return (
               <div
                 key={`${tech.category}-${tech.id}`}

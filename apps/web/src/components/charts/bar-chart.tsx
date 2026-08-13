@@ -2,7 +2,7 @@
 
 import { localPoint } from "@visx/event";
 import { ParentSize } from "@visx/responsive";
-import { scaleBand, scaleLinear } from "@visx/scale";
+import { scaleBand, scaleLinear, scaleTime } from "@visx/scale";
 import type { Transition } from "motion/react";
 import {
   memo,
@@ -29,7 +29,12 @@ import {
   resolveChartChildElement,
 } from "./chart-child-passthrough";
 import { ChartProvider, type LineConfig, type Margin, type TooltipData } from "./chart-context";
-import { isGradientDefComponent, isPatternDefComponent } from "./chart-defs";
+import { parseChartNumber, type ChartDatum } from "./chart-data";
+import {
+  getChartChildComponentName,
+  isGradientDefComponent,
+  isPatternDefComponent,
+} from "./chart-defs";
 import { shortDateFmt } from "./chart-formatters";
 import {
   type ChartPhase,
@@ -54,7 +59,7 @@ export type BarOrientation = "vertical" | "horizontal";
 
 export interface BarChartProps {
   /** Data array - each item should have an x-axis key and numeric values */
-  data: Record<string, unknown>[];
+  data: ChartDatum[];
   /** Key in data for the categorical axis. Default: "name" */
   xDataKey?: string;
   /** Chart margins */
@@ -98,24 +103,16 @@ function extractBarConfigs(children: ReactNode): LineConfig[] {
   const configs: LineConfig[] = [];
 
   forEachChartChild(children, (child) => {
-    const childType = child.type as {
-      displayName?: string;
-      name?: string;
-      __isBarDepthLayer?: boolean;
-    };
     // Bar-depth surface layers (BarDepthBack/Front, BarPulse) carry a
     // `dataKey` to pair with a Bar but are not series themselves — skip them
     // so they don't inflate the series count and shrink the real bars.
-    if (childType.__isBarDepthLayer) {
+    if (child.type instanceof Function && Reflect.get(child.type, "__isBarDepthLayer") === true) {
       return;
     }
-    const componentName =
-      typeof child.type === "function" ? childType.displayName || childType.name || "" : "";
+    const componentName = getChartChildComponentName(child);
 
     const props = child.props as BarProps | undefined;
-    const isBarComponent =
-      componentName === "Bar" ||
-      (props && typeof props.dataKey === "string" && props.dataKey.length > 0);
+    const isBarComponent = componentName === "Bar" || Boolean(props?.dataKey);
 
     if (isBarComponent && props?.dataKey) {
       // Use stroke for tooltip dot color if provided, otherwise fall back to fill
@@ -136,7 +133,7 @@ function extractBarConfigs(children: ReactNode): LineConfig[] {
 interface ChartInnerProps {
   width: number;
   height: number;
-  data: Record<string, unknown>[];
+  data: ChartDatum[];
   xDataKey: string;
   margin: Margin;
   animationDuration: number;
@@ -198,7 +195,7 @@ const ChartCore = memo(function ChartCore({
 
   // Category accessor function - returns string for categorical scale
   const categoryAccessor = useCallback(
-    (d: Record<string, unknown>): string => {
+    (d: ChartDatum): string => {
       const value = d[xDataKey];
       if (value instanceof Date) {
         return shortDateFmt.format(value);
@@ -210,7 +207,7 @@ const ChartCore = memo(function ChartCore({
 
   // For compatibility with ChartContext, provide a Date-based xAccessor
   const xAccessorDate = useCallback(
-    (d: Record<string, unknown>): Date => {
+    (d: ChartDatum): Date => {
       const value = d[xDataKey];
       if (value instanceof Date) {
         return value;
@@ -242,8 +239,8 @@ const ChartCore = memo(function ChartCore({
       for (const d of data) {
         let sum = 0;
         for (const line of lines) {
-          const value = d[line.dataKey];
-          if (typeof value === "number") {
+          const value = parseChartNumber(d[line.dataKey]);
+          if (value !== null) {
             sum += value;
           }
         }
@@ -257,8 +254,8 @@ const ChartCore = memo(function ChartCore({
     let max = 0;
     for (const line of lines) {
       for (const d of data) {
-        const value = d[line.dataKey];
-        if (typeof value === "number" && value > max) {
+        const value = parseChartNumber(d[line.dataKey]);
+        if (value !== null && value > max) {
           max = value;
         }
       }
@@ -288,8 +285,8 @@ const ChartCore = memo(function ChartCore({
         let max = 0;
         for (const d of data) {
           for (const key of dataKeys) {
-            const value = d[key];
-            if (typeof value === "number" && value > max) {
+            const value = parseChartNumber(d[key]);
+            if (value !== null && value > max) {
               max = value;
             }
           }
@@ -316,8 +313,8 @@ const ChartCore = memo(function ChartCore({
       let cumulative = 0;
       for (const line of lines) {
         pointOffsets.set(line.dataKey, cumulative);
-        const value = d[line.dataKey];
-        if (typeof value === "number") {
+        const value = parseChartNumber(d[line.dataKey]);
+        if (value !== null) {
           cumulative += value;
         }
       }
@@ -341,15 +338,11 @@ const ChartCore = memo(function ChartCore({
   const fakeTimeScale = useMemo(() => {
     const now = Date.now();
     const start = now - data.length * 24 * 60 * 60 * 1000;
-    const scale = {
-      ...categoryScale,
-      domain: () => [new Date(start), new Date(now)],
-      range: () => [0, innerWidth] as [number, number],
-      invert: (x: number) => new Date(start + (x / innerWidth) * (now - start)),
-      copy: () => scale,
-    };
-    return scale;
-  }, [categoryScale, innerWidth, data.length]);
+    return scaleTime<number>({
+      domain: [new Date(start), new Date(now)],
+      range: [0, innerWidth],
+    });
+  }, [innerWidth, data.length]);
 
   // Animation timing — replay when motion settings change
   // biome-ignore lint/correctness/useExhaustiveDependencies: revealSignature
@@ -406,8 +399,8 @@ const ChartCore = memo(function ChartCore({
           // Stacked horizontal: all bars same y, x at cumulative end
           let cumulative = 0;
           for (const line of lines) {
-            const value = d[line.dataKey];
-            if (typeof value === "number") {
+            const value = parseChartNumber(d[line.dataKey]);
+            if (value !== null) {
               cumulative += value;
               const axisScale = yScales[normalizeYAxisId(line.yAxisId)] ?? valueScale;
               xPositions[line.dataKey] = axisScale(cumulative) ?? 0;
@@ -417,8 +410,8 @@ const ChartCore = memo(function ChartCore({
         } else {
           // Grouped horizontal: each bar at its own y position
           lines.forEach((line, idx) => {
-            const value = d[line.dataKey];
-            if (typeof value === "number") {
+            const value = parseChartNumber(d[line.dataKey]);
+            if (value !== null) {
               const axisScale = yScales[normalizeYAxisId(line.yAxisId)] ?? valueScale;
               xPositions[line.dataKey] = axisScale(value) ?? 0;
               yPositions[line.dataKey] =
@@ -431,8 +424,8 @@ const ChartCore = memo(function ChartCore({
         let cumulative = 0;
         let seriesIdx = 0;
         for (const line of lines) {
-          const value = d[line.dataKey];
-          if (typeof value === "number") {
+          const value = parseChartNumber(d[line.dataKey]);
+          if (value !== null) {
             cumulative += value;
             const axisScale = yScales[normalizeYAxisId(line.yAxisId)] ?? primaryYScale;
             const gapOffset = seriesIdx * stackGap;
@@ -448,8 +441,8 @@ const ChartCore = memo(function ChartCore({
           seriesCount > 0 ? (bandWidth - groupGap * (seriesCount - 1)) / seriesCount : bandWidth;
 
         lines.forEach((line, idx) => {
-          const value = d[line.dataKey];
-          if (typeof value === "number") {
+          const value = parseChartNumber(d[line.dataKey]);
+          if (value !== null) {
             const axisScale = yScales[normalizeYAxisId(line.yAxisId)] ?? primaryYScale;
             yPositions[line.dataKey] = axisScale(value) ?? 0;
             xPositions[line.dataKey] =
@@ -534,7 +527,7 @@ const ChartCore = memo(function ChartCore({
     chartStatus: status,
     data,
     renderData: data,
-    xScale: fakeTimeScale as unknown as ReturnType<typeof import("@visx/scale").scaleTime<number>>,
+    xScale: fakeTimeScale,
     yScale: isHorizontal ? valueScale : primaryYScale,
     yScales,
     width,

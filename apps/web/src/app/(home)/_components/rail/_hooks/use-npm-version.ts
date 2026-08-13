@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { z } from "zod";
+
+const npmVersionResponseSchema = z.object({ version: z.string().trim().min(1) });
 
 export function useNpmVersion(): string {
   const [version, setVersion] = useState("0.0.0");
@@ -12,13 +15,9 @@ export function useNpmVersion(): string {
       try {
         const res = await fetch("https://registry.npmjs.org/create-better-t-stack/latest");
         if (!res.ok) throw new Error("Failed to fetch version");
-        const data = await res.json();
+        const data = npmVersionResponseSchema.safeParse(await res.json());
         if (cancelled) return;
-        setVersion(
-          typeof data?.version === "string" && data.version.trim().length > 0
-            ? data.version
-            : "latest",
-        );
+        setVersion(data.success ? data.data.version : "latest");
       } catch {
         if (!cancelled) setVersion("latest");
       }

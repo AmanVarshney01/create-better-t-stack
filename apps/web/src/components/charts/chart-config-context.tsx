@@ -29,6 +29,11 @@ export interface ChartConfigProviderProps {
   children: ReactNode;
 }
 
+export interface TooltipBoxMotion {
+  animate: boolean;
+  springConfig: SpringConfig;
+}
+
 export function ChartConfigProvider({ value, children }: ChartConfigProviderProps) {
   const merged = useMemo<ChartConfigValue>(
     () => ({
@@ -48,10 +53,7 @@ export function useChartConfig(): ChartConfigValue {
 const DEFAULT_TOOLTIP_BOX_DAMPING = DEFAULT_CHART_CONFIG.tooltipBoxSpring.damping;
 
 /** Maps a damping slider to the floating tooltip panel follow spring. `0` = instant. */
-export function resolveTooltipBoxMotion(damping?: number): {
-  animate: boolean;
-  springConfig: SpringConfig;
-} {
+export function resolveTooltipBoxMotion(damping?: number): TooltipBoxMotion {
   if (damping === 0) {
     return {
       animate: false,

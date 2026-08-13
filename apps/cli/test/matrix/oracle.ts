@@ -155,17 +155,14 @@ function validateDatabaseSetup(config: ProjectConfig, rules: Set<MatrixRule>) {
 
   const expectedDatabase = expectedDatabaseForSetup(config.dbSetup);
   if (expectedDatabase && config.database !== expectedDatabase) {
-    const ruleBySetup: Record<
-      Exclude<DatabaseSetup, "docker" | "none" | "planetscale">,
-      MatrixRule
-    > = {
+    const ruleBySetup = {
       d1: "db-setup-d1-requires-sqlite",
       "mongodb-atlas": "db-setup-mongodb-atlas-requires-mongodb",
       neon: "db-setup-neon-requires-postgres",
       "prisma-postgres": "db-setup-prisma-postgres-requires-postgres",
       supabase: "db-setup-supabase-requires-postgres",
       turso: "db-setup-turso-requires-sqlite",
-    };
+    } satisfies Record<Exclude<DatabaseSetup, "docker" | "none" | "planetscale">, MatrixRule>;
     rules.add(ruleBySetup[config.dbSetup as keyof typeof ruleBySetup]);
   }
 

@@ -76,29 +76,22 @@ function mergeAddonOptions(
     return undefined;
   }
 
-  const mergedAddonOptions: Partial<AddonOptions> = { ...existingAddonOptions };
+  const mergeOption = <T extends object>(existing: T | undefined, next: T | undefined) => {
+    if (!existing) return next;
+    if (!next) return existing;
+    return { ...existing, ...next };
+  };
 
-  if (nextAddonOptions) {
-    for (const addonKey of Object.keys(nextAddonOptions) as (keyof AddonOptions)[]) {
-      const existingOptionsForAddon = existingAddonOptions?.[addonKey];
-      const nextOptionsForAddon = nextAddonOptions[addonKey];
-      const mergedOptionsForAddon =
-        existingOptionsForAddon && nextOptionsForAddon
-          ? { ...existingOptionsForAddon, ...nextOptionsForAddon }
-          : nextOptionsForAddon;
+  const mergedAddonOptions: AddonOptions = {
+    wxt: mergeOption(existingAddonOptions?.wxt, nextAddonOptions?.wxt),
+    fumadocs: mergeOption(existingAddonOptions?.fumadocs, nextAddonOptions?.fumadocs),
+    opentui: mergeOption(existingAddonOptions?.opentui, nextAddonOptions?.opentui),
+    mcp: mergeOption(existingAddonOptions?.mcp, nextAddonOptions?.mcp),
+    skills: mergeOption(existingAddonOptions?.skills, nextAddonOptions?.skills),
+    ultracite: mergeOption(existingAddonOptions?.ultracite, nextAddonOptions?.ultracite),
+  };
 
-      (
-        mergedAddonOptions as Record<
-          keyof AddonOptions,
-          AddonOptions[keyof AddonOptions] | undefined
-        >
-      )[addonKey] = mergedOptionsForAddon as AddonOptions[keyof AddonOptions];
-    }
-  }
-
-  return Object.keys(mergedAddonOptions).length > 0
-    ? (mergedAddonOptions as AddonOptions)
-    : undefined;
+  return Object.values(mergedAddonOptions).some(Boolean) ? mergedAddonOptions : undefined;
 }
 
 function getSetupAddons(addonsToAdd: Addons[], updatedAddons: Addons[]): Addons[] {
@@ -259,11 +252,11 @@ async function addHandlerInternal(
     // Interactive mode - prompt user to select addons
     const promptResult = await Result.tryPromise({
       try: () => getAddonsToAdd(existingConfig),
-      catch: (e: unknown) => {
-        if (UserCancelledError.is(e)) return e;
+      catch: (cause: unknown) => {
+        if (UserCancelledError.is(cause)) return cause;
         return new CLIError({
-          message: e instanceof Error ? e.message : String(e),
-          cause: e,
+          message: cause instanceof Error ? cause.message : String(cause),
+          cause: cause,
         });
       },
     });
@@ -440,11 +433,11 @@ async function addHandlerInternal(
         ...config,
         addons: getSetupAddons(addonsToAdd, updatedAddons),
       }),
-    catch: (e: unknown) => {
-      if (UserCancelledError.is(e)) return e;
+    catch: (cause: unknown) => {
+      if (UserCancelledError.is(cause)) return cause;
       return new CLIError({
-        message: e instanceof Error ? e.message : String(e),
-        cause: e,
+        message: cause instanceof Error ? cause.message : String(cause),
+        cause: cause,
       });
     },
   });

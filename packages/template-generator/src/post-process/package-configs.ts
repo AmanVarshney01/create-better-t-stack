@@ -5,6 +5,7 @@
 
 import { getLocalD1Owner, webFrontends, type ProjectConfig } from "@better-t-stack/types";
 
+import type { JsonValue } from "../core/json-types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { dependencyVersionMap } from "../utils/add-deps";
 import { getDbScriptSupport } from "../utils/db-scripts";
@@ -18,7 +19,7 @@ type PackageJson = {
   overrides?: Record<string, string>;
   workspaces?: string[] | { packages?: string[]; catalog?: Record<string, string> };
   packageManager?: string;
-  [key: string]: unknown;
+  [key: string]: JsonValue | undefined;
 };
 
 type PackageManagerConfig = {
@@ -272,8 +273,10 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   vfs.writeJson("package.json", pkgJson);
 }
 
-function getNpmAllowedScripts(config: ProjectConfig): Record<string, boolean> {
-  const allowed: Record<string, boolean> = {};
+interface NpmAllowedScripts extends Record<string, boolean> {}
+
+function getNpmAllowedScripts(config: ProjectConfig): NpmAllowedScripts {
+  const allowed: NpmAllowedScripts = {};
   const hasCloudflareDeploy =
     config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare";
   const hasPrismaDeploy = config.webDeploy === "prisma" || config.serverDeploy === "prisma";
@@ -335,7 +338,7 @@ function getWorkspacePackages(workspaces: PackageJson["workspaces"]): string[] {
     return workspaces;
   }
 
-  if (workspaces && typeof workspaces === "object" && workspaces.packages) {
+  if (workspaces && !Array.isArray(workspaces) && workspaces.packages) {
     return workspaces.packages;
   }
 
@@ -346,12 +349,7 @@ function getUpdatedWorkspaces(
   existingWorkspaces: PackageJson["workspaces"],
   packages: string[],
 ): WorkspacesConfig {
-  if (
-    existingWorkspaces &&
-    !Array.isArray(existingWorkspaces) &&
-    typeof existingWorkspaces === "object" &&
-    existingWorkspaces.catalog
-  ) {
+  if (existingWorkspaces && !Array.isArray(existingWorkspaces) && existingWorkspaces.catalog) {
     return {
       ...existingWorkspaces,
       packages,
@@ -744,17 +742,20 @@ function updateVitePlusPackageScripts(vfs: VirtualFileSystem, config: ProjectCon
     return;
   }
 
-  const viteScriptReplacements: Record<string, string> = {
+  const viteScriptReplacements = {
     vite: "vp dev",
     "vite dev": "vp dev",
     "vite build": "vp build",
     "vite preview": "vp preview",
     "vitest run": "vp test",
     "vite build && tsc --noEmit": "vp build && tsc --noEmit",
-  };
+  } satisfies Record<string, string>;
 
   for (const [scriptName, command] of Object.entries(webPkg.scripts)) {
-    webPkg.scripts[scriptName] = viteScriptReplacements[command] ?? command;
+    const replacement = Object.entries(viteScriptReplacements).find(
+      ([viteCommand]) => viteCommand === command,
+    )?.[1];
+    webPkg.scripts[scriptName] = replacement ?? command;
   }
 
   vfs.writeJson(webPkgPath, webPkg);

@@ -1,4 +1,5 @@
 import type { TooltipData } from "./chart-context";
+import type { ChartDatum } from "./chart-data";
 import type { ChartSelection } from "./use-chart-interaction";
 
 // Pure geometry for the hover-highlight band, split out from the hook so it can
@@ -33,9 +34,9 @@ export const INACTIVE_SEGMENT: SegmentBounds = {
  * directly and takes priority over hover.
  */
 export function computeSegmentBounds(
-  data: Record<string, unknown>[],
+  data: ChartDatum[],
   xScale: (value: Date) => number | undefined,
-  xAccessor: (d: Record<string, unknown>) => Date,
+  xAccessor: (d: ChartDatum) => Date,
   tooltipData: Pick<TooltipData, "index"> | null | undefined,
   selection: Pick<ChartSelection, "active" | "startX" | "endX"> | null | undefined,
 ): SegmentBounds {

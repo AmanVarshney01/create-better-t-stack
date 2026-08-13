@@ -2,6 +2,7 @@
 
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { Activity, ChevronRight, Radio } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
@@ -31,6 +32,9 @@ const LOG_FIELD_ORDER = [
   "install",
 ] as const;
 
+type RecentAnalyticsEvent = FunctionReturnType<typeof api.analytics.getRecentEvents>[number];
+type LogValue = RecentAnalyticsEvent[(typeof LOG_FIELD_ORDER)[number]];
+
 const eventTimeFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric",
@@ -39,28 +43,25 @@ const eventTimeFormatter = new Intl.DateTimeFormat("en-US", {
   hour12: false,
 });
 
-function formatValue(value: unknown): string {
+function formatValue(value: LogValue): string {
   if (Array.isArray(value)) return value.length > 0 ? value.join(",") : "none";
-  if (typeof value === "boolean") return value ? "true" : "false";
-  if (typeof value === "string") return value;
+  if (value === true) return "true";
+  if (value === false) return "false";
   return String(value);
 }
 
-function hasLogValue(value: unknown): boolean {
+function hasLogValue(value: LogValue): boolean {
   if (value === undefined || value === null) return false;
   if (Array.isArray(value)) return value.length > 0;
   return true;
 }
 
-function formatStackSummary(event: Record<string, unknown>) {
-  const frontend = Array.isArray(event.frontend)
-    ? event.frontend.join("+")
-    : (event.frontend as string | undefined);
-  const backend = typeof event.backend === "string" ? event.backend : "none";
-  const database = typeof event.database === "string" ? event.database : "none";
-  const orm = typeof event.orm === "string" ? event.orm : "none";
-  const packageManager =
-    typeof event.packageManager === "string" ? event.packageManager : "unknown package manager";
+function formatStackSummary(event: RecentAnalyticsEvent) {
+  const frontend = event.frontend?.join("+");
+  const backend = event.backend ?? "none";
+  const database = event.database ?? "none";
+  const orm = event.orm ?? "none";
+  const packageManager = event.packageManager ?? "unknown package manager";
 
   return `${frontend || "none"} / ${backend} -> ${database} + ${orm} via ${packageManager}`;
 }
@@ -138,11 +139,8 @@ export function LiveLogs() {
                   <AnimatePresence initial={false} mode="popLayout">
                     {events.map((event, index) => {
                       const time = eventTimeFormatter.format(new Date(event._creationTime));
-                      const eventRecord = event as Record<string, unknown>;
                       const logFields = LOG_FIELD_ORDER.flatMap((key) =>
-                        hasLogValue(eventRecord[key])
-                          ? [{ key, value: formatValue(eventRecord[key]) }]
-                          : [],
+                        hasLogValue(event[key]) ? [{ key, value: formatValue(event[key]) }] : [],
                       );
                       const eventId = String(event._id).slice(-6);
 
@@ -172,7 +170,7 @@ export function LiveLogs() {
                                 project.start
                               </span>
                               <span className="min-w-0 break-words text-[13px] leading-[1.55]">
-                                {formatStackSummary(eventRecord)}
+                                {formatStackSummary(event)}
                               </span>
                               <span className="text-[10px] text-fd-muted-foreground/70">
                                 id={eventId}

@@ -1,5 +1,7 @@
 import type { Transition } from "motion/react";
 
+import { parseChartNumber } from "./chart-data";
+
 /** Default clip-reveal easing for cartesian charts. */
 export const DEFAULT_ANIMATION_EASING = "cubic-bezier(0.85, 0, 0.15, 1)";
 
@@ -24,9 +26,7 @@ export function clipRevealTransition(enterTransition?: Transition): Transition {
   }
 
   const duration =
-    typeof enterTransition?.duration === "number"
-      ? enterTransition.duration
-      : DEFAULT_ANIMATION_DURATION_MS / 1000;
+    parseChartNumber(enterTransition?.duration) ?? DEFAULT_ANIMATION_DURATION_MS / 1000;
 
   return {
     type: "tween",

@@ -4,7 +4,7 @@ import { type RefObject, useEffect, useLayoutEffect } from "react";
 
 // Correct before paint on the client so a clipped frame is never shown,
 // without tripping the SSR warning.
-const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+const useIsomorphicLayoutEffect = globalThis.window === undefined ? useEffect : useLayoutEffect;
 
 /**
  * Shrinks a <pre> until it actually fits its parent.

@@ -62,8 +62,8 @@ async function main(): Promise<void> {
         try {
           const deprecatedJson =
             await $`npm view ${`${packageName}@${v}`} deprecated --json`.text();
-          const deprecatedMsg = deprecatedJson ? JSON.parse(deprecatedJson) : null;
-          if (!deprecatedMsg || (typeof deprecatedMsg === "string" && deprecatedMsg.length === 0)) {
+          const deprecatedMsg = deprecatedJson.trim();
+          if (!deprecatedMsg || deprecatedMsg === '""') {
             nonDeprecated.push(v);
           }
         } catch {
@@ -85,13 +85,13 @@ async function main(): Promise<void> {
         return;
       }
 
-      const selected = (await multiselect({
+      const selected = await multiselect({
         message: "Select canary versions to deprecate:",
         options: nonDeprecated
           .sort()
           .reverse()
           .map((v) => ({ value: v, label: v })),
-      })) as unknown as string[] | symbol;
+      });
 
       if (isCancel(selected) || !Array.isArray(selected) || selected.length === 0) {
         console.log("❌ No selections made. Aborting.");

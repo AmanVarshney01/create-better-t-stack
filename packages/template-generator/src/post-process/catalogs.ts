@@ -6,6 +6,7 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 import yaml from "yaml";
 
+import type { JsonValue } from "../core/json-types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 type PackageJson = {
@@ -15,13 +16,15 @@ type PackageJson = {
   devDependencies?: Record<string, string>;
   workspaces?: string[] | { packages?: string[]; catalog?: Record<string, string> };
   packageManager?: string;
-  [key: string]: unknown;
+  [key: string]: JsonValue | undefined;
 };
 
 type CatalogEntry = {
   versions: Set<string>;
   packages: string[];
 };
+
+interface DependencyCatalog extends Record<string, string> {}
 
 type PackageInfo = {
   path: string;
@@ -84,7 +87,7 @@ export function processCatalogs(vfs: VirtualFileSystem, config: ProjectConfig): 
 function findDuplicateDependencies(
   packagesInfo: PackageInfo[],
   projectName: string,
-): Record<string, string> {
+): DependencyCatalog {
   const depCount = new Map<string, CatalogEntry>();
   const projectScope = `@${projectName}/`;
 
@@ -108,7 +111,7 @@ function findDuplicateDependencies(
     }
   }
 
-  const catalog: Record<string, string> = {};
+  const catalog: DependencyCatalog = {};
   for (const [depName, info] of depCount.entries()) {
     if (info.packages.length > 1 && info.versions.size === 1) {
       const version = Array.from(info.versions)[0];
@@ -134,7 +137,7 @@ function setupBunCatalogs(vfs: VirtualFileSystem, catalog: Record<string, string
       packages: pkgJson.workspaces,
       catalog,
     };
-  } else if (typeof pkgJson.workspaces === "object") {
+  } else {
     if (!pkgJson.workspaces.catalog) {
       pkgJson.workspaces.catalog = {};
     }

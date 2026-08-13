@@ -71,7 +71,7 @@ type SchemaToolInput = {
 type McpCreateProjectInput = z.infer<typeof McpCreateProjectInputSchema>;
 type McpAddInput = z.infer<typeof AddInputSchema>;
 
-function formatToolSuccess(data: unknown) {
+function formatToolSuccess<T>(data: T) {
   return {
     content: [
       {
@@ -86,8 +86,8 @@ function formatToolSuccess(data: unknown) {
   };
 }
 
-function formatToolError(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
+function formatToolError(cause: unknown) {
+  const message = cause instanceof Error ? cause.message : String(cause);
   return {
     content: [
       {

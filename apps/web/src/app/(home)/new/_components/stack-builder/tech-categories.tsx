@@ -133,7 +133,10 @@ export function TechCategories({
                               <TechIcon
                                 icon={tech.icon}
                                 name={tech.name}
-                                className={cn("mr-1.5 h-4 w-4 shrink-0", tech.className)}
+                                className={cn(
+                                  "mr-1.5 h-4 w-4 shrink-0",
+                                  "className" in tech ? tech.className : undefined,
+                                )}
                               />
                             )}
                             <span

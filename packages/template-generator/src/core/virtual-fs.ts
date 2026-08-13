@@ -4,6 +4,7 @@ import { memfs } from "memfs";
 import { dirname, extname, normalize, join } from "pathe";
 
 import type { VirtualDirectory, VirtualFile } from "../types";
+import type { JsonValue } from "./json-types";
 
 export class VirtualFileSystem {
   private _fs: ReturnType<typeof memfs>["fs"];
@@ -92,7 +93,7 @@ export class VirtualFileSystem {
     }
   }
 
-  writeJson(filePath: string, data: unknown, spaces = 2): void {
+  writeJson(filePath: string, data: JsonValue, spaces = 2): void {
     this.writeFile(filePath, JSON.stringify(data, null, spaces));
   }
 

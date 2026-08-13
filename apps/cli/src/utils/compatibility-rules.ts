@@ -51,10 +51,12 @@ export function isWebFrontend(value: Frontend) {
   return WEB_FRAMEWORKS.includes(value);
 }
 
-export function splitFrontends(values: Frontend[] = []): {
+export interface SplitFrontendsResult {
   web: Frontend[];
   native: Frontend[];
-} {
+}
+
+export function splitFrontends(values: Frontend[] = []): SplitFrontendsResult {
   const web = values.filter((f) => isWebFrontend(f));
   const native = values.filter(
     (f) => f === "native-bare" || f === "native-uniwind" || f === "native-unistyles",
@@ -489,13 +491,18 @@ export function validatePrismaWebDeployDesktopAddons(
   );
 }
 
+export interface AddonCompatibility {
+  isCompatible: boolean;
+  reason?: string;
+}
+
 export function validateAddonCompatibility(
   addon: Addons,
   frontend: Frontend[],
   auth?: Auth,
   backend?: Backend,
   runtime?: Runtime,
-): { isCompatible: boolean; reason?: string } {
+): AddonCompatibility {
   if (addon === "evlog" && !supportsEvlogAddon(frontend, backend, runtime)) {
     return {
       isCompatible: false,

@@ -4,6 +4,7 @@ import path from "node:path";
 import { execa } from "execa";
 import fs from "fs-extra";
 
+import type { CreateInput } from "../src/types";
 import { SMOKE_DIR } from "./setup";
 
 const CLI_INDEX_PATH = path.join(import.meta.dir, "..", "src", "index.ts");
@@ -11,7 +12,7 @@ const CLI_INDEX_PATH = path.join(import.meta.dir, "..", "src", "index.ts");
 type SilentCreateCase = {
   name: string;
   projectName: string;
-  options: Record<string, unknown>;
+  options: CreateInput;
   existingFile?: string;
 };
 

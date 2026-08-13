@@ -32,10 +32,10 @@ export class CLIError extends TaggedError("CLIError")<{
  */
 export class ValidationError extends TaggedError("ValidationError")<{
   field?: string;
-  value?: unknown;
+  value?: string | number | boolean | null;
   message: string;
 }> {
-  constructor(args: { field?: string; value?: unknown; message: string }) {
+  constructor(args: { field?: string; value?: string | number | boolean | null; message: string }) {
     super(args);
   }
 }
@@ -140,7 +140,7 @@ export function cliError(message: string): Result<never, CLIError> {
 export function validationError(
   message: string,
   field?: string,
-  value?: unknown,
+  value?: string | number | boolean | null,
 ): Result<never, ValidationError> {
   return Result.err(new ValidationError({ message, field, value }));
 }

@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 import { useChart, useChartStable } from "./chart-context";
+import type { ChartDatum } from "./chart-data";
 import { shortDateFmt } from "./chart-formatters";
 import { DEFAULT_Y_DOMAIN_TWEEN_MS } from "./chart-phase";
 import { LINE_LOADING_PULSE_EASE } from "./line-loading-timing";
@@ -171,9 +172,9 @@ function allIndexLayouts(length: number, tickCount: number): number[][] {
 
 function dedupeIndicesByLabel(
   indices: number[],
-  data: Record<string, unknown>[],
+  data: ChartDatum[],
   dateLabels: string[],
-  xAccessor: (d: Record<string, unknown>) => Date,
+  xAccessor: (d: ChartDatum) => Date,
 ): number[] {
   const seenLabels = new Set<string>();
   const deduped: number[] = [];
@@ -311,9 +312,9 @@ export function selectEvenlySpacedIndices(
   length: number,
   targetCount: number,
   options?: {
-    data?: Record<string, unknown>[];
+    data?: ChartDatum[];
     dateLabels?: string[];
-    xAccessor?: (d: Record<string, unknown>) => Date;
+    xAccessor?: (d: ChartDatum) => Date;
     resolveXPx?: (index: number) => number;
   },
 ): number[] {
@@ -369,11 +370,11 @@ function buildDataAlignedTicks({
   xAccessor,
   xScale,
 }: {
-  data: Record<string, unknown>[];
+  data: ChartDatum[];
   dateLabels: string[];
   marginLeft: number;
   targetTickCount: number;
-  xAccessor: (d: Record<string, unknown>) => Date;
+  xAccessor: (d: ChartDatum) => Date;
   xScale: (date: Date) => number | undefined;
 }): AxisTick[] {
   const seenLabels = new Set<string>();
@@ -459,8 +460,8 @@ function buildDomainTicks({
 }
 
 function domainExtendsPastData(
-  data: Record<string, unknown>[],
-  xAccessor: (d: Record<string, unknown>) => Date,
+  data: ChartDatum[],
+  xAccessor: (d: ChartDatum) => Date,
   xScale: { domain: () => Date[] },
 ): boolean {
   if (data.length === 0) {
@@ -477,8 +478,8 @@ function domainExtendsPastData(
 /** Domain ticks for the projection tail when brush keeps data-aligned labels. */
 function appendProjectionTailTicks(
   ticks: AxisTick[],
-  data: Record<string, unknown>[],
-  xAccessor: (d: Record<string, unknown>) => Date,
+  data: ChartDatum[],
+  xAccessor: (d: ChartDatum) => Date,
   xScale: {
     domain: () => Date[];
     (date: Date): number | undefined;

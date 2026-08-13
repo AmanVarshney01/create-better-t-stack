@@ -1,6 +1,7 @@
 import { Children, Fragment, isValidElement, type ReactElement, type ReactNode } from "react";
 
 import { isChartClipPassthrough } from "./chart-child-passthrough";
+import { getChartChildComponentName } from "./chart-defs";
 import type { ProjectionPoint } from "./projection-utils";
 import { projectionDateExtents, projectionValueExtents } from "./projection-utils";
 import { normalizeYAxisId } from "./y-axis-scales";
@@ -16,8 +17,7 @@ interface ProjectionLineConfigProps {
 }
 
 function getChildComponentName(child: ReactElement) {
-  const childType = child.type as { displayName?: string; name?: string };
-  return typeof child.type === "function" ? childType.displayName || childType.name || "" : "";
+  return getChartChildComponentName(child);
 }
 
 function isProjectionLineElement(child: ReactElement): boolean {

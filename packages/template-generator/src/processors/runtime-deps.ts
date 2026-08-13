@@ -1,11 +1,12 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
+import type { JsonValue } from "../core/json-types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency } from "../utils/add-deps";
 
 type PackageJson = {
   scripts?: Record<string, string>;
-  [key: string]: unknown;
+  [key: string]: JsonValue | undefined;
 };
 
 export function processRuntimeDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {

@@ -53,7 +53,7 @@ export function SelectedStackBadges({ stack, onRemove, onJump }: SelectedStackBa
               <TechIcon
                 icon={tech.icon}
                 name={tech.name}
-                className={cn("h-3 w-3", tech.className)}
+                className={cn("h-3 w-3", "className" in tech ? tech.className : undefined)}
               />
             )}
             {tech.name}

@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import { confirm, select, text } from "@clack/prompts";
+import { confirm, isCancel, select, text } from "@clack/prompts";
 import { $ } from "bun";
 
 const CLI_PACKAGE_JSON_PATH = join(process.cwd(), "apps/cli/package.json");
@@ -39,8 +39,8 @@ async function main(): Promise<void> {
         message: "Enter the version (e.g., 2.34.0):",
         placeholder: "2.34.0",
       });
-      versionInput = typeof customVersion === "string" ? customVersion : undefined;
-    } else if (typeof bumpType === "string") {
+      versionInput = isCancel(customVersion) ? undefined : customVersion;
+    } else if (!isCancel(bumpType)) {
       versionInput = bumpType;
     }
 
@@ -230,8 +230,8 @@ async function ensurePreviewLabelExists(): Promise<void> {
   await $`gh label create ${PREVIEW_LABEL} --description "Publish an npm preview release for a PR" --color 2EA44F`;
 }
 
-function formatError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+function formatError(cause: unknown): string {
+  return cause instanceof Error ? cause.message : String(cause);
 }
 
 main().catch(console.error);

@@ -96,13 +96,13 @@ type PreferenceChartCardProps = {
   columnGridClassName?: string;
 };
 
-const colorByKey: Record<NonNullable<PreferenceChartCardProps["colorKey"]>, string> = {
+const colorByKey = {
   chart1: "var(--chart-1)",
   chart2: "var(--chart-2)",
   chart3: "var(--chart-3)",
   chart4: "var(--chart-4)",
   chart5: "var(--chart-5)",
-};
+} satisfies Record<NonNullable<PreferenceChartCardProps["colorKey"]>, string>;
 
 export function PreferenceChartCard({
   title,
@@ -116,7 +116,7 @@ export function PreferenceChartCard({
   columnCount = 1,
   columnGridClassName,
 }: PreferenceChartCardProps) {
-  const ranking = typeof maxItems === "number" ? data.slice(0, maxItems) : data;
+  const ranking = maxItems === undefined ? data : data.slice(0, maxItems);
   const chunks = columnCount > 1 ? chunkItems(ranking, columnCount) : [ranking];
   const color = colorByKey[colorKey];
   const labelWidth = columnCount >= 3 ? 70 : columnCount === 2 ? 96 : 120;

@@ -9,6 +9,10 @@ import type { VirtualFileTree, VirtualNode, VirtualFile, VirtualDirectory } from
 
 const BINARY_FILE_MARKER = "[Binary file]";
 
+function isMissingPathError(cause: unknown): boolean {
+  return cause instanceof Error && "code" in cause && cause.code === "ENOENT";
+}
+
 /**
  * Error class for filesystem write failures
  */
@@ -155,12 +159,7 @@ async function assertSafeWritePath(baseDir: string, destinationPath: string): Pr
     try {
       stats = await fs.lstat(currentPath);
     } catch (error) {
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "code" in error &&
-        error.code === "ENOENT"
-      ) {
+      if (isMissingPathError(error)) {
         return;
       }
       throw error;

@@ -4,6 +4,7 @@ import { type ReactNode, useCallback, useMemo } from "react";
 
 import { clipRevealTransition } from "./animation";
 import { defaultScatterColors, useChartHover, useChartStable, useYScale } from "./chart-context";
+import { parseChartNumber, type ChartDatum } from "./chart-data";
 import { useChartLegendHover } from "./chart-legend-hover";
 import {
   getSeriesMarkerVisualExtent,
@@ -99,9 +100,9 @@ export function SeriesMarkers({
   const isRevealing = animate && !isLoaded;
 
   const getY = useCallback(
-    (d: Record<string, unknown>) => {
-      const value = d[dataKey];
-      return typeof value === "number" ? (yScale(value) ?? 0) : null;
+    (d: ChartDatum) => {
+      const value = parseChartNumber(d[dataKey]);
+      return value === null ? null : (yScale(value) ?? 0);
     },
     [dataKey, yScale],
   );

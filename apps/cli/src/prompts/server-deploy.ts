@@ -11,10 +11,12 @@ type DeploymentOption = {
   hint: string;
 };
 
-function getDeploymentDisplay(deployment: ServerDeploy): {
+interface DeploymentDisplay {
   label: string;
   hint: string;
-} {
+}
+
+function getDeploymentDisplay(deployment: ServerDeploy): DeploymentDisplay {
   if (deployment === "cloudflare") {
     return {
       label: "Cloudflare",

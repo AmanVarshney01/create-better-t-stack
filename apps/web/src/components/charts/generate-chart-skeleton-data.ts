@@ -1,3 +1,5 @@
+import type { ChartDatum } from "./chart-data";
+
 const DEFAULT_SKELETON_DATA_KEY = "value";
 const DEFAULT_SKELETON_POINT_COUNT = 7;
 
@@ -13,7 +15,7 @@ export interface GenerateChartSkeletonDataOptions {
 /** Placeholder series used while `status="loading"` and data is empty. */
 export function generateChartSkeletonData(
   options: GenerateChartSkeletonDataOptions = {},
-): Record<string, unknown>[] {
+): ChartDatum[] {
   const dataKey = options.dataKey ?? DEFAULT_SKELETON_DATA_KEY;
   const pointCount = options.pointCount ?? DEFAULT_SKELETON_POINT_COUNT;
   const baseDate = options.baseDate ?? new Date("2025-01-01");
@@ -30,9 +32,9 @@ export function generateChartSkeletonData(
 
 /** Skeleton rows that mirror target dates/count with lower magnitudes for Y tween. */
 export function generateChartSkeletonFromTarget(
-  targetData: Record<string, unknown>[],
+  targetData: ChartDatum[],
   dataKey: string,
-): Record<string, unknown>[] {
+): ChartDatum[] {
   return targetData.map((row, index) => ({
     ...row,
     [dataKey]: Math.round(95 + Math.sin(index * 1.05) * 28 + index * 7),

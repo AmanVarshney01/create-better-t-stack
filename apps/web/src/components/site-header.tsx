@@ -23,7 +23,7 @@ function isSecondary(item: LinkItemType) {
 const items = resolveLinkItems({
   links: baseOptions.links,
   githubUrl: baseOptions.githubUrl,
-}).filter((item): item is HrefItem => "url" in item && typeof item.url === "string");
+}).filter((item): item is HrefItem => "url" in item);
 
 const primaryItems = items.filter((item) => !isSecondary(item));
 const secondaryItems = items.filter(isSecondary);
@@ -85,7 +85,7 @@ function IconLink({
 
 function NavTitle() {
   const className = "inline-flex shrink-0 items-center gap-2.5 text-fd-foreground";
-  if (typeof navTitle === "function") {
+  if (navTitle instanceof Function) {
     const Title = navTitle;
     return <Title className={className} href="/" />;
   }
