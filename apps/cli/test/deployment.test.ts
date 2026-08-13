@@ -1958,6 +1958,83 @@ describe("Deployment Configurations", () => {
       expect(compose).toContain('"3001:3001"');
     });
 
+    it("should expose SolidStart Prisma SQLite native dependencies to Nitro", async () => {
+      const result = await createVirtual({
+        projectName: "docker-solid-prisma-sqlite",
+        webDeploy: "docker",
+        serverDeploy: "none",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "prisma",
+        auth: "better-auth",
+        payments: "none",
+        api: "orpc",
+        frontend: ["solid"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "pnpm",
+      });
+
+      if (result.isErr()) throw result.error;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const compose = files.get("docker-compose.yml") ?? "";
+      const readme = files.get("README.md") ?? "";
+
+      expect(webPkg.dependencies.libsql).toBeDefined();
+      expect(compose).toContain("DATABASE_URL: file:/data/local.db");
+      expect(compose).toContain("source: ./local.db");
+      expect(compose).toContain("target: /data/local.db");
+      expect(compose).toContain("create_host_path: false");
+      expect(compose).not.toContain("db-init:");
+      expect(files.get(".dockerignore")).toContain("local.db-*");
+      expect(files.get(".gitignore")).toContain("local.db-*");
+      expect(readme).toContain(
+        "Docker Compose uses the local `./local.db` file. Run `pnpm run db:push` before starting the stack.",
+      );
+    });
+
+    it("should mount SQLite in the Docker server that consumes it", async () => {
+      const result = await createVirtual({
+        projectName: "docker-server-sqlite",
+        webDeploy: "docker",
+        serverDeploy: "docker",
+        backend: "hono",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) throw result.error;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml") ?? "";
+      const serverPkg = JSON.parse(files.get("apps/server/package.json") ?? "{}");
+
+      expect(compose).toContain("dockerfile: apps/server/Dockerfile");
+      expect(compose).toContain("DATABASE_URL: file:/data/local.db");
+      expect(compose).toContain("source: ./local.db");
+      expect(compose).toContain("target: /data/local.db");
+      expect(compose).toContain("create_host_path: false");
+      expect(compose).not.toContain("db-init:");
+      expect(serverPkg.dependencies.libsql).toBeDefined();
+    });
+
     it("should route SolidStart SSR requests through the internal Docker server URL", async () => {
       const result = await createVirtual({
         projectName: "docker-solid-external-server",

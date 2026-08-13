@@ -4,12 +4,13 @@ import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
 export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { database, orm, backend } = config;
+  const { database, orm, backend, dbSetup } = config;
 
   if (backend === "convex" || database === "none") return;
 
   const dbPkgPath = "packages/db/package.json";
   const webPkgPath = "apps/web/package.json";
+  const serverPkgPath = "apps/server/package.json";
 
   if (!vfs.exists(dbPkgPath)) return;
   const webNeedsDbRuntime = backend === "self" && vfs.exists(webPkgPath);
@@ -20,6 +21,15 @@ export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfi
     processDrizzleDeps(vfs, config, dbPkgPath, webPkgPath, webNeedsDbRuntime);
   } else if (orm === "mongoose") {
     addPackageDependency({ vfs, packagePath: dbPkgPath, dependencies: ["mongoose"] });
+  }
+
+  if (
+    backend !== "self" &&
+    database === "sqlite" &&
+    dbSetup !== "d1" &&
+    vfs.exists(serverPkgPath)
+  ) {
+    addPackageDependency({ vfs, packagePath: serverPkgPath, dependencies: ["libsql"] });
   }
 }
 
@@ -78,7 +88,11 @@ function processPrismaDeps(
   });
 
   if (webExists) {
-    addPackageDependency({ vfs, packagePath: webPkgPath, dependencies: ["@prisma/client"] });
+    const webDeps: AvailableDependencies[] = ["@prisma/client"];
+    if (database === "sqlite" && dbSetup !== "d1") {
+      webDeps.push("libsql");
+    }
+    addPackageDependency({ vfs, packagePath: webPkgPath, dependencies: webDeps });
   }
 }
 

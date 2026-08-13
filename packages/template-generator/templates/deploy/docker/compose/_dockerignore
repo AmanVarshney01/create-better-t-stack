@@ -26,3 +26,6 @@ docker-compose.yml
 **/.env
 **/.env.*
 !**/.env.example
+
+local.db
+local.db-*

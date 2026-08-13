@@ -16,25 +16,27 @@ export default function App() {
 {{/if}}
 
   return (
+    <Router
+      root={(props) => (
 {{#if (eq api "orpc")}}
-    <QueryClientProvider client={queryClient}>
+        <QueryClientProvider client={queryClient}>
 {{/if}}
-      <Router
-        root={(props) => (
           <MetaProvider>
             <Title>{{projectName}}</Title>
             <div class="grid h-svh grid-rows-[auto_1fr]">
               <Header />
               <Suspense>{props.children}</Suspense>
             </div>
-          </MetaProvider>
-        )}
-      >
-        <FileRoutes />
-      </Router>
 {{#if (eq api "orpc")}}
-      <SolidQueryDevtools />
-    </QueryClientProvider>
+            <SolidQueryDevtools />
 {{/if}}
+          </MetaProvider>
+{{#if (eq api "orpc")}}
+        </QueryClientProvider>
+{{/if}}
+      )}
+    >
+      <FileRoutes />
+    </Router>
   );
 }

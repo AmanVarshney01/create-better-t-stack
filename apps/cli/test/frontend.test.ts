@@ -191,6 +191,7 @@ describe("Frontend Configurations", () => {
       expect(appFile).toContain("<FileRoutes />");
       expect(viteConfig).toContain("solidStart()");
       expect(viteConfig).toContain("nitro()");
+      expect(viteConfig).toContain('dedupe: ["solid-js"]');
 
       for (const file of [
         "src/app.tsx",

@@ -55,10 +55,13 @@ export default defineConfig({
       external: ["cloudflare:workers"],
     },
   },
-  resolve: {
-    alias: cloudflareWorkersAlias,
-  },
 {{/if}}
+  resolve: {
+{{#if (eq webDeploy "cloudflare")}}
+    alias: cloudflareWorkersAlias,
+{{/if}}
+    dedupe: ["solid-js"],
+  },
 {{#if (eq webDeploy "cloudflare")}}
   };
 {{else}}

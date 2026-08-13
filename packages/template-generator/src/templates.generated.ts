@@ -15305,6 +15305,8 @@ build
 
 # Generated files
 apps/web/src/routeTree.gen.ts
+local.db
+local.db-*
 
 # Environment variables
 .env
@@ -16372,6 +16374,9 @@ docker-compose.yml
 **/.env
 **/.env.*
 !**/.env.example
+
+local.db
+local.db-*
 `],
   ["deploy/docker/compose/docker-compose.yml.hbs", `name: {{projectName}}
 
@@ -16404,11 +16409,14 @@ services:
       - path: apps/web/.env
         required: false
 {{#if (eq backend "self")}}
-{{#if (or (eq dbSetup "docker") (eq auth "better-auth"))}}
+{{#if (or (eq dbSetup "docker") (eq auth "better-auth") (and (eq database "sqlite") (eq dbSetup "none")))}}
     environment:
 {{#if (eq auth "better-auth")}}
       BETTER_AUTH_URL: http://localhost:3001
       CORS_ORIGIN: http://localhost:3001
+{{/if}}
+{{#if (and (eq database "sqlite") (eq dbSetup "none"))}}
+      DATABASE_URL: file:/data/local.db
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "postgres"))}}
       DATABASE_URL: postgresql://postgres:\${POSTGRES_PASSWORD:-password}@postgres:5432/{{projectName}}
@@ -16424,6 +16432,13 @@ services:
     depends_on:
       {{database}}:
         condition: service_healthy
+{{else if (and (eq database "sqlite") (eq dbSetup "none"))}}
+    volumes:
+      - type: bind
+        source: ./local.db
+        target: /data/local.db
+        bind:
+          create_host_path: false
 {{/if}}
 {{else}}
 {{#if (eq serverDeploy "docker")}}
@@ -16476,10 +16491,13 @@ services:
     env_file:
       - path: apps/server/.env
         required: false
-{{#if (or (eq webDeploy "docker") (eq dbSetup "docker"))}}
+{{#if (or (eq webDeploy "docker") (eq dbSetup "docker") (and (eq database "sqlite") (eq dbSetup "none")))}}
     environment:
 {{#if (eq webDeploy "docker")}}
       CORS_ORIGIN: http://localhost:3001
+{{/if}}
+{{#if (and (eq database "sqlite") (eq dbSetup "none"))}}
+      DATABASE_URL: file:/data/local.db
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "postgres"))}}
       DATABASE_URL: postgresql://postgres:\${POSTGRES_PASSWORD:-password}@postgres:5432/{{projectName}}
@@ -16511,6 +16529,13 @@ services:
     depends_on:
       {{database}}:
         condition: service_healthy
+{{else if (and (eq database "sqlite") (eq dbSetup "none"))}}
+    volumes:
+      - type: bind
+        source: ./local.db
+        target: /data/local.db
+        bind:
+          create_host_path: false
 {{/if}}
     restart: unless-stopped
 
@@ -32628,26 +32653,28 @@ export default function App() {
 {{/if}}
 
   return (
+    <Router
+      root={(props) => (
 {{#if (eq api "orpc")}}
-    <QueryClientProvider client={queryClient}>
+        <QueryClientProvider client={queryClient}>
 {{/if}}
-      <Router
-        root={(props) => (
           <MetaProvider>
             <Title>{{projectName}}</Title>
             <div class="grid h-svh grid-rows-[auto_1fr]">
               <Header />
               <Suspense>{props.children}</Suspense>
             </div>
-          </MetaProvider>
-        )}
-      >
-        <FileRoutes />
-      </Router>
 {{#if (eq api "orpc")}}
-      <SolidQueryDevtools />
-    </QueryClientProvider>
+            <SolidQueryDevtools />
 {{/if}}
+          </MetaProvider>
+{{#if (eq api "orpc")}}
+        </QueryClientProvider>
+{{/if}}
+      )}
+    >
+      <FileRoutes />
+    </Router>
   );
 }
 `],
@@ -32744,7 +32771,6 @@ export default function NotFound() {
   ["frontend/solid/src/routes/index.tsx.hbs", `{{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/solid-query";
 import { orpc } from "~/utils/orpc";
-import { Match, Switch } from "solid-js";
 {{/if}}
 
 const TITLE_TEXT = \`
@@ -32765,7 +32791,11 @@ const TITLE_TEXT = \`
 
 export default function Home() {
   {{#if (eq api "orpc")}}
-  const healthCheck = useQuery(() => orpc.healthCheck.queryOptions());
+  const healthCheck = useQuery(() => ({
+    ...orpc.healthCheck.queryOptions(),
+    deferStream: true,
+  }));
+  const isConnected = () => healthCheck.data === "OK";
   {{/if}}
 
   return (
@@ -32775,32 +32805,18 @@ export default function Home() {
         {{#if (eq api "orpc")}}
         <section class="rounded-lg border p-4">
           <h2 class="mb-2 font-medium">API Status</h2>
-          <Switch>
-            <Match when={healthCheck.isPending}>
-              <div class="flex items-center gap-2">
-                <div class="h-2 w-2 rounded-full bg-gray-500 animate-pulse" />{" "}
-                <span class="text-sm text-muted-foreground">Checking...</span>
-              </div>
-            </Match>
-            <Match when={healthCheck.isError}>
-              <div class="flex items-center gap-2">
-                <div class="h-2 w-2 rounded-full bg-red-500" />
-                <span class="text-sm text-muted-foreground">Disconnected</span>
-              </div>
-            </Match>
-            <Match when={healthCheck.isSuccess}>
-              <div class="flex items-center gap-2">
-                <div
-                  class={\`h-2 w-2 rounded-full \${healthCheck.data ? "bg-green-500" : "bg-red-500"}\`}
-                />
-                <span class="text-sm text-muted-foreground">
-                  {healthCheck.data
-                    ? "Connected"
-                    : "Disconnected"}
-                </span>
-              </div>
-            </Match>
-          </Switch>
+          <div class="flex items-center gap-2">
+            <div
+              class={\`h-2 w-2 rounded-full \${healthCheck.isPending ? "bg-orange-400" : isConnected() ? "bg-green-500" : "bg-red-500"}\`}
+            />
+            <span class="text-sm text-muted-foreground">
+              {healthCheck.isPending
+                ? "Checking..."
+                : isConnected()
+                  ? "Connected"
+                  : "Disconnected"}
+            </span>
+          </div>
         </section>
         {{/if}}
       </div>
@@ -32893,10 +32909,13 @@ export default defineConfig({
       external: ["cloudflare:workers"],
     },
   },
-  resolve: {
-    alias: cloudflareWorkersAlias,
-  },
 {{/if}}
+  resolve: {
+{{#if (eq webDeploy "cloudflare")}}
+    alias: cloudflareWorkersAlias,
+{{/if}}
+    dedupe: ["solid-js"],
+  },
 {{#if (eq webDeploy "cloudflare")}}
   };
 {{else}}
