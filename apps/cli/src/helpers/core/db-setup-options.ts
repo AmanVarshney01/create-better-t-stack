@@ -13,6 +13,20 @@ export interface DatabaseSetupCliOptions {
 
 export type DbSetupMode = NonNullable<DbSetupOptions["mode"]>;
 
+export function withDbSetupMode(
+  dbSetupOptions: DbSetupOptions | undefined,
+  mode: DbSetupMode | undefined,
+): DbSetupOptions | undefined {
+  const resolved = { ...dbSetupOptions };
+  if (mode === undefined) {
+    delete resolved.mode;
+  } else {
+    resolved.mode = mode;
+  }
+
+  return Object.keys(resolved).length === 0 ? undefined : resolved;
+}
+
 const REMOTE_PROVISIONING_DB_SETUPS: DatabaseSetup[] = [
   "turso",
   "neon",

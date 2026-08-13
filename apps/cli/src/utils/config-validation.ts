@@ -234,9 +234,13 @@ export function validateDatabaseSetup(
   return Result.ok(undefined);
 }
 
-export function validateAlchemyDatabaseProvisioning(
-  config: Partial<ProjectConfig>,
-): ValidationResult {
+export function validateDatabaseProvisioningMode(config: Partial<ProjectConfig>): ValidationResult {
+  if (config.dbSetup === "planetscale" && config.dbSetupOptions?.mode === "auto") {
+    return validationErr(
+      "PlanetScale does not support automatic database setup. Use dbSetupOptions.mode 'alchemy' or 'manual'.",
+    );
+  }
+
   if (config.dbSetupOptions?.mode !== "alchemy") return Result.ok(undefined);
 
   const { backend, dbSetup, webDeploy, serverDeploy } = config;
@@ -527,7 +531,7 @@ export function validateFullConfig(
   return Result.gen(function* () {
     yield* validateDatabaseOrmAuth(config, providedFlags);
     yield* validateDatabaseSetup(config, providedFlags);
-    yield* validateAlchemyDatabaseProvisioning(config);
+    yield* validateDatabaseProvisioningMode(config);
 
     yield* validateConvexConstraints(config, providedFlags);
     yield* validateBackendNoneConstraints(config, providedFlags);

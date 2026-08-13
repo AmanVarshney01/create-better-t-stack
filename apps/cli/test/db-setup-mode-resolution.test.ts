@@ -4,7 +4,9 @@ import {
   mergeResolvedDbSetupOptions,
   resolveDbSetupMode,
   resolveProjectDbSetupOptions,
+  withDbSetupMode,
 } from "../src/helpers/core/db-setup-options";
+import { getDbProvisioningChoice } from "../src/prompts/database-setup";
 import { runWithContext } from "../src/utils/context";
 
 describe("DB setup mode resolution", () => {
@@ -68,5 +70,14 @@ describe("DB setup mode resolution", () => {
     );
 
     expect(options).toEqual({ mode: "manual" });
+  });
+
+  it("removes a stale Alchemy mode while preserving provider options", async () => {
+    const mode = await getDbProvisioningChoice("alchemy", "neon", "hono", "prisma", "vercel");
+
+    expect(mode).toBeUndefined();
+    expect(withDbSetupMode({ mode: "alchemy", neon: { method: "neon-new" } }, mode)).toEqual({
+      neon: { method: "neon-new" },
+    });
   });
 });

@@ -151,6 +151,65 @@ describe("programmatic API input validation", () => {
     expect(result.error.message).toContain("runtime");
   });
 
+  it("rejects unsupported database modes through create without writing files", async () => {
+    const projectDir = join(SMOKE_DIR, "invalid-planetscale-auto");
+    await fs.remove(projectDir);
+
+    const result = await create(projectDir, {
+      frontend: ["tanstack-router"],
+      backend: "hono",
+      runtime: "bun",
+      database: "postgres",
+      orm: "drizzle",
+      dbSetup: "planetscale",
+      dbSetupOptions: { mode: "auto" },
+      api: "trpc",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: ["none"],
+      webDeploy: "none",
+      serverDeploy: "prisma",
+      git: false,
+      install: false,
+      disableAnalytics: true,
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) throw new Error("Expected create() to reject PlanetScale automatic setup");
+    expect(CLIError.is(result.error)).toBe(true);
+    expect(ValidationError.is(result.error.cause)).toBe(true);
+    expect(result.error.message).toContain("PlanetScale does not support automatic database setup");
+    expect(await fs.pathExists(projectDir)).toBe(false);
+  });
+
+  it("rejects unsupported database modes through createVirtual", async () => {
+    const result = await createVirtual({
+      projectName: "invalid-planetscale-auto-virtual",
+      frontend: ["tanstack-router"],
+      backend: "hono",
+      runtime: "bun",
+      database: "postgres",
+      orm: "drizzle",
+      dbSetup: "planetscale",
+      dbSetupOptions: { mode: "auto" },
+      api: "trpc",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: ["none"],
+      webDeploy: "none",
+      serverDeploy: "prisma",
+      git: false,
+      packageManager: "bun",
+    });
+
+    expect(result.isErr()).toBe(true);
+    if (result.isOk()) throw new Error("Expected createVirtual() to reject PlanetScale auto setup");
+    expect(result.error.phase).toBe("validation");
+    expect(result.error.message).toContain("PlanetScale does not support automatic database setup");
+  });
+
   it("returns a structured failure instead of throwing for an invalid add input shape", async () => {
     const projectDir = join(SMOKE_DIR, "programmatic-add-invalid-input");
     const createResult = await create(projectDir, {

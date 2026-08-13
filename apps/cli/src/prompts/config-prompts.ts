@@ -1,4 +1,5 @@
 import { DEFAULT_CONFIG } from "../constants";
+import { withDbSetupMode } from "../helpers/core/db-setup-options";
 import type {
   Addons,
   API,
@@ -62,7 +63,7 @@ export async function gatherConfig(
   projectName: string,
   projectDir: string,
   relativePath: string,
-  options: { skipCompatibilityChecks?: boolean } = {},
+  options: { skipCompatibilityChecks?: boolean; manualDb?: boolean } = {},
 ) {
   if (isSilent()) {
     return {
@@ -170,7 +171,7 @@ export async function gatherConfig(
         ),
       dbSetupMode: ({ results, previousAnswer }) =>
         getDbProvisioningChoice(
-          flags.dbSetupOptions?.mode,
+          flags.dbSetupOptions?.mode ?? (options.manualDb === true ? "manual" : undefined),
           results.dbSetup,
           results.backend,
           results.webDeploy,
@@ -204,10 +205,7 @@ export async function gatherConfig(
     projectDir: projectDir,
     relativePath: relativePath,
     addonOptions: flags.addonOptions,
-    dbSetupOptions:
-      result.dbSetupMode === undefined
-        ? flags.dbSetupOptions
-        : { ...flags.dbSetupOptions, mode: result.dbSetupMode },
+    dbSetupOptions: withDbSetupMode(flags.dbSetupOptions, result.dbSetupMode),
     frontend: result.frontend,
     backend: result.backend,
     runtime: result.runtime,

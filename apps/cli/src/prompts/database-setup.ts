@@ -123,7 +123,7 @@ export async function getDBSetupChoice(
 
 type DbSetupMode = NonNullable<DbSetupOptions["mode"]>;
 
-const PROVIDER_LABELS = {
+const providerLabels = {
   neon: "Neon",
   planetscale: "PlanetScale",
   "prisma-postgres": "Prisma Postgres",
@@ -152,7 +152,7 @@ export async function getDbProvisioningChoice(
 
   if (mode !== undefined) return mode;
 
-  const provider = PROVIDER_LABELS[dbSetup];
+  const provider = providerLabels[dbSetup];
   if (!provider) return undefined;
 
   const options: Array<{ value: DbSetupMode; label: string; hint: string }> = [

@@ -112,10 +112,13 @@ describe("Alchemy providers", () => {
         runtime: "bun",
       });
       const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
+      const prismaConfig = files.get("packages/db/prisma.config.ts") ?? "";
 
       expect(infra).toContain('export const server = Prisma.Compute("server"');
       expect(infra).toContain('DATABASE_URL: Config.redacted("DATABASE_URL")');
       expect(infra).not.toContain(combination.providerResource);
+      expect(prismaConfig).toContain("env('DATABASE_URL')");
+      expect(prismaConfig).not.toContain("process.env.DATABASE_URL!");
     }
   });
 
