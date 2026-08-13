@@ -90,9 +90,9 @@ describe("API Configurations", () => {
   });
 
   describe("oRPC API", () => {
-    it("should wire SolidStart self-hosted oRPC routes and optimized SSR", async () => {
+    it("should wire Solid 2 self-hosted oRPC routes and optimized SSR", async () => {
       const config = {
-        projectName: "orpc-solid-start-self",
+        projectName: "orpc-solid-self",
         api: "orpc",
         frontend: ["solid"],
         backend: "self",
@@ -120,15 +120,15 @@ describe("API Configurations", () => {
       const files = collectFiles(result.value.root, result.value.root.path);
       const rpcRoute = files.get("apps/web/src/routes/rpc/[...rest].ts");
       const rpcIndex = files.get("apps/web/src/routes/rpc/index.ts");
-      const appFile = files.get("apps/web/src/app.tsx");
+      const appFile = files.get("apps/web/src/App.tsx");
       const homeRoute = files.get("apps/web/src/routes/index.tsx");
       const orpcClient = files.get("apps/web/src/utils/orpc.ts");
       const orpcServer = files.get("apps/web/src/utils/orpc.server.ts");
 
       expect(appFile).toBeDefined();
-      if (!appFile) throw new Error("Expected SolidStart app template");
+      if (!appFile) throw new Error("Expected Solid app template");
 
-      expect(rpcRoute).toContain('import type { APIEvent } from "@solidjs/start/server";');
+      expect(rpcRoute).toContain('import type { APIHandler } from "filesystem-routing/api";');
       expect(rpcRoute).toContain('prefix: "/rpc"');
       expect(rpcRoute).toContain("createContext({ headers: request.headers })");
       expect(rpcIndex).toContain('from "./[...rest]"');
@@ -141,9 +141,11 @@ describe("API Configurations", () => {
       expect(homeRoute).toContain('healthCheck.data === "OK"');
       expect(homeRoute).toContain("healthCheck.isPending");
       expect(homeRoute).toContain("deferStream: true");
-      expect(appFile.indexOf("root={(props)")).toBeLessThan(
-        appFile.indexOf("<QueryClientProvider"),
-      );
+      const queryClientProviderIndex = appFile.indexOf("<QueryClientProvider");
+      const routerIndex = appFile.indexOf("<Router>");
+      expect(queryClientProviderIndex).toBeGreaterThanOrEqual(0);
+      expect(routerIndex).toBeGreaterThanOrEqual(0);
+      expect(queryClientProviderIndex).toBeLessThan(routerIndex);
     });
 
     const frontends = [

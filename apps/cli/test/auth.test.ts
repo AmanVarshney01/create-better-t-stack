@@ -156,9 +156,9 @@ describe("Authentication Configurations", () => {
       expect(authFile).toContain("tanstackStartCookies()");
     });
 
-    it("should add the Better Auth SolidStart handler for the self backend", async () => {
+    it("should add the Better Auth Solid 2 handler for the self backend", async () => {
       const result = await runTRPCTest({
-        projectName: "better-auth-solid-start-self",
+        projectName: "better-auth-solid-self",
         auth: "better-auth",
         backend: "self",
         runtime: "none",
@@ -187,11 +187,40 @@ describe("Authentication Configurations", () => {
         path.join(result.projectDir, "apps/web/src/lib/auth-client.ts"),
         "utf8",
       );
+      const sharedAuthClient = await fs.readFile(
+        path.join(result.projectDir, "packages/auth/src/client.ts"),
+        "utf8",
+      );
+      const authConfig = await fs.readFile(
+        path.join(result.projectDir, "packages/auth/src/index.ts"),
+        "utf8",
+      );
+      const serverEnv = await fs.readFile(
+        path.join(result.projectDir, "packages/env/src/server.ts"),
+        "utf8",
+      );
+      const webEnv = await fs.readFile(path.join(result.projectDir, "apps/web/.env"), "utf8");
+      const webPackageJson = await fs.readJson(
+        path.join(result.projectDir, "apps/web/package.json"),
+      );
+      const authPackageJson = await fs.readJson(
+        path.join(result.projectDir, "packages/auth/package.json"),
+      );
 
-      expect(authRoute).toContain('import { toSolidStartHandler } from "better-auth/solid-start";');
-      expect(authRoute).toContain("toSolidStartHandler(auth)");
-      expect(authClient).toContain("createAuthClient({");
+      expect(authRoute).toContain('import type { APIHandler } from "filesystem-routing/api";');
+      expect(authRoute).toContain("auth.handler(request)");
+      expect(authClient).toContain('from "@better-auth-solid-self/auth/client"');
+      expect(authClient).toContain("export function useSession()");
       expect(authClient).not.toContain("VITE_SERVER_URL");
+      expect(sharedAuthClient).toContain('from "better-auth/client"');
+      expect(sharedAuthClient).not.toContain("VITE_SERVER_URL");
+      expect(authConfig).toContain("trustedOrigins: [env.BETTER_AUTH_URL]");
+      expect(authConfig).not.toContain("env.CORS_ORIGIN");
+      expect(serverEnv).not.toContain("CORS_ORIGIN");
+      expect(webEnv).not.toContain("CORS_ORIGIN");
+      expect(webPackageJson.dependencies?.["better-auth"]).toBeUndefined();
+      expect(webPackageJson.dependencies?.["@better-auth-solid-self/auth"]).toBeDefined();
+      expect(authPackageJson.dependencies?.["better-auth"]).toBeDefined();
     });
 
     it("should guard TanStack Start self dashboard before loading Polar payment state", async () => {
@@ -290,7 +319,7 @@ describe("Authentication Configurations", () => {
         "utf8",
       );
 
-      expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.25");
+      expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.27");
       expect(packageJson.workspaces.catalog["@convex-dev/better-auth"]).toBe("^0.12.5");
       expect(backendPackageJson.dependencies["better-auth"]).toBe("catalog:");
       expect(webPackageJson.dependencies["better-auth"]).toBe("catalog:");
@@ -767,7 +796,7 @@ describe("Authentication Configurations", () => {
         const packageJson = JSON.parse(
           await fs.readFile(path.join(result.projectDir, "package.json"), "utf8"),
         );
-        expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.25");
+        expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.27");
       });
     }
   });

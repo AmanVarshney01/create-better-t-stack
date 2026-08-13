@@ -17,6 +17,8 @@ Better-T-Stack's Cloudflare deployment path depends on the experimental Alchemy 
 - Add Prisma as an Alchemy deployment target for supported web and server applications while keeping the CLI label provider-level rather than exposing the underlying resource name.
 - Let the Alchemy deployment that owns the database-consuming application provision Neon, PlanetScale, or Prisma Postgres, inject typed runtime credentials, and apply checked-in migrations.
 - Preserve external database setup when the database consumer is deployed by another provider.
+- Replace the SolidStart 2 scaffold with Solid 2 start mode, router-neutral file routing, and the
+  provider adapters required by each existing deployment target.
 
 ### Non-goals
 
@@ -24,7 +26,7 @@ Better-T-Stack's Cloudflare deployment path depends on the experimental Alchemy 
 - Refactoring all deployment providers behind a common lifecycle abstraction.
 - Adding or redesigning Vercel, Railway, or Docker deployment.
 - Adding Waku to Better-T-Stack merely because Alchemy PR #886 includes it.
-- Upgrading a frontend framework major version solely to satisfy an unreleased Alchemy source provider.
+- Upgrading another frontend framework major version solely to satisfy an unreleased Alchemy source provider.
 - Treating a merged upstream pull request as usable before publication.
 - Installing a branch, git dependency, unpublished framework package, dependency override, or hoisted linker to bypass the release gate.
 - Claiming `alchemy logs` authentication or OpenNext on-demand ISR is fixed without a focused live reproduction.

@@ -139,9 +139,9 @@ describe("Frontend Configurations", () => {
       expect(packageJson.devDependencies["react-router-devtools"]).toBeUndefined();
     });
 
-    it("should generate the SolidStart v2 project structure", async () => {
+    it("should generate the Solid 2 project structure", async () => {
       const result = await runTRPCTest({
-        projectName: "solid-start-v2",
+        projectName: "solid-v2",
         frontend: ["solid"],
         api: "none",
         backend: "none",
@@ -172,16 +172,22 @@ describe("Frontend Configurations", () => {
         path.join(result.projectDir, "packages/env/src/web.ts"),
         "utf8",
       );
-      const appFile = await fs.readFile(path.join(webDir, "src/app.tsx"), "utf8");
+      const appFile = await fs.readFile(path.join(webDir, "src/App.tsx"), "utf8");
       const tsconfig = await fs.readJson(path.join(webDir, "tsconfig.json"));
       const viteConfig = await fs.readFile(path.join(webDir, "vite.config.ts"), "utf8");
 
       expect(packageJson.dependencies).toMatchObject({
-        "@solidjs/meta": "^0.29.4",
-        "@solidjs/router": "^1.0.0",
-        "@solidjs/start": "^2.0.0",
+        "@solidjs/meta": "^1.0.0-next.2",
+        "@solidjs/router": "^2.0.0-next.16",
+        "@solidjs/web": "^2.0.0-rc.0",
+        "solid-js": "^2.0.0-rc.0",
+      });
+      expect(packageJson.devDependencies).toMatchObject({
+        "@solidjs/vite-plugin": "^3.0.0-next.28",
+        "filesystem-routing": "0.2.1",
         nitro: "^3.0.260610-beta",
       });
+      expect(packageJson.dependencies["@solidjs/start"]).toBeUndefined();
       expect(packageJson.dependencies["@tanstack/solid-router"]).toBeUndefined();
       expect(packageJson.devDependencies["@tanstack/solid-router-devtools"]).toBeUndefined();
       expect(packageJson.devDependencies["@tanstack/router-plugin"]).toBeUndefined();
@@ -192,22 +198,29 @@ describe("Frontend Configurations", () => {
       expect(rootPackageJson.scripts["dev:web"]).toBeDefined();
       expect(envPackageJson.exports["./web"]).toBe("./src/web.ts");
       expect(webEnv).not.toContain("SKIP_ENV_VALIDATION");
-      expect(appFile).toContain('import { FileRoutes } from "@solidjs/start/router";');
-      expect(appFile).toContain("<FileRoutes />");
-      expect(viteConfig).toContain("solidStart()");
-      expect(viteConfig).toContain("nitro()");
-      expect(viteConfig).toContain('dedupe: ["solid-js"]');
+      expect(appFile).toContain('import { Router } from "~/router";');
+      expect(viteConfig).toContain("solid({");
+      expect(viteConfig).toContain('start: { middleware: "./src/middleware.ts" }');
+      expect(viteConfig).toContain("fileRoutes({ httpMethods: true })");
+      expect(viteConfig).toContain("nitro({ serverEntry: false })");
 
       for (const file of [
-        "src/app.tsx",
-        "src/entry-client.tsx",
-        "src/entry-server.tsx",
+        "src/App.tsx",
+        "src/Document.tsx",
+        "src/middleware.ts",
+        "src/router.ts",
         "src/routes/index.tsx",
       ]) {
         expect(await fs.pathExists(path.join(webDir, file))).toBe(true);
       }
 
-      for (const legacyFile of ["index.html", "src/main.tsx", "src/routes/__root.tsx"]) {
+      for (const legacyFile of [
+        "index.html",
+        "src/main.tsx",
+        "src/entry-client.tsx",
+        "src/entry-server.tsx",
+        "src/routes/__root.tsx",
+      ]) {
         expect(await fs.pathExists(path.join(webDir, legacyFile))).toBe(false);
       }
     });
@@ -374,9 +387,9 @@ describe("Frontend Configurations", () => {
   });
 
   describe("Frontend Compatibility with Backend", () => {
-    it("should work with the SolidStart self backend", async () => {
+    it("should work with the Solid 2 self backend", async () => {
       const result = await runTRPCTest({
-        projectName: "solid-start-self",
+        projectName: "solid-self",
         frontend: ["solid"],
         backend: "self",
         runtime: "none",

@@ -1,4 +1,9 @@
 FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+{{#if (and (eq orm "prisma") (not (includes addons "vite-plus")))}}
+RUN apt-get update -y \
+  && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
+{{/if}}
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
@@ -48,6 +53,11 @@ ENV DATABASE_URL=
 {{/if}}
 
 FROM node:24-slim AS runner
+{{#if (eq orm "prisma")}}
+RUN apt-get update -y \
+  && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
+{{/if}}
 WORKDIR /app/apps/web
 ENV NODE_ENV=production
 

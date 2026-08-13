@@ -76,7 +76,7 @@ function getBaseTasks(frontend: string[], addons: string[]): TurboTasks {
   }
 
   if (frontend.includes("solid")) {
-    buildOutputs.push(".output/**", ".vinxi/**");
+    buildOutputs.push(".output/**");
   }
 
   // SvelteKit outputs to .svelte-kit/** in addition to build/

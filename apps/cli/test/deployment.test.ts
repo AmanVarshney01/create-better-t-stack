@@ -1366,9 +1366,9 @@ describe("Deployment Configurations", () => {
       }
     });
 
-    it("should configure SolidStart SSR for Cloudflare and local Vite builds", async () => {
+    it("should configure Solid 2 SSR for Cloudflare and local Vite builds", async () => {
       const result = await createVirtual({
-        projectName: "solid-start-cloudflare",
+        projectName: "solid-cloudflare",
         webDeploy: "cloudflare",
         serverDeploy: "none",
         backend: "self",
@@ -1404,6 +1404,7 @@ describe("Deployment Configurations", () => {
       expect(viteConfig).toContain("const cloudflareWorkersAlias: Record<string, string>");
       expect(viteConfig).toContain('new URL("./cloudflare-workers.dev.ts", import.meta.url)');
       expect(viteConfig).toContain('external: ["cloudflare:workers"]');
+      expect(viteConfig).toContain("tsconfigPaths: true");
       expect(infraFile).toContain('export const web = Cloudflare.Website.Vite("web", {');
       expect(infraFile).toContain('rootDir: "../../apps/web"');
       expect(infraFile).toContain('flags: ["nodejs_compat"]');
@@ -1960,7 +1961,7 @@ describe("Deployment Configurations", () => {
       expect(serverDockerfile).toContain('CMD ["node", "dist/index.mjs"]');
     });
 
-    it("should deploy SolidStart production builds as an SSR server", async () => {
+    it("should deploy Solid 2 production builds as an SSR server", async () => {
       const result = await createVirtual({
         projectName: "docker-solid-no-api",
         webDeploy: "docker",
@@ -1990,16 +1991,18 @@ describe("Deployment Configurations", () => {
       const webDockerfile = files.get("apps/web/Dockerfile");
       const compose = files.get("docker-compose.yml");
 
-      expect(webPkg.dependencies["@solidjs/start"]).toBeDefined();
-      expect(webPkg.dependencies.nitro).toBeDefined();
+      expect(webPkg.dependencies["@solidjs/start"]).toBeUndefined();
+      expect(webPkg.dependencies["solid-js"]).toBe("^2.0.0-rc.0");
+      expect(webPkg.devDependencies.nitro).toBeDefined();
       expect(webPkg.devDependencies["@tanstack/solid-router-devtools"]).toBeUndefined();
+      expect(files.get("apps/web/vite.config.ts")).toContain("tsconfigPaths: true");
       expect(webDockerfile).toContain("FROM node:24-slim AS runner");
       expect(webDockerfile).toContain('CMD ["node", ".output/server/index.mjs"]');
       expect(webDockerfile).not.toContain("FROM nginx:alpine");
       expect(compose).toContain('"3001:3001"');
     });
 
-    it("should expose SolidStart Prisma SQLite native dependencies to Nitro", async () => {
+    it("should expose Solid 2 Prisma SQLite native dependencies to Nitro", async () => {
       const result = await createVirtual({
         projectName: "docker-solid-prisma-sqlite",
         webDeploy: "docker",
@@ -2114,7 +2117,7 @@ describe("Deployment Configurations", () => {
       expect(readme).not.toContain("Docker Compose uses the local");
     });
 
-    it("should route SolidStart SSR requests through the internal Docker server URL", async () => {
+    it("should route Solid 2 SSR requests through the internal Docker server URL", async () => {
       const result = await createVirtual({
         projectName: "docker-solid-external-server",
         webDeploy: "docker",

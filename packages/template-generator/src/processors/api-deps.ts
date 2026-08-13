@@ -258,7 +258,7 @@ function addQueryDeps(vfs: VirtualFileSystem, frontend: Frontend[], backend: Bac
     addPackageDependency({
       vfs,
       packagePath: webPath,
-      dependencies: ["@tanstack/solid-query"],
+      dependencies: ["@tanstack/solid-query", "@tanstack/query-core"],
       devDependencies: ["@tanstack/solid-query-devtools"],
     });
   }

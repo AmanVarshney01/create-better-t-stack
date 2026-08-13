@@ -19,14 +19,14 @@ Cloudflare supports a separate Hono server on the Workers runtime and supported 
 
 Prisma supports:
 
-- web: Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, and SolidStart
+- web: Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, and Solid
 - server: Hono, Express, Fastify, and Elysia on Bun or Node
 - mixed stacks, such as Cloudflare web + Prisma server or Prisma web + Cloudflare server
 
 The CLI rejects unsupported framework/runtime combinations before writing files.
 
 Alchemy's automatic framework builds handle Next.js, Nuxt, Astro, and TanStack Start. The generated
-stack supplies explicit production artifacts for the remaining frameworks: SolidStart's Nitro
+stack supplies explicit production artifacts for the remaining frameworks: Solid's Nitro
 server, React Router's documented custom Express server, and SvelteKit's official `adapter-node`
 server. TanStack Router is rejected for Prisma deployment because it emits static SPA assets while
 `Prisma.Compute` requires an executable server artifact; the generator does not synthesize a static
@@ -34,7 +34,7 @@ file server or use Vite's development-oriented preview command.
 
 Cloudflare web deployment uses Alchemy's released framework resources where they match the
 generated stable framework: `Website.Nuxt` for Nuxt, `Website.Astro` for Astro, and `Website.Vite`
-for React Router, TanStack Router, TanStack Start, and SolidStart. Next.js and stable SvelteKit keep
+for React Router, TanStack Router, TanStack Start, and Solid. Next.js and stable SvelteKit keep
 their qualified `StaticSite` paths until the released first-class resources accept the latest
 OpenNext and stable SvelteKit versions.
 
@@ -47,7 +47,7 @@ Postgres Prisma setup remains supported with the other Cloudflare SSR frontends 
 Docker, or Vercel deployment.
 
 ```bash
-# Full-stack SolidStart on Prisma with PlanetScale MySQL
+# Full-stack Solid on Prisma with PlanetScale MySQL
 bunx create-better-t-stack@latest my-app \
   --frontend solid \
   --backend self \

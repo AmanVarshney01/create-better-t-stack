@@ -10,6 +10,12 @@ function writeEnv(writer: AlchemyWriter, entries: readonly string[]): void {
   writeObject(writer, "env: {", () => writeLines(writer, entries), "},");
 }
 
+function cloudflareDevPort(framework: DeployedWebFramework): number {
+  if (framework === "react-router" || framework === "svelte") return 5173;
+  if (framework === "astro") return 4321;
+  return 3001;
+}
+
 function writeStaticSite(
   writer: AlchemyWriter,
   plan: AlchemyDeploymentPlan,
@@ -64,7 +70,7 @@ function writeStaticSite(
         "dev: {",
         () => {
           writer.writeLine(`command: "${plan.config.packageManager} run dev:bare",`);
-          writer.writeLine(`url: "http://localhost:${framework === "svelte" ? "5173" : "3001"}",`);
+          writer.writeLine(`url: "http://localhost:${cloudflareDevPort(framework)}",`);
         },
         "},",
       );
@@ -80,6 +86,12 @@ function writeNuxt(writer: AlchemyWriter, declaration: string, entries: readonly
     () => {
       writer.writeLine('rootDir: "../../apps/web",');
       writeEnv(writer, entries);
+      writeObject(
+        writer,
+        "dev: {",
+        () => writer.writeLine(`port: ${cloudflareDevPort("nuxt")},`),
+        "},",
+      );
     },
     "});",
   );
@@ -92,6 +104,12 @@ function writeAstro(writer: AlchemyWriter, declaration: string, entries: readonl
     () => {
       writer.writeLine('rootDir: "../../apps/web",');
       writeEnv(writer, entries);
+      writeObject(
+        writer,
+        "dev: {",
+        () => writer.writeLine(`port: ${cloudflareDevPort("astro")},`),
+        "},",
+      );
     },
     "});",
   );
@@ -139,6 +157,12 @@ function writeVite(
         );
       }
       writeEnv(writer, entries);
+      writeObject(
+        writer,
+        "dev: {",
+        () => writer.writeLine(`port: ${cloudflareDevPort(framework)},`),
+        "},",
+      );
     },
     "});",
   );

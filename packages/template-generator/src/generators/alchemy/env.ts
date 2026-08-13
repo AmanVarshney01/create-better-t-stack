@@ -25,9 +25,13 @@ export function databaseBindingEntries(plan: AlchemyDeploymentPlan): string[] {
   return [];
 }
 
-function commonRuntimeEntries(plan: AlchemyDeploymentPlan): string[] {
+function commonRuntimeEntries(plan: AlchemyDeploymentPlan, includeCorsOrigin = true): string[] {
   const { auth, dbSetup, payments } = plan.config;
-  const entries = [...databaseBindingEntries(plan), 'CORS_ORIGIN: Config.string("CORS_ORIGIN"),'];
+  const entries = [...databaseBindingEntries(plan)];
+
+  if (includeCorsOrigin) {
+    entries.push('CORS_ORIGIN: Config.string("CORS_ORIGIN"),');
+  }
 
   if (auth === "better-auth") {
     entries.push(
@@ -119,7 +123,7 @@ export function selfCloudflareWebEnvEntries(
     );
   }
 
-  entries.push(...commonRuntimeEntries(plan));
+  entries.push(...commonRuntimeEntries(plan, false));
 
   if (auth === "clerk" && ["next", "solid", "tanstack-start"].includes(framework)) {
     const insertAt = entries.findIndex(
@@ -210,7 +214,7 @@ export function prismaWebEnvEntries(
   const entries: string[] = [];
 
   if (plan.web.target !== "none" && plan.web.topology === "self") {
-    entries.push("...resolvedDatabaseEnv,", 'CORS_ORIGIN: Config.string("CORS_ORIGIN"),');
+    entries.push("...resolvedDatabaseEnv,");
     if (auth === "better-auth") {
       entries.push(
         'BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),',

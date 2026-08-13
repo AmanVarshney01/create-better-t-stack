@@ -127,6 +127,8 @@ export async function displayPostInstallInstructions(
     webDeploy,
     serverDeploy,
     backend,
+    config.auth,
+    frontend || [],
   );
 
   const hasWeb = frontend?.some((f) => (webFrontends as readonly string[]).includes(f));
@@ -697,6 +699,8 @@ function getAlchemyDeployInstructions(
   webDeploy: WebDeploy,
   serverDeploy: ServerDeploy,
   backend: Backend,
+  auth: ProjectConfig["auth"],
+  frontend: Frontend[],
 ) {
   const instructions: string[] = [];
   const isBackendSelf = backend === "self";
@@ -717,8 +721,27 @@ function getAlchemyDeployInstructions(
         : serverDeploy === "vercel"
           ? "deploy:web"
           : "deploy";
+    const originSteps: string[] = [];
+    const hasWeb = frontend.some((value) => (webFrontends as readonly string[]).includes(value));
+
+    if (!isBackendSelf && hasAlchemyServer && hasWeb) {
+      originSteps.push(
+        `${pc.cyan("•")} After the first deploy, set CORS_ORIGIN in apps/server/.env to the deployed web origin, then deploy again`,
+      );
+    }
+
+    if (auth === "better-auth" && isBackendSelf && webDeploy === "prisma") {
+      originSteps.push(
+        `${pc.cyan("•")} After the first deploy, set BETTER_AUTH_URL in apps/web/.env to the returned web URL, then deploy again`,
+      );
+    } else if (auth === "better-auth" && !isBackendSelf && serverDeploy === "prisma") {
+      originSteps.push(
+        `${pc.cyan("•")} After the first deploy, set BETTER_AUTH_URL in apps/server/.env to the returned server URL, then deploy again`,
+      );
+    }
+
     instructions.push(
-      `${pc.bold(`Deploy with Alchemy (${targetParts.join(" + ")}):`)}\n${pc.cyan("•")} Configure provider login: ${`cd packages/infra && ${alchemyExec} alchemy login --configure`}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${deployScript}`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
+      `${pc.bold(`Deploy with Alchemy (${targetParts.join(" + ")}):`)}\n${pc.cyan("•")} Configure provider login: ${`cd packages/infra && ${alchemyExec} alchemy login --configure`}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${deployScript}`}\n${originSteps.join("\n")}${originSteps.length > 0 ? "\n" : ""}${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
     );
   }
 

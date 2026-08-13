@@ -34,6 +34,60 @@ async function generate(overrides: Partial<CreateOptions>) {
 }
 
 describe("Alchemy providers", () => {
+  it("keeps Cloudflare development on each framework's documented frontend port", async () => {
+    const scenarios = [
+      { frontend: "tanstack-router", port: 3001 },
+      { frontend: "react-router", port: 5173 },
+      { frontend: "tanstack-start", port: 3001 },
+      { frontend: "next", port: 3001 },
+      { frontend: "nuxt", port: 3001 },
+      { frontend: "svelte", port: 5173 },
+      { frontend: "solid", port: 3001 },
+      { frontend: "astro", port: 4321 },
+    ] as const;
+
+    for (const scenario of scenarios) {
+      const files = await generate({
+        projectName: `cloudflare-dev-${scenario.frontend}`,
+        frontend: [scenario.frontend],
+      });
+      const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
+
+      if (scenario.frontend === "next" || scenario.frontend === "svelte") {
+        expect(infra).toContain(`url: "http://localhost:${scenario.port}"`);
+      } else {
+        expect(infra).toContain(`dev: {\n        port: ${scenario.port},\n      }`);
+      }
+    }
+  });
+
+  it("keeps self-hosted applications same-origin", async () => {
+    const cloudflareFiles = await generate({
+      projectName: "cloudflare-self-origin",
+      frontend: ["solid"],
+      backend: "self",
+      runtime: "none",
+      webDeploy: "cloudflare",
+      serverDeploy: "none",
+    });
+    const prismaFiles = await generate({
+      projectName: "prisma-self-origin",
+      frontend: ["solid"],
+      backend: "self",
+      runtime: "none",
+      webDeploy: "prisma",
+      serverDeploy: "none",
+    });
+
+    const cloudflareInfra = cloudflareFiles.get("packages/infra/alchemy.run.ts") ?? "";
+    const prismaInfra = prismaFiles.get("packages/infra/alchemy.run.ts") ?? "";
+
+    expect(cloudflareInfra).not.toContain("CORS_ORIGIN");
+    expect(cloudflareInfra).toContain("BETTER_AUTH_URL: Cloudflare.Worker.URL");
+    expect(prismaInfra).not.toContain("CORS_ORIGIN");
+    expect(prismaInfra).toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
+  });
+
   it("rejects OpenNext combinations that are broken in the current release", async () => {
     const nextPlanetScalePostgres = await createVirtual({
       ...baseConfig,

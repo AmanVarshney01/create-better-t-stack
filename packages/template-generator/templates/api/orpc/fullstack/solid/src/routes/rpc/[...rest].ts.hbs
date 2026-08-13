@@ -5,7 +5,7 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
-import type { APIEvent } from "@solidjs/start/server";
+import type { APIHandler } from "filesystem-routing/api";
 
 const rpcHandler = new RPCHandler(appRouter, {
 	interceptors: [
@@ -28,7 +28,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	],
 });
 
-async function handle({ request }: APIEvent) {
+const handle: APIHandler = async ({ request }) => {
 	const context = await createContext({ headers: request.headers });
 
 	const rpcResult = await rpcHandler.handle(request, {
@@ -44,7 +44,7 @@ async function handle({ request }: APIEvent) {
 	if (apiResult.response) return apiResult.response;
 
 	return new Response("Not found", { status: 404 });
-}
+};
 
 export const HEAD = handle;
 export const GET = handle;

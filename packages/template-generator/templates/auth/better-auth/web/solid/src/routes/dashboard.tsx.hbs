@@ -6,27 +6,30 @@ import { orpc } from "~/utils/orpc";
 import {
 	createEffect,
 {{#if (eq payments "polar")}}
-	createResource,
+	createMemo,
 {{/if}}
 	Show,
 } from "solid-js";
-import { authClient } from "~/lib/auth-client";
+import { {{#if (eq payments "polar")}}authClient, {{/if}}useSession } from "~/lib/auth-client";
 
 export default function Dashboard() {
 	const navigate = useNavigate();
-	const session = authClient.useSession();
+	const session = useSession();
 	{{#if (eq payments "polar")}}
-	const [customerState] = createResource(
-		() => session().data?.user.id,
-		async () => (await authClient.customer.state()).data,
-	);
+	const customerState = createMemo(async () => {
+		if (!session().data?.user.id) return;
+		return (await authClient.customer.state()).data;
+	});
 	{{/if}}
 
-	createEffect(() => {
-		if (!session().isPending && !session().data) {
+	createEffect(
+		() => !session().isPending && !session().data,
+		(shouldRedirect) => {
+		if (shouldRedirect) {
 			navigate("/login", { replace: true });
 		}
-	});
+		},
+	);
 
 	{{#if (eq api "orpc")}}
 	const privateData = useQuery(() => ({

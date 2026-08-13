@@ -107,7 +107,7 @@ Cloudflare resources SHALL preserve dependency ordering and pass resolved values
 
 ### Requirement: Framework-specific Cloudflare paths
 
-Each web framework SHALL use the intentional generated resource and runtime entry described by the accepted-version design: `Website.Vite` with single-page-application asset handling for TanStack Router, worker-first `Website.Vite` SSR for SolidStart v2, explicit-entry `Website.Vite` for React Router, `Website.Vite` for TanStack Start, `Website.Astro` for Astro, and qualified generic `StaticSite` paths for Next.js, Nuxt, and SvelteKit until their first-class providers pass the generated framework's independent gates. A framework path SHALL not change solely because another framework's gate passed.
+Each web framework SHALL use the intentional generated resource and runtime entry described by the accepted-version design: `Website.Vite` with single-page-application asset handling for TanStack Router, worker-first `Website.Vite` SSR for Solid 2, explicit-entry `Website.Vite` for React Router, `Website.Vite` for TanStack Start, `Website.Nuxt` for Nuxt, `Website.Astro` for Astro, and qualified generic `StaticSite` paths for Next.js and SvelteKit until their first-class providers pass the generated framework's independent gates. A framework path SHALL not change solely because another framework's gate passed.
 
 #### Scenario: Verify Nuxt support
 
@@ -321,9 +321,9 @@ Until their individual removal gates pass, the generator SHALL retain the worksp
 - **THEN** it SHALL use `Website.Vite` with single-page-application asset handling
 - **AND** a direct client-side route request SHALL receive the SPA fallback
 
-#### Scenario: Deploy SolidStart v2 SSR
+#### Scenario: Deploy Solid 2 SSR
 
-- **WHEN** SolidStart deploys with the accepted Alchemy version
+- **WHEN** Solid 2 deploys with the accepted Alchemy version
 - **THEN** it SHALL use `Website.Vite` with worker-first asset routing and a server entry
 - **AND** document, Better Auth, and oRPC requests SHALL execute through the SSR Worker
 

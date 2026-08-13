@@ -21,7 +21,7 @@ export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectCon
     }
   } else if (frontend.includes("solid") && backend === "self") {
     writeDevWranglerConfig(vfs, config);
-    writeSolidStartDevEnvProxy(vfs, config);
+    writeSolidDevEnvProxy(vfs, config);
   }
 }
 
@@ -42,7 +42,7 @@ function processManagedPrismaMigrations(vfs: VirtualFileSystem, config: ProjectC
   vfs.deleteFile(`${migrationRoot}/.gitkeep`);
 }
 
-function writeSolidStartDevEnvProxy(vfs: VirtualFileSystem, config: ProjectConfig) {
+function writeSolidDevEnvProxy(vfs: VirtualFileSystem, config: ProjectConfig) {
   const proxyPath = "apps/web/cloudflare-workers.dev.ts";
 
   if (config.dbSetup !== "d1") {

@@ -1,8 +1,8 @@
-import { MetaProvider, Title } from "@solidjs/meta";
-import { Router } from "@solidjs/router";
-import { FileRoutes } from "@solidjs/start/router";
-import { Suspense } from "solid-js";
+import { Title } from "@solidjs/meta";
+import { Loading } from "solid-js";
 import Header from "~/components/header";
+import Loader from "~/components/loader";
+import { Router } from "~/router";
 {{#if (eq api "orpc")}}
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";
@@ -16,27 +16,23 @@ export default function App() {
 {{/if}}
 
   return (
-    <Router
-      root={(props) => (
 {{#if (eq api "orpc")}}
-        <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
 {{/if}}
-          <MetaProvider>
+      <Router>
+        {(props) => (
+          <>
             <Title>{{projectName}}</Title>
             <div class="grid h-svh grid-rows-[auto_1fr]">
               <Header />
-              <Suspense>{props.children}</Suspense>
+              <Loading fallback={<Loader />}>{props.children}</Loading>
             </div>
+          </>
+        )}
+      </Router>
 {{#if (eq api "orpc")}}
-            <SolidQueryDevtools />
+      <SolidQueryDevtools />
+    </QueryClientProvider>
 {{/if}}
-          </MetaProvider>
-{{#if (eq api "orpc")}}
-        </QueryClientProvider>
-{{/if}}
-      )}
-    >
-      <FileRoutes />
-    </Router>
   );
 }
