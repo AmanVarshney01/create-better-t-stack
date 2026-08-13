@@ -1988,14 +1988,17 @@ describe("Deployment Configurations", () => {
 
       expect(webPkg.dependencies.libsql).toBeDefined();
       expect(compose).toContain("DATABASE_URL: file:/data/local.db");
-      expect(compose).toContain("source: ./local.db");
-      expect(compose).toContain("target: /data/local.db");
+      expect(compose).toContain("source: ./.data");
+      expect(compose).toContain("target: /data");
       expect(compose).toContain("create_host_path: false");
       expect(compose).not.toContain("db-init:");
+      expect(files.get("apps/web/.env")).toContain("DATABASE_URL=file:../../.data/local.db");
+      expect(files.get(".data/.gitignore")).toBe("*\n!.gitignore\n");
+      expect(files.get(".dockerignore")).toContain(".data");
       expect(files.get(".dockerignore")).toContain("local.db-*");
       expect(files.get(".gitignore")).toContain("local.db-*");
       expect(readme).toContain(
-        "Docker Compose uses the local `./local.db` file. Run `pnpm run db:push` before starting the stack.",
+        "Docker Compose uses the local `./.data/local.db` file. Run `pnpm run db:push` before starting the stack.",
       );
     });
 
@@ -2028,11 +2031,46 @@ describe("Deployment Configurations", () => {
 
       expect(compose).toContain("dockerfile: apps/server/Dockerfile");
       expect(compose).toContain("DATABASE_URL: file:/data/local.db");
-      expect(compose).toContain("source: ./local.db");
-      expect(compose).toContain("target: /data/local.db");
+      expect(compose).toContain("source: ./.data");
+      expect(compose).toContain("target: /data");
       expect(compose).toContain("create_host_path: false");
       expect(compose).not.toContain("db-init:");
+      expect(files.get("apps/server/.env")).toContain("DATABASE_URL=file:../../.data/local.db");
+      expect(files.get(".data/.gitignore")).toBe("*\n!.gitignore\n");
       expect(serverPkg.dependencies.libsql).toBeDefined();
+    });
+
+    it("should only document SQLite setup when Docker runs the database consumer", async () => {
+      const result = await createVirtual({
+        projectName: "docker-web-cloudflare-server-sqlite",
+        webDeploy: "docker",
+        serverDeploy: "cloudflare",
+        backend: "hono",
+        runtime: "workers",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) throw result.error;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml") ?? "";
+      const readme = files.get("README.md") ?? "";
+
+      expect(compose).not.toContain("DATABASE_URL: file:/data/local.db");
+      expect(compose).not.toContain("source: ./.data");
+      expect(files.has(".data/.gitignore")).toBe(false);
+      expect(readme).not.toContain("Docker Compose uses the local");
     });
 
     it("should route SolidStart SSR requests through the internal Docker server URL", async () => {
