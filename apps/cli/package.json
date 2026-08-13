@@ -85,7 +85,7 @@
     "jsonc-parser": "^3.3.1",
     "oxfmt": "^0.63.0",
     "picocolors": "^1.1.1",
-    "semver": "catalog:",
+    "semver": "^7.8.5",
     "tinyglobby": "^0.2.17",
     "trpc-cli": "^0.16.0",
     "ts-morph": "^28.0.0",
@@ -96,7 +96,7 @@
     "@types/bun": "^1.3.14",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^26.1.2",
-    "@types/semver": "catalog:",
+    "@types/semver": "^7.8.0",
     "publint": "^0.3.22",
     "tsdown": "^0.22.14",
     "typescript": "^6.0.3"
