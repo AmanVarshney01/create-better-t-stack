@@ -164,9 +164,9 @@ export const dependencyVersionMap = {
 
   // exact pins: caret ranges on prereleases can resolve to stray npm test tags
   alchemy: "2.0.0-beta.72",
-  effect: "4.0.0-beta.107",
-  "@effect/platform-node": "4.0.0-beta.107",
-  "@effect/platform-bun": "4.0.0-beta.107",
+  effect: "4.0.0-rc.108",
+  "@effect/platform-node": "4.0.0-rc.108",
+  "@effect/platform-bun": "4.0.0-rc.108",
   vercel: "^58.1.0",
 
   dotenv: "^17.4.2",

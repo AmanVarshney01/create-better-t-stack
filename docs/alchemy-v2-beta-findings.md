@@ -32,7 +32,7 @@ unless they explicitly say live-reverified. Registry and OAuth observations are 
 | A8  | Worker Assets assigns incomplete MIME types                         | Fixed in released source     | beta.72 covers the reported image, font, media, manifest, map, and JavaScript types                          | Rerun the representative live MIME fixture; no template workaround             |
 | A9  | Published Cloudflare packages have incompatible peer ranges         | Fixed in released graph      | beta.72 consolidates runtime/framework packages with aligned Distilled and Effect peers                      | No template override                                                           |
 | A10 | beta.66 local D1 migrations cannot open the Cloudflare runtime      | Fixed and locally qualified  | Released through merged [#1009](https://github.com/alchemy-run/alchemy/pull/1009)                            | beta.70 applies real nested Prisma migrations in `alchemy dev`                 |
-| A11 | Alchemy calls removed `Schema.TaggedErrorClass` with newer Effect   | Fixed                        | Released in beta.72 through merged [#1132](https://github.com/alchemy-run/alchemy/pull/1132)                 | Use Effect beta.107 directly; no compatibility pin or override                 |
+| A11 | Alchemy calls removed `Schema.TaggedErrorClass` with newer Effect   | Fixed                        | Released in beta.72 through merged [#1132](https://github.com/alchemy-run/alchemy/pull/1132)                 | Use Effect rc.108 directly; no compatibility pin or override                   |
 | A12 | `Website.Nuxt` injects raw TypeScript that Nitro cannot parse       | Fixed                        | beta.72 ships compiled Nuxt development code in `@alchemy.run/cloudflare-frameworks`                         | Use native `Website.Nuxt`; remove the generic Nitro/Wrangler path              |
 | A13 | Alchemy pins optional Drizzle peers to an exact prerelease          | Non-blocking packaging issue | npm hoists the app's stable Drizzle and reports Alchemy's optional peer as invalid; install/build/start pass | Support npm without changing app Drizzle; upstream should widen the peer range |
 
@@ -153,8 +153,8 @@ cause the next normal deploy to rebuild the frontend.
 was observed satisfying a caret beta range under Bun despite lacking expected Cloudflare exports.
 The package is now deprecated on npm, but it remains published. Better-T-Stack pins
 `2.0.0-beta.72` exactly together with `effect`, `@effect/platform-node`, and
-`@effect/platform-bun` beta.107. This keeps the accepted set inside beta.72's published API
-contract while preventing an unrelated prerelease from entering generated projects.
+`@effect/platform-bun` rc.108. This keeps the Effect package family aligned while preventing an
+unrelated prerelease from entering generated projects.
 
 Exact pinning is a permanent publication-safety policy, not a temporary workaround. Changing the
 accepted release means replacing one verified exact version with another verified exact version;
@@ -249,8 +249,8 @@ files accept the broad peer range; typechecking does not prove CLI startup.
 
 Merged [Alchemy PR #1132](https://github.com/alchemy-run/alchemy/pull/1132) replaces
 `Schema.TaggedErrorClass` with `Schema.TaggedError` and raises the Effect floor. Beta.72 contains
-that fix. Fresh beta.72 + Effect beta.107 Bun, npm, and pnpm projects install, import Alchemy and the
-Cloudflare framework resources, and start without the old crash. Better-T-Stack therefore removed
+that fix. Fresh beta.72 + Effect rc.108 Bun, npm, and pnpm projects install, typecheck, and start the
+Alchemy CLI without the old crash. Better-T-Stack therefore removed
 the beta.102 compatibility pin instead of carrying an override, patch, hoisted linker, or git
 dependency.
 

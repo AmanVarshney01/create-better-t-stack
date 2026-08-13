@@ -952,9 +952,9 @@ describe("Deployment Configurations", () => {
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
         alchemy: "2.0.0-beta.72",
-        effect: "4.0.0-beta.107",
-        "@effect/platform-node": "4.0.0-beta.107",
-        "@effect/platform-bun": "4.0.0-beta.107",
+        effect: "4.0.0-rc.108",
+        "@effect/platform-node": "4.0.0-rc.108",
+        "@effect/platform-bun": "4.0.0-rc.108",
       });
       expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
         infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
