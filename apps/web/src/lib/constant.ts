@@ -419,6 +419,7 @@ export const TECH_OPTIONS = {
       description: "Deploy to Vercel with Services",
       icon: `${ICON_BASE_URL}/vercel.svg`,
       color: "from-gray-700 to-black",
+      experimental: true,
     },
     {
       id: "none",
@@ -457,6 +458,7 @@ export const TECH_OPTIONS = {
       description: "Deploy to Vercel with Services",
       icon: `${ICON_BASE_URL}/vercel.svg`,
       color: "from-gray-700 to-black",
+      experimental: true,
     },
     {
       id: "none",
@@ -744,6 +746,7 @@ export const TECH_OPTIONS = {
     color: string;
     default?: boolean;
     className?: string;
+    experimental?: boolean;
   }[]
 >;
 

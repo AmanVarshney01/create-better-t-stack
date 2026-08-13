@@ -577,6 +577,15 @@ describe("stack builder option parity", () => {
       [...SERVER_DEPLOY_VALUES].sort(),
     );
   });
+
+  test("marks only Vercel deployment as experimental", () => {
+    for (const category of [TECH_OPTIONS.webDeploy, TECH_OPTIONS.serverDeploy]) {
+      for (const option of category) {
+        const isExperimental = "experimental" in option && option.experimental === true;
+        expect(isExperimental).toBe(option.id === "vercel");
+      }
+    }
+  });
 });
 
 describe("stack builder Prisma deployment compatibility", () => {

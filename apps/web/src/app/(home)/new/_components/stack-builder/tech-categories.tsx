@@ -147,6 +147,11 @@ export function TechCategories({
                             >
                               {tech.name}
                             </span>
+                            {"experimental" in tech && tech.experimental && (
+                              <span className="ml-1.5 shrink-0 rounded-[3px] border border-amber-500/30 bg-amber-500/10 px-1 py-0.5 font-mono text-[9px] text-amber-700 uppercase leading-none tracking-[0.08em] dark:text-amber-300">
+                                Experimental
+                              </span>
+                            )}
                           </div>
                           {isSelected && (
                             <CheckCircle2
