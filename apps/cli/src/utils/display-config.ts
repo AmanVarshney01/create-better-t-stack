@@ -28,7 +28,7 @@ const VALUE_LABELS = {
   next: "Next.js",
   nuxt: "Nuxt",
   svelte: "SvelteKit",
-  solid: "Solid 2",
+  solid: "Solid",
   astro: "Astro",
   "native-bare": "Expo (bare)",
   "native-uniwind": "Expo + Uniwind",

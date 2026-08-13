@@ -42,7 +42,7 @@ describe("stack builder D1 compatibility", () => {
 
     expect(getDisabledReason(stack, "backend", "self-solid")).toBeNull();
     expect(getDisabledReason(stack, "api", "trpc")).toBe(
-      "tRPC is not compatible with Solid 2 (use oRPC)",
+      "tRPC is not compatible with Solid (use oRPC)",
     );
     expect(getDisabledReason(stack, "addons", "evlog")).toBe(
       "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend",
@@ -611,7 +611,7 @@ describe("stack builder Prisma deployment compatibility", () => {
       expect(
         getDisabledReason(createStack({ webFrontend: [frontend] }), "webDeploy", "prisma"),
       ).toBe(
-        "Prisma requires Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or Solid 2",
+        "Prisma requires Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or Solid",
       );
     }
   });

@@ -134,7 +134,7 @@ export function validateSelfBackendCompatibility(
 
     if (!hasSupportedWeb) {
       return validationErr(
-        "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, Nuxt, SvelteKit, Solid 2, and Astro frontends. Please use --frontend next, --frontend tanstack-start, --frontend nuxt, --frontend svelte, --frontend solid, or --frontend astro.",
+        "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, Nuxt, SvelteKit, Solid, and Astro frontends. Please use --frontend next, --frontend tanstack-start, --frontend nuxt, --frontend svelte, --frontend solid, or --frontend astro.",
       );
     }
 
@@ -148,7 +148,7 @@ export function validateSelfBackendCompatibility(
   const hasFullstackFrontend = frontends.some((f) => FULLSTACK_FRONTENDS.includes(f));
   if (providedFlags.has("backend") && !hasFullstackFrontend && backend === "self") {
     return validationErr(
-      "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, Nuxt, SvelteKit, Solid 2, and Astro frontends. Please use --frontend next, --frontend tanstack-start, --frontend nuxt, --frontend svelte, --frontend solid, --frontend astro, or choose a different backend.",
+      "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, Nuxt, SvelteKit, Solid, and Astro frontends. Please use --frontend next, --frontend tanstack-start, --frontend nuxt, --frontend svelte, --frontend solid, --frontend astro, or choose a different backend.",
     );
   }
 
@@ -408,7 +408,7 @@ export function validatePrismaWebDeploy(
 
   if (!supportsPrismaWebDeploy(frontend)) {
     return validationErr(
-      "'--web-deploy prisma' requires a supported server frontend. Choose Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or Solid 2. TanStack Router is a static SPA, while Prisma Compute requires an executable server artifact.",
+      "'--web-deploy prisma' requires a supported server frontend. Choose Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or Solid. TanStack Router is a static SPA, while Prisma Compute requires an executable server artifact.",
     );
   }
 

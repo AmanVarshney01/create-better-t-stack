@@ -85,7 +85,7 @@ function getNodeToolingRequirements(config: RequirementConfig): VersionRequireme
         addNodeRequirement(requirements, "^22.19.0 || ^24.11.0 || >=26.0.0", "Nuxt 4");
         break;
       case "solid":
-        addNodeRequirement(requirements, ">=24.0.0", "Solid 2");
+        addNodeRequirement(requirements, ">=24.0.0", "Solid");
         break;
       case "react-router":
         addNodeRequirement(requirements, ">=22.22.0", "React Router 8");
