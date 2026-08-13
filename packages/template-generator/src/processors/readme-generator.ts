@@ -249,7 +249,14 @@ ${
     ? "\n## PWA Support with React Router v7\n\nThere is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809\n"
     : ""
 }
-${generateDeploymentCommands(packageManagerRunCmd, webDeploy, serverDeploy, backend)}
+${generateDeploymentCommands(
+  packageManagerRunCmd,
+  webDeploy,
+  serverDeploy,
+  backend,
+  database,
+  dbSetup,
+)}
 ${generateGitHooksSection(packageManagerRunCmd, addons)}
 
 ## Project Structure
@@ -833,6 +840,8 @@ function generateDeploymentCommands(
   webDeploy: ProjectConfig["webDeploy"],
   serverDeploy: ProjectConfig["serverDeploy"],
   backend: ProjectConfig["backend"],
+  database: ProjectConfig["database"],
+  dbSetup: ProjectConfig["dbSetup"],
 ): string {
   const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
   const hasPrismaCompute = webDeploy === "prisma" || serverDeploy === "prisma";
@@ -906,6 +915,16 @@ function generateDeploymentCommands(
       `- Stop: ${packageManagerRunCmd} docker:down`,
       "",
       "Environment variables are read from each app's `.env` file (baked into web builds for public variables) and overridden in `docker-compose.yml` for container networking.",
+    );
+
+    if (database === "sqlite" && dbSetup === "none") {
+      lines.push(
+        "",
+        `Docker Compose uses the local \`./local.db\` file. Run \`${packageManagerRunCmd} db:push\` before starting the stack.`,
+      );
+    }
+
+    lines.push(
       "",
       "For more details, see the guide on [Deploying with Docker Compose](https://www.better-t-stack.dev/docs/guides/docker).",
     );

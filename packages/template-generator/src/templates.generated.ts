@@ -15305,6 +15305,8 @@ build
 
 # Generated files
 apps/web/src/routeTree.gen.ts
+local.db
+local.db-*
 
 # Environment variables
 .env
@@ -16372,6 +16374,9 @@ docker-compose.yml
 **/.env
 **/.env.*
 !**/.env.example
+
+local.db
+local.db-*
 `],
   ["deploy/docker/compose/docker-compose.yml.hbs", `name: {{projectName}}
 
@@ -16404,11 +16409,14 @@ services:
       - path: apps/web/.env
         required: false
 {{#if (eq backend "self")}}
-{{#if (or (eq dbSetup "docker") (eq auth "better-auth"))}}
+{{#if (or (eq dbSetup "docker") (eq auth "better-auth") (and (eq database "sqlite") (eq dbSetup "none")))}}
     environment:
 {{#if (eq auth "better-auth")}}
       BETTER_AUTH_URL: http://localhost:3001
       CORS_ORIGIN: http://localhost:3001
+{{/if}}
+{{#if (and (eq database "sqlite") (eq dbSetup "none"))}}
+      DATABASE_URL: file:/data/local.db
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "postgres"))}}
       DATABASE_URL: postgresql://postgres:\${POSTGRES_PASSWORD:-password}@postgres:5432/{{projectName}}
@@ -16424,6 +16432,13 @@ services:
     depends_on:
       {{database}}:
         condition: service_healthy
+{{else if (and (eq database "sqlite") (eq dbSetup "none"))}}
+    volumes:
+      - type: bind
+        source: ./local.db
+        target: /data/local.db
+        bind:
+          create_host_path: false
 {{/if}}
 {{else}}
 {{#if (eq serverDeploy "docker")}}
@@ -16476,10 +16491,13 @@ services:
     env_file:
       - path: apps/server/.env
         required: false
-{{#if (or (eq webDeploy "docker") (eq dbSetup "docker"))}}
+{{#if (or (eq webDeploy "docker") (eq dbSetup "docker") (and (eq database "sqlite") (eq dbSetup "none")))}}
     environment:
 {{#if (eq webDeploy "docker")}}
       CORS_ORIGIN: http://localhost:3001
+{{/if}}
+{{#if (and (eq database "sqlite") (eq dbSetup "none"))}}
+      DATABASE_URL: file:/data/local.db
 {{/if}}
 {{#if (and (eq dbSetup "docker") (eq database "postgres"))}}
       DATABASE_URL: postgresql://postgres:\${POSTGRES_PASSWORD:-password}@postgres:5432/{{projectName}}
@@ -16511,6 +16529,13 @@ services:
     depends_on:
       {{database}}:
         condition: service_healthy
+{{else if (and (eq database "sqlite") (eq dbSetup "none"))}}
+    volumes:
+      - type: bind
+        source: ./local.db
+        target: /data/local.db
+        bind:
+          create_host_path: false
 {{/if}}
     restart: unless-stopped
 
