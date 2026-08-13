@@ -173,7 +173,7 @@ describe("post-install instructions", () => {
 
     const output = stdout.mock.calls.map(([chunk]) => String(chunk)).join("");
 
-    expect(output).toContain("CORS_ORIGIN in apps/server/.env");
+    expect(output).toContain("Required after the first deploy: set CORS_ORIGIN");
     expect(output).toContain("BETTER_AUTH_URL in apps/server/.env");
   });
 

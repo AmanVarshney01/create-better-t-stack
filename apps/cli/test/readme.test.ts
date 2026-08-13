@@ -109,7 +109,7 @@ describe("README generation", () => {
     });
 
     expect(readme).toContain(
-      "set `CORS_ORIGIN` in `apps/server/.env` to the exact deployed web origin",
+      "Required after the first deploy: set `CORS_ORIGIN` in `apps/server/.env`",
     );
     expect(readme).toContain(
       "set `BETTER_AUTH_URL` in `apps/server/.env` to the returned server URL",
