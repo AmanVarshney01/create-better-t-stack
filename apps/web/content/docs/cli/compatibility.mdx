@@ -91,17 +91,17 @@ When using `--backend none`, the following options are automatically set:
 
 ### API Framework Support
 
-| Frontend          | tRPC Support | oRPC Support | Notes                             |
-| ----------------- | ------------ | ------------ | --------------------------------- |
-| `tanstack-router` | ✅           | ✅           | Full support                      |
-| `react-router`    | ✅           | ✅           | Full support                      |
-| `tanstack-start`  | ✅           | ✅           | Full support                      |
-| `next`            | ✅           | ✅           | Full support                      |
-| `nuxt`            | ❌           | ✅           | tRPC not supported                |
-| `svelte`          | ❌           | ✅           | tRPC not supported                |
-| `solid`           | ❌           | ✅           | SolidStart v2; tRPC not supported |
-| `astro`           | ❌           | ✅           | tRPC not supported                |
-| Native frameworks | ✅           | ✅           | Full support                      |
+| Frontend          | tRPC Support | oRPC Support | Notes                       |
+| ----------------- | ------------ | ------------ | --------------------------- |
+| `tanstack-router` | ✅           | ✅           | Full support                |
+| `react-router`    | ✅           | ✅           | Full support                |
+| `tanstack-start`  | ✅           | ✅           | Full support                |
+| `next`            | ✅           | ✅           | Full support                |
+| `nuxt`            | ❌           | ✅           | tRPC not supported          |
+| `svelte`          | ❌           | ✅           | tRPC not supported          |
+| `solid`           | ❌           | ✅           | Solid 2; tRPC not supported |
+| `astro`           | ❌           | ✅           | tRPC not supported          |
+| Native frameworks | ✅           | ✅           | Full support                |
 
 ```bash
 # ❌ Invalid - Nuxt with tRPC
@@ -221,7 +221,7 @@ Clerk authentication requires:
 - Compatible frontends (React frameworks, Next.js, TanStack Start, native frameworks)
 - Supported backends: Convex, Hono, Express, Fastify, and Elysia
 - Fullstack (`--backend self`) support with Next.js or TanStack Start
-- Not compatible with Nuxt, Svelte, SolidStart, or Astro
+- Not compatible with Nuxt, Svelte, Solid 2, or Astro
 
 ### Payments Requirements
 

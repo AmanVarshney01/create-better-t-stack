@@ -152,6 +152,16 @@ export async function processAuthTemplates(
         config,
       );
     }
+
+    if (hasSolidWeb && authProvider === "better-auth") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        "auth/better-auth/client/solid",
+        "packages/auth",
+        config,
+      );
+    }
   }
 
   if (hasReactWeb) {

@@ -1,6 +1,19 @@
 packages:
   - "apps/*"
   - "packages/*"
+{{#if (includes frontend "solid")}}
+
+minimumReleaseAgeExclude:
+  - "@solidjs/meta@1.0.0-next.2"
+  - "@solidjs/router@2.0.0-next.16"
+  - "@solidjs/signals@2.0.0-rc.0"
+  - "@solidjs/vite-plugin@3.0.0-next.28"
+  - "@solidjs/web@2.0.0-rc.0"
+  - "@tanstack/solid-query-devtools@6.0.0-rc.0"
+  - "@tanstack/solid-query@6.0.0-rc.0"
+  - "babel-preset-solid@2.0.0-rc.0"
+  - "solid-js@2.0.0-rc.0"
+{{/if}}
 {{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "prisma") (eq serverDeploy "prisma") (eq webDeploy "docker") (eq serverDeploy "docker") (eq webDeploy "vercel") (eq serverDeploy "vercel") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "next") (includes frontend "nuxt"))}}
 
 # pnpm 11 blocks dependency lifecycle scripts unless they are approved here.

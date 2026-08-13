@@ -78,8 +78,8 @@ export const TECH_OPTIONS = {
     },
     {
       id: "solid",
-      name: "SolidStart",
-      description: "SolidStart v2 full-stack framework with SSR",
+      name: "Solid 2",
+      description: "Solid 2 application with file-based routing and SSR",
       icon: `${ICON_BASE_URL}/solid.svg`,
       color: "from-blue-600 to-blue-800",
       default: false,
@@ -236,8 +236,8 @@ export const TECH_OPTIONS = {
     },
     {
       id: "self-solid",
-      name: "Fullstack SolidStart",
-      description: "Use SolidStart's built-in API routes",
+      name: "Fullstack Solid 2",
+      description: "Use Solid 2 file-based API routes",
       icon: `${ICON_BASE_URL}/solidjs.svg`,
       color: "from-blue-400 to-blue-700",
     },

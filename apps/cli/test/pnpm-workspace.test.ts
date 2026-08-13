@@ -18,10 +18,44 @@ async function readPnpmWorkspace(config: TestConfig) {
 
   const workspacePath = path.join(result.projectDir!, "pnpm-workspace.yaml");
   const content = await readFile(workspacePath, "utf8");
-  return yaml.parse(content) as { allowBuilds?: Record<string, boolean> };
+  return yaml.parse(content) as {
+    allowBuilds?: Record<string, boolean>;
+    minimumReleaseAgeExclude?: string[];
+  };
 }
 
 describe("pnpm workspace", () => {
+  it("allows the pinned Solid 2 prereleases through pnpm's release-age policy", async () => {
+    const workspace = await readPnpmWorkspace({
+      projectName: "pnpm-solid-v2",
+      frontend: ["solid"],
+      backend: "none",
+      runtime: "none",
+      api: "none",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+    });
+
+    expect(workspace.minimumReleaseAgeExclude).toEqual([
+      "@solidjs/meta@1.0.0-next.2",
+      "@solidjs/router@2.0.0-next.16",
+      "@solidjs/signals@2.0.0-rc.0",
+      "@solidjs/vite-plugin@3.0.0-next.28",
+      "@solidjs/web@2.0.0-rc.0",
+      "@tanstack/solid-query-devtools@6.0.0-rc.0",
+      "@tanstack/solid-query@6.0.0-rc.0",
+      "babel-preset-solid@2.0.0-rc.0",
+      "solid-js@2.0.0-rc.0",
+    ]);
+  });
+
   it("adds build approvals for the Convex Better Auth Cloudflare stack", async () => {
     const workspace = await readPnpmWorkspace({
       projectName: "pnpm-convex-cloudflare",

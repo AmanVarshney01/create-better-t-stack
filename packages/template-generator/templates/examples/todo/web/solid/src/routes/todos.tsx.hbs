@@ -1,4 +1,3 @@
-import { Loader2, Trash2 } from "lucide-solid";
 import { createSignal, For, Show } from "solid-js";
 import { orpc } from "~/utils/orpc";
 import { useQuery, useMutation } from "@tanstack/solid-query";
@@ -70,14 +69,14 @@ export default function Todos() {
               class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
             >
               <Show when={createMutation.isPending} fallback="Add">
-                <Loader2 class="h-4 w-4 animate-spin" />
+                <span class="block h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
               </Show>
             </button>
           </form>
 
           <Show when={todos.isLoading}>
             <div class="flex justify-center py-4">
-              <Loader2 class="h-6 w-6 animate-spin" />
+              <span class="h-6 w-6 animate-spin rounded-full border-2 border-current border-r-transparent" />
             </div>
           </Show>
 
@@ -113,7 +112,7 @@ export default function Todos() {
                       aria-label="Delete todo"
                       class="ml-2 rounded-md p-1"
                     >
-                      <Trash2 class="h-4 w-4" />
+                      Delete
                     </button>
                   </li>
                 )}

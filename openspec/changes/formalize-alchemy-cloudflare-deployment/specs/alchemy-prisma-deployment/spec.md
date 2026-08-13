@@ -12,11 +12,11 @@ The CLI and generated user guidance SHALL label the target **Prisma**. The gener
 
 ### Requirement: Prisma web support uses verified production artifacts
 
-Prisma web deployment SHALL support Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, and SolidStart. Automatic Alchemy framework builds SHALL be used where available; every other supported framework SHALL emit an official production server artifact that listens on the configured port.
+Prisma web deployment SHALL support Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, and Solid 2. Automatic Alchemy framework builds SHALL be used where available; every other supported framework SHALL emit a production server artifact from its documented deployment adapter that listens on the configured port.
 
-#### Scenario: SolidStart custom artifact
+#### Scenario: Solid 2 custom artifact
 
-- **WHEN** SolidStart is deployed to Prisma
+- **WHEN** Solid 2 is deployed to Prisma
 - **THEN** the generated build SHALL produce `.output/server/index.mjs`
 - **AND** the deployment SHALL use that entrypoint on port 3000
 
@@ -79,6 +79,12 @@ Cloudflare and Prisma planes SHALL be composable in either direction. The web bu
 ### Requirement: Prisma deployment preserves build-time and runtime environment boundaries
 
 Application secrets and database values SHALL be runtime environment values. Framework-public values required during compilation SHALL be provided to both build and runtime as appropriate.
+
+#### Scenario: Public and private deployment values
+
+- **WHEN** Prisma deploys an application with framework-public configuration and runtime secrets
+- **THEN** public configuration SHALL be available to the production build and runtime
+- **AND** secrets and database credentials SHALL be supplied only to the runtime
 
 ### Requirement: Prisma deployment uses the common Alchemy lifecycle
 

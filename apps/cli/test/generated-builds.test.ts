@@ -114,7 +114,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-start-frontend-only",
+    name: "solid-v2-frontend-only",
     packageManagers: ["bun", "npm", "pnpm"],
     config: {
       ...baseConfig,
@@ -131,7 +131,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-start-hono-bun-auth-todo",
+    name: "solid-v2-hono-bun-auth-todo",
     config: {
       ...baseConfig,
       frontend: ["solid"],
@@ -147,7 +147,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-start-express-node-mongoose",
+    name: "solid-v2-express-node-mongoose",
     config: {
       ...baseConfig,
       frontend: ["solid"],
@@ -163,7 +163,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-start-fastify-node-prisma-polar",
+    name: "solid-v2-fastify-node-prisma-polar",
     config: {
       ...baseConfig,
       frontend: ["solid"],
@@ -179,7 +179,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-start-elysia-bun",
+    name: "solid-v2-elysia-bun",
     config: {
       ...baseConfig,
       frontend: ["solid"],
@@ -195,7 +195,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-start-hono-workers-cloudflare",
+    name: "solid-v2-hono-workers-cloudflare",
     config: {
       ...baseConfig,
       frontend: ["solid"],
@@ -212,7 +212,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-start-self-orpc-no-auth",
+    name: "solid-v2-self-orpc-no-auth",
     config: {
       ...baseConfig,
       frontend: ["solid"],
@@ -228,7 +228,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-start-self-orpc-auth-todo",
+    name: "solid-v2-self-orpc-auth-todo",
     config: {
       ...baseConfig,
       frontend: ["solid"],
@@ -244,7 +244,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-start-self-cloudflare",
+    name: "solid-v2-self-cloudflare",
     config: {
       ...baseConfig,
       frontend: ["solid"],
@@ -262,7 +262,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-start-self-docker-pnpm",
+    name: "solid-v2-self-docker-pnpm",
     packageManagers: ["pnpm"],
     config: {
       ...baseConfig,
@@ -280,7 +280,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-start-self-vercel-npm",
+    name: "solid-v2-self-vercel-npm",
     packageManagers: ["npm"],
     config: {
       ...baseConfig,
@@ -298,7 +298,24 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-start-pwa",
+    name: "solid-v2-prisma-web",
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "none",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: [],
+      webDeploy: "prisma",
+    },
+  },
+  {
+    name: "solid-v2-pwa",
     config: {
       ...baseConfig,
       frontend: ["solid"],
@@ -314,7 +331,7 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
-    name: "solid-start-vite-plus",
+    name: "solid-v2-vite-plus",
     config: {
       ...baseConfig,
       frontend: ["solid"],
@@ -620,7 +637,7 @@ async function runWorkspaceTypeChecks(
   }
 }
 
-async function validateSolidStartScaffold(sample: SelectedBuildSample, projectDir: string) {
+async function validateSolidScaffold(sample: SelectedBuildSample, projectDir: string) {
   if (!sample.config.frontend?.includes("solid")) return;
 
   const webDir = path.join(projectDir, "apps/web");
@@ -628,9 +645,10 @@ async function validateSolidStartScaffold(sample: SelectedBuildSample, projectDi
     "package.json",
     "tsconfig.json",
     "vite.config.ts",
-    "src/app.tsx",
-    "src/entry-client.tsx",
-    "src/entry-server.tsx",
+    "src/App.tsx",
+    "src/Document.tsx",
+    "src/middleware.ts",
+    "src/router.ts",
     "src/routes/index.tsx",
     "src/routes/[...404].tsx",
   ];
@@ -641,6 +659,8 @@ async function validateSolidStartScaffold(sample: SelectedBuildSample, projectDi
   const legacyFiles = [
     "index.html",
     "src/main.tsx",
+    "src/entry-client.tsx",
+    "src/entry-server.tsx",
     "src/routeTree.gen.ts",
     "src/routes/__root.tsx",
   ];
@@ -649,13 +669,22 @@ async function validateSolidStartScaffold(sample: SelectedBuildSample, projectDi
   }
 
   const webPackageJson = await fs.readJson(path.join(webDir, "package.json"));
-  expect(webPackageJson.dependencies?.["@solidjs/start"]).toBeDefined();
+  expect(webPackageJson.dependencies?.["@solidjs/start"]).toBeUndefined();
+  expect(webPackageJson.dependencies?.["solid-js"]).toBe("^2.0.0-rc.0");
+  expect(webPackageJson.dependencies?.["@solidjs/web"]).toBe("^2.0.0-rc.0");
   expect(webPackageJson.dependencies?.["@solidjs/router"]).toBeDefined();
+  expect(webPackageJson.devDependencies?.["@solidjs/vite-plugin"]).toBeDefined();
+  expect(webPackageJson.devDependencies?.["filesystem-routing"]).toBeDefined();
   expect(webPackageJson.dependencies?.["@tanstack/solid-router"]).toBeUndefined();
   expect(webPackageJson.scripts?.["check-types"]).toBe("tsc --noEmit");
 
+  if (sample.config.api === "orpc") {
+    expect(webPackageJson.dependencies?.["@tanstack/query-core"]).toBe("5.101.0");
+  }
+
   const viteConfig = await fs.readFile(path.join(webDir, "vite.config.ts"), "utf8");
-  expect(viteConfig).toContain("solidStart()");
+  expect(viteConfig).toContain("solid({");
+  expect(viteConfig).toContain("fileRoutes({ httpMethods: true })");
 
   if (sample.config.backend === "self" && sample.config.api === "orpc") {
     for (const file of [
@@ -674,7 +703,27 @@ async function validateSolidStartScaffold(sample: SelectedBuildSample, projectDi
   if (sample.config.backend === "self" && sample.config.auth === "better-auth") {
     const authRoute = path.join(webDir, "src/routes/api/auth/[...auth].ts");
     expect(await fs.pathExists(authRoute)).toBe(true);
-    expect(await fs.readFile(authRoute, "utf8")).toContain("toSolidStartHandler");
+    expect(await fs.readFile(authRoute, "utf8")).toContain(".handler(request)");
+  }
+
+  if (sample.config.auth === "better-auth") {
+    const authClient = path.join(projectDir, "packages/auth/src/client.ts");
+    const webAuthClient = path.join(webDir, "src/lib/auth-client.ts");
+    const authPackageJson = await fs.readJson(path.join(projectDir, "packages/auth/package.json"));
+
+    expect(await fs.pathExists(authClient)).toBe(true);
+    expect(await fs.readFile(authClient, "utf8")).toContain('from "better-auth/client"');
+    expect(await fs.readFile(webAuthClient, "utf8")).toContain(
+      `from "@${sample.name}/auth/client"`,
+    );
+    expect(webPackageJson.dependencies?.["better-auth"]).toBeUndefined();
+    expect(webPackageJson.dependencies?.[`@${sample.name}/auth`]).toBeDefined();
+    expect(authPackageJson.dependencies?.["better-auth"]).toBeDefined();
+
+    if (sample.config.payments === "polar") {
+      expect(webPackageJson.dependencies?.["@polar-sh/better-auth"]).toBeUndefined();
+      expect(authPackageJson.dependencies?.["@polar-sh/better-auth"]).toBeDefined();
+    }
   }
 
   if (sample.config.webDeploy === "cloudflare") {
@@ -696,12 +745,12 @@ async function validateSolidStartScaffold(sample: SelectedBuildSample, projectDi
   }
 }
 
-async function validateSolidStartBuildArtifacts(sample: SelectedBuildSample, projectDir: string) {
+async function validateSolidBuildArtifacts(sample: SelectedBuildSample, projectDir: string) {
   if (!sample.config.frontend?.includes("solid")) return;
 
   const serverEntry =
     sample.config.webDeploy === "cloudflare"
-      ? "apps/web/dist/server/entry-server.js"
+      ? "apps/web/dist/server/server.js"
       : "apps/web/.output/server/index.mjs";
   expect(await fs.pathExists(path.join(projectDir, serverEntry))).toBe(true);
 }
@@ -742,6 +791,18 @@ async function getAvailablePort(): Promise<number> {
   });
 }
 
+async function fetchWhenReady(url: string, init?: RequestInit) {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    try {
+      return await fetch(url, init);
+    } catch {
+      await Bun.sleep(100);
+    }
+  }
+
+  return undefined;
+}
+
 async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
   if (sample.config.webDeploy !== "prisma") return;
 
@@ -750,7 +811,9 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
     ? "build/server/index.js"
     : frontend.includes("svelte")
       ? "build/index.js"
-      : undefined;
+      : frontend.includes("solid")
+        ? ".output/server/index.mjs"
+        : undefined;
   if (!entrypoint) return;
 
   const webDir = path.join(projectDir, "apps/web");
@@ -770,15 +833,7 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   let failure: unknown;
   try {
     for (const pathname of ["/"]) {
-      let response: Response | undefined;
-      for (let attempt = 0; attempt < 100; attempt++) {
-        try {
-          response = await fetch(`http://127.0.0.1:${port}${pathname}`);
-          break;
-        } catch {
-          await Bun.sleep(100);
-        }
-      }
+      const response = await fetchWhenReady(`http://127.0.0.1:${port}${pathname}`);
       expect(response?.status).toBe(200);
     }
   } catch (error) {
@@ -797,6 +852,57 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   }
 }
 
+async function bootAndValidateSolidRuntime(sample: SelectedBuildSample, projectDir: string) {
+  if (sample.name !== "solid-v2-self-orpc-no-auth") return;
+
+  const webDir = path.join(projectDir, "apps/web");
+  const port = await getAvailablePort();
+  const runtime = execa("node", [".output/server/index.mjs"], {
+    cwd: webDir,
+    all: true,
+    reject: false,
+    env: {
+      ...process.env,
+      CORS_ORIGIN: `http://127.0.0.1:${port}`,
+      DATABASE_URL: "file:./local.db",
+      HOST: "127.0.0.1",
+      NODE_ENV: "production",
+      PORT: String(port),
+    },
+  });
+
+  let failure: unknown;
+  try {
+    const root = await fetchWhenReady(`http://127.0.0.1:${port}/`);
+    expect(root?.status).toBe(200);
+    expect(await root?.text()).toContain("Connected");
+
+    const health = await fetchWhenReady(`http://127.0.0.1:${port}/rpc/healthCheck`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ json: null }),
+    });
+    expect(health?.status).toBe(200);
+    expect(await health?.json()).toEqual({ json: "OK" });
+
+    const missing = await fetchWhenReady(`http://127.0.0.1:${port}/missing-page`);
+    expect(missing?.status).toBe(404);
+  } catch (error) {
+    failure = error;
+  } finally {
+    runtime.kill("SIGTERM");
+  }
+
+  const result = await runtime;
+  if (failure) {
+    throw new Error(
+      [`Generated Solid runtime probe failed: ${String(failure)}`, formatOutput(result.all)]
+        .filter(Boolean)
+        .join("\n\n"),
+    );
+  }
+}
+
 describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples", () => {
   for (const sample of getSelectedBuildSamples()) {
     it(
@@ -807,7 +913,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
 
         const createResult = await create(projectDir, sample.config);
         expect(createResult.isOk()).toBe(true);
-        await validateSolidStartScaffold(sample, projectDir);
+        await validateSolidScaffold(sample, projectDir);
 
         for (const script of ["install", "build"] as const) {
           const { command, args } = getPackageManagerCommand(sample.packageManager, script);
@@ -815,7 +921,8 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
         }
         await buildAndValidatePrismaWebArtifact(sample, projectDir);
         await bootAndValidatePrismaWebArtifact(sample, projectDir);
-        await validateSolidStartBuildArtifacts(sample, projectDir);
+        await bootAndValidateSolidRuntime(sample, projectDir);
+        await validateSolidBuildArtifacts(sample, projectDir);
         await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
       },
       sampleTimeoutMs,

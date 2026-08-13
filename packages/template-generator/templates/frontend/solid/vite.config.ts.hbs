@@ -1,5 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
-import { solidStart } from "@solidjs/start/config";
+import solid from "@solidjs/vite-plugin";
+import { fileRoutes } from "filesystem-routing/vite";
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
 import { unwasm } from "unwasm/plugin";
 {{/if}}
@@ -11,15 +12,13 @@ import { nitro } from "nitro/vite";
 {{/unless}}
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
-{{#if (eq webDeploy "cloudflare")}}
-{{#if (eq orm "prisma")}}
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
 const prismaWasm =
   process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
     ? null
     : unwasm({ esmImport: true });
 {{/if}}
 
-{{/if}}
 {{#if (eq webDeploy "cloudflare")}}
 export default defineConfig(({ command }) => {
   const cloudflareWorkersAlias: Record<string, string> =
@@ -39,11 +38,16 @@ export default defineConfig({
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     prismaWasm,
 {{/if}}
-    solidStart(),
-    tailwindcss(),
+    solid({
+      start: { middleware: "./src/middleware.ts" },
+      ssr: true,
+      extensions: [".jsx", ".tsx"],
+    }),
 {{#unless (eq webDeploy "cloudflare")}}
-    nitro(),
+    nitro({ serverEntry: false }),
 {{/unless}}
+    fileRoutes({ httpMethods: true }),
+    tailwindcss(),
   ],
   server: {
     port: 3001,
@@ -51,18 +55,12 @@ export default defineConfig({
 {{#if (eq webDeploy "cloudflare")}}
   build: {
     rollupOptions: {
-      // resolved by workerd at runtime; local production builds must not bundle it
       external: ["cloudflare:workers"],
     },
   },
-{{/if}}
   resolve: {
-{{#if (eq webDeploy "cloudflare")}}
     alias: cloudflareWorkersAlias,
-{{/if}}
-    dedupe: ["solid-js"],
   },
-{{#if (eq webDeploy "cloudflare")}}
   };
 {{else}}
 });

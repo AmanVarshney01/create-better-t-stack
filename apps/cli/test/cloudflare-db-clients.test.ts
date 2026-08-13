@@ -134,14 +134,11 @@ describe("Cloudflare DB client generation", () => {
       envAbsentNeedle: 'from "cloudflare:workers"',
     },
     {
-      name: "SolidStart",
+      name: "Solid 2",
       frontend: "solid",
       api: "orpc",
       routePath: "apps/web/src/routes/api/auth/[...auth].ts",
-      routeNeedles: [
-        "return toSolidStartHandler(createAuth()).GET(event);",
-        "return toSolidStartHandler(createAuth()).POST(event);",
-      ],
+      routeNeedles: ["createAuth().handler(request)"],
       envNeedle: 'export { env } from "cloudflare:workers";',
     },
     {

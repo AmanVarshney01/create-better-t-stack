@@ -1,135 +1,70 @@
 import { useNavigate } from "@solidjs/router";
-import { createForm } from "@tanstack/solid-form";
-import { For } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { authClient } from "~/lib/auth-client";
 import z from "zod";
 
+const signUpSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
 export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
   const navigate = useNavigate();
+  const [error, setError] = createSignal<string>();
+  const [isSubmitting, setIsSubmitting] = createSignal(false);
 
-  const form = createForm(() => ({
-    defaultValues: {
-      email: "",
-      password: "",
-      name: "",
-    },
-    onSubmit: async ({ value }) => {
-      await authClient.signUp.email(
-        {
-          email: value.email,
-          password: value.password,
-          name: value.name,
-        },
-        {
-          onSuccess: () => {
-            navigate("/dashboard");
-            console.log("Sign up successful");
-          },
-          onError: (error) => {
-            console.error(error.error.message);
-          },
-        },
-      );
-    },
-    validators: {
-      onSubmit: z.object({
-        name: z.string().min(2, "Name must be at least 2 characters"),
-        email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-      }),
-    },
-  }));
+  const submit = async (event: SubmitEvent & { currentTarget: HTMLFormElement }) => {
+    event.preventDefault();
+    const result = signUpSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)));
+    if (!result.success) {
+      setError(result.error.issues[0]?.message);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError();
+    await authClient.signUp.email(result.data, {
+      onSuccess: () => navigate("/dashboard"),
+      onError: ({ error }) => {
+        setError(error.message);
+      },
+    });
+    setIsSubmitting(false);
+  };
 
   return (
-    <div class="mx-auto w-full mt-10 max-w-md p-6">
+    <div class="mx-auto mt-10 w-full max-w-md p-6">
       <h1 class="mb-6 text-center text-3xl font-bold">Create Account</h1>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-        class="space-y-4"
-      >
-        <div>
-          <form.Field name="name">
-            {(field) => (
-              <div class="space-y-2">
-                <label for={field().name}>Name</label>
-                <input
-                  id={field().name}
-                  name={field().name}
-                  value={field().state.value}
-                  onBlur={field().handleBlur}
-                  onInput={(e) => field().handleChange(e.currentTarget.value)}
-                  class="w-full rounded border p-2"
-                />
-                <For each={field().state.meta.errors}>
-                  {(error) => <p class="text-sm text-red-600">{error?.message}</p>}
-                </For>
-              </div>
-            )}
-          </form.Field>
+      <form onSubmit={submit} class="space-y-4">
+        <div class="space-y-2">
+          <label for="name">Name</label>
+          <input id="name" name="name" minlength="2" required class="w-full rounded border p-2" />
         </div>
-
-        <div>
-          <form.Field name="email">
-            {(field) => (
-              <div class="space-y-2">
-                <label for={field().name}>Email</label>
-                <input
-                  id={field().name}
-                  name={field().name}
-                  type="email"
-                  value={field().state.value}
-                  onBlur={field().handleBlur}
-                  onInput={(e) => field().handleChange(e.currentTarget.value)}
-                  class="w-full rounded border p-2"
-                />
-                <For each={field().state.meta.errors}>
-                  {(error) => <p class="text-sm text-red-600">{error?.message}</p>}
-                </For>
-              </div>
-            )}
-          </form.Field>
+        <div class="space-y-2">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required class="w-full rounded border p-2" />
         </div>
-
-        <div>
-          <form.Field name="password">
-            {(field) => (
-              <div class="space-y-2">
-                <label for={field().name}>Password</label>
-                <input
-                  id={field().name}
-                  name={field().name}
-                  type="password"
-                  value={field().state.value}
-                  onBlur={field().handleBlur}
-                  onInput={(e) => field().handleChange(e.currentTarget.value)}
-                  class="w-full rounded border p-2"
-                />
-                <For each={field().state.meta.errors}>
-                  {(error) => <p class="text-sm text-red-600">{error?.message}</p>}
-                </For>
-              </div>
-            )}
-          </form.Field>
+        <div class="space-y-2">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            minlength="8"
+            required
+            class="w-full rounded border p-2"
+          />
         </div>
-
-        <form.Subscribe>
-          {(state) => (
-            <button
-              type="submit"
-              class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
-              disabled={!state().canSubmit || state().isSubmitting}
-            >
-              {state().isSubmitting ? "Submitting..." : "Sign Up"}
-            </button>
-          )}
-        </form.Subscribe>
+        <Show when={error()}>{(message) => <p class="text-sm text-red-600">{message()}</p>}</Show>
+        <button
+          type="submit"
+          class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
+          disabled={isSubmitting()}
+        >
+          {isSubmitting() ? "Submitting..." : "Sign Up"}
+        </button>
       </form>
-
       <div class="mt-4 text-center">
         <button
           type="button"

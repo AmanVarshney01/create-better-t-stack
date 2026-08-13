@@ -31,7 +31,7 @@ function createStack(overrides: Partial<StackState> = {}): StackState {
 }
 
 describe("stack builder D1 compatibility", () => {
-  test("supports SolidStart as a self-hosted fullstack backend", () => {
+  test("supports Solid 2 as a self-hosted fullstack backend", () => {
     const stack = createStack({
       webFrontend: ["solid"],
       backend: "self-solid",
@@ -42,7 +42,7 @@ describe("stack builder D1 compatibility", () => {
 
     expect(getDisabledReason(stack, "backend", "self-solid")).toBeNull();
     expect(getDisabledReason(stack, "api", "trpc")).toBe(
-      "tRPC is not compatible with SolidStart (use oRPC)",
+      "tRPC is not compatible with Solid 2 (use oRPC)",
     );
     expect(getDisabledReason(stack, "addons", "evlog")).toBe(
       "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend",
@@ -611,7 +611,7 @@ describe("stack builder Prisma deployment compatibility", () => {
       expect(
         getDisabledReason(createStack({ webFrontend: [frontend] }), "webDeploy", "prisma"),
       ).toBe(
-        "Prisma requires Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or SolidStart",
+        "Prisma requires Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or Solid 2",
       );
     }
   });

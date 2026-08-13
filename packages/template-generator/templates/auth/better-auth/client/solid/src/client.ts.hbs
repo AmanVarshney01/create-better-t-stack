@@ -1,0 +1,18 @@
+import { createAuthClient } from "better-auth/client";
+{{#if (eq payments "polar")}}
+import { polarClient } from "@polar-sh/better-auth/client";
+{{/if}}
+{{#unless (eq backend "self")}}
+import { env } from "@{{projectName}}/env/web";
+
+{{> getServerUrl}}
+{{/unless}}
+
+export const authClient = createAuthClient({
+{{#unless (eq backend "self")}}
+	baseURL: new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(),
+{{/unless}}
+{{#if (eq payments "polar")}}
+	plugins: [polarClient()],
+{{/if}}
+});

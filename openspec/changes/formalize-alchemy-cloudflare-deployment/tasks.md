@@ -175,7 +175,7 @@
 ## 17. Prisma Deployment
 
 - [x] 17.1 Add Prisma web/server deployment enums, prompts, validation, infra generation, scripts, and exact dependencies.
-- [x] 17.2 Support Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, and SolidStart web artifacts; reject static-only TanStack Router before generation.
+- [ ] 17.2 Support Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, and Solid 2 web artifacts; reject static-only TanStack Router before generation.
 - [x] 17.3 Support Hono, Express, Fastify, and Elysia servers on Bun or Node.
 - [x] 17.4 Support Cloudflare-web/Prisma-server and Prisma-web/Cloudflare-server URL wiring in one Alchemy graph.
 - [x] 17.5 Keep the user-facing label and generated topology summary as `Prisma`.
@@ -184,3 +184,12 @@
 - [x] 17.8 Reject the current Next.js + Cloudflare combination blocked by `pg-cloudflare` tracing without disabling unaffected targets.
 - [x] 17.9 Keep Nuxt Cloudflare Prisma SSR calls inside Nitro through `event.fetch`, emit one Prisma WASM module, and dry-run below the 3 MiB compressed limit.
 - [x] 17.10 Build and boot the exact React Router and SvelteKit artifacts, verify root HTTP responses, and verify TanStack Router is rejected without generating a server shim.
+
+## 18. Solid 2 Migration
+
+- [x] 18.1 Replace `@solidjs/start`, authored entry files, and SolidStart routing with `@solidjs/vite-plugin` start mode, `filesystem-routing`, Solid Router v2, and a generated document shell.
+- [x] 18.2 Migrate Better Auth, oRPC, status handling, async boundaries, effects, and addon/example templates to released Solid 2 APIs without compatibility aliases or dependency overrides.
+- [x] 18.3 Preserve Cloudflare `Website.Vite` SSR and use Nitro v3 as the non-Cloudflare deployment adapter for Node, Docker, Vercel, and Prisma artifacts.
+- [x] 18.4 Use Solid-2-compatible first-party and TanStack packages, remove incompatible Solid-only UI dependencies, and document any remaining upstream optional-peer warning honestly.
+- [x] 18.5 Rename every generated and user-facing SolidStart reference to Solid 2 while retaining `solid` as the stable CLI option value.
+- [x] 18.6 Generate, install, typecheck, build, boot, and route-test representative Bun, npm, and pnpm Solid 2 projects across self/split, auth/oRPC, Docker, Vercel, Prisma, and Cloudflare configurations.

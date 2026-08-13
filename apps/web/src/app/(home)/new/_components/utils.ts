@@ -431,7 +431,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       changed = true;
       changes.push({
         category: "backend",
-        message: "Frontend set to 'SolidStart' (required for SolidStart fullstack)",
+        message: "Frontend set to 'Solid 2' (required for Solid fullstack)",
       });
     }
     if (nextStack.backend === "self-astro" && !nextStack.webFrontend.includes("astro")) {
@@ -1157,16 +1157,16 @@ export const getDisabledReason = (
 
   if (currentStack.backend === "self-solid") {
     if (category === "runtime" && optionId !== "none") {
-      return "SolidStart fullstack uses built-in API routes";
+      return "Solid 2 fullstack uses file-based API routes";
     }
     if (category === "webFrontend" && optionId !== "solid") {
-      return "SolidStart fullstack requires SolidStart frontend";
+      return "Solid fullstack requires the Solid 2 frontend";
     }
     if (category === "serverDeploy" && optionId !== "none") {
       return "Fullstack uses frontend deployment";
     }
     if (category === "api" && optionId === "trpc") {
-      return "tRPC is not compatible with SolidStart (use oRPC)";
+      return "tRPC is not compatible with Solid 2 (use oRPC)";
     }
   }
 
@@ -1205,7 +1205,7 @@ export const getDisabledReason = (
       return "Requires SvelteKit frontend";
     }
     if (optionId === "self-solid" && !currentStack.webFrontend.includes("solid")) {
-      return "Requires SolidStart frontend";
+      return "Requires Solid 2 frontend";
     }
     if (optionId === "self-astro" && !currentStack.webFrontend.includes("astro")) {
       return "Requires Astro frontend";
@@ -1471,7 +1471,7 @@ export const getDisabledReason = (
         prismaComputeWebFrontends.includes(frontend as (typeof prismaComputeWebFrontends)[number]),
       )
     ) {
-      return "Prisma requires Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or SolidStart";
+      return "Prisma requires Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or Solid 2";
     }
     if (optionId === "prisma") {
       const prismaDesktopConflict = getPrismaDesktopConflict(

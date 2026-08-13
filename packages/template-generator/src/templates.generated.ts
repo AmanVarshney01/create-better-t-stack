@@ -562,7 +562,7 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
-import type { APIEvent } from "@solidjs/start/server";
+import type { APIHandler } from "filesystem-routing/api";
 
 const rpcHandler = new RPCHandler(appRouter, {
 	interceptors: [
@@ -585,7 +585,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	],
 });
 
-async function handle({ request }: APIEvent) {
+const handle: APIHandler = async ({ request }) => {
 	const context = await createContext({ headers: request.headers });
 
 	const rpcResult = await rpcHandler.handle(request, {
@@ -601,7 +601,7 @@ async function handle({ request }: APIEvent) {
 	if (apiResult.response) return apiResult.response;
 
 	return new Response("Not found", { status: 404 });
-}
+};
 
 export const HEAD = handle;
 export const GET = handle;
@@ -622,7 +622,7 @@ export const DELETE = handle;
   ["api/orpc/fullstack/solid/src/utils/orpc.server.ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createRouterClient } from "@orpc/server";
-import { getRequestEvent } from "solid-js/web";
+import { getRequestEvent } from "@solidjs/web";
 
 if (!import.meta.env.SSR) {
   throw new Error("This file must only be imported on the server.");
@@ -1703,7 +1703,9 @@ export const orpc = createTanstackQueryUtils(client)
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/solid-query";
-import { getRequestEvent } from "solid-js/web";
+{{#unless (eq backend "self")}}
+import { getRequestEvent } from "@solidjs/web";
+{{/unless}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
@@ -2446,6 +2448,25 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
 	queryClient,
 });
 {{/if}}
+`],
+  ["auth/better-auth/client/solid/src/client.ts.hbs", `import { createAuthClient } from "better-auth/client";
+{{#if (eq payments "polar")}}
+import { polarClient } from "@polar-sh/better-auth/client";
+{{/if}}
+{{#unless (eq backend "self")}}
+import { env } from "@{{projectName}}/env/web";
+
+{{> getServerUrl}}
+{{/unless}}
+
+export const authClient = createAuthClient({
+{{#unless (eq backend "self")}}
+	baseURL: new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(),
+{{/unless}}
+{{#if (eq payments "polar")}}
+	plugins: [polarClient()],
+{{/if}}
+});
 `],
   ["auth/better-auth/convex/backend/convex/auth.config.ts.hbs", `import { getAuthConfigProvider } from "@convex-dev/better-auth/auth-config";
 import type { AuthConfig } from "convex/server";
@@ -5761,23 +5782,19 @@ export default defineEventHandler((event) => {
 `],
   ["auth/better-auth/fullstack/solid/src/routes/api/auth/[...auth].ts.hbs", `{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 import { createAuth } from "@{{projectName}}/auth";
-import type { APIEvent } from "@solidjs/start/server";
 {{else}}
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
-import { toSolidStartHandler } from "better-auth/solid-start";
+import type { APIHandler } from "filesystem-routing/api";
 
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
-export function GET(event: APIEvent) {
-	return toSolidStartHandler(createAuth()).GET(event);
-}
-
-export function POST(event: APIEvent) {
-	return toSolidStartHandler(createAuth()).POST(event);
-}
+const handle: APIHandler = ({ request }) => createAuth().handler(request);
 {{else}}
-export const { GET, POST } = toSolidStartHandler(auth);
+const handle: APIHandler = ({ request }) => auth.handler(request);
 {{/if}}
+
+export const GET = handle;
+export const POST = handle;
 `],
   ["auth/better-auth/fullstack/svelte/src/hooks.server.ts.hbs", `{{#if (eq api "orpc")}}
 import "./lib/orpc.server";
@@ -11780,113 +11797,67 @@ function RouteComponent() {
 }
 `],
   ["auth/better-auth/web/solid/src/components/sign-in-form.tsx.hbs", `import { useNavigate } from "@solidjs/router";
-import { createForm } from "@tanstack/solid-form";
-import { For } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { authClient } from "~/lib/auth-client";
 import z from "zod";
 
+const signInSchema = z.object({
+  email: z.email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
 export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
   const navigate = useNavigate();
+  const [error, setError] = createSignal<string>();
+  const [isSubmitting, setIsSubmitting] = createSignal(false);
 
-  const form = createForm(() => ({
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-    onSubmit: async ({ value }) => {
-      await authClient.signIn.email(
-        {
-          email: value.email,
-          password: value.password,
-        },
-        {
-          onSuccess: () => {
-            navigate("/dashboard");
-            console.log("Sign in successful");
-          },
-          onError: (error) => {
-            console.error(error.error.message);
-          },
-        },
-      );
-    },
-    validators: {
-      onSubmit: z.object({
-        email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-      }),
-    },
-  }));
+  const submit = async (event: SubmitEvent & { currentTarget: HTMLFormElement }) => {
+    event.preventDefault();
+    const result = signInSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)));
+    if (!result.success) {
+      setError(result.error.issues[0]?.message);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError();
+    await authClient.signIn.email(result.data, {
+      onSuccess: () => navigate("/dashboard"),
+      onError: ({ error }) => {
+        setError(error.message);
+      },
+    });
+    setIsSubmitting(false);
+  };
 
   return (
-    <div class="mx-auto w-full mt-10 max-w-md p-6">
+    <div class="mx-auto mt-10 w-full max-w-md p-6">
       <h1 class="mb-6 text-center text-3xl font-bold">Welcome Back</h1>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-        class="space-y-4"
-      >
-        <div>
-          <form.Field name="email">
-            {(field) => (
-              <div class="space-y-2">
-                <label for={field().name}>Email</label>
-                <input
-                  id={field().name}
-                  name={field().name}
-                  type="email"
-                  value={field().state.value}
-                  onBlur={field().handleBlur}
-                  onInput={(e) => field().handleChange(e.currentTarget.value)}
-                  class="w-full rounded border p-2"
-                />
-                <For each={field().state.meta.errors}>
-                  {(error) => <p class="text-sm text-red-600">{error?.message}</p>}
-                </For>
-              </div>
-            )}
-          </form.Field>
+      <form onSubmit={submit} class="space-y-4">
+        <div class="space-y-2">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required class="w-full rounded border p-2" />
         </div>
-
-        <div>
-          <form.Field name="password">
-            {(field) => (
-              <div class="space-y-2">
-                <label for={field().name}>Password</label>
-                <input
-                  id={field().name}
-                  name={field().name}
-                  type="password"
-                  value={field().state.value}
-                  onBlur={field().handleBlur}
-                  onInput={(e) => field().handleChange(e.currentTarget.value)}
-                  class="w-full rounded border p-2"
-                />
-                <For each={field().state.meta.errors}>
-                  {(error) => <p class="text-sm text-red-600">{error?.message}</p>}
-                </For>
-              </div>
-            )}
-          </form.Field>
+        <div class="space-y-2">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            minlength="8"
+            required
+            class="w-full rounded border p-2"
+          />
         </div>
-
-        <form.Subscribe>
-          {(state) => (
-            <button
-              type="submit"
-              class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
-              disabled={!state().canSubmit || state().isSubmitting}
-            >
-              {state().isSubmitting ? "Submitting..." : "Sign In"}
-            </button>
-          )}
-        </form.Subscribe>
+        <Show when={error()}>{(message) => <p class="text-sm text-red-600">{message()}</p>}</Show>
+        <button
+          type="submit"
+          class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
+          disabled={isSubmitting()}
+        >
+          {isSubmitting() ? "Submitting..." : "Sign In"}
+        </button>
       </form>
-
       <div class="mt-4 text-center">
         <button
           type="button"
@@ -11901,137 +11872,72 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 }
 `],
   ["auth/better-auth/web/solid/src/components/sign-up-form.tsx.hbs", `import { useNavigate } from "@solidjs/router";
-import { createForm } from "@tanstack/solid-form";
-import { For } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { authClient } from "~/lib/auth-client";
 import z from "zod";
 
+const signUpSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
 export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
   const navigate = useNavigate();
+  const [error, setError] = createSignal<string>();
+  const [isSubmitting, setIsSubmitting] = createSignal(false);
 
-  const form = createForm(() => ({
-    defaultValues: {
-      email: "",
-      password: "",
-      name: "",
-    },
-    onSubmit: async ({ value }) => {
-      await authClient.signUp.email(
-        {
-          email: value.email,
-          password: value.password,
-          name: value.name,
-        },
-        {
-          onSuccess: () => {
-            navigate("/dashboard");
-            console.log("Sign up successful");
-          },
-          onError: (error) => {
-            console.error(error.error.message);
-          },
-        },
-      );
-    },
-    validators: {
-      onSubmit: z.object({
-        name: z.string().min(2, "Name must be at least 2 characters"),
-        email: z.email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
-      }),
-    },
-  }));
+  const submit = async (event: SubmitEvent & { currentTarget: HTMLFormElement }) => {
+    event.preventDefault();
+    const result = signUpSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)));
+    if (!result.success) {
+      setError(result.error.issues[0]?.message);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError();
+    await authClient.signUp.email(result.data, {
+      onSuccess: () => navigate("/dashboard"),
+      onError: ({ error }) => {
+        setError(error.message);
+      },
+    });
+    setIsSubmitting(false);
+  };
 
   return (
-    <div class="mx-auto w-full mt-10 max-w-md p-6">
+    <div class="mx-auto mt-10 w-full max-w-md p-6">
       <h1 class="mb-6 text-center text-3xl font-bold">Create Account</h1>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-        class="space-y-4"
-      >
-        <div>
-          <form.Field name="name">
-            {(field) => (
-              <div class="space-y-2">
-                <label for={field().name}>Name</label>
-                <input
-                  id={field().name}
-                  name={field().name}
-                  value={field().state.value}
-                  onBlur={field().handleBlur}
-                  onInput={(e) => field().handleChange(e.currentTarget.value)}
-                  class="w-full rounded border p-2"
-                />
-                <For each={field().state.meta.errors}>
-                  {(error) => <p class="text-sm text-red-600">{error?.message}</p>}
-                </For>
-              </div>
-            )}
-          </form.Field>
+      <form onSubmit={submit} class="space-y-4">
+        <div class="space-y-2">
+          <label for="name">Name</label>
+          <input id="name" name="name" minlength="2" required class="w-full rounded border p-2" />
         </div>
-
-        <div>
-          <form.Field name="email">
-            {(field) => (
-              <div class="space-y-2">
-                <label for={field().name}>Email</label>
-                <input
-                  id={field().name}
-                  name={field().name}
-                  type="email"
-                  value={field().state.value}
-                  onBlur={field().handleBlur}
-                  onInput={(e) => field().handleChange(e.currentTarget.value)}
-                  class="w-full rounded border p-2"
-                />
-                <For each={field().state.meta.errors}>
-                  {(error) => <p class="text-sm text-red-600">{error?.message}</p>}
-                </For>
-              </div>
-            )}
-          </form.Field>
+        <div class="space-y-2">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required class="w-full rounded border p-2" />
         </div>
-
-        <div>
-          <form.Field name="password">
-            {(field) => (
-              <div class="space-y-2">
-                <label for={field().name}>Password</label>
-                <input
-                  id={field().name}
-                  name={field().name}
-                  type="password"
-                  value={field().state.value}
-                  onBlur={field().handleBlur}
-                  onInput={(e) => field().handleChange(e.currentTarget.value)}
-                  class="w-full rounded border p-2"
-                />
-                <For each={field().state.meta.errors}>
-                  {(error) => <p class="text-sm text-red-600">{error?.message}</p>}
-                </For>
-              </div>
-            )}
-          </form.Field>
+        <div class="space-y-2">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            minlength="8"
+            required
+            class="w-full rounded border p-2"
+          />
         </div>
-
-        <form.Subscribe>
-          {(state) => (
-            <button
-              type="submit"
-              class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
-              disabled={!state().canSubmit || state().isSubmitting}
-            >
-              {state().isSubmitting ? "Submitting..." : "Sign Up"}
-            </button>
-          )}
-        </form.Subscribe>
+        <Show when={error()}>{(message) => <p class="text-sm text-red-600">{message()}</p>}</Show>
+        <button
+          type="submit"
+          class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
+          disabled={isSubmitting()}
+        >
+          {isSubmitting() ? "Submitting..." : "Sign Up"}
+        </button>
       </form>
-
       <div class="mt-4 text-center">
         <button
           type="button"
@@ -12045,13 +11951,13 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
   );
 }
 `],
-  ["auth/better-auth/web/solid/src/components/user-menu.tsx.hbs", `import { A, useNavigate } from "@solidjs/router";
+  ["auth/better-auth/web/solid/src/components/user-menu.tsx.hbs", `import { useNavigate } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
-import { authClient } from "~/lib/auth-client";
+import { authClient, useSession } from "~/lib/auth-client";
 
 export default function UserMenu() {
   const navigate = useNavigate();
-  const session = authClient.useSession();
+  const session = useSession();
   const [isMenuOpen, setIsMenuOpen] = createSignal(false);
 
   return (
@@ -12061,9 +11967,9 @@ export default function UserMenu() {
       </Show>
 
       <Show when={!session().isPending && !session().data}>
-        <A href="/login" class="inline-block border rounded px-4  text-sm">
+        <a href="/login" class="inline-block border rounded px-4  text-sm">
           Sign In
-        </A>
+        </a>
       </Show>
 
       <Show when={!session().isPending && session().data}>
@@ -12101,26 +12007,16 @@ export default function UserMenu() {
   );
 }
 `],
-  ["auth/better-auth/web/solid/src/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/solid";
-{{#if (eq payments "polar")}}
-import { polarClient } from "@polar-sh/better-auth/client";
-{{/if}}
-{{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+  ["auth/better-auth/web/solid/src/lib/auth-client.ts.hbs", `import { authClient } from "@{{projectName}}/auth/client";
+import { createSignal, onSettled } from "solid-js";
 
-{{> getServerUrl}}
-{{/unless}}
+export { authClient };
 
-export const authClient = createAuthClient({
-{{#unless (eq backend "self")}}
-	// better-auth derives its route-matching base from this URL's path, so the
-	// public auth path must equal the server-side mount (/api/auth everywhere)
-	baseURL: new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(),
-{{/unless}}
-{{#if (eq payments "polar")}}
-	plugins: [polarClient()]
-{{/if}}
-});
+export function useSession() {
+	const [session, setSession] = createSignal(authClient.useSession.get());
+	onSettled(() => authClient.useSession.subscribe(setSession));
+	return session;
+}
 `],
   ["auth/better-auth/web/solid/src/routes/dashboard.tsx.hbs", `import { useNavigate } from "@solidjs/router";
 {{#if (eq api "orpc")}}
@@ -12130,27 +12026,30 @@ import { orpc } from "~/utils/orpc";
 import {
 	createEffect,
 {{#if (eq payments "polar")}}
-	createResource,
+	createMemo,
 {{/if}}
 	Show,
 } from "solid-js";
-import { authClient } from "~/lib/auth-client";
+import { {{#if (eq payments "polar")}}authClient, {{/if}}useSession } from "~/lib/auth-client";
 
 export default function Dashboard() {
 	const navigate = useNavigate();
-	const session = authClient.useSession();
+	const session = useSession();
 	{{#if (eq payments "polar")}}
-	const [customerState] = createResource(
-		() => session().data?.user.id,
-		async () => (await authClient.customer.state()).data,
-	);
+	const customerState = createMemo(async () => {
+		if (!session().data?.user.id) return;
+		return (await authClient.customer.state()).data;
+	});
 	{{/if}}
 
-	createEffect(() => {
-		if (!session().isPending && !session().data) {
+	createEffect(
+		() => !session().isPending && !session().data,
+		(shouldRedirect) => {
+		if (shouldRedirect) {
 			navigate("/login", { replace: true });
 		}
-	});
+		},
+	);
 
 	{{#if (eq api "orpc")}}
 	const privateData = useQuery(() => ({
@@ -17009,6 +16908,11 @@ CMD ["node", ".output/server/index.mjs"]
 {{/if}}
 `],
   ["deploy/docker/web/solid/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+{{#if (and (eq orm "prisma") (not (includes addons "vite-plus")))}}
+RUN apt-get update -y \\
+  && apt-get install -y --no-install-recommends openssl \\
+  && rm -rf /var/lib/apt/lists/*
+{{/if}}
 {{#if (eq packageManager "bun")}}
 COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 {{/if}}
@@ -17058,6 +16962,11 @@ ENV DATABASE_URL=
 {{/if}}
 
 FROM node:24-slim AS runner
+{{#if (eq orm "prisma")}}
+RUN apt-get update -y \\
+  && apt-get install -y --no-install-recommends openssl \\
+  && rm -rf /var/lib/apt/lists/*
+{{/if}}
 WORKDIR /app/apps/web
 ENV NODE_ENV=production
 
@@ -25534,8 +25443,7 @@ function TodosRoute() {
   );
 }
 `],
-  ["examples/todo/web/solid/src/routes/todos.tsx.hbs", `import { Loader2, Trash2 } from "lucide-solid";
-import { createSignal, For, Show } from "solid-js";
+  ["examples/todo/web/solid/src/routes/todos.tsx.hbs", `import { createSignal, For, Show } from "solid-js";
 import { orpc } from "~/utils/orpc";
 import { useQuery, useMutation } from "@tanstack/solid-query";
 
@@ -25606,14 +25514,14 @@ export default function Todos() {
               class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
             >
               <Show when={createMutation.isPending} fallback="Add">
-                <Loader2 class="h-4 w-4 animate-spin" />
+                <span class="block h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
               </Show>
             </button>
           </form>
 
           <Show when={todos.isLoading}>
             <div class="flex justify-center py-4">
-              <Loader2 class="h-6 w-6 animate-spin" />
+              <span class="h-6 w-6 animate-spin rounded-full border-2 border-current border-r-transparent" />
             </div>
           </Show>
 
@@ -25649,7 +25557,7 @@ export default function Todos() {
                       aria-label="Delete todo"
                       class="ml-2 rounded-md p-1"
                     >
-                      <Trash2 class="h-4 w-4" />
+                      Delete
                     </button>
                   </li>
                 )}
@@ -26009,6 +25917,19 @@ declare module "cloudflare:workers" {
   ["extras/pnpm-workspace.yaml.hbs", `packages:
   - "apps/*"
   - "packages/*"
+{{#if (includes frontend "solid")}}
+
+minimumReleaseAgeExclude:
+  - "@solidjs/meta@1.0.0-next.2"
+  - "@solidjs/router@2.0.0-next.16"
+  - "@solidjs/signals@2.0.0-rc.0"
+  - "@solidjs/vite-plugin@3.0.0-next.28"
+  - "@solidjs/web@2.0.0-rc.0"
+  - "@tanstack/solid-query-devtools@6.0.0-rc.0"
+  - "@tanstack/solid-query@6.0.0-rc.0"
+  - "babel-preset-solid@2.0.0-rc.0"
+  - "solid-js@2.0.0-rc.0"
+{{/if}}
 {{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "prisma") (eq serverDeploy "prisma") (eq webDeploy "docker") (eq serverDeploy "docker") (eq webDeploy "vercel") (eq serverDeploy "vercel") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "next") (includes frontend "nuxt"))}}
 
 # pnpm 11 blocks dependency lifecycle scripts unless they are approved here.
@@ -32618,7 +32539,6 @@ dist
 .output
 .vercel
 .netlify
-.vinxi
 *.local
 .env
 .env.*
@@ -32635,19 +32555,22 @@ dist
     "dev": "vite dev",
     "build": "vite build",
     "check-types": "tsc --noEmit",
-    "start": "node .output/server/index.mjs",
+    "start": "{{#if (eq webDeploy "cloudflare")}}vite preview{{else}}node .output/server/index.mjs{{/if}}",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@solidjs/meta": "^0.29.4",
-    "@solidjs/router": "^1.0.0",
-    "@solidjs/start": "^2.0.0",
+    "@solidjs/meta": "^1.0.0-next.2",
+    "@solidjs/router": "^2.0.0-next.16",
+    "@solidjs/web": "^2.0.0-rc.0",
+    "solid-js": "^2.0.0-rc.0"
+  },
+  "devDependencies": {
+    "@solidjs/vite-plugin": "^3.0.0-next.28",
     "@tailwindcss/vite": "^4.3.3",
-    "lucide-solid": "^1.27.0",
-    "nitro": "^3.0.260610-beta",
-    "solid-js": "^1.9.14",
+    "filesystem-routing": "0.2.1",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.1.5"
+    "vite": "^8.1.5"{{#unless (eq webDeploy "cloudflare")}},
+    "nitro": "^3.0.260610-beta"{{/unless}}
   },
   "engines": {
     "node": ">=24"
@@ -32658,11 +32581,11 @@ dist
 User-agent: *
 Disallow:
 `],
-  ["frontend/solid/src/app.tsx.hbs", `import { MetaProvider, Title } from "@solidjs/meta";
-import { Router } from "@solidjs/router";
-import { FileRoutes } from "@solidjs/start/router";
-import { Suspense } from "solid-js";
+  ["frontend/solid/src/App.tsx.hbs", `import { Title } from "@solidjs/meta";
+import { Loading } from "solid-js";
 import Header from "~/components/header";
+import Loader from "~/components/loader";
+import { Router } from "~/router";
 {{#if (eq api "orpc")}}
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";
@@ -32676,33 +32599,28 @@ export default function App() {
 {{/if}}
 
   return (
-    <Router
-      root={(props) => (
 {{#if (eq api "orpc")}}
-        <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
 {{/if}}
-          <MetaProvider>
+      <Router>
+        {(props) => (
+          <>
             <Title>{{projectName}}</Title>
             <div class="grid h-svh grid-rows-[auto_1fr]">
               <Header />
-              <Suspense>{props.children}</Suspense>
+              <Loading fallback={<Loader />}>{props.children}</Loading>
             </div>
+          </>
+        )}
+      </Router>
 {{#if (eq api "orpc")}}
-            <SolidQueryDevtools />
+      <SolidQueryDevtools />
+    </QueryClientProvider>
 {{/if}}
-          </MetaProvider>
-{{#if (eq api "orpc")}}
-        </QueryClientProvider>
-{{/if}}
-      )}
-    >
-      <FileRoutes />
-    </Router>
   );
 }
 `],
-  ["frontend/solid/src/components/header.tsx.hbs", `import { A } from "@solidjs/router";
-{{#if (eq auth "better-auth")}}
+  ["frontend/solid/src/components/header.tsx.hbs", `{{#if (eq auth "better-auth")}}
 import UserMenu from "./user-menu";
 {{/if}}
 import { For } from "solid-js";
@@ -32726,7 +32644,7 @@ export default function Header() {
       <div class="flex flex-row items-center justify-between px-2 py-1">
         <nav class="flex gap-4 text-lg">
           <For each={links}>
-            {(link) => <A href={link.to}>{link.label}</A>}
+            {(link) => <a href={link.to}>{link.label}</a>}
           </For>
         </nav>
         <div class="flex items-center gap-2">
@@ -32740,52 +32658,54 @@ export default function Header() {
   );
 }
 `],
-  ["frontend/solid/src/components/loader.tsx", `import { Loader2 } from "lucide-solid";
-
-export default function Loader() {
+  ["frontend/solid/src/components/loader.tsx", `export default function Loader() {
   return (
-    <div class="flex h-full items-center justify-center pt-8">
-      <Loader2 class="animate-spin" />
+    <div class="flex h-full items-center justify-center pt-8" role="status">
+      <span class="h-5 w-5 animate-spin rounded-full border-2 border-current border-r-transparent" />
+      <span class="sr-only">Loading</span>
     </div>
   );
 }
 `],
-  ["frontend/solid/src/entry-client.tsx", `// @refresh reload
-import { mount, StartClient } from "@solidjs/start/client";
+  ["frontend/solid/src/Document.tsx", `import { HydrationScript } from "@solidjs/web";
+import type { ParentProps } from "solid-js";
 
-mount(() => <StartClient />, document.getElementById("app")!);
+export default function Document(props: ParentProps) {
+  return (
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <HydrationScript />
+      </head>
+      <body>{props.children}</body>
+    </html>
+  );
+}
 `],
-  ["frontend/solid/src/entry-server.tsx", `// @refresh reload
-import { createHandler, StartServer } from "@solidjs/start/server";
+  ["frontend/solid/src/middleware.ts", `import { createAPIHandler } from "filesystem-routing/api";
+import routes from "virtual:file-routes";
 
-export default createHandler(() => (
-  <StartServer
-    document={({ assets, children, scripts }) => (
-      <html lang="en">
-        <head>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          {assets}
-        </head>
-        <body>
-          <div id="app">{children}</div>
-          {scripts}
-        </body>
-      </html>
-    )}
-  />
-));
+export default [createAPIHandler(routes)];
 `],
-  ["frontend/solid/src/global.d.ts", `/// <reference types="@solidjs/start/env" />
+  ["frontend/solid/src/router.ts", `import { createRouter } from "@solidjs/router";
+import { fileRoutes } from "@solidjs/router/fs";
+import { pageRoutes } from "virtual:file-routes";
+
+export const Router = createRouter({ routes: fileRoutes(pageRoutes) });
 `],
   ["frontend/solid/src/routes/[...404].tsx", `import { Title } from "@solidjs/meta";
-import { HttpStatusCode } from "@solidjs/start";
+import type { RouteDefinition } from "@solidjs/router";
+import { httpStatus } from "@solidjs/web";
+
+export const route = {
+  preload: () => httpStatus(404),
+} satisfies RouteDefinition;
 
 export default function NotFound() {
   return (
     <main class="container mx-auto max-w-3xl px-4 py-10">
       <Title>Not Found</Title>
-      <HttpStatusCode code={404} />
       <h1 class="text-3xl font-bold">Page not found</h1>
     </main>
   );
@@ -32853,6 +32773,9 @@ body {
   @apply bg-neutral-950 text-neutral-100;
 }
 `],
+  ["frontend/solid/src/vite-env.d.ts", `/// <reference types="vite/client" />
+/// <reference types="filesystem-routing/types" />
+`],
   ["frontend/solid/tsconfig.json.hbs", `{
   "compilerOptions": {
     "target": "ESNext",
@@ -32861,22 +32784,23 @@ body {
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "jsx": "preserve",
-    "jsxImportSource": "solid-js",
+    "jsxImportSource": "@solidjs/web",
     "allowJs": true,
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["@solidjs/start/env", "vite/client"],
+    "types": ["vite/client"],
     "isolatedModules": true,
     "paths": {
       "~/*": ["./src/*"]
     }
   },
-  "exclude": ["dist"]
+  "exclude": ["dist", ".output"]
 }
 `],
   ["frontend/solid/vite.config.ts.hbs", `import tailwindcss from "@tailwindcss/vite";
-import { solidStart } from "@solidjs/start/config";
+import solid from "@solidjs/vite-plugin";
+import { fileRoutes } from "filesystem-routing/vite";
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
 import { unwasm } from "unwasm/plugin";
 {{/if}}
@@ -32888,15 +32812,13 @@ import { nitro } from "nitro/vite";
 {{/unless}}
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
-{{#if (eq webDeploy "cloudflare")}}
-{{#if (eq orm "prisma")}}
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
 const prismaWasm =
   process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
     ? null
     : unwasm({ esmImport: true });
 {{/if}}
 
-{{/if}}
 {{#if (eq webDeploy "cloudflare")}}
 export default defineConfig(({ command }) => {
   const cloudflareWorkersAlias: Record<string, string> =
@@ -32916,11 +32838,16 @@ export default defineConfig({
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     prismaWasm,
 {{/if}}
-    solidStart(),
-    tailwindcss(),
+    solid({
+      start: { middleware: "./src/middleware.ts" },
+      ssr: true,
+      extensions: [".jsx", ".tsx"],
+    }),
 {{#unless (eq webDeploy "cloudflare")}}
-    nitro(),
+    nitro({ serverEntry: false }),
 {{/unless}}
+    fileRoutes({ httpMethods: true }),
+    tailwindcss(),
   ],
   server: {
     port: 3001,
@@ -32928,18 +32855,12 @@ export default defineConfig({
 {{#if (eq webDeploy "cloudflare")}}
   build: {
     rollupOptions: {
-      // resolved by workerd at runtime; local production builds must not bundle it
       external: ["cloudflare:workers"],
     },
   },
-{{/if}}
   resolve: {
-{{#if (eq webDeploy "cloudflare")}}
     alias: cloudflareWorkersAlias,
-{{/if}}
-    dedupe: ["solid-js"],
   },
-{{#if (eq webDeploy "cloudflare")}}
   };
 {{else}}
 });
@@ -35736,4 +35657,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 520;
+export const TEMPLATE_COUNT = 522;

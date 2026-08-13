@@ -15,8 +15,8 @@ type PackageJson = {
 export const dependencyVersionMap = {
   typescript: "^6.0.3",
 
-  "better-auth": "1.6.25",
-  "@better-auth/expo": "1.6.25",
+  "better-auth": "1.6.27",
+  "@better-auth/expo": "1.6.27",
 
   "@clerk/backend": "^3.13.2",
   "@clerk/express": "^2.1.47",
@@ -144,12 +144,11 @@ export const dependencyVersionMap = {
   "@tanstack/react-query": "^5.101.4",
   "@tanstack/react-form": "^1.33.2",
   "@tanstack/react-router-ssr-query": "^1.167.1",
-  "@tanstack/solid-form": "^1.33.2",
   "@tanstack/svelte-form": "^1.33.2",
 
-  "@tanstack/solid-query": "^5.101.4",
-  "@tanstack/solid-query-devtools": "^5.101.4",
-  "@tanstack/solid-router-devtools": "^1.167.0",
+  "@tanstack/solid-query": "^6.0.0-rc.0",
+  "@tanstack/solid-query-devtools": "^6.0.0-rc.0",
+  "@tanstack/query-core": "5.101.0",
 
   wrangler: "^4.115.0",
   "@cloudflare/vite-plugin": "1.48.0",

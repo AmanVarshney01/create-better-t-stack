@@ -31,7 +31,7 @@ function getWebFramework(frontend: ProjectConfig["frontend"], isDesktop: boolean
   if (frontend.includes("svelte")) return "sveltekit";
   if (frontend.includes("astro")) return "astro";
   if (frontend.includes("tanstack-start")) return "tanstack-start";
-  if (frontend.includes("solid")) return "solidstart";
+  if (frontend.includes("solid")) return "nitro";
   // Desktop addons force React Router into a static export served as a plain vite app
   if (frontend.includes("react-router") && !isDesktop) return "react-router";
   return "vite";

@@ -102,7 +102,7 @@ describe("local tool requirements", () => {
   it.each([
     ["astro", "22.11.0", "22.12.0", "Astro 7"],
     ["react-router", "22.21.0", "22.22.0", "React Router 8"],
-    ["solid", "23.11.0", "24.0.0", "SolidStart 2"],
+    ["solid", "23.11.0", "24.0.0", "Solid 2"],
     ["native-bare", "22.12.0", "22.13.0", "React Native 0.86"],
   ] as const)(
     "checks the %s Node requirement",

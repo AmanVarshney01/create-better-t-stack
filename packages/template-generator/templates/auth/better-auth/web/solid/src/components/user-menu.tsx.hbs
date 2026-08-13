@@ -1,10 +1,10 @@
-import { A, useNavigate } from "@solidjs/router";
+import { useNavigate } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
-import { authClient } from "~/lib/auth-client";
+import { authClient, useSession } from "~/lib/auth-client";
 
 export default function UserMenu() {
   const navigate = useNavigate();
-  const session = authClient.useSession();
+  const session = useSession();
   const [isMenuOpen, setIsMenuOpen] = createSignal(false);
 
   return (
@@ -14,9 +14,9 @@ export default function UserMenu() {
       </Show>
 
       <Show when={!session().isPending && !session().data}>
-        <A href="/login" class="inline-block border rounded px-4  text-sm">
+        <a href="/login" class="inline-block border rounded px-4  text-sm">
           Sign In
-        </A>
+        </a>
       </Show>
 
       <Show when={!session().isPending && session().data}>

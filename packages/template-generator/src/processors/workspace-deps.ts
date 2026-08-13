@@ -15,6 +15,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     api,
     serverDeploy,
     webDeploy,
+    frontend,
   } = config;
 
   const workspaceVersion = packageManager === "npm" ? "*" : "workspace:*";
@@ -155,7 +156,11 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     const webPackageDeps = { ...envDep, ...uiDep } satisfies Record<string, string>;
 
     if (api !== "none" && packages.api) webPackageDeps[`@${projectName}/api`] = workspaceVersion;
-    if (backend === "self" && auth !== "none" && packages.auth) {
+    if (
+      auth !== "none" &&
+      packages.auth &&
+      (backend === "self" || (auth === "better-auth" && frontend.includes("solid")))
+    ) {
       webPackageDeps[`@${projectName}/auth`] = workspaceVersion;
     }
     if (backend === "convex" && packages.backend)
