@@ -34,6 +34,33 @@ async function generate(overrides: Partial<CreateOptions>) {
 }
 
 describe("Alchemy providers", () => {
+  it("keeps Cloudflare development on each framework's documented frontend port", async () => {
+    const scenarios = [
+      { frontend: "tanstack-router", port: 3001 },
+      { frontend: "react-router", port: 5173 },
+      { frontend: "tanstack-start", port: 3001 },
+      { frontend: "next", port: 3001 },
+      { frontend: "nuxt", port: 3001 },
+      { frontend: "svelte", port: 5173 },
+      { frontend: "solid", port: 3001 },
+      { frontend: "astro", port: 4321 },
+    ] as const;
+
+    for (const scenario of scenarios) {
+      const files = await generate({
+        projectName: `cloudflare-dev-${scenario.frontend}`,
+        frontend: [scenario.frontend],
+      });
+      const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
+
+      if (scenario.frontend === "next" || scenario.frontend === "svelte") {
+        expect(infra).toContain(`url: "http://localhost:${scenario.port}"`);
+      } else {
+        expect(infra).toContain(`dev: {\n        port: ${scenario.port},\n      }`);
+      }
+    }
+  });
+
   it("keeps self-hosted applications same-origin", async () => {
     const cloudflareFiles = await generate({
       projectName: "cloudflare-self-origin",
