@@ -1,4 +1,9 @@
-import type { DatabaseSetup, DbSetupOptions } from "../../types";
+import {
+  supportsAlchemyManagedDatabase,
+  type DatabaseSetup,
+  type DbSetupOptions,
+  type ProjectConfig,
+} from "../../types";
 import { isSilent } from "../../utils/context";
 
 export interface DatabaseSetupCliOptions {
@@ -66,4 +71,26 @@ export function mergeResolvedDbSetupOptions(
     ...dbSetupOptions,
     mode: resolvedMode,
   };
+}
+
+export function resolveProjectDbSetupOptions(
+  config: Pick<
+    ProjectConfig,
+    "backend" | "dbSetup" | "dbSetupOptions" | "webDeploy" | "serverDeploy"
+  >,
+  cliOptions: DatabaseSetupCliOptions = {},
+): DbSetupOptions | undefined {
+  const dbSetupOptions = config.dbSetupOptions ?? cliOptions.dbSetupOptions;
+  const explicitMode =
+    dbSetupOptions?.mode ?? (cliOptions.manualDb === true ? "manual" : undefined);
+
+  if (!explicitMode && supportsAlchemyManagedDatabase(config)) {
+    return { ...dbSetupOptions, mode: "alchemy" };
+  }
+
+  const resolved = mergeResolvedDbSetupOptions(config.dbSetup, dbSetupOptions, {
+    ...cliOptions,
+    dbSetupOptions,
+  });
+  return resolved;
 }

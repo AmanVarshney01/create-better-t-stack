@@ -359,7 +359,7 @@ Web deployment configuration:
 create-better-t-stack --web-deploy docker
 ```
 
-When the app that consumes Neon, PlanetScale, or Prisma Postgres is deployed with Alchemy, the generated stack provisions the database, injects runtime credentials, and applies checked-in migrations. Run `alchemy login --configure` from `packages/infra`; no separate provider setup step is required. See the [Alchemy deployment guide](/docs/guides/cloudflare-alchemy) for details.
+When the app that consumes Neon, PlanetScale, or Prisma Postgres is deployed with Alchemy, the CLI asks how the database should be provisioned and defaults to Alchemy. You can instead choose the provider's automatic setup when available or configure an existing database manually. With Alchemy selected, the generated stack provisions the database, injects runtime credentials, and applies checked-in migrations. Run `alchemy login --configure` from `packages/infra`; no separate provider setup step is required. See the [Alchemy deployment guide](/docs/guides/cloudflare-alchemy) for details.
 
 ## Automation Surfaces
 

@@ -157,6 +157,7 @@ describe("CLI flow presentation", () => {
       database: "postgres",
       orm: "drizzle",
       dbSetup: "neon",
+      dbSetupOptions: { mode: "alchemy" },
       auth: "better-auth",
       payments: "none",
       addons: ["turborepo", "mcp"],
@@ -189,6 +190,7 @@ describe("CLI flow presentation", () => {
           { label: "Database", value: "PostgreSQL" },
           { label: "ORM", value: "Drizzle" },
           { label: "Setup", value: "Neon" },
+          { label: "Provisioning", value: "Alchemy" },
         ],
       },
       {

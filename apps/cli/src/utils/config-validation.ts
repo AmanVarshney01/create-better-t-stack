@@ -1,6 +1,13 @@
 import { Result } from "better-result";
 
-import type { CLIInput, Database, DatabaseSetup, ProjectConfig, Runtime } from "../types";
+import {
+  supportsAlchemyManagedDatabase,
+  type CLIInput,
+  type Database,
+  type DatabaseSetup,
+  type ProjectConfig,
+  type Runtime,
+} from "../types";
 import {
   CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS,
   CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS,
@@ -222,6 +229,31 @@ export function validateDatabaseSetup(
         );
       }
     }
+  }
+
+  return Result.ok(undefined);
+}
+
+export function validateAlchemyDatabaseProvisioning(
+  config: Partial<ProjectConfig>,
+): ValidationResult {
+  if (config.dbSetupOptions?.mode !== "alchemy") return Result.ok(undefined);
+
+  const { backend, dbSetup, webDeploy, serverDeploy } = config;
+  if (!backend || !dbSetup || !webDeploy || !serverDeploy) return Result.ok(undefined);
+
+  if (
+    !supportsAlchemyManagedDatabase({
+      backend,
+      dbSetup,
+      webDeploy,
+      serverDeploy,
+      dbSetupOptions: config.dbSetupOptions,
+    })
+  ) {
+    return validationErr(
+      "Alchemy database provisioning requires Neon, PlanetScale, or Prisma Postgres and an Alchemy deployment target for the app that consumes the database.",
+    );
   }
 
   return Result.ok(undefined);
@@ -495,6 +527,7 @@ export function validateFullConfig(
   return Result.gen(function* () {
     yield* validateDatabaseOrmAuth(config, providedFlags);
     yield* validateDatabaseSetup(config, providedFlags);
+    yield* validateAlchemyDatabaseProvisioning(config);
 
     yield* validateConvexConstraints(config, providedFlags);
     yield* validateBackendNoneConstraints(config, providedFlags);

@@ -78,6 +78,7 @@ describe("Database setup options", () => {
     if (result.isErr()) return;
 
     expect(result.value.reproducibleCommand).toContain("--db-setup neon");
+    expect(result.value.reproducibleCommand).toContain(`--db-setup-options '{"mode":"auto"}'`);
     expect(result.value.reproducibleCommand).not.toContain("create-json --input");
     expect(result.value.reproducibleCommand).not.toContain("--manual-db");
   });
@@ -115,6 +116,7 @@ describe("Database setup options", () => {
     if (result.isErr()) return;
 
     expect(result.value.reproducibleCommand).toContain("--db-setup neon");
+    expect(result.value.reproducibleCommand).toContain(`--db-setup-options '{"mode":"auto"}'`);
     expect(result.value.reproducibleCommand).not.toContain("create-json --input");
   });
 

@@ -93,3 +93,31 @@ test("still rejects D1 when the remaining prompt flow cannot resolve it to a val
     );
   }
 });
+
+test("rejects Alchemy database provisioning without a matching deployment", () => {
+  const options = {
+    backend: "hono",
+    frontend: ["tanstack-router"],
+    database: "postgres",
+    orm: "drizzle",
+    dbSetup: "neon",
+    dbSetupOptions: { mode: "alchemy" },
+    api: "trpc",
+    auth: "none",
+    payments: "none",
+    addons: ["none"],
+    examples: ["none"],
+    runtime: "bun",
+    webDeploy: "none",
+    serverDeploy: "vercel",
+  } as const;
+
+  const result = processAndValidateFlags(options, getProvidedFlags(options), "my-app");
+
+  expect(result.isErr()).toBe(true);
+  if (result.isErr()) {
+    expect(result.error.message).toContain(
+      "Alchemy database provisioning requires Neon, PlanetScale, or Prisma Postgres",
+    );
+  }
+});

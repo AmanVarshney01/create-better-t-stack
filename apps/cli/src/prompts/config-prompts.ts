@@ -6,6 +6,7 @@ import type {
   Backend,
   Database,
   DatabaseSetup,
+  DbSetupOptions,
   Examples,
   Frontend,
   ORM,
@@ -23,7 +24,7 @@ import { getApiChoice } from "./api";
 import { getAuthChoice } from "./auth";
 import { getBackendFrameworkChoice } from "./backend";
 import { getDatabaseChoice } from "./database";
-import { getDBSetupChoice } from "./database-setup";
+import { getDBSetupChoice, getDbProvisioningChoice } from "./database-setup";
 import { getExamplesChoice } from "./examples";
 import { getFrontendChoice } from "./frontend";
 import { getGitChoice } from "./git";
@@ -53,6 +54,7 @@ type PromptGroupResults = {
   install: boolean;
   webDeploy: WebDeploy;
   serverDeploy: ServerDeploy;
+  dbSetupMode: DbSetupOptions["mode"];
 };
 
 export async function gatherConfig(
@@ -166,6 +168,15 @@ export async function gatherConfig(
           results.webDeploy,
           previousAnswer,
         ),
+      dbSetupMode: ({ results, previousAnswer }) =>
+        getDbProvisioningChoice(
+          flags.dbSetupOptions?.mode,
+          results.dbSetup,
+          results.backend,
+          results.webDeploy,
+          results.serverDeploy,
+          previousAnswer,
+        ),
       git: ({ previousAnswer }) => getGitChoice(flags.git, previousAnswer),
       packageManager: ({ previousAnswer }) =>
         getPackageManagerChoice(flags.packageManager, previousAnswer),
@@ -179,7 +190,7 @@ export async function gatherConfig(
         { label: "Product", prompts: ["auth", "payments", "addons", "examples"] },
         {
           label: "Ship",
-          prompts: ["webDeploy", "serverDeploy", "git", "packageManager", "install"],
+          prompts: ["webDeploy", "serverDeploy", "dbSetupMode", "git", "packageManager", "install"],
         },
       ],
       onCancel: () => {
@@ -193,7 +204,10 @@ export async function gatherConfig(
     projectDir: projectDir,
     relativePath: relativePath,
     addonOptions: flags.addonOptions,
-    dbSetupOptions: flags.dbSetupOptions,
+    dbSetupOptions:
+      result.dbSetupMode === undefined
+        ? flags.dbSetupOptions
+        : { ...flags.dbSetupOptions, mode: result.dbSetupMode },
     frontend: result.frontend,
     backend: result.backend,
     runtime: result.runtime,
