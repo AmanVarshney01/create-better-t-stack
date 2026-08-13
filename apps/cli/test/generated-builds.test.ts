@@ -733,7 +733,7 @@ async function validateSolidScaffold(sample: SelectedBuildSample, projectDir: st
     expect(viteConfig).toContain('external: ["cloudflare:workers"]');
     const infra = await fs.readFile(path.join(projectDir, "packages/infra/alchemy.run.ts"), "utf8");
     expect(infra).toContain('flags: ["nodejs_compat"]');
-    expect(infra).toContain("runWorkerFirst: true");
+    expect(infra).not.toContain("runWorkerFirst");
   }
 
   if (sample.config.webDeploy === "docker") {

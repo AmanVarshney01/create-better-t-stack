@@ -913,7 +913,7 @@ function generateDeploymentCommands(
     }
     if (needsCorsOrigin) {
       lines.push(
-        "- After the first deploy, set `CORS_ORIGIN` in `apps/server/.env` to the exact deployed web origin, such as `https://app.example.com`, then deploy the server again.",
+        "- Required after the first deploy: set `CORS_ORIGIN` in `apps/server/.env` to the exact deployed web origin, such as `https://app.example.com`, then deploy the server again.",
       );
     }
     if (prismaAuthTarget) {

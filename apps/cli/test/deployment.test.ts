@@ -1408,7 +1408,7 @@ describe("Deployment Configurations", () => {
       expect(infraFile).toContain('export const web = Cloudflare.Website.Vite("web", {');
       expect(infraFile).toContain('rootDir: "../../apps/web"');
       expect(infraFile).toContain('flags: ["nodejs_compat"]');
-      expect(infraFile).toContain("runWorkerFirst: true");
+      expect(infraFile).not.toContain("runWorkerFirst");
       expect(infraFile).toContain("DB: db");
       expect(webPkg.devDependencies.alchemy).toBeUndefined();
       expect(webPkg.devDependencies["@cloudflare/vite-plugin"]).toBeUndefined();

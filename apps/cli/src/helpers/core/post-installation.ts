@@ -726,7 +726,7 @@ function getAlchemyDeployInstructions(
 
     if (!isBackendSelf && hasAlchemyServer && hasWeb) {
       originSteps.push(
-        `${pc.cyan("•")} After the first deploy, set CORS_ORIGIN in apps/server/.env to the deployed web origin, then deploy again`,
+        `${pc.cyan("•")} Required after the first deploy: set CORS_ORIGIN in apps/server/.env to the deployed web origin, then deploy again`,
       );
     }
 

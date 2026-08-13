@@ -136,16 +136,7 @@ function writeVite(
           "},",
         );
       }
-      if (framework === "solid") {
-        writeObject(
-          writer,
-          "assets: {",
-          () => {
-            writer.writeLine("runWorkerFirst: true,");
-          },
-          "},",
-        );
-      } else if (framework === "tanstack-router") {
+      if (framework === "tanstack-router") {
         writeObject(
           writer,
           "assets: {",
