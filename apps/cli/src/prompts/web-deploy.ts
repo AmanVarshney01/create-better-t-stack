@@ -53,8 +53,8 @@ function getDeploymentDisplay(deployment: WebDeploy): DeploymentDisplay {
   }
   if (deployment === "vercel") {
     return {
-      label: "Vercel",
-      hint: "Deploy to Vercel with Services",
+      label: "Vercel (experimental)",
+      hint: "Deploy to Vercel with Services; not fully tested",
     };
   }
   return {

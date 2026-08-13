@@ -2,13 +2,13 @@
 
 ### Requirement: Vetted exact Alchemy version
 
-Every generated Alchemy project SHALL use the exact accepted Alchemy version. The currently selected release SHALL be `alchemy@2.0.0-beta.72`; Alchemy version ranges SHALL NOT be generated. The generated `effect`, `@effect/platform-node`, and `@effect/platform-bun` versions SHALL use the exact latest selected Effect beta, currently beta.107. This combination contains Alchemy's released `Schema.TaggedError` migration and SHALL be verified without an older Effect pin, dependency patch, override, or hoisted linker. A replacement version SHALL pass every applicable Better-T-Stack offline and live gate before becoming accepted. A fix on main or in a pull request SHALL not be treated as available until a containing release is pinned and verified. Exact pinning is a permanent publication-safety policy, not a temporary beta shim.
+Every generated Alchemy project SHALL use the exact accepted Alchemy version. The currently selected release SHALL be `alchemy@2.0.0-beta.72`; Alchemy version ranges SHALL NOT be generated. The generated `effect`, `@effect/platform-node`, and `@effect/platform-bun` versions SHALL use the exact latest selected Effect release candidate, currently rc.108. This combination contains Alchemy's released `Schema.TaggedError` migration and SHALL be verified without an older Effect pin, dependency patch, override, or hoisted linker. A replacement version SHALL pass every applicable Better-T-Stack offline and live gate before becoming accepted. A fix on main or in a pull request SHALL not be treated as available until a containing release is pinned and verified. Exact pinning is a permanent publication-safety policy, not a temporary beta shim.
 
 #### Scenario: Generate a Cloudflare target
 
 - **WHEN** either deployment plane selects Cloudflare
 - **THEN** the infra package SHALL depend on exactly `alchemy@2.0.0-beta.72`
-- **AND** its Effect and Effect platform dependencies SHALL be pinned exactly to `4.0.0-beta.107`
+- **AND** its Effect and Effect platform dependencies SHALL be pinned exactly to `4.0.0-rc.108`
 - **AND** the generated package manager SHALL resolve that exact version
 - **AND** the generated dependency graph SHALL install without an Effect downgrade or package-manager restriction
 
