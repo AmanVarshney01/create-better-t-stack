@@ -146,6 +146,69 @@ describe("CLI flow presentation", () => {
     expect(result.orm).toBe("drizzle");
   });
 
+  it("preserves the legacy manual database flag without opening a provisioning prompt", async () => {
+    const result = await runWithContextAsync({}, () =>
+      gatherConfig(
+        {
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          api: "trpc",
+          database: "postgres",
+          orm: "drizzle",
+          dbSetup: "neon",
+          auth: "none",
+          payments: "none",
+          addons: ["none"],
+          examples: ["none"],
+          webDeploy: "none",
+          serverDeploy: "prisma",
+          git: false,
+          packageManager: "bun",
+          install: false,
+        },
+        "manual-db-app",
+        "/tmp/manual-db-app",
+        "manual-db-app",
+        { skipCompatibilityChecks: true, manualDb: true },
+      ),
+    );
+
+    expect(result.dbSetupOptions).toEqual({ mode: "manual" });
+  });
+
+  it("clears a stale Alchemy mode after deployment navigation", async () => {
+    const result = await runWithContextAsync({}, () =>
+      gatherConfig(
+        {
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          api: "trpc",
+          database: "postgres",
+          orm: "drizzle",
+          dbSetup: "neon",
+          dbSetupOptions: { mode: "alchemy", neon: { method: "neon-new" } },
+          auth: "none",
+          payments: "none",
+          addons: ["none"],
+          examples: ["none"],
+          webDeploy: "prisma",
+          serverDeploy: "vercel",
+          git: false,
+          packageManager: "bun",
+          install: false,
+        },
+        "external-db-app",
+        "/tmp/external-db-app",
+        "external-db-app",
+        { skipCompatibilityChecks: true },
+      ),
+    );
+
+    expect(result.dbSetupOptions).toEqual({ neon: { method: "neon-new" } });
+  });
+
   it("groups the selected stack and uses product-facing labels", () => {
     const config = {
       projectName: "acme-app",
@@ -157,6 +220,7 @@ describe("CLI flow presentation", () => {
       database: "postgres",
       orm: "drizzle",
       dbSetup: "neon",
+      dbSetupOptions: { mode: "alchemy" },
       auth: "better-auth",
       payments: "none",
       addons: ["turborepo", "mcp"],
@@ -189,6 +253,7 @@ describe("CLI flow presentation", () => {
           { label: "Database", value: "PostgreSQL" },
           { label: "ORM", value: "Drizzle" },
           { label: "Setup", value: "Neon" },
+          { label: "Provisioning", value: "Alchemy" },
         ],
       },
       {

@@ -15842,7 +15842,7 @@ export default defineConfig({
     path: path.join("prisma", "migrations"),
   },
   datasource: {
-    url: {{#if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}process.env.DATABASE_URL!{{else}}env("DATABASE_URL"){{/if}},
+    url: {{#if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy dbSetupOptions)}}process.env.DATABASE_URL!{{else}}env("DATABASE_URL"){{/if}},
   },
 });
 `],
@@ -16037,7 +16037,7 @@ export default defineConfig({
     path: path.join("prisma", "migrations"),
     },
     datasource: {
-        url: {{#if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy)}}process.env.DATABASE_URL!{{else}}env('DATABASE_URL'){{/if}},
+        url: {{#if (usesAlchemyDatabase backend dbSetup webDeploy serverDeploy dbSetupOptions)}}process.env.DATABASE_URL!{{else}}env('DATABASE_URL'){{/if}},
     },
 })
 `],

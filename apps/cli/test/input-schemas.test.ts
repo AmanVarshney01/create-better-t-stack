@@ -9,6 +9,15 @@ import {
 import { getSchemaResult, SchemaNameSchema } from "../src/index";
 
 describe("Input schemas", () => {
+  it("accepts Alchemy as a database setup mode", () => {
+    const result = CreateInputSchema.safeParse({
+      projectName: "app",
+      dbSetupOptions: { mode: "alchemy" },
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("rejects conflicting manualDb and dbSetupOptions.mode inputs", () => {
     const result = CreateInputSchema.safeParse({
       projectName: "app",

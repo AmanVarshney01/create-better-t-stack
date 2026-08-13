@@ -49,6 +49,8 @@ export function generateReproducibleCommand(config: ProjectConfig): string {
   flags.push(`--db-setup ${config.dbSetup}`);
   if (config.dbSetupOptions?.mode === "manual") {
     flags.push("--manual-db");
+  } else if (config.dbSetupOptions?.mode === "auto") {
+    flags.push(`--db-setup-options '${JSON.stringify({ mode: "auto" })}'`);
   }
   flags.push(`--web-deploy ${config.webDeploy}`);
   flags.push(`--server-deploy ${config.serverDeploy}`);

@@ -43,7 +43,7 @@ import {
   validateResolvedConfigCompatibility,
 } from "../../validation";
 import { createProject } from "./create-project";
-import { mergeResolvedDbSetupOptions } from "./db-setup-options";
+import { resolveProjectDbSetupOptions } from "./db-setup-options";
 
 export interface CreateHandlerOptions {
   silent?: boolean;
@@ -324,6 +324,7 @@ async function createProjectHandlerInternal(
           try: async () =>
             gatherConfig(flagConfig, finalBaseName, finalResolvedPath, finalPathInput, {
               skipCompatibilityChecks: cliInput.yolo,
+              manualDb: cliInput.manualDb ?? input.manualDb,
             }),
           catch: (cause: unknown) => {
             if (cause instanceof UserCancelledError) return cause;
@@ -337,14 +338,10 @@ async function createProjectHandlerInternal(
       config = gatherResult;
     }
 
-    const effectiveDbSetupOptions = mergeResolvedDbSetupOptions(
-      config.dbSetup,
-      config.dbSetupOptions,
-      {
-        manualDb: cliInput.manualDb ?? input.manualDb,
-        dbSetupOptions: cliInput.dbSetupOptions ?? input.dbSetupOptions,
-      },
-    );
+    const effectiveDbSetupOptions = resolveProjectDbSetupOptions(config, {
+      manualDb: cliInput.manualDb ?? input.manualDb,
+      dbSetupOptions: cliInput.dbSetupOptions ?? input.dbSetupOptions,
+    });
 
     if (effectiveDbSetupOptions) {
       config = {

@@ -367,7 +367,9 @@ export const UltraciteHookSchema = z
   .enum(["cursor", "windsurf", "codebuddy", "claude", "copilot"])
   .describe("Ultracite hook integration");
 
-export const DbSetupModeSchema = z.enum(["manual", "auto"]).describe("Database setup mode");
+export const DbSetupModeSchema = z
+  .enum(["manual", "auto", "alchemy"])
+  .describe("Database setup mode");
 
 export const NeonSetupMethodSchema = z
   .enum(["neon-new", "neon", "neondb", "neonctl"])

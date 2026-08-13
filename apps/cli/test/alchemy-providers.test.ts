@@ -74,6 +74,52 @@ describe("Alchemy providers", () => {
         serverDeploy: "vercel",
       }),
     ).toBe(false);
+    expect(
+      usesAlchemyManagedDatabase({
+        backend: "hono",
+        dbSetup: "neon",
+        webDeploy: "none",
+        serverDeploy: "prisma",
+        dbSetupOptions: { mode: "auto" },
+      }),
+    ).toBe(false);
+    expect(
+      usesAlchemyManagedDatabase({
+        backend: "hono",
+        dbSetup: "neon",
+        webDeploy: "none",
+        serverDeploy: "prisma",
+        dbSetupOptions: { mode: "alchemy" },
+      }),
+    ).toBe(true);
+  });
+
+  it("keeps Alchemy compute while allowing externally provisioned databases", async () => {
+    const combinations = [
+      { dbSetup: "neon", mode: "auto", providerResource: "Neon.Project" },
+      { dbSetup: "planetscale", mode: "manual", providerResource: "Planetscale.PostgresDatabase" },
+      { dbSetup: "prisma-postgres", mode: "auto", providerResource: "Prisma.Postgres" },
+    ] as const;
+
+    for (const combination of combinations) {
+      const files = await generate({
+        projectName: `external-${combination.dbSetup}`,
+        dbSetup: combination.dbSetup,
+        dbSetupOptions: { mode: combination.mode },
+        webDeploy: "none",
+        serverDeploy: "prisma",
+        backend: "hono",
+        runtime: "bun",
+      });
+      const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
+      const prismaConfig = files.get("packages/db/prisma.config.ts") ?? "";
+
+      expect(infra).toContain('export const server = Prisma.Compute("server"');
+      expect(infra).toContain('DATABASE_URL: Config.redacted("DATABASE_URL")');
+      expect(infra).not.toContain(combination.providerResource);
+      expect(prismaConfig).toContain("env('DATABASE_URL')");
+      expect(prismaConfig).not.toContain("process.env.DATABASE_URL!");
+    }
   });
 
   it("provisions Neon and applies checked-in Prisma migrations", async () => {

@@ -125,4 +125,30 @@ describe("post-install instructions", () => {
       expect(nextSteps).not.toContain("db:migrate:local");
     });
   }
+
+  it("shows external database steps when Alchemy deploys compute only", async () => {
+    const stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
+    spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline in test"));
+
+    await displayPostInstallInstructions({
+      ...baseConfig,
+      projectName: "external-neon",
+      database: "postgres",
+      backend: "hono",
+      runtime: "bun",
+      frontend: ["tanstack-router"],
+      orm: "prisma",
+      dbSetup: "neon",
+      dbSetupOptions: { mode: "manual" },
+      webDeploy: "none",
+      serverDeploy: "prisma",
+      depsInstalled: false,
+    });
+
+    const output = stdout.mock.calls.map(([chunk]) => String(chunk)).join("");
+
+    expect(output).not.toContain("Alchemy provisions Neon");
+    expect(output).toContain("bun run db:push");
+    expect(output).toContain("bun run db:studio");
+  });
 });

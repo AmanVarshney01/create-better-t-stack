@@ -84,6 +84,9 @@ const VALUE_LABELS = {
   docker: "Docker",
   cloudflare: "Cloudflare",
   vercel: "Vercel",
+  alchemy: "Alchemy",
+  auto: "Automatic",
+  manual: "Manual",
   npm: "npm",
   pnpm: "pnpm",
 } satisfies Record<string, string>;
@@ -137,6 +140,7 @@ export function getConfigSections(config: Partial<ProjectConfig>): ConfigDisplay
       ["Database", config.database],
       ["ORM", config.orm],
       ["Setup", config.dbSetup],
+      ["Provisioning", config.dbSetupOptions?.mode],
     ]),
     section("Product", [
       ["Auth", config.auth],

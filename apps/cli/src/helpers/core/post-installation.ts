@@ -8,6 +8,7 @@ import type {
   Frontend,
   ORM,
   ProjectConfig,
+  DbSetupOptions,
   Runtime,
   ServerDeploy,
   WebDeploy,
@@ -63,6 +64,7 @@ export async function displayPostInstallInstructions(
     dbSetup,
     webDeploy,
     serverDeploy,
+    dbSetupOptions,
   } = config;
 
   const isConvex = backend === "convex";
@@ -92,6 +94,7 @@ export async function displayPostInstallInstructions(
           webDeploy,
           serverDeploy,
           backend,
+          dbSetupOptions,
         )
       : "";
 
@@ -375,6 +378,7 @@ async function getDatabaseInstructions(
   webDeploy: WebDeploy,
   serverDeploy: ServerDeploy,
   backend: Backend,
+  dbSetupOptions: DbSetupOptions | undefined,
 ) {
   const notes: string[] = [];
   const commands: Array<{ label: string; command: string }> = [];
@@ -386,6 +390,7 @@ async function getDatabaseInstructions(
     dbSetup,
     webDeploy,
     serverDeploy,
+    dbSetupOptions,
   });
 
   if (dbSetup === "docker") {

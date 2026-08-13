@@ -260,6 +260,12 @@ Structured addon options are still persisted in `bts.jsonc`, but the printed rep
 
 `dbSetupOptions` controls how database provisioning behaves in automation.
 
+The supported modes are:
+
+- `alchemy`: provision the selected provider through Alchemy
+- `auto`: use the provider's automatic setup flow
+- `manual`: use an existing database and configure its credentials yourself
+
 Example:
 
 ```bash
@@ -280,7 +286,9 @@ create-better-t-stack create-json --input '{
 
 Current behavior:
 
-- Providers with automatic cloud provisioning default to `manual` in silent/agent flows:
+- When the database-consuming application deploys through Alchemy and the selected setup is Neon, PlanetScale, or Prisma Postgres, provisioning defaults to `alchemy`.
+
+- Otherwise, providers with automatic cloud provisioning default to `manual` in silent/agent flows:
   - `turso`
   - `neon`
   - `prisma-postgres`

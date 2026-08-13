@@ -1,11 +1,4 @@
-import type {
-  Backend,
-  DatabaseSetup,
-  Frontend,
-  ProjectConfig,
-  ServerDeploy,
-  WebDeploy,
-} from "./types";
+import type { DatabaseSetup, Frontend, ProjectConfig, ServerDeploy, WebDeploy } from "./types";
 
 export const ALCHEMY_DEPLOY_TARGETS = ["cloudflare", "prisma"] as const;
 
@@ -35,17 +28,24 @@ export function isAlchemyDatabaseSetup(
   return ALCHEMY_DATABASE_SETUPS.some((value) => value === setup);
 }
 
-export function usesAlchemyManagedDatabase(config: {
-  backend: Backend;
-  dbSetup: DatabaseSetup;
-  webDeploy: WebDeploy;
-  serverDeploy: ServerDeploy;
-}): boolean {
+type AlchemyDatabaseConfig = Pick<
+  ProjectConfig,
+  "backend" | "dbSetup" | "dbSetupOptions" | "webDeploy" | "serverDeploy"
+>;
+
+export function supportsAlchemyManagedDatabase(config: AlchemyDatabaseConfig): boolean {
   if (!isAlchemyDatabaseSetup(config.dbSetup)) return false;
 
   return config.backend === "self"
     ? isAlchemyDeployTarget(config.webDeploy)
     : isAlchemyDeployTarget(config.serverDeploy);
+}
+
+export function usesAlchemyManagedDatabase(config: AlchemyDatabaseConfig): boolean {
+  if (!supportsAlchemyManagedDatabase(config)) return false;
+
+  const mode = config.dbSetupOptions?.mode;
+  return mode === undefined || mode === "alchemy";
 }
 
 export function getLocalD1Owner(

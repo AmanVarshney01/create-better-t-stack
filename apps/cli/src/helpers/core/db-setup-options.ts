@@ -1,4 +1,9 @@
-import type { DatabaseSetup, DbSetupOptions } from "../../types";
+import {
+  supportsAlchemyManagedDatabase,
+  type DatabaseSetup,
+  type DbSetupOptions,
+  type ProjectConfig,
+} from "../../types";
 import { isSilent } from "../../utils/context";
 
 export interface DatabaseSetupCliOptions {
@@ -7,6 +12,20 @@ export interface DatabaseSetupCliOptions {
 }
 
 export type DbSetupMode = NonNullable<DbSetupOptions["mode"]>;
+
+export function withDbSetupMode(
+  dbSetupOptions: DbSetupOptions | undefined,
+  mode: DbSetupMode | undefined,
+): DbSetupOptions | undefined {
+  const resolved = { ...dbSetupOptions };
+  if (mode === undefined) {
+    delete resolved.mode;
+  } else {
+    resolved.mode = mode;
+  }
+
+  return Object.keys(resolved).length === 0 ? undefined : resolved;
+}
 
 const REMOTE_PROVISIONING_DB_SETUPS: DatabaseSetup[] = [
   "turso",
@@ -66,4 +85,26 @@ export function mergeResolvedDbSetupOptions(
     ...dbSetupOptions,
     mode: resolvedMode,
   };
+}
+
+export function resolveProjectDbSetupOptions(
+  config: Pick<
+    ProjectConfig,
+    "backend" | "dbSetup" | "dbSetupOptions" | "webDeploy" | "serverDeploy"
+  >,
+  cliOptions: DatabaseSetupCliOptions = {},
+): DbSetupOptions | undefined {
+  const dbSetupOptions = config.dbSetupOptions ?? cliOptions.dbSetupOptions;
+  const explicitMode =
+    dbSetupOptions?.mode ?? (cliOptions.manualDb === true ? "manual" : undefined);
+
+  if (!explicitMode && supportsAlchemyManagedDatabase(config)) {
+    return { ...dbSetupOptions, mode: "alchemy" };
+  }
+
+  const resolved = mergeResolvedDbSetupOptions(config.dbSetup, dbSetupOptions, {
+    ...cliOptions,
+    dbSetupOptions,
+  });
+  return resolved;
 }
