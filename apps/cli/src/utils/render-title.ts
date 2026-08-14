@@ -37,7 +37,14 @@ const SHOW_CURSOR = "\u001B[?25h";
 const RESET = "\u001B[39m";
 
 const BLOCK_STAGES = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
-const CREST: RGB = [255, 255, 255];
+const WHITE: RGB = [255, 255, 255];
+const BLACK: RGB = [0, 0, 0];
+/** How far the crest is lifted toward white. Tinted, not blown out, so the
+ *  leading edge still reads as catppuccin rather than a white bar. */
+const CREST_LIFT = 0.72;
+/** The face is ANSI Shadow: the box-drawing glyphs are the drop shadow, so
+ *  they sit darker than the solid fill and the wordmark gains depth. */
+const SHADOW_DEPTH = 0.42;
 /** Columns the wavefront travels per frame. */
 const WAVE_SPEED = 2.4;
 /** Columns each row lags behind the one above, which slants the wavefront. */
@@ -90,6 +97,12 @@ function renderStaticTitle(title: string): string {
   return titleGradient.multiline(title);
 }
 
+/** The finished wordmark, or plain text where colour is unsupported. */
+function renderSettled(lines: string[], width: number): string {
+  if (!pc.isColorSupported) return lines.join("\n");
+  return renderWave(lines, width, Number.POSITIVE_INFINITY);
+}
+
 /**
  * One frame of a wavefront travelling left to right: ahead of it nothing has
  * appeared, at its crest the glyphs are rising through the block ramp and lit
@@ -115,17 +128,19 @@ function renderWave(lines: string[], width: number, head: number): string {
 
         const character = line[column];
         const settled = Math.min(1, age / RAMP);
+        const isFill = character === "█";
         const glyph =
-          character === "█" && settled < 1
+          isFill && settled < 1
             ? BLOCK_STAGES[
                 Math.min(BLOCK_STAGES.length - 1, Math.floor(settled * BLOCK_STAGES.length))
               ]
             : character;
 
-        const base = sampleStops(width > 1 ? column / (width - 1) : 0);
+        const stop = sampleStops(width > 1 ? column / (width - 1) : 0);
+        const base = isFill || character === " " ? stop : mix(stop, BLACK, SHADOW_DEPTH);
         // Ease the crest out quickly so only the leading columns read as hot.
         const heat = (1 - settled) ** 2;
-        const next = fg(mix(base, CREST, heat));
+        const next = fg(mix(base, WHITE, heat * CREST_LIFT));
         if (next !== pen) {
           out += next;
           pen = next;
@@ -168,7 +183,7 @@ export const renderTitle = async (options: RenderTitleOptions = {}): Promise<voi
   }
 
   if (terminalWidth === titleWidth || !(options.animate ?? shouldAnimate(output))) {
-    output.write(`${renderStaticTitle(TITLE_TEXT)}\n`);
+    output.write(`${renderSettled(lines, titleWidth)}\n`);
     return;
   }
 
@@ -183,7 +198,7 @@ export const renderTitle = async (options: RenderTitleOptions = {}): Promise<voi
   }
   // Settle with the same renderer, not gradient-string: it degrades to a lower
   // colour depth than the truecolor frames, which would jump on the last step.
-  frames.push(renderWave(lines, titleWidth, travel + RAMP));
+  frames.push(renderWave(lines, titleWidth, Number.POSITIVE_INFINITY));
 
   output.write(HIDE_CURSOR);
   const restoreCursorOnExit = () => output.write(SHOW_CURSOR);
