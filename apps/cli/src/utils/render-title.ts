@@ -36,22 +36,11 @@ const HIDE_CURSOR = "\u001B[?25l";
 const SHOW_CURSOR = "\u001B[?25h";
 const RESET = "\u001B[39m";
 
-const SCRAMBLE = ["░", "▒", "▓", "╬", "╪", "┼", "═", "║", "#", "%", "*", "+", "=", "<", ">", ":"];
-const WHITE: RGB = [255, 255, 255];
-const BLACK: RGB = [0, 0, 0];
-const NOISE_DIM: RGB = [69, 71, 90];
-/** Share of the timeline over which cells first wink in as static. */
-const BIRTH_SPREAD = 0.45;
-/** Window on the timeline in which cells resolve, in random order. */
-const LOCK_START = 0.35;
-const LOCK_END = 0.85;
-/** Share of the timeline over which a fresh lock-in fades back down. */
-const FLASH_FADE = 0.12;
-const FRAME_COUNT = 34;
-/** How far the flash lifts a freshly locked glyph toward white. */
-const FLASH_LIFT = 0.72;
-/** Box-drawing glyphs are ANSI Shadow's drop shadow, kept darker than the fill. */
-const SHADOW_DEPTH = 0.42;
+/** The wordmark lands whole in this quiet grey; colour is the only motion. */
+const NEUTRAL: RGB = [108, 112, 134];
+/** Share of the timeline the mark holds in grey before colour begins. */
+const HOLD = 0.15;
+const FRAME_COUNT = 26;
 const FRAME_DELAY_MS = 16;
 
 type RGB = [number, number, number];
@@ -94,11 +83,8 @@ function fg([r, g, b]: RGB): string {
   return `\u001B[38;2;${r};${g};${b}m`;
 }
 
-/** Deterministic per-cell-per-frame noise, so runs and tests are reproducible. */
-function hash(x: number, y: number, frame: number): number {
-  let h = (x * 374761393 + y * 668265263 + frame * 2246822519) >>> 0;
-  h = Math.imul(h ^ (h >>> 13), 1274126177);
-  return (h ^ (h >>> 16)) >>> 0;
+function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
 }
 
 function renderStaticTitle(title: string): string {
@@ -108,28 +94,24 @@ function renderStaticTitle(title: string): string {
 /** The finished wordmark, or plain text where colour is unsupported. */
 function renderSettled(lines: string[], width: number): string {
   if (!pc.isColorSupported) return lines.join("\n");
-  return renderDecode(lines, width, Number.POSITIVE_INFINITY);
+  return renderFade(lines, width, 1);
 }
 
 /**
- * One frame of the materialisation. Cells wink in as scramble static in one
- * random order and resolve into the real glyphs in another, each landing with
- * a brief on-palette flash. There is no direction to it: the wordmark
- * condenses out of noise everywhere at once.
+ * The whole wordmark at one point of the fade: every glyph present from the
+ * first frame, colour interpolated uniformly from the neutral grey to each
+ * column's gradient stop. Colour is the only thing that changes, matching the
+ * site's rule that motion is a colour transition and nothing else.
  */
-function renderDecode(lines: string[], width: number, progress: number): string {
-  const frameKey = Number.isFinite(progress) ? Math.round(progress * FRAME_COUNT * 2) : 0;
+function renderFade(lines: string[], width: number, t: number): string {
   return lines
-    .map((line, row) => {
+    .map((line) => {
       let out = "";
       let pen = "";
 
       for (let column = 0; column < line.length; column++) {
         const character = line[column];
-        const birth = ((hash(column, row, 1) % 1000) / 1000) * BIRTH_SPREAD;
-        const lock = LOCK_START + ((hash(column, row, 2) % 1000) / 1000) * (LOCK_END - LOCK_START);
-
-        if (character === " " || progress < birth) {
+        if (character === " ") {
           if (pen) {
             out += RESET;
             pen = "";
@@ -139,25 +121,12 @@ function renderDecode(lines: string[], width: number, progress: number): string 
         }
 
         const stop = sampleStops(width > 1 ? column / (width - 1) : 0);
-        let glyph: string;
-        let colour: RGB;
-        if (progress < lock) {
-          glyph = SCRAMBLE[hash(column, row, frameKey) % SCRAMBLE.length];
-          const approach = (progress - birth) / (lock - birth);
-          colour = mix(NOISE_DIM, stop, approach * 0.6);
-        } else {
-          glyph = character;
-          const base = character === "█" ? stop : mix(stop, BLACK, SHADOW_DEPTH);
-          const heat = Math.max(0, 1 - (progress - lock) / FLASH_FADE) ** 2;
-          colour = mix(base, WHITE, heat * FLASH_LIFT);
-        }
-
-        const next = fg(colour);
+        const next = fg(mix(NEUTRAL, stop, t));
         if (next !== pen) {
           out += next;
           pen = next;
         }
-        out += glyph;
+        out += character;
       }
 
       return pen ? out + RESET : out;
@@ -202,13 +171,13 @@ export const renderTitle = async (options: RenderTitleOptions = {}): Promise<voi
   const frameDelayMs = options.frameDelayMs ?? FRAME_DELAY_MS;
   const lineCount = lines.length - 1;
   const moveToFrameStart = `\u001B[${lineCount}A\r`;
+
   const frames: string[] = [];
   for (let frame = 0; frame < FRAME_COUNT; frame++) {
-    frames.push(renderDecode(lines, titleWidth, frame / (FRAME_COUNT - 1)));
+    const linear = frame / (FRAME_COUNT - 1);
+    const t = linear <= HOLD ? 0 : easeOutCubic((linear - HOLD) / (1 - HOLD));
+    frames.push(renderFade(lines, titleWidth, t));
   }
-  // Settle with the same renderer, not gradient-string: it degrades to a lower
-  // colour depth than the truecolor frames, which would jump on the last step.
-  frames.push(renderDecode(lines, titleWidth, Number.POSITIVE_INFINITY));
 
   output.write(HIDE_CURSOR);
   const restoreCursorOnExit = () => output.write(SHOW_CURSOR);

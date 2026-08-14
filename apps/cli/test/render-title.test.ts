@@ -59,7 +59,7 @@ describe("renderTitle", () => {
     expect(chunks[0]?.replaceAll(ANSI_PATTERN, "")).toBe(`${TITLE_TEXT}\n`);
   });
 
-  it("decodes through scramble static before settling", async () => {
+  it("fades the whole wordmark from neutral grey into the gradient", async () => {
     const { chunks, output } = createOutput(120);
 
     await renderTitle({ animate: true, frameDelayMs: 0, output });
@@ -67,13 +67,12 @@ describe("renderTitle", () => {
     expect(chunks[0]).toBe("\u001B[?25l");
     const lineCount = TITLE_TEXT.split("\n").length - 1;
     expect(chunks.some((chunk) => chunk.includes(`\u001B[${lineCount}A\r`))).toBe(true);
-    expect(chunks.some((chunk) => chunk.includes("░"))).toBe(true);
-    expect(chunks.some((chunk) => chunk.includes("▒"))).toBe(true);
-    expect(chunks.some((chunk) => chunk.includes("▓"))).toBe(true);
+    const firstFrame = chunks[1] ?? "";
+    expect(firstFrame.replaceAll(ANSI_PATTERN, "")).toBe(TITLE_TEXT);
+    expect(firstFrame).toContain("38;2;108;112;134");
     const lastFrame = chunks.at(-2) ?? "";
-    for (const scramble of ["░", "▒", "▓", "╬", "#", "%"]) {
-      expect(lastFrame).not.toContain(scramble);
-    }
+    expect(lastFrame.replaceAll(ANSI_PATTERN, "")).toContain("██████╗");
+    expect(lastFrame).not.toContain("38;2;108;112;134");
     expect(chunks.at(-1)).toBe("\u001B[?25h\n");
     expect(chunks.length).toBeGreaterThan(20);
   });
