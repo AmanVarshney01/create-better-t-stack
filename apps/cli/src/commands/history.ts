@@ -83,7 +83,7 @@ export async function historyHandler(input: HistoryCommandInput): Promise<void> 
     return;
   }
 
-  renderTitle();
+  await renderTitle();
   intro(pc.magenta(`Project history · ${entries.length}`));
 
   if (entries.length === 0) {

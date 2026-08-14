@@ -181,7 +181,7 @@ async function createProjectHandlerInternal(
 ): Promise<Result<CreateProjectResult, CreateHandlerError>> {
   return Result.gen(async function* () {
     if (!isSilent() && input.renderTitle !== false) {
-      renderTitle();
+      await renderTitle();
     }
     if (!isSilent()) intro(pc.magenta("Configure your new project"));
 
