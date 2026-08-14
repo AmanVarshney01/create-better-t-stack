@@ -59,7 +59,7 @@ describe("renderTitle", () => {
     expect(chunks[0]?.replaceAll(ANSI_PATTERN, "")).toBe(`${TITLE_TEXT}\n`);
   });
 
-  it("animates a wavefront that rises through the block stages", async () => {
+  it("decodes through scramble static before settling", async () => {
     const { chunks, output } = createOutput(120);
 
     await renderTitle({ animate: true, frameDelayMs: 0, output });
@@ -67,9 +67,13 @@ describe("renderTitle", () => {
     expect(chunks[0]).toBe("\u001B[?25l");
     const lineCount = TITLE_TEXT.split("\n").length - 1;
     expect(chunks.some((chunk) => chunk.includes(`\u001B[${lineCount}A\r`))).toBe(true);
-    expect(chunks.some((chunk) => chunk.includes("▁"))).toBe(true);
-    expect(chunks.some((chunk) => chunk.includes("▄"))).toBe(true);
-    expect(chunks.some((chunk) => chunk.includes("▇"))).toBe(true);
+    expect(chunks.some((chunk) => chunk.includes("░"))).toBe(true);
+    expect(chunks.some((chunk) => chunk.includes("▒"))).toBe(true);
+    expect(chunks.some((chunk) => chunk.includes("▓"))).toBe(true);
+    const lastFrame = chunks.at(-2) ?? "";
+    for (const scramble of ["░", "▒", "▓", "╬", "#", "%"]) {
+      expect(lastFrame).not.toContain(scramble);
+    }
     expect(chunks.at(-1)).toBe("\u001B[?25h\n");
     expect(chunks.length).toBeGreaterThan(20);
   });

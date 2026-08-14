@@ -36,21 +36,24 @@ const HIDE_CURSOR = "\u001B[?25l";
 const SHOW_CURSOR = "\u001B[?25h";
 const RESET = "\u001B[39m";
 
-const BLOCK_STAGES = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
+const SCRAMBLE = ["░", "▒", "▓", "╬", "╪", "┼", "═", "║", "#", "%", "*", "+", "=", "<", ">", ":"];
 const WHITE: RGB = [255, 255, 255];
 const BLACK: RGB = [0, 0, 0];
-/** How far the crest is lifted toward white. Tinted, not blown out, so the
- *  leading edge still reads as catppuccin rather than a white bar. */
-const CREST_LIFT = 0.72;
-/** The face is ANSI Shadow: the box-drawing glyphs are the drop shadow, so
- *  they sit darker than the solid fill and the wordmark gains depth. */
-const SHADOW_DEPTH = 0.42;
-/** Columns the wavefront travels per frame. */
-const WAVE_SPEED = 2.4;
-/** Columns each row lags behind the one above, which slants the wavefront. */
+const NOISE_DIM: RGB = [69, 71, 90];
+/** Columns of scramble static running ahead of each glyph's lock-in. */
+const NOISE_LEAD = 9;
+/** Random spread, in columns, added to each lock-in so the front is ragged. */
+const LOCK_JITTER = 7;
+/** Columns the decode front travels per frame. */
+const DECODE_SPEED = 2.6;
+/** Columns each row lags behind the one above. */
 const ROW_LAG = 1.4;
-/** Columns a glyph takes to rise from its first block stage to settled colour. */
-const RAMP = 7;
+/** Columns over which the lock-in flash fades back to the settled colour. */
+const FLASH_SPAN = 4;
+/** How far the flash lifts a freshly locked glyph toward white. */
+const FLASH_LIFT = 0.72;
+/** Box-drawing glyphs are ANSI Shadow's drop shadow, kept darker than the fill. */
+const SHADOW_DEPTH = 0.42;
 const FRAME_DELAY_MS = 16;
 
 type RGB = [number, number, number];
@@ -93,6 +96,13 @@ function fg([r, g, b]: RGB): string {
   return `\u001B[38;2;${r};${g};${b}m`;
 }
 
+/** Deterministic per-cell-per-frame noise, so runs and tests are reproducible. */
+function hash(x: number, y: number, frame: number): number {
+  let h = (x * 374761393 + y * 668265263 + frame * 2246822519) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return (h ^ (h >>> 16)) >>> 0;
+}
+
 function renderStaticTitle(title: string): string {
   return titleGradient.multiline(title);
 }
@@ -100,24 +110,28 @@ function renderStaticTitle(title: string): string {
 /** The finished wordmark, or plain text where colour is unsupported. */
 function renderSettled(lines: string[], width: number): string {
   if (!pc.isColorSupported) return lines.join("\n");
-  return renderWave(lines, width, Number.POSITIVE_INFINITY);
+  return renderDecode(lines, width, Number.POSITIVE_INFINITY);
 }
 
 /**
- * One frame of a wavefront travelling left to right: ahead of it nothing has
- * appeared, at its crest the glyphs are rising through the block ramp and lit
- * near-white, and behind it they have settled into the catppuccin gradient.
+ * One frame of the decode: ahead of the front nothing has appeared, inside the
+ * noise band glyph cells flicker through scramble static that warms toward the
+ * column's colour, and at lock-in the real glyph lands with a brief flash
+ * before settling into the gradient.
  */
-function renderWave(lines: string[], width: number, head: number): string {
+function renderDecode(lines: string[], width: number, head: number): string {
+  const frameKey = Number.isFinite(head) ? Math.floor(head) : 0;
   return lines
     .map((line, row) => {
-      const rowHead = head - row * ROW_LAG;
       let out = "";
       let pen = "";
 
       for (let column = 0; column < line.length; column++) {
-        const age = rowHead - column;
-        if (age <= 0) {
+        const character = line[column];
+        const lock = column + row * ROW_LAG + ((hash(column, row, 0) % 1000) / 1000) * LOCK_JITTER;
+        const age = head - lock;
+
+        if (character === " " || age < -NOISE_LEAD) {
           if (pen) {
             out += RESET;
             pen = "";
@@ -126,21 +140,21 @@ function renderWave(lines: string[], width: number, head: number): string {
           continue;
         }
 
-        const character = line[column];
-        const settled = Math.min(1, age / RAMP);
-        const isFill = character === "█";
-        const glyph =
-          isFill && settled < 1
-            ? BLOCK_STAGES[
-                Math.min(BLOCK_STAGES.length - 1, Math.floor(settled * BLOCK_STAGES.length))
-              ]
-            : character;
-
         const stop = sampleStops(width > 1 ? column / (width - 1) : 0);
-        const base = isFill || character === " " ? stop : mix(stop, BLACK, SHADOW_DEPTH);
-        // Ease the crest out quickly so only the leading columns read as hot.
-        const heat = (1 - settled) ** 2;
-        const next = fg(mix(base, WHITE, heat * CREST_LIFT));
+        let glyph: string;
+        let colour: RGB;
+        if (age < 0) {
+          glyph = SCRAMBLE[hash(column, row, frameKey) % SCRAMBLE.length];
+          const approach = 1 + age / NOISE_LEAD;
+          colour = mix(NOISE_DIM, stop, approach * 0.6);
+        } else {
+          glyph = character;
+          const base = character === "█" ? stop : mix(stop, BLACK, SHADOW_DEPTH);
+          const heat = Math.max(0, 1 - age / FLASH_SPAN) ** 2;
+          colour = mix(base, WHITE, heat * FLASH_LIFT);
+        }
+
+        const next = fg(colour);
         if (next !== pen) {
           out += next;
           pen = next;
@@ -190,15 +204,15 @@ export const renderTitle = async (options: RenderTitleOptions = {}): Promise<voi
   const frameDelayMs = options.frameDelayMs ?? FRAME_DELAY_MS;
   const lineCount = lines.length - 1;
   const moveToFrameStart = `\u001B[${lineCount}A\r`;
-  const travel = titleWidth + lineCount * ROW_LAG + RAMP;
+  const travel = titleWidth + lineCount * ROW_LAG + LOCK_JITTER + FLASH_SPAN;
 
   const frames: string[] = [];
-  for (let head = WAVE_SPEED; head < travel; head += WAVE_SPEED) {
-    frames.push(renderWave(lines, titleWidth, head));
+  for (let head = 0; head < travel; head += DECODE_SPEED) {
+    frames.push(renderDecode(lines, titleWidth, head));
   }
   // Settle with the same renderer, not gradient-string: it degrades to a lower
   // colour depth than the truecolor frames, which would jump on the last step.
-  frames.push(renderWave(lines, titleWidth, Number.POSITIVE_INFINITY));
+  frames.push(renderDecode(lines, titleWidth, Number.POSITIVE_INFINITY));
 
   output.write(HIDE_CURSOR);
   const restoreCursorOnExit = () => output.write(SHOW_CURSOR);
