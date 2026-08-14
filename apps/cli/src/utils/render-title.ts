@@ -40,16 +40,14 @@ const SCRAMBLE = ["░", "▒", "▓", "╬", "╪", "┼", "═", "║", "#", "
 const WHITE: RGB = [255, 255, 255];
 const BLACK: RGB = [0, 0, 0];
 const NOISE_DIM: RGB = [69, 71, 90];
-/** Columns of scramble static running ahead of each glyph's lock-in. */
-const NOISE_LEAD = 9;
-/** Random spread, in columns, added to each lock-in so the front is ragged. */
-const LOCK_JITTER = 7;
-/** Columns the decode front travels per frame. */
-const DECODE_SPEED = 2.6;
-/** Columns each row lags behind the one above. */
-const ROW_LAG = 1.4;
-/** Columns over which the lock-in flash fades back to the settled colour. */
-const FLASH_SPAN = 4;
+/** Share of the timeline over which cells first wink in as static. */
+const BIRTH_SPREAD = 0.45;
+/** Window on the timeline in which cells resolve, in random order. */
+const LOCK_START = 0.35;
+const LOCK_END = 0.85;
+/** Share of the timeline over which a fresh lock-in fades back down. */
+const FLASH_FADE = 0.12;
+const FRAME_COUNT = 34;
 /** How far the flash lifts a freshly locked glyph toward white. */
 const FLASH_LIFT = 0.72;
 /** Box-drawing glyphs are ANSI Shadow's drop shadow, kept darker than the fill. */
@@ -114,13 +112,13 @@ function renderSettled(lines: string[], width: number): string {
 }
 
 /**
- * One frame of the decode: ahead of the front nothing has appeared, inside the
- * noise band glyph cells flicker through scramble static that warms toward the
- * column's colour, and at lock-in the real glyph lands with a brief flash
- * before settling into the gradient.
+ * One frame of the materialisation. Cells wink in as scramble static in one
+ * random order and resolve into the real glyphs in another, each landing with
+ * a brief on-palette flash. There is no direction to it: the wordmark
+ * condenses out of noise everywhere at once.
  */
-function renderDecode(lines: string[], width: number, head: number): string {
-  const frameKey = Number.isFinite(head) ? Math.floor(head) : 0;
+function renderDecode(lines: string[], width: number, progress: number): string {
+  const frameKey = Number.isFinite(progress) ? Math.round(progress * FRAME_COUNT * 2) : 0;
   return lines
     .map((line, row) => {
       let out = "";
@@ -128,10 +126,10 @@ function renderDecode(lines: string[], width: number, head: number): string {
 
       for (let column = 0; column < line.length; column++) {
         const character = line[column];
-        const lock = column + row * ROW_LAG + ((hash(column, row, 0) % 1000) / 1000) * LOCK_JITTER;
-        const age = head - lock;
+        const birth = ((hash(column, row, 1) % 1000) / 1000) * BIRTH_SPREAD;
+        const lock = LOCK_START + ((hash(column, row, 2) % 1000) / 1000) * (LOCK_END - LOCK_START);
 
-        if (character === " " || age < -NOISE_LEAD) {
+        if (character === " " || progress < birth) {
           if (pen) {
             out += RESET;
             pen = "";
@@ -143,14 +141,14 @@ function renderDecode(lines: string[], width: number, head: number): string {
         const stop = sampleStops(width > 1 ? column / (width - 1) : 0);
         let glyph: string;
         let colour: RGB;
-        if (age < 0) {
+        if (progress < lock) {
           glyph = SCRAMBLE[hash(column, row, frameKey) % SCRAMBLE.length];
-          const approach = 1 + age / NOISE_LEAD;
+          const approach = (progress - birth) / (lock - birth);
           colour = mix(NOISE_DIM, stop, approach * 0.6);
         } else {
           glyph = character;
           const base = character === "█" ? stop : mix(stop, BLACK, SHADOW_DEPTH);
-          const heat = Math.max(0, 1 - age / FLASH_SPAN) ** 2;
+          const heat = Math.max(0, 1 - (progress - lock) / FLASH_FADE) ** 2;
           colour = mix(base, WHITE, heat * FLASH_LIFT);
         }
 
@@ -204,11 +202,9 @@ export const renderTitle = async (options: RenderTitleOptions = {}): Promise<voi
   const frameDelayMs = options.frameDelayMs ?? FRAME_DELAY_MS;
   const lineCount = lines.length - 1;
   const moveToFrameStart = `\u001B[${lineCount}A\r`;
-  const travel = titleWidth + lineCount * ROW_LAG + LOCK_JITTER + FLASH_SPAN;
-
   const frames: string[] = [];
-  for (let head = 0; head < travel; head += DECODE_SPEED) {
-    frames.push(renderDecode(lines, titleWidth, head));
+  for (let frame = 0; frame < FRAME_COUNT; frame++) {
+    frames.push(renderDecode(lines, titleWidth, frame / (FRAME_COUNT - 1)));
   }
   // Settle with the same renderer, not gradient-string: it degrades to a lower
   // colour depth than the truecolor frames, which would jump on the last step.
