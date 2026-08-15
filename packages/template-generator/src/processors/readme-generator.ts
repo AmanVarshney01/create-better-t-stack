@@ -576,6 +576,7 @@ function generateFeaturesList(
     nx: "- **Nx** - Smart monorepo task orchestration and caching",
     "vite-plus":
       "- **Vite+** - Unified Vite toolchain, workspace task runner, linting, and formatting",
+    "nix-flake": "- **Nix Flake** - Reproducible development environment",
   } satisfies Record<string, string>;
 
   for (const addon of addons) {

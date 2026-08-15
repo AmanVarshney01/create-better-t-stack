@@ -93,6 +93,10 @@ function getAddonDisplay(addon: Addons): AddonDisplay {
       label = "WXT";
       hint = "Build browser extensions";
       break;
+    case "nix-flake":
+      label = "Nix Flake";
+      hint = "Reproducible development environment with Nix";
+      break;
     case "skills":
       label = "Skills";
       hint = "AI coding agent skills for your stack";
@@ -118,6 +122,7 @@ const ADDON_GROUPS = {
   "Code Quality": ["biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
   "Platform Extensions": ["pwa", "tauri", "electrobun", "opentui", "wxt"],
+  "Development Environment": ["nix-flake"],
   Observability: ["evlog"],
   "AI & Agent Tools": ["skills", "mcp"],
 };

@@ -238,6 +238,121 @@ pre-commit:
     #   run: {{packageManagerRunCmd}} lint
 {{/if}}
 `],
+  ["addons/nix-flake/_envrc.hbs", `use flake .
+`],
+  ["addons/nix-flake/flake.lock", `{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1786711500,
+        "narHash": "sha256-QvnceIGTBeDvDd9oCn+GvdsnkquliuwbVgpiRH68qaQ=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "02e08985a27c65ffd33d434eeb2e660a2e4dc84d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-26.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
+`],
+  ["addons/nix-flake/flake.nix.hbs", `{
+  description = "Development shell for {{projectName}}";
+
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+
+  outputs = { nixpkgs, ... }:
+    let
+      supportedSystems = [
+        "aarch64-darwin"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "x86_64-linux"
+      ];
+      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+    in
+    {
+      devShells = forAllSystems (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.\${system};
+        in
+        {
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              git
+{{#if (eq packageManager "bun")}}
+              bun
+{{else}}
+              nodejs_24
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+              pnpm
+{{/if}}
+{{#if (or (and (eq runtime "bun") (ne packageManager "bun")) (and (includes addons "electrobun") (ne packageManager "bun")))}}
+              bun
+{{/if}}
+{{#if (and (eq runtime "node") (eq packageManager "bun"))}}
+              nodejs_24
+{{/if}}
+{{#if (eq runtime "workers")}}
+              wrangler
+{{/if}}
+{{#if (eq database "sqlite")}}
+              sqlite
+{{/if}}
+{{#if (eq database "postgres")}}
+              postgresql
+{{/if}}
+{{#if (eq database "mysql")}}
+              mariadb
+{{/if}}
+{{#if (eq database "mongodb")}}
+              mongosh
+{{/if}}
+{{#if (eq dbSetup "docker")}}
+              docker-client
+              docker-compose
+{{/if}}
+{{#if (eq dbSetup "turso")}}
+              turso-cli
+{{/if}}
+{{#if (eq dbSetup "supabase")}}
+              supabase-cli
+{{/if}}
+{{#if (includes addons "tauri")}}
+              cargo
+              clippy
+              openssl
+              pkg-config
+              rustc
+              rustfmt
+{{/if}}
+            ]{{#if (includes addons "tauri")}} ++ lib.optionals stdenv.isLinux [
+              gtk3
+              libayatana-appindicator
+              librsvg
+              libsoup_3
+              webkitgtk_4_1
+            ]{{/if}};
+          };
+        }
+      );
+    };
+}
+`],
   ["addons/pwa/apps/web/next/public/favicon/apple-touch-icon.png", `[Binary file]`],
   ["addons/pwa/apps/web/next/public/favicon/favicon-96x96.png", `[Binary file]`],
   ["addons/pwa/apps/web/next/public/favicon/favicon.svg", `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="92" height="92"><svg width="92" height="92" viewBox="0 0 92 92" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -35680,4 +35795,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 522;
+export const TEMPLATE_COUNT = 525;

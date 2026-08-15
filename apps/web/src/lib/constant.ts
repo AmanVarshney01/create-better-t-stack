@@ -660,6 +660,14 @@ export const TECH_OPTIONS = {
       default: false,
     },
     {
+      id: "nix-flake",
+      name: "Nix Flake",
+      description: "Reproducible development environment with Nix",
+      icon: "",
+      color: "from-sky-500 to-cyan-700",
+      default: false,
+    },
+    {
       id: "skills",
       name: "Skills",
       description: "Install AI agent skills for coding assistants",

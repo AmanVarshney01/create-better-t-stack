@@ -45,6 +45,7 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   updateInfraPackageJson(vfs, config);
   updateDesktopPackageJson(vfs, config);
   updateVitePlusPackageScripts(vfs, config);
+  updateNixGitignore(vfs, config);
 
   if (config.backend === "convex") {
     updateConvexPackageJson(vfs, config);
@@ -53,6 +54,15 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
     updateAuthPackageJson(vfs, config);
     updateApiPackageJson(vfs, config);
   }
+}
+
+function updateNixGitignore(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  if (!config.addons.includes("nix-flake")) return;
+
+  const gitignore = vfs.readFile(".gitignore");
+  if (!gitignore || gitignore.includes(".direnv/")) return;
+
+  vfs.writeFile(".gitignore", `${gitignore.trimEnd()}\n\n# Nix\n.direnv/\nresult\nresult-*\n`);
 }
 
 function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
