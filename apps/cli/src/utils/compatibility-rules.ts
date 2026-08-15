@@ -320,6 +320,19 @@ export function validateServerDeployRequiresBackend(
   return Result.ok(undefined);
 }
 
+export function validateNitroCloudflareServerDeploy(
+  serverDeploy: ServerDeploy | undefined,
+  backend: Backend | undefined,
+): ValidationResult {
+  if (serverDeploy === "cloudflare" && backend === "nitro") {
+    return validationErr(
+      "Nitro server deployment to Cloudflare is not available yet because Alchemy does not expose a standalone Nitro adapter. Choose Prisma, Docker, Vercel, or no server deployment.",
+    );
+  }
+
+  return Result.ok(undefined);
+}
+
 export function validateDockerServerDeploy(
   serverDeploy: ServerDeploy | undefined,
   backend: Backend | undefined,
@@ -329,7 +342,7 @@ export function validateDockerServerDeploy(
 
   if (backend === "convex" || backend === "self") {
     return validationErr(
-      "'--server-deploy docker' requires a separate server backend (hono, express, fastify, elysia). For a fullstack 'self' backend, use '--web-deploy docker' instead.",
+      "'--server-deploy docker' requires a separate server backend (hono, express, fastify, elysia, nitro). For a fullstack 'self' backend, use '--web-deploy docker' instead.",
     );
   }
 
@@ -351,7 +364,7 @@ export function validateVercelServerDeploy(
 
   if (backend === "convex" || backend === "self") {
     return validationErr(
-      "'--server-deploy vercel' requires a separate server backend (hono, express, fastify, elysia). For a fullstack 'self' backend, use '--web-deploy vercel' instead.",
+      "'--server-deploy vercel' requires a separate server backend (hono, express, fastify, elysia, nitro). For a fullstack 'self' backend, use '--web-deploy vercel' instead.",
     );
   }
 
@@ -373,7 +386,7 @@ export function validatePrismaServerDeploy(
 
   if (backend === "convex" || backend === "self") {
     return validationErr(
-      "'--server-deploy prisma' requires a separate server backend (hono, express, fastify, elysia). For a fullstack 'self' backend, use '--web-deploy prisma' instead.",
+      "'--server-deploy prisma' requires a separate server backend (hono, express, fastify, elysia, nitro). For a fullstack 'self' backend, use '--web-deploy prisma' instead.",
     );
   }
 

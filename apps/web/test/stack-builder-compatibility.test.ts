@@ -31,6 +31,30 @@ function createStack(overrides: Partial<StackState> = {}): StackState {
 }
 
 describe("stack builder D1 compatibility", () => {
+  test("offers Nitro with only its supported server deployment targets", () => {
+    expect(TECH_OPTIONS.backend.find((option) => option.id === "nitro")).toMatchObject({
+      name: "Nitro",
+      experimental: true,
+    });
+
+    const stack = createStack({
+      backend: "nitro",
+      runtime: "node",
+      serverDeploy: "none",
+    });
+
+    expect(getDisabledReason(stack, "serverDeploy", "docker")).toBeNull();
+    expect(getDisabledReason(stack, "serverDeploy", "prisma")).toBeNull();
+    expect(getDisabledReason(stack, "serverDeploy", "vercel")).toBeNull();
+    expect(getDisabledReason(stack, "serverDeploy", "cloudflare")).toBe(
+      "Cloudflare support requires a standalone Alchemy Nitro adapter",
+    );
+    expect(getDisabledReason(stack, "addons", "evlog")).toBe(
+      "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend",
+    );
+    expect(generateStackCommand(stack)).toContain("--backend nitro");
+  });
+
   test("supports Solid 2 as a self-hosted fullstack backend", () => {
     const stack = createStack({
       webFrontend: ["solid"],

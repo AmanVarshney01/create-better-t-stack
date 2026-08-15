@@ -22,6 +22,19 @@ export function processRuntimeDeps(vfs: VirtualFileSystem, config: ProjectConfig
 
   pkgJson.scripts = pkgJson.scripts || {};
 
+  if (backend === "nitro") {
+    pkgJson.scripts.dev = "nitro dev --port 3000";
+    pkgJson.scripts.start = `${runtime} .output/server/index.mjs`;
+
+    addPackageDependency({
+      vfs,
+      packagePath: serverPath,
+      devDependencies: [runtime === "bun" ? "@types/bun" : "@types/node"],
+    });
+    vfs.writeJson(serverPath, pkgJson);
+    return;
+  }
+
   if (runtime === "bun") {
     pkgJson.scripts.dev = "bun run --hot src/index.ts";
     pkgJson.scripts.start = "bun run dist/index.mjs";

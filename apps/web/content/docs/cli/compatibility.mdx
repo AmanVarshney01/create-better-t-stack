@@ -200,7 +200,8 @@ create-better-t-stack --addons turborepo
 ### Server Deployment
 
 - `--server-deploy cloudflare` requires `--runtime workers` with `--backend hono`
-- `--server-deploy docker` and `--server-deploy vercel` require `--runtime bun` or `--runtime node`
+- `--server-deploy docker`, `--server-deploy prisma`, and `--server-deploy vercel` require `--runtime bun` or `--runtime node`
+- Nitro supports Docker, Prisma, Vercel, or no deployment. Cloudflare requires a first-class standalone Nitro adapter in Alchemy and is rejected before generation.
 - `--server-deploy` is not used for `--backend self`, because fullstack backends deploy with the web app
 
 ## Authentication Requirements
@@ -219,7 +220,7 @@ Better-Auth authentication requires:
 Clerk authentication requires:
 
 - Compatible frontends (React frameworks, Next.js, TanStack Start, native frameworks)
-- Supported backends: Convex, Hono, Express, Fastify, and Elysia
+- Supported backends: Convex, Hono, Express, Fastify, Elysia, and Nitro
 - Fullstack (`--backend self`) support with Next.js or TanStack Start
 - Not compatible with Nuxt, Svelte, Solid, or Astro
 

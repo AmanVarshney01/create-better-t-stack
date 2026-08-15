@@ -129,6 +129,10 @@ const providerLabels = {
   "prisma-postgres": "Prisma Postgres",
 } as const satisfies Partial<Record<DatabaseSetup, string>>;
 
+function hasProviderLabel(dbSetup: DatabaseSetup): dbSetup is keyof typeof providerLabels {
+  return Object.hasOwn(providerLabels, dbSetup);
+}
+
 export async function getDbProvisioningChoice(
   mode: DbSetupMode | undefined,
   dbSetup: DatabaseSetup | undefined,
@@ -152,8 +156,8 @@ export async function getDbProvisioningChoice(
 
   if (mode !== undefined) return mode;
 
+  if (!hasProviderLabel(dbSetup)) return undefined;
   const provider = providerLabels[dbSetup];
-  if (!provider) return undefined;
 
   const options: Array<{ value: DbSetupMode; label: string; hint: string }> = [
     {

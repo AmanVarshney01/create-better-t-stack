@@ -53,12 +53,20 @@ function writePrismaServer(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): 
         writer,
         "build: {",
         () => {
+          if (plan.config.backend === "nitro") {
+            writer.writeLine(`command: "${plan.config.packageManager} run build",`);
+            writer.writeLine('outdir: ".output",');
+            writer.writeLine('entrypoint: "server/index.mjs",');
+            return;
+          }
           writer.writeLine('type: "auto" as const,');
           writer.writeLine('framework: "bun" as const,');
         },
         "},",
       );
-      writer.writeLine('entrypoint: "src/index.ts",');
+      if (plan.config.backend !== "nitro") {
+        writer.writeLine('entrypoint: "src/index.ts",');
+      }
       writer.writeLine("port: 3000,");
       writeObject(
         writer,

@@ -200,6 +200,14 @@ export const TECH_OPTIONS = {
       color: "from-gray-500 to-gray-700",
     },
     {
+      id: "nitro",
+      name: "Nitro",
+      description: "Portable, file-routed server framework",
+      icon: "",
+      color: "from-violet-500 to-indigo-700",
+      experimental: true,
+    },
+    {
       id: "convex",
       name: "Convex",
       description: "Reactive backend-as-a-service",

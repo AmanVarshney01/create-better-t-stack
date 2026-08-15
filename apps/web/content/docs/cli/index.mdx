@@ -29,7 +29,7 @@ create-better-t-stack [project-directory] [options]
 - `--install / --no-install`: Install dependencies after creation
 - `--git / --no-git`: Initialize Git repository
 - `--frontend <types...>`: Web and/or native frameworks (see [Options](/docs/cli/options#frontend))
-- `--backend <framework>`: `hono`, `express`, `fastify`, `elysia`, `convex`, `self`, `none`
+- `--backend <framework>`: `hono`, `express`, `fastify`, `elysia`, `nitro`, `convex`, `self`, `none`
 - `--runtime <runtime>`: `bun`, `node`, `workers` (`none` only with `--backend convex`, `--backend none`, or `--backend self`)
 - `--database <type>`: `none`, `sqlite`, `postgres`, `mysql`, `mongodb`
 - `--orm <type>`: `none`, `drizzle`, `prisma`, `mongoose`
@@ -38,8 +38,8 @@ create-better-t-stack [project-directory] [options]
 - `--payments <provider>`: `polar`, `none`
 - `--db-setup <setup>`: `none`, `turso`, `d1`, `neon`, `supabase`, `prisma-postgres`, `planetscale`, `mongodb-atlas`, `docker`
 - `--examples <types...>`: `none`, `todo`, `ai`
-- `--web-deploy <setup>`: `none`, `cloudflare`
-- `--server-deploy <setup>`: `none`, `cloudflare`
+- `--web-deploy <setup>`: `none`, `cloudflare`, `prisma`, `docker`, `vercel`
+- `--server-deploy <setup>`: `none`, `cloudflare`, `prisma`, `docker`, `vercel`
 - `--template <type>`: `none`, `mern`, `pern`, `t3`, `uniwind`
 - `--directory-conflict <strategy>`: `merge`, `overwrite`, `increment`, `error`
 - `--render-title / --no-render-title`: Show/hide ASCII art title

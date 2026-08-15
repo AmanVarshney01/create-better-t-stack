@@ -1,0 +1,4 @@
+import { auth } from "@{{projectName}}/auth";
+import { defineHandler } from "nitro";
+
+export default defineHandler((event) => auth.handler(event.req));

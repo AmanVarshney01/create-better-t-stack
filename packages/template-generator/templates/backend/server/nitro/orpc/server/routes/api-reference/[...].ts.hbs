@@ -1,0 +1,29 @@
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { onError } from "@orpc/server";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { defineHandler } from "nitro";
+
+const handler = new OpenAPIHandler(appRouter, {
+  plugins: [
+    new OpenAPIReferencePlugin({
+      schemaConverters: [new ZodToJsonSchemaConverter()],
+    }),
+  ],
+  interceptors: [
+    onError((error) => {
+      console.error(error);
+    }),
+  ],
+});
+
+export default defineHandler(async (event) => {
+  const result = await handler.handle(event.req, {
+    prefix: "/api-reference",
+    context: await createContext({ request: event.req }),
+  });
+
+  return result.response ?? new Response("Not Found", { status: 404 });
+});

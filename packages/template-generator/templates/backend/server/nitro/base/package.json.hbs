@@ -1,0 +1,15 @@
+{
+  "name": "server",
+  "type": "module",
+  "scripts": {
+    "build": "nitro build",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {},
+  {{#if (eq dbSetup 'supabase')}}
+  "trustedDependencies": [
+    "supabase"
+  ],
+  {{/if}}
+  "devDependencies": {}
+}

@@ -106,7 +106,9 @@ function getNodeToolingRequirements(config: RequirementConfig): VersionRequireme
     }
   }
 
-  if (!["none", "self", "convex"].includes(config.backend)) {
+  if (config.backend === "nitro") {
+    addNodeRequirement(requirements, "^20.19.0 || >=22.12.0", "Nitro 3");
+  } else if (!["none", "self", "convex"].includes(config.backend)) {
     addNodeRequirement(
       requirements,
       "^22.18.0 || >=24.11.0",

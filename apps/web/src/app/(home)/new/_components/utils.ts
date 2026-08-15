@@ -34,6 +34,7 @@ const clerkSupportedBackends = [
   "express",
   "fastify",
   "elysia",
+  "nitro",
   "self-next",
   "self-tanstack-start",
 ] as const;
@@ -56,7 +57,7 @@ const evlogSupportedFullstackBackends = [
 ] as const;
 
 const clerkBackendRequirementMessage =
-  "Clerk requires Convex, Hono, Express, Fastify, Elysia, or Next.js/TanStack Start fullstack backend";
+  "Clerk requires Convex, Hono, Express, Fastify, Elysia, Nitro, or Next.js/TanStack Start fullstack backend";
 const clerkFrontendRequirementMessage =
   "Clerk requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
 const clerkIncompatibleWebFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
@@ -1499,6 +1500,9 @@ export const getDisabledReason = (
 
   if (category === "serverDeploy") {
     if (optionId === "cloudflare") {
+      if (currentStack.backend === "nitro") {
+        return "Cloudflare support requires a standalone Alchemy Nitro adapter";
+      }
       if (currentStack.runtime !== "workers") return "Cloudflare requires Workers runtime";
       if (currentStack.backend !== "hono") return "Cloudflare requires Hono backend";
     }

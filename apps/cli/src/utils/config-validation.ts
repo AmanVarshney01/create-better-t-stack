@@ -22,6 +22,7 @@ import {
   validateDockerServerDeploy,
   validateDockerWebDeployDesktopAddons,
   validateServerDeployRequiresBackend,
+  validateNitroCloudflareServerDeploy,
   validateVercelServerDeploy,
   validatePrismaServerDeploy,
   validatePrismaWebDeploy,
@@ -543,6 +544,7 @@ export function validateFullConfig(
     yield* validateApiConstraints(config, options);
 
     yield* validateServerDeployRequiresBackend(config.serverDeploy, config.backend);
+    yield* validateNitroCloudflareServerDeploy(config.serverDeploy, config.backend);
     yield* validateDockerServerDeploy(config.serverDeploy, config.backend, config.runtime);
     yield* validateVercelServerDeploy(config.serverDeploy, config.backend, config.runtime);
     yield* validatePrismaServerDeploy(config.serverDeploy, config.backend, config.runtime);

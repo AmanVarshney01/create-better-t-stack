@@ -43,7 +43,7 @@ export function generateTurboConfig(config: ProjectConfig): TurboConfig {
   const hasAlchemy = isAlchemyDeployTarget(webDeploy) || isAlchemyDeployTarget(serverDeploy);
   const hasLocalD1 = getLocalD1Owner(config) === "wrangler";
 
-  const tasks: TurboTasks = getBaseTasks(frontend, config.addons);
+  const tasks: TurboTasks = getBaseTasks(frontend, config.addons, backend);
 
   if (config.addons.includes("electrobun")) Object.assign(tasks, getElectrobunTasks());
   if (isConvex) Object.assign(tasks, getConvexTasks());
@@ -60,7 +60,11 @@ export function generateTurboConfig(config: ProjectConfig): TurboConfig {
   };
 }
 
-function getBaseTasks(frontend: string[], addons: string[]): TurboTasks {
+function getBaseTasks(
+  frontend: string[],
+  addons: string[],
+  backend: ProjectConfig["backend"],
+): TurboTasks {
   // Build outputs per framework:
   // - Vite-based client apps: dist/**
   // - Next.js: .next/** excluding .next/cache/**
@@ -76,6 +80,10 @@ function getBaseTasks(frontend: string[], addons: string[]): TurboTasks {
   }
 
   if (frontend.includes("solid")) {
+    buildOutputs.push(".output/**");
+  }
+
+  if (backend === "nitro" && !buildOutputs.includes(".output/**")) {
     buildOutputs.push(".output/**");
   }
 
