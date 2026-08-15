@@ -44,7 +44,6 @@ export const AddonsSchema = z
     "oxlint",
     "opentui",
     "wxt",
-    "nix-flake",
     "none",
   ])
   .describe("Additional addons");

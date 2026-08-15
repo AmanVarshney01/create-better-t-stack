@@ -195,6 +195,5 @@ export const ADDON_COMPATIBILITY = {
   fumadocs: [],
   opentui: [],
   wxt: [],
-  "nix-flake": [],
   none: [],
 } as const;
