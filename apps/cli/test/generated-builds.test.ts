@@ -116,6 +116,25 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
+    name: "nitro-cloudflare-d1-auth-todo",
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-router"],
+      backend: "nitro",
+      runtime: "workers",
+      database: "sqlite",
+      orm: "drizzle",
+      dbSetup: "d1",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["todo"],
+      serverDeploy: "cloudflare",
+    },
+  },
+  {
     name: "nitro-prisma-better-auth",
     packageManagers: ["bun"],
     config: {
@@ -1042,7 +1061,7 @@ async function bootAndValidateSolidDevRuntime(sample: SelectedBuildSample, proje
 }
 
 async function bootAndValidateNitroRuntime(sample: SelectedBuildSample, projectDir: string) {
-  if (sample.config.backend !== "nitro") return;
+  if (sample.config.backend !== "nitro" || sample.config.runtime === "workers") return;
 
   const serverDir = path.join(projectDir, "apps/server");
   const port = await getAvailablePort();

@@ -15,7 +15,7 @@ The CLI calls the deployment choice **Prisma**. In the generated TypeScript, tha
 
 ## Supported deployment shapes
 
-Cloudflare supports a separate Hono server on the Workers runtime and supported web frameworks. Full-stack `backend: self` projects deploy as one web application.
+Cloudflare supports separate Hono and Nitro servers on the Workers runtime and supported web frameworks. Full-stack `backend: self` projects deploy as one web application.
 
 Prisma supports:
 
@@ -25,7 +25,7 @@ Prisma supports:
 
 The CLI rejects unsupported framework/runtime combinations before writing files.
 
-Nitro servers use Nitro's native command build for Prisma Compute: Alchemy runs the generated build script and deploys `.output/server/index.mjs`. Cloudflare is intentionally unavailable until Alchemy exposes a first-class standalone Nitro adapter.
+Nitro servers use native provider output. Prisma Compute deploys `.output/server/index.mjs` from Nitro's command build. Cloudflare builds the official `cloudflare_module` preset, deploys the same prebuilt ESM entrypoint without rebundling it, and uploads `.output/public` as Worker assets.
 
 Alchemy's automatic framework builds handle Next.js, Nuxt, Astro, and TanStack Start. The generated
 stack supplies explicit production artifacts for the remaining frameworks: Solid's Nitro

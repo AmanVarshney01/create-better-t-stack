@@ -24,7 +24,8 @@ export function processRuntimeDeps(vfs: VirtualFileSystem, config: ProjectConfig
 
   if (backend === "nitro") {
     pkgJson.scripts.dev = "nitro dev --port 3000";
-    pkgJson.scripts.start = `${runtime} .output/server/index.mjs`;
+    pkgJson.scripts.start =
+      runtime === "workers" ? "nitro preview" : `${runtime} .output/server/index.mjs`;
 
     addPackageDependency({
       vfs,

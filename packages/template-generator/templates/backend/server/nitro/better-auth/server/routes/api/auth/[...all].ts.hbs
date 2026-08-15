@@ -1,4 +1,10 @@
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 import { defineHandler } from "nitro";
 
-export default defineHandler((event) => auth.handler(event.req));
+export default defineHandler((event) =>
+  {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}createAuth(){{else}}auth{{/if}}.handler(event.req),
+);

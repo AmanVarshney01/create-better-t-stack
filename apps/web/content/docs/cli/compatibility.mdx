@@ -199,9 +199,9 @@ create-better-t-stack --addons turborepo
 
 ### Server Deployment
 
-- `--server-deploy cloudflare` requires `--runtime workers` with `--backend hono`
+- `--server-deploy cloudflare` requires `--runtime workers` with `--backend hono` or `--backend nitro`
 - `--server-deploy docker`, `--server-deploy prisma`, and `--server-deploy vercel` require `--runtime bun` or `--runtime node`
-- Nitro supports Docker, Prisma, Vercel, or no deployment. Cloudflare requires a first-class standalone Nitro adapter in Alchemy and is rejected before generation.
+- Nitro supports Cloudflare, Docker, Prisma, Vercel, or no deployment. Cloudflare uses Nitro's official module output with Alchemy's prebuilt Worker contract.
 - `--server-deploy` is not used for `--backend self`, because fullstack backends deploy with the web app
 
 ## Authentication Requirements
@@ -271,11 +271,12 @@ create-better-t-stack --auth clerk --backend self --frontend astro
 create-better-t-stack --database mongodb --orm mongoose
 ```
 
-### "Cloudflare Workers runtime is only supported with Hono backend"
+### "Cloudflare Workers runtime is only supported with Hono or Nitro backend"
 
 ```bash
-# Fix by using Hono
+# Fix by using Hono or Nitro
 create-better-t-stack --runtime workers --backend hono
+create-better-t-stack --runtime workers --backend nitro
 ```
 
 ### "Cannot select multiple web frameworks"

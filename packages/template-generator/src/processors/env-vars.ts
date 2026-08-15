@@ -504,7 +504,7 @@ function buildServerVars(
   const needsClerkPublishableKey =
     hasClerk &&
     (["express", "fastify"].includes(backend) ||
-      (api !== "none" && ["self", "hono", "elysia"].includes(backend)));
+      (api !== "none" && ["self", "hono", "elysia", "nitro"].includes(backend)));
 
   return [
     {

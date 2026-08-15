@@ -1157,7 +1157,11 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 
 {{else if (eq backend 'nitro')}}
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 {{/if}}
 
 export type CreateContextOptions = {
@@ -1166,7 +1170,7 @@ export type CreateContextOptions = {
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ request }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({ headers: request.headers });
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers: request.headers });
 	return {
 		auth: null,
 		session,
@@ -2092,7 +2096,11 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
 
 {{else if (eq backend 'nitro')}}
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 {{/if}}
 
 export type CreateContextOptions = {
@@ -2101,7 +2109,7 @@ export type CreateContextOptions = {
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ request }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({ headers: request.headers });
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers: request.headers });
 	return {
 		auth: null,
 		session,
@@ -15290,12 +15298,22 @@ export default defineHandler(async (event) => {
 .nitro
 .cache
 .output
+.wrangler
 `],
   ["backend/server/nitro/base/nitro.config.ts.hbs", `import { defineConfig } from "nitro";
 
 export default defineConfig({
+{{#if (eq runtime "workers")}}
+  defaultPreset: "cloudflare_module",
+{{else}}
   defaultPreset: "{{runtime}}",
+{{/if}}
   serverDir: "./server",
+{{#if (eq runtime "workers")}}
+  cloudflare: {
+    nodeCompat: true,
+  },
+{{/if}}
 });
 `],
   ["backend/server/nitro/base/package.json.hbs", `{
@@ -15342,14 +15360,21 @@ export default defineHandler(() => "OK");
   "extends": ["@{{projectName}}/config/tsconfig.base.json", "nitro/tsconfig"],
   "compilerOptions": {
     "composite": true,
-    "noEmit": true
+    "noEmit": true{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}},
+    "types": ["node"]{{/if}}
   }
 }
 `],
-  ["backend/server/nitro/better-auth/server/routes/api/auth/[...all].ts.hbs", `import { auth } from "@{{projectName}}/auth";
+  ["backend/server/nitro/better-auth/server/routes/api/auth/[...all].ts.hbs", `{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
 import { defineHandler } from "nitro";
 
-export default defineHandler((event) => auth.handler(event.req));
+export default defineHandler((event) =>
+  {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}createAuth(){{else}}auth{{/if}}.handler(event.req),
+);
 `],
   ["backend/server/nitro/native-polar/server/routes/polar/success.get.ts.hbs", `import { defineHandler } from "nitro";
 
@@ -26162,7 +26187,19 @@ export default function Todos() {
 shamefully-hoist=true
 strict-peer-dependencies=false
 {{/if}}`],
-  ["extras/env.d.ts.hbs", `{{#if (eq serverDeploy "cloudflare")}}
+  ["extras/env.d.ts.hbs", `{{#if (and (eq backend "nitro") (eq serverDeploy "cloudflare"))}}
+type CloudflareEnv = import("@{{projectName}}/infra/alchemy.run").ServerEnv;
+type Env = CloudflareEnv;
+
+declare module "cloudflare:workers" {
+  export const env: CloudflareEnv;
+
+  namespace Cloudflare {
+    export interface Env extends CloudflareEnv {}
+  }
+}
+{{else}}
+{{#if (eq serverDeploy "cloudflare")}}
 import type { ServerEnv } from "@{{projectName}}/infra/alchemy.run";
 {{else}}
 import type { WebEnv as ServerEnv } from "@{{projectName}}/infra/alchemy.run";
@@ -26182,6 +26219,7 @@ declare module "cloudflare:workers" {
     export interface Env extends CloudflareEnv {}
   }
 }
+{{/if}}
 `],
   ["extras/pnpm-workspace.yaml.hbs", `packages:
   - "apps/*"
@@ -33605,11 +33643,19 @@ export const env = createEnv({
 });
 `],
   ["packages/env/src/server.ts.hbs", `{{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+{{#if (eq backend "nitro")}}
+/// <reference path="../env.d.ts" />
+import type { ServerEnv } from "@{{projectName}}/infra/alchemy.run";
+
+export type CloudflareEnv = ServerEnv;
+export { env } from "cloudflare:workers";
+{{else}}
 /// <reference types="@cloudflare/workers-types" />
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
 export { env } from "cloudflare:workers";
+{{/if}}
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "next"))}}
 /// <reference path="../env.d.ts" />
 import { getCloudflareContext } from "@opennextjs/cloudflare";

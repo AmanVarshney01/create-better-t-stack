@@ -3,6 +3,70 @@ import type { AlchemyDeploymentPlan } from "./plan";
 import { writeLines, writeObject, type AlchemyWriter } from "./writer";
 
 function writeCloudflareServer(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void {
+  if (plan.config.backend === "nitro") {
+    writer.writeLine("export const server = Effect.gen(function* () {");
+    writer.indent(() => {
+      writeObject(
+        writer,
+        'const build = yield* Command.Build("server-build", {',
+        () => {
+          writer.writeLine(`command: "${plan.config.packageManager} run build",`);
+          writer.writeLine('cwd: "../../apps/server",');
+          writer.writeLine('outdir: ".output",');
+        },
+        "});",
+      );
+      writer.blankLine();
+      writeObject(
+        writer,
+        'return yield* Cloudflare.Worker("server", {',
+        () => {
+          writer.writeLine(
+            "main: Output.map(build.outdir, (outdir) => `${outdir}/server/index.mjs`),",
+          );
+          writer.writeLine("bundle: false,");
+          writeObject(
+            writer,
+            "assets: {",
+            () => {
+              writer.writeLine('directory: "../../apps/server/.output/public",');
+            },
+            "},",
+          );
+          writeObject(
+            writer,
+            "compatibility: {",
+            () => {
+              writer.writeLine('flags: ["nodejs_compat"],');
+            },
+            "},",
+          );
+          writeObject(
+            writer,
+            "env: {",
+            () => {
+              writeLines(writer, cloudflareServerEnvEntries(plan));
+            },
+            "},",
+          );
+          writeObject(
+            writer,
+            "dev: {",
+            () => {
+              writer.writeLine("port: 3000,");
+            },
+            "},",
+          );
+        },
+        "});",
+      );
+    });
+    writer.writeLine("});");
+    writer.blankLine();
+    writer.writeLine("export type ServerEnv = Cloudflare.InferEnv<typeof server>;");
+    return;
+  }
+
   writeObject(
     writer,
     'export const server = Cloudflare.Worker("server", {',

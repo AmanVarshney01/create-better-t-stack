@@ -95,10 +95,10 @@ The system SHALL only offer Nitro deployment targets backed by released provider
 - **WHEN** Nitro is selected with Vercel deployment
 - **THEN** generated Vercel Services configuration identifies Nitro and allows Nitro's provider detection to create Vercel output
 
-#### Scenario: Cloudflare deployment unavailable
+#### Scenario: Cloudflare deployment
 
-- **WHEN** a user attempts to configure Nitro with Cloudflare server deployment before a first-class Alchemy adapter is released
-- **THEN** validation rejects the combination before generation and explains the missing adapter boundary
+- **WHEN** Nitro is selected with the Workers runtime and Cloudflare server deployment
+- **THEN** generated Alchemy builds Nitro's `cloudflare_module` output, deploys `.output/server/index.mjs` as a prebuilt Worker, uploads `.output/public` as assets, and preserves runtime bindings in local and live environments
 
 ### Requirement: Nitro verification matrix
 

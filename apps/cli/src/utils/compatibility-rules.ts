@@ -164,21 +164,21 @@ export function validateWorkersCompatibility(
     providedFlags.has("runtime") &&
     options.runtime === "workers" &&
     config.backend &&
-    config.backend !== "hono"
+    !["hono", "nitro"].includes(config.backend)
   ) {
     return validationErr(
-      `Cloudflare Workers runtime (--runtime workers) is only supported with Hono backend (--backend hono). Current backend: ${config.backend}. Please use '--backend hono' or choose a different runtime.`,
+      `Cloudflare Workers runtime (--runtime workers) is only supported with Hono or Nitro backend. Current backend: ${config.backend}. Please use '--backend hono', '--backend nitro', or choose a different runtime.`,
     );
   }
 
   if (
     providedFlags.has("backend") &&
     config.backend &&
-    config.backend !== "hono" &&
+    !["hono", "nitro"].includes(config.backend) &&
     config.runtime === "workers"
   ) {
     return validationErr(
-      `Backend '${config.backend}' is not compatible with Cloudflare Workers runtime. Cloudflare Workers runtime is only supported with Hono backend. Please use '--backend hono' or choose a different runtime.`,
+      `Backend '${config.backend}' is not compatible with Cloudflare Workers runtime. Cloudflare Workers runtime is only supported with Hono or Nitro backend. Please use '--backend hono', '--backend nitro', or choose a different runtime.`,
     );
   }
 
@@ -317,19 +317,6 @@ export function validateServerDeployRequiresBackend(
       "'--server-deploy' requires a backend. Please select a backend or set '--server-deploy none'.",
     );
   }
-  return Result.ok(undefined);
-}
-
-export function validateNitroCloudflareServerDeploy(
-  serverDeploy: ServerDeploy | undefined,
-  backend: Backend | undefined,
-): ValidationResult {
-  if (serverDeploy === "cloudflare" && backend === "nitro") {
-    return validationErr(
-      "Nitro server deployment to Cloudflare is not available yet because Alchemy does not expose a standalone Nitro adapter. Choose Prisma, Docker, Vercel, or no server deployment.",
-    );
-  }
-
   return Result.ok(undefined);
 }
 

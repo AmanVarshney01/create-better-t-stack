@@ -320,7 +320,7 @@ Nitro uses its native file-based server layout rather than a generated framework
   </Folder>
 </Files>
 
-The selected features control which route files are present. Production builds are emitted to `apps/server/.output` and run from `.output/server/index.mjs`.
+The selected features control which route files are present. Node/Bun production builds are emitted to `apps/server/.output` and run from `.output/server/index.mjs`. Vercel deployments use Nitro's detected Vercel output.
 
 ### Workers runtime (optional)
 

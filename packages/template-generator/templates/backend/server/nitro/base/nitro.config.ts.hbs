@@ -1,6 +1,15 @@
 import { defineConfig } from "nitro";
 
 export default defineConfig({
+{{#if (eq runtime "workers")}}
+  defaultPreset: "cloudflare_module",
+{{else}}
   defaultPreset: "{{runtime}}",
+{{/if}}
   serverDir: "./server",
+{{#if (eq runtime "workers")}}
+  cloudflare: {
+    nodeCompat: true,
+  },
+{{/if}}
 });

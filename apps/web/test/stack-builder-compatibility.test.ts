@@ -31,7 +31,7 @@ function createStack(overrides: Partial<StackState> = {}): StackState {
 }
 
 describe("stack builder D1 compatibility", () => {
-  test("offers Nitro with only its supported server deployment targets", () => {
+  test("offers Nitro with all supported server deployment targets", () => {
     expect(TECH_OPTIONS.backend.find((option) => option.id === "nitro")).toMatchObject({
       name: "Nitro",
       experimental: true,
@@ -47,8 +47,15 @@ describe("stack builder D1 compatibility", () => {
     expect(getDisabledReason(stack, "serverDeploy", "prisma")).toBeNull();
     expect(getDisabledReason(stack, "serverDeploy", "vercel")).toBeNull();
     expect(getDisabledReason(stack, "serverDeploy", "cloudflare")).toBe(
-      "Cloudflare support requires a standalone Alchemy Nitro adapter",
+      "Cloudflare requires Workers runtime",
     );
+    expect(
+      getDisabledReason(
+        createStack({ backend: "nitro", runtime: "workers", serverDeploy: "cloudflare" }),
+        "serverDeploy",
+        "cloudflare",
+      ),
+    ).toBeNull();
     expect(getDisabledReason(stack, "addons", "evlog")).toBe(
       "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend",
     );
@@ -118,6 +125,26 @@ describe("stack builder D1 compatibility", () => {
       backend: "hono",
       runtime: "workers",
       database: "sqlite",
+      dbSetup: "d1",
+      serverDeploy: "cloudflare",
+    });
+  });
+
+  test("keeps Nitro when D1 selects the Workers deployment path", () => {
+    const result = analyzeStackCompatibility(
+      createStack({
+        backend: "nitro",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        dbSetup: "d1",
+        serverDeploy: "none",
+      }),
+    );
+
+    expect(result.adjustedStack).toMatchObject({
+      backend: "nitro",
+      runtime: "workers",
       dbSetup: "d1",
       serverDeploy: "cloudflare",
     });

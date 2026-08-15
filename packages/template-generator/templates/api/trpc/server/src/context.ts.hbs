@@ -97,7 +97,11 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
 
 {{else if (eq backend 'nitro')}}
 {{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
 import { auth } from "@{{projectName}}/auth";
+{{/if}}
 {{/if}}
 
 export type CreateContextOptions = {
@@ -106,7 +110,7 @@ export type CreateContextOptions = {
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ request }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
 {{#if (eq auth "better-auth")}}
-	const session = await auth.api.getSession({ headers: request.headers });
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers: request.headers });
 	return {
 		auth: null,
 		session,

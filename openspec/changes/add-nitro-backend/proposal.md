@@ -7,9 +7,9 @@ Better T Stack should offer Nitro as a native backend for users who want its fil
 - Add Nitro as an experimental backend choice throughout the CLI, saved configuration, generated README, and web stack builder.
 - Generate the official Nitro 3 standalone project structure and native Nitro scripts instead of wrapping another HTTP framework.
 - Integrate supported API layers, authentication, databases, ORMs, examples, and environment handling with Nitro's Web Request and file-route APIs.
-- Support deployment only through documented provider paths: Nitro output for Docker, Nitro's Vercel preset through Vercel Services, and Prisma Compute's supported custom-build contract.
+- Support deployment only through documented provider paths: Nitro output for Docker, Nitro's Vercel preset through Vercel Services, Prisma Compute's supported custom-build contract, and Nitro's Cloudflare module output through Alchemy's prebuilt Worker contract.
 - Add deterministic generation/build/runtime coverage across package managers and representative stack combinations, plus disposable live deployment verification where provider credentials are available.
-- Keep Cloudflare server deployment unavailable until Alchemy exposes a first-class standalone Nitro adapter; do not emulate one with a generic Worker or custom proxy.
+- Support Cloudflare without a framework adapter by composing Nitro's documented `cloudflare_module` output with Alchemy's documented `Command.Build` and prebuilt `Cloudflare.Worker` APIs.
 - Treat Nitro as experimental while Nitro 3 remains a prerelease package, without pinning undocumented internals.
 
 Non-goals:
@@ -30,4 +30,4 @@ None.
 
 ## Impact
 
-The change affects backend schemas and validation in `packages/types`, CLI prompts and summaries in `apps/cli`, backend and deployment generation in `packages/template-generator`, stack-builder options in `apps/web`, generated documentation, and compatibility/matrix tests. It adds Nitro's CLI/runtime packages to generated Nitro servers but does not add a new root runtime dependency. Cloudflare support is release-gated on a public first-class Alchemy adapter; other provider support must use released documented contracts.
+The change affects backend schemas and validation in `packages/types`, CLI prompts and summaries in `apps/cli`, backend and deployment generation in `packages/template-generator`, stack-builder options in `apps/web`, generated documentation, and compatibility/matrix tests. It adds Nitro's CLI/runtime packages to generated Nitro servers but does not add a new root runtime dependency. Every provider integration uses released documented contracts.

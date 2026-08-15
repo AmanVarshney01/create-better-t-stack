@@ -9,10 +9,10 @@ The documented Nitro behavior is:
 - the runtime selects a local default preset, while detected deployment providers take precedence over `defaultPreset`.
 - Node and Bun builds expose `.output/server/index.mjs`; Vercel builds use the Vercel Build Output API.
 
-Inspected Alchemy behavior adds two boundaries:
+Inspected Alchemy behavior provides two relevant build contracts:
 
 - Prisma `Compute` has a released command-build contract consisting of a build command, output directory, and output-relative entrypoint. This can package Nitro without teaching Alchemy a Nitro-specific build strategy.
-- Alchemy's Cloudflare website adapters own framework preset injection, local binding proxies, output discovery, assets, and Worker entrypoints. There is no released standalone Nitro adapter, so a generic Worker call would not be equivalent.
+- Alchemy `Command.Build` can own an arbitrary framework build, and `Cloudflare.Worker` can deploy a prebuilt ESM entrypoint byte-for-byte with sibling modules, static assets, runtime bindings, and the normal local workerd lifecycle. Nitro's documented `cloudflare_module` preset emits exactly that shape.
 
 ## Goals / Non-Goals
 
@@ -27,7 +27,7 @@ Inspected Alchemy behavior adds two boundaries:
 
 - Embedding another backend framework inside Nitro.
 - Creating a bespoke server wrapper around Nitro output.
-- Claiming standalone Cloudflare support before Alchemy publishes the adapter required for correct dev bindings and deployment assets.
+- Adding a generated compatibility server or modifying Nitro's provider output.
 - Enabling evlog until it has a Nitro integration.
 - Depending on unreleased provider code.
 
@@ -56,9 +56,11 @@ Better Auth receives the route event's `Request`. oRPC uses its fetch handlers, 
 | Docker     | Bun                | `.output/server/index.mjs` in a Bun image                             | Supported                                           |
 | Prisma     | Node/Bun           | `Prisma.Compute` command build of `.output`, entry `server/index.mjs` | Supported                                           |
 | Vercel     | Node/Bun selection | Vercel Services `nitro` framework and Nitro's detected Vercel preset  | Supported, experimental with existing Vercel option |
-| Cloudflare | Any                | Requires standalone Alchemy Nitro adapter                             | Unavailable                                         |
+| Cloudflare | Workers            | Nitro `cloudflare_module` build + Alchemy prebuilt Worker and assets  | Supported                                           |
 
-The generated Nitro config will not hard-code a provider preset. Provider-specific environment variables or platform detection remain able to select the final output.
+The generated Nitro config uses the selected runtime as its default preset. Workers selects `cloudflare_module`; Node and Bun retain their native defaults. Vercel provider detection can still override Node and Bun defaults.
+
+For Cloudflare, Alchemy runs the generated Nitro build from `apps/server`, tracks `.output`, deploys `.output/server/index.mjs` with `bundle: false`, uploads `.output/public` as Worker assets, enables `nodejs_compat`, and keeps the normal workerd dev server on port 3000. This is direct composition of two released provider contracts, not a framework wrapper.
 
 ### Retain existing cross-product rules
 
@@ -79,7 +81,8 @@ The CLI and web builder will label Nitro as experimental while npm's current Nit
 - [Global middleware can accidentally consume request bodies before RPC handlers] → Implement CORS without parsing bodies and test POST and preflight requests.
 - [Provider detection can be blocked by a hard-coded preset] → Use `defaultPreset`, then assert Vercel and local outputs separately.
 - [A new backend value can drift across CLI and builder] → Drive both from the shared schema where possible and add CLI, JSON schema, builder, and preview assertions.
-- [Cloudflare users may expect Nitro's own Cloudflare preset to be enough] → Reject the unsupported Alchemy combination during configuration and state the adapter boundary in generated/docs-facing messaging.
+- [Prebuilt Cloudflare output may contain sibling ESM chunks] → Deploy it with `bundle: false`; Alchemy recursively uploads the default `.mjs` and `.js` module rules from the entrypoint directory.
+- [A framework-owned dev server would not receive real Cloudflare bindings] → Keep Alchemy's local workerd runtime instead of configuring an external Nitro dev process.
 
 ## Migration Plan
 
@@ -88,10 +91,10 @@ The CLI and web builder will label Nitro as experimental while npm's current Nit
 3. Add deployment generation for Docker, Prisma, and Vercel.
 4. Regenerate derived builder/template assets.
 5. Run repository tests and generated application verification.
-6. Live-deploy disposable targets, probe routes, and destroy them.
+6. Live-deploy disposable targets, including Cloudflare, probe routes, and destroy them.
 
 Rollback consists of reverting the Nitro schema option and its isolated templates/processors. Existing generated stacks are unaffected because Nitro is opt-in.
 
 ## Open Questions
 
-None for the initial release. Cloudflare becomes eligible only after a released Alchemy standalone Nitro adapter is available and independently verified.
+None.

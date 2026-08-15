@@ -449,8 +449,8 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // RUNTIME CONSTRAINTS
   // ============================================
 
-  // Workers runtime requires Hono backend
-  if (nextStack.runtime === "workers" && nextStack.backend !== "hono") {
+  // Workers runtime requires a Workers-compatible backend
+  if (nextStack.runtime === "workers" && !["hono", "nitro"].includes(nextStack.backend)) {
     nextStack.backend = "hono";
     changed = true;
     changes.push({ category: "runtime", message: "Backend set to 'Hono' (required for Workers)" });
@@ -605,13 +605,20 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
           });
         }
       } else {
-        if (nextStack.runtime !== "workers" || nextStack.backend !== "hono") {
+        if (nextStack.runtime !== "workers") {
           nextStack.runtime = "workers";
+          changed = true;
+          changes.push({
+            category: "dbSetup",
+            message: "Runtime set to 'Workers' (required for D1)",
+          });
+        }
+        if (!["hono", "nitro"].includes(nextStack.backend)) {
           nextStack.backend = "hono";
           changed = true;
           changes.push({
             category: "dbSetup",
-            message: "Runtime set to 'Workers' with 'Hono' (required for D1)",
+            message: "Backend set to 'Hono' (required for D1)",
           });
         }
         if (nextStack.serverDeploy !== "cloudflare") {
@@ -937,12 +944,12 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
   // Server deploy constraints
   if (nextStack.serverDeploy === "cloudflare") {
-    if (nextStack.runtime !== "workers" || nextStack.backend !== "hono") {
+    if (nextStack.runtime !== "workers" || !["hono", "nitro"].includes(nextStack.backend)) {
       nextStack.serverDeploy = "none";
       changed = true;
       changes.push({
         category: "serverDeploy",
-        message: "Server deploy set to 'None' (Cloudflare requires Workers + Hono)",
+        message: "Server deploy set to 'None' (Cloudflare requires Workers + Hono or Nitro)",
       });
     }
   }
@@ -1218,9 +1225,14 @@ export const getDisabledReason = (
       const incompatible = currentStack.webFrontend.includes("solid") ? "Solid" : "Astro";
       return `Convex is not compatible with ${incompatible}`;
     }
-    // Workers runtime only works with Hono backend
-    if (currentStack.runtime === "workers" && optionId !== "hono" && optionId !== "none") {
-      return "Workers runtime only works with Hono";
+    // Workers runtime only works with Workers-compatible backends
+    if (
+      currentStack.runtime === "workers" &&
+      optionId !== "hono" &&
+      optionId !== "nitro" &&
+      optionId !== "none"
+    ) {
+      return "Workers runtime only works with Hono or Nitro";
     }
   }
 
@@ -1228,8 +1240,8 @@ export const getDisabledReason = (
   // RUNTIME CONSTRAINTS
   // ============================================
   if (category === "runtime") {
-    if (optionId === "workers" && currentStack.backend !== "hono") {
-      return "Workers requires Hono backend";
+    if (optionId === "workers" && !["hono", "nitro"].includes(currentStack.backend)) {
+      return "Workers requires Hono or Nitro backend";
     }
     if (optionId === "none") {
       if (
@@ -1500,11 +1512,10 @@ export const getDisabledReason = (
 
   if (category === "serverDeploy") {
     if (optionId === "cloudflare") {
-      if (currentStack.backend === "nitro") {
-        return "Cloudflare support requires a standalone Alchemy Nitro adapter";
-      }
       if (currentStack.runtime !== "workers") return "Cloudflare requires Workers runtime";
-      if (currentStack.backend !== "hono") return "Cloudflare requires Hono backend";
+      if (!["hono", "nitro"].includes(currentStack.backend)) {
+        return "Cloudflare requires Hono or Nitro backend";
+      }
     }
     if (optionId === "docker" && currentStack.runtime === "workers") {
       return "Docker server deployment requires the Bun or Node runtime";

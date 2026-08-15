@@ -21,6 +21,7 @@ describe("Backend and Runtime Combinations", () => {
 
       { backend: "nitro" as const, runtime: "bun" as const },
       { backend: "nitro" as const, runtime: "node" as const },
+      { backend: "nitro" as const, runtime: "workers" as const },
 
       // Special cases
       { backend: "convex" as const, runtime: "none" as const },
@@ -80,26 +81,24 @@ describe("Backend and Runtime Combinations", () => {
 
   describe("Invalid Backend-Runtime Combinations", () => {
     const invalidCombinations = [
-      // Workers runtime only works with Hono
+      // Workers runtime only works with Hono or Nitro
       {
         backend: "express" as const,
         runtime: "workers" as const,
-        error: "Cloudflare Workers runtime (--runtime workers) is only supported with Hono backend",
+        error:
+          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono or Nitro backend",
       },
       {
         backend: "fastify",
         runtime: "workers",
-        error: "Cloudflare Workers runtime (--runtime workers) is only supported with Hono backend",
+        error:
+          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono or Nitro backend",
       },
       {
         backend: "elysia",
         runtime: "workers",
-        error: "Cloudflare Workers runtime (--runtime workers) is only supported with Hono backend",
-      },
-      {
-        backend: "nitro",
-        runtime: "workers",
-        error: "Cloudflare Workers runtime (--runtime workers) is only supported with Hono backend",
+        error:
+          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono or Nitro backend",
       },
 
       // Convex backend requires runtime none

@@ -118,7 +118,7 @@ describe("Nitro backend", () => {
     expect(files.get("apps/server/server/routes/ai.post.ts")).toContain("await event.req.json()");
   });
 
-  it("generates first-class Docker, Prisma, and Vercel deployment contracts", async () => {
+  it("generates first-class Docker, Prisma, Vercel, and Cloudflare contracts", async () => {
     const dockerFiles = await generate({
       projectName: "nitro-docker",
       serverDeploy: "docker",
@@ -153,20 +153,36 @@ describe("Nitro backend", () => {
       framework: "nitro",
     });
     expect(vercel.services?.server).not.toHaveProperty("entrypoint");
-  });
 
-  it("rejects unsupported Cloudflare and evlog configurations before generation", async () => {
-    const cloudflare = await createVirtual({
-      ...baseConfig,
-      projectName: "nitro-cloudflare-rejected",
+    const cloudflareFiles = await generate({
+      projectName: "nitro-cloudflare",
       runtime: "workers",
       serverDeploy: "cloudflare",
     });
-    expect(cloudflare.isErr()).toBe(true);
-    expect(cloudflare.isErr() && cloudflare.error.message).toContain(
-      "Alchemy does not expose a standalone Nitro adapter",
+    const cloudflareInfra = cloudflareFiles.get("packages/infra/alchemy.run.ts") ?? "";
+    expect(cloudflareFiles.get("apps/server/nitro.config.ts")).toContain(
+      'defaultPreset: "cloudflare_module"',
     );
+    expect(cloudflareFiles.get("apps/server/nitro.config.ts")).toContain("nodeCompat: true");
+    expect(cloudflareFiles.get("apps/server/package.json")).toContain('"start": "nitro preview"');
+    expect(cloudflareInfra).toContain('Command.Build("server-build", {');
+    expect(cloudflareInfra).toContain('cwd: "../../apps/server"');
+    expect(cloudflareInfra).toContain('outdir: ".output"');
+    expect(cloudflareInfra).toContain("`${outdir}/server/index.mjs`");
+    expect(cloudflareInfra).toContain('directory: "../../apps/server/.output/public"');
+    expect(cloudflareInfra).toContain("bundle: false");
+    expect(cloudflareInfra).toContain('flags: ["nodejs_compat"]');
+    expect(cloudflareInfra).toContain("port: 3000");
+    expect(cloudflareInfra).not.toContain('main: "../../apps/server/src/index.ts"');
+    expect(cloudflareFiles.get("apps/server/server/routes/api/auth/[...all].ts")).toContain(
+      "createAuth().handler(event.req)",
+    );
+    expect(cloudflareFiles.get("packages/api/src/context.ts")).toContain(
+      "createAuth().api.getSession",
+    );
+  });
 
+  it("rejects evlog before generation", async () => {
     const evlog = await createVirtual({
       ...baseConfig,
       projectName: "nitro-evlog-rejected",

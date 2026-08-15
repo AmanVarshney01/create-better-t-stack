@@ -1,9 +1,17 @@
 {{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+{{#if (eq backend "nitro")}}
+/// <reference path="../env.d.ts" />
+import type { ServerEnv } from "@{{projectName}}/infra/alchemy.run";
+
+export type CloudflareEnv = ServerEnv;
+export { env } from "cloudflare:workers";
+{{else}}
 /// <reference types="@cloudflare/workers-types" />
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
 export { env } from "cloudflare:workers";
+{{/if}}
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "next"))}}
 /// <reference path="../env.d.ts" />
 import { getCloudflareContext } from "@opennextjs/cloudflare";
