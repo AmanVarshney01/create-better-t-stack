@@ -3,6 +3,21 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { type TemplateData, processTemplatesFromPrefix } from "./utils";
 
+function updateNixGitignore(vfs: VirtualFileSystem): void {
+  const gitignore = vfs.readFile(".gitignore");
+  if (gitignore === undefined) return;
+
+  const existingEntries = new Set(gitignore.split(/\r?\n/).map((line) => line.trim()));
+  const missingEntries = [".direnv/", "result", "result-*"].filter(
+    (entry) => !existingEntries.has(entry),
+  );
+  if (missingEntries.length === 0) return;
+
+  const existingContent = gitignore.trimEnd();
+  const separator = existingContent ? "\n\n# Nix\n" : "# Nix\n";
+  vfs.writeFile(".gitignore", `${existingContent}${separator}${missingEntries.join("\n")}\n`);
+}
+
 export async function processAddonTemplates(
   vfs: VirtualFileSystem,
   templates: TemplateData,
@@ -28,5 +43,6 @@ export async function processAddonTemplates(
     }
 
     processTemplatesFromPrefix(vfs, templates, `addons/${addon}`, "", config);
+    if (addon === "nix-flake") updateNixGitignore(vfs);
   }
 }

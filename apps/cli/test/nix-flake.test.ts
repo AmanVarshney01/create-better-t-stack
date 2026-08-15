@@ -1,9 +1,23 @@
 import { describe, expect, it } from "bun:test";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { add } from "../src";
 import { expectSuccess, runTRPCTest } from "./test-utils";
+
+async function createProjectForAdd(projectName: string) {
+  const created = await runTRPCTest({
+    projectName,
+    addons: ["none"],
+    git: false,
+    install: false,
+  });
+
+  expectSuccess(created);
+  const projectDir = created.result?.projectDirectory;
+  if (!projectDir) throw new Error("Expected generated project directory");
+  return projectDir;
+}
 
 describe("Nix flake addon", () => {
   it("generates an envrc and a Bun development shell", async () => {
@@ -39,6 +53,7 @@ describe("Nix flake addon", () => {
     expect(envrc).toBe("use flake .\n");
     expect(flake).toContain('inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05"');
     expect(lock.nodes.nixpkgs.original.ref).toBe("nixos-26.05");
+    expect(lock.nodes.nixpkgs.locked.rev).toHaveLength(40);
     expect(gitignore).toContain(".direnv/");
     expect(flake).toContain("bun");
     expect(flake).toContain("sqlite");
@@ -85,27 +100,37 @@ describe("Nix flake addon", () => {
     }
   });
 
-  it("can be added to an existing project", async () => {
-    const created = await runTRPCTest({
-      projectName: "nix-flake-add",
-      addons: ["none"],
-      git: false,
-      install: false,
+  for (const testCase of [
+    {
+      description: "a partial",
+      projectName: "partial",
+      initialGitignore: ".direnv/\n",
+      expectedGitignore: ".direnv/\n\n# Nix\nresult\nresult-*\n",
+    },
+    {
+      description: "an empty",
+      projectName: "empty",
+      initialGitignore: "",
+      expectedGitignore: "# Nix\n.direnv/\nresult\nresult-*\n",
+    },
+  ]) {
+    it(`can be added to a project with ${testCase.description} gitignore`, async () => {
+      const projectDir = await createProjectForAdd(`nix-flake-add-${testCase.projectName}`);
+      await writeFile(path.join(projectDir, ".gitignore"), testCase.initialGitignore);
+
+      const result = await add({
+        projectDir,
+        addons: ["nix-flake"],
+        packageManager: "bun",
+        install: false,
+      });
+
+      expect(result?.success).toBe(true);
+      expect(await readFile(path.join(projectDir, ".envrc"), "utf8")).toBe("use flake .\n");
+      expect(await readFile(path.join(projectDir, "flake.lock"), "utf8")).toContain("nixos-26.05");
+      expect(await readFile(path.join(projectDir, ".gitignore"), "utf8")).toBe(
+        testCase.expectedGitignore,
+      );
     });
-
-    expectSuccess(created);
-    const projectDir = created.result?.projectDirectory;
-    if (!projectDir) throw new Error("Expected generated project directory");
-
-    const result = await add({
-      projectDir,
-      addons: ["nix-flake"],
-      packageManager: "bun",
-      install: false,
-    });
-
-    expect(result?.success).toBe(true);
-    expect(await readFile(path.join(projectDir, ".envrc"), "utf8")).toBe("use flake .\n");
-    expect(await readFile(path.join(projectDir, "flake.lock"), "utf8")).toContain("nixos-26.05");
-  });
+  }
 });
