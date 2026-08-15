@@ -5,7 +5,7 @@ description: Understanding the structure of projects created by Better-T-Stack C
 
 ## Overview
 
-Better-T-Stack CLI scaffolds a monorepo with `apps/*` and, when needed, `packages/*`. The exact structure depends on your choices (frontend, backend, API, database/ORM, auth, addons, runtime, deploy). This page mirrors what the CLI actually writes.
+Better-T-Stack CLI scaffolds a monorepo with `apps/*` and `packages/*`. `packages/config` is always present; other packages and apps appear based on your choices (frontend, backend, API, database/ORM, auth, addons, runtime, deploy). This page mirrors what the CLI actually writes.
 
 ## Root layout
 
@@ -22,6 +22,7 @@ At the repository root you will see:
     <File name="package.json" />
     <File name="bts.jsonc" />
     <File name="turbo.json" />
+    <File name="nx.json" />
     <File name="pnpm-workspace.yaml" />
     <File name="bunfig.toml" />
     <File name=".npmrc" />
@@ -31,12 +32,15 @@ At the repository root you will see:
 
 Notes:
 
-- `bts.jsonc` lets the CLI detect and enhance your project later; keep it if you plan to use `bts add`.
+- `bts.jsonc` lets the CLI detect and enhance your project later; keep it if you plan to use `create-better-t-stack add`.
 - `turbo.json` exists only if you picked the Turborepo addon.
+- `nx.json` exists only if you picked the Nx addon.
+- `pnpm-workspace.yaml`, `bunfig.toml`, and `.npmrc` are added based on the package manager you choose.
+- `packages/infra` is created when a Cloudflare or Prisma deployment is enabled.
 
 ## Monorepo structure by backend
 
-### Non-Convex backends (hono, express, fastify, elysia, next)
+### Server backends (hono, express, fastify, elysia)
 
 <Files>
   <Folder name="my-app" defaultOpen>
@@ -44,7 +48,42 @@ Notes:
       <Folder name="web">
         <File name="..." />
       </Folder>
+      <Folder name="desktop">
+        <File name="..." />
+      </Folder>
       <Folder name="server">
+        <File name="..." />
+      </Folder>
+      <Folder name="native">
+        <File name="..." />
+      </Folder>
+      <Folder name="docs">
+        <File name="..." />
+      </Folder>
+    </Folder>
+    <Folder name="packages">
+      <File name="..." />
+    </Folder>
+  </Folder>
+</Files>
+
+Notes:
+
+- `apps/desktop` is created only with the Electrobun addon.
+- `apps/docs` is created only with the Starlight addon.
+- `apps/fumadocs` is created only with the Fumadocs addon.
+
+### Self backend (fullstack)
+
+When `--backend self` is used, API routes live inside `apps/web` (no `apps/server`).
+
+<Files>
+  <Folder name="my-app" defaultOpen>
+    <Folder name="apps" defaultOpen>
+      <Folder name="web">
+        <File name="..." />
+      </Folder>
+      <Folder name="desktop">
         <File name="..." />
       </Folder>
       <Folder name="native">
@@ -79,6 +118,12 @@ Notes:
       <Folder name="backend">
         <File name="..." />
       </Folder>
+      <Folder name="config">
+        <File name="..." />
+      </Folder>
+      <Folder name="env">
+        <File name="..." />
+      </Folder>
     </Folder>
   </Folder>
 </Files>
@@ -93,9 +138,6 @@ The structure varies by framework. Items marked "(auth)" or "(API)" appear only 
   <Folder name="apps/web" defaultOpen>
     <Folder name="src" defaultOpen>
       <Folder name="components" defaultOpen>
-        <Folder name="ui">
-          <File name="..." />
-        </Folder>
         <File name="header.tsx" />
         <File name="loader.tsx" />
         <File name="mode-toggle.tsx" />
@@ -104,9 +146,6 @@ The structure varies by framework. Items marked "(auth)" or "(API)" appear only 
       <Folder name="routes">
         <File name="__root.tsx" />
         <File name="index.tsx" />
-      </Folder>
-      <Folder name="lib">
-        <File name="utils.ts" />
       </Folder>
       <Folder name="utils">
         <File name="trpc.ts" />
@@ -119,6 +158,29 @@ The structure varies by framework. Items marked "(auth)" or "(API)" appear only 
     <File name="tsconfig.json" />
     <File name="vite.config.ts" />
     <File name="package.json" />
+  </Folder>
+  <Folder name="packages/ui">
+    <Folder name="src">
+      <Folder name="components">
+        <File name="button.tsx" />
+        <File name="card.tsx" />
+        <File name="checkbox.tsx" />
+        <File name="dropdown-menu.tsx" />
+        <File name="input.tsx" />
+        <File name="label.tsx" />
+        <File name="skeleton.tsx" />
+        <File name="sonner.tsx" />
+      </Folder>
+      <Folder name="lib">
+        <File name="utils.ts" />
+      </Folder>
+      <Folder name="styles">
+        <File name="globals.css" />
+      </Folder>
+    </Folder>
+    <File name="components.json" />
+    <File name="package.json" />
+    <File name="tsconfig.json" />
   </Folder>
 </Files>
 
@@ -143,12 +205,61 @@ The structure varies by framework. Items marked "(auth)" or "(API)" appear only 
     <File name="tsconfig.json" />
     <File name="package.json" />
   </Folder>
+  <Folder name="packages/ui">
+    <Folder name="src">
+      <Folder name="components">
+        <File name="button.tsx" />
+        <File name="card.tsx" />
+        <File name="checkbox.tsx" />
+        <File name="dropdown-menu.tsx" />
+        <File name="input.tsx" />
+        <File name="label.tsx" />
+        <File name="skeleton.tsx" />
+        <File name="sonner.tsx" />
+      </Folder>
+      <Folder name="lib">
+        <File name="utils.ts" />
+      </Folder>
+      <Folder name="styles">
+        <File name="globals.css" />
+      </Folder>
+    </Folder>
+    <File name="components.json" />
+    <File name="package.json" />
+    <File name="tsconfig.json" />
+  </Folder>
 </Files>
 
 Notes:
 
-- If you choose `backend=next`, the backend is scaffolded separately in `apps/server`. The web app does not include API routes.
+- If you choose `--backend self` with Next.js, TanStack Start, Nuxt, SvelteKit, Solid, or Astro, API routes live inside `apps/web` (no `apps/server`).
 - (auth) adds `src/app/login/*` and `src/app/dashboard/*` plus sign-in components.
+
+## React UI Customization
+
+React web apps (`tanstack-router`, `react-router`, `tanstack-start`, and `next`) share shadcn/ui primitives through `packages/ui`.
+
+- Change design tokens and global styles in `packages/ui/src/styles/globals.css`
+- Update shared primitives in `packages/ui/src/components/*`
+- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/web/components.json`
+
+### Add more shared components
+
+Run this from the project root to add more primitives to the shared UI package:
+
+```bash
+npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
+```
+
+Import shared components like this:
+
+```tsx
+import { Button } from "@your-project/ui/components/button";
+```
+
+### Add app-specific blocks
+
+If you want to add app-specific shadcn blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
 
 ## Backend Structure (apps/server)
 
@@ -181,31 +292,9 @@ The server structure depends on your backend choice:
   </Folder>
 </Files>
 
-### Next (backend)
-
-<Files>
-  <Folder name="apps/server" defaultOpen>
-    <Folder name="src" defaultOpen>
-      <Folder name="app">
-        <File name="route.ts" />
-      </Folder>
-      <File name="middleware.ts" />
-    </Folder>
-    <File name="next.config.ts" />
-    <File name="tsconfig.json" />
-    <File name="package.json" />
-  </Folder>
-</Files>
-
 ### Workers runtime (optional)
 
-When `runtime=workers`, you'll also get:
-
-<Files>
-  <Folder name="apps/server" defaultOpen>
-    <File name="wrangler.jsonc" />
-  </Folder>
-</Files>
+When `runtime=workers`, the server targets Cloudflare Workers. If you also choose Cloudflare deployment, you'll get `packages/infra/alchemy.run.ts` and related infra files.
 
 API and auth scaffolding (conditional):
 
@@ -303,9 +392,9 @@ If an API is selected, a client utility is added:
 - API=trpc: `utils/trpc.ts`
 - API=orpc: `utils/orpc.ts`
 
-## Documentation Structure (apps/docs)
+## Documentation Structure
 
-When using Starlight or Fumadocs addon:
+### Starlight (apps/docs)
 
 <Files>
   <Folder name="apps/docs" defaultOpen>
@@ -325,6 +414,14 @@ When using Starlight or Fumadocs addon:
   </Folder>
 </Files>
 
+### Fumadocs (apps/fumadocs)
+
+Fumadocs is generated by `create-fumadocs-app` inside `apps/fumadocs`. The exact structure depends on the template you choose (MDX vs static).
+
+### Electrobun (apps/desktop)
+
+Electrobun adds an `apps/desktop` workspace with its own `package.json`, `electrobun.config.ts`, and `src/bun/index.ts`. The desktop shell reuses `apps/web` during development and bundles its built static output for release builds. Use a separate backend or no backend for desktop apps; `--backend self` emits server routes inside `apps/web` and cannot be bundled as static desktop assets.
+
 ## Configuration Files
 
 ### Better-T-Stack Config (bts.jsonc)
@@ -336,17 +433,17 @@ When using Starlight or Fumadocs addon:
   "createdAt": "<timestamp>",
   "database": "<none|sqlite|postgres|mysql|mongodb>",
   "orm": "<none|drizzle|prisma|mongoose>",
-  "backend": "<none|hono|express|fastify|elysia|next|convex>",
-  "runtime": "<bun|node|workers>",
-  "frontend": ["<next|tanstack-router|react-router|tanstack-start|nuxt|svelte|solid>"] ,
-  "addons": ["<turborepo|biome|husky|pwa|starlight>"] ,
+  "backend": "<none|hono|express|fastify|elysia|convex|self>",
+  "runtime": "<bun|node|workers|none>",
+  "frontend": ["<tanstack-router|react-router|tanstack-start|next|nuxt|svelte|solid|astro|native-bare|native-uniwind|native-unistyles|none>"] ,
+  "addons": ["<pwa|tauri|electrobun|starlight|fumadocs|biome|lefthook|husky|mcp|turborepo|nx|vite-plus|ultracite|oxlint|opentui|wxt|skills|evlog|none>"] ,
   "examples": ["<ai|todo|none>"] ,
   "auth": <"better-auth"|"clerk"|"none">,
   "packageManager": "<bun|pnpm|npm>",
-  "dbSetup": "<none|docker|d1>",
+  "dbSetup": "<turso|neon|prisma-postgres|planetscale|mongodb-atlas|supabase|d1|docker|none>",
   "api": "<none|trpc|orpc>",
-  "webDeploy": "<none|wrangler|alchemy>",
-  "serverDeploy": "<none|wrangler|alchemy>"
+  "webDeploy": "<cloudflare|docker|vercel|none>",
+  "serverDeploy": "<cloudflare|docker|vercel|none>"
 }
 ```
 
@@ -360,7 +457,7 @@ Generated only if you chose the Turborepo addon.
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "dev": {
       "cache": false,
@@ -370,39 +467,99 @@ Generated only if you chose the Turborepo addon.
 }
 ```
 
+### Nx Config (nx.json)
+
+Generated only if you chose the Nx addon.
+
+### Vite+ Config
+
+Generated Vite frontends import `defineConfig` from `vite-plus` when you choose the Vite+ addon. A root `vite.config.ts` centralizes Vite+ lint, format, and staged-file checks, while root workspace scripts use `vp run` for task orchestration.
+
+When Vite+ is selected without Husky or Lefthook, generated projects also include `hooks:setup` for optional native Vite+ Git hooks. Run it if you want `vp config` to install hooks into `.vite-hooks` and use `vp staged` from `vite.config.ts`; see the [Vite+ commit hooks guide](https://viteplus.dev/guide/commit-hooks).
+
+```ts
+import { defineConfig } from "vite-plus";
+
+export default defineConfig({
+  lint: {
+    options: {
+      typeAware: false,
+      typeCheck: false,
+    },
+  },
+  fmt: {
+    sortPackageJson: true,
+  },
+  staged: {
+    "*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}": "vp check --fix",
+  },
+});
+```
+
 ## Shared packages
 
-By default, no shared packages are created. You will see `packages/backend` only when using the Convex backend. You can add more packages manually as your repo grows.
+Better-T-Stack always creates `packages/config`. Other packages are added based on your selections:
 
-<Files>
-  <Folder name="packages" defaultOpen>
-    <Folder name="backend">
-      <File name="..." />
-    </Folder>
-  </Folder>
-</Files>
+- `packages/env`: when any frontend is selected or the backend is not `none`
+- `packages/api`: when `--api` is not `none` (non-Convex)
+- `packages/auth`: when `--auth` is not `none` (non-Convex)
+- `packages/db`: when both `--database` and `--orm` are selected (non-Convex)
+- `packages/backend`: Convex backend only
+- `packages/infra`: Alchemy infrastructure for Cloudflare and/or Prisma deployments
 
 ## Development Scripts
 
-Scripts are adjusted based on your package manager and whether the Turborepo addon is selected.
+Scripts are adjusted based on your package manager and whether the Turborepo, Nx, or Vite+ addon is selected.
 
 With Turborepo:
 
 ```json
 {
   "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "check-types": "turbo check-types",
-    "dev:web": "turbo -F web dev",
-    "dev:server": "turbo -F server dev",
-    "db:push": "turbo -F server db:push",
-    "db:studio": "turbo -F server db:studio"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "check-types": "turbo run check-types",
+    "dev:web": "turbo run dev -F web",
+    "dev:server": "turbo run dev -F server",
+    "db:push": "turbo run db:push -F server",
+    "db:studio": "turbo run db:studio -F server"
   }
 }
 ```
 
-Without Turborepo (example for Bun):
+With Nx:
+
+```json
+{
+  "scripts": {
+    "dev": "nx run-many -t dev",
+    "build": "nx run-many -t build",
+    "check-types": "nx run-many -t check-types",
+    "dev:web": "nx run-many -t dev --projects=web",
+    "dev:server": "nx run-many -t dev --projects=server"
+  }
+}
+```
+
+With Vite+:
+
+```json
+{
+  "scripts": {
+    "dev": "vp run -r dev",
+    "build": "vp run -r build",
+    "check-types": "vp run -r check-types",
+    "check": "vp check && vp run -r check-types",
+    "lint": "vp lint",
+    "format": "vp fmt",
+    "staged": "vp staged",
+    "dev:web": "vp run --filter web dev",
+    "dev:server": "vp run --filter server dev"
+  }
+}
+```
+
+Without Turborepo, Nx, or Vite+ (example for Bun):
 
 ```json
 {
@@ -419,17 +576,18 @@ Without Turborepo (example for Bun):
 Notes:
 
 - Convex adds `dev:setup` for initial backend configuration.
+- Database scripts (`db:*`) are added only when a database + ORM are selected (Drizzle/Prisma). D1 + Cloudflare omits `db:push` and `db:studio`.
 
 ## Key Details
 
-- **Monorepo**: `apps/*` always; `packages/*` only when needed (Convex)
-- **React web base**: shadcn/ui primitives, `components.json`, common utilities
+- **Monorepo**: `apps/*` and `packages/*` are created only when relevant (except `packages/config`, which is always present)
+- **React web base**: app-specific files stay in `apps/web`, while shared shadcn/ui primitives live in `packages/ui`
 - **API clients**: `src/utils/trpc.ts` or `src/utils/orpc.ts` added to web/native when selected
 - **Auth**: Adds authentication setup based on provider:
   - `better-auth`: `src/lib/auth.ts` on server and login/dashboard pages on web app
   - `clerk`: Clerk provider setup and authentication components
 - **ORM/DB**: Drizzle/Prisma/Mongoose files added only when selected
 - **Extras**: `pnpm-workspace.yaml`, `bunfig.toml`, or `.npmrc` added based on package manager and choices
-- **Deploy**: Workers deploy adds `wrangler.jsonc` templates to the appropriate app(s)
+- **Deploy**: Cloudflare or Prisma deployment adds one `packages/infra/alchemy.run.ts` containing the selected application and database resources
 
 This reflects the actual files written by the CLI so new projects match what's documented here.

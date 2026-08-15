@@ -1,0 +1,11 @@
+# Local env files must never ship in deployments: Vercel project env vars are
+# the source of truth (bun env:vercel:*), and frameworks like Next.js would
+# otherwise load these localhost values at runtime.
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+local.db
+local.db-*
+.alchemy/

@@ -1,10 +1,13 @@
-import type { Backend, Runtime } from "../types";
-
 import { DEFAULT_CONFIG } from "../constants";
-import { exitCancelled } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import type { Backend, Runtime } from "../types";
+import { UserCancelledError } from "../utils/errors";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
-export async function getRuntimeChoice(runtime?: Runtime, backend?: Backend) {
+export async function getRuntimeChoice(
+  runtime?: Runtime,
+  backend?: Backend,
+  previousValue?: Runtime,
+) {
   if (backend === "convex" || backend === "none" || backend === "self") {
     return "none";
   }
@@ -37,12 +40,12 @@ export async function getRuntimeChoice(runtime?: Runtime, backend?: Backend) {
   }
 
   const response = await navigableSelect<Runtime>({
-    message: "Select runtime",
+    message: "Choose a runtime",
     options: runtimeOptions,
-    initialValue: DEFAULT_CONFIG.runtime,
+    initialValue: preferValidInitial(runtimeOptions, previousValue, DEFAULT_CONFIG.runtime),
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

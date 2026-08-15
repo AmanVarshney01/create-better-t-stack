@@ -1,0 +1,173 @@
+import { env } from "@{{projectName}}/env/server";
+{{#if (eq runtime "node")}}
+import { node } from "@elysiajs/node";
+{{/if}}
+import { Elysia } from "elysia";
+import { cors } from "@elysiajs/cors";
+{{#if (includes examples "ai")}}
+import { google } from "@ai-sdk/google";
+import { convertToModelMessages, createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, wrapLanguageModel } from "ai";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+{{/if}}
+{{#if (eq api "orpc")}}
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { RPCHandler } from "@orpc/server/fetch";
+import { onError } from "@orpc/server";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { createContext } from "@{{projectName}}/api/context";
+{{/if}}
+{{#if (eq auth "better-auth")}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+
+{{#if (eq api "orpc")}}
+const rpcHandler = new RPCHandler(appRouter, {
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+const apiHandler = new OpenAPIHandler(appRouter, {
+	plugins: [
+		new OpenAPIReferencePlugin({
+			schemaConverters: [new ZodToJsonSchemaConverter()],
+		}),
+	],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+{{/if}}
+
+{{#if (eq serverDeploy "vercel")}}const app = {{/if}}{{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
+	.use(
+		cors({
+			origin: env.CORS_ORIGIN,
+			methods: ["GET", "POST", "OPTIONS"],
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+			allowedHeaders: ["Content-Type", "Authorization"],
+{{/if}}
+{{#if (eq auth "better-auth")}}
+			credentials: true,
+{{/if}}
+		}),
+	)
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+	.get("/polar/success", ({ request, status }) => {
+		const nativeAppUrl = "{{projectName}}://";
+		const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+		const requestUrl = new URL(request.url);
+		const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+		let redirectUrl: URL;
+		try {
+			redirectUrl = new URL(returnUrl);
+		} catch {
+			return status(400, "Invalid return URL");
+		}
+
+		if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+			return status(400, "Invalid return URL");
+		}
+
+		return new Response(null, {
+			status: 302,
+			headers: {
+				Location: redirectUrl.toString(),
+			},
+		});
+	})
+{{/if}}
+{{#if (eq auth "better-auth")}}
+	.all("/api/auth/*", async (context) => {
+		const { request, status } = context;
+		if (["POST", "GET"].includes(request.method)) {
+			return auth.handler(request);
+		}
+		return status(405)
+	})
+{{/if}}
+{{#if (eq api "orpc")}}
+	.all(
+		"/rpc*",
+		async (context) => {
+			const { response } = await rpcHandler.handle(context.request, {
+				prefix: "/rpc",
+				context: await createContext({ context }),
+			});
+			return response ?? new Response("Not Found", { status: 404 });
+		},
+		{
+			parse: "none",
+		}
+	)
+	.all(
+		"/api-reference*",
+		async (context) => {
+			const { response } = await apiHandler.handle(context.request, {
+				prefix: "/api-reference",
+				context: await createContext({ context }),
+			});
+			return response ?? new Response("Not Found", { status: 404 });
+		},
+		{
+			parse: "none",
+		}
+	)
+{{/if}}
+{{#if (eq api "trpc")}}
+	.all("/trpc/*", async (context) => {
+		const res = await fetchRequestHandler({
+			endpoint: "/trpc",
+			router: appRouter,
+			req: context.request,
+			createContext: () => createContext({ context }),
+		});
+		return res;
+	})
+{{/if}}
+{{#if (includes examples "ai")}}
+	.post("/ai", async (context) => {
+		const body = (await context.request.json()) as { messages?: UIMessage[] };
+		const uiMessages = body.messages || [];
+		const model = wrapLanguageModel({
+			model: google("gemini-2.5-flash"),
+			middleware: devToolsMiddleware(),
+		});
+		const result = streamText({
+			model,
+			messages: await convertToModelMessages(uiMessages),
+		});
+
+		return createUIMessageStreamResponse({
+			stream: toUIMessageStream({ stream: result.stream }),
+		});
+	})
+{{/if}}
+	.get("/", () => "OK")
+{{#if (eq serverDeploy "vercel")}};
+
+export default app;
+
+// Elysia's default export is not auto-served by Bun or Node, so start a local
+// server outside Vercel while still exporting the app for Vercel functions.
+if (!process.env.VERCEL) {
+	app.listen(3000, () => {
+		console.log("Server is running on http://localhost:3000");
+	});
+}
+{{else}}
+	.listen(3000, () => {
+		console.log("Server is running on http://localhost:3000");
+	});
+{{/if}}

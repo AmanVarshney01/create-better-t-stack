@@ -1,0 +1,72 @@
+{{#if (eq api "orpc")}}
+import z from "zod";
+import "@{{projectName}}/db";
+import { publicProcedure } from "../index";
+import { Todo } from "@{{projectName}}/db/models/todo.model";
+
+export const todoRouter = {
+    getAll: publicProcedure.handler(async () => {
+        const todos = await Todo.find().lean();
+        return todos.map((todo) => ({ ...todo, id: todo.id }));
+    }),
+
+    create: publicProcedure
+        .input(z.object({ text: z.string().min(1) }))
+        .handler(async ({ input }) => {
+            const newTodo = await Todo.create({ text: input.text });
+            const todo = newTodo.toObject();
+            return { ...todo, id: todo.id };
+    }),
+
+    toggle: publicProcedure
+        .input(z.object({ id: z.string(), completed: z.boolean() }))
+        .handler(async ({ input }) => {
+            await Todo.updateOne({ id: input.id }, { completed: input.completed });
+            return { success: true };
+    }),
+
+    delete: publicProcedure
+        .input(z.object({ id: z.string() }))
+        .handler(async ({ input }) => {
+            await Todo.deleteOne({ id: input.id });
+            return { success: true };
+    }),
+};
+
+{{/if}}
+
+{{#if (eq api "trpc")}}
+import z from "zod";
+import "@{{projectName}}/db";
+import { router, publicProcedure } from "../index";
+import { Todo } from "@{{projectName}}/db/models/todo.model";
+
+export const todoRouter = router({
+    getAll: publicProcedure.query(async () => {
+        const todos = await Todo.find().lean();
+        return todos.map((todo) => ({ ...todo, id: todo.id }));
+    }),
+
+    create: publicProcedure
+        .input(z.object({ text: z.string().min(1) }))
+        .mutation(async ({ input }) => {
+            const newTodo = await Todo.create({ text: input.text });
+        const todo = newTodo.toObject();
+        return { ...todo, id: todo.id };
+    }),
+
+    toggle: publicProcedure
+        .input(z.object({ id: z.string(), completed: z.boolean() }))
+        .mutation(async ({ input }) => {
+            await Todo.updateOne({ id: input.id }, { completed: input.completed });
+            return { success: true };
+    }),
+
+    delete: publicProcedure
+        .input(z.object({ id: z.string() }))
+        .mutation(async ({ input }) => {
+            await Todo.deleteOne({ id: input.id });
+            return { success: true };
+    }),
+});
+{{/if}}

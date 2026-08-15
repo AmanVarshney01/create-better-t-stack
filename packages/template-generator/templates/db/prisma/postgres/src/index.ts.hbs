@@ -1,0 +1,88 @@
+{{#if (eq runtime "workers")}}
+import { PrismaClient } from "../prisma/generated/client";
+import { env } from "@{{projectName}}/env/server";
+{{#if (eq dbSetup "neon")}}
+import { PrismaNeon } from "@prisma/adapter-neon";
+import { neonConfig } from "@neondatabase/serverless";
+
+neonConfig.poolQueryViaFetch = true;
+
+export function createPrismaClient() {
+	return new PrismaClient({
+		adapter: new PrismaNeon({
+			connectionString: env.DATABASE_URL,
+		}),
+	});
+}
+
+{{else if (eq dbSetup "prisma-postgres")}}
+import { PrismaPostgresAdapter } from "@prisma/adapter-ppg";
+
+export function createPrismaClient() {
+	const adapter = new PrismaPostgresAdapter({
+		connectionString: env.DATABASE_URL,
+	});
+
+	return new PrismaClient({ adapter });
+}
+
+{{else}}
+import { PrismaPg } from "@prisma/adapter-pg";
+
+export function createPrismaClient() {
+	const adapter = new PrismaPg({
+		connectionString: env.DATABASE_URL,
+		maxUses: 1,
+	});
+	return new PrismaClient({ adapter });
+}
+
+{{/if}}
+{{else}}
+import { PrismaClient } from "../prisma/generated/client";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
+{{else}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+{{#if (eq dbSetup "neon")}}
+import { PrismaNeon } from "@prisma/adapter-neon";
+
+export function createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
+	const adapter = new PrismaNeon({
+		connectionString: env.DATABASE_URL,
+	});
+
+	return new PrismaClient({ adapter });
+}
+
+{{else if (eq dbSetup "prisma-postgres")}}
+import { PrismaPostgresAdapter } from "@prisma/adapter-ppg";
+
+export function createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
+	const adapter = new PrismaPostgresAdapter({
+		connectionString: env.DATABASE_URL,
+	});
+
+	return new PrismaClient({ adapter });
+}
+
+{{else}}
+import { PrismaPg } from "@prisma/adapter-pg";
+
+export function createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
+	const adapter = new PrismaPg({
+		connectionString: env.DATABASE_URL,
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+		maxUses: 1,
+{{/if}}
+	});
+	return new PrismaClient({ adapter });
+}
+
+{{/if}}
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+const prisma = createPrismaClient();
+export default prisma;
+{{/if}}
+{{/if}}

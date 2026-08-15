@@ -1,0 +1,33 @@
+{{#if (eq webDeploy "cloudflare")}}
+/// <reference path="../../../packages/env/env.d.ts" />
+{{/if}}
+{{#if (and (eq backend "self") (eq api "orpc"))}}
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+
+{{/if}}
+// See https://svelte.dev/docs/kit/types#app.d.ts
+// for information about these interfaces
+declare global {
+{{#if (and (eq backend "self") (eq api "orpc"))}}
+	var $client: AppRouterClient | undefined;
+
+{{/if}}
+	namespace App {
+		// interface Error {}
+		// interface Locals {}
+		// interface PageData {}
+		// interface PageState {}
+{{#if (eq webDeploy "cloudflare")}}
+		interface Platform {
+			env: Env;
+			ctx: ExecutionContext;
+			caches: CacheStorage;
+			cf: IncomingRequestCfProperties;
+		}
+{{else}}
+		// interface Platform {}
+{{/if}}
+	}
+}
+
+export {};

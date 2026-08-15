@@ -35,6 +35,14 @@ Skip automatic database setup prompts and use manual database configuration.
 create-better-t-stack --manual-db
 ```
 
+### `--dry-run`
+
+Validate configuration, compatibility, and directory handling without writing files.
+
+```bash
+create-better-t-stack my-app --yes --dry-run
+```
+
 ### `--package-manager <pm>`
 
 Choose package manager: `npm`, `pnpm`, or `bun`.
@@ -88,10 +96,14 @@ create-better-t-stack --no-render-title
 
 How to handle existing, non-empty target directories:
 
-- `merge`: Keep existing files and merge new ones
-- `overwrite`: Clear the directory before scaffolding
+- `merge`: Keep unrelated files and replace conflicting generated files
+- `overwrite`: Permanently clear the directory before scaffolding
 - `increment`: Create a suffixed directory (e.g., `my-app-1`)
 - `error`: Fail instead of prompting
+
+The interactive prompt recommends the first available suffixed directory and requires an extra
+confirmation before overwriting. Project targets and generated paths that pass through symbolic
+links are rejected instead of being followed.
 
 ```bash
 # Overwrite an existing directory without prompting
@@ -114,6 +126,8 @@ create-better-t-stack --no-disable-analytics
 ```
 
 Analytics help improve Better-T-Stack by providing insights into usage patterns. When disabled, no data is collected or transmitted.
+
+For JSON-first automation, runtime schemas, and nested structured options, see [Agent Workflows](/docs/cli/agent-workflows).
 
 ## Database Options
 
@@ -150,7 +164,7 @@ Database hosting/setup provider:
 
 - `none`: Manual setup
 - `turso`: Turso (SQLite)
-- `d1`: Cloudflare D1 (SQLite)
+- `d1`: Cloudflare D1 (SQLite; requires either Cloudflare Workers server deployment or `backend self` with Cloudflare web deployment)
 - `neon`: Neon (PostgreSQL)
 - `supabase`: Supabase (PostgreSQL)
 - `prisma-postgres`: Prisma Postgres
@@ -161,6 +175,8 @@ Database hosting/setup provider:
 ```bash
 create-better-t-stack --database postgres --db-setup neon
 ```
+
+If you need structured control over database provisioning behavior, use `dbSetupOptions` with `create-json` or the programmatic API. See [Agent Workflows](/docs/cli/agent-workflows).
 
 ## Backend Options
 
@@ -184,7 +200,7 @@ create-better-t-stack --backend hono
 
 Runtime environment:
 
-- `none`: No specific runtime (only with `convex` or `none` backend)
+- `none`: No specific runtime (only with `convex`, `none`, or `self` backend)
 - `bun`: Bun runtime
 - `node`: Node.js runtime
 - `workers`: Cloudflare Workers
@@ -219,7 +235,8 @@ Frontend frameworks (can specify multiple):
 - `next`: Next.js
 - `nuxt`: Nuxt (Vue)
 - `svelte`: SvelteKit
-- `solid`: SolidJS
+- `solid`: Solid (SSR)
+- `astro`: Astro
 
 **Native Frameworks:**
 
@@ -249,7 +266,7 @@ create-better-t-stack --frontend none
 Choose authentication provider:
 
 - `better-auth`: Better-Auth authentication (default)
-- `clerk`: Clerk authentication (only with Convex backend)
+- `clerk`: Clerk authentication
 - `none`: No authentication
 
 ```bash
@@ -260,9 +277,12 @@ create-better-t-stack --auth none
 
 **Note:**
 
-- `better-auth` requires both a database and backend framework
-- `clerk` is only available with Convex backend
-- Authentication is automatically set to `none` when using `--backend none` or `--database none` (unless using Convex)
+- `better-auth` requires a backend framework (cannot be `none`)
+- if you choose a database, you should also choose an ORM
+- with `--backend convex`, `better-auth` supports `react-router`, `tanstack-router`, `tanstack-start`, `next`, and native Expo frontends
+- `clerk` requires a compatible frontend
+- Supported Clerk backends: `convex`, `hono`, `express`, `fastify`, `elysia`, and `self` with Next.js or TanStack Start
+- Authentication is automatically set to `none` when using `--backend none`
 
 ## Payments
 
@@ -287,17 +307,23 @@ Additional features to include:
 
 - `none`: No addons
 - `pwa`: Progressive Web App support
-- `tauri`: Desktop app support
+- `tauri`: Desktop app support for static web output (not compatible with `--backend self`)
+- `electrobun`: Lightweight desktop shell for static web output (not compatible with `--backend self`)
 - `starlight`: Starlight documentation site
 - `fumadocs`: Fumadocs documentation site
 - `biome`: Biome linting and formatting
+- `lefthook`: Git hooks with Lefthook
 - `husky`: Git hooks with Husky
 - `turborepo`: Turborepo monorepo setup
+- `nx`: Nx monorepo setup
+- `vite-plus`: Vite+ unified toolchain, workspace task runner, linting, formatting, and optional native Git hooks
 - `ultracite`: Ultracite configuration
 - `oxlint`: Oxlint + Oxfmt (linting & formatting)
-- `ruler`: Centralize your AI rules with Ruler
+- `mcp`: Install MCP servers, including Better T Stack itself, with add-mcp
 - `opentui`: OpenTUI components
 - `wxt`: WXT browser extension framework
+- `skills`: Install AI agent skills for coding assistants (Cursor, Claude Code, GitHub Copilot, etc.)
+- `evlog`: Structured request logging for Hono, Express, Fastify, Elysia, or fullstack web backends
 
 ```bash
 create-better-t-stack --addons pwa biome husky
@@ -324,26 +350,75 @@ create-better-t-stack --examples todo ai
 Web deployment configuration:
 
 - `none`: No deployment setup
-- `alchemy`: Cloudflare Workers deployment (via Alchemy infrastructure as code)
+- `cloudflare`: Cloudflare Workers deployment (via Alchemy infrastructure as code)
+- `prisma`: Prisma deployment via Alchemy (all generated web frameworks)
+- `docker`: Self-hosted deployment with a Dockerfile and a root `docker-compose.yml`
+- `vercel`: Vercel Services deployment with a root `vercel.json`
 
 ```bash
-create-better-t-stack --web-deploy alchemy
+create-better-t-stack --web-deploy docker
 ```
 
-**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Infrastructure as Code with Alchemy Guide](/docs/guides/alchemy-deployment) for details.
+When the app that consumes Neon, PlanetScale, or Prisma Postgres is deployed with Alchemy, the CLI asks how the database should be provisioned and defaults to Alchemy. You can instead choose the provider's automatic setup when available or configure an existing database manually. With Alchemy selected, the generated stack provisions the database, injects runtime credentials, and applies checked-in migrations. Run `alchemy login --configure` from `packages/infra`; no separate provider setup step is required. See the [Alchemy deployment guide](/docs/guides/cloudflare-alchemy) for details.
+
+## Automation Surfaces
+
+These are part of the CLI contract for agents and scripts even though they are commands or JSON fields instead of traditional flags:
+
+- `create-json`
+- `add-json`
+- `schema --name <schema>`
+- `mcp`
+- `addonOptions`
+- `dbSetupOptions`
+
+See [Agent Workflows](/docs/cli/agent-workflows) for examples.
 
 ### `--server-deploy <setup>`
 
 Server deployment configuration:
 
 - `none`: No deployment setup
-- `alchemy`: Cloudflare Workers deployment (when runtime is workers, via Alchemy infrastructure as code)
+- `cloudflare`: Cloudflare Workers deployment (when runtime is workers, via Alchemy infrastructure as code)
+- `prisma`: Prisma deployment via Alchemy (requires the Bun or Node runtime)
+- `docker`: Self-hosted deployment with a Dockerfile and a root `docker-compose.yml` (requires the bun or node runtime)
+- `vercel`: Vercel Services deployment (requires the bun or node runtime)
 
 ```bash
-create-better-t-stack --server-deploy alchemy
+create-better-t-stack --server-deploy docker
 ```
 
-**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Infrastructure as Code with Alchemy Guide](/docs/guides/alchemy-deployment) for details.
+**Note:** The CLI displays this target simply as **Prisma**. The generated infrastructure uses Alchemy's Prisma provider. See the [Alchemy deployment guide](/docs/guides/cloudflare-alchemy) for details.
+
+## History
+
+### `history`
+
+View your project creation history. Projects are tracked locally using platform-specific directories:
+
+- **macOS**: `~/Library/Application Support/better-t-stack/history.json`
+- **Linux**: `~/.local/share/better-t-stack/history.json`
+- **Windows**: `%LOCALAPPDATA%\better-t-stack\Data\history.json`
+
+```bash
+# Show last 10 projects
+create-better-t-stack history
+
+# Show last 5 projects
+create-better-t-stack history --limit 5
+
+# Output as JSON
+create-better-t-stack history --json
+
+# Clear all history
+create-better-t-stack history --clear
+```
+
+**Options:**
+
+- `--limit <number>`: Number of entries to show (default: 10)
+- `--clear`: Clear all project history
+- `--json`: Output history as JSON
 
 ## Option Validation
 
@@ -365,8 +440,8 @@ create-better-t-stack \
   --addons pwa biome \
   --examples todo \
   --package-manager bun \
-  --web-deploy wrangler \
-  --server-deploy alchemy \
+  --web-deploy cloudflare \
+  --server-deploy cloudflare \
   --install
 ```
 

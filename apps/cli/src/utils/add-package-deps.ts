@@ -1,5 +1,6 @@
-import fs from "fs-extra";
 import path from "node:path";
+
+import fs from "fs-extra";
 
 import { type AvailableDependencies, dependencyVersionMap } from "../constants";
 

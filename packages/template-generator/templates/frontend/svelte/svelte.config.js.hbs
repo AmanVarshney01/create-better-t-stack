@@ -1,0 +1,44 @@
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+import adapter from '@sveltejs/adapter-static';
+{{else if (eq webDeploy "cloudflare")}}
+import adapter from '@sveltejs/adapter-cloudflare';
+{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
+import adapter from '@sveltejs/adapter-node';
+{{else if (eq webDeploy "vercel")}}
+import adapter from '@sveltejs/adapter-vercel';
+{{else}}
+import adapter from '@sveltejs/adapter-auto';
+{{/if}}
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	// Consult https://svelte.dev/docs/kit/integrations
+	// for more information about preprocessors
+	preprocess: vitePreprocess(),
+
+	kit: {
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+		// adapter-static emits files Electrobun and Tauri can bundle directly.
+		adapter: adapter({
+			pages: 'build',
+			assets: 'build',
+			fallback: 'index.html'
+		})
+{{else if (eq webDeploy "cloudflare")}}
+		adapter: adapter()
+{{else if (or (eq webDeploy "docker") (eq webDeploy "prisma"))}}
+		// adapter-node builds a standalone Node server (run with `node build/index.js`).
+		adapter: adapter()
+{{else if (eq webDeploy "vercel")}}
+		adapter: adapter()
+{{else}}
+		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
+		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
+		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
+		adapter: adapter()
+{{/if}}
+	}
+};
+
+export default config;

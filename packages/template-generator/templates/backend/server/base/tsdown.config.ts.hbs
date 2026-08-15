@@ -1,0 +1,20 @@
+import { defineConfig } from "tsdown";
+{{#if (and (eq runtime "workers") (eq orm "prisma"))}}
+import { unwasm } from "unwasm/plugin";
+{{/if}}
+
+export default defineConfig({
+  entry: "./src/index.ts",
+  format: "esm",
+  outDir: "./dist",
+  clean: true,
+  {{#if (and (eq runtime "workers") (eq orm "prisma"))}}
+  plugins: [unwasm({ esmImport: true })],
+  {{/if}}
+  deps: {
+    alwaysBundle: [/@{{projectName}}\/.*/],
+    {{#if (eq runtime "workers")}}
+    neverBundle: ["cloudflare:workers"],
+    {{/if}}
+  },
+});

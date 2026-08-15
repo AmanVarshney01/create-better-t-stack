@@ -1,0 +1,29 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "check-types": "tsc --noEmit",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
+    "@swc/helpers": "^0.5.23",
+    "lucide-react": "^1.27.0",
+    "next": "^16.3.0",
+    "next-themes": "^0.4.6",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sonner": "^2.0.7",
+    "babel-plugin-react-compiler": "^1.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^20.19.43",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "tailwindcss": "^4.3.3"
+  }
+}

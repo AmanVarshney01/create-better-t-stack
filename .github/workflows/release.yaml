@@ -22,14 +22,22 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          check-latest: true
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
 
       - name: Extract version from commit message
         id: version
         run: |
-          VERSION=$(echo "${{ github.event.head_commit.message }}" | sed -E 's/^chore\(release\): ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          VERSION=$(git log -1 --pretty=%s | sed -nE 's/^chore\(release\): ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Releasing version: $VERSION"
 
@@ -53,19 +61,6 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create and push tag
-        if: steps.check-version.outputs.exists == 'false'
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          git config --local user.email "amanvarshney.work@gmail.com"
-          git config --local user.name "Aman Varshney"
-          if ! git rev-parse "v$VERSION" >/dev/null 2>&1; then
-            git tag -a "v$VERSION" -m "Release v$VERSION"
-            git push --tags
-          else
-            echo "Tag v$VERSION already exists, skipping"
-          fi
-
       - name: Setup Bun
         if: steps.check-version.outputs.exists == 'false'
         uses: oven-sh/setup-bun@v2
@@ -75,18 +70,6 @@ jobs:
       - name: Install Dependencies
         if: steps.check-version.outputs.exists == 'false'
         run: bun install --frozen-lockfile
-
-      - name: Create GitHub Release
-        if: steps.check-version.outputs.exists == 'false'
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          if ! gh release view "v$VERSION" >/dev/null 2>&1; then
-            bunx changelogithub
-          else
-            echo "Release v$VERSION already exists, skipping"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update types package version
         if: steps.check-version.outputs.exists == 'false'
@@ -99,20 +82,23 @@ jobs:
         if: steps.check-version.outputs.exists == 'false'
         run: cd packages/types && bun run build
 
-      - name: Publish types to NPM
+      - name: Update template-generator package version and types dependency
         if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/types && bun publish --access public
-        env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 1
-          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cd packages/template-generator
+          jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["@better-t-stack/types"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Update CLI types dependency and version
+      - name: Build template-generator package
+        if: steps.check-version.outputs.exists == 'false'
+        run: cd packages/template-generator && bun run build
+
+      - name: Update CLI types and template-generator dependencies and version
         if: steps.check-version.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd apps/cli
-          jq --arg v "^$VERSION" '.dependencies["@better-t-stack/types"] = $v' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "^$VERSION" '.dependencies["@better-t-stack/types"] = $v | .dependencies["@better-t-stack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build CLI
         if: steps.check-version.outputs.exists == 'false'
@@ -128,21 +114,71 @@ jobs:
           cd packages/create-bts
           jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["create-better-t-stack"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
+      - name: Setup pnpm
+        if: steps.check-version.outputs.exists == 'false'
+        uses: pnpm/action-setup@v6
+        with:
+          version: latest
+
+      # Gate all publishes on the smoke so a failure here doesn't leave a
+      # partial release on npm (e.g. types/template-generator published but
+      # create-better-t-stack broken).
+      - name: Publish smoke test (npm, pnpm, bun)
+        if: steps.check-version.outputs.exists == 'false'
+        run: bun run smoke:publish
+
+      - name: Publish types to NPM
+        if: steps.check-version.outputs.exists == 'false'
+        run: cd packages/types && npm publish --access public
+        env:
+          BTS_TELEMETRY: 1
+          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+
+      - name: Publish template-generator to NPM
+        if: steps.check-version.outputs.exists == 'false'
+        run: cd packages/template-generator && npm publish --access public
+        env:
+          BTS_TELEMETRY: 1
+          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+
       - name: Publish CLI to NPM
         if: steps.check-version.outputs.exists == 'false'
-        run: cd apps/cli && bun publish --access public
+        run: cd apps/cli && npm publish --access public
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
       - name: Publish create-bts alias to NPM
         if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/create-bts && bun publish --access public
+        run: cd packages/create-bts && npm publish --access public
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+
+      - name: Create and push tag
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git config --local user.email "amanvarshney.work@gmail.com"
+          git config --local user.name "Aman Varshney"
+          if ! git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            git tag -a "v$VERSION" -m "Release v$VERSION"
+            git push --tags
+          else
+            echo "Tag v$VERSION already exists, skipping"
+          fi
+
+      - name: Create GitHub Release
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if ! gh release view "v$VERSION" >/dev/null 2>&1; then
+            bunx changelogithub
+          else
+            echo "Release v$VERSION already exists, skipping"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release Summary
         if: steps.check-version.outputs.exists == 'false'
@@ -154,6 +190,7 @@ jobs:
           echo "- [create-better-t-stack@$VERSION](https://www.npmjs.com/package/create-better-t-stack/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "- [create-bts@$VERSION](https://www.npmjs.com/package/create-bts/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "- [@better-t-stack/types@$VERSION](https://www.npmjs.com/package/@better-t-stack/types/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [@better-t-stack/template-generator@$VERSION](https://www.npmjs.com/package/@better-t-stack/template-generator/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### GitHub Release" >> $GITHUB_STEP_SUMMARY
           echo "[v$VERSION](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY

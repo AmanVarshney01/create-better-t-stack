@@ -1,0 +1,135 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Dashboard - {{projectName}}">
+  <div id="dashboard-content" class="hidden">
+    <main class="mx-auto max-w-4xl px-4 py-8">
+      <div class="rounded-xl border border-neutral-800 bg-neutral-900/50 p-8">
+        <h1 class="text-3xl font-bold text-white mb-6">Dashboard</h1>
+        
+        <div class="space-y-4">
+          <div class="rounded-lg bg-neutral-800/50 p-4">
+            <p class="text-sm text-neutral-400">Welcome back,</p>
+            <p id="user-name" class="text-xl font-medium text-white">Loading...</p>
+          </div>
+          
+          <div class="rounded-lg bg-neutral-800/50 p-4">
+            <p class="text-sm text-neutral-400 mb-2">Email</p>
+            <p id="user-email" class="text-white">Loading...</p>
+          </div>
+
+          {{#if (eq api "orpc")}}
+          <div class="rounded-lg bg-neutral-800/50 p-4">
+            <p class="text-sm text-neutral-400 mb-2">Server Message</p>
+            <p id="api-message" class="text-white">Loading...</p>
+          </div>
+          {{/if}}
+
+          {{#if (eq payments "polar")}}
+          <div class="rounded-lg bg-neutral-800/50 p-4">
+            <p class="text-sm text-neutral-400 mb-2">Subscription</p>
+            <div id="subscription-info" class="space-y-2">
+              <p class="text-white">Loading...</p>
+            </div>
+          </div>
+          {{/if}}
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="loading" class="flex h-[calc(100vh-4rem)] items-center justify-center">
+    <p class="text-neutral-400">Loading...</p>
+  </div>
+
+  <div id="redirect" class="hidden flex h-[calc(100vh-4rem)] items-center justify-center">
+    <p class="text-neutral-400">Redirecting to login...</p>
+  </div>
+</Layout>
+
+<script>
+  import { authClient } from "../lib/auth-client";
+  {{#if (eq api "orpc")}}
+  import { orpc } from "../lib/orpc";
+  {{/if}}
+
+  const dashboardContent = document.getElementById("dashboard-content")!;
+  const loading = document.getElementById("loading")!;
+  const redirect = document.getElementById("redirect")!;
+  const userName = document.getElementById("user-name")!;
+  const userEmail = document.getElementById("user-email")!;
+  {{#if (eq api "orpc")}}
+  const apiMessage = document.getElementById("api-message")!;
+  {{/if}}
+
+  async function init() {
+    try {
+      const { data: session } = await authClient.getSession();
+      
+      if (!session?.user) {
+        loading.classList.add("hidden");
+        redirect.classList.remove("hidden");
+        window.location.href = "/login";
+        return;
+      }
+
+      userName.textContent = session.user.name || "User";
+      userEmail.textContent = session.user.email || "";
+
+      {{#if (eq api "orpc")}}
+      try {
+        const data = await orpc.privateData();
+        apiMessage.textContent = data.message || "Connected to server";
+      } catch (e) {
+        apiMessage.textContent = "Failed to load server data";
+      }
+      {{/if}}
+
+      {{#if (eq payments "polar")}}
+      try {
+        const { data: customerState } = await authClient.customer.state();
+        const subscriptionInfo = document.getElementById("subscription-info")!;
+        if (customerState?.activeSubscriptions?.length > 0) {
+          subscriptionInfo.innerHTML = `
+            <p class="text-white">Plan: <span class="text-green-400">Pro</span></p>
+            <button
+              id="manage-subscription"
+              class="mt-2 rounded px-3 py-1.5 text-sm bg-neutral-700 hover:bg-neutral-600 text-white transition-colors"
+            >
+              Manage Subscription
+            </button>
+          `;
+          document.getElementById("manage-subscription")?.addEventListener("click", async () => {
+            await authClient.customer.portal();
+          });
+        } else {
+          subscriptionInfo.innerHTML = `
+            <p class="text-white">Plan: <span class="text-neutral-400">Free</span></p>
+            <button
+              id="upgrade-button"
+              class="mt-2 rounded px-3 py-1.5 text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+            >
+              Upgrade to Pro
+            </button>
+          `;
+          document.getElementById("upgrade-button")?.addEventListener("click", async () => {
+            await authClient.checkout({ slug: "pro" });
+          });
+        }
+      } catch (e) {
+        console.error("Failed to load subscription info", e);
+      }
+      {{/if}}
+
+      loading.classList.add("hidden");
+      dashboardContent.classList.remove("hidden");
+    } catch (error) {
+      loading.classList.add("hidden");
+      redirect.classList.remove("hidden");
+      window.location.href = "/login";
+    }
+  }
+
+  init();
+</script>

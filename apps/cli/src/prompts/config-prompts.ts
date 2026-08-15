@@ -1,3 +1,5 @@
+import { DEFAULT_CONFIG } from "../constants";
+import { withDbSetupMode } from "../helpers/core/db-setup-options";
 import type {
   Addons,
   API,
@@ -5,6 +7,7 @@ import type {
   Backend,
   Database,
   DatabaseSetup,
+  DbSetupOptions,
   Examples,
   Frontend,
   ORM,
@@ -15,14 +18,14 @@ import type {
   ServerDeploy,
   WebDeploy,
 } from "../types";
-
-import { exitCancelled } from "../utils/errors";
+import { isSilent } from "../utils/context";
+import { UserCancelledError } from "../utils/errors";
 import { getAddonsChoice } from "./addons";
 import { getApiChoice } from "./api";
 import { getAuthChoice } from "./auth";
 import { getBackendFrameworkChoice } from "./backend";
 import { getDatabaseChoice } from "./database";
-import { getDBSetupChoice } from "./database-setup";
+import { getDBSetupChoice, getDbProvisioningChoice } from "./database-setup";
 import { getExamplesChoice } from "./examples";
 import { getFrontendChoice } from "./frontend";
 import { getGitChoice } from "./git";
@@ -52,6 +55,7 @@ type PromptGroupResults = {
   install: boolean;
   webDeploy: WebDeploy;
   serverDeploy: ServerDeploy;
+  dbSetupMode: DbSetupOptions["mode"];
 };
 
 export async function gatherConfig(
@@ -59,59 +63,140 @@ export async function gatherConfig(
   projectName: string,
   projectDir: string,
   relativePath: string,
+  options: { skipCompatibilityChecks?: boolean; manualDb?: boolean } = {},
 ) {
+  if (isSilent()) {
+    return {
+      projectName,
+      projectDir,
+      relativePath,
+      addonOptions: flags.addonOptions,
+      dbSetupOptions: flags.dbSetupOptions,
+      frontend: flags.frontend ?? [...DEFAULT_CONFIG.frontend],
+      backend: flags.backend ?? DEFAULT_CONFIG.backend,
+      runtime: flags.runtime ?? DEFAULT_CONFIG.runtime,
+      database: flags.database ?? DEFAULT_CONFIG.database,
+      orm: flags.orm ?? DEFAULT_CONFIG.orm,
+      auth: flags.auth ?? DEFAULT_CONFIG.auth,
+      payments: flags.payments ?? DEFAULT_CONFIG.payments,
+      addons: flags.addons ?? [...DEFAULT_CONFIG.addons],
+      examples: flags.examples ?? [...DEFAULT_CONFIG.examples],
+      git: flags.git ?? DEFAULT_CONFIG.git,
+      packageManager: flags.packageManager ?? DEFAULT_CONFIG.packageManager,
+      install: flags.install ?? DEFAULT_CONFIG.install,
+      dbSetup: flags.dbSetup ?? DEFAULT_CONFIG.dbSetup,
+      api: flags.api ?? DEFAULT_CONFIG.api,
+      webDeploy: flags.webDeploy ?? DEFAULT_CONFIG.webDeploy,
+      serverDeploy: flags.serverDeploy ?? DEFAULT_CONFIG.serverDeploy,
+    };
+  }
+
   const result = await navigableGroup<PromptGroupResults>(
     {
-      frontend: () => getFrontendChoice(flags.frontend, flags.backend, flags.auth),
-      backend: ({ results }) => getBackendFrameworkChoice(flags.backend, results.frontend),
-      runtime: ({ results }) => getRuntimeChoice(flags.runtime, results.backend),
-      database: ({ results }) =>
-        getDatabaseChoice(flags.database, results.backend, results.runtime),
-      orm: ({ results }) =>
+      frontend: ({ previousAnswer }) =>
+        getFrontendChoice(flags.frontend, flags.backend, flags.auth, previousAnswer),
+      backend: ({ results, previousAnswer }) =>
+        getBackendFrameworkChoice(flags.backend, results.frontend, previousAnswer),
+      runtime: ({ results, previousAnswer }) =>
+        getRuntimeChoice(flags.runtime, results.backend, previousAnswer),
+      api: ({ results, previousAnswer }) =>
+        getApiChoice(flags.api, results.frontend, results.backend, previousAnswer) as Promise<API>,
+      database: ({ results, previousAnswer }) =>
+        getDatabaseChoice(flags.database, results.backend, results.runtime, previousAnswer),
+      orm: ({ results, previousAnswer }) =>
         getORMChoice(
           flags.orm,
           results.database !== "none",
           results.database,
           results.backend,
           results.runtime,
+          previousAnswer,
         ),
-      api: ({ results }) =>
-        getApiChoice(flags.api, results.frontend, results.backend) as Promise<API>,
-      auth: ({ results }) => getAuthChoice(flags.auth, results.backend, results.frontend),
-      payments: ({ results }) =>
-        getPaymentsChoice(flags.payments, results.auth, results.backend, results.frontend),
-      addons: ({ results }) => getAddonsChoice(flags.addons, results.frontend, results.auth),
-      examples: ({ results }) =>
-        getExamplesChoice(
-          flags.examples,
-          results.database,
-          results.frontend,
-          results.backend,
-          results.api,
-        ) as Promise<Examples[]>,
-      dbSetup: ({ results }) =>
+      dbSetup: ({ results, previousAnswer }) =>
         getDBSetupChoice(
           results.database ?? "none",
           flags.dbSetup,
           results.orm,
           results.backend,
           results.runtime,
+          previousAnswer,
         ),
-      webDeploy: ({ results }) =>
-        getDeploymentChoice(flags.webDeploy, results.runtime, results.backend, results.frontend),
-      serverDeploy: ({ results }) =>
+      auth: ({ results, previousAnswer }) =>
+        getAuthChoice(flags.auth, results.backend, results.frontend, previousAnswer),
+      payments: ({ results, previousAnswer }) =>
+        getPaymentsChoice(
+          flags.payments,
+          results.auth,
+          results.backend,
+          results.frontend,
+          previousAnswer,
+        ),
+      addons: ({ results, previousAnswer }) =>
+        getAddonsChoice(
+          flags.addons,
+          results.frontend,
+          results.auth,
+          results.backend,
+          results.runtime,
+          previousAnswer,
+        ),
+      examples: ({ results, previousAnswer }) =>
+        getExamplesChoice(
+          flags.examples,
+          results.database,
+          results.frontend,
+          results.backend,
+          results.api,
+          previousAnswer,
+        ) as Promise<Examples[]>,
+      webDeploy: ({ results, previousAnswer }) =>
+        getDeploymentChoice(
+          flags.webDeploy,
+          results.runtime,
+          results.backend,
+          results.frontend,
+          results.dbSetup,
+          results.database,
+          results.orm,
+          results.addons,
+          previousAnswer,
+        ),
+      serverDeploy: ({ results, previousAnswer }) =>
         getServerDeploymentChoice(
           flags.serverDeploy,
           results.runtime,
           results.backend,
           results.webDeploy,
+          previousAnswer,
         ),
-      git: () => getGitChoice(flags.git),
-      packageManager: () => getPackageManagerChoice(flags.packageManager),
-      install: () => getinstallChoice(flags.install),
+      dbSetupMode: ({ results, previousAnswer }) =>
+        getDbProvisioningChoice(
+          flags.dbSetupOptions?.mode ?? (options.manualDb === true ? "manual" : undefined),
+          results.dbSetup,
+          results.backend,
+          results.webDeploy,
+          results.serverDeploy,
+          previousAnswer,
+        ),
+      git: ({ previousAnswer }) => getGitChoice(flags.git, previousAnswer),
+      packageManager: ({ previousAnswer }) =>
+        getPackageManagerChoice(flags.packageManager, previousAnswer),
+      install: ({ previousAnswer }) => getinstallChoice(flags.install, previousAnswer),
     },
     {
-      onCancel: () => exitCancelled("Operation cancelled"),
+      preselected: options.skipCompatibilityChecks ? flags : undefined,
+      sections: [
+        { label: "App", prompts: ["frontend", "backend", "runtime", "api"] },
+        { label: "Data", prompts: ["database", "orm", "dbSetup"] },
+        { label: "Product", prompts: ["auth", "payments", "addons", "examples"] },
+        {
+          label: "Ship",
+          prompts: ["webDeploy", "serverDeploy", "dbSetupMode", "git", "packageManager", "install"],
+        },
+      ],
+      onCancel: () => {
+        throw new UserCancelledError({ message: "Operation cancelled" });
+      },
     },
   );
 
@@ -119,6 +204,8 @@ export async function gatherConfig(
     projectName: projectName,
     projectDir: projectDir,
     relativePath: relativePath,
+    addonOptions: flags.addonOptions,
+    dbSetupOptions: withDbSetupMode(flags.dbSetupOptions, result.dbSetupMode),
     frontend: result.frontend,
     backend: result.backend,
     runtime: result.runtime,

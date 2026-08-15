@@ -1,0 +1,76 @@
+import { createORPCClient } from "@orpc/client";
+import { RPCLink } from "@orpc/client/fetch";
+import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import { QueryCache, QueryClient } from "@tanstack/react-query";
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+import { env } from "@{{projectName}}/env/native";
+{{#if (eq auth "better-auth")}}
+import { authClient } from "@/lib/auth-client";
+import { Platform } from "react-native";
+{{else if (eq auth "clerk")}}
+import { getClerkAuthToken } from "@/utils/clerk-auth";
+{{/if}}
+
+export const queryClient = new QueryClient({
+	queryCache: new QueryCache({
+		onError: (error) => {
+			console.log(error)
+		},
+	}),
+});
+
+async function expoFetch(request: Request, init?: RequestInit) {
+	const { fetch } = await import("expo/fetch");
+
+	return fetch(request.url, {
+		body: await request.blob(),
+		headers: request.headers,
+		method: request.method,
+		signal: request.signal,
+		...init,
+	});
+}
+
+export const link = new RPCLink({
+{{#if (eq backend "self")}}
+{{#if (or (includes frontend "next") (includes frontend "tanstack-start"))}}
+	url: `${env.EXPO_PUBLIC_SERVER_URL}/api/rpc`,
+{{else}}
+	url: `${env.EXPO_PUBLIC_SERVER_URL}/rpc`,
+{{/if}}
+{{else}}
+	url: `${env.EXPO_PUBLIC_SERVER_URL}/rpc`,
+{{/if}}
+{{#if (eq auth "better-auth")}}
+	fetch(request, init) {
+		return expoFetch(request, {
+			...init,
+			// Better Auth Expo forwards the session cookie manually on native.
+			credentials: Platform.OS === "web" ? "include" : "omit",
+		});
+	},
+	headers() {
+		if (Platform.OS === "web") {
+			return {};
+		}
+		const headers = new Map<string, string>();
+		const cookies = authClient.getCookie();
+		if (cookies) {
+			headers.set("Cookie", cookies);
+		}
+		return Object.fromEntries(headers);
+	},
+{{else if (eq auth "clerk")}}
+	headers: async () => {
+		const token = await getClerkAuthToken();
+		return token ? { Authorization: `Bearer ${token}` } : {};
+	},
+	fetch: expoFetch,
+{{else}}
+	fetch: expoFetch,
+{{/if}}
+});
+
+export const client: AppRouterClient = createORPCClient(link);
+
+export const orpc = createTanstackQueryUtils(client);

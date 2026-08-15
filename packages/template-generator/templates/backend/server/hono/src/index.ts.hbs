@@ -1,0 +1,221 @@
+import { env } from "@{{projectName}}/env/server";
+{{#if (eq api "orpc")}}
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { RPCHandler } from "@orpc/server/fetch";
+import { onError } from "@orpc/server";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { trpcServer } from "@hono/trpc-server";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+{{/if}}
+{{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{/if}}
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+{{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
+import { google } from "@ai-sdk/google";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+{{/if}}
+{{#if (and (includes examples "ai") (eq runtime "workers"))}}
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+{{/if}}
+
+const app = new Hono();
+
+app.use(logger());
+app.use(
+	"/*",
+	cors({
+		origin: env.CORS_ORIGIN,
+		allowMethods: ["GET", "POST", "OPTIONS"],
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+		allowHeaders: ["Content-Type", "Authorization"],
+{{/if}}
+{{#if (eq auth "better-auth")}}
+		credentials: true,
+{{/if}}
+	})
+);
+
+{{#if (eq auth "better-auth")}}
+app.on(
+	["POST", "GET"],
+	"/api/auth/*",
+	(c) =>
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+		createAuth().handler(c.req.raw)
+{{else}}
+		auth.handler(c.req.raw)
+{{/if}}
+);
+{{/if}}
+
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+app.get("/polar/success", (c) => {
+	const requestUrl = new URL(c.req.url);
+	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+	let redirectUrl: URL;
+	try {
+		redirectUrl = new URL(returnUrl);
+	} catch {
+		return c.text("Invalid return URL", 400);
+	}
+
+	if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+		return c.text("Invalid return URL", 400);
+	}
+
+	return c.redirect(redirectUrl.toString(), 302);
+});
+
+{{/if}}
+{{#if (eq api "orpc")}}
+export const apiHandler = new OpenAPIHandler(appRouter, {
+	plugins: [
+		new OpenAPIReferencePlugin({
+			schemaConverters: [new ZodToJsonSchemaConverter()],
+		}),
+	],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+export const rpcHandler = new RPCHandler(appRouter, {
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+app.use("/*", async (c, next) => {
+	const context = await createContext({ context: c });
+
+	const rpcResult = await rpcHandler.handle(c.req.raw, {
+		prefix: "/rpc",
+		context: context,
+	});
+
+	if (rpcResult.matched) {
+		return c.newResponse(rpcResult.response.body, rpcResult.response);
+	}
+
+	const apiResult = await apiHandler.handle(c.req.raw, {
+		prefix: "/api-reference",
+		context: context,
+	});
+
+	if (apiResult.matched) {
+		return c.newResponse(apiResult.response.body, apiResult.response);
+	}
+
+	await next();
+});
+{{/if}}
+
+{{#if (eq api "trpc")}}
+app.use(
+	"/trpc/*",
+	trpcServer({
+		router: appRouter,
+		createContext: (_opts, context) => {
+			return createContext({ context });
+		},
+	})
+);
+{{/if}}
+
+{{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
+app.post("/ai", async (c) => {
+	const body = await c.req.json();
+	const uiMessages = body.messages || [];
+	const model = wrapLanguageModel({
+		model: google("gemini-2.5-flash"),
+		middleware: devToolsMiddleware(),
+	});
+	const result = streamText({
+		model,
+		messages: await convertToModelMessages(uiMessages),
+	});
+
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
+});
+{{/if}}
+
+{{#if (and (includes examples "ai") (eq runtime "workers"))}}
+app.post("/ai", async (c) => {
+	const body = await c.req.json();
+	const uiMessages = body.messages || [];
+	const google = createGoogleGenerativeAI({
+		apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
+	});
+	const model = wrapLanguageModel({
+		model: google("gemini-2.5-flash"),
+		middleware: devToolsMiddleware(),
+	});
+	const result = streamText({
+		model,
+		messages: await convertToModelMessages(uiMessages),
+	});
+
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
+});
+{{/if}}
+
+app.get("/", (c) => {
+	return c.text("OK");
+});
+
+{{#if (eq runtime "node")}}
+import { serve } from "@hono/node-server";
+
+{{#if (eq serverDeploy "vercel")}}
+export default app;
+
+if (!process.env.VERCEL) {
+{{/if}}
+	serve(
+		{
+			fetch: app.fetch,
+			port: 3000,
+		},
+		(info) => {
+			console.log(`Server is running on http://localhost:${info.port}`);
+		}
+	);
+{{#if (eq serverDeploy "vercel")}}
+}
+{{/if}}
+{{else}}
+{{#if (eq runtime "bun")}}
+export default app;
+{{/if}}
+{{#if (eq runtime "workers")}}
+export default app;
+{{/if}}
+{{/if}}

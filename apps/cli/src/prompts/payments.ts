@@ -1,15 +1,14 @@
-import type { Auth, Backend, Frontend, Payments } from "../types";
-
 import { DEFAULT_CONFIG } from "../constants";
-import { splitFrontends } from "../utils/compatibility-rules";
-import { exitCancelled } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import type { Auth, Backend, Frontend, Payments } from "../types";
+import { UserCancelledError } from "../utils/errors";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 export async function getPaymentsChoice(
   payments?: Payments,
   auth?: Auth,
   backend?: Backend,
-  frontends?: Frontend[],
+  _frontends?: Frontend[],
+  previousValue?: Payments,
 ) {
   if (payments !== undefined) return payments;
 
@@ -17,10 +16,7 @@ export async function getPaymentsChoice(
     return "none" as Payments;
   }
 
-  const isPolarCompatible =
-    auth === "better-auth" &&
-    backend !== "convex" &&
-    (frontends?.length === 0 || splitFrontends(frontends).web.length > 0);
+  const isPolarCompatible = auth === "better-auth";
 
   if (!isPolarCompatible) {
     return "none" as Payments;
@@ -40,12 +36,12 @@ export async function getPaymentsChoice(
   ];
 
   const response = await navigableSelect<Payments>({
-    message: "Select payments provider",
+    message: "Add payments?",
     options,
-    initialValue: DEFAULT_CONFIG.payments,
+    initialValue: preferValidInitial(options, previousValue, DEFAULT_CONFIG.payments),
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

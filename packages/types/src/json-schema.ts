@@ -17,9 +17,13 @@ import {
   ServerDeploySchema,
   DirectoryConflictSchema,
   TemplateSchema,
+  AddonOptionsSchema,
+  DbSetupOptionsSchema,
   CreateInputSchema,
+  AddInputSchema,
   ProjectConfigSchema,
   BetterTStackConfigSchema,
+  BetterTStackConfigFileSchema,
   InitResultSchema,
 } from "./schemas";
 
@@ -88,8 +92,20 @@ export function getTemplateJsonSchema() {
   return z.toJSONSchema(TemplateSchema);
 }
 
+export function getAddonOptionsJsonSchema() {
+  return z.toJSONSchema(AddonOptionsSchema);
+}
+
+export function getDbSetupOptionsJsonSchema() {
+  return z.toJSONSchema(DbSetupOptionsSchema);
+}
+
 export function getCreateInputJsonSchema() {
   return z.toJSONSchema(CreateInputSchema);
+}
+
+export function getAddInputJsonSchema() {
+  return z.toJSONSchema(AddInputSchema);
 }
 
 export function getProjectConfigJsonSchema() {
@@ -98,6 +114,10 @@ export function getProjectConfigJsonSchema() {
 
 export function getBetterTStackConfigJsonSchema() {
   return z.toJSONSchema(BetterTStackConfigSchema);
+}
+
+export function getBetterTStackConfigFileJsonSchema() {
+  return z.toJSONSchema(BetterTStackConfigFileSchema, { target: "draft-7" });
 }
 
 export function getInitResultJsonSchema() {
@@ -123,9 +143,13 @@ export function getAllJsonSchemas() {
     serverDeploy: getServerDeployJsonSchema(),
     directoryConflict: getDirectoryConflictJsonSchema(),
     template: getTemplateJsonSchema(),
+    addonOptions: getAddonOptionsJsonSchema(),
+    dbSetupOptions: getDbSetupOptionsJsonSchema(),
     createInput: getCreateInputJsonSchema(),
+    addInput: getAddInputJsonSchema(),
     projectConfig: getProjectConfigJsonSchema(),
     betterTStackConfig: getBetterTStackConfigJsonSchema(),
+    betterTStackConfigFile: getBetterTStackConfigFileJsonSchema(),
     initResult: getInitResultJsonSchema(),
   };
 }

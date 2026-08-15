@@ -1,0 +1,56 @@
+{{#if (eq auth "better-auth")}}
+import { authClient } from "@/lib/auth-client";
+import { Platform } from "react-native";
+{{else if (eq auth "clerk")}}
+import { getClerkAuthToken } from "@/utils/clerk-auth";
+{{/if}}
+import { QueryClient } from "@tanstack/react-query";
+import { createTRPCClient, httpBatchLink } from "@trpc/client";
+import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
+import type { AppRouter } from "@{{projectName}}/api/routers/index";
+import { env } from "@{{projectName}}/env/native";
+
+export const queryClient = new QueryClient();
+
+const trpcClient = createTRPCClient<AppRouter>({
+	links: [
+		httpBatchLink({
+{{#if (eq backend "self")}}
+			url: `${env.EXPO_PUBLIC_SERVER_URL}/api/trpc`,
+{{else}}
+			url: `${env.EXPO_PUBLIC_SERVER_URL}/trpc`,
+{{/if}}
+{{#if (eq auth "better-auth")}}
+			fetch:
+				function (url, options) {
+					return fetch(url, {
+						...options,
+						// Better Auth Expo forwards the session cookie manually on native.
+						credentials: Platform.OS === "web" ? "include" : "omit",
+					});
+				},
+			headers() {
+				if (Platform.OS === "web") {
+					return {};
+				}
+				const headers = new Map<string, string>();
+				const cookies = authClient.getCookie();
+				if (cookies) {
+					headers.set("Cookie", cookies);
+				}
+				return Object.fromEntries(headers);
+			},
+{{else if (eq auth "clerk")}}
+			headers: async function () {
+				const token = await getClerkAuthToken();
+				return token ? { Authorization: `Bearer ${token}` } : {};
+			},
+{{/if}}
+		}),
+	],
+});
+
+export const trpc = createTRPCOptionsProxy<AppRouter>({
+	client: trpcClient,
+	queryClient,
+});

@@ -1,0 +1,44 @@
+import { Container } from "@/components/container";
+import { Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { ScrollView, View, StyleSheet } from "react-native";
+import { useColorScheme } from "@/lib/use-color-scheme";
+import { NAV_THEME } from "@/lib/constants";
+
+export default function TabTwo() {
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
+
+  return (
+    <Container>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.content}>
+          <Host matchContents=\{{ vertical: true }}>
+            <Column spacing={8}>
+              <ExpoUIText
+                textStyle=\{{ color: theme.text, fontSize: 24, fontWeight: "bold" }}
+              >
+                Tab Two
+              </ExpoUIText>
+              <ExpoUIText
+                textStyle=\{{ color: theme.text, fontSize: 16 }}
+                style=\{{ opacity: 0.7 }}
+              >
+                Discover more features and content
+              </ExpoUIText>
+            </Column>
+          </Host>
+        </View>
+      </ScrollView>
+    </Container>
+  );
+}
+
+const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    padding: 16,
+  },
+  content: {
+    paddingVertical: 16,
+  },
+});

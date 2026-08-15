@@ -1,5 +1,53 @@
 import type { PackageManager } from "../types";
 
+function splitCommandArgs(commandWithArgs: string): string[] {
+  const args: string[] = [];
+  let current = "";
+  let quote: "'" | '"' | null = null;
+
+  for (let i = 0; i < commandWithArgs.length; i += 1) {
+    const char = commandWithArgs[i];
+
+    if (quote) {
+      if (char === quote) {
+        quote = null;
+        continue;
+      }
+      if (char === "\\" && i + 1 < commandWithArgs.length) {
+        const nextChar = commandWithArgs[i + 1];
+        if (nextChar === quote || nextChar === "\\") {
+          current += nextChar;
+          i += 1;
+          continue;
+        }
+      }
+      current += char;
+      continue;
+    }
+
+    if (char === '"' || char === "'") {
+      quote = char;
+      continue;
+    }
+
+    if (/\s/.test(char)) {
+      if (current.length > 0) {
+        args.push(current);
+        current = "";
+      }
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.length > 0) {
+    args.push(current);
+  }
+
+  return args;
+}
+
 /**
  * Returns the appropriate command for running a package without installing it globally,
  * based on the selected package manager.
@@ -34,7 +82,7 @@ export function getPackageExecutionArgs(
   packageManager: PackageManager | null | undefined,
   commandWithArgs: string,
 ): string[] {
-  const args = commandWithArgs.split(" ");
+  const args = splitCommandArgs(commandWithArgs);
   switch (packageManager) {
     case "pnpm":
       return ["pnpm", "dlx", ...args];

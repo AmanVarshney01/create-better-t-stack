@@ -3,6 +3,7 @@
 A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations
 
 <br />
+
 <a href="https://vercel.com/oss">
   <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
 </a>
@@ -10,10 +11,10 @@ A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with 
 ## Sponsors
 
 <p align="center">
-<img src="https://sponsors.amanv.dev/sponsors.png" alt="Sponsors">
+<img src="https://sponsors.better-t-stack.dev/sponsors.png" alt="Sponsors">
 </p>
 
-![demo](https://cdn.jsdelivr.net/gh/amanvarshney01/create-better-t-stack/demo.gif)
+https://github.com/user-attachments/assets/87b541ea-9d4d-4734-b383-00784b0b43ff
 
 ## Philosophy
 
@@ -35,16 +36,27 @@ pnpm create better-t-stack@latest
 npx create-better-t-stack@latest
 ```
 
+## Claude Code plugin
+
+Want your AI assistant to scaffold and extend projects with Better-T-Stack? Install the plugin and it will plan a valid stack and generate it through the bundled MCP server instead of hand-rolling boilerplate.
+
+```bash
+/plugin marketplace add AmanVarshney01/create-better-t-stack
+/plugin install better-t-stack@better-t-stack
+```
+
+Then ask: _"create a fullstack app with Next, Hono, Postgres and Better Auth"_, or run `/better-t-stack:new <description>`. See [`plugin/`](plugin) and the [Agent Workflows docs](https://better-t-stack.dev/docs/cli/agent-workflows#claude-code-plugin).
+
 ## Features
 
-- Frontend: React (TanStack Router, React Router, TanStack Start), Next.js, Nuxt, Svelte, Solid, React Native (NativeWind/Unistyles), or none
-- Backend: Hono, Express, Fastify, Elysia, Next API Routes, Convex, or none
+- Frontend: React (TanStack Router, React Router, TanStack Start), Next.js, Nuxt, Svelte, Solid, Astro, React Native (Bare, NativeWind, Unistyles), or none
+- Backend: Hono, Express, Fastify, Elysia, Self (fullstack web app), Convex, or none
 - API: tRPC or oRPC (or none)
 - Runtime: Bun, Node.js, or Cloudflare Workers
 - Databases: SQLite, PostgreSQL, MySQL, MongoDB (or none)
 - ORMs: Drizzle, Prisma, Mongoose (or none)
-- Auth: Better-Auth (optional)
-- Addons: Turborepo, PWA, Tauri, Biome, Husky, Starlight, Fumadocs, Ruler, Ultracite, Oxlint
+- Auth: Better Auth or Clerk (optional)
+- Addons: Turborepo, Nx, PWA, Tauri, Electrobun, Biome, Lefthook, Husky, Starlight, Fumadocs, Ultracite, Oxlint, MCP, OpenTUI, WXT, Skills
 - Examples: Todo, AI
 - DB Setup: Turso, Neon, Supabase, Prisma PostgreSQL, MongoDB Atlas, Cloudflare D1, Docker
 - Web Deploy: Cloudflare Workers
@@ -57,6 +69,7 @@ This repository is organized as a monorepo containing:
 
 - **CLI**: [`apps/cli`](apps/cli) - The scaffolding CLI tool
 - **Documentation**: [`apps/web`](apps/web) - Official website and documentation
+- **Plugin**: [`plugin`](plugin) - Claude Code plugin (MCP server + skills + commands + agent)
 
 ## Documentation
 
@@ -82,8 +95,8 @@ bun dev:web
 
 Please read the Contribution Guide first and open an issue before starting new features to ensure alignment with project goals.
 
-- Docs: [`Contributing`](/apps/web/content/docs/contributing.mdx)
-- Repo guide: [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md)
+- Docs: [`./apps/web/content/docs/contributing.mdx`](./apps/web/content/docs/contributing.mdx)
+- Repo guide: [`./.github/CONTRIBUTING.md`](./.github/CONTRIBUTING.md)
 
 ## Star History
 

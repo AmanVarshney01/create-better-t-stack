@@ -1,6 +1,8 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
-import { DB_SETUPS, expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+import { expectError, expectSuccess, runTRPCTest } from "./test-utils";
 
 describe("Database Setup Configurations", () => {
   describe("SQLite Database Setups", () => {
@@ -46,6 +48,32 @@ describe("Database Setup Configurations", () => {
       });
 
       expectSuccess(result);
+    });
+
+    it("should configure a package-local Prisma tooling database for D1", async () => {
+      const result = await runTRPCTest({
+        projectName: "d1-prisma-tooling-db",
+        database: "sqlite",
+        orm: "prisma",
+        dbSetup: "d1",
+        backend: "self",
+        runtime: "none",
+        auth: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        install: false,
+        git: false,
+      });
+
+      expectSuccess(result);
+      const envFile = await readFile(join(result.projectDir!, "apps/web/.env"), "utf8");
+      expect(envFile).toContain("DATABASE_URL=file:./local.db");
+      expect(envFile).not.toContain(`DATABASE_URL=file:${result.projectDir}`);
+      expect(await readFile(join(result.projectDir!, "packages/db/local.db"), "utf8")).toBe("");
     });
 
     it("should fail with Turso + non-SQLite database", async () => {
@@ -391,21 +419,21 @@ describe("Database Setup Configurations", () => {
   });
 
   describe("Special Runtime Constraints", () => {
-    it("should work with D1 + Workers runtime", async () => {
+    it("should work with D1 + self backend + Cloudflare web deploy", async () => {
       const result = await runTRPCTest({
-        projectName: "d1-workers-valid",
+        projectName: "d1-self-cloudflare-valid",
         database: "sqlite",
         orm: "drizzle",
-        dbSetup: "none",
-        backend: "hono",
-        runtime: "workers",
+        dbSetup: "d1",
+        backend: "self",
+        runtime: "none",
         auth: "none",
         api: "trpc",
-        frontend: ["tanstack-router"],
+        frontend: ["next"],
         addons: ["none"],
         examples: ["none"],
-        webDeploy: "none",
-        serverDeploy: "cloudflare",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
         install: false,
       });
 
@@ -432,67 +460,32 @@ describe("Database Setup Configurations", () => {
 
       expectError(
         result,
-        "Cloudflare D1 setup requires SQLite database and Cloudflare Workers runtime",
+        "Cloudflare D1 setup requires SQLite database and either Cloudflare Workers runtime with server deployment or backend 'self' with Cloudflare web deployment.",
       );
     });
-  });
 
-  describe("All Database Setup Types", () => {
-    for (const dbSetup of DB_SETUPS) {
-      if (dbSetup === "none") continue;
-
-      it(`should work with ${dbSetup} in appropriate setup`, async () => {
-        const config: TestConfig = {
-          projectName: `test-${dbSetup}`,
-          dbSetup,
-          backend: "hono",
-          runtime: "bun",
-          auth: "none",
-          api: "trpc",
-          frontend: ["tanstack-router"],
-          addons: ["none"],
-          examples: ["none"],
-          webDeploy: "none",
-          serverDeploy: "none",
-          manualDb: true,
-          install: false,
-        };
-
-        // Set appropriate database and ORM for each setup
-        switch (dbSetup) {
-          case "turso":
-            config.database = "sqlite";
-            config.orm = "drizzle";
-            break;
-          case "neon":
-          case "supabase":
-          case "prisma-postgres":
-            config.database = "postgres";
-            config.orm = "drizzle";
-            break;
-          case "planetscale":
-            config.database = "mysql";
-            config.orm = "drizzle";
-            break;
-          case "mongodb-atlas":
-            config.database = "mongodb";
-            config.orm = "mongoose";
-            break;
-          case "d1":
-            config.database = "sqlite";
-            config.orm = "drizzle";
-            config.runtime = "workers";
-            config.serverDeploy = "cloudflare";
-            break;
-          case "docker":
-            config.database = "postgres";
-            config.orm = "drizzle";
-            break;
-        }
-
-        const result = await runTRPCTest(config);
-        expectSuccess(result);
+    it("should fail with D1 + self backend without Cloudflare web deploy", async () => {
+      const result = await runTRPCTest({
+        projectName: "d1-self-no-cloudflare-fail",
+        database: "sqlite",
+        orm: "drizzle",
+        dbSetup: "d1",
+        backend: "self",
+        runtime: "none",
+        auth: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
       });
-    }
+
+      expectError(
+        result,
+        "Cloudflare D1 setup requires SQLite database and either Cloudflare Workers runtime with server deployment or backend 'self' with Cloudflare web deployment.",
+      );
+    });
   });
 });

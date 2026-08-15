@@ -1,0 +1,48 @@
+import { redirect } from "next/navigation";
+import Dashboard from "./dashboard";
+import { headers } from "next/headers";
+{{#if (eq backend "self")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{/if}}
+{{#if (or (ne backend "self") (eq payments "polar"))}}
+import { authClient } from "@/lib/auth-client";
+{{/if}}
+
+export default async function DashboardPage() {
+	{{#if (eq backend "self")}}
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+		headers: await headers(),
+	});
+	{{else}}
+	const session = await authClient.getSession({
+		fetchOptions: {
+			headers: await headers(),
+			throw: true
+		}
+	});
+	{{/if}}
+
+	if (!session?.user) {
+		redirect("/login");
+	}
+
+	{{#if (eq payments "polar")}}
+	const { data: customerState } = await authClient.customer.state({
+		fetchOptions: {
+			headers: await headers(),
+		},
+	});
+	{{/if}}
+
+	return (
+		<div>
+			<h1>Dashboard</h1>
+			<p>Welcome {session.user.name}</p>
+			<Dashboard session={session} {{#if (eq payments "polar")}}customerState={customerState}{{/if}} />
+		</div>
+	);
+}

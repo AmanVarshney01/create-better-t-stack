@@ -2,7 +2,9 @@ import type { UrlKeys } from "nuqs";
 
 import type { StackState } from "@/lib/constant";
 
-export const stackUrlKeys: UrlKeys<Record<keyof StackState, unknown>> = {
+type StackUrlState = StackState & { viewMode: string; selectedFile: string };
+
+export const stackUrlKeys: UrlKeys<StackUrlState> = {
   projectName: "name",
   webFrontend: "fe-w",
   nativeFrontend: "fe-n",
@@ -22,4 +24,6 @@ export const stackUrlKeys: UrlKeys<Record<keyof StackState, unknown>> = {
   webDeploy: "wd",
   serverDeploy: "sd",
   yolo: "yolo",
+  viewMode: "view",
+  selectedFile: "file",
 };

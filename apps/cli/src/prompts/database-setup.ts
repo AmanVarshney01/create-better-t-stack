@@ -1,7 +1,15 @@
-import type { Backend, DatabaseSetup, ORM, Runtime } from "../types";
-
-import { exitCancelled } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import {
+  supportsAlchemyManagedDatabase,
+  type Backend,
+  type DatabaseSetup,
+  type DbSetupOptions,
+  type ORM,
+  type Runtime,
+  type ServerDeploy,
+  type WebDeploy,
+} from "../types";
+import { UserCancelledError } from "../utils/errors";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 export async function getDBSetupChoice(
   databaseType: string,
@@ -9,6 +17,7 @@ export async function getDBSetupChoice(
   _orm?: ORM,
   backend?: Backend,
   runtime?: Runtime,
+  previousValue?: DatabaseSetup,
 ) {
   if (backend === "convex") {
     return "none";
@@ -29,7 +38,7 @@ export async function getDBSetupChoice(
         label: "Turso",
         hint: "SQLite for Production. Powered by libSQL",
       },
-      ...(runtime === "workers"
+      ...(runtime === "workers" || backend === "self"
         ? [
             {
               value: "d1" as const,
@@ -102,12 +111,79 @@ export async function getDBSetupChoice(
   }
 
   const response = await navigableSelect<DatabaseSetup>({
-    message: `Select ${databaseType} setup option`,
+    message: `Choose a ${databaseType} setup`,
     options,
-    initialValue: "none",
+    initialValue: preferValidInitial(options, previousValue, "none"),
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
+
+  return response;
+}
+
+type DbSetupMode = NonNullable<DbSetupOptions["mode"]>;
+
+const providerLabels = {
+  neon: "Neon",
+  planetscale: "PlanetScale",
+  "prisma-postgres": "Prisma Postgres",
+} as const satisfies Partial<Record<DatabaseSetup, string>>;
+
+export async function getDbProvisioningChoice(
+  mode: DbSetupMode | undefined,
+  dbSetup: DatabaseSetup | undefined,
+  backend: Backend | undefined,
+  webDeploy: WebDeploy | undefined,
+  serverDeploy: ServerDeploy | undefined,
+  previousValue?: DbSetupMode,
+): Promise<DbSetupMode | undefined | symbol> {
+  if (!dbSetup || !backend || !webDeploy || !serverDeploy) return mode;
+
+  const supportsAlchemy = supportsAlchemyManagedDatabase({
+    backend,
+    dbSetup,
+    webDeploy,
+    serverDeploy,
+  });
+
+  if (!supportsAlchemy) {
+    return mode === "alchemy" ? undefined : mode;
+  }
+
+  if (mode !== undefined) return mode;
+
+  const provider = providerLabels[dbSetup];
+  if (!provider) return undefined;
+
+  const options: Array<{ value: DbSetupMode; label: string; hint: string }> = [
+    {
+      value: "alchemy",
+      label: "Alchemy",
+      hint: `Provision ${provider} during deploy and inject its credentials`,
+    },
+    ...(dbSetup === "neon" || dbSetup === "prisma-postgres"
+      ? [
+          {
+            value: "auto" as const,
+            label: "Automatic",
+            hint: `Set up ${provider} now and write its connection credentials`,
+          },
+        ]
+      : []),
+    {
+      value: "manual",
+      label: "Manual",
+      hint: `Use an existing ${provider} database and configure credentials yourself`,
+    },
+  ];
+
+  const response = await navigableSelect<DbSetupMode>({
+    message: `How should ${provider} be provisioned?`,
+    options,
+    initialValue: preferValidInitial(options, previousValue, "alchemy"),
+  });
+
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

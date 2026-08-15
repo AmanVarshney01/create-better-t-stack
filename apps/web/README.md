@@ -22,19 +22,19 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the site.
+Open [http://localhost:3333](http://localhost:3333) with your browser to see the site.
 
 ## Project Structure
 
 - `/src/app` - Next.js application routes
-- `/src/content` - Documentation content in MDX format
+- `/content/docs` - Documentation content in MDX format
 - `/public` - Static assets
 
 ## Contributing to Documentation
 
 To add or modify documentation:
 
-1. Edit the appropriate MDX files in the `src/content` directory
+1. Edit the appropriate MDX files in the `content/docs` directory
 2. Run the development server to preview your changes
 3. Submit a pull request with your updates
 

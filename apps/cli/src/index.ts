@@ -1,13 +1,21 @@
-import { intro, log } from "@clack/prompts";
-import { createRouterClient, os } from "@orpc/server";
-import pc from "picocolors";
-import { createCli } from "trpc-cli";
+import { getAllJsonSchemas } from "@better-t-stack/types/json-schema";
+import { initTRPC } from "@trpc/server";
+import { Result } from "better-result";
+import { createCli, type TrpcCli, type TrpcCliMeta } from "trpc-cli";
 import z from "zod";
 
-import { addAddonsHandler, createProjectHandler } from "./helpers/core/command-handlers";
+import { historyHandler } from "./commands/history";
+import { openBuilderCommand, openDocsCommand, showSponsorsCommand } from "./commands/meta";
+import { addHandler, type AddResult } from "./helpers/core/add-handler";
+import { createProjectHandler, createProjectHandlerResult } from "./helpers/core/command-handlers";
 import {
+  type AddInput,
   type Addons,
   AddonsSchema,
+  type AddonOptions,
+  type DbSetupOptions,
+  DbSetupOptionsSchema,
+  AddInputSchema,
   type API,
   APISchema,
   type Auth,
@@ -16,6 +24,7 @@ import {
   BackendSchema,
   type BetterTStackConfig,
   type CreateInput,
+  CreateInputSchema,
   type Database,
   DatabaseSchema,
   type DatabaseSetup,
@@ -34,6 +43,7 @@ import {
   type Payments,
   PaymentsSchema,
   type ProjectConfig,
+  ProjectConfigSchema,
   ProjectNameSchema,
   type Runtime,
   RuntimeSchema,
@@ -44,14 +54,81 @@ import {
   type WebDeploy,
   WebDeploySchema,
 } from "./types";
-import { handleError } from "./utils/errors";
+import {
+  CLIError,
+  DirectoryConflictError,
+  ProjectCreationError,
+  UserCancelledError,
+} from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
-import { openUrl } from "./utils/open-url";
-import { renderTitle } from "./utils/render-title";
-import { displaySponsors, fetchSponsors } from "./utils/sponsors";
+import { validateResolvedConfigCompatibility } from "./validation";
 
-export const router = os.router({
-  create: os
+export const SchemaNameSchema = z
+  .enum([
+    "all",
+    "cli",
+    "database",
+    "orm",
+    "backend",
+    "runtime",
+    "frontend",
+    "addons",
+    "examples",
+    "packageManager",
+    "databaseSetup",
+    "api",
+    "auth",
+    "payments",
+    "webDeploy",
+    "serverDeploy",
+    "directoryConflict",
+    "template",
+    "addonOptions",
+    "dbSetupOptions",
+    "createInput",
+    "addInput",
+    "projectConfig",
+    "betterTStackConfig",
+    "betterTStackConfigFile",
+    "initResult",
+  ])
+  .default("all");
+
+const CreateVirtualInputSchema = ProjectConfigSchema.omit({
+  projectDir: true,
+  relativePath: true,
+})
+  .partial()
+  .strict();
+
+export type SchemaName = z.infer<typeof SchemaNameSchema>;
+
+const t = initTRPC.meta<TrpcCliMeta>().create();
+
+function getCliSchemaJson(): unknown {
+  return createCli({
+    router,
+    name: "create-better-t-stack",
+    version: getLatestCLIVersion(),
+  }).toJSON();
+}
+
+export function getSchemaResult(name: SchemaName) {
+  const schemas = getAllJsonSchemas();
+  if (name === "all") {
+    return {
+      cli: getCliSchemaJson(),
+      schemas,
+    };
+  }
+  if (name === "cli") {
+    return getCliSchemaJson();
+  }
+  return schemas[name];
+}
+
+export const router = t.router({
+  create: t.procedure
     .meta({
       description: "Create a new Better-T-Stack project",
       default: true,
@@ -68,6 +145,11 @@ export const router = os.router({
             .optional()
             .default(false)
             .describe("(WARNING - NOT RECOMMENDED) Bypass validations and compatibility checks"),
+          dryRun: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe("Validate setup without writing files"),
           verbose: z
             .boolean()
             .optional()
@@ -97,10 +179,13 @@ export const router = os.router({
             .optional()
             .default(false)
             .describe("Skip automatic/manual database setup prompt and use manual setup"),
+          dbSetupOptions: DbSetupOptionsSchema.optional().describe(
+            "Structured database setup options",
+          ),
         }),
       ]),
     )
-    .handler(async ({ input }) => {
+    .mutation(async ({ input }) => {
       const [projectName, options] = input;
       const combinedInput = {
         projectName,
@@ -112,63 +197,96 @@ export const router = os.router({
         return result;
       }
     }),
-  add: os
+  createJson: t.procedure
     .meta({
-      description: "Add addons or deployment configurations to an existing Better-T-Stack project",
+      description: "Create a project from a raw JSON payload (agent-friendly)",
+      jsonInput: "always",
     })
-    .input(
-      z.tuple([
-        z.object({
-          addons: z.array(AddonsSchema).optional().default([]),
-          webDeploy: WebDeploySchema.optional(),
-          serverDeploy: ServerDeploySchema.optional(),
-          projectDir: z.string().optional(),
-          install: z
-            .boolean()
-            .optional()
-            .default(false)
-            .describe("Install dependencies after adding addons or deployment"),
-          packageManager: PackageManagerSchema.optional(),
-        }),
-      ]),
-    )
-    .handler(async ({ input }) => {
-      const [options] = input;
-      await addAddonsHandler(options);
+    .input(CreateInputSchema)
+    .mutation(async ({ input }) => {
+      const result = await createProjectHandler(input, { silent: true });
+      if (!result) {
+        throw new UserCancelledError({ message: "Operation cancelled" });
+      }
+      if (!result.success) {
+        throw new CLIError({
+          message: result.error || "Unknown error occurred",
+        });
+      }
+      return result;
     }),
-  sponsors: os.meta({ description: "Show Better-T-Stack sponsors" }).handler(async () => {
-    try {
-      renderTitle();
-      intro(pc.magenta("Better-T-Stack Sponsors"));
-      const sponsors = await fetchSponsors();
-      displaySponsors(sponsors);
-    } catch (error) {
-      handleError(error, "Failed to display sponsors");
-    }
-  }),
-  docs: os.meta({ description: "Open Better-T-Stack documentation" }).handler(async () => {
-    const DOCS_URL = "https://better-t-stack.dev/docs";
-    try {
-      await openUrl(DOCS_URL);
-      log.success(pc.blue("Opened docs in your default browser."));
-    } catch {
-      log.message(`Please visit ${DOCS_URL}`);
-    }
-  }),
-  builder: os.meta({ description: "Open the web-based stack builder" }).handler(async () => {
-    const BUILDER_URL = "https://better-t-stack.dev/new";
-    try {
-      await openUrl(BUILDER_URL);
-      log.success(pc.blue("Opened builder in your default browser."));
-    } catch {
-      log.message(`Please visit ${BUILDER_URL}`);
-    }
-  }),
+  schema: t.procedure
+    .meta({ description: "Show runtime CLI and input schemas as JSON" })
+    .input(
+      z.object({
+        name: SchemaNameSchema.describe("Schema name to inspect"),
+      }),
+    )
+    .query(({ input }) => getSchemaResult(input.name)),
+  sponsors: t.procedure
+    .meta({ description: "Show Better-T-Stack sponsors" })
+    .mutation(() => showSponsorsCommand()),
+  docs: t.procedure
+    .meta({ description: "Open Better-T-Stack documentation" })
+    .mutation(() => openDocsCommand()),
+  builder: t.procedure
+    .meta({ description: "Open the web-based stack builder" })
+    .mutation(() => openBuilderCommand()),
+  add: t.procedure
+    .meta({ description: "Add addons to an existing Better-T-Stack project" })
+    .input(
+      z.object({
+        addons: z.array(AddonsSchema).optional().describe("Addons to add"),
+        install: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe("Install dependencies after adding"),
+        packageManager: PackageManagerSchema.optional().describe("Package manager to use"),
+        projectDir: z.string().optional().describe("Project directory (defaults to current)"),
+        dryRun: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe("Preview addon changes without writing files"),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await addHandler(input);
+    }),
+  addJson: t.procedure
+    .meta({
+      description: "Add addons from a raw JSON payload (agent-friendly)",
+      jsonInput: "always",
+    })
+    .input(AddInputSchema)
+    .mutation(async ({ input }) => {
+      const result = await addHandler(input, { silent: true });
+      if (!result) {
+        throw new UserCancelledError({ message: "Operation cancelled" });
+      }
+      if (!result.success) {
+        throw new CLIError({
+          message: result.error || "Unknown error occurred",
+        });
+      }
+      return result;
+    }),
+  history: t.procedure
+    .meta({ description: "Show project creation history" })
+    .input(
+      z.object({
+        limit: z.number().optional().default(10).describe("Number of entries to show"),
+        clear: z.boolean().optional().default(false).describe("Clear all history"),
+        json: z.boolean().optional().default(false).describe("Output as JSON"),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await historyHandler(input);
+    }),
 });
 
-const caller = createRouterClient(router, { context: {} });
-
-export function createBtsCli() {
+export function createBtsCli(): TrpcCli {
   return createCli({
     router,
     name: "create-better-t-stack",
@@ -176,13 +294,36 @@ export function createBtsCli() {
   });
 }
 
+// Re-export Result type from better-result for programmatic API consumers
+export { Result } from "better-result";
+
+/**
+ * Error types that can be returned from create/createVirtual
+ */
+export type CreateError =
+  | UserCancelledError
+  | CLIError
+  | DirectoryConflictError
+  | ProjectCreationError;
+
+function formatInputValidationError(label: string, error: z.ZodError): string {
+  const details = error.issues
+    .map((issue) => {
+      const field = issue.path.join(".");
+      return field ? `${field}: ${issue.message}` : issue.message;
+    })
+    .join("; ");
+
+  return `Invalid ${label} input: ${details}`;
+}
+
 /**
  * Programmatic API to create a new Better-T-Stack project.
- * Returns pure JSON - no console output, no interactive prompts.
+ * Returns a Result type - no console output, no interactive prompts.
  *
  * @example
  * ```typescript
- * import { create } from "create-better-t-stack";
+ * import { create, Result } from "create-better-t-stack";
  *
  * const result = await create("my-app", {
  *   frontend: ["tanstack-router"],
@@ -192,55 +333,177 @@ export function createBtsCli() {
  *   orm: "drizzle",
  * });
  *
- * if (result.success) {
- *   console.log(`Project created at: ${result.projectDirectory}`);
- * }
+ * result.match({
+ *   ok: (data) => console.log(`Project created at: ${data.projectDirectory}`),
+ *   err: (error) => console.error(`Failed: ${error.message}`),
+ * });
+ *
+ * // Or use unwrapOr for a default value
+ * const data = result.unwrapOr(null);
  * ```
  */
 export async function create(
   projectName?: string,
   options?: Partial<CreateInput>,
-): Promise<InitResult> {
+): Promise<Result<InitResult, CreateError>> {
+  const rawInput = { ...options, projectName };
+  const parsedInput = CreateInputSchema.safeParse(rawInput);
+
+  if (!parsedInput.success) {
+    return Result.err(
+      new CLIError({
+        message: formatInputValidationError("create", parsedInput.error),
+        cause: parsedInput.error,
+      }),
+    );
+  }
+
   const input = {
-    ...options,
-    projectName,
+    ...parsedInput.data,
     renderTitle: false,
     verbose: true,
-    disableAnalytics: options?.disableAnalytics ?? true,
-    directoryConflict: options?.directoryConflict ?? "error",
+    disableAnalytics: parsedInput.data.disableAnalytics ?? true,
+    directoryConflict: parsedInput.data.directoryConflict ?? "error",
   } as CreateInput & { projectName?: string };
 
-  try {
-    return (await createProjectHandler(input, { silent: true })) as InitResult;
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-      projectConfig: {} as ProjectConfig,
-      reproducibleCommand: "",
-      timeScaffolded: new Date().toISOString(),
-      elapsedTimeMs: 0,
-      projectDirectory: "",
-      relativePath: "",
-    };
-  }
+  return Result.tryPromise({
+    try: async () => {
+      const result = await createProjectHandlerResult(input, { silent: true });
+      if (result.isErr()) {
+        throw result.error;
+      }
+      return result.value as InitResult;
+    },
+    catch: (cause: unknown) => {
+      if (UserCancelledError.is(cause)) return cause;
+      if (CLIError.is(cause)) return cause;
+      if (DirectoryConflictError.is(cause)) return cause;
+      if (ProjectCreationError.is(cause)) return cause;
+      return new CLIError({
+        message: cause instanceof Error ? cause.message : String(cause),
+        cause: cause,
+      });
+    },
+  });
 }
 
 export async function sponsors() {
-  return caller.sponsors();
+  return showSponsorsCommand();
 }
 
 export async function docs() {
-  return caller.docs();
+  return openDocsCommand();
 }
 
 export async function builder() {
-  return caller.builder();
+  return openBuilderCommand();
+}
+
+// Re-export virtual filesystem types for programmatic usage
+export {
+  VirtualFileSystem,
+  type VirtualFileTree,
+  type VirtualFile,
+  type VirtualDirectory,
+  type VirtualNode,
+  type GeneratorOptions,
+  GeneratorError,
+  generate,
+  EMBEDDED_TEMPLATES,
+  TEMPLATE_COUNT,
+} from "@better-t-stack/template-generator";
+
+// Import for createVirtual
+import {
+  generate,
+  GeneratorError,
+  type VirtualFileTree,
+  EMBEDDED_TEMPLATES,
+} from "@better-t-stack/template-generator";
+
+/**
+ * Programmatic API to generate a project in-memory (virtual filesystem).
+ * Returns a Result with a VirtualFileTree without writing to disk.
+ * Useful for web previews and testing.
+ *
+ * @example
+ * ```typescript
+ * import { createVirtual, EMBEDDED_TEMPLATES, Result } from "create-better-t-stack";
+ *
+ * const result = await createVirtual({
+ *   frontend: ["tanstack-router"],
+ *   backend: "hono",
+ *   runtime: "bun",
+ *   database: "sqlite",
+ *   orm: "drizzle",
+ * });
+ *
+ * result.match({
+ *   ok: (tree) => console.log(`Generated ${tree.fileCount} files`),
+ *   err: (error) => console.error(`Failed: ${error.message}`),
+ * });
+ * ```
+ */
+export async function createVirtual(
+  options: Partial<Omit<ProjectConfig, "projectDir" | "relativePath">>,
+): Promise<Result<VirtualFileTree, GeneratorError>> {
+  const parsedInput = CreateVirtualInputSchema.safeParse(options);
+  if (!parsedInput.success) {
+    return Result.err(
+      new GeneratorError({
+        message: formatInputValidationError("virtual create", parsedInput.error),
+        phase: "validation",
+        cause: parsedInput.error,
+      }),
+    );
+  }
+
+  const virtualOptions = parsedInput.data;
+  const config: ProjectConfig = {
+    projectName: virtualOptions.projectName || "my-project",
+    projectDir: "/virtual",
+    relativePath: "./virtual",
+    addonOptions: virtualOptions.addonOptions,
+    dbSetupOptions: virtualOptions.dbSetupOptions,
+    database: virtualOptions.database || "none",
+    orm: virtualOptions.orm || "none",
+    backend: virtualOptions.backend || "hono",
+    runtime: virtualOptions.runtime || "bun",
+    frontend: virtualOptions.frontend || ["tanstack-router"],
+    addons: virtualOptions.addons || [],
+    examples: virtualOptions.examples || [],
+    auth: virtualOptions.auth || "none",
+    payments: virtualOptions.payments || "none",
+    git: virtualOptions.git ?? false,
+    packageManager: virtualOptions.packageManager || "bun",
+    install: false,
+    dbSetup: virtualOptions.dbSetup || "none",
+    api: virtualOptions.api || "trpc",
+    webDeploy: virtualOptions.webDeploy || "none",
+    serverDeploy: virtualOptions.serverDeploy || "none",
+  };
+
+  const validationResult = validateResolvedConfigCompatibility(config);
+  if (validationResult.isErr()) {
+    return Result.err(
+      new GeneratorError({
+        message: validationResult.error.message,
+        phase: "validation",
+        cause: validationResult.error,
+      }),
+    );
+  }
+
+  return generate({
+    config,
+    templates: EMBEDDED_TEMPLATES,
+  });
 }
 
 export type {
   CreateInput,
   InitResult,
+  ProjectConfig,
   BetterTStackConfig,
   Database,
   ORM,
@@ -248,6 +511,8 @@ export type {
   Runtime,
   Frontend,
   Addons,
+  AddonOptions,
+  DbSetupOptions,
   Examples,
   PackageManager,
   DatabaseSetup,
@@ -259,3 +524,60 @@ export type {
   Template,
   DirectoryConflict,
 };
+
+export type { AddResult };
+
+export type AddOptions = Pick<
+  AddInput,
+  "addons" | "addonOptions" | "install" | "packageManager" | "projectDir" | "dryRun"
+>;
+
+/**
+ * Programmatic API to add addons to an existing Better-T-Stack project.
+ *
+ * @example
+ * ```typescript
+ * import { add } from "create-better-t-stack";
+ *
+ * const result = await add({
+ *   addons: ["biome", "husky"],
+ *   install: true,
+ * });
+ *
+ * if (result.success) {
+ *   console.log(`Added: ${result.addedAddons.join(", ")}`);
+ * }
+ * ```
+ */
+export async function add(options: AddOptions = {}): Promise<AddResult> {
+  const parsedInput = AddInputSchema.safeParse(options);
+  if (!parsedInput.success) {
+    return {
+      success: false,
+      addedAddons: [],
+      projectDir: "",
+      error: formatInputValidationError("add", parsedInput.error),
+    };
+  }
+
+  const result = await addHandler(parsedInput.data, { silent: true });
+  return (
+    result ?? {
+      success: false,
+      addedAddons: [],
+      projectDir: parsedInput.data.projectDir ?? "",
+      error: "Operation cancelled",
+    }
+  );
+}
+
+// Re-export error types for consumers
+export {
+  UserCancelledError,
+  CLIError,
+  ProjectCreationError,
+  ValidationError,
+  CompatibilityError,
+  DirectoryConflictError,
+  DatabaseSetupError,
+} from "./utils/errors";

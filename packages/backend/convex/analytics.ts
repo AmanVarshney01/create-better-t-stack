@@ -1,40 +1,57 @@
+import { AnalyticsEventSchema, normalizeAnalyticsSelection } from "@better-t-stack/types";
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { internalAction, internalMutation, internalQuery, query } from "./_generated/server";
+import { buildDailyWindow } from "./analytics_date_utils";
+import {
+  adjustAnalyticsStats,
+  createEmptyAnalyticsStats,
+  type AnalyticsStatsFields,
+} from "./analytics_helpers";
 
-function incrementKey(
-  dist: Record<string, number>,
-  key: string | undefined,
-): Record<string, number> {
-  if (!key) return dist;
-  return { ...dist, [key]: (dist[key] || 0) + 1 };
-}
+const MAX_DAILY_STATS_WINDOW = 366;
+const ANALYTICS_REPAIR_BATCH_SIZE = 512;
 
-function incrementKeys(
-  dist: Record<string, number>,
-  keys: string[] | undefined,
-): Record<string, number> {
-  if (!keys) return dist;
-  const result = { ...dist };
+function incrementDistribution(distribution: Record<string, number>, keys: string[]): void {
   for (const key of keys) {
-    result[key] = (result[key] || 0) + 1;
+    distribution[key] = (distribution[key] || 0) + 1;
   }
-  return result;
 }
 
-function incrementBool(
-  dist: Record<string, number>,
-  val: boolean | undefined,
-): Record<string, number> {
-  if (val === undefined) return dist;
-  const key = val ? "Yes" : "No";
-  return { ...dist, [key]: (dist[key] || 0) + 1 };
-}
-
-function getMajorVersion(version: string | undefined): string | undefined {
-  if (!version) return undefined;
-  const clean = version.startsWith("v") ? version.slice(1) : version;
-  return `v${clean.split(".")[0]}`;
+function normalizeStats(stats: {
+  totalProjects: number;
+  lastEventTime: number;
+  backend: Record<string, number>;
+  frontend: Record<string, number>;
+  database: Record<string, number>;
+  orm: Record<string, number>;
+  api: Record<string, number>;
+  auth: Record<string, number>;
+  runtime: Record<string, number>;
+  packageManager: Record<string, number>;
+  platform: Record<string, number>;
+  addons: Record<string, number>;
+  examples: Record<string, number>;
+  dbSetup: Record<string, number>;
+  webDeploy: Record<string, number>;
+  serverDeploy: Record<string, number>;
+  payments: Record<string, number>;
+  git: Record<string, number>;
+  install: Record<string, number>;
+  nodeVersion: Record<string, number>;
+  cliVersion: Record<string, number>;
+  hourlyDistribution?: Record<string, number>;
+  stackCombinations?: Record<string, number>;
+  dbOrmCombinations?: Record<string, number>;
+}): AnalyticsStatsFields {
+  return {
+    ...stats,
+    hourlyDistribution: stats.hourlyDistribution || {},
+    stackCombinations: stats.stackCombinations || {},
+    dbOrmCombinations: stats.dbOrmCombinations || {},
+  };
 }
 
 export const ingestEvent = internalMutation({
@@ -55,80 +72,31 @@ export const ingestEvent = internalMutation({
     api: v.optional(v.string()),
     webDeploy: v.optional(v.string()),
     serverDeploy: v.optional(v.string()),
-    cli_version: v.optional(v.string()),
-    node_version: v.optional(v.string()),
-    platform: v.optional(v.string()),
+    cli_version: v.string(),
+    node_version: v.string(),
+    platform: v.string(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const now = Date.now();
-    await ctx.db.insert("analyticsEvents", args);
+    const parsed = AnalyticsEventSchema.safeParse(args);
+    if (!parsed.success) {
+      throw new Error("Invalid analytics event");
+    }
 
-    const hourKey = String(new Date(now).getUTCHours()).padStart(2, "0");
-    const fe = args.frontend?.[0] || "none";
-    const be = args.backend || "none";
-    const stackKey = `${be} + ${fe}`;
-    const db = args.database || "none";
-    const o = args.orm || "none";
-    const dbOrmKey = `${db} + ${o}`;
-
+    const id = await ctx.db.insert("analyticsEvents", parsed.data);
+    const event = await ctx.db.get(id);
+    const now = event!._creationTime;
     const existingStats = await ctx.db.query("analyticsStats").first();
+    const nextStats = adjustAnalyticsStats(
+      existingStats ? normalizeStats(existingStats) : createEmptyAnalyticsStats(),
+      [{ event: parsed.data, creationTime: now }],
+      1,
+    );
 
     if (existingStats) {
-      await ctx.db.patch("analyticsStats", existingStats._id, {
-        totalProjects: existingStats.totalProjects + 1,
-        lastEventTime: now,
-        backend: incrementKey(existingStats.backend, args.backend),
-        frontend: incrementKeys(existingStats.frontend, args.frontend),
-        database: incrementKey(existingStats.database, args.database),
-        orm: incrementKey(existingStats.orm, args.orm),
-        api: incrementKey(existingStats.api, args.api),
-        auth: incrementKey(existingStats.auth, args.auth),
-        runtime: incrementKey(existingStats.runtime, args.runtime),
-        packageManager: incrementKey(existingStats.packageManager, args.packageManager),
-        platform: incrementKey(existingStats.platform, args.platform),
-        addons: incrementKeys(existingStats.addons, args.addons),
-        examples: incrementKeys(existingStats.examples, args.examples),
-        dbSetup: incrementKey(existingStats.dbSetup, args.dbSetup),
-        webDeploy: incrementKey(existingStats.webDeploy, args.webDeploy),
-        serverDeploy: incrementKey(existingStats.serverDeploy, args.serverDeploy),
-        payments: incrementKey(existingStats.payments, args.payments),
-        git: incrementBool(existingStats.git, args.git),
-        install: incrementBool(existingStats.install, args.install),
-        nodeVersion: incrementKey(existingStats.nodeVersion, getMajorVersion(args.node_version)),
-        cliVersion: incrementKey(existingStats.cliVersion, args.cli_version),
-        hourlyDistribution: incrementKey(existingStats.hourlyDistribution || {}, hourKey),
-        stackCombinations: incrementKey(existingStats.stackCombinations || {}, stackKey),
-        dbOrmCombinations: incrementKey(existingStats.dbOrmCombinations || {}, dbOrmKey),
-      });
+      await ctx.db.patch("analyticsStats", existingStats._id, nextStats);
     } else {
-      const emptyDist: Record<string, number> = {};
-      await ctx.db.insert("analyticsStats", {
-        totalProjects: 1,
-        lastEventTime: now,
-        backend: incrementKey(emptyDist, args.backend),
-        frontend: incrementKeys(emptyDist, args.frontend),
-        database: incrementKey(emptyDist, args.database),
-        orm: incrementKey(emptyDist, args.orm),
-        api: incrementKey(emptyDist, args.api),
-        auth: incrementKey(emptyDist, args.auth),
-        runtime: incrementKey(emptyDist, args.runtime),
-        packageManager: incrementKey(emptyDist, args.packageManager),
-        platform: incrementKey(emptyDist, args.platform),
-        addons: incrementKeys(emptyDist, args.addons),
-        examples: incrementKeys(emptyDist, args.examples),
-        dbSetup: incrementKey(emptyDist, args.dbSetup),
-        webDeploy: incrementKey(emptyDist, args.webDeploy),
-        serverDeploy: incrementKey(emptyDist, args.serverDeploy),
-        payments: incrementKey(emptyDist, args.payments),
-        git: incrementBool(emptyDist, args.git),
-        install: incrementBool(emptyDist, args.install),
-        nodeVersion: incrementKey(emptyDist, getMajorVersion(args.node_version)),
-        cliVersion: incrementKey(emptyDist, args.cli_version),
-        hourlyDistribution: incrementKey(emptyDist, hourKey),
-        stackCombinations: incrementKey(emptyDist, stackKey),
-        dbOrmCombinations: incrementKey(emptyDist, dbOrmKey),
-      });
+      await ctx.db.insert("analyticsStats", nextStats);
     }
 
     const today = new Date(now).toISOString().slice(0, 10);
@@ -223,25 +191,75 @@ export const getDailyStats = query({
     }),
   ),
   handler: async (ctx, args) => {
-    const days = args.days ?? 30;
     const now = Date.now();
-    const cutoffDate = new Date(now - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-
-    const allDaily = await ctx.db
+    const today = new Date(now).toISOString().slice(0, 10);
+    const requestedDays = args.days;
+    const sanitizedDays =
+      requestedDays !== undefined && Number.isFinite(requestedDays) && requestedDays > 0
+        ? Math.min(Math.floor(requestedDays), MAX_DAILY_STATS_WINDOW)
+        : 30;
+    const cutoffDate = new Date(now - (sanitizedDays - 1) * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+    const dailyStats = await ctx.db
       .query("analyticsDailyStats")
-      .withIndex("by_date")
+      .withIndex("by_date", (q) => q.gte("date", cutoffDate).lte("date", today))
       .order("asc")
       .collect();
 
-    return allDaily
-      .filter((d) => d.date >= cutoffDate)
-      .map((d) => ({ date: d.date, count: d.count }));
+    return buildDailyWindow(
+      dailyStats.map((d) => ({ date: d.date, count: d.count })),
+      cutoffDate,
+      today,
+    );
   },
 });
 
-export const getAllEvents = query({
+export const getMonthlyStats = query({
+  args: {},
+  returns: v.object({
+    monthly: v.array(
+      v.object({
+        month: v.string(),
+        totalProjects: v.number(),
+      }),
+    ),
+    firstDate: v.union(v.string(), v.null()),
+    lastDate: v.union(v.string(), v.null()),
+  }),
+  handler: async (ctx) => {
+    const today = new Date().toISOString().slice(0, 10);
+    const allDaily = await ctx.db
+      .query("analyticsDailyStats")
+      .withIndex("by_date", (q) => q.lte("date", today))
+      .order("asc")
+      .collect();
+
+    if (allDaily.length === 0) {
+      return { monthly: [], firstDate: null, lastDate: null };
+    }
+
+    const byMonth = new Map<string, number>();
+    for (const d of allDaily) {
+      const month = d.date.slice(0, 7);
+      byMonth.set(month, (byMonth.get(month) || 0) + d.count);
+    }
+
+    const monthly = Array.from(byMonth.entries())
+      .map(([month, totalProjects]) => ({ month, totalProjects }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    return {
+      monthly,
+      firstDate: allDaily[0]?.date ?? null,
+      lastDate: allDaily[allDaily.length - 1]?.date ?? null,
+    };
+  },
+});
+
+export const getRecentEvents = query({
   args: {
-    range: v.union(v.literal("30d"), v.literal("7d"), v.literal("1d")),
+    limit: v.optional(v.number()),
   },
   returns: v.array(
     v.object({
@@ -269,122 +287,278 @@ export const getAllEvents = query({
     }),
   ),
   handler: async (ctx, args) => {
-    const now = Date.now();
-    const days = args.range === "30d" ? 30 : args.range === "7d" ? 7 : 1;
-    const cutoff = now - days * 24 * 60 * 60 * 1000;
+    const limit =
+      args.limit !== undefined && Number.isFinite(args.limit) && args.limit > 0
+        ? Math.min(Math.floor(args.limit), 50)
+        : 20;
 
-    const result = [];
-
-    for await (const ev of ctx.db.query("analyticsEvents").order("desc")) {
-      if (ev._creationTime < cutoff) break;
-      result.push(ev);
-    }
-
-    return result;
+    return await ctx.db
+      .query("analyticsEvents")
+      .withIndex("by_quarantined", (q) => q.eq("quarantinedAt", undefined))
+      .order("desc")
+      .take(limit);
   },
 });
 
-export const backfillStats = mutation({
-  args: {},
+export const getSelectionDistributionsBatch = internalQuery({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
   returns: v.object({
-    totalProcessed: v.number(),
-    dailyDates: v.number(),
+    continueCursor: v.string(),
+    isDone: v.boolean(),
+    scanned: v.number(),
+    frontend: distributionValidator,
+    addons: distributionValidator,
+    examples: distributionValidator,
   }),
-  handler: async (ctx) => {
-    const existing = await ctx.db.query("analyticsStats").first();
-    if (existing) {
-      await ctx.db.delete("analyticsStats", existing._id);
-    }
+  handler: async (ctx, args) => {
+    const page = await ctx.db
+      .query("analyticsEvents")
+      .withIndex("by_quarantined", (q) => q.eq("quarantinedAt", undefined))
+      .order("asc")
+      .paginate(args.paginationOpts);
+    const frontend: Record<string, number> = {};
+    const addons: Record<string, number> = {};
+    const examples: Record<string, number> = {};
 
-    const existingDaily = await ctx.db.query("analyticsDailyStats").collect();
-    for (const d of existingDaily) {
-      await ctx.db.delete("analyticsDailyStats", d._id);
-    }
-
-    const events = await ctx.db.query("analyticsEvents").collect();
-
-    const emptyDist: Record<string, number> = {};
-    const stats = {
-      totalProjects: 0,
-      lastEventTime: 0,
-      backend: { ...emptyDist },
-      frontend: { ...emptyDist },
-      database: { ...emptyDist },
-      orm: { ...emptyDist },
-      api: { ...emptyDist },
-      auth: { ...emptyDist },
-      runtime: { ...emptyDist },
-      packageManager: { ...emptyDist },
-      platform: { ...emptyDist },
-      addons: { ...emptyDist },
-      examples: { ...emptyDist },
-      dbSetup: { ...emptyDist },
-      webDeploy: { ...emptyDist },
-      serverDeploy: { ...emptyDist },
-      payments: { ...emptyDist },
-      git: { ...emptyDist },
-      install: { ...emptyDist },
-      nodeVersion: { ...emptyDist },
-      cliVersion: { ...emptyDist },
-      hourlyDistribution: { ...emptyDist },
-      stackCombinations: { ...emptyDist },
-      dbOrmCombinations: { ...emptyDist },
-    };
-
-    const dailyCounts = new Map<string, number>();
-
-    for (const ev of events) {
-      stats.totalProjects++;
-      if (ev._creationTime > stats.lastEventTime) {
-        stats.lastEventTime = ev._creationTime;
-      }
-
-      const hourKey = String(new Date(ev._creationTime).getUTCHours()).padStart(2, "0");
-      const fe = ev.frontend?.[0] || "none";
-      const be = ev.backend || "none";
-      const stackKey = `${be} + ${fe}`;
-      const db = ev.database || "none";
-      const o = ev.orm || "none";
-      const dbOrmKey = `${db} + ${o}`;
-
-      stats.backend = incrementKey(stats.backend, ev.backend);
-      stats.frontend = incrementKeys(stats.frontend, ev.frontend);
-      stats.database = incrementKey(stats.database, ev.database);
-      stats.orm = incrementKey(stats.orm, ev.orm);
-      stats.api = incrementKey(stats.api, ev.api);
-      stats.auth = incrementKey(stats.auth, ev.auth);
-      stats.runtime = incrementKey(stats.runtime, ev.runtime);
-      stats.packageManager = incrementKey(stats.packageManager, ev.packageManager);
-      stats.platform = incrementKey(stats.platform, ev.platform);
-      stats.addons = incrementKeys(stats.addons, ev.addons);
-      stats.examples = incrementKeys(stats.examples, ev.examples);
-      stats.dbSetup = incrementKey(stats.dbSetup, ev.dbSetup);
-      stats.webDeploy = incrementKey(stats.webDeploy, ev.webDeploy);
-      stats.serverDeploy = incrementKey(stats.serverDeploy, ev.serverDeploy);
-      stats.payments = incrementKey(stats.payments, ev.payments);
-      stats.git = incrementBool(stats.git, ev.git);
-      stats.install = incrementBool(stats.install, ev.install);
-      stats.nodeVersion = incrementKey(stats.nodeVersion, getMajorVersion(ev.node_version));
-      stats.cliVersion = incrementKey(stats.cliVersion, ev.cli_version);
-      stats.hourlyDistribution = incrementKey(stats.hourlyDistribution, hourKey);
-      stats.stackCombinations = incrementKey(stats.stackCombinations, stackKey);
-      stats.dbOrmCombinations = incrementKey(stats.dbOrmCombinations, dbOrmKey);
-
-      const date = new Date(ev._creationTime).toISOString().slice(0, 10);
-      dailyCounts.set(date, (dailyCounts.get(date) || 0) + 1);
-    }
-
-    if (stats.totalProjects > 0) {
-      await ctx.db.insert("analyticsStats", stats);
-    }
-
-    for (const [date, count] of dailyCounts) {
-      await ctx.db.insert("analyticsDailyStats", { date, count });
+    for (const event of page.page) {
+      incrementDistribution(frontend, normalizeAnalyticsSelection(event.frontend));
+      incrementDistribution(addons, normalizeAnalyticsSelection(event.addons));
+      incrementDistribution(examples, normalizeAnalyticsSelection(event.examples));
     }
 
     return {
-      totalProcessed: stats.totalProjects,
-      dailyDates: dailyCounts.size,
+      continueCursor: page.continueCursor,
+      isDone: page.isDone,
+      scanned: page.page.length,
+      frontend,
+      addons,
+      examples,
     };
+  },
+});
+
+export const replaceSelectionDistributions = internalMutation({
+  args: {
+    expectedTotal: v.number(),
+    frontend: distributionValidator,
+    addons: distributionValidator,
+    examples: distributionValidator,
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const stats = await ctx.db.query("analyticsStats").first();
+    if (!stats) {
+      throw new Error("Cannot rebuild missing analytics stats");
+    }
+    if (stats.totalProjects !== args.expectedTotal) {
+      throw new Error(
+        `Expected ${args.expectedTotal} active events, stats contain ${stats.totalProjects}`,
+      );
+    }
+
+    await ctx.db.patch(stats._id, {
+      frontend: args.frontend,
+      addons: args.addons,
+      examples: args.examples,
+    });
+    return null;
+  },
+});
+
+export const rebuildSelectionDistributions = internalAction({
+  args: {
+    dryRun: v.boolean(),
+  },
+  returns: v.object({
+    scanned: v.number(),
+    frontend: distributionValidator,
+    addons: distributionValidator,
+    examples: distributionValidator,
+  }),
+  handler: async (ctx, args) => {
+    let cursor: string | null = null;
+    let scanned = 0;
+    const frontend: Record<string, number> = {};
+    const addons: Record<string, number> = {};
+    const examples: Record<string, number> = {};
+
+    while (true) {
+      const result: {
+        continueCursor: string;
+        isDone: boolean;
+        scanned: number;
+        frontend: Record<string, number>;
+        addons: Record<string, number>;
+        examples: Record<string, number>;
+      } = await ctx.runQuery(internal.analytics.getSelectionDistributionsBatch, {
+        paginationOpts: {
+          numItems: ANALYTICS_REPAIR_BATCH_SIZE,
+          cursor,
+        },
+      });
+
+      scanned += result.scanned;
+      for (const [key, count] of Object.entries(result.frontend)) {
+        frontend[key] = (frontend[key] || 0) + count;
+      }
+      for (const [key, count] of Object.entries(result.addons)) {
+        addons[key] = (addons[key] || 0) + count;
+      }
+      for (const [key, count] of Object.entries(result.examples)) {
+        examples[key] = (examples[key] || 0) + count;
+      }
+
+      if (result.isDone) break;
+      cursor = result.continueCursor;
+    }
+
+    if (!args.dryRun) {
+      await ctx.runMutation(internal.analytics.replaceSelectionDistributions, {
+        expectedTotal: scanned,
+        frontend,
+        addons,
+        examples,
+      });
+    }
+
+    return { scanned, frontend, addons, examples };
+  },
+});
+
+export const quarantineInvalidEventsBatch = internalMutation({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    dryRun: v.boolean(),
+  },
+  returns: v.object({
+    continueCursor: v.string(),
+    isDone: v.boolean(),
+    scanned: v.number(),
+    invalid: v.number(),
+    quarantined: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const page = await ctx.db.query("analyticsEvents").order("asc").paginate(args.paginationOpts);
+    const invalidEvents = page.page.filter(
+      (event) =>
+        event.quarantinedAt === undefined && !AnalyticsEventSchema.safeParse(event).success,
+    );
+
+    if (!args.dryRun && invalidEvents.length > 0) {
+      const stats = await ctx.db.query("analyticsStats").first();
+      if (!stats) {
+        throw new Error("Cannot repair analytics events without aggregate stats");
+      }
+
+      const nextStats = adjustAnalyticsStats(
+        normalizeStats(stats),
+        invalidEvents.map((event) => ({ event, creationTime: event._creationTime })),
+        -1,
+        { legacyVersionKeys: true },
+      );
+      const dailyDecrements = new Map<string, number>();
+
+      for (const event of invalidEvents) {
+        const date = new Date(event._creationTime).toISOString().slice(0, 10);
+        dailyDecrements.set(date, (dailyDecrements.get(date) || 0) + 1);
+        await ctx.db.patch(event._id, {
+          quarantinedAt: Date.now(),
+          quarantineReason: "invalid_payload",
+        });
+      }
+
+      await ctx.db.patch(stats._id, nextStats);
+
+      for (const [date, decrement] of dailyDecrements) {
+        const dailyStats = await ctx.db
+          .query("analyticsDailyStats")
+          .withIndex("by_date", (q) => q.eq("date", date))
+          .first();
+        if (!dailyStats || dailyStats.count < decrement) {
+          throw new Error(`Cannot safely decrement analytics for ${date}`);
+        }
+
+        const nextCount = dailyStats.count - decrement;
+        await ctx.db.patch(dailyStats._id, { count: nextCount });
+      }
+    }
+
+    return {
+      continueCursor: page.continueCursor,
+      isDone: page.isDone,
+      scanned: page.page.length,
+      invalid: invalidEvents.length,
+      quarantined: args.dryRun ? 0 : invalidEvents.length,
+    };
+  },
+});
+
+export const syncLastEventTime = internalMutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const stats = await ctx.db.query("analyticsStats").first();
+    if (!stats) return null;
+
+    const latestEvent = await ctx.db
+      .query("analyticsEvents")
+      .withIndex("by_quarantined", (q) => q.eq("quarantinedAt", undefined))
+      .order("desc")
+      .first();
+    if (!latestEvent) {
+      await ctx.db.patch(stats._id, { lastEventTime: 0 });
+      return null;
+    }
+
+    await ctx.db.patch(stats._id, { lastEventTime: latestEvent._creationTime });
+    return null;
+  },
+});
+
+export const quarantineInvalidEvents = internalAction({
+  args: {
+    dryRun: v.boolean(),
+  },
+  returns: v.object({
+    scanned: v.number(),
+    invalid: v.number(),
+    quarantined: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    let cursor: string | null = null;
+    let scanned = 0;
+    let invalid = 0;
+    let quarantined = 0;
+
+    while (true) {
+      const result: {
+        continueCursor: string;
+        isDone: boolean;
+        scanned: number;
+        invalid: number;
+        quarantined: number;
+      } = await ctx.runMutation(internal.analytics.quarantineInvalidEventsBatch, {
+        paginationOpts: {
+          numItems: ANALYTICS_REPAIR_BATCH_SIZE,
+          cursor,
+        },
+        dryRun: args.dryRun,
+      });
+
+      scanned += result.scanned;
+      invalid += result.invalid;
+      quarantined += result.quarantined;
+
+      if (result.isDone) break;
+      cursor = result.continueCursor;
+    }
+
+    if (!args.dryRun) {
+      await ctx.runMutation(internal.analytics.syncLastEventTime, {});
+    }
+
+    return { scanned, invalid, quarantined };
   },
 });

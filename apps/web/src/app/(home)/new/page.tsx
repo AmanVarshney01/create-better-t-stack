@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-
 import { Suspense } from "react";
 
-import StackBuilder from "./_components/stack-builder";
+import { fetchSponsors } from "@/lib/sponsors";
+
+import { StackBuilder } from "./_components/stack-builder";
 
 export const metadata: Metadata = {
   title: "Stack Builder - Better-T-Stack",
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
     url: "https://better-t-stack.dev/new",
     images: [
       {
-        url: "https://r2.better-t-stack.dev/og.png",
+        url: "https://better-t-stack.dev/og/site/new.png",
         width: 1200,
         height: 630,
         alt: "Better-T-Stack Stack Builder",
@@ -24,15 +25,17 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Stack Builder - Better-T-Stack",
     description: "Interactive Ui to roll your own stack",
-    images: ["https://r2.better-t-stack.dev/og.png"],
+    images: ["https://better-t-stack.dev/og/site/new.png"],
   },
 };
 
-export default function FullScreenStackBuilder() {
+export default async function FullScreenStackBuilder() {
+  const sponsorsData = await fetchSponsors();
+
   return (
     <Suspense>
-      <div className="grid h-[calc(100vh-64px)] w-full flex-1 grid-cols-1 overflow-hidden">
-        <StackBuilder />
+      <div className="grid h-[calc(100svh-64px)] w-full flex-1 grid-cols-1 overflow-hidden">
+        <StackBuilder specialSponsors={sponsorsData.specialSponsors} />
       </div>
     </Suspense>
   );

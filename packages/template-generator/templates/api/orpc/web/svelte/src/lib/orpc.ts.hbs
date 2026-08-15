@@ -1,0 +1,50 @@
+{{#unless (eq backend "self")}}
+import { PUBLIC_SERVER_URL } from "$env/static/public";
+{{/unless}}
+import { createORPCClient } from "@orpc/client";
+import { RPCLink } from "@orpc/client/fetch";
+import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import { QueryCache, QueryClient } from "@tanstack/svelte-query";
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+
+export const queryClient = new QueryClient({
+	queryCache: new QueryCache({
+		onError: (error) => {
+			console.error(`Error: ${error.message}`);
+		},
+	}),
+});
+
+{{#unless (eq backend "self")}}
+{{> getServerUrl}}
+
+{{/unless}}
+export const link = new RPCLink({
+	{{#if (eq backend "self")}}
+	url: () => {
+		if (typeof window === "undefined") {
+			throw new Error("This link is not allowed on the server side.");
+		}
+
+		return `${window.location.origin}/rpc`;
+	},
+	{{else}}
+	url: `${getServerUrl(PUBLIC_SERVER_URL)}/rpc`,
+	{{/if}}
+	{{#if (eq auth "better-auth")}}
+	fetch(url, options) {
+		return fetch(url, {
+			...options,
+			credentials: "include",
+		});
+	},
+	{{/if}}
+});
+
+{{#if (eq backend "self")}}
+export const client: AppRouterClient = globalThis.$client ?? createORPCClient(link);
+{{else}}
+export const client: AppRouterClient = createORPCClient(link);
+{{/if}}
+
+export const orpc = createTanstackQueryUtils(client);

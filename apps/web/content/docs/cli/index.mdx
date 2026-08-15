@@ -7,7 +7,7 @@ description: Complete reference for all CLI commands
 
 The Better-T-Stack CLI provides several commands to manage your TypeScript projects.
 
-## `init` (Default Command)
+## `create` (Default Command)
 
 Creates a new Better-T-Stack project.
 
@@ -22,6 +22,7 @@ create-better-t-stack [project-directory] [options]
 ### Key Options
 
 - `--yes, -y`: Use default configuration (skips prompts)
+- `--dry-run`: Validate configuration and target directory without writing files
 - `--verbose`: Show detailed result information as JSON
 - `--yolo`: Bypass validations and compatibility checks
 - `--package-manager <pm>`: `npm`, `pnpm`, `bun`
@@ -29,7 +30,7 @@ create-better-t-stack [project-directory] [options]
 - `--git / --no-git`: Initialize Git repository
 - `--frontend <types...>`: Web and/or native frameworks (see [Options](/docs/cli/options#frontend))
 - `--backend <framework>`: `hono`, `express`, `fastify`, `elysia`, `convex`, `self`, `none`
-- `--runtime <runtime>`: `bun`, `node`, `workers` (`none` only with `--backend convex` or `--backend none`)
+- `--runtime <runtime>`: `bun`, `node`, `workers` (`none` only with `--backend convex`, `--backend none`, or `--backend self`)
 - `--database <type>`: `none`, `sqlite`, `postgres`, `mysql`, `mongodb`
 - `--orm <type>`: `none`, `drizzle`, `prisma`, `mongoose`
 - `--api <type>`: `none`, `trpc`, `orpc`
@@ -37,8 +38,8 @@ create-better-t-stack [project-directory] [options]
 - `--payments <provider>`: `polar`, `none`
 - `--db-setup <setup>`: `none`, `turso`, `d1`, `neon`, `supabase`, `prisma-postgres`, `planetscale`, `mongodb-atlas`, `docker`
 - `--examples <types...>`: `none`, `todo`, `ai`
-- `--web-deploy <setup>`: `none`, `alchemy`
-- `--server-deploy <setup>`: `none`, `alchemy`
+- `--web-deploy <setup>`: `none`, `cloudflare`
+- `--server-deploy <setup>`: `none`, `cloudflare`
 - `--template <type>`: `none`, `mern`, `pern`, `t3`, `uniwind`
 - `--directory-conflict <strategy>`: `merge`, `overwrite`, `increment`, `error`
 - `--render-title / --no-render-title`: Show/hide ASCII art title
@@ -46,6 +47,8 @@ create-better-t-stack [project-directory] [options]
 - `--manual-db`: Skip automatic database setup prompts
 
 See the full reference in [Options](/docs/cli/options).
+
+For JSON-first automation and agent usage, see [Agent Workflows](/docs/cli/agent-workflows).
 
 ### Examples
 
@@ -58,11 +61,14 @@ create-better-t-stack --yes
 
 # Specific configuration
 create-better-t-stack --database postgres --backend hono --frontend tanstack-router
+
+# Validate without writing files
+create-better-t-stack my-app --yes --dry-run
 ```
 
 ## `add`
 
-Adds addons or deployment configurations to an existing Better-T-Stack project.
+Adds addons to an existing Better-T-Stack project.
 
 ```bash
 create-better-t-stack add [options]
@@ -71,11 +77,9 @@ create-better-t-stack add [options]
 ### Options
 
 - `--addons <types...>`: Addons to add (see [Addons](/docs/cli/options#addons))
-- `--web-deploy <setup>`: Web deployment setup (`none`, `alchemy`)
-- `--server-deploy <setup>`: Server deployment setup (`none`, `alchemy`)
 - `--project-dir <path>`: Project directory (defaults to current directory)
-- `--install`: Install dependencies after adding
-- `--package-manager <pm>`: Package manager to use
+- `--install / --no-install`: Install dependencies after adding
+- `--package-manager <pm>`: Package manager to use (`npm`, `pnpm`, `bun`)
 
 ### Examples
 
@@ -86,9 +90,50 @@ create-better-t-stack add
 # Add specific addons
 create-better-t-stack add --addons pwa tauri --install
 
-# Add deployment setup
-create-better-t-stack add --web-deploy alchemy
+# Add addons in a specific project directory
+create-better-t-stack add --project-dir ./my-app --addons mcp skills
 ```
+
+## `create-json`
+
+Create a project from a raw JSON payload.
+
+```bash
+create-better-t-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
+```
+
+Use this when you want a single machine-readable input object instead of many flags.
+
+## `add-json`
+
+Add addons from a raw JSON payload.
+
+```bash
+create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["wxt"],"addonOptions":{"wxt":{"template":"react"}}}'
+```
+
+## `schema`
+
+Print runtime CLI and input schemas as JSON.
+
+```bash
+create-better-t-stack schema --name all
+create-better-t-stack schema --name createInput
+create-better-t-stack schema --name addonOptions
+create-better-t-stack schema --name dbSetupOptions
+```
+
+This is the best way for scripts and agents to discover the current input contract at runtime.
+
+## `mcp`
+
+Start the Better-T-Stack MCP server over stdio. It is launched by an MCP client (Claude Code, Codex, Cursor, opencode, and others), not run directly.
+
+```bash
+create-better-t-stack mcp
+```
+
+It exposes tools for planning and creating projects (`bts_plan_project`, `bts_create_project`) and managing addons (`bts_plan_addons`, `bts_add_addons`), plus schema and guidance helpers. See [Agent Workflows](/docs/cli/agent-workflows#use-it-inside-your-ai-agent) for setup and the full tool list.
 
 ## `sponsors`
 
@@ -120,6 +165,36 @@ create-better-t-stack builder
 
 Opens `https://better-t-stack.dev/new` where you can configure your stack visually.
 
+## `history`
+
+Shows project creation history stored on your local machine.
+
+```bash
+create-better-t-stack history [options]
+```
+
+### Options
+
+- `--limit <number>`: Number of entries to show (default: 10)
+- `--json`: Output history as JSON
+- `--clear`: Clear all history entries
+
+### Examples
+
+```bash
+# Show latest entries
+create-better-t-stack history
+
+# Show 5 entries
+create-better-t-stack history --limit 5
+
+# JSON output
+create-better-t-stack history --json
+
+# Clear history
+create-better-t-stack history --clear
+```
+
 ## Global Options
 
 These options work with any command:
@@ -137,7 +212,7 @@ create-better-t-stack \
   --orm drizzle \
   --backend hono \
   --frontend tanstack-router \
-  --auth \
+  --auth better-auth \
   --addons pwa biome
 ```
 
@@ -159,6 +234,12 @@ cd my-existing-project
 create-better-t-stack add --addons tauri starlight --install
 ```
 
+### Show Local History
+
+```bash
+create-better-t-stack history --limit 20
+```
+
 ## Programmatic Usage
 
 For advanced use cases, automation, or integration with other tools, you can use the [Programmatic API](/docs/cli/programmatic-api) to create projects from Node.js code:
@@ -173,9 +254,10 @@ const result = await create("my-app", {
   orm: "drizzle",
 });
 
-if (result.success) {
-  console.log(`Project created at: ${result.projectDirectory}`);
-}
+result.match({
+  ok: (data) => console.log(`Project created at: ${data.projectDirectory}`),
+  err: (error) => console.error(`Failed: ${error.message}`),
+});
 ```
 
 This is useful for:

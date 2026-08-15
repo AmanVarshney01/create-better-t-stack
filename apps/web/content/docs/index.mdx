@@ -20,290 +20,86 @@ description: Create your first Better-T-Stack project in minutes
 
 ### CLI (prompts)
 
-<Tabs groupId="installtab" defaultValue="npm" persist>
-  <TabsList>
-    <TabsTrigger value="npm" >
-      npm
-    </TabsTrigger>
-    <TabsTrigger value="pnpm" >
-      pnpm
-    </TabsTrigger>
-    <TabsTrigger value="bun" >
-      bun
-    </TabsTrigger>
-  </TabsList>
-  <TabsContent value="npm">
-    ```bash
-    npx create-better-t-stack@latest
-    ```
-  </TabsContent>
-  <TabsContent value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest
-    ```
-  </TabsContent>
-  <TabsContent value="bun">
-    ```bash
-    bun create better-t-stack@latest
-    ```
-  </TabsContent>
-</Tabs>
+```npm
+npm create better-t-stack@latest
+```
 
 Follow the interactive prompts to choose your frontend, backend, database, ORM, API layer, and addons.
 
 Skip prompts and use the default stack:
 
-<Tabs groupId="installtab" defaultValue="npm" persist>
-  <TabsList>
-    <TabsTrigger value="npm" >
-      npm
-    </TabsTrigger>
-    <TabsTrigger value="pnpm" >
-      pnpm
-    </TabsTrigger>
-    <TabsTrigger value="bun" >
-      bun
-    </TabsTrigger>
-  </TabsList>
-  <TabsContent value="npm">
-    ```bash
-    npx create-better-t-stack@latest  --yes
-    ```
-  </TabsContent>
-  <TabsContent value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest  --yes
-    ```
-  </TabsContent>
-  <TabsContent value="bun">
-    ```bash
-    bun create better-t-stack@latest  --yes
-    ```
-  </TabsContent>
-</Tabs>
+```npm
+npm create better-t-stack@latest --yes
+```
 
 ### Stack Builder (UI)
 
 - Visit [/new](/new) to pick your stack and copy the generated command
 - Or open it via:
 
-<Tabs groupId="installtab" defaultValue="npm" persist>
-  <TabsList>
-    <TabsTrigger value="npm" >
-      npm
-    </TabsTrigger>
-    <TabsTrigger value="pnpm" >
-      pnpm
-    </TabsTrigger>
-    <TabsTrigger value="bun" >
-      bun
-    </TabsTrigger>
-  </TabsList>
-  <TabsContent value="npm">
-    ```bash
-    npx create-better-t-stack@latest builder
-    ```
-  </TabsContent>
-  <TabsContent value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest builder
-    ```
-  </TabsContent>
-  <TabsContent value="bun">
-    ```bash
-    bun create better-t-stack@latest builder
-    ```
-  </TabsContent>
-</Tabs>
+```npm
+npm create better-t-stack@latest builder
+```
+
+### AI agent (plugin)
+
+Let your AI assistant build the stack for you. Install the Better-T-Stack plugin, then describe what you want in plain English — it plans a valid stack and scaffolds it for you.
+
+```bash
+# Claude Code
+/plugin marketplace add AmanVarshney01/create-better-t-stack
+/plugin install better-t-stack@better-t-stack
+```
+
+Then ask: _"create a fullstack app with Next, Hono, Postgres and Better Auth"_. Also works in Codex, opencode, and any MCP-capable agent — see [Use it inside your AI agent](/docs/cli/agent-workflows#use-it-inside-your-ai-agent).
 
 ## Common Setups
 
 ### Default Stack
 
-<Tabs groupId="installtab" defaultValue="npm" persist>
-  <TabsList>
-    <TabsTrigger value="npm" >
-      npm
-    </TabsTrigger>
-    <TabsTrigger value="pnpm" >
-      pnpm
-    </TabsTrigger>
-    <TabsTrigger value="bun" >
-      bun
-    </TabsTrigger>
-  </TabsList>
-  <TabsContent value="npm">
-    ```bash
-    npx create-better-t-stack@latest my-webapp \
-      --frontend tanstack-router \
-      --backend hono \
-      --database sqlite \
-      --orm drizzle \
-      --auth better-auth \
-      --addons turborepo
-    ```
-  </TabsContent>
-  <TabsContent value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest my-webapp \
-      --frontend tanstack-router \
-      --backend hono \
-      --database sqlite \
-      --orm drizzle \
-      --auth better-auth \
-      --addons turborepo
-    ```
-  </TabsContent>
-  <TabsContent value="bun">
-    ```bash
-    bun create better-t-stack@latest my-webapp \
-      --frontend tanstack-router \
-      --backend hono \
-      --database sqlite \
-      --orm drizzle \
-      --auth better-auth \
-      --addons turborepo
-    ```
-  </TabsContent>
-</Tabs>
+```npm
+npm create better-t-stack@latest my-webapp \
+  --frontend tanstack-router \
+  --backend hono \
+  --database sqlite \
+  --orm drizzle \
+  --auth better-auth \
+  --addons turborepo
+```
 
 ### Convex + React + Clerk
 
-<Tabs groupId="installtab" defaultValue="npm" persist>
-  <TabsList>
-    <TabsTrigger value="npm" >
-      npm
-    </TabsTrigger>
-    <TabsTrigger value="pnpm" >
-      pnpm
-    </TabsTrigger>
-    <TabsTrigger value="bun" >
-      bun
-    </TabsTrigger>
-  </TabsList>
-  <TabsContent value="npm">
-    ```bash
-    npx create-better-t-stack@latest my-api \
-      --frontend none \
-      --backend fastify \
-      --runtime node \
-      --database postgres \
-      --orm prisma \
-      --api trpc
-    ```
-  </TabsContent>
-  <TabsContent value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest my-api \
-      --frontend none \
-      --backend fastify \
-      --runtime node \
-      --database postgres \
-      --orm prisma \
-      --api trpc
-    ```
-  </TabsContent>
-  <TabsContent value="bun">
-    ```bash
-    bun create better-t-stack@latest my-api \
-      --frontend none \
-      --backend fastify \
-      --runtime node \
-      --database postgres \
-      --orm prisma \
-      --api trpc
-    ```
-  </TabsContent>
-</Tabs>
+```npm
+npm create better-t-stack@latest my-api \
+  --frontend tanstack-router \
+  --backend convex \
+  --auth clerk
+```
 
 ### Mobile App (Expo)
 
-<Tabs groupId="installtab" defaultValue="npm" persist>
-  <TabsList>
-    <TabsTrigger value="npm" >
-      npm
-    </TabsTrigger>
-    <TabsTrigger value="pnpm" >
-      pnpm
-    </TabsTrigger>
-    <TabsTrigger value="bun" >
-      bun
-    </TabsTrigger>
-  </TabsList>
-  <TabsContent value="npm">
-    ```bash
-    npx create-better-t-stack@latest my-native \
-      --frontend native-uniwind \
-      --backend hono \
-      --database sqlite \
-      --orm drizzle \
-      --auth better-auth
-    ```
-  </TabsContent>
-  <TabsContent value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest my-native \
-      --frontend native-uniwind \
-      --backend hono \
-      --database sqlite \
-      --orm drizzle \
-      --auth better-auth
-    ```
-  </TabsContent>
-  <TabsContent value="bun">
-    ```bash
-    bun create better-t-stack@latest my-native \
-      --frontend native-uniwind \
-      --backend hono \
-      --database sqlite \
-      --orm drizzle \
-      --auth better-auth
-    ```
-  </TabsContent>
-</Tabs>
+```npm
+npm create better-t-stack@latest my-native \
+  --frontend native-uniwind \
+  --backend hono \
+  --database sqlite \
+  --orm drizzle \
+  --auth better-auth
+```
 
 ### Empty Monorepo
 
-<Tabs groupId="installtab" defaultValue="npm" persist>
-  <TabsList>
-    <TabsTrigger value="npm" >
-      npm
-    </TabsTrigger>
-    <TabsTrigger value="pnpm" >
-      pnpm
-    </TabsTrigger>
-    <TabsTrigger value="bun" >
-      bun
-    </TabsTrigger>
-  </TabsList>
-  <TabsContent value="npm">
-    ```bash
-    npx create-better-t-stack@latest my-workspace \
-      --frontend none \
-      --backend none
-    ```
-  </TabsContent>
-  <TabsContent value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest my-workspace \
-      --frontend none \
-      --backend none
-    ```
-  </TabsContent>
-  <TabsContent value="bun">
-    ```bash
-    bun create better-t-stack@latest my-workspace \
-      --frontend none \
-      --backend none
-    ```
-  </TabsContent>
-</Tabs>
+```npm
+npm create better-t-stack@latest my-workspace \
+  --frontend none \
+  --backend none
+```
 
 ## Flags Cheat Sheet
 
 See the full list in the [CLI Reference](/docs/cli). Key flags:
 
-- `--frontend`: tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, native-bare, native-uniwind, native-unistyles, none
+- `--frontend`: tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, astro, native-bare, native-uniwind, native-unistyles, none
 - `--backend`: hono, express, fastify, elysia, convex, self, none
 - `--runtime`: bun, node, workers, none
 - `--database`: sqlite, postgres, mysql, mongodb, none
@@ -311,7 +107,7 @@ See the full list in the [CLI Reference](/docs/cli). Key flags:
 - `--api`: trpc, orpc, none
 - `--auth`: better-auth, clerk, none
 - `--payments`: polar, none
-- `--addons`: turborepo, pwa, tauri, biome, husky, starlight, fumadocs, ultracite, oxlint, ruler, opentui, wxt, none
+- `--addons`: turborepo, nx, vite-plus, pwa, tauri, electrobun, biome, lefthook, husky, starlight, fumadocs, ultracite, oxlint, mcp, opentui, wxt, skills, evlog, none
 - `--examples`: todo, ai, none
 
 ## Next Steps
@@ -320,14 +116,17 @@ See the full list in the [CLI Reference](/docs/cli). Key flags:
   <Card href="/docs/cli" title="CLI (per-command)">
     Flags, usage, and examples for each command
   </Card>
+  <Card href="/docs/cli/agent-workflows#use-it-inside-your-ai-agent" title="AI agent plugin">
+    Scaffold from Claude Code, Codex, opencode, and other MCP agents
+  </Card>
   <Card href="/docs/project-structure" title="Project Structure">
     See how web/server/native and Convex layouts are generated
   </Card>
-  <Card href="/docs/compatibility" title="Compatibility">
+  <Card href="/docs/cli/compatibility" title="Compatibility">
     Valid combinations for backend, runtime, database, ORM, API
   </Card>
   <Card href="/docs/bts-config" title="bts.jsonc">
-    Required for the add command; safe to delete if you don’t use add
+    Required for the add command; safe to delete if you don't use add
   </Card>
   <Card href="/docs/contributing" title="Contributing">
     Dev setup and contribution flow

@@ -1,0 +1,18 @@
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import { toNextJsHandler } from "better-auth/next-js";
+
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+export async function GET(request: Request) {
+	return toNextJsHandler(createAuth()).GET(request);
+}
+
+export async function POST(request: Request) {
+	return toNextJsHandler(createAuth()).POST(request);
+}
+{{else}}
+export const { GET, POST } = toNextJsHandler(auth);
+{{/if}}

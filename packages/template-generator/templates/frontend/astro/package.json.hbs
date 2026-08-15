@@ -1,0 +1,26 @@
+{
+  "name": "web",
+  "type": "module",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+{{#unless (eq webDeploy "cloudflare")}}
+    "build": "astro build",
+
+{{/unless}}
+		"check-types": "astro check",
+{{#unless (eq webDeploy "cloudflare")}}
+    "preview": "astro preview",
+{{/unless}}
+    "astro": "astro"
+  },
+  "dependencies": {
+    "astro": "^7.1.5"
+  },
+  "devDependencies": {
+		"@astrojs/check": "^0.9.10",
+    "@tailwindcss/vite": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}

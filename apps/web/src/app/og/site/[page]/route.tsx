@@ -1,0 +1,125 @@
+import { notFound } from "next/navigation";
+import { ImageResponse } from "next/og";
+
+import { OG_SIZE, OgShell, ogColors, ogFonts } from "@/lib/og";
+
+export const revalidate = false;
+
+const PAGES = {
+  home: {
+    path: "~",
+    section: "home",
+    title: "Roll Your Own Stack",
+    description: "Modern CLI for scaffolding end-to-end type-safe TypeScript projects",
+    command: "bun create better-t-stack@latest",
+  },
+  new: {
+    path: "~/new",
+    section: "stack builder",
+    title: "Stack Builder",
+    description: "Pick your stack, get a ready-to-run command",
+    command: "bun create better-t-stack@latest my-app --yes",
+  },
+  showcase: {
+    path: "~/showcase",
+    section: "showcase",
+    title: "Showcase",
+    description: "Projects built with Better-T-Stack",
+  },
+  analytics: {
+    path: "~/analytics",
+    section: "analytics",
+    title: "Analytics",
+    description: "Live usage insights from the create-better-t-stack CLI",
+  },
+  sponsors: {
+    path: "~/sponsors",
+    section: "sponsors",
+    title: "Sponsors",
+    description: "The companies and developers funding Better-T-Stack development",
+  },
+} satisfies Record<
+  string,
+  { path: string; section: string; title: string; description: string; command?: string }
+>;
+
+function isPageKey(page: string): page is keyof typeof PAGES {
+  return Object.hasOwn(PAGES, page);
+}
+
+export async function GET(_req: Request, { params }: RouteContext<"/og/site/[page]">) {
+  const { page: pageParam } = await params;
+  const pageKey = pageParam.replace(/\.png$/, "");
+  if (!isPageKey(pageKey)) notFound();
+  const page = PAGES[pageKey];
+
+  return new ImageResponse(
+    <OgShell path={page.path} section={page.section}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          padding: "48px 56px",
+          flex: 1,
+          justifyContent: "center",
+          gap: "20px",
+        }}
+      >
+        {"command" in page && page.command && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              fontFamily: "monospace",
+              fontSize: "20px",
+            }}
+          >
+            <span style={{ color: ogColors.accent, display: "flex" }}>$</span>
+            <span style={{ color: ogColors.subtext, display: "flex" }}>{page.command}</span>
+            <div
+              style={{
+                width: "11px",
+                height: "24px",
+                background: ogColors.accent,
+                display: "flex",
+              }}
+            />
+          </div>
+        )}
+
+        <div
+          style={{
+            fontSize: "64px",
+            fontWeight: 700,
+            color: ogColors.text,
+            lineHeight: 1.1,
+            letterSpacing: "-0.02em",
+            display: "flex",
+            flexWrap: "wrap",
+          }}
+        >
+          {page.title}
+        </div>
+
+        <div
+          style={{
+            fontSize: "26px",
+            color: ogColors.subtext,
+            lineHeight: 1.5,
+            display: "flex",
+            flexWrap: "wrap",
+            maxWidth: "900px",
+          }}
+        >
+          {page.description}
+        </div>
+      </div>
+    </OgShell>,
+    { ...OG_SIZE, fonts: await ogFonts() },
+  );
+}
+
+export function generateStaticParams() {
+  return Object.keys(PAGES).map((page) => ({ page: `${page}.png` }));
+}

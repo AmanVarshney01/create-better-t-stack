@@ -1,0 +1,55 @@
+{{#if (eq payments "polar")}}
+import { Button } from "@{{projectName}}/ui/components/button";
+import { authClient } from "@/lib/auth-client";
+{{/if}}
+{{#if (eq api "orpc")}}
+import { orpc } from "@/utils/orpc";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { trpc } from "@/utils/trpc";
+{{/if}}
+{{#if (or (eq api "orpc") (eq api "trpc"))}}
+import { useQuery } from "@tanstack/react-query";
+{{/if}}
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_auth/dashboard")({
+	component: RouteComponent,
+});
+
+function RouteComponent() {
+	const { session{{#if (eq payments "polar")}}, customerState{{/if}} } = Route.useRouteContext();
+
+	{{#if (eq api "orpc")}}
+	const privateData = useQuery(orpc.privateData.queryOptions());
+	{{/if}}
+	{{#if (eq api "trpc")}}
+	const privateData = useQuery(trpc.privateData.queryOptions());
+	{{/if}}
+
+	{{#if (eq payments "polar")}}
+	const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
+	{{/if}}
+
+	return (
+		<div>
+			<h1>Dashboard</h1>
+			<p>Welcome {session.data?.user.name}</p>
+			{{#if (or (eq api "orpc") (eq api "trpc"))}}
+			<p>API: {privateData.data?.message}</p>
+			{{/if}}
+			{{#if (eq payments "polar")}}
+			<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
+			{hasProSubscription ? (
+				<Button onClick={async () => await authClient.customer.portal()}>
+					Manage Subscription
+				</Button>
+			) : (
+				<Button onClick={async () => await authClient.checkout({ slug: "pro" })}>
+					Upgrade to Pro
+				</Button>
+			)}
+			{{/if}}
+		</div>
+	);
+}

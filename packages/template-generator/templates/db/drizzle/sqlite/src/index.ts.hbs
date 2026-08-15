@@ -1,0 +1,53 @@
+{{#if (eq dbSetup "d1")}}
+import * as schema from "./schema";
+import { drizzle } from "drizzle-orm/d1";
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
+{{else}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+
+export function createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
+	return drizzle(env.DB, { schema });
+}
+{{else if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
+{{else}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+import * as schema from "./schema";
+import { drizzle } from "drizzle-orm/libsql";
+import { createClient } from "@libsql/client";
+
+export function createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
+	const client = createClient({
+		url: env.DATABASE_URL,
+{{#if (eq dbSetup "turso")}}
+		authToken: env.DATABASE_AUTH_TOKEN,
+{{/if}}
+	});
+
+	return drizzle({ client, schema });
+}
+
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+export const db = createDb();
+{{/if}}
+{{else if (eq runtime "workers")}}
+import * as schema from "./schema";
+import { drizzle } from "drizzle-orm/libsql";
+import { env } from "@{{projectName}}/env/server";
+import { createClient } from "@libsql/client";
+
+export function createDb() {
+	const client = createClient({
+		url: env.DATABASE_URL || "",
+{{#if (eq dbSetup "turso")}}
+		authToken: env.DATABASE_AUTH_TOKEN,
+{{/if}}
+	});
+
+	return drizzle({ client, schema });
+}
+{{/if}}

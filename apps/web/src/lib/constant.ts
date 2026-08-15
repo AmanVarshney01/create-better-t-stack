@@ -2,18 +2,7 @@ import type { TechCategory } from "./types";
 
 export const ICON_BASE_URL = "https://r2.better-t-stack.dev/icons";
 
-export const TECH_OPTIONS: Record<
-  TechCategory,
-  {
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
-    color: string;
-    default?: boolean;
-    className?: string;
-  }[]
-> = {
+export const TECH_OPTIONS = {
   api: [
     {
       id: "trpc",
@@ -58,7 +47,7 @@ export const TECH_OPTIONS: Record<
     {
       id: "tanstack-start",
       name: "TanStack Start",
-      description: "Full-stack React and Solid framework powered by TanStack Router",
+      description: "Full-stack React framework powered by TanStack Router",
       icon: `${ICON_BASE_URL}/tanstack.svg`,
       color: "from-purple-400 to-purple-600",
       default: false,
@@ -90,9 +79,17 @@ export const TECH_OPTIONS: Record<
     {
       id: "solid",
       name: "Solid",
-      description: "Simple and performant reactivity for building UIs",
+      description: "Solid application with file-based routing and SSR",
       icon: `${ICON_BASE_URL}/solid.svg`,
       color: "from-blue-600 to-blue-800",
+      default: false,
+    },
+    {
+      id: "astro",
+      name: "Astro",
+      description: "The web framework for content-driven websites",
+      icon: `${ICON_BASE_URL}/astro.svg`,
+      color: "from-purple-500 to-orange-500",
       default: false,
     },
     {
@@ -222,6 +219,34 @@ export const TECH_OPTIONS: Record<
       description: "Use TanStack Start's built-in API routes",
       icon: `${ICON_BASE_URL}/tanstack.svg`,
       color: "from-purple-400 to-purple-600",
+    },
+    {
+      id: "self-nuxt",
+      name: "Fullstack Nuxt",
+      description: "Use Nuxt's built-in server routes",
+      icon: `${ICON_BASE_URL}/nuxt.svg`,
+      color: "from-green-400 to-green-700",
+    },
+    {
+      id: "self-svelte",
+      name: "Fullstack SvelteKit",
+      description: "Use SvelteKit's built-in server routes",
+      icon: `${ICON_BASE_URL}/svelte.svg`,
+      color: "from-orange-500 to-orange-700",
+    },
+    {
+      id: "self-solid",
+      name: "Fullstack Solid",
+      description: "Use Solid file-based API routes",
+      icon: `${ICON_BASE_URL}/solidjs.svg`,
+      color: "from-blue-400 to-blue-700",
+    },
+    {
+      id: "self-astro",
+      name: "Fullstack Astro",
+      description: "Use Astro's built-in API routes",
+      icon: `${ICON_BASE_URL}/astro.svg`,
+      color: "from-purple-500 to-orange-500",
     },
     {
       id: "none",
@@ -375,6 +400,28 @@ export const TECH_OPTIONS: Record<
       color: "from-orange-400 to-orange-600",
     },
     {
+      id: "prisma",
+      name: "Prisma",
+      description: "Deploy with Prisma using Alchemy",
+      icon: `${ICON_BASE_URL}/prisma.svg`,
+      color: "from-indigo-400 to-indigo-600",
+    },
+    {
+      id: "docker",
+      name: "Docker",
+      description: "Self-host with a Dockerfile and docker-compose.yml",
+      icon: `${ICON_BASE_URL}/docker.svg`,
+      color: "from-blue-400 to-blue-600",
+    },
+    {
+      id: "vercel",
+      name: "Vercel",
+      description: "Deploy to Vercel with Services",
+      icon: `${ICON_BASE_URL}/vercel.svg`,
+      color: "from-gray-700 to-black",
+      experimental: true,
+    },
+    {
       id: "none",
       name: "None",
       description: "Skip deployment setup",
@@ -390,6 +437,28 @@ export const TECH_OPTIONS: Record<
       description: "Deploy to Cloudflare Workers using Alchemy",
       icon: `${ICON_BASE_URL}/workers.svg`,
       color: "from-orange-400 to-orange-600",
+    },
+    {
+      id: "prisma",
+      name: "Prisma",
+      description: "Deploy with Prisma using Alchemy",
+      icon: `${ICON_BASE_URL}/prisma.svg`,
+      color: "from-indigo-400 to-indigo-600",
+    },
+    {
+      id: "docker",
+      name: "Docker",
+      description: "Self-host with a Dockerfile and docker-compose.yml",
+      icon: `${ICON_BASE_URL}/docker.svg`,
+      color: "from-blue-400 to-blue-600",
+    },
+    {
+      id: "vercel",
+      name: "Vercel",
+      description: "Deploy to Vercel with Services",
+      icon: `${ICON_BASE_URL}/vercel.svg`,
+      color: "from-gray-700 to-black",
+      experimental: true,
     },
     {
       id: "none",
@@ -479,9 +548,17 @@ export const TECH_OPTIONS: Record<
     {
       id: "tauri",
       name: "Tauri",
-      description: "Build native desktop apps",
+      description: "Package static web apps as native desktop apps",
       icon: `${ICON_BASE_URL}/tauri.svg`,
       color: "from-amber-500 to-amber-700",
+      default: false,
+    },
+    {
+      id: "electrobun",
+      name: "Electrobun",
+      description: "Bundle static web apps in a lightweight desktop shell",
+      icon: "",
+      color: "from-orange-500 to-orange-700",
       default: false,
     },
     {
@@ -493,11 +570,19 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
-      id: "biome",
-      name: "Biome",
-      description: "Format, lint, and more",
-      icon: `${ICON_BASE_URL}/biome.svg`,
-      color: "from-green-500 to-green-700",
+      id: "fumadocs",
+      name: "Fumadocs",
+      description: "Build excellent documentation site",
+      icon: `${ICON_BASE_URL}/fumadocs.svg`,
+      color: "from-indigo-500 to-indigo-700",
+      default: false,
+    },
+    {
+      id: "lefthook",
+      name: "Lefthook",
+      description: "Fast and powerful Git hooks manager",
+      icon: "",
+      color: "from-red-500 to-red-700",
       default: false,
     },
     {
@@ -509,20 +594,11 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
-      id: "ultracite",
-      name: "Ultracite",
-      description: "Biome preset with AI integration",
-      icon: `${ICON_BASE_URL}/ultracite.svg`,
-      color: "from-blue-500 to-blue-700",
-      className: "invert-0 dark:invert",
-      default: false,
-    },
-    {
-      id: "fumadocs",
-      name: "Fumadocs",
-      description: "Build excellent documentation site",
-      icon: `${ICON_BASE_URL}/fumadocs.svg`,
-      color: "from-indigo-500 to-indigo-700",
+      id: "biome",
+      name: "Biome",
+      description: "Format, lint, and more",
+      icon: `${ICON_BASE_URL}/biome.svg`,
+      color: "from-green-500 to-green-700",
       default: false,
     },
     {
@@ -534,11 +610,37 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
-      id: "ruler",
-      name: "Ruler",
-      description: "Centralize your AI rules",
-      icon: "",
-      color: "from-violet-500 to-violet-700",
+      id: "turborepo",
+      name: "Turborepo",
+      description: "High-performance build system",
+      icon: `${ICON_BASE_URL}/turborepo.svg`,
+      color: "from-gray-400 to-gray-700",
+      default: true,
+    },
+    {
+      id: "nx",
+      name: "Nx",
+      description: "Smart monorepo build system and task runner",
+      icon: `${ICON_BASE_URL}/nx.svg`,
+      color: "from-cyan-500 to-cyan-700",
+      default: false,
+    },
+    {
+      id: "vite-plus",
+      name: "Vite+",
+      description: "Unified Vite toolchain, task runner, linting, formatting, and optional hooks",
+      icon: `${ICON_BASE_URL}/vite-plus.svg`,
+      color: "from-violet-500 to-cyan-600",
+      default: false,
+    },
+    {
+      id: "ultracite",
+      name: "Ultracite",
+      description:
+        "A zero-config preset for ESLint, Biome, and Oxlint that helps AI write better code",
+      icon: `${ICON_BASE_URL}/ultracite.svg`,
+      color: "from-blue-500 to-blue-700",
+      className: "invert-0 dark:invert",
       default: false,
     },
     {
@@ -558,12 +660,28 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
-      id: "turborepo",
-      name: "Turborepo",
-      description: "High-performance build system",
-      icon: `${ICON_BASE_URL}/turborepo.svg`,
-      color: "from-gray-400 to-gray-700",
-      default: true,
+      id: "skills",
+      name: "Skills",
+      description: "Install AI agent skills for coding assistants",
+      icon: "",
+      color: "from-pink-500 to-pink-700",
+      default: false,
+    },
+    {
+      id: "mcp",
+      name: "MCP",
+      description: "Install MCP servers for your agents/editors",
+      icon: "",
+      color: "from-emerald-500 to-emerald-700",
+      default: false,
+    },
+    {
+      id: "evlog",
+      name: "evlog",
+      description: "Structured request logging with Better Auth context",
+      icon: "",
+      color: "from-sky-500 to-slate-700",
+      default: false,
     },
   ],
   examples: [
@@ -618,7 +736,19 @@ export const TECH_OPTIONS: Record<
       color: "from-yellow-400 to-yellow-600",
     },
   ],
-};
+} satisfies Record<
+  TechCategory,
+  {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+    default?: boolean;
+    className?: string;
+    experimental?: boolean;
+  }[]
+>;
 
 export const PRESET_TEMPLATES = [
   {

@@ -1,15 +1,28 @@
-import { isCancel, log, select, spinner, text } from "@clack/prompts";
-import { consola } from "consola";
+import path from "node:path";
+
+import { isCancel, select, text } from "@clack/prompts";
+import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
-import path from "node:path";
 import pc from "picocolors";
 
 import type { PackageManager, ProjectConfig } from "../../types";
-
-import { exitCancelled } from "../../utils/errors";
-import { getPackageExecutionArgs } from "../../utils/package-runner";
-import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
+import { isSilent } from "../../utils/context";
+import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
+import {
+  DatabaseSetupError,
+  databaseSetupError,
+  UserCancelledError,
+  userCancelled,
+} from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
+import { getPackageExecutionArgs, getPackageRunnerPrefix } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
+import {
+  type DatabaseSetupCliOptions,
+  type DbSetupMode,
+  resolveDbSetupMode,
+} from "../core/db-setup-options";
 
 type NeonConfig = {
   connectionString: string;
@@ -23,121 +36,190 @@ type NeonRegion = {
   value: string;
 };
 
+type NeonSetupResult = Result<void, DatabaseSetupError | UserCancelledError>;
+type NeonSetupMethod = "neon-new" | "neon" | "neondb" | "neonctl";
+
 const NEON_REGIONS: NeonRegion[] = [
   { label: "AWS US East (N. Virginia)", value: "aws-us-east-1" },
   { label: "AWS US East (Ohio)", value: "aws-us-east-2" },
   { label: "AWS US West (Oregon)", value: "aws-us-west-2" },
   { label: "AWS Europe (Frankfurt)", value: "aws-eu-central-1" },
   { label: "AWS Asia Pacific (Singapore)", value: "aws-ap-southeast-1" },
-  { label: "AWS South America East 1 (São Paulo)", value: "aws-sa-east-1" },
   { label: "AWS Asia Pacific (Sydney)", value: "aws-ap-southeast-2" },
   { label: "Azure East US 2 region (Virginia)", value: "azure-eastus2" },
 ];
 
 async function executeNeonCommand(
-  packageManager: PackageManager,
-  commandArgsString: string,
+  commandArgs: string[],
   spinnerText?: string,
-) {
-  const s = spinner();
-  try {
-    const args = getPackageExecutionArgs(packageManager, commandArgsString);
+): Promise<Result<{ stdout: string; stderr: string }, DatabaseSetupError>> {
+  const s = createSpinner();
 
-    if (spinnerText) s.start(spinnerText);
-    const result = await $`${args}`;
-    if (spinnerText) s.stop(pc.green(spinnerText.replace("...", "").replace("ing ", "ed ").trim()));
-    return result;
-  } catch (error) {
-    if (s) s.stop(pc.red(`Failed: ${spinnerText || "Command execution"}`));
-    throw error;
-  }
+  if (spinnerText) s.start(spinnerText);
+
+  return Result.tryPromise({
+    try: async () => {
+      const result = await $`${commandArgs}`;
+      if (spinnerText)
+        s.stop(pc.green(spinnerText.replace("...", "").replace("ing ", "ed ").trim()));
+      return result;
+    },
+    catch: (e) => {
+      if (s) s.stop(pc.red(`Failed: ${spinnerText || "Command execution"}`));
+      return new DatabaseSetupError({
+        provider: "neon",
+        message: `Command failed: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      });
+    },
+  });
+}
+
+export function getNeonProjectCreateArgs(
+  packageManager: PackageManager,
+  projectName: string,
+  regionId: string,
+) {
+  return [
+    ...getPackageRunnerPrefix(packageManager),
+    "neon@latest",
+    "projects",
+    "create",
+    "--name",
+    projectName,
+    "--region-id",
+    regionId,
+    "--output",
+    "json",
+  ];
 }
 
 async function createNeonProject(
   projectName: string,
   regionId: string,
   packageManager: PackageManager,
-) {
-  try {
-    const commandArgsString = `neonctl@latest projects create --name ${projectName} --region-id ${regionId} --output json`;
-    const { stdout } = await executeNeonCommand(
-      packageManager,
-      commandArgsString,
-      `Creating Neon project "${projectName}"...`,
-    );
+): Promise<Result<NeonConfig, DatabaseSetupError>> {
+  const execResult = await executeNeonCommand(
+    getNeonProjectCreateArgs(packageManager, projectName, regionId),
+    `Creating Neon project "${projectName}"...`,
+  );
 
-    const response = JSON.parse(stdout);
-
-    if (response.project && response.connection_uris && response.connection_uris.length > 0) {
-      const projectId = response.project.id;
-      const connectionUri = response.connection_uris[0].connection_uri;
-      const params = response.connection_uris[0].connection_parameters;
-
-      return {
-        connectionString: connectionUri,
-        projectId: projectId,
-        dbName: params.database,
-        roleName: params.role,
-      };
-    }
-    consola.error(pc.red("Failed to extract connection information from response"));
-    return null;
-  } catch {
-    consola.error(pc.red("Failed to create Neon project"));
+  if (execResult.isErr()) {
+    return Result.err(execResult.error);
   }
+
+  const parseResult = Result.try({
+    try: () => JSON.parse(execResult.value.stdout),
+    catch: (e) =>
+      new DatabaseSetupError({
+        provider: "neon",
+        message: `Failed to parse Neon response: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
+
+  if (parseResult.isErr()) {
+    return Result.err(parseResult.error);
+  }
+
+  const response = parseResult.value;
+
+  if (response.project && response.connection_uris && response.connection_uris.length > 0) {
+    const projectId = response.project.id;
+    const connectionUri = response.connection_uris[0].connection_uri;
+    const params = response.connection_uris[0].connection_parameters;
+
+    return Result.ok({
+      connectionString: connectionUri,
+      projectId: projectId,
+      dbName: params.database,
+      roleName: params.role,
+    });
+  }
+
+  return databaseSetupError("neon", "Failed to extract connection information from Neon response");
 }
 
 async function writeEnvFile(
   projectDir: string,
   backend: ProjectConfig["backend"],
   config?: NeonConfig,
-) {
-  const targetApp = backend === "self" ? "apps/web" : "apps/server";
-  const envPath = path.join(projectDir, targetApp, ".env");
-  const variables: EnvVariable[] = [
-    {
-      key: "DATABASE_URL",
-      value:
-        config?.connectionString ??
-        "postgresql://postgres:postgres@localhost:5432/mydb?schema=public",
-      condition: true,
+): Promise<Result<void, DatabaseSetupError>> {
+  return Result.tryPromise({
+    try: async () => {
+      const targetApp = backend === "self" ? "apps/web" : "apps/server";
+      const envPath = path.join(projectDir, targetApp, ".env");
+      const variables: EnvVariable[] = [
+        {
+          key: "DATABASE_URL",
+          value:
+            config?.connectionString ??
+            "postgresql://postgres:postgres@localhost:5432/mydb?schema=public",
+          condition: true,
+        },
+      ];
+      await addEnvVariablesToFile(envPath, variables);
     },
-  ];
-  await addEnvVariablesToFile(envPath, variables);
-
-  return true;
+    catch: (e) =>
+      new DatabaseSetupError({
+        provider: "neon",
+        message: `Failed to update .env file: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
 }
 
 async function setupWithNeonDb(
   projectDir: string,
   packageManager: PackageManager,
   backend: ProjectConfig["backend"],
-) {
-  try {
-    const s = spinner();
-    s.start("Creating Neon database using get-db...");
+): Promise<Result<void, DatabaseSetupError>> {
+  const s = createSpinner();
+  s.start("Creating Neon database using neon-new...");
 
-    const targetApp = backend === "self" ? "apps/web" : "apps/server";
-    const targetDir = path.join(projectDir, targetApp);
-    await fs.ensureDir(targetDir);
+  const targetApp = backend === "self" ? "apps/web" : "apps/server";
+  const targetDir = path.join(projectDir, targetApp);
 
-    const packageArgs = getPackageExecutionArgs(packageManager, "get-db@latest --yes");
+  const ensureDirResult = await Result.tryPromise({
+    try: () => fs.ensureDir(targetDir),
+    catch: (e) =>
+      new DatabaseSetupError({
+        provider: "neon",
+        message: `Failed to create directory: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
 
-    await $({ cwd: targetDir })`${packageArgs}`;
-
-    s.stop(pc.green("Neon database created successfully!"));
-
-    return true;
-  } catch (error) {
-    consola.error(pc.red("Failed to create database with get-db"));
-    throw error;
+  if (ensureDirResult.isErr()) {
+    s.stop(pc.red("Failed to create directory"));
+    return ensureDirResult;
   }
+
+  const packageArgs = getPackageExecutionArgs(
+    packageManager,
+    `neon-new@latest --yes --ref "sbA3tIe"`,
+  );
+
+  return Result.tryPromise({
+    try: async () => {
+      await $({ cwd: targetDir })`${packageArgs}`;
+      s.stop(pc.green("Neon database created successfully!"));
+    },
+    catch: (e) => {
+      s.stop(pc.red("Failed to create database with neon-new"));
+      return new DatabaseSetupError({
+        provider: "neon",
+        message: `Failed to create database with neon-new: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      });
+    },
+  });
 }
 
 function displayManualSetupInstructions(target: "apps/web" | "apps/server") {
-  log.info(`Manual Neon PostgreSQL Setup Instructions:
+  cliLog.info(`Manual Neon PostgreSQL Setup Instructions:
 
-1. Visit https://neon.tech and create an account
+1. Get Neon with Better T Stack referral: https://get.neon.com/sbA3tIe
 2. Create a new project from the dashboard
 3. Get your connection string
 4. Add the database URL to the .env file in ${target}/.env
@@ -145,98 +227,189 @@ function displayManualSetupInstructions(target: "apps/web" | "apps/server") {
 DATABASE_URL="your_connection_string"`);
 }
 
-export async function setupNeonPostgres(config: ProjectConfig, cliInput?: { manualDb?: boolean }) {
+export async function setupNeonPostgres(
+  config: ProjectConfig,
+  cliInput?: DatabaseSetupCliOptions,
+): Promise<NeonSetupResult> {
   const { packageManager, projectDir, backend } = config;
-  const manualDb = cliInput?.manualDb ?? false;
+  const setupMode = resolveDbSetupMode("neon", {
+    manualDb: cliInput?.manualDb,
+    dbSetupOptions: cliInput?.dbSetupOptions ?? config.dbSetupOptions,
+  });
+  const target: "apps/web" | "apps/server" = backend === "self" ? "apps/web" : "apps/server";
 
-  try {
-    if (manualDb) {
-      await writeEnvFile(projectDir, backend);
-      displayManualSetupInstructions(backend === "self" ? "apps/web" : "apps/server");
-      return;
+  if (shouldSkipExternalCommands()) {
+    const envResult = await writeEnvFile(projectDir, backend);
+    if (envResult.isErr()) {
+      return envResult;
     }
+    displayManualSetupInstructions(target);
+    return Result.ok(undefined);
+  }
 
-    const mode = await select({
-      message: "Neon setup: choose mode",
-      options: [
-        {
-          label: "Automatic",
-          value: "auto",
-          hint: "Automated setup with provider CLI, sets .env",
-        },
-        {
-          label: "Manual",
-          value: "manual",
-          hint: "Manual setup, add env vars yourself",
-        },
-      ],
-      initialValue: "auto",
-    });
-
-    if (isCancel(mode)) return exitCancelled("Operation cancelled");
-
-    if (mode === "manual") {
-      await writeEnvFile(projectDir, backend);
-      displayManualSetupInstructions(backend === "self" ? "apps/web" : "apps/server");
-      return;
+  if (setupMode === "manual") {
+    const envResult = await writeEnvFile(projectDir, backend);
+    if (envResult.isErr()) {
+      return envResult;
     }
+    displayManualSetupInstructions(target);
+    return Result.ok(undefined);
+  }
 
-    const setupMethod = await select({
-      message: "Choose your Neon setup method:",
-      options: [
-        {
-          label: "Quick setup with get-db",
-          value: "neondb",
-          hint: "fastest, no auth required",
-        },
-        {
-          label: "Custom setup with neonctl",
-          value: "neonctl",
-          hint: "More control - choose project name and region",
-        },
-      ],
-      initialValue: "neondb",
-    });
+  let selectedMode: DbSetupMode | undefined = setupMode;
 
-    if (isCancel(setupMethod)) return exitCancelled("Operation cancelled");
-
-    if (setupMethod === "neondb") {
-      await setupWithNeonDb(projectDir, packageManager, backend);
+  if (!selectedMode) {
+    if (isSilent()) {
+      selectedMode = "manual";
     } else {
-      const suggestedProjectName = path.basename(projectDir);
-      const projectName = await text({
+      const promptedMode = await select<DbSetupMode>({
+        message: "Neon setup: choose mode",
+        options: [
+          {
+            label: "Automatic",
+            value: "auto",
+            hint: "Automated setup with provider CLI, sets .env",
+          },
+          {
+            label: "Manual",
+            value: "manual",
+            hint: "Manual setup, add env vars yourself",
+          },
+        ],
+        initialValue: "auto",
+      });
+
+      if (isCancel(promptedMode)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      selectedMode = promptedMode;
+    }
+  }
+
+  if (selectedMode === "manual") {
+    const envResult = await writeEnvFile(projectDir, backend);
+    if (envResult.isErr()) {
+      return envResult;
+    }
+    displayManualSetupInstructions(target);
+    return Result.ok(undefined);
+  }
+
+  let setupMethod: NeonSetupMethod | undefined =
+    cliInput?.dbSetupOptions?.neon?.method ?? config.dbSetupOptions?.neon?.method;
+
+  if (!setupMethod) {
+    if (isSilent()) {
+      setupMethod = "neon-new";
+    } else {
+      const promptedSetupMethod = await select<"neon-new" | "neon">({
+        message: "Choose your Neon setup method:",
+        options: [
+          {
+            label: "Quick setup with neon-new",
+            value: "neon-new",
+            hint: "fastest, no auth required",
+          },
+          {
+            label: "Custom setup with Neon CLI",
+            value: "neon",
+            hint: "More control - choose project name and region",
+          },
+        ],
+        initialValue: "neon-new",
+      });
+
+      if (isCancel(promptedSetupMethod)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      setupMethod = promptedSetupMethod;
+    }
+  }
+
+  if (setupMethod === "neon-new" || setupMethod === "neondb") {
+    const neonDbResult = await setupWithNeonDb(projectDir, packageManager, backend);
+    if (neonDbResult.isErr()) {
+      cliLog.error(pc.red(neonDbResult.error.message));
+      const envResult = await writeEnvFile(projectDir, backend);
+      if (envResult.isErr()) {
+        return envResult;
+      }
+      displayManualSetupInstructions(target);
+      return Result.ok(undefined);
+    }
+
+    cliLog.info(
+      `Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`,
+    );
+    return Result.ok(undefined);
+  }
+
+  const suggestedProjectName = path.basename(projectDir);
+  let projectName =
+    cliInput?.dbSetupOptions?.neon?.projectName ?? config.dbSetupOptions?.neon?.projectName;
+
+  if (!projectName) {
+    if (isSilent()) {
+      projectName = suggestedProjectName;
+    } else {
+      const promptedProjectName = await text({
         message: "Enter a name for your Neon project:",
         defaultValue: suggestedProjectName,
         initialValue: suggestedProjectName,
       });
 
-      const regionId = await select({
+      if (isCancel(promptedProjectName)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      projectName = promptedProjectName as string;
+    }
+  }
+
+  let regionId = cliInput?.dbSetupOptions?.neon?.regionId ?? config.dbSetupOptions?.neon?.regionId;
+
+  if (!regionId) {
+    if (isSilent()) {
+      regionId = NEON_REGIONS[0]!.value;
+    } else {
+      const promptedRegionId = await select({
         message: "Select a region for your Neon project:",
         options: NEON_REGIONS,
         initialValue: NEON_REGIONS[0].value,
       });
 
-      if (isCancel(projectName) || isCancel(regionId)) return exitCancelled("Operation cancelled");
-
-      const neonConfig = await createNeonProject(projectName as string, regionId, packageManager);
-
-      if (!neonConfig) {
-        throw new Error("Failed to create project - couldn't get connection information");
+      if (isCancel(promptedRegionId)) {
+        return userCancelled("Operation cancelled");
       }
 
-      const finalSpinner = spinner();
-      finalSpinner.start("Configuring database connection");
-
-      await writeEnvFile(projectDir, backend, neonConfig);
-
-      finalSpinner.stop("Neon database configured!");
+      regionId = promptedRegionId;
     }
-  } catch (error) {
-    if (error instanceof Error) {
-      consola.error(pc.red(error.message));
-    }
-
-    await writeEnvFile(projectDir, backend);
-    displayManualSetupInstructions(backend === "self" ? "apps/web" : "apps/server");
   }
+
+  const neonConfigResult = await createNeonProject(projectName, regionId, packageManager);
+
+  if (neonConfigResult.isErr()) {
+    cliLog.error(pc.red(neonConfigResult.error.message));
+    const envResult = await writeEnvFile(projectDir, backend);
+    if (envResult.isErr()) {
+      return envResult;
+    }
+    displayManualSetupInstructions(target);
+    return Result.ok(undefined);
+  }
+
+  const finalSpinner = createSpinner();
+  finalSpinner.start("Configuring database connection");
+
+  const envResult = await writeEnvFile(projectDir, backend, neonConfigResult.value);
+  if (envResult.isErr()) {
+    finalSpinner.stop(pc.red("Failed to configure database connection"));
+    return envResult;
+  }
+
+  finalSpinner.stop("Neon database configured!");
+  cliLog.info(`Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`);
+  return Result.ok(undefined);
 }

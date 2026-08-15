@@ -1,0 +1,15 @@
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { createRouterClient } from "@orpc/server";
+import { getRequestEvent } from "@solidjs/web";
+
+if (!import.meta.env.SSR) {
+  throw new Error("This file must only be imported on the server.");
+}
+
+globalThis.$client = createRouterClient(appRouter, {
+	context: async () => {
+		const headers = getRequestEvent()?.request.headers ?? new Headers();
+		return createContext({ headers });
+	},
+});

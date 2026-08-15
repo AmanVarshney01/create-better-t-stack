@@ -1,16 +1,16 @@
 import { DEFAULT_CONFIG } from "../constants";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableConfirm } from "./navigable";
 
-export async function getGitChoice(git?: boolean) {
+export async function getGitChoice(git?: boolean, previousValue?: boolean) {
   if (git !== undefined) return git;
 
   const response = await navigableConfirm({
-    message: "Initialize git repository?",
-    initialValue: DEFAULT_CONFIG.git,
+    message: "Initialize a Git repository?",
+    initialValue: previousValue ?? DEFAULT_CONFIG.git,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

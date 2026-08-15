@@ -1,0 +1,15 @@
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import type { APIHandler } from "filesystem-routing/api";
+
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+const handle: APIHandler = ({ request }) => createAuth().handler(request);
+{{else}}
+const handle: APIHandler = ({ request }) => auth.handler(request);
+{{/if}}
+
+export const GET = handle;
+export const POST = handle;

@@ -1,0 +1,38 @@
+import { Title } from "@solidjs/meta";
+import { Loading } from "solid-js";
+import Header from "~/components/header";
+import Loader from "~/components/loader";
+import { Router } from "~/router";
+{{#if (eq api "orpc")}}
+import { QueryClientProvider } from "@tanstack/solid-query";
+import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";
+import { createQueryClient } from "~/utils/orpc";
+{{/if}}
+import "./styles.css";
+
+export default function App() {
+{{#if (eq api "orpc")}}
+  const queryClient = createQueryClient();
+{{/if}}
+
+  return (
+{{#if (eq api "orpc")}}
+    <QueryClientProvider client={queryClient}>
+{{/if}}
+      <Router>
+        {(props) => (
+          <>
+            <Title>{{projectName}}</Title>
+            <div class="grid h-svh grid-rows-[auto_1fr]">
+              <Header />
+              <Loading fallback={<Loader />}>{props.children}</Loading>
+            </div>
+          </>
+        )}
+      </Router>
+{{#if (eq api "orpc")}}
+      <SolidQueryDevtools />
+    </QueryClientProvider>
+{{/if}}
+  );
+}

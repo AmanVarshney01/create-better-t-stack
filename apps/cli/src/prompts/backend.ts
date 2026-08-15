@@ -1,24 +1,26 @@
-import type { Backend, Frontend } from "../types";
-
 import { DEFAULT_CONFIG } from "../constants";
-import { exitCancelled } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import type { Backend, Frontend } from "../types";
+import { UserCancelledError } from "../utils/errors";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
-// Temporarily restrict to Next.js and TanStack Start only for backend="self"
+// Frontends that support backend="self" (fullstack mode with built-in server routes)
 const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "next",
   "tanstack-start",
-  // "nuxt",      // TODO: Add support in future update
-  // "svelte",    // TODO: Add support in future update
+  "nuxt",
+  "svelte",
+  "solid",
+  "astro",
 ] as const;
 
 export async function getBackendFrameworkChoice(
   backendFramework?: Backend,
   frontends?: Frontend[],
+  previousValue?: Backend,
 ) {
   if (backendFramework !== undefined) return backendFramework;
 
-  const hasIncompatibleFrontend = frontends?.some((f) => f === "solid");
+  const hasIncompatibleFrontend = frontends?.some((f) => f === "solid" || f === "astro");
   const hasFullstackFrontend = frontends?.some((f) => FULLSTACK_FRONTENDS.includes(f));
 
   const backendOptions: Array<{
@@ -73,12 +75,16 @@ export async function getBackendFrameworkChoice(
   });
 
   const response = await navigableSelect<Backend>({
-    message: "Select backend",
+    message: "Choose a backend",
     options: backendOptions,
-    initialValue: hasFullstackFrontend ? "self" : DEFAULT_CONFIG.backend,
+    initialValue: preferValidInitial(
+      backendOptions,
+      previousValue,
+      hasFullstackFrontend ? "self" : DEFAULT_CONFIG.backend,
+    ),
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

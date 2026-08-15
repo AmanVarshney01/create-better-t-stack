@@ -1,0 +1,103 @@
+import {
+  Children,
+  cloneElement,
+  Fragment,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from "react";
+
+import { getChartChildComponentName } from "./chart-defs";
+
+/** Marker on wrapper components whose single child should inherit clip classification. */
+export const CHART_CLIP_PASSTHROUGH = "__chartClipPassthrough" as const;
+
+export function isChartClipPassthrough(type: ReactElement["type"]): boolean {
+  return (
+    type instanceof Function &&
+    Object.hasOwn(type, CHART_CLIP_PASSTHROUGH) &&
+    Reflect.get(type, CHART_CLIP_PASSTHROUGH) === true
+  );
+}
+
+/** Unwrap visibility wrappers so `Grid` / axes stay outside the series clip. */
+export function resolveChartChildElement(child: ReactElement): ReactElement {
+  if (isChartClipPassthrough(child.type)) {
+    const inner = (child.props as { children?: unknown }).children;
+    if (isValidElement(inner)) {
+      return resolveChartChildElement(inner);
+    }
+  }
+  return child;
+}
+
+/** Walk chart children, flattening React fragments (studio often groups layers in `<>...</>`). */
+export function forEachChartChild(
+  children: ReactNode,
+  callback: (child: ReactElement, index: number) => void,
+) {
+  let index = 0;
+  const visit = (nodes: ReactNode) => {
+    Children.forEach(nodes, (child) => {
+      if (!isValidElement(child)) {
+        return;
+      }
+      if (child.type === Fragment) {
+        visit((child.props as { children?: ReactNode }).children);
+        return;
+      }
+      callback(child, index);
+      index += 1;
+    });
+  };
+  visit(children);
+}
+
+const CLIP_EXCLUDED_COMPONENT_NAMES = new Set([
+  "Background",
+  "Grid",
+  "XAxis",
+  "YAxis",
+  "BarXAxis",
+  "BarYAxis",
+  "LiveXAxis",
+  "LiveYAxis",
+]);
+
+const UNDERLAY_COMPONENT_NAMES = new Set(["ReferenceArea"]);
+
+/** Markers render after the interaction overlay so they stay clickable. */
+export function isPostOverlayComponent(child: ReactElement): boolean {
+  if (
+    child.type instanceof Function &&
+    (Reflect.get(child.type, "__isChartMarkers") === true ||
+      Reflect.get(child.type, "__isPostOverlay") === true)
+  ) {
+    return true;
+  }
+
+  const componentName = getChartChildComponentName(child);
+
+  return (
+    componentName === "ChartMarkers" ||
+    componentName === "MarkerGroup" ||
+    componentName === "ChartBrush"
+  );
+}
+
+/** Renders above grid/axes but below series; excluded from grow-clip reveal. */
+export function isUnderlayComponent(child: ReactElement): boolean {
+  return UNDERLAY_COMPONENT_NAMES.has(getChartChildComponentName(child));
+}
+
+/** Grid and axes stay visible during series clip reveal (e.g. loading → ready). */
+export function isClipExcludedComponent(child: ReactElement): boolean {
+  return CLIP_EXCLUDED_COMPONENT_NAMES.has(getChartChildComponentName(child));
+}
+
+/** SVG layer lists from chart shells need stable keys when rendered as arrays. */
+export function renderKeyedChartLayers(children: ReactElement[]) {
+  return children.map((child, index) =>
+    cloneElement(child, { key: child.key ?? `chart-layer-${index}` }),
+  );
+}

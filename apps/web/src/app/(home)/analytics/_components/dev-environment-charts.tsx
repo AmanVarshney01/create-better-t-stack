@@ -1,279 +1,218 @@
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Tooltip, XAxis, YAxis } from "recharts";
+"use client";
 
-import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
+import { cn } from "@/lib/utils";
 
-import type { AggregatedAnalyticsData, Distribution, VersionDistribution } from "./types";
+import { formatCount, formatPercent } from "./analytics-helpers";
+import { CategoryBarChart } from "./bklit-charts";
+import { ChartCard } from "./chart-card";
+import { PreferenceChartCard } from "./preference-chart-card";
+import { SectionHeader } from "./section-header";
+import type { AggregatedAnalyticsData, ShareDistributionItem } from "./types";
 
-import { CHART_COLORS, chartConfig, getColor, truncateLabel } from "./types";
-
-function CustomYAxisTick({
-  x,
-  y,
-  payload,
-  maxChars = 10,
-}: {
-  x: number;
-  y: number;
-  payload: { value: string };
-  maxChars?: number;
-}) {
-  const label = truncateLabel(String(payload.value), maxChars);
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <text x={-4} y={0} dy={4} textAnchor="end" fill="hsl(var(--muted-foreground))" fontSize={11}>
-        {label}
-      </text>
-    </g>
-  );
-}
-
-function CustomXAxisTick({
-  x,
-  y,
-  payload,
-  maxChars = 7,
-}: {
-  x: number;
-  y: number;
-  payload: { value: string };
-  maxChars?: number;
-}) {
-  const label = truncateLabel(String(payload.value), maxChars);
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <text
-        x={0}
-        y={0}
-        dy={12}
-        textAnchor="middle"
-        fill="hsl(var(--muted-foreground))"
-        fontSize={10}
-      >
-        {label}
-      </text>
-    </g>
-  );
-}
-
-function ChartCard({
+function SplitMeterCard({
   title,
   description,
-  children,
+  data,
 }: {
   title: string;
   description: string;
-  children: React.ReactNode;
+  data: ShareDistributionItem[];
 }) {
+  const yesShare = data.find((item) => item.name === "Yes")?.share ?? 0;
+  const noShare = data.find((item) => item.name === "No")?.share ?? 0;
+  const yesCount = data.find((item) => item.name === "Yes")?.value ?? 0;
+  const noCount = data.find((item) => item.name === "No")?.value ?? 0;
+  const chartData = data.map((item) => ({
+    label: item.name,
+    value: item.value,
+  }));
+
   return (
-    <div className="rounded border border-border">
-      <div className="border-border border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="text-primary text-xs">$</span>
-          <span className="font-semibold text-sm">{title}</span>
+    <ChartCard title={title} description={description}>
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,0.9fr)_minmax(180px,0.7fr)] sm:items-center">
+        <div className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+          <div className="min-w-0 border-t pt-3">
+            <div className="text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
+              Yes
+            </div>
+            <div className="mt-2 font-medium text-[20px] tabular-nums tracking-[-0.02em]">
+              {formatCount(yesCount)}
+            </div>
+            <div className="mt-1 text-[11px] text-fd-muted-foreground tabular-nums">
+              {formatPercent(yesShare)}
+            </div>
+          </div>
+          <div className="min-w-0 border-t pt-3">
+            <div className="text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
+              No
+            </div>
+            <div className="mt-2 font-medium text-[20px] tabular-nums tracking-[-0.02em]">
+              {formatCount(noCount)}
+            </div>
+            <div className="mt-1 text-[11px] text-fd-muted-foreground tabular-nums">
+              {formatPercent(noShare)}
+            </div>
+          </div>
         </div>
-        <p className="mt-1 text-muted-foreground text-xs">{description}</p>
+        <CategoryBarChart
+          data={chartData}
+          xKey="label"
+          orientation="horizontal"
+          height={210}
+          labelWidth={52}
+          series={[{ key: "value", label: "Tracked setups", color: "var(--chart-2)" }]}
+        />
       </div>
-      <div className="p-4">{children}</div>
-    </div>
-  );
-}
-
-function CustomTooltip({
-  active,
-  payload,
-}: {
-  active?: boolean;
-  payload?: Array<{ value: number; payload: { name: string } }>;
-}) {
-  if (!active || !payload?.length) return null;
-  const item = payload[0];
-  return (
-    <div className="rounded border border-border/50 bg-background px-3 py-2 text-xs shadow-lg">
-      <p className="font-medium">{item.payload.name}</p>
-      <p className="text-muted-foreground">{item.value.toLocaleString()} projects</p>
-    </div>
-  );
-}
-
-function HorizontalBarChart({ data, height = 280 }: { data: Distribution; height?: number }) {
-  return (
-    <ChartContainer config={chartConfig} className="w-full" style={{ height }}>
-      <BarChart data={data} layout="vertical" margin={{ left: 4, right: 12, top: 4, bottom: 4 }}>
-        <CartesianGrid horizontal={false} className="stroke-border/40" />
-        <XAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
-        <YAxis
-          dataKey="name"
-          type="category"
-          tickLine={false}
-          axisLine={false}
-          width={75}
-          tick={(props) => <CustomYAxisTick {...props} maxChars={10} />}
-        />
-        <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }} />
-        <Bar dataKey="value" radius={3}>
-          {data.map((entry, i) => (
-            <Cell key={entry.name} fill={getColor(i)} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ChartContainer>
-  );
-}
-
-function VersionBarChart({ data, height = 280 }: { data: VersionDistribution; height?: number }) {
-  return (
-    <ChartContainer config={chartConfig} className="w-full" style={{ height }}>
-      <BarChart data={data} margin={{ left: -10, right: 8, top: 8, bottom: 4 }}>
-        <CartesianGrid vertical={false} className="stroke-border/40" />
-        <XAxis
-          dataKey="version"
-          tickLine={false}
-          axisLine={false}
-          tick={(props) => <CustomXAxisTick {...props} maxChars={7} />}
-          interval={0}
-        />
-        <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} width={35} />
-        <Tooltip
-          content={({ active, payload }) => {
-            if (!active || !payload?.length) return null;
-            const item = payload[0].payload as { version: string; count: number };
-            return (
-              <div className="rounded border border-border/50 bg-background px-3 py-2 text-xs shadow-lg">
-                <p className="font-medium">{item.version}</p>
-                <p className="text-muted-foreground">{item.count.toLocaleString()} projects</p>
-              </div>
-            );
-          }}
-          cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
-        />
-        <Bar dataKey="count" radius={3}>
-          {data.map((_, i) => (
-            <Cell key={i} fill={CHART_COLORS[4]} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ChartContainer>
-  );
-}
-
-function PieChartComponent({ data }: { data: Distribution }) {
-  const total = data.reduce((sum, d) => sum + d.value, 0);
-
-  return (
-    <ChartContainer config={chartConfig} className="h-[280px] w-full">
-      <PieChart>
-        <Tooltip
-          content={({ active, payload }) => {
-            if (!active || !payload?.length) return null;
-            const item = payload[0].payload as { name: string; value: number };
-            const percent = ((item.value / total) * 100).toFixed(1);
-            return (
-              <div className="rounded border border-border/50 bg-background px-3 py-2 text-xs shadow-lg">
-                <p className="font-medium">{item.name}</p>
-                <p className="text-muted-foreground">
-                  {item.value.toLocaleString()} ({percent}%)
-                </p>
-              </div>
-            );
-          }}
-        />
-        <Pie
-          data={data}
-          cx="50%"
-          cy="45%"
-          outerRadius={65}
-          innerRadius={35}
-          dataKey="value"
-          paddingAngle={2}
-        >
-          {data.map((entry, i) => (
-            <Cell key={entry.name} fill={getColor(i)} />
-          ))}
-        </Pie>
-        <ChartLegend
-          content={<ChartLegendContent nameKey="name" />}
-          formatter={(value) => truncateLabel(String(value), 8)}
-          wrapperStyle={{ fontSize: 11 }}
-        />
-      </PieChart>
-    </ChartContainer>
+    </ChartCard>
   );
 }
 
 export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
-  const {
-    packageManagerDistribution,
-    gitDistribution,
-    installDistribution,
-    addonsDistribution,
-    examplesDistribution,
-    nodeVersionDistribution,
-    cliVersionDistribution,
-    webDeployDistribution,
-    serverDeployDistribution,
-  } = data;
+  const webDeployOptions = data.webDeployDistribution;
+  const serverDeployOptions = data.serverDeployDistribution;
+  const hasDeploymentOptions = webDeployOptions.length > 0 || serverDeployOptions.length > 0;
+  const nodeVersionPreferences = data.nodeVersionDistribution.map((item) => ({
+    name: item.version,
+    value: item.count,
+    share: item.share,
+  }));
+  const cliVersionPreferences = data.cliVersionDistribution.map((item) => ({
+    name: item.version,
+    value: item.count,
+    share: item.share,
+  }));
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <span className="font-bold text-lg">DEV_TOOLS_AND_CONFIG</span>
-        <div className="h-px flex-1 bg-border" />
-        <span className="text-muted-foreground text-xs">[TOOLING]</span>
+      <SectionHeader
+        label="Environment"
+        title="Package manager, setup, deployment, and addon choices"
+        description="The environment choices that shape generated projects after the stack options are selected."
+        aside={
+          <span className="shrink-0 text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em]">
+            packages {data.summary.mostPopularPackageManager} • runtime{" "}
+            {data.summary.mostPopularRuntime}
+          </span>
+        }
+      />
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+        <PreferenceChartCard
+          title="Database setup"
+          description="How often each database setup option was selected."
+          data={data.dbSetupDistribution}
+          colorKey="chart4"
+        />
+        <PreferenceChartCard
+          title="Package manager"
+          description="How often each package manager was selected."
+          data={data.packageManagerDistribution}
+          colorKey="chart1"
+        />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <ChartCard title="package_managers.bar" description="npm vs pnpm vs bun usage">
-          <HorizontalBarChart data={packageManagerDistribution} />
-        </ChartCard>
-
-        <ChartCard title="git_init.pie" description="Git repository initialization">
-          <PieChartComponent data={gitDistribution} />
-        </ChartCard>
-
-        <ChartCard title="auto_install.pie" description="Automatic dependency installation">
-          <PieChartComponent data={installDistribution} />
-        </ChartCard>
-
-        <ChartCard title="node_versions.bar" description="Node.js version distribution">
-          <VersionBarChart data={nodeVersionDistribution} />
-        </ChartCard>
-      </div>
-
-      {addonsDistribution.length > 0 && (
-        <ChartCard title="addons.bar" description="Additional tooling and features">
-          <HorizontalBarChart
-            data={addonsDistribution}
-            height={Math.max(200, addonsDistribution.length * 40)}
+      <div
+        className={cn(
+          "grid gap-4",
+          data.paymentsDistribution.length > 0 ? "xl:grid-cols-2" : "grid-cols-1",
+        )}
+      >
+        <PreferenceChartCard
+          title="Platform"
+          description="How many tracked CLI runs came from each platform."
+          data={data.platformDistribution}
+          colorKey="chart2"
+        />
+        {data.paymentsDistribution.length > 0 ? (
+          <PreferenceChartCard
+            title="Payments"
+            description="How often each payments option was selected, including none."
+            data={data.paymentsDistribution}
+            colorKey="chart3"
           />
-        </ChartCard>
-      )}
+        ) : null}
+      </div>
 
-      {examplesDistribution.length > 0 && (
-        <ChartCard title="examples.bar" description="Example templates included">
-          <HorizontalBarChart data={examplesDistribution} />
-        </ChartCard>
-      )}
+      {hasDeploymentOptions ? (
+        <div className="grid gap-4 xl:grid-cols-2">
+          {webDeployOptions.length > 0 ? (
+            <PreferenceChartCard
+              title="Web deployment"
+              description="How often each web deployment option was selected, including none."
+              data={webDeployOptions}
+              colorKey="chart3"
+            />
+          ) : null}
 
-      {(webDeployDistribution.length > 0 || serverDeployDistribution.length > 0) && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {webDeployDistribution.length > 0 && (
-            <ChartCard title="web_deploy.bar" description="Web deployment platform">
-              <HorizontalBarChart data={webDeployDistribution} />
-            </ChartCard>
-          )}
-          {serverDeployDistribution.length > 0 && (
-            <ChartCard title="server_deploy.bar" description="Server deployment platform">
-              <HorizontalBarChart data={serverDeployDistribution} />
-            </ChartCard>
-          )}
+          {serverDeployOptions.length > 0 ? (
+            <PreferenceChartCard
+              title="Server deployment"
+              description="How often each server deployment option was selected, including none."
+              data={serverDeployOptions}
+              colorKey="chart2"
+            />
+          ) : null}
         </div>
-      )}
+      ) : null}
 
-      {cliVersionDistribution.length > 0 && (
-        <ChartCard title="cli_versions.bar" description="CLI version distribution (top 10)">
-          <VersionBarChart data={cliVersionDistribution} height={320} />
-        </ChartCard>
-      )}
+      <div className="grid gap-4 xl:grid-cols-2">
+        <SplitMeterCard
+          title="Git initialization"
+          description="Share of tracked setups where Git was initialized during project creation."
+          data={data.gitDistribution}
+        />
+        <SplitMeterCard
+          title="Install dependencies"
+          description="Share of tracked setups where dependencies were installed during project creation."
+          data={data.installDistribution}
+        />
+      </div>
+
+      <div
+        className={cn(
+          "grid gap-4",
+          data.examplesDistribution.length > 0 ? "xl:grid-cols-2" : "grid-cols-1",
+        )}
+      >
+        <PreferenceChartCard
+          title="Node versions"
+          description="How many tracked CLI runs reported each Node major version."
+          data={nodeVersionPreferences}
+          colorKey="chart5"
+          layout="vertical"
+        />
+
+        {data.examplesDistribution.length > 0 ? (
+          <PreferenceChartCard
+            title="Examples"
+            description="Selected examples and projects created without an example."
+            data={data.examplesDistribution}
+            colorKey="chart4"
+            layout="vertical"
+          />
+        ) : null}
+      </div>
+
+      {data.addonsDistribution.length > 0 ? (
+        <PreferenceChartCard
+          title="Addons"
+          description="Selected addons and projects created without addons."
+          data={data.addonsDistribution}
+          colorKey="chart1"
+          columnCount={2}
+        />
+      ) : null}
+
+      {cliVersionPreferences.length > 0 ? (
+        <PreferenceChartCard
+          title="CLI versions"
+          description="How many tracked setups were created with each CLI version."
+          data={cliVersionPreferences}
+          colorKey="chart4"
+          columnCount={4}
+          columnGridClassName="grid-cols-1 sm:grid-cols-2 xl:grid-cols-4"
+        />
+      ) : null}
     </div>
   );
 }

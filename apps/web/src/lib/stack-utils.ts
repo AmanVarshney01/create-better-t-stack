@@ -21,6 +21,64 @@ const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "install",
 ];
 
+const desktopAddonNames = {
+  tauri: "Tauri",
+  electrobun: "Electrobun",
+} as const;
+
+const staticDesktopFrontendNames = {
+  "tanstack-start": "TanStack Start",
+  next: "Next.js",
+  nuxt: "Nuxt",
+  svelte: "SvelteKit",
+  astro: "Astro",
+} as const;
+
+const selfHostedFullstackBackends = [
+  "self-next",
+  "self-tanstack-start",
+  "self-nuxt",
+  "self-svelte",
+  "self-solid",
+  "self-astro",
+] as const;
+
+export function formatProjectName(name: string | null | undefined) {
+  return (name || "my-better-t-app").replace(/\s+/g, "-");
+}
+
+export type SelectedTech = {
+  category: keyof typeof TECH_OPTIONS;
+  id: string;
+  name: string;
+  icon: string;
+};
+
+export function getSelectedTechs(stack: StackState): SelectedTech[] {
+  const selected: SelectedTech[] = [];
+  for (const category of CATEGORY_ORDER) {
+    const options = TECH_OPTIONS[category];
+    const value = stack[category as keyof StackState];
+    if (!options || value === undefined) continue;
+
+    const ids = Array.isArray(value) ? value : [value];
+    for (const id of ids) {
+      if (
+        id === "none" ||
+        id === "false" ||
+        (["git", "install", "auth"].includes(category) && id === "true")
+      ) {
+        continue;
+      }
+      const tech = options.find((opt) => opt.id === id);
+      if (tech) {
+        selected.push({ category, id: tech.id, name: tech.name, icon: tech.icon });
+      }
+    }
+  }
+  return selected;
+}
+
 export function generateStackSummary(stack: StackState) {
   const selectedTechs = CATEGORY_ORDER.flatMap((category) => {
     const options = TECH_OPTIONS[category];
@@ -47,6 +105,40 @@ export function generateStackSummary(stack: StackState) {
   return selectedTechs.length > 0 ? selectedTechs.join(" • ") : "Custom stack";
 }
 
+export function getDesktopBuildNote(stack: Pick<StackState, "addons" | "backend" | "webFrontend">) {
+  const selectedDesktopAddons = stack.addons.filter(
+    (addon): addon is keyof typeof desktopAddonNames => addon in desktopAddonNames,
+  );
+
+  if (selectedDesktopAddons.length === 0) {
+    return null;
+  }
+
+  const staticFrontend = stack.webFrontend.find(
+    (frontend): frontend is keyof typeof staticDesktopFrontendNames =>
+      frontend in staticDesktopFrontendNames,
+  );
+
+  if (!staticFrontend) {
+    return null;
+  }
+
+  const addonLabel =
+    selectedDesktopAddons.length === 2
+      ? "Tauri and Electrobun desktop builds"
+      : `${desktopAddonNames[selectedDesktopAddons[0]]} desktop builds`;
+
+  if (
+    selfHostedFullstackBackends.includes(
+      stack.backend as (typeof selfHostedFullstackBackends)[number],
+    )
+  ) {
+    return `${addonLabel} package static web assets and require a separate backend or no backend. Fullstack self backends emit server routes inside the web app, so they cannot be bundled for desktop packaging.`;
+  }
+
+  return `${addonLabel} package static web assets. ${staticDesktopFrontendNames[staticFrontend]} needs a static/export build configuration before desktop packaging will work.`;
+}
+
 export function generateStackCommand(stack: StackState) {
   const packageManagerCommands = {
     npm: "npx create-better-t-stack@latest",
@@ -71,7 +163,14 @@ export function generateStackCommand(stack: StackState) {
 
   // Map web interface backend IDs to CLI backend flags
   const mapBackendToCli = (backend: string) => {
-    if (backend === "self-next" || backend === "self-tanstack-start") {
+    if (
+      backend === "self-next" ||
+      backend === "self-tanstack-start" ||
+      backend === "self-nuxt" ||
+      backend === "self-svelte" ||
+      backend === "self-solid" ||
+      backend === "self-astro"
+    ) {
       return "self";
     }
     return backend;
@@ -99,21 +198,9 @@ export function generateStackCommand(stack: StackState) {
     `--addons ${
       stack.addons.length > 0
         ? stack.addons
-            .filter((addon) =>
-              [
-                "pwa",
-                "tauri",
-                "starlight",
-                "biome",
-                "husky",
-                "turborepo",
-                "ultracite",
-                "fumadocs",
-                "oxlint",
-                "ruler",
-                "opentui",
-                "wxt",
-              ].includes(addon),
+            .filter(
+              (addon) =>
+                addon !== "none" && TECH_OPTIONS.addons.some((option) => option.id === addon),
             )
             .join(" ") || "none"
         : "none"
@@ -128,9 +215,17 @@ export function generateStackCommand(stack: StackState) {
   return `${base} ${projectName} ${flags.join(" ")}`;
 }
 
+export function formatStackCommandForDisplay(command: string) {
+  return command.replaceAll(" --", ` ${"\\"}\n  --`);
+}
+
 export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
   const origin = baseUrl || "https://better-t-stack.dev";
+  const searchString = serializeStackToSearchString(stack);
+  return `${origin}/new${searchString ? `?${searchString}` : ""}`;
+}
 
+function serializeStackToSearchString(stack: StackState) {
   const stackParams = new URLSearchParams();
   Object.entries(stackUrlKeys).forEach(([stackKey, urlKey]) => {
     const value = stack[stackKey as keyof StackState];
@@ -138,24 +233,18 @@ export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
       stackParams.set(urlKey as string, Array.isArray(value) ? value.join(",") : String(value));
     }
   });
-
-  const searchString = stackParams.toString();
-  return `${origin}/new${searchString ? `?${searchString}` : ""}`;
+  return stackParams.toString();
 }
 
 export function generateStackSharingUrl(stack: StackState, baseUrl?: string) {
   const origin = baseUrl || "https://better-t-stack.dev";
-
-  const stackParams = new URLSearchParams();
-  Object.entries(stackUrlKeys).forEach(([stackKey, urlKey]) => {
-    const value = stack[stackKey as keyof StackState];
-    if (value !== undefined) {
-      stackParams.set(urlKey as string, Array.isArray(value) ? value.join(",") : String(value));
-    }
-  });
-
-  const searchString = stackParams.toString();
+  const searchString = serializeStackToSearchString(stack);
   return `${origin}/stack${searchString ? `?${searchString}` : ""}`;
+}
+
+export function generateStackOgImageUrl(stack: StackState, baseUrl = "") {
+  const searchString = serializeStackToSearchString(stack);
+  return `${baseUrl}/og/stack${searchString ? `?${searchString}` : ""}`;
 }
 
 export { CATEGORY_ORDER };

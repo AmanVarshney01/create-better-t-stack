@@ -1,0 +1,77 @@
+import { useNavigate } from "@solidjs/router";
+import { createSignal, Show } from "solid-js";
+import { authClient } from "~/lib/auth-client";
+import z from "zod";
+
+const signInSchema = z.object({
+  email: z.email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
+  const navigate = useNavigate();
+  const [error, setError] = createSignal<string>();
+  const [isSubmitting, setIsSubmitting] = createSignal(false);
+
+  const submit = async (event: SubmitEvent & { currentTarget: HTMLFormElement }) => {
+    event.preventDefault();
+    const result = signInSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)));
+    if (!result.success) {
+      setError(result.error.issues[0]?.message);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError();
+    try {
+      await authClient.signIn.email(result.data, {
+        onSuccess: () => navigate("/dashboard"),
+        onError: ({ error }) => {
+          setError(error.message);
+        },
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div class="mx-auto mt-10 w-full max-w-md p-6">
+      <h1 class="mb-6 text-center text-3xl font-bold">Welcome Back</h1>
+      <form onSubmit={submit} class="space-y-4">
+        <div class="space-y-2">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required class="w-full rounded border p-2" />
+        </div>
+        <div class="space-y-2">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            minlength="8"
+            required
+            class="w-full rounded border p-2"
+          />
+        </div>
+        <Show when={error()}>{(message) => <p class="text-sm text-red-600">{message()}</p>}</Show>
+        <button
+          type="submit"
+          class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
+          disabled={isSubmitting()}
+        >
+          {isSubmitting() ? "Submitting..." : "Sign In"}
+        </button>
+      </form>
+      <div class="mt-4 text-center">
+        <button
+          type="button"
+          onClick={onSwitchToSignUp}
+          class="text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
+        >
+          Need an account? Sign Up
+        </button>
+      </div>
+    </div>
+  );
+}

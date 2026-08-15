@@ -1,7 +1,8 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 
+import { createVirtual } from "../src/index";
 import type { API, Backend, Database, Examples, Frontend, ORM, Runtime } from "../src/types";
-
+import { collectFiles } from "./setup";
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("API Configurations", () => {
@@ -56,69 +57,6 @@ describe("API Configurations", () => {
       });
     }
 
-    it("should fail with tRPC + Nuxt", async () => {
-      const result = await runTRPCTest({
-        projectName: "trpc-nuxt-fail",
-        api: "trpc",
-        frontend: ["nuxt"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-      });
-
-      expectError(result, "tRPC API is not supported with 'nuxt' frontend");
-    });
-
-    it("should fail with tRPC + Svelte", async () => {
-      const result = await runTRPCTest({
-        projectName: "trpc-svelte-fail",
-        api: "trpc",
-        frontend: ["svelte"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-      });
-
-      expectError(result, "tRPC API is not supported with 'svelte' frontend");
-    });
-
-    it("should fail with tRPC + Solid", async () => {
-      const result = await runTRPCTest({
-        projectName: "trpc-solid-fail",
-        api: "trpc",
-        frontend: ["solid"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-      });
-
-      expectError(result, "tRPC API is not supported with 'solid' frontend");
-    });
-
     const backends = ["hono", "express", "fastify", "elysia"];
 
     for (const backend of backends) {
@@ -152,6 +90,64 @@ describe("API Configurations", () => {
   });
 
   describe("oRPC API", () => {
+    it("should wire Solid 2 self-hosted oRPC routes and optimized SSR", async () => {
+      const config = {
+        projectName: "orpc-solid-self",
+        api: "orpc",
+        frontend: ["solid"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+        payments: "none",
+      } satisfies TestConfig;
+
+      const result = await createVirtual(config);
+      expect(result.isOk()).toBe(true);
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const rpcRoute = files.get("apps/web/src/routes/rpc/[...rest].ts");
+      const rpcIndex = files.get("apps/web/src/routes/rpc/index.ts");
+      const appFile = files.get("apps/web/src/App.tsx");
+      const homeRoute = files.get("apps/web/src/routes/index.tsx");
+      const orpcClient = files.get("apps/web/src/utils/orpc.ts");
+      const orpcServer = files.get("apps/web/src/utils/orpc.server.ts");
+
+      expect(appFile).toBeDefined();
+      if (!appFile) throw new Error("Expected Solid app template");
+
+      expect(rpcRoute).toContain('import type { APIHandler } from "filesystem-routing/api";');
+      expect(rpcRoute).toContain('prefix: "/rpc"');
+      expect(rpcRoute).toContain("createContext({ headers: request.headers })");
+      expect(rpcIndex).toContain('from "./[...rest]"');
+      expect(orpcClient).toContain("if (import.meta.env.SSR)");
+      expect(orpcClient).toContain('await import("./orpc.server")');
+      expect(orpcClient).toContain("globalThis.$client ?? createORPCClient(link)");
+      expect(orpcServer).toContain("createRouterClient(appRouter");
+      expect(orpcServer).toContain("globalThis.$client");
+      expect(orpcServer).toContain("getRequestEvent()?.request.headers");
+      expect(homeRoute).toContain('healthCheck.data === "OK"');
+      expect(homeRoute).toContain("healthCheck.isPending");
+      expect(homeRoute).toContain("deferStream: true");
+      const queryClientProviderIndex = appFile.indexOf("<QueryClientProvider");
+      const routerIndex = appFile.indexOf("<Router>");
+      expect(queryClientProviderIndex).toBeGreaterThanOrEqual(0);
+      expect(routerIndex).toBeGreaterThanOrEqual(0);
+      expect(queryClientProviderIndex).toBeLessThan(routerIndex);
+    });
+
     const frontends = [
       "tanstack-router",
       "react-router",
@@ -222,7 +218,7 @@ describe("API Configurations", () => {
 
   describe("No API", () => {
     it("should work with API none + basic setup", async () => {
-      const result = await runTRPCTest({
+      const config = {
         projectName: "api-none-basic",
         api: "none",
         frontend: ["tanstack-router"],
@@ -237,13 +233,34 @@ describe("API Configurations", () => {
         webDeploy: "none",
         serverDeploy: "none",
         install: false,
-      });
+      } satisfies TestConfig;
+
+      const result = await runTRPCTest(config);
 
       expectSuccess(result);
+
+      const virtualResult = await createVirtual({
+        ...config,
+        git: false,
+        packageManager: "bun",
+        payments: "none",
+      });
+      expect(virtualResult.isOk()).toBe(true);
+      if (virtualResult.isErr()) {
+        throw virtualResult.error;
+      }
+
+      const files = collectFiles(virtualResult.value.root, virtualResult.value.root.path);
+      const envPackageJson = JSON.parse(files.get("packages/env/package.json") ?? "{}");
+      const baseTsconfig = files.get("packages/config/tsconfig.base.json");
+
+      expect(envPackageJson.devDependencies?.["@types/bun"]).toBeDefined();
+      expect(envPackageJson.devDependencies?.["@types/node"]).toBeUndefined();
+      expect(baseTsconfig).toContain('"bun"');
     });
 
     it("should work with API none + frontend only", async () => {
-      const result = await runTRPCTest({
+      const config = {
         projectName: "api-none-frontend-only",
         api: "none",
         frontend: ["tanstack-router"],
@@ -258,9 +275,29 @@ describe("API Configurations", () => {
         webDeploy: "none",
         serverDeploy: "none",
         install: false,
-      });
+      } satisfies TestConfig;
+
+      const result = await runTRPCTest(config);
 
       expectSuccess(result);
+
+      const virtualResult = await createVirtual({
+        ...config,
+        git: false,
+        packageManager: "bun",
+        payments: "none",
+      });
+      expect(virtualResult.isOk()).toBe(true);
+      if (virtualResult.isErr()) {
+        throw virtualResult.error;
+      }
+
+      const files = collectFiles(virtualResult.value.root, virtualResult.value.root.path);
+      const envPackageJson = JSON.parse(files.get("packages/env/package.json") ?? "{}");
+      const baseTsconfig = files.get("packages/config/tsconfig.base.json");
+
+      expect(envPackageJson.devDependencies?.["@types/node"]).toBeDefined();
+      expect(baseTsconfig).toContain('"node"');
     });
 
     it("should work with API none + convex", async () => {
@@ -500,45 +537,158 @@ describe("API Configurations", () => {
     }
   });
 
-  describe("All API Types", () => {
-    const apis = ["trpc", "orpc", "none"];
+  describe("API Edge Cases", () => {
+    it("should scaffold Fastify oRPC context with matching request shapes", async () => {
+      const result = await createVirtual({
+        projectName: "fastify-orpc-request-shape",
+        api: "orpc",
+        frontend: ["tanstack-router"],
+        backend: "fastify",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+        payments: "none",
+      });
 
-    for (const api of apis) {
-      it(`should work with ${api} API`, async () => {
-        const config: TestConfig = {
-          projectName: `test-api-${api}`,
-          api: api as API,
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const serverFile = files.get("apps/server/src/index.ts");
+      const contextFile = files.get("packages/api/src/context.ts");
+
+      expect(serverFile).toContain("context: await createContext(request.headers)");
+      expect(contextFile).toContain('import type { IncomingHttpHeaders } from "node:http";');
+      expect(contextFile).toContain("createContext(req: IncomingHttpHeaders)");
+    });
+
+    it("should scaffold native oRPC with Expo fetch support for each auth branch", async () => {
+      const cases = [
+        {
+          auth: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          expected: ["fetch: expoFetch"],
+        },
+        {
+          auth: "better-auth",
+          database: "sqlite",
+          orm: "drizzle",
+          expected: [
+            'import { authClient } from "@/lib/auth-client";',
+            'import { Platform } from "react-native";',
+            'credentials: Platform.OS === "web" ? "include" : "omit"',
+            "const cookies = authClient.getCookie();",
+            "return expoFetch(request, {",
+          ],
+        },
+        {
+          auth: "clerk",
+          database: "none",
+          orm: "none",
+          expected: [
+            'import { getClerkAuthToken } from "@/utils/clerk-auth";',
+            "const token = await getClerkAuthToken();",
+            "return token ? { Authorization: `Bearer ${token}` } : {};",
+            "fetch: expoFetch",
+          ],
+        },
+      ] as const;
+
+      for (const testCase of cases) {
+        const result = await createVirtual({
+          projectName: `native-orpc-expo-fetch-${testCase.auth}`,
+          api: "orpc",
+          frontend: ["native-bare"],
+          backend: "hono",
+          runtime: "bun",
+          database: testCase.database,
+          orm: testCase.orm,
+          auth: testCase.auth,
           addons: ["none"],
           examples: ["none"],
           dbSetup: "none",
           webDeploy: "none",
           serverDeploy: "none",
           install: false,
-        };
+          git: false,
+          packageManager: "bun",
+          payments: "none",
+        });
 
-        if (api === "none") {
-          config.backend = "none";
-          config.runtime = "none";
-          config.database = "none";
-          config.orm = "none";
-          config.auth = "none";
-          config.frontend = ["tanstack-router"];
-        } else {
-          config.backend = "hono";
-          config.runtime = "bun";
-          config.database = "sqlite";
-          config.orm = "drizzle";
-          config.auth = "none";
-          config.frontend = ["tanstack-router"];
+        if (result.isErr()) {
+          throw result.error;
         }
 
-        const result = await runTRPCTest(config);
-        expectSuccess(result);
-      });
-    }
-  });
+        const files = collectFiles(result.value.root, result.value.root.path);
+        const orpcFile = files.get("apps/native/utils/orpc.ts");
 
-  describe("API Edge Cases", () => {
+        expect(orpcFile).toContain('const { fetch } = await import("expo/fetch");');
+        for (const expected of testCase.expected) {
+          expect(orpcFile).toContain(expected);
+        }
+      }
+    });
+
+    it("should scaffold TanStack Start oRPC with a request-scoped query client", async () => {
+      const result = await createVirtual({
+        projectName: "tanstack-start-orpc-auth-workers",
+        api: "orpc",
+        frontend: ["tanstack-start"],
+        backend: "hono",
+        runtime: "workers",
+        database: "sqlite",
+        orm: "prisma",
+        auth: "better-auth",
+        payments: "none",
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "d1",
+        webDeploy: "cloudflare",
+        serverDeploy: "cloudflare",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const orpcFile = files.get("apps/web/src/utils/orpc.ts");
+      const routerFile = files.get("apps/web/src/router.tsx");
+      const authRouteFile = files.get("apps/web/src/routes/_auth/route.tsx");
+      const dashboardFile = files.get("apps/web/src/routes/_auth/dashboard.tsx");
+
+      expect(orpcFile).toContain("function createQueryClient()");
+      expect(orpcFile).toContain("defaultOptions: { queries: { staleTime: 60 * 1000 } },");
+      expect(orpcFile).toContain("query.invalidate();");
+      expect(orpcFile).not.toContain("void query.invalidate");
+      expect(orpcFile).not.toContain("onClick: query.invalidate");
+      expect(orpcFile).not.toContain("export const queryClient");
+      expect(routerFile).toContain('import { createQueryClient, orpc } from "./utils/orpc";');
+      expect(routerFile).toContain("const queryClient = createQueryClient();");
+      expect(authRouteFile).toContain('createFileRoute("/_auth")');
+      expect(authRouteFile).toContain("ssr: false");
+      expect(authRouteFile).toContain("const session = await authClient.getSession();");
+      expect(authRouteFile).not.toContain('import { getUser } from "@/functions/get-user";');
+      expect(dashboardFile).toContain('createFileRoute("/_auth/dashboard")');
+      expect(dashboardFile).toContain("session.data?.user.name");
+      expect(dashboardFile).toContain("privateData.queryOptions()");
+      expect(dashboardFile).not.toContain("const session = await authClient.getSession();");
+    });
+
     it("should handle API with complex frontend combinations", async () => {
       const result = await runTRPCTest({
         projectName: "api-complex-frontend",

@@ -1,8 +1,9 @@
-import { Github, Globe, Star } from "lucide-react";
+import { Globe, Star } from "lucide-react";
 import Image from "next/image";
+import { FaGithub } from "react-icons/fa6";
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { formatSponsorUrl, getSponsorUrl, shouldShowLifetimeTotal } from "@/lib/sponsor-utils";
+import { getSponsorUrl, getSponsorUrlLabel, shouldShowLifetimeTotal } from "@/lib/sponsor-utils";
 import { fetchSponsors } from "@/lib/sponsors";
 
 export async function SpecialSponsorBanner() {
@@ -21,23 +22,25 @@ export async function SpecialSponsorBanner() {
 
           return (
             <HoverCard key={entry.githubId}>
-              <HoverCardTrigger asChild>
-                <a
-                  href={sponsorUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={entry.name}
-                  className="inline-flex"
-                >
-                  <Image
-                    src={entry.avatarUrl}
-                    alt={entry.name}
-                    width={66}
-                    height={66}
-                    className="size-12 rounded border border-border"
-                    unoptimized
+              <HoverCardTrigger
+                render={
+                  <a
+                    href={sponsorUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={entry.name}
+                    className="inline-flex"
                   />
-                </a>
+                }
+              >
+                <Image
+                  src={entry.avatarUrl}
+                  alt={entry.name}
+                  width={66}
+                  height={66}
+                  className="size-12 rounded border border-border"
+                  unoptimized
+                />
               </HoverCardTrigger>
               <HoverCardContent align="start" sideOffset={8} className="bg-fd-background">
                 <div className="space-y-3">
@@ -81,7 +84,7 @@ export async function SpecialSponsorBanner() {
                           rel="noopener noreferrer"
                           className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
                         >
-                          <Github className="h-4 w-4" />
+                          <FaGithub className="h-4 w-4" />
                           <span className="truncate">{entry.githubId}</span>
                         </a>
                         {entry.websiteUrl ? (
@@ -92,7 +95,7 @@ export async function SpecialSponsorBanner() {
                             className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
                           >
                             <Globe className="h-4 w-4" />
-                            <span className="truncate">{formatSponsorUrl(sponsorUrl)}</span>
+                            <span className="truncate">{getSponsorUrlLabel(entry)}</span>
                           </a>
                         ) : null}
                       </div>

@@ -1,0 +1,35 @@
+{{#if (eq backend "self")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import { createMiddleware } from "@tanstack/react-start";
+
+
+export const authMiddleware = createMiddleware().server(async ({ next, request }) => {
+    const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+        headers: request.headers,
+    })
+    return next({
+        context: { session }
+    })
+})
+{{else}}
+import { authClient } from "@/lib/auth-client";
+import { createMiddleware } from "@tanstack/react-start";
+
+export const authMiddleware = createMiddleware().server(
+	async ({ next, request }) => {
+		const session = await authClient.getSession({
+			fetchOptions: {
+				headers: request.headers,
+				throw: true
+			}
+		})
+		return next({
+			context: { session },
+		});
+	},
+);
+{{/if}}

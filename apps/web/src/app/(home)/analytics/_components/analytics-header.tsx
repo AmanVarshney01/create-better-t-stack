@@ -1,87 +1,139 @@
-import { format } from "date-fns";
-import { Terminal } from "lucide-react";
-import Link from "next/link";
+import { Activity, DatabaseZap, Terminal } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
+import { PageHeader } from "../../_components/page-header";
+import { formatCompactNumber } from "./analytics-helpers";
+
+// Feb-Nov 2025 PostHog era, estimated from npm downloads (92.8k) times the
+// tracked era's projects-per-download ratio (~0.64)
+const UNTRACKED_ERA_PROJECT_ESTIMATE = 59_000;
+
+const utcDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+  timeZone: "UTC",
+});
+
+function formatUtcDateTime(value: string) {
+  return `${utcDateTimeFormatter.format(new Date(value))} UTC`;
+}
+
+function HeaderStat({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+}) {
+  return (
+    <div className="min-w-0 border-t pt-3">
+      <div className="font-mono text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
+        {label}
+      </div>
+      <div className="mt-2 font-medium text-[20px] tabular-nums tracking-[-0.02em]">{value}</div>
+      <p className="mt-1.5 text-[11px] text-fd-muted-foreground leading-[1.5]">{detail}</p>
+    </div>
+  );
+}
 
 export function AnalyticsHeader({
-  totalProjects,
   lastUpdated,
-  legacy,
+  liveTotal,
+  trackingDays,
+  connectionStatus,
 }: {
-  totalProjects: number;
   lastUpdated: string | null;
-  legacy: {
-    total: number;
-    avgPerDay: number;
-    lastUpdatedIso: string;
-    source: string;
-  };
+  liveTotal: number;
+  trackingDays: number;
+  connectionStatus: "online" | "connecting" | "reconnecting" | "offline";
 }) {
-  const formattedDate = lastUpdated
-    ? format(new Date(lastUpdated), "MMM d, yyyy 'at' HH:mm")
-    : null;
-  const legacyDate = format(new Date(legacy.lastUpdatedIso), "MMM d, yyyy 'at' HH:mm");
+  const formattedDate = lastUpdated ? formatUtcDateTime(lastUpdated) : null;
+  const statusMeta = {
+    online: {
+      label: "Streaming",
+      textClass: "text-primary",
+      dotClass: "bg-primary",
+    },
+    connecting: {
+      label: "Connecting",
+      textClass: "text-fd-muted-foreground",
+      dotClass: "bg-fd-muted-foreground",
+    },
+    reconnecting: {
+      label: "Reconnecting",
+      textClass: "text-fd-muted-foreground",
+      dotClass: "bg-fd-muted-foreground",
+    },
+    offline: {
+      label: "Offline",
+      textClass: "text-destructive",
+      dotClass: "bg-destructive",
+    },
+  }[connectionStatus];
 
   return (
-    <div className="mb-4">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
-        <div className="flex items-center gap-2">
-          <Terminal className="h-5 w-5 text-primary" />
-          <span className="font-bold text-lg sm:text-xl">CLI_ANALYTICS</span>
-        </div>
-        <div className="hidden h-px flex-1 bg-border sm:block" />
-        <span className="text-muted-foreground text-xs">
-          [{totalProjects.toLocaleString()} projects]
-        </span>
+    <section className="space-y-5">
+      <PageHeader
+        icon={Terminal}
+        title="ANALYTICS.SH"
+        description="Aggregate CLI telemetry for create-better-t-stack."
+        actions={
+          <span className="flex shrink-0 items-center gap-2 font-mono text-[10px] uppercase tracking-[0.10em]">
+            <Activity className={cn("h-3 w-3", statusMeta.textClass)} />
+            <span aria-hidden="true" className={cn("h-1.5 w-1.5", statusMeta.dotClass)} />
+            <span className={statusMeta.textClass}>{statusMeta.label}</span>
+          </span>
+        }
+      />
+
+      <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
+        <HeaderStat
+          label="Live projects"
+          value={formatCompactNumber(liveTotal)}
+          detail="Project creations tracked in the current Convex stream."
+        />
+        <HeaderStat
+          label="Tracked span"
+          value={trackingDays}
+          detail="Calendar days represented in the live telemetry dataset."
+        />
       </div>
 
-      <div className="rounded rounded-b-none border border-border p-4 font-mono text-sm">
-        <div className="flex items-center gap-2">
+      <div className="border-t pt-3">
+        <div className="flex items-start gap-2 text-[13px] leading-[1.55]">
           <span className="text-primary">$</span>
-          <span>Real-time analytics from Better-T-Stack CLI</span>
-        </div>
-        <div className="mt-2 flex items-center gap-2 text-muted-foreground">
-          <span className="text-primary">$</span>
-          <span>No personal data collected - anonymous usage stats only</span>
-        </div>
-        <div className="mt-2 flex items-center gap-2 text-muted-foreground">
-          <span className="text-primary">$</span>
-          <span>
-            Source:{" "}
-            <Link
-              href="https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent underline hover:text-primary"
-            >
-              analytics.ts
-            </Link>
-          </span>
-        </div>
-        {formattedDate && (
-          <div className="mt-2 flex items-center gap-2 text-muted-foreground">
-            <span className="text-primary">$</span>
-            <span>Last event: {formattedDate}</span>
-          </div>
-        )}
-        <div className="mt-2 flex flex-col gap-1 rounded border border-border/60 bg-muted/30 p-3 text-muted-foreground text-xs">
-          <div className="flex items-center gap-2">
-            <span className="text-primary">$</span>
-            <span className="font-semibold text-foreground">Legacy totals (pre-Convex)</span>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <span className="font-mono text-foreground">
-              {legacy.total.toLocaleString()} projects
-            </span>
-            <span className="font-mono">avg/day {legacy.avgPerDay.toFixed(1)}</span>
-            <span className="font-mono">as of {legacyDate}</span>
-            <span className="font-mono">source: {legacy.source}</span>
-          </div>
-          <span>
-            Notes: Legacy stats are frozen at the last PostHog run; live Convex stats continue
-            below.
+          <span className="text-fd-muted-foreground">
+            These numbers undercount real usage. The CLI shipped in Feb 2025, but this dataset only
+            goes back to Dec 2025. Earlier telemetry lived in PostHog and isn't included. Counting
+            that period via npm download volume, estimated all-time usage is around{" "}
+            {formatCompactNumber(liveTotal + UNTRACKED_ERA_PROJECT_ESTIMATE)} projects.
           </span>
         </div>
       </div>
-    </div>
+
+      <div className="border-t pt-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <DatabaseZap className="h-3.5 w-3.5 text-primary" />
+            <span className="text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
+              Telemetry
+            </span>
+          </div>
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em]">
+              Latest event
+            </span>
+            <span className="text-[13px] tabular-nums">{formattedDate ?? "Waiting"}</span>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

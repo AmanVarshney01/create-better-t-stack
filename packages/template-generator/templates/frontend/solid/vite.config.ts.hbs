@@ -1,0 +1,75 @@
+import tailwindcss from "@tailwindcss/vite";
+import solid from "@solidjs/vite-plugin";
+import { fileRoutes } from "filesystem-routing/vite";
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+import { unwasm } from "unwasm/plugin";
+{{/if}}
+{{#if (eq webDeploy "cloudflare")}}
+import { fileURLToPath } from "node:url";
+{{/if}}
+{{#unless (eq webDeploy "cloudflare")}}
+import { nitro } from "nitro/vite";
+{{/unless}}
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
+
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+const prismaWasm =
+  process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
+    ? null
+    : unwasm({ esmImport: true });
+{{/if}}
+
+{{#if (eq webDeploy "cloudflare")}}
+export default defineConfig(({ command }) => {
+  const cloudflareWorkersAlias: Record<string, string> =
+    command === "serve" && process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED !== "1"
+      ? {
+          "cloudflare:workers": fileURLToPath(
+            new URL("./cloudflare-workers.dev.ts", import.meta.url),
+          ),
+        }
+      : {};
+
+  return {
+{{else}}
+export default defineConfig({
+{{/if}}
+  plugins: [
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+    prismaWasm,
+{{/if}}
+    solid({
+      start: { middleware: "./src/middleware.ts" },
+      ssr: true,
+      extensions: [".jsx", ".tsx"],
+    }),
+{{#unless (eq webDeploy "cloudflare")}}
+    nitro({ serverEntry: false }),
+{{/unless}}
+    fileRoutes({ httpMethods: true }),
+    tailwindcss(),
+  ],
+  server: {
+    port: 3001,
+  },
+{{#if (eq webDeploy "cloudflare")}}
+  build: {
+    rollupOptions: {
+      external: ["cloudflare:workers"],
+    },
+  },
+{{/if}}
+  resolve: {
+    tsconfigPaths: true,
+{{#if (eq webDeploy "cloudflare")}}
+    alias: cloudflareWorkersAlias,
+{{/if}}
+  },
+{{#if (eq webDeploy "cloudflare")}}
+  };
+{{else}}
+});
+{{/if}}
+{{#if (eq webDeploy "cloudflare")}}
+});
+{{/if}}

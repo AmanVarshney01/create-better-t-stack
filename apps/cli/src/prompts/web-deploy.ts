@@ -1,9 +1,21 @@
-import type { Backend, Frontend, Runtime, WebDeploy } from "../types";
-
 import { DEFAULT_CONFIG } from "../constants";
+import type {
+  Addons,
+  Backend,
+  Database,
+  DatabaseSetup,
+  Frontend,
+  ProjectConfig,
+  Runtime,
+  WebDeploy,
+} from "../types";
 import { WEB_FRAMEWORKS } from "../utils/compatibility";
-import { exitCancelled } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import {
+  supportsPrismaWebDeploy,
+  validateCloudflareWebDeployKnownIssues,
+} from "../utils/compatibility-rules";
+import { UserCancelledError } from "../utils/errors";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 function hasWebFrontend(frontends: Frontend[]) {
   return frontends.some((f) => WEB_FRAMEWORKS.includes(f));
@@ -15,14 +27,34 @@ type DeploymentOption = {
   hint: string;
 };
 
-function getDeploymentDisplay(deployment: WebDeploy): {
+interface DeploymentDisplay {
   label: string;
   hint: string;
-} {
+}
+
+function getDeploymentDisplay(deployment: WebDeploy): DeploymentDisplay {
   if (deployment === "cloudflare") {
     return {
       label: "Cloudflare",
       hint: "Deploy to Cloudflare Workers using Alchemy",
+    };
+  }
+  if (deployment === "docker") {
+    return {
+      label: "Docker",
+      hint: "Self-host with a Dockerfile and docker-compose.yml",
+    };
+  }
+  if (deployment === "prisma") {
+    return {
+      label: "Prisma",
+      hint: "Deploy with Prisma using Alchemy",
+    };
+  }
+  if (deployment === "vercel") {
+    return {
+      label: "Vercel (experimental)",
+      hint: "Deploy to Vercel with Services; not fully tested",
     };
   }
   return {
@@ -34,15 +66,38 @@ function getDeploymentDisplay(deployment: WebDeploy): {
 export async function getDeploymentChoice(
   deployment?: WebDeploy,
   _runtime?: Runtime,
-  _backend?: Backend,
+  backend?: Backend,
   frontend: Frontend[] = [],
+  dbSetup?: DatabaseSetup,
+  database?: Database,
+  orm?: ProjectConfig["orm"],
+  addons: Addons[] = [],
+  previousValue?: WebDeploy,
 ) {
   if (deployment !== undefined) return deployment;
   if (!hasWebFrontend(frontend)) {
     return "none";
   }
 
-  const availableDeployments = ["cloudflare", "none"];
+  if (backend === "self" && dbSetup === "d1") {
+    return "cloudflare";
+  }
+
+  const supportsPrismaCompute = supportsPrismaWebDeploy(frontend);
+  const supportsCloudflare = validateCloudflareWebDeployKnownIssues({
+    webDeploy: "cloudflare",
+    frontend,
+    dbSetup,
+    database,
+    orm,
+  }).isOk();
+  const availableDeployments = [
+    ...(supportsCloudflare ? (["cloudflare"] as const) : []),
+    ...(supportsPrismaCompute ? (["prisma"] as const) : []),
+    "docker",
+    "vercel",
+    "none",
+  ];
 
   const options: DeploymentOption[] = availableDeployments.map((deploy) => {
     const { label, hint } = getDeploymentDisplay(deploy as WebDeploy);
@@ -54,12 +109,12 @@ export async function getDeploymentChoice(
   });
 
   const response = await navigableSelect<WebDeploy>({
-    message: "Select web deployment",
+    message: "Choose web deployment",
     options,
-    initialValue: DEFAULT_CONFIG.webDeploy,
+    initialValue: preferValidInitial(options, previousValue, DEFAULT_CONFIG.webDeploy),
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }
@@ -69,32 +124,28 @@ export async function getDeploymentToAdd(frontend: Frontend[], existingDeploymen
     return "none";
   }
 
-  const options: DeploymentOption[] = [];
-
-  if (existingDeployment !== "cloudflare") {
-    const { label, hint } = getDeploymentDisplay("cloudflare");
-    options.push({
-      value: "cloudflare",
-      label,
-      hint,
-    });
-  }
-
+  // A project can only have one web deployment target; nothing to add.
   if (existingDeployment && existingDeployment !== "none") {
     return "none";
   }
 
-  if (options.length > 0) {
-    options.push({
-      value: "none",
-      label: "None",
-      hint: "Skip deployment setup",
-    });
-  }
+  const supportsPrismaCompute = supportsPrismaWebDeploy(frontend);
+  const deployments = [
+    "cloudflare",
+    ...(supportsPrismaCompute ? (["prisma"] as const) : []),
+    "docker",
+    "vercel",
+  ] as const;
+  const options: DeploymentOption[] = deployments.map((deploy) => {
+    const { label, hint } = getDeploymentDisplay(deploy);
+    return { value: deploy, label, hint };
+  });
 
-  if (options.length === 0) {
-    return "none";
-  }
+  options.push({
+    value: "none",
+    label: "None",
+    hint: "Skip deployment setup",
+  });
 
   const response = await navigableSelect<WebDeploy>({
     message: "Select web deployment",
@@ -102,7 +153,7 @@ export async function getDeploymentToAdd(frontend: Frontend[], existingDeploymen
     initialValue: DEFAULT_CONFIG.webDeploy,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

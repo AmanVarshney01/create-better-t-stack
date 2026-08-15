@@ -1,7 +1,12 @@
 import { confirm, isCancel, multiselect, spinner } from "@clack/prompts";
 import { $ } from "bun";
 
-const PACKAGES = ["create-better-t-stack", "create-bts", "@better-t-stack/types"] as const;
+const PACKAGES = [
+  "create-better-t-stack",
+  "create-bts",
+  "@better-t-stack/types",
+  "@better-t-stack/template-generator",
+] as const;
 
 interface DistTags {
   [tag: string]: string;
@@ -86,10 +91,10 @@ async function main(): Promise<void> {
     return;
   }
 
-  const selected = (await multiselect({
+  const selected = await multiselect({
     message: "Select PR tags to clean up:",
     options: tagOptions,
-  })) as unknown as string[] | symbol;
+  });
 
   if (isCancel(selected) || !Array.isArray(selected) || selected.length === 0) {
     console.log("\nNo selections made. Aborting.");

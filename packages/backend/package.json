@@ -6,17 +6,20 @@
   "license": "ISC",
   "author": "",
   "scripts": {
+    "predev": "(cd ../types && bun run build)",
     "dev": "convex dev",
     "dev:setup": "convex dev --configure --until-success",
+    "predeploy": "(cd ../types && bun run build)",
     "deploy": "convex deploy"
   },
   "dependencies": {
-    "@convex-dev/crons": "^0.2.0",
-    "@erquhart/convex-oss-stats": "^0.8.2",
-    "convex": "^1.31.0",
-    "convex-helpers": "^0.1.107"
+    "@better-t-stack/types": "workspace:*",
+    "@convex-dev/crons": "^0.2.2",
+    "@erquhart/convex-oss-stats": "catalog:",
+    "convex": "catalog:",
+    "convex-helpers": "catalog:"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "catalog:"
   }
 }

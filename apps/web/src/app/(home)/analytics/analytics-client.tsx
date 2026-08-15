@@ -1,36 +1,16 @@
 "use client";
 
 import { api } from "@better-t-stack/backend/convex/_generated/api";
-import { type Preloaded, usePreloadedQuery, useQuery } from "convex/react";
-import { useState } from "react";
+import { type Preloaded, useConvexConnectionState, usePreloadedQuery } from "convex/react";
+import { useEffect, useState } from "react";
 
-import type { AggregatedAnalyticsData, Distribution } from "./_components/types";
-
+import {
+  buildWeekdayDistribution,
+  versionWithShare,
+  withShare,
+} from "./_components/analytics-helpers";
 import AnalyticsPage from "./_components/analytics-page";
-
-type EventRow = {
-  _id: string;
-  _creationTime: number;
-  database?: string;
-  orm?: string;
-  backend?: string;
-  runtime?: string;
-  frontend?: string[];
-  addons?: string[];
-  examples?: string[];
-  auth?: string;
-  payments?: string;
-  git?: boolean;
-  packageManager?: string;
-  install?: boolean;
-  dbSetup?: string;
-  api?: string;
-  webDeploy?: string;
-  serverDeploy?: string;
-  cli_version?: string;
-  node_version?: string;
-  platform?: string;
-};
+import type { AggregatedAnalyticsData, Distribution, TimeSeriesPoint } from "./_components/types";
 
 type PrecomputedStats = {
   totalProjects: number;
@@ -60,8 +40,29 @@ type PrecomputedStats = {
 };
 
 type DailyStats = { date: string; count: number };
+type MonthlyStats = {
+  monthly: Array<{ month: string; totalProjects: number }>;
+  firstDate: string | null;
+  lastDate: string | null;
+};
+type ConnectionStatus = "online" | "connecting" | "reconnecting" | "offline";
 
-type RangeOption = "all" | "30d" | "7d" | "1d";
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function getConnectionStatus({
+  isWebSocketConnected,
+  hasEverConnected,
+  connectionRetries,
+}: {
+  isWebSocketConnected: boolean;
+  hasEverConnected: boolean;
+  connectionRetries: number;
+}): ConnectionStatus {
+  if (isWebSocketConnected) return "online";
+  if (hasEverConnected) return "reconnecting";
+  if (connectionRetries > 0) return "offline";
+  return "connecting";
+}
 
 function recordToDistribution(record: Record<string, number>): Distribution {
   return Object.entries(record)
@@ -73,10 +74,84 @@ function getMostPopular(dist: Distribution) {
   return dist.length > 0 ? dist[0].name : "none";
 }
 
+function getCalendarDaySpan(timeSeries: DailyStats[]): number {
+  if (timeSeries.length === 0) return 1;
+
+  const firstDate = timeSeries[0]?.date;
+  const lastDate = timeSeries[timeSeries.length - 1]?.date;
+  if (!firstDate || !lastDate) return 1;
+
+  const start = Date.parse(`${firstDate}T00:00:00Z`);
+  const end = Date.parse(`${lastDate}T00:00:00Z`);
+
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) {
+    return Math.max(timeSeries.length, 1);
+  }
+
+  return Math.floor((end - start) / MILLISECONDS_PER_DAY) + 1;
+}
+
+function getCalendarDaySpanFromRange(
+  firstDate: string | null,
+  lastDate: string | null,
+  fallbackSeries: DailyStats[],
+): number {
+  if (!firstDate || !lastDate) {
+    return getCalendarDaySpan(fallbackSeries);
+  }
+
+  const start = Date.parse(`${firstDate}T00:00:00Z`);
+  const end = Date.parse(`${lastDate}T00:00:00Z`);
+
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) {
+    return getCalendarDaySpan(fallbackSeries);
+  }
+
+  return Math.floor((end - start) / MILLISECONDS_PER_DAY) + 1;
+}
+
+function buildTimeSeries(dailyStats: DailyStats[]): TimeSeriesPoint[] {
+  const sorted = [...dailyStats].sort((a, b) => a.date.localeCompare(b.date));
+  let cumulativeProjects = 0;
+
+  return sorted.map((day, index) => {
+    cumulativeProjects += day.count;
+    const trailingWindow = sorted.slice(Math.max(0, index - 6), index + 1);
+    const rollingAverage =
+      trailingWindow.reduce((sum, point) => sum + point.count, 0) / trailingWindow.length;
+
+    return {
+      date: day.date,
+      dateValue: new Date(`${day.date}T00:00:00`),
+      count: day.count,
+      rollingAverage,
+      cumulativeProjects,
+    };
+  });
+}
+
+function buildMonthlyTimeSeries(monthlyStats: MonthlyStats["monthly"]) {
+  let cumulativeProjects = 0;
+
+  return [...monthlyStats]
+    .sort((a, b) => a.month.localeCompare(b.month))
+    .map((month) => {
+      cumulativeProjects += month.totalProjects;
+      return {
+        month: month.month,
+        monthDate: new Date(`${month.month}-01T00:00:00`),
+        totalProjects: month.totalProjects,
+        cumulativeProjects,
+      };
+    });
+}
+
 function buildFromPrecomputed(
   stats: PrecomputedStats,
   dailyStats: DailyStats[],
+  monthlyStats: MonthlyStats,
 ): AggregatedAnalyticsData {
+  const totalProjects = stats.totalProjects;
   const backendDistribution = recordToDistribution(stats.backend);
   const frontendDistribution = recordToDistribution(stats.frontend);
   const databaseDistribution = recordToDistribution(stats.database);
@@ -88,267 +163,100 @@ function buildFromPrecomputed(
   const platformDistribution = recordToDistribution(stats.platform);
   const addonsDistribution = recordToDistribution(stats.addons);
   const examplesDistribution = recordToDistribution(stats.examples);
-  const dbSetupDistribution = recordToDistribution(stats.dbSetup).filter((d) => d.name !== "none");
-  const webDeployDistribution = recordToDistribution(stats.webDeploy).filter(
-    (d) => d.name !== "none",
-  );
-  const serverDeployDistribution = recordToDistribution(stats.serverDeploy).filter(
-    (d) => d.name !== "none",
-  );
-  const paymentsDistribution = recordToDistribution(stats.payments).filter(
-    (d) => d.name !== "none",
-  );
+  const dbSetupDistribution = recordToDistribution(stats.dbSetup);
+  const webDeployDistribution = recordToDistribution(stats.webDeploy);
+  const serverDeployDistribution = recordToDistribution(stats.serverDeploy);
+  const paymentsDistribution = recordToDistribution(stats.payments);
   const gitDistribution = recordToDistribution(stats.git);
   const installDistribution = recordToDistribution(stats.install);
-  const nodeVersionDistribution = recordToDistribution(stats.nodeVersion).map((d) => ({
-    version: d.name,
-    count: d.value,
-  }));
-  const cliVersionDistribution = recordToDistribution(stats.cliVersion)
-    .filter((d) => d.name !== "unknown")
-    .slice(0, 10)
-    .map((d) => ({ version: d.name, count: d.value }));
+  const stackCombinationDistribution = withShare(
+    recordToDistribution(stats.stackCombinations),
+    totalProjects,
+  );
+  const databaseORMCombinationDistribution = withShare(
+    recordToDistribution(stats.dbOrmCombinations),
+    totalProjects,
+  );
 
-  const timeSeries = dailyStats
-    .map((d) => ({ date: d.date, count: d.count }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  const timeSeries = buildTimeSeries(dailyStats);
+  const monthlyTimeSeries = buildMonthlyTimeSeries(monthlyStats.monthly);
+  const calendarDaySpan = getCalendarDaySpanFromRange(
+    monthlyStats.firstDate,
+    monthlyStats.lastDate,
+    dailyStats,
+  );
 
-  const byMonth = new Map<string, number>();
-  for (const d of dailyStats) {
-    const month = d.date.slice(0, 7);
-    byMonth.set(month, (byMonth.get(month) || 0) + d.count);
-  }
-  const monthlyTimeSeries = Array.from(byMonth.entries())
-    .map(([month, count]) => ({ month, count }))
-    .sort((a, b) => a.month.localeCompare(b.month));
-
-  const uniqueDays = dailyStats.length || 1;
-
-  const hourlyDistribution = Array.from({ length: 24 }, (_, i) => {
-    const hour = String(i).padStart(2, "0");
-    return { hour: `${hour}:00`, count: stats.hourlyDistribution[hour] || 0 };
+  const hourlyDistribution = Array.from({ length: 24 }, (_, hourValue) => {
+    const hour = String(hourValue).padStart(2, "0");
+    return {
+      hour: `${hour}:00`,
+      hourValue,
+      label: hour,
+      count: stats.hourlyDistribution[hour] || 0,
+    };
   });
 
-  const popularStackCombinations = recordToDistribution(stats.stackCombinations).slice(0, 8);
-  const databaseORMCombinations = recordToDistribution(stats.dbOrmCombinations).slice(0, 8);
+  const weekdayDistribution = buildWeekdayDistribution(timeSeries);
+  const nodeVersionDistribution = versionWithShare(
+    recordToDistribution(stats.nodeVersion).map((item) => ({
+      version: item.name,
+      count: item.value,
+    })),
+    totalProjects,
+  );
+  const cliVersionDistribution = versionWithShare(
+    recordToDistribution(stats.cliVersion)
+      .filter((item) => item.name !== "unknown")
+      .map((item) => ({
+        version: item.name,
+        count: item.value,
+      })),
+    totalProjects,
+  );
+
+  const recent7Days = timeSeries.slice(-7).reduce((sum, point) => sum + point.count, 0);
+  const previous7Days = timeSeries.slice(-14, -7).reduce((sum, point) => sum + point.count, 0);
+  const delta = recent7Days - previous7Days;
+  const deltaPercentage = previous7Days > 0 ? delta / previous7Days : recent7Days > 0 ? null : 0;
+  const peakDay = timeSeries.reduce<TimeSeriesPoint | null>(
+    (max, point) => (max && max.count >= point.count ? max : point),
+    null,
+  );
+  const busiestHourCandidate = hourlyDistribution.reduce<
+    (typeof hourlyDistribution)[number] | null
+  >((max, point) => (max && max.count >= point.count ? max : point), null);
+  const busiestHour =
+    busiestHourCandidate && busiestHourCandidate.count > 0 ? busiestHourCandidate : null;
 
   return {
     lastUpdated: new Date(stats.lastEventTime).toISOString(),
-    totalProjects: stats.totalProjects,
-    avgProjectsPerDay: stats.totalProjects / uniqueDays,
-    timeSeries,
-    monthlyTimeSeries,
-    hourlyDistribution,
-    platformDistribution,
-    packageManagerDistribution,
-    backendDistribution,
-    databaseDistribution,
-    ormDistribution,
-    dbSetupDistribution,
-    apiDistribution,
-    frontendDistribution,
-    authDistribution,
-    runtimeDistribution,
-    addonsDistribution,
-    examplesDistribution,
-    gitDistribution,
-    installDistribution,
-    webDeployDistribution,
-    serverDeployDistribution,
-    paymentsDistribution,
-    nodeVersionDistribution,
-    cliVersionDistribution,
-    popularStackCombinations,
-    databaseORMCombinations,
-    summary: {
-      mostPopularFrontend: getMostPopular(frontendDistribution),
-      mostPopularBackend: getMostPopular(backendDistribution),
-      mostPopularDatabase: getMostPopular(databaseDistribution),
-      mostPopularORM: getMostPopular(ormDistribution),
-      mostPopularAPI: getMostPopular(apiDistribution),
-      mostPopularAuth: getMostPopular(authDistribution),
-      mostPopularPackageManager: getMostPopular(packageManagerDistribution),
-      mostPopularRuntime: getMostPopular(runtimeDistribution),
-    },
-  };
-}
-
-function count(map: Map<string, number>, key: string | undefined) {
-  if (!key) return;
-  map.set(key, (map.get(key) || 0) + 1);
-}
-
-function countBool(map: Map<string, number>, val: boolean | undefined) {
-  if (val === undefined) return;
-  const key = val ? "Yes" : "No";
-  map.set(key, (map.get(key) || 0) + 1);
-}
-
-function countArray(map: Map<string, number>, arr: string[] | undefined) {
-  if (!arr) return;
-  for (const item of arr) {
-    count(map, item);
-  }
-}
-
-function toDistribution(map: Map<string, number>): Distribution {
-  return Array.from(map.entries())
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
-}
-
-function getMajorVersion(version: string | undefined) {
-  if (!version) return "unknown";
-  const clean = version.startsWith("v") ? version.slice(1) : version;
-  return `v${clean.split(".")[0]}`;
-}
-
-function aggregateEvents(events: EventRow[], dailyStats?: DailyStats[]): AggregatedAnalyticsData {
-  const byDate = new Map<string, number>();
-  const byMonth = new Map<string, number>();
-  const byHour = new Map<string, number>();
-  const platform = new Map<string, number>();
-  const packageManager = new Map<string, number>();
-  const backend = new Map<string, number>();
-  const database = new Map<string, number>();
-  const orm = new Map<string, number>();
-  const dbSetup = new Map<string, number>();
-  const apiLayer = new Map<string, number>();
-  const frontend = new Map<string, number>();
-  const auth = new Map<string, number>();
-  const runtime = new Map<string, number>();
-  const addons = new Map<string, number>();
-  const examples = new Map<string, number>();
-  const git = new Map<string, number>();
-  const install = new Map<string, number>();
-  const webDeploy = new Map<string, number>();
-  const serverDeploy = new Map<string, number>();
-  const payments = new Map<string, number>();
-  const nodeVersion = new Map<string, number>();
-  const cliVersion = new Map<string, number>();
-  const stackCombo = new Map<string, number>();
-  const dbOrmCombo = new Map<string, number>();
-
-  for (const row of events) {
-    const date = new Date(row._creationTime);
-    const dayKey = date.toISOString().slice(0, 10);
-    const monthKey = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
-    const hourKey = String(date.getUTCHours()).padStart(2, "0");
-
-    byDate.set(dayKey, (byDate.get(dayKey) || 0) + 1);
-    byMonth.set(monthKey, (byMonth.get(monthKey) || 0) + 1);
-    byHour.set(hourKey, (byHour.get(hourKey) || 0) + 1);
-
-    count(platform, row.platform);
-    count(packageManager, row.packageManager);
-    count(backend, row.backend);
-    count(database, row.database);
-    count(orm, row.orm);
-    count(dbSetup, row.dbSetup);
-    count(apiLayer, row.api);
-    countArray(frontend, row.frontend);
-    count(auth, row.auth);
-    count(runtime, row.runtime);
-    countArray(addons, row.addons);
-    countArray(examples, row.examples);
-    countBool(git, row.git);
-    countBool(install, row.install);
-    count(webDeploy, row.webDeploy);
-    count(serverDeploy, row.serverDeploy);
-    count(payments, row.payments);
-    count(nodeVersion, getMajorVersion(row.node_version));
-    count(cliVersion, row.cli_version);
-
-    const fe = row.frontend?.[0] || "none";
-    const be = row.backend || "none";
-    stackCombo.set(`${be} + ${fe}`, (stackCombo.get(`${be} + ${fe}`) || 0) + 1);
-
-    const db = row.database || "none";
-    const o = row.orm || "none";
-    dbOrmCombo.set(`${db} + ${o}`, (dbOrmCombo.get(`${db} + ${o}`) || 0) + 1);
-  }
-
-  const totalProjects = events.length;
-  const uniqueDays = byDate.size || 1;
-  const avgProjectsPerDay = totalProjects / uniqueDays;
-  const lastUpdated =
-    events.length === 0
-      ? null
-      : new Date(Math.max(...events.map((e) => e._creationTime))).toISOString();
-
-  const timeSeries = dailyStats
-    ? dailyStats
-        .map((d) => ({ date: d.date, count: d.count }))
-        .sort((a, b) => a.date.localeCompare(b.date))
-    : Array.from(byDate.entries())
-        .map(([date, count]) => ({ date, count }))
-        .sort((a, b) => a.date.localeCompare(b.date));
-
-  const monthlyTimeSeries = Array.from(byMonth.entries())
-    .map(([month, count]) => ({ month, count }))
-    .sort((a, b) => a.month.localeCompare(b.month));
-
-  const hourlyDistribution = Array.from({ length: 24 }, (_, i) => {
-    const hour = String(i).padStart(2, "0");
-    return { hour: `${hour}:00`, count: byHour.get(hour) || 0 };
-  });
-
-  const platformDistribution = toDistribution(platform);
-  const packageManagerDistribution = toDistribution(packageManager);
-  const backendDistribution = toDistribution(backend);
-  const databaseDistribution = toDistribution(database);
-  const ormDistribution = toDistribution(orm);
-  const dbSetupDistribution = toDistribution(dbSetup).filter((d) => d.name !== "none");
-  const apiDistribution = toDistribution(apiLayer);
-  const frontendDistribution = toDistribution(frontend);
-  const authDistribution = toDistribution(auth);
-  const runtimeDistribution = toDistribution(runtime);
-  const addonsDistribution = toDistribution(addons);
-  const examplesDistribution = toDistribution(examples);
-  const gitDistribution = toDistribution(git);
-  const installDistribution = toDistribution(install);
-  const webDeployDistribution = toDistribution(webDeploy).filter((d) => d.name !== "none");
-  const serverDeployDistribution = toDistribution(serverDeploy).filter((d) => d.name !== "none");
-  const paymentsDistribution = toDistribution(payments).filter((d) => d.name !== "none");
-  const nodeVersionDistribution = toDistribution(nodeVersion).map((d) => ({
-    version: d.name,
-    count: d.value,
-  }));
-  const cliVersionDistribution = toDistribution(cliVersion)
-    .filter((d) => d.name !== "unknown")
-    .slice(0, 10)
-    .map((d) => ({ version: d.name, count: d.value }));
-  const popularStackCombinations = toDistribution(stackCombo).slice(0, 8);
-  const databaseORMCombinations = toDistribution(dbOrmCombo).slice(0, 8);
-
-  return {
-    lastUpdated,
     totalProjects,
-    avgProjectsPerDay,
+    avgProjectsPerDay: totalProjects / Math.max(calendarDaySpan, 1),
     timeSeries,
     monthlyTimeSeries,
     hourlyDistribution,
-    platformDistribution,
-    packageManagerDistribution,
-    backendDistribution,
-    databaseDistribution,
-    ormDistribution,
-    dbSetupDistribution,
-    apiDistribution,
-    frontendDistribution,
-    authDistribution,
-    runtimeDistribution,
-    addonsDistribution,
-    examplesDistribution,
-    gitDistribution,
-    installDistribution,
-    webDeployDistribution,
-    serverDeployDistribution,
-    paymentsDistribution,
+    weekdayDistribution,
+    platformDistribution: withShare(platformDistribution, totalProjects),
+    packageManagerDistribution: withShare(packageManagerDistribution, totalProjects),
+    backendDistribution: withShare(backendDistribution, totalProjects),
+    databaseDistribution: withShare(databaseDistribution, totalProjects),
+    ormDistribution: withShare(ormDistribution, totalProjects),
+    dbSetupDistribution: withShare(dbSetupDistribution, totalProjects),
+    apiDistribution: withShare(apiDistribution, totalProjects),
+    frontendDistribution: withShare(frontendDistribution, totalProjects),
+    authDistribution: withShare(authDistribution, totalProjects),
+    runtimeDistribution: withShare(runtimeDistribution, totalProjects),
+    addonsDistribution: withShare(addonsDistribution, totalProjects),
+    examplesDistribution: withShare(examplesDistribution, totalProjects),
+    gitDistribution: withShare(gitDistribution, totalProjects),
+    installDistribution: withShare(installDistribution, totalProjects),
+    webDeployDistribution: withShare(webDeployDistribution, totalProjects),
+    serverDeployDistribution: withShare(serverDeployDistribution, totalProjects),
+    paymentsDistribution: withShare(paymentsDistribution, totalProjects),
     nodeVersionDistribution,
     cliVersionDistribution,
-    popularStackCombinations,
-    databaseORMCombinations,
+    stackCombinationDistribution,
+    databaseORMCombinationDistribution,
     summary: {
       mostPopularFrontend: getMostPopular(frontendDistribution),
       mostPopularBackend: getMostPopular(backendDistribution),
@@ -358,58 +266,97 @@ function aggregateEvents(events: EventRow[], dailyStats?: DailyStats[]): Aggrega
       mostPopularAuth: getMostPopular(authDistribution),
       mostPopularPackageManager: getMostPopular(packageManagerDistribution),
       mostPopularRuntime: getMostPopular(runtimeDistribution),
+      topStack: stackCombinationDistribution[0]?.name ?? "none",
+      topDatabasePair: databaseORMCombinationDistribution[0]?.name ?? "none",
+    },
+    momentum: {
+      trackingDays: calendarDaySpan,
+      last7Days: recent7Days,
+      previous7Days,
+      delta,
+      deltaPercentage,
+      activeDaysLast30: timeSeries.filter((point) => point.count > 0).length,
+      peakDay: peakDay ? { date: peakDay.date, count: peakDay.count } : null,
+      busiestHour: busiestHour ? { hour: busiestHour.hour, count: busiestHour.count } : null,
     },
   };
 }
+
+const emptyData: AggregatedAnalyticsData = {
+  lastUpdated: null,
+  totalProjects: 0,
+  avgProjectsPerDay: 0,
+  timeSeries: [],
+  monthlyTimeSeries: [],
+  hourlyDistribution: [],
+  weekdayDistribution: [],
+  platformDistribution: [],
+  packageManagerDistribution: [],
+  backendDistribution: [],
+  databaseDistribution: [],
+  ormDistribution: [],
+  dbSetupDistribution: [],
+  apiDistribution: [],
+  frontendDistribution: [],
+  authDistribution: [],
+  runtimeDistribution: [],
+  addonsDistribution: [],
+  examplesDistribution: [],
+  gitDistribution: [],
+  installDistribution: [],
+  webDeployDistribution: [],
+  serverDeployDistribution: [],
+  paymentsDistribution: [],
+  nodeVersionDistribution: [],
+  cliVersionDistribution: [],
+  stackCombinationDistribution: [],
+  databaseORMCombinationDistribution: [],
+  summary: {
+    mostPopularFrontend: "none",
+    mostPopularBackend: "none",
+    mostPopularDatabase: "none",
+    mostPopularORM: "none",
+    mostPopularAPI: "none",
+    mostPopularAuth: "none",
+    mostPopularPackageManager: "none",
+    mostPopularRuntime: "none",
+    topStack: "none",
+    topDatabasePair: "none",
+  },
+  momentum: {
+    trackingDays: 0,
+    last7Days: 0,
+    previous7Days: 0,
+    delta: 0,
+    deltaPercentage: 0,
+    activeDaysLast30: 0,
+    peakDay: null,
+    busiestHour: null,
+  },
+};
 
 export function AnalyticsClient({
   preloadedStats,
   preloadedDailyStats,
+  preloadedMonthlyStats,
 }: {
   preloadedStats: Preloaded<typeof api.analytics.getStats>;
   preloadedDailyStats: Preloaded<typeof api.analytics.getDailyStats>;
+  preloadedMonthlyStats: Preloaded<typeof api.analytics.getMonthlyStats>;
 }) {
-  const [range, setRange] = useState<RangeOption>("all");
-
   const stats = usePreloadedQuery(preloadedStats);
   const dailyStats = usePreloadedQuery(preloadedDailyStats);
+  const monthlyStats = usePreloadedQuery(preloadedMonthlyStats);
+  const connectionState = useConvexConnectionState();
+  const [hasHydrated, setHasHydrated] = useState(false);
 
-  const rangeDays = range === "30d" ? 30 : range === "7d" ? 7 : 1;
-  const rawEvents = useQuery(
-    api.analytics.getAllEvents,
-    range === "all" ? "skip" : { range: range as "30d" | "7d" | "1d" },
-  ) as EventRow[] | undefined;
-  const rangeDailyStats = useQuery(
-    api.analytics.getDailyStats,
-    range === "all" ? "skip" : { days: rangeDays },
-  );
+  useEffect(() => {
+    setHasHydrated(true);
+  }, []);
 
-  const isLoading = range !== "all" && rawEvents === undefined;
+  const connectionStatus = hasHydrated ? getConnectionStatus(connectionState) : "connecting";
 
-  let data: AggregatedAnalyticsData;
+  const data = stats ? buildFromPrecomputed(stats, dailyStats, monthlyStats) : emptyData;
 
-  if (range === "all" && stats) {
-    data = buildFromPrecomputed(stats, dailyStats);
-  } else if (rawEvents) {
-    data = aggregateEvents(rawEvents, rangeDailyStats ?? undefined);
-  } else {
-    data = stats ? buildFromPrecomputed(stats, dailyStats) : aggregateEvents([]);
-  }
-
-  const legacy = {
-    total: 55434,
-    avgPerDay: 326.1,
-    lastUpdatedIso: "2025-11-13T10:10:00.000Z",
-    source: "PostHog (legacy)",
-  };
-
-  return (
-    <AnalyticsPage
-      data={data}
-      range={range}
-      onRangeChange={setRange}
-      legacy={legacy}
-      isLoading={isLoading}
-    />
-  );
+  return <AnalyticsPage data={data} connectionStatus={connectionStatus} />;
 }

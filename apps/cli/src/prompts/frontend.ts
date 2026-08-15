@@ -1,30 +1,45 @@
-import type { Backend, Frontend } from "../types";
-
 import { DEFAULT_CONFIG } from "../constants";
+import type { Backend, Frontend } from "../types";
 import { isFrontendAllowedWithBackend } from "../utils/compatibility-rules";
 import { isFirstPrompt } from "../utils/context";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
 import {
   GO_BACK_SYMBOL,
   isCancel,
   isGoBack,
   navigableMultiselect,
   navigableSelect,
+  preferValidInitial,
   setIsFirstPrompt,
 } from "./navigable";
+
+const WEB_FRONTEND_VALUES: readonly Frontend[] = [
+  "tanstack-router",
+  "react-router",
+  "next",
+  "nuxt",
+  "svelte",
+  "solid",
+  "astro",
+  "tanstack-start",
+];
 
 export async function getFrontendChoice(
   frontendOptions?: Frontend[],
   backend?: Backend,
   auth?: string,
+  previousValue?: Frontend[],
 ): Promise<Frontend[] | symbol> {
   if (frontendOptions !== undefined) return frontendOptions;
+
+  const previousWeb = previousValue?.find((f) => WEB_FRONTEND_VALUES.includes(f));
+  const previousNative = previousValue?.find((f) => f.startsWith("native-"));
 
   while (true) {
     const wasFirstPrompt = isFirstPrompt();
 
     const frontendTypes = await navigableMultiselect({
-      message: "Select project type",
+      message: "What are you building?",
       options: [
         {
           value: "web",
@@ -38,11 +53,13 @@ export async function getFrontendChoice(
         },
       ],
       required: false,
-      initialValues: ["web"],
+      initialValues: previousValue
+        ? [...(previousWeb ? ["web"] : []), ...(previousNative ? ["native"] : [])]
+        : ["web"],
     });
 
     if (isGoBack(frontendTypes)) return GO_BACK_SYMBOL;
-    if (isCancel(frontendTypes)) return exitCancelled("Operation cancelled");
+    if (isCancel(frontendTypes)) throw new UserCancelledError({ message: "Operation cancelled" });
 
     setIsFirstPrompt(false);
 
@@ -82,6 +99,11 @@ export async function getFrontendChoice(
           hint: "Simple and performant reactivity for building user interfaces",
         },
         {
+          value: "astro" as const,
+          label: "Astro",
+          hint: "The web framework for content-driven websites",
+        },
+        {
           value: "tanstack-start" as const,
           label: "TanStack Start",
           hint: "SSR, Server Functions, API Routes and more with TanStack Router",
@@ -93,15 +115,15 @@ export async function getFrontendChoice(
       );
 
       const webFramework = await navigableSelect<Frontend>({
-        message: "Choose web",
+        message: "Choose a web framework",
         options: webOptions,
-        initialValue: DEFAULT_CONFIG.frontend[0],
+        initialValue: preferValidInitial(webOptions, previousWeb, DEFAULT_CONFIG.frontend[0]),
       });
 
       if (isGoBack(webFramework)) {
         shouldRestart = true;
       } else if (isCancel(webFramework)) {
-        return exitCancelled("Operation cancelled");
+        throw new UserCancelledError({ message: "Operation cancelled" });
       } else {
         result.push(webFramework as Frontend);
       }
@@ -114,7 +136,7 @@ export async function getFrontendChoice(
 
     if (frontendTypes.includes("native")) {
       const nativeFramework = await navigableSelect<Frontend>({
-        message: "Choose native",
+        message: "Choose a native setup",
         options: [
           {
             value: "native-bare" as const,
@@ -132,7 +154,7 @@ export async function getFrontendChoice(
             hint: "Consistent styling for React Native",
           },
         ],
-        initialValue: "native-bare",
+        initialValue: previousNative ?? "native-bare",
       });
 
       if (isGoBack(nativeFramework)) {
@@ -143,7 +165,7 @@ export async function getFrontendChoice(
           continue;
         }
       } else if (isCancel(nativeFramework)) {
-        return exitCancelled("Operation cancelled");
+        throw new UserCancelledError({ message: "Operation cancelled" });
       } else {
         result.push(nativeFramework as Frontend);
       }

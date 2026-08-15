@@ -3,19 +3,23 @@
  * These prompts return GO_BACK_SYMBOL when 'b' is pressed (instead of canceling)
  */
 
+import type { Readable, Writable } from "node:stream";
+
 import {
   ConfirmPrompt,
+  type Prompt,
   type State,
   GroupMultiSelectPrompt,
   MultiSelectPrompt,
   SelectPrompt,
-  TextPrompt,
   isCancel,
 } from "@clack/core";
+import { limitOptions } from "@clack/prompts";
 import pc from "picocolors";
 
 import {
   didLastPromptShowUI as ctxDidLastPromptShowUI,
+  getPromptProgress,
   isFirstPrompt as ctxIsFirstPrompt,
   setIsFirstPrompt as ctxSetIsFirstPrompt,
   setLastPromptShownUI as ctxSetLastPromptShownUI,
@@ -27,6 +31,7 @@ const S_STEP_ACTIVE = unicode ? "◆" : "*";
 const S_STEP_CANCEL = unicode ? "■" : "x";
 const S_STEP_ERROR = unicode ? "▲" : "x";
 const S_STEP_SUBMIT = unicode ? "◇" : "o";
+const S_STEP_BACK = unicode ? "↶" : "<";
 const S_BAR = unicode ? "│" : "|";
 const S_BAR_END = unicode ? "└" : "—";
 const S_RADIO_ACTIVE = unicode ? "●" : ">";
@@ -34,6 +39,11 @@ const S_RADIO_INACTIVE = unicode ? "○" : " ";
 const S_CHECKBOX_ACTIVE = unicode ? "◻" : "[•]";
 const S_CHECKBOX_SELECTED = unicode ? "◼" : "[+]";
 const S_CHECKBOX_INACTIVE = unicode ? "◻" : "[ ]";
+const promptsNavigatingBack = new WeakSet<object>();
+
+function keycap(label: string): string {
+  return pc.inverse(` ${label} `);
+}
 
 function symbol(state: State) {
   switch (state) {
@@ -50,19 +60,19 @@ function symbol(state: State) {
 }
 
 const KEYBOARD_HINT = pc.dim(
-  `${pc.gray("↑/↓")} navigate • ${pc.gray("enter")} confirm • ${pc.gray("b")} back • ${pc.gray("ctrl+c")} cancel`,
+  `${keycap("↑↓")} move  ${keycap("enter")} choose  ${keycap("b")} back  ${keycap("^c")} cancel`,
 );
 
 const KEYBOARD_HINT_FIRST = pc.dim(
-  `${pc.gray("↑/↓")} navigate • ${pc.gray("enter")} confirm • ${pc.gray("ctrl+c")} cancel`,
+  `${keycap("↑↓")} move  ${keycap("enter")} choose  ${keycap("^c")} cancel`,
 );
 
 const KEYBOARD_HINT_MULTI = pc.dim(
-  `${pc.gray("↑/↓")} navigate • ${pc.gray("space")} select • ${pc.gray("enter")} confirm • ${pc.gray("b")} back • ${pc.gray("ctrl+c")} cancel`,
+  `${keycap("↑↓")} move  ${keycap("space")} toggle  ${keycap("enter")} choose  ${keycap("b")} back  ${keycap("^c")} cancel`,
 );
 
 const KEYBOARD_HINT_MULTI_FIRST = pc.dim(
-  `${pc.gray("↑/↓")} navigate • ${pc.gray("space")} select • ${pc.gray("enter")} confirm • ${pc.gray("ctrl+c")} cancel`,
+  `${keycap("↑↓")} move  ${keycap("space")} toggle  ${keycap("enter")} choose  ${keycap("^c")} cancel`,
 );
 
 export const setIsFirstPrompt = ctxSetIsFirstPrompt;
@@ -77,20 +87,61 @@ function getMultiHint(): string {
   return ctxIsFirstPrompt() ? KEYBOARD_HINT_MULTI_FIRST : KEYBOARD_HINT_MULTI;
 }
 
-async function runWithNavigation<T>(prompt: any): Promise<T | symbol> {
+function activePromptTitle(message: string, state: "active" | "error" = "active"): string {
+  const progress = getPromptProgress();
+  const eyebrow = progress
+    ? `${pc.magenta(pc.bold(progress.section.toUpperCase()))} ${pc.dim(`· ${progress.current}/${progress.total}`)}`
+    : pc.dim("SETUP");
+
+  return `${pc.gray(S_BAR)}  ${eyebrow}\n${symbol(state)}  ${pc.bold(message)}\n`;
+}
+
+function resolvedPrompt(message: string, value: string, state: "submit" | "cancel"): string {
+  const promptMessage = state === "cancel" ? pc.strikethrough(pc.dim(message)) : pc.dim(message);
+  return `${symbol(state)}  ${promptMessage} ${pc.dim("›")} ${value}`;
+}
+
+function canceledPrompt<T extends object>(prompt: T, message: string, value: string): string {
+  if (promptsNavigatingBack.has(prompt)) {
+    return `${pc.cyan(S_STEP_BACK)}  ${pc.dim(message)}`;
+  }
+  return resolvedPrompt(message, value, "cancel");
+}
+
+function normalizeValidationMessage(
+  validationMessage: string | Error | undefined,
+): string | undefined {
+  return validationMessage instanceof Error ? validationMessage.message : validationMessage;
+}
+
+async function runWithNavigation<T>(prompt: Prompt<T>): Promise<T | symbol> {
   let goBack = false;
 
   prompt.on("key", (char: string | undefined) => {
-    if (char === "b" && !ctxIsFirstPrompt()) {
+    if ((char === "b" || char === "B") && !ctxIsFirstPrompt()) {
       goBack = true;
+      promptsNavigatingBack.add(prompt);
+      // Use Clack's public state field so the normal keypress finalize path
+      // restores raw mode, listeners, and the terminal cursor.
       prompt.state = "cancel";
     }
   });
 
   ctxSetLastPromptShownUI(true);
-  const result = await prompt.prompt();
+  try {
+    const result = await prompt.prompt();
+    return goBack ? GO_BACK_SYMBOL : (result as T | symbol);
+  } finally {
+    promptsNavigatingBack.delete(prompt);
+  }
+}
 
-  return goBack ? GO_BACK_SYMBOL : result;
+interface NavigableCommonOptions {
+  /** Abort this prompt through Clack's normal cancellation path. */
+  signal?: AbortSignal;
+  /** Override streams for embedding or deterministic prompt tests. */
+  input?: Readable;
+  output?: Writable;
 }
 
 interface SelectOption<T> {
@@ -100,17 +151,19 @@ interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export interface NavigableSelectOptions<T> {
+export interface NavigableSelectOptions<T> extends NavigableCommonOptions {
   message: string;
   options: SelectOption<T>[];
   initialValue?: T;
+  maxItems?: number;
 }
 
 export async function navigableSelect<T>(opts: NavigableSelectOptions<T>): Promise<T | symbol> {
   const opt = (
-    option: SelectOption<T>,
+    option: SelectOption<T> | undefined,
     state: "inactive" | "active" | "selected" | "cancelled" | "disabled",
   ) => {
+    if (!option) return pc.dim("none");
     const label = option.label ?? String(option.value);
     switch (state) {
       case "disabled":
@@ -118,7 +171,7 @@ export async function navigableSelect<T>(opts: NavigableSelectOptions<T>): Promi
       case "selected":
         return `${pc.dim(label)}`;
       case "active":
-        return `${pc.green(S_RADIO_ACTIVE)} ${label}${option.hint ? ` ${pc.dim(`(${option.hint})`)}` : ""}`;
+        return `${pc.cyan(S_RADIO_ACTIVE)} ${label}${option.hint ? ` ${pc.dim(`(${option.hint})`)}` : ""}`;
       case "cancelled":
         return `${pc.strikethrough(pc.dim(label))}`;
       default:
@@ -129,24 +182,30 @@ export async function navigableSelect<T>(opts: NavigableSelectOptions<T>): Promi
   const prompt = new SelectPrompt({
     options: opts.options,
     initialValue: opts.initialValue,
+    signal: opts.signal,
+    input: opts.input,
+    output: opts.output,
     render() {
-      const title = `${pc.gray(S_BAR)}\n${symbol(this.state)}  ${opts.message}\n`;
-
       switch (this.state) {
         case "submit": {
-          return `${title}${pc.gray(S_BAR)}  ${opt(this.options[this.cursor], "selected")}`;
+          return resolvedPrompt(opts.message, opt(this.options[this.cursor], "selected"), "submit");
         }
         case "cancel": {
-          return `${title}${pc.gray(S_BAR)}  ${opt(this.options[this.cursor], "cancelled")}\n${pc.gray(S_BAR)}`;
+          return canceledPrompt(this, opts.message, opt(this.options[this.cursor], "cancelled"));
         }
         default: {
-          const optionsText = this.options
-            .map((option, i) =>
-              opt(option, option.disabled ? "disabled" : i === this.cursor ? "active" : "inactive"),
-            )
-            .join(`\n${pc.cyan(S_BAR)}  `);
-          const hint = `\n${pc.gray(S_BAR)}  ${getHint()}`;
-          return `${title}${pc.cyan(S_BAR)}  ${optionsText}\n${pc.cyan(S_BAR_END)}${hint}\n`;
+          const optionsText = limitOptions({
+            output: opts.output,
+            options: this.options,
+            cursor: this.cursor,
+            maxItems: opts.maxItems,
+            columnPadding: 3,
+            rowPadding: 5,
+            style: (option, active) =>
+              opt(option, option.disabled ? "disabled" : active ? "active" : "inactive"),
+          }).join(`\n${pc.cyan(S_BAR)}  `);
+          const hint = `${pc.gray(S_BAR_END)}  ${getHint()}`;
+          return `${activePromptTitle(opts.message)}${pc.cyan(S_BAR)}  ${optionsText}\n${hint}\n`;
         }
       }
     },
@@ -155,11 +214,14 @@ export async function navigableSelect<T>(opts: NavigableSelectOptions<T>): Promi
   return runWithNavigation(prompt) as Promise<T | symbol>;
 }
 
-export interface NavigableMultiselectOptions<T> {
+export interface NavigableMultiselectOptions<T> extends NavigableCommonOptions {
   message: string;
   options: SelectOption<T>[];
   initialValues?: T[];
+  cursorAt?: T;
+  maxItems?: number;
   required?: boolean;
+  validate?: (selected: T[] | undefined) => string | Error | undefined;
 }
 
 export async function navigableMultiselect<T>(
@@ -203,14 +265,18 @@ export async function navigableMultiselect<T>(
   const prompt = new MultiSelectPrompt({
     options: opts.options,
     initialValues: opts.initialValues,
+    cursorAt: opts.cursorAt,
     required,
+    signal: opts.signal,
+    input: opts.input,
+    output: opts.output,
     validate(selected: T[] | undefined) {
       if (required && (selected === undefined || selected.length === 0)) {
         return `Please select at least one option.\n${pc.reset(pc.dim(`Press ${pc.gray(pc.bgWhite(pc.inverse(" space ")))} to select, ${pc.gray(pc.bgWhite(pc.inverse(" enter ")))} to submit`))}`;
       }
+      return normalizeValidationMessage(opts.validate?.(selected));
     },
     render() {
-      const title = `${pc.gray(S_BAR)}\n${symbol(this.state)}  ${opts.message}\n`;
       const value = this.value ?? [];
 
       const styleOption = (option: SelectOption<T>, active: boolean) => {
@@ -234,31 +300,44 @@ export async function navigableMultiselect<T>(
               .filter(({ value: optionValue }) => value.includes(optionValue))
               .map((option) => opt(option, "submitted"))
               .join(pc.dim(", ")) || pc.dim("none");
-          return `${title}${pc.gray(S_BAR)}  ${submitText}`;
+          return resolvedPrompt(opts.message, submitText, "submit");
         }
         case "cancel": {
-          const label = this.options
-            .filter(({ value: optionValue }) => value.includes(optionValue))
-            .map((option) => opt(option, "cancelled"))
-            .join(pc.dim(", "));
-          return `${title}${pc.gray(S_BAR)}  ${label}\n${pc.gray(S_BAR)}`;
+          const label =
+            this.options
+              .filter(({ value: optionValue }) => value.includes(optionValue))
+              .map((option) => opt(option, "cancelled"))
+              .join(pc.dim(", ")) || pc.dim("none");
+          return canceledPrompt(this, opts.message, label);
         }
         case "error": {
           const footer = this.error
             .split("\n")
             .map((ln, i) => (i === 0 ? `${pc.yellow(S_BAR_END)}  ${pc.yellow(ln)}` : `   ${ln}`))
             .join("\n");
-          const optionsText = this.options
-            .map((option, i) => styleOption(option, i === this.cursor))
-            .join(`\n${pc.yellow(S_BAR)}  `);
-          return `${title}${pc.yellow(S_BAR)}  ${optionsText}\n${footer}\n`;
+          const optionsText = limitOptions({
+            output: opts.output,
+            options: this.options,
+            cursor: this.cursor,
+            maxItems: opts.maxItems,
+            columnPadding: 3,
+            rowPadding: footer.split("\n").length + 4,
+            style: styleOption,
+          }).join(`\n${pc.yellow(S_BAR)}  `);
+          return `${activePromptTitle(opts.message, "error")}${pc.yellow(S_BAR)}  ${optionsText}\n${footer}\n`;
         }
         default: {
-          const optionsText = this.options
-            .map((option, i) => styleOption(option, i === this.cursor))
-            .join(`\n${pc.cyan(S_BAR)}  `);
-          const hint = `\n${pc.gray(S_BAR)}  ${getMultiHint()}`;
-          return `${title}${pc.cyan(S_BAR)}  ${optionsText}\n${pc.cyan(S_BAR_END)}${hint}\n`;
+          const optionsText = limitOptions({
+            output: opts.output,
+            options: this.options,
+            cursor: this.cursor,
+            maxItems: opts.maxItems,
+            columnPadding: 3,
+            rowPadding: 5,
+            style: styleOption,
+          }).join(`\n${pc.cyan(S_BAR)}  `);
+          const hint = `${pc.gray(S_BAR_END)}  ${getMultiHint()}`;
+          return `${activePromptTitle(opts.message)}${pc.cyan(S_BAR)}  ${optionsText}\n${hint}\n`;
         }
       }
     },
@@ -267,7 +346,7 @@ export async function navigableMultiselect<T>(
   return runWithNavigation(prompt) as Promise<T[] | symbol>;
 }
 
-export interface NavigableConfirmOptions {
+export interface NavigableConfirmOptions extends NavigableCommonOptions {
   message: string;
   active?: string;
   inactive?: string;
@@ -282,80 +361,34 @@ export async function navigableConfirm(opts: NavigableConfirmOptions): Promise<b
     active,
     inactive,
     initialValue: opts.initialValue ?? true,
+    signal: opts.signal,
+    input: opts.input,
+    output: opts.output,
     render() {
-      const title = `${pc.gray(S_BAR)}\n${symbol(this.state)}  ${opts.message}\n`;
       const value = this.value ? active : inactive;
 
       switch (this.state) {
         case "submit":
-          return `${title}${pc.gray(S_BAR)}  ${pc.dim(value)}`;
+          return resolvedPrompt(opts.message, pc.dim(value), "submit");
         case "cancel":
-          return `${title}${pc.gray(S_BAR)}  ${pc.strikethrough(pc.dim(value))}\n${pc.gray(S_BAR)}`;
+          return canceledPrompt(this, opts.message, pc.strikethrough(pc.dim(value)));
         default: {
-          const hint = `\n${pc.gray(S_BAR)}  ${getHint()}`;
-          return `${title}${pc.cyan(S_BAR)}  ${
+          const hint = `${pc.gray(S_BAR_END)}  ${getHint()}`;
+          return `${activePromptTitle(opts.message)}${pc.cyan(S_BAR)}  ${
             this.value
-              ? `${pc.green(S_RADIO_ACTIVE)} ${active}`
+              ? `${pc.cyan(S_RADIO_ACTIVE)} ${active}`
               : `${pc.dim(S_RADIO_INACTIVE)} ${pc.dim(active)}`
           } ${pc.dim("/")} ${
             !this.value
-              ? `${pc.green(S_RADIO_ACTIVE)} ${inactive}`
+              ? `${pc.cyan(S_RADIO_ACTIVE)} ${inactive}`
               : `${pc.dim(S_RADIO_INACTIVE)} ${pc.dim(inactive)}`
-          }\n${pc.cyan(S_BAR_END)}${hint}\n`;
+          }\n${hint}\n`;
         }
       }
     },
   });
 
   return runWithNavigation(prompt) as Promise<boolean | symbol>;
-}
-
-export interface NavigableTextOptions {
-  message: string;
-  placeholder?: string;
-  defaultValue?: string;
-  initialValue?: string;
-  validate?: (value: string | undefined) => string | Error | undefined;
-}
-
-export async function navigableText(opts: NavigableTextOptions): Promise<string | symbol> {
-  const prompt = new TextPrompt({
-    validate: opts.validate,
-    placeholder: opts.placeholder,
-    defaultValue: opts.defaultValue,
-    initialValue: opts.initialValue,
-    render() {
-      const title = `${pc.gray(S_BAR)}\n${symbol(this.state)}  ${opts.message}\n`;
-      const placeholder = opts.placeholder
-        ? pc.inverse(opts.placeholder[0]) + pc.dim(opts.placeholder.slice(1))
-        : pc.inverse(pc.hidden("_"));
-      // biome-ignore lint/suspicious/noExplicitAny: TextPrompt has userInput but types don't expose it
-      const self = this as any;
-      const userInput = !self.userInput ? placeholder : self.userInputWithCursor;
-      const value = this.value ?? "";
-
-      switch (this.state) {
-        case "error": {
-          const errorText = this.error ? `  ${pc.yellow(this.error)}` : "";
-          return `${title.trim()}\n${pc.yellow(S_BAR)}  ${userInput}\n${pc.yellow(S_BAR_END)}${errorText}\n`;
-        }
-        case "submit": {
-          const valueText = value ? `  ${pc.dim(value)}` : "";
-          return `${title}${pc.gray(S_BAR)}${valueText}`;
-        }
-        case "cancel": {
-          const valueText = value ? `  ${pc.strikethrough(pc.dim(value))}` : "";
-          return `${title}${pc.gray(S_BAR)}${valueText}${value.trim() ? `\n${pc.gray(S_BAR)}` : ""}`;
-        }
-        default: {
-          const hint = `\n${pc.gray(S_BAR)}  ${getHint()}`;
-          return `${title}${pc.cyan(S_BAR)}  ${userInput}\n${pc.cyan(S_BAR_END)}${hint}\n`;
-        }
-      }
-    },
-  });
-
-  return runWithNavigation(prompt) as Promise<string | symbol>;
 }
 
 export interface GroupMultiSelectOption<T> {
@@ -365,11 +398,14 @@ export interface GroupMultiSelectOption<T> {
   disabled?: boolean;
 }
 
-export interface NavigableGroupMultiselectOptions<T> {
+export interface NavigableGroupMultiselectOptions<T> extends NavigableCommonOptions {
   message: string;
   options: Record<string, GroupMultiSelectOption<T>[]>;
   initialValues?: T[];
+  cursorAt?: T;
+  maxItems?: number;
   required?: boolean;
+  validate?: (selected: T[] | undefined) => string | Error | undefined;
 }
 
 export async function navigableGroupMultiselect<T>(
@@ -391,7 +427,7 @@ export async function navigableGroupMultiselect<T>(
     options: (GroupMultiSelectOption<T> & { group: string | boolean })[] = [],
   ) => {
     const label = option.label ?? String(option.value);
-    const isItem = typeof option.group === "string";
+    const isItem = option.group !== true && option.group !== false;
     const next = isItem && (options[options.indexOf(option) + 1] ?? { group: true });
     const isLast = isItem && next && next.group === true;
     const prefix = isItem ? `${isLast ? S_BAR_END : S_BAR} ` : "";
@@ -425,100 +461,103 @@ export async function navigableGroupMultiselect<T>(
   const prompt = new GroupMultiSelectPrompt<GroupMultiSelectOption<T>>({
     options: opts.options,
     initialValues: opts.initialValues,
+    cursorAt: opts.cursorAt,
     required,
     selectableGroups: true,
+    signal: opts.signal,
+    input: opts.input,
+    output: opts.output,
     validate(selected: T[] | undefined) {
       if (required && (selected === undefined || selected.length === 0)) {
         return `Please select at least one option.\n${pc.reset(pc.dim(`Press ${pc.gray(pc.bgWhite(pc.inverse(" space ")))} to select, ${pc.gray(pc.bgWhite(pc.inverse(" enter ")))} to submit`))}`;
       }
+      return normalizeValidationMessage(opts.validate?.(selected));
     },
     render() {
-      const title = `${pc.gray(S_BAR)}\n${symbol(this.state)}  ${opts.message}\n`;
       const value = this.value ?? [];
+      const styleOption = (
+        option: GroupMultiSelectOption<T> & { group: string | boolean },
+        active: boolean,
+      ) => {
+        const selected =
+          value.includes(option.value) ||
+          (option.group === true && this.isGroupSelected(`${option.value}`));
+        const groupActive =
+          !active &&
+          option.group !== true &&
+          option.group !== false &&
+          this.options[this.cursor]?.value === option.group;
+        if (groupActive) {
+          return opt(option, selected ? "group-active-selected" : "group-active", this.options);
+        }
+        if (active && selected) {
+          return opt(option, "active-selected", this.options);
+        }
+        if (selected) {
+          return opt(option, "selected", this.options);
+        }
+        return opt(option, active ? "active" : "inactive", this.options);
+      };
 
       switch (this.state) {
         case "submit": {
           const selectedOptions = this.options
             .filter(({ value: optionValue }) => value.includes(optionValue))
             .map((option) => opt(option, "submitted"));
-          const optionsText =
-            selectedOptions.length === 0 ? "" : `  ${selectedOptions.join(pc.dim(", "))}`;
-          return `${title}${pc.gray(S_BAR)}${optionsText}`;
+          const optionsText = selectedOptions.join(pc.dim(", ")) || pc.dim("none");
+          return resolvedPrompt(opts.message, optionsText, "submit");
         }
         case "cancel": {
-          const label = this.options
-            .filter(({ value: optionValue }) => value.includes(optionValue))
-            .map((option) => opt(option, "cancelled"))
-            .join(pc.dim(", "));
-          return `${title}${pc.gray(S_BAR)}  ${label.trim() ? `${label}\n${pc.gray(S_BAR)}` : ""}`;
+          const label =
+            this.options
+              .filter(({ value: optionValue }) => value.includes(optionValue))
+              .map((option) => opt(option, "cancelled"))
+              .join(pc.dim(", ")) || pc.dim("none");
+          return canceledPrompt(this, opts.message, label);
         }
         case "error": {
           const footer = this.error
             .split("\n")
             .map((ln, i) => (i === 0 ? `${pc.yellow(S_BAR_END)}  ${pc.yellow(ln)}` : `   ${ln}`))
             .join("\n");
-          const optionsText = this.options
-            .map((option, i, options) => {
-              const selected =
-                value.includes(option.value) ||
-                (option.group === true && this.isGroupSelected(`${option.value}`));
-              const active = i === this.cursor;
-              const groupActive =
-                !active &&
-                typeof option.group === "string" &&
-                this.options[this.cursor].value === option.group;
-              if (groupActive) {
-                return opt(option, selected ? "group-active-selected" : "group-active", options);
-              }
-              if (active && selected) {
-                return opt(option, "active-selected", options);
-              }
-              if (selected) {
-                return opt(option, "selected", options);
-              }
-              return opt(option, active ? "active" : "inactive", options);
-            })
-            .join(`\n${pc.yellow(S_BAR)}  `);
-          return `${title}${pc.yellow(S_BAR)}  ${optionsText}\n${footer}\n`;
+          const optionsText = limitOptions({
+            output: opts.output,
+            options: this.options,
+            cursor: this.cursor,
+            maxItems: opts.maxItems,
+            columnPadding: 3,
+            rowPadding: footer.split("\n").length + 4,
+            style: styleOption,
+          }).join(`\n${pc.yellow(S_BAR)}  `);
+          return `${activePromptTitle(opts.message, "error")}${pc.yellow(S_BAR)}  ${optionsText}\n${footer}\n`;
         }
         default: {
-          const optionsText = this.options
-            .map((option, i, options) => {
-              const selected =
-                value.includes(option.value) ||
-                (option.group === true && this.isGroupSelected(`${option.value}`));
-              const active = i === this.cursor;
-              const groupActive =
-                !active &&
-                typeof option.group === "string" &&
-                this.options[this.cursor].value === option.group;
-              let optionText = "";
-              if (groupActive) {
-                optionText = opt(
-                  option,
-                  selected ? "group-active-selected" : "group-active",
-                  options,
-                );
-              } else if (active && selected) {
-                optionText = opt(option, "active-selected", options);
-              } else if (selected) {
-                optionText = opt(option, "selected", options);
-              } else {
-                optionText = opt(option, active ? "active" : "inactive", options);
-              }
-              const optPrefix = i !== 0 && !optionText.startsWith("\n") ? "  " : "";
-              return `${optPrefix}${optionText}`;
-            })
-            .join(`\n${pc.cyan(S_BAR)}`);
-          const optionsPrefix = optionsText.startsWith("\n") ? "" : "  ";
-          const hint = `\n${pc.gray(S_BAR)}  ${getMultiHint()}`;
-          return `${title}${pc.cyan(S_BAR)}${optionsPrefix}${optionsText}\n${pc.cyan(S_BAR_END)}${hint}\n`;
+          const optionsText = limitOptions({
+            output: opts.output,
+            options: this.options,
+            cursor: this.cursor,
+            maxItems: opts.maxItems,
+            columnPadding: 3,
+            rowPadding: 5,
+            style: styleOption,
+          }).join(`\n${pc.cyan(S_BAR)}  `);
+          const hint = `${pc.gray(S_BAR_END)}  ${getMultiHint()}`;
+          return `${activePromptTitle(opts.message)}${pc.cyan(S_BAR)}  ${optionsText}\n${hint}\n`;
         }
       }
     },
   });
 
   return runWithNavigation(prompt) as Promise<T[] | symbol>;
+}
+
+/** Use the remembered answer as the initial value only while it is still selectable. */
+export function preferValidInitial<T>(
+  options: ReadonlyArray<{ value: T }>,
+  previous: T | undefined,
+  fallback: T,
+): T {
+  return previous !== undefined && options.some((o) => o.value === previous) ? previous : fallback;
 }
 
 export { isCancel };

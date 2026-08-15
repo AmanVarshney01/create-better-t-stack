@@ -1,0 +1,43 @@
+import { expoClient } from "@better-auth/expo/client";
+import { createAuthClient } from "better-auth/react";
+import * as SecureStore from "expo-secure-store";
+import Constants from "expo-constants";
+import { env } from "@{{projectName}}/env/native";
+
+export const authClient = createAuthClient({
+	baseURL: env.EXPO_PUBLIC_SERVER_URL,
+	plugins: [
+		expoClient({
+			scheme: Constants.expoConfig?.scheme as string,
+			storagePrefix: Constants.expoConfig?.scheme as string,
+			storage: SecureStore,
+		}),
+	],
+});
+{{#if (eq payments "polar")}}
+
+type PolarLinkResponse = {
+	url: string;
+	redirect: boolean;
+};
+
+type PolarClientResponse<T> = Promise<{
+	data: T | null;
+	error: { message?: string } | null;
+}>;
+
+type PolarNativeClient = typeof authClient & {
+	checkout: (data: {
+		slug?: string;
+		products?: string[] | string;
+		redirect?: boolean;
+		successUrl?: string;
+		returnUrl?: string;
+	}) => PolarClientResponse<PolarLinkResponse>;
+	customer: {
+		portal: (data?: { redirect?: boolean }) => PolarClientResponse<PolarLinkResponse>;
+	};
+};
+
+export const polarNativeClient = authClient as PolarNativeClient;
+{{/if}}

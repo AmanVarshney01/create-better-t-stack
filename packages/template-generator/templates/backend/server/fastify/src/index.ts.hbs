@@ -1,0 +1,218 @@
+import { env } from "@{{projectName}}/env/server";
+import Fastify from "fastify";
+import fastifyCors from "@fastify/cors";
+
+{{#if (eq api "trpc")}}
+import { fastifyTRPCPlugin, type FastifyTRPCPluginOptions } from "@trpc/server/adapters/fastify";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter, type AppRouter } from "@{{projectName}}/api/routers/index";
+{{/if}}
+
+{{#if (eq api "orpc")}}
+import { OpenAPIHandler } from "@orpc/openapi/fastify";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { RPCHandler } from "@orpc/server/fastify";
+import { onError } from "@orpc/server";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+{{/if}}
+
+{{#if (includes examples "ai")}}
+import { createUIMessageStreamResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { google } from "@ai-sdk/google";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+{{/if}}
+
+{{#if (eq auth "better-auth")}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{#if (eq auth "clerk")}}
+import { clerkPlugin } from "@clerk/fastify";
+{{/if}}
+
+const baseCorsConfig = {
+	origin: env.CORS_ORIGIN,
+	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+	allowedHeaders: [
+		"Content-Type",
+		"Authorization",
+		"X-Requested-With"
+	],
+	credentials: true,
+	maxAge: 86400,
+};
+
+{{#if (eq api "orpc")}}
+const rpcHandler = new RPCHandler(appRouter, {
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+const apiHandler = new OpenAPIHandler(appRouter, {
+	plugins: [
+		new OpenAPIReferencePlugin({
+			schemaConverters: [new ZodToJsonSchemaConverter()],
+		}),
+	],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+const fastify = Fastify({
+	logger: true,
+});
+{{else}}
+const fastify = Fastify({
+	logger: true,
+});
+{{/if}}
+
+fastify.register(fastifyCors, baseCorsConfig);
+{{#if (eq auth "clerk")}}
+fastify.register(clerkPlugin, {
+	publishableKey: env.CLERK_PUBLISHABLE_KEY,
+	secretKey: env.CLERK_SECRET_KEY,
+});
+{{/if}}
+
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+fastify.get("/polar/success", async (request, reply) => {
+	const requestUrl = new URL(request.url, env.BETTER_AUTH_URL);
+	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+	let redirectUrl: URL;
+	try {
+		redirectUrl = new URL(returnUrl);
+	} catch {
+		reply.status(400).send("Invalid return URL");
+		return;
+	}
+
+	if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+		reply.status(400).send("Invalid return URL");
+		return;
+	}
+
+	reply.status(302).header("Location", redirectUrl.toString()).send();
+});
+
+{{/if}}
+{{#if (eq api "orpc")}}
+fastify.register(async (rpcApp) => {
+	// Fully utilize oRPC features by letting oRPC parse the request body.
+	rpcApp.addContentTypeParser("*", (_, _payload, done) => {
+		done(null, undefined);
+	});
+
+	rpcApp.all("/rpc/*", async (request, reply) => {
+		const { matched } = await rpcHandler.handle(request, reply, {
+			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
+			prefix: "/rpc",
+		});
+
+		if (!matched) {
+			reply.status(404).send();
+		}
+	});
+
+	rpcApp.all("/api-reference/*", async (request, reply) => {
+		const { matched } = await apiHandler.handle(request, reply, {
+			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
+			prefix: "/api-reference",
+		});
+
+		if (!matched) {
+			reply.status(404).send();
+		}
+	});
+});
+{{/if}}
+
+{{#if (eq auth "better-auth")}}
+fastify.route({
+	method: ["GET", "POST"],
+	url: "/api/auth/*",
+	async handler(request, reply) {
+		try {
+			const url = new URL(request.url, `http://${request.headers.host}`);
+			const headers = new Headers();
+			Object.entries(request.headers).forEach(([key, value]) => {
+				if (value) headers.append(key, value.toString());
+			});
+			const req = new Request(url.toString(), {
+				method: request.method,
+				headers,
+				body: request.body ? JSON.stringify(request.body) : undefined,
+			});
+			const response = await auth.handler(req);
+			reply.status(response.status);
+			response.headers.forEach((value, key) => reply.header(key, value));
+			reply.send(response.body ? await response.text() : null);
+		} catch (error) {
+			fastify.log.error({ err: error }, "Authentication Error:");
+			reply.status(500).send({
+				error: "Internal authentication error",
+				code: "AUTH_FAILURE"
+			});
+		}
+	}
+});
+{{/if}}
+
+{{#if (eq api "trpc")}}
+fastify.register(fastifyTRPCPlugin, {
+	prefix: "/trpc",
+	trpcOptions: {
+		router: appRouter,
+		createContext,
+		onError({ path, error }) {
+			console.error(`Error in tRPC handler on path '${path}':`, error);
+		},
+	} satisfies FastifyTRPCPluginOptions<AppRouter>["trpcOptions"],
+});
+{{/if}}
+
+{{#if (includes examples "ai")}}
+interface AiRequestBody {
+	id?: string;
+	messages: UIMessage[];
+}
+
+fastify.post('/ai', async function (request) {
+	const { messages } = request.body as AiRequestBody;
+	const model = wrapLanguageModel({
+		model: google('gemini-2.5-flash'),
+		middleware: devToolsMiddleware(),
+	});
+	const result = streamText({
+		model,
+		messages: await convertToModelMessages(messages),
+	});
+
+	return createUIMessageStreamResponse({
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
+});
+{{/if}}
+
+fastify.get('/', async () => {
+	return 'OK';
+});
+
+fastify.listen({ port: 3000{{#if (or (eq serverDeploy "docker") (eq serverDeploy "prisma"))}}, host: "0.0.0.0"{{/if}} }, (err) => {
+	if (err) {
+		fastify.log.error(err);
+		process.exit(1);
+	}
+	console.log("Server running on port 3000");
+});

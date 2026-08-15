@@ -1,0 +1,64 @@
+import "@{{projectName}}/env/web";
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+import { defineNuxtModule } from "nuxt/kit";
+import { unwasm } from "unwasm/plugin";
+
+const prismaWasm = defineNuxtModule({
+  setup(_options, nuxt) {
+    nuxt.hook("vite:extendConfig", (viteConfig) => {
+      viteConfig.plugins?.unshift(unwasm({ esmImport: true }));
+    });
+  },
+});
+{{/if}}
+
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  compatibilityDate: 'latest',
+  devtools: { enabled: true },
+  experimental: {
+    payloadExtraction: 'client',
+  },
+  modules: [
+    {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+    prismaWasm,
+    {{/if}}
+    '@nuxt/ui'
+    {{#if (eq backend "convex")}},
+    'convex-nuxt'
+    {{/if}}
+  ],
+  css: ['~/assets/css/main.css'],
+  devServer: {
+    port: 3001
+  },
+  {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+  nitro: {
+    {{#if (eq database "postgres")}}
+    alias: {
+      // pg-native is optional and unavailable in Workers; pg uses its JavaScript driver.
+      'pg-native': 'unenv/mock/proxy'
+    },
+    {{/if}}
+    experimental: {
+      wasm: true
+    },
+    wasm: {
+      esmImport: true
+    }
+  },
+  {{/if}}
+  {{#if (eq backend "convex")}}
+  convex: {
+    url: process.env.NUXT_PUBLIC_CONVEX_URL,
+  },
+  {{else if (and (ne backend "self") (ne backend "none"))}}
+  runtimeConfig: {
+    // server-side override for SSR fetches (NUXT_SERVER_URL); falls back to the public URL
+    serverUrl: "",
+    public: {
+      serverUrl: process.env.NUXT_PUBLIC_SERVER_URL ?? "",
+    }
+  },
+  {{/if}}
+})

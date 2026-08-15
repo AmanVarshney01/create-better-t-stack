@@ -1,13 +1,16 @@
 import type { API, Backend, Frontend } from "../types";
-
-import { allowedApisForFrontends } from "../utils/compatibility-rules";
-import { exitCancelled } from "../utils/errors";
-import { isCancel, navigableSelect } from "./navigable";
+import {
+  allowedApisForFrontends,
+  validateApiFrontendCompatibility,
+} from "../utils/compatibility-rules";
+import { UserCancelledError } from "../utils/errors";
+import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 export async function getApiChoice(
   Api?: API | undefined,
   frontend?: Frontend[],
   backend?: Backend,
+  previousValue?: API,
 ) {
   if (backend === "convex" || backend === "none") {
     return "none";
@@ -16,7 +19,9 @@ export async function getApiChoice(
   const allowed = allowedApisForFrontends(frontend ?? []);
 
   if (Api) {
-    return allowed.includes(Api) ? Api : allowed[0];
+    const compat = validateApiFrontendCompatibility(Api, frontend ?? []);
+    if (compat.isErr()) throw compat.error;
+    return Api;
   }
   const apiOptions = allowed.map((a) =>
     a === "trpc"
@@ -39,12 +44,12 @@ export async function getApiChoice(
   );
 
   const apiType = await navigableSelect<API>({
-    message: "Select API type",
+    message: "Choose an API layer",
     options: apiOptions,
-    initialValue: apiOptions[0].value,
+    initialValue: preferValidInitial(apiOptions, previousValue, apiOptions[0].value),
   });
 
-  if (isCancel(apiType)) return exitCancelled("Operation cancelled");
+  if (isCancel(apiType)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return apiType;
 }

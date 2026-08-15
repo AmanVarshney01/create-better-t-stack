@@ -1,0 +1,8 @@
+import mongoose from "mongoose";
+import { env } from "@{{projectName}}/env/server";
+
+await mongoose.connect(env.DATABASE_URL);
+
+const client = mongoose.connection.getClient().db();
+
+export { client };

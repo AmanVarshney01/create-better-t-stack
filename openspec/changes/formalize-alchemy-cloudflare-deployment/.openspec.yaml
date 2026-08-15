@@ -1,0 +1,6 @@
+schema: spec-driven
+created: 2026-07-12
+goal: Generated Alchemy projects remain correct against one exact release,
+  Cloudflare compatibility safeguards have evidence-backed removal gates, and
+  provider-owned databases plus Prisma deployments preserve typed credentials,
+  checked-in migrations, and one local lifecycle.

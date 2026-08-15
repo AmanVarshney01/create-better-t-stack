@@ -5,69 +5,46 @@ description: What we collect, how to disable it, and where to view aggregated in
 
 ## What is collected
 
-On successful project creation, the CLI sends a single event (`project_created`) with:
+On successful project creation, the CLI sends one anonymous event with:
 
-- Selected options (stack choices): `frontend`, `backend`, `runtime`, `database`, `orm`, `api`, `auth`, `addons`, `examples`, `dbSetup`, `webDeploy`, `packageManager`
+- Selected options (stack choices), including: `frontend`, `backend`, `runtime`, `database`, `orm`, `api`, `auth`, `payments`, `addons`, `examples`, `dbSetup`, `webDeploy`, `serverDeploy`, `packageManager`, `git`, `install`
 - Environment data: `cli_version`, `node_version`, `platform`
-- A random session id: `distinct_id` like `cli_<random>`
-- IP removed: `$ip: null`
 
 Not collected:
 
 - Project name, path, or file contents (explicitly omitted)
+- Nested addon or database provisioning options
 - Secrets or environment variables from your machine
+- IP addresses or persistent project/user identifiers
 
 ## Disable telemetry
 
 Telemetry is enabled by default. To disable:
 
-<Tabs groupId="installtab" defaultValue="npm" persist>
-  <TabsList>
-    <TabsTrigger value="npm">
-      npm
-    </TabsTrigger>
-    <TabsTrigger value="pnpm">
-      pnpm
-    </TabsTrigger>
-    <TabsTrigger value="bun">
-      bun
-    </TabsTrigger>
-  </TabsList>
-  <TabsContent value="npm">
-    ```bash
-    BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack@latest
-    ```
-  </TabsContent>
-  <TabsContent value="pnpm">
-    ```bash
-    BTS_TELEMETRY_DISABLED=1 pnpm create better-t-stack@latest
-    ```
-  </TabsContent>
-  <TabsContent value="bun">
-    ```bash
-    BTS_TELEMETRY_DISABLED=1 bun create better-t-stack@latest
-    ```
-  </TabsContent>
-</Tabs>
+```bash
+BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack@latest
+```
 
-<Callout title="Note">The above commands disable it for a single run.</Callout>
+<Callout title="Note">The above command disables it for a single run.</Callout>
 
 Add `export BTS_TELEMETRY_DISABLED=1` to your shell profile to make it permanent.
 
 ## Where to view analytics
 
 - Charts: [`/analytics`](/analytics)
-- Raw JSON snapshot: `https://r2.better-t-stack.dev/analytics-data.json`
-- CSV export: `https://r2.better-t-stack.dev/export.csv`
+- Shared website analytics: [Umami dashboard](https://umami.amanv.cloud/share/pHvqHleyOl9PBfaK) (self-hosted on a Hostinger VPS)
+- Aggregate JSON snapshot: `https://r2.better-t-stack.dev/analytics-data.json`
+- Aggregate CSV export: `https://r2.better-t-stack.dev/export.csv`
 
 Notes:
 
-- Aggregates are periodically regenerated from incoming events
+- Aggregates are updated atomically with each accepted event
+- Incoming values are checked against a bounded schema before storage
 - Raw data is not publicly exposed; the `/analytics` page presents only summary statistics
 
 ## Full transparency
 
-Single event per scaffold; randomized id; no IP or project identifiers. See source code below.
+Single event per scaffold; no IP or project identifiers. See source code below.
 
 If in doubt, set `BTS_TELEMETRY_DISABLED=1` and proceed. You can still use all CLI features.
 
@@ -75,4 +52,5 @@ If in doubt, set `BTS_TELEMETRY_DISABLED=1` and proceed. You can still use all C
 
 - CLI event sender: [`apps/cli/src/utils/analytics.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts)
 - Telemetry toggle logic: [`apps/cli/src/utils/telemetry.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/telemetry.ts)
-- Aggregation script (builds the charts data): [`apps/web/scripts/generate-analytics.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/web/scripts/generate-analytics.ts)
+- Ingest endpoint: [`packages/backend/convex/http.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/packages/backend/convex/http.ts)
+- Analytics backend (ingest + aggregation): [`packages/backend/convex/analytics.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/packages/backend/convex/analytics.ts)

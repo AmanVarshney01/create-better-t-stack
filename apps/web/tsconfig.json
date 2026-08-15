@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "target": "ESNext",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
@@ -13,10 +12,11 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "types": ["bun"],
     "jsx": "react-jsx",
     "incremental": true,
     "paths": {
-      "fumadocs-mdx:collections/*": [".source/*"],
+      "fumadocs-mdx:collections/*": ["./.source/*"],
       "@/*": ["./src/*"],
       "@/public/*": ["./public/*"]
     },

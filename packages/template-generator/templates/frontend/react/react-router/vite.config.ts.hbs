@@ -1,0 +1,45 @@
+{{#if (and (eq webDeploy "cloudflare") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+import { fileURLToPath } from "node:url";
+{{/if}}
+import { reactRouter } from "@react-router/dev/vite";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
+
+export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [
+    tailwindcss(),
+    reactRouter(),
+  ],
+{{#if (and (or (eq webDeploy "vercel") (eq webDeploy "prisma")) (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+  ssr: {
+    // The deployment artifact has no node_modules; bundle all server dependencies.
+    noExternal: true,
+  },
+{{/if}}
+{{#if (and (eq webDeploy "prisma") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+  environments: {
+    ssr: {
+      build: {
+        rollupOptions: {
+          input: "./prisma.server.ts",
+        },
+      },
+    },
+  },
+{{/if}}
+{{#if (and (eq webDeploy "cloudflare") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
+  environments: {
+    ssr: {
+      build: {
+        rollupOptions: {
+          // Worker entry wrapping the React Router request handler; must be absolute
+          input: fileURLToPath(new URL("./workers/app.ts", import.meta.url)),
+        },
+      },
+    },
+  },
+{{/if}}
+});

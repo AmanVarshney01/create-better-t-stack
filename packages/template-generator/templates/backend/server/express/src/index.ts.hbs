@@ -1,0 +1,153 @@
+import { env } from "@{{projectName}}/env/server";
+{{#if (eq api "trpc")}}
+import { createExpressMiddleware } from "@trpc/server/adapters/express";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+{{/if}}
+{{#if (eq api "orpc")}}
+import { OpenAPIHandler } from "@orpc/openapi/node";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { RPCHandler } from "@orpc/server/node";
+import { onError } from "@orpc/server";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { createContext } from "@{{projectName}}/api/context";
+{{/if}}
+import cors from "cors";
+import express from "express";
+{{#if (includes examples "ai")}}
+import { pipeUIMessageStreamToResponse, streamText, toUIMessageStream, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { google } from "@ai-sdk/google";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+{{/if}}
+{{#if (eq auth "better-auth")}}
+import { auth } from "@{{projectName}}/auth";
+import { toNodeHandler } from "better-auth/node";
+{{/if}}
+{{#if (eq auth "clerk")}}
+import { clerkMiddleware } from "@clerk/express";
+{{/if}}
+
+const app = express();
+
+app.use(
+	cors({
+		origin: env.CORS_ORIGIN,
+		methods: ["GET", "POST", "OPTIONS"],
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+		allowedHeaders: ["Content-Type", "Authorization"],
+{{/if}}
+{{#if (eq auth "better-auth")}}
+		credentials: true,
+{{/if}}
+	})
+);
+
+{{#if (eq auth "clerk")}}
+app.use(clerkMiddleware());
+{{/if}}
+
+{{#if (eq auth "better-auth")}}
+app.all("/api/auth{/*path}", toNodeHandler(auth));
+{{/if}}
+
+{{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+app.get("/polar/success", (req, res) => {
+	const requestUrl = new URL(req.url, env.BETTER_AUTH_URL);
+	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+	let redirectUrl: URL;
+	try {
+		redirectUrl = new URL(returnUrl);
+	} catch {
+		res.status(400).send("Invalid return URL");
+		return;
+	}
+
+	if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+		res.status(400).send("Invalid return URL");
+		return;
+	}
+
+	res.redirect(302, redirectUrl.toString());
+});
+
+{{/if}}
+{{#if (eq api "trpc")}}
+app.use(
+	"/trpc",
+	createExpressMiddleware({
+		router: appRouter,
+		createContext,
+	})
+);
+{{/if}}
+
+{{#if (eq api "orpc")}}
+const rpcHandler = new RPCHandler(appRouter, {
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+const apiHandler = new OpenAPIHandler(appRouter, {
+	plugins: [
+		new OpenAPIReferencePlugin({
+			schemaConverters: [new ZodToJsonSchemaConverter()],
+		}),
+	],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+app.use(async (req, res, next) => {
+	const rpcResult = await rpcHandler.handle(req, res, {
+		prefix: "/rpc",
+		context: await createContext({ req }),
+	});
+	if (rpcResult.matched) return;
+
+	const apiResult = await apiHandler.handle(req, res, {
+		prefix: "/api-reference",
+		context: await createContext({ req }),
+	});
+	if (apiResult.matched) return;
+
+	next();
+});
+{{/if}}
+
+app.use(express.json());
+
+{{#if (includes examples "ai")}}
+app.post("/ai", async (req, res) => {
+	const { messages = [] } = (req.body || {}) as { messages: UIMessage[] };
+	const model = wrapLanguageModel({
+		model: google("gemini-2.5-flash"),
+		middleware: devToolsMiddleware(),
+	});
+	const result = streamText({
+		model,
+		messages: await convertToModelMessages(messages),
+	});
+	pipeUIMessageStreamToResponse({
+		response: res,
+		stream: toUIMessageStream({ stream: result.stream }),
+	});
+});
+{{/if}}
+
+app.get("/", (_req, res) => {
+	res.status(200).send("OK");
+});
+
+app.listen(3000, () => {
+	console.log("Server is running on http://localhost:3000");
+});

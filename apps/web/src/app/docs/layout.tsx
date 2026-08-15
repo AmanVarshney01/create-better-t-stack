@@ -1,15 +1,17 @@
+import { DocsLayout, type DocsLayoutProps } from "fumadocs-ui/layouts/notebook";
 import type { ReactNode } from "react";
 
-import { DocsLayout, type DocsLayoutProps } from "fumadocs-ui/layouts/notebook";
-
 import { baseOptions } from "@/app/layout.config";
+import { DocsSiteHeader } from "@/components/site-header";
 import { SpecialSponsorBanner } from "@/components/special-sponsor-banner";
 import { source } from "@/lib/source";
 
 const docsOptions: DocsLayoutProps = {
   ...baseOptions,
   tree: source.pageTree,
-  // links: [],
+  slots: {
+    header: DocsSiteHeader,
+  },
   sidebar: {
     banner: <SpecialSponsorBanner />,
   },

@@ -19,7 +19,6 @@ import {
   GenericDatabaseReader,
   GenericDatabaseWriter,
 } from "convex/server";
-
 import type { DataModel } from "./dataModel.js";
 
 /**

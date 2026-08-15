@@ -1,0 +1,27 @@
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+import { createORPCClient } from "@orpc/client";
+import { RPCLink } from "@orpc/client/fetch";
+import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+
+export default defineNuxtPlugin(() => {
+  const rpcLink = new RPCLink({
+    url: `${window.location.origin}/rpc`,
+    {{#if (eq auth "better-auth")}}
+    fetch(url, options) {
+        return fetch(url, {
+        ...options,
+        credentials: "include",
+        });
+    },
+    {{/if}}
+  });
+
+  const client: AppRouterClient = createORPCClient(rpcLink);
+  const orpcUtils = createTanstackQueryUtils(client);
+
+  return {
+    provide: {
+      orpc: orpcUtils,
+    },
+  };
+});

@@ -1,15 +1,16 @@
 import type { BaseLayoutProps, LinkItemType } from "fumadocs-ui/layouts/shared";
-
 import Image from "next/image";
 
 import discordLogo from "@/public/icon/discord.svg";
 import npmLogo from "@/public/icon/npm.svg";
 import xLogo from "@/public/icon/x.svg";
-import mainLogo from "@/public/logo.svg";
+import mainLogoDark from "@/public/logo-dark.svg";
+import mainLogoLight from "@/public/logo-light.svg";
 
 export const logo = (
   <>
-    <Image alt="better-t-stack" src={mainLogo} className="w-8" aria-label="better-t-stack" />
+    <Image alt="better-t-stack" src={mainLogoLight} className="w-8 dark:hidden" />
+    <Image alt="better-t-stack" src={mainLogoDark} className="hidden w-8 dark:block" />
   </>
 );
 
@@ -30,6 +31,15 @@ export const links: LinkItemType[] = [
   {
     text: "Showcase",
     url: "/showcase",
+  },
+  {
+    text: "Sponsors",
+    url: "/sponsors",
+  },
+  {
+    text: "Demo",
+    url: "https://my-better-t-app.amanv.cloud/",
+    external: true,
   },
   {
     text: "NPM",
@@ -65,7 +75,9 @@ export const baseOptions: BaseLayoutProps = {
     title: (
       <>
         {logo}
-        <span className="font-medium font-mono text-md tracking-tighter">Better T Stack</span>
+        <span className="inline shrink-0 whitespace-nowrap font-medium font-mono text-base tracking-tighter md:hidden xl:inline">
+          Better T Stack
+        </span>
       </>
     ),
   },

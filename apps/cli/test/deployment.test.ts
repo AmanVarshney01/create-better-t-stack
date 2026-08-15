@@ -1,5 +1,7 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 
+import { createVirtual } from "../src/index";
+import { collectFiles } from "./setup";
 import {
   expectError,
   expectSuccess,
@@ -20,7 +22,7 @@ describe("Deployment Configurations", () => {
             projectName: `${webDeploy}-web-deploy`,
             webDeploy: webDeploy,
             serverDeploy: "none",
-            frontend: ["tanstack-router"],
+            frontend: [webDeploy === "prisma" ? "next" : "tanstack-router"],
             backend: "hono",
             runtime: "bun",
             database: "sqlite",
@@ -110,6 +112,7 @@ describe("Deployment Configurations", () => {
         "nuxt",
         "svelte",
         "solid",
+        "astro",
       ] as const;
 
       for (const frontend of webFrontends) {
@@ -130,7 +133,7 @@ describe("Deployment Configurations", () => {
         };
 
         // Handle API compatibility
-        if (["nuxt", "svelte", "solid"].includes(frontend)) {
+        if (["nuxt", "svelte", "solid", "astro"].includes(frontend)) {
           config.api = "orpc";
         } else {
           config.api = "trpc";
@@ -313,91 +316,1176 @@ describe("Deployment Configurations", () => {
 
       expectError(result, "Cloudflare Workers runtime requires a server deployment");
     });
+
+    it("should fail with workers runtime + vercel server deploy", async () => {
+      const result = await runTRPCTest({
+        projectName: "workers-vercel-server-deploy-fail",
+        runtime: "workers",
+        serverDeploy: "vercel",
+        backend: "hono",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "'--server-deploy vercel' is not compatible with '--runtime workers'");
+    });
   });
 
   describe("Combined Web and Server Deployment", () => {
-    it("should work with both web and server deploy", async () => {
-      const result = await runTRPCTest({
-        projectName: "web-server-deploy-combo",
-        webDeploy: "cloudflare",
+    it("should generate Vercel Services for combined web and server deploys", async () => {
+      const result = await createVirtual({
+        projectName: "next-hono-vercel",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const vercelJson = files.get("vercel.json") ?? "{}";
+      const vercelConfig = JSON.parse(vercelJson) as {
+        bunVersion?: string;
+        services?: Record<
+          string,
+          {
+            root?: string;
+            framework?: string;
+            entrypoint?: string;
+            buildCommand?: string;
+            routes?: Array<{
+              src?: string;
+              transforms?: Array<{ type?: string; op?: string; args?: string }>;
+            }>;
+          }
+        >;
+        rewrites?: Array<{
+          source?: string;
+          destination?: string | { service?: string };
+        }>;
+      };
+      const packageJson = JSON.parse(files.get("package.json") ?? "{}") as {
+        scripts?: Record<string, string>;
+        devDependencies?: Record<string, string>;
+      };
+
+      expect(files.has("vercel.json")).toBe(true);
+      expect(files.has("vercel.ts")).toBe(false);
+      // Without this, no-git deploys upload local .env files and frameworks
+      // like Next.js load the localhost values at runtime
+      expect(files.get(".vercelignore")).toContain("**/.env");
+      expect(vercelConfig.bunVersion).toBe("1.x");
+      expect(vercelConfig.services?.web).toMatchObject({
+        root: "apps/web",
+        framework: "nextjs",
+        buildCommand: "NEXT_PUBLIC_SERVER_URL=/api bun run build",
+      });
+      expect(vercelConfig.services?.server).toMatchObject({
+        root: "apps/server",
+        framework: "hono",
+        entrypoint: "src/index.ts",
+      });
+      expect(vercelConfig.services?.server?.routes?.[0]).toMatchObject({
+        src: "/api/((?!auth(?:/|$)).*)",
+        transforms: [{ type: "request.path", op: "set", args: "/$1" }],
+      });
+      expect(vercelConfig.rewrites).toEqual([
+        { source: "/api/(.*)", destination: { service: "server" } },
+        { source: "/(.*)", destination: { service: "web" } },
+      ]);
+      expect(files.has("scripts/sync-vercel-env.ts")).toBe(true);
+      expect(files.has("scripts/sync-vercel-env.mjs")).toBe(false);
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain(
+        'const DEFAULT_ENVIRONMENT = "preview";',
+      );
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain('"apps/web/.env"');
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain('"apps/server/.env"');
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain('"NEXT_PUBLIC_SERVER_URL", "/api"');
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain('"CORS_ORIGIN"');
+      // Vercel CLI runs through the stack's package runner (local devDep)
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain('["bunx", "vercel"]');
+      expect(files.get("scripts/sync-vercel-env.ts")).not.toContain("LOCAL_VERCEL_BIN");
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain("passthroughArgs");
+      // Preview syncs must be non-interactive so the piped-stdin value does not
+      // collide with Vercel's interactive "Git branch?" prompt.
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain('"--non-interactive"');
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain('import dotenv from "dotenv"');
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain("dotenv.parse");
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain("new Map<string, string>");
+      expect(files.get("scripts/sync-vercel-env.ts")).not.toContain("function parseEnvFile");
+
+      expect(packageJson.devDependencies).not.toHaveProperty("@vercel/config");
+      expect(packageJson.devDependencies).toHaveProperty("@types/node");
+      expect(packageJson.devDependencies).toHaveProperty("tsx");
+      expect(packageJson.devDependencies).toHaveProperty("vercel");
+      // dotenv comes from workspace-deps as a regular dependency; it must not
+      // be duplicated into devDependencies (bun warns on cross-section dupes)
+      expect(packageJson.devDependencies).not.toHaveProperty("dotenv");
+      expect(packageJson.scripts).toMatchObject({
+        "deploy:setup": "vercel link",
+        "dev:vercel": "vercel dev -L",
+        "env:preview": "tsx scripts/sync-vercel-env.ts preview",
+        "env:production": "tsx scripts/sync-vercel-env.ts production",
+        deploy: "vercel deploy",
+        "deploy:prod": "vercel deploy --prod",
+        "deploy:check": "vercel deploy --dry",
+      });
+      expect(packageJson.scripts).not.toHaveProperty("deploy:vercel");
+      expect(files.get("packages/env/src/web.ts")).toContain("const serverUrlSchema = z.union");
+      expect(files.get("packages/env/src/server.ts")).toContain("function getVercelOrigin()");
+      // Server-side better-auth must build public callback URLs through the
+      // /api rewrite prefix, not the bare origin
+      expect(files.get("packages/env/src/server.ts")).toContain("${vercelOrigin}/api/auth");
+      // better-auth and tRPC clients must normalize the same-origin /api path;
+      // both reject relative URLs (BetterAuthError / SSR fetch failure)
+      const authClient = files.get("apps/web/src/lib/auth-client.ts") ?? "";
+      expect(authClient).toContain("function getServerUrl(url: string)");
+      // The /api/auth suffix is required: better-auth uses a baseURL with a
+      // path as-is, so the origin-only shortcut breaks same-origin deploys
+      expect(authClient).toContain(
+        'baseURL: new URL("/api/auth", getServerUrl(env.NEXT_PUBLIC_SERVER_URL)).toString()',
+      );
+      const trpcClient = files.get("apps/web/src/utils/trpc.ts") ?? "";
+      expect(trpcClient).toContain("url: `${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/trpc`");
+      expect(files.get("README.md")).toContain("### Vercel Services");
+      expect(files.get("README.md")).toContain("Sync preview env");
+      expect(files.get("README.md")).toContain("Config: `vercel.json`");
+      expect(files.get("README.md")).toContain("env:production --scope your-team");
+      expect(files.get("README.md")).toContain("https://www.better-t-stack.dev/docs/guides/vercel");
+    });
+
+    it("should name deploy scripts by target for mixed Vercel + Cloudflare deploys", async () => {
+      const result = await createVirtual({
+        projectName: "mixed-vercel-cf",
+        webDeploy: "vercel",
         serverDeploy: "cloudflare",
         backend: "hono",
         runtime: "workers",
         database: "sqlite",
         orm: "drizzle",
         auth: "none",
+        payments: "none",
         api: "trpc",
         frontend: ["tanstack-router"],
         addons: ["none"],
         examples: ["none"],
-        dbSetup: "none",
+        dbSetup: "d1",
         install: false,
+        git: false,
+        packageManager: "bun",
       });
 
-      expectSuccess(result);
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const pkg = JSON.parse(files.get("package.json") ?? "{}") as {
+        scripts?: Record<string, string>;
+      };
+
+      // Different platforms per target: scripts are named by what they deploy
+      expect(pkg.scripts?.["deploy:web"]).toBe("vercel deploy");
+      expect(pkg.scripts?.["deploy:web:prod"]).toBe("vercel deploy --prod");
+      expect(pkg.scripts?.["deploy:server"]).toContain("deploy");
+      expect(pkg.scripts?.destroy).toContain("destroy");
+      expect(pkg.scripts).not.toHaveProperty("deploy");
+      expect(pkg.scripts?.["deploy:setup"]).toBe("vercel link");
+      expect(pkg.scripts?.["env:production"]).toBe("tsx scripts/sync-vercel-env.ts production");
     });
 
-    it("should work with different deploy providers", async () => {
-      const result = await runTRPCTest({
-        projectName: "different-deploy-providers",
-        webDeploy: "cloudflare",
-        serverDeploy: "cloudflare",
-        backend: "hono",
-        runtime: "workers",
+    it("should normalize relative Vercel oRPC URLs before creating RPC links", async () => {
+      const result = await createVirtual({
+        projectName: "orpc-vercel-url",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+        backend: "express",
+        runtime: "bun",
         database: "sqlite",
         orm: "drizzle",
         auth: "none",
-        api: "trpc",
+        payments: "none",
+        api: "orpc",
         frontend: ["tanstack-router"],
         addons: ["none"],
         examples: ["none"],
         dbSetup: "none",
         install: false,
+        git: false,
+        packageManager: "bun",
       });
 
-      expectSuccess(result);
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const vercelConfig = JSON.parse(files.get("vercel.json") ?? "{}") as {
+        services?: Record<string, { buildCommand?: string }>;
+      };
+      const orpcClient = files.get("apps/web/src/utils/orpc.ts") ?? "";
+
+      expect(vercelConfig.services?.web?.buildCommand).toBe("VITE_SERVER_URL=/api bun run build");
+      // SPA frontends on the plain vite preset need an in-service fallback,
+      // otherwise deep links like /login 404 in production
+      expect(
+        (vercelConfig.services?.web as { rewrites?: unknown[] } | undefined)?.rewrites,
+      ).toEqual([{ source: "/(.*)", destination: "/index.html" }]);
+      expect(files.get("packages/env/src/web.ts")).toContain(
+        "Use an absolute URL or a same-origin path like /api",
+      );
+      expect(orpcClient).toContain("function getServerUrl(url: string)");
+      expect(orpcClient).toContain("window.location.origin");
+      expect(orpcClient).toContain("VERCEL_PROJECT_PRODUCTION_URL");
+      // Preview/branch SSR must resolve the current deployment, not production.
+      expect(orpcClient).toContain('VERCEL_ENV === "production"');
+      expect(orpcClient).toContain("url: `${getServerUrl(env.VITE_SERVER_URL)}/rpc`");
     });
 
-    it("should work with web deploy only", async () => {
-      const result = await runTRPCTest({
-        projectName: "web-deploy-only",
-        webDeploy: "cloudflare",
+    it("should generate Vercel web-only config for self fullstack backends", async () => {
+      const result = await createVirtual({
+        projectName: "next-self-vercel",
+        webDeploy: "vercel",
         serverDeploy: "none",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "pnpm",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const vercelConfig = JSON.parse(files.get("vercel.json") ?? "{}") as {
+        services?: Record<string, { root?: string }>;
+        rewrites?: Array<{ source?: string; destination?: string | { service?: string } }>;
+      };
+
+      expect(files.has("vercel.ts")).toBe(false);
+      expect(vercelConfig.services?.web).toMatchObject({ root: "apps/web" });
+      expect(vercelConfig.services?.server).toBeUndefined();
+      expect(vercelConfig.rewrites).toEqual([{ source: "/(.*)", destination: { service: "web" } }]);
+      // self fullstack apps run ON Vercel, so origin-dependent keys must be
+      // skipped and derived at runtime — synced localhost values break auth
+      const syncScript = files.get("scripts/sync-vercel-env.ts") ?? "";
+      expect(syncScript).toContain('"BETTER_AUTH_URL"');
+      expect(syncScript).toContain('"CORS_ORIGIN"');
+    });
+
+    for (const packageManager of ["bun", "npm", "pnpm"] as const) {
+      it(`should use the Bun runtime for Vercel web deploys with ${packageManager}`, async () => {
+        const result = await createVirtual({
+          projectName: `tanstack-start-vercel-bun-${packageManager}`,
+          webDeploy: "vercel",
+          serverDeploy: "none",
+          backend: "hono",
+          runtime: "bun",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["tanstack-start"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager,
+        });
+
+        if (result.isErr()) {
+          throw result.error;
+        }
+
+        const files = collectFiles(result.value.root, result.value.root.path);
+        const vercelConfig = JSON.parse(files.get("vercel.json") ?? "{}");
+
+        expect(vercelConfig.bunVersion).toBe("1.x");
+        expect(vercelConfig.services.web).toMatchObject({
+          root: "apps/web",
+          framework: "tanstack-start",
+          installCommand: `cd ../.. && ${packageManager} install`,
+        });
+        expect(vercelConfig.services.server).toBeUndefined();
+        expect(files.get("apps/web/vite.config.ts")).toContain("nitro(),");
+      });
+    }
+
+    it("should skip origin-derived envs for server-only Vercel deploys", async () => {
+      const result = await createVirtual({
+        projectName: "native-hono-vercel",
+        webDeploy: "none",
+        serverDeploy: "vercel",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "trpc",
+        frontend: ["native-bare"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const syncScript = files.get("scripts/sync-vercel-env.ts") ?? "";
+
+      // BETTER_AUTH_URL always derives from the deployment's own origin, and
+      // Vercel manages NODE_ENV — pushing local values breaks production auth
+      expect(syncScript).toContain('"BETTER_AUTH_URL"');
+      expect(syncScript).toContain('"NODE_ENV"');
+      // CORS_ORIGIN must sync: with the web app on another host it is not derivable
+      expect(syncScript).not.toContain('"CORS_ORIGIN"');
+    });
+
+    it("should export Elysia apps for Vercel server deployments", async () => {
+      const result = await createVirtual({
+        projectName: "elysia-vercel",
+        webDeploy: "none",
+        serverDeploy: "vercel",
+        backend: "elysia",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const serverEntry = files.get("apps/server/src/index.ts");
+
+      expect(serverEntry).toContain("const app = new Elysia()");
+      expect(serverEntry).toContain("export default app;");
+      // Bun does not auto-serve Elysia's default export, so a guarded local
+      // listen must remain (skipped on Vercel via process.env.VERCEL).
+      expect(serverEntry).toContain("if (!process.env.VERCEL)");
+      expect(serverEntry).toContain("app.listen(3000");
+    });
+
+    it("should guard the local Elysia listen for node-runtime Vercel deploys", async () => {
+      const result = await createVirtual({
+        projectName: "elysia-node-vercel",
+        webDeploy: "none",
+        serverDeploy: "vercel",
+        backend: "elysia",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const serverEntry = files.get("apps/server/src/index.ts");
+
+      // node has no default-export auto-serve, so it must still listen locally
+      // while exporting the app for Vercel functions.
+      expect(serverEntry).toContain("export default app;");
+      expect(serverEntry).toContain("if (!process.env.VERCEL)");
+      expect(serverEntry).toContain("app.listen(3000");
+    });
+
+    it("should use the react-router preset for SSR React Router Vercel deploys", async () => {
+      const result = await createVirtual({
+        projectName: "rr-vercel-ssr",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+        backend: "hono",
+        runtime: "bun",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["react-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const web = (
+        JSON.parse(files.get("vercel.json") ?? "{}") as {
+          services?: Record<
+            string,
+            { framework?: string; outputDirectory?: string; rewrites?: Array<{ source: string }> }
+          >;
+        }
+      ).services?.web;
+
+      // SSR is the default: the react-router preset serves the server build,
+      // so no static outputDirectory or SPA fallback is generated
+      expect(web?.framework).toBe("react-router");
+      expect(web?.outputDirectory).toBeUndefined();
+      expect(web?.rewrites).toBeUndefined();
+      expect(files.get("apps/web/react-router.config.ts")).not.toContain("ssr: false");
+      // Vercel functions have no node_modules; deps must be bundled into the server build
+      expect(files.get("apps/web/vite.config.ts")).toContain("noExternal: true");
+    });
+
+    it("should use the explicit Vercel adapter for SvelteKit Vercel deploys", async () => {
+      const result = await createVirtual({
+        projectName: "svelte-vercel",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+        backend: "hono",
+        runtime: "bun",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["svelte"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const svelteConfig = files.get("apps/web/svelte.config.js");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+
+      // Vercel docs recommend the explicit adapter over adapter-auto
+      expect(svelteConfig).toContain("@sveltejs/adapter-vercel");
+      expect(svelteConfig).not.toContain("@sveltejs/adapter-auto");
+      expect(webPkg.devDependencies["@sveltejs/adapter-vercel"]).toBeDefined();
+    });
+
+    it("should wire nitro into TanStack Start Vercel web deploys", async () => {
+      const result = await createVirtual({
+        projectName: "start-vercel",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
+        backend: "fastify",
+        runtime: "bun",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["tanstack-start"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const viteConfig = files.get("apps/web/vite.config.ts") ?? "";
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}") as {
+        dependencies?: Record<string, string>;
+      };
+
+      // Without nitro the Start build is a plain node server Vercel cannot serve
+      expect(viteConfig).toContain('import { nitro } from "nitro/vite"');
+      expect(viteConfig).toContain("nitro(),");
+      expect(viteConfig).toContain("noExternal: true");
+      expect(webPkg.dependencies).toHaveProperty("nitro");
+    });
+
+    it("should use the Vercel adapter for Astro web deploys", async () => {
+      const result = await createVirtual({
+        projectName: "astro-vercel",
+        webDeploy: "vercel",
+        serverDeploy: "vercel",
         backend: "hono",
         runtime: "bun",
         database: "sqlite",
         orm: "drizzle",
         auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
+        payments: "none",
+        api: "orpc",
+        frontend: ["astro"],
         addons: ["none"],
         examples: ["none"],
         dbSetup: "none",
         install: false,
+        git: false,
+        packageManager: "bun",
       });
 
-      expectSuccess(result);
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const astroConfig = files.get("apps/web/astro.config.mjs") ?? "";
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}") as {
+        dependencies?: Record<string, string>;
+      };
+
+      expect(astroConfig).toContain('import vercel from "@astrojs/vercel"');
+      expect(astroConfig).toContain("adapter: vercel()");
+      expect(astroConfig).not.toContain("@astrojs/node");
+      expect(webPkg.dependencies).toHaveProperty("@astrojs/vercel");
+      expect(webPkg.dependencies).not.toHaveProperty("@astrojs/node");
     });
 
-    it("should work with server deploy only", async () => {
-      const result = await runTRPCTest({
-        projectName: "server-deploy-only",
-        webDeploy: "none",
+    it("should wire Cloudflare web deploys to the generated server Worker URL", async () => {
+      const result = await createVirtual({
+        projectName: "tanstack-start-hono-cloudflare-auth",
+        webDeploy: "cloudflare",
         serverDeploy: "cloudflare",
         backend: "hono",
         runtime: "workers",
         database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
+        orm: "prisma",
+        auth: "better-auth",
+        payments: "none",
+        api: "orpc",
+        frontend: ["tanstack-start"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "d1",
         install: false,
+        git: false,
+        packageManager: "bun",
       });
 
-      expectSuccess(result);
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const infraFile = files.get("packages/infra/alchemy.run.ts");
+      const infraPackage = JSON.parse(files.get("packages/infra/package.json") ?? "{}") as {
+        devDependencies?: Record<string, string>;
+      };
+      const serverBuildConfig = files.get("apps/server/tsdown.config.ts") ?? "";
+      const serverPackage = JSON.parse(files.get("apps/server/package.json") ?? "{}") as {
+        devDependencies?: Record<string, string>;
+      };
+      expect(infraFile).toContain('export const server = Cloudflare.Worker("server"');
+      expect(infraFile).toContain("export type ServerEnv = Cloudflare.InferEnv<typeof server>");
+      expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
+      expect(infraFile).toContain("BETTER_AUTH_URL: Cloudflare.Worker.URL");
+      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
+      expect(infraFile).toContain("export default Alchemy.Stack(");
+      expect(infraPackage.devDependencies).toMatchObject({
+        alchemy: "2.0.0-beta.72",
+        effect: "4.0.0-rc.108",
+        "@effect/platform-node": "4.0.0-rc.108",
+        "@effect/platform-bun": "4.0.0-rc.108",
+      });
+      expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
+        infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
+      );
+      expect(serverBuildConfig).toContain('import { unwasm } from "unwasm/plugin"');
+      expect(serverBuildConfig).toContain("plugins: [unwasm({ esmImport: true })]");
+      expect(serverPackage.devDependencies?.unwasm).toBe("^0.6.0");
+    });
+
+    it("should bind self-hosted Cloudflare auth to the deployed Worker URL", async () => {
+      const result = await createVirtual({
+        projectName: "svelte-cloudflare-auth-url",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "orpc",
+        frontend: ["svelte"],
+        addons: ["none"],
+        examples: ["todo"],
+        dbSetup: "d1",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) throw result.error;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const infraFile = files.get("packages/infra/alchemy.run.ts") ?? "";
+      const authFile = files.get("packages/auth/src/index.ts") ?? "";
+
+      expect(infraFile).toContain("BETTER_AUTH_URL: Cloudflare.Worker.URL");
+      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
+      expect(authFile).toContain("baseURL: env.BETTER_AUTH_URL");
+    });
+
+    it("should preserve deployment arguments through npm and Turborepo", async () => {
+      const [npmResult, turboResult] = await Promise.all([
+        createVirtual({
+          projectName: "npm-deploy-args",
+          webDeploy: "cloudflare",
+          serverDeploy: "none",
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["nuxt"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "npm",
+        }),
+        createVirtual({
+          projectName: "turbo-deploy-args",
+          webDeploy: "cloudflare",
+          serverDeploy: "none",
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["astro"],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "pnpm",
+        }),
+      ]);
+
+      if (npmResult.isErr()) throw npmResult.error;
+      if (turboResult.isErr()) throw turboResult.error;
+
+      const npmFiles = collectFiles(npmResult.value.root, npmResult.value.root.path);
+      const turboFiles = collectFiles(turboResult.value.root, turboResult.value.root.path);
+      const npmPackage = JSON.parse(npmFiles.get("package.json") ?? "{}") as {
+        scripts?: Record<string, string>;
+      };
+      const turboPackage = JSON.parse(turboFiles.get("package.json") ?? "{}") as {
+        scripts?: Record<string, string>;
+      };
+
+      expect(npmPackage.scripts?.deploy).toBe(
+        "npm run deploy --workspace @npm-deploy-args/infra --",
+      );
+      expect(npmPackage.scripts?.destroy).toBe(
+        "npm run destroy --workspace @npm-deploy-args/infra --",
+      );
+      expect(turboPackage.scripts?.deploy).toBe("turbo run deploy -F @turbo-deploy-args/infra --");
+      expect(turboPackage.scripts?.destroy).toBe(
+        "turbo run destroy -F @turbo-deploy-args/infra --",
+      );
+    });
+
+    it("should generate current Cloudflare integrations for every framework family", async () => {
+      const [
+        reactRouterResult,
+        nextResult,
+        nextWebOnlyResult,
+        nuxtResult,
+        astroResult,
+        svelteResult,
+        tanstackStartResult,
+      ] = await Promise.all([
+        createVirtual({
+          projectName: "react-router-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["react-router"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+        createVirtual({
+          projectName: "next-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "trpc",
+          frontend: ["next"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+        createVirtual({
+          projectName: "next-cloudflare-web-only-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "none",
+          backend: "hono",
+          runtime: "bun",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "trpc",
+          frontend: ["next"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+        createVirtual({
+          projectName: "nuxt-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["nuxt"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "pnpm",
+        }),
+        createVirtual({
+          projectName: "astro-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["astro"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+        createVirtual({
+          projectName: "svelte-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["svelte"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+        createVirtual({
+          projectName: "tanstack-start-cloudflare-current",
+          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
+          backend: "hono",
+          runtime: "workers",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          payments: "none",
+          api: "orpc",
+          frontend: ["tanstack-start"],
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          install: false,
+          git: false,
+          packageManager: "bun",
+        }),
+      ]);
+
+      if (reactRouterResult.isErr()) throw reactRouterResult.error;
+      if (nextResult.isErr()) throw nextResult.error;
+      if (nextWebOnlyResult.isErr()) throw nextWebOnlyResult.error;
+      if (nuxtResult.isErr()) throw nuxtResult.error;
+      if (astroResult.isErr()) throw astroResult.error;
+      if (svelteResult.isErr()) throw svelteResult.error;
+      if (tanstackStartResult.isErr()) throw tanstackStartResult.error;
+
+      const reactRouterFiles = collectFiles(
+        reactRouterResult.value.root,
+        reactRouterResult.value.root.path,
+      );
+      const entryServer = reactRouterFiles.get("apps/web/src/entry.server.tsx") ?? "";
+      const reactRouterViteConfig = reactRouterFiles.get("apps/web/vite.config.ts") ?? "";
+      const reactRouterPackage = JSON.parse(
+        reactRouterFiles.get("apps/web/package.json") ?? "{}",
+      ) as { devDependencies?: Record<string, string> };
+      expect(entryServer).toContain("EntryContext, RouterContextProvider");
+      expect(entryServer).toContain("export const streamTimeout = 5_000");
+      expect(entryServer).toContain('request.method.toUpperCase() === "HEAD"');
+      expect(entryServer).toContain("return new Response(null");
+      expect(entryServer).toContain("AbortSignal.timeout(streamTimeout + 1000)");
+      expect(reactRouterViteConfig).toContain("tsconfigPaths: true");
+      expect(reactRouterViteConfig).not.toContain("vite-tsconfig-paths");
+      expect(reactRouterPackage.devDependencies?.["vite-tsconfig-paths"]).toBeUndefined();
+
+      const nextFiles = collectFiles(nextResult.value.root, nextResult.value.root.path);
+      const infraFile = nextFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      const wranglerConfig = JSON.parse(nextFiles.get("apps/web/wrangler.jsonc") ?? "{}") as {
+        images?: { binding?: string };
+      };
+      expect(wranglerConfig.images?.binding).toBe("IMAGES");
+      expect(infraFile.match(/IMAGES: Cloudflare\.Images\.Images\(\)/g)).toHaveLength(1);
+      expect(infraFile).not.toContain("outputAwareStaticSite");
+      expect(infraFile).not.toContain('import * as Command from "alchemy/Command"');
+      expect(infraFile).not.toContain('import * as Output from "alchemy/Output"');
+      expect(infraFile).toContain("NEXT_PUBLIC_SERVER_URL: serverWorker.url.as<string>()");
+      expect(infraFile).toContain(
+        'const webWorker = yield* Cloudflare.Website.StaticSite("web", {',
+      );
+      expect(infraFile).toContain("memo: false");
+
+      const nextWebOnlyFiles = collectFiles(
+        nextWebOnlyResult.value.root,
+        nextWebOnlyResult.value.root.path,
+      );
+      const nextWebOnlyInfra = nextWebOnlyFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      expect(nextWebOnlyInfra).not.toContain("outputAwareStaticSite");
+      expect(nextWebOnlyInfra).toContain(
+        'const webWorker = yield* Cloudflare.Website.StaticSite("web", {',
+      );
+      expect(nextWebOnlyInfra).toContain(
+        'NEXT_PUBLIC_SERVER_URL: Config.string("NEXT_PUBLIC_SERVER_URL")',
+      );
+      expect(nextWebOnlyInfra).not.toContain("const serverWorker = yield* server");
+
+      const nuxtFiles = collectFiles(nuxtResult.value.root, nuxtResult.value.root.path);
+      const nuxtInfra = nuxtFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      const nuxtConfig = nuxtFiles.get("apps/web/nuxt.config.ts") ?? "";
+      const nuxtPackage = JSON.parse(nuxtFiles.get("apps/web/package.json") ?? "{}") as {
+        devDependencies?: Record<string, string>;
+      };
+      const nuxtRootPackage = JSON.parse(nuxtFiles.get("package.json") ?? "{}") as {
+        scripts?: Record<string, string>;
+      };
+      expect(nuxtInfra).toContain('Cloudflare.Website.Nuxt("web", {');
+      expect(nuxtInfra).not.toContain('Cloudflare.Website.StaticSite("web", {');
+      expect(nuxtInfra).not.toContain('outdir: ".output/public"');
+      expect(nuxtInfra).not.toContain('main: "../../apps/web/.output/server/index.mjs"');
+      expect(nuxtConfig).not.toContain("nitro-cloudflare-dev");
+      expect(nuxtConfig).not.toContain("preset: 'cloudflare-module'");
+      expect(nuxtPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBeUndefined();
+      expect(nuxtPackage.devDependencies?.["@alchemy.run/cloudflare-frameworks"]).toBe(
+        "2.0.0-beta.72",
+      );
+      expect(nuxtPackage.devDependencies?.["nitro-cloudflare-dev"]).toBeUndefined();
+      expect(nuxtPackage.devDependencies?.wrangler).toBeUndefined();
+      expect((nuxtPackage as { scripts?: Record<string, string> }).scripts?.build).toBe(
+        "nuxt build",
+      );
+      expect(nuxtRootPackage.scripts?.build).toBe("pnpm -r --if-present build");
+      expect(nuxtFiles.has("apps/web/cloudflare-workers.dev.ts")).toBe(false);
+      expect(nuxtFiles.has("apps/web/wrangler.jsonc")).toBe(false);
+
+      const astroFiles = collectFiles(astroResult.value.root, astroResult.value.root.path);
+      const astroInfra = astroFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      const astroConfig = astroFiles.get("apps/web/astro.config.mjs") ?? "";
+      const astroPackage = JSON.parse(astroFiles.get("apps/web/package.json") ?? "{}") as {
+        devDependencies?: Record<string, string>;
+      };
+      expect(astroInfra).toContain('Cloudflare.Website.Astro("web", {');
+      expect(astroInfra).not.toContain('Cloudflare.Website.StaticSite("web", {');
+      expect(astroInfra.match(/SESSION: Cloudflare\.KV\.Namespace\("session"\)/g)).toHaveLength(1);
+      expect(astroInfra).toContain("IMAGES: Cloudflare.Images.Images()");
+      expect(astroConfig).not.toContain("@astrojs/cloudflare");
+      expect(astroConfig).not.toContain("adapter: cloudflare()");
+      expect(astroPackage.devDependencies?.["@distilled.cloud/astro"]).toBeUndefined();
+      expect(astroPackage.devDependencies?.["@alchemy.run/cloudflare-frameworks"]).toBe(
+        "2.0.0-beta.72",
+      );
+      expect(astroPackage.devDependencies?.["@astrojs/cloudflare"]).toBeUndefined();
+      expect((astroPackage as { scripts?: Record<string, string> }).scripts?.build).toBeUndefined();
+
+      const svelteFiles = collectFiles(svelteResult.value.root, svelteResult.value.root.path);
+      const svelteInfra = svelteFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      expect(svelteInfra).toContain('Cloudflare.Website.StaticSite("web", {');
+      expect(svelteInfra).not.toContain('Cloudflare.Website.SvelteKit("web", {');
+
+      const tanstackStartFiles = collectFiles(
+        tanstackStartResult.value.root,
+        tanstackStartResult.value.root.path,
+      );
+      const tanstackStartInfra = tanstackStartFiles.get("packages/infra/alchemy.run.ts") ?? "";
+      expect(tanstackStartInfra).toContain('Cloudflare.Website.Vite("web", {');
+      expect(tanstackStartInfra).not.toContain('Cloudflare.Website.StaticSite("web", {');
+    });
+
+    it("should use released Website.Vite SPA support for TanStack Router", async () => {
+      const results = await Promise.all(
+        (["tanstack-router"] as const).map((frontend) =>
+          createVirtual({
+            projectName: `${frontend}-cloudflare-vite`,
+            webDeploy: "cloudflare",
+            serverDeploy: "cloudflare",
+            backend: "hono",
+            runtime: "workers",
+            database: "none",
+            orm: "none",
+            auth: "none",
+            payments: "none",
+            api: "orpc",
+            frontend: [frontend],
+            addons: ["none"],
+            examples: ["none"],
+            dbSetup: "none",
+            install: false,
+            git: false,
+            packageManager: "bun",
+          }),
+        ),
+      );
+
+      for (const result of results) {
+        if (result.isErr()) throw result.error;
+
+        const files = collectFiles(result.value.root, result.value.root.path);
+        const infraFile = files.get("packages/infra/alchemy.run.ts") ?? "";
+
+        expect(infraFile).toContain('const webWorker = yield* Cloudflare.Website.Vite("web", {');
+        expect(infraFile).toContain('rootDir: "../../apps/web"');
+        expect(infraFile).toContain('htmlHandling: "auto-trailing-slash"');
+        expect(infraFile).toContain('notFoundHandling: "single-page-application"');
+        expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
+        expect(infraFile).not.toContain("outputAwareStaticSite");
+        expect(infraFile).not.toContain('import * as Command from "alchemy/Command"');
+        expect(infraFile).not.toContain('import * as Output from "alchemy/Output"');
+      }
+    });
+
+    it("should configure Solid 2 SSR for Cloudflare and local Vite builds", async () => {
+      const result = await createVirtual({
+        projectName: "solid-cloudflare",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "orpc",
+        frontend: ["solid"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "d1",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const viteConfig = files.get("apps/web/vite.config.ts");
+      const infraFile = files.get("packages/infra/alchemy.run.ts");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const rootPkg = JSON.parse(files.get("package.json") ?? "{}");
+      const turboConfig = JSON.parse(files.get("turbo.json") ?? "{}");
+
+      expect(viteConfig).not.toContain('from "alchemy/cloudflare/vite"');
+      expect(viteConfig).toContain('process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED !== "1"');
+      expect(viteConfig).toContain('command === "serve"');
+      expect(viteConfig).toContain("const cloudflareWorkersAlias: Record<string, string>");
+      expect(viteConfig).toContain('new URL("./cloudflare-workers.dev.ts", import.meta.url)');
+      expect(viteConfig).toContain('external: ["cloudflare:workers"]');
+      expect(viteConfig).toContain("tsconfigPaths: true");
+      expect(infraFile).toContain('export const web = Cloudflare.Website.Vite("web", {');
+      expect(infraFile).toContain('rootDir: "../../apps/web"');
+      expect(infraFile).toContain('flags: ["nodejs_compat"]');
+      expect(infraFile).not.toContain("runWorkerFirst");
+      expect(infraFile).toContain("DB: db");
+      expect(webPkg.devDependencies.alchemy).toBeUndefined();
+      expect(webPkg.devDependencies["@cloudflare/vite-plugin"]).toBeUndefined();
+      expect(webPkg.devDependencies.wrangler).toBeDefined();
+      expect(webPkg.scripts["db:migrate:local"]).toBeDefined();
+      expect(rootPkg.scripts["db:migrate:local"]).toContain("web");
+      expect(turboConfig.tasks["db:migrate:local"]).toEqual({
+        cache: false,
+        interactive: true,
+      });
+    });
+
+    it("should keep native Metro from watching Alchemy state", async () => {
+      const result = await createVirtual({
+        projectName: "native-astro-alchemy",
+        frontend: ["astro", "native-unistyles"],
+        backend: "hono",
+        runtime: "workers",
+        api: "orpc",
+        auth: "better-auth",
+        payments: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        dbSetup: "d1",
+        packageManager: "pnpm",
+        git: false,
+        webDeploy: "cloudflare",
+        serverDeploy: "cloudflare",
+        install: false,
+        addons: ["evlog", "lefthook", "turborepo", "ultracite"],
+        examples: ["none"],
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const metroConfig = files.get("apps/native/metro.config.js");
+
+      expect(metroConfig).toContain("config.resolver.blockList = [");
+      expect(metroConfig).toContain("[/\\\\]packages[/\\\\]infra[/\\\\]\\.alchemy(?:[/\\\\]|$)");
+      expect(metroConfig).not.toContain("config.watchFolders =");
+    });
+
+    it("should keep native Metro minimal without Cloudflare deploys", async () => {
+      const result = await createVirtual({
+        projectName: "native-no-alchemy",
+        frontend: ["native-unistyles"],
+        backend: "hono",
+        runtime: "bun",
+        api: "orpc",
+        auth: "none",
+        payments: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        dbSetup: "none",
+        packageManager: "pnpm",
+        git: false,
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+        addons: ["none"],
+        examples: ["none"],
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const metroConfig = files.get("apps/native/metro.config.js");
+
+      expect(metroConfig).toBeDefined();
+      expect(metroConfig).not.toContain("node:path");
+      expect(metroConfig).not.toContain("config.resolver.blockList");
+      expect(metroConfig).not.toContain("\\.alchemy");
     });
   });
 
@@ -422,88 +1510,6 @@ describe("Deployment Configurations", () => {
 
       expectSuccess(result);
     });
-
-    it("should work with deployment + fullstack setup", async () => {
-      const result = await runTRPCTest({
-        projectName: "deploy-fullstack",
-        webDeploy: "cloudflare",
-        serverDeploy: "cloudflare",
-        backend: "hono",
-        runtime: "workers",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-  });
-
-  describe("All Deployment Options", () => {
-    const deployOptions: ReadonlyArray<{
-      webDeploy: TestConfig["webDeploy"];
-      serverDeploy: TestConfig["serverDeploy"];
-    }> = [
-      { webDeploy: "cloudflare", serverDeploy: "cloudflare" },
-      { webDeploy: "none", serverDeploy: "cloudflare" },
-      { webDeploy: "none", serverDeploy: "none" },
-    ];
-
-    for (const { webDeploy, serverDeploy } of deployOptions) {
-      it(`should work with webDeploy: ${webDeploy}, serverDeploy: ${serverDeploy}`, async () => {
-        const config: TestConfig = {
-          projectName: `deploy-${webDeploy}-${serverDeploy}`,
-          webDeploy,
-          serverDeploy,
-          backend: "hono",
-          runtime: "workers",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          api: "trpc",
-          frontend: ["tanstack-router"],
-          addons: ["none"],
-          examples: ["none"],
-          dbSetup: "none",
-          install: false,
-        };
-
-        // Handle special cases
-        if (
-          webDeploy !== "none" &&
-          !config.frontend?.some((f) =>
-            [
-              "tanstack-router",
-              "react-router",
-              "tanstack-start",
-              "next",
-              "nuxt",
-              "svelte",
-              "solid",
-            ].includes(f),
-          )
-        ) {
-          config.frontend = ["tanstack-router"]; // Ensure web frontend for web deploy
-        }
-
-        if (serverDeploy !== "none" && config.backend === "none") {
-          config.backend = "hono"; // Ensure backend for server deploy
-        }
-
-        if (serverDeploy === "none" && webDeploy === "none") {
-          config.runtime = "bun";
-        }
-
-        const result = await runTRPCTest(config);
-        expectSuccess(result);
-      });
-    }
   });
 
   describe("Deployment Edge Cases", () => {
@@ -526,27 +1532,694 @@ describe("Deployment Configurations", () => {
 
       expectSuccess(result);
     });
+  });
 
-    it("should handle deployment constraints properly", async () => {
-      // This should fail because we have web deploy but only native frontend
-      const result = await runTRPCTest({
-        projectName: "deployment-constraints-fail",
-        webDeploy: "cloudflare",
+  describe("Docker Deployment", () => {
+    it("should generate a full Docker Compose stack (web + server + db)", async () => {
+      const result = await createVirtual({
+        projectName: "docker-full-stack",
+        webDeploy: "docker",
+        serverDeploy: "docker",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "docker",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml");
+      const webDockerfile = files.get("apps/web/Dockerfile");
+      const serverDockerfile = files.get("apps/server/Dockerfile");
+      const rootPkg = JSON.parse(files.get("package.json") ?? "{}");
+      const readme = files.get("README.md");
+
+      expect(files.has(".dockerignore")).toBe(true);
+      expect(files.has("apps/web/nginx.conf")).toBe(true);
+
+      // The database service is inlined in the root compose, not a separate file
+      expect(files.has("packages/db/docker-compose.yml")).toBe(false);
+      expect(compose).not.toContain("include:");
+      expect(compose).toContain("container_name: docker-full-stack-postgres");
+      expect(compose).toContain("docker-full-stack_postgres_data:");
+      expect(compose).toContain("init: true");
+      expect(compose).toContain("dockerfile: apps/web/Dockerfile");
+      expect(compose).toContain("dockerfile: apps/server/Dockerfile");
+      expect(compose).toContain('"3001:80"');
+      expect(compose).toContain('"3000:3000"');
+      expect(compose).toContain('"http://127.0.0.1:80/"');
+      expect(compose).toContain("CORS_ORIGIN: http://localhost:3001");
+      expect(compose).toContain(
+        // biome-ignore format: compose interpolation syntax
+        "DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-password}@postgres:5432/docker-full-stack",
+      );
+      expect(compose).toContain("condition: service_healthy");
+      // public client values are baked via build args, not .env files in the context
+      expect(compose).toContain("VITE_SERVER_URL: http://localhost:3000");
+      expect(webDockerfile).toContain("ARG VITE_SERVER_URL");
+      expect(webDockerfile).not.toContain("SKIP_ENV_VALIDATION");
+      expect(files.get(".dockerignore")).toContain("**/.env");
+      expect(webDockerfile).toContain("FROM node:24-slim AS builder");
+      expect(serverDockerfile).toContain("FROM oven/bun:1 AS builder");
+      expect(serverDockerfile).toContain("FROM oven/bun:1 AS runner");
+
+      // SPA frontend builds static assets served by nginx with an SPA fallback
+      expect(webDockerfile).toContain("FROM nginx:alpine");
+      expect(files.get("apps/web/nginx.conf")).toContain("try_files $uri $uri/ /index.html");
+
+      expect(serverDockerfile).toContain('CMD ["bun", "dist/index.mjs"]');
+      expect(serverDockerfile).toContain("bun install");
+
+      expect(rootPkg.scripts["docker:up"]).toBe("docker compose up -d --build");
+      expect(rootPkg.scripts["docker:down"]).toBe("docker compose down");
+      // db scripts are scoped to the database service of the root compose
+      expect(rootPkg.scripts["db:start"]).toBe("docker compose up -d postgres");
+      expect(rootPkg.scripts["db:stop"]).toBe("docker compose stop postgres");
+      expect(readme).toContain("### Docker Compose");
+      expect(readme).toContain("https://www.better-t-stack.dev/docs/guides/docker");
+    });
+
+    it("should generate a web-only container for a fullstack self backend", async () => {
+      const result = await createVirtual({
+        projectName: "docker-self-next",
+        webDeploy: "docker",
         serverDeploy: "none",
-        backend: "none", // No backend but we have server deploy
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "prisma",
+        auth: "better-auth",
+        payments: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "docker",
+        install: false,
+        git: false,
+        packageManager: "pnpm",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml");
+      const webDockerfile = files.get("apps/web/Dockerfile");
+
+      expect(files.has("apps/server/Dockerfile")).toBe(false);
+      expect(compose).not.toContain("dockerfile: apps/server/Dockerfile");
+      expect(compose).toContain('"3001:3001"');
+      expect(compose).toContain("BETTER_AUTH_URL: http://localhost:3001");
+      expect(compose).toContain(
+        // biome-ignore format: compose interpolation syntax
+        "DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-password}@postgres:5432/docker-self-next",
+      );
+      expect(webDockerfile).toContain("npm install -g pnpm");
+      expect(webDockerfile).toContain("ENV SKIP_ENV_VALIDATION=1");
+      // Next.js Docker deploys use standalone output for a minimal runtime image
+      expect(webDockerfile).toContain(".next/standalone");
+      expect(webDockerfile).toContain('CMD ["node", "apps/web/server.js"]');
+      expect(files.get("apps/web/next.config.ts")).toContain('output: "standalone"');
+    });
+
+    it("should switch Svelte to adapter-node for Docker web deploys", async () => {
+      const result = await createVirtual({
+        projectName: "docker-svelte",
+        webDeploy: "docker",
+        serverDeploy: "none",
+        backend: "none",
         runtime: "none",
         database: "none",
         orm: "none",
         auth: "none",
+        payments: "none",
         api: "none",
-        frontend: ["native-bare"], // Only native frontend
+        frontend: ["svelte"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "npm",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const svelteConfig = files.get("apps/web/svelte.config.js");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const webDockerfile = files.get("apps/web/Dockerfile");
+
+      expect(svelteConfig).toContain("@sveltejs/adapter-node");
+      expect(svelteConfig).not.toContain("@sveltejs/adapter-auto");
+      expect(webPkg.devDependencies["@sveltejs/adapter-node"]).toBeDefined();
+      expect(webDockerfile).toContain('CMD ["node", "build/index.js"]');
+    });
+
+    it("should validate Nuxt public variables during Docker builds", async () => {
+      const result = await createVirtual({
+        projectName: "docker-nuxt",
+        webDeploy: "docker",
+        serverDeploy: "docker",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["nuxt"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml") ?? "";
+      const webDockerfile = files.get("apps/web/Dockerfile") ?? "";
+
+      expect(compose).toContain("NUXT_PUBLIC_SERVER_URL: http://localhost:3000");
+      expect(webDockerfile).toContain("ARG NUXT_PUBLIC_SERVER_URL");
+      expect(webDockerfile).toContain("ENV NUXT_PUBLIC_SERVER_URL=${NUXT_PUBLIC_SERVER_URL}");
+      expect(webDockerfile.indexOf("ARG NUXT_PUBLIC_SERVER_URL")).toBeLessThan(
+        webDockerfile.indexOf("bun install"),
+      );
+      expect(webDockerfile).not.toContain("SKIP_ENV_VALIDATION");
+      expect(files.get("packages/env/src/web.ts")).not.toContain("SKIP_ENV_VALIDATION");
+    });
+
+    it("should not infer the TanStack Start runtime from the package manager", async () => {
+      const result = await createVirtual({
+        projectName: "docker-tanstack-start",
+        webDeploy: "docker",
+        serverDeploy: "none",
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "none",
+        frontend: ["tanstack-start"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const viteConfig = files.get("apps/web/vite.config.ts");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const webDockerfile = files.get("apps/web/Dockerfile");
+      const compose = files.get("docker-compose.yml");
+
+      expect(viteConfig).toContain('import { nitro } from "nitro/vite"');
+      expect(viteConfig).toContain('nitro({ preset: "node-server" }),');
+      expect(webPkg.dependencies.nitro).toBeDefined();
+      // SSR chunks require() externals at runtime, so the app runs from the workspace
+      expect(webDockerfile).toContain("FROM oven/bun:1 AS builder");
+      expect(webDockerfile).toContain("FROM node:24-slim AS runner");
+      expect(webDockerfile).toContain("WORKDIR /app/apps/web");
+      expect(webDockerfile).toContain('CMD ["node", ".output/server/index.mjs"]');
+      expect(compose).toContain('"node",\n          "-e"');
+    });
+
+    it("should use the full Node 24 image for Vite+ Docker web builds", async () => {
+      const result = await createVirtual({
+        projectName: "docker-vite-plus",
+        webDeploy: "docker",
+        serverDeploy: "docker",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "prisma",
+        auth: "better-auth",
+        payments: "none",
+        api: "orpc",
+        frontend: ["tanstack-start"],
+        addons: ["vite-plus"],
+        examples: ["none"],
+        dbSetup: "docker",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const webDockerfile = files.get("apps/web/Dockerfile");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const viteConfig = files.get("apps/web/vite.config.ts");
+      const compose = files.get("docker-compose.yml");
+
+      expect(webPkg.scripts.build).toBe("vp build");
+      expect(viteConfig).toContain('nitro({ preset: "bun" }),');
+      expect(webDockerfile).toContain("FROM node:24 AS builder");
+      expect(webDockerfile).toContain("FROM oven/bun:1 AS runner");
+      expect(webDockerfile).not.toContain("ca-certificates");
+      expect(webDockerfile).toContain('CMD ["bun", ".output/server/index.mjs"]');
+      expect(compose).toContain('"bun",\n          "-e"');
+    });
+
+    for (const runtime of ["bun", "node"] as const) {
+      for (const packageManager of ["bun", "npm", "pnpm"] as const) {
+        for (const useVitePlus of [false, true]) {
+          it(`should use the ${runtime} runtime with ${packageManager}${useVitePlus ? " and Vite+" : ""}`, async () => {
+            const result = await createVirtual({
+              projectName: `docker-${runtime}-${packageManager}${useVitePlus ? "-vite-plus" : ""}`,
+              webDeploy: "docker",
+              serverDeploy: "docker",
+              backend: "hono",
+              runtime,
+              database: "none",
+              orm: "none",
+              auth: "none",
+              payments: "none",
+              api: "orpc",
+              frontend: ["tanstack-start"],
+              addons: useVitePlus ? ["vite-plus"] : ["none"],
+              examples: ["none"],
+              dbSetup: "none",
+              install: false,
+              git: false,
+              packageManager,
+            });
+
+            if (result.isErr()) {
+              throw result.error;
+            }
+
+            const files = collectFiles(result.value.root, result.value.root.path);
+            const viteConfig = files.get("apps/web/vite.config.ts");
+            const webDockerfile = files.get("apps/web/Dockerfile");
+            const serverDockerfile = files.get("apps/server/Dockerfile");
+            const compose = files.get("docker-compose.yml");
+
+            expect(viteConfig).toContain(
+              runtime === "bun" ? 'nitro({ preset: "bun" }),' : 'nitro({ preset: "node-server" }),',
+            );
+            expect(webDockerfile).toContain(
+              packageManager === "bun" && !useVitePlus
+                ? "FROM oven/bun:1 AS builder"
+                : `FROM node:24${useVitePlus ? "" : "-slim"} AS builder`,
+            );
+            expect(webDockerfile).toContain(
+              runtime === "bun" ? "FROM oven/bun:1 AS runner" : "FROM node:24-slim AS runner",
+            );
+            expect(webDockerfile).toContain(
+              runtime === "bun"
+                ? 'CMD ["bun", ".output/server/index.mjs"]'
+                : 'CMD ["node", ".output/server/index.mjs"]',
+            );
+            expect(serverDockerfile).toContain(
+              packageManager === "bun"
+                ? "FROM oven/bun:1 AS builder"
+                : "FROM node:24-slim AS builder",
+            );
+            expect(serverDockerfile).toContain(
+              runtime === "bun" ? "FROM oven/bun:1 AS runner" : "FROM node:24-slim AS runner",
+            );
+            expect(serverDockerfile).toContain(
+              runtime === "bun"
+                ? 'CMD ["bun", "dist/index.mjs"]'
+                : 'CMD ["node", "dist/index.mjs"]',
+            );
+            expect(compose?.match(new RegExp(`"${runtime}",`, "g"))?.length).toBe(2);
+          });
+        }
+      }
+    }
+
+    it("should serve React Router SSR builds with a node runner", async () => {
+      const result = await createVirtual({
+        projectName: "docker-react-router",
+        webDeploy: "docker",
+        serverDeploy: "none",
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "none",
+        frontend: ["react-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "npm",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const webDockerfile = files.get("apps/web/Dockerfile");
+      const compose = files.get("docker-compose.yml");
+
+      // react-router scaffolds SSR-first, so the container runs the server build
+      expect(webDockerfile).not.toContain("FROM nginx:alpine");
+      expect(webDockerfile).toContain("FROM node:24-slim AS runner");
+      expect(webDockerfile).toContain('CMD ["sh", "-c", "cd apps/web && npm run start"]');
+      expect(files.has("apps/web/nginx.conf")).toBe(false);
+      expect(compose).toContain('"3001:3001"');
+    });
+
+    it("should generate a server-only Docker setup with web on another deploy", async () => {
+      const result = await createVirtual({
+        projectName: "docker-server-only",
+        webDeploy: "none",
+        serverDeploy: "docker",
+        backend: "express",
+        runtime: "node",
+        database: "postgres",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["nuxt"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "npm",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml");
+      const serverDockerfile = files.get("apps/server/Dockerfile");
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+
+      // Explicit vue 3 pin keeps npm's resolver off the vue 2 optional-peer path
+      expect(webPkg.dependencies.vue).toBeDefined();
+      expect(files.has("apps/web/Dockerfile")).toBe(false);
+      expect(compose).not.toContain("dockerfile: apps/web/Dockerfile");
+      expect(compose).toContain("dockerfile: apps/server/Dockerfile");
+      // External database: connection string comes from apps/server/.env
+      expect(compose).not.toContain("DATABASE_URL:");
+      expect(compose).not.toContain("include:");
+      expect(serverDockerfile).toContain('CMD ["node", "dist/index.mjs"]');
+    });
+
+    it("should deploy Solid 2 production builds as an SSR server", async () => {
+      const result = await createVirtual({
+        projectName: "docker-solid-no-api",
+        webDeploy: "docker",
+        serverDeploy: "none",
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "none",
+        frontend: ["solid"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const webDockerfile = files.get("apps/web/Dockerfile");
+      const compose = files.get("docker-compose.yml");
+
+      expect(webPkg.dependencies["@solidjs/start"]).toBeUndefined();
+      expect(webPkg.dependencies["solid-js"]).toBe("^2.0.0-rc.0");
+      expect(webPkg.devDependencies.nitro).toBeDefined();
+      expect(webPkg.devDependencies["@tanstack/solid-router-devtools"]).toBeUndefined();
+      expect(files.get("apps/web/vite.config.ts")).toContain("tsconfigPaths: true");
+      expect(webDockerfile).toContain("FROM node:24-slim AS runner");
+      expect(webDockerfile).toContain('CMD ["node", ".output/server/index.mjs"]');
+      expect(webDockerfile).not.toContain("FROM nginx:alpine");
+      expect(compose).toContain('"3001:3001"');
+    });
+
+    it("should expose Solid 2 Prisma SQLite native dependencies to Nitro", async () => {
+      const result = await createVirtual({
+        projectName: "docker-solid-prisma-sqlite",
+        webDeploy: "docker",
+        serverDeploy: "none",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "prisma",
+        auth: "better-auth",
+        payments: "none",
+        api: "orpc",
+        frontend: ["solid"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "pnpm",
+      });
+
+      if (result.isErr()) throw result.error;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const webPkg = JSON.parse(files.get("apps/web/package.json") ?? "{}");
+      const compose = files.get("docker-compose.yml") ?? "";
+      const readme = files.get("README.md") ?? "";
+
+      expect(webPkg.dependencies.libsql).toBeDefined();
+      expect(compose).toContain("DATABASE_URL: file:/data/local.db");
+      expect(compose).toContain("source: ./.data");
+      expect(compose).toContain("target: /data");
+      expect(compose).toContain("create_host_path: false");
+      expect(compose).not.toContain("db-init:");
+      expect(files.get("apps/web/.env")).toContain("DATABASE_URL=file:../../.data/local.db");
+      expect(files.get(".data/.gitignore")).toBe("*\n!.gitignore\n");
+      expect(files.get(".dockerignore")).toContain(".data");
+      expect(files.get(".dockerignore")).toContain("local.db-*");
+      expect(files.get(".gitignore")).toContain("local.db-*");
+      expect(readme).toContain(
+        "Docker Compose uses the local `./.data/local.db` file. Run `pnpm run db:push` before starting the stack.",
+      );
+    });
+
+    it("should mount SQLite in the Docker server that consumes it", async () => {
+      const result = await createVirtual({
+        projectName: "docker-server-sqlite",
+        webDeploy: "docker",
+        serverDeploy: "docker",
+        backend: "hono",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        payments: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) throw result.error;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml") ?? "";
+      const serverPkg = JSON.parse(files.get("apps/server/package.json") ?? "{}");
+
+      expect(compose).toContain("dockerfile: apps/server/Dockerfile");
+      expect(compose).toContain("DATABASE_URL: file:/data/local.db");
+      expect(compose).toContain("source: ./.data");
+      expect(compose).toContain("target: /data");
+      expect(compose).toContain("create_host_path: false");
+      expect(compose).not.toContain("db-init:");
+      expect(files.get("apps/server/.env")).toContain("DATABASE_URL=file:../../.data/local.db");
+      expect(files.get(".data/.gitignore")).toBe("*\n!.gitignore\n");
+      expect(serverPkg.dependencies.libsql).toBeDefined();
+    });
+
+    it("should only document SQLite setup when Docker runs the database consumer", async () => {
+      const result = await createVirtual({
+        projectName: "docker-web-cloudflare-server-sqlite",
+        webDeploy: "docker",
+        serverDeploy: "cloudflare",
+        backend: "hono",
+        runtime: "workers",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        payments: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) throw result.error;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml") ?? "";
+      const readme = files.get("README.md") ?? "";
+
+      expect(compose).not.toContain("DATABASE_URL: file:/data/local.db");
+      expect(compose).not.toContain("source: ./.data");
+      expect(files.has(".data/.gitignore")).toBe(false);
+      expect(readme).not.toContain("Docker Compose uses the local");
+    });
+
+    it("should route Solid 2 SSR requests through the internal Docker server URL", async () => {
+      const result = await createVirtual({
+        projectName: "docker-solid-external-server",
+        webDeploy: "docker",
+        serverDeploy: "docker",
+        backend: "hono",
+        runtime: "node",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["solid"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "bun",
+      });
+
+      if (result.isErr()) throw result.error;
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      const compose = files.get("docker-compose.yml") ?? "";
+      const orpcClient = files.get("apps/web/src/utils/orpc.ts") ?? "";
+
+      expect(compose).toContain("SERVER_URL: http://server:3000");
+      expect(compose).toContain("VITE_SERVER_URL: http://localhost:3000");
+      expect(orpcClient).toContain('typeof window === "undefined" && processEnv?.SERVER_URL');
+    });
+
+    it("should bind Fastify to all interfaces for Docker deploys", async () => {
+      const result = await createVirtual({
+        projectName: "docker-fastify-host",
+        webDeploy: "none",
+        serverDeploy: "docker",
+        backend: "fastify",
+        runtime: "node",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        payments: "none",
+        api: "orpc",
+        frontend: ["nuxt"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        install: false,
+        git: false,
+        packageManager: "npm",
+      });
+
+      if (result.isErr()) {
+        throw result.error;
+      }
+
+      const files = collectFiles(result.value.root, result.value.root.path);
+      expect(files.get("apps/server/src/index.ts")).toContain(
+        'fastify.listen({ port: 3000, host: "0.0.0.0" }',
+      );
+    });
+
+    it("should fail with docker server deploy + workers runtime", async () => {
+      const result = await runTRPCTest({
+        projectName: "docker-workers-fail",
+        webDeploy: "none",
+        serverDeploy: "docker",
+        backend: "hono",
+        runtime: "workers",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
         addons: ["none"],
         examples: ["none"],
         dbSetup: "none",
         expectError: true,
       });
 
-      expectError(result, "'--web-deploy' requires a web frontend");
+      expectError(result, "'--server-deploy docker' is not compatible with '--runtime workers'");
+    });
+
+    it("should fail with docker server deploy + self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "docker-self-server-fail",
+        webDeploy: "none",
+        serverDeploy: "docker",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        expectError: true,
+      });
+
+      expectError(result, "'--server-deploy docker' requires a separate server backend");
     });
   });
 });

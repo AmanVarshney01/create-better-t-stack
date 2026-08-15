@@ -1,0 +1,64 @@
+{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
+{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
+import type { CloudflareEnv } from "@{{projectName}}/env/server";
+{{else}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+import * as schema from "./schema";
+
+{{#if (eq dbSetup "neon")}}
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+
+export function createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
+	const sql = neon(env.DATABASE_URL);
+	return drizzle(sql, { schema });
+}
+{{else}}
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+{{else}}
+import { drizzle } from "drizzle-orm/node-postgres";
+{{/if}}
+
+export function createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
+	const client = postgres(env.DATABASE_URL, { max: 1 });
+
+	return drizzle({ client, schema });
+{{else}}
+	return drizzle(env.DATABASE_URL, { schema });
+{{/if}}
+}
+{{/if}}
+
+{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+export const db = createDb();
+{{/if}}
+{{/if}}
+
+{{#if (eq runtime "workers")}}
+import * as schema from "./schema";
+
+{{#if (eq dbSetup "neon")}}
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { env } from "@{{projectName}}/env/server";
+
+export function createDb() {
+	const sql = neon(env.DATABASE_URL || "");
+	return drizzle(sql, { schema });
+}
+{{else}}
+import { drizzle } from "drizzle-orm/postgres-js";
+import { env } from "@{{projectName}}/env/server";
+import postgres from "postgres";
+
+export function createDb() {
+	const client = postgres(env.DATABASE_URL || "", { max: 1 });
+
+	return drizzle({ client, schema });
+}
+{{/if}}
+{{/if}}

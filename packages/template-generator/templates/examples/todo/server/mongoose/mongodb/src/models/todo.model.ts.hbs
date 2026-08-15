@@ -1,0 +1,26 @@
+import mongoose from 'mongoose';
+
+const { Schema, model } = mongoose;
+
+const todoSchema = new Schema({
+  id: {
+    type: String,
+    required: true,
+    default: () => new mongoose.Types.ObjectId().toString(),
+  },
+  text: {
+    type: String,
+    required: true,
+  },
+  completed: {
+    type: Boolean,
+    default: false,
+  },
+}, {
+  collection: 'todo',
+  id: false,
+});
+
+const Todo = model('Todo', todoSchema);
+
+export { Todo };

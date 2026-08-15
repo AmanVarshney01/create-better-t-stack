@@ -1,0 +1,13 @@
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import type { APIRoute } from "astro";
+
+export const ALL: APIRoute = async (ctx) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+  const auth = createAuth();
+{{/if}}
+  return auth.handler(ctx.request);
+};

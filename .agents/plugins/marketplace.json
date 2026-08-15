@@ -1,0 +1,20 @@
+{
+  "name": "better-t-stack",
+  "interface": {
+    "displayName": "Better-T-Stack"
+  },
+  "plugins": [
+    {
+      "name": "better-t-stack",
+      "source": {
+        "source": "local",
+        "path": "./plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Coding"
+    }
+  ]
+}

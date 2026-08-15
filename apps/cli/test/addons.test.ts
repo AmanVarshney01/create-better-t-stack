@@ -1,37 +1,64 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import { existsSync } from "node:fs";
+import { readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
 
-import type { Addons, Frontend } from "../src";
+import {
+  DiagnosticCategory,
+  flattenDiagnosticMessageText,
+  ModuleKind,
+  ScriptTarget,
+  transpileModule,
+} from "typescript";
 
+import { add, type Addons, type Backend, type Frontend } from "../src";
+import { getCompatibleAddons } from "../src/utils/compatibility-rules";
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
+async function readSourceFiles(dir: string): Promise<{ path: string; content: string }[]> {
+  if (!existsSync(dir)) return [];
+
+  const entries = await readdir(dir, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const entryPath = join(dir, entry.name);
+      if (entry.isDirectory()) return readSourceFiles(entryPath);
+      if (!/\.(?:cjs|js|mjs|ts|tsx|vue)$/.test(entry.name)) return [];
+      return [{ path: entryPath, content: await readFile(entryPath, "utf-8") }];
+    }),
+  );
+
+  return files.flat();
+}
+
+function expectParseableTypeScript(content: string) {
+  const diagnostics =
+    transpileModule(content, {
+      compilerOptions: {
+        module: ModuleKind.ESNext,
+        target: ScriptTarget.ESNext,
+      },
+      reportDiagnostics: true,
+    }).diagnostics?.filter((diagnostic) => diagnostic.category === DiagnosticCategory.Error) ?? [];
+
+  expect(
+    diagnostics.map((diagnostic) => flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
+  ).toEqual([]);
+}
+
+function expectDocsWithEvlogAuth(content: string) {
+  expect(content).not.toContain("createEvlogAuth");
+  expect(content).not.toContain("toHeaders");
+  expect(content).not.toContain("GetSessionInput");
+  expect(content).not.toContain("GetSessionResult");
+  expect(content).not.toContain("toEvlogAuthEvent");
+  expect(content).not.toContain("await identifyUser(event);");
+  expect(content).not.toContain('declare module "h3"');
+  expect(content).not.toContain("H3EventContext");
+  expect(content).not.toContain("as unknown as BetterAuthInstance");
+}
+
 describe("Addon Configurations", () => {
-  describe("Universal Addons (no frontend restrictions)", () => {
-    const universalAddons = ["biome", "husky", "turborepo", "oxlint"];
-
-    for (const addon of universalAddons) {
-      it(`should work with ${addon} addon on any frontend`, async () => {
-        const result = await runTRPCTest({
-          projectName: `${addon}-universal`,
-          addons: [addon as Addons],
-          frontend: ["tanstack-router"],
-          backend: "hono",
-          runtime: "bun",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          api: "trpc",
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
-        });
-
-        expectSuccess(result);
-      });
-    }
-  });
-
   describe("Frontend-Specific Addons", () => {
     describe("PWA Addon", () => {
       const pwaCompatibleFrontends = ["tanstack-router", "react-router", "solid", "next"];
@@ -111,10 +138,11 @@ describe("Addon Configurations", () => {
       const tauriCompatibleFrontends = [
         "tanstack-router",
         "react-router",
+        "tanstack-start",
+        "next",
         "nuxt",
         "svelte",
-        "solid",
-        "next",
+        "astro",
       ];
 
       for (const frontend of tauriCompatibleFrontends) {
@@ -135,7 +163,7 @@ describe("Addon Configurations", () => {
             install: false,
           };
 
-          if (["nuxt", "svelte", "solid"].includes(frontend)) {
+          if (["nuxt", "svelte", "astro"].includes(frontend)) {
             config.api = "orpc";
           } else {
             config.api = "trpc";
@@ -146,7 +174,12 @@ describe("Addon Configurations", () => {
         });
       }
 
-      const tauriIncompatibleFrontends = ["native-bare", "native-uniwind", "native-unistyles"];
+      const tauriIncompatibleFrontends = [
+        "solid",
+        "native-bare",
+        "native-uniwind",
+        "native-unistyles",
+      ];
 
       for (const frontend of tauriIncompatibleFrontends) {
         it(`should fail with Tauri + ${frontend}`, async () => {
@@ -159,7 +192,7 @@ describe("Addon Configurations", () => {
             database: "sqlite",
             orm: "drizzle",
             auth: "none",
-            api: "trpc",
+            api: frontend === "solid" ? "orpc" : "trpc",
             examples: ["none"],
             dbSetup: "none",
             webDeploy: "none",
@@ -170,7 +203,201 @@ describe("Addon Configurations", () => {
           expectError(result, "tauri addon requires one of these frontends");
         });
       }
+
+      it("should fail with Tauri + backend self", async () => {
+        const result = await runTRPCTest({
+          projectName: "tauri-self-backend-fail",
+          addons: ["tauri"],
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          api: "orpc",
+          examples: ["ai"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          expectError: true,
+        });
+
+        expectError(result, "tauri addon requires a separate backend or no backend");
+      });
+
+      for (const frontend of ["next", "tanstack-start"] as const) {
+        it(`should fail with Tauri + Convex Better Auth + ${frontend}`, async () => {
+          const result = await runTRPCTest({
+            projectName: `tauri-convex-better-auth-${frontend}-fail`,
+            addons: ["tauri"],
+            frontend: [frontend],
+            backend: "convex",
+            runtime: "none",
+            database: "none",
+            orm: "none",
+            auth: "better-auth",
+            api: "none",
+            examples: ["ai"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            expectError: true,
+          });
+
+          expectError(result, "server auth bootstrap");
+        });
+      }
     });
+
+    describe("Electrobun Addon", () => {
+      const electrobunCompatibleFrontends = [
+        "tanstack-router",
+        "react-router",
+        "tanstack-start",
+        "next",
+        "nuxt",
+        "svelte",
+        "astro",
+      ];
+
+      for (const frontend of electrobunCompatibleFrontends) {
+        it(`should work with Electrobun + ${frontend}`, async () => {
+          const config: TestConfig = {
+            projectName: `electrobun-${frontend}`,
+            addons: ["electrobun"],
+            frontend: [frontend as Frontend],
+            backend: "hono",
+            runtime: "bun",
+            database: "sqlite",
+            orm: "drizzle",
+            auth: "none",
+            examples: ["none"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            install: false,
+          };
+
+          config.api = ["nuxt", "svelte", "astro"].includes(frontend) ? "orpc" : "trpc";
+
+          const result = await runTRPCTest(config);
+          expectSuccess(result);
+        });
+      }
+
+      const electrobunIncompatibleFrontends = [
+        "solid",
+        "native-bare",
+        "native-uniwind",
+        "native-unistyles",
+      ];
+
+      for (const frontend of electrobunIncompatibleFrontends) {
+        it(`should fail with Electrobun + ${frontend}`, async () => {
+          const config: TestConfig = {
+            projectName: `electrobun-${frontend}-fail`,
+            addons: ["electrobun"],
+            frontend: [frontend as Frontend],
+            backend: "hono",
+            runtime: "bun",
+            database: "sqlite",
+            orm: "drizzle",
+            auth: "none",
+            examples: ["none"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            expectError: true,
+          };
+
+          config.api = frontend === "solid" ? "orpc" : "trpc";
+
+          const result = await runTRPCTest(config);
+          expectError(result, "electrobun addon requires one of these frontends");
+        });
+      }
+
+      it("should fail with Electrobun + backend self", async () => {
+        const result = await runTRPCTest({
+          projectName: "electrobun-self-backend-fail",
+          addons: ["electrobun"],
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          api: "orpc",
+          examples: ["ai"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          expectError: true,
+        });
+
+        expectError(result, "electrobun addon requires a separate backend or no backend");
+      });
+
+      it("should work with Electrobun + Convex Better Auth + Next.js for desktop HMR", async () => {
+        const result = await runTRPCTest({
+          projectName: "electrobun-convex-better-auth-next",
+          addons: ["turborepo", "electrobun"],
+          frontend: ["next"],
+          backend: "convex",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "better-auth",
+          api: "none",
+          examples: ["ai"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        expect(result.projectDir).toBeDefined();
+        if (!result.projectDir) return;
+
+        const rootPackageJson = JSON.parse(
+          await readFile(join(result.projectDir, "package.json"), "utf8"),
+        );
+        const nextConfig = await readFile(
+          join(result.projectDir, "apps", "web", "next.config.ts"),
+          "utf8",
+        );
+
+        expect(rootPackageJson.scripts["dev:desktop"]).toBe("turbo run dev:hmr -F desktop --");
+        expect(nextConfig).not.toContain('output: "export"');
+      });
+    });
+  });
+
+  describe("Standalone Addons", () => {
+    // smoke coverage for addons that have no dedicated content tests
+    for (const addon of ["oxlint", "lefthook", "mcp"] as const) {
+      it(`should work with ${addon} addon`, async () => {
+        const result = await runTRPCTest({
+          projectName: `${addon}-standalone`,
+          addons: [addon],
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
   });
 
   describe("Multiple Addons", () => {
@@ -178,6 +405,27 @@ describe("Addon Configurations", () => {
       const result = await runTRPCTest({
         projectName: "multiple-addons",
         addons: ["biome", "husky", "turborepo", "pwa"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with lefthook and husky together", async () => {
+      const result = await runTRPCTest({
+        projectName: "both-git-hooks",
+        addons: ["lefthook", "husky"],
         frontend: ["tanstack-router"],
         backend: "hono",
         runtime: "bun",
@@ -216,6 +464,553 @@ describe("Addon Configurations", () => {
       expectError(result, "pwa addon requires one of these frontends");
     });
 
+    it("should fail when task runners are combined", async () => {
+      const result = await runTRPCTest({
+        projectName: "monorepo-addon-conflict",
+        addons: ["turborepo", "vite-plus"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "`nx`, `turborepo`, and `vite-plus` cannot be used together");
+    });
+
+    it("should hide task runner addons when one is already installed", () => {
+      const compatibleAddons = getCompatibleAddons(
+        ["turborepo", "nx", "vite-plus", "biome"] as Addons[],
+        ["tanstack-router"] as Frontend[],
+        ["turborepo"] as Addons[],
+      );
+
+      expect(compatibleAddons).not.toContain("nx");
+      expect(compatibleAddons).not.toContain("vite-plus");
+      expect(compatibleAddons).toContain("biome");
+    });
+
+    it("should wire Vite+ addon scripts, deps, overrides, and config imports", async () => {
+      const result = await runTRPCTest({
+        projectName: "vite-plus-addon",
+        addons: ["vite-plus"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.projectDir;
+      expect(projectDir).toBeDefined();
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir!, "package.json"), "utf8"));
+      const webPackageJson = JSON.parse(
+        await readFile(join(projectDir!, "apps/web/package.json"), "utf8"),
+      );
+      const webViteConfig = await readFile(join(projectDir!, "apps/web/vite.config.ts"), "utf8");
+
+      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.2.6");
+      expect(rootPackageJson.devDependencies.rolldown).toBe("1.2.0");
+      expect(rootPackageJson.overrides).toMatchObject({
+        vite: "npm:@voidzero-dev/vite-plus-core@0.2.6",
+      });
+      expect(rootPackageJson.overrides.vitest).toBeUndefined();
+      expect(rootPackageJson.scripts.dev).toBe("vp run -r dev");
+      expect(rootPackageJson.scripts.build).toBe("vp run -r build");
+      expect(rootPackageJson.scripts["check-types"]).toBe("vp run -r check-types");
+      expect(rootPackageJson.scripts.check).toBe("vp check && vp run -r check-types");
+      expect(rootPackageJson.scripts.lint).toBe("vp lint");
+      expect(rootPackageJson.scripts.format).toBe("vp fmt");
+      expect(rootPackageJson.scripts.staged).toBe("vp staged");
+      expect(rootPackageJson.scripts["hooks:setup"]).toBe("vp config");
+      expect(rootPackageJson.scripts["dev:web"]).toBe("vp run --filter web dev");
+      expect(rootPackageJson.scripts["dev:server"]).toBe("vp run --filter server dev");
+      expect(webPackageJson.scripts.dev).toBe("vp dev");
+      expect(webPackageJson.scripts.build).toBe("vp build");
+      expect(webPackageJson.scripts.start).toBe("vp dev");
+      expect(webPackageJson.scripts["check-types"]).toBe("vp build && tsc --noEmit");
+      expect(webViteConfig).toContain('import { defineConfig } from "vite-plus";');
+      expect(webViteConfig).not.toContain('import { defineConfig } from "vite";');
+      const rootViteConfig = await readFile(join(projectDir!, "vite.config.ts"), "utf8");
+      expect(rootViteConfig).toContain('import { defineConfig } from "vite-plus";');
+      expect(rootViteConfig).toContain('"apps/web/dist/**"');
+      expect(rootViteConfig).toContain('"apps/web/.tanstack/**"');
+      expect(rootViteConfig).toContain('"apps/web/src/routeTree.gen.ts"');
+      expect(rootViteConfig).toContain('"apps/server/dist/**"');
+      expect(rootViteConfig).toContain('"packages/db/dist/**"');
+      expect(rootViteConfig).toContain('"packages/db/local.db*"');
+      expect(rootViteConfig).not.toContain('"apps/web/.next/**"');
+      expect(rootViteConfig).not.toContain('"apps/web/.nuxt/**"');
+      expect(rootViteConfig).not.toContain('"packages/db/prisma/generated/**"');
+      expect(rootViteConfig).not.toContain('"packages/db/prisma/**/*.db*"');
+      expect(rootViteConfig).not.toContain('".wrangler/**"');
+      expect(rootViteConfig).toContain("typeCheck: false");
+      expect(rootViteConfig).toContain('"*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}":');
+      expect(rootViteConfig).toContain('"vp check --fix"');
+    });
+
+    it("should wire Vite+ staged checks into Git hook addons", async () => {
+      const result = await runTRPCTest({
+        projectName: "vite-plus-hooks",
+        addons: ["vite-plus", "lefthook", "husky"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.projectDir;
+      expect(projectDir).toBeDefined();
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir!, "package.json"), "utf8"));
+      const lefthookConfig = await readFile(join(projectDir!, "lefthook.yml"), "utf8");
+
+      expect(rootPackageJson["lint-staged"]).toEqual({
+        "*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}": ["vp check --fix"],
+      });
+      expect(rootPackageJson.scripts["hooks:setup"]).toBeUndefined();
+      expect(lefthookConfig).toContain("name: vite-plus");
+      expect(lefthookConfig).toContain("run: bun vp staged");
+      expect(lefthookConfig).not.toContain("oxlint --fix");
+    });
+
+    it("should keep explicit Oxlint Git hook tasks when Vite+ is also selected", async () => {
+      const result = await runTRPCTest({
+        projectName: "vite-plus-oxlint-hooks",
+        addons: ["vite-plus", "oxlint", "lefthook", "husky"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.projectDir;
+      expect(projectDir).toBeDefined();
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir!, "package.json"), "utf8"));
+      const lefthookConfig = await readFile(join(projectDir!, "lefthook.yml"), "utf8");
+
+      expect(rootPackageJson["lint-staged"]).toEqual({
+        "*": ["oxlint", "oxfmt --write"],
+      });
+      expect(lefthookConfig).toContain("name: oxlint");
+      expect(lefthookConfig).toContain("name: oxfmt");
+      expect(lefthookConfig).not.toContain("name: vite-plus");
+    });
+
+    it("should wire Vite+ addon when added later", async () => {
+      const created = await runTRPCTest({
+        projectName: "vite-plus-add-later",
+        addons: ["none"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["vite-plus"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir, "package.json"), "utf8"));
+      const webPackageJson = JSON.parse(
+        await readFile(join(projectDir, "apps/web/package.json"), "utf8"),
+      );
+      const webViteConfig = await readFile(join(projectDir, "apps/web/vite.config.ts"), "utf8");
+      const rootViteConfig = await readFile(join(projectDir, "vite.config.ts"), "utf8");
+
+      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.2.6");
+      expect(rootPackageJson.scripts.dev).toBe("vp run -r dev");
+      expect(rootPackageJson.scripts.staged).toBe("vp staged");
+      expect(rootPackageJson.scripts["hooks:setup"]).toBe("vp config");
+      expect(webPackageJson.scripts.dev).toBe("vp dev");
+      expect(webViteConfig).toContain('import { defineConfig } from "vite-plus";');
+      expect(webViteConfig).not.toContain('from "vite";');
+      expect(rootViteConfig).toContain('import { defineConfig } from "vite-plus";');
+    });
+
+    it("should wire Nx addon when added later", async () => {
+      const created = await runTRPCTest({
+        projectName: "nx-add-later",
+        addons: ["none"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["nx"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir, "package.json"), "utf8"));
+      const nxConfig = JSON.parse(await readFile(join(projectDir, "nx.json"), "utf8"));
+
+      expect(rootPackageJson.devDependencies.nx).toBeDefined();
+      expect(rootPackageJson.scripts.dev).toBe("nx run-many -t dev");
+      expect(rootPackageJson.scripts.build).toBe("nx run-many -t build");
+      expect(nxConfig.namedInputs.production).toContain("!{workspaceRoot}/apps/web/dist/**");
+      expect(nxConfig.namedInputs.production).toContain("!{workspaceRoot}/apps/server/dist/**");
+      expect(nxConfig.namedInputs.production).toContain("!{workspaceRoot}/packages/db/dist/**");
+      expect(nxConfig.namedInputs.production).toContain("!{workspaceRoot}/packages/db/local.db*");
+    });
+
+    it("should wire Turborepo addon when added later", async () => {
+      const created = await runTRPCTest({
+        projectName: "turborepo-add-later",
+        addons: ["none"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["turborepo"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir, "package.json"), "utf8"));
+      const turboConfig = JSON.parse(await readFile(join(projectDir, "turbo.json"), "utf8"));
+
+      expect(rootPackageJson.devDependencies.turbo).toBeDefined();
+      expect(rootPackageJson.scripts.dev).toBe("turbo run dev");
+      expect(rootPackageJson.scripts.build).toBe("turbo run build");
+      expect(turboConfig.tasks.build.dependsOn).toEqual(["^build"]);
+    });
+
+    it("should reject adding Vite+ to a project with an existing task runner", async () => {
+      const created = await runTRPCTest({
+        projectName: "vite-plus-add-task-runner-conflict",
+        addons: ["turborepo"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["vite-plus"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(false);
+      expect(addResult?.error).toContain(
+        "Cannot combine 'turborepo', 'nx', and 'vite-plus' addons",
+      );
+
+      const btsConfig = await readFile(join(projectDir, "bts.jsonc"), "utf8");
+      expect(btsConfig).toContain('"turborepo"');
+      expect(btsConfig).not.toContain('"vite-plus"');
+    });
+
+    it("should reject adding another task runner to a Vite+ project", async () => {
+      const created = await runTRPCTest({
+        projectName: "vite-plus-add-reverse-task-runner-conflict",
+        addons: ["vite-plus"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["nx"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(false);
+      expect(addResult?.error).toContain(
+        "Cannot combine 'turborepo', 'nx', and 'vite-plus' addons",
+      );
+
+      const btsConfig = await readFile(join(projectDir, "bts.jsonc"), "utf8");
+      expect(btsConfig).toContain('"vite-plus"');
+      expect(btsConfig).not.toContain('"nx"');
+    });
+
+    it("should refresh existing Git hook addons when Vite+ is added later", async () => {
+      const created = await runTRPCTest({
+        projectName: "vite-plus-add-existing-hooks",
+        addons: ["lefthook", "husky"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["vite-plus"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir, "package.json"), "utf8"));
+      const lefthookConfig = await readFile(join(projectDir, "lefthook.yml"), "utf8");
+
+      expect(rootPackageJson.scripts["hooks:setup"]).toBeUndefined();
+      expect(rootPackageJson["lint-staged"]).toEqual({
+        "*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}": ["vp check --fix"],
+      });
+      expect(lefthookConfig).toContain("name: vite-plus");
+      expect(lefthookConfig).toContain("run: bun vp staged");
+    });
+
+    it("should refresh Git hook addons when they are added after Vite+", async () => {
+      const created = await runTRPCTest({
+        projectName: "vite-plus-add-hooks-later",
+        addons: ["vite-plus"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["husky", "lefthook"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir, "package.json"), "utf8"));
+      const lefthookConfig = await readFile(join(projectDir, "lefthook.yml"), "utf8");
+
+      expect(rootPackageJson.scripts["hooks:setup"]).toBeUndefined();
+      expect(rootPackageJson["lint-staged"]).toEqual({
+        "*.{js,ts,jsx,tsx,vue,svelte,json,jsonc,css,md}": ["vp check --fix"],
+      });
+      expect(lefthookConfig).toContain("name: vite-plus");
+      expect(lefthookConfig).toContain("run: bun vp staged");
+    });
+
+    it("should refresh existing Git hook addons when Biome is added later", async () => {
+      const created = await runTRPCTest({
+        projectName: "biome-add-existing-hooks",
+        addons: ["lefthook", "husky"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["biome"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJson = JSON.parse(await readFile(join(projectDir, "package.json"), "utf8"));
+      const lefthookConfig = await readFile(join(projectDir, "lefthook.yml"), "utf8");
+
+      expect(rootPackageJson["lint-staged"]).toEqual({
+        "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": ["biome check --write ."],
+      });
+      expect(lefthookConfig).toContain("name: biome");
+      expect(lefthookConfig).toContain("biome check --write");
+      expect(lefthookConfig).not.toContain("name: vite-plus");
+      expect(lefthookConfig).not.toContain("name: oxlint");
+    });
+
+    it("should preserve Bun workspace catalogs when package scripts refresh on add", async () => {
+      const created = await runTRPCTest({
+        projectName: "bun-catalog-add-refresh",
+        addons: ["turborepo"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const rootPackageJsonBefore = JSON.parse(
+        await readFile(join(projectDir, "package.json"), "utf8"),
+      );
+      const catalogBefore = rootPackageJsonBefore.workspaces.catalog;
+      expect(catalogBefore["better-auth"]).toBeDefined();
+
+      const addResult = await add({
+        projectDir,
+        addons: ["biome"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const rootPackageJsonAfter = JSON.parse(
+        await readFile(join(projectDir, "package.json"), "utf8"),
+      );
+      const authPackageJson = JSON.parse(
+        await readFile(join(projectDir, "packages/auth/package.json"), "utf8"),
+      );
+
+      expect(Array.isArray(rootPackageJsonAfter.workspaces)).toBe(false);
+      expect(rootPackageJsonAfter.workspaces.packages).toEqual(
+        rootPackageJsonBefore.workspaces.packages,
+      );
+      expect(rootPackageJsonAfter.workspaces.catalog).toMatchObject(catalogBefore);
+      expect(authPackageJson.dependencies["better-auth"]).toBe("catalog:");
+    });
+
     it("should deduplicate addons", async () => {
       const result = await runTRPCTest({
         projectName: "duplicate-addons",
@@ -235,6 +1030,808 @@ describe("Addon Configurations", () => {
       });
 
       expectSuccess(result);
+    });
+  });
+
+  describe("Evlog Addon", () => {
+    it("should not offer evlog for Convex projects", () => {
+      const compatibleAddons = getCompatibleAddons(
+        ["evlog", "mcp"] as Addons[],
+        ["tanstack-start", "native-uniwind"] as Frontend[],
+        [],
+        "better-auth",
+        "convex",
+        "none",
+      );
+
+      expect(compatibleAddons).not.toContain("evlog");
+      expect(compatibleAddons).toContain("mcp");
+    });
+
+    const backendSnippets = {
+      hono: 'import { evlog, type EvlogVariables } from "evlog/hono";',
+      express: 'import { evlog } from "evlog/express";',
+      fastify: 'import { evlog } from "evlog/fastify";',
+      elysia: 'import { evlog } from "evlog/elysia";',
+      convex: "",
+      self: "",
+      none: "",
+    } satisfies Record<Backend, string>;
+
+    for (const backend of ["hono", "express", "fastify", "elysia"] as const) {
+      it(`should wire evlog middleware for ${backend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `evlog-${backend}`,
+          addons: ["evlog"],
+          frontend: ["tanstack-router"],
+          backend,
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        const projectDir = result.result?.projectDirectory;
+        if (!projectDir) throw new Error("Expected generated project directory");
+
+        const serverIndex = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf-8");
+        const serverPackageJson = await readFile(
+          join(projectDir, "apps/server/package.json"),
+          "utf-8",
+        );
+
+        expect(serverIndex).toContain('import { initLogger } from "evlog";');
+        expect(serverIndex).toContain('import { createFsDrain } from "evlog/fs";');
+        expect(serverIndex).toContain(backendSnippets[backend]);
+        expect(serverIndex).toContain(`env: { service: "evlog-${backend}-server" }`);
+        expect(serverIndex).toContain(
+          'drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain()',
+        );
+        expect(serverPackageJson).toContain('"evlog": "^2.22.4"');
+        const gitignore = await readFile(join(projectDir, ".gitignore"), "utf-8");
+        expect(gitignore).toContain(".evlog/");
+      });
+    }
+
+    it("should keep the Node file system drain out of Cloudflare Workers", async () => {
+      const result = await runTRPCTest({
+        projectName: "evlog-hono-workers",
+        addons: ["evlog"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "workers",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "cloudflare",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const serverIndex = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf-8");
+      expect(serverIndex).toContain('import { evlog, type EvlogVariables } from "evlog/hono";');
+      expect(serverIndex).not.toContain("evlog/fs");
+      expect(serverIndex).toContain("app.use(evlog());");
+    });
+
+    const webCases = [
+      {
+        frontend: "next",
+        api: "trpc",
+        files: [
+          ["apps/web/src/lib/evlog.ts", "createEvlog"],
+          ["apps/web/src/lib/evlog.ts", "createFsDrain"],
+          ["apps/web/src/lib/evlog.ts", 'from "evlog/next/instrumentation/create"'],
+          ["apps/web/instrumentation.ts", "defineNodeInstrumentation"],
+          ["apps/web/src/proxy.ts", "evlogMiddleware"],
+          ["apps/web/src/app/api/trpc/[trpc]/route.ts", "withEvlog(handler)"],
+        ],
+      },
+      {
+        frontend: "nuxt",
+        api: "orpc",
+        files: [
+          ["apps/web/nuxt.config.ts", '"evlog/nuxt"'],
+          ["apps/web/server/plugins/evlog-drain.ts", "createFsDrain"],
+        ],
+      },
+      {
+        frontend: "svelte",
+        api: "orpc",
+        files: [
+          ["apps/web/vite.config.ts", "evlog({ service:"],
+          ["apps/web/src/hooks.server.ts", "createEvlogHooks"],
+          ["apps/web/src/hooks.server.ts", "createFsDrain"],
+          ["apps/web/src/app.d.ts", "log: RequestLogger"],
+        ],
+      },
+      {
+        frontend: "tanstack-start",
+        api: "trpc",
+        files: [
+          ["apps/web/nitro.config.ts", 'evlog from "evlog/nitro/v3"'],
+          ["apps/web/server/plugins/evlog-drain.ts", "createFsDrain"],
+          ["apps/web/src/routes/__root.tsx", "evlogErrorHandler"],
+        ],
+      },
+      {
+        frontend: "astro",
+        api: "orpc",
+        files: [
+          ["apps/web/src/middleware.ts", "createRequestLogger"],
+          ["apps/web/src/middleware.ts", "createFsDrain"],
+          ["apps/web/src/env.d.ts", "log: RequestLogger"],
+        ],
+      },
+    ] as const;
+
+    for (const webCase of webCases) {
+      it(`should wire evlog for ${webCase.frontend} fullstack projects`, async () => {
+        const result = await runTRPCTest({
+          projectName: `evlog-${webCase.frontend}-web`,
+          addons: ["evlog"],
+          frontend: [webCase.frontend as Frontend],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: webCase.api,
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        const projectDir = result.result?.projectDirectory;
+        if (!projectDir) throw new Error("Expected generated project directory");
+
+        for (const [filePath, snippet] of webCase.files) {
+          const file = await readFile(join(projectDir, filePath), "utf-8");
+          expect(file).toContain(snippet);
+        }
+
+        const webPackageJson = await readFile(join(projectDir, "apps/web/package.json"), "utf-8");
+        expect(webPackageJson).toContain('"evlog": "^2.22.4"');
+        if (webCase.frontend === "tanstack-start") {
+          expect(webPackageJson).toContain('"nitro": "^3.0.260610-beta"');
+        }
+        const gitignore = await readFile(join(projectDir, ".gitignore"), "utf-8");
+        expect(gitignore).toContain(".evlog/");
+      });
+    }
+
+    it("should keep Nuxt config parseable with Cloudflare web deploy", async () => {
+      const result = await runTRPCTest({
+        projectName: "evlog-nuxt-cloudflare-web",
+        addons: ["evlog"],
+        frontend: ["nuxt"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "orpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const nuxtConfig = await readFile(join(projectDir, "apps/web/nuxt.config.ts"), "utf-8");
+      const infra = await readFile(join(projectDir, "packages/infra/alchemy.run.ts"), "utf-8");
+      const webPackage = JSON.parse(
+        await readFile(join(projectDir, "apps/web/package.json"), "utf-8"),
+      ) as { devDependencies?: Record<string, string> };
+
+      expect(nuxtConfig).toContain('"evlog/nuxt"');
+      expect(nuxtConfig).not.toContain("cloudflare-module");
+      expect(nuxtConfig).not.toContain("nitro-cloudflare-dev");
+      expect(nuxtConfig).not.toContain("cloudflare-workers.dev.ts");
+      expect(nuxtConfig).toContain("evlog:");
+      expect(infra).toContain('Cloudflare.Website.Nuxt("web", {');
+      expect(webPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBeUndefined();
+      expect(webPackage.devDependencies?.["@alchemy.run/cloudflare-frameworks"]).toBe(
+        "2.0.0-beta.72",
+      );
+      expect(webPackage.devDependencies?.["nitro-cloudflare-dev"]).toBeUndefined();
+      expect(webPackage.devDependencies?.wrangler).toBeUndefined();
+      expect(existsSync(join(projectDir, "apps/web/server/plugins/evlog-drain.ts"))).toBe(false);
+      expectParseableTypeScript(nuxtConfig);
+    });
+
+    it("should type Nitro Better Auth events for Nuxt Cloudflare projects", async () => {
+      const result = await runTRPCTest({
+        projectName: "evlog-nuxt-cloudflare-auth",
+        addons: ["evlog"],
+        frontend: ["nuxt"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "orpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "cloudflare",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const authMiddleware = await readFile(
+        join(projectDir, "apps/web/server/middleware/evlog-auth.ts"),
+        "utf-8",
+      );
+      const authClient = await readFile(
+        join(projectDir, "apps/web/app/plugins/auth-client.ts"),
+        "utf-8",
+      );
+      const envServer = await readFile(join(projectDir, "packages/env/src/server.ts"), "utf-8");
+
+      expect(existsSync(join(projectDir, "apps/web/server/plugins/evlog-auth.ts"))).toBe(false);
+      expect(authMiddleware).toContain(
+        'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
+      );
+      expect(authMiddleware).toContain(
+        "createAuth((event.context.cloudflare as { env: CloudflareEnv }).env) as BetterAuthInstance",
+      );
+      expect(authMiddleware).toContain('exclude: ["/api/auth/**"]');
+      expect(authMiddleware).toContain("maskEmail: true");
+      expect(authMiddleware).toContain("export default defineEventHandler(async (event) => {");
+      expect(authMiddleware).toContain(
+        "await identify(event.context.log, event.headers, event.path);",
+      );
+      expect(authMiddleware).not.toContain("createAuthIdentifier(");
+      expectDocsWithEvlogAuth(authMiddleware);
+      expectParseableTypeScript(authMiddleware);
+
+      expect(authClient).not.toContain("baseURL:");
+      expect(authClient).not.toContain("as string");
+      expectParseableTypeScript(authClient);
+
+      expect(envServer).toContain('import type { CloudflareEnv } from "../env.d.ts";');
+      expect(envServer).toContain('export type { CloudflareEnv } from "../env.d.ts";');
+      expect(envServer).not.toContain('from "cloudflare:workers"');
+      expectParseableTypeScript(envServer);
+    });
+
+    const fullstackBetterAuthEvlogCases = [
+      {
+        frontend: "next",
+        api: "trpc",
+        path: "apps/web/src/lib/evlog-auth.ts",
+        expected: "createAuthMiddleware(auth as BetterAuthInstance",
+      },
+      {
+        frontend: "nuxt",
+        api: "orpc",
+        path: "apps/web/server/middleware/evlog-auth.ts",
+        expected: "createAuthMiddleware(auth as BetterAuthInstance",
+      },
+      {
+        frontend: "svelte",
+        api: "orpc",
+        path: "apps/web/src/hooks.server.ts",
+        expected: "createAuthMiddleware(auth as BetterAuthInstance",
+      },
+      {
+        frontend: "tanstack-start",
+        api: "trpc",
+        path: "apps/web/server/plugins/evlog-auth.ts",
+        expected: "createAuthIdentifier(auth as BetterAuthInstance",
+      },
+      {
+        frontend: "astro",
+        api: "orpc",
+        path: "apps/web/src/middleware.ts",
+        expected: "createAuthMiddleware(auth as BetterAuthInstance",
+      },
+    ] as const;
+
+    for (const webCase of fullstackBetterAuthEvlogCases) {
+      it(`should generate docs-shaped evlog Better Auth wiring for ${webCase.frontend} fullstack projects`, async () => {
+        const result = await runTRPCTest({
+          projectName: `evlog-${webCase.frontend}-fullstack-auth`,
+          addons: ["evlog"],
+          frontend: [webCase.frontend as Frontend],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "better-auth",
+          api: webCase.api,
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        const projectDir = result.result?.projectDirectory;
+        if (!projectDir) throw new Error("Expected generated project directory");
+
+        const authFile = await readFile(join(projectDir, webCase.path), "utf-8");
+        if (webCase.frontend === "tanstack-start") {
+          expect(authFile).toContain(
+            'import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";',
+          );
+          expect(authFile).not.toContain("createAuthMiddleware(");
+        } else {
+          expect(authFile).toContain(
+            'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
+          );
+        }
+        expect(authFile).toContain(webCase.expected);
+        expect(authFile).toContain('exclude: ["/api/auth/**"]');
+        expect(authFile).toContain("maskEmail: true");
+        expectDocsWithEvlogAuth(authFile);
+        expectParseableTypeScript(authFile);
+      });
+    }
+
+    const fullstackBetterAuthFactoryEvlogCases = [
+      {
+        frontend: "next",
+        api: "trpc",
+        path: "apps/web/src/lib/evlog-auth.ts",
+        expected: "createAuthMiddleware(createAuth() as BetterAuthInstance",
+        insideMarker: "export async function identifyEvlogUser",
+      },
+      {
+        frontend: "nuxt",
+        api: "orpc",
+        path: "apps/web/server/middleware/evlog-auth.ts",
+        expected:
+          "createAuth((event.context.cloudflare as { env: CloudflareEnv }).env) as BetterAuthInstance",
+        insideMarker: "export default defineEventHandler",
+      },
+      {
+        frontend: "svelte",
+        api: "orpc",
+        path: "apps/web/src/hooks.server.ts",
+        expected: "createAuthMiddleware(createAuth(authEnv) as BetterAuthInstance",
+        insideMarker: "const evlogAuthHandle",
+      },
+      {
+        frontend: "tanstack-start",
+        api: "trpc",
+        path: "apps/web/server/plugins/evlog-auth.ts",
+        expected: "createAuthIdentifier(createAuth() as BetterAuthInstance",
+        insideMarker: 'nitroApp.hooks.hook("request", async (event) => {',
+      },
+      {
+        frontend: "astro",
+        api: "orpc",
+        path: "apps/web/src/middleware.ts",
+        expected: "createAuthMiddleware(createAuth() as BetterAuthInstance",
+        insideMarker: "export const onRequest",
+      },
+    ] as const;
+
+    for (const webCase of fullstackBetterAuthFactoryEvlogCases) {
+      it(`should keep factory-based evlog auth wiring inside the request path for ${webCase.frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `evlog-${webCase.frontend}-cloudflare-auth`,
+          addons: ["evlog"],
+          frontend: [webCase.frontend as Frontend],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "better-auth",
+          api: webCase.api,
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "cloudflare",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        const projectDir = result.result?.projectDirectory;
+        if (!projectDir) throw new Error("Expected generated project directory");
+
+        const authFile = await readFile(join(projectDir, webCase.path), "utf-8");
+        expect(authFile).toContain(webCase.expected);
+        expect(authFile.indexOf(webCase.insideMarker)).toBeLessThan(
+          authFile.indexOf(webCase.expected),
+        );
+        expect(authFile).toContain('exclude: ["/api/auth/**"]');
+        expect(authFile).toContain("maskEmail: true");
+        expectDocsWithEvlogAuth(authFile);
+        expectParseableTypeScript(authFile);
+      });
+    }
+
+    it("should reject evlog for Convex backend projects", async () => {
+      const result = await runTRPCTest({
+        projectName: "evlog-convex-fail",
+        addons: ["evlog"],
+        frontend: ["tanstack-start", "native-uniwind"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "better-auth",
+        api: "none",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+        expectError: true,
+      });
+
+      expectError(result, "Convex and backend none are not supported yet");
+    });
+
+    it("should wire evlog Better Auth and AI SDK helpers for server projects", async () => {
+      const result = await runTRPCTest({
+        projectName: "evlog-hono-auth-ai",
+        addons: ["evlog"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "trpc",
+        examples: ["ai"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const serverIndex = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf-8");
+      expect(serverIndex).toContain(
+        'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
+      );
+      expect(serverIndex).toContain(
+        "const identifyUser = createAuthMiddleware(auth as BetterAuthInstance",
+      );
+      expect(serverIndex).toContain(
+        'await identifyUser(c.get("log"), c.req.raw.headers, c.req.path);',
+      );
+      expectDocsWithEvlogAuth(serverIndex);
+      expect(serverIndex).toContain(
+        'import { createAILogger, createEvlogIntegration } from "evlog/ai";',
+      );
+      expect(serverIndex).toContain('const ai = createAILogger(c.get("log"));');
+      expect(serverIndex).toContain("model: ai.wrap(model)");
+      expect(serverIndex).toContain("telemetry:");
+      expect(serverIndex).not.toContain("experimental_telemetry");
+      expect(serverIndex).toContain("integrations: [createEvlogIntegration(ai)]");
+    });
+
+    it("should wire evlog AI SDK helpers for Express server projects", async () => {
+      const result = await runTRPCTest({
+        projectName: "evlog-express-ai",
+        addons: ["evlog"],
+        frontend: ["nuxt"],
+        backend: "express",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "orpc",
+        examples: ["ai"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const serverIndex = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf-8");
+      expect(serverIndex).toContain(
+        'import { createAILogger, createEvlogIntegration } from "evlog/ai";',
+      );
+      expect(serverIndex).toContain("const ai = createAILogger(useLogger());");
+      expect(serverIndex).toContain("model: ai.wrap(model)");
+      expect(serverIndex).toContain("telemetry:");
+      expect(serverIndex).not.toContain("experimental_telemetry");
+      expect(serverIndex).toContain("integrations: [createEvlogIntegration(ai)]");
+    });
+
+    it("should wire evlog AI SDK helpers to every supported AI route", async () => {
+      const cases = [
+        {
+          projectName: "evlog-fastify-ai",
+          frontend: "tanstack-router",
+          backend: "fastify",
+          runtime: "node",
+          api: "orpc",
+          filePath: "apps/server/src/index.ts",
+          expectedLogger: "const ai = createAILogger(useLogger());",
+        },
+        {
+          projectName: "evlog-elysia-ai",
+          frontend: "tanstack-router",
+          backend: "elysia",
+          runtime: "bun",
+          api: "trpc",
+          filePath: "apps/server/src/index.ts",
+          expectedLogger: "const ai = createAILogger(context.log);",
+        },
+        {
+          projectName: "evlog-nuxt-self-ai",
+          frontend: "nuxt",
+          backend: "self",
+          runtime: "none",
+          api: "orpc",
+          filePath: "apps/web/server/api/ai.post.ts",
+          expectedLogger: "const ai = createAILogger(useLogger(event));",
+        },
+        {
+          projectName: "evlog-svelte-self-ai",
+          frontend: "svelte",
+          backend: "self",
+          runtime: "none",
+          api: "orpc",
+          filePath: "apps/web/src/routes/api/ai/+server.ts",
+          expectedLogger: "const ai = createAILogger(locals.log);",
+        },
+        {
+          projectName: "evlog-tanstack-start-self-ai",
+          frontend: "tanstack-start",
+          backend: "self",
+          runtime: "none",
+          api: "orpc",
+          filePath: "apps/web/src/routes/api/ai/$.ts",
+          expectedLogger: "const ai = createAILogger(useRequest().context.log as RequestLogger);",
+        },
+      ] as const;
+
+      for (const testCase of cases) {
+        const result = await runTRPCTest({
+          projectName: testCase.projectName,
+          addons: ["evlog"],
+          frontend: [testCase.frontend],
+          backend: testCase.backend,
+          runtime: testCase.runtime,
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: testCase.api,
+          examples: ["ai"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        const projectDir = result.result?.projectDirectory;
+        if (!projectDir) throw new Error("Expected generated project directory");
+
+        const aiFile = await readFile(join(projectDir, testCase.filePath), "utf-8");
+        expect(aiFile).toContain(
+          'import { createAILogger, createEvlogIntegration } from "evlog/ai";',
+        );
+        if (testCase.frontend === "nuxt") {
+          expect(aiFile).toContain('import { useLogger } from "evlog/nitro";');
+        }
+        expect(aiFile).toContain(testCase.expectedLogger);
+        expect(aiFile).toContain("model: ai.wrap(model)");
+        expect(aiFile).toContain("telemetry:");
+        expect(aiFile).toContain("isEnabled: true");
+        expect(aiFile).toContain("integrations: [createEvlogIntegration(ai)]");
+        expect(aiFile).not.toContain("experimental_telemetry");
+        if (testCase.backend === "elysia") {
+          expect(aiFile).toContain("new Elysia()");
+          expect(aiFile).not.toContain("const app =");
+        }
+      }
+    });
+
+    it("should wire evlog request and auth helpers for Next fullstack AI projects", async () => {
+      const result = await runTRPCTest({
+        projectName: "evlog-next-auth-ai",
+        addons: ["evlog"],
+        frontend: ["next"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "trpc",
+        examples: ["ai"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const evlogAuth = await readFile(join(projectDir, "apps/web/src/lib/evlog-auth.ts"), "utf-8");
+      const trpcRoute = await readFile(
+        join(projectDir, "apps/web/src/app/api/trpc/[trpc]/route.ts"),
+        "utf-8",
+      );
+      const aiRoute = await readFile(join(projectDir, "apps/web/src/app/api/ai/route.ts"), "utf-8");
+
+      expect(evlogAuth).toContain(
+        'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
+      );
+      expect(evlogAuth).toContain("createAuthMiddleware(auth as BetterAuthInstance");
+      expectDocsWithEvlogAuth(evlogAuth);
+      expect(trpcRoute).toContain("withEvlog(handler)");
+      expect(trpcRoute).toContain("await identifyEvlogUser(req);");
+      expect(aiRoute).toContain("withEvlog(async (req: Request)");
+      expect(aiRoute).toContain("await identifyEvlogUser(req);");
+      expect(aiRoute).toContain("const ai = createAILogger(useLogger());");
+      expect(aiRoute).toContain("model: ai.wrap(model)");
+      expect(aiRoute).toContain("integrations: [createEvlogIntegration(ai)]");
+    });
+
+    const separateBackendWebAuthCases = [
+      { frontend: "next", api: "trpc" },
+      { frontend: "nuxt", api: "orpc" },
+      { frontend: "svelte", api: "orpc" },
+      { frontend: "tanstack-start", api: "trpc" },
+      { frontend: "astro", api: "orpc" },
+    ] as const;
+
+    for (const webCase of separateBackendWebAuthCases) {
+      it(`should keep Better Auth identifiers in the server for ${webCase.frontend} + separate backend projects`, async () => {
+        const projectName = `evlog-${webCase.frontend}-express-auth-ai`;
+        const result = await runTRPCTest({
+          projectName,
+          addons: ["evlog"],
+          frontend: [webCase.frontend as Frontend],
+          backend: "express",
+          runtime: "node",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "better-auth",
+          api: webCase.api,
+          examples: webCase.frontend === "astro" ? ["todo"] : ["todo", "ai"],
+          dbSetup: "turso",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        const projectDir = result.result?.projectDirectory;
+        if (!projectDir) throw new Error("Expected generated project directory");
+
+        const serverIndex = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf-8");
+        const webPackageJson = await readFile(join(projectDir, "apps/web/package.json"), "utf-8");
+        const webFiles = await readSourceFiles(join(projectDir, "apps/web"));
+        const webContent = webFiles.map((file) => file.content).join("\n");
+
+        expect(serverIndex).toContain(
+          'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
+        );
+        expect(serverIndex).toContain("createAuthMiddleware(auth as BetterAuthInstance");
+        expectDocsWithEvlogAuth(serverIndex);
+        expect(serverIndex).toContain("maskEmail: true");
+        expect(webPackageJson).not.toContain(`"@${projectName}/auth"`);
+        expect(webPackageJson).not.toContain('"@libsql/client"');
+        expect(webPackageJson).not.toContain('"libsql"');
+        expect(webContent).not.toContain(`@${projectName}/auth`);
+        expect(webContent).not.toContain(`@${projectName}/db`);
+        expect(webContent).not.toContain(`@${projectName}/env/server`);
+        expect(webContent).not.toContain("createAuthMiddleware");
+        expect(webContent).not.toContain("createAuthIdentifier");
+        expect(webContent).not.toContain("identifyEvlogUser");
+        expect(webContent).not.toContain('serverExternalPackages: ["libsql", "@libsql/client"]');
+        expect(webContent).not.toContain("BETTER_AUTH_SECRET");
+        expect(webContent).not.toContain("DATABASE_URL");
+      });
+    }
+
+    it("should patch an existing server when evlog is added later", async () => {
+      const created = await runTRPCTest({
+        projectName: "evlog-add-existing",
+        addons: ["none"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["evlog"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(true);
+
+      const serverIndex = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf-8");
+      const serverPackageJson = await readFile(
+        join(projectDir, "apps/server/package.json"),
+        "utf-8",
+      );
+      expect(serverIndex).toContain('import { evlog, type EvlogVariables } from "evlog/hono";');
+      expect(serverIndex).toContain('import { createFsDrain } from "evlog/fs";');
+      expect(serverIndex).toContain(
+        'app.use(evlog({ drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain() }));',
+      );
+      expect(serverPackageJson).toContain('"evlog": "^2.22.4"');
+    });
+
+    it("should reject evlog when added later to a Convex project", async () => {
+      const created = await runTRPCTest({
+        projectName: "evlog-add-convex-fail",
+        addons: ["none"],
+        frontend: ["tanstack-start", "native-uniwind"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "better-auth",
+        api: "none",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const addResult = await add({
+        projectDir,
+        addons: ["evlog"],
+        install: false,
+      });
+
+      expect(addResult?.success).toBe(false);
+      expect(addResult?.error).toContain("Convex and backend none are not supported yet");
     });
   });
 
@@ -280,49 +1877,5 @@ describe("Addon Configurations", () => {
 
       expectError(result, "Cannot combine 'none' with other addons");
     });
-  });
-
-  describe("All Available Addons", () => {
-    const testableAddons = [
-      "pwa",
-      "tauri",
-      "biome",
-      "husky",
-      "turborepo",
-      "oxlint",
-      // Note: starlight, ultracite, ruler, fumadocs are prompt-controlled only
-    ];
-
-    for (const addon of testableAddons) {
-      it(`should work with ${addon} addon in appropriate setup`, async () => {
-        const config: TestConfig = {
-          projectName: `test-${addon}`,
-          addons: [addon as Addons],
-          backend: "hono",
-          runtime: "bun",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          api: "trpc",
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
-        };
-
-        // Choose compatible frontend for each addon
-        if (["pwa"].includes(addon)) {
-          config.frontend = ["tanstack-router"]; // PWA compatible
-        } else if (["tauri"].includes(addon)) {
-          config.frontend = ["tanstack-router"]; // Tauri compatible
-        } else {
-          config.frontend = ["tanstack-router"]; // Universal addons
-        }
-
-        const result = await runTRPCTest(config);
-        expectSuccess(result);
-      });
-    }
   });
 });

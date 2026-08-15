@@ -1,4 +1,6 @@
 import { describe, expect, it } from "bun:test";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import { expectError, expectSuccess, PACKAGE_MANAGERS, runTRPCTest } from "./test-utils";
 
@@ -75,6 +77,18 @@ describe("Basic Configurations", () => {
 
         expectSuccess(result);
         expect(result.result?.projectConfig.packageManager).toBe(packageManager);
+
+        const config = await readFile(join(result.projectDir!, "bts.jsonc"), "utf8");
+        const expectedAddCommand =
+          packageManager === "npm"
+            ? "npx create-better-t-stack@latest add"
+            : packageManager === "pnpm"
+              ? "pnpm dlx create-better-t-stack@latest add"
+              : "bunx create-better-t-stack@latest add";
+
+        expect(config).toContain("Keep this file to use the `add` command.");
+        expect(config).toContain(`Add addons: ${expectedAddCommand}`);
+        expect(config).not.toContain("This file is safe to delete");
       });
     }
   });
@@ -106,10 +120,7 @@ describe("Basic Configurations", () => {
   });
 
   describe("Installation Options", () => {
-    // Skip install test in CI to avoid timeouts
-    const runInstallTest = process.env.AGENT ? it.skip : it;
-
-    runInstallTest(
+    it.skipIf(Boolean(process.env.CI))(
       "should work with install enabled",
       async () => {
         const result = await runTRPCTest({
@@ -169,7 +180,7 @@ describe("Basic Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Input validation failed");
+      expectError(result, "Invalid project name");
     });
 
     it("should fail when combining --yes with configuration flags", async () => {

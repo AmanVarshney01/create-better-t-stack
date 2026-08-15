@@ -1,0 +1,59 @@
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma"))}}
+import { nitro } from "nitro/vite";
+{{/if}}
+import tailwindcss from "@tailwindcss/vite";
+import viteReact from "@vitejs/plugin-react";
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+import { unwasm } from "unwasm/plugin";
+
+const prismaWasm =
+  process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
+    ? null
+    : unwasm({ esmImport: true });
+{{/if}}
+
+export default defineConfig({
+  server: {
+    port: 3001,
+  },
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}
+  build: {
+    rollupOptions: {
+      // resolved by workerd at runtime; node builds cannot bundle it
+      external: ["cloudflare:workers"],
+    },
+  },
+{{/if}}
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+    prismaWasm,
+{{/if}}
+    tailwindcss(),
+    tanstackStart({{#if (or (includes addons "tauri") (and (includes addons "electrobun") (or (ne backend "convex") (ne auth "better-auth"))))}}
+      {
+        prerender: {
+          enabled: true,
+        },
+      },
+{{/if}}),
+{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma"))}}
+    nitro({{#if (eq webDeploy "docker")}}{ preset: "{{#if (eq runtime "bun")}}bun{{else}}node-server{{/if}}" }{{/if}}),
+{{/if}}
+    viteReact(),
+  ],
+{{#if (eq webDeploy "vercel")}}
+  // Bundle all SSR deps: Vercel functions have no node_modules at runtime
+  ssr: {
+    noExternal: true,
+  },
+{{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+  ssr: {
+    noExternal: ["@convex-dev/better-auth"],
+  },
+{{/if}}
+});

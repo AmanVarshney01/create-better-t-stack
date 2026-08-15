@@ -1,4 +1,7 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import path from "node:path";
+
+import fs from "fs-extra";
 
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
@@ -15,6 +18,7 @@ describe("Frontend Configurations", () => {
       "native-unistyles",
       "svelte",
       "solid",
+      "astro",
     ] satisfies ReadonlyArray<
       | "tanstack-router"
       | "react-router"
@@ -26,6 +30,7 @@ describe("Frontend Configurations", () => {
       | "native-unistyles"
       | "svelte"
       | "solid"
+      | "astro"
     >;
 
     for (const frontend of singleFrontends) {
@@ -75,6 +80,19 @@ describe("Frontend Configurations", () => {
           config.dbSetup = "none";
           config.webDeploy = "none";
           config.serverDeploy = "none";
+        } else if (frontend === "astro") {
+          // Astro uses oRPC, not Convex compatible
+          config.backend = "hono";
+          config.runtime = "bun";
+          config.database = "sqlite";
+          config.orm = "drizzle";
+          config.auth = "none";
+          config.api = "orpc"; // tRPC not supported with astro
+          config.addons = ["none"];
+          config.examples = ["none"];
+          config.dbSetup = "none";
+          config.webDeploy = "none";
+          config.serverDeploy = "none";
         } else {
           config.backend = "hono";
           config.runtime = "bun";
@@ -96,6 +114,148 @@ describe("Frontend Configurations", () => {
   });
 
   describe("Frontend Compatibility with API", () => {
+    it("should keep React Router on the app's Vite version", async () => {
+      const result = await runTRPCTest({
+        projectName: "react-router-vite",
+        frontend: ["react-router"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      const packageJson = await fs.readJson(path.join(result.projectDir!, "apps/web/package.json"));
+      expect(packageJson.devDependencies.vite).toBe("^8.1.5");
+      expect(packageJson.devDependencies["react-router-devtools"]).toBeUndefined();
+    });
+
+    it("should generate the Solid 2 project structure", async () => {
+      const result = await runTRPCTest({
+        projectName: "solid-v2",
+        frontend: ["solid"],
+        api: "none",
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const webDir = path.join(result.projectDir, "apps/web");
+      const packageJson = await fs.readJson(path.join(webDir, "package.json"));
+      const rootPackageJson = await fs.readJson(path.join(result.projectDir, "package.json"));
+      const envPackageJson = await fs.readJson(
+        path.join(result.projectDir, "packages/env/package.json"),
+      );
+      const webEnv = await fs.readFile(
+        path.join(result.projectDir, "packages/env/src/web.ts"),
+        "utf8",
+      );
+      const appFile = await fs.readFile(path.join(webDir, "src/App.tsx"), "utf8");
+      const tsconfig = await fs.readJson(path.join(webDir, "tsconfig.json"));
+      const viteConfig = await fs.readFile(path.join(webDir, "vite.config.ts"), "utf8");
+
+      expect(packageJson.dependencies).toMatchObject({
+        "@solidjs/meta": "^1.0.0-next.2",
+        "@solidjs/router": "^2.0.0-next.16",
+        "@solidjs/web": "^2.0.0-rc.0",
+        "solid-js": "^2.0.0-rc.0",
+      });
+      expect(packageJson.devDependencies).toMatchObject({
+        "@solidjs/vite-plugin": "^3.0.0-next.28",
+        "filesystem-routing": "0.2.1",
+        nitro: "^3.0.260610-beta",
+      });
+      expect(packageJson.dependencies["@solidjs/start"]).toBeUndefined();
+      expect(packageJson.dependencies["@tanstack/solid-router"]).toBeUndefined();
+      expect(packageJson.devDependencies["@tanstack/solid-router-devtools"]).toBeUndefined();
+      expect(packageJson.devDependencies["@tanstack/router-plugin"]).toBeUndefined();
+      expect(packageJson.devDependencies["vite-plugin-solid"]).toBeUndefined();
+      expect(packageJson.engines.node).toBe(">=24");
+      expect(packageJson.scripts["check-types"]).toBe("tsc --noEmit");
+      expect(tsconfig.exclude).toContain("dist");
+      expect(rootPackageJson.scripts["dev:web"]).toBeDefined();
+      expect(envPackageJson.exports["./web"]).toBe("./src/web.ts");
+      expect(webEnv).not.toContain("SKIP_ENV_VALIDATION");
+      expect(appFile).toContain('import { Router } from "~/router";');
+      expect(viteConfig).toContain("solid({");
+      expect(viteConfig).toContain('start: { middleware: "./src/middleware.ts" }');
+      expect(viteConfig).toContain("fileRoutes({ httpMethods: true })");
+      expect(viteConfig).toContain("nitro({ serverEntry: false })");
+
+      for (const file of [
+        "src/App.tsx",
+        "src/Document.tsx",
+        "src/middleware.ts",
+        "src/router.ts",
+        "src/routes/index.tsx",
+      ]) {
+        expect(await fs.pathExists(path.join(webDir, file))).toBe(true);
+      }
+
+      for (const legacyFile of [
+        "index.html",
+        "src/main.tsx",
+        "src/entry-client.tsx",
+        "src/entry-server.tsx",
+        "src/routes/__root.tsx",
+      ]) {
+        expect(await fs.pathExists(path.join(webDir, legacyFile))).toBe(false);
+      }
+    });
+
+    it("should generate the current Nuxt dependency baseline", async () => {
+      const result = await runTRPCTest({
+        projectName: "nuxt-dependency-baseline",
+        frontend: ["nuxt"],
+        api: "orpc",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      const packageJson = await fs.readJson(path.join(result.projectDir!, "apps/web/package.json"));
+      expect(packageJson.dependencies).toMatchObject({
+        "@nuxt/ui": "^4.10.0",
+        nuxt: "^4.5.1",
+        vue: "^3.5.40",
+        "vue-router": "^5.2.0",
+      });
+      expect(packageJson.devDependencies["vue-tsc"]).toBe("^3.3.8");
+      expect(packageJson.scripts["check-types"]).toBe("nuxt typecheck");
+    });
+
     it("should work with React frontends + tRPC", async () => {
       const result = await runTRPCTest({
         projectName: "react-trpc",
@@ -180,7 +340,28 @@ describe("Frontend Configurations", () => {
       expectError(result, "tRPC API is not supported with 'solid' frontend");
     });
 
-    const frontends = ["nuxt", "svelte", "solid"] as const;
+    it("should fail with Astro + tRPC", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-trpc-fail",
+        frontend: ["astro"],
+        api: "trpc",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "tRPC API is not supported with 'astro' frontend");
+    });
+
+    const frontends = ["nuxt", "svelte", "solid", "astro"] as const;
     for (const frontend of frontends) {
       it(`should work with ${frontend} + oRPC`, async () => {
         const result = await runTRPCTest({
@@ -206,6 +387,27 @@ describe("Frontend Configurations", () => {
   });
 
   describe("Frontend Compatibility with Backend", () => {
+    it("should work with the Solid 2 self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "solid-self",
+        frontend: ["solid"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "orpc",
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
     it("should fail Solid + Convex", async () => {
       const result = await runTRPCTest({
         projectName: "solid-convex-fail",
@@ -227,6 +429,30 @@ describe("Frontend Configurations", () => {
       expectError(
         result,
         "The following frontends are not compatible with '--backend convex': solid. Please choose a different frontend or backend.",
+      );
+    });
+
+    it("should fail Astro + Convex", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-convex-fail",
+        frontend: ["astro"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(
+        result,
+        "The following frontends are not compatible with '--backend convex': astro. Please choose a different frontend or backend.",
       );
     });
 
@@ -253,18 +479,18 @@ describe("Frontend Configurations", () => {
   });
 
   describe("Frontend Compatibility with Auth", () => {
-    const incompatibleFrontends = ["nuxt", "svelte", "solid"] as const;
+    const incompatibleFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
     for (const frontend of incompatibleFrontends) {
-      it(`should fail incompatible ${frontend} with Clerk + Convex`, async () => {
+      it(`should fail incompatible ${frontend} with Clerk`, async () => {
         const result = await runTRPCTest({
-          projectName: `${frontend}-clerk-convex-fail`,
+          projectName: `${frontend}-clerk-fail`,
           frontend: [frontend],
-          backend: "convex",
-          runtime: "none",
-          database: "none",
-          orm: "none",
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
           auth: "clerk",
-          api: "none",
+          api: "orpc",
           addons: ["none"],
           examples: ["none"],
           dbSetup: "none",
@@ -284,16 +510,16 @@ describe("Frontend Configurations", () => {
       "next",
     ] as const;
     for (const frontend of compatibleFrontends) {
-      it(`should work with compatible ${frontend} + Clerk + Convex`, async () => {
+      it(`should work with compatible ${frontend} + Clerk`, async () => {
         const result = await runTRPCTest({
-          projectName: `${frontend}-clerk-convex`,
+          projectName: `${frontend}-clerk`,
           frontend: [frontend],
-          backend: "convex",
-          runtime: "none",
-          database: "none",
-          orm: "none",
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
           auth: "clerk",
-          api: "none",
+          api: "trpc",
           addons: ["none"],
           examples: ["none"],
           dbSetup: "none",
@@ -372,6 +598,47 @@ describe("Frontend Configurations", () => {
     });
   });
 
+  describe("Native Bare Layout", () => {
+    it("should keep drawer content aligned under the native header", async () => {
+      const result = await runTRPCTest({
+        projectName: "native-bare-layout",
+        frontend: ["native-bare"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const nativeIndexFile = await fs.readFile(
+        path.join(result.projectDir, "apps/native/app/(drawer)/index.tsx"),
+        "utf8",
+      );
+      const containerFile = await fs.readFile(
+        path.join(result.projectDir, "apps/native/components/container.tsx"),
+        "utf8",
+      );
+
+      expect(nativeIndexFile).toContain('contentInsetAdjustmentBehavior="never"');
+      expect(nativeIndexFile).toContain("<Host style={styles.titleHost}>");
+      expect(nativeIndexFile).toContain('textAlign: "center"');
+      expect(nativeIndexFile).toContain("height: 34");
+      expect(containerFile).toContain('edges={["left", "right", "bottom"]}');
+    });
+  });
+
   describe("Frontend with None Option", () => {
     it("should work with frontend none", async () => {
       const result = await runTRPCTest({
@@ -437,17 +704,42 @@ describe("Frontend Configurations", () => {
 
       expectSuccess(result);
     });
+  });
 
-    it("should work with Next.js and traditional backend", async () => {
+  describe("Nuxt with Self Backend", () => {
+    it("should work with Nuxt and self backend", async () => {
       const result = await runTRPCTest({
-        projectName: "nextjs-traditional-backend",
-        frontend: ["next"],
-        backend: "hono",
-        runtime: "bun",
+        projectName: "nuxt-self-backend",
+        frontend: ["nuxt"],
+        backend: "self",
+        runtime: "none",
         database: "sqlite",
         orm: "drizzle",
-        auth: "none",
-        api: "trpc",
+        auth: "better-auth",
+        api: "orpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+  });
+
+  describe("Astro with Self Backend", () => {
+    it("should work with Astro and self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-self-backend",
+        frontend: ["astro"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "orpc",
         addons: ["none"],
         examples: ["none"],
         dbSetup: "none",

@@ -1,0 +1,25 @@
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import { defineMiddleware } from "astro:middleware";
+
+export const onRequest = defineMiddleware(async (context, next) => {
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
+  const auth = createAuth();
+{{/if}}
+  const isAuthed = await auth.api.getSession({
+    headers: context.request.headers,
+  });
+
+  if (isAuthed) {
+    context.locals.user = isAuthed.user;
+    context.locals.session = isAuthed.session;
+  } else {
+    context.locals.user = null;
+    context.locals.session = null;
+  }
+
+  return next();
+});

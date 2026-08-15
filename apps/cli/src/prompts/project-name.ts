@@ -1,12 +1,14 @@
-import { isCancel, text } from "@clack/prompts";
-import consola from "consola";
-import fs from "fs-extra";
 import path from "node:path";
+
+import { isCancel, text } from "@clack/prompts";
+import fs from "fs-extra";
 import pc from "picocolors";
 
 import { DEFAULT_CONFIG } from "../constants";
 import { ProjectNameSchema } from "../types";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
+import { isMissingPathError } from "../utils/fs-error";
+import { cliConsola } from "../utils/terminal-output";
 
 function isPathWithinCwd(targetPath: string) {
   const resolved = path.resolve(targetPath);
@@ -24,7 +26,7 @@ function validateDirectoryName(name: string) {
   return undefined;
 }
 
-export async function getProjectName(initialName?: string) {
+export async function getProjectName(initialName?: string): Promise<string> {
   if (initialName) {
     if (initialName === ".") {
       return initialName;
@@ -36,7 +38,7 @@ export async function getProjectName(initialName?: string) {
       if (isPathWithinCwd(projectDir)) {
         return initialName;
       }
-      consola.error(pc.red("Project path must be within current directory"));
+      cliConsola.error(pc.red("Project path must be within current directory"));
     }
   }
 
@@ -45,17 +47,26 @@ export async function getProjectName(initialName?: string) {
   let defaultName: string = DEFAULT_CONFIG.projectName;
   let counter = 1;
 
-  while (
-    (await fs.pathExists(path.resolve(process.cwd(), defaultName))) &&
-    (await fs.readdir(path.resolve(process.cwd(), defaultName))).length > 0
-  ) {
+  while (true) {
+    const defaultPath = path.resolve(process.cwd(), defaultName);
+    let stats;
+    try {
+      stats = await fs.lstat(defaultPath);
+    } catch (error) {
+      if (isMissingPathError(error)) {
+        break;
+      }
+      throw error;
+    }
+
+    if (stats.isDirectory() && (await fs.readdir(defaultPath)).length === 0) break;
     defaultName = `${DEFAULT_CONFIG.projectName}-${counter}`;
     counter++;
   }
 
   while (!isValid) {
     const response = await text({
-      message: "Enter your project name or path (relative to current directory)",
+      message: "Where should we create your project?",
       placeholder: defaultName,
       initialValue: initialName,
       defaultValue: defaultName,
@@ -77,7 +88,9 @@ export async function getProjectName(initialName?: string) {
       },
     });
 
-    if (isCancel(response)) return exitCancelled("Operation cancelled.");
+    if (isCancel(response)) {
+      throw new UserCancelledError({ message: "Operation cancelled." });
+    }
 
     projectPath = response || defaultName;
     isValid = true;
