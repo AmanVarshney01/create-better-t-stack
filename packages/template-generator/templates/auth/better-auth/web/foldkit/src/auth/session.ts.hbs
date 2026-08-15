@@ -1,0 +1,85 @@
+import { Effect, Option, Schema as S } from "effect";
+import { AsyncData, Command } from "foldkit";
+import { m } from "foldkit/message";
+
+import { authClient } from "./client";
+{{#if (eq api "orpc")}}
+import { client } from "../api/orpc";
+{{/if}}
+
+// MODEL
+
+export const Session = S.Struct({
+  user: S.Struct({
+    id: S.String,
+    name: S.String,
+    email: S.String,
+  }),
+});
+export type Session = typeof Session.Type;
+
+export const SessionState = AsyncData.Schema(S.Option(Session), S.String);
+export type SessionState = typeof SessionState.schema.Type;
+
+export const toSession = (user: Readonly<{ id: string; name: string; email: string }>): Session => ({
+  user: { id: user.id, name: user.name, email: user.email },
+});
+
+export const currentSession = (state: SessionState): Option.Option<Session> =>
+  Option.flatten(AsyncData.getData(state));
+{{#if (eq api "orpc")}}
+
+export const PrivateData = AsyncData.Schema(S.String, S.String);
+export type PrivateData = typeof PrivateData.schema.Type;
+{{/if}}
+
+// MESSAGE
+
+export const CompletedFetchSession = m("CompletedFetchSession", {
+  maybeSession: S.Option(Session),
+});
+export const CompletedSignOut = m("CompletedSignOut");
+{{#if (eq api "orpc")}}
+export const SucceededFetchPrivateData = m("SucceededFetchPrivateData", {
+  message: S.String,
+});
+export const FailedFetchPrivateData = m("FailedFetchPrivateData", {
+  error: S.String,
+});
+{{/if}}
+
+// COMMAND
+
+export const FetchSession = Command.define("FetchSession", {
+  messages: [CompletedFetchSession],
+  execute: Effect.tryPromise(() => authClient.getSession()).pipe(
+    Effect.map((result) =>
+      CompletedFetchSession({
+        maybeSession: Option.map(Option.fromNullishOr(result.data), (data) =>
+          toSession(data.user),
+        ),
+      }),
+    ),
+    Effect.catch(() => Effect.succeed(CompletedFetchSession({ maybeSession: Option.none() }))),
+  ),
+});
+
+export const SignOut = Command.define("SignOut", {
+  messages: [CompletedSignOut],
+  execute: Effect.tryPromise(() => authClient.signOut()).pipe(
+    Effect.as(CompletedSignOut()),
+    Effect.catch(() => Effect.succeed(CompletedSignOut())),
+  ),
+});
+{{#if (eq api "orpc")}}
+
+export const FetchPrivateData = Command.define("FetchPrivateData", {
+  messages: [SucceededFetchPrivateData, FailedFetchPrivateData],
+  execute: Effect.tryPromise((signal) => client.privateData(undefined, { signal })).pipe(
+    Effect.map(({ message }) => SucceededFetchPrivateData({ message })),
+    Effect.catch(() =>
+      Effect.succeed(FailedFetchPrivateData({ error: "Could not load private data" })),
+    ),
+  ),
+});
+{{/if}}

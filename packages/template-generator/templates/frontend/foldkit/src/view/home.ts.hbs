@@ -1,0 +1,75 @@
+{{#if (eq api "orpc")}}
+import { AsyncData } from "foldkit";
+{{/if}}
+import type { Html, HtmlBuilder } from "foldkit/html";
+
+{{#if (eq api "orpc")}}
+import type { HealthCheck } from "../api/health";
+{{/if}}
+import type { Message } from "../message";
+
+const TITLE_TEXT = `
+ ██████╗ ███████╗████████╗████████╗███████╗██████╗
+ ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
+ ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
+ ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
+ ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
+ ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
+
+ ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
+ ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+    ██║       ███████╗   ██║   ███████║██║     █████╔╝
+    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
+    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
+    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+ `;
+{{#if (eq api "orpc")}}
+
+const statusView = (
+  dotClass: string,
+  label: string,
+  h: HtmlBuilder<Message>,
+): Html =>
+  h.div(
+    [h.Class("flex items-center gap-2")],
+    [
+      h.div([h.Class(`h-2 w-2 rounded-full ${dotClass}`)]),
+      h.span([h.Class("text-sm text-neutral-400")], [label]),
+    ],
+  );
+
+const apiStatusView = (healthCheck: HealthCheck, h: HtmlBuilder<Message>): Html =>
+  h.section(
+    [h.Class("rounded-lg border border-neutral-800 p-4")],
+    [
+      h.h2([h.Class("mb-2 font-medium")], ["API Status"]),
+      AsyncData.matchDataSplitEmpty(healthCheck, {
+        onIdle: () => statusView("bg-neutral-600", "Not checked", h),
+        onLoading: () => statusView("bg-orange-400", "Checking...", h),
+        onFailure: (error) => statusView("bg-red-500", error, h),
+        onData: () => statusView("bg-green-500", "Connected", h),
+      }),
+    ],
+  );
+{{/if}}
+
+export const homeView = ({{#if (eq api "orpc")}}healthCheck: HealthCheck, {{/if}}h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [h.Class("container mx-auto max-w-3xl px-4 py-2")],
+    [
+      h.pre([h.Class("overflow-x-auto font-mono text-sm")], [TITLE_TEXT]),
+      h.div(
+        [h.Class("grid gap-6")],
+        [
+{{#if (eq api "orpc")}}
+          apiStatusView(healthCheck, h),
+{{else}}
+          h.p(
+            [h.Class("text-sm text-neutral-400")],
+            ["Model, Message, update, view. Edit src/main.ts to get started."],
+          ),
+{{/if}}
+        ],
+      ),
+    ],
+  );

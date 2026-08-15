@@ -59,7 +59,7 @@ const clerkBackendRequirementMessage =
   "Clerk requires Convex, Hono, Express, Fastify, Elysia, or Next.js/TanStack Start fullstack backend";
 const clerkFrontendRequirementMessage =
   "Clerk requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
-const clerkIncompatibleWebFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
+const clerkIncompatibleWebFrontends = ["nuxt", "svelte", "solid", "astro", "foldkit"] as const;
 const convexBetterAuthSupportedWebFrontends = [
   "react-router",
   "tanstack-router",
@@ -71,7 +71,29 @@ const convexBetterAuthSupportedNativeFrontends = [
   "native-uniwind",
   "native-unistyles",
 ] as const;
-const convexBetterAuthIncompatibleWebFrontends = ["nuxt", "svelte", "solid", "astro"] as const;
+const convexBetterAuthIncompatibleWebFrontends = [
+  "nuxt",
+  "svelte",
+  "solid",
+  "astro",
+  "foldkit",
+] as const;
+const convexIncompatibleWebFrontends = ["solid", "astro", "foldkit"] as const;
+const orpcOnlyWebFrontends = ["nuxt", "svelte", "solid", "astro", "foldkit"] as const;
+const aiIncompatibleWebFrontends = ["solid", "astro", "foldkit"] as const;
+const cloudflareIncompatibleWebFrontends = ["foldkit"] as const;
+
+const findConvexIncompatibleFrontend = (webFrontend: string[]) =>
+  webFrontend.find((f) => (convexIncompatibleWebFrontends as readonly string[]).includes(f));
+
+const findOrpcOnlyFrontend = (webFrontend: string[]) =>
+  webFrontend.find((f) => (orpcOnlyWebFrontends as readonly string[]).includes(f));
+
+const findAiIncompatibleFrontend = (webFrontend: string[]) =>
+  webFrontend.find((f) => (aiIncompatibleWebFrontends as readonly string[]).includes(f));
+
+const findCloudflareIncompatibleFrontend = (webFrontend: string[]) =>
+  webFrontend.find((f) => (cloudflareIncompatibleWebFrontends as readonly string[]).includes(f));
 const staticDesktopAddons = ["tauri", "electrobun"] as const;
 const dockerServerOutputFrontends = ["next", "svelte", "solid", "astro", "react-router"] as const;
 const prismaComputeWebFrontends = [
@@ -282,11 +304,17 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     }
 
     // Remove incompatible frontends
-    if (nextStack.webFrontend.includes("solid") || nextStack.webFrontend.includes("astro")) {
-      nextStack.webFrontend = nextStack.webFrontend.filter((f) => f !== "solid" && f !== "astro");
+    const convexIncompatibleFrontend = findConvexIncompatibleFrontend(nextStack.webFrontend);
+    if (convexIncompatibleFrontend) {
+      nextStack.webFrontend = nextStack.webFrontend.filter(
+        (f) => !(convexIncompatibleWebFrontends as readonly string[]).includes(f),
+      );
       if (nextStack.webFrontend.length === 0) nextStack.webFrontend = ["none"];
       changed = true;
-      changes.push({ category: "backend", message: "Removed Solid (incompatible with Convex)" });
+      changes.push({
+        category: "backend",
+        message: `Removed ${convexIncompatibleFrontend} (incompatible with Convex)`,
+      });
     }
 
     // Remove AI example if incompatible frontends are selected (Convex AI only supports React-based frontends)
@@ -696,9 +724,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
   if (nextStack.backend !== "convex" && nextStack.backend !== "none") {
     // Nuxt, Svelte, Solid, Astro require oRPC (not tRPC)
-    const needsOrpc = nextStack.webFrontend.some((f) =>
-      ["nuxt", "svelte", "solid", "astro"].includes(f),
-    );
+    const needsOrpc = findOrpcOnlyFrontend(nextStack.webFrontend) !== undefined;
     if (needsOrpc && nextStack.api === "trpc") {
       nextStack.api = "orpc";
       changed = true;
@@ -741,6 +767,13 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       changes.push({
         category: "payments",
         message: "Payments set to 'None' (Polar requires Better Auth)",
+      });
+    } else if (nextStack.webFrontend.includes("foldkit")) {
+      nextStack.payments = "none";
+      changed = true;
+      changes.push({
+        category: "payments",
+        message: "Payments set to 'None' (Polar has no Foldkit checkout template yet)",
       });
     }
   }
@@ -842,14 +875,15 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
   // AI example constraints
   if (nextStack.examples.includes("ai")) {
-    // Solid and Astro frontends are incompatible with the AI example
-    if (nextStack.webFrontend.includes("solid") || nextStack.webFrontend.includes("astro")) {
+    // Solid, Astro, and Foldkit frontends are incompatible with the AI example
+    const aiIncompatibleFrontend = findAiIncompatibleFrontend(nextStack.webFrontend);
+    if (aiIncompatibleFrontend) {
       nextStack.examples = nextStack.examples.filter((e) => e !== "ai");
       if (nextStack.examples.length === 0) nextStack.examples = ["none"];
       changed = true;
       changes.push({
         category: "examples",
-        message: "AI removed (not compatible with Solid or Astro frontend)",
+        message: `AI removed (not compatible with the ${aiIncompatibleFrontend} frontend)`,
       });
     }
     // Convex AI only supports React-based frontends (not Svelte/Nuxt)
@@ -920,6 +954,20 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       changes.push({
         category: "webDeploy",
         message: `Web deploy set to 'None' (${prismaDesktopConflict.selectedDesktopAddons.join(" and ")} requires a static ${prismaDesktopConflict.affectedFrontend} build)`,
+      });
+    }
+  }
+
+  if (nextStack.webDeploy === "cloudflare") {
+    const cloudflareIncompatibleFrontend = findCloudflareIncompatibleFrontend(
+      nextStack.webFrontend,
+    );
+    if (cloudflareIncompatibleFrontend) {
+      nextStack.webDeploy = "none";
+      changed = true;
+      changes.push({
+        category: "webDeploy",
+        message: `Web deploy set to 'None' (Cloudflare has no Alchemy recipe for the ${cloudflareIncompatibleFrontend} frontend)`,
       });
     }
   }
@@ -1049,7 +1097,10 @@ export const getDisabledReason = (
         return convexBetterAuthFrontendRequirementMessage;
       }
     }
-    if (category === "webFrontend" && (optionId === "solid" || optionId === "astro")) {
+    if (
+      category === "webFrontend" &&
+      (convexIncompatibleWebFrontends as readonly string[]).includes(optionId)
+    ) {
       return `${optionId.charAt(0).toUpperCase() + optionId.slice(1)} is not compatible with Convex`;
     }
     if (category === "examples" && optionId === "ai") {
@@ -1210,12 +1261,9 @@ export const getDisabledReason = (
     if (optionId === "self-astro" && !currentStack.webFrontend.includes("astro")) {
       return "Requires Astro frontend";
     }
-    if (
-      optionId === "convex" &&
-      (currentStack.webFrontend.includes("solid") || currentStack.webFrontend.includes("astro"))
-    ) {
-      const incompatible = currentStack.webFrontend.includes("solid") ? "Solid" : "Astro";
-      return `Convex is not compatible with ${incompatible}`;
+    const convexIncompatibleFrontend = findConvexIncompatibleFrontend(currentStack.webFrontend);
+    if (optionId === "convex" && convexIncompatibleFrontend) {
+      return `Convex is not compatible with ${convexIncompatibleFrontend}`;
     }
     // Workers runtime only works with Hono backend
     if (currentStack.runtime === "workers" && optionId !== "hono" && optionId !== "none") {
@@ -1324,14 +1372,9 @@ export const getDisabledReason = (
   // API CONSTRAINTS
   // ============================================
   if (category === "api" && optionId === "trpc") {
-    const needsOrpc = currentStack.webFrontend.some((f) =>
-      ["nuxt", "svelte", "solid", "astro"].includes(f),
-    );
-    if (needsOrpc) {
-      const frontendName = currentStack.webFrontend.find((f) =>
-        ["nuxt", "svelte", "solid", "astro"].includes(f),
-      );
-      return `${frontendName} requires oRPC, not tRPC`;
+    const orpcOnlyFrontend = findOrpcOnlyFrontend(currentStack.webFrontend);
+    if (orpcOnlyFrontend) {
+      return `${orpcOnlyFrontend} requires oRPC, not tRPC`;
     }
   }
 
@@ -1357,6 +1400,9 @@ export const getDisabledReason = (
   if (category === "payments" && optionId === "polar") {
     if (currentStack.auth !== "better-auth") {
       return "Polar requires Better Auth";
+    }
+    if (currentStack.webFrontend.includes("foldkit")) {
+      return "Polar has no Foldkit checkout template yet";
     }
   }
 
@@ -1429,11 +1475,9 @@ export const getDisabledReason = (
       }
     }
     if (optionId === "ai") {
-      if (
-        currentStack.webFrontend.includes("solid") ||
-        currentStack.webFrontend.includes("astro")
-      ) {
-        return "AI example not compatible with Solid or Astro frontend";
+      const aiIncompatibleFrontend = findAiIncompatibleFrontend(currentStack.webFrontend);
+      if (aiIncompatibleFrontend) {
+        return `AI example not compatible with the ${aiIncompatibleFrontend} frontend`;
       }
       if (currentStack.backend === "convex") {
         const hasIncompatibleFrontend = currentStack.webFrontend.some((f) =>
@@ -1483,6 +1527,12 @@ export const getDisabledReason = (
       }
     }
     if (optionId === "cloudflare") {
+      const cloudflareIncompatibleFrontend = findCloudflareIncompatibleFrontend(
+        currentStack.webFrontend,
+      );
+      if (cloudflareIncompatibleFrontend) {
+        return `Cloudflare has no Alchemy recipe for the ${cloudflareIncompatibleFrontend} frontend`;
+      }
       const issue = getCloudflareNextIssue({ ...currentStack, webDeploy: "cloudflare" });
       if (issue) return issue;
     }

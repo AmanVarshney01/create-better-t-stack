@@ -1,0 +1,108 @@
+import { Array{{#if (eq auth "better-auth")}}, Option{{/if}} } from "effect";
+{{#if (eq auth "better-auth")}}
+import { Button } from "@foldkit/ui";
+{{/if}}
+import type { Html, HtmlBuilder } from "foldkit/html";
+
+{{#if (eq auth "better-auth")}}
+import type { Session } from "../auth/session";
+import { ClickedSignOut, type Message } from "../message";
+{{else}}
+import type { Message } from "../message";
+{{/if}}
+{{#if (eq auth "better-auth")}}
+import { type AppRoute, dashboardRouter, homeRouter, loginRouter{{#if (includes examples "todo")}}, todosRouter{{/if}} } from "../route";
+{{else if (includes examples "todo")}}
+import { type AppRoute, homeRouter, todosRouter } from "../route";
+{{else}}
+import { type AppRoute, homeRouter } from "../route";
+{{/if}}
+
+type NavLink = Readonly<{
+  href: string;
+  label: string;
+  isActive: boolean;
+}>;
+
+const navLinksFor = (route: AppRoute): ReadonlyArray<NavLink> => [
+  { href: homeRouter(), label: "Home", isActive: route._tag === "Home" },
+{{#if (includes examples "todo")}}
+  { href: todosRouter(), label: "Todos", isActive: route._tag === "Todos" },
+{{/if}}
+{{#if (eq auth "better-auth")}}
+  { href: dashboardRouter(), label: "Dashboard", isActive: route._tag === "Dashboard" },
+{{/if}}
+];
+
+const navLinkView = (link: NavLink, h: HtmlBuilder<Message>): Html =>
+  h.keyed("a")(
+    link.href,
+    [
+      h.Href(link.href),
+      h.Class(
+        `rounded px-3 py-1 text-sm font-medium transition hover:bg-neutral-800 ${
+          link.isActive ? "bg-neutral-800" : ""
+        }`,
+      ),
+    ],
+    [link.label],
+  );
+{{#if (eq auth "better-auth")}}
+
+const userMenuView = (maybeSession: Option.Option<Session>, h: HtmlBuilder<Message>): Html =>
+  Option.match(maybeSession, {
+    onNone: () =>
+      h.a(
+        [
+          h.Href(loginRouter()),
+          h.Class("rounded bg-indigo-600 px-3 py-1 text-sm text-white transition hover:bg-indigo-500"),
+        ],
+        ["Sign In"],
+      ),
+    onSome: (session) =>
+      h.div(
+        [h.Class("flex items-center gap-3")],
+        [
+          h.span([h.Class("text-sm text-neutral-300")], [session.user.name]),
+          Button.view(
+            {
+              onClick: ClickedSignOut(),
+              toView: (attributes) =>
+                h.button(
+                  [
+                    ...attributes.button,
+                    h.Class(
+                      "rounded bg-neutral-800 px-3 py-1 text-sm transition hover:bg-neutral-700",
+                    ),
+                  ],
+                  ["Sign Out"],
+                ),
+            },
+            h,
+          ),
+        ],
+      ),
+  });
+{{/if}}
+
+export const headerView = (
+  route: AppRoute,
+{{#if (eq auth "better-auth")}}
+  maybeSession: Option.Option<Session>,
+{{/if}}
+  h: HtmlBuilder<Message>,
+): Html =>
+  h.header(
+    [h.Class("border-b border-neutral-800")],
+    [
+      h.div(
+        [h.Class("mx-auto flex max-w-3xl items-center justify-between px-4 py-3")],
+        [
+          h.nav([h.Class("flex gap-2")], Array.map(navLinksFor(route), (link) => navLinkView(link, h))),
+{{#if (eq auth "better-auth")}}
+          userMenuView(maybeSession, h),
+{{/if}}
+        ],
+      ),
+    ],
+  );

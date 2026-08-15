@@ -1,0 +1,347 @@
+import { Array, Effect, Match as M, Option, Schema as S, String } from "effect";
+import { Button, Checkbox, Input } from "@foldkit/ui";
+import { AsyncData, Command, Submodel, Update } from "foldkit";
+import type { Html, HtmlBuilder } from "foldkit/html";
+import { m } from "foldkit/message";
+import { evo } from "foldkit/struct";
+
+import { client } from "../api/orpc";
+
+// MODEL
+
+const TodoId = {{#if (eq orm "mongoose")}}S.String{{else}}S.Number{{/if}};
+type TodoId = typeof TodoId.Type;
+
+const Todo = S.Struct({
+  id: TodoId,
+  text: S.String,
+  completed: S.Boolean,
+});
+type Todo = typeof Todo.Type;
+
+const TodoList = AsyncData.Schema(S.Array(Todo), S.String);
+
+export const Model = S.Struct({
+  todos: TodoList.schema,
+  newTodoText: S.String,
+  pendingTodoIds: S.Array(TodoId),
+  maybeError: S.Option(S.String),
+});
+
+export type Model = typeof Model.Type;
+
+// MESSAGE
+
+export const UpdatedNewTodoText = m("UpdatedNewTodoText", { text: S.String });
+export const SubmittedNewTodo = m("SubmittedNewTodo");
+export const ClickedToggleTodo = m("ClickedToggleTodo", {
+  id: TodoId,
+  completed: S.Boolean,
+});
+export const ClickedDeleteTodo = m("ClickedDeleteTodo", { id: TodoId });
+export const SucceededLoadTodos = m("SucceededLoadTodos", { todos: S.Array(Todo) });
+export const FailedLoadTodos = m("FailedLoadTodos", { error: S.String });
+export const SucceededCreateTodo = m("SucceededCreateTodo");
+export const FailedCreateTodo = m("FailedCreateTodo", { error: S.String });
+export const SucceededMutateTodo = m("SucceededMutateTodo", { id: TodoId });
+export const FailedMutateTodo = m("FailedMutateTodo", { id: TodoId, error: S.String });
+
+export const Message = S.Union([
+  UpdatedNewTodoText,
+  SubmittedNewTodo,
+  ClickedToggleTodo,
+  ClickedDeleteTodo,
+  SucceededLoadTodos,
+  FailedLoadTodos,
+  SucceededCreateTodo,
+  FailedCreateTodo,
+  SucceededMutateTodo,
+  FailedMutateTodo,
+]);
+export type Message = typeof Message.Type;
+
+// COMMAND
+
+const LoadTodos = Command.define("LoadTodos", {
+  messages: [SucceededLoadTodos, FailedLoadTodos],
+  execute: Effect.tryPromise((signal) => client.todo.getAll(undefined, { signal })).pipe(
+    Effect.map((todos) => SucceededLoadTodos({ todos })),
+    Effect.catch(() => Effect.succeed(FailedLoadTodos({ error: "Could not load todos" }))),
+  ),
+});
+
+const CreateTodo = Command.define("CreateTodo", {
+  args: { text: S.String },
+  messages: [SucceededCreateTodo, FailedCreateTodo],
+  execute: ({ text }) =>
+    Effect.tryPromise(() => client.todo.create({ text })).pipe(
+      Effect.as(SucceededCreateTodo()),
+      Effect.catch(() => Effect.succeed(FailedCreateTodo({ error: "Could not add the todo" }))),
+    ),
+});
+
+const ToggleTodo = Command.define("ToggleTodo", {
+  args: { id: TodoId, completed: S.Boolean },
+  messages: [SucceededMutateTodo, FailedMutateTodo],
+  execute: ({ id, completed }) =>
+    Effect.tryPromise(() => client.todo.toggle({ id, completed })).pipe(
+      Effect.as(SucceededMutateTodo({ id })),
+      Effect.catch(() =>
+        Effect.succeed(FailedMutateTodo({ id, error: "Could not update the todo" })),
+      ),
+    ),
+});
+
+const DeleteTodo = Command.define("DeleteTodo", {
+  args: { id: TodoId },
+  messages: [SucceededMutateTodo, FailedMutateTodo],
+  execute: ({ id }) =>
+    Effect.tryPromise(() => client.todo.delete({ id })).pipe(
+      Effect.as(SucceededMutateTodo({ id })),
+      Effect.catch(() =>
+        Effect.succeed(FailedMutateTodo({ id, error: "Could not delete the todo" })),
+      ),
+    ),
+});
+
+// INIT
+
+export const init = (): readonly [Model, ReadonlyArray<Command.Command<Message>>] => [
+  {
+    todos: TodoList.Loading(),
+    newTodoText: "",
+    pendingTodoIds: [],
+    maybeError: Option.none(),
+  },
+  [LoadTodos()],
+];
+
+// UPDATE
+
+type UpdateReturn = readonly [Model, ReadonlyArray<Command.Command<Message>>];
+const withUpdateReturn = M.withReturnType<UpdateReturn>();
+
+const refreshTodos = Update.refresh({
+  read: (model: Model) => Option.some(model.todos),
+  revalidate: AsyncData.revalidate,
+  write: (model, nextTodos) => evo(model, { todos: () => nextTodos }),
+  load: LoadTodos(),
+});
+
+const markPending =
+  (id: TodoId): Update.Step<Model, Message> =>
+  (model) => [
+    evo(model, { pendingTodoIds: Array.append(id), maybeError: () => Option.none() }),
+    [],
+  ];
+
+const clearPending =
+  (id: TodoId): Update.Step<Model, Message> =>
+  (model) => [
+    evo(model, {
+      pendingTodoIds: Array.filter((pendingId: TodoId) => pendingId !== id),
+    }),
+    [],
+  ];
+
+export const update = (model: Model, message: Message): UpdateReturn =>
+  M.value(message).pipe(
+    withUpdateReturn,
+    M.tagsExhaustive({
+      UpdatedNewTodoText: ({ text }) => [evo(model, { newTodoText: () => text }), []],
+
+      SubmittedNewTodo: () => {
+        const text = model.newTodoText.trim();
+        if (String.isEmpty(text)) {
+          return [model, []];
+        }
+        return [
+          evo(model, { newTodoText: () => "", maybeError: () => Option.none() }),
+          [CreateTodo({ text })],
+        ];
+      },
+
+      ClickedToggleTodo: ({ id, completed }) =>
+        Update.combine(model, [
+          markPending(id),
+          (nextModel) => [nextModel, [ToggleTodo({ id, completed: !completed })]],
+        ]),
+
+      ClickedDeleteTodo: ({ id }) =>
+        Update.combine(model, [
+          markPending(id),
+          (nextModel) => [nextModel, [DeleteTodo({ id })]],
+        ]),
+
+      SucceededLoadTodos: ({ todos }) => [
+        evo(model, { todos: () => TodoList.Success({ data: todos }) }),
+        [],
+      ],
+
+      FailedLoadTodos: ({ error }) => [
+        evo(model, { todos: () => TodoList.Failure({ error }) }),
+        [],
+      ],
+
+      SucceededCreateTodo: () => Update.combine(model, [refreshTodos]),
+
+      FailedCreateTodo: ({ error }) => [
+        evo(model, { maybeError: () => Option.some(error) }),
+        [],
+      ],
+
+      SucceededMutateTodo: ({ id }) => Update.combine(model, [clearPending(id), refreshTodos]),
+
+      FailedMutateTodo: ({ id, error }) =>
+        Update.combine(model, [
+          clearPending(id),
+          (nextModel) => [evo(nextModel, { maybeError: () => Option.some(error) }), []],
+        ]),
+    }),
+  );
+
+// VIEW
+
+const todoView = (
+  todo: Todo,
+  isPending: boolean,
+  h: HtmlBuilder<Message>,
+): Html =>
+  h.keyed("li")(
+    todo.id,
+    [
+      h.Class(
+        `flex items-center justify-between gap-2 rounded border border-neutral-800 px-3 py-2 ${
+          isPending ? "opacity-50" : ""
+        }`,
+      ),
+    ],
+    [
+      Checkbox.view(
+        {
+          id: `todo-${todo.id}`,
+          isChecked: todo.completed,
+          isDisabled: isPending,
+          onToggle: () => ClickedToggleTodo({ id: todo.id, completed: todo.completed }),
+          toView: (attributes) =>
+            h.div(
+              [h.Class("flex items-center gap-2")],
+              [
+                h.div(
+                  [
+                    ...attributes.checkbox,
+                    h.Class(
+                      `flex h-4 w-4 items-center justify-center rounded border border-neutral-600 ${
+                        todo.completed ? "bg-indigo-600" : ""
+                      }`,
+                    ),
+                  ],
+                  todo.completed ? [h.span([h.Class("text-xs text-white")], ["✓"])] : [],
+                ),
+                h.span(
+                  [
+                    ...attributes.label,
+                    h.Class(todo.completed ? "text-neutral-500 line-through" : ""),
+                  ],
+                  [todo.text],
+                ),
+              ],
+            ),
+        },
+        h,
+      ),
+      Button.view(
+        {
+          onClick: ClickedDeleteTodo({ id: todo.id }),
+          isDisabled: isPending,
+          toView: (attributes) =>
+            h.button(
+              [
+                ...attributes.button,
+                h.AriaLabel("Delete todo"),
+                h.Class("text-red-500 transition hover:text-red-400 data-[disabled]:opacity-50"),
+              ],
+              ["✕"],
+            ),
+        },
+        h,
+      ),
+    ],
+  );
+
+const todoListView = (
+  todos: ReadonlyArray<Todo>,
+  pendingTodoIds: ReadonlyArray<TodoId>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  Array.match(todos, {
+    onEmpty: () => h.p([h.Class("text-neutral-400")], ["No todos yet."]),
+    onNonEmpty: (nonEmptyTodos) =>
+      h.ul(
+        [h.Class("space-y-2")],
+        Array.map(nonEmptyTodos, (todo) =>
+          todoView(todo, Array.contains(pendingTodoIds, todo.id), h),
+        ),
+      ),
+  });
+
+export const view = Submodel.defineView<Model, Message>((model, h) =>
+  h.div(
+    [h.Class("container mx-auto max-w-3xl px-4 py-8")],
+    [
+      h.h1([h.Class("mb-4 text-2xl font-bold")], ["Todos"]),
+
+      h.form(
+        [h.Class("mb-4 flex gap-2"), h.OnSubmit(SubmittedNewTodo())],
+        [
+          Input.view(
+            {
+              id: "new-todo",
+              value: model.newTodoText,
+              placeholder: "New task...",
+              onInput: (text) => UpdatedNewTodoText({ text }),
+              toView: (attributes) =>
+                h.input([
+                  ...attributes.input,
+                  h.AriaLabel("New todo"),
+                  h.Class(
+                    "flex-grow rounded border border-neutral-800 bg-neutral-900 px-3 py-2 outline-none",
+                  ),
+                ]),
+            },
+            h,
+          ),
+          Button.view(
+            {
+              type: "submit",
+              isDisabled: String.isEmpty(model.newTodoText.trim()),
+              toView: (attributes) =>
+                h.button(
+                  [
+                    ...attributes.button,
+                    h.Class(
+                      "rounded bg-indigo-600 px-4 py-2 text-white transition hover:bg-indigo-500 data-[disabled]:opacity-50",
+                    ),
+                  ],
+                  ["Add"],
+                ),
+            },
+            h,
+          ),
+        ],
+      ),
+
+      AsyncData.matchDataSplitEmpty(model.todos, {
+        onIdle: () => h.empty,
+        onLoading: () => h.p([h.Class("text-neutral-400")], ["Loading..."]),
+        onFailure: (error) => h.p([h.Class("text-red-500")], [error]),
+        onData: (todos) => todoListView(todos, model.pendingTodoIds, h),
+      }),
+
+      Option.match(model.maybeError, {
+        onNone: () => h.empty,
+        onSome: (error) => h.p([h.Class("mt-4 text-sm text-red-500")], [error]),
+      }),
+    ],
+  ),
+);

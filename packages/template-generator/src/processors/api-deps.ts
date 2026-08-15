@@ -9,6 +9,7 @@ type FrontendType = {
   hasSvelteWeb: boolean;
   hasSolidWeb: boolean;
   hasAstroWeb: boolean;
+  hasFoldkitWeb: boolean;
   hasNative: boolean;
 };
 
@@ -21,6 +22,7 @@ function getFrontendType(frontend: Frontend[]): FrontendType {
     hasSvelteWeb: frontend.includes("svelte"),
     hasSolidWeb: frontend.includes("solid"),
     hasAstroWeb: frontend.includes("astro"),
+    hasFoldkitWeb: frontend.includes("foldkit"),
     hasNative: frontend.some((f) =>
       ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
     ),
@@ -208,6 +210,14 @@ function addWebClientDeps(
         "@tanstack/solid-query",
       ],
       devDependencies: ["@tanstack/solid-query-devtools"],
+    });
+  } else if (api === "orpc" && frontendType.hasFoldkitWeb) {
+    // Foldkit fetches through Commands and holds server state as AsyncData in the
+    // Model, so it uses the vanilla oRPC client without a query cache
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@orpc/client"],
     });
   } else if (api === "orpc" && frontendType.hasAstroWeb) {
     // Astro uses vanilla oRPC client without TanStack Query

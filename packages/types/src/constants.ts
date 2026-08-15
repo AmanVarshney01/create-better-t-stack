@@ -9,6 +9,7 @@ export const webFrontends = [
   "svelte",
   "solid",
   "astro",
+  "foldkit",
 ] as const satisfies readonly Exclude<WebFrontend, "none">[];
 
 export const desktopWebFrontends = [

@@ -205,17 +205,25 @@ export function validateWorkersCompatibility(
   return Result.ok(undefined);
 }
 
+// Frontends whose web client templates exist for oRPC only.
+const TRPC_UNSUPPORTED_FRONTENDS: readonly Frontend[] = [
+  "nuxt",
+  "svelte",
+  "solid",
+  "astro",
+  "foldkit",
+];
+
 export function validateApiFrontendCompatibility(
   api: API | undefined,
   frontends: Frontend[] = [],
 ): ValidationResult {
-  const includesNuxt = frontends.includes("nuxt");
-  const includesSvelte = frontends.includes("svelte");
-  const includesSolid = frontends.includes("solid");
-  const includesAstro = frontends.includes("astro");
-  if ((includesNuxt || includesSvelte || includesSolid || includesAstro) && api === "trpc") {
+  if (api !== "trpc") return Result.ok(undefined);
+
+  const unsupported = frontends.find((frontend) => TRPC_UNSUPPORTED_FRONTENDS.includes(frontend));
+  if (unsupported) {
     return validationErr(
-      `tRPC API is not supported with '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : includesSolid ? "solid" : "astro"}' frontend. Please use --api orpc or --api none or remove '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : includesSolid ? "solid" : "astro"}' from --frontend.`,
+      `tRPC API is not supported with '${unsupported}' frontend. Please use --api orpc or --api none or remove '${unsupported}' from --frontend.`,
     );
   }
   return Result.ok(undefined);
@@ -236,11 +244,11 @@ export function isFrontendAllowedWithBackend(
       return false;
     }
 
-    if (frontend === "solid" || frontend === "astro") return false;
+    if (frontend === "solid" || frontend === "astro" || frontend === "foldkit") return false;
   }
 
   if (auth === "clerk") {
-    const incompatibleFrontends = ["nuxt", "svelte", "solid", "astro"];
+    const incompatibleFrontends = ["nuxt", "svelte", "solid", "astro", "foldkit"];
     if (incompatibleFrontends.includes(frontend)) return false;
   }
 
@@ -256,12 +264,8 @@ export function supportsConvexBetterAuth(frontends: readonly Frontend[] = []) {
 }
 
 export function allowedApisForFrontends(frontends: Frontend[] = []) {
-  const includesNuxt = frontends.includes("nuxt");
-  const includesSvelte = frontends.includes("svelte");
-  const includesSolid = frontends.includes("solid");
-  const includesAstro = frontends.includes("astro");
   const base: API[] = ["trpc", "orpc", "none"];
-  if (includesNuxt || includesSvelte || includesSolid || includesAstro) {
+  if (frontends.some((frontend) => TRPC_UNSUPPORTED_FRONTENDS.includes(frontend))) {
     return ["orpc", "none"];
   }
   return base;
@@ -284,7 +288,8 @@ export function isExampleAIAllowed(backend?: ProjectConfig["backend"], frontends
 
   const includesSolid = frontends.includes("solid");
   const includesAstro = frontends.includes("astro");
-  if (includesSolid || includesAstro) return false;
+  const includesFoldkit = frontends.includes("foldkit");
+  if (includesSolid || includesAstro || includesFoldkit) return false;
 
   // Convex AI example only supports React-based frontends (not Svelte or Nuxt)
   if (backend === "convex") {
@@ -409,6 +414,31 @@ export function validatePrismaWebDeploy(
   if (!supportsPrismaWebDeploy(frontend)) {
     return validationErr(
       "'--web-deploy prisma' requires a supported server frontend. Choose Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or Solid. TanStack Router is a static SPA, while Prisma Compute requires an executable server artifact.",
+    );
+  }
+
+  return Result.ok(undefined);
+}
+
+// Frontends the Alchemy generator has no Cloudflare Workers recipe for.
+const CLOUDFLARE_WEB_DEPLOY_UNSUPPORTED_FRONTENDS: readonly Frontend[] = ["foldkit"];
+
+export function supportsCloudflareWebDeploy(frontend: Frontend[] = []): boolean {
+  return !frontend.some((value) => CLOUDFLARE_WEB_DEPLOY_UNSUPPORTED_FRONTENDS.includes(value));
+}
+
+export function validateCloudflareWebDeploy(
+  webDeploy: WebDeploy | undefined,
+  frontend: Frontend[] | undefined,
+): ValidationResult {
+  if (webDeploy !== "cloudflare" || !frontend) return Result.ok(undefined);
+
+  const unsupported = frontend.find((value) =>
+    CLOUDFLARE_WEB_DEPLOY_UNSUPPORTED_FRONTENDS.includes(value),
+  );
+  if (unsupported) {
+    return validationErr(
+      `'--web-deploy cloudflare' has no Alchemy recipe for the '${unsupported}' frontend. Choose '--web-deploy docker', '--web-deploy vercel', or '--web-deploy none'.`,
     );
   }
 
@@ -651,7 +681,7 @@ export function validatePaymentsCompatibility(
   payments: Payments | undefined,
   auth: Auth | undefined,
   _backend: Backend | undefined,
-  _frontends: Frontend[] = [],
+  frontends: Frontend[] = [],
 ): ValidationResult {
   if (!payments || payments === "none") return Result.ok(undefined);
 
@@ -659,6 +689,12 @@ export function validatePaymentsCompatibility(
     if (!auth || auth === "none" || auth !== "better-auth") {
       return validationErr(
         "Polar payments requires Better Auth. Please use '--auth better-auth' or choose a different payments provider.",
+      );
+    }
+
+    if (frontends.includes("foldkit")) {
+      return validationErr(
+        "Polar payments has no Foldkit checkout template yet. Please use '--payments none' or choose a different frontend.",
       );
     }
   }
@@ -695,6 +731,10 @@ export function validateExamplesCompatibility(
 
   if (examplesArr.includes("ai") && (frontend ?? []).includes("astro")) {
     return validationErr("The 'ai' example is not compatible with the Astro frontend.");
+  }
+
+  if (examplesArr.includes("ai") && (frontend ?? []).includes("foldkit")) {
+    return validationErr("The 'ai' example is not compatible with the Foldkit frontend.");
   }
 
   if (examplesArr.includes("ai") && backend === "none") {

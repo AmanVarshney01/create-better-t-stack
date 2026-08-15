@@ -1,0 +1,10 @@
+import { foldkit } from "@foldkit/vite-plugin";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
+
+export default defineConfig({
+  server: {
+    port: 3001,
+  },
+  plugins: [tailwindcss(), foldkit()],
+});

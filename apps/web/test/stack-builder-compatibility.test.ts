@@ -300,7 +300,7 @@ describe("stack builder D1 compatibility", () => {
     });
 
     expect(getDisabledReason(stack, "examples", "ai")).toBe(
-      "AI example not compatible with Solid or Astro frontend",
+      "AI example not compatible with the astro frontend",
     );
 
     const result = analyzeStackCompatibility({
@@ -562,6 +562,40 @@ describe("stack builder Vercel deployment compatibility", () => {
     expect(result.adjustedStack).toMatchObject({
       serverDeploy: "none",
     });
+  });
+});
+
+describe("stack builder Foldkit compatibility", () => {
+  test("forces oRPC and blocks tRPC", () => {
+    const stack = createStack({ webFrontend: ["foldkit"], backend: "hono", api: "trpc" });
+
+    expect(getDisabledReason(stack, "api", "trpc")).toBe("foldkit requires oRPC, not tRPC");
+    expect(analyzeStackCompatibility(stack).adjustedStack?.api).toBe("orpc");
+  });
+
+  test("blocks Convex, Clerk, Polar, the AI example, and Cloudflare deployment", () => {
+    const stack = createStack({ webFrontend: ["foldkit"], backend: "hono", api: "orpc" });
+
+    expect(getDisabledReason(stack, "backend", "convex")).toBe(
+      "Convex is not compatible with foldkit",
+    );
+    expect(getDisabledReason(stack, "auth", "clerk")).not.toBeNull();
+    expect(getDisabledReason(stack, "payments", "polar")).toBe(
+      "Polar has no Foldkit checkout template yet",
+    );
+    expect(getDisabledReason(stack, "examples", "ai")).toBe(
+      "AI example not compatible with the foldkit frontend",
+    );
+    expect(getDisabledReason(stack, "webDeploy", "cloudflare")).toBe(
+      "Cloudflare has no Alchemy recipe for the foldkit frontend",
+    );
+  });
+
+  test("keeps Docker and Vercel web deployment available", () => {
+    const stack = createStack({ webFrontend: ["foldkit"], backend: "hono", api: "orpc" });
+
+    expect(getDisabledReason(stack, "webDeploy", "docker")).toBeNull();
+    expect(getDisabledReason(stack, "webDeploy", "vercel")).toBeNull();
   });
 });
 

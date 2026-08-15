@@ -26,6 +26,7 @@ export async function processEnvPackage(
       "svelte",
       "solid",
       "astro",
+      "foldkit",
     ].includes(f),
   );
   const hasNative = config.frontend.some((f) =>

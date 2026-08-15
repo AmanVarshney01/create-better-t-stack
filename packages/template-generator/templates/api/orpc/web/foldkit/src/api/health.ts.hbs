@@ -1,0 +1,29 @@
+import { Effect, Schema as S } from "effect";
+import { AsyncData, Command } from "foldkit";
+import { m } from "foldkit/message";
+
+import { client } from "./orpc";
+
+// MODEL
+
+export const HealthCheck = AsyncData.Schema(S.String, S.String);
+export type HealthCheck = typeof HealthCheck.schema.Type;
+
+// MESSAGE
+
+export const SucceededFetchHealthCheck = m("SucceededFetchHealthCheck", {
+  status: S.String,
+});
+export const FailedFetchHealthCheck = m("FailedFetchHealthCheck", {
+  error: S.String,
+});
+
+// COMMAND
+
+export const FetchHealthCheck = Command.define("FetchHealthCheck", {
+  messages: [SucceededFetchHealthCheck, FailedFetchHealthCheck],
+  execute: Effect.tryPromise((signal) => client.healthCheck(undefined, { signal })).pipe(
+    Effect.map((status) => SucceededFetchHealthCheck({ status })),
+    Effect.catch(() => Effect.succeed(FailedFetchHealthCheck({ error: "Disconnected" }))),
+  ),
+});

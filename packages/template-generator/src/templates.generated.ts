@@ -1440,6 +1440,57 @@ export const link = new RPCLink({
 
 export const orpc: AppRouterClient = createORPCClient(link);
 `],
+  ["api/orpc/web/foldkit/src/api/health.ts.hbs", `import { Effect, Schema as S } from "effect";
+import { AsyncData, Command } from "foldkit";
+import { m } from "foldkit/message";
+
+import { client } from "./orpc";
+
+// MODEL
+
+export const HealthCheck = AsyncData.Schema(S.String, S.String);
+export type HealthCheck = typeof HealthCheck.schema.Type;
+
+// MESSAGE
+
+export const SucceededFetchHealthCheck = m("SucceededFetchHealthCheck", {
+  status: S.String,
+});
+export const FailedFetchHealthCheck = m("FailedFetchHealthCheck", {
+  error: S.String,
+});
+
+// COMMAND
+
+export const FetchHealthCheck = Command.define("FetchHealthCheck", {
+  messages: [SucceededFetchHealthCheck, FailedFetchHealthCheck],
+  execute: Effect.tryPromise((signal) => client.healthCheck(undefined, { signal })).pipe(
+    Effect.map((status) => SucceededFetchHealthCheck({ status })),
+    Effect.catch(() => Effect.succeed(FailedFetchHealthCheck({ error: "Disconnected" }))),
+  ),
+});
+`],
+  ["api/orpc/web/foldkit/src/api/orpc.ts.hbs", `import { createORPCClient } from "@orpc/client";
+import { RPCLink } from "@orpc/client/fetch";
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+import { env } from "@{{projectName}}/env/web";
+
+{{> getServerUrlSpaces}}
+
+const link = new RPCLink({
+  url: \`\${getServerUrl(env.VITE_SERVER_URL)}/rpc\`,
+{{#if (eq auth "better-auth")}}
+  fetch(url, options) {
+    return fetch(url, {
+      ...options,
+      credentials: "include",
+    });
+  },
+{{/if}}
+});
+
+export const client: AppRouterClient = createORPCClient(link);
+`],
   ["api/orpc/web/nuxt/app/plugins/orpc.ts.hbs", `import { defineNuxtPlugin } from '#app'
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 import { createORPCClient } from '@orpc/client'
@@ -9431,6 +9482,525 @@ import Layout from "../layouts/Layout.astro";
   </div>
 </Layout>
 `],
+  ["auth/better-auth/web/foldkit/src/auth/client.ts.hbs", `import { env } from "@{{projectName}}/env/web";
+import { createAuthClient } from "better-auth/client";
+
+{{> getServerUrlSpaces}}
+
+export const authClient = createAuthClient({
+  // better-auth derives its route-matching base from this URL's path, so the
+  // public auth path must equal the server-side mount (/api/auth everywhere)
+  baseURL: new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(),
+});
+`],
+  ["auth/better-auth/web/foldkit/src/auth/session.ts.hbs", `import { Effect, Option, Schema as S } from "effect";
+import { AsyncData, Command } from "foldkit";
+import { m } from "foldkit/message";
+
+import { authClient } from "./client";
+{{#if (eq api "orpc")}}
+import { client } from "../api/orpc";
+{{/if}}
+
+// MODEL
+
+export const Session = S.Struct({
+  user: S.Struct({
+    id: S.String,
+    name: S.String,
+    email: S.String,
+  }),
+});
+export type Session = typeof Session.Type;
+
+export const SessionState = AsyncData.Schema(S.Option(Session), S.String);
+export type SessionState = typeof SessionState.schema.Type;
+
+export const toSession = (user: Readonly<{ id: string; name: string; email: string }>): Session => ({
+  user: { id: user.id, name: user.name, email: user.email },
+});
+
+export const currentSession = (state: SessionState): Option.Option<Session> =>
+  Option.flatten(AsyncData.getData(state));
+{{#if (eq api "orpc")}}
+
+export const PrivateData = AsyncData.Schema(S.String, S.String);
+export type PrivateData = typeof PrivateData.schema.Type;
+{{/if}}
+
+// MESSAGE
+
+export const CompletedFetchSession = m("CompletedFetchSession", {
+  maybeSession: S.Option(Session),
+});
+export const CompletedSignOut = m("CompletedSignOut");
+{{#if (eq api "orpc")}}
+export const SucceededFetchPrivateData = m("SucceededFetchPrivateData", {
+  message: S.String,
+});
+export const FailedFetchPrivateData = m("FailedFetchPrivateData", {
+  error: S.String,
+});
+{{/if}}
+
+// COMMAND
+
+export const FetchSession = Command.define("FetchSession", {
+  messages: [CompletedFetchSession],
+  execute: Effect.tryPromise(() => authClient.getSession()).pipe(
+    Effect.map((result) =>
+      CompletedFetchSession({
+        maybeSession: Option.map(Option.fromNullishOr(result.data), (data) =>
+          toSession(data.user),
+        ),
+      }),
+    ),
+    Effect.catch(() => Effect.succeed(CompletedFetchSession({ maybeSession: Option.none() }))),
+  ),
+});
+
+export const SignOut = Command.define("SignOut", {
+  messages: [CompletedSignOut],
+  execute: Effect.tryPromise(() => authClient.signOut()).pipe(
+    Effect.as(CompletedSignOut()),
+    Effect.catch(() => Effect.succeed(CompletedSignOut())),
+  ),
+});
+{{#if (eq api "orpc")}}
+
+export const FetchPrivateData = Command.define("FetchPrivateData", {
+  messages: [SucceededFetchPrivateData, FailedFetchPrivateData],
+  execute: Effect.tryPromise((signal) => client.privateData(undefined, { signal })).pipe(
+    Effect.map(({ message }) => SucceededFetchPrivateData({ message })),
+    Effect.catch(() =>
+      Effect.succeed(FailedFetchPrivateData({ error: "Could not load private data" })),
+    ),
+  ),
+});
+{{/if}}
+`],
+  ["auth/better-auth/web/foldkit/src/page/login.ts.hbs", `import { Array, Effect, Match as M, Option, Schema as S } from "effect";
+import { Button, Input } from "@foldkit/ui";
+import { Command, Submodel } from "foldkit";
+import {
+  Field,
+  Invalid,
+  NotValidated,
+  Rule,
+  allValid,
+  makeRules,
+  validate,
+} from "foldkit/fieldValidation";
+import type { Html, HtmlBuilder } from "foldkit/html";
+import { m } from "foldkit/message";
+import { evo } from "foldkit/struct";
+
+import { authClient } from "../auth/client";
+import { Session, toSession } from "../auth/session";
+
+// MODEL
+
+const AuthMode = S.Literals(["SignIn", "SignUp"]);
+type AuthMode = typeof AuthMode.Type;
+
+export const Model = S.Struct({
+  mode: AuthMode,
+  name: Field(S.String),
+  email: Field(S.String),
+  password: Field(S.String),
+  isSubmitting: S.Boolean,
+  maybeError: S.Option(S.String),
+});
+
+export type Model = typeof Model.Type;
+
+export const init = (): Model => ({
+  mode: "SignIn",
+  name: NotValidated({ value: "" }),
+  email: NotValidated({ value: "" }),
+  password: NotValidated({ value: "" }),
+  isSubmitting: false,
+  maybeError: Option.none(),
+});
+
+// MESSAGE
+
+export const SelectedMode = m("SelectedMode", { mode: AuthMode });
+export const ChangedName = m("ChangedName", { value: S.String });
+export const ChangedEmail = m("ChangedEmail", { value: S.String });
+export const ChangedPassword = m("ChangedPassword", { value: S.String });
+export const SubmittedForm = m("SubmittedForm");
+export const SucceededAuthenticate = m("SucceededAuthenticate", { session: Session });
+export const FailedAuthenticate = m("FailedAuthenticate", { error: S.String });
+
+export const Message = S.Union([
+  SelectedMode,
+  ChangedName,
+  ChangedEmail,
+  ChangedPassword,
+  SubmittedForm,
+  SucceededAuthenticate,
+  FailedAuthenticate,
+]);
+export type Message = typeof Message.Type;
+
+// OUT MESSAGE
+
+export const CompletedAuthentication = m("CompletedAuthentication", { session: Session });
+
+export const OutMessage = S.Union([CompletedAuthentication]);
+export type OutMessage = typeof OutMessage.Type;
+
+// VALIDATION
+
+const nameRules = makeRules({
+  required: "Name is required",
+  rules: [Rule.minLength(2, "Name must be at least 2 characters")],
+});
+
+const emailRules = makeRules({
+  required: "Email is required",
+  rules: [Rule.email("Please enter a valid email")],
+});
+
+const passwordRules = makeRules({
+  required: "Password is required",
+  rules: [Rule.minLength(8, "Password must be at least 8 characters")],
+});
+
+const validateName = validate(nameRules);
+const validateEmail = validate(emailRules);
+const validatePassword = validate(passwordRules);
+
+const isFormValid = (model: Model): boolean =>
+  allValid(
+    model.mode === "SignUp"
+      ? [
+          [model.name, nameRules],
+          [model.email, emailRules],
+          [model.password, passwordRules],
+        ]
+      : [
+          [model.email, emailRules],
+          [model.password, passwordRules],
+        ],
+  );
+
+// COMMAND
+
+const SignIn = Command.define("SignIn", {
+  args: { email: S.String, password: S.String },
+  messages: [SucceededAuthenticate, FailedAuthenticate],
+  execute: ({ email, password }) =>
+    Effect.tryPromise(() => authClient.signIn.email({ email, password })).pipe(
+      Effect.map((result) =>
+        Option.match(Option.fromNullishOr(result.data), {
+          onNone: () =>
+            FailedAuthenticate({ error: result.error?.message ?? "Sign in failed" }),
+          onSome: (data) => SucceededAuthenticate({ session: toSession(data.user) }),
+        }),
+      ),
+      Effect.catch(() => Effect.succeed(FailedAuthenticate({ error: "Sign in failed" }))),
+    ),
+});
+
+const SignUp = Command.define("SignUp", {
+  args: { name: S.String, email: S.String, password: S.String },
+  messages: [SucceededAuthenticate, FailedAuthenticate],
+  execute: ({ name, email, password }) =>
+    Effect.tryPromise(() => authClient.signUp.email({ name, email, password })).pipe(
+      Effect.map((result) =>
+        Option.match(Option.fromNullishOr(result.data), {
+          onNone: () =>
+            FailedAuthenticate({ error: result.error?.message ?? "Sign up failed" }),
+          onSome: (data) => SucceededAuthenticate({ session: toSession(data.user) }),
+        }),
+      ),
+      Effect.catch(() => Effect.succeed(FailedAuthenticate({ error: "Sign up failed" }))),
+    ),
+});
+
+// UPDATE
+
+type UpdateReturn = readonly [
+  Model,
+  ReadonlyArray<Command.Command<Message>>,
+  Option.Option<OutMessage>,
+];
+const withUpdateReturn = M.withReturnType<UpdateReturn>();
+
+export const update = (model: Model, message: Message): UpdateReturn =>
+  M.value(message).pipe(
+    withUpdateReturn,
+    M.tagsExhaustive({
+      SelectedMode: ({ mode }) => [
+        evo(model, { mode: () => mode, maybeError: () => Option.none() }),
+        [],
+        Option.none(),
+      ],
+
+      ChangedName: ({ value }) => [
+        evo(model, { name: () => validateName(value) }),
+        [],
+        Option.none(),
+      ],
+
+      ChangedEmail: ({ value }) => [
+        evo(model, { email: () => validateEmail(value) }),
+        [],
+        Option.none(),
+      ],
+
+      ChangedPassword: ({ value }) => [
+        evo(model, { password: () => validatePassword(value) }),
+        [],
+        Option.none(),
+      ],
+
+      SubmittedForm: () => {
+        if (model.isSubmitting || !isFormValid(model)) {
+          return [model, [], Option.none()];
+        }
+
+        const command =
+          model.mode === "SignUp"
+            ? SignUp({
+                name: model.name.value,
+                email: model.email.value,
+                password: model.password.value,
+              })
+            : SignIn({ email: model.email.value, password: model.password.value });
+
+        return [
+          evo(model, { isSubmitting: () => true, maybeError: () => Option.none() }),
+          [command],
+          Option.none(),
+        ];
+      },
+
+      SucceededAuthenticate: ({ session }) => [
+        evo(model, { isSubmitting: () => false }),
+        [],
+        Option.some(CompletedAuthentication({ session })),
+      ],
+
+      FailedAuthenticate: ({ error }) => [
+        evo(model, {
+          isSubmitting: () => false,
+          maybeError: () => Option.some(error),
+          password: () => Invalid({ value: model.password.value, errors: [error] }),
+        }),
+        [],
+        Option.none(),
+      ],
+    }),
+  );
+
+// VIEW
+
+const fieldBorderClass = (field: Field<string>): string =>
+  M.value(field).pipe(
+    M.tagsExhaustive({
+      NotValidated: () => "border-neutral-700",
+      Validating: () => "border-neutral-500",
+      Valid: () => "border-green-600",
+      Invalid: () => "border-red-500",
+    }),
+  );
+
+const fieldView = (
+  id: string,
+  labelText: string,
+  type: "text" | "email" | "password",
+  field: Field<string>,
+  toMessage: (value: string) => Message,
+  h: HtmlBuilder<Message>,
+): Html =>
+  Input.view(
+    {
+      id,
+      type,
+      value: field.value,
+      onInput: toMessage,
+      isInvalid: field._tag === "Invalid",
+      toView: (attributes) =>
+        h.div(
+          [h.Class("space-y-1")],
+          [
+            h.label(
+              [...attributes.label, h.Class("block text-sm text-neutral-300")],
+              [labelText],
+            ),
+            h.input([
+              ...attributes.input,
+              h.Class(
+                \`w-full rounded border bg-neutral-900 px-3 py-2 outline-none \${fieldBorderClass(field)}\`,
+              ),
+            ]),
+            M.value(field).pipe(
+              M.tag("Invalid", ({ errors }) =>
+                h.p(
+                  [...attributes.description, h.Class("text-sm text-red-500")],
+                  [Array.headNonEmpty(errors)],
+                ),
+              ),
+              M.orElse(() => h.empty),
+            ),
+          ],
+        ),
+    },
+    h,
+  );
+
+const submitLabel = (model: Model): string => {
+  if (model.isSubmitting) {
+    return "Submitting...";
+  }
+  return model.mode === "SignIn" ? "Sign In" : "Sign Up";
+};
+
+const modeToggleView = (mode: AuthMode, h: HtmlBuilder<Message>): Html =>
+  Button.view(
+    {
+      onClick: SelectedMode({ mode: mode === "SignIn" ? "SignUp" : "SignIn" }),
+      toView: (attributes) =>
+        h.button(
+          [...attributes.button, h.Class("text-sm text-indigo-400 hover:underline")],
+          [mode === "SignIn" ? "Need an account? Sign Up" : "Already have an account? Sign In"],
+        ),
+    },
+    h,
+  );
+
+export const view = Submodel.defineView<Model, Message>((model, h) => {
+  const canSubmit = isFormValid(model) && !model.isSubmitting;
+
+  return h.div(
+    [h.Class("mx-auto mt-10 w-full max-w-md px-4")],
+    [
+      h.h1(
+        [h.Class("mb-6 text-center text-3xl font-bold")],
+        [model.mode === "SignIn" ? "Welcome Back" : "Create Account"],
+      ),
+      h.form(
+        [h.Class("space-y-4"), h.OnSubmit(SubmittedForm())],
+        [
+          model.mode === "SignUp"
+            ? fieldView("name", "Name", "text", model.name, (value) => ChangedName({ value }), h)
+            : h.empty,
+          fieldView("email", "Email", "email", model.email, (value) => ChangedEmail({ value }), h),
+          fieldView(
+            "password",
+            "Password",
+            "password",
+            model.password,
+            (value) => ChangedPassword({ value }),
+            h,
+          ),
+          Button.view(
+            {
+              type: "submit",
+              isDisabled: !canSubmit,
+              toView: (attributes) =>
+                h.button(
+                  [
+                    ...attributes.button,
+                    h.Class(
+                      "w-full rounded bg-indigo-600 py-2 font-medium text-white transition hover:bg-indigo-500 data-[disabled]:opacity-50",
+                    ),
+                  ],
+                  [submitLabel(model)],
+                ),
+            },
+            h,
+          ),
+        ],
+      ),
+      Option.match(model.maybeError, {
+        onNone: () => h.empty,
+        onSome: (error) => h.p([h.Class("mt-4 text-sm text-red-500")], [error]),
+      }),
+      h.div([h.Class("mt-4 text-center")], [modeToggleView(model.mode, h)]),
+    ],
+  );
+});
+`],
+  ["auth/better-auth/web/foldkit/src/view/dashboard.ts.hbs", `import { Option } from "effect";
+import { AsyncData } from "foldkit";
+import type { Html, HtmlBuilder } from "foldkit/html";
+
+{{#if (eq api "orpc")}}
+import type { PrivateData, Session, SessionState } from "../auth/session";
+{{else}}
+import type { Session, SessionState } from "../auth/session";
+{{/if}}
+import type { Message } from "../message";
+
+const noticeView = (text: string, h: HtmlBuilder<Message>): Html =>
+  h.p([h.Class("text-neutral-400")], [text]);
+{{#if (eq api "orpc")}}
+
+const privateDataView = (privateData: PrivateData, h: HtmlBuilder<Message>): Html =>
+  h.section(
+    [h.Class("rounded-lg border border-neutral-800 p-4")],
+    [
+      h.h2([h.Class("mb-2 font-medium")], ["Private API"]),
+      AsyncData.matchDataSplitEmpty(privateData, {
+        onIdle: () => noticeView("Not requested", h),
+        onLoading: () => noticeView("Loading...", h),
+        onFailure: (error) => h.p([h.Class("text-red-500")], [error]),
+        onData: (message) => h.p([h.Class("text-neutral-300")], [message]),
+      }),
+    ],
+  );
+{{/if}}
+
+const signedInView = (
+  session: Session,
+{{#if (eq api "orpc")}}
+  privateData: PrivateData,
+{{/if}}
+  h: HtmlBuilder<Message>,
+): Html =>
+  h.div(
+    [h.Class("grid gap-6")],
+    [
+      h.div(
+        [],
+        [
+          h.h1([h.Class("mb-2 text-3xl font-bold")], ["Dashboard"]),
+          h.p([h.Class("text-neutral-400")], [\`Signed in as \${session.user.email}\`]),
+        ],
+      ),
+{{#if (eq api "orpc")}}
+      privateDataView(privateData, h),
+{{/if}}
+    ],
+  );
+
+export const dashboardView = (
+  session: SessionState,
+{{#if (eq api "orpc")}}
+  privateData: PrivateData,
+{{/if}}
+  h: HtmlBuilder<Message>,
+): Html =>
+  h.div(
+    [h.Class("container mx-auto max-w-3xl px-4 py-8")],
+    [
+      AsyncData.matchDataSplitEmpty(session, {
+        onIdle: () => noticeView("Loading...", h),
+        onLoading: () => noticeView("Loading...", h),
+        onFailure: (error) => h.p([h.Class("text-red-500")], [error]),
+        onData: (maybeSession) =>
+          Option.match(maybeSession, {
+            onNone: () => noticeView("Redirecting to sign in...", h),
+            onSome: (session) => signedInView(session, {{#if (eq api "orpc")}}privateData, {{/if}}h),
+          }),
+      }),
+    ],
+  );
+`],
   ["auth/better-auth/web/nuxt/app/components/SignInForm.vue.hbs", `<script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
@@ -16306,7 +16876,7 @@ services:
 {{/if}}
     init: true
     ports:
-{{#if (includes frontend "tanstack-router")}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "foldkit"))}}
       - "3001:80"
 {{else}}
       - "3001:3001"
@@ -16364,7 +16934,7 @@ services:
 {{/if}}
 {{/if}}
     healthcheck:
-{{#if (includes frontend "tanstack-router")}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "foldkit"))}}
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/"]
 {{else}}
       test:
@@ -16610,6 +17180,60 @@ EXPOSE 3001
 
 WORKDIR /app/apps/web
 CMD ["node", "dist/server/entry.mjs"]
+`],
+  ["deploy/docker/web/foldkit/Dockerfile.hbs", `FROM node:24{{#unless (includes addons "vite-plus")}}-slim{{/unless}} AS builder
+{{#if (eq packageManager "bun")}}
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+RUN npm install -g pnpm@11
+{{/if}}
+WORKDIR /app
+{{#if (eq orm "prisma")}}
+# prisma generate resolves DATABASE_URL at install time; the real value comes from compose at runtime
+ENV DATABASE_URL={{#if (eq database "mysql")}}mysql://build:build@localhost:3306/build{{else if (eq database "mongodb")}}mongodb://localhost:27017/build{{else if (eq database "sqlite")}}file:./build.db{{else}}postgresql://build:build@localhost:5432/build{{/if}}
+{{/if}}
+
+COPY . .
+{{#if (eq packageManager "bun")}}
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
+{{else if (eq packageManager "pnpm")}}
+RUN --mount=type=cache,target=/pnpm-store pnpm install --store-dir /pnpm-store
+{{else}}
+RUN --mount=type=cache,target=/root/.npm npm install
+{{/if}}
+
+{{#if (and (ne backend "none") (ne backend "convex"))}}
+ARG VITE_SERVER_URL
+ENV VITE_SERVER_URL=\${VITE_SERVER_URL}
+{{/if}}
+ENV NODE_ENV=production
+RUN cd apps/web && {{packageManager}} run build
+
+FROM nginx:alpine AS runner
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+`],
+  ["deploy/docker/web/foldkit/nginx.conf", `server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript image/svg+xml;
+
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    # SPA fallback
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
 `],
   ["deploy/docker/web/nuxt/Dockerfile.hbs", `FROM node:24-slim AS builder
 {{#if (eq packageManager "bun")}}
@@ -24197,6 +24821,354 @@ import Layout from "../layouts/Layout.astro";
   loadTodos();
 </script>
 `],
+  ["examples/todo/web/foldkit/src/page/todos.ts.hbs", `import { Array, Effect, Match as M, Option, Schema as S, String } from "effect";
+import { Button, Checkbox, Input } from "@foldkit/ui";
+import { AsyncData, Command, Submodel, Update } from "foldkit";
+import type { Html, HtmlBuilder } from "foldkit/html";
+import { m } from "foldkit/message";
+import { evo } from "foldkit/struct";
+
+import { client } from "../api/orpc";
+
+// MODEL
+
+const TodoId = {{#if (eq orm "mongoose")}}S.String{{else}}S.Number{{/if}};
+type TodoId = typeof TodoId.Type;
+
+const Todo = S.Struct({
+  id: TodoId,
+  text: S.String,
+  completed: S.Boolean,
+});
+type Todo = typeof Todo.Type;
+
+const TodoList = AsyncData.Schema(S.Array(Todo), S.String);
+
+export const Model = S.Struct({
+  todos: TodoList.schema,
+  newTodoText: S.String,
+  pendingTodoIds: S.Array(TodoId),
+  maybeError: S.Option(S.String),
+});
+
+export type Model = typeof Model.Type;
+
+// MESSAGE
+
+export const UpdatedNewTodoText = m("UpdatedNewTodoText", { text: S.String });
+export const SubmittedNewTodo = m("SubmittedNewTodo");
+export const ClickedToggleTodo = m("ClickedToggleTodo", {
+  id: TodoId,
+  completed: S.Boolean,
+});
+export const ClickedDeleteTodo = m("ClickedDeleteTodo", { id: TodoId });
+export const SucceededLoadTodos = m("SucceededLoadTodos", { todos: S.Array(Todo) });
+export const FailedLoadTodos = m("FailedLoadTodos", { error: S.String });
+export const SucceededCreateTodo = m("SucceededCreateTodo");
+export const FailedCreateTodo = m("FailedCreateTodo", { error: S.String });
+export const SucceededMutateTodo = m("SucceededMutateTodo", { id: TodoId });
+export const FailedMutateTodo = m("FailedMutateTodo", { id: TodoId, error: S.String });
+
+export const Message = S.Union([
+  UpdatedNewTodoText,
+  SubmittedNewTodo,
+  ClickedToggleTodo,
+  ClickedDeleteTodo,
+  SucceededLoadTodos,
+  FailedLoadTodos,
+  SucceededCreateTodo,
+  FailedCreateTodo,
+  SucceededMutateTodo,
+  FailedMutateTodo,
+]);
+export type Message = typeof Message.Type;
+
+// COMMAND
+
+const LoadTodos = Command.define("LoadTodos", {
+  messages: [SucceededLoadTodos, FailedLoadTodos],
+  execute: Effect.tryPromise((signal) => client.todo.getAll(undefined, { signal })).pipe(
+    Effect.map((todos) => SucceededLoadTodos({ todos })),
+    Effect.catch(() => Effect.succeed(FailedLoadTodos({ error: "Could not load todos" }))),
+  ),
+});
+
+const CreateTodo = Command.define("CreateTodo", {
+  args: { text: S.String },
+  messages: [SucceededCreateTodo, FailedCreateTodo],
+  execute: ({ text }) =>
+    Effect.tryPromise(() => client.todo.create({ text })).pipe(
+      Effect.as(SucceededCreateTodo()),
+      Effect.catch(() => Effect.succeed(FailedCreateTodo({ error: "Could not add the todo" }))),
+    ),
+});
+
+const ToggleTodo = Command.define("ToggleTodo", {
+  args: { id: TodoId, completed: S.Boolean },
+  messages: [SucceededMutateTodo, FailedMutateTodo],
+  execute: ({ id, completed }) =>
+    Effect.tryPromise(() => client.todo.toggle({ id, completed })).pipe(
+      Effect.as(SucceededMutateTodo({ id })),
+      Effect.catch(() =>
+        Effect.succeed(FailedMutateTodo({ id, error: "Could not update the todo" })),
+      ),
+    ),
+});
+
+const DeleteTodo = Command.define("DeleteTodo", {
+  args: { id: TodoId },
+  messages: [SucceededMutateTodo, FailedMutateTodo],
+  execute: ({ id }) =>
+    Effect.tryPromise(() => client.todo.delete({ id })).pipe(
+      Effect.as(SucceededMutateTodo({ id })),
+      Effect.catch(() =>
+        Effect.succeed(FailedMutateTodo({ id, error: "Could not delete the todo" })),
+      ),
+    ),
+});
+
+// INIT
+
+export const init = (): readonly [Model, ReadonlyArray<Command.Command<Message>>] => [
+  {
+    todos: TodoList.Loading(),
+    newTodoText: "",
+    pendingTodoIds: [],
+    maybeError: Option.none(),
+  },
+  [LoadTodos()],
+];
+
+// UPDATE
+
+type UpdateReturn = readonly [Model, ReadonlyArray<Command.Command<Message>>];
+const withUpdateReturn = M.withReturnType<UpdateReturn>();
+
+const refreshTodos = Update.refresh({
+  read: (model: Model) => Option.some(model.todos),
+  revalidate: AsyncData.revalidate,
+  write: (model, nextTodos) => evo(model, { todos: () => nextTodos }),
+  load: LoadTodos(),
+});
+
+const markPending =
+  (id: TodoId): Update.Step<Model, Message> =>
+  (model) => [
+    evo(model, { pendingTodoIds: Array.append(id), maybeError: () => Option.none() }),
+    [],
+  ];
+
+const clearPending =
+  (id: TodoId): Update.Step<Model, Message> =>
+  (model) => [
+    evo(model, {
+      pendingTodoIds: Array.filter((pendingId: TodoId) => pendingId !== id),
+    }),
+    [],
+  ];
+
+export const update = (model: Model, message: Message): UpdateReturn =>
+  M.value(message).pipe(
+    withUpdateReturn,
+    M.tagsExhaustive({
+      UpdatedNewTodoText: ({ text }) => [evo(model, { newTodoText: () => text }), []],
+
+      SubmittedNewTodo: () => {
+        const text = model.newTodoText.trim();
+        if (String.isEmpty(text)) {
+          return [model, []];
+        }
+        return [
+          evo(model, { newTodoText: () => "", maybeError: () => Option.none() }),
+          [CreateTodo({ text })],
+        ];
+      },
+
+      ClickedToggleTodo: ({ id, completed }) =>
+        Update.combine(model, [
+          markPending(id),
+          (nextModel) => [nextModel, [ToggleTodo({ id, completed: !completed })]],
+        ]),
+
+      ClickedDeleteTodo: ({ id }) =>
+        Update.combine(model, [
+          markPending(id),
+          (nextModel) => [nextModel, [DeleteTodo({ id })]],
+        ]),
+
+      SucceededLoadTodos: ({ todos }) => [
+        evo(model, { todos: () => TodoList.Success({ data: todos }) }),
+        [],
+      ],
+
+      FailedLoadTodos: ({ error }) => [
+        evo(model, { todos: () => TodoList.Failure({ error }) }),
+        [],
+      ],
+
+      SucceededCreateTodo: () => Update.combine(model, [refreshTodos]),
+
+      FailedCreateTodo: ({ error }) => [
+        evo(model, { maybeError: () => Option.some(error) }),
+        [],
+      ],
+
+      SucceededMutateTodo: ({ id }) => Update.combine(model, [clearPending(id), refreshTodos]),
+
+      FailedMutateTodo: ({ id, error }) =>
+        Update.combine(model, [
+          clearPending(id),
+          (nextModel) => [evo(nextModel, { maybeError: () => Option.some(error) }), []],
+        ]),
+    }),
+  );
+
+// VIEW
+
+const todoView = (
+  todo: Todo,
+  isPending: boolean,
+  h: HtmlBuilder<Message>,
+): Html =>
+  h.keyed("li")(
+    todo.id,
+    [
+      h.Class(
+        \`flex items-center justify-between gap-2 rounded border border-neutral-800 px-3 py-2 \${
+          isPending ? "opacity-50" : ""
+        }\`,
+      ),
+    ],
+    [
+      Checkbox.view(
+        {
+          id: \`todo-\${todo.id}\`,
+          isChecked: todo.completed,
+          isDisabled: isPending,
+          onToggle: () => ClickedToggleTodo({ id: todo.id, completed: todo.completed }),
+          toView: (attributes) =>
+            h.div(
+              [h.Class("flex items-center gap-2")],
+              [
+                h.div(
+                  [
+                    ...attributes.checkbox,
+                    h.Class(
+                      \`flex h-4 w-4 items-center justify-center rounded border border-neutral-600 \${
+                        todo.completed ? "bg-indigo-600" : ""
+                      }\`,
+                    ),
+                  ],
+                  todo.completed ? [h.span([h.Class("text-xs text-white")], ["✓"])] : [],
+                ),
+                h.span(
+                  [
+                    ...attributes.label,
+                    h.Class(todo.completed ? "text-neutral-500 line-through" : ""),
+                  ],
+                  [todo.text],
+                ),
+              ],
+            ),
+        },
+        h,
+      ),
+      Button.view(
+        {
+          onClick: ClickedDeleteTodo({ id: todo.id }),
+          isDisabled: isPending,
+          toView: (attributes) =>
+            h.button(
+              [
+                ...attributes.button,
+                h.AriaLabel("Delete todo"),
+                h.Class("text-red-500 transition hover:text-red-400 data-[disabled]:opacity-50"),
+              ],
+              ["✕"],
+            ),
+        },
+        h,
+      ),
+    ],
+  );
+
+const todoListView = (
+  todos: ReadonlyArray<Todo>,
+  pendingTodoIds: ReadonlyArray<TodoId>,
+  h: HtmlBuilder<Message>,
+): Html =>
+  Array.match(todos, {
+    onEmpty: () => h.p([h.Class("text-neutral-400")], ["No todos yet."]),
+    onNonEmpty: (nonEmptyTodos) =>
+      h.ul(
+        [h.Class("space-y-2")],
+        Array.map(nonEmptyTodos, (todo) =>
+          todoView(todo, Array.contains(pendingTodoIds, todo.id), h),
+        ),
+      ),
+  });
+
+export const view = Submodel.defineView<Model, Message>((model, h) =>
+  h.div(
+    [h.Class("container mx-auto max-w-3xl px-4 py-8")],
+    [
+      h.h1([h.Class("mb-4 text-2xl font-bold")], ["Todos"]),
+
+      h.form(
+        [h.Class("mb-4 flex gap-2"), h.OnSubmit(SubmittedNewTodo())],
+        [
+          Input.view(
+            {
+              id: "new-todo",
+              value: model.newTodoText,
+              placeholder: "New task...",
+              onInput: (text) => UpdatedNewTodoText({ text }),
+              toView: (attributes) =>
+                h.input([
+                  ...attributes.input,
+                  h.AriaLabel("New todo"),
+                  h.Class(
+                    "flex-grow rounded border border-neutral-800 bg-neutral-900 px-3 py-2 outline-none",
+                  ),
+                ]),
+            },
+            h,
+          ),
+          Button.view(
+            {
+              type: "submit",
+              isDisabled: String.isEmpty(model.newTodoText.trim()),
+              toView: (attributes) =>
+                h.button(
+                  [
+                    ...attributes.button,
+                    h.Class(
+                      "rounded bg-indigo-600 px-4 py-2 text-white transition hover:bg-indigo-500 data-[disabled]:opacity-50",
+                    ),
+                  ],
+                  ["Add"],
+                ),
+            },
+            h,
+          ),
+        ],
+      ),
+
+      AsyncData.matchDataSplitEmpty(model.todos, {
+        onIdle: () => h.empty,
+        onLoading: () => h.p([h.Class("text-neutral-400")], ["Loading..."]),
+        onFailure: (error) => h.p([h.Class("text-red-500")], [error]),
+        onData: (todos) => todoListView(todos, model.pendingTodoIds, h),
+      }),
+
+      Option.match(model.maybeError, {
+        onNone: () => h.empty,
+        onSome: (error) => h.p([h.Class("mt-4 text-sm text-red-500")], [error]),
+      }),
+    ],
+  ),
+);
+`],
   ["examples/todo/web/nuxt/app/pages/todos.vue.hbs", `<script setup lang="ts">
 import { ref } from 'vue'
 {{#if (eq backend "convex")}}
@@ -26259,6 +27231,776 @@ const TITLE_TEXT = \`
   "include": [".astro/types.d.ts", "**/*"],
   "exclude": ["dist"]
 }
+`],
+  ["frontend/foldkit/_gitignore", `node_modules
+.DS_Store
+dist
+.output
+.vercel
+.netlify
+*.local
+.env
+.env.*
+
+.wrangler
+.alchemy
+.dev.vars*
+`],
+  ["frontend/foldkit/index.html.hbs", `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="/src/styles.css" rel="stylesheet" />
+    <title>{{projectName}}</title>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/entry.ts"></script>
+  </body>
+</html>
+`],
+  ["frontend/foldkit/package.json.hbs", `{
+  "name": "web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "serve": "vite preview",
+    "start": "vite preview",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@foldkit/ui": "^0.145.0",
+    "effect": "4.0.0-rc.108",
+    "foldkit": "^0.145.0"
+  },
+  "devDependencies": {
+    "@foldkit/devtools": "^0.145.0",
+    "@foldkit/vite-plugin": "^0.13.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.1.5"
+  }
+}
+`],
+  ["frontend/foldkit/src/entry.ts.hbs", `import { Runtime } from "foldkit";
+
+import { ChangedUrl, ClickedLink, Message } from "./message";
+import { Model, init, update, view } from "./main";
+
+const application = Runtime.makeApplication({
+  Model,
+  init,
+  update,
+  view,
+  container: document.getElementById("root"),
+  routing: {
+    onUrlRequest: (request) => ClickedLink({ request }),
+    onUrlChange: (url) => ChangedUrl({ url }),
+  },
+  devTools: {
+    Message,
+  },
+});
+
+Runtime.run(application);
+`],
+  ["frontend/foldkit/src/main.ts.hbs", `import { Effect, Match as M, {{#if (or (eq auth "better-auth") (includes examples "todo"))}}Option, {{/if}}Schema as S } from "effect";
+import { {{#if (or (eq api "orpc") (eq auth "better-auth"))}}AsyncData, {{/if}}Command, Runtime{{#if (or (eq auth "better-auth") (includes examples "todo"))}}, Update{{/if}} } from "foldkit";
+import type { Document, Html, HtmlBuilder } from "foldkit/html";
+import { load, pushUrl{{#if (eq auth "better-auth")}}, replaceUrl{{/if}} } from "foldkit/navigation";
+import { evo } from "foldkit/struct";
+import { toString as urlToString } from "foldkit/url";
+
+{{#if (eq api "orpc")}}
+import { FetchHealthCheck, HealthCheck } from "./api/health";
+{{/if}}
+{{#if (eq auth "better-auth")}}
+import {
+  FetchSession,
+{{#if (eq api "orpc")}}
+  FetchPrivateData,
+  PrivateData,
+{{/if}}
+  SessionState,
+  SignOut,
+  currentSession,
+} from "./auth/session";
+import * as Login from "./page/login";
+import { dashboardView } from "./view/dashboard";
+{{/if}}
+{{#if (includes examples "todo")}}
+import * as Todos from "./page/todos";
+{{/if}}
+import {
+  CompletedLoadExternal,
+  CompletedNavigateInternal,
+{{#if (eq auth "better-auth")}}
+  GotLoginMessage,
+{{/if}}
+{{#if (includes examples "todo")}}
+  GotTodosMessage,
+{{/if}}
+  type Message,
+} from "./message";
+{{#if (eq auth "better-auth")}}
+import { AppRoute, dashboardRouter, homeRouter, loginRouter, urlToAppRoute } from "./route";
+{{else}}
+import { AppRoute, urlToAppRoute } from "./route";
+{{/if}}
+import { headerView } from "./view/header";
+import { homeView } from "./view/home";
+import { notFoundView } from "./view/notFound";
+
+// MODEL
+
+export const Model = S.Struct({
+  route: AppRoute,
+{{#if (eq api "orpc")}}
+  healthCheck: HealthCheck.schema,
+{{/if}}
+{{#if (eq auth "better-auth")}}
+  session: SessionState.schema,
+  login: Login.Model,
+{{#if (eq api "orpc")}}
+  privateData: PrivateData.schema,
+{{/if}}
+{{/if}}
+{{#if (includes examples "todo")}}
+  todos: Todos.Model,
+{{/if}}
+});
+
+export type Model = typeof Model.Type;
+
+// INIT
+
+export const init: Runtime.RoutingApplicationInit<Model, Message> = (url) => {
+{{#if (includes examples "todo")}}
+  const [todos, todosCommands] = Todos.init();
+
+{{/if}}
+  const model: Model = {
+    route: urlToAppRoute(url),
+{{#if (eq api "orpc")}}
+    healthCheck: HealthCheck.Loading(),
+{{/if}}
+{{#if (eq auth "better-auth")}}
+    session: SessionState.Loading(),
+    login: Login.init(),
+{{#if (eq api "orpc")}}
+    privateData: PrivateData.Idle(),
+{{/if}}
+{{/if}}
+{{#if (includes examples "todo")}}
+    todos,
+{{/if}}
+  };
+
+  return [
+    model,
+    [
+{{#if (eq api "orpc")}}
+      FetchHealthCheck(),
+{{/if}}
+{{#if (eq auth "better-auth")}}
+      FetchSession(),
+{{/if}}
+{{#if (includes examples "todo")}}
+      ...Command.mapMessages(todosCommands, (message) => GotTodosMessage({ message })),
+{{/if}}
+    ],
+  ];
+};
+
+// COMMAND
+
+const NavigateInternal = Command.define("NavigateInternal", {
+  args: { url: S.String },
+  messages: [CompletedNavigateInternal],
+  execute: ({ url }) => pushUrl(url).pipe(Effect.as(CompletedNavigateInternal())),
+});
+
+const LoadExternal = Command.define("LoadExternal", {
+  args: { href: S.String },
+  messages: [CompletedLoadExternal],
+  execute: ({ href }) => load(href).pipe(Effect.as(CompletedLoadExternal())),
+});
+{{#if (eq auth "better-auth")}}
+
+const RedirectToLogin = Command.define("RedirectToLogin", {
+  messages: [CompletedNavigateInternal],
+  execute: replaceUrl(loginRouter()).pipe(Effect.as(CompletedNavigateInternal())),
+});
+
+const RedirectToDashboard = Command.define("RedirectToDashboard", {
+  messages: [CompletedNavigateInternal],
+  execute: replaceUrl(dashboardRouter()).pipe(Effect.as(CompletedNavigateInternal())),
+});
+
+const RedirectToHome = Command.define("RedirectToHome", {
+  messages: [CompletedNavigateInternal],
+  execute: replaceUrl(homeRouter()).pipe(Effect.as(CompletedNavigateInternal())),
+});
+{{/if}}
+
+// UPDATE
+
+type UpdateReturn = readonly [Model, ReadonlyArray<Command.Command<Message>>];
+const withUpdateReturn = M.withReturnType<UpdateReturn>();
+{{#if (eq auth "better-auth")}}
+
+// The session resolves after the first paint, so the guard waits for the fetch
+// to settle before it redirects; until then the page renders its loading state.
+const enforceRouteAccess = (model: Model): UpdateReturn =>
+  M.value(model.route).pipe(
+    withUpdateReturn,
+    M.tag("Dashboard", () => {
+      if (AsyncData.isPending(model.session)) {
+        return [model, []];
+      }
+      if (Option.isNone(currentSession(model.session))) {
+        return [model, [RedirectToLogin()]];
+      }
+{{#if (eq api "orpc")}}
+      return AsyncData.isIdle(model.privateData)
+        ? [evo(model, { privateData: () => PrivateData.Loading() }), [FetchPrivateData()]]
+        : [model, []];
+{{else}}
+      return [model, []];
+{{/if}}
+    }),
+    M.tag("Login", () =>
+      Option.isSome(currentSession(model.session))
+        ? [model, [RedirectToDashboard()]]
+        : [model, []],
+    ),
+    M.orElse(() => [model, []]),
+  );
+
+const foldLoginOutMessage: (
+  outMessage: Login.OutMessage,
+) => Update.Step<Model, Message> = M.type<Login.OutMessage>().pipe(
+  M.withReturnType<Update.Step<Model, Message>>(),
+  M.tagsExhaustive({
+    CompletedAuthentication:
+      ({ session }) =>
+      (model) => [
+        evo(model, { session: () => SessionState.Success({ data: Option.some(session) }) }),
+        [RedirectToDashboard()],
+      ],
+  }),
+);
+
+const foldLogin = Update.foldChild({
+  update: Login.update,
+  read: (model: Model) => Option.some(model.login),
+  write: (model, nextLogin) => evo(model, { login: () => nextLogin }),
+  toParentMessage: (message) => GotLoginMessage({ message }),
+  foldOutMessage: foldLoginOutMessage,
+});
+{{/if}}
+{{#if (includes examples "todo")}}
+
+const foldTodos = Update.foldChild({
+  update: Todos.update,
+  read: (model: Model) => Option.some(model.todos),
+  write: (model, nextTodos) => evo(model, { todos: () => nextTodos }),
+  toParentMessage: (message) => GotTodosMessage({ message }),
+});
+{{/if}}
+
+export const update = (model: Model, message: Message): UpdateReturn =>
+  M.value(message).pipe(
+    withUpdateReturn,
+    M.tagsExhaustive({
+      CompletedNavigateInternal: () => [model, []],
+      CompletedLoadExternal: () => [model, []],
+
+      ClickedLink: ({ request }) =>
+        M.value(request).pipe(
+          withUpdateReturn,
+          M.tagsExhaustive({
+            Internal: ({ url }) => [model, [NavigateInternal({ url: urlToString(url) })]],
+            External: ({ href }) => [model, [LoadExternal({ href })]],
+          }),
+        ),
+
+{{#if (eq auth "better-auth")}}
+      ChangedUrl: ({ url }) => enforceRouteAccess(evo(model, { route: () => urlToAppRoute(url) })),
+{{else}}
+      ChangedUrl: ({ url }) => [evo(model, { route: () => urlToAppRoute(url) }), []],
+{{/if}}
+{{#if (eq api "orpc")}}
+
+      SucceededFetchHealthCheck: ({ status }) => [
+        evo(model, { healthCheck: () => HealthCheck.Success({ data: status }) }),
+        [],
+      ],
+
+      FailedFetchHealthCheck: ({ error }) => [
+        evo(model, { healthCheck: () => HealthCheck.Failure({ error }) }),
+        [],
+      ],
+{{/if}}
+{{#if (eq auth "better-auth")}}
+
+      CompletedFetchSession: ({ maybeSession }) =>
+        enforceRouteAccess(
+          evo(model, { session: () => SessionState.Success({ data: maybeSession }) }),
+        ),
+
+      ClickedSignOut: () => [model, [SignOut()]],
+
+      CompletedSignOut: () => [
+        evo(model, {
+          session: () => SessionState.Success({ data: Option.none() }),
+{{#if (eq api "orpc")}}
+          privateData: () => PrivateData.Idle(),
+{{/if}}
+        }),
+        [RedirectToHome()],
+      ],
+
+      GotLoginMessage: ({ message }) => foldLogin(model, message),
+{{#if (eq api "orpc")}}
+
+      SucceededFetchPrivateData: ({ message }) => [
+        evo(model, { privateData: () => PrivateData.Success({ data: message }) }),
+        [],
+      ],
+
+      FailedFetchPrivateData: ({ error }) => [
+        evo(model, { privateData: () => PrivateData.Failure({ error }) }),
+        [],
+      ],
+{{/if}}
+{{/if}}
+{{#if (includes examples "todo")}}
+
+      GotTodosMessage: ({ message }) => foldTodos(model, message),
+{{/if}}
+    }),
+  );
+
+// VIEW
+
+const routeTitle = (route: AppRoute): string =>
+  M.value(route).pipe(
+    M.tag("Home", () => "{{projectName}}"),
+{{#if (includes examples "todo")}}
+    M.tag("Todos", () => "Todos | {{projectName}}"),
+{{/if}}
+{{#if (eq auth "better-auth")}}
+    M.tag("Login", () => "Sign In | {{projectName}}"),
+    M.tag("Dashboard", () => "Dashboard | {{projectName}}"),
+{{/if}}
+    M.orElse(() => "Not Found | {{projectName}}"),
+  );
+
+export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
+  const content = M.value(model.route).pipe(
+    M.withReturnType<Html>(),
+    M.tagsExhaustive({
+      Home: () => homeView({{#if (eq api "orpc")}}model.healthCheck, {{/if}}h),
+{{#if (includes examples "todo")}}
+      Todos: () =>
+        h.submodel({
+          slotId: "todos",
+          model: model.todos,
+          view: Todos.view,
+          toParentMessage: (message) => GotTodosMessage({ message }),
+        }),
+{{/if}}
+{{#if (eq auth "better-auth")}}
+      Login: () =>
+        h.submodel({
+          slotId: "login",
+          model: model.login,
+          view: Login.view,
+          toParentMessage: (message) => GotLoginMessage({ message }),
+        }),
+      Dashboard: () => dashboardView(model.session, {{#if (eq api "orpc")}}model.privateData, {{/if}}h),
+{{/if}}
+      NotFound: ({ path }) => notFoundView(path, h),
+    }),
+  );
+
+  return {
+    title: routeTitle(model.route),
+    body: h.div(
+      [h.Class("grid h-svh grid-rows-[auto_1fr]")],
+      [
+        headerView(model.route, {{#if (eq auth "better-auth")}}currentSession(model.session), {{/if}}h),
+        h.main([h.Class("overflow-y-auto")], [content]),
+      ],
+    ),
+  };
+};
+`],
+  ["frontend/foldkit/src/message.ts.hbs", `import { Schema as S } from "effect";
+import { m } from "foldkit/message";
+import { UrlRequest } from "foldkit/navigation";
+import { Url } from "foldkit/url";
+
+{{#if (eq api "orpc")}}
+import { FailedFetchHealthCheck, SucceededFetchHealthCheck } from "./api/health";
+{{/if}}
+{{#if (eq auth "better-auth")}}
+import {
+  CompletedFetchSession,
+  CompletedSignOut,
+{{#if (eq api "orpc")}}
+  FailedFetchPrivateData,
+  SucceededFetchPrivateData,
+{{/if}}
+} from "./auth/session";
+import * as Login from "./page/login";
+{{/if}}
+{{#if (includes examples "todo")}}
+import * as Todos from "./page/todos";
+{{/if}}
+
+// MESSAGE
+
+export const CompletedNavigateInternal = m("CompletedNavigateInternal");
+export const CompletedLoadExternal = m("CompletedLoadExternal");
+export const ClickedLink = m("ClickedLink", { request: UrlRequest });
+export const ChangedUrl = m("ChangedUrl", { url: Url });
+{{#if (eq auth "better-auth")}}
+export const ClickedSignOut = m("ClickedSignOut");
+export const GotLoginMessage = m("GotLoginMessage", { message: Login.Message });
+{{/if}}
+{{#if (includes examples "todo")}}
+export const GotTodosMessage = m("GotTodosMessage", { message: Todos.Message });
+{{/if}}
+
+export const Message = S.Union([
+  CompletedNavigateInternal,
+  CompletedLoadExternal,
+  ClickedLink,
+  ChangedUrl,
+{{#if (eq api "orpc")}}
+  SucceededFetchHealthCheck,
+  FailedFetchHealthCheck,
+{{/if}}
+{{#if (eq auth "better-auth")}}
+  CompletedFetchSession,
+  CompletedSignOut,
+  ClickedSignOut,
+  GotLoginMessage,
+{{#if (eq api "orpc")}}
+  SucceededFetchPrivateData,
+  FailedFetchPrivateData,
+{{/if}}
+{{/if}}
+{{#if (includes examples "todo")}}
+  GotTodosMessage,
+{{/if}}
+]);
+export type Message = typeof Message.Type;
+`],
+  ["frontend/foldkit/src/route.ts.hbs", `import { Schema as S, pipe } from "effect";
+import { Route } from "foldkit";
+{{#if (or (includes examples "todo") (eq auth "better-auth"))}}
+import { literal, r } from "foldkit/route";
+{{else}}
+import { r } from "foldkit/route";
+{{/if}}
+
+export const HomeRoute = r("Home");
+{{#if (includes examples "todo")}}
+export const TodosRoute = r("Todos");
+{{/if}}
+{{#if (eq auth "better-auth")}}
+export const LoginRoute = r("Login");
+export const DashboardRoute = r("Dashboard");
+{{/if}}
+export const NotFoundRoute = r("NotFound", { path: S.String });
+
+export const AppRoute = S.Union([
+  HomeRoute,
+{{#if (includes examples "todo")}}
+  TodosRoute,
+{{/if}}
+{{#if (eq auth "better-auth")}}
+  LoginRoute,
+  DashboardRoute,
+{{/if}}
+  NotFoundRoute,
+]);
+
+export type HomeRoute = typeof HomeRoute.Type;
+{{#if (includes examples "todo")}}
+export type TodosRoute = typeof TodosRoute.Type;
+{{/if}}
+{{#if (eq auth "better-auth")}}
+export type LoginRoute = typeof LoginRoute.Type;
+export type DashboardRoute = typeof DashboardRoute.Type;
+{{/if}}
+export type NotFoundRoute = typeof NotFoundRoute.Type;
+export type AppRoute = typeof AppRoute.Type;
+
+export const homeRouter = pipe(Route.root, Route.mapTo(HomeRoute));
+{{#if (includes examples "todo")}}
+export const todosRouter = pipe(literal("todos"), Route.mapTo(TodosRoute));
+{{/if}}
+{{#if (eq auth "better-auth")}}
+export const loginRouter = pipe(literal("login"), Route.mapTo(LoginRoute));
+export const dashboardRouter = pipe(literal("dashboard"), Route.mapTo(DashboardRoute));
+{{/if}}
+
+const routeParser = Route.oneOf(
+{{#if (includes examples "todo")}}
+  todosRouter,
+{{/if}}
+{{#if (eq auth "better-auth")}}
+  loginRouter,
+  dashboardRouter,
+{{/if}}
+  homeRouter,
+);
+
+export const urlToAppRoute = Route.parseUrlWithFallback(routeParser, NotFoundRoute);
+`],
+  ["frontend/foldkit/src/styles.css", `@import "tailwindcss";
+
+body {
+  @apply bg-neutral-950 text-neutral-100;
+}
+`],
+  ["frontend/foldkit/src/view/header.ts.hbs", `import { Array{{#if (eq auth "better-auth")}}, Option{{/if}} } from "effect";
+{{#if (eq auth "better-auth")}}
+import { Button } from "@foldkit/ui";
+{{/if}}
+import type { Html, HtmlBuilder } from "foldkit/html";
+
+{{#if (eq auth "better-auth")}}
+import type { Session } from "../auth/session";
+import { ClickedSignOut, type Message } from "../message";
+{{else}}
+import type { Message } from "../message";
+{{/if}}
+{{#if (eq auth "better-auth")}}
+import { type AppRoute, dashboardRouter, homeRouter, loginRouter{{#if (includes examples "todo")}}, todosRouter{{/if}} } from "../route";
+{{else if (includes examples "todo")}}
+import { type AppRoute, homeRouter, todosRouter } from "../route";
+{{else}}
+import { type AppRoute, homeRouter } from "../route";
+{{/if}}
+
+type NavLink = Readonly<{
+  href: string;
+  label: string;
+  isActive: boolean;
+}>;
+
+const navLinksFor = (route: AppRoute): ReadonlyArray<NavLink> => [
+  { href: homeRouter(), label: "Home", isActive: route._tag === "Home" },
+{{#if (includes examples "todo")}}
+  { href: todosRouter(), label: "Todos", isActive: route._tag === "Todos" },
+{{/if}}
+{{#if (eq auth "better-auth")}}
+  { href: dashboardRouter(), label: "Dashboard", isActive: route._tag === "Dashboard" },
+{{/if}}
+];
+
+const navLinkView = (link: NavLink, h: HtmlBuilder<Message>): Html =>
+  h.keyed("a")(
+    link.href,
+    [
+      h.Href(link.href),
+      h.Class(
+        \`rounded px-3 py-1 text-sm font-medium transition hover:bg-neutral-800 \${
+          link.isActive ? "bg-neutral-800" : ""
+        }\`,
+      ),
+    ],
+    [link.label],
+  );
+{{#if (eq auth "better-auth")}}
+
+const userMenuView = (maybeSession: Option.Option<Session>, h: HtmlBuilder<Message>): Html =>
+  Option.match(maybeSession, {
+    onNone: () =>
+      h.a(
+        [
+          h.Href(loginRouter()),
+          h.Class("rounded bg-indigo-600 px-3 py-1 text-sm text-white transition hover:bg-indigo-500"),
+        ],
+        ["Sign In"],
+      ),
+    onSome: (session) =>
+      h.div(
+        [h.Class("flex items-center gap-3")],
+        [
+          h.span([h.Class("text-sm text-neutral-300")], [session.user.name]),
+          Button.view(
+            {
+              onClick: ClickedSignOut(),
+              toView: (attributes) =>
+                h.button(
+                  [
+                    ...attributes.button,
+                    h.Class(
+                      "rounded bg-neutral-800 px-3 py-1 text-sm transition hover:bg-neutral-700",
+                    ),
+                  ],
+                  ["Sign Out"],
+                ),
+            },
+            h,
+          ),
+        ],
+      ),
+  });
+{{/if}}
+
+export const headerView = (
+  route: AppRoute,
+{{#if (eq auth "better-auth")}}
+  maybeSession: Option.Option<Session>,
+{{/if}}
+  h: HtmlBuilder<Message>,
+): Html =>
+  h.header(
+    [h.Class("border-b border-neutral-800")],
+    [
+      h.div(
+        [h.Class("mx-auto flex max-w-3xl items-center justify-between px-4 py-3")],
+        [
+          h.nav([h.Class("flex gap-2")], Array.map(navLinksFor(route), (link) => navLinkView(link, h))),
+{{#if (eq auth "better-auth")}}
+          userMenuView(maybeSession, h),
+{{/if}}
+        ],
+      ),
+    ],
+  );
+`],
+  ["frontend/foldkit/src/view/home.ts.hbs", `{{#if (eq api "orpc")}}
+import { AsyncData } from "foldkit";
+{{/if}}
+import type { Html, HtmlBuilder } from "foldkit/html";
+
+{{#if (eq api "orpc")}}
+import type { HealthCheck } from "../api/health";
+{{/if}}
+import type { Message } from "../message";
+
+const TITLE_TEXT = \`
+ ██████╗ ███████╗████████╗████████╗███████╗██████╗
+ ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
+ ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
+ ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
+ ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
+ ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
+
+ ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
+ ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+    ██║       ███████╗   ██║   ███████║██║     █████╔╝
+    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
+    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
+    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+ \`;
+{{#if (eq api "orpc")}}
+
+const statusView = (
+  dotClass: string,
+  label: string,
+  h: HtmlBuilder<Message>,
+): Html =>
+  h.div(
+    [h.Class("flex items-center gap-2")],
+    [
+      h.div([h.Class(\`h-2 w-2 rounded-full \${dotClass}\`)]),
+      h.span([h.Class("text-sm text-neutral-400")], [label]),
+    ],
+  );
+
+const apiStatusView = (healthCheck: HealthCheck, h: HtmlBuilder<Message>): Html =>
+  h.section(
+    [h.Class("rounded-lg border border-neutral-800 p-4")],
+    [
+      h.h2([h.Class("mb-2 font-medium")], ["API Status"]),
+      AsyncData.matchDataSplitEmpty(healthCheck, {
+        onIdle: () => statusView("bg-neutral-600", "Not checked", h),
+        onLoading: () => statusView("bg-orange-400", "Checking...", h),
+        onFailure: (error) => statusView("bg-red-500", error, h),
+        onData: () => statusView("bg-green-500", "Connected", h),
+      }),
+    ],
+  );
+{{/if}}
+
+export const homeView = ({{#if (eq api "orpc")}}healthCheck: HealthCheck, {{/if}}h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [h.Class("container mx-auto max-w-3xl px-4 py-2")],
+    [
+      h.pre([h.Class("overflow-x-auto font-mono text-sm")], [TITLE_TEXT]),
+      h.div(
+        [h.Class("grid gap-6")],
+        [
+{{#if (eq api "orpc")}}
+          apiStatusView(healthCheck, h),
+{{else}}
+          h.p(
+            [h.Class("text-sm text-neutral-400")],
+            ["Model, Message, update, view. Edit src/main.ts to get started."],
+          ),
+{{/if}}
+        ],
+      ),
+    ],
+  );
+`],
+  ["frontend/foldkit/src/view/notFound.ts.hbs", `import type { Html, HtmlBuilder } from "foldkit/html";
+
+import type { Message } from "../message";
+import { homeRouter } from "../route";
+
+export const notFoundView = (path: string, h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [h.Class("container mx-auto max-w-3xl px-4 py-10")],
+    [
+      h.h1([h.Class("mb-4 text-3xl font-bold")], ["Page not found"]),
+      h.p([h.Class("mb-6 text-neutral-400")], [\`Nothing is routed at "\${path}".\`]),
+      h.a([h.Href(homeRouter()), h.Class("text-indigo-400 hover:underline")], ["Go home"]),
+    ],
+  );
+`],
+  ["frontend/foldkit/tsconfig.json.hbs", `{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "types": ["vite/client"]
+  },
+  "include": ["src/**/*.ts", "vite.config.ts"]
+}
+`],
+  ["frontend/foldkit/vite.config.ts.hbs", `import { foldkit } from "@foldkit/vite-plugin";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
+
+export default defineConfig({
+  server: {
+    port: 3001,
+  },
+  plugins: [tailwindcss(), foldkit()],
+});
 `],
   ["frontend/native/bare/_gitignore", `node_modules/
 .expo/
@@ -35680,4 +37422,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 522;
+export const TEMPLATE_COUNT = 544;

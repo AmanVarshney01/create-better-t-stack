@@ -20,6 +20,7 @@ export async function processApiTemplates(
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
   const hasAstroWeb = config.frontend.includes("astro");
+  const hasFoldkitWeb = config.frontend.includes("foldkit");
 
   if (hasReactWeb) {
     processTemplatesFromPrefix(
@@ -90,6 +91,8 @@ export async function processApiTemplates(
         config,
       );
     }
+  } else if (hasFoldkitWeb && config.api === "orpc") {
+    processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/foldkit`, "apps/web", config);
   } else if (hasAstroWeb && config.api === "orpc") {
     // Always include the orpc client (handles both self and external backend)
     processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/astro`, "apps/web", config);

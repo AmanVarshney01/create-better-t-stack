@@ -7,7 +7,9 @@ import {
   type WebFrontend,
 } from "@better-t-stack/types";
 
-export type DeployedWebFramework = Exclude<WebFrontend, "none">;
+// Foldkit ships no Alchemy recipe yet, so it is not deployable through Cloudflare
+// or Prisma Compute. `validateAlchemyWebDeploy` rejects the combination up front.
+export type DeployedWebFramework = Exclude<WebFrontend, "none" | "foldkit">;
 
 export type ManagedDatabasePlan =
   | { kind: "none" }
@@ -47,7 +49,7 @@ export type AlchemyDeploymentPlan = {
 };
 
 function isDeployedWebFramework(frontend: Frontend): frontend is DeployedWebFramework {
-  return (webFrontends as readonly Frontend[]).includes(frontend);
+  return frontend !== "foldkit" && (webFrontends as readonly Frontend[]).includes(frontend);
 }
 
 function getDeployedWebFramework(config: ProjectConfig): DeployedWebFramework {

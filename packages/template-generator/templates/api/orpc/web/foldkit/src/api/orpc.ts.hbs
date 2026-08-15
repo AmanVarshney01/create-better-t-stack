@@ -1,0 +1,20 @@
+import { createORPCClient } from "@orpc/client";
+import { RPCLink } from "@orpc/client/fetch";
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+import { env } from "@{{projectName}}/env/web";
+
+{{> getServerUrlSpaces}}
+
+const link = new RPCLink({
+  url: `${getServerUrl(env.VITE_SERVER_URL)}/rpc`,
+{{#if (eq auth "better-auth")}}
+  fetch(url, options) {
+    return fetch(url, {
+      ...options,
+      credentials: "include",
+    });
+  },
+{{/if}}
+});
+
+export const client: AppRouterClient = createORPCClient(link);

@@ -17,6 +17,7 @@ export async function processExampleTemplates(
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
   const hasAstroWeb = config.frontend.includes("astro");
+  const hasFoldkitWeb = config.frontend.includes("foldkit");
   const hasNativeBare = config.frontend.includes("native-bare");
   const hasUniwind = config.frontend.includes("native-uniwind");
   const hasUnistyles = config.frontend.includes("native-unistyles");
@@ -126,6 +127,14 @@ export async function processExampleTemplates(
         vfs,
         templates,
         `examples/${example}/web/astro`,
+        "apps/web",
+        config,
+      );
+    } else if (hasFoldkitWeb) {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `examples/${example}/web/foldkit`,
         "apps/web",
         config,
       );

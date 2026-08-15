@@ -1,0 +1,332 @@
+import { Effect, Match as M, {{#if (or (eq auth "better-auth") (includes examples "todo"))}}Option, {{/if}}Schema as S } from "effect";
+import { {{#if (or (eq api "orpc") (eq auth "better-auth"))}}AsyncData, {{/if}}Command, Runtime{{#if (or (eq auth "better-auth") (includes examples "todo"))}}, Update{{/if}} } from "foldkit";
+import type { Document, Html, HtmlBuilder } from "foldkit/html";
+import { load, pushUrl{{#if (eq auth "better-auth")}}, replaceUrl{{/if}} } from "foldkit/navigation";
+import { evo } from "foldkit/struct";
+import { toString as urlToString } from "foldkit/url";
+
+{{#if (eq api "orpc")}}
+import { FetchHealthCheck, HealthCheck } from "./api/health";
+{{/if}}
+{{#if (eq auth "better-auth")}}
+import {
+  FetchSession,
+{{#if (eq api "orpc")}}
+  FetchPrivateData,
+  PrivateData,
+{{/if}}
+  SessionState,
+  SignOut,
+  currentSession,
+} from "./auth/session";
+import * as Login from "./page/login";
+import { dashboardView } from "./view/dashboard";
+{{/if}}
+{{#if (includes examples "todo")}}
+import * as Todos from "./page/todos";
+{{/if}}
+import {
+  CompletedLoadExternal,
+  CompletedNavigateInternal,
+{{#if (eq auth "better-auth")}}
+  GotLoginMessage,
+{{/if}}
+{{#if (includes examples "todo")}}
+  GotTodosMessage,
+{{/if}}
+  type Message,
+} from "./message";
+{{#if (eq auth "better-auth")}}
+import { AppRoute, dashboardRouter, homeRouter, loginRouter, urlToAppRoute } from "./route";
+{{else}}
+import { AppRoute, urlToAppRoute } from "./route";
+{{/if}}
+import { headerView } from "./view/header";
+import { homeView } from "./view/home";
+import { notFoundView } from "./view/notFound";
+
+// MODEL
+
+export const Model = S.Struct({
+  route: AppRoute,
+{{#if (eq api "orpc")}}
+  healthCheck: HealthCheck.schema,
+{{/if}}
+{{#if (eq auth "better-auth")}}
+  session: SessionState.schema,
+  login: Login.Model,
+{{#if (eq api "orpc")}}
+  privateData: PrivateData.schema,
+{{/if}}
+{{/if}}
+{{#if (includes examples "todo")}}
+  todos: Todos.Model,
+{{/if}}
+});
+
+export type Model = typeof Model.Type;
+
+// INIT
+
+export const init: Runtime.RoutingApplicationInit<Model, Message> = (url) => {
+{{#if (includes examples "todo")}}
+  const [todos, todosCommands] = Todos.init();
+
+{{/if}}
+  const model: Model = {
+    route: urlToAppRoute(url),
+{{#if (eq api "orpc")}}
+    healthCheck: HealthCheck.Loading(),
+{{/if}}
+{{#if (eq auth "better-auth")}}
+    session: SessionState.Loading(),
+    login: Login.init(),
+{{#if (eq api "orpc")}}
+    privateData: PrivateData.Idle(),
+{{/if}}
+{{/if}}
+{{#if (includes examples "todo")}}
+    todos,
+{{/if}}
+  };
+
+  return [
+    model,
+    [
+{{#if (eq api "orpc")}}
+      FetchHealthCheck(),
+{{/if}}
+{{#if (eq auth "better-auth")}}
+      FetchSession(),
+{{/if}}
+{{#if (includes examples "todo")}}
+      ...Command.mapMessages(todosCommands, (message) => GotTodosMessage({ message })),
+{{/if}}
+    ],
+  ];
+};
+
+// COMMAND
+
+const NavigateInternal = Command.define("NavigateInternal", {
+  args: { url: S.String },
+  messages: [CompletedNavigateInternal],
+  execute: ({ url }) => pushUrl(url).pipe(Effect.as(CompletedNavigateInternal())),
+});
+
+const LoadExternal = Command.define("LoadExternal", {
+  args: { href: S.String },
+  messages: [CompletedLoadExternal],
+  execute: ({ href }) => load(href).pipe(Effect.as(CompletedLoadExternal())),
+});
+{{#if (eq auth "better-auth")}}
+
+const RedirectToLogin = Command.define("RedirectToLogin", {
+  messages: [CompletedNavigateInternal],
+  execute: replaceUrl(loginRouter()).pipe(Effect.as(CompletedNavigateInternal())),
+});
+
+const RedirectToDashboard = Command.define("RedirectToDashboard", {
+  messages: [CompletedNavigateInternal],
+  execute: replaceUrl(dashboardRouter()).pipe(Effect.as(CompletedNavigateInternal())),
+});
+
+const RedirectToHome = Command.define("RedirectToHome", {
+  messages: [CompletedNavigateInternal],
+  execute: replaceUrl(homeRouter()).pipe(Effect.as(CompletedNavigateInternal())),
+});
+{{/if}}
+
+// UPDATE
+
+type UpdateReturn = readonly [Model, ReadonlyArray<Command.Command<Message>>];
+const withUpdateReturn = M.withReturnType<UpdateReturn>();
+{{#if (eq auth "better-auth")}}
+
+// The session resolves after the first paint, so the guard waits for the fetch
+// to settle before it redirects; until then the page renders its loading state.
+const enforceRouteAccess = (model: Model): UpdateReturn =>
+  M.value(model.route).pipe(
+    withUpdateReturn,
+    M.tag("Dashboard", () => {
+      if (AsyncData.isPending(model.session)) {
+        return [model, []];
+      }
+      if (Option.isNone(currentSession(model.session))) {
+        return [model, [RedirectToLogin()]];
+      }
+{{#if (eq api "orpc")}}
+      return AsyncData.isIdle(model.privateData)
+        ? [evo(model, { privateData: () => PrivateData.Loading() }), [FetchPrivateData()]]
+        : [model, []];
+{{else}}
+      return [model, []];
+{{/if}}
+    }),
+    M.tag("Login", () =>
+      Option.isSome(currentSession(model.session))
+        ? [model, [RedirectToDashboard()]]
+        : [model, []],
+    ),
+    M.orElse(() => [model, []]),
+  );
+
+const foldLoginOutMessage: (
+  outMessage: Login.OutMessage,
+) => Update.Step<Model, Message> = M.type<Login.OutMessage>().pipe(
+  M.withReturnType<Update.Step<Model, Message>>(),
+  M.tagsExhaustive({
+    CompletedAuthentication:
+      ({ session }) =>
+      (model) => [
+        evo(model, { session: () => SessionState.Success({ data: Option.some(session) }) }),
+        [RedirectToDashboard()],
+      ],
+  }),
+);
+
+const foldLogin = Update.foldChild({
+  update: Login.update,
+  read: (model: Model) => Option.some(model.login),
+  write: (model, nextLogin) => evo(model, { login: () => nextLogin }),
+  toParentMessage: (message) => GotLoginMessage({ message }),
+  foldOutMessage: foldLoginOutMessage,
+});
+{{/if}}
+{{#if (includes examples "todo")}}
+
+const foldTodos = Update.foldChild({
+  update: Todos.update,
+  read: (model: Model) => Option.some(model.todos),
+  write: (model, nextTodos) => evo(model, { todos: () => nextTodos }),
+  toParentMessage: (message) => GotTodosMessage({ message }),
+});
+{{/if}}
+
+export const update = (model: Model, message: Message): UpdateReturn =>
+  M.value(message).pipe(
+    withUpdateReturn,
+    M.tagsExhaustive({
+      CompletedNavigateInternal: () => [model, []],
+      CompletedLoadExternal: () => [model, []],
+
+      ClickedLink: ({ request }) =>
+        M.value(request).pipe(
+          withUpdateReturn,
+          M.tagsExhaustive({
+            Internal: ({ url }) => [model, [NavigateInternal({ url: urlToString(url) })]],
+            External: ({ href }) => [model, [LoadExternal({ href })]],
+          }),
+        ),
+
+{{#if (eq auth "better-auth")}}
+      ChangedUrl: ({ url }) => enforceRouteAccess(evo(model, { route: () => urlToAppRoute(url) })),
+{{else}}
+      ChangedUrl: ({ url }) => [evo(model, { route: () => urlToAppRoute(url) }), []],
+{{/if}}
+{{#if (eq api "orpc")}}
+
+      SucceededFetchHealthCheck: ({ status }) => [
+        evo(model, { healthCheck: () => HealthCheck.Success({ data: status }) }),
+        [],
+      ],
+
+      FailedFetchHealthCheck: ({ error }) => [
+        evo(model, { healthCheck: () => HealthCheck.Failure({ error }) }),
+        [],
+      ],
+{{/if}}
+{{#if (eq auth "better-auth")}}
+
+      CompletedFetchSession: ({ maybeSession }) =>
+        enforceRouteAccess(
+          evo(model, { session: () => SessionState.Success({ data: maybeSession }) }),
+        ),
+
+      ClickedSignOut: () => [model, [SignOut()]],
+
+      CompletedSignOut: () => [
+        evo(model, {
+          session: () => SessionState.Success({ data: Option.none() }),
+{{#if (eq api "orpc")}}
+          privateData: () => PrivateData.Idle(),
+{{/if}}
+        }),
+        [RedirectToHome()],
+      ],
+
+      GotLoginMessage: ({ message }) => foldLogin(model, message),
+{{#if (eq api "orpc")}}
+
+      SucceededFetchPrivateData: ({ message }) => [
+        evo(model, { privateData: () => PrivateData.Success({ data: message }) }),
+        [],
+      ],
+
+      FailedFetchPrivateData: ({ error }) => [
+        evo(model, { privateData: () => PrivateData.Failure({ error }) }),
+        [],
+      ],
+{{/if}}
+{{/if}}
+{{#if (includes examples "todo")}}
+
+      GotTodosMessage: ({ message }) => foldTodos(model, message),
+{{/if}}
+    }),
+  );
+
+// VIEW
+
+const routeTitle = (route: AppRoute): string =>
+  M.value(route).pipe(
+    M.tag("Home", () => "{{projectName}}"),
+{{#if (includes examples "todo")}}
+    M.tag("Todos", () => "Todos | {{projectName}}"),
+{{/if}}
+{{#if (eq auth "better-auth")}}
+    M.tag("Login", () => "Sign In | {{projectName}}"),
+    M.tag("Dashboard", () => "Dashboard | {{projectName}}"),
+{{/if}}
+    M.orElse(() => "Not Found | {{projectName}}"),
+  );
+
+export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
+  const content = M.value(model.route).pipe(
+    M.withReturnType<Html>(),
+    M.tagsExhaustive({
+      Home: () => homeView({{#if (eq api "orpc")}}model.healthCheck, {{/if}}h),
+{{#if (includes examples "todo")}}
+      Todos: () =>
+        h.submodel({
+          slotId: "todos",
+          model: model.todos,
+          view: Todos.view,
+          toParentMessage: (message) => GotTodosMessage({ message }),
+        }),
+{{/if}}
+{{#if (eq auth "better-auth")}}
+      Login: () =>
+        h.submodel({
+          slotId: "login",
+          model: model.login,
+          view: Login.view,
+          toParentMessage: (message) => GotLoginMessage({ message }),
+        }),
+      Dashboard: () => dashboardView(model.session, {{#if (eq api "orpc")}}model.privateData, {{/if}}h),
+{{/if}}
+      NotFound: ({ path }) => notFoundView(path, h),
+    }),
+  );
+
+  return {
+    title: routeTitle(model.route),
+    body: h.div(
+      [h.Class("grid h-svh grid-rows-[auto_1fr]")],
+      [
+        headerView(model.route, {{#if (eq auth "better-auth")}}currentSession(model.session), {{/if}}h),
+        h.main([h.Class("overflow-y-auto")], [content]),
+      ],
+    ),
+  };
+};

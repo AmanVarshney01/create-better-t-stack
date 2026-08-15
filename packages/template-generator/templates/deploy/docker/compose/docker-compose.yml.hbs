@@ -20,7 +20,7 @@ services:
 {{/if}}
     init: true
     ports:
-{{#if (includes frontend "tanstack-router")}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "foldkit"))}}
       - "3001:80"
 {{else}}
       - "3001:3001"
@@ -78,7 +78,7 @@ services:
 {{/if}}
 {{/if}}
     healthcheck:
-{{#if (includes frontend "tanstack-router")}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "foldkit"))}}
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/"]
 {{else}}
       test:

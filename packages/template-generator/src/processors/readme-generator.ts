@@ -145,6 +145,7 @@ function hasWebFrontend(frontend: ProjectConfig["frontend"]): boolean {
       "nuxt",
       "solid",
       "astro",
+      "foldkit",
     ].includes(value),
   );
 }
@@ -295,6 +296,7 @@ function generateStackDescription(
     nuxt: "Nuxt",
     solid: "Solid",
     astro: "Astro",
+    foldkit: "Foldkit",
     "native-bare": "React Native, Expo",
     "native-uniwind": "React Native, Expo",
     "native-unistyles": "React Native, Expo",
@@ -403,6 +405,7 @@ function generateProjectStructure(config: ProjectConfig): string {
       nuxt: "Nuxt",
       solid: "Solid",
       astro: "Astro",
+      foldkit: "Foldkit",
     } satisfies Record<string, string>;
     let frontendType = "";
     for (const selectedFrontend of frontend) {
@@ -495,6 +498,7 @@ function generateFeaturesList(
     nuxt: "- **Nuxt** - The Intuitive Vue Framework",
     solid: "- **Solid** - Solid application with file-based routing and SSR",
     astro: "- **Astro** - The web framework for content-driven websites",
+    foldkit: "- **Foldkit** - Effect-powered TypeScript framework architected like Elm",
   } satisfies Record<string, string>;
 
   for (const fe of frontend) {
@@ -730,6 +734,7 @@ function generateScriptsList(
       "svelte",
       "solid",
       "astro",
+      "foldkit",
     ].includes(f),
   );
   const dbSupport = getDbScriptSupport(config);
