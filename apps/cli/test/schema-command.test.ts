@@ -34,4 +34,18 @@ describe("Schema command", () => {
     expect(commandNames).toContain("add-json");
     expect(commandNames).toContain("schema");
   });
+
+  it("describes the post-create launcher option", async () => {
+    const result = await caller.schema({ name: "cli" });
+    const createCommand = result.commands.find((command) => command.name === "create");
+    const openOption = createCommand?.options.find((option) => option.name === "open");
+
+    expect(openOption?.choices).toContain("vscode");
+    expect(openOption?.choices).toContain("codex");
+    expect(openOption?.choices).toContain("claude-code");
+    expect(openOption?.choices).toContain("opencode");
+    expect(openOption?.choices).toContain("pi");
+    expect(openOption?.choices).toContain("goose");
+    expect(openOption?.choices).toContain("continue");
+  });
 });

@@ -61,6 +61,7 @@ import {
   UserCancelledError,
 } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
+import { type ProjectLauncher, ProjectLauncherSchema } from "./utils/project-launcher";
 import { validateResolvedConfigCompatibility } from "./validation";
 
 export const SchemaNameSchema = z
@@ -165,6 +166,7 @@ export const router = t.router({
           git: z.boolean().optional(),
           packageManager: PackageManagerSchema.optional(),
           install: z.boolean().optional(),
+          open: ProjectLauncherSchema.optional(),
           dbSetup: DatabaseSetupSchema.optional(),
           backend: BackendSchema.optional(),
           runtime: RuntimeSchema.optional(),
@@ -523,7 +525,10 @@ export type {
   ServerDeploy,
   Template,
   DirectoryConflict,
+  ProjectLauncher,
 };
+
+export { ProjectLauncherSchema };
 
 export type { AddResult };
 

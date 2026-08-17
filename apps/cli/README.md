@@ -78,6 +78,7 @@ Options:
   --package-manager <pm>          Package manager (npm, pnpm, bun)
   --install                       Install dependencies
   --no-install                    Skip installing dependencies
+  --open <target>                 Open in an editor, IDE, or coding agent after creation
   --db-setup <setup>              Database setup (turso, d1, neon, supabase, prisma-postgres, planetscale, mongodb-atlas, docker, none)
   --web-deploy <setup>            Web deployment (cloudflare, docker, vercel, none)
   --server-deploy <setup>         Server deployment (cloudflare, docker, vercel, none)
