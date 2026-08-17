@@ -131,6 +131,7 @@ export const PROJECT_LAUNCHERS = [
     label: "Neovim",
     kind: "editor",
     commands: ["nvim"],
+    args: () => ["."],
     cwd: (projectDir) => projectDir,
   },
   {

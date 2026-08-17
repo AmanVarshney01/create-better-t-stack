@@ -47,6 +47,25 @@ describe("project launcher", () => {
     });
   });
 
+  it("opens Neovim on the generated project directory", async () => {
+    const launchers = await detectProjectLaunchers(
+      "/tmp/my-app",
+      async (command) => command === "nvim",
+      "linux",
+    );
+
+    expect(launchers).toEqual([
+      {
+        id: "neovim",
+        label: "Neovim",
+        kind: "editor",
+        command: "nvim",
+        args: ["."],
+        cwd: "/tmp/my-app",
+      },
+    ]);
+  });
+
   it("only offers the Codex app launcher on supported platforms", async () => {
     const detectCommand = async (command: string) => command === "codex";
     const macLaunchers = await detectProjectLaunchers("/tmp/my-app", detectCommand, "darwin");
