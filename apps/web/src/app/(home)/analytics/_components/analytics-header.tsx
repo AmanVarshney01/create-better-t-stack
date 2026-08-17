@@ -1,4 +1,4 @@
-import { Activity, DatabaseZap, Terminal } from "lucide-react";
+import { Activity, ArrowUpRight, DatabaseZap, Terminal } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -85,11 +85,22 @@ export function AnalyticsHeader({
         title="ANALYTICS.SH"
         description="Aggregate CLI telemetry for create-better-t-stack."
         actions={
-          <span className="flex shrink-0 items-center gap-2 font-mono text-[10px] uppercase tracking-[0.10em]">
-            <Activity className={cn("h-3 w-3", statusMeta.textClass)} />
-            <span aria-hidden="true" className={cn("h-1.5 w-1.5", statusMeta.dotClass)} />
-            <span className={statusMeta.textClass}>{statusMeta.label}</span>
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="flex shrink-0 items-center gap-2 font-mono text-[10px] uppercase tracking-[0.10em]">
+              <Activity className={cn("h-3 w-3", statusMeta.textClass)} />
+              <span aria-hidden="true" className={cn("h-1.5 w-1.5", statusMeta.dotClass)} />
+              <span className={statusMeta.textClass}>{statusMeta.label}</span>
+            </span>
+            <a
+              href="https://umami.amanv.cloud/share/pHvqHleyOl9PBfaK"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="builder-focus-ring flex min-h-8 items-center gap-2 rounded-[4px] border px-3 py-1.5 font-mono text-[10px] text-primary uppercase tracking-[0.10em] transition-colors duration-150 hover:text-fd-foreground"
+            >
+              <span>Website analytics</span>
+              <ArrowUpRight aria-hidden="true" className="h-3 w-3" />
+            </a>
+          </div>
         }
       />
 
