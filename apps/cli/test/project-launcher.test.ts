@@ -20,7 +20,15 @@ describe("project launcher", () => {
   });
 
   it("detects installed editors and agents and resolves command aliases", async () => {
-    const installed = new Set(["code", "zeditor", "webstorm", "codex", "claude", "pi"]);
+    const installed = new Set([
+      "code",
+      "zeditor",
+      "webstorm",
+      "intellij-idea",
+      "codex",
+      "claude",
+      "pi",
+    ]);
     const launchers = await detectProjectLaunchers(
       "/tmp/my-app",
       async (command) => installed.has(command),
@@ -31,6 +39,7 @@ describe("project launcher", () => {
       "vscode",
       "zed",
       "webstorm",
+      "intellij-idea",
       "codex-app",
       "codex",
       "claude-code",
@@ -38,6 +47,10 @@ describe("project launcher", () => {
     ]);
     expect(launchers.find(({ id }) => id === "zed")).toMatchObject({
       command: "zeditor",
+      args: ["/tmp/my-app"],
+    });
+    expect(launchers.find(({ id }) => id === "intellij-idea")).toMatchObject({
+      command: "intellij-idea",
       args: ["/tmp/my-app"],
     });
     expect(launchers.find(({ id }) => id === "claude-code")).toMatchObject({

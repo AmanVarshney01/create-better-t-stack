@@ -109,14 +109,14 @@ export const PROJECT_LAUNCHERS = [
     id: "webstorm",
     label: "JetBrains WebStorm",
     kind: "editor",
-    commands: ["webstorm", "webstorm64.exe", "webstorm.sh"],
+    commands: ["webstorm", "webstorm64.exe", "webstorm.bat", "webstorm.sh"],
     args: (projectDir) => [projectDir],
   },
   {
     id: "intellij-idea",
     label: "JetBrains IntelliJ IDEA",
     kind: "editor",
-    commands: ["idea", "idea64.exe", "idea.sh"],
+    commands: ["idea", "intellij-idea", "idea64.exe", "idea.bat", "idea.sh"],
     args: (projectDir) => [projectDir],
   },
   {
