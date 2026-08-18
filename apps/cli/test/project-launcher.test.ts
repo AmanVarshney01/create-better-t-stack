@@ -116,6 +116,52 @@ describe("project launcher", () => {
     });
   });
 
+  it("uses the documented T3 Code and Orca project-opening commands", async () => {
+    const installed = new Set(["t3", "orca"]);
+    const launchers = await detectProjectLaunchers(
+      "/tmp/my-app",
+      async (command) => installed.has(command),
+      "darwin",
+    );
+
+    expect(launchers.map(({ id }) => id)).toEqual(["t3-code", "orca"]);
+    expect(launchers.find(({ id }) => id === "t3-code")).toMatchObject({
+      command: "t3",
+      args: [],
+      cwd: "/tmp/my-app",
+    });
+    expect(launchers.find(({ id }) => id === "orca")).toMatchObject({
+      command: "orca",
+      launchSequence: [
+        { command: "orca", args: ["open", "--json"] },
+        {
+          command: "orca",
+          args: ["repo", "add", "--path", "/tmp/my-app", "--json"],
+        },
+      ],
+    });
+  });
+
+  it("uses Orca's Linux-specific CLI name", async () => {
+    const launchers = await detectProjectLaunchers(
+      "/tmp/my-app",
+      async (command) => command === "orca-ide",
+      "linux",
+    );
+
+    expect(launchers.map(({ id }) => id)).toEqual(["orca"]);
+    expect(launchers[0]).toMatchObject({
+      command: "orca-ide",
+      launchSequence: [
+        { command: "orca-ide", args: ["open", "--json"] },
+        {
+          command: "orca-ide",
+          args: ["repo", "add", "--path", "/tmp/my-app", "--json"],
+        },
+      ],
+    });
+  });
+
   it("returns a useful error for an explicitly requested missing launcher", async () => {
     const result = await getProjectLauncherChoice("opencode", "/tmp/my-app", {
       detectCommand: async () => false,
@@ -216,6 +262,41 @@ describe("project launcher", () => {
     if (result.isErr()) {
       expect(result.error.message).toBe("Could not open the project with Visual Studio Code.");
     }
+  });
+
+  it("runs multi-command launchers in order", async () => {
+    const calls: Array<{ command: string; args: string[] }> = [];
+    const result = await launchProject(
+      {
+        id: "orca",
+        label: "Orca",
+        kind: "agent",
+        command: "orca",
+        args: [],
+        launchSequence: [
+          { command: "orca", args: ["open", "--json"] },
+          {
+            command: "orca",
+            args: ["repo", "add", "--path", "/tmp/my-app", "--json"],
+          },
+        ],
+      },
+      {
+        runner: async (command, args) => {
+          calls.push({ command, args });
+        },
+        skipExternalCommands: false,
+      },
+    );
+
+    expect(result.isOk()).toBe(true);
+    expect(calls).toEqual([
+      { command: "orca", args: ["open", "--json"] },
+      {
+        command: "orca",
+        args: ["repo", "add", "--path", "/tmp/my-app", "--json"],
+      },
+    ]);
   });
 
   it("honors external-command guards", async () => {

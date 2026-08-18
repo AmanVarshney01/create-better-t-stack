@@ -21,6 +21,7 @@ export const ProjectLauncherSchema = z
     "neovim",
     "codex-app",
     "codex",
+    "t3-code",
     "claude-code",
     "opencode",
     "pi",
@@ -36,6 +37,7 @@ export const ProjectLauncherSchema = z
     "qwen-code",
     "crush",
     "cursor-agent",
+    "orca",
     "none",
   ])
   .describe("Editor, IDE, or coding agent to open after creating the project");
@@ -48,9 +50,17 @@ interface ProjectLauncherDefinition {
   label: string;
   kind: ProjectLauncherKind;
   commands: readonly string[];
+  commandsByPlatform?: Partial<Record<NodeJS.Platform, readonly string[]>>;
   args?: (projectDir: string) => string[];
   cwd?: (projectDir: string) => string;
+  launchSequence?: (command: string, projectDir: string) => ProjectLaunchCommand[];
   platforms?: readonly NodeJS.Platform[];
+}
+
+interface ProjectLaunchCommand {
+  command: string;
+  args: string[];
+  cwd?: string;
 }
 
 export interface AvailableProjectLauncher {
@@ -60,6 +70,7 @@ export interface AvailableProjectLauncher {
   command: string;
   args: string[];
   cwd?: string;
+  launchSequence?: ProjectLaunchCommand[];
 }
 
 export const PROJECT_LAUNCHERS = [
@@ -147,6 +158,13 @@ export const PROJECT_LAUNCHERS = [
     label: "Codex CLI",
     kind: "agent",
     commands: ["codex"],
+    cwd: (projectDir) => projectDir,
+  },
+  {
+    id: "t3-code",
+    label: "T3 Code",
+    kind: "agent",
+    commands: ["t3"],
     cwd: (projectDir) => projectDir,
   },
   {
@@ -256,6 +274,17 @@ export const PROJECT_LAUNCHERS = [
     commands: ["cursor-agent"],
     cwd: (projectDir) => projectDir,
   },
+  {
+    id: "orca",
+    label: "Orca",
+    kind: "agent",
+    commands: ["orca"],
+    commandsByPlatform: { linux: ["orca-ide"] },
+    launchSequence: (command, projectDir) => [
+      { command, args: ["open", "--json"] },
+      { command, args: ["repo", "add", "--path", projectDir, "--json"] },
+    ],
+  },
 ] as const satisfies readonly ProjectLauncherDefinition[];
 
 type CommandDetector = (command: string) => Promise<boolean>;
@@ -269,7 +298,9 @@ export async function detectProjectLaunchers(
   const supportedDefinitions = definitions.filter(
     ({ platforms }) => platforms === undefined || platforms.includes(platform),
   );
-  const commands = [...new Set(supportedDefinitions.flatMap(({ commands }) => commands))];
+  const commandsFor = (launcher: ProjectLauncherDefinition) =>
+    launcher.commandsByPlatform?.[platform] ?? launcher.commands;
+  const commands = [...new Set(supportedDefinitions.flatMap(commandsFor))];
   const detectedCommands = new Map(
     await Promise.all(
       commands.map(async (command) => [command, await detectCommand(command)] as const),
@@ -277,19 +308,21 @@ export async function detectProjectLaunchers(
   );
 
   return supportedDefinitions.flatMap((launcher) => {
-    const command = launcher.commands.find((candidate) => detectedCommands.get(candidate));
+    const command = commandsFor(launcher).find((candidate) => detectedCommands.get(candidate));
     if (!command) return [];
 
-    return [
-      {
-        id: launcher.id,
-        label: launcher.label,
-        kind: launcher.kind,
-        command,
-        args: launcher.args?.(projectDir) ?? [],
-        cwd: launcher.cwd?.(projectDir),
-      },
-    ];
+    const availableLauncher: AvailableProjectLauncher = {
+      id: launcher.id,
+      label: launcher.label,
+      kind: launcher.kind,
+      command,
+      args: launcher.args?.(projectDir) ?? [],
+      cwd: launcher.cwd?.(projectDir),
+    };
+    if (launcher.launchSequence) {
+      availableLauncher.launchSequence = launcher.launchSequence(command, projectDir);
+    }
+    return [availableLauncher];
   });
 }
 
@@ -372,11 +405,15 @@ export async function launchProject(
   }
 
   return Result.tryPromise({
-    try: () =>
-      (options.runner ?? runCommand)(launcher.command, launcher.args, {
-        cwd: launcher.cwd,
-        stdio: launcher.cwd ? "inherit" : "ignore",
-      }),
+    try: async () => {
+      const commands = launcher.launchSequence ?? [launcher];
+      for (const command of commands) {
+        await (options.runner ?? runCommand)(command.command, command.args, {
+          cwd: command.cwd,
+          stdio: command.cwd ? "inherit" : "ignore",
+        });
+      }
+    },
     catch: (cause: unknown) =>
       new CLIError({
         message: `Could not open the project with ${launcher.label}.`,
