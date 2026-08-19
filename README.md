@@ -50,6 +50,7 @@ Then ask: _"create a fullstack app with Next, Hono, Postgres and Better Auth"_, 
 ## Features
 
 - Frontend: React (TanStack Router, React Router, TanStack Start), Next.js, Nuxt, Svelte, Solid, Astro, React Native (Bare, NativeWind, Unistyles), or none
+- Extra apps: additional frontend apps (admin panel, landing page, ...) sharing one backend, via `--apps` at create time or the `add-app` command later
 - Backend: Hono, Express, Fastify, Elysia, Self (fullstack web app), Convex, or none
 - API: tRPC or oRPC (or none)
 - Runtime: Bun, Node.js, or Cloudflare Workers

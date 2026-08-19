@@ -27,21 +27,28 @@ export async function readBtsConfig(projectDir: string): Promise<BetterTStackCon
 
 /**
  * Updates specific fields in the BTS configuration file.
+ * Returns true when the file was updated, false when it was missing or the write failed.
  */
 export async function updateBtsConfig(
   projectDir: string,
   updates: Partial<
     Pick<
       BetterTStackConfig,
-      "addons" | "addonOptions" | "dbSetupOptions" | "webDeploy" | "serverDeploy"
+      | "addons"
+      | "addonOptions"
+      | "dbSetupOptions"
+      | "webDeploy"
+      | "serverDeploy"
+      | "apps"
+      | "reproducibleCommand"
     >
   >,
-): Promise<void> {
+): Promise<boolean> {
   try {
     const configPath = path.join(projectDir, BTS_CONFIG_FILE);
 
     if (!(await fs.pathExists(configPath))) {
-      return;
+      return false;
     }
 
     let content = await fs.readFile(configPath, "utf-8");
@@ -53,7 +60,9 @@ export async function updateBtsConfig(
     }
 
     await fs.writeFile(configPath, content, "utf-8");
+    return true;
   } catch {
     // Silent failure
+    return false;
   }
 }

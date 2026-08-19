@@ -666,6 +666,33 @@ export function validatePaymentsCompatibility(
   return Result.ok(undefined);
 }
 
+/**
+ * Validates that a frontend framework can be added as an extra app to an
+ * existing project, given the project's api/auth/backend choices.
+ */
+export function validateAddAppFrontendCompatibility(
+  frontend: Frontend,
+  config: Pick<ProjectConfig, "api" | "auth" | "backend">,
+): ValidationResult {
+  if (config.backend === "self") {
+    return validationErr(
+      "Cannot add an app to a fullstack (backend 'self') project: the web app serves its own API routes, so additional apps have no shared server to connect to.",
+    );
+  }
+
+  const apiResult = validateApiFrontendCompatibility(config.api, [frontend]);
+  if (apiResult.isErr()) return apiResult;
+
+  if (!isFrontendAllowedWithBackend(frontend, config.backend, config.auth)) {
+    const authSuffix = config.auth && config.auth !== "none" ? ` with ${config.auth} auth` : "";
+    return validationErr(
+      `Frontend '${frontend}' is not compatible with this project's '${config.backend}' backend${authSuffix}.`,
+    );
+  }
+
+  return Result.ok(undefined);
+}
+
 export function validateExamplesCompatibility(
   examples: string[] | undefined,
   backend: ProjectConfig["backend"] | undefined,

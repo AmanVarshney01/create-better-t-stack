@@ -338,7 +338,12 @@ async function addHandlerInternal(
   const vfs = new VirtualFileSystem();
 
   // Pre-load existing files into VFS so addon processors can modify them.
-  for (const pkgPath of ADD_PACKAGE_JSON_PATHS) {
+  // Apps created with `add-app` are included so whole-workspace processors see them.
+  const packageJsonPaths = [
+    ...ADD_PACKAGE_JSON_PATHS,
+    ...(existingConfig.apps ?? []).map((app) => `apps/${app.name}/package.json`),
+  ];
+  for (const pkgPath of packageJsonPaths) {
     const fullPath = path.join(projectDir, pkgPath);
     if (await fs.pathExists(fullPath)) {
       const content = await fs.readFile(fullPath, "utf-8");

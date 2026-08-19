@@ -6,13 +6,15 @@ import { log } from "@clack/prompts";
 import { Result } from "better-result";
 import fs from "fs-extra";
 
-import type { DbSetupOptions, ProjectConfig } from "../../types";
+import type { AddedApp, DbSetupOptions, ProjectConfig } from "../../types";
+import { readBtsConfig, updateBtsConfig } from "../../utils/bts-config";
 import { isSilent } from "../../utils/context";
 import { ProjectCreationError } from "../../utils/errors";
 import { formatProject } from "../../utils/file-formatter";
 import { getLatestCLIVersion } from "../../utils/get-latest-cli-version";
 import { setupAddons } from "../addons/addons-setup";
 import { setupDatabase } from "../core/db-setup";
+import { addAppHandler, buildExtraAppsWiringNote } from "./add-app-handler";
 import { initializeGit } from "./git";
 import { installDependencies } from "./install-dependencies";
 import { displayPostInstallInstructions } from "./post-installation";
@@ -21,6 +23,7 @@ export interface CreateProjectOptions {
   manualDb?: boolean;
   dbSetupOptions?: DbSetupOptions;
   packageManagerVersion: string;
+  extraApps?: { name: string; frontend: AddedApp["frontend"] }[];
 }
 
 /**
@@ -119,6 +122,52 @@ export async function createProject(
     yield* Result.await(formatProject(projectDir));
 
     if (!isSilent()) log.success("Project scaffolded");
+
+    // Scaffold extra frontend apps (--apps) before install and git so the
+    // single install and the initial commit include them.
+    const extraApps = cliInput.extraApps ?? [];
+    if (extraApps.length > 0) {
+      const addedApps: AddedApp[] = [];
+
+      for (const app of extraApps) {
+        const appResult = await addAppHandler(
+          { projectDir, name: app.name, frontend: app.frontend, install: false },
+          { silent: true },
+        );
+        const appPort = appResult?.success ? appResult.port : undefined;
+        if (appPort === undefined) {
+          yield* new ProjectCreationError({
+            phase: "extra-apps",
+            message: appResult?.error ?? `Failed to add app '${app.name}'.`,
+          });
+        } else {
+          addedApps.push({ name: app.name, frontend: app.frontend, port: appPort });
+        }
+      }
+
+      // Record --apps in the reproducible command now that the apps exist.
+      const btsConfig = await readBtsConfig(projectDir);
+      if (btsConfig?.reproducibleCommand) {
+        const appSpecs = extraApps.map((app) => `${app.name}:${app.frontend}`).join(" ");
+        await updateBtsConfig(projectDir, {
+          reproducibleCommand: `${btsConfig.reproducibleCommand} --apps ${appSpecs}`,
+        });
+      }
+
+      if (!isSilent()) {
+        log.success(`Added ${addedApps.length} extra app${addedApps.length > 1 ? "s" : ""}`);
+        log.message(
+          buildExtraAppsWiringNote({
+            apps: addedApps,
+            backend: options.backend,
+            auth: options.auth,
+            webDeploy: options.webDeploy,
+            serverDeploy: options.serverDeploy,
+            packageManager: options.packageManager,
+          }),
+        );
+      }
+    }
 
     // Install dependencies if requested
     if (options.install) {

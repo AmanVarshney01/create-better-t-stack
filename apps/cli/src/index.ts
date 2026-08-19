@@ -6,13 +6,18 @@ import z from "zod";
 
 import { historyHandler } from "./commands/history";
 import { openBuilderCommand, openDocsCommand, showSponsorsCommand } from "./commands/meta";
+import { addAppHandler, type AddAppResult } from "./helpers/core/add-app-handler";
 import { addHandler, type AddResult } from "./helpers/core/add-handler";
 import { createProjectHandler, createProjectHandlerResult } from "./helpers/core/command-handlers";
 import {
+  type AddAppInput,
+  AddAppInputSchema,
+  AddedAppSpecSchema,
   type AddInput,
   type Addons,
   AddonsSchema,
   type AddonOptions,
+  AppNameSchema,
   type DbSetupOptions,
   DbSetupOptionsSchema,
   AddInputSchema,
@@ -53,6 +58,7 @@ import {
   TemplateSchema,
   type WebDeploy,
   WebDeploySchema,
+  WebFrontendSchema,
 } from "./types";
 import {
   CLIError,
@@ -88,6 +94,7 @@ export const SchemaNameSchema = z
     "dbSetupOptions",
     "createInput",
     "addInput",
+    "addAppInput",
     "projectConfig",
     "betterTStackConfig",
     "betterTStackConfigFile",
@@ -161,6 +168,10 @@ export const router = t.router({
           auth: AuthSchema.optional(),
           payments: PaymentsSchema.optional(),
           frontend: z.array(FrontendSchema).optional(),
+          apps: z
+            .array(AddedAppSpecSchema)
+            .optional()
+            .describe("Extra frontend apps as name:framework (e.g. admin:next landing:astro)"),
           addons: z.array(AddonsSchema).optional(),
           examples: z.array(ExamplesSchema).optional(),
           git: z.boolean().optional(),
@@ -264,6 +275,57 @@ export const router = t.router({
     .input(AddInputSchema)
     .mutation(async ({ input }) => {
       const result = await addHandler(input, { silent: true });
+      if (!result) {
+        throw new UserCancelledError({ message: "Operation cancelled" });
+      }
+      if (!result.success) {
+        throw new CLIError({
+          message: result.error || "Unknown error occurred",
+        });
+      }
+      return result;
+    }),
+  addApp: t.procedure
+    .meta({ description: "Add another frontend app to an existing Better-T-Stack project" })
+    .input(
+      z.tuple([
+        AppNameSchema.optional().describe("Name of the new app (e.g. admin)"),
+        z.object({
+          frontend: WebFrontendSchema.optional().describe("Framework for the new app"),
+          port: z
+            .number()
+            .int()
+            .min(1024)
+            .max(65535)
+            .optional()
+            .describe("Dev server port (defaults to the next free port from 3002)"),
+          install: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe("Install dependencies after adding"),
+          packageManager: PackageManagerSchema.optional().describe("Package manager to use"),
+          projectDir: z.string().optional().describe("Project directory (defaults to current)"),
+          dryRun: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe("Preview app files without writing them"),
+        }),
+      ]),
+    )
+    .mutation(async ({ input }) => {
+      const [name, options] = input;
+      await addAppHandler({ ...options, name });
+    }),
+  addAppJson: t.procedure
+    .meta({
+      description: "Add an app from a raw JSON payload (agent-friendly)",
+      jsonInput: "always",
+    })
+    .input(AddAppInputSchema)
+    .mutation(async ({ input }) => {
+      const result = await addAppHandler(input, { silent: true });
       if (!result) {
         throw new UserCancelledError({ message: "Operation cancelled" });
       }
@@ -570,6 +632,50 @@ export async function add(options: AddOptions = {}): Promise<AddResult> {
     result ?? {
       success: false,
       addedAddons: [],
+      projectDir: parsedInput.data.projectDir ?? "",
+      error: "Operation cancelled",
+    }
+  );
+}
+
+export type { AddAppResult };
+
+export type AddAppOptions = Pick<
+  AddAppInput,
+  "name" | "frontend" | "port" | "install" | "packageManager" | "projectDir" | "dryRun"
+>;
+
+/**
+ * Programmatic API to add another frontend app to an existing Better-T-Stack project.
+ *
+ * @example
+ * ```typescript
+ * import { addApp } from "create-better-t-stack";
+ *
+ * const result = await addApp({
+ *   name: "admin",
+ *   frontend: "next",
+ * });
+ *
+ * if (result.success) {
+ *   console.log(`Added apps/${result.appName} on port ${result.port}`);
+ * }
+ * ```
+ */
+export async function addApp(options: AddAppOptions = {}): Promise<AddAppResult> {
+  const parsedInput = AddAppInputSchema.safeParse(options);
+  if (!parsedInput.success) {
+    return {
+      success: false,
+      projectDir: "",
+      error: formatInputValidationError("add-app", parsedInput.error),
+    };
+  }
+
+  const result = await addAppHandler(parsedInput.data, { silent: true });
+  return (
+    result ?? {
+      success: false,
       projectDir: parsedInput.data.projectDir ?? "",
       error: "Operation cancelled",
     }

@@ -21,6 +21,8 @@ import {
   DbSetupOptionsSchema,
   CreateInputSchema,
   AddInputSchema,
+  AddAppInputSchema,
+  RESERVED_APP_NAMES,
   ProjectConfigSchema,
   BetterTStackConfigSchema,
   BetterTStackConfigFileSchema,
@@ -108,6 +110,21 @@ export function getAddInputJsonSchema() {
   return z.toJSONSchema(AddInputSchema);
 }
 
+/** JSON Schema for add-app input, with reserved app names surfaced as a not/enum constraint. */
+export function getAddAppInputJsonSchema() {
+  const schema = z.toJSONSchema(AddAppInputSchema) as {
+    properties?: { name?: { not?: { enum: string[] } } };
+  };
+
+  // The reserved-name rule lives in a zod refinement, which does not
+  // serialize; surface it so JSON-Schema consumers see it too.
+  if (schema.properties?.name) {
+    schema.properties.name.not = { enum: [...RESERVED_APP_NAMES].sort() };
+  }
+
+  return schema;
+}
+
 export function getProjectConfigJsonSchema() {
   return z.toJSONSchema(ProjectConfigSchema);
 }
@@ -147,6 +164,7 @@ export function getAllJsonSchemas() {
     dbSetupOptions: getDbSetupOptionsJsonSchema(),
     createInput: getCreateInputJsonSchema(),
     addInput: getAddInputJsonSchema(),
+    addAppInput: getAddAppInputJsonSchema(),
     projectConfig: getProjectConfigJsonSchema(),
     betterTStackConfig: getBetterTStackConfigJsonSchema(),
     betterTStackConfigFile: getBetterTStackConfigFileJsonSchema(),

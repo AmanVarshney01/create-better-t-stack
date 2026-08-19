@@ -91,10 +91,12 @@ describe("MCP server", () => {
 
     expect(toolNames).toEqual([
       "bts_add_addons",
+      "bts_add_app",
       "bts_create_project",
       "bts_get_schema",
       "bts_get_stack_guidance",
       "bts_plan_addons",
+      "bts_plan_app",
       "bts_plan_project",
     ]);
   });
@@ -124,6 +126,17 @@ describe("MCP server", () => {
       openWorldHint: true,
     });
     expect(toolsByName.get("bts_add_addons")?.annotations).toMatchObject({
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: true,
+    });
+    expect(toolsByName.get("bts_plan_app")?.annotations).toMatchObject({
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    });
+    expect(toolsByName.get("bts_add_app")?.annotations).toMatchObject({
       destructiveHint: true,
       idempotentHint: false,
       openWorldHint: true,
@@ -532,6 +545,129 @@ describe("MCP server", () => {
 
     const after = await readBtsConfig(projectPath);
     expect(after?.addons).toEqual(expect.arrayContaining(["turborepo", "biome"]));
+  });
+
+  it("plans an app addition without mutating the project", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const projectPath = path.join(SMOKE_DIR, "mcp-plan-app");
+    await fs.remove(projectPath);
+    const createResult = await create(projectPath, {
+      frontend: ["tanstack-router"],
+      backend: "hono",
+      runtime: "bun",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "trpc",
+      auth: "none",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+      install: false,
+      git: true,
+      packageManager: "bun",
+      disableAnalytics: true,
+    });
+    expect(createResult.isOk()).toBe(true);
+
+    const before = await readBtsConfig(projectPath);
+
+    const result = await client.callTool({
+      name: "bts_plan_app",
+      arguments: {
+        projectDir: projectPath,
+        name: "admin",
+        frontend: "next",
+      },
+    });
+
+    const payload = result.structuredContent as {
+      ok: boolean;
+      data?: { success?: boolean; dryRun?: boolean; appName?: string; port?: number };
+    };
+
+    expect(payload.ok).toBe(true);
+    expect(payload.data?.success).toBe(true);
+    expect(payload.data?.dryRun).toBe(true);
+    expect(payload.data?.appName).toBe("admin");
+    expect(payload.data?.port).toBe(3002);
+
+    expect(await fs.pathExists(path.join(projectPath, "apps", "admin"))).toBe(false);
+    const after = await readBtsConfig(projectPath);
+    expect(after).toEqual(before);
+  });
+
+  it("adds an app through MCP and persists it to bts.jsonc", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const projectPath = path.join(SMOKE_DIR, "mcp-add-app");
+    await fs.remove(projectPath);
+    const createResult = await create(projectPath, {
+      frontend: ["tanstack-router"],
+      backend: "hono",
+      runtime: "bun",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "trpc",
+      auth: "none",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+      install: false,
+      git: true,
+      packageManager: "bun",
+      disableAnalytics: true,
+    });
+    expect(createResult.isOk()).toBe(true);
+
+    const result = await client.callTool({
+      name: "bts_add_app",
+      arguments: {
+        projectDir: projectPath,
+        name: "admin",
+        frontend: "next",
+      },
+    });
+
+    const payload = result.structuredContent as {
+      ok: boolean;
+      data?: { success?: boolean; appName?: string; port?: number };
+    };
+
+    expect(payload.ok).toBe(true);
+    expect(payload.data?.success).toBe(true);
+    expect(payload.data?.appName).toBe("admin");
+
+    expect(await fs.pathExists(path.join(projectPath, "apps", "admin", "package.json"))).toBe(true);
+    const after = await readBtsConfig(projectPath);
+    expect(after?.apps).toEqual([{ name: "admin", frontend: "next", port: 3002 }]);
+  });
+
+  it("rejects unknown keys in bts_plan_app input", async () => {
+    const { client, cleanup } = await connectInMemoryClient();
+    cleanups.push(cleanup);
+
+    const result = await client.callTool({
+      name: "bts_plan_app",
+      arguments: {
+        projectDir: path.join(SMOKE_DIR, "mcp-plan-app-unknown"),
+        name: "admin",
+        frontend: "next",
+        bogusKey: true,
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    const text = getToolText(result as { content: Array<{ type: string; text?: string }> });
+    expect(text).toContain("Unrecognized key");
   });
 
   it("starts over stdio through the CLI entrypoint", async () => {

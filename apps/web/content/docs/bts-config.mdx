@@ -18,7 +18,7 @@ If `bts.jsonc` is missing, the `add` command cannot run because the project cann
 
 ## Safe to delete (with a caveat)
 
-It’s safe to delete for normal development; the generated code in `apps/*` and `packages/*` remains the source of truth. However, if you plan to use the `add` command later, you must keep `bts.jsonc` so the CLI can detect your project.
+It’s safe to delete for normal development; the generated code in `apps/*` and `packages/*` remains the source of truth. However, if you plan to use the `add` or `add-app` commands later, you must keep `bts.jsonc` so the CLI can detect your project.
 
 ## Format
 
@@ -59,6 +59,8 @@ The file is JSONC with comments enabled and includes a `$schema` URL for tooling
   "webDeploy": "none",
   "serverDeploy": "none",
   "packageManager": "bun",
+  // Present only after `add-app` has added extra frontend apps
+  "apps": [{ "name": "admin", "frontend": "next", "port": 3002 }],
 }
 ```
 
@@ -69,6 +71,6 @@ Notes:
 - Deeply nested structured options remain in `addonOptions` or `dbSetupOptions` and may not be fully represented in the one-line command
 - `addonOptions` stores nested configuration for prompt-driven addons
 - `dbSetupOptions` stores structured database setup behavior for automation
-- The file may be updated when you run `add` (addons and addon-specific config)
+- The file may be updated when you run `add` (addons and addon-specific config) or `add-app` (the `apps` array)
 
 See also: [`add` command](/docs/cli#add)

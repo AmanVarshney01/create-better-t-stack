@@ -7,7 +7,11 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { processCatalogs } from "./catalogs";
-import { finalizeAlchemyDevScripts, processPackageConfigs } from "./package-configs";
+import {
+  finalizeAlchemyDevScripts,
+  getWorkspaceScriptCommand,
+  processPackageConfigs,
+} from "./package-configs";
 import { processVercelConfig } from "./vercel-config";
 
 /**
@@ -19,4 +23,10 @@ export function processPostGeneration(vfs: VirtualFileSystem, config: ProjectCon
   processVercelConfig(vfs, config);
 }
 
-export { finalizeAlchemyDevScripts, processCatalogs, processPackageConfigs, processVercelConfig };
+export {
+  finalizeAlchemyDevScripts,
+  getWorkspaceScriptCommand,
+  processCatalogs,
+  processPackageConfigs,
+  processVercelConfig,
+};

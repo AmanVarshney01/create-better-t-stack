@@ -95,6 +95,46 @@ create-better-t-stack add --addons pwa tauri --install
 create-better-t-stack add --project-dir ./my-app --addons mcp skills
 ```
 
+## `add-app`
+
+Adds another frontend app (for example an admin panel or landing page) to an existing Better-T-Stack project. The new app lands in `apps/<name>`, gets its own dev port and env module, and is wired to the project's existing API, auth, and shared packages.
+
+```bash
+create-better-t-stack add-app [name] [options]
+```
+
+### Options
+
+- `--frontend <framework>`: Framework for the new app (`tanstack-router`, `react-router`, `tanstack-start`, `next`, `nuxt`, `svelte`, `solid`, `astro`)
+- `--port <number>`: Dev server port (defaults to the next free port from 3002)
+- `--project-dir <path>`: Project directory (defaults to current directory)
+- `--install / --no-install`: Install dependencies after adding
+- `--package-manager <pm>`: Package manager to use (`npm`, `pnpm`, `bun`)
+- `--dry-run`: Preview the app files without writing them
+
+The framework can differ from your existing web app, but is validated against the project's stack: tRPC projects and Clerk projects accept React-family frameworks only, Convex projects exclude Solid and Astro, and fullstack (`backend: self`) projects cannot add apps. Extra apps are scaffolded without deploy wiring, and the CLI prints the manual CORS/auth origin steps instead of editing your server code.
+
+For new projects you can skip the second step entirely: `create` accepts `--apps` with the same validation, scaffolding the extra apps in one command (before install and the initial git commit):
+
+```bash
+create-better-t-stack my-app --frontend tanstack-router --backend hono --api orpc --apps admin:next landing:astro
+```
+
+The [Stack Builder](https://better-t-stack.dev/new) has an Extra Apps section that appends `--apps` to the generated command, and shared builder links carry the planned apps.
+
+### Examples
+
+```bash
+# Add an app interactively
+create-better-t-stack add-app
+
+# Add a Next.js admin app
+create-better-t-stack add-app admin --frontend next
+
+# Add an Astro landing page on a specific port
+create-better-t-stack add-app landing --frontend astro --port 3005
+```
+
 ## `create-json`
 
 Create a project from a raw JSON payload.
@@ -111,6 +151,14 @@ Add addons from a raw JSON payload.
 
 ```bash
 create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["wxt"],"addonOptions":{"wxt":{"template":"react"}}}'
+```
+
+## `add-app-json`
+
+Add an app from a raw JSON payload.
+
+```bash
+create-better-t-stack add-app-json --input '{"projectDir":"./my-app","name":"admin","frontend":"next"}'
 ```
 
 ## `schema`
@@ -134,7 +182,7 @@ Start the Better-T-Stack MCP server over stdio. It is launched by an MCP client 
 create-better-t-stack mcp
 ```
 
-It exposes tools for planning and creating projects (`bts_plan_project`, `bts_create_project`) and managing addons (`bts_plan_addons`, `bts_add_addons`), plus schema and guidance helpers. See [Agent Workflows](/docs/cli/agent-workflows#use-it-inside-your-ai-agent) for setup and the full tool list.
+It exposes tools for planning and creating projects (`bts_plan_project`, `bts_create_project`), managing addons (`bts_plan_addons`, `bts_add_addons`), and adding apps (`bts_plan_app`, `bts_add_app`), plus schema and guidance helpers. See [Agent Workflows](/docs/cli/agent-workflows#use-it-inside-your-ai-agent) for setup and the full tool list.
 
 ## `sponsors`
 

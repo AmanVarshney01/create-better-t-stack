@@ -17,6 +17,7 @@ type PackageJson = {
   devDependencies?: Record<string, string>;
   allowScripts?: Record<string, boolean>;
   overrides?: Record<string, string>;
+  exports?: Record<string, string>;
   workspaces?: string[] | { packages?: string[]; catalog?: Record<string, string> };
   packageManager?: string;
   [key: string]: JsonValue | undefined;
@@ -421,6 +422,23 @@ function getPackageManagerConfig(
   }
 }
 
+/**
+ * Build the root-script command that runs `script` in a single workspace,
+ * honoring the project's task runner (turborepo/nx/vite-plus) or package manager.
+ */
+export function getWorkspaceScriptCommand(
+  packageManager: ProjectConfig["packageManager"],
+  addons: ProjectConfig["addons"],
+  workspace: string,
+  script: string,
+): string {
+  return getPackageManagerConfig(packageManager, {
+    hasTurborepo: addons.includes("turborepo"),
+    hasNx: addons.includes("nx"),
+    hasVitePlus: addons.includes("vite-plus"),
+  }).filter(workspace, script);
+}
+
 function getElectrobunRootBuildCommand(
   vfs: VirtualFileSystem,
   packageManager: ProjectConfig["packageManager"],
@@ -652,7 +670,13 @@ function updateEnvPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): vo
   );
   const needsServerEnv = config.backend !== "none" && config.backend !== "convex";
 
-  const exports: Record<string, string> = {};
+  // Preserve export entries this function does not manage (e.g. per-app env
+  // modules created by `add-app`); only the server/web/native keys are rebuilt.
+  const exports = { ...pkgJson.exports };
+
+  delete exports["./server"];
+  delete exports["./web"];
+  delete exports["./native"];
 
   if (needsServerEnv) {
     exports["./server"] = "./src/server.ts";

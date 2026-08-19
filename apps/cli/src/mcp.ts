@@ -2,8 +2,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import z from "zod";
 
-import { add, create, type SchemaName, SchemaNameSchema, getSchemaResult } from "./index";
+import { add, addApp, create, type SchemaName, SchemaNameSchema, getSchemaResult } from "./index";
 import {
+  AddAppInputSchema,
   AddInputSchema,
   AddonOptionsSchema,
   AddonsSchema,
@@ -70,6 +71,7 @@ type SchemaToolInput = {
 };
 type McpCreateProjectInput = z.infer<typeof McpCreateProjectInputSchema>;
 type McpAddInput = z.infer<typeof AddInputSchema>;
+type McpAddAppInput = z.infer<typeof AddAppInputSchema>;
 
 function formatToolSuccess<T>(data: T) {
   return {
@@ -113,9 +115,9 @@ function getProjectToolAnnotations() {
 
 function getMcpInstallTimeoutMessage(packageManager: string) {
   return [
-    "MCP project creation requires `install: false`.",
+    "MCP execution requires `install: false`.",
     "Dependency installation can exceed common MCP client request timeouts and cause the connection to close before the tool returns.",
-    `Scaffold the project first, then run \`${packageManager} install\` in the generated project directory from a terminal.`,
+    `Scaffold first, then run \`${packageManager} install\` in the project directory from a terminal.`,
   ].join(" ");
 }
 
@@ -127,6 +129,7 @@ function getStackGuidance() {
       "Always call bts_plan_project before bts_create_project.",
       "Only call bts_create_project after the plan succeeds and matches the user's intent.",
       "Use bts_plan_addons before bts_add_addons for existing projects.",
+      "Use bts_plan_app before bts_add_app to add another frontend app to an existing project.",
     ],
     createContract: {
       requiresExplicitFields: [
@@ -154,6 +157,7 @@ function getStackGuidance() {
     fieldNotes: {
       frontend:
         "frontend is for app surfaces only. Choose explicit app targets such as next, react-router, tanstack-router, native-bare, native-uniwind, or native-unistyles.",
+      apps: "apps is optional: extra frontend apps as name:framework strings (e.g. admin:next). They are scaffolded into apps/<name> after create, wired to the project's API and auth. Frameworks are gated by api/auth/backend; fullstack self backends cannot add apps.",
       addons: "addons must be an explicit array. Use [] when no addons are requested.",
       examples: "examples must be an explicit array. Use [] when no examples are requested.",
       dbSetup:
@@ -375,6 +379,74 @@ export function createBtsMcpServer() {
 
         if (!result?.success) {
           return formatToolError(result?.error ?? "Failed to add addons");
+        }
+
+        return formatToolSuccess(result);
+      } catch (error) {
+        return formatToolError(error);
+      }
+    },
+  );
+
+  server.registerTool(
+    "bts_plan_app",
+    {
+      title: "Plan Better T Stack App",
+      description:
+        "Validate and preview adding another frontend app to an existing Better T Stack project without writing files. Always use this before bts_add_app.",
+      inputSchema: AddAppInputSchema,
+      outputSchema: ToolResponseSchema,
+      annotations: {
+        title: "Plan Better T Stack App",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async (input: McpAddAppInput) => {
+      try {
+        const result = await addApp({
+          ...input,
+          dryRun: true,
+        });
+
+        if (!result?.success) {
+          return formatToolError(result?.error ?? "Failed to plan app addition");
+        }
+
+        return formatToolSuccess(result);
+      } catch (error) {
+        return formatToolError(error);
+      }
+    },
+  );
+
+  server.registerTool(
+    "bts_add_app",
+    {
+      title: "Add Better T Stack App",
+      description:
+        "Add another frontend app to an existing Better T Stack project using the same silent flow as add-app-json. Call this only after bts_plan_app succeeds and the planned changes match the user's intent.",
+      inputSchema: AddAppInputSchema,
+      outputSchema: ToolResponseSchema,
+      annotations: {
+        title: "Add Better T Stack App",
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
+    },
+    async (input: McpAddAppInput) => {
+      try {
+        if (input.install) {
+          return formatToolError(getMcpInstallTimeoutMessage(input.packageManager ?? "bun"));
+        }
+
+        const result = await addApp(input);
+
+        if (!result?.success) {
+          return formatToolError(result?.error ?? "Failed to add app");
         }
 
         return formatToolSuccess(result);

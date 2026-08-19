@@ -125,6 +125,8 @@ Exposed tools:
 - `bts_create_project`
 - `bts_plan_addons`
 - `bts_add_addons`
+- `bts_plan_app`
+- `bts_add_app`
 
 This is the best path when an MCP-capable client should scaffold or modify Better-T-Stack projects without shelling out to a prompt-driven CLI flow.
 
@@ -136,6 +138,7 @@ Recommended MCP workflow:
 4. Call `bts_plan_project` before `bts_create_project`.
 5. For MCP execution, use `install: false` when creating projects.
 6. Call `bts_plan_addons` before `bts_add_addons`.
+7. Call `bts_plan_app` before `bts_add_app` when adding another frontend app.
 
 For project creation, the MCP tools now expect a full explicit config, not a partial payload. That means the agent should provide all major stack choices such as:
 
