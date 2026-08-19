@@ -208,6 +208,10 @@ export function generateStackCommand(stack: StackState) {
     `--examples ${stack.examples.join(" ") || "none"}`,
   ];
 
+  if (stack.apps.length > 0) {
+    flags.push(`--apps ${stack.apps.join(" ")}`);
+  }
+
   if (stack.yolo === "true") {
     flags.push("--yolo");
   }

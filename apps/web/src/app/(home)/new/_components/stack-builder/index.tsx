@@ -253,6 +253,21 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                         }
                         scrollToCategorySection("section", category);
                       }}
+                      onRemoveApp={(name) =>
+                        setStack({
+                          apps: effectiveStack.apps.filter(
+                            (encoded) => !encoded.startsWith(`${name}:`),
+                          ),
+                        })
+                      }
+                      onJumpToApps={() => {
+                        if (viewMode !== "command") {
+                          startTransition(() => {
+                            setViewMode("command");
+                          });
+                        }
+                        scrollToCategorySection("section", "apps");
+                      }}
                     />
                   </section>
 
@@ -334,6 +349,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                       stack={effectiveStack}
                       compatibilityNotes={compatibilityAnalysis.notes}
                       onSelect={handleTechSelect}
+                      onExtraAppsChange={(apps) => setStack({ apps })}
                       showAllCategories
                     />
                   </main>
@@ -475,6 +491,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                     stack={effectiveStack}
                     compatibilityNotes={compatibilityAnalysis.notes}
                     onSelect={handleTechSelect}
+                    onExtraAppsChange={(apps) => setStack({ apps })}
                     showAllCategories
                   />
                 </main>

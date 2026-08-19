@@ -1,4 +1,5 @@
 import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "./constant";
+import { sanitizeExtraApps } from "./extra-apps";
 
 const validWebFrontendIds = new Set(TECH_OPTIONS.webFrontend.map((option) => option.id));
 const validNativeFrontendIds = new Set(TECH_OPTIONS.nativeFrontend.map((option) => option.id));
@@ -88,6 +89,7 @@ export function sanitizeStackState(stack: StackState): StackState {
     nativeFrontend: sanitizeNativeFrontends(stack.nativeFrontend),
     addons: sanitizeAddons(stack.addons),
     examples: sanitizeExamples(stack.examples),
+    apps: sanitizeExtraApps(stack.apps, stack),
   };
 }
 

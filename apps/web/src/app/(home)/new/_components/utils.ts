@@ -1,6 +1,11 @@
 import { desktopWebFrontends } from "@better-t-stack/types";
 
 import { DEFAULT_STACK, type StackState, type TECH_OPTIONS } from "@/lib/constant";
+import {
+  getExtraAppFrontendDisabledReason,
+  getExtraAppsBlockedReason,
+  parseExtraApp,
+} from "@/lib/extra-apps";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";
 
 export function validateProjectName(name: string): string | undefined {
@@ -995,6 +1000,44 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       category: "serverDeploy",
       message: "Server deploy set to 'None' (not needed for this backend)",
     });
+  }
+
+  // ============================================
+  // EXTRA APPS (planned add-app commands)
+  // ============================================
+
+  if (nextStack.apps.length > 0) {
+    const blockedReason = getExtraAppsBlockedReason(nextStack);
+    const keptApps: string[] = [];
+
+    for (const encoded of nextStack.apps) {
+      const app = parseExtraApp(encoded);
+      if (!app) continue;
+
+      if (blockedReason) {
+        changes.push({
+          category: "apps",
+          message: `Removed planned app '${app.name}': fullstack (self) backends can't add extra apps`,
+        });
+        continue;
+      }
+
+      const reason = getExtraAppFrontendDisabledReason(nextStack, app.frontend);
+      if (reason) {
+        changes.push({
+          category: "apps",
+          message: `Removed planned app '${app.name}': ${reason}`,
+        });
+        continue;
+      }
+
+      keptApps.push(encoded);
+    }
+
+    if (keptApps.length !== nextStack.apps.length) {
+      nextStack.apps = keptApps;
+      changed = true;
+    }
   }
 
   return {

@@ -48,6 +48,7 @@ export const stackParsers = {
   serverDeploy: parseAsStringEnum<StackState["serverDeploy"]>(
     getValidIds("serverDeploy"),
   ).withDefault(DEFAULT_STACK.serverDeploy),
+  apps: parseAsArrayOf(parseAsString).withDefault(DEFAULT_STACK.apps),
   yolo: parseAsStringEnum<StackState["yolo"]>(["true", "false"]).withDefault(DEFAULT_STACK.yolo),
   viewMode: parseAsStringEnum<"command" | "preview">(["command", "preview"]).withDefault("command"),
   selectedFile: parseAsString.withDefault(""),
@@ -82,6 +83,7 @@ function getStackFromQueryState(queryState: StackState): StackState {
     install: queryState.install,
     webDeploy: queryState.webDeploy,
     serverDeploy: queryState.serverDeploy,
+    apps: queryState.apps,
     yolo: queryState.yolo,
   });
 }
