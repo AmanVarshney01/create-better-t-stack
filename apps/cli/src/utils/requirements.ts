@@ -43,7 +43,7 @@ export const PACKAGE_MANAGER_VERSION_RANGES = {
   pnpm: ">=10.26.0",
 } as const satisfies Record<PackageManager, string>;
 
-export const RECOMMENDED_BUN_VERSION_RANGE = ">=1.3.0";
+export const RECOMMENDED_BUN_VERSION_RANGE = ">=1.4.0";
 
 const PACKAGE_MANAGER_REASONS = {
   bun: "generated Bun workspaces use dependency catalogs",
@@ -257,7 +257,7 @@ export function getLocalToolRecommendations(
   }
 
   return [
-    `Bun ${version} meets the minimum requirement, but Bun 1.3 or newer is recommended. Run \`bun upgrade\`.`,
+    `Bun ${version} meets the minimum requirement, but Bun 1.4 or newer is recommended. Run \`bun upgrade\`.`,
   ];
 }
 
