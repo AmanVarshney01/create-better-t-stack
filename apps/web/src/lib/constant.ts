@@ -238,7 +238,7 @@ export const TECH_OPTIONS = {
       id: "self-solid",
       name: "Fullstack Solid",
       description: "Use Solid file-based API routes",
-      icon: `${ICON_BASE_URL}/solidjs.svg`,
+      icon: `${ICON_BASE_URL}/solid.svg`,
       color: "from-blue-400 to-blue-700",
     },
     {
