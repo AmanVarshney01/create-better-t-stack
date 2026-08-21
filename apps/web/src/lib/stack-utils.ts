@@ -1,4 +1,5 @@
 import { DEFAULT_STACK, isStackDefault, type StackState, TECH_OPTIONS } from "@/lib/constant";
+import { SITE_URL } from "@/lib/site";
 import { stackUrlKeys } from "@/lib/stack-url-keys";
 
 const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
@@ -220,7 +221,7 @@ export function formatStackCommandForDisplay(command: string) {
 }
 
 export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
-  const origin = baseUrl || "https://better-t-stack.dev";
+  const origin = baseUrl || SITE_URL;
   const searchString = serializeStackToSearchString(stack);
   return `${origin}/new${searchString ? `?${searchString}` : ""}`;
 }
@@ -237,7 +238,7 @@ function serializeStackToSearchString(stack: StackState) {
 }
 
 export function generateStackSharingUrl(stack: StackState, baseUrl?: string) {
-  const origin = baseUrl || "https://better-t-stack.dev";
+  const origin = baseUrl || SITE_URL;
   const searchString = serializeStackToSearchString(stack);
   return `${origin}/stack${searchString ? `?${searchString}` : ""}`;
 }

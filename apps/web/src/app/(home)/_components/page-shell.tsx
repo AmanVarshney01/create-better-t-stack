@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import Footer from "./footer";
 
-/** The one page shell shared by /analytics, /showcase and /sponsors. */
+/** The page shell shared by the standalone home-section pages. */
 export function PageShell({ children }: { children: ReactNode }) {
   return (
     <main className="min-h-svh bg-fd-background">

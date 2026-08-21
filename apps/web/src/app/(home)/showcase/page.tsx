@@ -4,18 +4,23 @@ import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import type { Metadata } from "next";
 
+import { SITE_URL } from "@/lib/site";
+
 import { ShowcasePage } from "./_components/showcase-page";
 
 export const metadata: Metadata = {
   title: "Showcase - Better-T-Stack",
   description: "Projects created with Better-T-Stack",
+  alternates: {
+    canonical: "/showcase",
+  },
   openGraph: {
     title: "Showcase - Better-T-Stack",
     description: "Projects created with Better-T-Stack",
-    url: "https://better-t-stack.dev/showcase",
+    url: `${SITE_URL}/showcase`,
     images: [
       {
-        url: "https://better-t-stack.dev/og/site/showcase.png",
+        url: `${SITE_URL}/og/site/showcase.png`,
         width: 1200,
         height: 630,
         alt: "Better-T-Stack Showcase",
@@ -26,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Showcase - Better-T-Stack",
     description: "Projects created with Better-T-Stack",
-    images: ["https://better-t-stack.dev/og/site/showcase.png"],
+    images: [`${SITE_URL}/og/site/showcase.png`],
   },
 };
 

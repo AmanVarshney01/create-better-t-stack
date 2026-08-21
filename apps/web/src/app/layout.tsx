@@ -5,6 +5,14 @@ import Script from "next/script";
 import type { ReactNode } from "react";
 
 import Providers from "@/components/providers";
+import {
+  NPM_PACKAGE_URL,
+  REPOSITORY_URL,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+  SUPPORT_EMAIL,
+} from "@/lib/site";
 
 import "./global.css";
 import { cn } from "@/lib/utils";
@@ -21,12 +29,72 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
 });
 
-const ogImage = "https://better-t-stack.dev/og/site/home.png";
+const ogImage = `${SITE_URL}/og/site/home.png`;
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@id": `${SITE_URL}/#project`,
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: `${SITE_URL}/favicon/web-app-manifest-512x512.png`,
+      sameAs: [REPOSITORY_URL, NPM_PACKAGE_URL, "https://x.com/amanvarshney01"],
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "project support",
+        email: SUPPORT_EMAIL,
+        url: `${SITE_URL}/contact`,
+        availableLanguage: "English",
+      },
+    },
+    {
+      "@id": `${SITE_URL}/#software`,
+      "@type": "SoftwareApplication",
+      name: SITE_NAME,
+      alternateName: "create-better-t-stack",
+      description: SITE_DESCRIPTION,
+      url: SITE_URL,
+      applicationCategory: "DeveloperApplication",
+      operatingSystem: "Linux, macOS, Windows",
+      isAccessibleForFree: true,
+      license: `${REPOSITORY_URL}/blob/main/LICENSE`,
+      downloadUrl: NPM_PACKAGE_URL,
+      installUrl: `${SITE_URL}/docs`,
+      softwareHelp: `${SITE_URL}/docs`,
+      provider: {
+        "@id": `${SITE_URL}/#project`,
+      },
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+      },
+      featureList: [
+        "Interactive and non-interactive TypeScript project scaffolding",
+        "Structured JSON commands for coding agents",
+        "Local stdio MCP server",
+        "Programmatic npm API",
+      ],
+      sameAs: [REPOSITORY_URL, NPM_PACKAGE_URL],
+    },
+    {
+      "@id": `${SITE_URL}/#website`,
+      "@type": "WebSite",
+      name: SITE_NAME,
+      description: SITE_DESCRIPTION,
+      url: SITE_URL,
+      publisher: {
+        "@id": `${SITE_URL}/#project`,
+      },
+    },
+  ],
+};
 
 export const metadata: Metadata = {
-  title: "Better-T-Stack",
-  description:
-    "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
+  title: SITE_NAME,
+  description: SITE_DESCRIPTION,
   keywords: [
     "TypeScript",
     "project scaffolding",
@@ -54,16 +122,12 @@ export const metadata: Metadata = {
     email: false,
     telephone: false,
   },
-  metadataBase: new URL("https://better-t-stack.dev"),
-  alternates: {
-    canonical: "/",
-  },
+  metadataBase: new URL(SITE_URL),
   openGraph: {
-    title: "Better-T-Stack",
-    description:
-      "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
-    url: "https://better-t-stack.dev",
-    siteName: "Better-T-Stack",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: SITE_NAME,
     images: [
       {
         url: ogImage,
@@ -77,9 +141,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Better-T-Stack",
-    description:
-      "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
     images: [ogImage],
   },
   robots: {
@@ -118,6 +181,12 @@ export default function Layout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(structuredData).replaceAll("<", "\\u003c"),
+          }}
+        />
         <Script
           src="https://umami.amanv.cloud/script.js"
           data-website-id="3fe218f9-a51b-40c3-ab37-d65e6963d686"
