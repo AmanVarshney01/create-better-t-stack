@@ -26309,7 +26309,7 @@ yarn-error.*
 		"userInterfaceStyle": "automatic",
 		"ios": {
 			"supportsTablet": true,
-			"bundleIdentifier": "{{appId projectName}}"
+			"bundleIdentifier": "{{appId projectName "ios"}}"
 		},
 		"android": {
 			"adaptiveIcon": {
@@ -26319,7 +26319,7 @@ yarn-error.*
 				"monochromeImage": "./assets/images/android-icon-monochrome.png"
 			},
 			"predictiveBackGestureEnabled": false,
-			"package": "{{appId projectName}}"
+			"package": "{{appId projectName "android"}}"
 		},
 		"web": {
 			"output": "static",
@@ -27547,7 +27547,7 @@ yarn-error.*
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "{{appId projectName}}"
+      "bundleIdentifier": "{{appId projectName "ios"}}"
     },
     "android": {
       "adaptiveIcon": {
@@ -27557,7 +27557,7 @@ yarn-error.*
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "{{appId projectName}}"
+      "package": "{{appId projectName "android"}}"
     },
     "web": {
       "output": "static",
@@ -29015,7 +29015,7 @@ uniwind-types.d.ts
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "{{appId projectName}}"
+      "bundleIdentifier": "{{appId projectName "ios"}}"
     },
     "android": {
       "adaptiveIcon": {
@@ -29025,7 +29025,7 @@ uniwind-types.d.ts
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "{{appId projectName}}"
+      "package": "{{appId projectName "android"}}"
     },
     "web": {
       "bundler": "metro",
