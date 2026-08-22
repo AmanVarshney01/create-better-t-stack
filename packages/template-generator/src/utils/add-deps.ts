@@ -15,8 +15,8 @@ type PackageJson = {
 export const dependencyVersionMap = {
   typescript: "^6.0.3",
 
-  "better-auth": "1.6.27",
-  "@better-auth/expo": "1.6.27",
+  "better-auth": "1.6.30",
+  "@better-auth/expo": "1.6.30",
 
   "@clerk/backend": "^3.13.2",
   "@clerk/express": "^2.1.47",
@@ -26,7 +26,7 @@ export const dependencyVersionMap = {
   "@clerk/react-router": "^3.6.1",
   "@react-router/express": "^8.3.0",
   "@clerk/tanstack-react-start": "^1.4.24",
-  "@clerk/expo": "^4.1.0",
+  "@clerk/expo": "^4.5.2",
 
   "drizzle-orm": "^0.45.2",
   "drizzle-kit": "^0.31.10",
@@ -125,7 +125,7 @@ export const dependencyVersionMap = {
   next: "^16.3.0",
   nitro: "^3.0.260610-beta",
 
-  convex: "^1.42.3",
+  convex: "^1.45.0",
   "@convex-dev/react-query": "^0.1.0",
   "@convex-dev/agent": "^0.6.4",
   "@convex-dev/polar": "^0.9.2",

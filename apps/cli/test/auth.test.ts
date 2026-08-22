@@ -319,7 +319,7 @@ describe("Authentication Configurations", () => {
         "utf8",
       );
 
-      expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.27");
+      expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.17");
       expect(packageJson.workspaces.catalog["@convex-dev/better-auth"]).toBe("^0.12.5");
       expect(backendPackageJson.dependencies["better-auth"]).toBe("catalog:");
       expect(webPackageJson.dependencies["better-auth"]).toBe("catalog:");
@@ -796,7 +796,7 @@ describe("Authentication Configurations", () => {
         const packageJson = JSON.parse(
           await fs.readFile(path.join(result.projectDir, "package.json"), "utf8"),
         );
-        expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.27");
+        expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.30");
       });
     }
   });
@@ -1010,7 +1010,7 @@ describe("Authentication Configurations", () => {
         "utf8",
       );
 
-      expect(nativePackageFile).toContain('"@clerk/expo": "^4.1.0"');
+      expect(nativePackageFile).toContain('"@clerk/expo": "^4.5.2"');
 
       expect(signInFile).not.toContain("setActive");
       expect(signInFile).not.toContain("signIn.create");
