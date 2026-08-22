@@ -1,5 +1,4 @@
 import { expect } from "bun:test";
-import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 
 import { create, UserCancelledError, CLIError, ProjectCreationError } from "../src/index";
@@ -21,9 +20,7 @@ import type {
   DatabaseSetup,
 } from "../src/types";
 import { PackageManagerSchema, ServerDeploySchema, WebDeploySchema } from "../src/types";
-
-// Smoke directory path - use the same as setup.ts
-const SMOKE_DIR_PATH = join(import.meta.dir, "..", ".smoke");
+import { ensureSmokeDirectory, SMOKE_DIR } from "./setup";
 
 export interface TestResult {
   success: boolean;
@@ -44,15 +41,10 @@ export interface TestConfig extends CreateInput {
  * The create() API runs in silent mode and returns JSON instead of calling process.exit().
  */
 export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
-  // Ensure smoke directory exists (may be called before global setup in some cases)
-  try {
-    await mkdir(SMOKE_DIR_PATH, { recursive: true });
-  } catch {
-    // Directory may already exist
-  }
+  await ensureSmokeDirectory();
 
   const projectName = config.projectName || "default-app";
-  const projectPath = join(SMOKE_DIR_PATH, projectName);
+  const projectPath = join(SMOKE_DIR, projectName);
 
   // Determine if we should use --yes or not
   // Only core stack flags conflict with --yes flag (from CLI error message)

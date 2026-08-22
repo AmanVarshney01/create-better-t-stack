@@ -1,0 +1,84 @@
+{
+  description = "Development shell for {{projectName}}";
+
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+
+  outputs = { nixpkgs, ... }:
+    let
+      supportedSystems = [
+        "aarch64-darwin"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "x86_64-linux"
+      ];
+      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+    in
+    {
+      devShells = forAllSystems (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        {
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              git
+{{#if (eq packageManager "bun")}}
+              bun
+{{else}}
+              nodejs_24
+{{/if}}
+{{#if (eq packageManager "pnpm")}}
+              pnpm
+{{/if}}
+{{#if (or (and (eq runtime "bun") (ne packageManager "bun")) (and (includes addons "electrobun") (ne packageManager "bun")))}}
+              bun
+{{/if}}
+{{#if (and (eq runtime "node") (eq packageManager "bun"))}}
+              nodejs_24
+{{/if}}
+{{#if (eq runtime "workers")}}
+              wrangler
+{{/if}}
+{{#if (eq database "sqlite")}}
+              sqlite
+{{/if}}
+{{#if (eq database "postgres")}}
+              postgresql
+{{/if}}
+{{#if (eq database "mysql")}}
+              mariadb
+{{/if}}
+{{#if (eq database "mongodb")}}
+              mongosh
+{{/if}}
+{{#if (eq dbSetup "docker")}}
+              docker-client
+              docker-compose
+{{/if}}
+{{#if (eq dbSetup "turso")}}
+              turso-cli
+{{/if}}
+{{#if (eq dbSetup "supabase")}}
+              supabase-cli
+{{/if}}
+{{#if (includes addons "tauri")}}
+              cargo
+              clippy
+              openssl
+              pkg-config
+              rustc
+              rustfmt
+{{/if}}
+            ]{{#if (includes addons "tauri")}} ++ lib.optionals stdenv.isLinux [
+              gtk3
+              libayatana-appindicator
+              librsvg
+              libsoup_3
+              webkitgtk_4_1
+            ]{{/if}};
+          };
+        }
+      );
+    };
+}
