@@ -81,7 +81,7 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
     const server: VercelService = {
       root: "apps/server",
       framework: backend,
-      entrypoint: "src/index.ts",
+      entrypoint: backend === "nitro" ? undefined : "src/index.ts",
       installCommand,
     };
     if (hasWeb) {

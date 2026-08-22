@@ -1053,6 +1053,7 @@ describe("Addon Configurations", () => {
       express: 'import { evlog } from "evlog/express";',
       fastify: 'import { evlog } from "evlog/fastify";',
       elysia: 'import { evlog } from "evlog/elysia";',
+      nitro: "",
       convex: "",
       self: "",
       none: "",

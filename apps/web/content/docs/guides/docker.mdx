@@ -38,7 +38,7 @@ Choosing `docker` as a deploy target generates:
 </Files>
 
 - **`docker-compose.yml`** at the repo root defines the `web`, `server`, and (optionally) database services with health checks and startup ordering.
-- **`apps/*/Dockerfile`** are multi-stage builds that install the whole monorepo workspace, build one app, and ship a minimal runtime image.
+- **`apps/*/Dockerfile`** are multi-stage builds that install the whole monorepo workspace, build one app, and ship a minimal runtime image. Nitro server images copy its native `.output` artifact and start `.output/server/index.mjs` directly.
 - **`nginx.conf`** is generated for the static TanStack Router SPA, which is served by nginx. Solid runs as a Node SSR server from its Nitro `.output` build.
 
 ## Enabling Docker Deployment

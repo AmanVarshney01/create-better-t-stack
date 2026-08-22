@@ -934,7 +934,7 @@ function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContex
 }
 {{/if}}
 
-{{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
+{{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia') (eq backend 'nitro')))}}
 {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 {{else}}
 import { createClerkClient } from "@clerk/backend";
@@ -1146,6 +1146,40 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 	return {
 		auth: null,
 		session,
+	};
+{{else}}
+	return {
+		auth: null,
+		session: null,
+	};
+{{/if}}
+}
+
+{{else if (eq backend 'nitro')}}
+{{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{/if}}
+
+export type CreateContextOptions = {
+	request: Request;
+};
+
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ request }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+{{#if (eq auth "better-auth")}}
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers: request.headers });
+	return {
+		auth: null,
+		session,
+	};
+{{else if (eq auth "clerk")}}
+	const clerkAuth = await authenticateClerkRequest(request);
+	return {
+		auth: clerkAuth,
+		session: null,
 	};
 {{else}}
 	return {
@@ -1978,7 +2012,7 @@ function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContex
 }
 {{/if}}
 
-{{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia')))}}
+{{#if (and (eq auth "clerk") (or (eq backend 'self') (eq backend 'hono') (eq backend 'elysia') (eq backend 'nitro')))}}
 import { createClerkClient } from "@clerk/backend";
 import { env } from "@{{projectName}}/env/server";
 
@@ -2048,6 +2082,40 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
 	};
 {{else if (eq auth "clerk")}}
 	const clerkAuth = await authenticateClerkRequest(req);
+	return {
+		auth: clerkAuth,
+		session: null,
+	};
+{{else}}
+	return {
+		auth: null,
+		session: null,
+	};
+{{/if}}
+}
+
+{{else if (eq backend 'nitro')}}
+{{#if (eq auth "better-auth")}}
+{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{/if}}
+
+export type CreateContextOptions = {
+	request: Request;
+};
+
+export async function createContext({{#if (eq auth "none")}}_options{{else}}{ request }{{/if}}: CreateContextOptions){{#if (eq auth "clerk")}}: Promise<ClerkRequestContext>{{/if}} {
+{{#if (eq auth "better-auth")}}
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers: request.headers });
+	return {
+		auth: null,
+		session,
+	};
+{{else if (eq auth "clerk")}}
+	const clerkAuth = await authenticateClerkRequest(request);
 	return {
 		auth: clerkAuth,
 		session: null,
@@ -15198,6 +15266,206 @@ export default app;
 {{/if}}
 {{/if}}
 `],
+  ["backend/server/nitro/ai/server/routes/ai.post.ts.hbs", `import { devToolsMiddleware } from "@ai-sdk/devtools";
+import { google } from "@ai-sdk/google";
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  type UIMessage,
+  wrapLanguageModel,
+} from "ai";
+import { defineHandler } from "nitro";
+
+export default defineHandler(async (event) => {
+  const { messages = [] } = (await event.req.json()) as { messages?: UIMessage[] };
+  const model = wrapLanguageModel({
+    model: google("gemini-2.5-flash"),
+    middleware: devToolsMiddleware(),
+  });
+  const result = streamText({
+    model,
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+});
+`],
+  ["backend/server/nitro/base/_gitignore", `.data
+.nitro
+.cache
+.output
+.wrangler
+`],
+  ["backend/server/nitro/base/nitro.config.ts.hbs", `import { defineConfig } from "nitro";
+
+export default defineConfig({
+{{#if (eq runtime "workers")}}
+  defaultPreset: "cloudflare_module",
+{{else}}
+  defaultPreset: "{{runtime}}",
+{{/if}}
+  serverDir: "./server",
+{{#if (eq runtime "workers")}}
+  cloudflare: {
+    nodeCompat: true,
+  },
+{{/if}}
+});
+`],
+  ["backend/server/nitro/base/package.json.hbs", `{
+  "name": "server",
+  "type": "module",
+  "scripts": {
+    "build": "nitro build",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {},
+  {{#if (eq dbSetup 'supabase')}}
+  "trustedDependencies": [
+    "supabase"
+  ],
+  {{/if}}
+  "devDependencies": {}
+}
+`],
+  ["backend/server/nitro/base/server/middleware/cors.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+import { defineHandler } from "nitro";
+import { handleCors } from "nitro/h3";
+
+export default defineHandler((event) => {
+  const response = handleCors(event, {
+    origin: [env.CORS_ORIGIN],
+    methods: ["GET", "POST", "OPTIONS"],
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+    allowHeaders: ["Content-Type", "Authorization"],
+{{/if}}
+{{#if (eq auth "better-auth")}}
+    credentials: true,
+{{/if}}
+  });
+
+  if (response !== false) return response;
+  return undefined;
+});
+`],
+  ["backend/server/nitro/base/server/routes/index.get.ts.hbs", `import { defineHandler } from "nitro";
+
+export default defineHandler(() => "OK");
+`],
+  ["backend/server/nitro/base/tsconfig.json.hbs", `{
+  "extends": ["@{{projectName}}/config/tsconfig.base.json", "nitro/tsconfig"],
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}},
+    "types": ["node"]{{/if}}
+  }
+}
+`],
+  ["backend/server/nitro/better-auth/server/routes/api/auth/[...all].ts.hbs", `{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}
+import { createAuth } from "@{{projectName}}/auth";
+{{else}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import { defineHandler } from "nitro";
+
+export default defineHandler((event) =>
+  {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare"))}}createAuth(){{else}}auth{{/if}}.handler(event.req),
+);
+`],
+  ["backend/server/nitro/native-polar/server/routes/polar/success.get.ts.hbs", `import { defineHandler } from "nitro";
+
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+export default defineHandler((event) => {
+  const requestUrl = new URL(event.req.url);
+  const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+  let redirectUrl: URL;
+  try {
+    redirectUrl = new URL(returnUrl);
+  } catch {
+    return new Response("Invalid return URL", { status: 400 });
+  }
+
+  if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+    return new Response("Invalid return URL", { status: 400 });
+  }
+
+  return Response.redirect(redirectUrl, 302);
+});
+`],
+  ["backend/server/nitro/orpc/server/routes/api-reference/[...].ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { onError } from "@orpc/server";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { defineHandler } from "nitro";
+
+const handler = new OpenAPIHandler(appRouter, {
+  plugins: [
+    new OpenAPIReferencePlugin({
+      schemaConverters: [new ZodToJsonSchemaConverter()],
+    }),
+  ],
+  interceptors: [
+    onError((error) => {
+      console.error(error);
+    }),
+  ],
+});
+
+export default defineHandler(async (event) => {
+  const result = await handler.handle(event.req, {
+    prefix: "/api-reference",
+    context: await createContext({ request: event.req }),
+  });
+
+  return result.response ?? new Response("Not Found", { status: 404 });
+});
+`],
+  ["backend/server/nitro/orpc/server/routes/rpc/[...].ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { onError } from "@orpc/server";
+import { RPCHandler } from "@orpc/server/fetch";
+import { defineHandler } from "nitro";
+
+const handler = new RPCHandler(appRouter, {
+  interceptors: [
+    onError((error) => {
+      console.error(error);
+    }),
+  ],
+});
+
+export default defineHandler(async (event) => {
+  const result = await handler.handle(event.req, {
+    prefix: "/rpc",
+    context: await createContext({ request: event.req }),
+  });
+
+  return result.response ?? new Response("Not Found", { status: 404 });
+});
+`],
+  ["backend/server/nitro/trpc/server/routes/trpc/[...].ts.hbs", `import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { defineHandler } from "nitro";
+
+export default defineHandler((event) =>
+  fetchRequestHandler({
+    endpoint: "/trpc",
+    req: event.req,
+    router: appRouter,
+    createContext: () => createContext({ request: event.req }),
+  }),
+);
+`],
   ["base/_gitignore", `# Dependencies
 node_modules
 .pnp
@@ -16544,15 +16812,27 @@ FROM node:24-slim AS runner
 {{/if}}
 WORKDIR /app
 ENV NODE_ENV=production
+{{#if (eq backend "nitro")}}
+COPY --from=builder /app/apps/server/.output ./
+{{else}}
 COPY --from=builder /app /app
+{{/if}}
 
 EXPOSE 3000
 
+{{#if (eq backend "nitro")}}
+{{#if (eq runtime "bun")}}
+CMD ["bun", "server/index.mjs"]
+{{else}}
+CMD ["node", "server/index.mjs"]
+{{/if}}
+{{else}}
 WORKDIR /app/apps/server
 {{#if (eq runtime "bun")}}
 CMD ["bun", "dist/index.mjs"]
 {{else}}
 CMD ["node", "dist/index.mjs"]
+{{/if}}
 {{/if}}
 `],
   ["deploy/docker/web/astro/Dockerfile.hbs", `FROM node:24-slim AS base
@@ -25907,7 +26187,19 @@ export default function Todos() {
 shamefully-hoist=true
 strict-peer-dependencies=false
 {{/if}}`],
-  ["extras/env.d.ts.hbs", `{{#if (eq serverDeploy "cloudflare")}}
+  ["extras/env.d.ts.hbs", `{{#if (and (eq backend "nitro") (eq serverDeploy "cloudflare"))}}
+type CloudflareEnv = import("@{{projectName}}/infra/alchemy.run").ServerEnv;
+type Env = CloudflareEnv;
+
+declare module "cloudflare:workers" {
+  export const env: CloudflareEnv;
+
+  namespace Cloudflare {
+    export interface Env extends CloudflareEnv {}
+  }
+}
+{{else}}
+{{#if (eq serverDeploy "cloudflare")}}
 import type { ServerEnv } from "@{{projectName}}/infra/alchemy.run";
 {{else}}
 import type { WebEnv as ServerEnv } from "@{{projectName}}/infra/alchemy.run";
@@ -25927,6 +26219,7 @@ declare module "cloudflare:workers" {
     export interface Env extends CloudflareEnv {}
   }
 }
+{{/if}}
 `],
   ["extras/pnpm-workspace.yaml.hbs", `packages:
   - "apps/*"
@@ -33350,11 +33643,19 @@ export const env = createEnv({
 });
 `],
   ["packages/env/src/server.ts.hbs", `{{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
+{{#if (eq backend "nitro")}}
+/// <reference path="../env.d.ts" />
+import type { ServerEnv } from "@{{projectName}}/infra/alchemy.run";
+
+export type CloudflareEnv = ServerEnv;
+export { env } from "cloudflare:workers";
+{{else}}
 /// <reference types="@cloudflare/workers-types" />
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
 export { env } from "cloudflare:workers";
+{{/if}}
 {{else if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "next"))}}
 /// <reference path="../env.d.ts" />
 import { getCloudflareContext } from "@opennextjs/cloudflare";
@@ -33502,7 +33803,7 @@ export const env = createEnv({
 {{/if}}
 {{#if (eq auth "clerk")}}
 		CLERK_SECRET_KEY: z.string().min(1),
-{{#if (or (eq backend "express") (eq backend "fastify") (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia"))))}}
+{{#if (or (eq backend "express") (eq backend "fastify") (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia") (eq backend "nitro"))))}}
 		CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 {{/if}}
@@ -35680,4 +35981,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 522;
+export const TEMPLATE_COUNT = 534;

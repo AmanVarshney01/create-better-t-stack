@@ -158,6 +158,20 @@ describe("local tool requirements", () => {
     ).toBe(true);
   });
 
+  it("uses Nitro's own Node requirement instead of the tsdown requirement", () => {
+    const requirements = getLocalVersionRequirements(
+      config({ backend: "nitro", frontend: [], packageManager: "npm", runtime: "node" }),
+      "node",
+    );
+
+    expect(requirements).toContainEqual({
+      tool: "node",
+      range: "^20.19.0 || >=22.12.0",
+      reason: "Nitro 3",
+    });
+    expect(requirements.some(({ reason }) => reason.includes("tsdown"))).toBe(false);
+  });
+
   it.each([
     [{ examples: ["ai"] }, "21.7.0", "22.0.0", "AI SDK 7"],
     [{ orm: "mongoose" }, "20.18.0", "20.19.0", "Mongoose 9 and MongoDB 7"],

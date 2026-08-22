@@ -1,0 +1,13 @@
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { defineHandler } from "nitro";
+
+export default defineHandler((event) =>
+  fetchRequestHandler({
+    endpoint: "/trpc",
+    req: event.req,
+    router: appRouter,
+    createContext: () => createContext({ request: event.req }),
+  }),
+);

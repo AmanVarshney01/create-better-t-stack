@@ -58,6 +58,11 @@ export async function getBackendFrameworkChoice(
       label: "Elysia",
       hint: "Ergonomic web framework for building backend servers",
     },
+    {
+      value: "nitro" as const,
+      label: "Nitro (experimental)",
+      hint: "Portable, file-routed server framework powered by H3",
+    },
   );
 
   if (!hasIncompatibleFrontend) {

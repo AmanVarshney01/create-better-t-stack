@@ -64,7 +64,7 @@ export function cloudflareServerEnvEntries(plan: AlchemyDeploymentPlan): string[
       (entry) => entry.startsWith("GOOGLE_") || entry.startsWith("POLAR_"),
     );
     const clerkEntries = ['CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),'];
-    if (api !== "none" && ["self", "hono", "elysia"].includes(backend)) {
+    if (api !== "none" && ["self", "hono", "elysia", "nitro"].includes(backend)) {
       clerkEntries.push('CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),');
     }
     entries.splice(insertAt === -1 ? entries.length : insertAt, 0, ...clerkEntries);
@@ -87,7 +87,7 @@ export function prismaServerEnvEntries(plan: AlchemyDeploymentPlan): string[] {
     entries.push('CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),');
     if (
       ["express", "fastify"].includes(backend) ||
-      (api !== "none" && ["hono", "elysia"].includes(backend))
+      (api !== "none" && ["hono", "elysia", "nitro"].includes(backend))
     ) {
       entries.push('CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),');
     }

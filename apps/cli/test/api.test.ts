@@ -57,7 +57,7 @@ describe("API Configurations", () => {
       });
     }
 
-    const backends = ["hono", "express", "fastify", "elysia"];
+    const backends = ["hono", "express", "fastify", "elysia", "nitro"];
 
     for (const backend of backends) {
       it(`should work with tRPC + ${backend}`, async () => {
@@ -184,7 +184,7 @@ describe("API Configurations", () => {
       });
     }
 
-    const backends = ["hono", "express", "fastify", "elysia"];
+    const backends = ["hono", "express", "fastify", "elysia", "nitro"];
 
     for (const backend of backends) {
       it(`should work with oRPC + ${backend}`, async () => {

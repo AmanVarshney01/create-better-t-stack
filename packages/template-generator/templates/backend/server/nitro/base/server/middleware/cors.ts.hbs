@@ -1,0 +1,19 @@
+import { env } from "@{{projectName}}/env/server";
+import { defineHandler } from "nitro";
+import { handleCors } from "nitro/h3";
+
+export default defineHandler((event) => {
+  const response = handleCors(event, {
+    origin: [env.CORS_ORIGIN],
+    methods: ["GET", "POST", "OPTIONS"],
+{{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+    allowHeaders: ["Content-Type", "Authorization"],
+{{/if}}
+{{#if (eq auth "better-auth")}}
+    credentials: true,
+{{/if}}
+  });
+
+  if (response !== false) return response;
+  return undefined;
+});

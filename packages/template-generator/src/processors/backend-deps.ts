@@ -31,6 +31,8 @@ export function processBackendDeps(vfs: VirtualFileSystem, config: ProjectConfig
     devDeps.push("@types/express", "@types/cors");
   } else if (backend === "fastify") {
     deps.push("fastify", "@fastify/cors");
+  } else if (backend === "nitro") {
+    devDeps.push("nitro");
   }
 
   if (api === "trpc") {
@@ -43,8 +45,10 @@ export function processBackendDeps(vfs: VirtualFileSystem, config: ProjectConfig
 
   if (auth === "better-auth") deps.push("better-auth");
 
-  if (runtime === "node") devDeps.push("tsx", "@types/node");
-  else if (runtime === "bun") devDeps.push("@types/bun");
+  if (runtime === "node") {
+    if (backend !== "nitro") devDeps.push("tsx");
+    devDeps.push("@types/node");
+  } else if (runtime === "bun") devDeps.push("@types/bun");
 
   if (deps.length > 0 || devDeps.length > 0) {
     addPackageDependency({

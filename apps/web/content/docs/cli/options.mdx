@@ -207,6 +207,7 @@ Backend framework to use:
 - `express`: Express.js (popular, mature)
 - `fastify`: Fastify (fast, plugin-based)
 - `elysia`: Elysia (Bun-native)
+- `nitro`: Nitro 3 (experimental, portable, file-routed, H3-based)
 - `convex`: Convex backend
 - `self`: Self-hosted/custom backend
 
@@ -299,7 +300,7 @@ create-better-t-stack --auth none
 - if you choose a database, you should also choose an ORM
 - with `--backend convex`, `better-auth` supports `react-router`, `tanstack-router`, `tanstack-start`, `next`, and native Expo frontends
 - `clerk` requires a compatible frontend
-- Supported Clerk backends: `convex`, `hono`, `express`, `fastify`, `elysia`, and `self` with Next.js or TanStack Start
+- Supported Clerk backends: `convex`, `hono`, `express`, `fastify`, `elysia`, `nitro`, and `self` with Next.js or TanStack Start
 - Authentication is automatically set to `none` when using `--backend none`
 
 ## Payments

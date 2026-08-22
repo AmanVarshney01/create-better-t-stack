@@ -21,7 +21,7 @@ This guide explains how Better-T-Stack deploys your applications to [Vercel](htt
 
 **Vercel Services** let you run multiple apps — a frontend and one or more backends — as services inside a single Vercel project. Each service gets its own build and its own [Fluid Compute](https://vercel.com/docs/fluid-compute) functions, while sharing one domain, one set of environment variables, and one deployment lifecycle.
 
-Better-T-Stack uses this to deploy your monorepo's `apps/web` and `apps/server` together: the web service serves your frontend, the server service runs your Hono/Express/Fastify/Elysia backend, and rewrites route `/api/*` requests between them on the same domain. No CORS configuration, no separate projects to keep in sync.
+Better-T-Stack uses this to deploy your monorepo's `apps/web` and `apps/server` together: the web service serves your frontend, the server service runs your Hono/Express/Fastify/Elysia/Nitro backend, and rewrites route `/api/*` requests between them on the same domain. No CORS configuration, no separate projects to keep in sync.
 
 ## Enabling Vercel Deployment
 
@@ -57,7 +57,7 @@ npm create better-t-stack@latest my-app \
   --server-deploy vercel
 ```
 
-Server deployment requires the `bun` or `node` runtime and a separate backend (hono, express, fastify, elysia). For the Cloudflare `workers` runtime, use `--server-deploy cloudflare` instead.
+Server deployment requires the `bun` or `node` runtime and a separate backend (hono, express, fastify, elysia, nitro). For the Cloudflare `workers` runtime, use `--server-deploy cloudflare` instead.
 
 ## Understanding vercel.json
 
@@ -116,6 +116,8 @@ How the pieces fit together:
 | Solid           | `nitro`           |         | SSR via Nitro's Vercel preset            |
 
 Astro projects automatically use the [`@astrojs/vercel`](https://docs.astro.build/en/guides/integrations-guide/vercel/) adapter instead of the Node standalone adapter.
+
+Standalone Nitro backends use the `nitro` service framework and omit a source entrypoint. Nitro emits Vercel's Build Output API directly from its file-based server routes.
 
 ### Choosing a region
 

@@ -1,0 +1,22 @@
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { onError } from "@orpc/server";
+import { RPCHandler } from "@orpc/server/fetch";
+import { defineHandler } from "nitro";
+
+const handler = new RPCHandler(appRouter, {
+  interceptors: [
+    onError((error) => {
+      console.error(error);
+    }),
+  ],
+});
+
+export default defineHandler(async (event) => {
+  const result = await handler.handle(event.req, {
+    prefix: "/rpc",
+    context: await createContext({ request: event.req }),
+  });
+
+  return result.response ?? new Response("Not Found", { status: 404 });
+});

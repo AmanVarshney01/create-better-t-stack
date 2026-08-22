@@ -31,6 +31,37 @@ function createStack(overrides: Partial<StackState> = {}): StackState {
 }
 
 describe("stack builder D1 compatibility", () => {
+  test("offers Nitro with all supported server deployment targets", () => {
+    expect(TECH_OPTIONS.backend.find((option) => option.id === "nitro")).toMatchObject({
+      name: "Nitro",
+      experimental: true,
+    });
+
+    const stack = createStack({
+      backend: "nitro",
+      runtime: "node",
+      serverDeploy: "none",
+    });
+
+    expect(getDisabledReason(stack, "serverDeploy", "docker")).toBeNull();
+    expect(getDisabledReason(stack, "serverDeploy", "prisma")).toBeNull();
+    expect(getDisabledReason(stack, "serverDeploy", "vercel")).toBeNull();
+    expect(getDisabledReason(stack, "serverDeploy", "cloudflare")).toBe(
+      "Cloudflare requires Workers runtime",
+    );
+    expect(
+      getDisabledReason(
+        createStack({ backend: "nitro", runtime: "workers", serverDeploy: "cloudflare" }),
+        "serverDeploy",
+        "cloudflare",
+      ),
+    ).toBeNull();
+    expect(getDisabledReason(stack, "addons", "evlog")).toBe(
+      "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend",
+    );
+    expect(generateStackCommand(stack)).toContain("--backend nitro");
+  });
+
   test("supports Solid 2 as a self-hosted fullstack backend", () => {
     const stack = createStack({
       webFrontend: ["solid"],
@@ -94,6 +125,26 @@ describe("stack builder D1 compatibility", () => {
       backend: "hono",
       runtime: "workers",
       database: "sqlite",
+      dbSetup: "d1",
+      serverDeploy: "cloudflare",
+    });
+  });
+
+  test("keeps Nitro when D1 selects the Workers deployment path", () => {
+    const result = analyzeStackCompatibility(
+      createStack({
+        backend: "nitro",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        dbSetup: "d1",
+        serverDeploy: "none",
+      }),
+    );
+
+    expect(result.adjustedStack).toMatchObject({
+      backend: "nitro",
+      runtime: "workers",
       dbSetup: "d1",
       serverDeploy: "cloudflare",
     });

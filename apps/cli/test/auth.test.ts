@@ -1155,7 +1155,7 @@ describe("Authentication Configurations", () => {
   });
 
   describe("Authentication with Different Backends", () => {
-    const backends = ["hono", "express", "fastify", "elysia", "self"];
+    const backends = ["hono", "express", "fastify", "elysia", "nitro", "self"];
 
     for (const backend of backends) {
       it(`should work with better-auth + ${backend}`, async () => {
