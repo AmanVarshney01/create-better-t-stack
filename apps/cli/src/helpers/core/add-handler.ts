@@ -16,6 +16,7 @@ import { intro, log, outro } from "@clack/prompts";
 import { Result } from "better-result";
 import fs from "fs-extra";
 import pc from "picocolors";
+import z from "zod";
 
 import { getAddonsToAdd } from "../../prompts/addons";
 import type { AddInput, Addons, AddonOptions, ProjectConfig } from "../../types";
@@ -41,6 +42,7 @@ export interface AddResult {
   projectDir: string;
   dryRun?: boolean;
   plannedFileCount?: number;
+  addedPackage?: string;
   error?: string;
 }
 
@@ -67,6 +69,72 @@ const ADD_TEXT_FILE_PATHS = ["apps/web/vite.config.ts", "lefthook.yml"];
 const HOOK_ADDONS = ["husky", "lefthook"] as const satisfies readonly Addons[];
 const HOOK_LINTER_ADDONS = ["biome", "oxlint", "vite-plus"] as const satisfies readonly Addons[];
 const TASK_RUNNER_ADDONS = ["turborepo", "nx", "vite-plus"] as const satisfies readonly Addons[];
+const ConfigPackageScopeSchema = z
+  .object({
+    name: z.string().regex(/^@[^/]+\/config$/),
+  })
+  .transform(({ name }) => name.slice(0, -"/config".length));
+
+async function addWorkspacePackage(
+  vfs: VirtualFileSystem,
+  projectDir: string,
+  packageName: string,
+): Promise<Result<void, CLIError>> {
+  const packageDir = path.join(projectDir, "packages", packageName);
+  if (await fs.pathExists(packageDir)) {
+    return Result.err(
+      new CLIError({
+        message: `Workspace package already exists: packages/${packageName}`,
+      }),
+    );
+  }
+
+  const configPackagePath = path.join(projectDir, "packages", "config", "package.json");
+  const packageScopeResult = await Result.tryPromise({
+    try: async () => ConfigPackageScopeSchema.parse(await fs.readJson(configPackagePath)),
+    catch: (cause: unknown) =>
+      new CLIError({
+        message:
+          "Cannot determine the workspace package scope. Expected packages/config/package.json to have a name like @my-app/config.",
+        cause,
+      }),
+  });
+  if (packageScopeResult.isErr()) {
+    return Result.err(packageScopeResult.error);
+  }
+
+  const packageScope = packageScopeResult.value;
+  const packagePath = `packages/${packageName}`;
+  vfs.writeFile(
+    `${packagePath}/package.json`,
+    `${JSON.stringify(
+      {
+        name: `${packageScope}/${packageName}`,
+        version: "0.0.0",
+        private: true,
+        type: "module",
+        exports: { ".": "./src/index.ts" },
+        scripts: { "check-types": "tsc --noEmit" },
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  vfs.writeFile(
+    `${packagePath}/tsconfig.json`,
+    `${JSON.stringify(
+      {
+        extends: `${packageScope}/config/tsconfig.base.json`,
+        include: ["src/**/*.ts"],
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  vfs.writeFile(`${packagePath}/src/index.ts`, "export {};\n");
+
+  return Result.ok(undefined);
+}
 
 function mergeAddonOptions(
   existingAddonOptions?: AddonOptions,
@@ -231,7 +299,7 @@ async function addHandlerInternal(
       (addon) => addon !== "none" && !existingConfig.addons.includes(addon),
     );
 
-    if (addonsToAdd.length === 0) {
+    if (addonsToAdd.length === 0 && !input.package) {
       if (!isSilent()) {
         log.warn(pc.yellow("Nothing to add — those addons are already installed"));
         outro(pc.dim("Project unchanged"));
@@ -242,10 +310,12 @@ async function addHandlerInternal(
         projectDir,
       });
     }
+  } else if (input.package) {
+    addonsToAdd = [];
   } else if (isSilent()) {
     return Result.err(
       new CLIError({
-        message: "Addons are required in silent mode. Provide them via add() or add-json.",
+        message: "Addons or a package are required in silent mode.",
       }),
     );
   } else {
@@ -289,7 +359,11 @@ async function addHandlerInternal(
   }
 
   if (!isSilent()) {
-    log.info(`${pc.dim("Adding")} ${pc.cyan(formatConfigValue(addonsToAdd))}`);
+    const additions = [
+      addonsToAdd.length > 0 ? formatConfigValue(addonsToAdd) : undefined,
+      input.package ? `package ${input.package}` : undefined,
+    ].filter(Boolean);
+    log.info(`${pc.dim("Adding")} ${pc.cyan(additions.join(" and "))}`);
   }
 
   const mergedAddonOptions = mergeAddonOptions(existingConfig.addonOptions, input.addonOptions);
@@ -320,13 +394,15 @@ async function addHandlerInternal(
     addons: updatedAddons,
   };
 
-  const requirementsResult = await checkLocalRequirements(updatedConfig);
-  if (requirementsResult.isErr()) {
-    return Result.err(requirementsResult.error);
-  }
-  if (!isSilent()) {
-    for (const warning of requirementsResult.value.warnings) {
-      log.warn(pc.yellow(warning));
+  if (addonsToAdd.length > 0) {
+    const requirementsResult = await checkLocalRequirements(updatedConfig);
+    if (requirementsResult.isErr()) {
+      return Result.err(requirementsResult.error);
+    }
+    if (!isSilent()) {
+      for (const warning of requirementsResult.value.warnings) {
+        log.warn(pc.yellow(warning));
+      }
     }
   }
 
@@ -337,54 +413,61 @@ async function addHandlerInternal(
 
   const vfs = new VirtualFileSystem();
 
-  // Pre-load existing files into VFS so addon processors can modify them.
-  for (const pkgPath of ADD_PACKAGE_JSON_PATHS) {
-    const fullPath = path.join(projectDir, pkgPath);
-    if (await fs.pathExists(fullPath)) {
-      const content = await fs.readFile(fullPath, "utf-8");
-      vfs.writeFile(pkgPath, content);
-    }
-  }
-  for (const filePath of ADD_TEXT_FILE_PATHS) {
-    const fullPath = path.join(projectDir, filePath);
-    if (await fs.pathExists(fullPath)) {
-      const content = await fs.readFile(fullPath, "utf-8");
-      vfs.writeFile(filePath, content);
+  if (input.package) {
+    const packageResult = await addWorkspacePackage(vfs, projectDir, input.package);
+    if (packageResult.isErr()) {
+      return Result.err(packageResult.error);
     }
   }
 
-  // Process addon templates
-  await processAddonTemplates(vfs, EMBEDDED_TEMPLATES, config);
+  if (addonsToAdd.length > 0) {
+    // Pre-load existing files into VFS so addon processors can modify them.
+    for (const pkgPath of ADD_PACKAGE_JSON_PATHS) {
+      const fullPath = path.join(projectDir, pkgPath);
+      if (await fs.pathExists(fullPath)) {
+        const content = await fs.readFile(fullPath, "utf-8");
+        vfs.writeFile(pkgPath, content);
+      }
+    }
+    for (const filePath of ADD_TEXT_FILE_PATHS) {
+      const fullPath = path.join(projectDir, filePath);
+      if (await fs.pathExists(fullPath)) {
+        const content = await fs.readFile(fullPath, "utf-8");
+        vfs.writeFile(filePath, content);
+      }
+    }
 
-  // Process addon dependencies (adds deps to package.json files in VFS)
-  processAddonsDeps(vfs, config);
+    // Process addon templates and dependencies using template-generator's logic.
+    await processAddonTemplates(vfs, EMBEDDED_TEMPLATES, config);
+    processAddonsDeps(vfs, config);
 
-  if (addonsToAdd.includes("turborepo")) {
-    processTurboConfig(vfs, updatedConfig);
-  }
+    if (addonsToAdd.includes("turborepo")) {
+      processTurboConfig(vfs, updatedConfig);
+    }
 
-  if (addonsToAdd.includes("nx")) {
-    processNxConfig(vfs, updatedConfig);
-  }
+    if (addonsToAdd.includes("nx")) {
+      processNxConfig(vfs, updatedConfig);
+    }
 
-  if (addonsToAdd.includes("vite-plus")) {
-    processVitePlusConfig(vfs, updatedConfig);
-  }
+    if (addonsToAdd.includes("vite-plus")) {
+      processVitePlusConfig(vfs, updatedConfig);
+    }
 
-  const hasTaskRunner = updatedAddons.some((addon) =>
-    (TASK_RUNNER_ADDONS as readonly Addons[]).includes(addon),
-  );
+    const hasTaskRunner = updatedAddons.some((addon) =>
+      (TASK_RUNNER_ADDONS as readonly Addons[]).includes(addon),
+    );
 
-  if (hasTaskRunner) {
-    processPackageConfigs(vfs, updatedConfig);
-  }
+    if (hasTaskRunner) {
+      processPackageConfigs(vfs, updatedConfig);
+    }
 
-  if (updatedAddons.includes("vite-plus")) {
-    updateViteConfigImportsForVitePlus(vfs);
-  }
+    if (updatedAddons.includes("vite-plus")) {
+      updateViteConfigImportsForVitePlus(vfs);
+    }
 
-  if (shouldRefreshLefthook(addonsToAdd, updatedAddons)) {
-    refreshLefthookTemplate(vfs, updatedConfig);
+    if (shouldRefreshLefthook(addonsToAdd, updatedAddons)) {
+      refreshLefthookTemplate(vfs, updatedConfig);
+    }
   }
 
   // Write VFS to disk
@@ -398,7 +481,7 @@ async function addHandlerInternal(
   if (input.dryRun) {
     if (!isSilent()) {
       log.success(pc.green("Dry run passed · no files written"));
-      log.message(pc.dim(`${vfs.getFileCount()} addon files planned`));
+      log.message(pc.dim(`${vfs.getFileCount()} files planned`));
       outro(pc.dim("Project unchanged"));
     }
 
@@ -408,6 +491,7 @@ async function addHandlerInternal(
       projectDir,
       dryRun: true,
       plannedFileCount: vfs.getFileCount(),
+      addedPackage: input.package,
     });
   }
 
@@ -416,23 +500,26 @@ async function addHandlerInternal(
   if (writeResult.isErr()) {
     return Result.err(
       new CLIError({
-        message: `Failed to write addon files: ${writeResult.error.message}`,
+        message: `Failed to write files: ${writeResult.error.message}`,
       }),
     );
   }
 
   if (vfs.getFileCount() > 0 && !isSilent()) {
-    log.info(pc.dim(`Wrote ${vfs.getFileCount()} addon files`));
+    log.info(pc.dim(`Wrote ${vfs.getFileCount()} files`));
   }
 
   // Run addon setup (handles deps and interactive prompts)
   // Wrap with Result.tryPromise since setupAddons can throw UserCancelledError
   const setupResult = await Result.tryPromise({
-    try: () =>
-      setupAddons({
-        ...config,
-        addons: getSetupAddons(addonsToAdd, updatedAddons),
-      }),
+    try: async () => {
+      if (addonsToAdd.length > 0) {
+        await setupAddons({
+          ...config,
+          addons: getSetupAddons(addonsToAdd, updatedAddons),
+        });
+      }
+    },
     catch: (cause: unknown) => {
       if (UserCancelledError.is(cause)) return cause;
       return new CLIError({
@@ -447,10 +534,12 @@ async function addHandlerInternal(
   }
 
   // Update bts.jsonc with new addons
-  await updateBtsConfig(projectDir, {
-    addons: updatedAddons,
-    addonOptions: updatedConfig.addonOptions,
-  });
+  if (addonsToAdd.length > 0) {
+    await updateBtsConfig(projectDir, {
+      addons: updatedAddons,
+      addonOptions: updatedConfig.addonOptions,
+    });
+  }
 
   // Install dependencies if requested
   if (input.install) {
@@ -458,7 +547,11 @@ async function addHandlerInternal(
   }
 
   if (!isSilent()) {
-    log.success(pc.green(`Added ${formatConfigValue(addonsToAdd)}`));
+    const additions = [
+      addonsToAdd.length > 0 ? formatConfigValue(addonsToAdd) : undefined,
+      input.package ? `package ${input.package}` : undefined,
+    ].filter(Boolean);
+    log.success(pc.green(`Added ${additions.join(" and ")}`));
 
     if (!input.install) {
       const installCommand =
@@ -474,5 +567,6 @@ async function addHandlerInternal(
     addedAddons: addonsToAdd,
     projectDir,
     plannedFileCount: vfs.getFileCount(),
+    addedPackage: input.package,
   });
 }

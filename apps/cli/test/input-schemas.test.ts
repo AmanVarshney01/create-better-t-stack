@@ -28,6 +28,14 @@ describe("Input schemas", () => {
     expect(result.success).toBe(false);
   });
 
+  it("accepts safe workspace package names and rejects path-like names", () => {
+    expect(AddInputSchema.safeParse({ package: "shared-utils" }).success).toBe(true);
+
+    for (const packageName of ["../shared", "@acme/shared", "Shared", "node_modules"]) {
+      expect(AddInputSchema.safeParse({ package: packageName }).success).toBe(false);
+    }
+  });
+
   it("rejects conflicting task-runner addon combinations", () => {
     const conflictingAddonPairs = [
       ["nx", "vite-plus"],

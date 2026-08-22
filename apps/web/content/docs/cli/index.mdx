@@ -69,7 +69,7 @@ create-better-t-stack my-app --yes --dry-run
 
 ## `add`
 
-Adds addons to an existing Better-T-Stack project.
+Adds addons or scaffolds a workspace package in an existing Better-T-Stack project.
 
 ```bash
 create-better-t-stack add [options]
@@ -78,6 +78,7 @@ create-better-t-stack add [options]
 ### Options
 
 - `--addons <types...>`: Addons to add (see [Addons](/docs/cli/options#addons))
+- `--package <name>`: Scaffold `packages/<name>` with a package manifest, shared TypeScript config, and `src/index.ts`
 - `--project-dir <path>`: Project directory (defaults to current directory)
 - `--install / --no-install`: Install dependencies after adding
 - `--package-manager <pm>`: Package manager to use (`npm`, `pnpm`, `bun`)
@@ -93,6 +94,9 @@ create-better-t-stack add --addons pwa tauri --install
 
 # Add addons in a specific project directory
 create-better-t-stack add --project-dir ./my-app --addons mcp skills
+
+# Scaffold @my-app/shared in packages/shared
+create-better-t-stack add --package shared
 ```
 
 ## `create-json`
