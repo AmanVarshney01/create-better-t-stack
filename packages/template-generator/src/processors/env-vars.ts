@@ -268,7 +268,8 @@ function buildConvexBackendVars(
     frontend.includes("nuxt") ||
     frontend.includes("solid") ||
     frontend.includes("svelte") ||
-    frontend.includes("astro");
+    frontend.includes("astro") ||
+    frontend.includes("foldkit");
   const defaultSiteUrl =
     hasNative && !hasWeb
       ? "http://localhost:8081"
@@ -379,7 +380,8 @@ function buildConvexCommentBlocks(
     frontend.includes("nuxt") ||
     frontend.includes("solid") ||
     frontend.includes("svelte") ||
-    frontend.includes("astro");
+    frontend.includes("astro") ||
+    frontend.includes("foldkit");
   const defaultSiteUrl =
     hasNative && !hasWeb
       ? "http://localhost:8081"
@@ -447,7 +449,8 @@ function buildServerVars(
     frontend.includes("tanstack-start") ||
     frontend.includes("next") ||
     frontend.includes("nuxt") ||
-    frontend.includes("solid");
+    frontend.includes("solid") ||
+    frontend.includes("foldkit");
 
   let corsOrigin = "http://localhost:3001";
   if (hasAstro) {
@@ -579,6 +582,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
   const hasSvelte = frontend.includes("svelte");
   const hasSolid = frontend.includes("solid");
   const hasAstro = frontend.includes("astro");
+  const hasFoldkit = frontend.includes("foldkit");
   const hasWebFrontend =
     hasReactRouter ||
     hasTanStackRouter ||
@@ -587,7 +591,8 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     hasNuxt ||
     hasSolid ||
     hasSvelte ||
-    hasAstro;
+    hasAstro ||
+    hasFoldkit;
 
   // --- Client App .env ---
   if (hasWebFrontend) {

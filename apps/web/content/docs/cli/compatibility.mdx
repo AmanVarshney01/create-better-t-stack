@@ -71,9 +71,9 @@ When using `--backend convex`, these constraints apply:
 - `--server-deploy none`
 - Auth can be `better-auth`, `clerk`, or `none` depending frontend compatibility
 
-**Note:** Convex supports Clerk authentication with compatible frontends (React frameworks, Next.js, TanStack Start, and native frameworks). Nuxt, Svelte, Solid, and Astro are not compatible with Clerk.
+**Note:** Convex supports Clerk authentication with compatible frontends (React frameworks, Next.js, TanStack Start, and native frameworks). Nuxt, Svelte, Solid, Astro, and Foldkit are not compatible with Clerk.
 
-**Better Auth with Convex:** supported frontends are `react-router`, `tanstack-router`, `tanstack-start`, `next`, `native-bare`, `native-uniwind`, and `native-unistyles`. Nuxt, Svelte, Solid, and Astro are not supported with Convex Better Auth.
+**Better Auth with Convex:** supported frontends are `react-router`, `tanstack-router`, `tanstack-start`, `next`, `native-bare`, `native-uniwind`, and `native-unistyles`. Nuxt, Svelte, Solid, Astro, and Foldkit are not supported with Convex Better Auth.
 
 #### No Backend
 
@@ -101,6 +101,7 @@ When using `--backend none`, the following options are automatically set:
 | `svelte`          | ❌           | ✅           | tRPC not supported        |
 | `solid`           | ❌           | ✅           | Solid; tRPC not supported |
 | `astro`           | ❌           | ✅           | tRPC not supported        |
+| `foldkit`         | ❌           | ✅           | tRPC not supported        |
 | Native frameworks | ✅           | ✅           | Full support              |
 
 ```bash
@@ -196,6 +197,7 @@ create-better-t-stack --addons turborepo
 
 - `--web-deploy cloudflare`, `--web-deploy docker`, and `--web-deploy vercel` require a web frontend
 - Cannot be used with native-only projects
+- `--web-deploy cloudflare` needs an Alchemy recipe for the frontend; Foldkit has none yet, so use `docker` or `vercel`
 
 ### Server Deployment
 
@@ -221,7 +223,7 @@ Clerk authentication requires:
 - Compatible frontends (React frameworks, Next.js, TanStack Start, native frameworks)
 - Supported backends: Convex, Hono, Express, Fastify, and Elysia
 - Fullstack (`--backend self`) support with Next.js or TanStack Start
-- Not compatible with Nuxt, Svelte, Solid, or Astro
+- Not compatible with Nuxt, Svelte, Solid, Astro, or Foldkit
 
 ### Payments Requirements
 
@@ -229,6 +231,7 @@ Polar payments require:
 
 - Better-Auth authentication
 - A web frontend (or no frontend selected)
+- A frontend with a checkout template; Foldkit has none yet
 
 ```bash
 # ✅ Valid - Better-Auth without database

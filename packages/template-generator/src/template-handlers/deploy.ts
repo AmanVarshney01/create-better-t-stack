@@ -73,6 +73,7 @@ export async function processDeployTemplates(
       nuxt: "nuxt",
       svelte: "svelte",
       astro: "astro",
+      foldkit: "foldkit",
     } satisfies Record<string, string>;
 
     for (const f of config.frontend) {

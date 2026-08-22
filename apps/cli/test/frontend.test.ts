@@ -19,6 +19,7 @@ describe("Frontend Configurations", () => {
       "svelte",
       "solid",
       "astro",
+      "foldkit",
     ] satisfies ReadonlyArray<
       | "tanstack-router"
       | "react-router"
@@ -31,6 +32,7 @@ describe("Frontend Configurations", () => {
       | "svelte"
       | "solid"
       | "astro"
+      | "foldkit"
     >;
 
     for (const frontend of singleFrontends) {
@@ -75,6 +77,19 @@ describe("Frontend Configurations", () => {
           config.orm = "drizzle";
           config.auth = "none";
           config.api = "orpc"; // tRPC not supported with nuxt/svelte
+          config.addons = ["none"];
+          config.examples = ["none"];
+          config.dbSetup = "none";
+          config.webDeploy = "none";
+          config.serverDeploy = "none";
+        } else if (frontend === "foldkit") {
+          // Foldkit is a Vite SPA: oRPC only, no Convex, no self backend
+          config.backend = "hono";
+          config.runtime = "bun";
+          config.database = "sqlite";
+          config.orm = "drizzle";
+          config.auth = "none";
+          config.api = "orpc";
           config.addons = ["none"];
           config.examples = ["none"];
           config.dbSetup = "none";
@@ -793,6 +808,190 @@ describe("Frontend Configurations", () => {
       });
 
       expectError(result, "'--web-deploy' requires a web frontend");
+    });
+  });
+
+  describe("Foldkit Frontend", () => {
+    const foldkitBase = {
+      frontend: ["foldkit"],
+      backend: "hono",
+      runtime: "bun",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      addons: ["turborepo"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+      install: false,
+    } satisfies Partial<TestConfig>;
+
+    it("should generate the Foldkit project structure", async () => {
+      const result = await runTRPCTest({
+        ...foldkitBase,
+        projectName: "foldkit-structure",
+        auth: "better-auth",
+        examples: ["todo"],
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const webDir = path.join(result.projectDir, "apps/web");
+      const packageJson = await fs.readJson(path.join(webDir, "package.json"));
+
+      expect(packageJson.dependencies.foldkit).toBeDefined();
+      expect(packageJson.dependencies.effect).toBeDefined();
+      expect(packageJson.dependencies["@orpc/client"]).toBeDefined();
+      // Foldkit holds server state in the Model, so it pulls in no query cache
+      expect(packageJson.dependencies["@tanstack/react-query"]).toBeUndefined();
+      expect(packageJson.dependencies["@orpc/tanstack-query"]).toBeUndefined();
+      expect(packageJson.devDependencies["@foldkit/vite-plugin"]).toBeDefined();
+
+      for (const file of [
+        "index.html",
+        "src/entry.ts",
+        "src/main.ts",
+        "src/message.ts",
+        "src/route.ts",
+        "src/api/orpc.ts",
+        "src/api/health.ts",
+        "src/auth/client.ts",
+        "src/auth/session.ts",
+        "src/page/login.ts",
+        "src/page/todos.ts",
+        "src/view/header.ts",
+      ]) {
+        expect(await fs.pathExists(path.join(webDir, file))).toBe(true);
+      }
+    });
+
+    it("should omit auth and example modules when they are not selected", async () => {
+      const result = await runTRPCTest({
+        ...foldkitBase,
+        projectName: "foldkit-minimal",
+        auth: "none",
+        examples: ["none"],
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const webDir = path.join(result.projectDir, "apps/web");
+      expect(await fs.pathExists(path.join(webDir, "src/auth/session.ts"))).toBe(false);
+      expect(await fs.pathExists(path.join(webDir, "src/page/todos.ts"))).toBe(false);
+      expect(await fs.pathExists(path.join(webDir, "src/api/orpc.ts"))).toBe(true);
+    });
+
+    it("should serve the built SPA through nginx for Docker web deploy", async () => {
+      const result = await runTRPCTest({
+        ...foldkitBase,
+        projectName: "foldkit-docker",
+        auth: "none",
+        examples: ["none"],
+        webDeploy: "docker",
+        serverDeploy: "docker",
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const webDir = path.join(result.projectDir, "apps/web");
+      expect(await fs.pathExists(path.join(webDir, "nginx.conf"))).toBe(true);
+
+      const dockerfile = await fs.readFile(path.join(webDir, "Dockerfile"), "utf8");
+      expect(dockerfile).toContain("FROM nginx:alpine AS runner");
+      expect(dockerfile).toContain("/app/apps/web/dist");
+
+      const compose = await fs.readFile(path.join(result.projectDir, "docker-compose.yml"), "utf8");
+      expect(compose).toContain('"3001:80"');
+    });
+
+    it("should fail Foldkit + tRPC", async () => {
+      const result = await runTRPCTest({
+        ...foldkitBase,
+        projectName: "foldkit-trpc-fail",
+        auth: "none",
+        examples: ["none"],
+        api: "trpc",
+      });
+
+      expectError(result, "tRPC API is not supported with 'foldkit' frontend");
+    });
+
+    it("should fail Foldkit + Convex", async () => {
+      const result = await runTRPCTest({
+        projectName: "foldkit-convex-fail",
+        frontend: ["foldkit"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectError(result);
+    });
+
+    it("should fail Foldkit + Clerk", async () => {
+      const result = await runTRPCTest({
+        ...foldkitBase,
+        projectName: "foldkit-clerk-fail",
+        auth: "clerk",
+        examples: ["none"],
+      });
+
+      expectError(result);
+    });
+
+    it("should fail Foldkit + Polar payments", async () => {
+      const result = await runTRPCTest({
+        ...foldkitBase,
+        projectName: "foldkit-polar-fail",
+        auth: "better-auth",
+        payments: "polar",
+        examples: ["none"],
+      });
+
+      expectError(result, "Polar payments has no Foldkit checkout template yet");
+    });
+
+    it("should fail Foldkit + Cloudflare web deploy", async () => {
+      const result = await runTRPCTest({
+        ...foldkitBase,
+        projectName: "foldkit-cloudflare-fail",
+        auth: "none",
+        examples: ["none"],
+        webDeploy: "cloudflare",
+      });
+
+      expectError(result, "has no Alchemy recipe for the 'foldkit' frontend");
+    });
+
+    it("should fail Foldkit + self backend", async () => {
+      const result = await runTRPCTest({
+        ...foldkitBase,
+        projectName: "foldkit-self-fail",
+        backend: "self",
+        runtime: "none",
+        auth: "none",
+        examples: ["none"],
+      });
+
+      expectError(result);
     });
   });
 });

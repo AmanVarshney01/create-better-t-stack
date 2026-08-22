@@ -24,6 +24,7 @@ import {
   validateServerDeployRequiresBackend,
   validateVercelServerDeploy,
   validatePrismaServerDeploy,
+  validateCloudflareWebDeploy,
   validatePrismaWebDeploy,
   validatePrismaWebDeployDesktopAddons,
   validateCloudflareWebDeployKnownIssues,
@@ -433,7 +434,7 @@ export function validateBackendConstraints(
 
   if (config.auth === "clerk" && config.frontend) {
     const incompatibleFrontends = config.frontend.filter((f) =>
-      ["nuxt", "svelte", "solid", "astro"].includes(f),
+      ["nuxt", "svelte", "solid", "astro", "foldkit"].includes(f),
     );
     if (incompatibleFrontends.length > 0) {
       return validationErr(
@@ -459,7 +460,9 @@ export function validateBackendConstraints(
   }
 
   if (backend === "convex" && providedFlags.has("frontend") && options.frontend) {
-    const incompatibleFrontends = options.frontend.filter((f) => f === "solid" || f === "astro");
+    const incompatibleFrontends = options.frontend.filter(
+      (f) => f === "solid" || f === "astro" || f === "foldkit",
+    );
     if (incompatibleFrontends.length > 0) {
       return validationErr(
         `The following frontends are not compatible with '--backend convex': ${incompatibleFrontends.join(
@@ -547,6 +550,7 @@ export function validateFullConfig(
     yield* validateVercelServerDeploy(config.serverDeploy, config.backend, config.runtime);
     yield* validatePrismaServerDeploy(config.serverDeploy, config.backend, config.runtime);
     yield* validatePrismaWebDeploy(config.webDeploy, config.frontend);
+    yield* validateCloudflareWebDeploy(config.webDeploy, config.frontend);
     yield* validateCloudflareWebDeployKnownIssues(config);
     yield* validateDockerWebDeployDesktopAddons(
       config.webDeploy,

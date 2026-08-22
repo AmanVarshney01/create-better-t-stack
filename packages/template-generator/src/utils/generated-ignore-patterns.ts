@@ -14,6 +14,7 @@ const FRONTEND_GENERATED_PATTERNS = {
   svelte: ["apps/web/.svelte-kit/**", "apps/web/build/**", "apps/web/.output/**"],
   solid: ["apps/web/dist/**", "apps/web/.output/**"],
   astro: ["apps/web/dist/**", "apps/web/.astro/**"],
+  foldkit: ["apps/web/dist/**"],
   "native-bare": ["apps/native/.expo/**", "apps/native/dist/**", "apps/native/web-build/**"],
   "native-uniwind": ["apps/native/.expo/**", "apps/native/dist/**", "apps/native/web-build/**"],
   "native-unistyles": [

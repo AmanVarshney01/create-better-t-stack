@@ -31,9 +31,11 @@ export type MatrixRule =
   | "orm-mongodb-requires-mongoose-or-prisma"
   | "orm-requires-database"
   | "payments-polar-requires-better-auth"
+  | "payments-polar-frontend-incompatible"
   | "runtime-none-requires-terminal-backend"
   | "server-deploy-requires-backend"
   | "server-deploy-requires-workers-runtime"
+  | "web-deploy-cloudflare-frontend-incompatible"
   | "web-deploy-requires-web-frontend"
   | "workers-requires-hono"
   | "workers-requires-server-deploy"
@@ -53,6 +55,7 @@ const WEB_FRONTENDS: readonly Frontend[] = [
   "svelte",
   "solid",
   "astro",
+  "foldkit",
 ] as const;
 
 const FULLSTACK_FRONTENDS: readonly Frontend[] = [
@@ -64,7 +67,7 @@ const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "astro",
 ] as const;
 
-const CONVEX_INCOMPATIBLE_FRONTENDS: readonly Frontend[] = ["solid", "astro"] as const;
+const CONVEX_INCOMPATIBLE_FRONTENDS: readonly Frontend[] = ["solid", "astro", "foldkit"] as const;
 
 const CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS: readonly Frontend[] = [
   "tanstack-router",
@@ -81,9 +84,30 @@ const CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS: readonly Frontend[] = [
   "svelte",
   "solid",
   "astro",
+  "foldkit",
 ] as const;
 
-const CLERK_INCOMPATIBLE_FRONTENDS: readonly Frontend[] = ["nuxt", "svelte", "solid", "astro"];
+const CLERK_INCOMPATIBLE_FRONTENDS: readonly Frontend[] = [
+  "nuxt",
+  "svelte",
+  "solid",
+  "astro",
+  "foldkit",
+];
+
+const TRPC_UNSUPPORTED_FRONTENDS: readonly Frontend[] = [
+  "nuxt",
+  "svelte",
+  "solid",
+  "astro",
+  "foldkit",
+];
+
+const AI_EXAMPLE_INCOMPATIBLE_FRONTENDS: readonly Frontend[] = ["solid", "astro", "foldkit"];
+
+const POLAR_INCOMPATIBLE_FRONTENDS: readonly Frontend[] = ["foldkit"];
+
+const CLOUDFLARE_WEB_DEPLOY_INCOMPATIBLE_FRONTENDS: readonly Frontend[] = ["foldkit"];
 
 function hasFrontend(frontends: readonly Frontend[], values: readonly Frontend[]) {
   return frontends.some((frontend) => values.includes(frontend));
@@ -286,12 +310,19 @@ function validateRuntimeAndDeploy(config: ProjectConfig, rules: Set<MatrixRule>)
     config.webDeploy !== "none" && !hasWebFrontend(config.frontend),
     "web-deploy-requires-web-frontend",
   );
+
+  addRule(
+    rules,
+    config.webDeploy === "cloudflare" &&
+      hasFrontend(config.frontend, CLOUDFLARE_WEB_DEPLOY_INCOMPATIBLE_FRONTENDS),
+    "web-deploy-cloudflare-frontend-incompatible",
+  );
 }
 
 function validateFrontendApi(config: ProjectConfig, rules: Set<MatrixRule>) {
   addRule(
     rules,
-    config.api === "trpc" && hasFrontend(config.frontend, ["nuxt", "svelte", "solid", "astro"]),
+    config.api === "trpc" && hasFrontend(config.frontend, TRPC_UNSUPPORTED_FRONTENDS),
     "api-trpc-frontend-incompatible",
   );
 }
@@ -304,6 +335,12 @@ function validatePayments(config: ProjectConfig, rules: Set<MatrixRule>) {
     config.payments === "polar" && config.auth !== "better-auth",
     "payments-polar-requires-better-auth",
   );
+
+  addRule(
+    rules,
+    config.payments === "polar" && hasFrontend(config.frontend, POLAR_INCOMPATIBLE_FRONTENDS),
+    "payments-polar-frontend-incompatible",
+  );
 }
 
 function validateExamples(config: ProjectConfig, rules: Set<MatrixRule>) {
@@ -315,7 +352,7 @@ function validateExamples(config: ProjectConfig, rules: Set<MatrixRule>) {
   if (config.examples.includes("ai")) {
     addRule(
       rules,
-      hasFrontend(config.frontend, ["solid", "astro"]),
+      hasFrontend(config.frontend, AI_EXAMPLE_INCOMPATIBLE_FRONTENDS),
       "example-ai-frontend-incompatible",
     );
     addRule(rules, config.backend === "none", "example-ai-requires-backend");
@@ -388,6 +425,12 @@ export function classifyMatrixError(message: string): MatrixRule | "unknown" {
     return "db-setup-supabase-requires-postgres";
   }
   if (message.includes("Turso setup requires SQLite")) return "db-setup-turso-requires-sqlite";
+  if (message.includes("Polar payments has no Foldkit checkout template yet")) {
+    return "payments-polar-frontend-incompatible";
+  }
+  if (message.includes("has no Alchemy recipe for the")) {
+    return "web-deploy-cloudflare-frontend-incompatible";
+  }
   if (message.includes("The 'ai' example is not compatible")) {
     return "example-ai-frontend-incompatible";
   }

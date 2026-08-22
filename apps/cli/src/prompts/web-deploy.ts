@@ -11,6 +11,7 @@ import type {
 } from "../types";
 import { WEB_FRAMEWORKS } from "../utils/compatibility";
 import {
+  supportsCloudflareWebDeploy,
   supportsPrismaWebDeploy,
   validateCloudflareWebDeployKnownIssues,
 } from "../utils/compatibility-rules";
@@ -84,13 +85,15 @@ export async function getDeploymentChoice(
   }
 
   const supportsPrismaCompute = supportsPrismaWebDeploy(frontend);
-  const supportsCloudflare = validateCloudflareWebDeployKnownIssues({
-    webDeploy: "cloudflare",
-    frontend,
-    dbSetup,
-    database,
-    orm,
-  }).isOk();
+  const supportsCloudflare =
+    supportsCloudflareWebDeploy(frontend) &&
+    validateCloudflareWebDeployKnownIssues({
+      webDeploy: "cloudflare",
+      frontend,
+      dbSetup,
+      database,
+      orm,
+    }).isOk();
   const availableDeployments = [
     ...(supportsCloudflare ? (["cloudflare"] as const) : []),
     ...(supportsPrismaCompute ? (["prisma"] as const) : []),
@@ -131,7 +134,7 @@ export async function getDeploymentToAdd(frontend: Frontend[], existingDeploymen
 
   const supportsPrismaCompute = supportsPrismaWebDeploy(frontend);
   const deployments = [
-    "cloudflare",
+    ...(supportsCloudflareWebDeploy(frontend) ? (["cloudflare"] as const) : []),
     ...(supportsPrismaCompute ? (["prisma"] as const) : []),
     "docker",
     "vercel",

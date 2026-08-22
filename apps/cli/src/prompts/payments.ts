@@ -7,7 +7,7 @@ export async function getPaymentsChoice(
   payments?: Payments,
   auth?: Auth,
   backend?: Backend,
-  _frontends?: Frontend[],
+  frontends?: Frontend[],
   previousValue?: Payments,
 ) {
   if (payments !== undefined) return payments;
@@ -16,7 +16,7 @@ export async function getPaymentsChoice(
     return "none" as Payments;
   }
 
-  const isPolarCompatible = auth === "better-auth";
+  const isPolarCompatible = auth === "better-auth" && !frontends?.includes("foldkit");
 
   if (!isPolarCompatible) {
     return "none" as Payments;

@@ -53,7 +53,9 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
   const hasServer = serverDeploy === "vercel" && backend !== "self";
   const isDesktop = addons.includes("tauri") || addons.includes("electrobun");
   const isStaticSpa =
-    frontend.includes("tanstack-router") || (frontend.includes("react-router") && isDesktop);
+    frontend.includes("tanstack-router") ||
+    frontend.includes("foldkit") ||
+    (frontend.includes("react-router") && isDesktop);
   const installCommand = `cd ../.. && ${packageManager} install`;
 
   const services: Record<string, VercelService> = {};

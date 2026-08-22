@@ -148,6 +148,7 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
       "svelte",
       "solid",
       "astro",
+      "foldkit",
     ].includes(f),
   );
   const hasReactWebAuthForms = frontend.some((f) =>

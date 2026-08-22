@@ -21,6 +21,7 @@ const WEB_FRONTEND_VALUES: readonly Frontend[] = [
   "svelte",
   "solid",
   "astro",
+  "foldkit",
   "tanstack-start",
 ];
 
@@ -102,6 +103,11 @@ export async function getFrontendChoice(
           value: "astro" as const,
           label: "Astro",
           hint: "The web framework for content-driven websites",
+        },
+        {
+          value: "foldkit" as const,
+          label: "Foldkit",
+          hint: "Effect-powered TypeScript framework architected like Elm",
         },
         {
           value: "tanstack-start" as const,

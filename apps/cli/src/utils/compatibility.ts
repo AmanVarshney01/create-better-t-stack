@@ -9,4 +9,5 @@ export const WEB_FRAMEWORKS: readonly Frontend[] = [
   "svelte",
   "solid",
   "astro",
+  "foldkit",
 ] as const;

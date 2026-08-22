@@ -66,10 +66,11 @@ export type WebFrontend = Extract<
   | "svelte"
   | "solid"
   | "astro"
+  | "foldkit"
   | "none"
 >;
 
-export type DesktopWebFrontend = Exclude<WebFrontend, "none" | "solid">;
+export type DesktopWebFrontend = Exclude<WebFrontend, "none" | "solid" | "foldkit">;
 
 export type NativeFrontend = Extract<
   Frontend,

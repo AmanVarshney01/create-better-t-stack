@@ -87,6 +87,9 @@ function getNodeToolingRequirements(config: RequirementConfig): VersionRequireme
       case "solid":
         addNodeRequirement(requirements, ">=24.0.0", "Solid");
         break;
+      case "foldkit":
+        addNodeRequirement(requirements, "^20.19.0 || >=22.12.0", "Foldkit");
+        break;
       case "react-router":
         addNodeRequirement(requirements, ">=22.22.0", "React Router 8");
         break;

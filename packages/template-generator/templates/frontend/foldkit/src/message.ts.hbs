@@ -1,0 +1,61 @@
+import { Schema as S } from "effect";
+import { m } from "foldkit/message";
+import { UrlRequest } from "foldkit/navigation";
+import { Url } from "foldkit/url";
+
+{{#if (eq api "orpc")}}
+import { FailedFetchHealthCheck, SucceededFetchHealthCheck } from "./api/health";
+{{/if}}
+{{#if (eq auth "better-auth")}}
+import {
+  CompletedFetchSession,
+  CompletedSignOut,
+{{#if (eq api "orpc")}}
+  FailedFetchPrivateData,
+  SucceededFetchPrivateData,
+{{/if}}
+} from "./auth/session";
+import * as Login from "./page/login";
+{{/if}}
+{{#if (includes examples "todo")}}
+import * as Todos from "./page/todos";
+{{/if}}
+
+// MESSAGE
+
+export const CompletedNavigateInternal = m("CompletedNavigateInternal");
+export const CompletedLoadExternal = m("CompletedLoadExternal");
+export const ClickedLink = m("ClickedLink", { request: UrlRequest });
+export const ChangedUrl = m("ChangedUrl", { url: Url });
+{{#if (eq auth "better-auth")}}
+export const ClickedSignOut = m("ClickedSignOut");
+export const GotLoginMessage = m("GotLoginMessage", { message: Login.Message });
+{{/if}}
+{{#if (includes examples "todo")}}
+export const GotTodosMessage = m("GotTodosMessage", { message: Todos.Message });
+{{/if}}
+
+export const Message = S.Union([
+  CompletedNavigateInternal,
+  CompletedLoadExternal,
+  ClickedLink,
+  ChangedUrl,
+{{#if (eq api "orpc")}}
+  SucceededFetchHealthCheck,
+  FailedFetchHealthCheck,
+{{/if}}
+{{#if (eq auth "better-auth")}}
+  CompletedFetchSession,
+  CompletedSignOut,
+  ClickedSignOut,
+  GotLoginMessage,
+{{#if (eq api "orpc")}}
+  SucceededFetchPrivateData,
+  FailedFetchPrivateData,
+{{/if}}
+{{/if}}
+{{#if (includes examples "todo")}}
+  GotTodosMessage,
+{{/if}}
+]);
+export type Message = typeof Message.Type;

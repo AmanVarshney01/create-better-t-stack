@@ -15,12 +15,13 @@ export async function processFrontendTemplates(
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
   const hasAstroWeb = config.frontend.includes("astro");
+  const hasFoldkitWeb = config.frontend.includes("foldkit");
   const hasNativeBare = config.frontend.includes("native-bare");
   const hasNativeUniwind = config.frontend.includes("native-uniwind");
   const hasUnistyles = config.frontend.includes("native-unistyles");
   const isConvex = config.backend === "convex";
 
-  if (hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb || hasAstroWeb) {
+  if (hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb || hasAstroWeb || hasFoldkitWeb) {
     if (hasReactWeb) {
       processTemplatesFromPrefix(vfs, templates, "frontend/react/web-base", "apps/web", config);
 
@@ -44,6 +45,8 @@ export async function processFrontendTemplates(
       processTemplatesFromPrefix(vfs, templates, "frontend/solid", "apps/web", config);
     } else if (hasAstroWeb) {
       processTemplatesFromPrefix(vfs, templates, "frontend/astro", "apps/web", config);
+    } else if (hasFoldkitWeb) {
+      processTemplatesFromPrefix(vfs, templates, "frontend/foldkit", "apps/web", config);
     }
   }
 

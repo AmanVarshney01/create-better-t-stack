@@ -22,6 +22,7 @@ export const MATRIX_WEB_FRONTENDS = [
   "svelte",
   "solid",
   "astro",
+  "foldkit",
 ] as const;
 export const MATRIX_NATIVE_FRONTENDS = [
   "native-bare",
@@ -386,6 +387,11 @@ export function createSmokeMatrixCases(): MatrixCase[] {
     pushUnique(configs, seen, {
       examples: [...examples],
       frontend: ["astro"],
+      api: "orpc",
+    });
+    pushUnique(configs, seen, {
+      examples: [...examples],
+      frontend: ["foldkit"],
       api: "orpc",
     });
   }

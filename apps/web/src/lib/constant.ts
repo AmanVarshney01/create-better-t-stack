@@ -93,6 +93,14 @@ export const TECH_OPTIONS = {
       default: false,
     },
     {
+      id: "foldkit",
+      name: "Foldkit",
+      description: "Effect-powered TypeScript framework architected like Elm",
+      icon: "",
+      color: "from-sky-400 to-indigo-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Web Frontend",
       description: "No web-based frontend",

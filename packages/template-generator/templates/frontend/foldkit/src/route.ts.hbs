@@ -1,0 +1,62 @@
+import { Schema as S, pipe } from "effect";
+import { Route } from "foldkit";
+{{#if (or (includes examples "todo") (eq auth "better-auth"))}}
+import { literal, r } from "foldkit/route";
+{{else}}
+import { r } from "foldkit/route";
+{{/if}}
+
+export const HomeRoute = r("Home");
+{{#if (includes examples "todo")}}
+export const TodosRoute = r("Todos");
+{{/if}}
+{{#if (eq auth "better-auth")}}
+export const LoginRoute = r("Login");
+export const DashboardRoute = r("Dashboard");
+{{/if}}
+export const NotFoundRoute = r("NotFound", { path: S.String });
+
+export const AppRoute = S.Union([
+  HomeRoute,
+{{#if (includes examples "todo")}}
+  TodosRoute,
+{{/if}}
+{{#if (eq auth "better-auth")}}
+  LoginRoute,
+  DashboardRoute,
+{{/if}}
+  NotFoundRoute,
+]);
+
+export type HomeRoute = typeof HomeRoute.Type;
+{{#if (includes examples "todo")}}
+export type TodosRoute = typeof TodosRoute.Type;
+{{/if}}
+{{#if (eq auth "better-auth")}}
+export type LoginRoute = typeof LoginRoute.Type;
+export type DashboardRoute = typeof DashboardRoute.Type;
+{{/if}}
+export type NotFoundRoute = typeof NotFoundRoute.Type;
+export type AppRoute = typeof AppRoute.Type;
+
+export const homeRouter = pipe(Route.root, Route.mapTo(HomeRoute));
+{{#if (includes examples "todo")}}
+export const todosRouter = pipe(literal("todos"), Route.mapTo(TodosRoute));
+{{/if}}
+{{#if (eq auth "better-auth")}}
+export const loginRouter = pipe(literal("login"), Route.mapTo(LoginRoute));
+export const dashboardRouter = pipe(literal("dashboard"), Route.mapTo(DashboardRoute));
+{{/if}}
+
+const routeParser = Route.oneOf(
+{{#if (includes examples "todo")}}
+  todosRouter,
+{{/if}}
+{{#if (eq auth "better-auth")}}
+  loginRouter,
+  dashboardRouter,
+{{/if}}
+  homeRouter,
+);
+
+export const urlToAppRoute = Route.parseUrlWithFallback(routeParser, NotFoundRoute);

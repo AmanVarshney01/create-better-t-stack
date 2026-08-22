@@ -1,0 +1,345 @@
+import { Array, Effect, Match as M, Option, Schema as S } from "effect";
+import { Button, Input } from "@foldkit/ui";
+import { Command, Submodel } from "foldkit";
+import {
+  Field,
+  Invalid,
+  NotValidated,
+  Rule,
+  allValid,
+  makeRules,
+  validate,
+} from "foldkit/fieldValidation";
+import type { Html, HtmlBuilder } from "foldkit/html";
+import { m } from "foldkit/message";
+import { evo } from "foldkit/struct";
+
+import { authClient } from "../auth/client";
+import { Session, toSession } from "../auth/session";
+
+// MODEL
+
+const AuthMode = S.Literals(["SignIn", "SignUp"]);
+type AuthMode = typeof AuthMode.Type;
+
+export const Model = S.Struct({
+  mode: AuthMode,
+  name: Field(S.String),
+  email: Field(S.String),
+  password: Field(S.String),
+  isSubmitting: S.Boolean,
+  maybeError: S.Option(S.String),
+});
+
+export type Model = typeof Model.Type;
+
+export const init = (): Model => ({
+  mode: "SignIn",
+  name: NotValidated({ value: "" }),
+  email: NotValidated({ value: "" }),
+  password: NotValidated({ value: "" }),
+  isSubmitting: false,
+  maybeError: Option.none(),
+});
+
+// MESSAGE
+
+export const SelectedMode = m("SelectedMode", { mode: AuthMode });
+export const ChangedName = m("ChangedName", { value: S.String });
+export const ChangedEmail = m("ChangedEmail", { value: S.String });
+export const ChangedPassword = m("ChangedPassword", { value: S.String });
+export const SubmittedForm = m("SubmittedForm");
+export const SucceededAuthenticate = m("SucceededAuthenticate", { session: Session });
+export const FailedAuthenticate = m("FailedAuthenticate", { error: S.String });
+
+export const Message = S.Union([
+  SelectedMode,
+  ChangedName,
+  ChangedEmail,
+  ChangedPassword,
+  SubmittedForm,
+  SucceededAuthenticate,
+  FailedAuthenticate,
+]);
+export type Message = typeof Message.Type;
+
+// OUT MESSAGE
+
+export const CompletedAuthentication = m("CompletedAuthentication", { session: Session });
+
+export const OutMessage = S.Union([CompletedAuthentication]);
+export type OutMessage = typeof OutMessage.Type;
+
+// VALIDATION
+
+const nameRules = makeRules({
+  required: "Name is required",
+  rules: [Rule.minLength(2, "Name must be at least 2 characters")],
+});
+
+const emailRules = makeRules({
+  required: "Email is required",
+  rules: [Rule.email("Please enter a valid email")],
+});
+
+const passwordRules = makeRules({
+  required: "Password is required",
+  rules: [Rule.minLength(8, "Password must be at least 8 characters")],
+});
+
+const validateName = validate(nameRules);
+const validateEmail = validate(emailRules);
+const validatePassword = validate(passwordRules);
+
+const isFormValid = (model: Model): boolean =>
+  allValid(
+    model.mode === "SignUp"
+      ? [
+          [model.name, nameRules],
+          [model.email, emailRules],
+          [model.password, passwordRules],
+        ]
+      : [
+          [model.email, emailRules],
+          [model.password, passwordRules],
+        ],
+  );
+
+// COMMAND
+
+const SignIn = Command.define("SignIn", {
+  args: { email: S.String, password: S.String },
+  messages: [SucceededAuthenticate, FailedAuthenticate],
+  execute: ({ email, password }) =>
+    Effect.tryPromise(() => authClient.signIn.email({ email, password })).pipe(
+      Effect.map((result) =>
+        Option.match(Option.fromNullishOr(result.data), {
+          onNone: () =>
+            FailedAuthenticate({ error: result.error?.message ?? "Sign in failed" }),
+          onSome: (data) => SucceededAuthenticate({ session: toSession(data.user) }),
+        }),
+      ),
+      Effect.catch(() => Effect.succeed(FailedAuthenticate({ error: "Sign in failed" }))),
+    ),
+});
+
+const SignUp = Command.define("SignUp", {
+  args: { name: S.String, email: S.String, password: S.String },
+  messages: [SucceededAuthenticate, FailedAuthenticate],
+  execute: ({ name, email, password }) =>
+    Effect.tryPromise(() => authClient.signUp.email({ name, email, password })).pipe(
+      Effect.map((result) =>
+        Option.match(Option.fromNullishOr(result.data), {
+          onNone: () =>
+            FailedAuthenticate({ error: result.error?.message ?? "Sign up failed" }),
+          onSome: (data) => SucceededAuthenticate({ session: toSession(data.user) }),
+        }),
+      ),
+      Effect.catch(() => Effect.succeed(FailedAuthenticate({ error: "Sign up failed" }))),
+    ),
+});
+
+// UPDATE
+
+type UpdateReturn = readonly [
+  Model,
+  ReadonlyArray<Command.Command<Message>>,
+  Option.Option<OutMessage>,
+];
+const withUpdateReturn = M.withReturnType<UpdateReturn>();
+
+export const update = (model: Model, message: Message): UpdateReturn =>
+  M.value(message).pipe(
+    withUpdateReturn,
+    M.tagsExhaustive({
+      SelectedMode: ({ mode }) => [
+        evo(model, { mode: () => mode, maybeError: () => Option.none() }),
+        [],
+        Option.none(),
+      ],
+
+      ChangedName: ({ value }) => [
+        evo(model, { name: () => validateName(value) }),
+        [],
+        Option.none(),
+      ],
+
+      ChangedEmail: ({ value }) => [
+        evo(model, { email: () => validateEmail(value) }),
+        [],
+        Option.none(),
+      ],
+
+      ChangedPassword: ({ value }) => [
+        evo(model, { password: () => validatePassword(value) }),
+        [],
+        Option.none(),
+      ],
+
+      SubmittedForm: () => {
+        if (model.isSubmitting || !isFormValid(model)) {
+          return [model, [], Option.none()];
+        }
+
+        const command =
+          model.mode === "SignUp"
+            ? SignUp({
+                name: model.name.value,
+                email: model.email.value,
+                password: model.password.value,
+              })
+            : SignIn({ email: model.email.value, password: model.password.value });
+
+        return [
+          evo(model, { isSubmitting: () => true, maybeError: () => Option.none() }),
+          [command],
+          Option.none(),
+        ];
+      },
+
+      SucceededAuthenticate: ({ session }) => [
+        evo(model, { isSubmitting: () => false }),
+        [],
+        Option.some(CompletedAuthentication({ session })),
+      ],
+
+      FailedAuthenticate: ({ error }) => [
+        evo(model, {
+          isSubmitting: () => false,
+          maybeError: () => Option.some(error),
+          password: () => Invalid({ value: model.password.value, errors: [error] }),
+        }),
+        [],
+        Option.none(),
+      ],
+    }),
+  );
+
+// VIEW
+
+const fieldBorderClass = (field: Field<string>): string =>
+  M.value(field).pipe(
+    M.tagsExhaustive({
+      NotValidated: () => "border-neutral-700",
+      Validating: () => "border-neutral-500",
+      Valid: () => "border-green-600",
+      Invalid: () => "border-red-500",
+    }),
+  );
+
+const fieldView = (
+  id: string,
+  labelText: string,
+  type: "text" | "email" | "password",
+  field: Field<string>,
+  toMessage: (value: string) => Message,
+  h: HtmlBuilder<Message>,
+): Html =>
+  Input.view(
+    {
+      id,
+      type,
+      value: field.value,
+      onInput: toMessage,
+      isInvalid: field._tag === "Invalid",
+      toView: (attributes) =>
+        h.div(
+          [h.Class("space-y-1")],
+          [
+            h.label(
+              [...attributes.label, h.Class("block text-sm text-neutral-300")],
+              [labelText],
+            ),
+            h.input([
+              ...attributes.input,
+              h.Class(
+                `w-full rounded border bg-neutral-900 px-3 py-2 outline-none ${fieldBorderClass(field)}`,
+              ),
+            ]),
+            M.value(field).pipe(
+              M.tag("Invalid", ({ errors }) =>
+                h.p(
+                  [...attributes.description, h.Class("text-sm text-red-500")],
+                  [Array.headNonEmpty(errors)],
+                ),
+              ),
+              M.orElse(() => h.empty),
+            ),
+          ],
+        ),
+    },
+    h,
+  );
+
+const submitLabel = (model: Model): string => {
+  if (model.isSubmitting) {
+    return "Submitting...";
+  }
+  return model.mode === "SignIn" ? "Sign In" : "Sign Up";
+};
+
+const modeToggleView = (mode: AuthMode, h: HtmlBuilder<Message>): Html =>
+  Button.view(
+    {
+      onClick: SelectedMode({ mode: mode === "SignIn" ? "SignUp" : "SignIn" }),
+      toView: (attributes) =>
+        h.button(
+          [...attributes.button, h.Class("text-sm text-indigo-400 hover:underline")],
+          [mode === "SignIn" ? "Need an account? Sign Up" : "Already have an account? Sign In"],
+        ),
+    },
+    h,
+  );
+
+export const view = Submodel.defineView<Model, Message>((model, h) => {
+  const canSubmit = isFormValid(model) && !model.isSubmitting;
+
+  return h.div(
+    [h.Class("mx-auto mt-10 w-full max-w-md px-4")],
+    [
+      h.h1(
+        [h.Class("mb-6 text-center text-3xl font-bold")],
+        [model.mode === "SignIn" ? "Welcome Back" : "Create Account"],
+      ),
+      h.form(
+        [h.Class("space-y-4"), h.OnSubmit(SubmittedForm())],
+        [
+          model.mode === "SignUp"
+            ? fieldView("name", "Name", "text", model.name, (value) => ChangedName({ value }), h)
+            : h.empty,
+          fieldView("email", "Email", "email", model.email, (value) => ChangedEmail({ value }), h),
+          fieldView(
+            "password",
+            "Password",
+            "password",
+            model.password,
+            (value) => ChangedPassword({ value }),
+            h,
+          ),
+          Button.view(
+            {
+              type: "submit",
+              isDisabled: !canSubmit,
+              toView: (attributes) =>
+                h.button(
+                  [
+                    ...attributes.button,
+                    h.Class(
+                      "w-full rounded bg-indigo-600 py-2 font-medium text-white transition hover:bg-indigo-500 data-[disabled]:opacity-50",
+                    ),
+                  ],
+                  [submitLabel(model)],
+                ),
+            },
+            h,
+          ),
+        ],
+      ),
+      Option.match(model.maybeError, {
+        onNone: () => h.empty,
+        onSome: (error) => h.p([h.Class("mt-4 text-sm text-red-500")], [error]),
+      }),
+      h.div([h.Class("mt-4 text-center")], [modeToggleView(model.mode, h)]),
+    ],
+  );
+});

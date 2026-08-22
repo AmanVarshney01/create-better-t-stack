@@ -1,0 +1,14 @@
+import type { Html, HtmlBuilder } from "foldkit/html";
+
+import type { Message } from "../message";
+import { homeRouter } from "../route";
+
+export const notFoundView = (path: string, h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [h.Class("container mx-auto max-w-3xl px-4 py-10")],
+    [
+      h.h1([h.Class("mb-4 text-3xl font-bold")], ["Page not found"]),
+      h.p([h.Class("mb-6 text-neutral-400")], [`Nothing is routed at "${path}".`]),
+      h.a([h.Href(homeRouter()), h.Class("text-indigo-400 hover:underline")], ["Go home"]),
+    ],
+  );
