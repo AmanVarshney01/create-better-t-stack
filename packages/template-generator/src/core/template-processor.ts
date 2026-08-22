@@ -8,6 +8,12 @@ Handlebars.registerHelper("and", (...args) => args.slice(0, -1).every(Boolean));
 Handlebars.registerHelper("or", (...args) => args.slice(0, -1).some(Boolean));
 Handlebars.registerHelper("not", (a) => !a);
 Handlebars.registerHelper("includes", (arr, val) => Array.isArray(arr) && arr.includes(val));
+Handlebars.registerHelper("appId", (projectName: string) => {
+  const segment = String(projectName)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  return `com.anonymous.${/^[a-z]/.test(segment) ? segment : `app${segment}`}`;
+});
 Handlebars.registerHelper(
   "usesAlchemyDatabase",
   (backend, dbSetup, webDeploy, serverDeploy, dbSetupOptions) =>

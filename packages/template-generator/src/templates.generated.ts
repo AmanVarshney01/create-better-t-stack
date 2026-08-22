@@ -8077,7 +8077,6 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			polar({
 				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -8160,7 +8159,6 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			polar({
 				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -8245,7 +8243,6 @@ export function createAuth() {
 			polar({
 				client: polarClient,
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -8315,7 +8312,6 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			polar({
 				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -8387,7 +8383,6 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			polar({
 				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -9365,7 +9360,7 @@ import Layout from "../layouts/Layout.astro";
       try {
         const { data: customerState } = await authClient.customer.state();
         const subscriptionInfo = document.getElementById("subscription-info")!;
-        if (customerState?.activeSubscriptions?.length > 0) {
+        if ((customerState?.activeSubscriptions?.length ?? 0) > 0) {
           subscriptionInfo.innerHTML = \`
             <p class="text-white">Plan: <span class="text-green-400">Pro</span></p>
             <button
@@ -12494,8 +12489,8 @@ export const authClient = createAuthClient({
 		<p>API: {privateDataQuery.data?.message}</p>
 		{{/if}}
 		{{#if (eq payments "polar")}}
-		<p>Plan: {customerState?.activeSubscriptions?.length > 0 ? "Pro" : "Free"}</p>
-		{#if customerState?.activeSubscriptions?.length > 0}
+		<p>Plan: {(customerState?.activeSubscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
+		{#if (customerState?.activeSubscriptions?.length ?? 0) > 0}
 			<button onclick={async () => await authClient.customer.portal()}>
 				Manage Subscription
 			</button>
@@ -14317,7 +14312,7 @@ export default defineSchema({
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/node": "^24.13.3"
+    "@types/node": "^26.2.0"
   },
   "dependencies": {}
 }
@@ -26313,7 +26308,8 @@ yarn-error.*
 		"scheme": "{{projectName}}",
 		"userInterfaceStyle": "automatic",
 		"ios": {
-			"supportsTablet": true
+			"supportsTablet": true,
+			"bundleIdentifier": "{{appId projectName}}"
 		},
 		"android": {
 			"adaptiveIcon": {
@@ -26323,7 +26319,7 @@ yarn-error.*
 				"monochromeImage": "./assets/images/android-icon-monochrome.png"
 			},
 			"predictiveBackGestureEnabled": false,
-			"package": "com.anonymous.mybettertapp"
+			"package": "{{appId projectName}}"
 		},
 		"web": {
 			"output": "static",
@@ -27550,7 +27546,8 @@ yarn-error.*
     "scheme": "{{projectName}}",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "{{appId projectName}}"
     },
     "android": {
       "adaptiveIcon": {
@@ -27560,7 +27557,7 @@ yarn-error.*
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.mybettertapp"
+      "package": "{{appId projectName}}"
     },
     "web": {
       "output": "static",
@@ -29017,7 +29014,8 @@ uniwind-types.d.ts
     "scheme": "{{projectName}}",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "{{appId projectName}}"
     },
     "android": {
       "adaptiveIcon": {
@@ -29027,7 +29025,7 @@ uniwind-types.d.ts
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.mybettertapp"
+      "package": "{{appId projectName}}"
     },
     "web": {
       "bundler": "metro",
@@ -30004,7 +30002,7 @@ module.exports = uniwindConfig;
     "uniwind": "^1.11.0"
   },
   "devDependencies": {
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.2.0",
     "@types/react": "~19.2.18",
     "typescript": "~6.0.3"
   }
@@ -30429,7 +30427,7 @@ initOpenNextCloudflareForDev();
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^20.19.43",
+    "@types/node": "^26.2.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "^4.3.3"
@@ -30835,7 +30833,7 @@ export function ThemeProvider({
   "devDependencies": {
     "@react-router/dev": "^8.3.0",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/node": "^22.20.1",
+    "@types/node": "^26.2.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "^4.3.3",
@@ -31405,7 +31403,7 @@ export default defineConfig({
 	"devDependencies": {
 		"@tanstack/react-router-devtools": "^1.167.0",
 		"@tanstack/router-plugin": "^1.168.23",
-		"@types/node": "^22.20.1",
+		"@types/node": "^26.2.0",
 		"@types/react": "^19.2.17",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^6.0.4",

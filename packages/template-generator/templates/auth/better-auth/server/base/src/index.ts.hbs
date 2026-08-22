@@ -54,7 +54,6 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			polar({
 				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -137,7 +136,6 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			polar({
 				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -222,7 +220,6 @@ export function createAuth() {
 			polar({
 				client: polarClient,
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -292,7 +289,6 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			polar({
 				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -364,7 +360,6 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			polar({
 				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [

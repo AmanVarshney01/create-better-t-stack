@@ -73,7 +73,7 @@ export const dependencyVersionMap = {
   "lint-staged": "^17.2.0",
 
   tsx: "^4.23.1",
-  "@types/node": "^22.20.1",
+  "@types/node": "^26.2.0",
 
   "@types/bun": "^1.3.14",
 
