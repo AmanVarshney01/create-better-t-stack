@@ -23,6 +23,7 @@ export const stackUrlKeys: UrlKeys<StackUrlState> = {
   install: "i",
   webDeploy: "wd",
   serverDeploy: "sd",
+  apps: "apps",
   yolo: "yolo",
   viewMode: "view",
   selectedFile: "file",

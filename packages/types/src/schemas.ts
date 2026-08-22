@@ -475,6 +475,66 @@ export const ProjectNameSchema = z
   .refine((name) => name.toLowerCase() !== "node_modules", "Project name is reserved")
   .describe("Project name or path");
 
+export const WebFrontendSchema = z
+  .enum([
+    "tanstack-router",
+    "react-router",
+    "tanstack-start",
+    "next",
+    "nuxt",
+    "svelte",
+    "solid",
+    "astro",
+  ])
+  .describe("Web frontend framework");
+
+export const RESERVED_APP_NAMES = new Set([
+  "web",
+  "native",
+  "server",
+  "desktop",
+  "docs",
+  "fumadocs",
+  "tui",
+  "extension",
+  "api",
+  "auth",
+  "db",
+  "backend",
+  "config",
+  "env",
+  "infra",
+  "ui",
+]);
+
+export const AppNameSchema = z
+  .string()
+  .min(1, "App name cannot be empty")
+  .max(30, "App name must be 30 characters or fewer")
+  .regex(
+    /^[a-z][a-z0-9-]*$/,
+    "App name must use lowercase letters, digits, and dashes, and start with a letter",
+  )
+  .refine((name) => !RESERVED_APP_NAMES.has(name), "App name is reserved")
+  .describe("Name of the app to add");
+
+export const AddedAppSchema = z
+  .strictObject({
+    name: AppNameSchema,
+    frontend: WebFrontendSchema,
+    port: z.number().int().min(1024).max(65535).describe("Dev server port"),
+  })
+  .describe("An additional app added with the add-app command");
+
+export const AddedAppSpecSchema = z
+  .string()
+  .regex(
+    new RegExp(`^[a-z][a-z0-9-]{0,29}:(${WebFrontendSchema.options.join("|")})$`),
+    "Expected <name>:<framework> (e.g. admin:next)",
+  )
+  .refine((spec) => !RESERVED_APP_NAMES.has(spec.split(":")[0] ?? ""), "App name is reserved")
+  .describe("Extra frontend app as name:framework (e.g. admin:next)");
+
 export const CreateInputSchema = z
   .object({
     projectName: z.string().optional(),
@@ -490,6 +550,7 @@ export const CreateInputSchema = z
     auth: AuthSchema.optional(),
     payments: PaymentsSchema.optional(),
     frontend: z.array(FrontendSchema).optional(),
+    apps: z.array(AddedAppSpecSchema).optional(),
     addons: AddonsListSchema.optional(),
     examples: z.array(ExamplesSchema).optional(),
     git: z.boolean().optional(),
@@ -518,6 +579,18 @@ export const AddInputSchema = z
     addonOptions: AddonOptionsSchema.optional(),
     webDeploy: WebDeploySchema.optional(),
     serverDeploy: ServerDeploySchema.optional(),
+    projectDir: z.string().optional(),
+    install: z.boolean().optional(),
+    packageManager: PackageManagerSchema.optional(),
+    dryRun: z.boolean().optional(),
+  })
+  .strict();
+
+export const AddAppInputSchema = z
+  .object({
+    name: AppNameSchema.optional(),
+    frontend: WebFrontendSchema.optional(),
+    port: z.number().int().min(1024).max(65535).optional().describe("Dev server port"),
     projectDir: z.string().optional(),
     install: z.boolean().optional(),
     packageManager: PackageManagerSchema.optional(),
@@ -573,6 +646,7 @@ export const BetterTStackConfigSchema = z.object({
   api: APISchema,
   webDeploy: WebDeploySchema,
   serverDeploy: ServerDeploySchema,
+  apps: z.array(AddedAppSchema).optional().describe("Additional apps added with add-app"),
 });
 
 export const BetterTStackConfigFileSchema = BetterTStackConfigSchema.safeExtend({
@@ -612,3 +686,4 @@ export const WEB_DEPLOY_VALUES = WebDeploySchema.options;
 export const SERVER_DEPLOY_VALUES = ServerDeploySchema.options;
 export const DIRECTORY_CONFLICT_VALUES = DirectoryConflictSchema.options;
 export const TEMPLATE_VALUES = TemplateSchema.options;
+export const WEB_FRONTEND_VALUES = WebFrontendSchema.options;

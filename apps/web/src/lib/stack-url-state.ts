@@ -60,6 +60,7 @@ const serverStackParsers = {
   serverDeploy: parseAsStringEnumServer<StackState["serverDeploy"]>(
     getValidIds("serverDeploy"),
   ).withDefault(DEFAULT_STACK.serverDeploy),
+  apps: parseAsArrayOfServer(parseAsStringServer).withDefault(DEFAULT_STACK.apps),
   yolo: parseAsStringEnumServer<StackState["yolo"]>(["true", "false"]).withDefault(
     DEFAULT_STACK.yolo,
   ),

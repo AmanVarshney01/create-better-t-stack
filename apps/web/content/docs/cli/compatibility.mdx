@@ -113,9 +113,10 @@ create-better-t-stack --frontend nuxt --api orpc
 
 ### Frontend Restrictions
 
-- **Multiple Web Frontends**: ❌ Only one web framework allowed
+- **Multiple Web Frontends**: ❌ Only one web framework allowed in `--frontend`
 - **Multiple Native Frontends**: ❌ Only one native framework allowed
 - **Web + Native**: ✅ One web and one native framework allowed
+- **Extra web apps**: ✅ Use [`--apps` / `add-app`](/docs/cli#add-app) — each extra app picks its own framework
 
 ```bash
 # ❌ Invalid - Multiple web frontends
@@ -123,6 +124,9 @@ create-better-t-stack --frontend next tanstack-router
 
 # ✅ Valid - Web + native
 create-better-t-stack --frontend next native-uniwind
+
+# ✅ Valid - Primary web app + extra apps
+create-better-t-stack --frontend tanstack-router --api orpc --apps admin:next
 ```
 
 ## Database Setup Compatibility
@@ -280,8 +284,11 @@ create-better-t-stack --runtime workers --backend hono
 ### "Cannot select multiple web frameworks"
 
 ```bash
-# Fix by choosing one web framework
+# Fix by choosing one primary web framework
 create-better-t-stack --frontend tanstack-router
+
+# Or add the second framework as an extra app
+create-better-t-stack --frontend tanstack-router --api orpc --apps admin:next
 ```
 
 ### "Polar payments requires Better Auth"

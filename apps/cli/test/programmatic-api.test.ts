@@ -5,6 +5,7 @@ import fs from "fs-extra";
 
 import {
   add,
+  addApp,
   CLIError,
   create,
   createVirtual,
@@ -232,5 +233,16 @@ describe("programmatic API input validation", () => {
     expect(result.addedAddons).toEqual([]);
     expect(result.error).toContain("Invalid add input");
     expect(result.error).toContain("addons");
+  });
+
+  it("returns a structured failure instead of throwing for an invalid add-app input shape", async () => {
+    const result = await addApp({
+      name: "admin",
+      frontend: 42,
+    } as never);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Invalid add-app input");
+    expect(result.error).toContain("frontend");
   });
 });

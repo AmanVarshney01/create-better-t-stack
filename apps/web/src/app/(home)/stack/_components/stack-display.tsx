@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { ShareDialog } from "@/components/ui/share-dialog";
 import { TechBadge } from "@/components/ui/tech-badge";
+import { EXTRA_APP_FRAMEWORKS, parseExtraApp } from "@/lib/extra-apps";
 import type { LoadedStackState } from "@/lib/stack-url-state";
 import {
   formatProjectName,
@@ -47,6 +48,13 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
       category={tech.category}
     />
   ));
+
+  const extraApps = stack.apps.flatMap((encoded) => {
+    const app = parseExtraApp(encoded);
+    if (!app) return [];
+    const option = EXTRA_APP_FRAMEWORKS.find((candidate) => candidate.id === app.frontend);
+    return option ? [{ ...app, option }] : [];
+  });
 
   const copyCommand = async () => {
     try {
@@ -166,6 +174,29 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
             </div>
           )}
         </div>
+
+        {extraApps.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="text-primary text-xs">▶</span>
+              <span className="font-mono font-semibold text-foreground text-sm">
+                EXTRA_APPS ({extraApps.length})
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              {extraApps.map((app) => (
+                <span
+                  key={app.name}
+                  className="flex items-center gap-2 rounded border border-border bg-fd-background px-3 py-2 font-mono text-xs"
+                >
+                  <span className="text-foreground">{app.name}</span>
+                  <span className="text-muted-foreground">{app.option.name}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

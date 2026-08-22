@@ -14,6 +14,7 @@ describe("Schema command", () => {
     expect(result).toHaveProperty("schemas");
     expect(result.schemas).toHaveProperty("createInput");
     expect(result.schemas).toHaveProperty("addInput");
+    expect(result.schemas).toHaveProperty("addAppInput");
     expect(result.schemas).toHaveProperty("addonOptions");
     expect(result.schemas).toHaveProperty("dbSetupOptions");
     expect(Array.isArray(result.cli.commands)).toBe(true);
@@ -24,6 +25,15 @@ describe("Schema command", () => {
 
     expect(result).toHaveProperty("type", "object");
     expect(result).toHaveProperty("properties");
+  });
+
+  it("exposes reserved app names in the add-app input schema", async () => {
+    const result = (await caller.schema({ name: "addAppInput" })) as {
+      properties?: { name?: { not?: { enum?: string[] } } };
+    };
+
+    expect(result.properties?.name?.not?.enum).toContain("web");
+    expect(result.properties?.name?.not?.enum).toContain("server");
   });
 
   it("includes agent-focused commands in CLI introspection", async () => {

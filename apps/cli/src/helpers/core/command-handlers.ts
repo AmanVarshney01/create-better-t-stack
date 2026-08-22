@@ -8,9 +8,10 @@ import pc from "picocolors";
 import { getDefaultConfig } from "../../constants";
 import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
-import type { CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
+import type { AddedApp, CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
 import { getCliSubcommandCommand } from "../../utils/cli-invocation";
+import { validateAddAppFrontendCompatibility } from "../../utils/compatibility-rules";
 import { isSilent, runWithContextAsync } from "../../utils/context";
 import { displayConfig } from "../../utils/display-config";
 import {
@@ -371,6 +372,30 @@ async function createProjectHandlerInternal(
       }
     }
 
+    // Extra frontend apps (--apps): validate names and framework compatibility
+    // against the resolved stack before anything is written.
+    const extraApps: { name: string; frontend: AddedApp["frontend"] }[] = [];
+    const seenAppNames = new Set<string>();
+    for (const spec of input.apps ?? []) {
+      const separatorIndex = spec.indexOf(":");
+      const name = spec.slice(0, separatorIndex);
+      const frontend = spec.slice(separatorIndex + 1) as AddedApp["frontend"];
+
+      if (seenAppNames.has(name)) {
+        yield* new CLIError({ message: `Duplicate app name in --apps: '${name}'.` });
+      }
+      seenAppNames.add(name);
+
+      const appCompatResult = validateAddAppFrontendCompatibility(frontend, config);
+      if (appCompatResult.isErr()) {
+        yield* new CLIError({
+          message: `Invalid --apps entry '${spec}': ${appCompatResult.error.message}`,
+        });
+      }
+
+      extraApps.push({ name, frontend });
+    }
+
     const localRequirements = yield* Result.await(checkLocalRequirements(config));
     if (!isSilent()) {
       for (const warning of localRequirements.warnings) {
@@ -398,7 +423,12 @@ async function createProjectHandlerInternal(
       log.message(displayConfig(config));
     }
 
-    const reproducibleCommand = generateReproducibleCommand(config);
+    const reproducibleCommand =
+      extraApps.length > 0
+        ? `${generateReproducibleCommand(config)} --apps ${extraApps
+            .map((app) => `${app.name}:${app.frontend}`)
+            .join(" ")}`
+        : generateReproducibleCommand(config);
 
     if (input.dryRun) {
       const elapsedTimeMs = Date.now() - startTime;
@@ -434,6 +464,7 @@ async function createProjectHandlerInternal(
         manualDb: cliInput.manualDb ?? input.manualDb,
         dbSetupOptions: effectiveDbSetupOptions,
         packageManagerVersion: localRequirements.packageManagerVersion,
+        extraApps,
       }),
     );
 

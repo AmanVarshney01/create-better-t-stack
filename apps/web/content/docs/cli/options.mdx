@@ -266,6 +266,16 @@ Frontend frameworks (can specify multiple):
 
 - `none`: Backend-only project
 
+### `--apps <specs...>`
+
+Extra frontend apps to scaffold alongside the project, as `name:framework` pairs. Each lands in `apps/<name>` with its own dev port (3002+) and env module, wired to the project's API and auth. Frameworks are validated against the stack: tRPC and Clerk accept React-family frameworks only, Convex excludes Solid and Astro, and fullstack (`self`) backends cannot use `--apps`.
+
+```bash
+create-better-t-stack my-app --frontend tanstack-router --api orpc --apps admin:next landing:astro
+```
+
+Use the [`add-app` command](/docs/cli#add-app) to add apps to an existing project instead.
+
 ```bash
 # Single web frontend
 create-better-t-stack --frontend tanstack-router
@@ -385,6 +395,7 @@ These are part of the CLI contract for agents and scripts even though they are c
 
 - `create-json`
 - `add-json`
+- `add-app-json`
 - `schema --name <schema>`
 - `mcp`
 - `addonOptions`

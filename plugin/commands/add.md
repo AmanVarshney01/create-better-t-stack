@@ -17,4 +17,6 @@ Add tooling/features to the current Better-T-Stack project using the Better-T-St
 4. **Apply with `bts_add_addons`** once confirmed.
 5. **Report** what changed and any follow-up commands.
 
+If the request is for another frontend app (admin panel, landing page) rather than an addon, use `bts_plan_app` → `bts_add_app` with `{ name, frontend }` instead.
+
 Always plan before applying. Don't add addons the user didn't ask for.

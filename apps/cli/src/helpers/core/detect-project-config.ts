@@ -13,6 +13,7 @@ export async function detectProjectConfig(projectDir: string) {
         return {
           projectDir,
           projectName: path.basename(projectDir),
+          version: btsConfig.version,
           addonOptions: btsConfig.addonOptions,
           dbSetupOptions: btsConfig.dbSetupOptions,
           database: btsConfig.database,
@@ -29,6 +30,7 @@ export async function detectProjectConfig(projectDir: string) {
           api: btsConfig.api,
           webDeploy: btsConfig.webDeploy,
           serverDeploy: btsConfig.serverDeploy,
+          apps: btsConfig.apps,
         };
       }
 

@@ -3,8 +3,25 @@ import type { Dirent } from "node:fs";
 import { memfs } from "memfs";
 import { dirname, extname, normalize, join } from "pathe";
 
-import type { VirtualDirectory, VirtualFile } from "../types";
+import type { VirtualDirectory, VirtualFile, VirtualNode } from "../types";
 import type { JsonValue } from "./json-types";
+
+/**
+ * Flatten a virtual tree into a map of relative file path -> file node.
+ */
+export function collectTreeFiles(
+  node: VirtualNode,
+  files = new Map<string, VirtualFile>(),
+): Map<string, VirtualFile> {
+  if (node.type === "file") {
+    files.set(node.path, node);
+  } else {
+    for (const child of node.children) {
+      collectTreeFiles(child, files);
+    }
+  }
+  return files;
+}
 
 export class VirtualFileSystem {
   private _fs: ReturnType<typeof memfs>["fs"];

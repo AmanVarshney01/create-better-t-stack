@@ -20,8 +20,11 @@ import type {
   AddonOptionsSchema,
   DbSetupOptionsSchema,
   ProjectNameSchema,
+  AppNameSchema,
+  AddedAppSchema,
   CreateInputSchema,
   AddInputSchema,
+  AddAppInputSchema,
   CLIInputSchema,
   ProjectConfigSchema,
   BetterTStackConfigSchema,
@@ -48,9 +51,12 @@ export type Template = z.infer<typeof TemplateSchema>;
 export type AddonOptions = z.infer<typeof AddonOptionsSchema>;
 export type DbSetupOptions = z.infer<typeof DbSetupOptionsSchema>;
 export type ProjectName = z.infer<typeof ProjectNameSchema>;
+export type AppName = z.infer<typeof AppNameSchema>;
+export type AddedApp = z.infer<typeof AddedAppSchema>;
 
 export type CreateInput = z.infer<typeof CreateInputSchema>;
 export type AddInput = z.infer<typeof AddInputSchema>;
+export type AddAppInput = z.infer<typeof AddAppInputSchema>;
 export type CLIInput = z.infer<typeof CLIInputSchema>;
 export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
 export type BetterTStackConfig = z.infer<typeof BetterTStackConfigSchema>;

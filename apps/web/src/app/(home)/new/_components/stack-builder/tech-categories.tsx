@@ -1,4 +1,5 @@
 import { CheckCircle2, InfoIcon, Terminal } from "lucide-react";
+import { Fragment } from "react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { StackState } from "@/lib/constant";
@@ -9,12 +10,14 @@ import { cn } from "@/lib/utils";
 
 import { TechIcon } from "../tech-icon";
 import { getCategoryDisplayName, getDisabledReason, isOptionCompatible } from "../utils";
+import { ExtraAppsSection } from "./extra-apps-section";
 
 type TechCategoriesProps = {
   mode: "desktop" | "mobile";
   stack: StackState;
   compatibilityNotes: Record<string, { hasIssue: boolean; notes: string[] }>;
   onSelect: (category: keyof typeof TECH_OPTIONS, techId: string) => void;
+  onExtraAppsChange?: (apps: string[]) => void;
   showAllCategories?: boolean;
 };
 
@@ -38,6 +41,7 @@ export function TechCategories({
   stack,
   compatibilityNotes,
   onSelect,
+  onExtraAppsChange,
   showAllCategories = false,
 }: TechCategoriesProps) {
   const isDesktop = mode === "desktop";
@@ -51,7 +55,7 @@ export function TechCategories({
 
         if (categoryOptions.length === 0) return null;
 
-        return (
+        const sectionNode = (
           <section
             key={`${mode}-${categoryKey}`}
             id={isDesktop ? `section-${categoryKey}` : `section-mobile-${categoryKey}`}
@@ -212,6 +216,18 @@ export function TechCategories({
             </div>
           </section>
         );
+
+        // Planned extra apps live right below the web frontend choice.
+        if (categoryKey === "webFrontend" && onExtraAppsChange) {
+          return (
+            <Fragment key={`${mode}-${categoryKey}-with-apps`}>
+              {sectionNode}
+              <ExtraAppsSection stack={stack} mode={mode} onAppsChange={onExtraAppsChange} />
+            </Fragment>
+          );
+        }
+
+        return sectionNode;
       })}
       <div className="h-24" />
     </>

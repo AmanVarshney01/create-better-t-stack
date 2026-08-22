@@ -108,6 +108,44 @@ if (result.success) {
 `add()` validates its input at runtime and always returns an `AddResult`. Invalid input and
 addon failures return `{ success: false, error }` instead of throwing or exiting the process.
 
+### `addApp(options?)`
+
+Add another frontend app to an existing Better-T-Stack project.
+
+```typescript
+function addApp(options?: {
+  name?: string;
+  frontend?: WebFrontend;
+  port?: number;
+  install?: boolean;
+  packageManager?: PackageManager;
+  projectDir?: string;
+  dryRun?: boolean;
+}): Promise<AddAppResult>;
+```
+
+Example:
+
+```typescript
+import { addApp } from "create-better-t-stack";
+
+const result = await addApp({
+  projectDir: "./my-app",
+  name: "admin",
+  frontend: "next",
+});
+
+if (result.success) {
+  console.log(`Added apps/${result.appName} on port ${result.port}`);
+} else {
+  console.error(result.error ?? "Failed to add app");
+}
+```
+
+`addApp()` validates its input at runtime and always returns an `AddAppResult`. The chosen
+framework is checked against the project's existing api/auth/backend, and `name`/`frontend`
+are required in this silent mode.
+
 ### `createVirtual(options)`
 
 Generate a project in memory without writing to disk.
@@ -185,8 +223,8 @@ type AddResult = {
 - `CLIError`
 - `ProjectCreationError`
 
-The `CreateInput`, `AddOptions`, `ProjectConfig`, `InitResult`, and `AddResult` types are exported
-from `create-better-t-stack`.
+The `CreateInput`, `AddOptions`, `AddAppOptions`, `ProjectConfig`, `InitResult`, `AddResult`,
+and `AddAppResult` types are exported from `create-better-t-stack`.
 
 ## Error Handling Pattern
 

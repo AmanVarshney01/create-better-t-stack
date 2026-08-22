@@ -95,11 +95,25 @@ npm create better-t-stack@latest my-workspace \
   --backend none
 ```
 
+### Multi-App Workspace
+
+```npm
+npm create better-t-stack@latest my-platform \
+  --frontend tanstack-router \
+  --backend hono \
+  --api orpc \
+  --database postgres \
+  --orm drizzle \
+  --auth better-auth \
+  --apps admin:next landing:astro
+```
+
 ## Flags Cheat Sheet
 
 See the full list in the [CLI Reference](/docs/cli). Key flags:
 
 - `--frontend`: tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, astro, native-bare, native-uniwind, native-unistyles, none
+- `--apps`: extra frontend apps as name:framework (e.g. admin:next landing:astro) — see [add-app](/docs/cli#add-app)
 - `--backend`: hono, express, fastify, elysia, convex, self, none
 - `--runtime`: bun, node, workers, none
 - `--database`: sqlite, postgres, mysql, mongodb, none

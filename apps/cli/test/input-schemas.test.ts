@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 
 import {
+  AddAppInputSchema,
   AddInputSchema,
   BetterTStackConfigFileSchema,
   CLIInputSchema,
@@ -71,6 +72,54 @@ describe("Input schemas", () => {
       webDeploy: "none",
       serverDeploy: "none",
       unexpected: true,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts an apps array in bts.jsonc config payloads", () => {
+    const result = BetterTStackConfigFileSchema.safeParse({
+      version: "0.0.0",
+      createdAt: new Date(0).toISOString(),
+      database: "sqlite",
+      orm: "drizzle",
+      backend: "hono",
+      runtime: "bun",
+      frontend: ["tanstack-router"],
+      addons: ["none"],
+      examples: ["none"],
+      auth: "none",
+      payments: "none",
+      packageManager: "bun",
+      dbSetup: "none",
+      api: "trpc",
+      webDeploy: "none",
+      serverDeploy: "none",
+      apps: [{ name: "admin", frontend: "next", port: 3002 }],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("validates --apps specs on create input", () => {
+    expect(
+      CreateInputSchema.safeParse({ projectName: "app", apps: ["admin:next", "landing:astro"] })
+        .success,
+    ).toBe(true);
+
+    for (const spec of ["Admin:next", "admin:angular", "web:next", "admin", "admin:"]) {
+      expect(
+        CreateInputSchema.safeParse({ projectName: "app", apps: [spec] }).success,
+        `expected '${spec}' to be rejected`,
+      ).toBe(false);
+    }
+  });
+
+  it("rejects unknown keys in add-app input", () => {
+    const result = AddAppInputSchema.safeParse({
+      name: "admin",
+      frontend: "next",
+      bogusKey: true,
     });
 
     expect(result.success).toBe(false);

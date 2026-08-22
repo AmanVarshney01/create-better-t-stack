@@ -443,9 +443,12 @@ Electrobun adds an `apps/desktop` workspace with its own `package.json`, `electr
   "dbSetup": "<turso|neon|prisma-postgres|planetscale|mongodb-atlas|supabase|d1|docker|none>",
   "api": "<none|trpc|orpc>",
   "webDeploy": "<cloudflare|docker|vercel|none>",
-  "serverDeploy": "<cloudflare|docker|vercel|none>"
+  "serverDeploy": "<cloudflare|docker|vercel|none>",
+  "apps": [{ "name": "<app-name>", "frontend": "<web-framework>", "port": 3002 }]
 }
 ```
+
+The optional `apps` array tracks extra frontend apps added with `create-better-t-stack add-app`. Each one lives in `apps/<name>` with its own dev port and env module (`@{project}/env/<name>`), sharing the project's API, auth, and workspace packages.
 
 ### Turborepo Config (turbo.json)
 
