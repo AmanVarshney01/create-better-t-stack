@@ -153,6 +153,18 @@ describe("stack builder D1 compatibility", () => {
     expect(displayCommand).toContain(`tanstack-router ${"\\"}\n  --backend`);
   });
 
+  test("quotes project names as a single shell argument", () => {
+    expect(generateStackCommand(createStack({ projectName: "name; echo INJECTED" }))).toContain(
+      "'name; echo INJECTED' --yes",
+    );
+    expect(generateStackCommand(createStack({ projectName: "name$(echo INJECTED)" }))).toContain(
+      "'name$(echo INJECTED)' --yes",
+    );
+    expect(generateStackCommand(createStack({ projectName: "project's app\nnext" }))).toContain(
+      "'project'\\''s app\nnext' --yes",
+    );
+  });
+
   test("reapplies the same D1 adjustment after leaving and returning to it", () => {
     const initialRawD1Stack = createStack({
       backend: "self-next",

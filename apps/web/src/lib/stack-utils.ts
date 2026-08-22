@@ -48,6 +48,14 @@ export function formatProjectName(name: string | null | undefined) {
   return (name || "my-better-t-app").replace(/\s+/g, "-");
 }
 
+function quoteShellArgument(value: string) {
+  if (/^[a-zA-Z0-9_./-]+$/.test(value)) {
+    return value;
+  }
+
+  return `'${value.replaceAll("'", `'\\''`)}'`;
+}
+
 export type SelectedTech = {
   category: keyof typeof TECH_OPTIONS;
   id: string;
@@ -150,7 +158,7 @@ export function generateStackCommand(stack: StackState) {
   const base =
     packageManagerCommands[stack.packageManager as keyof typeof packageManagerCommands] ||
     packageManagerCommands.default;
-  const projectName = stack.projectName || "my-better-t-app";
+  const projectName = quoteShellArgument(stack.projectName || "my-better-t-app");
 
   const isStackDefaultExceptProjectName = Object.entries(DEFAULT_STACK).every(
     ([key]) =>
