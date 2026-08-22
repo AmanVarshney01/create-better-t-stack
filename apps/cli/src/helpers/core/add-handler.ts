@@ -71,7 +71,7 @@ const HOOK_LINTER_ADDONS = ["biome", "oxlint", "vite-plus"] as const satisfies r
 const TASK_RUNNER_ADDONS = ["turborepo", "nx", "vite-plus"] as const satisfies readonly Addons[];
 const ConfigPackageScopeSchema = z
   .object({
-    name: z.string().regex(/^@[^/]+\/config$/),
+    name: z.string().regex(/^@[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?\/config$/),
   })
   .transform(({ name }) => name.slice(0, -"/config".length));
 
@@ -104,12 +104,21 @@ async function addWorkspacePackage(
   }
 
   const packageScope = packageScopeResult.value;
+  const fullPackageName = `${packageScope}/${packageName}`;
+  if (fullPackageName.length > 214) {
+    return Result.err(
+      new CLIError({
+        message: "Workspace package name must not exceed 214 characters including its scope.",
+      }),
+    );
+  }
+
   const packagePath = `packages/${packageName}`;
   vfs.writeFile(
     `${packagePath}/package.json`,
     `${JSON.stringify(
       {
-        name: `${packageScope}/${packageName}`,
+        name: fullPackageName,
         version: "0.0.0",
         private: true,
         type: "module",

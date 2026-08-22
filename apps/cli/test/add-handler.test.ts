@@ -85,6 +85,23 @@ describe("add()", () => {
     expect(duplicateResult.success).toBe(false);
     expect(duplicateResult.error).toContain("Workspace package already exists");
     expect(await readFile(indexPath, "utf8")).toBe("export const existing = true;\n");
+
+    const longPackageName = "a".repeat(209);
+    const longNameResult = await add({ projectDir, package: longPackageName, install: false });
+
+    expect(longNameResult.success).toBe(false);
+    expect(longNameResult.error).toContain("must not exceed 214 characters including its scope");
+    expect(existsSync(join(projectDir, "packages", longPackageName))).toBe(false);
+
+    await writeFile(
+      join(projectDir, "packages", "config", "package.json"),
+      JSON.stringify({ name: "@Upper/config", private: true }),
+    );
+    const invalidScopeResult = await add({ projectDir, package: "other", install: false });
+
+    expect(invalidScopeResult.success).toBe(false);
+    expect(invalidScopeResult.error).toContain("Cannot determine the workspace package scope");
+    expect(existsSync(join(projectDir, "packages", "other"))).toBe(false);
   });
 
   it("returns an error in silent mode instead of exiting when the project config is missing", async () => {
