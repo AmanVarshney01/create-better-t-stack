@@ -12521,18 +12521,19 @@ export const authClient = createAuthClient({
 	<SignUpForm switchToSignIn={() => showSignIn = true} />
 {/if}
 `],
-  ["auth/clerk/convex/backend/convex/auth.config.ts.hbs", `export default {
+  ["auth/clerk/convex/backend/convex/auth.config.ts.hbs", `import type { AuthConfig } from "convex/server";
+
+export default {
 	providers: [
 		{
-			// Replace with your own Clerk Issuer URL from your "convex" JWT template
-			// or with \`process.env.CLERK_JWT_ISSUER_DOMAIN\`
-			// and configure CLERK_JWT_ISSUER_DOMAIN on the Convex Dashboard
+			// Clerk Frontend API URL from the Convex integration in the Clerk Dashboard.
+			// Set CLERK_JWT_ISSUER_DOMAIN on the Convex deployment (npx convex env set).
 			// See https://docs.convex.dev/auth/clerk#configuring-dev-and-prod-instances
-			domain: process.env.CLERK_JWT_ISSUER_DOMAIN,
+			domain: process.env.CLERK_JWT_ISSUER_DOMAIN!,
 			applicationID: "convex",
 		},
 	],
-};
+} satisfies AuthConfig;
 `],
   ["auth/clerk/convex/backend/convex/privateData.ts.hbs", `import { query } from "./_generated/server";
 
@@ -32066,9 +32067,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 
 const fetchClerkAuth = createServerFn({ method: "GET" }).handler(async () => {
-  const clerkAuth = await auth();
-  const token = await clerkAuth.getToken({ template: "convex" });
-  return { userId: clerkAuth.userId, token };
+  const { userId, getToken } = await auth();
+  const token = await getToken();
+  return { userId, token };
 });
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { createServerFn } from "@tanstack/react-start";
