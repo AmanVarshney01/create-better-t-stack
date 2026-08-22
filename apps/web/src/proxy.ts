@@ -8,10 +8,65 @@ import {
 } from "@/lib/agent-content";
 
 function acceptsMarkdown(request: NextRequest) {
-  return request.headers
+  const ranges = request.headers
     .get("Accept")
     ?.split(",")
-    .some((value) => value.trim().split(";", 1)[0] === "text/markdown");
+    .map((value) => {
+      const [rawMediaType, ...parameters] = value.split(";");
+      const mediaType = rawMediaType?.trim().toLowerCase();
+      const qualityParameter = parameters.find(
+        (parameter) => parameter.split("=", 1)[0]?.trim().toLowerCase() === "q",
+      );
+      const qualityValue = qualityParameter?.split("=", 2)[1]?.trim();
+      const quality = qualityParameter === undefined ? 1 : Number(qualityValue);
+      const mediaTypeParts = mediaType?.split("/");
+
+      if (
+        mediaTypeParts?.length !== 2 ||
+        mediaTypeParts.some((part) => !part) ||
+        !Number.isFinite(quality) ||
+        quality < 0 ||
+        quality > 1
+      ) {
+        return null;
+      }
+
+      return { mediaType, quality };
+    })
+    .filter((range): range is { mediaType: string; quality: number } => range !== null);
+
+  if (!ranges?.some((range) => range.mediaType === "text/markdown")) {
+    return false;
+  }
+
+  const qualityFor = (mediaType: string) => {
+    const [type, subtype] = mediaType.split("/");
+    let bestQuality = 0;
+    let bestSpecificity = -1;
+
+    for (const range of ranges) {
+      const [rangeType, rangeSubtype] = range.mediaType.split("/");
+      if (
+        (rangeType !== "*" && rangeType !== type) ||
+        (rangeSubtype !== "*" && rangeSubtype !== subtype)
+      ) {
+        continue;
+      }
+
+      const specificity = rangeType === "*" ? 0 : rangeSubtype === "*" ? 1 : 2;
+      if (specificity > bestSpecificity) {
+        bestSpecificity = specificity;
+        bestQuality = range.quality;
+      } else if (specificity === bestSpecificity) {
+        bestQuality = Math.max(bestQuality, range.quality);
+      }
+    }
+
+    return bestQuality;
+  };
+
+  const markdownQuality = qualityFor("text/markdown");
+  return markdownQuality > 0 && markdownQuality >= qualityFor("text/html");
 }
 
 function withAcceptVary(response: NextResponse) {

@@ -43,10 +43,10 @@ export default function PrivacyPage() {
 
       <TrustSection title="CLI_TELEMETRY">
         <p>
-          After a project is created successfully, the CLI sends one anonymous event containing
-          selected stack options and basic environment fields such as the CLI version, Node.js
-          version, platform, and package manager. This information is used to understand which
-          integrations are used and to guide maintenance priorities.
+          After a project is created successfully, the CLI sends one telemetry event containing
+          selected stack options and basic environment fields: CLI version, Node.js version,
+          platform, and package manager. This information is used to understand which integrations
+          are used and to guide maintenance priorities.
         </p>
         <p>
           The telemetry payload intentionally omits project names, paths, file contents, secrets,
@@ -74,19 +74,17 @@ export default function PrivacyPage() {
 
       <TrustSection title="RETENTION_AND_CONTACT">
         <p>
-          Anonymous CLI events and aggregate website statistics are retained to operate, secure, and
-          improve the project. Because CLI events intentionally contain no persistent user
-          identifier, the project may be unable to locate a specific event as belonging to one
-          person. Infrastructure providers may keep limited operational logs under their own
-          retention and security practices.
+          The project does not currently publish a fixed retention period for CLI events or
+          aggregate website statistics. Because a CLI event contains no persistent user identifier,
+          the event record alone cannot be associated with a specific person. Infrastructure
+          providers may retain operational logs under their own policies.
         </p>
         <p>
           Questions about this notice can be sent to{" "}
           <Link href={`mailto:${SUPPORT_EMAIL}`} className={trustPageLinkClass}>
             {SUPPORT_EMAIL}
           </Link>
-          . This notice was last updated on August 22, 2026 and will be revised when collection or
-          processing materially changes.
+          . This notice will be revised when collection or processing materially changes.
         </p>
       </TrustSection>
     </TrustPage>

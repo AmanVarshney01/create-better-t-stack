@@ -36,8 +36,8 @@ export default function AboutPage() {
           starter stack.
         </p>
         <p>
-          Generated projects are ordinary source code owned and controlled by the developer. They do
-          not depend on a required Better-T-Stack account, subscription, or hosted runtime after
+          Generated projects are ordinary source code under the developer's control. They do not
+          depend on a required Better-T-Stack account, subscription, or hosted runtime after
           generation.
         </p>
       </TrustSection>
@@ -84,10 +84,9 @@ export default function AboutPage() {
 
       <TrustSection title="PROJECT_VALUES">
         <p>
-          Better-T-Stack favors explicit choices, minimal templates, current stable dependencies,
-          reproducible commands, and transparent compatibility rules. Its goal is to remove setup
-          friction while leaving architecture decisions and long-term ownership with the people
-          building the application.
+          Better-T-Stack favors explicit choices, minimal templates, reproducible commands, and
+          transparent compatibility rules. Its goal is to remove setup friction while leaving
+          architecture decisions and long-term ownership with the people building the application.
         </p>
         <p>
           The project does not claim that one stack fits every team. It provides composable options

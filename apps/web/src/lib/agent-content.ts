@@ -1,3 +1,4 @@
+import type { StackState } from "./constant";
 import {
   NPM_PACKAGE_URL,
   REPOSITORY_URL,
@@ -6,6 +7,14 @@ import {
   SITE_URL,
   SUPPORT_EMAIL,
 } from "./site";
+import {
+  generateStackCommand,
+  generateStackSharingUrl,
+  generateStackSummary,
+  generateStackUrlFromState,
+  getSelectedTechs,
+} from "./stack-utils";
+import type { SelectedTech } from "./stack-utils";
 
 export const MARKDOWN_CONTENT_TYPE = "text/markdown; charset=utf-8";
 
@@ -35,7 +44,7 @@ const agentPageMarkdown = {
 
 ${SITE_DESCRIPTION}
 
-Better-T-Stack is a free, MIT-licensed open-source project maintained in public. It generates source code that belongs to the developer and does not add a required hosted Better-T-Stack runtime.
+Better-T-Stack is a free, MIT-licensed open-source project maintained in public. It generates source code under the developer's control and does not add a required hosted Better-T-Stack runtime.
 
 - [Documentation](${SITE_URL}/docs)
 - [Source code](${REPOSITORY_URL})
@@ -66,7 +75,7 @@ Use GitHub issues for reproducible bugs and feature requests. Include the CLI ve
 - [Documentation](${SITE_URL}/docs)`,
   privacy: `# Better-T-Stack privacy
 
-The website uses self-hosted Umami analytics and the CLI sends one anonymous event after successful project creation unless telemetry is disabled. The CLI payload does not include project names, paths, file contents, secrets, environment variables, IP addresses, or persistent user identifiers.
+The website uses self-hosted Umami analytics and the CLI sends one telemetry event after successful project creation unless telemetry is disabled. The CLI payload does not include project names, paths, file contents, secrets, environment variables, IP addresses, or persistent user identifiers.
 
 - [Full privacy notice](${SITE_URL}/privacy)
 - [Analytics and telemetry details](${SITE_URL}/docs/analytics.mdx)
@@ -92,6 +101,26 @@ The stack page renders a configuration encoded in its query string. Open the lin
 - [CLI documentation](${SITE_URL}/docs/cli)`,
 } satisfies Record<AgentPageSlug, string>;
 
+const stackCategoryLabels = {
+  addons: "Addon",
+  api: "API",
+  auth: "Authentication",
+  backend: "Backend",
+  database: "Database",
+  dbSetup: "Database setup",
+  examples: "Example",
+  git: "Git",
+  install: "Dependency installation",
+  nativeFrontend: "Native frontend",
+  orm: "ORM",
+  packageManager: "Package manager",
+  payments: "Payments",
+  runtime: "Runtime",
+  serverDeploy: "Server deployment",
+  webDeploy: "Web deployment",
+  webFrontend: "Web frontend",
+} satisfies Record<SelectedTech["category"], string>;
+
 export const MARKDOWN_NOT_FOUND = `# 404: Page not found
 
 The requested resource does not exist. Use one of these indexes to recover:
@@ -106,8 +135,37 @@ export function getAgentPageMarkdown(slug: string) {
   return agentPageMarkdown[slug as AgentPageSlug] ?? null;
 }
 
-export function getAgentPageSlugs() {
-  return Object.values(agentPageSlugByPath).map((slug) => ({ slug }));
+export function buildStackMarkdown(stack: StackState) {
+  const projectName = (stack.projectName || "my-better-t-app").replaceAll(/\s+/g, " ").trim();
+  const escapedProjectName = projectName.replaceAll("`", "\\`");
+  const selectedTechnologies = getSelectedTechs(stack)
+    .map(({ category, name }) => `- ${stackCategoryLabels[category]}: ${name}`)
+    .join("\n");
+  const command = generateStackCommand(stack);
+  const backtickRuns = command.match(/`+/g)?.map((run) => run.length) ?? [];
+  const codeFence = "`".repeat(Math.max(3, ...backtickRuns.map((length) => length + 1)));
+
+  return `# Shared Better-T-Stack configuration
+
+- Project name: \`${escapedProjectName}\`
+- Summary: ${generateStackSummary(stack)}
+
+## Selected technologies
+
+${selectedTechnologies || "No technologies selected."}
+
+## Generated CLI command
+
+${codeFence}bash
+${command}
+${codeFence}
+
+## Links
+
+- [Open this exact configuration](${generateStackSharingUrl(stack)})
+- [Edit this configuration](${generateStackUrlFromState(stack)})
+- [CLI documentation](${SITE_URL}/docs/cli)
+`;
 }
 
 export function getDocumentationMarkdownUrl(pageUrl: string) {
