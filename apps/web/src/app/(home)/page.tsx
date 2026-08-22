@@ -2,6 +2,7 @@ export const dynamic = "force-static";
 
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { fetchSponsors } from "@/lib/sponsors";
@@ -14,6 +15,15 @@ import SponsorsPane, { SponsorsPaneFooter } from "./_components/rail/panes/spons
 import TweetsPane from "./_components/rail/panes/tweets-pane";
 import VideosPane from "./_components/rail/panes/videos-pane";
 import Rail from "./_components/rail/rail";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+    types: {
+      "text/markdown": "/llms.txt",
+    },
+  },
+};
 
 export default async function HomePage() {
   const sponsorsData = await fetchSponsors();
@@ -45,23 +55,26 @@ export default async function HomePage() {
   ]);
 
   return (
-    <Rail>
-      {PANES.map((pane, index) => {
-        const paneContent = content.get(pane.id);
-        return (
-          <Pane
-            key={pane.id}
-            id={pane.id}
-            index={index}
-            title={pane.title}
-            width={pane.width}
-            count={paneContent?.count}
-            footer={paneContent?.footer}
-          >
-            {paneContent?.body}
-          </Pane>
-        );
-      })}
-    </Rail>
+    <>
+      <h1 className="sr-only">Better T Stack: roll your own stack</h1>
+      <Rail>
+        {PANES.map((pane, index) => {
+          const paneContent = content.get(pane.id);
+          return (
+            <Pane
+              key={pane.id}
+              id={pane.id}
+              index={index}
+              title={pane.title}
+              width={pane.width}
+              count={paneContent?.count}
+              footer={paneContent?.footer}
+            >
+              {paneContent?.body}
+            </Pane>
+          );
+        })}
+      </Rail>
+    </>
   );
 }

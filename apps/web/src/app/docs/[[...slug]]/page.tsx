@@ -7,6 +7,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { LLMCopyButton, ViewOptions } from "@/components/ai/page-actions";
+import { getDocumentationMarkdownUrl } from "@/lib/agent-content";
 import { getPageImage, source } from "@/lib/source";
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
@@ -15,6 +16,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   if (!page) notFound();
 
   const MDX = page.data.body;
+  const markdownUrl = getDocumentationMarkdownUrl(page.url);
 
   return (
     <DocsPage toc={page.data.toc} tableOfContent={{ style: "clerk" }} full={page.data.full}>
@@ -44,9 +46,9 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
         </div>
       )}
       <div className="flex flex-row flex-wrap items-center gap-2 border-b pt-2 pb-6">
-        <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
+        <LLMCopyButton markdownUrl={markdownUrl} />
         <ViewOptions
-          markdownUrl={`${page.url}.mdx`}
+          markdownUrl={markdownUrl}
           githubUrl={`https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/web/content/docs/${page.path}`}
         />
       </div>
@@ -73,6 +75,12 @@ export async function generateMetadata({
   return {
     title: page.data.title,
     description: page.data.description,
+    alternates: {
+      canonical: page.url,
+      types: {
+        "text/markdown": getDocumentationMarkdownUrl(page.url),
+      },
+    },
     openGraph: {
       title: page.data.title,
       description: page.data.description,
