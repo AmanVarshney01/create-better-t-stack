@@ -341,9 +341,9 @@ describe("Clerk matrix", () => {
         const nativeSignIn = files.get("apps/native/app/(auth)/sign-in.tsx");
         const nativeSignUp = files.get("apps/native/app/(auth)/sign-up.tsx");
 
-        if (!nativePackage?.includes('"@clerk/expo": "^4.1.0"')) {
+        if (!nativePackage?.includes('"@clerk/expo": "^4.5.2"')) {
           failures.push(
-            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: native package is missing @clerk/expo ^4.1.0`,
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: native package is missing @clerk/expo ^4.5.2`,
           );
         }
 
