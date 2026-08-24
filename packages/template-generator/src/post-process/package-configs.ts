@@ -226,7 +226,7 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
 
   // Note: packageManager version is set by CLI at runtime since it requires running the actual CLI
   // For preview purposes, we just show the configured package manager
-  pkgJson.packageManager ??= `${packageManager}@latest`;
+  pkgJson.packageManager ||= `${packageManager}@latest`;
 
   if (packageManager === "npm") {
     const allowScripts = getNpmAllowedScripts(config);
