@@ -69,7 +69,7 @@ const ADD_TEXT_FILE_PATHS = ["apps/web/vite.config.ts", "lefthook.yml"];
 const HOOK_ADDONS = ["husky", "lefthook"] as const satisfies readonly Addons[];
 const HOOK_LINTER_ADDONS = ["biome", "oxlint", "vite-plus"] as const satisfies readonly Addons[];
 const TASK_RUNNER_ADDONS = ["turborepo", "nx", "vite-plus"] as const satisfies readonly Addons[];
-const ConfigPackageScopeSchema = z
+const configPackageScopeSchema = z
   .object({
     name: z.string().regex(/^@[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?\/config$/),
   })
@@ -91,7 +91,7 @@ async function addWorkspacePackage(
 
   const configPackagePath = path.join(projectDir, "packages", "config", "package.json");
   const packageScopeResult = await Result.tryPromise({
-    try: async () => ConfigPackageScopeSchema.parse(await fs.readJson(configPackagePath)),
+    try: async () => configPackageScopeSchema.parse(await fs.readJson(configPackagePath)),
     catch: (cause: unknown) =>
       new CLIError({
         message:
@@ -507,6 +507,26 @@ async function addHandlerInternal(
   const writeResult = await writeTree(tree, projectDir);
 
   if (writeResult.isErr()) {
+    if (input.package) {
+      const packageName = input.package;
+      const cleanupResult = await Result.tryPromise({
+        try: () => fs.remove(path.join(projectDir, "packages", packageName)),
+        catch: (cause: unknown) =>
+          new CLIError({
+            message: `Failed to clean up incomplete workspace package: packages/${packageName}`,
+            cause,
+          }),
+      });
+      if (cleanupResult.isErr()) {
+        return Result.err(
+          new CLIError({
+            message: `Failed to write files: ${writeResult.error.message}. ${cleanupResult.error.message}`,
+            cause: cleanupResult.error,
+          }),
+        );
+      }
+    }
+
     return Result.err(
       new CLIError({
         message: `Failed to write files: ${writeResult.error.message}`,
