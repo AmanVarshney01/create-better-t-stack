@@ -69,11 +69,37 @@ const ADD_TEXT_FILE_PATHS = ["apps/web/vite.config.ts", "lefthook.yml"];
 const HOOK_ADDONS = ["husky", "lefthook"] as const satisfies readonly Addons[];
 const HOOK_LINTER_ADDONS = ["biome", "oxlint", "vite-plus"] as const satisfies readonly Addons[];
 const TASK_RUNNER_ADDONS = ["turborepo", "nx", "vite-plus"] as const satisfies readonly Addons[];
+const fileExistsErrorSchema = z.object({ code: z.literal("EEXIST") });
 const configPackageScopeSchema = z
   .object({
     name: z.string().regex(/^@[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?\/config$/),
   })
   .transform(({ name }) => name.slice(0, -"/config".length));
+
+function isFileExistsError(cause: unknown): boolean {
+  return fileExistsErrorSchema.safeParse(cause).success;
+}
+
+async function reserveWorkspacePackage(
+  projectDir: string,
+  packageName: string,
+): Promise<Result<string, CLIError>> {
+  const packageDir = path.join(projectDir, "packages", packageName);
+
+  return Result.tryPromise({
+    try: async () => {
+      await fs.mkdir(packageDir);
+      return packageDir;
+    },
+    catch: (cause: unknown) =>
+      new CLIError({
+        message: isFileExistsError(cause)
+          ? `Workspace package already exists: packages/${packageName}`
+          : `Failed to reserve workspace package: packages/${packageName}`,
+        cause,
+      }),
+  });
+}
 
 async function addWorkspacePackage(
   vfs: VirtualFileSystem,
@@ -417,7 +443,7 @@ async function addHandlerInternal(
 
   // Create VFS and process addon templates using template-generator's logic
   if (!isSilent()) {
-    log.info(pc.dim("Preparing addon files…"));
+    log.info(pc.dim("Preparing files…"));
   }
 
   const vfs = new VirtualFileSystem();
@@ -504,16 +530,24 @@ async function addHandlerInternal(
     });
   }
 
+  let reservedPackageDir: string | undefined;
+  if (input.package) {
+    const reservationResult = await reserveWorkspacePackage(projectDir, input.package);
+    if (reservationResult.isErr()) {
+      return Result.err(reservationResult.error);
+    }
+    reservedPackageDir = reservationResult.value;
+  }
+
   const writeResult = await writeTree(tree, projectDir);
 
   if (writeResult.isErr()) {
-    if (input.package) {
-      const packageName = input.package;
+    if (reservedPackageDir && input.package) {
       const cleanupResult = await Result.tryPromise({
-        try: () => fs.remove(path.join(projectDir, "packages", packageName)),
+        try: () => fs.remove(reservedPackageDir),
         catch: (cause: unknown) =>
           new CLIError({
-            message: `Failed to clean up incomplete workspace package: packages/${packageName}`,
+            message: `Failed to clean up incomplete workspace package: packages/${input.package}`,
             cause,
           }),
       });

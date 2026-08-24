@@ -7,7 +7,7 @@ import { add } from "../src/index";
 import { SMOKE_DIR } from "./setup";
 
 describe("add()", () => {
-  it("scaffolds a workspace package through the Add Path", async () => {
+  it("scaffolds a workspace package through add()", async () => {
     const projectDir = join(SMOKE_DIR, "workspace-package-project");
     await rm(projectDir, { recursive: true, force: true });
     await mkdir(join(projectDir, "packages", "config"), { recursive: true });
@@ -85,6 +85,20 @@ describe("add()", () => {
     expect(duplicateResult.success).toBe(false);
     expect(duplicateResult.error).toContain("Workspace package already exists");
     expect(await readFile(indexPath, "utf8")).toBe("export const existing = true;\n");
+
+    const concurrentResults = await Promise.all([
+      add({ projectDir, package: "concurrent", install: false }),
+      add({ projectDir, package: "concurrent", install: false }),
+    ]);
+
+    expect(concurrentResults.filter((result) => result.success)).toHaveLength(1);
+    expect(concurrentResults.filter((result) => !result.success)).toHaveLength(1);
+    expect(concurrentResults.find((result) => !result.success)?.error).toContain(
+      "Workspace package already exists",
+    );
+    expect(
+      await readFile(join(projectDir, "packages", "concurrent", "src", "index.ts"), "utf8"),
+    ).toBe("export {};\n");
 
     const longPackageName = "a".repeat(209);
     const longNameResult = await add({ projectDir, package: longPackageName, install: false });

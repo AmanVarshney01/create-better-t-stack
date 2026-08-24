@@ -515,7 +515,7 @@ export const CreateInputSchema = z
 export const WorkspacePackageNameSchema = z
   .string()
   .min(1, "Package name cannot be empty")
-  .max(214, "Package name must be less than 214 characters")
+  .max(214, "Package name must not exceed 214 characters")
   .regex(
     /^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/,
     "Package name must be an unscoped lowercase npm name",
