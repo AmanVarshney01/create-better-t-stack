@@ -53,6 +53,7 @@ import {
   TemplateSchema,
   type WebDeploy,
   WebDeploySchema,
+  WorkspacePackageNameSchema,
 } from "./types";
 import {
   CLIError,
@@ -235,10 +236,13 @@ export const router = t.router({
     .meta({ description: "Open the web-based stack builder" })
     .mutation(() => openBuilderCommand()),
   add: t.procedure
-    .meta({ description: "Add addons to an existing Better-T-Stack project" })
+    .meta({
+      description: "Add addons or a workspace package to an existing Better-T-Stack project",
+    })
     .input(
       z.object({
         addons: z.array(AddonsSchema).optional().describe("Addons to add"),
+        package: WorkspacePackageNameSchema.optional(),
         install: z
           .boolean()
           .optional()
@@ -258,7 +262,7 @@ export const router = t.router({
     }),
   addJson: t.procedure
     .meta({
-      description: "Add addons from a raw JSON payload (agent-friendly)",
+      description: "Add addons or a workspace package from a raw JSON payload (agent-friendly)",
       jsonInput: "always",
     })
     .input(AddInputSchema)
@@ -534,11 +538,11 @@ export type { AddResult };
 
 export type AddOptions = Pick<
   AddInput,
-  "addons" | "addonOptions" | "install" | "packageManager" | "projectDir" | "dryRun"
+  "addons" | "addonOptions" | "package" | "install" | "packageManager" | "projectDir" | "dryRun"
 >;
 
 /**
- * Programmatic API to add addons to an existing Better-T-Stack project.
+ * Programmatic API to add addons or a workspace package to an existing Better-T-Stack project.
  *
  * @example
  * ```typescript

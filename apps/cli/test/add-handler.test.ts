@@ -1,11 +1,148 @@
 import { describe, expect, it } from "bun:test";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { add } from "../src/index";
 import { SMOKE_DIR } from "./setup";
 
 describe("add()", () => {
+  it("scaffolds a workspace package through add()", async () => {
+    const projectDir = join(SMOKE_DIR, "workspace-package-project");
+    await rm(projectDir, { recursive: true, force: true });
+    await mkdir(join(projectDir, "packages", "config"), { recursive: true });
+    const projectConfig = {
+      version: "0.0.0-test",
+      createdAt: new Date(0).toISOString(),
+      database: "none",
+      orm: "none",
+      backend: "none",
+      runtime: "bun",
+      frontend: ["tanstack-router"],
+      addons: ["none"],
+      examples: ["none"],
+      auth: "none",
+      payments: "none",
+      packageManager: "bun",
+      dbSetup: "none",
+      api: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+    };
+    await writeFile(join(projectDir, "bts.jsonc"), JSON.stringify(projectConfig));
+    await writeFile(
+      join(projectDir, "package.json"),
+      JSON.stringify({ private: true, devDependencies: { typescript: "catalog:" } }),
+    );
+    await writeFile(
+      join(projectDir, "packages", "config", "package.json"),
+      JSON.stringify({ name: "@acme/config", private: true }),
+    );
+
+    const previewResult = await add({
+      projectDir,
+      package: "shared",
+      install: false,
+      dryRun: true,
+    });
+
+    expect(previewResult).toMatchObject({
+      success: true,
+      dryRun: true,
+      addedPackage: "shared",
+      plannedFileCount: 3,
+    });
+    expect(existsSync(join(projectDir, "packages", "shared"))).toBe(false);
+
+    const result = await add({ projectDir, package: "shared", install: false });
+
+    expect(result).toMatchObject({
+      success: true,
+      addedAddons: [],
+      addedPackage: "shared",
+      plannedFileCount: 3,
+    });
+    expect(
+      JSON.parse(await readFile(join(projectDir, "packages", "shared", "package.json"), "utf8")),
+    ).toEqual({
+      name: "@acme/shared",
+      version: "0.0.0",
+      private: true,
+      type: "module",
+      exports: { ".": "./src/index.ts" },
+      scripts: { "check-types": "tsc --noEmit" },
+      devDependencies: {
+        "@acme/config": "workspace:*",
+        typescript: "catalog:",
+      },
+    });
+    expect(
+      JSON.parse(await readFile(join(projectDir, "packages", "shared", "tsconfig.json"), "utf8")),
+    ).toEqual({
+      extends: "@acme/config/tsconfig.base.json",
+      include: ["src/**/*.ts"],
+    });
+    const indexPath = join(projectDir, "packages", "shared", "src", "index.ts");
+    expect(await readFile(indexPath, "utf8")).toBe("export {};\n");
+
+    await writeFile(indexPath, "export const existing = true;\n");
+    const duplicateResult = await add({ projectDir, package: "shared", install: false });
+
+    expect(duplicateResult.success).toBe(false);
+    expect(duplicateResult.error).toContain("Workspace package already exists");
+    expect(await readFile(indexPath, "utf8")).toBe("export const existing = true;\n");
+
+    const concurrentResults = await Promise.all([
+      add({ projectDir, package: "concurrent", install: false }),
+      add({ projectDir, package: "concurrent", install: false }),
+    ]);
+
+    expect(concurrentResults.filter((result) => result.success)).toHaveLength(1);
+    expect(concurrentResults.filter((result) => !result.success)).toHaveLength(1);
+    expect(concurrentResults.find((result) => !result.success)?.error).toContain(
+      "Workspace package already exists",
+    );
+    expect(
+      await readFile(join(projectDir, "packages", "concurrent", "src", "index.ts"), "utf8"),
+    ).toBe("export {};\n");
+
+    const longPackageName = "a".repeat(209);
+    const longNameResult = await add({ projectDir, package: longPackageName, install: false });
+
+    expect(longNameResult.success).toBe(false);
+    expect(longNameResult.error).toContain("must not exceed 214 characters including its scope");
+    expect(existsSync(join(projectDir, "packages", longPackageName))).toBe(false);
+
+    await writeFile(
+      join(projectDir, "bts.jsonc"),
+      JSON.stringify({ ...projectConfig, packageManager: "npm" }),
+    );
+    await writeFile(
+      join(projectDir, "package.json"),
+      JSON.stringify({ private: true, devDependencies: { typescript: "^6.0.3" } }),
+    );
+    const npmPackageResult = await add({ projectDir, package: "npm-utils", install: false });
+
+    expect(npmPackageResult.success).toBe(true);
+    expect(
+      JSON.parse(await readFile(join(projectDir, "packages", "npm-utils", "package.json"), "utf8"))
+        .devDependencies,
+    ).toEqual({
+      "@acme/config": "*",
+      typescript: "^6.0.3",
+    });
+
+    await writeFile(
+      join(projectDir, "packages", "config", "package.json"),
+      JSON.stringify({ name: "@Upper/config", private: true }),
+    );
+    const invalidScopeResult = await add({ projectDir, package: "other", install: false });
+
+    expect(invalidScopeResult.success).toBe(false);
+    expect(invalidScopeResult.error).toContain("Cannot determine the workspace package scope");
+    expect(existsSync(join(projectDir, "packages", "other"))).toBe(false);
+  });
+
   it("returns an error in silent mode instead of exiting when the project config is missing", async () => {
     const projectDir = join(SMOKE_DIR, "missing-bts-config");
     await mkdir(projectDir, { recursive: true });

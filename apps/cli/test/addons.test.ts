@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import {
@@ -960,7 +960,7 @@ describe("Addon Configurations", () => {
       expect(lefthookConfig).not.toContain("name: oxlint");
     });
 
-    it("should preserve Bun workspace catalogs when package scripts refresh on add", async () => {
+    it("should preserve Bun workspace metadata when package scripts refresh on add", async () => {
       const created = await runTRPCTest({
         projectName: "bun-catalog-add-refresh",
         addons: ["turborepo"],
@@ -1008,7 +1008,26 @@ describe("Addon Configurations", () => {
         rootPackageJsonBefore.workspaces.packages,
       );
       expect(rootPackageJsonAfter.workspaces.catalog).toMatchObject(catalogBefore);
+      expect(rootPackageJsonAfter.packageManager).toBe(rootPackageJsonBefore.packageManager);
       expect(authPackageJson.dependencies["better-auth"]).toBe("catalog:");
+
+      rootPackageJsonAfter.packageManager = "";
+      await writeFile(
+        join(projectDir, "package.json"),
+        `${JSON.stringify(rootPackageJsonAfter, null, 2)}\n`,
+      );
+
+      const fallbackResult = await add({
+        projectDir,
+        addons: ["pwa"],
+        install: false,
+      });
+      expect(fallbackResult?.success).toBe(true);
+
+      const rootPackageJsonWithFallback = JSON.parse(
+        await readFile(join(projectDir, "package.json"), "utf8"),
+      );
+      expect(rootPackageJsonWithFallback.packageManager).toBe("bun@latest");
     });
 
     it("should deduplicate addons", async () => {
