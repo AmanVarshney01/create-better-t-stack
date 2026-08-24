@@ -1008,6 +1008,7 @@ describe("Addon Configurations", () => {
         rootPackageJsonBefore.workspaces.packages,
       );
       expect(rootPackageJsonAfter.workspaces.catalog).toMatchObject(catalogBefore);
+      expect(rootPackageJsonAfter.packageManager).toBe(rootPackageJsonBefore.packageManager);
       expect(authPackageJson.dependencies["better-auth"]).toBe("catalog:");
     });
 
