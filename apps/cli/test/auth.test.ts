@@ -29,6 +29,16 @@ describe("Authentication Configurations", () => {
         });
 
         expectSuccess(result);
+        if (!result.projectDir) {
+          throw new Error("Expected projectDir to be defined");
+        }
+
+        const authSchema = await fs.readFile(
+          path.join(result.projectDir, "packages/db/src/schema/auth.ts"),
+          "utf8",
+        );
+        expect(authSchema).toContain("issuer:");
+        expect(authSchema).toContain('uniqueIndex("account_issuer_accountId_uidx")');
       });
     }
 
@@ -87,6 +97,10 @@ describe("Authentication Configurations", () => {
       expect(authModels).toContain("_id: { type: ObjectId, auto: true }");
       expect(authModels).toContain('userId: { type: ObjectId, ref: "User", required: true }');
       expect(authModels).toContain("sessionSchema.index({ userId: 1 })");
+      expect(authModels).toContain("issuer: { type: String, required: true }");
+      expect(authModels).toContain(
+        "accountSchema.index({ issuer: 1, accountId: 1 }, { unique: true })",
+      );
       expect(authModels).toContain("verificationSchema.index({ identifier: 1 })");
     });
 
@@ -796,7 +810,7 @@ describe("Authentication Configurations", () => {
         const packageJson = JSON.parse(
           await fs.readFile(path.join(result.projectDir, "package.json"), "utf8"),
         );
-        expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.6.30");
+        expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.7.1");
       });
     }
   });
@@ -1222,6 +1236,20 @@ describe("Authentication Configurations", () => {
         });
 
         expectSuccess(result);
+        if (!result.projectDir) {
+          throw new Error("Expected projectDir to be defined");
+        }
+
+        if (orm === "prisma") {
+          const authSchema = await fs.readFile(
+            path.join(result.projectDir, "packages/db/prisma/schema/auth.prisma"),
+            "utf8",
+          );
+          expect(authSchema).toContain("issuer                String");
+          expect(authSchema).toContain(
+            '@@unique([issuer, accountId], map: "account_issuer_accountId_uidx")',
+          );
+        }
       });
     }
   });

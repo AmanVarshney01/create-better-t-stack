@@ -46,16 +46,19 @@ describe("local tool requirements", () => {
       npm: ">=11.16.0",
       pnpm: ">=10.26.0",
     });
-    expect(RECOMMENDED_BUN_VERSION_RANGE).toBe(">=1.3.0");
+    expect(RECOMMENDED_BUN_VERSION_RANGE).toBe(">=1.4.0");
   });
 
-  it("recommends Bun 1.3 without rejecting the catalog-compatible minimum", () => {
+  it("recommends Bun 1.4 without rejecting the catalog-compatible minimum", () => {
     const project = config();
 
     expect(getLocalToolRecommendations(project, { bun: "1.2.14" })).toEqual([
-      "Bun 1.2.14 meets the minimum requirement, but Bun 1.3 or newer is recommended. Run `bun upgrade`.",
+      "Bun 1.2.14 meets the minimum requirement, but Bun 1.4 or newer is recommended. Run `bun upgrade`.",
     ]);
-    expect(getLocalToolRecommendations(project, { bun: "1.3.0" })).toEqual([]);
+    expect(getLocalToolRecommendations(project, { bun: "1.3.14" })).toEqual([
+      "Bun 1.3.14 meets the minimum requirement, but Bun 1.4 or newer is recommended. Run `bun upgrade`.",
+    ]);
+    expect(getLocalToolRecommendations(project, { bun: "1.4.0" })).toEqual([]);
   });
 
   it.each([

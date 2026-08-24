@@ -15,8 +15,8 @@ type PackageJson = {
 export const dependencyVersionMap = {
   typescript: "^6.0.3",
 
-  "better-auth": "1.6.30",
-  "@better-auth/expo": "1.6.30",
+  "better-auth": "1.7.1",
+  "@better-auth/expo": "1.7.1",
 
   "@clerk/backend": "^3.16.10",
   "@clerk/express": "^2.1.61",
