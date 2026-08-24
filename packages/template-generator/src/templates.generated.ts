@@ -843,12 +843,12 @@ export const link = new RPCLink({
 			credentials: Platform.OS === "web" ? "include" : "omit",
 		});
 	},
-	headers() {
+	async headers() {
 		if (Platform.OS === "web") {
 			return {};
 		}
 		const headers = new Map<string, string>();
-		const cookies = authClient.getCookie();
+		const cookies = await authClient.getCookie();
 		if (cookies) {
 			headers.set("Cookie", cookies);
 		}
@@ -1888,12 +1888,12 @@ const trpcClient = createTRPCClient<AppRouter>({
 						credentials: Platform.OS === "web" ? "include" : "omit",
 					});
 				},
-			headers() {
+			async headers() {
 				if (Platform.OS === "web") {
 					return {};
 				}
 				const headers = new Map<string, string>();
-				const cookies = authClient.getCookie();
+				const cookies = await authClient.getCookie();
 				if (cookies) {
 					headers.set("Cookie", cookies);
 				}
@@ -8425,6 +8425,7 @@ import {
   timestamp,
   boolean,
   index,
+  uniqueIndex,
 } from "drizzle-orm/mysql-core";
 
 export const user = mysqlTable("user", {
@@ -8463,7 +8464,8 @@ export const account = mysqlTable(
   "account",
   {
     id: varchar("id", { length: 36 }).primaryKey(),
-    accountId: text("account_id").notNull(),
+    issuer: varchar("issuer", { length: 191 }).notNull(),
+    accountId: varchar("account_id", { length: 191 }).notNull(),
     providerId: text("provider_id").notNull(),
     userId: varchar("user_id", { length: 36 })
       .notNull()
@@ -8480,7 +8482,10 @@ export const account = mysqlTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)],
+  (table) => [
+    uniqueIndex("account_issuer_accountId_uidx").on(table.issuer, table.accountId),
+    index("account_userId_idx").on(table.userId),
+  ],
 );
 
 export const verification = mysqlTable(
@@ -8519,7 +8524,7 @@ export const accountRelations = relations(account, ({ one }) => ({
 }));
 `],
   ["auth/better-auth/server/db/drizzle/postgres/src/schema/auth.ts.hbs", `import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -8557,6 +8562,7 @@ export const account = pgTable(
   "account",
   {
     id: text("id").primaryKey(),
+    issuer: text("issuer").notNull(),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
     userId: text("user_id")
@@ -8574,7 +8580,10 @@ export const account = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)],
+  (table) => [
+    uniqueIndex("account_issuer_accountId_uidx").on(table.issuer, table.accountId),
+    index("account_userId_idx").on(table.userId),
+  ],
 );
 
 export const verification = pgTable(
@@ -8613,7 +8622,7 @@ export const accountRelations = relations(account, ({ one }) => ({
 }));
 `],
   ["auth/better-auth/server/db/drizzle/sqlite/src/schema/auth.ts.hbs", `import { relations, sql } from "drizzle-orm";
-import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -8657,6 +8666,7 @@ export const account = sqliteTable(
   "account",
   {
     id: text("id").primaryKey(),
+    issuer: text("issuer").notNull(),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
     userId: text("user_id")
@@ -8680,7 +8690,10 @@ export const account = sqliteTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)],
+  (table) => [
+    uniqueIndex("account_issuer_accountId_uidx").on(table.issuer, table.accountId),
+    index("account_userId_idx").on(table.userId),
+  ],
 );
 
 export const verification = sqliteTable(
@@ -8756,6 +8769,7 @@ sessionSchema.index({ userId: 1 });
 const accountSchema = new Schema(
     {
         _id: { type: ObjectId, auto: true },
+        issuer: { type: String, required: true },
         accountId: { type: String, required: true },
         providerId: { type: String, required: true },
         userId: { type: ObjectId, ref: 'User', required: true },
@@ -8771,6 +8785,7 @@ const accountSchema = new Schema(
     },
     { collection: 'account' }
 );
+accountSchema.index({ issuer: 1, accountId: 1 }, { unique: true });
 accountSchema.index({ userId: 1 });
 
 const verificationSchema = new Schema(
@@ -8826,6 +8841,7 @@ model Session {
 
 model Account {
   id                    String    @id @map("_id")
+  issuer                String
   accountId             String
   providerId            String
   userId                String
@@ -8840,6 +8856,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
+  @@unique([issuer, accountId], map: "account_issuer_accountId_uidx")
   @@index([userId])
   @@map("account")
 }
@@ -8889,7 +8906,8 @@ model Session {
 
 model Account {
   id                    String    @id
-  accountId             String    @db.Text
+  issuer                String    @db.VarChar(191)
+  accountId             String    @db.VarChar(191)
   providerId            String    @db.Text
   userId                String
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -8903,6 +8921,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
+  @@unique([issuer, accountId], map: "account_issuer_accountId_uidx")
   @@index([userId(length: 191)])
   @@map("account")
 }
@@ -8952,6 +8971,7 @@ model Session {
 
 model Account {
   id                    String    @id
+  issuer                String
   accountId             String
   providerId            String
   userId                String
@@ -8966,6 +8986,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
+  @@unique([issuer, accountId], map: "account_issuer_accountId_uidx")
   @@index([userId])
   @@map("account")
 }
@@ -9015,6 +9036,7 @@ model Session {
 
 model Account {
   id                    String    @id
+  issuer                String
   accountId             String
   providerId            String
   userId                String
@@ -9029,6 +9051,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
+  @@unique([issuer, accountId], map: "account_issuer_accountId_uidx")
   @@index([userId])
   @@map("account")
 }
@@ -15783,7 +15806,8 @@ CREATE TABLE \`session\` (
 -- CreateTable
 CREATE TABLE \`account\` (
     \`id\` VARCHAR(191) NOT NULL,
-    \`accountId\` TEXT NOT NULL,
+    \`issuer\` VARCHAR(191) NOT NULL,
+    \`accountId\` VARCHAR(191) NOT NULL,
     \`providerId\` TEXT NOT NULL,
     \`userId\` VARCHAR(191) NOT NULL,
     \`accessToken\` TEXT NULL,
@@ -15796,6 +15820,7 @@ CREATE TABLE \`account\` (
     \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     \`updatedAt\` DATETIME(3) NOT NULL,
 
+    UNIQUE INDEX \`account_issuer_accountId_uidx\`(\`issuer\`, \`accountId\`),
     INDEX \`account_userId_idx\`(\`userId\`(191)),
     PRIMARY KEY (\`id\`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -15978,6 +16003,7 @@ CREATE TABLE "session" (
 -- CreateTable
 CREATE TABLE "account" (
     "id" TEXT NOT NULL,
+    "issuer" TEXT NOT NULL,
     "accountId" TEXT NOT NULL,
     "providerId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -16030,6 +16056,9 @@ CREATE UNIQUE INDEX "session_token_key" ON "session"("token");
 
 -- CreateIndex
 CREATE INDEX "account_userId_idx" ON "account"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "account_issuer_accountId_uidx" ON "account"("issuer", "accountId");
 
 -- CreateIndex
 CREATE INDEX "verification_identifier_idx" ON "verification"("identifier");

@@ -588,7 +588,7 @@ describe("API Configurations", () => {
             'import { authClient } from "@/lib/auth-client";',
             'import { Platform } from "react-native";',
             'credentials: Platform.OS === "web" ? "include" : "omit"',
-            "const cookies = authClient.getCookie();",
+            "const cookies = await authClient.getCookie();",
             "return expoFetch(request, {",
           ],
         },
