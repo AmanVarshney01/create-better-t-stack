@@ -11,26 +11,28 @@ describe("add()", () => {
     const projectDir = join(SMOKE_DIR, "workspace-package-project");
     await rm(projectDir, { recursive: true, force: true });
     await mkdir(join(projectDir, "packages", "config"), { recursive: true });
+    const projectConfig = {
+      version: "0.0.0-test",
+      createdAt: new Date(0).toISOString(),
+      database: "none",
+      orm: "none",
+      backend: "none",
+      runtime: "bun",
+      frontend: ["tanstack-router"],
+      addons: ["none"],
+      examples: ["none"],
+      auth: "none",
+      payments: "none",
+      packageManager: "bun",
+      dbSetup: "none",
+      api: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+    };
+    await writeFile(join(projectDir, "bts.jsonc"), JSON.stringify(projectConfig));
     await writeFile(
-      join(projectDir, "bts.jsonc"),
-      JSON.stringify({
-        version: "0.0.0-test",
-        createdAt: new Date(0).toISOString(),
-        database: "none",
-        orm: "none",
-        backend: "none",
-        runtime: "bun",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        auth: "none",
-        payments: "none",
-        packageManager: "bun",
-        dbSetup: "none",
-        api: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-      }),
+      join(projectDir, "package.json"),
+      JSON.stringify({ private: true, devDependencies: { typescript: "catalog:" } }),
     );
     await writeFile(
       join(projectDir, "packages", "config", "package.json"),
@@ -69,6 +71,10 @@ describe("add()", () => {
       type: "module",
       exports: { ".": "./src/index.ts" },
       scripts: { "check-types": "tsc --noEmit" },
+      devDependencies: {
+        "@acme/config": "workspace:*",
+        typescript: "catalog:",
+      },
     });
     expect(
       JSON.parse(await readFile(join(projectDir, "packages", "shared", "tsconfig.json"), "utf8")),
@@ -106,6 +112,25 @@ describe("add()", () => {
     expect(longNameResult.success).toBe(false);
     expect(longNameResult.error).toContain("must not exceed 214 characters including its scope");
     expect(existsSync(join(projectDir, "packages", longPackageName))).toBe(false);
+
+    await writeFile(
+      join(projectDir, "bts.jsonc"),
+      JSON.stringify({ ...projectConfig, packageManager: "npm" }),
+    );
+    await writeFile(
+      join(projectDir, "package.json"),
+      JSON.stringify({ private: true, devDependencies: { typescript: "^6.0.3" } }),
+    );
+    const npmPackageResult = await add({ projectDir, package: "npm-utils", install: false });
+
+    expect(npmPackageResult.success).toBe(true);
+    expect(
+      JSON.parse(await readFile(join(projectDir, "packages", "npm-utils", "package.json"), "utf8"))
+        .devDependencies,
+    ).toEqual({
+      "@acme/config": "*",
+      typescript: "^6.0.3",
+    });
 
     await writeFile(
       join(projectDir, "packages", "config", "package.json"),

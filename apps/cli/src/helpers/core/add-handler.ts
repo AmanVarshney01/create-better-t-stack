@@ -75,6 +75,11 @@ const configPackageScopeSchema = z
     name: z.string().regex(/^@[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?\/config$/),
   })
   .transform(({ name }) => name.slice(0, -"/config".length));
+const rootTypescriptVersionSchema = z
+  .object({
+    devDependencies: z.object({ typescript: z.string().min(1) }),
+  })
+  .transform(({ devDependencies }) => devDependencies.typescript);
 
 function isFileExistsError(cause: unknown): boolean {
   return fileExistsErrorSchema.safeParse(cause).success;
@@ -105,6 +110,7 @@ async function addWorkspacePackage(
   vfs: VirtualFileSystem,
   projectDir: string,
   packageName: string,
+  packageManager: ProjectConfig["packageManager"],
 ): Promise<Result<void, CLIError>> {
   const packageDir = path.join(projectDir, "packages", packageName);
   if (await fs.pathExists(packageDir)) {
@@ -129,6 +135,20 @@ async function addWorkspacePackage(
     return Result.err(packageScopeResult.error);
   }
 
+  const typescriptVersionResult = await Result.tryPromise({
+    try: async () =>
+      rootTypescriptVersionSchema.parse(await fs.readJson(path.join(projectDir, "package.json"))),
+    catch: (cause: unknown) =>
+      new CLIError({
+        message:
+          "Cannot determine the TypeScript version. Expected package.json to declare devDependencies.typescript.",
+        cause,
+      }),
+  });
+  if (typescriptVersionResult.isErr()) {
+    return Result.err(typescriptVersionResult.error);
+  }
+
   const packageScope = packageScopeResult.value;
   const fullPackageName = `${packageScope}/${packageName}`;
   if (fullPackageName.length > 214) {
@@ -150,6 +170,10 @@ async function addWorkspacePackage(
         type: "module",
         exports: { ".": "./src/index.ts" },
         scripts: { "check-types": "tsc --noEmit" },
+        devDependencies: {
+          [`${packageScope}/config`]: packageManager === "npm" ? "*" : "workspace:*",
+          typescript: typescriptVersionResult.value,
+        },
       },
       null,
       2,
@@ -449,7 +473,12 @@ async function addHandlerInternal(
   const vfs = new VirtualFileSystem();
 
   if (input.package) {
-    const packageResult = await addWorkspacePackage(vfs, projectDir, input.package);
+    const packageResult = await addWorkspacePackage(
+      vfs,
+      projectDir,
+      input.package,
+      existingConfig.packageManager,
+    );
     if (packageResult.isErr()) {
       return Result.err(packageResult.error);
     }
