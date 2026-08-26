@@ -58,7 +58,6 @@ export default function AsciiBanner() {
 
   return (
     <div className="bts-banner-fit">
-      <h1 className="sr-only">Better T Stack: roll your own stack</h1>
       <pre ref={wideRef} aria-hidden="true" className="bts-banner max-md:hidden">
         {WIDE}
       </pre>

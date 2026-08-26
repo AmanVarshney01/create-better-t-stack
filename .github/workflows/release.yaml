@@ -64,8 +64,6 @@ jobs:
       - name: Setup Bun
         if: steps.check-version.outputs.exists == 'false'
         uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
 
       - name: Install Dependencies
         if: steps.check-version.outputs.exists == 'false'

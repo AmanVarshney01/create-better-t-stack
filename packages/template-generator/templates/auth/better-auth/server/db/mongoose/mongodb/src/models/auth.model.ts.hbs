@@ -34,6 +34,7 @@ sessionSchema.index({ userId: 1 });
 const accountSchema = new Schema(
     {
         _id: { type: ObjectId, auto: true },
+        issuer: { type: String, required: true },
         accountId: { type: String, required: true },
         providerId: { type: String, required: true },
         userId: { type: ObjectId, ref: 'User', required: true },
@@ -49,6 +50,7 @@ const accountSchema = new Schema(
     },
     { collection: 'account' }
 );
+accountSchema.index({ issuer: 1, accountId: 1 }, { unique: true });
 accountSchema.index({ userId: 1 });
 
 const verificationSchema = new Schema(

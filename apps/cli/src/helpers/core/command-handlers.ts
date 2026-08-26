@@ -31,6 +31,12 @@ import {
   validateSafeProjectDirectoryPath,
 } from "../../utils/project-directory";
 import { addToHistory } from "../../utils/project-history";
+import {
+  type AvailableProjectLauncher,
+  type ProjectLauncher,
+  getProjectLauncherChoice,
+  launchProject,
+} from "../../utils/project-launcher";
 import { validateProjectName } from "../../utils/project-name-validation";
 import { renderTitle } from "../../utils/render-title";
 import { checkLocalRequirements } from "../../utils/requirements";
@@ -48,6 +54,11 @@ import { resolveProjectDbSetupOptions } from "./db-setup-options";
 export interface CreateHandlerOptions {
   silent?: boolean;
 }
+
+type CreateCommandInput = CreateInput & {
+  projectName?: string;
+  open?: ProjectLauncher;
+};
 
 /**
  * Result type for project creation
@@ -117,7 +128,7 @@ interface CreateHandlerExecution {
 }
 
 async function executeCreateProjectHandler(
-  input: CreateInput & { projectName?: string },
+  input: CreateCommandInput,
   options: CreateHandlerOptions,
 ): Promise<CreateHandlerExecution> {
   const { silent = false } = options;
@@ -132,7 +143,7 @@ async function executeCreateProjectHandler(
 }
 
 export async function createProjectHandlerResult(
-  input: CreateInput & { projectName?: string },
+  input: CreateCommandInput,
   options: CreateHandlerOptions = {},
 ): Promise<Result<CreateProjectResult, CreateHandlerError>> {
   const execution = await executeCreateProjectHandler(input, options);
@@ -140,7 +151,7 @@ export async function createProjectHandlerResult(
 }
 
 export async function createProjectHandler(
-  input: CreateInput & { projectName?: string },
+  input: CreateCommandInput,
   options: CreateHandlerOptions = {},
 ): Promise<CreateProjectResult | undefined> {
   const { silent = false } = options;
@@ -175,7 +186,7 @@ export async function createProjectHandler(
 }
 
 async function createProjectHandlerInternal(
-  input: CreateInput & { projectName?: string },
+  input: CreateCommandInput,
   startTime: number,
   timeScaffolded: string,
 ): Promise<Result<CreateProjectResult, CreateHandlerError>> {
@@ -438,10 +449,34 @@ async function createProjectHandlerInternal(
       log.message(`${pc.dim("Setup saved to history")}\n${pc.cyan(historyCommand)}`);
     }
 
+    let projectLauncher: AvailableProjectLauncher | undefined;
+    if (!isSilent()) {
+      const launcherResult = await getProjectLauncherChoice(input.open, config.projectDir, {
+        prompt:
+          !input.yes &&
+          process.env.CI === undefined &&
+          process.stdin.isTTY === true &&
+          process.stdout.isTTY === true,
+      });
+
+      if (launcherResult.isErr()) {
+        log.warn(pc.yellow(launcherResult.error.message));
+      } else {
+        projectLauncher = launcherResult.value;
+      }
+    }
+
     const elapsedTimeMs = Date.now() - startTime;
     if (!isSilent()) {
       const elapsedTimeInSeconds = (elapsedTimeMs / 1000).toFixed(1);
       outro(pc.magenta(`Project ready in ${pc.bold(`${elapsedTimeInSeconds}s`)}`));
+
+      if (projectLauncher) {
+        const launchResult = await launchProject(projectLauncher);
+        if (launchResult.isErr()) {
+          log.warn(pc.yellow(launchResult.error.message));
+        }
+      }
     }
 
     return Result.ok({

@@ -90,7 +90,7 @@ import Layout from "../layouts/Layout.astro";
       try {
         const { data: customerState } = await authClient.customer.state();
         const subscriptionInfo = document.getElementById("subscription-info")!;
-        if (customerState?.activeSubscriptions?.length > 0) {
+        if ((customerState?.activeSubscriptions?.length ?? 0) > 0) {
           subscriptionInfo.innerHTML = `
             <p class="text-white">Plan: <span class="text-green-400">Pro</span></p>
             <button

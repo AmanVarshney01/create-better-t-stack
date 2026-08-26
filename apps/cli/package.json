@@ -1,6 +1,6 @@
 {
   "name": "create-better-t-stack",
-  "version": "3.40.0",
+  "version": "3.40.5",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
   "keywords": [
     "better-auth",
@@ -28,7 +28,7 @@
     "type-safety",
     "typescript"
   ],
-  "homepage": "https://better-t-stack.dev/",
+  "homepage": "https://www.better-t-stack.dev/",
   "license": "MIT",
   "author": "Aman Varshney",
   "repository": {

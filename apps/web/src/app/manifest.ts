@@ -1,13 +1,14 @@
 import type { MetadataRoute } from "next";
 
+import { SITE_DESCRIPTION } from "@/lib/site";
+
 export const dynamic = "force-static";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Better T Stack",
     short_name: "Better T Stack",
-    description:
-      "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
+    description: SITE_DESCRIPTION,
     start_url: "/new",
     display: "standalone",
     background_color: "#ffffff",

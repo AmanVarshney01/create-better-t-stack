@@ -27,6 +27,7 @@ create-better-t-stack [project-directory] [options]
 - `--yolo`: Bypass validations and compatibility checks
 - `--package-manager <pm>`: `npm`, `pnpm`, `bun`
 - `--install / --no-install`: Install dependencies after creation
+- `--open <target>`: Open the project in an installed editor, IDE, or coding agent
 - `--git / --no-git`: Initialize Git repository
 - `--frontend <types...>`: Web and/or native frameworks (see [Options](/docs/cli/options#frontend))
 - `--backend <framework>`: `hono`, `express`, `fastify`, `elysia`, `convex`, `self`, `none`
@@ -68,7 +69,7 @@ create-better-t-stack my-app --yes --dry-run
 
 ## `add`
 
-Adds addons to an existing Better-T-Stack project.
+Adds addons or scaffolds a workspace package in an existing Better-T-Stack project.
 
 ```bash
 create-better-t-stack add [options]
@@ -77,8 +78,9 @@ create-better-t-stack add [options]
 ### Options
 
 - `--addons <types...>`: Addons to add (see [Addons](/docs/cli/options#addons))
+- `--package <name>`: Scaffold `packages/<name>` with a package manifest, shared TypeScript config, and `src/index.ts`
 - `--project-dir <path>`: Project directory (defaults to current directory)
-- `--install / --no-install`: Install dependencies after adding
+- `--install [boolean]`: Install dependencies after adding (defaults to `false`)
 - `--package-manager <pm>`: Package manager to use (`npm`, `pnpm`, `bun`)
 
 ### Examples
@@ -92,6 +94,9 @@ create-better-t-stack add --addons pwa tauri --install
 
 # Add addons in a specific project directory
 create-better-t-stack add --project-dir ./my-app --addons mcp skills
+
+# Scaffold @my-app/shared in packages/shared
+create-better-t-stack add --package shared
 ```
 
 ## `create-json`
@@ -153,7 +158,7 @@ Opens the Better-T-Stack documentation in your default browser.
 create-better-t-stack docs
 ```
 
-Opens `https://better-t-stack.dev/docs` in your browser.
+Opens `https://www.better-t-stack.dev/docs` in your browser.
 
 ## `builder`
 
@@ -163,7 +168,7 @@ Opens the web-based stack builder in your default browser.
 create-better-t-stack builder
 ```
 
-Opens `https://better-t-stack.dev/new` where you can configure your stack visually.
+Opens `https://www.better-t-stack.dev/new` where you can configure your stack visually.
 
 ## `history`
 

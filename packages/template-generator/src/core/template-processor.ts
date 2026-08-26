@@ -8,6 +8,85 @@ Handlebars.registerHelper("and", (...args) => args.slice(0, -1).every(Boolean));
 Handlebars.registerHelper("or", (...args) => args.slice(0, -1).some(Boolean));
 Handlebars.registerHelper("not", (a) => !a);
 Handlebars.registerHelper("includes", (arr, val) => Array.isArray(arr) && arr.includes(val));
+// Mirrors the sanitizers expo prebuild applies when it suggests identifiers.
+const reservedAndroidSegments = new Set([
+  "abstract",
+  "assert",
+  "boolean",
+  "break",
+  "byte",
+  "case",
+  "catch",
+  "char",
+  "class",
+  "const",
+  "continue",
+  "default",
+  "do",
+  "double",
+  "else",
+  "enum",
+  "extends",
+  "final",
+  "finally",
+  "float",
+  "for",
+  "goto",
+  "if",
+  "implements",
+  "import",
+  "instanceof",
+  "int",
+  "interface",
+  "long",
+  "native",
+  "new",
+  "package",
+  "private",
+  "protected",
+  "public",
+  "return",
+  "short",
+  "static",
+  "strictfp",
+  "super",
+  "switch",
+  "synchronized",
+  "this",
+  "throw",
+  "throws",
+  "transient",
+  "try",
+  "void",
+  "volatile",
+  "while",
+  "true",
+  "false",
+  "null",
+]);
+
+function sanitizeAndroidPackage(value: string) {
+  const output = value
+    .replace(/[^a-zA-Z0-9_.]/g, "")
+    .replace(/\.+/g, ".")
+    .replace(/^\.|\.$/g, "");
+  return (output || "app")
+    .split(".")
+    .map((segment) => {
+      const valid = /^[a-zA-Z]/.test(segment) ? segment : `x${segment}`;
+      return reservedAndroidSegments.has(valid) ? `x${valid}` : valid;
+    })
+    .join(".");
+}
+
+function sanitizeIosBundleIdentifier(value: string) {
+  return value.replace(/(^[^a-zA-Z.-]|[^a-zA-Z0-9-.])/g, "-");
+}
+
+Handlebars.registerHelper("appId", (projectName: string, platform: "ios" | "android") => {
+  const id = `com.anonymous.${projectName}`;
+  return platform === "android" ? sanitizeAndroidPackage(id) : sanitizeIosBundleIdentifier(id);
+});
 Handlebars.registerHelper(
   "usesAlchemyDatabase",
   (backend, dbSetup, webDeploy, serverDeploy, dbSetupOptions) =>

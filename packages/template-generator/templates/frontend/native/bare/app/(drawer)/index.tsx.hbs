@@ -62,7 +62,7 @@ const products = useQuery(api.polar.listAllProducts);
 const subscription = useQuery(api.polar.getCurrentSubscription);
 const generateCheckoutLink = useAction(api.polar.generateCheckoutLink);
 const generateCustomerPortalUrl = useAction(api.polar.generateCustomerPortalUrl);
-const recurringProduct = products?.find((product) => product.isRecurring);
+const recurringProduct = products?.find((product: { isRecurring?: boolean }) => product.isRecurring);
 
 const openPolarLink = async (url: string, returnUrl: string) => {
 	await WebBrowser.openAuthSessionAsync(url, returnUrl);
