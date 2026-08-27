@@ -37,7 +37,8 @@ type PrecomputedStats = {
   hourlyDistribution: Record<string, number>;
   stackCombinations: Record<string, number>;
   dbOrmCombinations: Record<string, number>;
-  mode: Record<string, number>;
+  /** Absent until the Convex deployment that added it is live. */
+  mode?: Record<string, number>;
 };
 
 type DailyStats = { date: string; count: number };
@@ -179,7 +180,7 @@ function buildFromPrecomputed(
     totalProjects,
   );
   // Mode was added later, so shares are relative to events that carry it.
-  const modeDistribution = withShare(recordToDistribution(stats.mode));
+  const modeDistribution = withShare(recordToDistribution(stats.mode ?? {}));
 
   const timeSeries = buildTimeSeries(dailyStats);
   const monthlyTimeSeries = buildMonthlyTimeSeries(monthlyStats.monthly);
