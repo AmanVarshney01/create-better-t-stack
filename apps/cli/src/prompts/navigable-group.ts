@@ -25,10 +25,7 @@ export interface NavigablePromptGroupOptions<T> {
    * Control how the group can be canceled
    * if one of the prompts is canceled.
    */
-  onCancel?: (opts: {
-    results: Prettify<Partial<PromptGroupAwaitedReturn<T>>>;
-    prompt: string;
-  }) => void;
+  onCancel?: (opts: { results: Prettify<Partial<PromptGroupAwaitedReturn<T>>> }) => void;
   /** Group related questions into named stages shown in the prompt chrome. */
   sections?: ReadonlyArray<{
     label: string;
@@ -112,7 +109,7 @@ export async function navigableGroup<T>(
       if (isCancel(result)) {
         if (opts?.onCancel) {
           results[name] = "canceled";
-          opts.onCancel({ results, prompt: String(name) });
+          opts.onCancel({ results });
         }
         return results;
       }

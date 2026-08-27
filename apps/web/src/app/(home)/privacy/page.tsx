@@ -57,12 +57,11 @@ export default function PrivacyPage() {
           project identifiers. Aggregate results are published on the analytics page.
         </p>
         <p>
-          The CLI and its MCP server also send a small number of anonymous diagnostic events to the
-          same self-hosted Umami instance as the website: command failures with a stage and error
-          class, cancelled prompts, usage of commands other than create, slow stages, and MCP client
-          and tool names. Umami derives coarse location from the request IP and a session hash that
-          rotates monthly; the IP address itself is not stored. These events never include project
-          names, paths, or full error messages, and the same telemetry switch disables them.
+          When project creation fails, the CLI also sends one anonymous failure event to the same
+          self-hosted Umami instance as the website, with the stage that failed and the error class.
+          Umami derives coarse location from the request IP and a session hash that rotates monthly;
+          the IP address itself is not stored. The event never includes project names, paths, or
+          full error messages, and the same telemetry switch disables it.
         </p>
       </TrustSection>
 

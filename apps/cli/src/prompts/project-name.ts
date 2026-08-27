@@ -91,7 +91,7 @@ export async function getProjectName(initialName?: string): Promise<string> {
     });
 
     if (isCancel(response)) {
-      throw new UserCancelledError({ message: "Operation cancelled.", prompt: "projectName" });
+      throw new UserCancelledError({ message: "Operation cancelled." });
     }
 
     projectPath = response || defaultName;

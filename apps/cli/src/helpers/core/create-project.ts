@@ -8,7 +8,6 @@ import fs from "fs-extra";
 
 import type { DbSetupOptions, ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
-import { reportSlowStage } from "../../utils/diagnostics";
 import { ProjectCreationError } from "../../utils/errors";
 import { formatProject } from "../../utils/file-formatter";
 import { getLatestCLIVersion } from "../../utils/get-latest-cli-version";
@@ -35,7 +34,6 @@ export async function createProject(
   return Result.gen(async function* () {
     const projectDir = options.projectDir;
     const isConvex = options.backend === "convex";
-    const scaffoldStartTime = Date.now();
 
     // Ensure project directory exists
     yield* Result.await(
@@ -121,27 +119,14 @@ export async function createProject(
     yield* Result.await(formatProject(projectDir));
 
     if (!isSilent()) log.success("Project scaffolded");
-    await reportSlowStage(
-      "create",
-      "scaffold",
-      Date.now() - scaffoldStartTime,
-      options.packageManager,
-    );
 
     // Install dependencies if requested
     if (options.install) {
-      const installStartTime = Date.now();
       yield* Result.await(
         installDependencies({
           projectDir,
           packageManager: options.packageManager,
         }),
-      );
-      await reportSlowStage(
-        "create",
-        "install",
-        Date.now() - installStartTime,
-        options.packageManager,
       );
     }
 

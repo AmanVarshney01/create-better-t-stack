@@ -130,7 +130,7 @@ This CLI collects anonymous usage data to help improve the tool. The data collec
 - Platform (OS)
 - How the CLI was driven (prompts, flags, `--yes`, JSON, the programmatic API, or the MCP server)
 
-Separately, a small number of anonymous diagnostic events are sent for failures (stage and error class, never full messages or paths), cancelled prompts, other commands such as `add` and `history`, slow runs, and MCP tool usage. See the [analytics documentation](https://better-t-stack.dev/docs/analytics) for the exact list.
+Separately, one anonymous failure event is sent when a scaffold breaks (stage and error class, never full messages or paths). See the [analytics documentation](https://better-t-stack.dev/docs/analytics) for details.
 
 **Telemetry is enabled by default in published versions** to help us understand usage patterns and improve the tool.
 

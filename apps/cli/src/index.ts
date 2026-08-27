@@ -56,7 +56,6 @@ import {
   WorkspacePackageNameSchema,
 } from "./types";
 import { getProcessMode } from "./utils/context";
-import { durationBucket, reportDiagnostic } from "./utils/diagnostics";
 import {
   CLIError,
   DirectoryConflictError,
@@ -230,13 +229,13 @@ export const router = t.router({
     .query(({ input }) => getSchemaResult(input.name)),
   sponsors: t.procedure
     .meta({ description: "Show Better-T-Stack sponsors" })
-    .mutation(() => trackCommand("sponsors", () => showSponsorsCommand())),
+    .mutation(() => showSponsorsCommand()),
   docs: t.procedure
     .meta({ description: "Open Better-T-Stack documentation" })
-    .mutation(() => trackCommand("docs", () => openDocsCommand())),
+    .mutation(() => openDocsCommand()),
   builder: t.procedure
     .meta({ description: "Open the web-based stack builder" })
-    .mutation(() => trackCommand("builder", () => openBuilderCommand())),
+    .mutation(() => openBuilderCommand()),
   add: t.procedure
     .meta({
       description: "Add addons or a workspace package to an existing Better-T-Stack project",
@@ -290,38 +289,9 @@ export const router = t.router({
       }),
     )
     .mutation(async ({ input }) => {
-      await trackCommand(
-        "history",
-        () => historyHandler(input),
-        (ok) => ok,
-      );
+      await historyHandler(input);
     }),
 });
-
-/** Usage diagnostics for commands that have no project event of their own. */
-async function trackCommand<T>(
-  command: string,
-  run: () => Promise<T> | T,
-  isOk: (value: T) => boolean = () => true,
-): Promise<T> {
-  const startTime = Date.now();
-  try {
-    const value = await run();
-    await reportDiagnostic("cli_command", {
-      command,
-      ok: isOk(value),
-      duration: durationBucket(Date.now() - startTime),
-    });
-    return value;
-  } catch (cause) {
-    await reportDiagnostic("cli_command", {
-      command,
-      ok: false,
-      duration: durationBucket(Date.now() - startTime),
-    });
-    throw cause;
-  }
-}
 
 export function createBtsCli(): TrpcCli {
   return createCli({

@@ -148,30 +148,19 @@ async function executeCreateProjectHandler(
   );
 }
 
-/** Diagnostics for what the success-only project event cannot show; awaited so it beats process.exit. */
+/** Failure diagnostics, which the success-only project event cannot show; awaited so it beats process.exit. */
 async function reportCreateOutcome(
   input: CreateCommandInput,
   result: Result<CreateProjectResult, CreateHandlerError>,
 ): Promise<void> {
-  const mode = resolveInvocationMode(input.yes);
-
-  // Slow stages are reported from createProject, where scaffolding and install are timed
-  // separately; the total here would include time spent answering prompts.
   if (result.isOk()) return;
 
   const error = result.error;
-  if (UserCancelledError.is(error)) {
-    await reportDiagnostic("cli_cancelled", {
-      command: "create",
-      mode,
-      prompt: error.prompt ?? "unknown",
-    });
-    return;
-  }
+  if (UserCancelledError.is(error)) return;
 
   await reportDiagnostic("cli_failed", {
     command: "create",
-    mode,
+    mode: resolveInvocationMode(input.yes),
     stage: failureStage(error),
     error: errorClass(error),
     reason: scrubReason(error),

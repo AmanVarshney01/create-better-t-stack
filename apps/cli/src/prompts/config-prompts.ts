@@ -194,8 +194,8 @@ export async function gatherConfig(
           prompts: ["webDeploy", "serverDeploy", "dbSetupMode", "git", "packageManager", "install"],
         },
       ],
-      onCancel: ({ prompt }) => {
-        throw new UserCancelledError({ message: "Operation cancelled", prompt });
+      onCancel: () => {
+        throw new UserCancelledError({ message: "Operation cancelled" });
       },
     },
   );

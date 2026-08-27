@@ -23,13 +23,7 @@ import type { AddInput, Addons, AddonOptions, AnalyticsMode, ProjectConfig } fro
 import { updateBtsConfig } from "../../utils/bts-config";
 import { validateAddonsAgainstConfig } from "../../utils/compatibility-rules";
 import { isSilent, resolveInvocationMode, runWithContextAsync } from "../../utils/context";
-import {
-  durationBucket,
-  errorClass,
-  failureStage,
-  reportDiagnostic,
-  scrubReason,
-} from "../../utils/diagnostics";
+import { errorClass, failureStage, reportDiagnostic, scrubReason } from "../../utils/diagnostics";
 import { formatConfigValue } from "../../utils/display-config";
 import { CLIError, UserCancelledError, displayError } from "../../utils/errors";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
@@ -289,9 +283,8 @@ export async function addHandler(
   const { silent = false, mode } = options;
 
   return runWithContextAsync({ silent, mode }, async () => {
-    const startTime = Date.now();
     const result = await addHandlerInternal(input);
-    await reportAddOutcome(input, result, Date.now() - startTime);
+    await reportAddOutcome(input, result);
 
     if (result.isOk()) {
       return result.value;
@@ -328,30 +321,15 @@ export async function addHandler(
 async function reportAddOutcome(
   input: AddInput,
   result: Result<AddResult, UserCancelledError | CLIError>,
-  elapsedMs: number,
 ): Promise<void> {
-  const mode = resolveInvocationMode(false);
-  const duration = durationBucket(elapsedMs);
-
-  if (result.isOk()) {
-    await reportDiagnostic("cli_command", { command: "add", mode, ok: true, duration });
-    return;
-  }
+  if (result.isOk()) return;
 
   const error = result.error;
-  if (UserCancelledError.is(error)) {
-    await reportDiagnostic("cli_cancelled", {
-      command: "add",
-      mode,
-      prompt: error.prompt ?? "unknown",
-    });
-    return;
-  }
+  if (UserCancelledError.is(error)) return;
 
-  await reportDiagnostic("cli_command", { command: "add", mode, ok: false, duration });
   await reportDiagnostic("cli_failed", {
     command: "add",
-    mode,
+    mode: resolveInvocationMode(false),
     stage: failureStage(error),
     error: errorClass(error),
     reason: scrubReason(error),
