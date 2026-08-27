@@ -32,7 +32,7 @@ Add `export BTS_TELEMETRY_DISABLED=1` to your shell profile to make it permanent
 ## Where to view analytics
 
 - Charts: [`/analytics`](/analytics)
-- Shared website analytics: [Umami dashboard](https://umami.amanv.cloud/share/pHvqHleyOl9PBfaK) (self-hosted on a Hostinger VPS)
+- Shared website analytics: [Umami dashboard](https://umami.amanv.cloud/share/pHvqHleyOl9PBfaK) (self-hosted on a Hostinger VPS). Besides page views, the website records anonymous interaction events: builder selections, presets, command copies, share actions, docs actions, and outbound link clicks. Event names and their properties are defined in `apps/web/src/lib/analytics.ts`.
 - Aggregate JSON snapshot: `https://r2.better-t-stack.dev/analytics-data.json`
 - Aggregate CSV export: `https://r2.better-t-stack.dev/export.csv`
 

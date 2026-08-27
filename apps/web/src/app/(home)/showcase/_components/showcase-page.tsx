@@ -2,6 +2,8 @@
 
 import { Terminal } from "lucide-react";
 
+import { track } from "@/lib/analytics";
+
 import { PageHeader } from "../../_components/page-header";
 import { PageShell } from "../../_components/page-shell";
 import ShowcaseItem from "../_components/showcase-item";
@@ -55,6 +57,7 @@ export function ShowcasePage({ showcaseProjects }: { showcaseProjects: Array<Sho
               href="https://github.com/AmanVarshney01/create-better-t-stack/issues/new/choose"
               target="_blank"
               rel="noreferrer"
+              onClick={() => track("showcase_submit", {})}
               className="builder-focus-ring underline decoration-fd-border underline-offset-4 transition-colors duration-150 hover:text-primary"
             >
               GitHub issues

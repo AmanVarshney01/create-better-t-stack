@@ -3,6 +3,7 @@ import Image from "next/image";
 import { FaGithub } from "react-icons/fa6";
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { trackAttrs } from "@/lib/analytics";
 import { getSponsorUrl, getSponsorUrlLabel, shouldShowLifetimeTotal } from "@/lib/sponsor-utils";
 import { fetchSponsors } from "@/lib/sponsors";
 
@@ -30,6 +31,11 @@ export async function SpecialSponsorBanner() {
                     rel="noopener noreferrer"
                     aria-label={entry.name}
                     className="inline-flex"
+                    {...trackAttrs("sponsor_click", {
+                      sponsor: entry.githubId,
+                      target: entry.websiteUrl ? "website" : "github",
+                      location: "docs-sidebar",
+                    })}
                   />
                 }
               >
@@ -83,6 +89,11 @@ export async function SpecialSponsorBanner() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
+                          {...trackAttrs("sponsor_click", {
+                            sponsor: entry.githubId,
+                            target: "github",
+                            location: "docs-sidebar",
+                          })}
                         >
                           <FaGithub className="h-4 w-4" />
                           <span className="truncate">{entry.githubId}</span>
@@ -93,6 +104,11 @@ export async function SpecialSponsorBanner() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="group flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-primary"
+                            {...trackAttrs("sponsor_click", {
+                              sponsor: entry.githubId,
+                              target: "website",
+                              location: "docs-sidebar",
+                            })}
                           >
                             <Globe className="h-4 w-4" />
                             <span className="truncate">{getSponsorUrlLabel(entry)}</span>

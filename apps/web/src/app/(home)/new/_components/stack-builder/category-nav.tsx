@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 import { getCategoryDisplayName } from "../utils";
@@ -98,7 +99,10 @@ export function CategoryNav({ progress, idPrefix }: CategoryNavProps) {
             key={category}
             type="button"
             data-category={category}
-            onClick={() => scrollToCategorySection(idPrefix, category)}
+            onClick={() => {
+              track("builder_category_jump", { category, source: "nav" });
+              scrollToCategorySection(idPrefix, category);
+            }}
             title={`Jump to ${getCategoryDisplayName(category)}`}
             className={cn(
               "builder-focus-ring pointer-coarse:min-h-8 flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[4px] border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.10em] transition-colors duration-150",

@@ -4,6 +4,8 @@ import Image from "next/image";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import type { TwitterComponents } from "react-tweet";
 
+import { track } from "@/lib/analytics";
+
 export const components: TwitterComponents = {
   AvatarImg: (props) => {
     if (!props.src) {
@@ -79,7 +81,10 @@ export function VideoCard({
         ) : (
           <button
             type="button"
-            onClick={() => setPlaying(true)}
+            onClick={() => {
+              track("home_video_play", { video: video.embedId, title: video.title });
+              setPlaying(true);
+            }}
             aria-label={`Play ${video.title}`}
             className="builder-focus-ring group absolute inset-0 h-full w-full"
           >
