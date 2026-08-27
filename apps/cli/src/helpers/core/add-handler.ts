@@ -282,17 +282,30 @@ export async function addHandler(
 ): Promise<AddResult | undefined> {
   const { silent = false, mode } = options;
 
-  return runWithContextAsync({ silent, mode }, async () => {
-    const result = await addHandlerInternal(input);
-    await reportAddOutcome(input, result);
+  return runWithContextAsync(
+    { silent, mode, analyticsDisabled: input.disableAnalytics },
+    async () => {
+      const result = await addHandlerInternal(input);
+      await reportAddOutcome(input, result);
 
-    if (result.isOk()) {
-      return result.value;
-    }
+      if (result.isOk()) {
+        return result.value;
+      }
 
-    const error = result.error;
+      const error = result.error;
 
-    if (UserCancelledError.is(error)) {
+      if (UserCancelledError.is(error)) {
+        if (isSilent()) {
+          return {
+            success: false,
+            addedAddons: [],
+            projectDir: "",
+            error: error.message,
+          };
+        }
+        return undefined;
+      }
+
       if (isSilent()) {
         return {
           success: false,
@@ -301,21 +314,11 @@ export async function addHandler(
           error: error.message,
         };
       }
-      return undefined;
-    }
 
-    if (isSilent()) {
-      return {
-        success: false,
-        addedAddons: [],
-        projectDir: "",
-        error: error.message,
-      };
-    }
-
-    displayError(error);
-    process.exit(1);
-  });
+      displayError(error);
+      process.exit(1);
+    },
+  );
 }
 
 async function reportAddOutcome(
