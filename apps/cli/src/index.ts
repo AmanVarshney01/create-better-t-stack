@@ -543,7 +543,14 @@ export type { AddResult };
 
 export type AddOptions = Pick<
   AddInput,
-  "addons" | "addonOptions" | "package" | "install" | "packageManager" | "projectDir" | "dryRun"
+  | "addons"
+  | "addonOptions"
+  | "package"
+  | "install"
+  | "packageManager"
+  | "projectDir"
+  | "dryRun"
+  | "disableAnalytics"
 >;
 
 /**
