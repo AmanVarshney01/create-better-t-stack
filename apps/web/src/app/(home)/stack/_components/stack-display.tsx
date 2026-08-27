@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { ShareDialog } from "@/components/ui/share-dialog";
 import { TechBadge } from "@/components/ui/tech-badge";
+import { stackSnapshot, track } from "@/lib/analytics";
 import type { LoadedStackState } from "@/lib/stack-url-state";
 import {
   formatProjectName,
@@ -54,6 +55,7 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
       setCopied(true);
       toast.success("Command copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
+      track("stack_copy_command", stackSnapshot(stackState));
     } catch {
       toast.error("Failed to copy command");
     }
@@ -89,7 +91,7 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link href={editUrl}>
+          <Link href={editUrl} onClick={() => track("stack_edit", {})}>
             <button
               type="button"
               className="flex items-center gap-2 rounded border border-border bg-fd-background px-3 py-2 font-mono text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
@@ -99,7 +101,7 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
             </button>
           </Link>
 
-          <ShareDialog stackUrl={stackUrl} stackState={stackState}>
+          <ShareDialog stackUrl={stackUrl} stackState={stackState} page="stack">
             <button
               type="button"
               className="flex items-center gap-2 rounded border border-border bg-fd-background px-3 py-2 font-mono text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"

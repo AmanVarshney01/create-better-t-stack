@@ -1,7 +1,6 @@
 import { RootProvider } from "fumadocs-ui/provider/next";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import type { ReactNode } from "react";
 
 import Providers from "@/components/providers";
@@ -186,11 +185,6 @@ export default function Layout({ children }: { children: ReactNode }) {
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(structuredData).replaceAll("<", "\\u003c"),
           }}
-        />
-        <Script
-          src="https://umami.amanv.cloud/script.js"
-          data-website-id="3fe218f9-a51b-40c3-ab37-d65e6963d686"
-          strategy="afterInteractive"
         />
         <RootProvider
           search={{

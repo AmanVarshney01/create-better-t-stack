@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 const LOG_FIELD_ORDER = [
@@ -76,7 +77,10 @@ export function LiveLogs() {
         type="button"
         aria-expanded={isOpen}
         className="builder-focus-ring group flex w-full items-center justify-between gap-4 border-b px-4 py-2.5 text-left"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          track("analytics_live_feed", { open: !isOpen });
+          setIsOpen(!isOpen);
+        }}
       >
         <span className="flex items-center gap-2.5">
           <ChevronRight

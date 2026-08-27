@@ -5,6 +5,7 @@ import Image from "next/image";
 import { FaGithub } from "react-icons/fa6";
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { trackAttrs } from "@/lib/analytics";
 import { getSponsorUrl, getSponsorUrlLabel, shouldShowLifetimeTotal } from "@/lib/sponsor-utils";
 import type { Sponsor } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,11 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
                     rel="noopener noreferrer"
                     aria-label={entry.name}
                     className="builder-focus-ring inline-flex shrink-0"
+                    {...trackAttrs("sponsor_click", {
+                      sponsor: entry.githubId,
+                      target: entry.websiteUrl ? "website" : "github",
+                      location: "builder",
+                    })}
                   />
                 }
               >
@@ -104,6 +110,11 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
                       target="_blank"
                       rel="noopener noreferrer"
                       className="group flex items-center gap-2 font-mono text-[11px] text-fd-muted-foreground transition-colors duration-150 hover:text-primary"
+                      {...trackAttrs("sponsor_click", {
+                        sponsor: entry.githubId,
+                        target: "github",
+                        location: "builder",
+                      })}
                     >
                       <FaGithub className="h-3.5 w-3.5" />
                       <span className="truncate">{entry.githubId}</span>
@@ -114,6 +125,11 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
                         target="_blank"
                         rel="noopener noreferrer"
                         className="group flex items-center gap-2 font-mono text-[11px] text-fd-muted-foreground transition-colors duration-150 hover:text-primary"
+                        {...trackAttrs("sponsor_click", {
+                          sponsor: entry.githubId,
+                          target: "website",
+                          location: "builder",
+                        })}
                       >
                         <Globe className="h-3.5 w-3.5" />
                         <span className="truncate">{getSponsorUrlLabel(entry)}</span>
@@ -134,6 +150,11 @@ export function SpecialSponsorsPanel({ sponsors, compact = false }: SpecialSpons
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Become a sponsor"
+                {...trackAttrs("sponsor_click", {
+                  sponsor: "AmanVarshney01",
+                  target: "sponsor-me",
+                  location: "builder",
+                })}
                 className={cn(
                   "builder-focus-ring inline-flex shrink-0 items-center justify-center rounded-[4px] border border-dashed text-primary transition-colors duration-150 hover:border-primary",
                   compact ? "h-9 w-9" : "h-10 w-10",

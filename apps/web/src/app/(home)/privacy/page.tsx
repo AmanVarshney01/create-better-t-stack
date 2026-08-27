@@ -29,11 +29,14 @@ export default function PrivacyPage() {
     <TrustPage icon={ShieldCheck} title="PRIVACY.TXT" description={description}>
       <TrustSection title="WEBSITE_ANALYTICS">
         <p>
-          The website loads a self-hosted Umami analytics script to understand aggregate traffic and
-          page usage. The site also displays externally hosted content such as videos, social posts,
-          images, and sponsor information. Requests to those external services are governed by their
-          own privacy practices and may expose ordinary connection information such as an IP
-          address, browser headers, and the requested resource.
+          The website loads a self-hosted Umami analytics script to understand aggregate traffic,
+          page usage, and anonymous interaction events such as which stack options are selected in
+          the builder, which commands are copied, and which outbound links are followed. These
+          events do not include project names, personal information, or persistent identifiers. The
+          site also displays externally hosted content such as videos, social posts, images, and
+          sponsor information. Requests to those external services are governed by their own privacy
+          practices and may expose ordinary connection information such as an IP address, browser
+          headers, and the requested resource.
         </p>
         <p>
           Better-T-Stack does not provide user accounts on this website and does not sell personal

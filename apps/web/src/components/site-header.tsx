@@ -10,6 +10,7 @@ import { useTheme } from "next-themes";
 import { type ComponentProps, type ReactNode, useEffect, useState } from "react";
 
 import { baseOptions } from "@/app/layout.config";
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 type HrefItem = Extract<LinkItemType, { url: string }>;
@@ -29,6 +30,11 @@ const primaryItems = items.filter((item) => !isSecondary(item));
 const secondaryItems = items.filter(isSecondary);
 
 const navTitle = baseOptions.nav?.title;
+
+function navLabel(item: HrefItem) {
+  if ("label" in item && item.label) return item.label;
+  return item.url;
+}
 
 const labelClass = "font-mono text-[11px] uppercase tracking-[0.08em]";
 const iconButtonClass =
@@ -110,7 +116,11 @@ function ThemeToggle({ className }: { className?: string }) {
     <button
       type="button"
       aria-label="Toggle theme"
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={() => {
+        const theme = isDark ? "light" : "dark";
+        track("theme_toggle", { theme });
+        setTheme(theme);
+      }}
       className={cn(iconButtonClass, className)}
     >
       {isDark ? <Moon /> : <Sun />}
@@ -153,7 +163,11 @@ export function SiteHeader({ leading, trailing, className, ...props }: SiteHeade
 
         <nav aria-label="Main" className="flex items-center gap-4 max-md:hidden">
           {primaryItems.map((item) => (
-            <NavLink item={item} key={item.url} />
+            <NavLink
+              item={item}
+              key={item.url}
+              onClick={() => track("nav_click", { item: navLabel(item), location: "header" })}
+            />
           ))}
         </nav>
 
@@ -172,7 +186,11 @@ export function SiteHeader({ leading, trailing, className, ...props }: SiteHeade
 
         <div className="flex items-center gap-1 max-md:hidden">
           {secondaryItems.map((item) => (
-            <IconLink item={item} key={item.url} />
+            <IconLink
+              item={item}
+              key={item.url}
+              onClick={() => track("nav_click", { item: navLabel(item), location: "header" })}
+            />
           ))}
         </div>
 
@@ -185,7 +203,10 @@ export function SiteHeader({ leading, trailing, className, ...props }: SiteHeade
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           aria-controls="site-header-menu"
-          onClick={() => setOpen((prev) => !prev)}
+          onClick={() => {
+            track("mobile_menu", { open: !open });
+            setOpen(!open);
+          }}
           className={cn(iconButtonClass, "md:hidden")}
         >
           {open ? <X /> : <Menu />}
@@ -212,13 +233,23 @@ export function SiteHeader({ leading, trailing, className, ...props }: SiteHeade
                   className="py-2.5"
                   item={item}
                   key={item.url}
-                  onClick={() => setOpen(false)}
+                  onClick={() => {
+                    track("nav_click", { item: navLabel(item), location: "mobile-menu" });
+                    setOpen(false);
+                  }}
                 />
               ))}
             </nav>
             <div className="mt-1 flex items-center gap-1 border-t pt-2">
               {secondaryItems.map((item) => (
-                <IconLink item={item} key={item.url} onClick={() => setOpen(false)} />
+                <IconLink
+                  item={item}
+                  key={item.url}
+                  onClick={() => {
+                    track("nav_click", { item: navLabel(item), location: "mobile-menu" });
+                    setOpen(false);
+                  }}
+                />
               ))}
               <span className="flex-1" />
               <ThemeToggle />

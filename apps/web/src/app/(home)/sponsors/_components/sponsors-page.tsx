@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaGithub } from "react-icons/fa6";
 
+import { trackAttrs } from "@/lib/analytics";
 import {
   getSponsorUrl,
   getSponsorUrlLabel,
@@ -73,12 +74,32 @@ function SponsorLinks({ sponsor, muted = false }: { sponsor: Sponsor; muted?: bo
 
   return (
     <div className="flex flex-col">
-      <a href={sponsor.githubUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
+      <a
+        href={sponsor.githubUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={linkClass}
+        {...trackAttrs("sponsor_click", {
+          sponsor: sponsor.githubId,
+          target: "github",
+          location: "sponsors",
+        })}
+      >
         <FaGithub aria-hidden="true" className="size-3 shrink-0" />
         <span className="wrap-anywhere">{sponsor.githubId}</span>
       </a>
       {sponsor.websiteUrl && (
-        <a href={sponsorUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
+        <a
+          href={sponsorUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={linkClass}
+          {...trackAttrs("sponsor_click", {
+            sponsor: sponsor.githubId,
+            target: "website",
+            location: "sponsors",
+          })}
+        >
           <Globe aria-hidden="true" className="size-3 shrink-0" />
           <span className="wrap-anywhere">{getSponsorUrlLabel(sponsor)}</span>
         </a>
@@ -179,6 +200,11 @@ function BackerChip({ sponsor }: { sponsor: Sponsor }) {
       target="_blank"
       rel="noopener noreferrer"
       className="builder-focus-ring group flex items-center gap-2 rounded-[4px] border px-3 py-2"
+      {...trackAttrs("sponsor_click", {
+        sponsor: sponsor.githubId,
+        target: "github",
+        location: "sponsors",
+      })}
     >
       <Image
         src={sponsor.avatarUrl}
@@ -206,6 +232,11 @@ function PastSponsorRow({ sponsor }: { sponsor: Sponsor }) {
       target="_blank"
       rel="noopener noreferrer"
       className="builder-focus-ring group flex items-center gap-3 rounded-[4px] border px-3 py-2"
+      {...trackAttrs("sponsor_click", {
+        sponsor: sponsor.githubId,
+        target: "github",
+        location: "sponsors-past",
+      })}
     >
       <Image
         src={sponsor.avatarUrl}
@@ -255,6 +286,11 @@ export function SponsorsPage({
             href="https://github.com/sponsors/AmanVarshney01"
             target="_blank"
             rel="noopener noreferrer"
+            {...trackAttrs("sponsor_click", {
+              sponsor: "AmanVarshney01",
+              target: "sponsor-me",
+              location: "sponsors",
+            })}
             className="builder-focus-ring flex min-h-8 items-center gap-2 rounded-[4px] border px-3 py-1.5 font-mono text-[10px] text-primary uppercase tracking-[0.10em] transition-colors duration-150 hover:text-fd-foreground"
           >
             <Heart aria-hidden="true" className="h-3 w-3" />
@@ -417,6 +453,11 @@ export function SponsorsPage({
             href="https://github.com/sponsors/AmanVarshney01"
             target="_blank"
             rel="noopener noreferrer"
+            {...trackAttrs("sponsor_click", {
+              sponsor: "AmanVarshney01",
+              target: "sponsor-me",
+              location: "sponsors",
+            })}
             className="builder-focus-ring flex min-h-9 items-center gap-2 rounded-[4px] border px-4 py-2 text-[11px] text-primary uppercase tracking-[0.08em] transition-colors duration-150 hover:text-fd-foreground"
           >
             <Heart aria-hidden="true" className="h-3.5 w-3.5" />

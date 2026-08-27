@@ -13,6 +13,7 @@ import {
   CodeBlockHeader,
   CodeBlockItem,
 } from "@/components/ui/kibo-ui/code-block";
+import { track } from "@/lib/analytics";
 
 interface CodeViewerProps {
   filePath: string;
@@ -94,7 +95,7 @@ export const CodeViewer = memo(function CodeViewer({
               </CodeBlockFilename>
             )}
           </CodeBlockFiles>
-          <CodeBlockCopyButton />
+          <CodeBlockCopyButton onCopy={() => track("preview_file_copy", { path: filePath })} />
         </CodeBlockHeader>
         <CodeBlockBody className="flex-1 overflow-auto [&_.shiki]:bg-fd-background! dark:[&_.shiki]:bg-fd-background! bg-fd-background">
           {(item) => (

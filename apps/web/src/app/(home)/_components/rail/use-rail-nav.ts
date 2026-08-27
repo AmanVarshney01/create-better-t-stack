@@ -2,6 +2,8 @@
 
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
 
+import { track } from "@/lib/analytics";
+
 import { PANES } from "./panes-config";
 
 const DESKTOP_QUERY = "(min-width: 768px)";
@@ -164,33 +166,37 @@ export function useRailNav(railRef: RefObject<HTMLDivElement | null>) {
         return;
       }
 
+      const goToByKey = (index: number) => {
+        event.preventDefault();
+        const clamped = Math.min(Math.max(index, 0), PANES.length - 1);
+        if (clamped !== activeIndex) {
+          track("home_rail_navigate", { pane: PANES[clamped].id, method: "keyboard" });
+        }
+        goTo(clamped);
+      };
+
       const digit = Number.parseInt(event.key, 10);
       if (!Number.isNaN(digit) && digit >= 1 && digit <= PANES.length) {
-        event.preventDefault();
-        goTo(digit - 1);
+        goToByKey(digit - 1);
         return;
       }
 
       switch (event.key) {
         case "ArrowRight":
         case "l":
-          event.preventDefault();
-          goTo(activeIndex + 1);
+          goToByKey(activeIndex + 1);
           break;
         case "ArrowLeft":
         case "h":
-          event.preventDefault();
-          goTo(activeIndex - 1);
+          goToByKey(activeIndex - 1);
           break;
         case "Home":
         case "g":
-          event.preventDefault();
-          goTo(0);
+          goToByKey(0);
           break;
         case "End":
         case "G":
-          event.preventDefault();
-          goTo(PANES.length - 1);
+          goToByKey(PANES.length - 1);
           break;
         default:
           break;

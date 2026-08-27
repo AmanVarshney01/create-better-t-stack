@@ -4,6 +4,7 @@ import { Check, Copy } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 import PackageIcon from "../../icons";
@@ -25,6 +26,12 @@ export default function InstallPane() {
     navigator.clipboard.writeText(COMMANDS[selected]);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    track("home_copy_install", { pm: selected });
+  };
+
+  const select = (pm: PackageManager) => {
+    if (pm !== selected) track("home_pm_select", { pm });
+    setSelected(pm);
   };
 
   return (
@@ -36,7 +43,7 @@ export default function InstallPane() {
             <button
               key={pm}
               type="button"
-              onClick={() => setSelected(pm)}
+              onClick={() => select(pm)}
               aria-pressed={selected === pm}
               className={cn(
                 "builder-focus-ring -my-2 flex items-center gap-2 py-2 font-mono text-[13px] transition-colors duration-150",
@@ -84,12 +91,14 @@ export default function InstallPane() {
         <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
           <Link
             href="/new"
+            onClick={() => track("home_cta", { target: "builder" })}
             className="builder-focus-ring font-mono text-[13px] text-primary transition-colors duration-150 hover:text-primary/70"
           >
             open builder -&gt;
           </Link>
           <Link
             href="/docs/cli/agent-workflows#mcp"
+            onClick={() => track("home_cta", { target: "mcp-docs" })}
             className="builder-focus-ring font-mono text-[13px] text-fd-muted-foreground transition-colors duration-150 hover:text-primary"
           >
             or run it as an MCP server -&gt;

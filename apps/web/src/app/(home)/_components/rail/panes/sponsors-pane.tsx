@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
+import { track, trackAttrs } from "@/lib/analytics";
 import {
   getSponsorUrl,
   getSponsorUrlLabel,
@@ -51,6 +52,11 @@ function SponsorTile({
             href={entry.githubUrl}
             target="_blank"
             rel="noopener noreferrer"
+            {...trackAttrs("sponsor_click", {
+              sponsor: entry.githubId,
+              target: "github",
+              location: "home",
+            })}
             className={cn(
               "builder-focus-ring block wrap-anywhere font-mono leading-[1.4] transition-colors duration-150 hover:text-primary",
               large ? "text-[15px] tracking-[-0.01em]" : "text-[13px]",
@@ -85,6 +91,11 @@ function SponsorTile({
           href={getSponsorUrl(entry)}
           target="_blank"
           rel="noopener noreferrer"
+          {...trackAttrs("sponsor_click", {
+            sponsor: entry.githubId,
+            target: "website",
+            location: "home",
+          })}
           className="builder-focus-ring -mt-1 truncate font-mono text-[11px] text-fd-muted-foreground transition-colors duration-150 hover:text-fd-foreground"
         >
           {getSponsorUrlLabel(entry)}
@@ -126,7 +137,10 @@ export default function SponsorsPane({ sponsorsData }: { sponsorsData: SponsorsD
         <div>
           <button
             type="button"
-            onClick={() => setShowPast(!showPast)}
+            onClick={() => {
+              track("home_past_sponsors", { shown: !showPast });
+              setShowPast(!showPast);
+            }}
             aria-expanded={showPast}
             className="builder-focus-ring -mt-2 mb-1 flex w-full items-center gap-3 py-2 text-left"
           >
@@ -161,6 +175,11 @@ export function SponsorsPaneFooter() {
         href="https://github.com/sponsors/AmanVarshney01"
         target="_blank"
         rel="noopener noreferrer"
+        {...trackAttrs("sponsor_click", {
+          sponsor: "AmanVarshney01",
+          target: "sponsor-me",
+          location: "home",
+        })}
         className="builder-focus-ring font-mono text-[13px] text-primary transition-colors duration-150 hover:text-primary/70"
       >
         become a sponsor -&gt;

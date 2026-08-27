@@ -13,6 +13,7 @@ import { startTransition, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { track } from "@/lib/analytics";
 import { formatStackCommandForDisplay, getDesktopBuildNote } from "@/lib/stack-utils";
 import type { Sponsor } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -74,7 +75,10 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
       stackUrl={getStackUrl()}
       stackState={effectiveStack}
       yolo={stack.yolo === "true"}
-      onYoloToggle={(yolo) => setStack({ yolo })}
+      onYoloToggle={(yolo) => {
+        track("builder_yolo_toggle", { enabled: yolo === "true" });
+        setStack({ yolo });
+      }}
     />
   );
 
@@ -86,7 +90,10 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
             <div className="flex items-center gap-4">
               <button
                 type="button"
-                onClick={() => setMobileTab("build")}
+                onClick={() => {
+                  track("builder_mobile_tab", { tab: "build" });
+                  setMobileTab("build");
+                }}
                 className={cn(
                   "builder-focus-ring -m-2 flex items-center gap-1.5 p-2 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors duration-150",
                   mobileTab === "build"
@@ -101,7 +108,10 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
               </button>
               <button
                 type="button"
-                onClick={() => setMobileTab("preview")}
+                onClick={() => {
+                  track("builder_mobile_tab", { tab: "preview" });
+                  setMobileTab("preview");
+                }}
                 className={cn(
                   "builder-focus-ring -m-2 flex items-center gap-1.5 p-2 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors duration-150",
                   mobileTab === "preview"
@@ -169,7 +179,10 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                         {isCommandMultiline && (
                           <button
                             type="button"
-                            onClick={() => setCommandExpanded((prev) => !prev)}
+                            onClick={() => {
+                              track("builder_command_expand", { expanded: !commandExpanded });
+                              setCommandExpanded(!commandExpanded);
+                            }}
                             className="builder-focus-ring flex items-center gap-1 rounded-[4px] border px-2 py-1 font-mono text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em] transition-colors duration-150 hover:text-fd-foreground"
                             title={commandExpanded ? "Collapse command" : "Show full command"}
                           >
@@ -184,7 +197,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                         )}
                         <button
                           type="button"
-                          onClick={copyToClipboard}
+                          onClick={() => copyToClipboard("button")}
                           className={cn(
                             "builder-focus-ring flex items-center gap-1 rounded-[4px] border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.10em] transition-colors duration-150",
                             copied
@@ -205,11 +218,11 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                     <div
                       role="button"
                       tabIndex={0}
-                      onClick={copyToClipboard}
+                      onClick={() => copyToClipboard("command")}
                       onKeyDown={(event) => {
                         if (event.key === "Enter" || event.key === " ") {
                           event.preventDefault();
-                          copyToClipboard();
+                          copyToClipboard("command");
                         }
                       }}
                       aria-label="Copy CLI command"
@@ -246,6 +259,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                       stack={effectiveStack}
                       onRemove={removeSelectedTech}
                       onJump={(category) => {
+                        track("builder_category_jump", { category, source: "badge" });
                         if (viewMode !== "command") {
                           startTransition(() => {
                             setViewMode("command");
@@ -288,6 +302,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                 <button
                   type="button"
                   onClick={() => {
+                    track("builder_view_mode", { mode: "command" });
                     startTransition(() => {
                       setViewMode("command");
                     });
@@ -305,6 +320,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                 <button
                   type="button"
                   onClick={() => {
+                    track("builder_view_mode", { mode: "preview" });
                     startTransition(() => {
                       setViewMode("preview");
                     });
@@ -396,7 +412,10 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                           {isCommandMultiline && (
                             <button
                               type="button"
-                              onClick={() => setCommandExpanded((prev) => !prev)}
+                              onClick={() => {
+                                track("builder_command_expand", { expanded: !commandExpanded });
+                                setCommandExpanded(!commandExpanded);
+                              }}
                               className="builder-focus-ring flex items-center gap-1 rounded-[4px] border px-2 py-1 font-mono text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em] transition-colors duration-150 hover:text-fd-foreground"
                               title={commandExpanded ? "Collapse command" : "Show full command"}
                             >
@@ -427,11 +446,11 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                       <div
                         role="button"
                         tabIndex={0}
-                        onClick={copyToClipboard}
+                        onClick={() => copyToClipboard("mobile-command")}
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
                             event.preventDefault();
-                            copyToClipboard();
+                            copyToClipboard("mobile-command");
                           }
                         }}
                         className={cn(
