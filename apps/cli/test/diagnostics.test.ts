@@ -28,6 +28,18 @@ describe("scrubReason", () => {
     );
   });
 
+  test("scrubs path segments with spaces and relative paths or package names", () => {
+    expect(scrubReason("error at /Users/Jane Doe/project/file.ts while writing")).toBe(
+      "error at <path> while writing",
+    );
+    expect(scrubReason("Workspace package already exists: packages/customer-name")).toBe(
+      "Workspace package already exists: <path>",
+    );
+    expect(
+      scrubReason('No Better-T-Stack project found in "customer-app". Make sure bts.jsonc exists.'),
+    ).toBe("No Better-T-Stack project found in <name>. Make sure bts.jsonc exists.");
+  });
+
   test("truncates very long reasons", () => {
     expect(scrubReason("x".repeat(400))).toHaveLength(160);
   });
@@ -100,7 +112,7 @@ describe("reportDiagnostic", () => {
     }) as typeof fetch;
 
     try {
-      await reportDiagnostic("cli_outdated", { installed: "3.40.5", latest: "3.41.0" });
+      await reportDiagnostic("mcp_session", { client: "test", clientVersion: "1.0.0" });
     } finally {
       globalThis.fetch = originalFetch;
     }

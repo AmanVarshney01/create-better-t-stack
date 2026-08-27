@@ -8,6 +8,7 @@ import {
   normalizeEventData,
   pendingEventCount,
   resetPageviewDedupe,
+  scrubMessage,
   stackSnapshot,
   track,
   trackAttrs,
@@ -40,10 +41,14 @@ afterEach(() => {
 describe("beforeSend", () => {
   test("strips the query string from builder pageviews and keeps it elsewhere", () => {
     const builder = beforeSend("event", { url: `${SITE}/new?fe-w=next&backend=hono` });
-    expect(builder).toEqual({ url: `${SITE}/new` });
+    expect(builder).toEqual({ url: "/new" });
 
     const docs = beforeSend("event", { url: `${SITE}/docs?utm_source=x#install` });
-    expect(docs).toEqual({ url: `${SITE}/docs?utm_source=x` });
+    expect(docs).toEqual({ url: "/docs?utm_source=x" });
+  });
+
+  test("keeps the path form the tracker sends", () => {
+    expect(beforeSend("event", { url: "/docs/cli?tab=1#x" })).toEqual({ url: "/docs/cli?tab=1" });
   });
 
   test("collapses repeated pageviews for the same normalized url", () => {
@@ -55,7 +60,7 @@ describe("beforeSend", () => {
 
   test("normalizes a same-site referrer that carried builder params", () => {
     const result = beforeSend("event", { url: `${SITE}/stack`, referrer: `${SITE}/new?a=1` });
-    expect(result).toEqual({ url: `${SITE}/stack`, referrer: `${SITE}/new` });
+    expect(result).toEqual({ url: "/stack", referrer: `${SITE}/new` });
   });
 
   test("passes custom events and identify payloads through untouched", () => {
@@ -91,6 +96,17 @@ describe("track", () => {
     expect(data.message).toHaveLength(MAX_STRING_LENGTH);
     expect(data.count).toBe(3);
     expect(data.enabled).toBe(true);
+  });
+});
+
+describe("scrubMessage", () => {
+  test("removes paths, urls, and quoted names from preview errors", () => {
+    expect(
+      scrubMessage(
+        `Template "apps/web/src/index.ts" failed at /Users/Jane Doe/work/app/file.ts (https://example.com/x)\nstack`,
+      ),
+    ).toBe("Template <name> failed at <path> (<url>)");
+    expect(scrubMessage("Cannot resolve packages/customer-name")).toBe("Cannot resolve <path>");
   });
 });
 

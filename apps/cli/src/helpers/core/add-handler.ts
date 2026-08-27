@@ -384,7 +384,7 @@ async function addHandlerInternal(
   if (!existingConfig) {
     return Result.err(
       new CLIError({
-        message: `No Better-T-Stack project found in ${projectDir}. Make sure bts.jsonc exists.`,
+        message: `No Better-T-Stack project found in "${projectDir}". Make sure bts.jsonc exists.`,
       }),
     );
   }

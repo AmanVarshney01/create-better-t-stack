@@ -91,7 +91,10 @@ export function scrubReason(cause: unknown): string {
   const scrubbed = firstLine
     .replaceAll(/https?:\/\/[^\s)\]"'>]+/gi, "<url>")
     .replaceAll(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "<email>")
-    .replaceAll(/(?:[a-zA-Z]:)?(?:[\\/][\w.@+-]+){2,}/g, "<path>")
+    // Absolute paths, including segments with spaces ("/Users/Jane Doe/app/file.ts").
+    .replaceAll(/(?:[a-zA-Z]:)?(?:[\\/][\w.@+ -]+)+[\\/][\w.@+-]+/g, "<path>")
+    // Anything else containing a separator, such as relative paths and "packages/<name>".
+    .replaceAll(/\S*[\\/]\S*/g, "<path>")
     .replaceAll(/(["'`])(?:(?!\1).)*\1/g, "<name>")
     .replaceAll(/\s+/g, " ")
     .trim();

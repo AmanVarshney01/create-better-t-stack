@@ -128,8 +128,10 @@ function instrumentTool<Args extends unknown[]>(
   server: McpServer,
   tool: string,
   handler: (...args: Args) => Promise<ToolResult>,
+  isOptedOut?: (...args: Args) => boolean,
 ) {
   return async (...args: Args): Promise<ToolResult> => {
+    if (isOptedOut?.(...args)) return handler(...args);
     reportMcpSession(server);
     const startTime = Date.now();
     const result = await handler(...args);
@@ -148,6 +150,10 @@ function instrumentTool<Args extends unknown[]>(
     }
     return result;
   };
+}
+
+function isCreateOptedOut(input: McpCreateProjectInput) {
+  return input.disableAnalytics === true;
 }
 
 function getProjectToolAnnotations() {
@@ -303,34 +309,39 @@ export function createBtsMcpServer() {
         openWorldHint: false,
       },
     },
-    instrumentTool(server, "bts_plan_project", async (input: McpCreateProjectInput) => {
-      try {
-        const result = await create(input.projectName, {
-          ...input,
-          dryRun: true,
-          disableAnalytics: true,
-        });
+    instrumentTool(
+      server,
+      "bts_plan_project",
+      async (input: McpCreateProjectInput) => {
+        try {
+          const result = await create(input.projectName, {
+            ...input,
+            dryRun: true,
+            disableAnalytics: true,
+          });
 
-        if (result.isErr()) {
-          return formatToolError(result.error);
+          if (result.isErr()) {
+            return formatToolError(result.error);
+          }
+
+          const planningData = input.install
+            ? {
+                ...result.value,
+                warnings: [getMcpInstallTimeoutMessage(input.packageManager)],
+                recommendedMcpExecution: {
+                  ...input,
+                  install: false,
+                },
+              }
+            : result.value;
+
+          return formatToolSuccess(planningData);
+        } catch (error) {
+          return formatToolError(error);
         }
-
-        const planningData = input.install
-          ? {
-              ...result.value,
-              warnings: [getMcpInstallTimeoutMessage(input.packageManager)],
-              recommendedMcpExecution: {
-                ...input,
-                install: false,
-              },
-            }
-          : result.value;
-
-        return formatToolSuccess(planningData);
-      } catch (error) {
-        return formatToolError(error);
-      }
-    }),
+      },
+      isCreateOptedOut,
+    ),
   );
 
   server.registerTool(
@@ -346,26 +357,31 @@ export function createBtsMcpServer() {
         ...getProjectToolAnnotations(),
       },
     },
-    instrumentTool(server, "bts_create_project", async (input: McpCreateProjectInput) => {
-      try {
-        if (input.install) {
-          return formatToolError(getMcpInstallTimeoutMessage(input.packageManager));
+    instrumentTool(
+      server,
+      "bts_create_project",
+      async (input: McpCreateProjectInput) => {
+        try {
+          if (input.install) {
+            return formatToolError(getMcpInstallTimeoutMessage(input.packageManager));
+          }
+
+          const result = await create(input.projectName, {
+            ...input,
+            disableAnalytics: input.disableAnalytics ?? false,
+          });
+
+          if (result.isErr()) {
+            return formatToolError(result.error);
+          }
+
+          return formatToolSuccess(result.value);
+        } catch (error) {
+          return formatToolError(error);
         }
-
-        const result = await create(input.projectName, {
-          ...input,
-          disableAnalytics: input.disableAnalytics ?? false,
-        });
-
-        if (result.isErr()) {
-          return formatToolError(result.error);
-        }
-
-        return formatToolSuccess(result.value);
-      } catch (error) {
-        return formatToolError(error);
-      }
-    }),
+      },
+      isCreateOptedOut,
+    ),
   );
 
   server.registerTool(

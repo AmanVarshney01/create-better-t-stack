@@ -290,18 +290,26 @@ export const router = t.router({
       }),
     )
     .mutation(async ({ input }) => {
-      await trackCommand("history", () => historyHandler(input));
+      await trackCommand(
+        "history",
+        () => historyHandler(input),
+        (ok) => ok,
+      );
     }),
 });
 
 /** Usage diagnostics for commands that have no project event of their own. */
-async function trackCommand<T>(command: string, run: () => Promise<T> | T): Promise<T> {
+async function trackCommand<T>(
+  command: string,
+  run: () => Promise<T> | T,
+  isOk: (value: T) => boolean = () => true,
+): Promise<T> {
   const startTime = Date.now();
   try {
     const value = await run();
     await reportDiagnostic("cli_command", {
       command,
-      ok: true,
+      ok: isOk(value),
       duration: durationBucket(Date.now() - startTime),
     });
     return value;
