@@ -35,6 +35,7 @@ export async function createProject(
   return Result.gen(async function* () {
     const projectDir = options.projectDir;
     const isConvex = options.backend === "convex";
+    const scaffoldStartTime = Date.now();
 
     // Ensure project directory exists
     yield* Result.await(
@@ -120,6 +121,12 @@ export async function createProject(
     yield* Result.await(formatProject(projectDir));
 
     if (!isSilent()) log.success("Project scaffolded");
+    await reportSlowStage(
+      "create",
+      "scaffold",
+      Date.now() - scaffoldStartTime,
+      options.packageManager,
+    );
 
     // Install dependencies if requested
     if (options.install) {

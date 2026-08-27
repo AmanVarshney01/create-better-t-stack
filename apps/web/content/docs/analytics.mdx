@@ -25,7 +25,7 @@ Separately from the project-creation event, the CLI and its MCP server send a sm
 - `cli_failed`: command, stage (`validate`, `scaffold`, `install`, `git`, `dbSetup`, `postInstall`), error class, and a scrubbed one-line reason with paths, URLs, emails, and quoted names replaced by placeholders
 - `cli_cancelled`: which prompt was open when a run was cancelled
 - `cli_command`: usage of commands other than `create` (`add`, `history`, `docs`, `sponsors`, `builder`), with outcome and a duration bucket
-- `cli_slow`: project creation or dependency installation that took longer than a minute, with a duration bucket and package manager
+- `cli_slow`: scaffolding (template generation, file writing, database and addon setup) or dependency installation that took longer than a minute, with a duration bucket and package manager. Time spent answering prompts is never counted.
 - `mcp_session`, `mcp_tool`, `mcp_tool_error`: MCP client name and version, tool name, outcome, and duration bucket
 
 Umami derives coarse location (country, region, city) from the request IP and a session hash from IP and user agent that rotates monthly; the IP address itself is not stored. Diagnostic events never include project names, paths, file contents, or full error messages. The same `BTS_TELEMETRY_DISABLED=1` or `DO_NOT_TRACK=1` switch and the `--disable-analytics` flag turn them off.
