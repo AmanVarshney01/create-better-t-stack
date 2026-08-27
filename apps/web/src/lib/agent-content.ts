@@ -75,7 +75,7 @@ Use GitHub issues for reproducible bugs and feature requests. Include the CLI ve
 - [Documentation](${SITE_URL}/docs)`,
   privacy: `# Better-T-Stack privacy
 
-The website uses self-hosted Umami analytics and the CLI sends one telemetry event after successful project creation unless telemetry is disabled. The CLI payload does not include project names, paths, file contents, secrets, environment variables, IP addresses, or persistent user identifiers.
+The website uses self-hosted Umami analytics. The CLI sends one telemetry event after successful project creation (including how it was driven: prompts, flags, JSON, API, or MCP) plus a small number of anonymous diagnostic events for failures, cancellations, other commands, and MCP tool usage, unless telemetry is disabled. The CLI payloads do not include project names, paths, file contents, secrets, environment variables, or persistent user identifiers.
 
 - [Full privacy notice](${SITE_URL}/privacy)
 - [Analytics and telemetry details](${SITE_URL}/docs/analytics.mdx)

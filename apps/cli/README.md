@@ -128,6 +128,9 @@ This CLI collects anonymous usage data to help improve the tool. The data collec
 - CLI version
 - Node.js version
 - Platform (OS)
+- How the CLI was driven (prompts, flags, `--yes`, JSON, the programmatic API, or the MCP server)
+
+Separately, a small number of anonymous diagnostic events are sent for failures (stage and error class, never full messages or paths), cancelled prompts, other commands such as `add` and `history`, slow runs, and MCP tool usage. See the [analytics documentation](https://better-t-stack.dev/docs/analytics) for the exact list.
 
 **Telemetry is enabled by default in published versions** to help us understand usage patterns and improve the tool.
 
