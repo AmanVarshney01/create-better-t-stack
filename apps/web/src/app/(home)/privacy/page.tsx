@@ -71,8 +71,10 @@ export default function PrivacyPage() {
           Disable CLI telemetry for one command with{" "}
           <code className="rounded bg-fd-muted px-1.5 py-0.5">--disable-analytics</code> or set{" "}
           <code className="rounded bg-fd-muted px-1.5 py-0.5">BTS_TELEMETRY_DISABLED=1</code>. The
-          environment variable can be added to a shell profile when telemetry should remain
-          disabled. Project generation continues to work when telemetry is off.
+          cross-tool <code className="rounded bg-fd-muted px-1.5 py-0.5">DO_NOT_TRACK=1</code>{" "}
+          convention is honored as well. Either variable can be added to a shell profile when
+          telemetry should remain disabled. Project generation continues to work when telemetry is
+          off.
         </p>
         <p>
           See the{" "}

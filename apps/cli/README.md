@@ -146,6 +146,8 @@ BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack
 export BTS_TELEMETRY_DISABLED=1
 ```
 
+The CLI also honors the cross-tool `DO_NOT_TRACK=1` convention (https://consoledonottrack.com), and `--disable-analytics` skips telemetry for a single run.
+
 ## Examples
 
 Create a project with default configuration:

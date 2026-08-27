@@ -28,7 +28,7 @@ Separately from the project-creation event, the CLI and its MCP server send a sm
 - `cli_slow`: project creation or dependency installation that took longer than a minute, with a duration bucket and package manager
 - `mcp_session`, `mcp_tool`, `mcp_tool_error`: MCP client name and version, tool name, outcome, and duration bucket
 
-Umami derives coarse location (country, region, city) from the request IP and a session hash from IP and user agent that rotates monthly; the IP address itself is not stored. Diagnostic events never include project names, paths, file contents, or full error messages. The same `BTS_TELEMETRY_DISABLED=1` switch and `--disable-analytics` flag turn them off.
+Umami derives coarse location (country, region, city) from the request IP and a session hash from IP and user agent that rotates monthly; the IP address itself is not stored. Diagnostic events never include project names, paths, file contents, or full error messages. The same `BTS_TELEMETRY_DISABLED=1` or `DO_NOT_TRACK=1` switch and the `--disable-analytics` flag turn them off.
 
 ## Disable telemetry
 
@@ -41,6 +41,8 @@ BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack@latest
 <Callout title="Note">The above command disables it for a single run.</Callout>
 
 Add `export BTS_TELEMETRY_DISABLED=1` to your shell profile to make it permanent.
+
+The CLI also honors the cross-tool [`DO_NOT_TRACK=1`](https://consoledonottrack.com) convention, so one variable can turn off telemetry for every tool that supports it. The `--disable-analytics` flag skips it for a single run.
 
 ## Where to view analytics
 
