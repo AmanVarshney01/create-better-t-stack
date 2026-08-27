@@ -4,6 +4,7 @@
 
 import {
   didLastPromptShowUI,
+  markPromptShown,
   setIsFirstPrompt,
   setLastPromptShownUI,
   setPromptProgress,
@@ -24,7 +25,10 @@ export interface NavigablePromptGroupOptions<T> {
    * Control how the group can be canceled
    * if one of the prompts is canceled.
    */
-  onCancel?: (opts: { results: Prettify<Partial<PromptGroupAwaitedReturn<T>>> }) => void;
+  onCancel?: (opts: {
+    results: Prettify<Partial<PromptGroupAwaitedReturn<T>>>;
+    prompt: string;
+  }) => void;
   /** Group related questions into named stages shown in the prompt chrome. */
   sections?: ReadonlyArray<{
     label: string;
@@ -86,6 +90,7 @@ export async function navigableGroup<T>(
       setLastPromptShownUI(false);
 
       const presetResult = opts?.preselected?.[name];
+      if (presetResult === undefined) markPromptShown();
       const result =
         presetResult !== undefined
           ? presetResult
@@ -107,7 +112,7 @@ export async function navigableGroup<T>(
       if (isCancel(result)) {
         if (opts?.onCancel) {
           results[name] = "canceled";
-          opts.onCancel({ results });
+          opts.onCancel({ results, prompt: String(name) });
         }
         return results;
       }

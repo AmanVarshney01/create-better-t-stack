@@ -73,7 +73,7 @@
     "@better-t-stack/types": "workspace:*",
     "@clack/core": "^1.4.3",
     "@clack/prompts": "^1.7.0",
-    "@modelcontextprotocol/sdk": "1.30.0",
+    "@modelcontextprotocol/server": "2.0.0",
     "@trpc/server": "^11.18.0",
     "better-result": "^3.0.0",
     "consola": "^3.4.2",
@@ -93,6 +93,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "2.0.0",
     "@types/bun": "^1.3.14",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^26.1.2",

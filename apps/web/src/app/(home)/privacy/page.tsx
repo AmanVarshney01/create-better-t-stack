@@ -32,11 +32,11 @@ export default function PrivacyPage() {
           The website loads a self-hosted Umami analytics script to understand aggregate traffic,
           page usage, and anonymous interaction events such as which stack options are selected in
           the builder, which commands are copied, and which outbound links are followed. These
-          events do not include project names, personal information, or persistent identifiers. The
-          site also displays externally hosted content such as videos, social posts, images, and
-          sponsor information. Requests to those external services are governed by their own privacy
-          practices and may expose ordinary connection information such as an IP address, browser
-          headers, and the requested resource.
+          events do not include the names of projects you build, personal information, or persistent
+          identifiers. The site also displays externally hosted content such as videos, social
+          posts, images, and sponsor information. Requests to those external services are governed
+          by their own privacy practices and may expose ordinary connection information such as an
+          IP address, browser headers, and the requested resource.
         </p>
         <p>
           Better-T-Stack does not provide user accounts on this website and does not sell personal
@@ -56,6 +56,14 @@ export default function PrivacyPage() {
           environment variables, nested provisioning options, IP addresses, and persistent user or
           project identifiers. Aggregate results are published on the analytics page.
         </p>
+        <p>
+          The CLI and its MCP server also send a small number of anonymous diagnostic events to the
+          same self-hosted Umami instance as the website: command failures with a stage and error
+          class, cancelled prompts, usage of commands other than create, slow stages, and MCP client
+          and tool names. Umami derives coarse location from the request IP and a session hash that
+          rotates monthly; the IP address itself is not stored. These events never include project
+          names, paths, or full error messages, and the same telemetry switch disables them.
+        </p>
       </TrustSection>
 
       <TrustSection title="CHOICES_AND_CONTROL">
@@ -63,8 +71,10 @@ export default function PrivacyPage() {
           Disable CLI telemetry for one command with{" "}
           <code className="rounded bg-fd-muted px-1.5 py-0.5">--disable-analytics</code> or set{" "}
           <code className="rounded bg-fd-muted px-1.5 py-0.5">BTS_TELEMETRY_DISABLED=1</code>. The
-          environment variable can be added to a shell profile when telemetry should remain
-          disabled. Project generation continues to work when telemetry is off.
+          cross-tool <code className="rounded bg-fd-muted px-1.5 py-0.5">DO_NOT_TRACK=1</code>{" "}
+          convention is honored as well. Either variable can be added to a shell profile when
+          telemetry should remain disabled. Project generation continues to work when telemetry is
+          off.
         </p>
         <p>
           See the{" "}

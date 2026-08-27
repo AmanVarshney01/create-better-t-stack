@@ -8,6 +8,7 @@ import fs from "fs-extra";
 
 import type { DbSetupOptions, ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
+import { reportSlowStage } from "../../utils/diagnostics";
 import { ProjectCreationError } from "../../utils/errors";
 import { formatProject } from "../../utils/file-formatter";
 import { getLatestCLIVersion } from "../../utils/get-latest-cli-version";
@@ -122,11 +123,18 @@ export async function createProject(
 
     // Install dependencies if requested
     if (options.install) {
+      const installStartTime = Date.now();
       yield* Result.await(
         installDependencies({
           projectDir,
           packageManager: options.packageManager,
         }),
+      );
+      await reportSlowStage(
+        "create",
+        "install",
+        Date.now() - installStartTime,
+        options.packageManager,
       );
     }
 

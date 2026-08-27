@@ -83,6 +83,7 @@ export type AggregatedAnalyticsData = {
   cliVersionDistribution: VersionDistribution;
   stackCombinationDistribution: ShareDistributionItem[];
   databaseORMCombinationDistribution: ShareDistributionItem[];
+  modeDistribution: ShareDistributionItem[];
   summary: {
     mostPopularFrontend: string;
     mostPopularBackend: string;

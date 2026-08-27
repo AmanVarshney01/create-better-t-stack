@@ -19,10 +19,17 @@ import pc from "picocolors";
 import z from "zod";
 
 import { getAddonsToAdd } from "../../prompts/addons";
-import type { AddInput, Addons, AddonOptions, ProjectConfig } from "../../types";
+import type { AddInput, Addons, AddonOptions, AnalyticsMode, ProjectConfig } from "../../types";
 import { updateBtsConfig } from "../../utils/bts-config";
 import { validateAddonsAgainstConfig } from "../../utils/compatibility-rules";
-import { isSilent, runWithContextAsync } from "../../utils/context";
+import { isSilent, resolveInvocationMode, runWithContextAsync } from "../../utils/context";
+import {
+  durationBucket,
+  errorClass,
+  failureStage,
+  reportDiagnostic,
+  scrubReason,
+} from "../../utils/diagnostics";
 import { formatConfigValue } from "../../utils/display-config";
 import { CLIError, UserCancelledError, displayError } from "../../utils/errors";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
@@ -34,6 +41,7 @@ import { installDependencies } from "./install-dependencies";
 
 export interface AddHandlerOptions {
   silent?: boolean;
+  mode?: AnalyticsMode;
 }
 
 export interface AddResult {
@@ -278,10 +286,12 @@ export async function addHandler(
   input: AddInput,
   options: AddHandlerOptions = {},
 ): Promise<AddResult | undefined> {
-  const { silent = false } = options;
+  const { silent = false, mode } = options;
 
-  return runWithContextAsync({ silent }, async () => {
+  return runWithContextAsync({ silent, mode }, async () => {
+    const startTime = Date.now();
     const result = await addHandlerInternal(input);
+    await reportAddOutcome(input, result, Date.now() - startTime);
 
     if (result.isOk()) {
       return result.value;
@@ -315,6 +325,40 @@ export async function addHandler(
   });
 }
 
+async function reportAddOutcome(
+  input: AddInput,
+  result: Result<AddResult, UserCancelledError | CLIError>,
+  elapsedMs: number,
+): Promise<void> {
+  const mode = resolveInvocationMode(false);
+  const duration = durationBucket(elapsedMs);
+
+  if (result.isOk()) {
+    await reportDiagnostic("cli_command", { command: "add", mode, ok: true, duration });
+    return;
+  }
+
+  const error = result.error;
+  if (UserCancelledError.is(error)) {
+    await reportDiagnostic("cli_cancelled", {
+      command: "add",
+      mode,
+      prompt: error.prompt ?? "unknown",
+    });
+    return;
+  }
+
+  await reportDiagnostic("cli_command", { command: "add", mode, ok: false, duration });
+  await reportDiagnostic("cli_failed", {
+    command: "add",
+    mode,
+    stage: failureStage(error),
+    error: errorClass(error),
+    reason: scrubReason(error),
+    packageManager: input.packageManager,
+  });
+}
+
 async function addHandlerInternal(
   input: AddInput,
 ): Promise<Result<AddResult, UserCancelledError | CLIError>> {
@@ -340,7 +384,7 @@ async function addHandlerInternal(
   if (!existingConfig) {
     return Result.err(
       new CLIError({
-        message: `No Better-T-Stack project found in ${projectDir}. Make sure bts.jsonc exists.`,
+        message: `No Better-T-Stack project found in "${projectDir}". Make sure bts.jsonc exists.`,
       }),
     );
   }

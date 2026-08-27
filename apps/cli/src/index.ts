@@ -55,6 +55,8 @@ import {
   WebDeploySchema,
   WorkspacePackageNameSchema,
 } from "./types";
+import { getProcessMode } from "./utils/context";
+import { durationBucket, reportDiagnostic } from "./utils/diagnostics";
 import {
   CLIError,
   DirectoryConflictError,
@@ -207,7 +209,7 @@ export const router = t.router({
     })
     .input(CreateInputSchema)
     .mutation(async ({ input }) => {
-      const result = await createProjectHandler(input, { silent: true });
+      const result = await createProjectHandler(input, { silent: true, mode: "json" });
       if (!result) {
         throw new UserCancelledError({ message: "Operation cancelled" });
       }
@@ -228,13 +230,13 @@ export const router = t.router({
     .query(({ input }) => getSchemaResult(input.name)),
   sponsors: t.procedure
     .meta({ description: "Show Better-T-Stack sponsors" })
-    .mutation(() => showSponsorsCommand()),
+    .mutation(() => trackCommand("sponsors", () => showSponsorsCommand())),
   docs: t.procedure
     .meta({ description: "Open Better-T-Stack documentation" })
-    .mutation(() => openDocsCommand()),
+    .mutation(() => trackCommand("docs", () => openDocsCommand())),
   builder: t.procedure
     .meta({ description: "Open the web-based stack builder" })
-    .mutation(() => openBuilderCommand()),
+    .mutation(() => trackCommand("builder", () => openBuilderCommand())),
   add: t.procedure
     .meta({
       description: "Add addons or a workspace package to an existing Better-T-Stack project",
@@ -267,7 +269,7 @@ export const router = t.router({
     })
     .input(AddInputSchema)
     .mutation(async ({ input }) => {
-      const result = await addHandler(input, { silent: true });
+      const result = await addHandler(input, { silent: true, mode: "json" });
       if (!result) {
         throw new UserCancelledError({ message: "Operation cancelled" });
       }
@@ -288,9 +290,38 @@ export const router = t.router({
       }),
     )
     .mutation(async ({ input }) => {
-      await historyHandler(input);
+      await trackCommand(
+        "history",
+        () => historyHandler(input),
+        (ok) => ok,
+      );
     }),
 });
+
+/** Usage diagnostics for commands that have no project event of their own. */
+async function trackCommand<T>(
+  command: string,
+  run: () => Promise<T> | T,
+  isOk: (value: T) => boolean = () => true,
+): Promise<T> {
+  const startTime = Date.now();
+  try {
+    const value = await run();
+    await reportDiagnostic("cli_command", {
+      command,
+      ok: isOk(value),
+      duration: durationBucket(Date.now() - startTime),
+    });
+    return value;
+  } catch (cause) {
+    await reportDiagnostic("cli_command", {
+      command,
+      ok: false,
+      duration: durationBucket(Date.now() - startTime),
+    });
+    throw cause;
+  }
+}
 
 export function createBtsCli(): TrpcCli {
   return createCli({
@@ -374,7 +405,10 @@ export async function create(
 
   return Result.tryPromise({
     try: async () => {
-      const result = await createProjectHandlerResult(input, { silent: true });
+      const result = await createProjectHandlerResult(input, {
+        silent: true,
+        mode: getProcessMode() ?? "api",
+      });
       if (result.isErr()) {
         throw result.error;
       }
@@ -569,7 +603,10 @@ export async function add(options: AddOptions = {}): Promise<AddResult> {
     };
   }
 
-  const result = await addHandler(parsedInput.data, { silent: true });
+  const result = await addHandler(parsedInput.data, {
+    silent: true,
+    mode: getProcessMode() ?? "api",
+  });
   return (
     result ?? {
       success: false,

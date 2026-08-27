@@ -6,6 +6,7 @@ import pc from "picocolors";
 
 import { DEFAULT_CONFIG } from "../constants";
 import { ProjectNameSchema } from "../types";
+import { markPromptShown } from "../utils/context";
 import { UserCancelledError } from "../utils/errors";
 import { isMissingPathError } from "../utils/fs-error";
 import { cliConsola } from "../utils/terminal-output";
@@ -65,6 +66,7 @@ export async function getProjectName(initialName?: string): Promise<string> {
   }
 
   while (!isValid) {
+    markPromptShown();
     const response = await text({
       message: "Where should we create your project?",
       placeholder: defaultName,
@@ -89,7 +91,7 @@ export async function getProjectName(initialName?: string): Promise<string> {
     });
 
     if (isCancel(response)) {
-      throw new UserCancelledError({ message: "Operation cancelled." });
+      throw new UserCancelledError({ message: "Operation cancelled.", prompt: "projectName" });
     }
 
     projectPath = response || defaultName;

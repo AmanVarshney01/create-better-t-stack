@@ -168,6 +168,17 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
         />
       </div>
 
+      {data.modeDistribution.length > 0 ? (
+        <PreferenceChartCard
+          title="How the CLI was driven"
+          description="Interactive prompts, flags, --yes, JSON output, the programmatic API, or the MCP server. Counted for runs that report it."
+          data={data.modeDistribution}
+          colorKey="chart2"
+          columnCount={3}
+          columnGridClassName="grid-cols-1 sm:grid-cols-3"
+        />
+      ) : null}
+
       <div
         className={cn(
           "grid gap-4",

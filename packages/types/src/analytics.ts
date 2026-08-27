@@ -42,8 +42,13 @@ export const ANALYTICS_CLI_MAX_PATCH = 99;
 export const ANALYTICS_NODE_MIN_MAJOR = 18;
 export const ANALYTICS_NODE_MAX_MAJOR = 30;
 
+/** How the CLI was driven for the run that produced the event. */
+export const ANALYTICS_MODE_VALUES = ["interactive", "flags", "yes", "json", "api", "mcp"] as const;
+
 export const AnalyticsAddonSchema = z.enum(ANALYTICS_ADDON_VALUES);
 export const AnalyticsPlatformSchema = z.enum(ANALYTICS_PLATFORM_VALUES);
+export const AnalyticsModeSchema = z.enum(ANALYTICS_MODE_VALUES);
+export type AnalyticsMode = z.infer<typeof AnalyticsModeSchema>;
 
 const CLIVersionSchema = z
   .string()
@@ -149,6 +154,7 @@ export const AnalyticsEventSchema = z.object({
   cli_version: CLIVersionSchema,
   node_version: NodeVersionSchema,
   platform: AnalyticsPlatformSchema,
+  mode: AnalyticsModeSchema.optional(),
 });
 
 export type AnalyticsEvent = z.infer<typeof AnalyticsEventSchema>;

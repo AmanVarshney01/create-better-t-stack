@@ -126,10 +126,27 @@ function getTracker() {
 
 function send(tracker: UmamiTracker, name: string, data: EventData) {
   try {
-    void tracker.track(name.slice(0, MAX_EVENT_NAME_LENGTH), normalizeEventData(data));
+    void Promise.resolve(
+      tracker.track(name.slice(0, MAX_EVENT_NAME_LENGTH), normalizeEventData(data)),
+    ).catch(() => undefined);
   } catch {
     // Analytics must never break the page.
   }
+}
+
+const MAX_MESSAGE_LENGTH = 160;
+
+/** Error text safe to send: paths, URLs, and quoted names replaced, first line only. */
+export function scrubMessage(message: string): string {
+  const firstLine = message.split(/\r?\n/, 1)[0] ?? "";
+  const scrubbed = firstLine
+    .replaceAll(/(["'`])(?:(?!\1).)*\1/g, "<name>")
+    .replaceAll(/https?:\/\/[^\s)\]"'>]+/gi, "<url>")
+    .replaceAll(/(?:[a-zA-Z]:)?(?:[\\/][\w.@+ -]+)+[\\/][\w.@+-]+(?:[ \w.@+-]*\.\w+)?/g, "<path>")
+    .replaceAll(/\S*[\\/]\S*/g, "<path>")
+    .replaceAll(/\s+/g, " ")
+    .trim();
+  return clampString(scrubbed.slice(0, MAX_MESSAGE_LENGTH));
 }
 
 export function trackRaw(name: string, data: EventData = {}) {
@@ -254,7 +271,8 @@ export function beforeSend(type: string, payload: UmamiPayload): UmamiPayload | 
   if (key === lastPageviewUrl) return false;
   lastPageviewUrl = key;
 
-  const next: UmamiPayload = { ...payload, url: url.toString() };
+  // Path form, matching what the tracker sends, so page reports stay continuous.
+  const next: UmamiPayload = { ...payload, url: key };
   if (payload.referrer) {
     try {
       next.referrer = normalizePageviewUrl(payload.referrer, url.origin).toString();

@@ -1,5 +1,5 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { McpServer } from "@modelcontextprotocol/server";
+import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import z from "zod";
 
 import { add, create, type SchemaName, SchemaNameSchema, getSchemaResult } from "./index";
@@ -24,6 +24,8 @@ import {
   ServerDeploySchema,
   WebDeploySchema,
 } from "./types";
+import { setProcessMode } from "./utils/context";
+import { durationBucket, reportDiagnostic, scrubReason } from "./utils/diagnostics";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
 
 const ToolResponseSchema = z.object({
@@ -103,6 +105,57 @@ function formatToolError(cause: unknown) {
   };
 }
 
+type ToolResult = ReturnType<typeof formatToolSuccess> | ReturnType<typeof formatToolError>;
+
+const reportedSessions = new WeakSet<McpServer>();
+
+/** One session event per connection, sent when the client identity is first known. */
+function reportMcpSession(server: McpServer) {
+  if (reportedSessions.has(server)) return;
+  reportedSessions.add(server);
+  const client = server.server.getClientVersion();
+  void reportDiagnostic("mcp_session", {
+    client: client?.name ?? "unknown",
+    clientVersion: client?.version ?? "unknown",
+  });
+}
+
+/**
+ * Times every tool call and reports the outcome. Diagnostics are fire-and-forget here
+ * because the server process is long-lived and must not add latency to tool results.
+ */
+function instrumentTool<Args extends unknown[]>(
+  server: McpServer,
+  tool: string,
+  handler: (...args: Args) => Promise<ToolResult>,
+  isOptedOut?: (...args: Args) => boolean,
+) {
+  return async (...args: Args): Promise<ToolResult> => {
+    if (isOptedOut?.(...args)) return handler(...args);
+    reportMcpSession(server);
+    const startTime = Date.now();
+    const result = await handler(...args);
+    const ok = !("isError" in result);
+    void reportDiagnostic("mcp_tool", {
+      tool,
+      ok,
+      duration: durationBucket(Date.now() - startTime),
+    });
+    if (!ok) {
+      void reportDiagnostic("mcp_tool_error", {
+        tool,
+        error: "ToolError",
+        reason: scrubReason(result.structuredContent.error),
+      });
+    }
+    return result;
+  };
+}
+
+function isCreateOptedOut(input: McpCreateProjectInput) {
+  return input.disableAnalytics === true;
+}
+
 function getProjectToolAnnotations() {
   return {
     destructiveHint: true,
@@ -178,14 +231,15 @@ function getStackGuidance() {
 }
 
 export function createBtsMcpServer() {
+  setProcessMode("mcp");
   const server = new McpServer(
     {
       name: "create-better-t-stack",
       version: getLatestCLIVersion(),
     },
     {
-      capabilities: {
-        logging: {},
+      cacheHints: {
+        "tools/list": { ttlMs: 60 * 60 * 1000, cacheScope: "public" },
       },
     },
   );
@@ -205,13 +259,13 @@ export function createBtsMcpServer() {
         openWorldHint: false,
       },
     },
-    async () => {
+    instrumentTool(server, "bts_get_stack_guidance", async () => {
       try {
         return formatToolSuccess(getStackGuidance());
       } catch (error) {
         return formatToolError(error);
       }
-    },
+    }),
   );
 
   server.registerTool(
@@ -230,13 +284,13 @@ export function createBtsMcpServer() {
         openWorldHint: false,
       },
     },
-    async ({ name }: SchemaToolInput) => {
+    instrumentTool(server, "bts_get_schema", async ({ name }: SchemaToolInput) => {
       try {
         return formatToolSuccess(getSchemaResult((name ?? "all") as SchemaName));
       } catch (error) {
         return formatToolError(error);
       }
-    },
+    }),
   );
 
   server.registerTool(
@@ -255,34 +309,39 @@ export function createBtsMcpServer() {
         openWorldHint: false,
       },
     },
-    async (input: McpCreateProjectInput) => {
-      try {
-        const result = await create(input.projectName, {
-          ...input,
-          dryRun: true,
-          disableAnalytics: true,
-        });
+    instrumentTool(
+      server,
+      "bts_plan_project",
+      async (input: McpCreateProjectInput) => {
+        try {
+          const result = await create(input.projectName, {
+            ...input,
+            dryRun: true,
+            disableAnalytics: true,
+          });
 
-        if (result.isErr()) {
-          return formatToolError(result.error);
+          if (result.isErr()) {
+            return formatToolError(result.error);
+          }
+
+          const planningData = input.install
+            ? {
+                ...result.value,
+                warnings: [getMcpInstallTimeoutMessage(input.packageManager)],
+                recommendedMcpExecution: {
+                  ...input,
+                  install: false,
+                },
+              }
+            : result.value;
+
+          return formatToolSuccess(planningData);
+        } catch (error) {
+          return formatToolError(error);
         }
-
-        const planningData = input.install
-          ? {
-              ...result.value,
-              warnings: [getMcpInstallTimeoutMessage(input.packageManager)],
-              recommendedMcpExecution: {
-                ...input,
-                install: false,
-              },
-            }
-          : result.value;
-
-        return formatToolSuccess(planningData);
-      } catch (error) {
-        return formatToolError(error);
-      }
-    },
+      },
+      isCreateOptedOut,
+    ),
   );
 
   server.registerTool(
@@ -298,26 +357,31 @@ export function createBtsMcpServer() {
         ...getProjectToolAnnotations(),
       },
     },
-    async (input: McpCreateProjectInput) => {
-      try {
-        if (input.install) {
-          return formatToolError(getMcpInstallTimeoutMessage(input.packageManager));
+    instrumentTool(
+      server,
+      "bts_create_project",
+      async (input: McpCreateProjectInput) => {
+        try {
+          if (input.install) {
+            return formatToolError(getMcpInstallTimeoutMessage(input.packageManager));
+          }
+
+          const result = await create(input.projectName, {
+            ...input,
+            disableAnalytics: input.disableAnalytics ?? false,
+          });
+
+          if (result.isErr()) {
+            return formatToolError(result.error);
+          }
+
+          return formatToolSuccess(result.value);
+        } catch (error) {
+          return formatToolError(error);
         }
-
-        const result = await create(input.projectName, {
-          ...input,
-          disableAnalytics: true,
-        });
-
-        if (result.isErr()) {
-          return formatToolError(result.error);
-        }
-
-        return formatToolSuccess(result.value);
-      } catch (error) {
-        return formatToolError(error);
-      }
-    },
+      },
+      isCreateOptedOut,
+    ),
   );
 
   server.registerTool(
@@ -336,7 +400,7 @@ export function createBtsMcpServer() {
         openWorldHint: false,
       },
     },
-    async (input: McpAddInput) => {
+    instrumentTool(server, "bts_plan_addons", async (input: McpAddInput) => {
       try {
         const result = await add({
           ...input,
@@ -351,7 +415,7 @@ export function createBtsMcpServer() {
       } catch (error) {
         return formatToolError(error);
       }
-    },
+    }),
   );
 
   server.registerTool(
@@ -369,7 +433,7 @@ export function createBtsMcpServer() {
         openWorldHint: true,
       },
     },
-    async (input: McpAddInput) => {
+    instrumentTool(server, "bts_add_addons", async (input: McpAddInput) => {
       try {
         const result = await add(input);
 
@@ -381,14 +445,12 @@ export function createBtsMcpServer() {
       } catch (error) {
         return formatToolError(error);
       }
-    },
+    }),
   );
 
   return server;
 }
 
-export async function startBtsMcpServer() {
-  const server = createBtsMcpServer();
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+export function startBtsMcpServer() {
+  return serveStdio(() => createBtsMcpServer());
 }

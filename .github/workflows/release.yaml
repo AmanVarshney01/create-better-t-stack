@@ -104,6 +104,7 @@ jobs:
         env:
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+          UMAMI_CLI_WEBSITE_ID: ${{ secrets.UMAMI_CLI_WEBSITE_ID }}
 
       - name: Update create-bts alias package version
         if: steps.check-version.outputs.exists == 'false'
@@ -131,6 +132,7 @@ jobs:
         env:
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+          UMAMI_CLI_WEBSITE_ID: ${{ secrets.UMAMI_CLI_WEBSITE_ID }}
 
       - name: Publish template-generator to NPM
         if: steps.check-version.outputs.exists == 'false'
@@ -138,6 +140,7 @@ jobs:
         env:
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+          UMAMI_CLI_WEBSITE_ID: ${{ secrets.UMAMI_CLI_WEBSITE_ID }}
 
       - name: Publish CLI to NPM
         if: steps.check-version.outputs.exists == 'false'
@@ -145,6 +148,7 @@ jobs:
         env:
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+          UMAMI_CLI_WEBSITE_ID: ${{ secrets.UMAMI_CLI_WEBSITE_ID }}
 
       - name: Publish create-bts alias to NPM
         if: steps.check-version.outputs.exists == 'false'
@@ -152,6 +156,7 @@ jobs:
         env:
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+          UMAMI_CLI_WEBSITE_ID: ${{ secrets.UMAMI_CLI_WEBSITE_ID }}
 
       - name: Create and push tag
         if: steps.check-version.outputs.exists == 'false'

@@ -9,6 +9,7 @@ On successful project creation, the CLI sends one anonymous event with:
 
 - Selected options (stack choices), including: `frontend`, `backend`, `runtime`, `database`, `orm`, `api`, `auth`, `payments`, `addons`, `examples`, `dbSetup`, `webDeploy`, `serverDeploy`, `packageManager`, `git`, `install`
 - Environment data: `cli_version`, `node_version`, `platform`
+- How the CLI was driven (`mode`): interactive prompts, flags, `--yes`, JSON output, the programmatic API, or the MCP server
 
 Not collected:
 
@@ -16,6 +17,18 @@ Not collected:
 - Nested addon or database provisioning options
 - Secrets or environment variables from your machine
 - IP addresses or persistent project/user identifiers
+
+## Diagnostic events
+
+Separately from the project-creation event, the CLI and its MCP server send a small number of anonymous diagnostic events to the same self-hosted Umami instance that powers the website analytics. They exist to catch problems the success event cannot show:
+
+- `cli_failed`: command, stage (`validate`, `scaffold`, `install`, `git`, `dbSetup`, `postInstall`), error class, and a scrubbed one-line reason with paths, URLs, emails, and quoted names replaced by placeholders
+- `cli_cancelled`: which prompt was open when a run was cancelled
+- `cli_command`: usage of commands other than `create` (`add`, `history`, `docs`, `sponsors`, `builder`), with outcome and a duration bucket
+- `cli_slow`: project creation or dependency installation that took longer than a minute, with a duration bucket and package manager
+- `mcp_session`, `mcp_tool`, `mcp_tool_error`: MCP client name and version, tool name, outcome, and duration bucket
+
+Umami derives coarse location (country, region, city) from the request IP and a session hash from IP and user agent that rotates monthly; the IP address itself is not stored. Diagnostic events never include project names, paths, file contents, or full error messages. The same `BTS_TELEMETRY_DISABLED=1` or `DO_NOT_TRACK=1` switch and the `--disable-analytics` flag turn them off.
 
 ## Disable telemetry
 
@@ -28,6 +41,8 @@ BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack@latest
 <Callout title="Note">The above command disables it for a single run.</Callout>
 
 Add `export BTS_TELEMETRY_DISABLED=1` to your shell profile to make it permanent.
+
+The CLI also honors the cross-tool [`DO_NOT_TRACK=1`](https://consoledonottrack.com) convention, so one variable can turn off telemetry for every tool that supports it. The `--disable-analytics` flag skips it for a single run.
 
 ## Where to view analytics
 
@@ -44,13 +59,14 @@ Notes:
 
 ## Full transparency
 
-Single event per scaffold; no IP or project identifiers. See source code below.
+One project event per successful scaffold plus the diagnostic events listed above; no project identifiers. See source code below.
 
 If in doubt, set `BTS_TELEMETRY_DISABLED=1` and proceed. You can still use all CLI features.
 
 ## Source code
 
 - CLI event sender: [`apps/cli/src/utils/analytics.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts)
+- CLI diagnostic events: [`apps/cli/src/utils/diagnostics.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/diagnostics.ts)
 - Telemetry toggle logic: [`apps/cli/src/utils/telemetry.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/telemetry.ts)
 - Ingest endpoint: [`packages/backend/convex/http.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/packages/backend/convex/http.ts)
 - Analytics backend (ingest + aggregation): [`packages/backend/convex/analytics.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/packages/backend/convex/analytics.ts)

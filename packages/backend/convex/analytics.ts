@@ -45,12 +45,14 @@ function normalizeStats(stats: {
   hourlyDistribution?: Record<string, number>;
   stackCombinations?: Record<string, number>;
   dbOrmCombinations?: Record<string, number>;
+  mode?: Record<string, number>;
 }): AnalyticsStatsFields {
   return {
     ...stats,
     hourlyDistribution: stats.hourlyDistribution || {},
     stackCombinations: stats.stackCombinations || {},
     dbOrmCombinations: stats.dbOrmCombinations || {},
+    mode: stats.mode || {},
   };
 }
 
@@ -75,6 +77,7 @@ export const ingestEvent = internalMutation({
     cli_version: v.string(),
     node_version: v.string(),
     platform: v.string(),
+    mode: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -145,6 +148,7 @@ export const getStats = query({
       hourlyDistribution: distributionValidator,
       stackCombinations: distributionValidator,
       dbOrmCombinations: distributionValidator,
+      mode: distributionValidator,
     }),
     v.null(),
   ),
@@ -176,6 +180,7 @@ export const getStats = query({
       hourlyDistribution: stats.hourlyDistribution || {},
       stackCombinations: stats.stackCombinations || {},
       dbOrmCombinations: stats.dbOrmCombinations || {},
+      mode: stats.mode || {},
     };
   },
 });
@@ -284,6 +289,7 @@ export const getRecentEvents = query({
       cli_version: v.optional(v.string()),
       node_version: v.optional(v.string()),
       platform: v.optional(v.string()),
+      mode: v.optional(v.string()),
     }),
   ),
   handler: async (ctx, args) => {

@@ -56,7 +56,7 @@ The analytics page publishes aggregate usage trends from successful CLI project 
 
 - [Analytics dashboard](${SITE_URL}/analytics)
 - [Analytics and telemetry documentation](${SITE_URL}/docs/analytics.mdx)
-- Disable CLI telemetry with \`BTS_TELEMETRY_DISABLED=1\` or \`--disable-analytics\`.`,
+- Disable CLI telemetry with \`BTS_TELEMETRY_DISABLED=1\`, \`DO_NOT_TRACK=1\`, or \`--disable-analytics\`.`,
   builder: `# Better-T-Stack browser builder
 
 Use the stack builder to choose a frontend, backend, runtime, database, ORM, API layer, authentication, deployment targets, and addons. It produces a reproducible \`create-better-t-stack\` command.
@@ -75,11 +75,11 @@ Use GitHub issues for reproducible bugs and feature requests. Include the CLI ve
 - [Documentation](${SITE_URL}/docs)`,
   privacy: `# Better-T-Stack privacy
 
-The website uses self-hosted Umami analytics and the CLI sends one telemetry event after successful project creation unless telemetry is disabled. The CLI payload does not include project names, paths, file contents, secrets, environment variables, IP addresses, or persistent user identifiers.
+The website uses self-hosted Umami analytics. The CLI sends one telemetry event after successful project creation (including how it was driven: prompts, flags, JSON, API, or MCP) plus a small number of anonymous diagnostic events for failures, cancellations, other commands, slow runs, and MCP client sessions and tool usage, unless telemetry is disabled. The CLI payloads do not include project names, paths, file contents, secrets, environment variables, or persistent user identifiers.
 
 - [Full privacy notice](${SITE_URL}/privacy)
 - [Analytics and telemetry details](${SITE_URL}/docs/analytics.mdx)
-- Disable CLI telemetry with \`BTS_TELEMETRY_DISABLED=1\` or \`--disable-analytics\`.`,
+- Disable CLI telemetry with \`BTS_TELEMETRY_DISABLED=1\`, \`DO_NOT_TRACK=1\`, or \`--disable-analytics\`.`,
   showcase: `# Better-T-Stack showcase
 
 Community projects generated with Better-T-Stack are listed on the showcase page. Each entry links to the submitted project and identifies its technologies.
