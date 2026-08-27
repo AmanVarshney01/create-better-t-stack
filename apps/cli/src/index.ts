@@ -256,6 +256,7 @@ export const router = t.router({
           .optional()
           .default(false)
           .describe("Preview addon changes without writing files"),
+        disableAnalytics: z.boolean().optional().default(false).describe("Disable analytics"),
       }),
     )
     .mutation(async ({ input }) => {

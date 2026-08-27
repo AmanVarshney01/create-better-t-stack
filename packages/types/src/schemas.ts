@@ -534,6 +534,7 @@ export const AddInputSchema = z
     install: z.boolean().optional(),
     packageManager: PackageManagerSchema.optional(),
     dryRun: z.boolean().optional(),
+    disableAnalytics: z.boolean().optional(),
   })
   .strict();
 
