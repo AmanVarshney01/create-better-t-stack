@@ -57,11 +57,13 @@ export default function PrivacyPage() {
           project identifiers. Aggregate results are published on the analytics page.
         </p>
         <p>
-          When project creation fails, the CLI also sends one anonymous failure event to the same
-          self-hosted Umami instance as the website, with the stage that failed and the error class.
-          Umami derives coarse location from the request IP and a session hash that rotates monthly;
-          the IP address itself is not stored. The event never includes project names, paths, or
-          full error messages, and the same telemetry switch disables it.
+          When creating a project or adding to one fails, the CLI also sends one anonymous failure
+          event to the same self-hosted Umami instance as the website: the command, how the CLI was
+          driven, the stage that failed, the error class, the package manager and backend when
+          known, and a one-line reason with names and paths replaced by placeholders. Umami derives
+          coarse location from the request IP and a session hash that rotates monthly; the IP
+          address itself is not stored. The event never includes project names, paths, or full error
+          messages, and the same telemetry switch disables it.
         </p>
       </TrustSection>
 
