@@ -12,13 +12,7 @@ import type { AnalyticsMode, CreateInput, DirectoryConflict, ProjectConfig } fro
 import { trackProjectCreation } from "../../utils/analytics";
 import { getCliSubcommandCommand } from "../../utils/cli-invocation";
 import { isSilent, resolveInvocationMode, runWithContextAsync } from "../../utils/context";
-import {
-  errorClass,
-  failureStage,
-  reportDiagnostic,
-  reportSlowStage,
-  scrubReason,
-} from "../../utils/diagnostics";
+import { errorClass, failureStage, reportDiagnostic, scrubReason } from "../../utils/diagnostics";
 import { displayConfig } from "../../utils/display-config";
 import {
   type AppError,
@@ -147,7 +141,7 @@ async function executeCreateProjectHandler(
       const startTime = Date.now();
       const timeScaffolded = new Date().toISOString();
       const result = await createProjectHandlerInternal(input, startTime, timeScaffolded);
-      await reportCreateOutcome(input, result, Date.now() - startTime);
+      await reportCreateOutcome(input, result);
 
       return { result, startTime, timeScaffolded };
     },
@@ -158,16 +152,12 @@ async function executeCreateProjectHandler(
 async function reportCreateOutcome(
   input: CreateCommandInput,
   result: Result<CreateProjectResult, CreateHandlerError>,
-  elapsedMs: number,
 ): Promise<void> {
   const mode = resolveInvocationMode(input.yes);
 
-  if (result.isOk()) {
-    if (!input.dryRun) {
-      await reportSlowStage("create", "create", elapsedMs, input.packageManager ?? "unknown");
-    }
-    return;
-  }
+  // Slow stages are reported from createProject, where scaffolding and install are timed
+  // separately; the total here would include time spent answering prompts.
+  if (result.isOk()) return;
 
   const error = result.error;
   if (UserCancelledError.is(error)) {
