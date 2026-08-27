@@ -15,9 +15,8 @@ import { getLatestCLIVersion } from "./get-latest-cli-version";
 import { isTelemetryEnabled } from "./telemetry";
 
 /**
- * Diagnostic events go to the self-hosted Umami instance (a separate "CLI" website),
- * not to the Convex project dataset. They cover what the project-creation event
- * cannot: failures, cancellations, non-create commands, slow stages, and MCP usage.
+ * Failure diagnostics go to the self-hosted Umami instance (a separate "CLI" website),
+ * not to the Convex project dataset, which only records successful creations.
  * Everything is a no-op until UMAMI_CLI_WEBSITE_ID is baked in at build time.
  */
 const UMAMI_HOST_URL = process.env.UMAMI_HOST_URL;
@@ -25,7 +24,6 @@ const UMAMI_CLI_WEBSITE_ID = process.env.UMAMI_CLI_WEBSITE_ID;
 const SEND_TIMEOUT_MS = 3000;
 const MAX_STRING_LENGTH = 500;
 const MAX_REASON_LENGTH = 160;
-export const SLOW_STAGE_THRESHOLD_MS = 60_000;
 
 type DiagnosticValue = string | number | boolean;
 
@@ -39,30 +37,9 @@ export type DiagnosticEvents = {
     packageManager?: string;
     backend?: string;
   };
-  cli_cancelled: { command: string; mode: AnalyticsMode; prompt: string };
-  cli_command: { command: string; mode?: AnalyticsMode; ok: boolean; duration: string };
-  cli_slow: { command: string; stage: string; duration: string; packageManager: string };
-  mcp_session: { client: string; clientVersion: string };
-  mcp_tool: { tool: string; ok: boolean; duration: string };
-  mcp_tool_error: { tool: string; error: string; reason: string };
 };
 
 export type DiagnosticEventName = keyof DiagnosticEvents;
-
-const DURATION_BUCKETS: Array<[number, string]> = [
-  [1_000, "<1s"],
-  [5_000, "1-5s"],
-  [15_000, "5-15s"],
-  [60_000, "15-60s"],
-  [300_000, "1-5m"],
-];
-
-export function durationBucket(elapsedMs: number): string {
-  for (const [limit, label] of DURATION_BUCKETS) {
-    if (elapsedMs < limit) return label;
-  }
-  return ">5m";
-}
 
 /** Class name of the failure, which is stable and never carries user content. */
 export function errorClass(cause: unknown): string {
@@ -83,7 +60,7 @@ export function failureStage(cause: unknown): string {
 
 /**
  * First line of an error message with anything that could identify a machine or
- * project replaced by placeholders: file paths, URLs, emails, and quoted names.
+ * project replaced by placeholders: quoted names, URLs, emails, and paths.
  */
 export function scrubReason(cause: unknown): string {
   const message = cause instanceof Error ? cause.message : String(cause);
@@ -117,12 +94,6 @@ function isDiagnosticsEnabled() {
   );
 }
 
-function eventUrl(name: DiagnosticEventName, data: Record<string, DiagnosticValue>) {
-  if (name.startsWith("mcp_")) return "/mcp";
-  const command = data.command;
-  return command === undefined ? `/${name}` : `/${String(command)}`;
-}
-
 export function buildDiagnosticPayload<Name extends DiagnosticEventName>(
   name: Name,
   data: DiagnosticEvents[Name],
@@ -137,7 +108,7 @@ export function buildDiagnosticPayload<Name extends DiagnosticEventName>(
     payload: {
       website: UMAMI_CLI_WEBSITE_ID,
       hostname: "cli",
-      url: eventUrl(name, eventData),
+      url: `/${data.command}`,
       title: name,
       name,
       data: eventData,
@@ -168,21 +139,5 @@ export async function reportDiagnostic<Name extends DiagnosticEventName>(
         keepalive: true,
       }),
     catch: () => undefined, // Silent failure: diagnostics must never affect the CLI.
-  });
-}
-
-/** Reports a stage only when it crossed the slow threshold, so the event is a signal. */
-export async function reportSlowStage(
-  command: string,
-  stage: string,
-  elapsedMs: number,
-  packageManager: string,
-): Promise<void> {
-  if (elapsedMs < SLOW_STAGE_THRESHOLD_MS) return;
-  await reportDiagnostic("cli_slow", {
-    command,
-    stage,
-    duration: durationBucket(elapsedMs),
-    packageManager,
   });
 }

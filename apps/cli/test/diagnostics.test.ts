@@ -3,7 +3,6 @@ import { describe, expect, test } from "bun:test";
 import {
   buildDiagnosticPayload,
   diagnosticUserAgent,
-  durationBucket,
   errorClass,
   reportDiagnostic,
   scrubReason,
@@ -57,19 +56,8 @@ describe("errorClass", () => {
   });
 });
 
-describe("durationBucket", () => {
-  test("maps elapsed milliseconds to coarse buckets", () => {
-    expect(durationBucket(120)).toBe("<1s");
-    expect(durationBucket(4_000)).toBe("1-5s");
-    expect(durationBucket(14_999)).toBe("5-15s");
-    expect(durationBucket(59_000)).toBe("15-60s");
-    expect(durationBucket(200_000)).toBe("1-5m");
-    expect(durationBucket(900_000)).toBe(">5m");
-  });
-});
-
 describe("buildDiagnosticPayload", () => {
-  test("routes CLI events by command and MCP events under /mcp", () => {
+  test("routes events by command and drops undefined properties", () => {
     const failed = buildDiagnosticPayload("cli_failed", {
       command: "create",
       mode: "flags",
@@ -92,13 +80,15 @@ describe("buildDiagnosticPayload", () => {
       packageManager: "bun",
     });
 
-    const tool = buildDiagnosticPayload("mcp_tool", {
-      tool: "bts_plan_project",
-      ok: true,
-      duration: "<1s",
+    const add = buildDiagnosticPayload("cli_failed", {
+      command: "add",
+      mode: "mcp",
+      stage: "config",
+      error: "CLIError",
+      reason: "No Better-T-Stack project found in <name>",
     });
-    expect(tool.payload.url).toBe("/mcp");
-    expect(tool.payload.data.ok).toBe(true);
+    expect(add.payload.url).toBe("/add");
+    expect(add.payload.data.mode).toBe("mcp");
   });
 
   test("uses a browser-compatible user agent so Umami does not drop it as a bot", () => {
@@ -116,7 +106,13 @@ describe("reportDiagnostic", () => {
     }) as typeof fetch;
 
     try {
-      await reportDiagnostic("mcp_session", { client: "test", clientVersion: "1.0.0" });
+      await reportDiagnostic("cli_failed", {
+        command: "create",
+        mode: "flags",
+        stage: "validate",
+        error: "ValidationError",
+        reason: "invalid",
+      });
     } finally {
       globalThis.fetch = originalFetch;
     }
