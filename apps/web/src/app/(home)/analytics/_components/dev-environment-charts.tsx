@@ -171,7 +171,7 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
       {data.modeDistribution.length > 0 ? (
         <PreferenceChartCard
           title="How the CLI was driven"
-          description="Interactive prompts, flags, --yes, JSON output, the programmatic API, or the MCP server. Counted for runs that report it."
+          description="Interactive prompts, flags, --yes, JSON output, the programmatic API, or the MCP server (new: tracked since CLI v3.41.0 in August 2026, so counts start small)."
           data={data.modeDistribution}
           colorKey="chart2"
           columnCount={3}
