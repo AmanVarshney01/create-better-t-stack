@@ -140,10 +140,10 @@ const MAX_MESSAGE_LENGTH = 160;
 export function scrubMessage(message: string): string {
   const firstLine = message.split(/\r?\n/, 1)[0] ?? "";
   const scrubbed = firstLine
-    .replaceAll(/https?:\/\/[^\s)\]"'>]+/gi, "<url>")
-    .replaceAll(/(?:[a-zA-Z]:)?(?:[\\/][\w.@+ -]+)+[\\/][\w.@+-]+/g, "<path>")
-    .replaceAll(/\S*[\\/]\S*/g, "<path>")
     .replaceAll(/(["'`])(?:(?!\1).)*\1/g, "<name>")
+    .replaceAll(/https?:\/\/[^\s)\]"'>]+/gi, "<url>")
+    .replaceAll(/(?:[a-zA-Z]:)?(?:[\\/][\w.@+ -]+)+[\\/][\w.@+-]+(?:[ \w.@+-]*\.\w+)?/g, "<path>")
+    .replaceAll(/\S*[\\/]\S*/g, "<path>")
     .replaceAll(/\s+/g, " ")
     .trim();
   return clampString(scrubbed.slice(0, MAX_MESSAGE_LENGTH));

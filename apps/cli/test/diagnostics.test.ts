@@ -32,6 +32,10 @@ describe("scrubReason", () => {
     expect(scrubReason("error at /Users/Jane Doe/project/file.ts while writing")).toBe(
       "error at <path> while writing",
     );
+    expect(scrubReason("cannot read /Users/jane/report final.txt")).toBe("cannot read <path>");
+    expect(scrubReason('Template "apps/web/src/index.ts" is missing')).toBe(
+      "Template <name> is missing",
+    );
     expect(scrubReason("Workspace package already exists: packages/customer-name")).toBe(
       "Workspace package already exists: <path>",
     );

@@ -89,13 +89,15 @@ export function scrubReason(cause: unknown): string {
   const message = cause instanceof Error ? cause.message : String(cause);
   const firstLine = message.split(/\r?\n/, 1)[0] ?? "";
   const scrubbed = firstLine
+    // Quoted spans first: they are user-supplied values whatever they contain.
+    .replaceAll(/(["'`])(?:(?!\1).)*\1/g, "<name>")
     .replaceAll(/https?:\/\/[^\s)\]"'>]+/gi, "<url>")
     .replaceAll(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "<email>")
-    // Absolute paths, including segments with spaces ("/Users/Jane Doe/app/file.ts").
-    .replaceAll(/(?:[a-zA-Z]:)?(?:[\\/][\w.@+ -]+)+[\\/][\w.@+-]+/g, "<path>")
+    // Absolute paths, including segments with spaces ("/Users/Jane Doe/app/file.ts") and a
+    // final file name with spaces when it carries an extension ("/Users/jane/report final.txt").
+    .replaceAll(/(?:[a-zA-Z]:)?(?:[\\/][\w.@+ -]+)+[\\/][\w.@+-]+(?:[ \w.@+-]*\.\w+)?/g, "<path>")
     // Anything else containing a separator, such as relative paths and "packages/<name>".
     .replaceAll(/\S*[\\/]\S*/g, "<path>")
-    .replaceAll(/(["'`])(?:(?!\1).)*\1/g, "<name>")
     .replaceAll(/\s+/g, " ")
     .trim();
   return scrubbed.length > MAX_REASON_LENGTH ? scrubbed.slice(0, MAX_REASON_LENGTH) : scrubbed;
