@@ -8,10 +8,17 @@ import pc from "picocolors";
 import { getDefaultConfig } from "../../constants";
 import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
-import type { CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
+import type { AnalyticsMode, CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
 import { getCliSubcommandCommand } from "../../utils/cli-invocation";
-import { isSilent, runWithContextAsync } from "../../utils/context";
+import { isSilent, resolveInvocationMode, runWithContextAsync } from "../../utils/context";
+import {
+  errorClass,
+  failureStage,
+  reportDiagnostic,
+  reportSlowStage,
+  scrubReason,
+} from "../../utils/diagnostics";
 import { displayConfig } from "../../utils/display-config";
 import {
   type AppError,
@@ -53,6 +60,7 @@ import { resolveProjectDbSetupOptions } from "./db-setup-options";
 
 export interface CreateHandlerOptions {
   silent?: boolean;
+  mode?: AnalyticsMode;
 }
 
 type CreateCommandInput = CreateInput & {
@@ -131,14 +139,54 @@ async function executeCreateProjectHandler(
   input: CreateCommandInput,
   options: CreateHandlerOptions,
 ): Promise<CreateHandlerExecution> {
-  const { silent = false } = options;
+  const { silent = false, mode } = options;
 
-  return runWithContextAsync({ silent }, async () => {
-    const startTime = Date.now();
-    const timeScaffolded = new Date().toISOString();
-    const result = await createProjectHandlerInternal(input, startTime, timeScaffolded);
+  return runWithContextAsync(
+    { silent, mode, analyticsDisabled: input.disableAnalytics },
+    async () => {
+      const startTime = Date.now();
+      const timeScaffolded = new Date().toISOString();
+      const result = await createProjectHandlerInternal(input, startTime, timeScaffolded);
+      await reportCreateOutcome(input, result, Date.now() - startTime);
 
-    return { result, startTime, timeScaffolded };
+      return { result, startTime, timeScaffolded };
+    },
+  );
+}
+
+/** Diagnostics for what the success-only project event cannot show; awaited so it beats process.exit. */
+async function reportCreateOutcome(
+  input: CreateCommandInput,
+  result: Result<CreateProjectResult, CreateHandlerError>,
+  elapsedMs: number,
+): Promise<void> {
+  const mode = resolveInvocationMode(input.yes);
+
+  if (result.isOk()) {
+    if (!input.dryRun) {
+      await reportSlowStage("create", "create", elapsedMs, input.packageManager ?? "unknown");
+    }
+    return;
+  }
+
+  const error = result.error;
+  if (UserCancelledError.is(error)) {
+    await reportDiagnostic("cli_cancelled", {
+      command: "create",
+      mode,
+      prompt: error.prompt ?? "unknown",
+    });
+    return;
+  }
+
+  await reportDiagnostic("cli_failed", {
+    command: "create",
+    mode,
+    stage: failureStage(error),
+    error: errorClass(error),
+    reason: scrubReason(error),
+    packageManager: input.packageManager,
+    backend: input.backend,
   });
 }
 
@@ -437,7 +485,7 @@ async function createProjectHandlerInternal(
       }),
     );
 
-    await trackProjectCreation(config, input.disableAnalytics);
+    await trackProjectCreation(config, input.disableAnalytics, resolveInvocationMode(input.yes));
 
     // Track locally in history.json (non-fatal)
     const historyResult = await addToHistory(config, reproducibleCommand);

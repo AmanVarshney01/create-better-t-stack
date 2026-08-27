@@ -29,6 +29,7 @@ export type AnalyticsStatsFields = {
   hourlyDistribution: Record<string, number>;
   stackCombinations: Record<string, number>;
   dbOrmCombinations: Record<string, number>;
+  mode: Record<string, number>;
 };
 
 export type AnalyticsEventFields = {
@@ -51,6 +52,7 @@ export type AnalyticsEventFields = {
   cli_version?: string;
   node_version?: string;
   platform?: string;
+  mode?: string;
 };
 
 export type TimestampedAnalyticsEvent = {
@@ -81,6 +83,7 @@ const DISTRIBUTION_FIELDS = [
   "hourlyDistribution",
   "stackCombinations",
   "dbOrmCombinations",
+  "mode",
 ] as const satisfies ReadonlyArray<keyof AnalyticsStatsFields>;
 
 type DistributionField = (typeof DISTRIBUTION_FIELDS)[number];
@@ -111,6 +114,7 @@ export function createEmptyAnalyticsStats(): AnalyticsStatsFields {
     hourlyDistribution: {},
     stackCombinations: {},
     dbOrmCombinations: {},
+    mode: {},
   };
 }
 
@@ -227,6 +231,7 @@ export function adjustAnalyticsStats(
     adjustKey(next, "hourlyDistribution", hourKey, delta);
     adjustKey(next, "stackCombinations", `${backend} + ${frontend}`, delta);
     adjustKey(next, "dbOrmCombinations", `${database} + ${orm}`, delta);
+    adjustKey(next, "mode", event.mode, delta);
   }
 
   next.totalProjects = Math.max(next.totalProjects, 0);

@@ -29,6 +29,7 @@ const LOG_FIELD_ORDER = [
   "cli_version",
   "node_version",
   "platform",
+  "mode",
   "git",
   "install",
 ] as const;

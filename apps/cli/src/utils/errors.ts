@@ -13,9 +13,11 @@ import { cliConsola } from "./terminal-output";
  */
 export class UserCancelledError extends TaggedError("UserCancelledError")<{
   message: string;
+  /** Name of the prompt that was open when the user cancelled, when known. */
+  prompt?: string;
 }> {
-  constructor(args?: { message?: string }) {
-    super({ message: args?.message ?? "Operation cancelled" });
+  constructor(args?: { message?: string; prompt?: string }) {
+    super({ message: args?.message ?? "Operation cancelled", prompt: args?.prompt });
   }
 }
 
