@@ -231,9 +231,15 @@ async function createProjectHandlerInternal(
     // Before any prompt: the package manager that will run the install and the Node.js
     // hosting the CLI. Stack-specific requirements are checked once the config is known.
     if (!isSilent()) {
-      yield* Result.await(
-        checkBaselineRequirements(input.packageManager ?? detectInvokingPackageManager()),
+      const baseline = yield* Result.await(
+        checkBaselineRequirements(
+          input.packageManager ?? detectInvokingPackageManager(),
+          input.packageManager !== undefined,
+        ),
       );
+      for (const warning of baseline.warnings) {
+        log.warn(pc.yellow(warning));
+      }
     }
 
     // Get project name

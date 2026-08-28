@@ -233,9 +233,14 @@ export function validateLocalToolVersions(
   return validateRequirements(getLocalVersionRequirements(config, hostRuntime), versions);
 }
 
+const STACK_REQUIREMENTS_HEADLINE = "Your local toolchain does not meet this stack's requirements:";
+const BASELINE_REQUIREMENTS_HEADLINE =
+  "Your local toolchain does not meet create-better-t-stack's requirements:";
+
 export function validateRequirements(
   requirements: VersionRequirement[],
   versions: LocalToolVersions,
+  headline = STACK_REQUIREMENTS_HEADLINE,
 ): Result<void, CLIError> {
   const failures = requirements
     .map((requirement) => formatRequirementError(requirement, versions[requirement.tool]))
@@ -258,7 +263,7 @@ export function validateRequirements(
   return Result.err(
     new CLIError({
       message: [
-        "Your local toolchain does not meet this stack's requirements:",
+        headline,
         ...failures.map((failure) => `- ${failure}`),
         "",
         ...upgradeInstructions,
@@ -305,11 +310,22 @@ async function readToolVersion(tool: Tool): Promise<string | null> {
   return result.isOk() ? result.value : null;
 }
 
-/** Fast pre-prompt check; the full stack-aware check still runs once the config is known. */
+export type BaselineCheck = {
+  /** Problems with a package manager the user has not committed to yet; shown, not fatal. */
+  warnings: string[];
+};
+
+/**
+ * Fast pre-prompt check; the full stack-aware check still runs once the config is known.
+ * The host Node.js version is always fatal. The package manager is fatal only when it was
+ * passed explicitly: an inferred one (from the launching user agent) can still be swapped at
+ * the package manager prompt, so it is reported as a warning.
+ */
 export async function checkBaselineRequirements(
   packageManager: PackageManager | undefined,
-): Promise<Result<void, CLIError>> {
-  if (shouldSkipExternalCommands()) return Result.ok(undefined);
+  packageManagerIsExplicit: boolean,
+): Promise<Result<BaselineCheck, CLIError>> {
+  if (shouldSkipExternalCommands()) return Result.ok({ warnings: [] });
 
   const hostRuntime = process.versions.bun ? "bun" : "node";
   const versions: LocalToolVersions = {};
@@ -321,7 +337,24 @@ export async function checkBaselineRequirements(
     versions.node = process.versions.node;
   }
 
-  return validateRequirements(getBaselineRequirements(packageManager, hostRuntime), versions);
+  const requirements = getBaselineRequirements(packageManager, hostRuntime);
+  const fatal = requirements.filter(
+    (requirement) => requirement.tool === "node" || packageManagerIsExplicit,
+  );
+  const fatalResult = validateRequirements(fatal, versions, BASELINE_REQUIREMENTS_HEADLINE);
+  if (fatalResult.isErr()) return Result.err(fatalResult.error);
+
+  const advisory = requirements.filter((requirement) => !fatal.includes(requirement));
+  const advisoryResult = validateRequirements(advisory, versions, BASELINE_REQUIREMENTS_HEADLINE);
+  if (advisoryResult.isErr()) {
+    return Result.ok({
+      warnings: [
+        `${advisoryResult.error.message}\nYou can also choose a different package manager at the package manager step.`,
+      ],
+    });
+  }
+
+  return Result.ok({ warnings: [] });
 }
 
 export async function checkLocalRequirements(

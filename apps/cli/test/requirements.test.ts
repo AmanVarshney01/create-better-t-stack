@@ -45,7 +45,23 @@ describe("baseline requirements (before prompts)", () => {
     expect(detectInvokingPackageManager("pnpm/10.26.0 npm/? node/v22.0.0")).toBe("pnpm");
     expect(detectInvokingPackageManager("npm/11.16.0 node/v24.0.0")).toBe("npm");
     expect(detectInvokingPackageManager("yarn/4.0.0 npm/?")).toBeUndefined();
-    expect(detectInvokingPackageManager(undefined)).toBeUndefined();
+    expect(detectInvokingPackageManager("")).toBeUndefined();
+  });
+
+  it("uses a stack-neutral headline for the pre-prompt check", () => {
+    const result = validateRequirements(
+      getBaselineRequirements("pnpm", "node"),
+      { pnpm: "9.15.0", node: "v22.22.0" },
+      "Your local toolchain does not meet create-better-t-stack's requirements:",
+    );
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(
+        result.error.message.startsWith(
+          "Your local toolchain does not meet create-better-t-stack's requirements:",
+        ),
+      ).toBe(true);
+    }
   });
 });
 
