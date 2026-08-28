@@ -10,7 +10,7 @@ import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
 import type { AnalyticsMode, CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
-import { getCliSubcommandCommand } from "../../utils/cli-invocation";
+import { detectInvokingPackageManager, getCliSubcommandCommand } from "../../utils/cli-invocation";
 import { isSilent, resolveInvocationMode, runWithContextAsync } from "../../utils/context";
 import { errorClass, failureStage, reportDiagnostic, scrubReason } from "../../utils/diagnostics";
 import { displayConfig } from "../../utils/display-config";
@@ -41,7 +41,7 @@ import {
 } from "../../utils/project-launcher";
 import { validateProjectName } from "../../utils/project-name-validation";
 import { renderTitle } from "../../utils/render-title";
-import { checkLocalRequirements } from "../../utils/requirements";
+import { checkBaselineRequirements, checkLocalRequirements } from "../../utils/requirements";
 import { getTemplateConfig, getTemplateDescription } from "../../utils/templates";
 import {
   getProvidedFlags,
@@ -228,6 +228,20 @@ async function createProjectHandlerInternal(
 
     if (!isSilent() && input.yolo) {
       log.warn(pc.yellow("YOLO mode enabled — compatibility checks are disabled."));
+    }
+
+    // Before any prompt: the package manager that will run the install and the Node.js
+    // hosting the CLI. Stack-specific requirements are checked once the config is known.
+    if (!isSilent()) {
+      const baseline = yield* Result.await(
+        checkBaselineRequirements(
+          input.packageManager ?? detectInvokingPackageManager(),
+          input.packageManager !== undefined,
+        ),
+      );
+      for (const warning of baseline.warnings) {
+        log.warn(pc.yellow(warning));
+      }
     }
 
     // Get project name

@@ -202,12 +202,46 @@ function formatRequirementError(
   return null;
 }
 
+/**
+ * The checks that do not depend on the chosen stack: the package manager that will run the
+ * install, and the Node.js version hosting the CLI. Running them before any prompt means a
+ * user with an outdated toolchain finds out immediately instead of after configuring a stack.
+ */
+export function getBaselineRequirements(
+  packageManager: PackageManager | undefined,
+  hostRuntime: "bun" | "node",
+): VersionRequirement[] {
+  const requirements: VersionRequirement[] = [];
+  if (packageManager) {
+    requirements.push({
+      tool: packageManager,
+      range: PACKAGE_MANAGER_VERSION_RANGES[packageManager],
+      reason: PACKAGE_MANAGER_REASONS[packageManager],
+    });
+  }
+  if (hostRuntime === "node") {
+    addNodeRequirement(requirements, ">=22.0.0", "create-better-t-stack");
+  }
+  return requirements;
+}
+
 export function validateLocalToolVersions(
   config: RequirementConfig,
   versions: LocalToolVersions,
   hostRuntime: "bun" | "node",
 ): Result<void, CLIError> {
-  const requirements = getLocalVersionRequirements(config, hostRuntime);
+  return validateRequirements(getLocalVersionRequirements(config, hostRuntime), versions);
+}
+
+const STACK_REQUIREMENTS_HEADLINE = "Your local toolchain does not meet this stack's requirements:";
+const BASELINE_REQUIREMENTS_HEADLINE =
+  "Your local toolchain does not meet create-better-t-stack's requirements:";
+
+export function validateRequirements(
+  requirements: VersionRequirement[],
+  versions: LocalToolVersions,
+  headline = STACK_REQUIREMENTS_HEADLINE,
+): Result<void, CLIError> {
   const failures = requirements
     .map((requirement) => formatRequirementError(requirement, versions[requirement.tool]))
     .filter((failure): failure is string => failure !== null);
@@ -229,7 +263,7 @@ export function validateLocalToolVersions(
   return Result.err(
     new CLIError({
       message: [
-        "Your local toolchain does not meet this stack's requirements:",
+        headline,
         ...failures.map((failure) => `- ${failure}`),
         "",
         ...upgradeInstructions,
@@ -274,6 +308,53 @@ async function readToolVersion(tool: Tool): Promise<string | null> {
   });
 
   return result.isOk() ? result.value : null;
+}
+
+export type BaselineCheck = {
+  /** Problems with a package manager the user has not committed to yet; shown, not fatal. */
+  warnings: string[];
+};
+
+/**
+ * Fast pre-prompt check; the full stack-aware check still runs once the config is known.
+ * The host Node.js version is always fatal. The package manager is fatal only when it was
+ * passed explicitly: an inferred one (from the launching user agent) can still be swapped at
+ * the package manager prompt, so it is reported as a warning.
+ */
+export async function checkBaselineRequirements(
+  packageManager: PackageManager | undefined,
+  packageManagerIsExplicit: boolean,
+): Promise<Result<BaselineCheck, CLIError>> {
+  if (shouldSkipExternalCommands()) return Result.ok({ warnings: [] });
+
+  const hostRuntime = process.versions.bun ? "bun" : "node";
+  const versions: LocalToolVersions = {};
+  if (packageManager) {
+    const packageManagerVersion = await readToolVersion(packageManager);
+    if (packageManagerVersion) versions[packageManager] = packageManagerVersion;
+  }
+  if (hostRuntime === "node") {
+    versions.node = process.versions.node;
+  }
+
+  const requirements = getBaselineRequirements(packageManager, hostRuntime);
+  const fatal = requirements.filter(
+    (requirement) => requirement.tool === "node" || packageManagerIsExplicit,
+  );
+  const fatalResult = validateRequirements(fatal, versions, BASELINE_REQUIREMENTS_HEADLINE);
+  if (fatalResult.isErr()) return Result.err(fatalResult.error);
+
+  const advisory = requirements.filter((requirement) => !fatal.includes(requirement));
+  const advisoryResult = validateRequirements(advisory, versions, BASELINE_REQUIREMENTS_HEADLINE);
+  if (advisoryResult.isErr()) {
+    return Result.ok({
+      warnings: [
+        `${advisoryResult.error.message}\nYou can also choose a different package manager at the package manager step.`,
+      ],
+    });
+  }
+
+  return Result.ok({ warnings: [] });
 }
 
 export async function checkLocalRequirements(

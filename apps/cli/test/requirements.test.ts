@@ -1,13 +1,69 @@
 import { describe, expect, it } from "bun:test";
 
 import type { ProjectConfig } from "../src/types";
+import { detectInvokingPackageManager } from "../src/utils/cli-invocation";
 import {
   PACKAGE_MANAGER_VERSION_RANGES,
   RECOMMENDED_BUN_VERSION_RANGE,
+  getBaselineRequirements,
   getLocalVersionRequirements,
   getLocalToolRecommendations,
   validateLocalToolVersions,
+  validateRequirements,
 } from "../src/utils/requirements";
+
+describe("baseline requirements (before prompts)", () => {
+  it("covers only the package manager and the host Node.js, never the stack", () => {
+    expect(getBaselineRequirements("pnpm", "node")).toEqual([
+      expect.objectContaining({ tool: "pnpm", range: PACKAGE_MANAGER_VERSION_RANGES.pnpm }),
+      expect.objectContaining({ tool: "node", range: ">=22.0.0" }),
+    ]);
+    expect(getBaselineRequirements(undefined, "bun")).toEqual([]);
+  });
+
+  it("fails an outdated pnpm before any stack is chosen", () => {
+    const result = validateRequirements(getBaselineRequirements("pnpm", "node"), {
+      pnpm: "9.15.0",
+      node: "v22.22.0",
+    });
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.message).toContain("pnpm 9.15.0 does not satisfy");
+      expect(result.error.message).toContain("pnpm self-update");
+    }
+
+    expect(
+      validateRequirements(getBaselineRequirements("pnpm", "node"), {
+        pnpm: "10.26.0",
+        node: "v22.22.0",
+      }).isOk(),
+    ).toBe(true);
+  });
+
+  it("detects the launching package manager from the npm user agent", () => {
+    expect(detectInvokingPackageManager("bun/1.4.0 npm/? node/v24.0.0")).toBe("bun");
+    expect(detectInvokingPackageManager("pnpm/10.26.0 npm/? node/v22.0.0")).toBe("pnpm");
+    expect(detectInvokingPackageManager("npm/11.16.0 node/v24.0.0")).toBe("npm");
+    expect(detectInvokingPackageManager("yarn/4.0.0 npm/?")).toBeUndefined();
+    expect(detectInvokingPackageManager("")).toBeUndefined();
+  });
+
+  it("uses a stack-neutral headline for the pre-prompt check", () => {
+    const result = validateRequirements(
+      getBaselineRequirements("pnpm", "node"),
+      { pnpm: "9.15.0", node: "v22.22.0" },
+      "Your local toolchain does not meet create-better-t-stack's requirements:",
+    );
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(
+        result.error.message.startsWith(
+          "Your local toolchain does not meet create-better-t-stack's requirements:",
+        ),
+      ).toBe(true);
+    }
+  });
+});
 
 type RequirementConfig = Pick<
   ProjectConfig,
