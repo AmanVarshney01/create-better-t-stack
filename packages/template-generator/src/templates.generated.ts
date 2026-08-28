@@ -41,7 +41,7 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
+			"preset": "recommended",
 			"correctness": {
 				"useExhaustiveDependencies": "info"
 			},

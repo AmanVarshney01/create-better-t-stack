@@ -102,8 +102,7 @@ function getAllMcpServers(config: ProjectConfig): McpServerDef[] {
       key: "cloudflare-docs",
       label: "Cloudflare Docs",
       name: "cloudflare-docs",
-      target: "https://docs.mcp.cloudflare.com/sse",
-      transport: "sse",
+      target: "https://docs.mcp.cloudflare.com/mcp",
     },
     {
       key: "convex",
@@ -169,7 +168,7 @@ function getAllMcpServers(config: ProjectConfig): McpServerDef[] {
       key: "better-auth",
       label: "Better Auth",
       name: "better-auth",
-      target: "https://mcp.inkeep.com/better-auth/mcp",
+      target: "https://mcp.better-auth.com/mcp",
     },
     {
       key: "clerk",

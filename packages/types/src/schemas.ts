@@ -192,7 +192,7 @@ export const SkillsSourceSchema = z
     "vercel/ai",
     "vercel/turborepo",
     "yusukebe/hono-skill",
-    "vercel-labs/next-skills",
+    "vercel/next.js",
     "nuxt/ui",
     "heroui-inc/heroui",
     "shadcn/ui",

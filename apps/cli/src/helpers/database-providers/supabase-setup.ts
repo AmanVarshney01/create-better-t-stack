@@ -59,8 +59,22 @@ async function writeSupabaseEnvFile(
 }
 
 function extractDbUrl(output: string): string | null {
-  const dbUrlMatch = output.match(/DB URL:\s*(postgresql:\/\/[^\s]+)/);
-  return dbUrlMatch?.[1] ?? null;
+  const envMatch = output.match(/DB_URL="(postgresql:\/\/[^"]+)"/);
+  if (envMatch?.[1]) return envMatch[1];
+  const urlMatch = output.match(/postgresql:\/\/[^\s"'`|│]+/);
+  return urlMatch?.[0] ?? null;
+}
+
+async function readSupabaseStatus(serverDir: string, packageManager: PackageManager) {
+  const statusArgs = getPackageExecutionArgs(packageManager, "supabase status --agent no -o env");
+  const result = await Result.tryPromise({
+    try: async () => {
+      const { stdout } = await execa(statusArgs[0], statusArgs.slice(1), { cwd: serverDir });
+      return stdout;
+    },
+    catch: () => "",
+  });
+  return result.isOk() ? result.value : "";
 }
 
 async function initializeSupabase(
@@ -98,7 +112,7 @@ async function startSupabase(
   packageManager: PackageManager,
 ): Promise<Result<string, DatabaseSetupError>> {
   cliLog.info("Starting Supabase services (this may take a moment)...");
-  const supabaseStartArgs = getPackageExecutionArgs(packageManager, "supabase start");
+  const supabaseStartArgs = getPackageExecutionArgs(packageManager, "supabase start --agent no");
 
   return Result.tryPromise({
     try: async () => {
@@ -153,14 +167,14 @@ function displayManualSupabaseInstructions(
 2. Install the Supabase CLI (e.g., \`npm install -g supabase\`).
 3. Run \`supabase init\` in your project's \`packages/db\` directory.
 4. Run \`supabase start\` in your project's \`packages/db\` directory.
-5. Copy the 'DB URL' from the output.${
+5. Copy the database URL from the output.${
       output
         ? `
 ${pc.bold("Relevant output from `supabase start`:")}
 ${pc.dim(output)}`
         : ""
     }
-6. Add the DB URL to the .env file in \`${targetApp}/.env\` as \`DATABASE_URL\`:
+6. Add the database URL to the .env file in \`${targetApp}/.env\` as \`DATABASE_URL\`:
 			${pc.gray('DATABASE_URL="your_supabase_db_url"')}`,
   );
 }
@@ -248,7 +262,9 @@ export async function setupSupabase(
   }
 
   const supabaseOutput = startResult.value;
-  const dbUrl = extractDbUrl(supabaseOutput);
+  const dbUrl =
+    extractDbUrl(await readSupabaseStatus(serverDir, packageManager)) ??
+    extractDbUrl(supabaseOutput);
 
   if (dbUrl) {
     const envResult = await writeSupabaseEnvFile(projectDir, backend, dbUrl);

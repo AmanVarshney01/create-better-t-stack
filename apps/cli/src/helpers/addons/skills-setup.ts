@@ -41,8 +41,8 @@ const SKILL_SOURCES = {
   "yusukebe/hono-skill": {
     label: "Hono Backend",
   },
-  "vercel-labs/next-skills": {
-    label: "Next.js Best Practices",
+  "vercel/next.js": {
+    label: "Next.js",
   },
   "nuxt/ui": {
     label: "Nuxt UI",
@@ -257,7 +257,7 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
   }
 
   if (frontend.includes("next")) {
-    sources.push("vercel-labs/next-skills");
+    sources.push("vercel/next.js");
   }
 
   if (frontend.includes("nuxt")) {
@@ -352,7 +352,11 @@ const CURATED_SKILLS_BY_SOURCE = {
   "vercel/ai": () => ["ai-sdk"],
   "vercel/turborepo": () => ["turborepo"],
   "yusukebe/hono-skill": () => ["hono"],
-  "vercel-labs/next-skills": () => ["next-best-practices", "next-cache-components"],
+  "vercel/next.js": () => [
+    "next-dev-loop",
+    "next-cache-components-adoption",
+    "next-cache-components-optimizer",
+  ],
   "nuxt/ui": () => ["nuxt-ui"],
   "heroui-inc/heroui": () => ["heroui-native"],
   "shadcn/ui": () => ["shadcn"],
@@ -393,10 +397,10 @@ const CURATED_SKILLS_BY_SOURCE = {
   "expo/skills": (config) => {
     const skills = [
       "expo-dev-client",
-      "building-native-ui",
-      "native-data-fetching",
-      "expo-deployment",
-      "expo-cicd-workflows",
+      "expo-native-ui",
+      "expo-data-fetching",
+      "eas-app-stores",
+      "eas-workflows",
     ];
     if (config.frontend.includes("native-uniwind")) {
       skills.push("expo-tailwind-setup");

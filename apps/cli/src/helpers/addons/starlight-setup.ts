@@ -30,6 +30,7 @@ export async function setupStarlight(
     "--no-install",
     "--no-git",
     "--skip-houston",
+    "--no-ai",
   ];
   const starlightArgsString = starlightArgs.join(" ");
 
