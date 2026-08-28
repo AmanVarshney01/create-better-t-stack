@@ -92,7 +92,7 @@ describe("renderTitle", () => {
 
     expect(chunks[0]).toBe("\u001B[?25l");
     const lineCount = TITLE_TEXT.split("\n").length - 1;
-    expect(chunks.some((chunk) => chunk.includes(`\u001B[${lineCount}A\r`))).toBe(true);
+    expect(chunks.some((chunk) => chunk.includes(`\u001B[${lineCount}F`))).toBe(true);
 
     const firstFrame = chunks[1] ?? "";
     const lastFrame = chunks.at(-2) ?? "";
@@ -102,7 +102,7 @@ describe("renderTitle", () => {
     expect(glyphCount(strippedFirst)).toBeLessThan(glyphCount(TITLE_TEXT) / 4);
     expect(strippedLast).toBe(TITLE_TEXT);
     expect(lastFrame).toContain("38;2;");
-    expect(lastFrame).toContain("\u2588\u2588\u2588\u2588\u2588\u2588╗");
+    expect(strippedLast).toContain("\u2588\u2588\u2588\u2588\u2588\u2588\u2557");
     expect(chunks.at(-1)).toBe("\u001B[?25h\n");
     expect(chunks.length).toBeGreaterThan(30);
   });

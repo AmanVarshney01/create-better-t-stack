@@ -11,7 +11,7 @@ export const TITLE_TEXT = `
 
  ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
  ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
-    ██║       ███████╗   ██║   ███████║██║     █████╔╝
+    ██║       ███████╗   ██║   ██████║██║     █████╔╝
     ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
     ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
@@ -208,7 +208,7 @@ export const renderTitle = async (options: RenderTitleOptions = {}): Promise<voi
 
   const delayMs = options.frameDelayMs ?? frameDelayMs;
   const lineCount = lines.length - 1;
-  const moveToFrameStart = `\u001B[${lineCount}A\r`;
+  const moveToFrameStart = `\u001B[${lineCount}F`;
 
   const frames: string[] = [];
   for (let frame = 0; frame < frameCount; frame++) {
@@ -220,14 +220,17 @@ export const renderTitle = async (options: RenderTitleOptions = {}): Promise<voi
   };
 
   output.write(hideCursor);
+  const usingRealStdout = options.output === undefined;
   process.once("exit", restoreCursor);
   const onSignal = (signal: NodeJS.Signals) => {
     restoreCursor();
     process.off("exit", restoreCursor);
     process.exit(signal === "SIGINT" ? 130 : 143);
   };
-  process.once("SIGINT", onSignal);
-  process.once("SIGTERM", onSignal);
+  if (usingRealStdout) {
+    process.once("SIGINT", onSignal);
+    process.once("SIGTERM", onSignal);
+  }
 
   try {
     for (const [index, frame] of frames.entries()) {
@@ -236,8 +239,10 @@ export const renderTitle = async (options: RenderTitleOptions = {}): Promise<voi
     }
   } finally {
     process.off("exit", restoreCursor);
-    process.off("SIGINT", onSignal);
-    process.off("SIGTERM", onSignal);
+    if (usingRealStdout) {
+      process.off("SIGINT", onSignal);
+      process.off("SIGTERM", onSignal);
+    }
     output.write(`${showCursor}\n`);
   }
 };
