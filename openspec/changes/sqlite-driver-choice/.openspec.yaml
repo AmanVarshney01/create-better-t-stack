@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-08-28
+goal: Bun-runtime SQLite projects can select the built-in bun:sqlite driver
+  instead of libSQL, keeping libSQL as the default so Turso remains a
+  configuration change rather than a code change.
