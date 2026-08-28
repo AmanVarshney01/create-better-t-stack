@@ -433,8 +433,10 @@ export async function navigableGroupMultiselect<T>(
   const exclusiveValues = new Set(exclusive.flat());
   const exclusiveGroups = new Set(
     Object.entries(opts.options)
-      .filter(
-        ([, items]) => items.length > 1 && items.every((item) => exclusiveValues.has(item.value)),
+      .filter(([, items]) =>
+        exclusive.some(
+          (set) => items.length > 1 && items.every((item) => set.includes(item.value)),
+        ),
       )
       .map(([group]) => group),
   );
