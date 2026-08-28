@@ -5,7 +5,6 @@ import { writeTree } from "@better-t-stack/template-generator/fs-writer";
 import { log } from "@clack/prompts";
 import { Result } from "better-result";
 import fs from "fs-extra";
-import pc from "picocolors";
 
 import type { DbSetupOptions, ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
@@ -141,13 +140,6 @@ export async function createProject(
         installError = installResult.error;
       } else {
         install = installResult.value;
-      }
-      if (install !== "installed" && !isSilent()) {
-        log.warn(
-          pc.yellow(
-            `Dependencies were not installed. Run \`${options.packageManager} install\` in ${options.relativePath} and continue with the steps below.`,
-          ),
-        );
       }
     }
 
