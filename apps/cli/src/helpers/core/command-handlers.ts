@@ -483,6 +483,9 @@ async function createProjectHandlerInternal(
     await trackProjectCreation(config, input.disableAnalytics, mode);
 
     const warnings: string[] = [];
+    if (created.install === "cancelled") {
+      warnings.push("Dependency install was cancelled.");
+    }
     if (created.installError) {
       warnings.push(created.installError.message);
       await reportDiagnostic("cli_failed", {

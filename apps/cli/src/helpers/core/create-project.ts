@@ -26,6 +26,7 @@ export interface CreateProjectOptions {
 
 export interface CreateProjectOutcome {
   projectDir: string;
+  install: "installed" | "skipped" | "cancelled" | "failed";
   installError: ProjectCreationError | null;
 }
 
@@ -128,6 +129,7 @@ export async function createProject(
     if (!isSilent()) log.success("Project scaffolded");
 
     // Install dependencies if requested
+    let install: CreateProjectOutcome["install"] = "skipped";
     let installError: ProjectCreationError | null = null;
     if (options.install) {
       const installResult = await installDependencies({
@@ -135,14 +137,17 @@ export async function createProject(
         packageManager: options.packageManager,
       });
       if (installResult.isErr()) {
+        install = "failed";
         installError = installResult.error;
-        if (!isSilent()) {
-          log.warn(
-            pc.yellow(
-              `Dependencies were not installed. Run \`${options.packageManager} install\` in ${options.relativePath} and continue with the steps below.`,
-            ),
-          );
-        }
+      } else {
+        install = installResult.value;
+      }
+      if (install !== "installed" && !isSilent()) {
+        log.warn(
+          pc.yellow(
+            `Dependencies were not installed. Run \`${options.packageManager} install\` in ${options.relativePath} and continue with the steps below.`,
+          ),
+        );
       }
     }
 
@@ -153,11 +158,11 @@ export async function createProject(
     if (!isSilent()) {
       await displayPostInstallInstructions({
         ...options,
-        depsInstalled: options.install && installError === null,
+        depsInstalled: install === "installed",
       });
     }
 
-    return Result.ok({ projectDir, installError });
+    return Result.ok({ projectDir, install, installError });
   });
 }
 
