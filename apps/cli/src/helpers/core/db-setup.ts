@@ -9,12 +9,10 @@ import path from "node:path";
 import { usesAlchemyManagedDatabase } from "@better-t-stack/types";
 import { Result } from "better-result";
 import fs from "fs-extra";
-import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 import { DatabaseSetupError, UserCancelledError } from "../../utils/errors";
-import { wasInterrupted } from "../../utils/interrupt";
-import { cliConsola, cliLog } from "../../utils/terminal-output";
+import { runOptionalStep } from "../../utils/optional-step";
 import { setupCloudflareD1 } from "../database-providers/d1-setup";
 import { setupDockerCompose } from "../database-providers/docker-compose-setup";
 import { setupMongoDBAtlas } from "../database-providers/mongodb-atlas-setup";
@@ -53,21 +51,9 @@ export async function setupDatabase(
     return;
   }
 
-  // Helper to run setup and handle Result
-  async function runSetup<T, E extends UserCancelledError | DatabaseSetupError>(
-    setupFn: () => Promise<Result<T, E>>,
-  ): Promise<void> {
-    const result = await setupFn();
-    if (result.isErr()) {
-      // The project is already on disk, so cancelling here only skips this step
-      if (UserCancelledError.is(result.error) || wasInterrupted()) {
-        cliLog.warn(pc.yellow("Database setup cancelled. Configure the connection manually."));
-        return;
-      }
-      // Log other errors but don't fail the overall project creation
-      cliConsola.error(pc.red(result.error.message));
-    }
-  }
+  const runSetup = <T>(
+    setupFn: () => Promise<Result<T, DatabaseSetupError | UserCancelledError>>,
+  ) => runOptionalStep(setupFn, "Database setup cancelled. Configure the connection manually.");
 
   const resolvedCliInput: DatabaseSetupCliOptions = {
     ...cliInput,

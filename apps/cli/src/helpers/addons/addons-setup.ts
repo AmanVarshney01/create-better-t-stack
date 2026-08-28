@@ -2,13 +2,11 @@ import path from "node:path";
 
 import { Result } from "better-result";
 import fs from "fs-extra";
-import pc from "picocolors";
 
 import { desktopWebFrontends, type ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
-import { wasInterrupted } from "../../utils/interrupt";
-import { cliConsola, cliLog } from "../../utils/terminal-output";
+import { runOptionalStep } from "../../utils/optional-step";
 import { setupEvlog } from "./evlog-setup";
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupMcp } from "./mcp-setup";
@@ -20,41 +18,23 @@ import { setupTui } from "./tui-setup";
 import { setupUltracite } from "./ultracite-setup";
 import { setupWxt } from "./wxt-setup";
 
-// Helper to run setup and handle Result
-async function runSetup<T, E extends AddonSetupError | UserCancelledError>(
-  setupFn: () => Promise<Result<T, E>>,
-): Promise<void> {
-  const result = await setupFn();
-  if (result.isErr()) {
-    // The project is already on disk, so cancelling here only skips this step
-    if (UserCancelledError.is(result.error) || wasInterrupted()) {
-      cliLog.warn(pc.yellow("Addon setup cancelled."));
-      return;
-    }
-    // Log other errors but don't fail the overall project creation
-    cliConsola.error(pc.red(result.error.message));
-  }
-}
+const runSetup = <T>(setupFn: () => Promise<Result<T, AddonSetupError | UserCancelledError>>) =>
+  runOptionalStep(setupFn, "Addon setup cancelled.");
 
-async function runAddonStep(addon: string, step: () => Promise<void>): Promise<void> {
-  const result = await Result.tryPromise({
-    try: async () => step(),
-    catch: (e) =>
-      new AddonSetupError({
-        addon,
-        message: `Failed to set up ${addon}: ${e instanceof Error ? e.message : String(e)}`,
-        cause: e,
+const runAddonStep = (addon: string, step: () => Promise<void>) =>
+  runOptionalStep(
+    () =>
+      Result.tryPromise({
+        try: async () => step(),
+        catch: (e) =>
+          new AddonSetupError({
+            addon,
+            message: `Failed to set up ${addon}: ${e instanceof Error ? e.message : String(e)}`,
+            cause: e,
+          }),
       }),
-  });
-
-  if (result.isErr()) {
-    if (wasInterrupted()) {
-      cliLog.warn(pc.yellow(`${addon} setup cancelled.`));
-      return;
-    }
-    cliConsola.error(pc.red(result.error.message));
-  }
-}
+    `${addon} setup cancelled.`,
+  );
 
 export async function setupAddons(config: ProjectConfig): Promise<void> {
   const { addons, frontend, projectDir } = config;
