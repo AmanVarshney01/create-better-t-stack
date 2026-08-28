@@ -66,6 +66,9 @@ describe("scrubReason", () => {
     expect(scrubReason("Directory 'my app' already exists")).toBe(
       "Directory <name> already exists",
     );
+    expect(scrubReason("Beyoncé's note 'draft' is missing")).toBe(
+      "Beyoncé's note <name> is missing",
+    );
   });
 
   test("truncates very long reasons", () => {
