@@ -8,7 +8,11 @@ import {
   type ProjectConfig,
   type Runtime,
 } from "../types";
-import { getCompatibleAddons, validateAddonCompatibility } from "../utils/compatibility-rules";
+import {
+  TASK_RUNNER_ADDONS,
+  getCompatibleAddons,
+  validateAddonCompatibility,
+} from "../utils/compatibility-rules";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableGroupMultiselect } from "./navigable";
 
@@ -152,8 +156,7 @@ function sortAndPruneGroupedOptions(groupedOptions: Record<string, AddonOption[]
 }
 
 function validateAddonSelection(selected: Addons[] | undefined) {
-  const selectedTaskRunners =
-    selected?.filter((addon) => ["turborepo", "nx", "vite-plus"].includes(addon)) ?? [];
+  const selectedTaskRunners = selected?.filter((addon) => TASK_RUNNER_ADDONS.includes(addon)) ?? [];
   if (selectedTaskRunners.length > 1) {
     return "Choose Turborepo, Nx, or Vite+ as your task runner, not more than one.";
   }
@@ -202,6 +205,7 @@ export async function getAddonsChoice(
     options: groupedOptions,
     initialValues: initialValues,
     required: false,
+    exclusive: [TASK_RUNNER_ADDONS],
     validate: validateAddonSelection,
   });
 
@@ -240,6 +244,7 @@ export async function getAddonsToAdd(config: AddonProjectConfig) {
     message: "Select addons to add",
     options: groupedOptions,
     required: false,
+    exclusive: [TASK_RUNNER_ADDONS],
     validate: validateAddonSelection,
   });
 

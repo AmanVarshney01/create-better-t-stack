@@ -21,7 +21,7 @@ import z from "zod";
 import { getAddonsToAdd } from "../../prompts/addons";
 import type { AddInput, Addons, AddonOptions, AnalyticsMode, ProjectConfig } from "../../types";
 import { updateBtsConfig } from "../../utils/bts-config";
-import { validateAddonsAgainstConfig } from "../../utils/compatibility-rules";
+import { TASK_RUNNER_ADDONS, validateAddonsAgainstConfig } from "../../utils/compatibility-rules";
 import { isSilent, resolveInvocationMode, runWithContextAsync } from "../../utils/context";
 import { errorClass, failureStage, reportDiagnostic, scrubReason } from "../../utils/diagnostics";
 import { formatConfigValue } from "../../utils/display-config";
@@ -70,7 +70,6 @@ const ADD_TEXT_FILE_PATHS = ["apps/web/vite.config.ts", "lefthook.yml"];
 
 const HOOK_ADDONS = ["husky", "lefthook"] as const satisfies readonly Addons[];
 const HOOK_LINTER_ADDONS = ["biome", "oxlint", "vite-plus"] as const satisfies readonly Addons[];
-const TASK_RUNNER_ADDONS = ["turborepo", "nx", "vite-plus"] as const satisfies readonly Addons[];
 const fileExistsErrorSchema = z.object({ code: z.literal("EEXIST") });
 const configPackageScopeSchema = z
   .object({
