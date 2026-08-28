@@ -156,7 +156,10 @@ async function reportCreateOutcome(
   if (result.isOk()) return;
 
   const error = result.error;
+  // Cancelling inside a setup step (addons, database) surfaces as a ProjectCreationError
+  // whose cause is the cancellation; that is not a failure either.
   if (UserCancelledError.is(error)) return;
+  if (ProjectCreationError.is(error) && UserCancelledError.is(error.cause)) return;
 
   await reportDiagnostic("cli_failed", {
     command: "create",

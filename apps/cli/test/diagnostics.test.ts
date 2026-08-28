@@ -43,6 +43,18 @@ describe("scrubReason", () => {
     ).toBe("No Better-T-Stack project found in <name>. Make sure bts.jsonc exists.");
   });
 
+  test("keeps bullet lines under the headline, such as toolchain requirement failures", () => {
+    const message = [
+      "Your local toolchain does not meet this stack's requirements:",
+      "- Node.js v20.11.0 does not satisfy >=22.0.0 required by the Next.js template.",
+      "",
+      "Upgrade Node.js from https://nodejs.org",
+    ].join("\n");
+    expect(scrubReason(new Error(message))).toBe(
+      "Your local toolchain does not meet this stack's requirements: Node.js v20.11.0 does not satisfy >=22.0.0 required by the Next.js template.",
+    );
+  });
+
   test("truncates very long reasons", () => {
     expect(scrubReason("x".repeat(400))).toHaveLength(160);
   });

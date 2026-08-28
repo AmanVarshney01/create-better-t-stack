@@ -64,7 +64,15 @@ export function failureStage(cause: unknown): string {
  */
 export function scrubReason(cause: unknown): string {
   const message = cause instanceof Error ? cause.message : String(cause);
-  const firstLine = message.split(/\r?\n/, 1)[0] ?? "";
+  const lines = message.split(/\r?\n/);
+  // Keep the headline plus any bullet lines directly under it: messages such as the
+  // toolchain check put the actual failing requirement on those bullets.
+  const bullets: string[] = [];
+  for (const line of lines.slice(1)) {
+    if (!line.startsWith("- ")) break;
+    bullets.push(line.slice(2));
+  }
+  const firstLine = [lines[0] ?? "", ...bullets].join(" ");
   const scrubbed = firstLine
     // Quoted spans first: they are user-supplied values whatever they contain.
     .replaceAll(/(["'`])(?:(?!\1).)*\1/g, "<name>")
