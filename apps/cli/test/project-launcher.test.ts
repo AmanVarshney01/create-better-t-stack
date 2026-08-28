@@ -8,6 +8,8 @@ import {
   launchProject,
 } from "../src/utils/project-launcher";
 
+const noMacApps = async () => false;
+
 describe("project launcher", () => {
   it("defines unique launcher ids accepted by the CLI schema", () => {
     const ids = PROJECT_LAUNCHERS.map(({ id }) => id);
@@ -29,11 +31,11 @@ describe("project launcher", () => {
       "claude",
       "pi",
     ]);
-    const launchers = await detectProjectLaunchers(
-      "/tmp/my-app",
-      async (command) => installed.has(command),
-      "darwin",
-    );
+    const launchers = await detectProjectLaunchers("/tmp/my-app", {
+      detectCommand: async (command) => installed.has(command),
+      detectMacApp: noMacApps,
+      platform: "darwin",
+    });
 
     expect(launchers.map(({ id }) => id)).toEqual([
       "vscode",
@@ -61,11 +63,11 @@ describe("project launcher", () => {
   });
 
   it("opens Neovim on the generated project directory", async () => {
-    const launchers = await detectProjectLaunchers(
-      "/tmp/my-app",
-      async (command) => command === "nvim",
-      "linux",
-    );
+    const launchers = await detectProjectLaunchers("/tmp/my-app", {
+      detectCommand: async (command) => command === "nvim",
+      detectMacApp: noMacApps,
+      platform: "linux",
+    });
 
     expect(launchers).toEqual([
       {
@@ -81,8 +83,16 @@ describe("project launcher", () => {
 
   it("only offers the Codex app launcher on supported platforms", async () => {
     const detectCommand = async (command: string) => command === "codex";
-    const macLaunchers = await detectProjectLaunchers("/tmp/my-app", detectCommand, "darwin");
-    const linuxLaunchers = await detectProjectLaunchers("/tmp/my-app", detectCommand, "linux");
+    const macLaunchers = await detectProjectLaunchers("/tmp/my-app", {
+      detectCommand: detectCommand,
+      detectMacApp: noMacApps,
+      platform: "darwin",
+    });
+    const linuxLaunchers = await detectProjectLaunchers("/tmp/my-app", {
+      detectCommand: detectCommand,
+      detectMacApp: noMacApps,
+      platform: "linux",
+    });
 
     expect(macLaunchers.map(({ id }) => id)).toEqual(["codex-app", "codex"]);
     expect(linuxLaunchers.map(({ id }) => id)).toEqual(["codex"]);
@@ -90,11 +100,11 @@ describe("project launcher", () => {
 
   it("uses the documented entry commands for additional coding agents", async () => {
     const installed = new Set(["kiro-cli", "droid", "goose", "cline", "cn", "crush"]);
-    const launchers = await detectProjectLaunchers(
-      "/tmp/my-app",
-      async (command) => installed.has(command),
-      "darwin",
-    );
+    const launchers = await detectProjectLaunchers("/tmp/my-app", {
+      detectCommand: async (command) => installed.has(command),
+      detectMacApp: noMacApps,
+      platform: "darwin",
+    });
 
     expect(launchers.map(({ id }) => id)).toEqual([
       "kiro-cli",
@@ -118,11 +128,11 @@ describe("project launcher", () => {
 
   it("uses the documented T3 Code and Orca project-opening commands", async () => {
     const installed = new Set(["t3", "orca"]);
-    const launchers = await detectProjectLaunchers(
-      "/tmp/my-app",
-      async (command) => installed.has(command),
-      "darwin",
-    );
+    const launchers = await detectProjectLaunchers("/tmp/my-app", {
+      detectCommand: async (command) => installed.has(command),
+      detectMacApp: noMacApps,
+      platform: "darwin",
+    });
 
     expect(launchers.map(({ id }) => id)).toEqual(["t3-code", "orca"]);
     expect(launchers.find(({ id }) => id === "t3-code")).toMatchObject({
@@ -142,12 +152,40 @@ describe("project launcher", () => {
     });
   });
 
+  it("opens the T3 Code desktop app when only the app bundle is installed", async () => {
+    const launchers = await detectProjectLaunchers("/tmp/my-app", {
+      detectCommand: async () => false,
+      detectMacApp: async (app) => app.bundleId === "com.t3tools.t3code",
+      platform: "darwin",
+      packageManager: "bun",
+    });
+
+    expect(launchers.map(({ id }) => id)).toEqual(["t3-code"]);
+    expect(launchers[0]?.launchSequence).toEqual([
+      { command: "bunx", args: ["t3@latest", "project", "add", "/tmp/my-app"], cwd: "/tmp/my-app" },
+      { command: "open", args: ["-b", "com.t3tools.t3code"] },
+    ]);
+  });
+
+  it("registers the project through the t3 CLI when both the CLI and the app exist", async () => {
+    const launchers = await detectProjectLaunchers("/tmp/my-app", {
+      detectCommand: async (command) => command === "t3",
+      detectMacApp: async () => true,
+      platform: "darwin",
+    });
+
+    expect(launchers.find(({ id }) => id === "t3-code")?.launchSequence).toEqual([
+      { command: "t3", args: ["project", "add", "/tmp/my-app"], cwd: "/tmp/my-app" },
+      { command: "open", args: ["-b", "com.t3tools.t3code"] },
+    ]);
+  });
+
   it("uses Orca's Linux-specific CLI name", async () => {
-    const launchers = await detectProjectLaunchers(
-      "/tmp/my-app",
-      async (command) => command === "orca-ide",
-      "linux",
-    );
+    const launchers = await detectProjectLaunchers("/tmp/my-app", {
+      detectCommand: async (command) => command === "orca-ide",
+      detectMacApp: noMacApps,
+      platform: "linux",
+    });
 
     expect(launchers.map(({ id }) => id)).toEqual(["orca"]);
     expect(launchers[0]).toMatchObject({
@@ -165,6 +203,7 @@ describe("project launcher", () => {
   it("returns a useful error for an explicitly requested missing launcher", async () => {
     const result = await getProjectLauncherChoice("opencode", "/tmp/my-app", {
       detectCommand: async () => false,
+      detectMacApp: noMacApps,
       prompt: false,
     });
 
@@ -182,6 +221,7 @@ describe("project launcher", () => {
         detectionCount += 1;
         return true;
       },
+      detectMacApp: noMacApps,
       prompt: false,
     });
 
