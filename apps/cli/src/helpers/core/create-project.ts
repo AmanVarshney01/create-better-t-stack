@@ -5,6 +5,7 @@ import { writeTree } from "@better-t-stack/template-generator/fs-writer";
 import { log } from "@clack/prompts";
 import { Result } from "better-result";
 import fs from "fs-extra";
+import pc from "picocolors";
 
 import type { DbSetupOptions, ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
@@ -14,8 +15,13 @@ import { getLatestCLIVersion } from "../../utils/get-latest-cli-version";
 import {
   beginInterruptibleScope,
   endInterruptibleScope,
+  getInterruptSignal,
+  startInterruptibleStep,
   wasAnyStepInterrupted,
+  wasInterrupted,
 } from "../../utils/interrupt";
+import { runOptionalStep } from "../../utils/optional-step";
+import { cliLog } from "../../utils/terminal-output";
 import { setupAddons } from "../addons/addons-setup";
 import { setupDatabase } from "../core/db-setup";
 import { initializeGit } from "./git";
@@ -144,8 +150,9 @@ async function* runPostScaffoldSteps(
     );
   }
 
-  // Format project
-  yield* Result.await(formatProject(projectDir));
+  startInterruptibleStep();
+  yield* Result.await(formatProject(projectDir, getInterruptSignal()));
+  if (wasInterrupted()) cliLog.warn(pc.yellow("Formatting cancelled."));
 
   if (!isSilent()) log.success("Project scaffolded");
 
@@ -165,8 +172,10 @@ async function* runPostScaffoldSteps(
     }
   }
 
-  // Initialize git if requested
-  yield* Result.await(initializeGit(projectDir, options.git));
+  await runOptionalStep(
+    () => initializeGit(projectDir, options.git, getInterruptSignal()),
+    "Git initialization cancelled.",
+  );
 
   // Display post-install instructions
   if (!isSilent()) {

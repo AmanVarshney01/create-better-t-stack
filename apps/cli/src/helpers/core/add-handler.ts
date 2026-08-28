@@ -285,8 +285,12 @@ export async function addHandler(
   return runWithContextAsync(
     { silent, mode, analyticsDisabled: input.disableAnalytics },
     async () => {
-      const result = await addHandlerInternal(input);
-      endInterruptibleScope();
+      let result: Awaited<ReturnType<typeof addHandlerInternal>>;
+      try {
+        result = await addHandlerInternal(input);
+      } finally {
+        endInterruptibleScope();
+      }
       await reportAddOutcome(input, result);
 
       if (result.isOk()) {

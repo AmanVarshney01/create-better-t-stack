@@ -24,11 +24,17 @@ const SHOW_CURSOR = "\x1b[?25h";
 const CLEAR_LINE = "\r\x1b[2K";
 
 let cursorHidden = false;
+let restoreCursorOnExit = false;
 function hideCursor(): void {
   if (cursorHidden) return;
   cursorHidden = true;
   process.stdout.write(HIDE_CURSOR);
-  process.once("exit", () => process.stdout.write(SHOW_CURSOR));
+  if (!restoreCursorOnExit) {
+    restoreCursorOnExit = true;
+    process.once("exit", () => {
+      if (cursorHidden) process.stdout.write(SHOW_CURSOR);
+    });
+  }
 }
 function showCursor(): void {
   if (!cursorHidden) return;

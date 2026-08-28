@@ -65,9 +65,12 @@ describe("navigableGroupMultiselect exclusive sets", () => {
       }),
     );
 
+    // Keys are consumed synchronously in the stream's data -> keypress chain, which runs on
+    // the next event-loop turn after write(); clack skips re-rendering for some keys, so
+    // waiting on output would hang.
     const press = async (key: string) => {
       input.write(key);
-      await new Promise((resolve) => setTimeout(resolve, 20));
+      await new Promise((resolve) => setImmediate(resolve));
     };
     const down = "\x1b[B";
     await press(down);
