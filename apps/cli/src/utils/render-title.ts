@@ -36,16 +36,13 @@ const hideCursor = "\u001B[?25l";
 const showCursor = "\u001B[?25h";
 const reset = "\u001B[39m";
 
-/** Block fill rises through this ramp at the wavefront. */
-const blockStages = ["\u2581", "\u2582", "\u2583", "\u2584", "\u2585", "\u2586", "\u2587", "\u2588"] as const;
-/** Crest of the wave reads as a light source. */
-const nearWhite: RGB = [248, 248, 252];
-const frameCount = 34;
+const frameCount = 24;
 const frameDelayMs = 16;
-/** Columns of lag per row so T STACK trails BETTER. */
-const rowLag = 1.75;
-/** Width of the rising band, in columns. */
-const waveWidth = 7;
+/** How far the colour ghosts start, in columns. */
+const maxSplit = 4;
+const pink: RGB = [245, 194, 231];
+const sky: RGB = [137, 220, 235];
+const nearWhite: RGB = [248, 248, 252];
 
 type RGB = [number, number, number];
 
@@ -60,6 +57,8 @@ type RenderTitleOptions = {
   frameDelayMs?: number;
   output?: TitleOutput;
 };
+
+type Cell = { ch: string; color: RGB };
 
 function hexToRgb(hex: string): RGB {
   const value = Number.parseInt(hex.slice(1), 16);
@@ -76,6 +75,22 @@ function mix(a: RGB, b: RGB, t: number): RGB {
   ];
 }
 
+function clampByte(value: number): number {
+  return Math.max(0, Math.min(255, Math.round(value)));
+}
+
+function scale(color: RGB, amount: number): RGB {
+  return [clampByte(color[0] * amount), clampByte(color[1] * amount), clampByte(color[2] * amount)];
+}
+
+function screen(a: RGB, b: RGB): RGB {
+  return [
+    clampByte(255 - ((255 - a[0]) * (255 - b[0])) / 255),
+    clampByte(255 - ((255 - a[1]) * (255 - b[1])) / 255),
+    clampByte(255 - ((255 - a[2]) * (255 - b[2])) / 255),
+  ];
+}
+
 /** Same even spacing across the stops that gradient-string uses per column. */
 function sampleStops(t: number): RGB {
   const scaled = Math.max(0, Math.min(1, t)) * (colorStops.length - 1);
@@ -87,46 +102,65 @@ function fg([r, g, b]: RGB): string {
   return `\u001B[38;2;${r};${g};${b}m`;
 }
 
-function isFullBlock(character: string): boolean {
-  return character === "\u2588";
-}
-
-function glyphFor(character: string, rise: number): string {
-  if (!isFullBlock(character)) {
-    return rise < 0.35 ? " " : character;
-  }
-  const index = Math.min(blockStages.length - 1, Math.floor(rise * blockStages.length));
-  return blockStages[index];
-}
-
 function renderStaticTitle(title: string): string {
   return titleGradient.multiline(title);
 }
 
 function renderSettled(lines: string[], width: number): string {
   if (!pc.isColorSupported) return lines.join("\n");
-  return renderWave(lines, width, frameCount - 1);
+  return renderPrism(lines, width, frameCount - 1);
 }
 
 /**
- * One wavefront travelling left to right.
- * Ahead of it nothing has appeared. At the crest, full-block glyphs rise
- * through ▁▂▃▄▅▆▇█ and light near-white. Behind it they settle into the
- * catppuccin gradient. Rows lag the one above so T STACK trails BETTER.
+ * Pink and sky ghosts of the wordmark start sheared apart, then slam into
+ * register as the true catppuccin gradient takes over. A lock flash at the
+ * end. Not a wipe and not a fade — chromatic focus.
  */
-function renderWave(lines: string[], width: number, frame: number): string {
-  const maxRowLag = rowLag * Math.max(0, lines.length - 1);
-  const travel = width + waveWidth + maxRowLag;
-  const waveX = (frame / (frameCount - 1)) * travel;
+function renderPrism(lines: string[], width: number, frame: number): string {
+  const linear = frameCount === 1 ? 1 : frame / (frameCount - 1);
+  const t = linear ** 2.2;
+  const split = Math.round((1 - t) * maxSplit);
+  const ghostAmount = (1 - t) ** 0.6;
+  const coreAmount = t;
+  const flash = linear > 0.84 ? Math.sin(((linear - 0.84) / 0.16) * Math.PI) ** 2 : 0;
 
   return lines
-    .map((line, row) => {
+    .map((line) => {
+      const cells: Array<Cell | undefined> = Array.from({ length: line.length });
+
+      const stamp = (offset: number, colorFor: (column: number) => RGB, amount: number) => {
+        if (amount <= 0.02) return;
+        for (let source = 0; source < line.length; source++) {
+          const ch = line[source];
+          if (ch === " " || ch === undefined) continue;
+          const dest = source + offset;
+          if (dest < 0 || dest >= line.length) continue;
+          const incoming = scale(colorFor(source), amount);
+          const prev = cells[dest];
+          if (!prev) {
+            cells[dest] = { ch, color: incoming };
+          } else {
+            cells[dest] = { ch: offset === 0 ? ch : prev.ch, color: screen(prev.color, incoming) };
+          }
+        }
+      };
+
+      stamp(-split, () => pink, ghostAmount);
+      stamp(split, () => sky, ghostAmount);
+      stamp(0, (column) => sampleStops(width > 1 ? column / (width - 1) : 0), coreAmount);
+
+      if (flash > 0.02) {
+        for (const cell of cells) {
+          if (!cell) continue;
+          cell.color = mix(cell.color, nearWhite, flash * 0.55);
+        }
+      }
+
       let out = "";
       let pen = "";
-
       for (let column = 0; column < line.length; column++) {
-        const character = line[column];
-        if (character === " ") {
+        const cell = cells[column];
+        if (!cell) {
           if (pen) {
             out += reset;
             pen = "";
@@ -134,39 +168,13 @@ function renderWave(lines: string[], width: number, frame: number): string {
           out += " ";
           continue;
         }
-
-        const local = waveX - column - row * rowLag;
-        if (local < 0) {
-          if (pen) {
-            out += reset;
-            pen = "";
-          }
-          out += " ";
-          continue;
-        }
-
-        const settled = local >= waveWidth;
-        const rise = settled ? 1 : local / waveWidth;
-        const glyph = glyphFor(character, rise);
-        if (glyph === " ") {
-          if (pen) {
-            out += reset;
-            pen = "";
-          }
-          out += " ";
-          continue;
-        }
-
-        const stop = sampleStops(width > 1 ? column / (width - 1) : 0);
-        const heat = settled ? 0 : (1 - rise) ** 2;
-        const next = fg(mix(stop, nearWhite, heat));
+        const next = fg(cell.color);
         if (next !== pen) {
           out += next;
           pen = next;
         }
-        out += glyph;
+        out += cell.ch;
       }
-
       return pen ? out + reset : out;
     })
     .join("\n");
@@ -212,7 +220,7 @@ export const renderTitle = async (options: RenderTitleOptions = {}): Promise<voi
 
   const frames: string[] = [];
   for (let frame = 0; frame < frameCount; frame++) {
-    frames.push(renderWave(lines, titleWidth, frame));
+    frames.push(renderPrism(lines, titleWidth, frame));
   }
 
   const restoreCursor = () => {

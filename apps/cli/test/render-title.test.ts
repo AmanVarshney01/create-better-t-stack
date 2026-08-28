@@ -85,7 +85,7 @@ describe("renderTitle", () => {
     }
   });
 
-  it("reveals the wordmark as a left-to-right wavefront", async () => {
+  it("slams pink and sky ghosts into a single registered wordmark", async () => {
     const { chunks, output } = createOutput(120);
 
     await renderTitle({ animate: true, frameDelayMs: 0, output });
@@ -96,14 +96,15 @@ describe("renderTitle", () => {
 
     const firstFrame = chunks[1] ?? "";
     const lastFrame = chunks.at(-2) ?? "";
-    const strippedFirst = stripAnsi(firstFrame);
     const strippedLast = stripAnsi(lastFrame);
 
-    expect(glyphCount(strippedFirst)).toBeLessThan(glyphCount(TITLE_TEXT) / 4);
+    expect(firstFrame).toContain("38;2;245;194;231");
+    expect(firstFrame).toContain("38;2;137;220;235");
+    expect(stripAnsi(firstFrame)).not.toBe(TITLE_TEXT);
     expect(strippedLast).toBe(TITLE_TEXT);
     expect(lastFrame).toContain("38;2;");
-    expect(strippedLast).toContain("\u2588\u2588\u2588\u2588\u2588\u2588\u2557");
+    expect(strippedLast).toContain("██████╗");
     expect(chunks.at(-1)).toBe("\u001B[?25h\n");
-    expect(chunks.length).toBeGreaterThan(30);
+    expect(chunks.length).toBeGreaterThan(20);
   });
 });
