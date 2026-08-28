@@ -1,20 +1,21 @@
+import { log } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
 
 import type { Addons, PackageManager } from "../../types";
+import { isSilent } from "../../utils/context";
 import { ProjectCreationError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
-import { createSpinner } from "../../utils/terminal-output";
 
 export type InstallStatus = "installed" | "cancelled";
 
 const FORCE_KILL_AFTER_MS = 2000;
 
 /**
- * Ctrl-C during the install only stops the install: the CLI keeps its own SIGINT listener
- * while the package manager runs so the process is not terminated, and execa's cancelSignal
- * ends the subprocess.
+ * Ctrl-C during the install only stops the install. No spinner here on purpose: clack's spinner
+ * puts stdin in raw mode and exits the process on Ctrl-C itself; without it Ctrl-C is a SIGINT,
+ * which the listener below turns into a cancelled subprocess while the CLI keeps running.
  */
 export async function installDependencies({
   projectDir,
@@ -28,8 +29,7 @@ export async function installDependencies({
     return Result.ok("installed");
   }
 
-  const s = createSpinner();
-  s.start(`Running ${packageManager} install...`);
+  if (!isSilent()) log.step(`Running ${packageManager} install...`);
 
   const controller = new AbortController();
   const onSigint = () => controller.abort();
@@ -55,15 +55,15 @@ export async function installDependencies({
   process.off("SIGINT", onSigint);
 
   if (controller.signal.aborted) {
-    s.stop(pc.yellow("Dependency install cancelled"));
+    if (!isSilent()) log.warn(pc.yellow("Dependency install cancelled"));
     return Result.ok("cancelled");
   }
 
   if (result.isOk()) {
-    s.stop("Dependencies installed");
+    if (!isSilent()) log.success("Dependencies installed");
     return Result.ok("installed");
   }
 
-  s.stop(pc.red("Failed to install dependencies"));
+  if (!isSilent()) log.error(pc.red("Failed to install dependencies"));
   return Result.err(result.error);
 }
