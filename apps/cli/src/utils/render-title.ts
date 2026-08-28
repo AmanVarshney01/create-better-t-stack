@@ -32,16 +32,20 @@ const catppuccinTheme = {
 };
 
 const titleGradient = gradient(Object.values(catppuccinTheme));
-const HIDE_CURSOR = "\u001B[?25l";
-const SHOW_CURSOR = "\u001B[?25h";
-const RESET = "\u001B[39m";
+const hideCursor = "\u001B[?25l";
+const showCursor = "\u001B[?25h";
+const reset = "\u001B[39m";
 
-/** The wordmark lands whole in this quiet grey; colour is the only motion. */
-const NEUTRAL: RGB = [108, 112, 134];
-/** Share of the timeline the mark holds in grey before colour begins. */
-const HOLD = 0.15;
-const FRAME_COUNT = 26;
-const FRAME_DELAY_MS = 16;
+/** Block fill rises through this ramp at the wavefront. */
+const blockStages = ["\u2581", "\u2582", "\u2583", "\u2584", "\u2585", "\u2586", "\u2587", "\u2588"] as const;
+/** Crest of the wave reads as a light source. */
+const nearWhite: RGB = [248, 248, 252];
+const frameCount = 34;
+const frameDelayMs = 16;
+/** Columns of lag per row so T STACK trails BETTER. */
+const rowLag = 1.75;
+/** Width of the rising band, in columns. */
+const waveWidth = 7;
 
 type RGB = [number, number, number];
 
@@ -62,7 +66,7 @@ function hexToRgb(hex: string): RGB {
   return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
 }
 
-const STOPS: RGB[] = Object.values(catppuccinTheme).map(hexToRgb);
+const colorStops: RGB[] = Object.values(catppuccinTheme).map(hexToRgb);
 
 function mix(a: RGB, b: RGB, t: number): RGB {
   return [
@@ -74,38 +78,49 @@ function mix(a: RGB, b: RGB, t: number): RGB {
 
 /** Same even spacing across the stops that gradient-string uses per column. */
 function sampleStops(t: number): RGB {
-  const scaled = Math.max(0, Math.min(1, t)) * (STOPS.length - 1);
-  const index = Math.min(STOPS.length - 2, Math.floor(scaled));
-  return mix(STOPS[index], STOPS[index + 1], scaled - index);
+  const scaled = Math.max(0, Math.min(1, t)) * (colorStops.length - 1);
+  const index = Math.min(colorStops.length - 2, Math.floor(scaled));
+  return mix(colorStops[index], colorStops[index + 1], scaled - index);
 }
 
 function fg([r, g, b]: RGB): string {
   return `\u001B[38;2;${r};${g};${b}m`;
 }
 
-function easeOutCubic(t: number): number {
-  return 1 - (1 - t) ** 3;
+function isFullBlock(character: string): boolean {
+  return character === "\u2588";
+}
+
+function glyphFor(character: string, rise: number): string {
+  if (!isFullBlock(character)) {
+    return rise < 0.35 ? " " : character;
+  }
+  const index = Math.min(blockStages.length - 1, Math.floor(rise * blockStages.length));
+  return blockStages[index];
 }
 
 function renderStaticTitle(title: string): string {
   return titleGradient.multiline(title);
 }
 
-/** The finished wordmark, or plain text where colour is unsupported. */
 function renderSettled(lines: string[], width: number): string {
   if (!pc.isColorSupported) return lines.join("\n");
-  return renderFade(lines, width, 1);
+  return renderWave(lines, width, frameCount - 1);
 }
 
 /**
- * The whole wordmark at one point of the fade: every glyph present from the
- * first frame, colour interpolated uniformly from the neutral grey to each
- * column's gradient stop. Colour is the only thing that changes, matching the
- * site's rule that motion is a colour transition and nothing else.
+ * One wavefront travelling left to right.
+ * Ahead of it nothing has appeared. At the crest, full-block glyphs rise
+ * through ▁▂▃▄▅▆▇█ and light near-white. Behind it they settle into the
+ * catppuccin gradient. Rows lag the one above so T STACK trails BETTER.
  */
-function renderFade(lines: string[], width: number, t: number): string {
+function renderWave(lines: string[], width: number, frame: number): string {
+  const maxRowLag = rowLag * Math.max(0, lines.length - 1);
+  const travel = width + waveWidth + maxRowLag;
+  const waveX = (frame / (frameCount - 1)) * travel;
+
   return lines
-    .map((line) => {
+    .map((line, row) => {
       let out = "";
       let pen = "";
 
@@ -113,7 +128,29 @@ function renderFade(lines: string[], width: number, t: number): string {
         const character = line[column];
         if (character === " ") {
           if (pen) {
-            out += RESET;
+            out += reset;
+            pen = "";
+          }
+          out += " ";
+          continue;
+        }
+
+        const local = waveX - column - row * rowLag;
+        if (local < 0) {
+          if (pen) {
+            out += reset;
+            pen = "";
+          }
+          out += " ";
+          continue;
+        }
+
+        const settled = local >= waveWidth;
+        const rise = settled ? 1 : local / waveWidth;
+        const glyph = glyphFor(character, rise);
+        if (glyph === " ") {
+          if (pen) {
+            out += reset;
             pen = "";
           }
           out += " ";
@@ -121,15 +158,16 @@ function renderFade(lines: string[], width: number, t: number): string {
         }
 
         const stop = sampleStops(width > 1 ? column / (width - 1) : 0);
-        const next = fg(mix(NEUTRAL, stop, t));
+        const heat = settled ? 0 : (1 - rise) ** 2;
+        const next = fg(mix(stop, nearWhite, heat));
         if (next !== pen) {
           out += next;
           pen = next;
         }
-        out += character;
+        out += glyph;
       }
 
-      return pen ? out + RESET : out;
+      return pen ? out + reset : out;
     })
     .join("\n");
 }
@@ -137,13 +175,13 @@ function renderFade(lines: string[], width: number, t: number): string {
 function shouldAnimate(output: TitleOutput): boolean {
   return Boolean(
     output.isTTY &&
-    pc.isColorSupported &&
-    !process.env.CI &&
-    process.env.NO_COLOR === undefined &&
-    process.env.FORCE_COLOR !== "0" &&
-    process.env.TERM !== "dumb" &&
-    process.env.BTS_TEST_MODE !== "1" &&
-    process.env.BTS_NO_ANIMATION !== "1",
+      pc.isColorSupported &&
+      !process.env.CI &&
+      process.env.NO_COLOR === undefined &&
+      process.env.FORCE_COLOR !== "0" &&
+      process.env.TERM !== "dumb" &&
+      process.env.BTS_TEST_MODE !== "1" &&
+      process.env.BTS_NO_ANIMATION !== "1",
   );
 }
 
@@ -168,27 +206,38 @@ export const renderTitle = async (options: RenderTitleOptions = {}): Promise<voi
     return;
   }
 
-  const frameDelayMs = options.frameDelayMs ?? FRAME_DELAY_MS;
+  const delayMs = options.frameDelayMs ?? frameDelayMs;
   const lineCount = lines.length - 1;
   const moveToFrameStart = `\u001B[${lineCount}A\r`;
 
   const frames: string[] = [];
-  for (let frame = 0; frame < FRAME_COUNT; frame++) {
-    const linear = frame / (FRAME_COUNT - 1);
-    const t = linear <= HOLD ? 0 : easeOutCubic((linear - HOLD) / (1 - HOLD));
-    frames.push(renderFade(lines, titleWidth, t));
+  for (let frame = 0; frame < frameCount; frame++) {
+    frames.push(renderWave(lines, titleWidth, frame));
   }
 
-  output.write(HIDE_CURSOR);
-  const restoreCursorOnExit = () => output.write(SHOW_CURSOR);
-  process.once("exit", restoreCursorOnExit);
+  const restoreCursor = () => {
+    output.write(showCursor);
+  };
+
+  output.write(hideCursor);
+  process.once("exit", restoreCursor);
+  const onSignal = (signal: NodeJS.Signals) => {
+    restoreCursor();
+    process.off("exit", restoreCursor);
+    process.exit(signal === "SIGINT" ? 130 : 143);
+  };
+  process.once("SIGINT", onSignal);
+  process.once("SIGTERM", onSignal);
+
   try {
     for (const [index, frame] of frames.entries()) {
       output.write(`${index === 0 ? "" : moveToFrameStart}${frame}`);
-      if (index < frames.length - 1) await wait(frameDelayMs);
+      if (index < frames.length - 1) await wait(delayMs);
     }
   } finally {
-    process.off("exit", restoreCursorOnExit);
-    output.write(`${SHOW_CURSOR}\n`);
+    process.off("exit", restoreCursor);
+    process.off("SIGINT", onSignal);
+    process.off("SIGTERM", onSignal);
+    output.write(`${showCursor}\n`);
   }
 };
