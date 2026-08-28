@@ -7,7 +7,8 @@ import pc from "picocolors";
 import { desktopWebFrontends, type ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
-import { cliConsola } from "../../utils/terminal-output";
+import { wasInterrupted } from "../../utils/interrupt";
+import { cliConsola, cliLog } from "../../utils/terminal-output";
 import { setupEvlog } from "./evlog-setup";
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupMcp } from "./mcp-setup";
@@ -25,9 +26,10 @@ async function runSetup<T, E extends AddonSetupError | UserCancelledError>(
 ): Promise<void> {
   const result = await setupFn();
   if (result.isErr()) {
-    // Re-throw user cancellation to propagate up
-    if (UserCancelledError.is(result.error)) {
-      throw result.error;
+    // The project is already on disk, so cancelling here only skips this step
+    if (UserCancelledError.is(result.error) || wasInterrupted()) {
+      cliLog.warn(pc.yellow("Addon setup cancelled."));
+      return;
     }
     // Log other errors but don't fail the overall project creation
     cliConsola.error(pc.red(result.error.message));
@@ -46,6 +48,10 @@ async function runAddonStep(addon: string, step: () => Promise<void>): Promise<v
   });
 
   if (result.isErr()) {
+    if (wasInterrupted()) {
+      cliLog.warn(pc.yellow(`${addon} setup cancelled.`));
+      return;
+    }
     cliConsola.error(pc.red(result.error.message));
   }
 }

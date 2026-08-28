@@ -13,7 +13,8 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 import { DatabaseSetupError, UserCancelledError } from "../../utils/errors";
-import { cliConsola } from "../../utils/terminal-output";
+import { wasInterrupted } from "../../utils/interrupt";
+import { cliConsola, cliLog } from "../../utils/terminal-output";
 import { setupCloudflareD1 } from "../database-providers/d1-setup";
 import { setupDockerCompose } from "../database-providers/docker-compose-setup";
 import { setupMongoDBAtlas } from "../database-providers/mongodb-atlas-setup";
@@ -58,9 +59,10 @@ export async function setupDatabase(
   ): Promise<void> {
     const result = await setupFn();
     if (result.isErr()) {
-      // Re-throw user cancellation to propagate up
-      if (UserCancelledError.is(result.error)) {
-        throw result.error;
+      // The project is already on disk, so cancelling here only skips this step
+      if (UserCancelledError.is(result.error) || wasInterrupted()) {
+        cliLog.warn(pc.yellow("Database setup cancelled. Configure the connection manually."));
+        return;
       }
       // Log other errors but don't fail the overall project creation
       cliConsola.error(pc.red(result.error.message));

@@ -483,8 +483,8 @@ async function createProjectHandlerInternal(
     await trackProjectCreation(config, input.disableAnalytics, mode);
 
     const warnings: string[] = [];
-    if (created.install === "cancelled") {
-      warnings.push("Dependency install was cancelled.");
+    if (created.interrupted) {
+      warnings.push("Setup was interrupted; the remaining setup steps were skipped.");
     }
     if (created.installError) {
       warnings.push(created.installError.message);

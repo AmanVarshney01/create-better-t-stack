@@ -11,6 +11,11 @@ import { isSilent } from "../../utils/context";
 import { ProjectCreationError } from "../../utils/errors";
 import { formatProject } from "../../utils/file-formatter";
 import { getLatestCLIVersion } from "../../utils/get-latest-cli-version";
+import {
+  beginInterruptibleScope,
+  endInterruptibleScope,
+  wasInterrupted,
+} from "../../utils/interrupt";
 import { setupAddons } from "../addons/addons-setup";
 import { setupDatabase } from "../core/db-setup";
 import { initializeGit } from "./git";
@@ -27,6 +32,7 @@ export interface CreateProjectOutcome {
   projectDir: string;
   install: "installed" | "skipped" | "cancelled" | "failed";
   installError: ProjectCreationError | null;
+  interrupted: boolean;
 }
 
 /**
@@ -92,70 +98,87 @@ export async function createProject(
       setPackageManagerVersion(projectDir, options.packageManager, cliInput.packageManagerVersion),
     );
 
-    // Setup database if needed
-    if (!isConvex && options.database !== "none") {
-      yield* Result.await(
-        Result.tryPromise({
-          try: () => setupDatabase(options, cliInput),
-          catch: (e) =>
-            new ProjectCreationError({
-              phase: "database-setup",
-              message: `Failed to setup database: ${e instanceof Error ? e.message : String(e)}`,
-              cause: e,
-            }),
-        }),
-      );
+    // Files are on disk from here: Ctrl-C only stops the current step
+    beginInterruptibleScope();
+    try {
+      return yield* runPostScaffoldSteps(options, cliInput, projectDir, isConvex);
+    } finally {
+      endInterruptibleScope();
     }
-
-    // Setup addons if any
-    if (options.addons.length > 0 && options.addons[0] !== "none") {
-      yield* Result.await(
-        Result.tryPromise({
-          try: () => setupAddons(options),
-          catch: (e) =>
-            new ProjectCreationError({
-              phase: "addons-setup",
-              message: `Failed to setup addons: ${e instanceof Error ? e.message : String(e)}`,
-              cause: e,
-            }),
-        }),
-      );
-    }
-
-    // Format project
-    yield* Result.await(formatProject(projectDir));
-
-    if (!isSilent()) log.success("Project scaffolded");
-
-    // Install dependencies if requested
-    let install: CreateProjectOutcome["install"] = "skipped";
-    let installError: ProjectCreationError | null = null;
-    if (options.install) {
-      const installResult = await installDependencies({
-        projectDir,
-        packageManager: options.packageManager,
-      });
-      if (installResult.isErr()) {
-        install = "failed";
-        installError = installResult.error;
-      } else {
-        install = installResult.value;
-      }
-    }
-
-    // Initialize git if requested
-    yield* Result.await(initializeGit(projectDir, options.git));
-
-    // Display post-install instructions
-    if (!isSilent()) {
-      await displayPostInstallInstructions({
-        ...options,
-        depsInstalled: install === "installed",
-      });
-    }
-
-    return Result.ok({ projectDir, install, installError });
   });
+}
+
+async function* runPostScaffoldSteps(
+  options: ProjectConfig,
+  cliInput: CreateProjectOptions,
+  projectDir: string,
+  isConvex: boolean,
+) {
+  // Setup database if needed
+  if (!isConvex && options.database !== "none" && !wasInterrupted()) {
+    yield* Result.await(
+      Result.tryPromise({
+        try: () => setupDatabase(options, cliInput),
+        catch: (e) =>
+          new ProjectCreationError({
+            phase: "database-setup",
+            message: `Failed to setup database: ${e instanceof Error ? e.message : String(e)}`,
+            cause: e,
+          }),
+      }),
+    );
+  }
+
+  // Setup addons if any
+  if (options.addons.length > 0 && options.addons[0] !== "none" && !wasInterrupted()) {
+    yield* Result.await(
+      Result.tryPromise({
+        try: () => setupAddons(options),
+        catch: (e) =>
+          new ProjectCreationError({
+            phase: "addons-setup",
+            message: `Failed to setup addons: ${e instanceof Error ? e.message : String(e)}`,
+            cause: e,
+          }),
+      }),
+    );
+  }
+
+  // Format project
+  yield* Result.await(formatProject(projectDir));
+
+  if (!isSilent()) log.success("Project scaffolded");
+
+  // Install dependencies if requested
+  let install: CreateProjectOutcome["install"] = "skipped";
+  let installError: ProjectCreationError | null = null;
+  if (options.install && wasInterrupted()) {
+    install = "cancelled";
+  } else if (options.install) {
+    const installResult = await installDependencies({
+      projectDir,
+      packageManager: options.packageManager,
+    });
+    if (installResult.isErr()) {
+      install = "failed";
+      installError = installResult.error;
+    } else {
+      install = installResult.value;
+    }
+  }
+
+  // Initialize git if requested
+  yield* Result.await(initializeGit(projectDir, options.git));
+
+  // Display post-install instructions
+  if (!isSilent()) {
+    await displayPostInstallInstructions({
+      ...options,
+      depsInstalled: install === "installed",
+    });
+  }
+
+  return Result.ok({ projectDir, install, installError, interrupted: wasInterrupted() });
 }
 
 async function setPackageManagerVersion(
