@@ -1,7 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
 import type { ProjectConfig } from "../src/types";
-import { detectInvokingPackageManager } from "../src/utils/cli-invocation";
 import {
   PACKAGE_MANAGER_VERSION_RANGES,
   RECOMMENDED_BUN_VERSION_RANGE,
@@ -38,14 +37,6 @@ describe("baseline requirements (before prompts)", () => {
         node: "v22.22.0",
       }).isOk(),
     ).toBe(true);
-  });
-
-  it("detects the launching package manager from the npm user agent", () => {
-    expect(detectInvokingPackageManager("bun/1.4.0 npm/? node/v24.0.0")).toBe("bun");
-    expect(detectInvokingPackageManager("pnpm/10.26.0 npm/? node/v22.0.0")).toBe("pnpm");
-    expect(detectInvokingPackageManager("npm/11.16.0 node/v24.0.0")).toBe("npm");
-    expect(detectInvokingPackageManager("yarn/4.0.0 npm/?")).toBeUndefined();
-    expect(detectInvokingPackageManager("")).toBeUndefined();
   });
 
   it("uses a stack-neutral headline for the pre-prompt check", () => {

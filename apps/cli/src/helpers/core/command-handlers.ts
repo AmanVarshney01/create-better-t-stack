@@ -10,7 +10,7 @@ import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
 import type { AnalyticsMode, CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
-import { detectInvokingPackageManager, getCliSubcommandCommand } from "../../utils/cli-invocation";
+import { getCliSubcommandCommand } from "../../utils/cli-invocation";
 import { isSilent, resolveInvocationMode, runWithContextAsync } from "../../utils/context";
 import { errorClass, failureStage, reportDiagnostic, scrubReason } from "../../utils/diagnostics";
 import { displayConfig } from "../../utils/display-config";
@@ -23,6 +23,7 @@ import {
   displayError,
   isUserCancellation,
 } from "../../utils/errors";
+import { getUserPkgManager } from "../../utils/get-package-manager";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
 import {
   findAvailableIncrementedPath,
@@ -235,7 +236,7 @@ async function createProjectHandlerInternal(
     if (!isSilent()) {
       const baseline = yield* Result.await(
         checkBaselineRequirements(
-          input.packageManager ?? detectInvokingPackageManager(),
+          input.packageManager ?? getUserPkgManager(),
           input.packageManager !== undefined,
         ),
       );
