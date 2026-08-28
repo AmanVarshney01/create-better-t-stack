@@ -515,7 +515,7 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
     build: `${webBuildCommand} && electrobun build`,
     "build:stable": `${webBuildCommand} && electrobun build --env=stable`,
     "build:canary": `${webBuildCommand} && electrobun build --env=canary`,
-    "check-types": "tsc --noEmit",
+    "check-types": "electrobun prepare && tsc --noEmit",
   };
 
   vfs.writeJson("apps/desktop/package.json", pkgJson);

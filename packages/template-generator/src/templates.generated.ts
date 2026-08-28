@@ -100,7 +100,9 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 	{{/if}}
 }
 `],
-  ["addons/electrobun/apps/desktop/.gitignore", `artifacts
+  ["addons/electrobun/apps/desktop/.gitignore", `.hutch/
+artifacts
+build
 `],
   ["addons/electrobun/apps/desktop/electrobun.config.ts.hbs", `import type { ElectrobunConfig } from "electrobun";
 
@@ -117,7 +119,8 @@ export default {
     exitOnLastWindowClosed: true,
   },
   build: {
-    bun: {
+    mainProcess: "cottontail",
+    cottontail: {
       entrypoint: "src/bun/index.ts",
     },
     copy: {
@@ -144,18 +147,15 @@ export default {
   "private": true,
   "type": "module",
   "scripts": {},
-  "dependencies": {
-    "electrobun": "^1.18.1"
-  },
   "devDependencies": {
     "@types/bun": "^1.4.0",
-    "@types/three": "^0.185.4",
     "concurrently": "^10.0.5",
+    "electrobun": "^2.0.1",
     "typescript": "^6.0.3"
   }
 }
 `],
-  ["addons/electrobun/apps/desktop/src/bun/index.ts.hbs", `import { BrowserWindow, Updater } from "electrobun/bun";
+  ["addons/electrobun/apps/desktop/src/bun/index.ts.hbs", `import { BrowserWindow, Updater } from "electrobun/main";
 
 const DEV_SERVER_PORT = {{#if (or (includes frontend "react-router") (includes frontend "svelte"))}}5173{{else if (includes frontend "astro")}}4321{{else}}3001{{/if}};
 const DEV_SERVER_URL = \`http://localhost:\${DEV_SERVER_PORT}\`;
@@ -193,16 +193,15 @@ new BrowserWindow({
 console.log("Electrobun desktop shell started.");
 `],
   ["addons/electrobun/apps/desktop/tsconfig.json.hbs", `{
-  "extends": "../../packages/config/tsconfig.base.json",
+  "extends": ["../../packages/config/tsconfig.base.json", "./.hutch/devkit/tsconfig.json"],
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "lib": ["ESNext", "DOM"],
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "types": ["bun"]
   },
   "include": ["src/**/*.ts", "electrobun.config.ts"]
 }
@@ -33661,7 +33660,9 @@ import { createEnv } from "@t3-oss/env-core";
 {{else}}
 import { createEnv } from "@t3-oss/env-core";
 {{/if}}
+{{#if (ne backend "none")}}
 import { z } from "zod";
+{{/if}}
 
 {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 const serverUrlSchema = z.union([
@@ -33784,6 +33785,21 @@ export const env = createEnv({
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 	},
+	runtimeEnv: (import.meta as any).env,
+{{/if}}
+{{else}}
+{{#if (includes frontend "next")}}
+	client: {},
+	runtimeEnv: {},
+{{else if (includes frontend "nuxt")}}
+	client: {},
+{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
+	clientPrefix: "PUBLIC_",
+	client: {},
+	runtimeEnv: (import.meta as any).env,
+{{else}}
+	clientPrefix: "VITE_",
+	client: {},
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
 {{/if}}

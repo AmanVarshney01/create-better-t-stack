@@ -73,6 +73,27 @@ describe("Electrobun addon scaffolding", () => {
     expect(desktopEntry).not.toContain("HMR_RETRY_COUNT");
     expect(desktopEntry).toContain("fetch(DEV_SERVER_URL");
     expect(fallbackHtmlExists).toBe(false);
+
+    const desktopTsconfig = await fs.readJson(
+      path.join(result.projectDir, "apps", "desktop", "tsconfig.json"),
+    );
+    const desktopGitignore = await fs.readFile(
+      path.join(result.projectDir, "apps", "desktop", ".gitignore"),
+      "utf8",
+    );
+    expect(desktopPackageJson.devDependencies.electrobun).toBe("^2.0.1");
+    expect(desktopPackageJson.dependencies?.electrobun).toBeUndefined();
+    expect(desktopPackageJson.scripts["check-types"]).toBe("electrobun prepare && tsc --noEmit");
+    expect(desktopConfig).toContain('mainProcess: "cottontail"');
+    expect(desktopConfig).toContain('cottontail: {\n      entrypoint: "src/bun/index.ts"');
+    expect(desktopConfig).not.toContain("bun: {");
+    expect(desktopEntry).toContain('from "electrobun/main"');
+    expect(desktopTsconfig.extends).toEqual([
+      "../../packages/config/tsconfig.base.json",
+      "./.hutch/devkit/tsconfig.json",
+    ]);
+    expect(desktopTsconfig.compilerOptions.types).toEqual(["bun"]);
+    expect(desktopGitignore).toContain(".hutch/");
   });
 
   it("uses the React Router client build output for packaged desktop assets", async () => {
