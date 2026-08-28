@@ -9938,7 +9938,49 @@ export default function Dashboard({
 	);
 }
 `],
-  ["auth/better-auth/web/react/next/src/app/dashboard/page.tsx.hbs", `import { redirect } from "next/navigation";
+  ["auth/better-auth/web/react/next/src/app/dashboard/page.tsx.hbs", `{{#if (or (includes addons "tauri") (and (includes addons "electrobun") (or (ne backend "convex") (ne auth "better-auth"))))}}
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { authClient } from "@/lib/auth-client";
+import Dashboard from "./dashboard";
+{{#if (eq payments "polar")}}
+import { useQuery } from "@tanstack/react-query";
+{{/if}}
+
+// Desktop builds are statically exported, so the session is resolved in the browser.
+export default function DashboardPage() {
+	const router = useRouter();
+	const { data: session, isPending } = authClient.useSession();
+{{#if (eq payments "polar")}}
+	const { data: customerState } = useQuery({
+		queryKey: ["polar", "customer-state"],
+		queryFn: async () => (await authClient.customer.state()).data,
+		enabled: Boolean(session?.user),
+	});
+{{/if}}
+
+	useEffect(() => {
+		if (!isPending && !session?.user) {
+			router.replace("/login");
+		}
+	}, [isPending, router, session]);
+
+	if (isPending || !session?.user) {
+		return null;
+	}
+
+	return (
+		<div>
+			<h1>Dashboard</h1>
+			<p>Welcome {session.user.name}</p>
+			<Dashboard session={session} {{#if (eq payments "polar")}}customerState={customerState}{{/if}} />
+		</div>
+	);
+}
+{{else}}
+import { redirect } from "next/navigation";
 import Dashboard from "./dashboard";
 import { headers } from "next/headers";
 {{#if (eq backend "self")}}
@@ -9986,6 +10028,7 @@ export default async function DashboardPage() {
 		</div>
 	);
 }
+{{/if}}
 `],
   ["auth/better-auth/web/react/next/src/app/login/page.tsx.hbs", `"use client"
 
