@@ -1,4 +1,4 @@
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 {{#if (eq api "orpc")}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -40,7 +40,7 @@ app.use(logger());
 app.use(
 	"/*",
 	cors({
-		origin: env.CORS_ORIGIN,
+		origin: {{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}[env.CORS_ORIGIN, ...desktopOrigins]{{else}}env.CORS_ORIGIN{{/if}},
 		allowMethods: ["GET", "POST", "OPTIONS"],
 {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 		allowHeaders: ["Content-Type", "Authorization"],

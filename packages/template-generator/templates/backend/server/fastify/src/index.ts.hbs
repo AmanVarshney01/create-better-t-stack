@@ -1,4 +1,4 @@
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
 
@@ -32,7 +32,7 @@ import { clerkPlugin } from "@clerk/fastify";
 {{/if}}
 
 const baseCorsConfig = {
-	origin: env.CORS_ORIGIN,
+	origin: {{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}[env.CORS_ORIGIN, ...desktopOrigins]{{else}}env.CORS_ORIGIN{{/if}},
 	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 	allowedHeaders: [
 		"Content-Type",

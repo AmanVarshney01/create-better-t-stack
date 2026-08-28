@@ -4,7 +4,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}{{/if}}
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
@@ -28,7 +28,10 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 		}),
 
 		trustedOrigins: [
-			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN,
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+			...desktopOrigins,
+{{/if}}{{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -85,7 +88,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
@@ -110,7 +113,10 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			schema: schema,
 		}),
 		trustedOrigins: [
-			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN,
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+			...desktopOrigins,
+{{/if}}{{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -163,7 +169,7 @@ export const auth = createAuth();
 {{#if (eq runtime "workers")}}
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
@@ -183,7 +189,10 @@ export function createAuth() {
 			schema: schema,
 		}),
 		trustedOrigins: [
-			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN,
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+			...desktopOrigins,
+{{/if}}{{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -247,7 +256,7 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
@@ -263,7 +272,10 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 	return betterAuth({
 		database: mongodbAdapter(client),
 		trustedOrigins: [
-			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN,
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+			...desktopOrigins,
+{{/if}}{{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -318,7 +330,7 @@ import { betterAuth } from "better-auth";
 {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
@@ -334,7 +346,10 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 	return betterAuth({
 		database: "", // Invalid configuration
 		trustedOrigins: [
-			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN,
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+			...desktopOrigins,
+{{/if}}{{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",

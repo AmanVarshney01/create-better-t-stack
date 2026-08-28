@@ -169,3 +169,16 @@ export const env = createEnv({
 	emptyStringAsUndefined: true,
 });
 {{/if}}
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}
+
+/** Packaged desktop builds serve the frontend from their own origin, not CORS_ORIGIN. */
+export const desktopOrigins = [
+{{#if (includes addons "electrobun")}}
+	"views://mainview",
+{{/if}}
+{{#if (includes addons "tauri")}}
+	"tauri://localhost",
+	"http://tauri.localhost",
+{{/if}}
+];
+{{/if}}

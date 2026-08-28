@@ -504,13 +504,14 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
 
   pkgJson.scripts = {
     ...pkgJson.scripts,
-    start: "electrobun dev",
+    start: `${webBuildCommand} && electrobun dev`,
     // No `dev` script on purpose: the root `dev` aggregate skips desktop so it
     // never auto-launches the native window. Use `dev:desktop` (dev:hmr) instead.
-    // build* mirrors the official electrobun pattern (`vite build && electrobun
-    // build`): build the web app, then electrobun. The root build serializes this
+    // Every electrobun command is preceded by the web build, the pattern the official
+    // templates use: it produces the bundled views the config copies, and doubles as the
+    // offline fallback when the dev server is not running. The root build serializes this
     // so package managers without topological ordering don't race on the web build.
-    "dev:hmr": `concurrently "${localRunCommand} hmr" "electrobun dev --watch"`,
+    "dev:hmr": `${webBuildCommand} && concurrently "${localRunCommand} hmr" "electrobun dev --watch"`,
     hmr: rootDevCommand,
     build: `${webBuildCommand} && electrobun build`,
     "build:stable": `${webBuildCommand} && electrobun build --env=stable`,

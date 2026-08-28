@@ -104,10 +104,7 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 /artifacts/
 /build/
 `],
-  ["addons/electrobun/apps/desktop/electrobun.config.ts.hbs", `import { existsSync } from "node:fs";
-import path from "node:path";
-
-import type { ElectrobunConfig } from "electrobun";
+  ["addons/electrobun/apps/desktop/electrobun.config.ts.hbs", `import type { ElectrobunConfig } from "electrobun";
 
 const webBuildDir =
   "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "nuxt")}}../web/.output/public{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}";
@@ -126,9 +123,9 @@ export default {
     cottontail: {
       entrypoint: "src/bun/index.ts",
     },
-    copy: existsSync(path.resolve(import.meta.dirname, webBuildDir))
-      ? { [webBuildDir]: "views/mainview" }
-      : {},
+    copy: {
+      [webBuildDir]: "views/mainview",
+    },
     watchIgnore: [\`\${webBuildDir}/**\`],
     mac: {
       bundleCEF: true,
@@ -8030,7 +8027,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}{{/if}}
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
@@ -8054,7 +8051,10 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 		}),
 
 		trustedOrigins: [
-			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN,
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+			...desktopOrigins,
+{{/if}}{{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -8111,7 +8111,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
@@ -8136,7 +8136,10 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			schema: schema,
 		}),
 		trustedOrigins: [
-			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN,
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+			...desktopOrigins,
+{{/if}}{{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -8189,7 +8192,7 @@ export const auth = createAuth();
 {{#if (eq runtime "workers")}}
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
@@ -8209,7 +8212,10 @@ export function createAuth() {
 			schema: schema,
 		}),
 		trustedOrigins: [
-			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN,
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+			...desktopOrigins,
+{{/if}}{{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -8273,7 +8279,7 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
@@ -8289,7 +8295,10 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 	return betterAuth({
 		database: mongodbAdapter(client),
 		trustedOrigins: [
-			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN,
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+			...desktopOrigins,
+{{/if}}{{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -8344,7 +8353,7 @@ import { betterAuth } from "better-auth";
 {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
 import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{else}}
-import { env } from "@{{projectName}}/env/server";
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
@@ -8360,7 +8369,10 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 	return betterAuth({
 		database: "", // Invalid configuration
 		trustedOrigins: [
-			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN{{/if}},
+			{{#if (eq backend "self")}}env.BETTER_AUTH_URL{{else}}env.CORS_ORIGIN,
+{{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
+			...desktopOrigins,
+{{/if}}{{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 			"{{projectName}}://",
 			"exp://",
@@ -14451,7 +14463,7 @@ export default defineConfig({
   },
 });
 `],
-  ["backend/server/elysia/src/index.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+  ["backend/server/elysia/src/index.ts.hbs", `{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 {{#if (eq runtime "node")}}
 import { node } from "@elysiajs/node";
 {{/if}}
@@ -14505,7 +14517,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 {{#if (eq serverDeploy "vercel")}}const app = {{/if}}{{#if (eq runtime "node")}}new Elysia({ adapter: node() }){{else}}new Elysia(){{/if}}
 	.use(
 		cors({
-			origin: env.CORS_ORIGIN,
+			origin: {{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}[env.CORS_ORIGIN, ...desktopOrigins]{{else}}env.CORS_ORIGIN{{/if}},
 			methods: ["GET", "POST", "OPTIONS"],
 {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 			allowedHeaders: ["Content-Type", "Authorization"],
@@ -14625,7 +14637,7 @@ if (!process.env.VERCEL) {
 	});
 {{/if}}
 `],
-  ["backend/server/express/src/index.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+  ["backend/server/express/src/index.ts.hbs", `{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 {{#if (eq api "trpc")}}
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { createContext } from "@{{projectName}}/api/context";
@@ -14659,7 +14671,7 @@ const app = express();
 
 app.use(
 	cors({
-		origin: env.CORS_ORIGIN,
+		origin: {{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}[env.CORS_ORIGIN, ...desktopOrigins]{{else}}env.CORS_ORIGIN{{/if}},
 		methods: ["GET", "POST", "OPTIONS"],
 {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 		allowedHeaders: ["Content-Type", "Authorization"],
@@ -14779,7 +14791,7 @@ app.listen(3000, () => {
 	console.log("Server is running on http://localhost:3000");
 });
 `],
-  ["backend/server/fastify/src/index.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+  ["backend/server/fastify/src/index.ts.hbs", `{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
 
@@ -14813,7 +14825,7 @@ import { clerkPlugin } from "@clerk/fastify";
 {{/if}}
 
 const baseCorsConfig = {
-	origin: env.CORS_ORIGIN,
+	origin: {{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}[env.CORS_ORIGIN, ...desktopOrigins]{{else}}env.CORS_ORIGIN{{/if}},
 	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 	allowedHeaders: [
 		"Content-Type",
@@ -14998,7 +15010,7 @@ fastify.listen({ port: 3000{{#if (or (eq serverDeploy "docker") (eq serverDeploy
 	console.log("Server running on port 3000");
 });
 `],
-  ["backend/server/hono/src/index.ts.hbs", `import { env } from "@{{projectName}}/env/server";
+  ["backend/server/hono/src/index.ts.hbs", `{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
 {{#if (eq api "orpc")}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -15040,7 +15052,7 @@ app.use(logger());
 app.use(
 	"/*",
 	cors({
-		origin: env.CORS_ORIGIN,
+		origin: {{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}[env.CORS_ORIGIN, ...desktopOrigins]{{else}}env.CORS_ORIGIN{{/if}},
 		allowMethods: ["GET", "POST", "OPTIONS"],
 {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
 		allowHeaders: ["Content-Type", "Authorization"],
@@ -33653,6 +33665,19 @@ export const env = createEnv({
 	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 	emptyStringAsUndefined: true,
 });
+{{/if}}
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}
+
+/** Packaged desktop builds serve the frontend from their own origin, not CORS_ORIGIN. */
+export const desktopOrigins = [
+{{#if (includes addons "electrobun")}}
+	"views://mainview",
+{{/if}}
+{{#if (includes addons "tauri")}}
+	"tauri://localhost",
+	"http://tauri.localhost",
+{{/if}}
+];
 {{/if}}
 `],
   ["packages/env/src/web.ts.hbs", `{{#if (includes frontend "next")}}

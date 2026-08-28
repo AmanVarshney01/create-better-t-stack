@@ -59,7 +59,10 @@ describe("Electrobun addon scaffolding", () => {
     expect(desktopPackageJson.scripts.hmr).toBe("bun run --cwd ../.. dev");
     expect(desktopPackageJson.scripts["build:stable"]).toContain("--env=stable");
     expect(desktopPackageJson.scripts["build:canary"]).toContain("--env=canary");
-    expect(desktopPackageJson.scripts.start).toBe("electrobun dev");
+    expect(desktopPackageJson.scripts.start).toBe("bun run --filter web build && electrobun dev");
+    expect(desktopPackageJson.scripts["dev:hmr"]).toStartWith(
+      "bun run --filter web build && concurrently",
+    );
     expect(desktopPackageJson.scripts["dev:hmr"]).toContain('"bun run hmr"');
     expect(desktopPackageJson.scripts["dev:hmr"]).toContain('"electrobun dev --watch"');
     expect(desktopConfig).toContain('const webBuildDir = "../web/dist";');
@@ -89,7 +92,7 @@ describe("Electrobun addon scaffolding", () => {
     expect(desktopConfig).not.toContain("bun: {");
     expect(desktopEntry).toContain('from "electrobun/main"');
     expect(desktopEntry).toContain('history.replaceState(null, "", "/")');
-    expect(desktopConfig).toContain("existsSync(path.resolve(import.meta.dirname, webBuildDir))");
+    expect(desktopConfig).toContain('[webBuildDir]: "views/mainview"');
     expect(desktopTsconfig.extends).toEqual([
       "../../packages/config/tsconfig.base.json",
       "./.hutch/devkit/tsconfig.json",
@@ -315,7 +318,7 @@ describe("Electrobun addon scaffolding", () => {
       );
       const rootPackageJson = await fs.readJson(path.join(result.projectDir, "package.json"));
 
-      expect(desktopPackageJson.scripts.start).toBe("electrobun dev");
+      expect(desktopPackageJson.scripts.start).toBe(`${testCase.expectedRunner} && electrobun dev`);
       expect(desktopPackageJson.scripts.hmr).toBe(testCase.expectedHmr);
       // The desktop self-builds its web app, then electrobun (official pattern).
       expect(desktopPackageJson.scripts.build).toContain(testCase.expectedRunner);
