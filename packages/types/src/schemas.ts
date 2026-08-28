@@ -607,6 +607,7 @@ export const InitResultSchema = z.object({
   projectDirectory: z.string(),
   relativePath: z.string(),
   error: z.string().optional(),
+  warnings: z.array(z.string()).optional(),
 });
 
 export const DATABASE_VALUES = DatabaseSchema.options;

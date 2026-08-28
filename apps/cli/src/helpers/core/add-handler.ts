@@ -27,6 +27,7 @@ import { errorClass, failureStage, reportDiagnostic, scrubReason } from "../../u
 import { formatConfigValue } from "../../utils/display-config";
 import { CLIError, UserCancelledError, displayError } from "../../utils/errors";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
+import { beginInterruptibleScope, endInterruptibleScope } from "../../utils/interrupt";
 import { renderTitle } from "../../utils/render-title";
 import { checkLocalRequirements } from "../../utils/requirements";
 import { setupAddons } from "../addons/addons-setup";
@@ -285,6 +286,7 @@ export async function addHandler(
     { silent, mode, analyticsDisabled: input.disableAnalytics },
     async () => {
       const result = await addHandlerInternal(input);
+      endInterruptibleScope();
       await reportAddOutcome(input, result);
 
       if (result.isOk()) {
@@ -624,6 +626,9 @@ async function addHandlerInternal(
   if (vfs.getFileCount() > 0 && !isSilent()) {
     log.info(pc.dim(`Wrote ${vfs.getFileCount()} files`));
   }
+
+  // Files are on disk from here: Ctrl-C only stops the current step
+  beginInterruptibleScope();
 
   // Run addon setup (handles deps and interactive prompts)
   // Wrap with Result.tryPromise since setupAddons can throw UserCancelledError

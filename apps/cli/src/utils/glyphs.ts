@@ -1,0 +1,14 @@
+export const unicode = process.platform !== "win32";
+export const S_STEP_ACTIVE = unicode ? "◆" : "*";
+export const S_STEP_CANCEL = unicode ? "■" : "x";
+export const S_STEP_ERROR = unicode ? "▲" : "x";
+export const S_STEP_SUBMIT = unicode ? "◇" : "o";
+export const S_STEP_BACK = unicode ? "↶" : "<";
+export const S_BAR = unicode ? "│" : "|";
+export const S_BAR_END = unicode ? "└" : "—";
+export const S_RADIO_ACTIVE = unicode ? "●" : ">";
+export const S_RADIO_INACTIVE = unicode ? "○" : " ";
+export const S_CHECKBOX_ACTIVE = unicode ? "◻" : "[•]";
+export const S_CHECKBOX_SELECTED = unicode ? "◼" : "[+]";
+export const S_CHECKBOX_INACTIVE = unicode ? "◻" : "[ ]";
+export const SPINNER_FRAMES = unicode ? ["◒", "◐", "◓", "◑"] : ["•", "o", "O", "0"];

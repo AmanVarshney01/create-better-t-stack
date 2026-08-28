@@ -24,21 +24,22 @@ import {
   setIsFirstPrompt as ctxSetIsFirstPrompt,
   setLastPromptShownUI as ctxSetLastPromptShownUI,
 } from "../utils/context";
+import {
+  S_BAR,
+  S_BAR_END,
+  S_CHECKBOX_ACTIVE,
+  S_CHECKBOX_INACTIVE,
+  S_CHECKBOX_SELECTED,
+  S_RADIO_ACTIVE,
+  S_RADIO_INACTIVE,
+  S_STEP_ACTIVE,
+  S_STEP_BACK,
+  S_STEP_CANCEL,
+  S_STEP_ERROR,
+  S_STEP_SUBMIT,
+} from "../utils/glyphs";
 import { GO_BACK_SYMBOL } from "../utils/navigation";
 
-const unicode = process.platform !== "win32";
-const S_STEP_ACTIVE = unicode ? "◆" : "*";
-const S_STEP_CANCEL = unicode ? "■" : "x";
-const S_STEP_ERROR = unicode ? "▲" : "x";
-const S_STEP_SUBMIT = unicode ? "◇" : "o";
-const S_STEP_BACK = unicode ? "↶" : "<";
-const S_BAR = unicode ? "│" : "|";
-const S_BAR_END = unicode ? "└" : "—";
-const S_RADIO_ACTIVE = unicode ? "●" : ">";
-const S_RADIO_INACTIVE = unicode ? "○" : " ";
-const S_CHECKBOX_ACTIVE = unicode ? "◻" : "[•]";
-const S_CHECKBOX_SELECTED = unicode ? "◼" : "[+]";
-const S_CHECKBOX_INACTIVE = unicode ? "◻" : "[ ]";
 const promptsNavigatingBack = new WeakSet<object>();
 
 function keycap(label: string): string {
