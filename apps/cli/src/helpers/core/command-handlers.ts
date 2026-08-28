@@ -75,6 +75,8 @@ export interface CreateProjectResult {
   projectDirectory: string;
   relativePath: string;
   error?: string;
+  /** Non-fatal problems, such as a dependency install that failed after the files were written. */
+  warnings?: string[];
 }
 
 /**
@@ -457,7 +459,7 @@ async function createProjectHandlerInternal(
     }
 
     // Create the project
-    yield* Result.await(
+    const created = yield* Result.await(
       createProject(config, {
         manualDb: cliInput.manualDb ?? input.manualDb,
         dbSetupOptions: effectiveDbSetupOptions,
@@ -465,7 +467,23 @@ async function createProjectHandlerInternal(
       }),
     );
 
-    await trackProjectCreation(config, input.disableAnalytics, resolveInvocationMode(input.yes));
+    const mode = resolveInvocationMode(input.yes);
+    await trackProjectCreation(config, input.disableAnalytics, mode);
+
+    // The project exists even when the install failed; keep that visible in diagnostics.
+    const warnings: string[] = [];
+    if (created.installError) {
+      warnings.push(created.installError.message);
+      await reportDiagnostic("cli_failed", {
+        command: "create",
+        mode,
+        stage: "dependency-installation",
+        error: errorClass(created.installError),
+        reason: scrubReason(created.installError),
+        packageManager: config.packageManager,
+        backend: config.backend,
+      });
+    }
 
     // Track locally in history.json (non-fatal)
     const historyResult = await addToHistory(config, reproducibleCommand);
@@ -515,6 +533,7 @@ async function createProjectHandlerInternal(
       elapsedTimeMs,
       projectDirectory: config.projectDir,
       relativePath: config.relativePath,
+      warnings: warnings.length > 0 ? warnings : undefined,
     });
   });
 }

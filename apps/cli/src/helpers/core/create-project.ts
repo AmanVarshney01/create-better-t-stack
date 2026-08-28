@@ -5,6 +5,7 @@ import { writeTree } from "@better-t-stack/template-generator/fs-writer";
 import { log } from "@clack/prompts";
 import { Result } from "better-result";
 import fs from "fs-extra";
+import pc from "picocolors";
 
 import type { DbSetupOptions, ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
@@ -23,14 +24,21 @@ export interface CreateProjectOptions {
   packageManagerVersion: string;
 }
 
+export interface CreateProjectOutcome {
+  projectDir: string;
+  /** Set when the files were written but the dependency install failed. */
+  installError: ProjectCreationError | null;
+}
+
 /**
  * Creates a new project with the given configuration.
- * Returns a Result with the project directory path on success, or an error on failure.
+ * Returns a Result with the outcome on success, or an error on failure. A failed dependency
+ * install is not a failure: the project exists on disk, so it is reported as a warning.
  */
 export async function createProject(
   options: ProjectConfig,
   cliInput: CreateProjectOptions,
-): Promise<Result<string, ProjectCreationError>> {
+): Promise<Result<CreateProjectOutcome, ProjectCreationError>> {
   return Result.gen(async function* () {
     const projectDir = options.projectDir;
     const isConvex = options.backend === "convex";
@@ -120,14 +128,24 @@ export async function createProject(
 
     if (!isSilent()) log.success("Project scaffolded");
 
-    // Install dependencies if requested
+    // Install dependencies if requested. The project is already on disk at this point, so a
+    // failed install must not fail the run: warn, and the next steps below include the install.
+    let installError: ProjectCreationError | null = null;
     if (options.install) {
-      yield* Result.await(
-        installDependencies({
-          projectDir,
-          packageManager: options.packageManager,
-        }),
-      );
+      const installResult = await installDependencies({
+        projectDir,
+        packageManager: options.packageManager,
+      });
+      if (installResult.isErr()) {
+        installError = installResult.error;
+        if (!isSilent()) {
+          log.warn(
+            pc.yellow(
+              `Dependencies were not installed. Run \`${options.packageManager} install\` in ${options.relativePath} and continue with the steps below.`,
+            ),
+          );
+        }
+      }
     }
 
     // Initialize git if requested
@@ -137,11 +155,11 @@ export async function createProject(
     if (!isSilent()) {
       await displayPostInstallInstructions({
         ...options,
-        depsInstalled: options.install,
+        depsInstalled: options.install && installError === null,
       });
     }
 
-    return Result.ok(projectDir);
+    return Result.ok({ projectDir, installError });
   });
 }
 
