@@ -104,7 +104,10 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 /artifacts/
 /build/
 `],
-  ["addons/electrobun/apps/desktop/electrobun.config.ts.hbs", `import type { ElectrobunConfig } from "electrobun";
+  ["addons/electrobun/apps/desktop/electrobun.config.ts.hbs", `import { existsSync } from "node:fs";
+import path from "node:path";
+
+import type { ElectrobunConfig } from "electrobun";
 
 const webBuildDir =
   "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "nuxt")}}../web/.output/public{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}";
@@ -123,9 +126,9 @@ export default {
     cottontail: {
       entrypoint: "src/bun/index.ts",
     },
-    copy: {
-      [webBuildDir]: "views/mainview",
-    },
+    copy: existsSync(path.resolve(import.meta.dirname, webBuildDir))
+      ? { [webBuildDir]: "views/mainview" }
+      : {},
     watchIgnore: [\`\${webBuildDir}/**\`],
     mac: {
       bundleCEF: true,
@@ -182,6 +185,7 @@ const url = await getMainViewUrl();
 new BrowserWindow({
   title: "{{projectName}}",
   url,
+  preload: url.startsWith("views://") ? 'history.replaceState(null, "", "/");' : undefined,
   frame: {
     width: 1280,
     height: 820,

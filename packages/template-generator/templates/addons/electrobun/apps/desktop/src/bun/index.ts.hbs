@@ -25,6 +25,7 @@ const url = await getMainViewUrl();
 new BrowserWindow({
   title: "{{projectName}}",
   url,
+  preload: url.startsWith("views://") ? 'history.replaceState(null, "", "/");' : undefined,
   frame: {
     width: 1280,
     height: 820,

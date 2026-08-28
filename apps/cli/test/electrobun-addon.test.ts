@@ -56,7 +56,7 @@ describe("Electrobun addon scaffolding", () => {
     // The desktop intentionally has no `dev` script (root dev must skip it).
     expect(desktopPackageJson.scripts.dev).toBeUndefined();
     expect(desktopPackageJson.scripts["dev:hmr"]).toBeDefined();
-    expect(desktopPackageJson.scripts.hmr).toContain("bun run --filter web dev");
+    expect(desktopPackageJson.scripts.hmr).toBe("bun run --cwd ../.. dev");
     expect(desktopPackageJson.scripts["build:stable"]).toContain("--env=stable");
     expect(desktopPackageJson.scripts["build:canary"]).toContain("--env=canary");
     expect(desktopPackageJson.scripts.start).toBe("electrobun dev");
@@ -88,6 +88,8 @@ describe("Electrobun addon scaffolding", () => {
     expect(desktopConfig).toContain('cottontail: {\n      entrypoint: "src/bun/index.ts"');
     expect(desktopConfig).not.toContain("bun: {");
     expect(desktopEntry).toContain('from "electrobun/main"');
+    expect(desktopEntry).toContain('history.replaceState(null, "", "/")');
+    expect(desktopConfig).toContain("existsSync(path.resolve(import.meta.dirname, webBuildDir))");
     expect(desktopTsconfig.extends).toEqual([
       "../../packages/config/tsconfig.base.json",
       "./.hutch/devkit/tsconfig.json",
@@ -239,7 +241,7 @@ describe("Electrobun addon scaffolding", () => {
         projectName: "electrobun-turbo-runner-static-v2",
         addons: ["turborepo", "electrobun"] as const,
         expectedRunner: "turbo run build -F web",
-        expectedHmr: "turbo run dev -F web",
+        expectedHmr: "turbo run dev",
         expectedRootDev: "turbo run dev",
         expectedRootBuild: "turbo run build --filter='!desktop' && turbo run build -F desktop",
       },
@@ -247,7 +249,7 @@ describe("Electrobun addon scaffolding", () => {
         projectName: "electrobun-nx-runner-static-v2",
         addons: ["nx", "electrobun"] as const,
         expectedRunner: "nx run-many -t build --projects=web",
-        expectedHmr: "nx run-many -t dev --projects=web",
+        expectedHmr: "nx run-many -t dev",
         expectedRootDev: "nx run-many -t dev",
         expectedRootBuild:
           "nx run-many -t build --exclude=desktop && nx run-many -t build --projects=desktop",
@@ -256,7 +258,7 @@ describe("Electrobun addon scaffolding", () => {
         projectName: "electrobun-vite-plus-runner-static-v2",
         addons: ["vite-plus", "electrobun"] as const,
         expectedRunner: "vp run --filter web build",
-        expectedHmr: "vp run --filter web dev",
+        expectedHmr: "vp run -r dev",
         expectedRootDev: "vp run -r dev",
         expectedRootBuild: "vp run -r build --filter '!desktop' && vp run --filter desktop build",
       },
@@ -265,7 +267,7 @@ describe("Electrobun addon scaffolding", () => {
         addons: ["electrobun"] as const,
         packageManager: "pnpm" as const,
         expectedRunner: "pnpm -w --filter web build",
-        expectedHmr: "pnpm -w --filter web dev",
+        expectedHmr: "pnpm -w run dev",
         expectedRootDev: "pnpm -r dev",
         expectedRootBuild: "pnpm -r --filter '!desktop' build && pnpm --filter desktop build",
       },
@@ -274,7 +276,7 @@ describe("Electrobun addon scaffolding", () => {
         addons: ["electrobun"] as const,
         packageManager: "npm" as const,
         expectedRunner: "npm run build --workspace web",
-        expectedHmr: "npm run dev --workspace web",
+        expectedHmr: "npm run dev --prefix ../..",
         expectedRootDev: "npm run dev --workspaces --if-present",
         expectedRootBuildIncludes: [
           "npm run build --workspace apps/server --if-present",

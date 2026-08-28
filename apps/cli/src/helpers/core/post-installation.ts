@@ -519,13 +519,13 @@ function getElectrobunInstructions(runCmd: string, frontend: Frontend[]) {
 
   return `\n${pc.bold("Desktop app with Electrobun:")}\n${pc.cyan(
     "•",
-  )} Start desktop app with HMR: ${`${runCmd} dev:desktop`}\n${pc.cyan(
+  )} Start desktop app with HMR (runs the whole stack): ${`${runCmd} dev:desktop`}\n${pc.cyan(
     "•",
   )} Build stable desktop app (DMG/App): ${`${runCmd} build:desktop`}\n${pc.cyan(
     "•",
   )} Build canary desktop app: ${`${runCmd} build:desktop:canary`}\n${pc.yellow(
     "NOTE:",
-  )} Electrobun wraps your web frontend in a desktop shell.\n   The first desktop command downloads Hutch and the Electrobun toolchain.\n   See: ${"https://framework.blackboard.sh/electrobun/"}${
+  )} Electrobun wraps your web frontend in a desktop shell.\n   The first desktop command downloads Hutch and the Electrobun toolchain.\n   Packaged builds bake the API URL from apps/web/.env, so point it at a reachable server first.\n   See: ${"https://framework.blackboard.sh/electrobun/"}${
     staticBuildNote ? `\n${staticBuildNote}` : ""
   }`;
 }

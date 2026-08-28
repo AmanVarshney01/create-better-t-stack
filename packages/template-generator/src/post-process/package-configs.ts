@@ -495,11 +495,11 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
     { hasTurborepo, hasNx, hasVitePlus },
     desktopBuildScript,
   );
-  const webDevCommand = getDesktopWebCommand(
-    packageManager,
-    { hasTurborepo, hasNx, hasVitePlus },
-    "dev",
-  );
+  const rootDevCommand = getDesktopRootDevCommand(packageManager, {
+    hasTurborepo,
+    hasNx,
+    hasVitePlus,
+  });
   const localRunCommand = getLocalRunCommand(packageManager);
 
   pkgJson.scripts = {
@@ -511,7 +511,7 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
     // build`): build the web app, then electrobun. The root build serializes this
     // so package managers without topological ordering don't race on the web build.
     "dev:hmr": `concurrently "${localRunCommand} hmr" "electrobun dev --watch"`,
-    hmr: webDevCommand,
+    hmr: rootDevCommand,
     build: `${webBuildCommand} && electrobun build`,
     "build:stable": `${webBuildCommand} && electrobun build --env=stable`,
     "build:canary": `${webBuildCommand} && electrobun build --env=canary`,
@@ -546,6 +546,26 @@ function getDesktopWebCommand(
     case "bun":
     default:
       return `bun run --filter web ${script}`;
+  }
+}
+
+/** The desktop shell needs the web app and its API, so HMR runs the root `dev` aggregate. */
+function getDesktopRootDevCommand(
+  packageManager: ProjectConfig["packageManager"],
+  options: { hasTurborepo: boolean; hasNx: boolean; hasVitePlus: boolean },
+): string {
+  if (options.hasTurborepo) return "turbo run dev";
+  if (options.hasNx) return "nx run-many -t dev";
+  if (options.hasVitePlus) return "vp run -r dev";
+
+  switch (packageManager) {
+    case "npm":
+      return "npm run dev --prefix ../..";
+    case "pnpm":
+      return "pnpm -w run dev";
+    case "bun":
+    default:
+      return "bun run --cwd ../.. dev";
   }
 }
 

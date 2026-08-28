@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
+
 import type { ElectrobunConfig } from "electrobun";
 
 const webBuildDir =
@@ -17,9 +20,9 @@ export default {
     cottontail: {
       entrypoint: "src/bun/index.ts",
     },
-    copy: {
-      [webBuildDir]: "views/mainview",
-    },
+    copy: existsSync(path.resolve(import.meta.dirname, webBuildDir))
+      ? { [webBuildDir]: "views/mainview" }
+      : {},
     watchIgnore: [`${webBuildDir}/**`],
     mac: {
       bundleCEF: true,
