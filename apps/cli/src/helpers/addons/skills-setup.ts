@@ -333,27 +333,6 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
   return sources;
 }
 
-/** Sources renamed upstream; older bts.jsonc files may still reference them. */
-function resolveSkillSource(source: string): SourceKey | undefined {
-  if (source === "vercel-labs/next-skills") return "vercel/next.js";
-  return source in SKILL_SOURCES ? (source as SourceKey) : undefined;
-}
-
-export function normalizeSkillsOptions(
-  skillsOptions: SkillsOptions | undefined,
-): SkillsOptions | undefined {
-  if (!skillsOptions?.selections) return skillsOptions;
-  const selections = skillsOptions.selections.flatMap((selection) => {
-    const source = resolveSkillSource(selection.source);
-    if (!source) {
-      cliLog.warn(pc.yellow(`Skipping unknown skill source "${selection.source}".`));
-      return [];
-    }
-    return [{ ...selection, source }];
-  });
-  return { ...skillsOptions, selections };
-}
-
 const CURATED_SKILLS_BY_SOURCE = {
   "vercel-labs/agent-skills": (config) => {
     const skills: string[] = [];
@@ -503,7 +482,7 @@ export async function setupSkills(
     : config;
 
   const recommendedSourceKeys = getRecommendedSourceKeys(fullConfig);
-  const skillsOptions = normalizeSkillsOptions(fullConfig.addonOptions?.skills);
+  const skillsOptions = fullConfig.addonOptions?.skills;
   const configuredSourceKeys = uniqueValues(
     (skillsOptions?.selections ?? []).map((selection) => selection.source),
   );
