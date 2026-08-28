@@ -156,21 +156,36 @@ function getNodeToolingRequirements(config: RequirementConfig): VersionRequireme
   return requirements;
 }
 
-export function getLocalVersionRequirements(
-  config: RequirementConfig,
-  hostRuntime: "bun" | "node",
-): VersionRequirement[] {
-  const requirements: VersionRequirement[] = [
-    {
-      tool: config.packageManager,
-      range: PACKAGE_MANAGER_VERSION_RANGES[config.packageManager],
-      reason: PACKAGE_MANAGER_REASONS[config.packageManager],
-    },
-  ];
+type HostRuntime = "bun" | "node";
 
+function getHostRuntime(): HostRuntime {
+  return process.versions.bun ? "bun" : "node";
+}
+
+/** Requirements that do not depend on the chosen stack, so they can run before any prompt. */
+export function getBaselineRequirements(
+  packageManager: PackageManager | undefined,
+  hostRuntime: HostRuntime,
+): VersionRequirement[] {
+  const requirements: VersionRequirement[] = [];
+  if (packageManager) {
+    requirements.push({
+      tool: packageManager,
+      range: PACKAGE_MANAGER_VERSION_RANGES[packageManager],
+      reason: PACKAGE_MANAGER_REASONS[packageManager],
+    });
+  }
   if (hostRuntime === "node") {
     addNodeRequirement(requirements, ">=22.0.0", "create-better-t-stack");
   }
+  return requirements;
+}
+
+export function getLocalVersionRequirements(
+  config: RequirementConfig,
+  hostRuntime: HostRuntime,
+): VersionRequirement[] {
+  const requirements = getBaselineRequirements(config.packageManager, hostRuntime);
 
   if (config.packageManager !== "bun") {
     requirements.push(...getNodeToolingRequirements(config));
@@ -202,33 +217,10 @@ function formatRequirementError(
   return null;
 }
 
-/**
- * The checks that do not depend on the chosen stack: the package manager that will run the
- * install, and the Node.js version hosting the CLI. Running them before any prompt means a
- * user with an outdated toolchain finds out immediately instead of after configuring a stack.
- */
-export function getBaselineRequirements(
-  packageManager: PackageManager | undefined,
-  hostRuntime: "bun" | "node",
-): VersionRequirement[] {
-  const requirements: VersionRequirement[] = [];
-  if (packageManager) {
-    requirements.push({
-      tool: packageManager,
-      range: PACKAGE_MANAGER_VERSION_RANGES[packageManager],
-      reason: PACKAGE_MANAGER_REASONS[packageManager],
-    });
-  }
-  if (hostRuntime === "node") {
-    addNodeRequirement(requirements, ">=22.0.0", "create-better-t-stack");
-  }
-  return requirements;
-}
-
 export function validateLocalToolVersions(
   config: RequirementConfig,
   versions: LocalToolVersions,
-  hostRuntime: "bun" | "node",
+  hostRuntime: HostRuntime,
 ): Result<void, CLIError> {
   return validateRequirements(getLocalVersionRequirements(config, hostRuntime), versions);
 }
@@ -310,16 +302,32 @@ async function readToolVersion(tool: Tool): Promise<string | null> {
   return result.isOk() ? result.value : null;
 }
 
+async function readLocalToolVersions(
+  packageManager: PackageManager | undefined,
+  hostRuntime: HostRuntime,
+  needsNode: boolean,
+): Promise<LocalToolVersions> {
+  const versions: LocalToolVersions = {};
+  if (packageManager) {
+    const packageManagerVersion = await readToolVersion(packageManager);
+    if (packageManagerVersion) versions[packageManager] = packageManagerVersion;
+  }
+  if (needsNode) {
+    versions.node =
+      hostRuntime === "node"
+        ? process.versions.node
+        : ((await readToolVersion("node")) ?? undefined);
+  }
+  return versions;
+}
+
 export type BaselineCheck = {
-  /** Problems with a package manager the user has not committed to yet; shown, not fatal. */
   warnings: string[];
 };
 
 /**
- * Fast pre-prompt check; the full stack-aware check still runs once the config is known.
- * The host Node.js version is always fatal. The package manager is fatal only when it was
- * passed explicitly: an inferred one (from the launching user agent) can still be swapped at
- * the package manager prompt, so it is reported as a warning.
+ * Pre-prompt check. An inferred package manager can still be changed at its prompt, so it only
+ * warns; an explicit one and the host Node.js version are fatal.
  */
 export async function checkBaselineRequirements(
   packageManager: PackageManager | undefined,
@@ -327,17 +335,13 @@ export async function checkBaselineRequirements(
 ): Promise<Result<BaselineCheck, CLIError>> {
   if (shouldSkipExternalCommands()) return Result.ok({ warnings: [] });
 
-  const hostRuntime = process.versions.bun ? "bun" : "node";
-  const versions: LocalToolVersions = {};
-  if (packageManager) {
-    const packageManagerVersion = await readToolVersion(packageManager);
-    if (packageManagerVersion) versions[packageManager] = packageManagerVersion;
-  }
-  if (hostRuntime === "node") {
-    versions.node = process.versions.node;
-  }
-
+  const hostRuntime = getHostRuntime();
   const requirements = getBaselineRequirements(packageManager, hostRuntime);
+  const versions = await readLocalToolVersions(
+    packageManager,
+    hostRuntime,
+    requirements.some((requirement) => requirement.tool === "node"),
+  );
   const fatal = requirements.filter(
     (requirement) => requirement.tool === "node" || packageManagerIsExplicit,
   );
@@ -360,23 +364,15 @@ export async function checkBaselineRequirements(
 export async function checkLocalRequirements(
   config: RequirementConfig,
 ): Promise<Result<LocalRequirements, CLIError>> {
-  const hostRuntime = process.versions.bun ? "bun" : "node";
-  const versions: LocalToolVersions = {};
-
-  const packageManagerVersion = await readToolVersion(config.packageManager);
-  if (packageManagerVersion) {
-    versions[config.packageManager] = packageManagerVersion;
-  }
-
-  const needsNode = getLocalVersionRequirements(config, hostRuntime).some(
-    (requirement) => requirement.tool === "node",
+  const hostRuntime = getHostRuntime();
+  const versions = await readLocalToolVersions(
+    config.packageManager,
+    hostRuntime,
+    getLocalVersionRequirements(config, hostRuntime).some(
+      (requirement) => requirement.tool === "node",
+    ),
   );
-  if (needsNode) {
-    versions.node =
-      hostRuntime === "node"
-        ? process.versions.node
-        : ((await readToolVersion("node")) ?? undefined);
-  }
+  const packageManagerVersion = versions[config.packageManager];
 
   if (!shouldSkipExternalCommands()) {
     const validationResult = validateLocalToolVersions(config, versions, hostRuntime);

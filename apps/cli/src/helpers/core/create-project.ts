@@ -26,14 +26,13 @@ export interface CreateProjectOptions {
 
 export interface CreateProjectOutcome {
   projectDir: string;
-  /** Set when the files were written but the dependency install failed. */
   installError: ProjectCreationError | null;
 }
 
 /**
  * Creates a new project with the given configuration.
- * Returns a Result with the outcome on success, or an error on failure. A failed dependency
- * install is not a failure: the project exists on disk, so it is reported as a warning.
+ * A failed dependency install is returned in the outcome instead of failing, since the project
+ * is already on disk by then.
  */
 export async function createProject(
   options: ProjectConfig,
@@ -128,8 +127,7 @@ export async function createProject(
 
     if (!isSilent()) log.success("Project scaffolded");
 
-    // Install dependencies if requested. The project is already on disk at this point, so a
-    // failed install must not fail the run: warn, and the next steps below include the install.
+    // Install dependencies if requested
     let installError: ProjectCreationError | null = null;
     if (options.install) {
       const installResult = await installDependencies({

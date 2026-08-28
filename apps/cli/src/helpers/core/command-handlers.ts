@@ -76,7 +76,6 @@ export interface CreateProjectResult {
   projectDirectory: string;
   relativePath: string;
   error?: string;
-  /** Non-fatal problems, such as a dependency install that failed after the files were written. */
   warnings?: string[];
 }
 
@@ -231,8 +230,6 @@ async function createProjectHandlerInternal(
       log.warn(pc.yellow("YOLO mode enabled — compatibility checks are disabled."));
     }
 
-    // Before any prompt: the package manager that will run the install and the Node.js
-    // hosting the CLI. Stack-specific requirements are checked once the config is known.
     if (!isSilent()) {
       const baseline = yield* Result.await(
         checkBaselineRequirements(
@@ -485,7 +482,6 @@ async function createProjectHandlerInternal(
     const mode = resolveInvocationMode(input.yes);
     await trackProjectCreation(config, input.disableAnalytics, mode);
 
-    // The project exists even when the install failed; keep that visible in diagnostics.
     const warnings: string[] = [];
     if (created.installError) {
       warnings.push(created.installError.message);
