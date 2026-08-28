@@ -21,6 +21,7 @@ import {
   ProjectCreationError,
   UserCancelledError,
   displayError,
+  isUserCancellation,
 } from "../../utils/errors";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
 import {
@@ -156,7 +157,7 @@ async function reportCreateOutcome(
   if (result.isOk()) return;
 
   const error = result.error;
-  if (UserCancelledError.is(error)) return;
+  if (isUserCancellation(error)) return;
 
   await reportDiagnostic("cli_failed", {
     command: "create",
@@ -193,8 +194,8 @@ export async function createProjectHandler(
   const error = result.error;
   const elapsedTimeMs = Date.now() - startTime;
 
-  // Handle user cancellation specially
-  if (UserCancelledError.is(error)) {
+  // Handle user cancellation specially, including one raised inside a setup step
+  if (isUserCancellation(error)) {
     if (silent) {
       return createEmptyResult(timeScaffolded, elapsedTimeMs, error.message);
     }
