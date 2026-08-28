@@ -368,9 +368,10 @@ export async function checkLocalRequirements(
   const versions = await readLocalToolVersions(
     config.packageManager,
     hostRuntime,
-    getLocalVersionRequirements(config, hostRuntime).some(
-      (requirement) => requirement.tool === "node",
-    ),
+    !shouldSkipExternalCommands() &&
+      getLocalVersionRequirements(config, hostRuntime).some(
+        (requirement) => requirement.tool === "node",
+      ),
   );
   const packageManagerVersion = versions[config.packageManager];
 
