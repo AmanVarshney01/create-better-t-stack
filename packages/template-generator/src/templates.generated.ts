@@ -101,8 +101,8 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 }
 `],
   ["addons/electrobun/apps/desktop/.gitignore", `.hutch/
-artifacts
-build
+/artifacts/
+/build/
 `],
   ["addons/electrobun/apps/desktop/electrobun.config.ts.hbs", `import type { ElectrobunConfig } from "electrobun";
 
