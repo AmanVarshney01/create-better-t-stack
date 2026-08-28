@@ -55,6 +55,8 @@ export type ProjectLauncherKind = "editor" | "agent";
 interface MacAppDefinition {
   bundleId: string;
   names: readonly string[];
+  /** Printed after a successful launch when the app cannot jump to the project itself. */
+  note?: string;
   launchSequence: (
     projectDir: string,
     packageManager: PackageManager,
@@ -89,6 +91,7 @@ export interface AvailableProjectLauncher {
   args: string[];
   cwd?: string;
   launchSequence?: ProjectLaunchCommand[];
+  note?: string;
 }
 
 const T3_CODE_BUNDLE_ID = "com.t3tools.t3code";
@@ -189,6 +192,7 @@ export const PROJECT_LAUNCHERS = [
     macApp: {
       bundleId: T3_CODE_BUNDLE_ID,
       names: ["T3 Code", "T3 Code (Alpha)"],
+      note: "Added to T3 Code. Pick the project from its project list.",
       launchSequence: (projectDir, packageManager, cliCommand) => {
         const [command, ...prefixArgs] = cliCommand
           ? [cliCommand]
@@ -393,6 +397,7 @@ export async function detectProjectLaunchers(
           command: "open",
           args: ["-b", launcher.macApp.bundleId],
           launchSequence: launcher.macApp.launchSequence(projectDir, packageManager, command),
+          note: launcher.macApp.note,
         },
       ];
     }

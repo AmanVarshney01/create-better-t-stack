@@ -148,9 +148,9 @@ export default {
     "electrobun": "^1.18.1"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.14",
-    "@types/three": "^0.185.1",
-    "concurrently": "^10.0.4",
+    "@types/bun": "^1.4.0",
+    "@types/three": "^0.185.4",
+    "concurrently": "^10.0.5",
     "typescript": "^6.0.3"
   }
 }

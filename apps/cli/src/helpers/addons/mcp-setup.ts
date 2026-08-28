@@ -52,6 +52,10 @@ const MCP_AGENTS: AgentOption[] = [
   { value: "zed", label: "Zed", scope: "both" },
   { value: "claude-desktop", label: "Claude Desktop", scope: "global" },
   { value: "goose", label: "Goose", scope: "global" },
+  { value: "fx", label: "fx", scope: "global" },
+  { value: "kilo-code", label: "Kilo Code", scope: "both" },
+  { value: "kimi-code", label: "Kimi Code", scope: "both" },
+  { value: "kiro-cli", label: "Kiro CLI", scope: "both" },
 ];
 
 const DEFAULT_SCOPE: InstallScope = "project";

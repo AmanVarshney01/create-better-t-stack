@@ -65,17 +65,17 @@ export const dependencyVersionMap = {
 
   "@biomejs/biome": "^2.5.11",
 
-  oxlint: "^1.78.0",
-  oxfmt: "^0.63.0",
+  oxlint: "^1.80.0",
+  oxfmt: "^0.65.0",
 
   husky: "^9.1.7",
-  lefthook: "^2.1.10",
-  "lint-staged": "^17.2.0",
+  lefthook: "^2.1.12",
+  "lint-staged": "^17.4.1",
 
   tsx: "^4.23.1",
   "@types/node": "^26.2.0",
 
-  "@types/bun": "^1.3.14",
+  "@types/bun": "^1.4.0",
 
   "@elysiajs/node": "^1.4.5",
 
@@ -97,10 +97,10 @@ export const dependencyVersionMap = {
   fastify: "^5.10.0",
   "@fastify/cors": "^11.3.0",
 
-  turbo: "^2.10.7",
-  nx: "^23.1.0",
+  turbo: "^2.10.12",
+  nx: "^23.1.2",
   "vite-plus": "0.3.0",
-  rolldown: "1.2.0",
+  rolldown: "1.2.6",
   unwasm: "^0.6.0",
 
   ai: "^7.0.41",
@@ -181,7 +181,7 @@ export const dependencyVersionMap = {
   "@stripe/react-stripe-js": "^6.8.0",
   "@stripe/stripe-js": "^9.12.1",
 
-  evlog: "^2.22.4",
+  evlog: "^2.27.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

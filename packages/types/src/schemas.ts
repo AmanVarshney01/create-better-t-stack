@@ -183,6 +183,10 @@ export const McpAgentSchema = z
     "zed",
     "claude-desktop",
     "goose",
+    "fx",
+    "kilo-code",
+    "kimi-code",
+    "kiro-cli",
   ])
   .describe("Agent target for MCP installation");
 
@@ -259,6 +263,7 @@ export const SkillsAgentSchema = z
     "lingma",
     "loaf",
     "mcpjam",
+    "minimax-code",
     "mistral-vibe",
     "moxby",
     "mux",
@@ -270,6 +275,7 @@ export const SkillsAgentSchema = z
     "openhands",
     "pi",
     "pochi",
+    "posit-assistant",
     "promptscript",
     "qoder",
     "qoder-cn",
@@ -313,6 +319,7 @@ export const UltraciteEditorSchema = z
     "trae",
     "void",
     "zed",
+    "universal",
   ])
   .describe("Ultracite editor integration");
 

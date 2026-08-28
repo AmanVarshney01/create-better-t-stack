@@ -26,7 +26,8 @@ type UltraciteEditor =
   | "kiro"
   | "trae"
   | "void"
-  | "zed";
+  | "zed"
+  | "universal";
 
 type UltraciteAgent =
   | "universal"
@@ -283,6 +284,7 @@ export async function setupUltracite(
             options: [
               { value: "vscode", label: "VSCode / Cursor / Windsurf" },
               { value: "zed", label: "Zed" },
+              { value: "universal", label: "Universal (.vscode/settings.json)" },
             ],
           });
         },

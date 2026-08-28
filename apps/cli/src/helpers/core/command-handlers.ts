@@ -536,6 +536,8 @@ async function createProjectHandlerInternal(
         const launchResult = await launchProject(projectLauncher);
         if (launchResult.isErr()) {
           log.warn(pc.yellow(launchResult.error.message));
+        } else if (projectLauncher.note) {
+          log.info(projectLauncher.note);
         }
       }
     }
