@@ -484,7 +484,7 @@ async function createProjectHandlerInternal(
 
     const warnings: string[] = [];
     if (created.interrupted) {
-      warnings.push("Setup was interrupted; the remaining setup steps were skipped.");
+      warnings.push("One or more setup steps were cancelled.");
     }
     if (created.installError) {
       warnings.push(created.installError.message);

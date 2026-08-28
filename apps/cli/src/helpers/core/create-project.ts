@@ -14,7 +14,7 @@ import { getLatestCLIVersion } from "../../utils/get-latest-cli-version";
 import {
   beginInterruptibleScope,
   endInterruptibleScope,
-  wasInterrupted,
+  wasAnyStepInterrupted,
 } from "../../utils/interrupt";
 import { setupAddons } from "../addons/addons-setup";
 import { setupDatabase } from "../core/db-setup";
@@ -115,7 +115,7 @@ async function* runPostScaffoldSteps(
   isConvex: boolean,
 ) {
   // Setup database if needed
-  if (!isConvex && options.database !== "none" && !wasInterrupted()) {
+  if (!isConvex && options.database !== "none") {
     yield* Result.await(
       Result.tryPromise({
         try: () => setupDatabase(options, cliInput),
@@ -130,7 +130,7 @@ async function* runPostScaffoldSteps(
   }
 
   // Setup addons if any
-  if (options.addons.length > 0 && options.addons[0] !== "none" && !wasInterrupted()) {
+  if (options.addons.length > 0 && options.addons[0] !== "none") {
     yield* Result.await(
       Result.tryPromise({
         try: () => setupAddons(options),
@@ -152,9 +152,7 @@ async function* runPostScaffoldSteps(
   // Install dependencies if requested
   let install: CreateProjectOutcome["install"] = "skipped";
   let installError: ProjectCreationError | null = null;
-  if (options.install && wasInterrupted()) {
-    install = "cancelled";
-  } else if (options.install) {
+  if (options.install) {
     const installResult = await installDependencies({
       projectDir,
       packageManager: options.packageManager,
@@ -178,7 +176,7 @@ async function* runPostScaffoldSteps(
     });
   }
 
-  return Result.ok({ projectDir, install, installError, interrupted: wasInterrupted() });
+  return Result.ok({ projectDir, install, installError, interrupted: wasAnyStepInterrupted() });
 }
 
 async function setPackageManagerVersion(

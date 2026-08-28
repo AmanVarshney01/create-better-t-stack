@@ -117,8 +117,9 @@ export const cliLog = {
   success(message: string) {
     if (!isSilent()) log.success(message);
   },
+  /** Silent after a Ctrl-C in the current step: the cancelled line already said it. */
   error(message: string) {
-    if (!isSilent()) log.error(message);
+    if (!isSilent() && !wasInterrupted()) log.error(message);
   },
   message(message: string) {
     if (!isSilent()) log.message(message);
@@ -127,7 +128,7 @@ export const cliLog = {
 
 export const cliConsola = {
   error(message: string) {
-    if (!isSilent()) baseConsola.error(message);
+    if (!isSilent() && !wasInterrupted()) baseConsola.error(message);
   },
   warn(message: string) {
     if (!isSilent()) baseConsola.warn(message);

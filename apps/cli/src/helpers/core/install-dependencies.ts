@@ -5,7 +5,7 @@ import pc from "picocolors";
 import type { Addons, PackageManager } from "../../types";
 import { ProjectCreationError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
-import { getInterruptSignal, wasInterrupted } from "../../utils/interrupt";
+import { getInterruptSignal, startInterruptibleStep, wasInterrupted } from "../../utils/interrupt";
 import { createSpinner } from "../../utils/terminal-output";
 
 export type InstallStatus = "installed" | "cancelled";
@@ -24,6 +24,7 @@ export async function installDependencies({
     return Result.ok("installed");
   }
 
+  startInterruptibleStep();
   const s = createSpinner();
   s.start(`Running ${packageManager} install...`);
 

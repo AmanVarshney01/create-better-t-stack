@@ -2,7 +2,7 @@ import type { Result } from "better-result";
 import pc from "picocolors";
 
 import { UserCancelledError } from "./errors";
-import { wasInterrupted } from "./interrupt";
+import { startInterruptibleStep, wasInterrupted } from "./interrupt";
 import { cliConsola, cliLog } from "./terminal-output";
 
 /**
@@ -13,6 +13,7 @@ export async function runOptionalStep<T>(
   step: () => Promise<Result<T, { message: string }>>,
   cancelledMessage: string,
 ): Promise<void> {
+  startInterruptibleStep();
   const result = await step();
   if (result.isOk()) return;
 
