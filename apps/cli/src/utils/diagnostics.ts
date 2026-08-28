@@ -74,8 +74,9 @@ export function scrubReason(cause: unknown): string {
   }
   const firstLine = [lines[0] ?? "", ...bullets].join(" ");
   const scrubbed = firstLine
-    // Quoted spans first: they are user-supplied values whatever they contain.
-    .replaceAll(/(["'`])(?:(?!\1).)*\1/g, "<name>")
+    // Quoted spans first: they are user-supplied values whatever they contain. Apostrophes
+    // inside words ("stack's") are not quote delimiters.
+    .replaceAll(/(?<!\w)(["'`])(?:(?!\1).)*\1(?!\w)/g, "<name>")
     .replaceAll(/https?:\/\/[^\s)\]"'>]+/gi, "<url>")
     .replaceAll(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "<email>")
     // Absolute paths, including segments with spaces ("/Users/Jane Doe/app/file.ts") and a

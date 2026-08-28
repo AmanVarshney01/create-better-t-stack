@@ -55,6 +55,19 @@ describe("scrubReason", () => {
     );
   });
 
+  test("does not treat apostrophes inside words as quotes", () => {
+    const message = [
+      "Your local toolchain does not meet this stack's requirements:",
+      "- Node.js v20.11.0 does not satisfy >=22.0.0 required by Starlight's Astro toolchain.",
+    ].join("\n");
+    expect(scrubReason(new Error(message))).toBe(
+      "Your local toolchain does not meet this stack's requirements: Node.js v20.11.0 does not satisfy >=22.0.0 required by Starlight's Astro toolchain.",
+    );
+    expect(scrubReason("Directory 'my app' already exists")).toBe(
+      "Directory <name> already exists",
+    );
+  });
+
   test("truncates very long reasons", () => {
     expect(scrubReason("x".repeat(400))).toHaveLength(160);
   });

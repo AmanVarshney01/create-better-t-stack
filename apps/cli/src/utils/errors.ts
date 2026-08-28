@@ -20,6 +20,15 @@ export class UserCancelledError extends TaggedError("UserCancelledError")<{
 }
 
 /**
+ * True for a direct cancellation or one that a setup step wrapped in a ProjectCreationError
+ * (for example cancelling a prompt inside addon or database setup).
+ */
+export function isUserCancellation(cause: unknown): boolean {
+  if (UserCancelledError.is(cause)) return true;
+  return ProjectCreationError.is(cause) && UserCancelledError.is(cause.cause);
+}
+
+/**
  * General CLI error for validation failures, invalid flags, etc.
  */
 export class CLIError extends TaggedError("CLIError")<{
