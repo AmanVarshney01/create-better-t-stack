@@ -1,5 +1,5 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { McpServer } from "@modelcontextprotocol/server";
+import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import z from "zod";
 
 import { add, create, type SchemaName, SchemaNameSchema, getSchemaResult } from "./index";
@@ -24,6 +24,7 @@ import {
   ServerDeploySchema,
   WebDeploySchema,
 } from "./types";
+import { setProcessMode } from "./utils/context";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
 
 const ToolResponseSchema = z.object({
@@ -126,7 +127,7 @@ function getStackGuidance() {
       "For project creation, build a full explicit config before calling bts_plan_project.",
       "Always call bts_plan_project before bts_create_project.",
       "Only call bts_create_project after the plan succeeds and matches the user's intent.",
-      "Use bts_plan_addons before bts_add_addons for existing projects.",
+      "Use bts_plan_addons before bts_add_addons when adding addons or scaffolding a workspace package in an existing project.",
     ],
     createContract: {
       requiresExplicitFields: [
@@ -178,14 +179,15 @@ function getStackGuidance() {
 }
 
 export function createBtsMcpServer() {
+  setProcessMode("mcp");
   const server = new McpServer(
     {
       name: "create-better-t-stack",
       version: getLatestCLIVersion(),
     },
     {
-      capabilities: {
-        logging: {},
+      cacheHints: {
+        "tools/list": { ttlMs: 60 * 60 * 1000, cacheScope: "public" },
       },
     },
   );
@@ -306,7 +308,7 @@ export function createBtsMcpServer() {
 
         const result = await create(input.projectName, {
           ...input,
-          disableAnalytics: true,
+          disableAnalytics: input.disableAnalytics ?? false,
         });
 
         if (result.isErr()) {
@@ -323,13 +325,13 @@ export function createBtsMcpServer() {
   server.registerTool(
     "bts_plan_addons",
     {
-      title: "Plan Better T Stack Addons",
+      title: "Plan Better T Stack Project Additions",
       description:
-        "Validate and preview addon installation for an existing Better T Stack project without writing files. Always use this before bts_add_addons when the addon set or nested options are uncertain.",
+        "Validate and preview addon installation or workspace package scaffolding for an existing Better T Stack project without writing files. Always use this before bts_add_addons.",
       inputSchema: AddInputSchema,
       outputSchema: ToolResponseSchema,
       annotations: {
-        title: "Plan Better T Stack Addons",
+        title: "Plan Better T Stack Project Additions",
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
@@ -344,7 +346,7 @@ export function createBtsMcpServer() {
         });
 
         if (!result?.success) {
-          return formatToolError(result?.error ?? "Failed to plan addon installation");
+          return formatToolError(result?.error ?? "Failed to plan project additions");
         }
 
         return formatToolSuccess(result);
@@ -357,13 +359,13 @@ export function createBtsMcpServer() {
   server.registerTool(
     "bts_add_addons",
     {
-      title: "Add Better T Stack Addons",
+      title: "Apply Better T Stack Project Additions",
       description:
-        "Install addons into an existing Better T Stack project using the same silent flow as add-json. Call this only after bts_plan_addons succeeds and the planned changes match the user's intent.",
+        "Install addons or scaffold a workspace package in an existing Better T Stack project using the same silent flow as add-json. Call this only after bts_plan_addons succeeds and the planned changes match the user's intent.",
       inputSchema: AddInputSchema,
       outputSchema: ToolResponseSchema,
       annotations: {
-        title: "Add Better T Stack Addons",
+        title: "Apply Better T Stack Project Additions",
         destructiveHint: true,
         idempotentHint: false,
         openWorldHint: true,
@@ -374,7 +376,7 @@ export function createBtsMcpServer() {
         const result = await add(input);
 
         if (!result?.success) {
-          return formatToolError(result?.error ?? "Failed to add addons");
+          return formatToolError(result?.error ?? "Failed to update project");
         }
 
         return formatToolSuccess(result);
@@ -387,8 +389,6 @@ export function createBtsMcpServer() {
   return server;
 }
 
-export async function startBtsMcpServer() {
-  const server = createBtsMcpServer();
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+export function startBtsMcpServer() {
+  return serveStdio(() => createBtsMcpServer());
 }

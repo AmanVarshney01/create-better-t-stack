@@ -70,6 +70,30 @@ const Footer = () => {
                   Demo Application
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/about"
+                  className="inline-block transition-colors hover:text-primary focus:text-primary focus:outline-none"
+                >
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy"
+                  className="inline-block transition-colors hover:text-primary focus:text-primary focus:outline-none"
+                >
+                  Privacy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="inline-block transition-colors hover:text-primary focus:text-primary focus:outline-none"
+                >
+                  Contact
+                </Link>
+              </li>
             </ul>
           </div>
 

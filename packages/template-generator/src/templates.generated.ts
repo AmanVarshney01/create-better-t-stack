@@ -843,12 +843,12 @@ export const link = new RPCLink({
 			credentials: Platform.OS === "web" ? "include" : "omit",
 		});
 	},
-	headers() {
+	async headers() {
 		if (Platform.OS === "web") {
 			return {};
 		}
 		const headers = new Map<string, string>();
-		const cookies = authClient.getCookie();
+		const cookies = await authClient.getCookie();
 		if (cookies) {
 			headers.set("Cookie", cookies);
 		}
@@ -1888,12 +1888,12 @@ const trpcClient = createTRPCClient<AppRouter>({
 						credentials: Platform.OS === "web" ? "include" : "omit",
 					});
 				},
-			headers() {
+			async headers() {
 				if (Platform.OS === "web") {
 					return {};
 				}
 				const headers = new Map<string, string>();
-				const cookies = authClient.getCookie();
+				const cookies = await authClient.getCookie();
 				if (cookies) {
 					headers.set("Cookie", cookies);
 				}
@@ -8077,7 +8077,6 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			polar({
 				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -8160,7 +8159,6 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			polar({
 				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -8245,7 +8243,6 @@ export function createAuth() {
 			polar({
 				client: polarClient,
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -8315,7 +8312,6 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			polar({
 				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -8387,7 +8383,6 @@ export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDepl
 			polar({
 				client: {{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}createPolarClient(env){{else}}polarClient{{/if}},
 				createCustomerOnSignUp: true,
-				enableCustomerPortal: true,
 				use: [
 					checkout({
 						products: [
@@ -8430,6 +8425,7 @@ import {
   timestamp,
   boolean,
   index,
+  uniqueIndex,
 } from "drizzle-orm/mysql-core";
 
 export const user = mysqlTable("user", {
@@ -8468,7 +8464,8 @@ export const account = mysqlTable(
   "account",
   {
     id: varchar("id", { length: 36 }).primaryKey(),
-    accountId: text("account_id").notNull(),
+    issuer: varchar("issuer", { length: 191 }).notNull(),
+    accountId: varchar("account_id", { length: 191 }).notNull(),
     providerId: text("provider_id").notNull(),
     userId: varchar("user_id", { length: 36 })
       .notNull()
@@ -8485,7 +8482,10 @@ export const account = mysqlTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)],
+  (table) => [
+    uniqueIndex("account_issuer_accountId_uidx").on(table.issuer, table.accountId),
+    index("account_userId_idx").on(table.userId),
+  ],
 );
 
 export const verification = mysqlTable(
@@ -8524,7 +8524,7 @@ export const accountRelations = relations(account, ({ one }) => ({
 }));
 `],
   ["auth/better-auth/server/db/drizzle/postgres/src/schema/auth.ts.hbs", `import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -8562,6 +8562,7 @@ export const account = pgTable(
   "account",
   {
     id: text("id").primaryKey(),
+    issuer: text("issuer").notNull(),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
     userId: text("user_id")
@@ -8579,7 +8580,10 @@ export const account = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)],
+  (table) => [
+    uniqueIndex("account_issuer_accountId_uidx").on(table.issuer, table.accountId),
+    index("account_userId_idx").on(table.userId),
+  ],
 );
 
 export const verification = pgTable(
@@ -8618,7 +8622,7 @@ export const accountRelations = relations(account, ({ one }) => ({
 }));
 `],
   ["auth/better-auth/server/db/drizzle/sqlite/src/schema/auth.ts.hbs", `import { relations, sql } from "drizzle-orm";
-import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -8662,6 +8666,7 @@ export const account = sqliteTable(
   "account",
   {
     id: text("id").primaryKey(),
+    issuer: text("issuer").notNull(),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
     userId: text("user_id")
@@ -8685,7 +8690,10 @@ export const account = sqliteTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)],
+  (table) => [
+    uniqueIndex("account_issuer_accountId_uidx").on(table.issuer, table.accountId),
+    index("account_userId_idx").on(table.userId),
+  ],
 );
 
 export const verification = sqliteTable(
@@ -8761,6 +8769,7 @@ sessionSchema.index({ userId: 1 });
 const accountSchema = new Schema(
     {
         _id: { type: ObjectId, auto: true },
+        issuer: { type: String, required: true },
         accountId: { type: String, required: true },
         providerId: { type: String, required: true },
         userId: { type: ObjectId, ref: 'User', required: true },
@@ -8776,6 +8785,7 @@ const accountSchema = new Schema(
     },
     { collection: 'account' }
 );
+accountSchema.index({ issuer: 1, accountId: 1 }, { unique: true });
 accountSchema.index({ userId: 1 });
 
 const verificationSchema = new Schema(
@@ -8831,6 +8841,7 @@ model Session {
 
 model Account {
   id                    String    @id @map("_id")
+  issuer                String
   accountId             String
   providerId            String
   userId                String
@@ -8845,6 +8856,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
+  @@unique([issuer, accountId], map: "account_issuer_accountId_uidx")
   @@index([userId])
   @@map("account")
 }
@@ -8894,7 +8906,8 @@ model Session {
 
 model Account {
   id                    String    @id
-  accountId             String    @db.Text
+  issuer                String    @db.VarChar(191)
+  accountId             String    @db.VarChar(191)
   providerId            String    @db.Text
   userId                String
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -8908,6 +8921,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
+  @@unique([issuer, accountId], map: "account_issuer_accountId_uidx")
   @@index([userId(length: 191)])
   @@map("account")
 }
@@ -8957,6 +8971,7 @@ model Session {
 
 model Account {
   id                    String    @id
+  issuer                String
   accountId             String
   providerId            String
   userId                String
@@ -8971,6 +8986,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
+  @@unique([issuer, accountId], map: "account_issuer_accountId_uidx")
   @@index([userId])
   @@map("account")
 }
@@ -9020,6 +9036,7 @@ model Session {
 
 model Account {
   id                    String    @id
+  issuer                String
   accountId             String
   providerId            String
   userId                String
@@ -9034,6 +9051,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
+  @@unique([issuer, accountId], map: "account_issuer_accountId_uidx")
   @@index([userId])
   @@map("account")
 }
@@ -9365,7 +9383,7 @@ import Layout from "../layouts/Layout.astro";
       try {
         const { data: customerState } = await authClient.customer.state();
         const subscriptionInfo = document.getElementById("subscription-info")!;
-        if (customerState?.activeSubscriptions?.length > 0) {
+        if ((customerState?.activeSubscriptions?.length ?? 0) > 0) {
           subscriptionInfo.innerHTML = \`
             <p class="text-white">Plan: <span class="text-green-400">Pro</span></p>
             <button
@@ -12494,8 +12512,8 @@ export const authClient = createAuthClient({
 		<p>API: {privateDataQuery.data?.message}</p>
 		{{/if}}
 		{{#if (eq payments "polar")}}
-		<p>Plan: {customerState?.activeSubscriptions?.length > 0 ? "Pro" : "Free"}</p>
-		{#if customerState?.activeSubscriptions?.length > 0}
+		<p>Plan: {(customerState?.activeSubscriptions?.length ?? 0) > 0 ? "Pro" : "Free"}</p>
+		{#if (customerState?.activeSubscriptions?.length ?? 0) > 0}
 			<button onclick={async () => await authClient.customer.portal()}>
 				Manage Subscription
 			</button>
@@ -12521,18 +12539,19 @@ export const authClient = createAuthClient({
 	<SignUpForm switchToSignIn={() => showSignIn = true} />
 {/if}
 `],
-  ["auth/clerk/convex/backend/convex/auth.config.ts.hbs", `export default {
+  ["auth/clerk/convex/backend/convex/auth.config.ts.hbs", `import type { AuthConfig } from "convex/server";
+
+export default {
 	providers: [
 		{
-			// Replace with your own Clerk Issuer URL from your "convex" JWT template
-			// or with \`process.env.CLERK_JWT_ISSUER_DOMAIN\`
-			// and configure CLERK_JWT_ISSUER_DOMAIN on the Convex Dashboard
+			// Clerk Frontend API URL from the Convex integration in the Clerk Dashboard.
+			// Set CLERK_JWT_ISSUER_DOMAIN on the Convex deployment (npx convex env set).
 			// See https://docs.convex.dev/auth/clerk#configuring-dev-and-prod-instances
-			domain: process.env.CLERK_JWT_ISSUER_DOMAIN,
+			domain: process.env.CLERK_JWT_ISSUER_DOMAIN!,
 			applicationID: "convex",
 		},
 	],
-};
+} satisfies AuthConfig;
 `],
   ["auth/clerk/convex/backend/convex/privateData.ts.hbs", `import { query } from "./_generated/server";
 
@@ -14316,7 +14335,7 @@ export default defineSchema({
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/node": "^24.13.3"
+    "@types/node": "^26.2.0"
   },
   "dependencies": {}
 }
@@ -15787,7 +15806,8 @@ CREATE TABLE \`session\` (
 -- CreateTable
 CREATE TABLE \`account\` (
     \`id\` VARCHAR(191) NOT NULL,
-    \`accountId\` TEXT NOT NULL,
+    \`issuer\` VARCHAR(191) NOT NULL,
+    \`accountId\` VARCHAR(191) NOT NULL,
     \`providerId\` TEXT NOT NULL,
     \`userId\` VARCHAR(191) NOT NULL,
     \`accessToken\` TEXT NULL,
@@ -15800,6 +15820,7 @@ CREATE TABLE \`account\` (
     \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     \`updatedAt\` DATETIME(3) NOT NULL,
 
+    UNIQUE INDEX \`account_issuer_accountId_uidx\`(\`issuer\`, \`accountId\`),
     INDEX \`account_userId_idx\`(\`userId\`(191)),
     PRIMARY KEY (\`id\`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -15982,6 +16003,7 @@ CREATE TABLE "session" (
 -- CreateTable
 CREATE TABLE "account" (
     "id" TEXT NOT NULL,
+    "issuer" TEXT NOT NULL,
     "accountId" TEXT NOT NULL,
     "providerId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -16034,6 +16056,9 @@ CREATE UNIQUE INDEX "session_token_key" ON "session"("token");
 
 -- CreateIndex
 CREATE INDEX "account_userId_idx" ON "account"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "account_issuer_accountId_uidx" ON "account"("issuer", "accountId");
 
 -- CreateIndex
 CREATE INDEX "verification_identifier_idx" ON "verification"("identifier");
@@ -26260,24 +26285,47 @@ const TITLE_TEXT = \`
   "exclude": ["dist"]
 }
 `],
-  ["frontend/native/bare/_gitignore", `node_modules/
+  ["frontend/native/bare/_gitignore", `# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
 .expo/
 dist/
-npm-debug.*
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
-*.orig.*
-web-build/
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
 
 # macOS
 .DS_Store
+*.pem
 
-# Temporary files created by Metro to check the health of the file watcher
-.metro-health-check*
+# local env files
+.env*.local
 
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
 `],
   ["frontend/native/bare/app.json.hbs", `{
 	"expo": {
@@ -26289,7 +26337,8 @@ web-build/
 		"scheme": "{{projectName}}",
 		"userInterfaceStyle": "automatic",
 		"ios": {
-			"supportsTablet": true
+			"supportsTablet": true,
+			"bundleIdentifier": "{{appId projectName "ios"}}"
 		},
 		"android": {
 			"adaptiveIcon": {
@@ -26299,7 +26348,7 @@ web-build/
 				"monochromeImage": "./assets/images/android-icon-monochrome.png"
 			},
 			"predictiveBackGestureEnabled": false,
-			"package": "com.anonymous.mybettertapp"
+			"package": "{{appId projectName "android"}}"
 		},
 		"web": {
 			"output": "static",
@@ -26809,7 +26858,7 @@ const products = useQuery(api.polar.listAllProducts);
 const subscription = useQuery(api.polar.getCurrentSubscription);
 const generateCheckoutLink = useAction(api.polar.generateCheckoutLink);
 const generateCustomerPortalUrl = useAction(api.polar.generateCustomerPortalUrl);
-const recurringProduct = products?.find((product) => product.isRecurring);
+const recurringProduct = products?.find((product: { isRecurring?: boolean }) => product.isRecurring);
 
 const openPolarLink = async (url: string, returnUrl: string) => {
 	await WebBrowser.openAuthSessionAsync(url, returnUrl);
@@ -27412,40 +27461,41 @@ module.exports = config;
     "android": "expo run:android",
     "ios": "expo run:ios",
     "prebuild": "expo prebuild",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@expo/ui": "~57.0.7",
+    "@expo/ui": "~57.0.12",
     "@expo/vector-icons": "^15.1.1",
     "@tanstack/react-query": "^5.101.4",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.3",
     {{/if}}
-    "expo": "~57.0.8",
-    "expo-constants": "~57.0.7",
+    "expo": "~57.0.15",
+    "expo-constants": "~57.0.13",
     "expo-crypto": "~57.0.1",
     "expo-font": "~57.0.1",
-    "expo-linking": "~57.0.4",
+    "expo-linking": "~57.0.7",
     "expo-network": "~57.0.1",
-    "expo-router": "~57.0.8",
+    "expo-router": "~57.0.15",
     "expo-secure-store": "~57.0.1",
-    "expo-splash-screen": "~57.0.5",
+    "expo-splash-screen": "~57.0.7",
     "expo-status-bar": "~57.0.1",
-    "expo-system-ui": "~57.0.1",
+    "expo-system-ui": "~57.0.2",
     "expo-web-browser": "~57.0.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.86.0",
+    "react-native": "0.86.2",
     "react-native-gesture-handler": "~2.32.0",
-    "react-native-reanimated": "4.5.0",
+    "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.10.0"
+    "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
-    "@types/react": "~19.2.17",
+    "@types/react": "~19.2.18",
     "typescript": "~6.0.3"
   },
   "private": true
@@ -27473,30 +27523,48 @@ module.exports = config;
   ["frontend/native/base/assets/images/react-logo@2x.png", `[Binary file]`],
   ["frontend/native/base/assets/images/react-logo@3x.png", `[Binary file]`],
   ["frontend/native/base/assets/images/splash-icon.png", `[Binary file]`],
-  ["frontend/native/unistyles/_gitignore", `node_modules/
+  ["frontend/native/unistyles/_gitignore", `# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
 .expo/
 dist/
-npm-debug.*
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
-*.orig.*
-web-build/
-# expo router
-expo-env.d.ts
 
-.env
+# Metro
+.metro-health-check*
 
-ios
-android
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
 
 # macOS
 .DS_Store
+*.pem
 
-# Temporary files created by Metro to check the health of the file watcher
-.metro-health-check*`],
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
+`],
   ["frontend/native/unistyles/app.json.hbs", `{
   "expo": {
     "name": "{{projectName}}",
@@ -27507,7 +27575,8 @@ android
     "scheme": "{{projectName}}",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "{{appId projectName "ios"}}"
     },
     "android": {
       "adaptiveIcon": {
@@ -27517,7 +27586,7 @@ android
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.mybettertapp"
+      "package": "{{appId projectName "android"}}"
     },
     "web": {
       "output": "static",
@@ -28070,7 +28139,7 @@ export default function Home() {
   const subscription = useQuery(api.polar.getCurrentSubscription);
   const generateCheckoutLink = useAction(api.polar.generateCheckoutLink);
   const generateCustomerPortalUrl = useAction(api.polar.generateCustomerPortalUrl);
-  const recurringProduct = products?.find((product) => product.isRecurring);
+  const recurringProduct = products?.find((product: { isRecurring?: boolean }) => product.isRecurring);
 
   const openPolarLink = async (url: string, returnUrl: string) => {
     await WebBrowser.openAuthSessionAsync(url, returnUrl);
@@ -28615,23 +28684,18 @@ const styles = StyleSheet.create((theme) => ({
 `],
   ["frontend/native/unistyles/babel.config.js.hbs", `module.exports = (api) => {
 	api.cache(true);
-	const plugins = [];
-
-	plugins.push([
-		"react-native-unistyles/plugin",
-		{
-			root: "src",
-			autoProcessRoot: "app",
-			autoProcessImports: ["@/components"],
-		},
-	]);
-
-	plugins.push("react-native-worklets/plugin");
 
 	return {
 		presets: ["babel-preset-expo"],
-
-		plugins,
+		plugins: [
+			[
+				"react-native-unistyles/plugin",
+				{
+					root: "app",
+					autoProcessImports: ["@/components"],
+				},
+			],
+		],
 	};
 };
 `],
@@ -28741,7 +28805,8 @@ module.exports = config;
     "dev": "expo start --clear",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
@@ -28749,36 +28814,36 @@ module.exports = config;
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.3",
     {{/if}}
-    "babel-preset-expo": "~57.0.4",
-    "expo": "~57.0.8",
-    "expo-constants": "~57.0.7",
+    "babel-preset-expo": "~57.0.7",
+    "expo": "~57.0.15",
+    "expo-constants": "~57.0.13",
     "expo-crypto": "~57.0.1",
-    "expo-dev-client": "~57.0.8",
+    "expo-dev-client": "~57.0.14",
     "expo-font": "~57.0.1",
-    "expo-linking": "~57.0.4",
+    "expo-linking": "~57.0.7",
     "expo-network": "~57.0.1",
-    "expo-router": "~57.0.8",
+    "expo-router": "~57.0.15",
     "expo-secure-store": "~57.0.1",
-    "expo-splash-screen": "~57.0.5",
+    "expo-splash-screen": "~57.0.7",
     "expo-status-bar": "~57.0.1",
-    "expo-system-ui": "~57.0.1",
+    "expo-system-ui": "~57.0.2",
     "expo-web-browser": "~57.0.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.86.0",
+    "react-native": "0.86.2",
     "react-native-gesture-handler": "~2.32.0",
-    "react-native-nitro-modules": "0.36.3",
-    "react-native-reanimated": "4.5.0",
+    "react-native-nitro-modules": "0.36.5",
+    "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-unistyles": "^3.3.0",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.10.0"
+    "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
     "ajv": "^8.20.0",
     "@babel/core": "^7.29.7",
-    "@types/react": "~19.2.17",
+    "@types/react": "~19.2.18",
     "typescript": "~6.0.3"
   }
 }
@@ -28923,40 +28988,93 @@ StyleSheet.configure({
   },
 });
 `],
-  ["frontend/native/uniwind/_gitignore", `node_modules/
+  ["frontend/native/uniwind/_gitignore", `# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
 .expo/
 dist/
-npm-debug.*
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
-*.orig.*
-web-build/
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
 
 # macOS
 .DS_Store
+*.pem
 
-# Temporary files created by Metro to check the health of the file watcher
-.metro-health-check*
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
 
 # UniWind generated types
 uniwind-types.d.ts
-
 `],
   ["frontend/native/uniwind/app.json.hbs", `{
   "expo": {
-    "scheme": "{{projectName}}",
-    "userInterfaceStyle": "automatic",
-    "orientation": "default",
-    "web": {
-      "bundler": "metro"
-    },
     "name": "{{projectName}}",
     "slug": "{{projectName}}",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "{{projectName}}",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "{{appId projectName "ios"}}"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "{{appId projectName "android"}}"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
     "plugins": [
-      "expo-font"
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -29385,7 +29503,7 @@ const products = useQuery(api.polar.listAllProducts);
 const subscription = useQuery(api.polar.getCurrentSubscription);
 const generateCheckoutLink = useAction(api.polar.generateCheckoutLink);
 const generateCustomerPortalUrl = useAction(api.polar.generateCustomerPortalUrl);
-const recurringProduct = products?.find((product) => product.isRecurring);
+const recurringProduct = products?.find((product: { isRecurring?: boolean }) => product.isRecurring);
 
 const openPolarLink = async (url: string, returnUrl: string) => {
   await WebBrowser.openAuthSessionAsync(url, returnUrl);
@@ -29836,8 +29954,6 @@ export function useAppTheme() {
   ["frontend/native/uniwind/global.css", `@import "tailwindcss";
 @import "uniwind";
 @import "heroui-native/styles";
-
-@source './node_modules/heroui-native/lib';
 `],
   ["frontend/native/uniwind/metro.config.js.hbs", `const { getDefaultConfig } = require("expo/metro-config");
 const { withUniwindConfig } = require("uniwind/metro");
@@ -29874,46 +29990,49 @@ module.exports = uniwindConfig;
     "android": "expo run:android",
     "ios": "expo run:ios",
     "prebuild": "expo prebuild",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~57.0.7",
+    "@expo/metro-runtime": "~57.0.12",
     "@expo/vector-icons": "^15.1.1",
     "@gorhom/bottom-sheet": "^5.2.14",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.3",
     {{/if}}
-    "expo": "~57.0.8",
-    "expo-constants": "~57.0.7",
+    "expo": "~57.0.15",
+    "expo-constants": "~57.0.13",
     "expo-font": "~57.0.1",
     "expo-haptics": "~57.0.1",
-    "expo-linking": "~57.0.4",
+    "expo-linking": "~57.0.7",
     "expo-network": "~57.0.1",
-    "expo-router": "~57.0.8",
+    "expo-router": "~57.0.15",
     "expo-secure-store": "~57.0.1",
+    "expo-splash-screen": "~57.0.7",
     "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.2",
     "expo-web-browser": "~57.0.2",
-    "heroui-native": "^1.0.7",
+    "heroui-native": "^1.0.8",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.86.0",
+    "react-native": "0.86.2",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-keyboard-controller": "1.21.9",
-    "react-native-reanimated": "4.5.0",
+    "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.10.0",
+    "react-native-worklets": "0.10.1",
     "tailwind-merge": "^3.6.0",
-    "tailwind-variants": "^3.3.0",
+    "tailwind-variants": "^3.3.1",
     "tailwindcss": "^4.3.3",
-    "uniwind": "^1.10.0"
+    "uniwind": "^1.11.0"
   },
   "devDependencies": {
-    "@types/node": "^26.1.2",
-    "@types/react": "~19.2.17",
+    "@types/node": "^26.2.0",
+    "@types/react": "~19.2.18",
     "typescript": "~6.0.3"
   }
 }
@@ -30337,7 +30456,7 @@ initOpenNextCloudflareForDev();
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^20.19.43",
+    "@types/node": "^26.2.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "^4.3.3"
@@ -30743,7 +30862,7 @@ export function ThemeProvider({
   "devDependencies": {
     "@react-router/dev": "^8.3.0",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/node": "^22.20.1",
+    "@types/node": "^26.2.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "^4.3.3",
@@ -31313,7 +31432,7 @@ export default defineConfig({
 	"devDependencies": {
 		"@tanstack/react-router-devtools": "^1.167.0",
 		"@tanstack/router-plugin": "^1.168.23",
-		"@types/node": "^22.20.1",
+		"@types/node": "^26.2.0",
 		"@types/react": "^19.2.17",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^6.0.4",
@@ -31975,9 +32094,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 
 const fetchClerkAuth = createServerFn({ method: "GET" }).handler(async () => {
-  const clerkAuth = await auth();
-  const token = await clerkAuth.getToken({ template: "convex" });
-  return { userId: clerkAuth.userId, token };
+  const { userId, getToken } = await auth();
+  const token = await getToken();
+  return { userId, token };
 });
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { createServerFn } from "@tanstack/react-start";
@@ -33345,7 +33464,19 @@ export const env = createEnv({
 		EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 	},
-	runtimeEnv: process.env,
+	runtimeEnv: {
+{{#if (eq backend "convex")}}
+		EXPO_PUBLIC_CONVEX_URL: process.env.EXPO_PUBLIC_CONVEX_URL,
+{{#if (eq auth "better-auth")}}
+		EXPO_PUBLIC_CONVEX_SITE_URL: process.env.EXPO_PUBLIC_CONVEX_SITE_URL,
+{{/if}}
+{{else}}
+		EXPO_PUBLIC_SERVER_URL: process.env.EXPO_PUBLIC_SERVER_URL,
+{{/if}}
+{{#if (eq auth "clerk")}}
+		EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY,
+{{/if}}
+	},
 	emptyStringAsUndefined: true,
 });
 `],

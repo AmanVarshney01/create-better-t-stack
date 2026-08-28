@@ -1,9 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import path from "node:path";
 
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import fs from "fs-extra";
 
 import { create } from "../src/index";
@@ -431,7 +430,7 @@ describe("MCP server", () => {
     expect(payload.error).toContain("already exists and is not empty");
   });
 
-  it("plans addon installation without mutating bts.jsonc", async () => {
+  it("plans addons and workspace packages without writing files", async () => {
     const { client, cleanup } = await connectInMemoryClient();
     cleanups.push(cleanup);
 
@@ -465,6 +464,7 @@ describe("MCP server", () => {
       arguments: {
         projectDir: projectPath,
         addons: ["biome"],
+        package: "planned-utils",
         packageManager: "bun",
         install: false,
       },
@@ -472,19 +472,26 @@ describe("MCP server", () => {
 
     const payload = result.structuredContent as {
       ok: boolean;
-      data?: { success?: boolean; dryRun?: boolean; addedAddons?: string[] };
+      data?: {
+        success?: boolean;
+        dryRun?: boolean;
+        addedAddons?: string[];
+        addedPackage?: string;
+      };
     };
 
     expect(payload.ok).toBe(true);
     expect(payload.data?.success).toBe(true);
     expect(payload.data?.dryRun).toBe(true);
     expect(payload.data?.addedAddons).toEqual(["biome"]);
+    expect(payload.data?.addedPackage).toBe("planned-utils");
+    expect(await fs.pathExists(path.join(projectPath, "packages", "planned-utils"))).toBe(false);
 
     const after = await readBtsConfig(projectPath);
     expect(after).toEqual(before);
   });
 
-  it("adds addons through MCP and persists them to bts.jsonc", async () => {
+  it("adds addons and workspace packages through MCP", async () => {
     const { client, cleanup } = await connectInMemoryClient();
     cleanups.push(cleanup);
 
@@ -516,6 +523,7 @@ describe("MCP server", () => {
       arguments: {
         projectDir: projectPath,
         addons: ["biome"],
+        package: "shared-utils",
         packageManager: "bun",
         install: false,
       },
@@ -523,12 +531,16 @@ describe("MCP server", () => {
 
     const payload = result.structuredContent as {
       ok: boolean;
-      data?: { success?: boolean; addedAddons?: string[] };
+      data?: { success?: boolean; addedAddons?: string[]; addedPackage?: string };
     };
 
     expect(payload.ok).toBe(true);
     expect(payload.data?.success).toBe(true);
     expect(payload.data?.addedAddons).toEqual(["biome"]);
+    expect(payload.data?.addedPackage).toBe("shared-utils");
+    expect(
+      await fs.readJson(path.join(projectPath, "packages", "shared-utils", "package.json")),
+    ).toMatchObject({ name: "@mcp-add-addons/shared-utils", private: true });
 
     const after = await readBtsConfig(projectPath);
     expect(after?.addons).toEqual(expect.arrayContaining(["turborepo", "biome"]));

@@ -4,8 +4,10 @@ import { buttonVariants } from "fumadocs-ui/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "fumadocs-ui/components/ui/popover";
 import { useCopyButton } from "fumadocs-ui/utils/use-copy-button";
 import { Check, ChevronDown, Copy, ExternalLinkIcon, MessageCircleIcon } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 const cache = new Map<string, string>();
@@ -18,8 +20,10 @@ export function LLMCopyButton({
 }: {
   markdownUrl: string;
 }) {
+  const pathname = usePathname();
   const [isLoading, setLoading] = useState(false);
   const [checked, onClick] = useCopyButton(async () => {
+    track("docs_copy_markdown", { path: pathname });
     const cached = cache.get(markdownUrl);
     if (cached) return navigator.clipboard.writeText(cached);
 
@@ -78,6 +82,7 @@ export function ViewOptions({
    */
   githubUrl: string;
 }) {
+  const pathname = usePathname();
   const items = useMemo(() => {
     const origin = globalThis.window?.location.origin;
     const fullMarkdownUrl = origin ? new URL(markdownUrl, origin) : "loading";
@@ -204,7 +209,11 @@ export function ViewOptions({
   }, [githubUrl, markdownUrl]);
 
   return (
-    <Popover>
+    <Popover
+      onOpenChange={(open) => {
+        if (open) track("docs_view_options_open", { path: pathname });
+      }}
+    >
       <PopoverTrigger
         className={cn(
           buttonVariants({
@@ -224,6 +233,7 @@ export function ViewOptions({
             href={item.href}
             rel="noreferrer noopener"
             target="_blank"
+            onClick={() => track("docs_open_in", { target: item.title, path: pathname })}
             className={cn(optionVariants())}
           >
             {item.icon}

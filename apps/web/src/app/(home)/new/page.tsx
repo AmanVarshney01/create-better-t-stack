@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { SITE_URL } from "@/lib/site";
 import { fetchSponsors } from "@/lib/sponsors";
 
 import { StackBuilder } from "./_components/stack-builder";
@@ -8,13 +9,16 @@ import { StackBuilder } from "./_components/stack-builder";
 export const metadata: Metadata = {
   title: "Stack Builder - Better-T-Stack",
   description: "Interactive Ui to roll your own stack",
+  alternates: {
+    canonical: "/new",
+  },
   openGraph: {
     title: "Stack Builder - Better-T-Stack",
     description: "Interactive Ui to roll your own stack",
-    url: "https://better-t-stack.dev/new",
+    url: `${SITE_URL}/new`,
     images: [
       {
-        url: "https://better-t-stack.dev/og/site/new.png",
+        url: `${SITE_URL}/og/site/new.png`,
         width: 1200,
         height: 630,
         alt: "Better-T-Stack Stack Builder",
@@ -25,7 +29,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Stack Builder - Better-T-Stack",
     description: "Interactive Ui to roll your own stack",
-    images: ["https://better-t-stack.dev/og/site/new.png"],
+    images: [`${SITE_URL}/og/site/new.png`],
   },
 };
 

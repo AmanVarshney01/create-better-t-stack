@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaGithub } from "react-icons/fa6";
 
+import { track } from "@/lib/analytics";
+
 export interface ShowcaseItemProps {
   title: string;
   description: string;
@@ -78,6 +80,7 @@ export default function ShowcaseItem({
           href={liveUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => track("showcase_click", { project: title, target: "demo" })}
           className="builder-focus-ring flex items-center gap-2 border-t px-4 py-2.5 font-mono text-[11px] text-primary uppercase tracking-[0.08em] transition-colors duration-150 hover:text-primary/70"
         >
           <Monitor aria-hidden="true" className="h-3 w-3 shrink-0" />
@@ -90,6 +93,7 @@ export default function ShowcaseItem({
           href={sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => track("showcase_click", { project: title, target: "source" })}
           className="builder-focus-ring flex items-center gap-2 border-t px-4 py-2.5 font-mono text-[11px] text-fd-muted-foreground uppercase tracking-[0.08em] transition-colors duration-150 hover:text-fd-foreground"
         >
           <FaGithub aria-hidden="true" className="h-3 w-3 shrink-0" />

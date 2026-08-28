@@ -4,6 +4,7 @@
 
 import {
   didLastPromptShowUI,
+  markPromptShown,
   setIsFirstPrompt,
   setLastPromptShownUI,
   setPromptProgress,
@@ -86,6 +87,7 @@ export async function navigableGroup<T>(
       setLastPromptShownUI(false);
 
       const presetResult = opts?.preselected?.[name];
+      if (presetResult === undefined) markPromptShown();
       const result =
         presetResult !== undefined
           ? presetResult

@@ -576,6 +576,31 @@ describe("Frontend Configurations", () => {
       expectError(result, "Cannot select multiple native frameworks");
     });
 
+    it("should derive native app identifiers from the project name", async () => {
+      const result = await runTRPCTest({
+        projectName: "my-app_1",
+        frontend: ["native-bare"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      const appJson = await fs.readJson(path.join(result.projectDir!, "apps/native/app.json"));
+      expect(appJson.expo.ios.bundleIdentifier).toBe("com.anonymous.my-app-1");
+      expect(appJson.expo.android.package).toBe("com.anonymous.myapp_1");
+    });
+
     it("should work with one web + one native frontend", async () => {
       const result = await runTRPCTest({
         projectName: "web-native-combo",

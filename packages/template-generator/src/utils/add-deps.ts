@@ -15,18 +15,18 @@ type PackageJson = {
 export const dependencyVersionMap = {
   typescript: "^6.0.3",
 
-  "better-auth": "1.6.27",
-  "@better-auth/expo": "1.6.27",
+  "better-auth": "1.7.1",
+  "@better-auth/expo": "1.7.1",
 
-  "@clerk/backend": "^3.13.2",
-  "@clerk/express": "^2.1.47",
-  "@clerk/fastify": "^3.1.57",
-  "@clerk/nextjs": "^7.6.2",
-  "@clerk/react": "^6.12.8",
-  "@clerk/react-router": "^3.6.1",
+  "@clerk/backend": "^3.16.10",
+  "@clerk/express": "^2.1.61",
+  "@clerk/fastify": "^3.1.71",
+  "@clerk/nextjs": "^7.8.0",
+  "@clerk/react": "^6.14.5",
+  "@clerk/react-router": "^3.6.15",
   "@react-router/express": "^8.3.0",
-  "@clerk/tanstack-react-start": "^1.4.24",
-  "@clerk/expo": "^4.1.0",
+  "@clerk/tanstack-react-start": "^1.5.6",
+  "@clerk/expo": "^4.5.2",
 
   "drizzle-orm": "^0.45.2",
   "drizzle-kit": "^0.31.10",
@@ -73,7 +73,7 @@ export const dependencyVersionMap = {
   "lint-staged": "^17.2.0",
 
   tsx: "^4.23.1",
-  "@types/node": "^22.20.1",
+  "@types/node": "^26.2.0",
 
   "@types/bun": "^1.3.14",
 
@@ -125,7 +125,7 @@ export const dependencyVersionMap = {
   next: "^16.3.0",
   nitro: "^3.0.260610-beta",
 
-  convex: "^1.42.3",
+  convex: "^1.45.0",
   "@convex-dev/react-query": "^0.1.0",
   "@convex-dev/agent": "^0.6.4",
   "@convex-dev/polar": "^0.9.2",

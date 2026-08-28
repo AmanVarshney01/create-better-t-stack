@@ -45,23 +45,6 @@ export function AnalyticsSources() {
           </span>
           <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-fd-muted-foreground transition-colors duration-150 group-hover:text-primary" />
         </Link>
-
-        <Link
-          href="https://umami.amanv.cloud/share/pHvqHleyOl9PBfaK"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="builder-focus-ring group flex items-center justify-between gap-3 py-2.5"
-        >
-          <span className="min-w-0">
-            <span className="block text-[10px] text-fd-muted-foreground uppercase tracking-[0.10em]">
-              Website analytics
-            </span>
-            <span className="block break-words text-[13px] leading-[1.55] transition-colors duration-150 group-hover:text-primary">
-              Umami dashboard
-            </span>
-          </span>
-          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-fd-muted-foreground transition-colors duration-150 group-hover:text-primary" />
-        </Link>
       </div>
 
       <p className="mt-4 text-[11px] text-fd-muted-foreground leading-[1.5]">

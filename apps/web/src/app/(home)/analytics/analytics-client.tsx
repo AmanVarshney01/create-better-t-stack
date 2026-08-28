@@ -37,6 +37,8 @@ type PrecomputedStats = {
   hourlyDistribution: Record<string, number>;
   stackCombinations: Record<string, number>;
   dbOrmCombinations: Record<string, number>;
+  /** Absent until the Convex deployment that added it is live. */
+  mode?: Record<string, number>;
 };
 
 type DailyStats = { date: string; count: number };
@@ -177,6 +179,8 @@ function buildFromPrecomputed(
     recordToDistribution(stats.dbOrmCombinations),
     totalProjects,
   );
+  // Mode was added later, so shares are relative to events that carry it.
+  const modeDistribution = withShare(recordToDistribution(stats.mode ?? {}));
 
   const timeSeries = buildTimeSeries(dailyStats);
   const monthlyTimeSeries = buildMonthlyTimeSeries(monthlyStats.monthly);
@@ -257,6 +261,7 @@ function buildFromPrecomputed(
     cliVersionDistribution,
     stackCombinationDistribution,
     databaseORMCombinationDistribution,
+    modeDistribution,
     summary: {
       mostPopularFrontend: getMostPopular(frontendDistribution),
       mostPopularBackend: getMostPopular(backendDistribution),
@@ -311,6 +316,7 @@ const emptyData: AggregatedAnalyticsData = {
   cliVersionDistribution: [],
   stackCombinationDistribution: [],
   databaseORMCombinationDistribution: [],
+  modeDistribution: [],
   summary: {
     mostPopularFrontend: "none",
     mostPopularBackend: "none",

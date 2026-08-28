@@ -2,18 +2,23 @@ import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { preloadQuery } from "convex/nextjs";
 import type { Metadata } from "next";
 
+import { SITE_URL } from "@/lib/site";
+
 import { AnalyticsClient } from "./analytics-client";
 
 export const metadata: Metadata = {
   title: "Analytics - Better-T-Stack",
   description: "Convex-backed project creation analytics for Better-T-Stack.",
+  alternates: {
+    canonical: "/analytics",
+  },
   openGraph: {
     title: "Analytics - Better-T-Stack",
     description: "Convex-backed project creation analytics for Better-T-Stack.",
-    url: "https://better-t-stack.dev/analytics",
+    url: `${SITE_URL}/analytics`,
     images: [
       {
-        url: "https://better-t-stack.dev/og/site/analytics.png",
+        url: `${SITE_URL}/og/site/analytics.png`,
         width: 1200,
         height: 630,
         alt: "Better-T-Stack Convex Analytics",
@@ -24,7 +29,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Analytics - Better-T-Stack",
     description: "Convex-backed project creation analytics for Better-T-Stack.",
-    images: ["https://better-t-stack.dev/og/site/analytics.png"],
+    images: [`${SITE_URL}/og/site/analytics.png`],
   },
 };
 

@@ -67,6 +67,23 @@ export default function NotFound() {
             </div>
           </Link>
         </div>
+
+        <nav aria-label="Recovery links" className="rounded border border-border p-4">
+          <p className="mb-3 font-mono text-sm text-fd-muted-foreground">
+            Try a project index instead:
+          </p>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 font-mono text-sm">
+            <Link href="/docs" className="underline decoration-fd-border underline-offset-4">
+              Documentation
+            </Link>
+            <Link href="/llms.txt" className="underline decoration-fd-border underline-offset-4">
+              Agent instructions
+            </Link>
+            <Link href="/sitemap.xml" className="underline decoration-fd-border underline-offset-4">
+              Sitemap
+            </Link>
+          </div>
+        </nav>
       </main>
     </div>
   );

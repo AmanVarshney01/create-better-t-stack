@@ -30,7 +30,7 @@ Follow the prompts to configure your project or use the `--yes` flag for default
 ## Requirements
 
 - Node.js 22 or newer to run the CLI with Node.js. The selected framework may require a newer release; the CLI checks the exact stack before writing files.
-- Bun 1.3 or newer is recommended. Bun 1.2.14 remains the minimum because generated workspaces use dependency catalogs.
+- Bun 1.4 or newer is recommended. Bun 1.2.14 remains the minimum because generated workspaces use dependency catalogs.
 - pnpm 10.26.0 or newer when using pnpm (catalogs and `allowBuilds`).
 - npm 11.16.0 or newer when using npm (`allowScripts`).
 
@@ -78,6 +78,7 @@ Options:
   --package-manager <pm>          Package manager (npm, pnpm, bun)
   --install                       Install dependencies
   --no-install                    Skip installing dependencies
+  --open <target>                 Open in an editor, IDE, or coding agent after creation
   --db-setup <setup>              Database setup (turso, d1, neon, supabase, prisma-postgres, planetscale, mongodb-atlas, docker, none)
   --web-deploy <setup>            Web deployment (cloudflare, docker, vercel, none)
   --server-deploy <setup>         Server deployment (cloudflare, docker, vercel, none)
@@ -127,6 +128,9 @@ This CLI collects anonymous usage data to help improve the tool. The data collec
 - CLI version
 - Node.js version
 - Platform (OS)
+- How the CLI was driven (prompts, flags, `--yes`, JSON, the programmatic API, or the MCP server)
+
+Separately, one anonymous failure event is sent when a scaffold breaks (stage and error class, never full messages or paths). See the [analytics documentation](https://better-t-stack.dev/docs/analytics) for details.
 
 **Telemetry is enabled by default in published versions** to help us understand usage patterns and improve the tool.
 
@@ -141,6 +145,8 @@ BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack
 # Disable telemetry globally in your shell profile (.bashrc, .zshrc, etc.)
 export BTS_TELEMETRY_DISABLED=1
 ```
+
+The CLI also honors the cross-tool `DO_NOT_TRACK=1` convention (https://consoledonottrack.com), and `--disable-analytics` skips telemetry for a single run.
 
 ## Examples
 

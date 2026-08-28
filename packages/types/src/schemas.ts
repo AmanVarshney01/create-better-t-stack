@@ -512,9 +512,21 @@ export const CreateInputSchema = z
     path: ["dbSetupOptions", "mode"],
   });
 
+export const WorkspacePackageNameSchema = z
+  .string()
+  .min(1, "Package name cannot be empty")
+  .max(214, "Package name must not exceed 214 characters")
+  .regex(
+    /^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/,
+    "Package name must be an unscoped lowercase npm name",
+  )
+  .refine((name) => name !== "node_modules", "Package name is reserved")
+  .describe("Name of a workspace package to scaffold");
+
 export const AddInputSchema = z
   .object({
     addons: AddonsListSchema.optional(),
+    package: WorkspacePackageNameSchema.optional(),
     addonOptions: AddonOptionsSchema.optional(),
     webDeploy: WebDeploySchema.optional(),
     serverDeploy: ServerDeploySchema.optional(),
@@ -522,6 +534,7 @@ export const AddInputSchema = z
     install: z.boolean().optional(),
     packageManager: PackageManagerSchema.optional(),
     dryRun: z.boolean().optional(),
+    disableAnalytics: z.boolean().optional(),
   })
   .strict();
 

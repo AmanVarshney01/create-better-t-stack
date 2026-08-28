@@ -9,6 +9,7 @@ On successful project creation, the CLI sends one anonymous event with:
 
 - Selected options (stack choices), including: `frontend`, `backend`, `runtime`, `database`, `orm`, `api`, `auth`, `payments`, `addons`, `examples`, `dbSetup`, `webDeploy`, `serverDeploy`, `packageManager`, `git`, `install`
 - Environment data: `cli_version`, `node_version`, `platform`
+- How the CLI was driven (`mode`): interactive prompts, flags, `--yes`, JSON output, the programmatic API, or the MCP server
 
 Not collected:
 
@@ -16,6 +17,12 @@ Not collected:
 - Nested addon or database provisioning options
 - Secrets or environment variables from your machine
 - IP addresses or persistent project/user identifiers
+
+## Diagnostic events
+
+Separately from the project-creation event, the CLI sends one anonymous `cli_failed` event to the same self-hosted Umami instance that powers the website analytics when `create` or `add` fails. It exists to catch problems the success event cannot show and contains: the command, how the CLI was driven, the stage that failed (for example `template-generation`, `file-writing`, `database-setup`, `addons-setup`, `dependency-installation`, `git-initialization`, `directory`, `validate`), the error class, the package manager and backend when known, and a scrubbed one-line reason with quoted names, paths, URLs, and emails replaced by placeholders. Cancelled runs send nothing.
+
+Umami derives coarse location (country, region, city) from the request IP and a session hash from IP and user agent that rotates monthly; the IP address itself is not stored. The event never includes project names, paths, file contents, or full error messages. The same `BTS_TELEMETRY_DISABLED=1` or `DO_NOT_TRACK=1` switch and the `--disable-analytics` flag turn it off.
 
 ## Disable telemetry
 
@@ -29,10 +36,12 @@ BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack@latest
 
 Add `export BTS_TELEMETRY_DISABLED=1` to your shell profile to make it permanent.
 
+The CLI also honors the cross-tool [`DO_NOT_TRACK=1`](https://consoledonottrack.com) convention, so one variable can turn off telemetry for every tool that supports it. The `--disable-analytics` flag skips it for a single run.
+
 ## Where to view analytics
 
 - Charts: [`/analytics`](/analytics)
-- Shared website analytics: [Umami dashboard](https://umami.amanv.cloud/share/pHvqHleyOl9PBfaK) (self-hosted on a Hostinger VPS)
+- Shared website analytics: [Umami dashboard](https://umami.amanv.cloud/share/pHvqHleyOl9PBfaK) (self-hosted on a Hostinger VPS). Besides page views, the website records anonymous interaction events: builder selections, presets, command copies, share actions, docs actions, and outbound link clicks. Event names and their properties are defined in `apps/web/src/lib/analytics.ts`.
 - Aggregate JSON snapshot: `https://r2.better-t-stack.dev/analytics-data.json`
 - Aggregate CSV export: `https://r2.better-t-stack.dev/export.csv`
 
@@ -44,13 +53,14 @@ Notes:
 
 ## Full transparency
 
-Single event per scaffold; no IP or project identifiers. See source code below.
+One project event per successful scaffold plus one failure event when a scaffold breaks; no project identifiers. See source code below.
 
 If in doubt, set `BTS_TELEMETRY_DISABLED=1` and proceed. You can still use all CLI features.
 
 ## Source code
 
 - CLI event sender: [`apps/cli/src/utils/analytics.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts)
+- CLI diagnostic events: [`apps/cli/src/utils/diagnostics.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/diagnostics.ts)
 - Telemetry toggle logic: [`apps/cli/src/utils/telemetry.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/telemetry.ts)
 - Ingest endpoint: [`packages/backend/convex/http.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/packages/backend/convex/http.ts)
 - Analytics backend (ingest + aggregation): [`packages/backend/convex/analytics.ts`](https://github.com/AmanVarshney01/create-better-t-stack/blob/main/packages/backend/convex/analytics.ts)

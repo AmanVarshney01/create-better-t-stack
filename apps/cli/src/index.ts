@@ -53,7 +53,9 @@ import {
   TemplateSchema,
   type WebDeploy,
   WebDeploySchema,
+  WorkspacePackageNameSchema,
 } from "./types";
+import { getProcessMode } from "./utils/context";
 import {
   CLIError,
   DirectoryConflictError,
@@ -61,6 +63,7 @@ import {
   UserCancelledError,
 } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
+import { type ProjectLauncher, ProjectLauncherSchema } from "./utils/project-launcher";
 import { validateResolvedConfigCompatibility } from "./validation";
 
 export const SchemaNameSchema = z
@@ -165,6 +168,7 @@ export const router = t.router({
           git: z.boolean().optional(),
           packageManager: PackageManagerSchema.optional(),
           install: z.boolean().optional(),
+          open: ProjectLauncherSchema.optional(),
           dbSetup: DatabaseSetupSchema.optional(),
           backend: BackendSchema.optional(),
           runtime: RuntimeSchema.optional(),
@@ -204,7 +208,7 @@ export const router = t.router({
     })
     .input(CreateInputSchema)
     .mutation(async ({ input }) => {
-      const result = await createProjectHandler(input, { silent: true });
+      const result = await createProjectHandler(input, { silent: true, mode: "json" });
       if (!result) {
         throw new UserCancelledError({ message: "Operation cancelled" });
       }
@@ -233,10 +237,13 @@ export const router = t.router({
     .meta({ description: "Open the web-based stack builder" })
     .mutation(() => openBuilderCommand()),
   add: t.procedure
-    .meta({ description: "Add addons to an existing Better-T-Stack project" })
+    .meta({
+      description: "Add addons or a workspace package to an existing Better-T-Stack project",
+    })
     .input(
       z.object({
         addons: z.array(AddonsSchema).optional().describe("Addons to add"),
+        package: WorkspacePackageNameSchema.optional(),
         install: z
           .boolean()
           .optional()
@@ -249,6 +256,7 @@ export const router = t.router({
           .optional()
           .default(false)
           .describe("Preview addon changes without writing files"),
+        disableAnalytics: z.boolean().optional().default(false).describe("Disable analytics"),
       }),
     )
     .mutation(async ({ input }) => {
@@ -256,12 +264,12 @@ export const router = t.router({
     }),
   addJson: t.procedure
     .meta({
-      description: "Add addons from a raw JSON payload (agent-friendly)",
+      description: "Add addons or a workspace package from a raw JSON payload (agent-friendly)",
       jsonInput: "always",
     })
     .input(AddInputSchema)
     .mutation(async ({ input }) => {
-      const result = await addHandler(input, { silent: true });
+      const result = await addHandler(input, { silent: true, mode: "json" });
       if (!result) {
         throw new UserCancelledError({ message: "Operation cancelled" });
       }
@@ -368,7 +376,10 @@ export async function create(
 
   return Result.tryPromise({
     try: async () => {
-      const result = await createProjectHandlerResult(input, { silent: true });
+      const result = await createProjectHandlerResult(input, {
+        silent: true,
+        mode: getProcessMode() ?? "api",
+      });
       if (result.isErr()) {
         throw result.error;
       }
@@ -523,17 +534,27 @@ export type {
   ServerDeploy,
   Template,
   DirectoryConflict,
+  ProjectLauncher,
 };
+
+export { ProjectLauncherSchema };
 
 export type { AddResult };
 
 export type AddOptions = Pick<
   AddInput,
-  "addons" | "addonOptions" | "install" | "packageManager" | "projectDir" | "dryRun"
+  | "addons"
+  | "addonOptions"
+  | "package"
+  | "install"
+  | "packageManager"
+  | "projectDir"
+  | "dryRun"
+  | "disableAnalytics"
 >;
 
 /**
- * Programmatic API to add addons to an existing Better-T-Stack project.
+ * Programmatic API to add addons or a workspace package to an existing Better-T-Stack project.
  *
  * @example
  * ```typescript
@@ -560,7 +581,10 @@ export async function add(options: AddOptions = {}): Promise<AddResult> {
     };
   }
 
-  const result = await addHandler(parsedInput.data, { silent: true });
+  const result = await addHandler(parsedInput.data, {
+    silent: true,
+    mode: getProcessMode() ?? "api",
+  });
   return (
     result ?? {
       success: false,

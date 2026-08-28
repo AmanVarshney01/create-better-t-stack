@@ -61,6 +61,21 @@ describe("adjustAnalyticsStats", () => {
     expect(stats.stackCombinations).toEqual({ "hono + none": 1 });
   });
 
+  test("counts the invocation mode only when an event reports it", () => {
+    const stats = adjustAnalyticsStats(
+      createEmptyAnalyticsStats(),
+      [
+        { event: { ...legitimateEvent, mode: "mcp" }, creationTime: Date.UTC(2026, 7, 10, 4) },
+        { event: { ...legitimateEvent, mode: "mcp" }, creationTime: Date.UTC(2026, 7, 10, 5) },
+        { event: legitimateEvent, creationTime: Date.UTC(2026, 7, 10, 6) },
+      ],
+      1,
+    );
+
+    expect(stats.totalProjects).toBe(3);
+    expect(stats.mode).toEqual({ mcp: 2 });
+  });
+
   test("normalizes version keys during ingestion", () => {
     const stats = adjustAnalyticsStats(
       createEmptyAnalyticsStats(),

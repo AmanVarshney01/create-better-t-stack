@@ -3,9 +3,9 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
-// Intentional: keep Convex Better Auth on the latest Better Auth 1.6.x release
-// supported by @convex-dev/better-auth (>=1.6.11 <1.7.0).
-const CONVEX_BETTER_AUTH_VERSION = "1.6.27";
+// Intentional: @convex-dev/better-auth's AuthClient type rejects better-auth >=1.6.18
+// clients (get-convex/better-auth#420), so Convex projects pin the last compatible release.
+const CONVEX_BETTER_AUTH_VERSION = "1.6.17";
 
 export function processAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { auth, backend } = config;

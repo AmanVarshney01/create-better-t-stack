@@ -42,6 +42,7 @@ export default defineSchema({
     cli_version: v.optional(v.string()),
     node_version: v.optional(v.string()),
     platform: v.optional(v.string()),
+    mode: v.optional(v.string()),
     quarantinedAt: v.optional(v.number()),
     quarantineReason: v.optional(v.literal("invalid_payload")),
   }).index("by_quarantined", ["quarantinedAt"]),
@@ -71,6 +72,7 @@ export default defineSchema({
     hourlyDistribution: v.optional(distributionValidator),
     stackCombinations: v.optional(distributionValidator),
     dbOrmCombinations: v.optional(distributionValidator),
+    mode: v.optional(distributionValidator),
   }),
 
   analyticsDailyStats: defineTable({

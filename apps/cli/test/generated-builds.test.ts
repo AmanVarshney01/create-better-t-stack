@@ -447,6 +447,22 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
+    name: "expo-convex-better-auth-polar",
+    config: {
+      ...baseConfig,
+      frontend: ["native-bare"],
+      backend: "convex",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "better-auth",
+      payments: "polar",
+      addons: ["turborepo"],
+      examples: ["todo"],
+    },
+  },
+  {
     name: "workers-clerk-hono",
     config: {
       ...baseConfig,

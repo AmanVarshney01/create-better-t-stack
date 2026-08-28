@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { SITE_URL } from "@/lib/site";
 import { loadStackParams, serializeStackParams } from "@/lib/stack-url-state";
 import {
   generateStackOgImageUrl,
@@ -19,7 +20,7 @@ export async function generateMetadata({ searchParams }: StackPageProps): Promis
   const projectName = params.projectName || "my-better-t-app";
   const title = `${projectName} – Better-T-Stack`;
   const description = generateStackSummary(params);
-  const ogImage = generateStackOgImageUrl(params, "https://better-t-stack.dev");
+  const ogImage = generateStackOgImageUrl(params, SITE_URL);
   return {
     title,
     description,

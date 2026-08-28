@@ -1,5 +1,13 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
+const NATIVE_GENERATED_PATTERNS = [
+  "apps/native/.expo/**",
+  "apps/native/dist/**",
+  "apps/native/web-build/**",
+  "apps/native/ios/**",
+  "apps/native/android/**",
+] as const;
+
 const FRONTEND_GENERATED_PATTERNS = {
   "tanstack-router": ["apps/web/dist/**", "apps/web/.tanstack/**", "apps/web/src/routeTree.gen.ts"],
   "react-router": ["apps/web/build/**", "apps/web/.react-router/**"],
@@ -14,15 +22,9 @@ const FRONTEND_GENERATED_PATTERNS = {
   svelte: ["apps/web/.svelte-kit/**", "apps/web/build/**", "apps/web/.output/**"],
   solid: ["apps/web/dist/**", "apps/web/.output/**"],
   astro: ["apps/web/dist/**", "apps/web/.astro/**"],
-  "native-bare": ["apps/native/.expo/**", "apps/native/dist/**", "apps/native/web-build/**"],
-  "native-uniwind": ["apps/native/.expo/**", "apps/native/dist/**", "apps/native/web-build/**"],
-  "native-unistyles": [
-    "apps/native/.expo/**",
-    "apps/native/dist/**",
-    "apps/native/web-build/**",
-    "apps/native/ios/**",
-    "apps/native/android/**",
-  ],
+  "native-bare": NATIVE_GENERATED_PATTERNS,
+  "native-uniwind": NATIVE_GENERATED_PATTERNS,
+  "native-unistyles": NATIVE_GENERATED_PATTERNS,
   none: [],
 } as const satisfies Partial<Record<ProjectConfig["frontend"][number], readonly string[]>>;
 

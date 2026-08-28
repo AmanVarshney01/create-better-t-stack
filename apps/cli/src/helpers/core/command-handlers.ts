@@ -8,10 +8,11 @@ import pc from "picocolors";
 import { getDefaultConfig } from "../../constants";
 import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
-import type { CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
+import type { AnalyticsMode, CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
 import { getCliSubcommandCommand } from "../../utils/cli-invocation";
-import { isSilent, runWithContextAsync } from "../../utils/context";
+import { isSilent, resolveInvocationMode, runWithContextAsync } from "../../utils/context";
+import { errorClass, failureStage, reportDiagnostic, scrubReason } from "../../utils/diagnostics";
 import { displayConfig } from "../../utils/display-config";
 import {
   type AppError,
@@ -20,6 +21,7 @@ import {
   ProjectCreationError,
   UserCancelledError,
   displayError,
+  isUserCancellation,
 } from "../../utils/errors";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
 import {
@@ -31,6 +33,12 @@ import {
   validateSafeProjectDirectoryPath,
 } from "../../utils/project-directory";
 import { addToHistory } from "../../utils/project-history";
+import {
+  type AvailableProjectLauncher,
+  type ProjectLauncher,
+  getProjectLauncherChoice,
+  launchProject,
+} from "../../utils/project-launcher";
 import { validateProjectName } from "../../utils/project-name-validation";
 import { renderTitle } from "../../utils/render-title";
 import { checkLocalRequirements } from "../../utils/requirements";
@@ -47,7 +55,13 @@ import { resolveProjectDbSetupOptions } from "./db-setup-options";
 
 export interface CreateHandlerOptions {
   silent?: boolean;
+  mode?: AnalyticsMode;
 }
+
+type CreateCommandInput = CreateInput & {
+  projectName?: string;
+  open?: ProjectLauncher;
+};
 
 /**
  * Result type for project creation
@@ -117,22 +131,47 @@ interface CreateHandlerExecution {
 }
 
 async function executeCreateProjectHandler(
-  input: CreateInput & { projectName?: string },
+  input: CreateCommandInput,
   options: CreateHandlerOptions,
 ): Promise<CreateHandlerExecution> {
-  const { silent = false } = options;
+  const { silent = false, mode } = options;
 
-  return runWithContextAsync({ silent }, async () => {
-    const startTime = Date.now();
-    const timeScaffolded = new Date().toISOString();
-    const result = await createProjectHandlerInternal(input, startTime, timeScaffolded);
+  return runWithContextAsync(
+    { silent, mode, analyticsDisabled: input.disableAnalytics },
+    async () => {
+      const startTime = Date.now();
+      const timeScaffolded = new Date().toISOString();
+      const result = await createProjectHandlerInternal(input, startTime, timeScaffolded);
+      await reportCreateOutcome(input, result);
 
-    return { result, startTime, timeScaffolded };
+      return { result, startTime, timeScaffolded };
+    },
+  );
+}
+
+/** Failure diagnostics, which the success-only project event cannot show; awaited so it beats process.exit. */
+async function reportCreateOutcome(
+  input: CreateCommandInput,
+  result: Result<CreateProjectResult, CreateHandlerError>,
+): Promise<void> {
+  if (result.isOk()) return;
+
+  const error = result.error;
+  if (isUserCancellation(error)) return;
+
+  await reportDiagnostic("cli_failed", {
+    command: "create",
+    mode: resolveInvocationMode(input.yes),
+    stage: failureStage(error),
+    error: errorClass(error),
+    reason: scrubReason(error),
+    packageManager: input.packageManager,
+    backend: input.backend,
   });
 }
 
 export async function createProjectHandlerResult(
-  input: CreateInput & { projectName?: string },
+  input: CreateCommandInput,
   options: CreateHandlerOptions = {},
 ): Promise<Result<CreateProjectResult, CreateHandlerError>> {
   const execution = await executeCreateProjectHandler(input, options);
@@ -140,7 +179,7 @@ export async function createProjectHandlerResult(
 }
 
 export async function createProjectHandler(
-  input: CreateInput & { projectName?: string },
+  input: CreateCommandInput,
   options: CreateHandlerOptions = {},
 ): Promise<CreateProjectResult | undefined> {
   const { silent = false } = options;
@@ -155,8 +194,8 @@ export async function createProjectHandler(
   const error = result.error;
   const elapsedTimeMs = Date.now() - startTime;
 
-  // Handle user cancellation specially
-  if (UserCancelledError.is(error)) {
+  // Handle user cancellation specially, including one raised inside a setup step
+  if (isUserCancellation(error)) {
     if (silent) {
       return createEmptyResult(timeScaffolded, elapsedTimeMs, error.message);
     }
@@ -175,7 +214,7 @@ export async function createProjectHandler(
 }
 
 async function createProjectHandlerInternal(
-  input: CreateInput & { projectName?: string },
+  input: CreateCommandInput,
   startTime: number,
   timeScaffolded: string,
 ): Promise<Result<CreateProjectResult, CreateHandlerError>> {
@@ -426,7 +465,7 @@ async function createProjectHandlerInternal(
       }),
     );
 
-    await trackProjectCreation(config, input.disableAnalytics);
+    await trackProjectCreation(config, input.disableAnalytics, resolveInvocationMode(input.yes));
 
     // Track locally in history.json (non-fatal)
     const historyResult = await addToHistory(config, reproducibleCommand);
@@ -438,10 +477,34 @@ async function createProjectHandlerInternal(
       log.message(`${pc.dim("Setup saved to history")}\n${pc.cyan(historyCommand)}`);
     }
 
+    let projectLauncher: AvailableProjectLauncher | undefined;
+    if (!isSilent()) {
+      const launcherResult = await getProjectLauncherChoice(input.open, config.projectDir, {
+        prompt:
+          !input.yes &&
+          process.env.CI === undefined &&
+          process.stdin.isTTY === true &&
+          process.stdout.isTTY === true,
+      });
+
+      if (launcherResult.isErr()) {
+        log.warn(pc.yellow(launcherResult.error.message));
+      } else {
+        projectLauncher = launcherResult.value;
+      }
+    }
+
     const elapsedTimeMs = Date.now() - startTime;
     if (!isSilent()) {
       const elapsedTimeInSeconds = (elapsedTimeMs / 1000).toFixed(1);
       outro(pc.magenta(`Project ready in ${pc.bold(`${elapsedTimeInSeconds}s`)}`));
+
+      if (projectLauncher) {
+        const launchResult = await launchProject(projectLauncher);
+        if (launchResult.isErr()) {
+          log.warn(pc.yellow(launchResult.error.message));
+        }
+      }
     }
 
     return Result.ok({

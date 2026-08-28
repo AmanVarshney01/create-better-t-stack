@@ -60,27 +60,28 @@ export function formatHistoryEntry(entry: ProjectHistoryEntry, index: number): s
   )}\n${pc.cyan(entry.reproducibleCommand)}`;
 }
 
-export async function historyHandler(input: HistoryCommandInput): Promise<void> {
+/** Resolves to whether the command did what was asked; failures are reported to the user here. */
+export async function historyHandler(input: HistoryCommandInput): Promise<boolean> {
   if (input.clear) {
     const clearResult = await clearHistory();
     if (clearResult.isErr()) {
       log.warn(pc.yellow(clearResult.error.message));
-      return;
+      return false;
     }
     log.success(pc.green("Project history cleared."));
-    return;
+    return true;
   }
 
   const historyResult = await getHistory(input.limit);
   if (historyResult.isErr()) {
     log.warn(pc.yellow(historyResult.error.message));
-    return;
+    return false;
   }
   const entries = historyResult.value;
 
   if (input.json) {
     console.log(JSON.stringify(entries, null, 2));
-    return;
+    return true;
   }
 
   await renderTitle();
@@ -92,9 +93,10 @@ export async function historyHandler(input: HistoryCommandInput): Promise<void> 
         "create-better-t-stack my-app",
       )}`,
     );
-    return;
+    return true;
   }
 
   log.message(entries.map(formatHistoryEntry).join("\n\n"));
   outro(pc.dim("Run a command above to recreate that project"));
+  return true;
 }

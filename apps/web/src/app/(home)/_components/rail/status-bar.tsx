@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 import { useNpmVersion } from "./_hooks/use-npm-version";
@@ -45,7 +46,10 @@ export default function StatusBar() {
             <button
               key={pane.id}
               type="button"
-              onClick={() => goTo(index)}
+              onClick={() => {
+                track("home_rail_navigate", { pane: pane.id, method: "click" });
+                goTo(index);
+              }}
               aria-current={active ? "true" : undefined}
               className={cn(
                 "builder-focus-ring shrink-0 uppercase tracking-[0.10em] transition-colors duration-150 max-md:py-2",

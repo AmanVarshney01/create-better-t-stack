@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
-import type { PackageManager } from "../types";
+import type { AnalyticsMode, PackageManager } from "../types";
 
 export type NavigationState = {
   isFirstPrompt: boolean;
@@ -20,12 +20,28 @@ export type CLIContext = {
   navigation: NavigationState;
   silent: boolean;
   verbose: boolean;
+  /** Set when the caller already knows how the CLI is being driven (json, api, mcp). */
+  mode?: AnalyticsMode;
+  /** True once any interactive prompt was rendered during this run. */
+  promptShown: boolean;
+  analyticsDisabled: boolean;
   projectDir?: string;
   projectName?: string;
   packageManager?: PackageManager;
 };
 
 const cliStorage = new AsyncLocalStorage<CLIContext>();
+
+/** Process-wide mode for hosts that own the whole process, such as the MCP server. */
+let processMode: AnalyticsMode | undefined;
+
+export function setProcessMode(mode: AnalyticsMode | undefined): void {
+  processMode = mode;
+}
+
+export function getProcessMode(): AnalyticsMode | undefined {
+  return processMode;
+}
 
 function defaultContext(): CLIContext {
   return {
@@ -35,6 +51,8 @@ function defaultContext(): CLIContext {
     },
     silent: false,
     verbose: false,
+    promptShown: false,
+    analyticsDisabled: false,
   };
 }
 
@@ -72,6 +90,24 @@ export function didLastPromptShowUI(): boolean {
 
 export function getPromptProgress(): PromptProgress | undefined {
   return getContext().navigation.promptProgress;
+}
+
+export function markPromptShown(): void {
+  const ctx = tryGetContext();
+  if (ctx) {
+    ctx.promptShown = true;
+  }
+}
+
+/**
+ * How this run is being driven. Hosts that know (json, api, mcp) set it up front;
+ * otherwise it is derived from whether prompts were rendered.
+ */
+export function resolveInvocationMode(yes?: boolean): AnalyticsMode {
+  const ctx = getContext();
+  if (ctx.mode) return ctx.mode;
+  if (yes) return "yes";
+  return ctx.promptShown ? "interactive" : "flags";
 }
 
 export function getProjectDir(): string | undefined {
@@ -119,42 +155,37 @@ export function setProjectInfo(info: {
 export type ContextOptions = {
   silent?: boolean;
   verbose?: boolean;
+  mode?: AnalyticsMode;
+  analyticsDisabled?: boolean;
   projectDir?: string;
   projectName?: string;
   packageManager?: PackageManager;
 };
 
-export function runWithContext<T>(options: ContextOptions, fn: () => T): T {
-  const ctx: CLIContext = {
+function createContext(options: ContextOptions): CLIContext {
+  return {
     navigation: {
       isFirstPrompt: false,
       lastPromptShownUI: false,
     },
     silent: options.silent ?? false,
     verbose: options.verbose ?? false,
+    mode: options.mode ?? processMode,
+    promptShown: false,
+    analyticsDisabled: options.analyticsDisabled ?? false,
     projectDir: options.projectDir,
     projectName: options.projectName,
     packageManager: options.packageManager,
   };
+}
 
-  return cliStorage.run(ctx, fn);
+export function runWithContext<T>(options: ContextOptions, fn: () => T): T {
+  return cliStorage.run(createContext(options), fn);
 }
 
 export async function runWithContextAsync<T>(
   options: ContextOptions,
   fn: () => Promise<T>,
 ): Promise<T> {
-  const ctx: CLIContext = {
-    navigation: {
-      isFirstPrompt: false,
-      lastPromptShownUI: false,
-    },
-    silent: options.silent ?? false,
-    verbose: options.verbose ?? false,
-    projectDir: options.projectDir,
-    projectName: options.projectName,
-    packageManager: options.packageManager,
-  };
-
-  return cliStorage.run(ctx, fn);
+  return cliStorage.run(createContext(options), fn);
 }
