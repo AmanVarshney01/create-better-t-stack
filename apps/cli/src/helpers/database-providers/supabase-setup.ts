@@ -58,11 +58,8 @@ async function writeSupabaseEnvFile(
   });
 }
 
-function extractDbUrl(output: string): string | null {
-  const envMatch = output.match(/DB_URL="(postgresql:\/\/[^"]+)"/);
-  if (envMatch?.[1]) return envMatch[1];
-  const urlMatch = output.match(/postgresql:\/\/[^\s"'`|│]+/);
-  return urlMatch?.[0] ?? null;
+function extractDbUrl(statusEnv: string): string | null {
+  return statusEnv.match(/^DB_URL="(postgresql:\/\/[^"]+)"$/m)?.[1] ?? null;
 }
 
 async function readSupabaseStatus(serverDir: string, packageManager: PackageManager) {
@@ -262,9 +259,7 @@ export async function setupSupabase(
   }
 
   const supabaseOutput = startResult.value;
-  const dbUrl =
-    extractDbUrl(await readSupabaseStatus(serverDir, packageManager)) ??
-    extractDbUrl(supabaseOutput);
+  const dbUrl = extractDbUrl(await readSupabaseStatus(serverDir, packageManager));
 
   if (dbUrl) {
     const envResult = await writeSupabaseEnvFile(projectDir, backend, dbUrl);
