@@ -71,7 +71,7 @@ const DEFAULT_TEMPLATE: FumadocsTemplate = "next-mdx";
 const DEFAULT_DEV_PORT = 4000;
 
 function aiChatDisabledForTemplate(template: FumadocsTemplate): boolean {
-  return template === "next-mdx-static" || template.endsWith("-spa");
+  return template === "next-mdx-static" || template === "astro" || template.endsWith("-spa");
 }
 
 export function getFumadocsLinter(addons: ProjectConfig["addons"]): FumadocsLinter | undefined {

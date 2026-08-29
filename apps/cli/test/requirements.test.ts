@@ -4,10 +4,57 @@ import type { ProjectConfig } from "../src/types";
 import {
   PACKAGE_MANAGER_VERSION_RANGES,
   RECOMMENDED_BUN_VERSION_RANGE,
+  getBaselineRequirements,
   getLocalVersionRequirements,
   getLocalToolRecommendations,
   validateLocalToolVersions,
+  validateRequirements,
 } from "../src/utils/requirements";
+
+describe("baseline requirements (before prompts)", () => {
+  it("covers only the package manager and the host Node.js, never the stack", () => {
+    expect(getBaselineRequirements("pnpm", "node")).toEqual([
+      expect.objectContaining({ tool: "pnpm", range: PACKAGE_MANAGER_VERSION_RANGES.pnpm }),
+      expect.objectContaining({ tool: "node", range: ">=22.0.0" }),
+    ]);
+    expect(getBaselineRequirements(undefined, "bun")).toEqual([]);
+  });
+
+  it("fails an outdated pnpm before any stack is chosen", () => {
+    const result = validateRequirements(getBaselineRequirements("pnpm", "node"), {
+      pnpm: "9.15.0",
+      node: "v22.22.0",
+    });
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error.message).toContain("pnpm 9.15.0 does not satisfy");
+      expect(result.error.message).toContain("pnpm self-update");
+    }
+
+    expect(
+      validateRequirements(getBaselineRequirements("pnpm", "node"), {
+        pnpm: "10.26.0",
+        node: "v22.22.0",
+      }).isOk(),
+    ).toBe(true);
+  });
+
+  it("uses a stack-neutral headline for the pre-prompt check", () => {
+    const result = validateRequirements(
+      getBaselineRequirements("pnpm", "node"),
+      { pnpm: "9.15.0", node: "v22.22.0" },
+      "Your local toolchain does not meet create-better-t-stack's requirements:",
+    );
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(
+        result.error.message.startsWith(
+          "Your local toolchain does not meet create-better-t-stack's requirements:",
+        ),
+      ).toBe(true);
+    }
+  });
+});
 
 type RequirementConfig = Pick<
   ProjectConfig,

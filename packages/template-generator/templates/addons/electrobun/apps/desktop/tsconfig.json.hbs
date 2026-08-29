@@ -1,14 +1,13 @@
 {
-  "extends": "../../packages/config/tsconfig.base.json",
+  "extends": ["../../packages/config/tsconfig.base.json", "./.hutch/devkit/tsconfig.json"],
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "lib": ["ESNext", "DOM"],
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "types": ["bun"]
   },
   "include": ["src/**/*.ts", "electrobun.config.ts"]
 }

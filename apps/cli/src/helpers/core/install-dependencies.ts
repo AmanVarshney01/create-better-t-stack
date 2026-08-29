@@ -5,7 +5,12 @@ import pc from "picocolors";
 import type { Addons, PackageManager } from "../../types";
 import { ProjectCreationError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
+import { getInterruptSignal, startInterruptibleStep, wasInterrupted } from "../../utils/interrupt";
 import { createSpinner } from "../../utils/terminal-output";
+
+export type InstallStatus = "installed" | "cancelled";
+
+const FORCE_KILL_AFTER_MS = 2000;
 
 export async function installDependencies({
   projectDir,
@@ -14,13 +19,13 @@ export async function installDependencies({
   projectDir: string;
   packageManager: PackageManager;
   addons?: Addons[];
-}): Promise<Result<void, ProjectCreationError>> {
+}): Promise<Result<InstallStatus, ProjectCreationError>> {
   if (shouldSkipExternalCommands()) {
-    return Result.ok(undefined);
+    return Result.ok("installed");
   }
 
+  startInterruptibleStep();
   const s = createSpinner();
-
   s.start(`Running ${packageManager} install...`);
 
   const result = await Result.tryPromise({
@@ -28,6 +33,8 @@ export async function installDependencies({
       await $({
         cwd: projectDir,
         stderr: "inherit",
+        cancelSignal: getInterruptSignal(),
+        forceKillAfterDelay: FORCE_KILL_AFTER_MS,
       })`${packageManager} install`;
     },
     catch: (e) =>
@@ -38,11 +45,16 @@ export async function installDependencies({
       }),
   });
 
-  if (result.isOk()) {
-    s.stop("Dependencies installed");
-  } else {
-    s.stop(pc.red("Failed to install dependencies"));
+  if (wasInterrupted()) {
+    s.stop();
+    return Result.ok("cancelled");
   }
 
-  return result;
+  if (result.isOk()) {
+    s.stop("Dependencies installed");
+    return Result.ok("installed");
+  }
+
+  s.stop(pc.red("Failed to install dependencies"));
+  return Result.err(result.error);
 }

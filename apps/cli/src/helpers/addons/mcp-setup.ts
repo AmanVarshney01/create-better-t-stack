@@ -52,6 +52,10 @@ const MCP_AGENTS: AgentOption[] = [
   { value: "zed", label: "Zed", scope: "both" },
   { value: "claude-desktop", label: "Claude Desktop", scope: "global" },
   { value: "goose", label: "Goose", scope: "global" },
+  { value: "fx", label: "fx", scope: "global" },
+  { value: "kilo-code", label: "Kilo Code", scope: "both" },
+  { value: "kimi-code", label: "Kimi Code", scope: "both" },
+  { value: "kiro-cli", label: "Kiro CLI", scope: "both" },
 ];
 
 const DEFAULT_SCOPE: InstallScope = "project";
@@ -102,8 +106,7 @@ function getAllMcpServers(config: ProjectConfig): McpServerDef[] {
       key: "cloudflare-docs",
       label: "Cloudflare Docs",
       name: "cloudflare-docs",
-      target: "https://docs.mcp.cloudflare.com/sse",
-      transport: "sse",
+      target: "https://docs.mcp.cloudflare.com/mcp",
     },
     {
       key: "convex",
@@ -169,7 +172,7 @@ function getAllMcpServers(config: ProjectConfig): McpServerDef[] {
       key: "better-auth",
       label: "Better Auth",
       name: "better-auth",
-      target: "https://mcp.inkeep.com/better-auth/mcp",
+      target: "https://mcp.better-auth.com/mcp",
     },
     {
       key: "clerk",

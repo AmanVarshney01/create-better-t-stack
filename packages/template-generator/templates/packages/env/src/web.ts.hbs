@@ -7,7 +7,9 @@ import { createEnv } from "@t3-oss/env-core";
 {{else}}
 import { createEnv } from "@t3-oss/env-core";
 {{/if}}
+{{#if (ne backend "none")}}
 import { z } from "zod";
+{{/if}}
 
 {{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel") (ne backend "self") (ne backend "none") (ne backend "convex"))}}
 const serverUrlSchema = z.union([
@@ -130,6 +132,21 @@ export const env = createEnv({
 		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 {{/if}}
 	},
+	runtimeEnv: (import.meta as any).env,
+{{/if}}
+{{else}}
+{{#if (includes frontend "next")}}
+	client: {},
+	runtimeEnv: {},
+{{else if (includes frontend "nuxt")}}
+	client: {},
+{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
+	clientPrefix: "PUBLIC_",
+	client: {},
+	runtimeEnv: (import.meta as any).env,
+{{else}}
+	clientPrefix: "VITE_",
+	client: {},
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
 {{/if}}

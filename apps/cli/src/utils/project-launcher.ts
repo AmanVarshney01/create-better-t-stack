@@ -289,11 +289,18 @@ export const PROJECT_LAUNCHERS = [
 
 type CommandDetector = (command: string) => Promise<boolean>;
 
+export interface DetectProjectLaunchersOptions {
+  detectCommand?: CommandDetector;
+  platform?: NodeJS.Platform;
+}
+
 export async function detectProjectLaunchers(
   projectDir: string,
-  detectCommand: CommandDetector = commandExists,
-  platform: NodeJS.Platform = process.platform,
+  options: DetectProjectLaunchersOptions = {},
 ): Promise<AvailableProjectLauncher[]> {
+  const detectCommand = options.detectCommand ?? commandExists;
+  const platform = options.platform ?? process.platform;
+
   const definitions: readonly ProjectLauncherDefinition[] = PROJECT_LAUNCHERS;
   const supportedDefinitions = definitions.filter(
     ({ platforms }) => platforms === undefined || platforms.includes(platform),
@@ -329,20 +336,13 @@ export async function detectProjectLaunchers(
 export async function getProjectLauncherChoice(
   requestedLauncher: ProjectLauncher | undefined,
   projectDir: string,
-  options: {
-    detectCommand?: CommandDetector;
-    platform?: NodeJS.Platform;
-    prompt?: boolean;
-  } = {},
+  options: DetectProjectLaunchersOptions & { prompt?: boolean } = {},
 ): Promise<Result<AvailableProjectLauncher | undefined, CLIError>> {
   if (requestedLauncher === "none") return Result.ok(undefined);
   if (!requestedLauncher && options.prompt === false) return Result.ok(undefined);
 
-  const availableLaunchers = await detectProjectLaunchers(
-    projectDir,
-    options.detectCommand,
-    options.platform,
-  );
+  const { prompt: _prompt, ...detectOptions } = options;
+  const availableLaunchers = await detectProjectLaunchers(projectDir, detectOptions);
 
   if (requestedLauncher) {
     const launcher = availableLaunchers.find(({ id }) => id === requestedLauncher);

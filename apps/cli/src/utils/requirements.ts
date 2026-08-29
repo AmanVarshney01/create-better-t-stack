@@ -156,21 +156,36 @@ function getNodeToolingRequirements(config: RequirementConfig): VersionRequireme
   return requirements;
 }
 
-export function getLocalVersionRequirements(
-  config: RequirementConfig,
-  hostRuntime: "bun" | "node",
-): VersionRequirement[] {
-  const requirements: VersionRequirement[] = [
-    {
-      tool: config.packageManager,
-      range: PACKAGE_MANAGER_VERSION_RANGES[config.packageManager],
-      reason: PACKAGE_MANAGER_REASONS[config.packageManager],
-    },
-  ];
+type HostRuntime = "bun" | "node";
 
+function getHostRuntime(): HostRuntime {
+  return process.versions.bun ? "bun" : "node";
+}
+
+/** Requirements that do not depend on the chosen stack, so they can run before any prompt. */
+export function getBaselineRequirements(
+  packageManager: PackageManager | undefined,
+  hostRuntime: HostRuntime,
+): VersionRequirement[] {
+  const requirements: VersionRequirement[] = [];
+  if (packageManager) {
+    requirements.push({
+      tool: packageManager,
+      range: PACKAGE_MANAGER_VERSION_RANGES[packageManager],
+      reason: PACKAGE_MANAGER_REASONS[packageManager],
+    });
+  }
   if (hostRuntime === "node") {
     addNodeRequirement(requirements, ">=22.0.0", "create-better-t-stack");
   }
+  return requirements;
+}
+
+export function getLocalVersionRequirements(
+  config: RequirementConfig,
+  hostRuntime: HostRuntime,
+): VersionRequirement[] {
+  const requirements = getBaselineRequirements(config.packageManager, hostRuntime);
 
   if (config.packageManager !== "bun") {
     requirements.push(...getNodeToolingRequirements(config));
@@ -205,9 +220,20 @@ function formatRequirementError(
 export function validateLocalToolVersions(
   config: RequirementConfig,
   versions: LocalToolVersions,
-  hostRuntime: "bun" | "node",
+  hostRuntime: HostRuntime,
 ): Result<void, CLIError> {
-  const requirements = getLocalVersionRequirements(config, hostRuntime);
+  return validateRequirements(getLocalVersionRequirements(config, hostRuntime), versions);
+}
+
+const STACK_REQUIREMENTS_HEADLINE = "Your local toolchain does not meet this stack's requirements:";
+const BASELINE_REQUIREMENTS_HEADLINE =
+  "Your local toolchain does not meet create-better-t-stack's requirements:";
+
+export function validateRequirements(
+  requirements: VersionRequirement[],
+  versions: LocalToolVersions,
+  headline = STACK_REQUIREMENTS_HEADLINE,
+): Result<void, CLIError> {
   const failures = requirements
     .map((requirement) => formatRequirementError(requirement, versions[requirement.tool]))
     .filter((failure): failure is string => failure !== null);
@@ -229,7 +255,7 @@ export function validateLocalToolVersions(
   return Result.err(
     new CLIError({
       message: [
-        "Your local toolchain does not meet this stack's requirements:",
+        headline,
         ...failures.map((failure) => `- ${failure}`),
         "",
         ...upgradeInstructions,
@@ -276,26 +302,78 @@ async function readToolVersion(tool: Tool): Promise<string | null> {
   return result.isOk() ? result.value : null;
 }
 
-export async function checkLocalRequirements(
-  config: RequirementConfig,
-): Promise<Result<LocalRequirements, CLIError>> {
-  const hostRuntime = process.versions.bun ? "bun" : "node";
+async function readLocalToolVersions(
+  packageManager: PackageManager | undefined,
+  hostRuntime: HostRuntime,
+  needsNode: boolean,
+): Promise<LocalToolVersions> {
   const versions: LocalToolVersions = {};
-
-  const packageManagerVersion = await readToolVersion(config.packageManager);
-  if (packageManagerVersion) {
-    versions[config.packageManager] = packageManagerVersion;
+  if (packageManager) {
+    const packageManagerVersion = await readToolVersion(packageManager);
+    if (packageManagerVersion) versions[packageManager] = packageManagerVersion;
   }
-
-  const needsNode = getLocalVersionRequirements(config, hostRuntime).some(
-    (requirement) => requirement.tool === "node",
-  );
   if (needsNode) {
     versions.node =
       hostRuntime === "node"
         ? process.versions.node
         : ((await readToolVersion("node")) ?? undefined);
   }
+  return versions;
+}
+
+export type BaselineCheck = {
+  warnings: string[];
+};
+
+/**
+ * Pre-prompt check. An inferred package manager can still be changed at its prompt, so it only
+ * warns; an explicit one and the host Node.js version are fatal.
+ */
+export async function checkBaselineRequirements(
+  packageManager: PackageManager | undefined,
+  packageManagerIsExplicit: boolean,
+): Promise<Result<BaselineCheck, CLIError>> {
+  if (shouldSkipExternalCommands()) return Result.ok({ warnings: [] });
+
+  const hostRuntime = getHostRuntime();
+  const requirements = getBaselineRequirements(packageManager, hostRuntime);
+  const versions = await readLocalToolVersions(
+    packageManager,
+    hostRuntime,
+    requirements.some((requirement) => requirement.tool === "node"),
+  );
+  const fatal = requirements.filter(
+    (requirement) => requirement.tool === "node" || packageManagerIsExplicit,
+  );
+  const fatalResult = validateRequirements(fatal, versions, BASELINE_REQUIREMENTS_HEADLINE);
+  if (fatalResult.isErr()) return Result.err(fatalResult.error);
+
+  const advisory = requirements.filter((requirement) => !fatal.includes(requirement));
+  const advisoryResult = validateRequirements(advisory, versions, BASELINE_REQUIREMENTS_HEADLINE);
+  if (advisoryResult.isErr()) {
+    return Result.ok({
+      warnings: [
+        `${advisoryResult.error.message}\nYou can also choose a different package manager at the package manager step.`,
+      ],
+    });
+  }
+
+  return Result.ok({ warnings: [] });
+}
+
+export async function checkLocalRequirements(
+  config: RequirementConfig,
+): Promise<Result<LocalRequirements, CLIError>> {
+  const hostRuntime = getHostRuntime();
+  const versions = await readLocalToolVersions(
+    config.packageManager,
+    hostRuntime,
+    !shouldSkipExternalCommands() &&
+      getLocalVersionRequirements(config, hostRuntime).some(
+        (requirement) => requirement.tool === "node",
+      ),
+  );
+  const packageManagerVersion = versions[config.packageManager];
 
   if (!shouldSkipExternalCommands()) {
     const validationResult = validateLocalToolVersions(config, versions, hostRuntime);

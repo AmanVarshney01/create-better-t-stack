@@ -23,6 +23,7 @@ import {
   displayError,
   isUserCancellation,
 } from "../../utils/errors";
+import { getUserPkgManager } from "../../utils/get-package-manager";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
 import {
   findAvailableIncrementedPath,
@@ -41,7 +42,7 @@ import {
 } from "../../utils/project-launcher";
 import { validateProjectName } from "../../utils/project-name-validation";
 import { renderTitle } from "../../utils/render-title";
-import { checkLocalRequirements } from "../../utils/requirements";
+import { checkBaselineRequirements, checkLocalRequirements } from "../../utils/requirements";
 import { getTemplateConfig, getTemplateDescription } from "../../utils/templates";
 import {
   getProvidedFlags,
@@ -75,6 +76,7 @@ export interface CreateProjectResult {
   projectDirectory: string;
   relativePath: string;
   error?: string;
+  warnings?: string[];
 }
 
 /**
@@ -226,6 +228,18 @@ async function createProjectHandlerInternal(
 
     if (!isSilent() && input.yolo) {
       log.warn(pc.yellow("YOLO mode enabled — compatibility checks are disabled."));
+    }
+
+    if (!isSilent()) {
+      const baseline = yield* Result.await(
+        checkBaselineRequirements(
+          input.packageManager ?? getUserPkgManager(),
+          input.packageManager !== undefined,
+        ),
+      );
+      for (const warning of baseline.warnings) {
+        log.warn(pc.yellow(warning));
+      }
     }
 
     // Get project name
@@ -457,7 +471,7 @@ async function createProjectHandlerInternal(
     }
 
     // Create the project
-    yield* Result.await(
+    const created = yield* Result.await(
       createProject(config, {
         manualDb: cliInput.manualDb ?? input.manualDb,
         dbSetupOptions: effectiveDbSetupOptions,
@@ -465,7 +479,25 @@ async function createProjectHandlerInternal(
       }),
     );
 
-    await trackProjectCreation(config, input.disableAnalytics, resolveInvocationMode(input.yes));
+    const mode = resolveInvocationMode(input.yes);
+    await trackProjectCreation(config, input.disableAnalytics, mode);
+
+    const warnings: string[] = [];
+    if (created.interrupted) {
+      warnings.push("One or more setup steps were cancelled.");
+    }
+    if (created.installError) {
+      warnings.push(created.installError.message);
+      await reportDiagnostic("cli_failed", {
+        command: "create",
+        mode,
+        stage: "dependency-installation",
+        error: errorClass(created.installError),
+        reason: scrubReason(created.installError),
+        packageManager: config.packageManager,
+        backend: config.backend,
+      });
+    }
 
     // Track locally in history.json (non-fatal)
     const historyResult = await addToHistory(config, reproducibleCommand);
@@ -515,6 +547,7 @@ async function createProjectHandlerInternal(
       elapsedTimeMs,
       projectDirectory: config.projectDir,
       relativePath: config.relativePath,
+      warnings: warnings.length > 0 ? warnings : undefined,
     });
   });
 }

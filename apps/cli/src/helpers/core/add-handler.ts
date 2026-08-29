@@ -21,12 +21,13 @@ import z from "zod";
 import { getAddonsToAdd } from "../../prompts/addons";
 import type { AddInput, Addons, AddonOptions, AnalyticsMode, ProjectConfig } from "../../types";
 import { updateBtsConfig } from "../../utils/bts-config";
-import { validateAddonsAgainstConfig } from "../../utils/compatibility-rules";
+import { TASK_RUNNER_ADDONS, validateAddonsAgainstConfig } from "../../utils/compatibility-rules";
 import { isSilent, resolveInvocationMode, runWithContextAsync } from "../../utils/context";
 import { errorClass, failureStage, reportDiagnostic, scrubReason } from "../../utils/diagnostics";
 import { formatConfigValue } from "../../utils/display-config";
 import { CLIError, UserCancelledError, displayError } from "../../utils/errors";
 import { validateAgentSafePathInput } from "../../utils/input-hardening";
+import { beginInterruptibleScope, endInterruptibleScope } from "../../utils/interrupt";
 import { renderTitle } from "../../utils/render-title";
 import { checkLocalRequirements } from "../../utils/requirements";
 import { setupAddons } from "../addons/addons-setup";
@@ -70,7 +71,6 @@ const ADD_TEXT_FILE_PATHS = ["apps/web/vite.config.ts", "lefthook.yml"];
 
 const HOOK_ADDONS = ["husky", "lefthook"] as const satisfies readonly Addons[];
 const HOOK_LINTER_ADDONS = ["biome", "oxlint", "vite-plus"] as const satisfies readonly Addons[];
-const TASK_RUNNER_ADDONS = ["turborepo", "nx", "vite-plus"] as const satisfies readonly Addons[];
 const fileExistsErrorSchema = z.object({ code: z.literal("EEXIST") });
 const configPackageScopeSchema = z
   .object({
@@ -285,7 +285,12 @@ export async function addHandler(
   return runWithContextAsync(
     { silent, mode, analyticsDisabled: input.disableAnalytics },
     async () => {
-      const result = await addHandlerInternal(input);
+      let result: Awaited<ReturnType<typeof addHandlerInternal>>;
+      try {
+        result = await addHandlerInternal(input);
+      } finally {
+        endInterruptibleScope();
+      }
       await reportAddOutcome(input, result);
 
       if (result.isOk()) {
@@ -625,6 +630,9 @@ async function addHandlerInternal(
   if (vfs.getFileCount() > 0 && !isSilent()) {
     log.info(pc.dim(`Wrote ${vfs.getFileCount()} files`));
   }
+
+  // Files are on disk from here: Ctrl-C only stops the current step
+  beginInterruptibleScope();
 
   // Run addon setup (handles deps and interactive prompts)
   // Wrap with Result.tryPromise since setupAddons can throw UserCancelledError

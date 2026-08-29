@@ -41,8 +41,8 @@ const SKILL_SOURCES = {
   "yusukebe/hono-skill": {
     label: "Hono Backend",
   },
-  "vercel-labs/next-skills": {
-    label: "Next.js Best Practices",
+  "vercel/next.js": {
+    label: "Next.js",
   },
   "nuxt/ui": {
     label: "Nuxt UI",
@@ -139,6 +139,7 @@ const SKILLS_CLI_AGENT_OPTIONS: AgentOption[] = [
   { value: "lingma", label: "Lingma" },
   { value: "loaf", label: "Loaf" },
   { value: "mcpjam", label: "MCPJam" },
+  { value: "minimax-code", label: "MiniMax Code" },
   { value: "mistral-vibe", label: "Mistral Vibe" },
   { value: "moxby", label: "Moxby" },
   { value: "mux", label: "Mux" },
@@ -149,6 +150,7 @@ const SKILLS_CLI_AGENT_OPTIONS: AgentOption[] = [
   { value: "openhands", label: "OpenHands" },
   { value: "pi", label: "Pi" },
   { value: "pochi", label: "Pochi" },
+  { value: "posit-assistant", label: "Posit Assistant" },
   { value: "promptscript", label: "PromptScript" },
   { value: "qoder", label: "Qoder" },
   { value: "qoder-cn", label: "Qoder CN" },
@@ -257,7 +259,7 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
   }
 
   if (frontend.includes("next")) {
-    sources.push("vercel-labs/next-skills");
+    sources.push("vercel/next.js");
   }
 
   if (frontend.includes("nuxt")) {
@@ -352,11 +354,20 @@ const CURATED_SKILLS_BY_SOURCE = {
   "vercel/ai": () => ["ai-sdk"],
   "vercel/turborepo": () => ["turborepo"],
   "yusukebe/hono-skill": () => ["hono"],
-  "vercel-labs/next-skills": () => ["next-best-practices", "next-cache-components"],
+  "vercel/next.js": () => [
+    "next-dev-loop",
+    "next-cache-components-adoption",
+    "next-cache-components-optimizer",
+    "next-partial-prefetching-adoption",
+  ],
   "nuxt/ui": () => ["nuxt-ui"],
   "heroui-inc/heroui": () => ["heroui-native"],
   "shadcn/ui": () => ["shadcn"],
-  "better-auth/skills": () => ["better-auth-best-practices"],
+  "better-auth/skills": () => [
+    "better-auth-best-practices",
+    "better-auth-security-best-practices",
+    "email-and-password-best-practices",
+  ],
   "clerk/skills": (config) => {
     const skills = [
       "clerk",
@@ -367,9 +378,13 @@ const CURATED_SKILLS_BY_SOURCE = {
       "clerk-orgs",
     ];
 
-    if (config.frontend.includes("next")) {
-      skills.push("clerk-nextjs-patterns");
-    }
+    if (config.frontend.includes("next")) skills.push("clerk-nextjs-patterns");
+    if (config.frontend.includes("react-router")) skills.push("clerk-react-router-patterns");
+    if (config.frontend.includes("tanstack-start")) skills.push("clerk-tanstack-patterns");
+    if (config.frontend.includes("tanstack-router")) skills.push("clerk-react-patterns");
+    if (config.frontend.includes("nuxt")) skills.push("clerk-nuxt-patterns");
+    if (config.frontend.includes("astro")) skills.push("clerk-astro-patterns");
+    if (hasNativeFrontend(config.frontend)) skills.push("clerk-expo");
 
     return skills;
   },
@@ -392,11 +407,13 @@ const CURATED_SKILLS_BY_SOURCE = {
   },
   "expo/skills": (config) => {
     const skills = [
+      "expo-overview",
+      "expo-router",
       "expo-dev-client",
-      "building-native-ui",
-      "native-data-fetching",
-      "expo-deployment",
-      "expo-cicd-workflows",
+      "expo-native-ui",
+      "expo-data-fetching",
+      "eas-app-stores",
+      "eas-workflows",
     ];
     if (config.frontend.includes("native-uniwind")) {
       skills.push("expo-tailwind-setup");

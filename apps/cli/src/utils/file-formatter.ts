@@ -32,14 +32,17 @@ export async function formatCode(filePath: string, content: string): Promise<str
 
 export async function formatProject(
   projectDir: string,
+  signal?: AbortSignal,
 ): Promise<Result<void, ProjectCreationError>> {
   return Result.tryPromise({
     try: async () => {
       async function formatDirectory(dir: string) {
+        if (signal?.aborted) return;
         const entries = await fs.readdir(dir, { withFileTypes: true });
 
         await Promise.all(
           entries.map(async (entry) => {
+            if (signal?.aborted) return;
             const fullPath = path.join(dir, entry.name);
 
             if (entry.isDirectory()) {

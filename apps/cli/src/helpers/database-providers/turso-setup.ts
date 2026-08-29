@@ -179,7 +179,10 @@ async function createTursoDatabase(
       const error = e as Error;
       s.stop(pc.red(`Failed to create database "${dbName}"`));
 
-      if (error.message?.includes("already exists")) {
+      if (
+        error.message?.includes("already exists") ||
+        error.message?.includes("is not available")
+      ) {
         return new DatabaseSetupError({
           provider: "turso",
           message: "DATABASE_EXISTS",

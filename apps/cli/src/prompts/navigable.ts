@@ -24,21 +24,22 @@ import {
   setIsFirstPrompt as ctxSetIsFirstPrompt,
   setLastPromptShownUI as ctxSetLastPromptShownUI,
 } from "../utils/context";
+import {
+  S_BAR,
+  S_BAR_END,
+  S_CHECKBOX_ACTIVE,
+  S_CHECKBOX_INACTIVE,
+  S_CHECKBOX_SELECTED,
+  S_RADIO_ACTIVE,
+  S_RADIO_INACTIVE,
+  S_STEP_ACTIVE,
+  S_STEP_BACK,
+  S_STEP_CANCEL,
+  S_STEP_ERROR,
+  S_STEP_SUBMIT,
+} from "../utils/glyphs";
 import { GO_BACK_SYMBOL } from "../utils/navigation";
 
-const unicode = process.platform !== "win32";
-const S_STEP_ACTIVE = unicode ? "◆" : "*";
-const S_STEP_CANCEL = unicode ? "■" : "x";
-const S_STEP_ERROR = unicode ? "▲" : "x";
-const S_STEP_SUBMIT = unicode ? "◇" : "o";
-const S_STEP_BACK = unicode ? "↶" : "<";
-const S_BAR = unicode ? "│" : "|";
-const S_BAR_END = unicode ? "└" : "—";
-const S_RADIO_ACTIVE = unicode ? "●" : ">";
-const S_RADIO_INACTIVE = unicode ? "○" : " ";
-const S_CHECKBOX_ACTIVE = unicode ? "◻" : "[•]";
-const S_CHECKBOX_SELECTED = unicode ? "◼" : "[+]";
-const S_CHECKBOX_INACTIVE = unicode ? "◻" : "[ ]";
 const promptsNavigatingBack = new WeakSet<object>();
 
 function keycap(label: string): string {
@@ -405,13 +406,41 @@ export interface NavigableGroupMultiselectOptions<T> extends NavigableCommonOpti
   cursorAt?: T;
   maxItems?: number;
   required?: boolean;
+  /** Sets of values that cannot be selected together; picking one deselects the others. */
+  exclusive?: ReadonlyArray<ReadonlyArray<T>>;
   validate?: (selected: T[] | undefined) => string | Error | undefined;
+}
+
+/** Keeps at most one value per exclusive set, preferring what was just selected. */
+export function resolveExclusiveSelection<T>(
+  previous: readonly T[],
+  next: readonly T[],
+  exclusive: ReadonlyArray<ReadonlyArray<T>>,
+): T[] {
+  let resolved = [...next];
+  for (const set of exclusive) {
+    const added = resolved.find((value) => set.includes(value) && !previous.includes(value));
+    if (added === undefined) continue;
+    resolved = resolved.filter((value) => !set.includes(value) || value === added);
+  }
+  return resolved;
 }
 
 export async function navigableGroupMultiselect<T>(
   opts: NavigableGroupMultiselectOptions<T>,
 ): Promise<T[] | symbol> {
   const required = opts.required ?? true;
+  const exclusive = opts.exclusive ?? [];
+  const exclusiveValues = new Set(exclusive.flat());
+  const exclusiveGroups = new Set(
+    Object.entries(opts.options)
+      .filter(([, items]) =>
+        exclusive.some(
+          (set) => items.length > 1 && items.every((item) => set.includes(item.value)),
+        ),
+      )
+      .map(([group]) => group),
+  );
 
   const opt = (
     option: GroupMultiSelectOption<T> & { group: string | boolean },
@@ -426,14 +455,20 @@ export async function navigableGroupMultiselect<T>(
       | "cancelled",
     options: (GroupMultiSelectOption<T> & { group: string | boolean })[] = [],
   ) => {
-    const label = option.label ?? String(option.value);
     const isItem = option.group !== true && option.group !== false;
+    const isGroup = option.group === true;
+    const chooseOne = isGroup && exclusiveGroups.has(String(option.value));
+    const label = `${option.label ?? String(option.value)}${chooseOne ? pc.dim(" (choose one)") : ""}`;
     const next = isItem && (options[options.indexOf(option) + 1] ?? { group: true });
     const isLast = isItem && next && next.group === true;
     const prefix = isItem ? `${isLast ? S_BAR_END : S_BAR} ` : "";
+    const radio = isItem && exclusiveValues.has(option.value);
+    const activeBox = radio ? S_RADIO_INACTIVE : S_CHECKBOX_ACTIVE;
+    const selectedBox = radio ? S_RADIO_ACTIVE : S_CHECKBOX_SELECTED;
+    const inactiveBox = radio ? S_RADIO_INACTIVE : S_CHECKBOX_INACTIVE;
 
     if (state === "active") {
-      return `${pc.dim(prefix)}${pc.cyan(S_CHECKBOX_ACTIVE)} ${label}${option.hint ? ` ${pc.dim(`(${option.hint})`)}` : ""}`;
+      return `${pc.dim(prefix)}${pc.cyan(activeBox)} ${label}${option.hint ? ` ${pc.dim(`(${option.hint})`)}` : ""}`;
     }
     if (state === "group-active") {
       return `${prefix}${pc.cyan(S_CHECKBOX_ACTIVE)} ${pc.dim(label)}`;
@@ -442,19 +477,19 @@ export async function navigableGroupMultiselect<T>(
       return `${prefix}${pc.green(S_CHECKBOX_SELECTED)} ${pc.dim(label)}`;
     }
     if (state === "selected") {
-      const selectedCheckbox = isItem ? pc.green(S_CHECKBOX_SELECTED) : "";
+      const selectedCheckbox = isItem ? pc.green(selectedBox) : "";
       return `${pc.dim(prefix)}${selectedCheckbox} ${pc.dim(label)}${option.hint ? ` ${pc.dim(`(${option.hint})`)}` : ""}`;
     }
     if (state === "cancelled") {
       return `${pc.strikethrough(pc.dim(label))}`;
     }
     if (state === "active-selected") {
-      return `${pc.dim(prefix)}${pc.green(S_CHECKBOX_SELECTED)} ${label}${option.hint ? ` ${pc.dim(`(${option.hint})`)}` : ""}`;
+      return `${pc.dim(prefix)}${pc.green(selectedBox)} ${label}${option.hint ? ` ${pc.dim(`(${option.hint})`)}` : ""}`;
     }
     if (state === "submitted") {
       return `${pc.dim(label)}`;
     }
-    const unselectedCheckbox = isItem ? pc.dim(S_CHECKBOX_INACTIVE) : "";
+    const unselectedCheckbox = isItem ? pc.dim(inactiveBox) : "";
     return `${pc.dim(prefix)}${unselectedCheckbox} ${pc.dim(label)}`;
   };
 
@@ -547,6 +582,16 @@ export async function navigableGroupMultiselect<T>(
       }
     },
   });
+
+  if (exclusive.length > 0) {
+    let previous = [...(opts.initialValues ?? [])];
+    prompt.on("cursor", (key) => {
+      if (key === "space") {
+        prompt.value = resolveExclusiveSelection(previous, prompt.value ?? [], exclusive);
+      }
+      previous = [...(prompt.value ?? [])];
+    });
+  }
 
   return runWithNavigation(prompt) as Promise<T[] | symbol>;
 }

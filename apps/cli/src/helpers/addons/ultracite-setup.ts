@@ -26,7 +26,8 @@ type UltraciteEditor =
   | "kiro"
   | "trae"
   | "void"
-  | "zed";
+  | "zed"
+  | "universal";
 
 type UltraciteAgent =
   | "universal"
@@ -145,7 +146,7 @@ const HOOKS = {
 
 // Pinned so upstream preset releases can't silently break scaffold lint compliance;
 // bump alongside a template compliance run (BTS_ULTRACITE_COMPLIANCE=1 bun test)
-const ULTRACITE_VERSION = "7.9.4";
+const ULTRACITE_VERSION = "7.10.7";
 
 const DEFAULT_LINTER: UltraciteLinter = "biome";
 const DEFAULT_EDITORS: UltraciteEditor[] = ["vscode"];
@@ -283,6 +284,7 @@ export async function setupUltracite(
             options: [
               { value: "vscode", label: "VSCode / Cursor / Windsurf" },
               { value: "zed", label: "Zed" },
+              { value: "universal", label: "Universal (.vscode/settings.json)" },
             ],
           });
         },
