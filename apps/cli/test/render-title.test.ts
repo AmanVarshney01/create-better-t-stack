@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import { renderTitle, TITLE_TEXT } from "../src/utils/render-title";
+import { renderTitle, TITLE_TEXT } from "../src/render-title";
 
 const ansiPattern = new RegExp(`${String.fromCharCode(27)}\\[[0-?]*[ -/]*[@-~]`, "g");
 
@@ -85,7 +85,7 @@ describe("renderTitle", () => {
     }
   });
 
-  it("slams pink and sky ghosts into a single registered wordmark", async () => {
+  it("draws a neutral wireframe then fills the wordmark upward", async () => {
     const { chunks, output } = createOutput(120);
 
     await renderTitle({ animate: true, frameDelayMs: 0, output });
@@ -96,11 +96,13 @@ describe("renderTitle", () => {
 
     const firstFrame = chunks[1] ?? "";
     const lastFrame = chunks.at(-2) ?? "";
+    const strippedFirst = stripAnsi(firstFrame);
     const strippedLast = stripAnsi(lastFrame);
 
-    expect(firstFrame).toContain("38;2;245;194;231");
-    expect(firstFrame).toContain("38;2;137;220;235");
-    expect(stripAnsi(firstFrame)).not.toBe(TITLE_TEXT);
+    expect(firstFrame).toContain("38;2;108;112;134");
+    expect(strippedFirst).not.toContain("█");
+    expect(strippedFirst).toContain("╗");
+    expect(glyphCount(strippedFirst)).toBeLessThan(glyphCount(TITLE_TEXT));
     expect(strippedLast).toBe(TITLE_TEXT);
     expect(lastFrame).toContain("38;2;");
     expect(strippedLast).toContain("██████╗");
