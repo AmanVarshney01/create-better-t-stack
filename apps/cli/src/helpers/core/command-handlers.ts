@@ -512,7 +512,6 @@ async function createProjectHandlerInternal(
     let projectLauncher: AvailableProjectLauncher | undefined;
     if (!isSilent()) {
       const launcherResult = await getProjectLauncherChoice(input.open, config.projectDir, {
-        packageManager: config.packageManager,
         prompt:
           !input.yes &&
           process.env.CI === undefined &&
@@ -536,8 +535,6 @@ async function createProjectHandlerInternal(
         const launchResult = await launchProject(projectLauncher);
         if (launchResult.isErr()) {
           log.warn(pc.yellow(launchResult.error.message));
-        } else if (projectLauncher.note) {
-          log.info(projectLauncher.note);
         }
       }
     }

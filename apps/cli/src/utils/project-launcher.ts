@@ -1,17 +1,11 @@
-import { existsSync } from "node:fs";
-import os from "node:os";
-import path from "node:path";
-
 import { Result } from "better-result";
-import { $, execa } from "execa";
+import { execa } from "execa";
 import z from "zod";
 
 import { isCancel, navigableSelect, setIsFirstPrompt } from "../prompts/navigable";
-import type { PackageManager } from "../types";
 import { commandExists } from "./command-exists";
 import { CLIError } from "./errors";
 import { shouldSkipExternalCommands } from "./external-commands";
-import { getPackageRunnerPrefix } from "./package-runner";
 
 export const ProjectLauncherSchema = z
   .enum([
@@ -51,19 +45,6 @@ export const ProjectLauncherSchema = z
 export type ProjectLauncher = z.infer<typeof ProjectLauncherSchema>;
 export type ProjectLauncherKind = "editor" | "agent";
 
-/** A macOS app bundle that can open the project even when no CLI is on PATH. */
-interface MacAppDefinition {
-  bundleId: string;
-  names: readonly string[];
-  /** Printed after a successful launch when the app cannot jump to the project itself. */
-  note?: string;
-  launchSequence: (
-    projectDir: string,
-    packageManager: PackageManager,
-    cliCommand: string | undefined,
-  ) => ProjectLaunchCommand[];
-}
-
 interface ProjectLauncherDefinition {
   id: Exclude<ProjectLauncher, "none">;
   label: string;
@@ -73,7 +54,6 @@ interface ProjectLauncherDefinition {
   args?: (projectDir: string) => string[];
   cwd?: (projectDir: string) => string;
   launchSequence?: (command: string, projectDir: string) => ProjectLaunchCommand[];
-  macApp?: MacAppDefinition;
   platforms?: readonly NodeJS.Platform[];
 }
 
@@ -91,10 +71,7 @@ export interface AvailableProjectLauncher {
   args: string[];
   cwd?: string;
   launchSequence?: ProjectLaunchCommand[];
-  note?: string;
 }
-
-const T3_CODE_BUNDLE_ID = "com.t3tools.t3code";
 
 export const PROJECT_LAUNCHERS = [
   {
@@ -189,20 +166,6 @@ export const PROJECT_LAUNCHERS = [
     kind: "agent",
     commands: ["t3"],
     cwd: (projectDir) => projectDir,
-    macApp: {
-      bundleId: T3_CODE_BUNDLE_ID,
-      names: ["T3 Code", "T3 Code (Alpha)"],
-      note: "Added to T3 Code. Pick the project from its project list.",
-      launchSequence: (projectDir, packageManager, cliCommand) => {
-        const [command, ...prefixArgs] = cliCommand
-          ? [cliCommand]
-          : [...getPackageRunnerPrefix(packageManager), "t3@latest"];
-        return [
-          { command, args: [...prefixArgs, "project", "add", projectDir], cwd: projectDir },
-          { command: "open", args: ["-b", T3_CODE_BUNDLE_ID] },
-        ];
-      },
-    },
   },
   {
     id: "claude-code",
@@ -325,32 +288,10 @@ export const PROJECT_LAUNCHERS = [
 ] as const satisfies readonly ProjectLauncherDefinition[];
 
 type CommandDetector = (command: string) => Promise<boolean>;
-type MacAppDetector = (app: MacAppDefinition) => Promise<boolean>;
-
-export async function macAppInstalled(app: MacAppDefinition): Promise<boolean> {
-  const appDirs = ["/Applications", path.join(os.homedir(), "Applications")];
-  const bundleExists = app.names.some((name) =>
-    appDirs.some((dir) => existsSync(path.join(dir, `${name}.app`))),
-  );
-  if (bundleExists) return true;
-
-  const result = await Result.tryPromise({
-    try: async () => {
-      const { stdout } = await $({
-        reject: false,
-      })`mdfind ${`kMDItemCFBundleIdentifier == '${app.bundleId}'`}`;
-      return stdout.trim().length > 0;
-    },
-    catch: () => false,
-  });
-  return result.isOk() ? result.value : false;
-}
 
 export interface DetectProjectLaunchersOptions {
   detectCommand?: CommandDetector;
-  detectMacApp?: MacAppDetector;
   platform?: NodeJS.Platform;
-  packageManager?: PackageManager;
 }
 
 export async function detectProjectLaunchers(
@@ -358,9 +299,7 @@ export async function detectProjectLaunchers(
   options: DetectProjectLaunchersOptions = {},
 ): Promise<AvailableProjectLauncher[]> {
   const detectCommand = options.detectCommand ?? commandExists;
-  const detectMacApp = options.detectMacApp ?? macAppInstalled;
   const platform = options.platform ?? process.platform;
-  const packageManager = options.packageManager ?? "npm";
 
   const definitions: readonly ProjectLauncherDefinition[] = PROJECT_LAUNCHERS;
   const supportedDefinitions = definitions.filter(
@@ -374,34 +313,9 @@ export async function detectProjectLaunchers(
       commands.map(async (command) => [command, await detectCommand(command)] as const),
     ),
   );
-  const detectedMacApps = new Map(
-    await Promise.all(
-      supportedDefinitions
-        .filter((launcher) => platform === "darwin" && launcher.macApp !== undefined)
-        .map(async (launcher) => {
-          const installed = launcher.macApp ? await detectMacApp(launcher.macApp) : false;
-          return [launcher.id, installed] as const;
-        }),
-    ),
-  );
 
   return supportedDefinitions.flatMap((launcher) => {
     const command = commandsFor(launcher).find((candidate) => detectedCommands.get(candidate));
-
-    if (launcher.macApp && detectedMacApps.get(launcher.id)) {
-      return [
-        {
-          id: launcher.id,
-          label: launcher.label,
-          kind: launcher.kind,
-          command: "open",
-          args: ["-b", launcher.macApp.bundleId],
-          launchSequence: launcher.macApp.launchSequence(projectDir, packageManager, command),
-          note: launcher.macApp.note,
-        },
-      ];
-    }
-
     if (!command) return [];
 
     const availableLauncher: AvailableProjectLauncher = {
