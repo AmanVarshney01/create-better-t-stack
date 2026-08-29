@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import { renderTitle, TITLE_TEXT } from "../src/render-title";
+import { renderTitle, TITLE_TEXT } from "../src/utils/render-title";
 
 const ansiPattern = new RegExp(`${String.fromCharCode(27)}\\[[0-?]*[ -/]*[@-~]`, "g");
 
