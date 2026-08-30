@@ -14,7 +14,8 @@ export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 nvm install 24 >/dev/null
 nvm alias default 24 >/dev/null
-export PATH="$(dirname "$(nvm which 24)"):$PATH"
+NODE24_BIN="$(dirname "$(nvm which 24)")"
+export PATH="$NODE24_BIN:$PATH"
 
 # --- Bun 1.4.0 (pinned via packageManager) ---
 export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
@@ -25,6 +26,25 @@ fi
 
 node --version
 bun --version
+
+# Make Node 24 + Bun available in future interactive/login shells (terminals
+# already self-configure, but this helps ad-hoc shells too).
+PATH_MARKER="# >>> better-t-stack cloud agent path >>>"
+persist_path_block() {
+  rc="$1"
+  [ -f "$rc" ] || return 0
+  grep -qF "$PATH_MARKER" "$rc" && return 0
+  {
+    printf '\n%s\n' "$PATH_MARKER"
+    printf 'export BUN_INSTALL="$HOME/.bun"\n'
+    printf 'export NVM_DIR="$HOME/.nvm"\n'
+    printf '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1\n'
+    printf 'export PATH="$BUN_INSTALL/bin:%s:$PATH"\n' "$NODE24_BIN"
+    printf '# <<< better-t-stack cloud agent path <<<\n'
+  } >>"$rc"
+}
+persist_path_block "$HOME/.bashrc"
+persist_path_block "$HOME/.profile"
 
 # --- Dependencies ---
 # --ignore-scripts skips the root `prepare` (lefthook install), which fails in
