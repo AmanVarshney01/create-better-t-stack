@@ -36,15 +36,14 @@ const hideCursor = "\u001B[?25l";
 const showCursor = "\u001B[?25h";
 const reset = "\u001B[39m";
 
-const frameCount = 28;
-const frameDelayMs = 16;
+const frameCount = 40;
+const frameDelayMs = 22;
 /** Quiet grey for the wireframe — catppuccin overlay0. */
 const neutral: RGB = [108, 112, 134];
-/** Share of the timeline that is outline-only before ink rises. */
-const outlineUntil = 0.32;
-/** Soft vertical band the fill front occupies. */
-const fillBand = 0.4;
-const blockStages = ["\u2581", "\u2582", "\u2583", "\u2584", "\u2585", "\u2586", "\u2587", "\u2588"] as const;
+/** Hold as outline-only before the ink waterline starts rising. */
+const outlineUntil = 0.42;
+/** Partial block used only on the rising waterline row. */
+const waterlineGlyph = "\u2584";
 
 type RGB = [number, number, number];
 
@@ -105,21 +104,23 @@ function renderSettled(lines: string[], width: number): string {
 }
 
 /**
- * Neutral wireframe first (box-drawing only), then ink fills upward through
- * the block cells into the catppuccin gradient. No pink, no white flash.
+ * Hold a neutral grey wireframe, then a crisp ink waterline rises from the
+ * bottom and floods each row solid into the catppuccin gradient.
+ * Deliberately not a block-stage wavefront.
  */
 function renderInk(lines: string[], width: number, frame: number): string {
   const linear = frameCount === 1 ? 1 : frame / (frameCount - 1);
   const fillLinear = linear <= outlineUntil ? 0 : (linear - outlineUntil) / (1 - outlineUntil);
   const fillEase = smoothstep(fillLinear);
   const rowCount = Math.max(1, lines.length - 1);
+  // 0 = nothing filled, rowCount = every row solid. Overshoot so the last frame settles.
+  const waterline = fillEase * (rowCount + 1);
 
   return lines
     .map((line, row) => {
-      const rowFromBottom = (rowCount - row) / rowCount;
-      // Travel past the top so the final frame is fully solid.
-      const front = fillEase * (1 + fillBand);
-      const rowFill = Math.max(0, Math.min(1, (front - rowFromBottom) / fillBand));
+      const fromBottom = rowCount - row;
+      // >1 solid, 0..1 waterline row (half block), <=0 empty (outline only).
+      const depth = waterline - fromBottom;
 
       let out = "";
       let pen = "";
@@ -139,7 +140,7 @@ function renderInk(lines: string[], width: number, frame: number): string {
         let color: RGB = neutral;
 
         if (isFullBlock(character)) {
-          if (rowFill <= 0) {
+          if (depth <= 0) {
             if (pen) {
               out += reset;
               pen = "";
@@ -147,12 +148,16 @@ function renderInk(lines: string[], width: number, frame: number): string {
             out += " ";
             continue;
           }
-          const stage = Math.min(blockStages.length - 1, Math.floor(rowFill * blockStages.length));
-          glyph = blockStages[stage];
-          color = mix(neutral, stop, Math.min(1, rowFill * 1.15));
+          if (depth < 1) {
+            glyph = waterlineGlyph;
+            color = mix(neutral, stop, 0.55);
+          } else {
+            glyph = "\u2588";
+            color = stop;
+          }
         } else {
-          // Outline warms from grey into a muted gradient as the ink rises.
-          color = mix(neutral, stop, fillEase * 0.75);
+          // Outline stays grey until the waterline has passed, then settles.
+          color = depth > 0 ? mix(neutral, stop, Math.min(1, depth)) : neutral;
         }
 
         const next = fg(color);
