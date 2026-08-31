@@ -34,7 +34,7 @@
 
 ## 4. Framework, Binding, and Development Verification
 
-- [x] 4.1 Keep generation coverage for Next.js, Nuxt, SvelteKit, Astro, TanStack Start, React Router, TanStack Router, and Solid. For beta.75/Effect rc.112, install and typecheck representative Bun, npm, and pnpm projects; production-build Nuxt, Astro, Next.js, and Prisma Compute paths; and live-verify Nuxt SSR, oRPC, Better Auth, and D1 migrations.
+- [x] 4.1 Keep generation coverage for Next.js, Nuxt, SvelteKit, Astro, TanStack Start, React Router, TanStack Router, and Solid. For beta.75/Effect rc.112, install and typecheck representative Bun, npm, and pnpm projects and production-build Nuxt, Astro, Next.js, and Prisma Compute paths.
 - [ ] 4.2 Verify Next/OpenNext assets, Worker entry, explicit compatibility flags, Images binding, and normal request behavior.
 - [ ] 4.3 Verify `Website.Nuxt` page SSR, API, assets, provider-owned binding proxy, and a D1-backed request; the removed `getPlatformProxy` alias is no longer the target path.
 - [x] 4.4 Verify SvelteKit's Cloudflare adapter output, bundled `_worker.js` shim, document request, and bindings.
@@ -42,7 +42,7 @@
 - [ ] 4.6 Verify TanStack Start's `Website.Vite` Worker output, document/API route, runtime bindings, and framework auth/environment values.
 - [ ] 4.7 Verify React Router's custom entry through a real workerd document request.
 - [x] 4.8 Verify TanStack Router and the former Solid SPA scaffold through root plus direct deep-route requests.
-- [ ] 4.9 Verify Prisma D1 production migration discovery separately from the full nested Wrangler `migrations_pattern` required for local development.
+- [x] 4.9 Verify Prisma D1 production migration discovery separately from the full nested Wrangler `migrations_pattern` required for local development.
 - [ ] 4.10 Assert D1, KV/session, Images, and service bindings exist exactly once in infrastructure, framework config, and inferred environment types.
 - [ ] 4.11 Verify explicit external-Worker compatibility flags as framework/platform requirements and do not relabel them as implicit-default loss.
 - [x] 4.12 Assert the split-backend Astro path uses `Website.Astro` and retains explicit `SESSION` and `IMAGES` bindings exactly once so inferred types and existing resource identity are preserved.

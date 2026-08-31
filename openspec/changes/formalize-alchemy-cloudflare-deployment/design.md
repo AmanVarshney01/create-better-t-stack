@@ -399,7 +399,7 @@ Database ownership follows the process that opens the connection, not whichever 
 
 The single `alchemy.run.ts` co-locates provider construction, migration credentials, runtime credentials, provider layers, and application deployment. It defines an Effect-shaped `databaseEnv` for Prisma resources and statically shaped `databaseBindings` whose individual values are Effects for Cloudflare. The second form is intentional: passing the entire Worker props object through an Effect widens Alchemy's Worker binding generic, while individual binding Effects retain precise `Cloudflare.InferEnv` output.
 
-Runtime credentials are pooled or least privilege. Migration credentials are direct or elevated and never reach the application resource. Prisma migrations run through `Command.Exec` because schema history belongs in the repository; Drizzle uses native Neon/PlanetScale `migrationsDir` support and a command for Prisma Postgres. PlanetScale defaults to `PS_DEV`, with an explicit cost warning in generated guidance.
+Runtime credentials are pooled or least privilege. Migration credentials are direct or elevated and never reach the application resource. Prisma migrations run through `Command.Exec` because schema history belongs in the repository; Drizzle uses native Neon/PlanetScale `migrations` support and a command for Prisma Postgres. PlanetScale defaults to `PS_DEV`, with an explicit cost warning in generated guidance.
 
 ## 11. Prisma deployment architecture
 
@@ -408,6 +408,6 @@ The product surface calls the target **Prisma**; `Prisma.Compute` is the Alchemy
 One `Prisma.Project` is reused by all Prisma application resources and, when selected, Prisma Postgres. Mixed Cloudflare/Prisma stacks remain one Alchemy graph, so the server resource is yielded before the web and its URL remains an Output rather than a copied configuration string.
 Nuxt and Astro now use their released first-class resources. Next.js and SvelteKit remain on
 qualified generic paths because their current provider peers do not match the latest generated
-framework dependencies. Beta.72 contains the Effect compatibility fix; the remaining Nuxt and Astro
+framework dependencies. Beta.75 retains the Effect compatibility fix on Effect rc.112; the remaining Nuxt and Astro
 work is provider-owned live build, development, binding, and request verification rather than a
 dependency-startup blocker.
