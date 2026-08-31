@@ -16,7 +16,7 @@ function writeNeon(
     'const database = yield* Neon.Project("database", {',
     () => {
       if (database.orm === "drizzle") {
-        writer.writeLine('migrationsDir: "../../packages/db/src/migrations",');
+        writer.writeLine('migrations: "../../packages/db/src/migrations",');
       }
     },
     "});",
@@ -41,7 +41,7 @@ function writePlanetScalePostgres(
     () => {
       writer.writeLine('clusterSize: "PS_DEV",');
       if (database.orm === "drizzle") {
-        writer.writeLine('migrationsDir: "../../packages/db/src/migrations",');
+        writer.writeLine('migrations: "../../packages/db/src/migrations",');
       }
     },
     "});",
@@ -107,7 +107,7 @@ function writePlanetScaleMySql(
     () => {
       writer.writeLine('clusterSize: "PS_DEV",');
       if (database.orm === "drizzle") {
-        writer.writeLine('migrationsDir: "../../packages/db/src/migrations",');
+        writer.writeLine('migrations: "../../packages/db/src/migrations",');
       }
     },
     "});",
@@ -326,9 +326,9 @@ function writeD1(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void {
     'export const db = Cloudflare.D1.Database("database", {',
     () => {
       if (plan.config.orm === "prisma") {
-        writer.writeLine('migrationsDir: "../../packages/db/prisma/migrations",');
+        writer.writeLine('migrations: "../../packages/db/prisma/migrations",');
       } else if (plan.config.orm === "drizzle") {
-        writer.writeLine('migrationsDir: "../../packages/db/src/migrations",');
+        writer.writeLine('migrations: "../../packages/db/src/migrations",');
       }
     },
     "});",

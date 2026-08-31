@@ -11,13 +11,13 @@
 
 ## 2. Exact Dependency and Generated Artifact Gates
 
-- [x] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.72` output with no semver range; pin Effect and both platform packages to rc.108 and verify the released #1132 startup fix without a downgrade.
+- [x] 2.1 Keep the accepted Alchemy version in one generator dependency source and assert exact `alchemy@2.0.0-beta.75` output with no semver range; pin Effect and both platform packages to rc.112 and verify the released startup and isolated-install fixes without a downgrade.
 - [x] 2.2 Generate npm, pnpm, and Bun projects and prove each resolves the exact accepted Alchemy package rather than an incompatible test prerelease.
 - [ ] 2.3 Add deterministic artifact assertions for web-only, server-only, combined, full-stack `self`, Convex-web, D1, and mixed single-plane Cloudflare topologies.
 - [ ] 2.4 Assert that every selected Cloudflare plane emits `packages/infra/alchemy.run.ts`, the infra package, scripts, framework adapter/configuration, bindings, inferred env types, and user guidance.
 - [ ] 2.5 Add configuration-time rejection tests for non-Hono Cloudflare servers, non-Workers runtimes, unsupported `self` frontends, and invalid D1 consumers across flags and programmatic generation.
 - [x] 2.6 Regenerate `packages/template-generator/src/templates.generated.ts` only from source templates and verify it introduces no independent behavioral drift.
-- [x] 2.7 Prove `@alchemy.run/cloudflare-frameworks` resolves from the generated web workspace under fresh npm, pnpm, and Bun installs without accidental hoisting.
+- [x] 2.7 Prove `@alchemy.run/frontend-frameworks` resolves from the generated web workspace under fresh npm, pnpm, and Bun installs without accidental hoisting.
 - [ ] 2.8 Assert that no generated project uses a git dependency, pull-request branch, moving dist-tag, or unpublished framework source package.
 
 ## 3. Compatibility Safeguard Tests
@@ -34,7 +34,7 @@
 
 ## 4. Framework, Binding, and Development Verification
 
-- [x] 4.1 Generate and install fresh Cloudflare projects for Next.js, Nuxt, SvelteKit, Astro, TanStack Start, React Router, TanStack Router, and Solid against beta.72/Effect beta.107; typecheck every workspace and run the ordinary root build contract. Provider-owned Nuxt and Astro production builds remain under 4.3 and 4.5.
+- [x] 4.1 Keep generation coverage for Next.js, Nuxt, SvelteKit, Astro, TanStack Start, React Router, TanStack Router, and Solid. For beta.75/Effect rc.112, install and typecheck representative Bun, npm, and pnpm projects; production-build Nuxt, Astro, Next.js, and Prisma Compute paths; and live-verify Nuxt SSR, oRPC, Better Auth, and D1 migrations.
 - [ ] 4.2 Verify Next/OpenNext assets, Worker entry, explicit compatibility flags, Images binding, and normal request behavior.
 - [ ] 4.3 Verify `Website.Nuxt` page SSR, API, assets, provider-owned binding proxy, and a D1-backed request; the removed `getPlatformProxy` alias is no longer the target path.
 - [x] 4.4 Verify SvelteKit's Cloudflare adapter output, bundled `_worker.js` shim, document request, and bindings.

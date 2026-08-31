@@ -1271,8 +1271,8 @@ describe("Addon Configurations", () => {
       expect(nuxtConfig).toContain("evlog:");
       expect(infra).toContain('Cloudflare.Website.Nuxt("web", {');
       expect(webPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBeUndefined();
-      expect(webPackage.devDependencies?.["@alchemy.run/cloudflare-frameworks"]).toBe(
-        "2.0.0-beta.72",
+      expect(webPackage.devDependencies?.["@alchemy.run/frontend-frameworks"]).toBe(
+        "2.0.0-beta.75",
       );
       expect(webPackage.devDependencies?.["nitro-cloudflare-dev"]).toBeUndefined();
       expect(webPackage.devDependencies?.wrangler).toBeUndefined();

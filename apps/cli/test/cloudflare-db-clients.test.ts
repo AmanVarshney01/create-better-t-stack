@@ -276,6 +276,8 @@ describe("Cloudflare DB client generation", () => {
     expect(infraFile).toContain('BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET")');
     expect(infraFile).not.toContain("BETTER_AUTH_SECRET: yield* Config.redacted");
     expect(infraFile).toContain("memo: false");
+    expect(infraFile).toContain('migrations: "../../packages/db/prisma/migrations"');
+    expect(infraFile).not.toContain("migrationsDir:");
     expect(wranglerConfig.d1_databases?.[0]).toMatchObject({
       migrations_dir: "../../packages/db/prisma/migrations",
       migrations_pattern: "../../packages/db/prisma/migrations/*/migration.sql",

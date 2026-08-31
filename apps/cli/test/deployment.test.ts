@@ -951,10 +951,10 @@ describe("Deployment Configurations", () => {
       expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
-        alchemy: "2.0.0-beta.72",
-        effect: "4.0.0-rc.108",
-        "@effect/platform-node": "4.0.0-rc.108",
-        "@effect/platform-bun": "4.0.0-rc.108",
+        alchemy: "2.0.0-beta.75",
+        effect: "4.0.0-rc.112",
+        "@effect/platform-node": "4.0.0-rc.112",
+        "@effect/platform-bun": "4.0.0-rc.112",
       });
       expect(infraFile!.indexOf("const serverWorker = yield* server")).toBeLessThan(
         infraFile!.indexOf('yield* Cloudflare.Website.Vite("web"'),
@@ -1279,8 +1279,8 @@ describe("Deployment Configurations", () => {
       expect(nuxtConfig).not.toContain("nitro-cloudflare-dev");
       expect(nuxtConfig).not.toContain("preset: 'cloudflare-module'");
       expect(nuxtPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBeUndefined();
-      expect(nuxtPackage.devDependencies?.["@alchemy.run/cloudflare-frameworks"]).toBe(
-        "2.0.0-beta.72",
+      expect(nuxtPackage.devDependencies?.["@alchemy.run/frontend-frameworks"]).toBe(
+        "2.0.0-beta.75",
       );
       expect(nuxtPackage.devDependencies?.["nitro-cloudflare-dev"]).toBeUndefined();
       expect(nuxtPackage.devDependencies?.wrangler).toBeUndefined();
@@ -1304,8 +1304,8 @@ describe("Deployment Configurations", () => {
       expect(astroConfig).not.toContain("@astrojs/cloudflare");
       expect(astroConfig).not.toContain("adapter: cloudflare()");
       expect(astroPackage.devDependencies?.["@distilled.cloud/astro"]).toBeUndefined();
-      expect(astroPackage.devDependencies?.["@alchemy.run/cloudflare-frameworks"]).toBe(
-        "2.0.0-beta.72",
+      expect(astroPackage.devDependencies?.["@alchemy.run/frontend-frameworks"]).toBe(
+        "2.0.0-beta.75",
       );
       expect(astroPackage.devDependencies?.["@astrojs/cloudflare"]).toBeUndefined();
       expect((astroPackage as { scripts?: Record<string, string> }).scripts?.build).toBeUndefined();
