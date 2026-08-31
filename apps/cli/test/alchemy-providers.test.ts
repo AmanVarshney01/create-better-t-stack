@@ -202,10 +202,10 @@ describe("Alchemy providers", () => {
     expect(files.has("packages/db/prisma/migrations/0000_init/migration.sql")).toBe(true);
     expect(infraPackage.scripts?.["check-types"]).toBe("tsc --noEmit");
     expect(infraPackage.devDependencies).toMatchObject({
-      alchemy: "2.0.0-beta.72",
-      effect: "4.0.0-rc.108",
-      "@effect/platform-node": "4.0.0-rc.108",
-      "@effect/platform-bun": "4.0.0-rc.108",
+      alchemy: "2.0.0-beta.75",
+      effect: "4.0.0-rc.112",
+      "@effect/platform-node": "4.0.0-rc.112",
+      "@effect/platform-bun": "4.0.0-rc.112",
     });
   });
 
@@ -225,7 +225,7 @@ describe("Alchemy providers", () => {
 
     expect(infra).toContain('Planetscale.PostgresDatabase("database"');
     expect(infra).toContain('clusterSize: "PS_DEV"');
-    expect(infra).toContain('migrationsDir: "../../packages/db/src/migrations"');
+    expect(infra).toContain('migrations: "../../packages/db/src/migrations"');
     expect(infra).toContain('inheritedRoles: ["pg_read_all_data", "pg_write_all_data"]');
     expect(infra).not.toContain('Command.Exec("database-migrations"');
     expect(dbSource).toContain("drizzle-orm/postgres-js");
@@ -248,6 +248,8 @@ describe("Alchemy providers", () => {
     });
     const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
 
+    expect(infra).toContain('migrations: "../../packages/db/src/migrations"');
+    expect(infra).not.toContain("migrationsDir:");
     expect(infra).toContain("database.pooledConnectionUri.pipe(Output.map(Redacted.make))");
     expect(infra).not.toContain("database.connectionUri");
     expect(infra).not.toContain("migrationUrl");
@@ -264,6 +266,8 @@ describe("Alchemy providers", () => {
     const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
 
     expect(infra).toContain('Planetscale.MySQLDatabase("database"');
+    expect(infra).toContain('migrations: "../../packages/db/src/migrations"');
+    expect(infra).not.toContain("migrationsDir:");
     expect(infra).not.toContain('import * as Redacted from "effect/Redacted"');
     expect(infra).not.toContain("migrationUrl");
   });

@@ -173,7 +173,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: ["@alchemy.run/cloudflare-frameworks"],
+        devDependencies: ["@alchemy.run/frontend-frameworks"],
       });
     } else if (frontend.includes("svelte")) {
       addPackageDependency({
@@ -193,7 +193,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: ["@alchemy.run/cloudflare-frameworks", "@cloudflare/workers-types"],
+        devDependencies: ["@alchemy.run/frontend-frameworks", "@cloudflare/workers-types"],
       });
     }
   }
