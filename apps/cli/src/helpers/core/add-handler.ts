@@ -440,6 +440,15 @@ async function addHandlerInternal(
     addonsToAdd = selectedAddons;
   }
 
+  if (addonsToAdd.includes("axiom")) {
+    return Result.err(
+      new CLIError({
+        message:
+          "Axiom must be selected during project creation because it configures Alchemy infrastructure and deployment bindings.",
+      }),
+    );
+  }
+
   // Build config for addon setup
   const updatedAddons = [...existingConfig.addons, ...addonsToAdd];
   const addonsValidationResult = validateAddonsAgainstConfig(updatedAddons, existingConfig);

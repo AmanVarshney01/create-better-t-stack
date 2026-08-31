@@ -29,8 +29,13 @@ services:
       - path: apps/web/.env
         required: false
 {{#if (eq backend "self")}}
-{{#if (or (eq dbSetup "docker") (eq auth "better-auth") (and (eq database "sqlite") (eq dbSetup "none")))}}
+{{#if (or (eq dbSetup "docker") (eq auth "better-auth") (and (eq database "sqlite") (eq dbSetup "none")) (includes addons "axiom"))}}
     environment:
+{{#if (includes addons "axiom")}}
+      AXIOM_API_KEY: ${AXIOM_API_KEY:?Set AXIOM_API_KEY}
+      AXIOM_DATASET: ${AXIOM_DATASET:?Set AXIOM_DATASET}
+      AXIOM_EDGE_URL: ${AXIOM_EDGE_URL:?Set AXIOM_EDGE_URL}
+{{/if}}
 {{#if (eq auth "better-auth")}}
       BETTER_AUTH_URL: http://localhost:3001
       CORS_ORIGIN: http://localhost:3001
@@ -61,9 +66,15 @@ services:
           create_host_path: false
 {{/if}}
 {{else}}
-{{#if (eq serverDeploy "docker")}}
+{{#if (or (eq serverDeploy "docker") (and (includes addons "axiom") (or (includes frontend "next") (includes frontend "tanstack-start") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro"))))}}
 {{#unless (includes frontend "tanstack-router")}}
     environment:
+{{#if (and (includes addons "axiom") (or (includes frontend "next") (includes frontend "tanstack-start") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro")))}}
+      AXIOM_API_KEY: ${AXIOM_API_KEY:?Set AXIOM_API_KEY}
+      AXIOM_DATASET: ${AXIOM_DATASET:?Set AXIOM_DATASET}
+      AXIOM_EDGE_URL: ${AXIOM_EDGE_URL:?Set AXIOM_EDGE_URL}
+{{/if}}
+{{#if (eq serverDeploy "docker")}}
       SERVER_URL: http://server:3000
 {{#if (includes frontend "next")}}
       NEXT_PUBLIC_SERVER_URL: http://server:3000
@@ -71,10 +82,13 @@ services:
 {{#if (includes frontend "nuxt")}}
       NUXT_SERVER_URL: http://server:3000
 {{/if}}
+{{/if}}
 {{/unless}}
+{{#if (eq serverDeploy "docker")}}
     depends_on:
       server:
         condition: service_healthy
+{{/if}}
 {{/if}}
 {{/if}}
     healthcheck:
@@ -111,8 +125,13 @@ services:
     env_file:
       - path: apps/server/.env
         required: false
-{{#if (or (eq webDeploy "docker") (eq dbSetup "docker") (and (eq database "sqlite") (eq dbSetup "none")))}}
+{{#if (or (eq webDeploy "docker") (eq dbSetup "docker") (and (eq database "sqlite") (eq dbSetup "none")) (includes addons "axiom"))}}
     environment:
+{{#if (includes addons "axiom")}}
+      AXIOM_API_KEY: ${AXIOM_API_KEY:?Set AXIOM_API_KEY}
+      AXIOM_DATASET: ${AXIOM_DATASET:?Set AXIOM_DATASET}
+      AXIOM_EDGE_URL: ${AXIOM_EDGE_URL:?Set AXIOM_EDGE_URL}
+{{/if}}
 {{#if (eq webDeploy "docker")}}
       CORS_ORIGIN: http://localhost:3001
 {{/if}}

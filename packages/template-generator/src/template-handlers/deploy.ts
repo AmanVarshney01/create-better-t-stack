@@ -18,7 +18,8 @@ export async function processDeployTemplates(
 
   if (
     ["cloudflare", "prisma"].includes(config.webDeploy) ||
-    ["cloudflare", "prisma"].includes(config.serverDeploy)
+    ["cloudflare", "prisma"].includes(config.serverDeploy) ||
+    config.addons.includes("axiom")
   ) {
     processTemplatesFromPrefix(vfs, templates, "packages/infra", "packages/infra", config);
     processAlchemyRun(vfs, config);

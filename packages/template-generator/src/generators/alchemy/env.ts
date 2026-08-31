@@ -51,6 +51,9 @@ function commonRuntimeEntries(plan: AlchemyDeploymentPlan, includeCorsOrigin = t
   if (dbSetup === "turso") {
     entries.push('DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),');
   }
+  if (plan.hasAxiomServerRuntime) {
+    entries.push("...observabilityBindings,");
+  }
 
   return entries;
 }
@@ -104,6 +107,9 @@ export function prismaServerEnvEntries(plan: AlchemyDeploymentPlan): string[] {
   if (dbSetup === "turso") {
     entries.push('DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),');
   }
+  if (plan.hasAxiomServerRuntime) {
+    entries.push("...resolvedObservabilityEnv,");
+  }
 
   return entries;
 }
@@ -124,6 +130,9 @@ export function selfCloudflareWebEnvEntries(
   }
 
   entries.push(...commonRuntimeEntries(plan, false));
+  if (plan.hasAxiomWebRuntime) {
+    entries.push("...observabilityBindings,");
+  }
 
   if (auth === "clerk" && ["next", "solid", "tanstack-start"].includes(framework)) {
     const insertAt = entries.findIndex(
@@ -241,6 +250,9 @@ export function prismaWebEnvEntries(
     if (dbSetup === "turso") {
       entries.push('DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),');
     }
+    if (plan.hasAxiomWebRuntime) {
+      entries.push("...resolvedObservabilityEnv,");
+    }
   }
 
   entries.push(...prismaPublicEnvEntries(plan, framework));
@@ -254,6 +266,10 @@ export function splitCloudflareWebEnvEntries(
   const { auth, backend } = plan.config;
   const serverValue = plan.server.target === "none" ? undefined : "serverWorker.url.as<string>()";
   const entries: string[] = [];
+
+  if (plan.hasAxiomWebRuntime) {
+    entries.push("...observabilityBindings,");
+  }
 
   if (framework === "next") entries.push("IMAGES: Cloudflare.Images.Images(),");
   if (framework === "astro") {

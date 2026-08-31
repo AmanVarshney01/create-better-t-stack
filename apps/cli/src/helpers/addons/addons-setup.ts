@@ -109,7 +109,7 @@ export async function setupAddons(config: ProjectConfig): Promise<void> {
     await runSetup(() => setupMcp(config));
   }
 
-  if (addons.includes("evlog")) {
+  if (addons.includes("evlog") || addons.includes("axiom")) {
     await runSetup(() => setupEvlog(config));
   }
 }

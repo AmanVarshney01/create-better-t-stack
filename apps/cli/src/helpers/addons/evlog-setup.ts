@@ -26,8 +26,13 @@ function getEvlogWebFrontend(frontends: Frontend[]): EvlogWebFrontend | undefine
   );
 }
 
+function usesAxiom(config: ProjectConfig) {
+  return config.addons.includes("axiom");
+}
+
 function shouldWireEvlogServerFsDrain(config: ProjectConfig) {
   return (
+    !usesAxiom(config) &&
     isEvlogBackend(config.backend) &&
     config.runtime !== "workers" &&
     config.serverDeploy !== "cloudflare"
@@ -35,7 +40,11 @@ function shouldWireEvlogServerFsDrain(config: ProjectConfig) {
 }
 
 function shouldWireEvlogWebFsDrain(config: ProjectConfig) {
-  return getEvlogWebFrontend(config.frontend) !== undefined && config.webDeploy !== "cloudflare";
+  return (
+    !usesAxiom(config) &&
+    getEvlogWebFrontend(config.frontend) !== undefined &&
+    config.webDeploy !== "cloudflare"
+  );
 }
 
 export function supportsEvlogLocalLogs(config: ProjectConfig) {
@@ -46,8 +55,12 @@ function shouldIdentifyWebAuth(config: ProjectConfig) {
   return config.auth === "better-auth" && config.backend === "self";
 }
 
-function getEvlogServerMiddlewareMarker(backend: EvlogBackend, fsDrain: boolean) {
-  const options = fsDrain ? `{ drain: ${NODE_DEV_FS_DRAIN_EXPRESSION} }` : "";
+function getEvlogServerMiddlewareMarker(backend: EvlogBackend, fsDrain: boolean, axiom = false) {
+  const options = axiom
+    ? "{ drain: createAxiomDrain() }"
+    : fsDrain
+      ? `{ drain: ${NODE_DEV_FS_DRAIN_EXPRESSION} }`
+      : "";
 
   if (backend === "hono" || backend === "express") {
     return `app.use(evlog(${options}));`;
@@ -59,6 +72,8 @@ function getEvlogServerMiddlewareMarker(backend: EvlogBackend, fsDrain: boolean)
 }
 
 function findEvlogServerMiddlewareMarker(content: string, backend: EvlogBackend) {
+  const axiomMarker = getEvlogServerMiddlewareMarker(backend, false, true);
+  if (content.includes(axiomMarker)) return axiomMarker;
   const fsDrainMarker = getEvlogServerMiddlewareMarker(backend, true);
   return content.includes(fsDrainMarker)
     ? fsDrainMarker
@@ -280,9 +295,10 @@ export function addEvlogServerSetup(
   backend: EvlogBackend,
   serviceName: string,
   fsDrain: boolean,
+  axiom = false,
 ) {
   const initSnippet = `initLogger({\n\tenv: { service: "${serviceName}" },\n});\n\n`;
-  const evlogMarker = getEvlogServerMiddlewareMarker(backend, fsDrain);
+  const evlogMarker = getEvlogServerMiddlewareMarker(backend, fsDrain, axiom);
   const legacyEvlogMarker = getEvlogServerMiddlewareMarker(backend, false);
 
   if (backend === "hono") {
@@ -290,6 +306,7 @@ export function addEvlogServerSetup(
       'import { initLogger } from "evlog";',
       'import { evlog, type EvlogVariables } from "evlog/hono";',
       ...(fsDrain ? ['import { createFsDrain } from "evlog/fs";'] : []),
+      ...(axiom ? ['import { createAxiomDrain } from "evlog/axiom";'] : []),
     ]);
     nextContent = insertBeforeOnce(
       nextContent,
@@ -320,6 +337,7 @@ export function addEvlogServerSetup(
       'import { initLogger } from "evlog";',
       'import { evlog } from "evlog/express";',
       ...(fsDrain ? ['import { createFsDrain } from "evlog/fs";'] : []),
+      ...(axiom ? ['import { createAxiomDrain } from "evlog/axiom";'] : []),
     ]);
     nextContent = insertBeforeOnce(
       nextContent,
@@ -343,6 +361,7 @@ export function addEvlogServerSetup(
       'import { initLogger } from "evlog";',
       'import { evlog } from "evlog/fastify";',
       ...(fsDrain ? ['import { createFsDrain } from "evlog/fs";'] : []),
+      ...(axiom ? ['import { createAxiomDrain } from "evlog/axiom";'] : []),
     ]);
     nextContent = insertBeforeOnce(
       nextContent,
@@ -365,6 +384,7 @@ export function addEvlogServerSetup(
     'import { initLogger } from "evlog";',
     'import { evlog } from "evlog/elysia";',
     ...(fsDrain ? ['import { createFsDrain } from "evlog/fs";'] : []),
+    ...(axiom ? ['import { createAxiomDrain } from "evlog/axiom";'] : []),
   ]);
   const elysiaMarker = nextContent.includes("const app = new Elysia")
     ? "const app = new Elysia"
@@ -379,8 +399,16 @@ export function addEvlogServerSetup(
   return nextContent;
 }
 
-function addNuxtEvlogSetup(content: string, serviceName: string) {
+function addNuxtEvlogSetup(content: string, serviceName: string, axiom: boolean) {
   let nextContent = content;
+  const axiomConfig = axiom
+    ? `
+    axiom: {
+      apiKey: process.env.AXIOM_API_KEY!,
+      dataset: process.env.AXIOM_DATASET!,
+      edgeUrl: process.env.AXIOM_EDGE_URL!,
+    },`
+    : "";
   if (!nextContent.includes('"evlog/nuxt"') && !nextContent.includes("'evlog/nuxt'")) {
     nextContent = nextContent.replace(/modules:\s*\[/, (match) => `${match}\n    "evlog/nuxt",`);
   }
@@ -389,8 +417,13 @@ function addNuxtEvlogSetup(content: string, serviceName: string) {
     nextContent = nextContent.replace(/\n\}\)\s*$/, (match) => {
       const contentBeforeConfigClose = nextContent.slice(0, -match.length);
       const needsComma = !/[,{]\s*$/.test(contentBeforeConfigClose);
-      return `${needsComma ? "," : ""}\n  evlog: {\n    env: { service: "${serviceName}" },\n  },\n})`;
+      return `${needsComma ? "," : ""}\n  evlog: {\n    env: { service: "${serviceName}" },${axiomConfig}\n  },\n})`;
     });
+  } else if (axiom && !nextContent.includes("axiom:")) {
+    nextContent = nextContent.replace(
+      /evlog:\s*\{\n/,
+      "evlog: {\n    axiom: {\n      apiKey: process.env.AXIOM_API_KEY!,\n      dataset: process.env.AXIOM_DATASET!,\n      edgeUrl: process.env.AXIOM_EDGE_URL!,\n    },\n",
+    );
   }
 
   return nextContent;
@@ -406,22 +439,24 @@ function addSvelteViteEvlogSetup(content: string, serviceName: string) {
   );
 }
 
-function getSvelteEvlogHooksCall(fsDrain: boolean) {
+function getSvelteEvlogHooksCall(fsDrain: boolean, axiom = false) {
+  if (axiom) return "createEvlogHooks({ drain: createAxiomDrain() })";
   return fsDrain
     ? `createEvlogHooks({ drain: ${SVELTE_DEV_FS_DRAIN_EXPRESSION} })`
     : "createEvlogHooks()";
 }
 
-function addSvelteHooksEvlogSetup(content: string, fsDrain: boolean) {
+function addSvelteHooksEvlogSetup(content: string, fsDrain: boolean, axiom: boolean) {
   let nextContent = prependMissingImports(content, [
     'import { createEvlogHooks } from "evlog/sveltekit";',
     ...(fsDrain ? ['import { createFsDrain } from "evlog/fs";'] : []),
+    ...(axiom ? ['import { createAxiomDrain } from "evlog/axiom";'] : []),
   ]);
   if (fsDrain) {
     nextContent = addNamedImport(nextContent, "$app/environment", ["dev"]);
   }
-  const hooksCall = getSvelteEvlogHooksCall(fsDrain);
-  if (fsDrain) {
+  const hooksCall = getSvelteEvlogHooksCall(fsDrain, axiom);
+  if (fsDrain || axiom) {
     nextContent = nextContent.replaceAll("createEvlogHooks()", hooksCall);
   }
 
@@ -500,17 +535,32 @@ function addTanstackStartRootEvlogSetup(content: string) {
   );
 }
 
-function getInitLoggerSnippet(serviceName: string, fsDrain: boolean, indent: string) {
-  const drain = fsDrain ? `\n${indent}drain: ${ASTRO_DEV_FS_DRAIN_EXPRESSION},` : "";
+function getInitLoggerSnippet(
+  serviceName: string,
+  fsDrain: boolean,
+  indent: string,
+  axiom = false,
+) {
+  const drain = axiom
+    ? `\n${indent}drain: createAxiomDrain(),`
+    : fsDrain
+      ? `\n${indent}drain: ${ASTRO_DEV_FS_DRAIN_EXPRESSION},`
+      : "";
   return `initLogger({\n${indent}env: { service: "${serviceName}" },${drain}\n});\n\n`;
 }
 
-function addAstroMiddlewareEvlogSetup(content: string, serviceName: string, fsDrain: boolean) {
+function addAstroMiddlewareEvlogSetup(
+  content: string,
+  serviceName: string,
+  fsDrain: boolean,
+  axiom: boolean,
+) {
   let nextContent = prependMissingImports(content, [
     'import { createRequestLogger, initLogger } from "evlog";',
     ...(fsDrain ? ['import { createFsDrain } from "evlog/fs";'] : []),
+    ...(axiom ? ['import { createAxiomDrain } from "evlog/axiom";'] : []),
   ]);
-  const initSnippet = getInitLoggerSnippet(serviceName, fsDrain, "  ");
+  const initSnippet = getInitLoggerSnippet(serviceName, fsDrain, "  ", axiom);
 
   nextContent = insertBeforeOnce(
     nextContent,
@@ -566,18 +616,14 @@ function addAstroLocalsType(content: string) {
 
   if (nextContent.includes("log: RequestLogger")) return nextContent;
 
-  if (nextContent.includes("interface Locals {")) {
-    return nextContent.replace("interface Locals {", "interface Locals {\n    log: RequestLogger;");
-  }
-
-  if (nextContent.includes("declare namespace App {")) {
+  if (nextContent.includes("declare global {") && nextContent.includes("interface Locals {")) {
     return nextContent.replace(
-      "declare namespace App {",
-      "declare namespace App {\n  interface Locals {\n    log: RequestLogger;\n  }\n",
+      "interface Locals {",
+      "interface Locals {\n      log: RequestLogger;",
     );
   }
 
-  return `${nextContent.trimEnd()}\n\ndeclare namespace App {\n  interface Locals {\n    log: RequestLogger;\n  }\n}\n`;
+  return `${nextContent.trimEnd()}\n\ndeclare global {\n  namespace App {\n    interface Locals {\n      log: RequestLogger;\n    }\n  }\n}\n`;
 }
 
 function addNextRouteWrappers(content: string) {
@@ -769,14 +815,15 @@ function addAstroBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
   return nextContent;
 }
 
-function getNextEvlogFile(serviceName: string, fsDrain: boolean) {
+function getNextEvlogFile(serviceName: string, fsDrain: boolean, axiom: boolean) {
   return `import { createEvlog } from "evlog/next";
 import { createInstrumentation } from "evlog/next/instrumentation/create";
 ${fsDrain ? 'import { createFsDrain } from "evlog/fs";\n' : ""}
+${axiom ? 'import { createAxiomDrain } from "evlog/axiom";\n' : ""}
 
 export const { withEvlog, useLogger, log, createError } = createEvlog({
   service: "${serviceName}",
-${fsDrain ? `  drain: ${NODE_DEV_FS_DRAIN_EXPRESSION},\n` : ""}});
+${axiom ? "  drain: createAxiomDrain(),\n" : fsDrain ? `  drain: ${NODE_DEV_FS_DRAIN_EXPRESSION},\n` : ""}});
 
 export const { register, onRequestError } = createInstrumentation({
   service: "${serviceName}",
@@ -911,7 +958,16 @@ export default defineEventHandler(async (event) => {
 `;
 }
 
-function getTanstackNitroConfigFile(serviceName: string) {
+function getTanstackNitroConfigFile(serviceName: string, axiom: boolean) {
+  const axiomConfig = axiom
+    ? `      axiom: {
+        apiKey: process.env.AXIOM_API_KEY!,
+        dataset: process.env.AXIOM_DATASET!,
+        edgeUrl: process.env.AXIOM_EDGE_URL!,
+      },
+`
+    : "";
+
   return `import { defineConfig } from "nitro";
 import evlog from "evlog/nitro/v3";
 
@@ -922,18 +978,19 @@ export default defineConfig({
   modules: [
     evlog({
       env: { service: "${serviceName}" },
-    }),
+${axiomConfig}    }),
   ],
 });
 `;
 }
 
-function getAstroMiddlewareFile(serviceName: string, fsDrain: boolean) {
+function getAstroMiddlewareFile(serviceName: string, fsDrain: boolean, axiom: boolean) {
   return `import { defineMiddleware } from "astro:middleware";
 import { createRequestLogger, initLogger } from "evlog";
 ${fsDrain ? 'import { createFsDrain } from "evlog/fs";\n' : ""}
+${axiom ? 'import { createAxiomDrain } from "evlog/axiom";\n' : ""}
 
-${getInitLoggerSnippet(serviceName, fsDrain, "  ").trimEnd()}
+${getInitLoggerSnippet(serviceName, fsDrain, "  ", axiom).trimEnd()}
 
 export const onRequest = defineMiddleware(async ({ request, locals }, next) => {
   const url = new URL(request.url);
@@ -962,9 +1019,11 @@ function getAstroEnvFile() {
 
 import type { RequestLogger } from "evlog";
 
-declare namespace App {
-  interface Locals {
-    log: RequestLogger;
+declare global {
+  namespace App {
+    interface Locals {
+      log: RequestLogger;
+    }
   }
 }
 `;
@@ -973,10 +1032,11 @@ declare namespace App {
 async function setupNextEvlog(config: ProjectConfig, serviceName: string) {
   const webDir = path.join(config.projectDir, "apps/web");
   const fsDrain = shouldWireEvlogWebFsDrain(config);
+  const axiom = usesAxiom(config);
 
   const evlogPath = path.join(webDir, "src/lib/evlog.ts");
   if (!(await fs.pathExists(evlogPath))) {
-    await writeFileIfChanged(evlogPath, getNextEvlogFile(serviceName, fsDrain));
+    await writeFileIfChanged(evlogPath, getNextEvlogFile(serviceName, fsDrain, axiom));
   }
 
   const identifyWebAuth = shouldIdentifyWebAuth(config);
@@ -1031,7 +1091,7 @@ async function setupNuxtEvlog(config: ProjectConfig, serviceName: string) {
   const webDir = path.join(config.projectDir, "apps/web");
   const fsDrain = shouldWireEvlogWebFsDrain(config);
   await updateFileIfExists(path.join(webDir, "nuxt.config.ts"), (content) =>
-    addNuxtEvlogSetup(content, serviceName),
+    addNuxtEvlogSetup(content, serviceName, usesAxiom(config)),
   );
 
   if (fsDrain) {
@@ -1064,21 +1124,25 @@ async function setupNuxtEvlog(config: ProjectConfig, serviceName: string) {
 async function setupSvelteEvlog(config: ProjectConfig, serviceName: string) {
   const webDir = path.join(config.projectDir, "apps/web");
   const fsDrain = shouldWireEvlogWebFsDrain(config);
+  const axiom = usesAxiom(config);
   await updateFileIfExists(path.join(webDir, "vite.config.ts"), (content) =>
     addSvelteViteEvlogSetup(content, serviceName),
   );
 
   const hooksPath = path.join(webDir, "src/hooks.server.ts");
   if (await fs.pathExists(hooksPath)) {
-    await updateFileIfExists(hooksPath, (content) => addSvelteHooksEvlogSetup(content, fsDrain));
+    await updateFileIfExists(hooksPath, (content) =>
+      addSvelteHooksEvlogSetup(content, fsDrain, axiom),
+    );
   } else {
     await writeFileIfChanged(
       hooksPath,
       `import { createEvlogHooks } from "evlog/sveltekit";
 ${fsDrain ? 'import { createFsDrain } from "evlog/fs";\n' : ""}
+${axiom ? 'import { createAxiomDrain } from "evlog/axiom";\n' : ""}
 ${fsDrain ? 'import { dev } from "$app/environment";\n' : ""}
 
-export const { handle, handleError } = ${getSvelteEvlogHooksCall(fsDrain)};
+export const { handle, handleError } = ${getSvelteEvlogHooksCall(fsDrain, axiom)};
 `,
     );
   }
@@ -1104,7 +1168,10 @@ async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: strin
   const fsDrain = shouldWireEvlogWebFsDrain(config);
   const nitroConfigPath = path.join(webDir, "nitro.config.ts");
   if (!(await fs.pathExists(nitroConfigPath))) {
-    await writeFileIfChanged(nitroConfigPath, getTanstackNitroConfigFile(serviceName));
+    await writeFileIfChanged(
+      nitroConfigPath,
+      getTanstackNitroConfigFile(serviceName, usesAxiom(config)),
+    );
   }
   await updateFileIfExists(
     path.join(webDir, "src/routes/__root.tsx"),
@@ -1136,12 +1203,13 @@ async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: strin
 async function setupAstroEvlog(config: ProjectConfig, serviceName: string) {
   const webDir = path.join(config.projectDir, "apps/web");
   const fsDrain = shouldWireEvlogWebFsDrain(config);
+  const axiom = usesAxiom(config);
   const middlewarePath = path.join(webDir, "src/middleware.ts");
   if (!(await fs.pathExists(middlewarePath))) {
-    await writeFileIfChanged(middlewarePath, getAstroMiddlewareFile(serviceName, fsDrain));
+    await writeFileIfChanged(middlewarePath, getAstroMiddlewareFile(serviceName, fsDrain, axiom));
   } else {
     await updateFileIfExists(middlewarePath, (content) =>
-      addAstroMiddlewareEvlogSetup(content, serviceName, fsDrain),
+      addAstroMiddlewareEvlogSetup(content, serviceName, fsDrain, axiom),
     );
   }
 
@@ -1190,6 +1258,7 @@ export async function setupEvlog(config: ProjectConfig): Promise<Result<void, Ad
             config.backend,
             `${config.projectName}-server`,
             shouldWireEvlogServerFsDrain(config),
+            usesAxiom(config),
           );
 
           if (config.auth === "better-auth") {

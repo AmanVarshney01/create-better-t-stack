@@ -16401,8 +16401,13 @@ services:
       - path: apps/web/.env
         required: false
 {{#if (eq backend "self")}}
-{{#if (or (eq dbSetup "docker") (eq auth "better-auth") (and (eq database "sqlite") (eq dbSetup "none")))}}
+{{#if (or (eq dbSetup "docker") (eq auth "better-auth") (and (eq database "sqlite") (eq dbSetup "none")) (includes addons "axiom"))}}
     environment:
+{{#if (includes addons "axiom")}}
+      AXIOM_API_KEY: \${AXIOM_API_KEY:?Set AXIOM_API_KEY}
+      AXIOM_DATASET: \${AXIOM_DATASET:?Set AXIOM_DATASET}
+      AXIOM_EDGE_URL: \${AXIOM_EDGE_URL:?Set AXIOM_EDGE_URL}
+{{/if}}
 {{#if (eq auth "better-auth")}}
       BETTER_AUTH_URL: http://localhost:3001
       CORS_ORIGIN: http://localhost:3001
@@ -16433,9 +16438,15 @@ services:
           create_host_path: false
 {{/if}}
 {{else}}
-{{#if (eq serverDeploy "docker")}}
+{{#if (or (eq serverDeploy "docker") (and (includes addons "axiom") (or (includes frontend "next") (includes frontend "tanstack-start") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro"))))}}
 {{#unless (includes frontend "tanstack-router")}}
     environment:
+{{#if (and (includes addons "axiom") (or (includes frontend "next") (includes frontend "tanstack-start") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "astro")))}}
+      AXIOM_API_KEY: \${AXIOM_API_KEY:?Set AXIOM_API_KEY}
+      AXIOM_DATASET: \${AXIOM_DATASET:?Set AXIOM_DATASET}
+      AXIOM_EDGE_URL: \${AXIOM_EDGE_URL:?Set AXIOM_EDGE_URL}
+{{/if}}
+{{#if (eq serverDeploy "docker")}}
       SERVER_URL: http://server:3000
 {{#if (includes frontend "next")}}
       NEXT_PUBLIC_SERVER_URL: http://server:3000
@@ -16443,10 +16454,13 @@ services:
 {{#if (includes frontend "nuxt")}}
       NUXT_SERVER_URL: http://server:3000
 {{/if}}
+{{/if}}
 {{/unless}}
+{{#if (eq serverDeploy "docker")}}
     depends_on:
       server:
         condition: service_healthy
+{{/if}}
 {{/if}}
 {{/if}}
     healthcheck:
@@ -16483,8 +16497,13 @@ services:
     env_file:
       - path: apps/server/.env
         required: false
-{{#if (or (eq webDeploy "docker") (eq dbSetup "docker") (and (eq database "sqlite") (eq dbSetup "none")))}}
+{{#if (or (eq webDeploy "docker") (eq dbSetup "docker") (and (eq database "sqlite") (eq dbSetup "none")) (includes addons "axiom"))}}
     environment:
+{{#if (includes addons "axiom")}}
+      AXIOM_API_KEY: \${AXIOM_API_KEY:?Set AXIOM_API_KEY}
+      AXIOM_DATASET: \${AXIOM_DATASET:?Set AXIOM_DATASET}
+      AXIOM_EDGE_URL: \${AXIOM_EDGE_URL:?Set AXIOM_EDGE_URL}
+{{/if}}
 {{#if (eq webDeploy "docker")}}
       CORS_ORIGIN: http://localhost:3001
 {{/if}}
@@ -17226,11 +17245,6 @@ for (const arg of remainingArgs) {
 const vercelArgs = [...passthroughArgs, ...forwardedArgs];
 const envFiles = files.length > 0 ? files : DEFAULT_FILES;
 
-if (envFiles.length === 0) {
-	console.log("No env files configured for this Vercel stack.");
-	process.exit(0);
-}
-
 const env = new Map<string, string>();
 
 for (const file of envFiles) {
@@ -17244,6 +17258,13 @@ for (const file of envFiles) {
 		env.set(key, OVERRIDE_KEYS.get(key) ?? value);
 	}
 }
+
+{{#if (includes addons "axiom")}}
+for (const key of ["AXIOM_API_KEY", "AXIOM_DATASET", "AXIOM_EDGE_URL"] as const) {
+	const value = process.env[key];
+	if (value) env.set(key, value);
+}
+{{/if}}
 
 if (env.size === 0) {
 	console.log("No Vercel env vars found to sync.");
@@ -26030,7 +26051,7 @@ minimumReleaseAgeExclude:
   - "babel-preset-solid@2.0.0-rc.0"
   - "solid-js@2.0.0-rc.0"
 {{/if}}
-{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "prisma") (eq serverDeploy "prisma") (eq webDeploy "docker") (eq serverDeploy "docker") (eq webDeploy "vercel") (eq serverDeploy "vercel") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "next") (includes frontend "nuxt"))}}
+{{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "prisma") (eq serverDeploy "prisma") (eq webDeploy "docker") (eq serverDeploy "docker") (eq webDeploy "vercel") (eq serverDeploy "vercel") (eq orm "prisma") (includes addons "axiom") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "next") (includes frontend "nuxt"))}}
 
 # pnpm 11 blocks dependency lifecycle scripts unless they are approved here.
 # Entries are scoped to packages this generated stack can pull in.
@@ -26045,7 +26066,7 @@ allowBuilds:
 {{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "prisma") (eq serverDeploy "prisma") (eq webDeploy "docker") (eq webDeploy "vercel") (includes addons "pwa") (includes frontend "next"))}}
   sharp: true
 {{/if}}
-{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "prisma") (eq serverDeploy "prisma"))}}
+{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "prisma") (eq serverDeploy "prisma") (includes addons "axiom"))}}
   msgpackr-extract: true
   workerd: true
 {{/if}}
@@ -26089,7 +26110,7 @@ pnpm-debug.log*
 `],
   ["frontend/astro/astro.config.mjs.hbs", `// @ts-check
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig, envField } from "astro/config";
+import { defineConfig{{#if (ne backend "self")}}, envField{{/if}} } from "astro/config";
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 {{else if (eq webDeploy "vercel")}}
 import vercel from "@astrojs/vercel";
@@ -33397,7 +33418,7 @@ const config = {
 		// adapter-node builds a standalone Node server (run with \`node build/index.js\`).
 		adapter: adapter()
 {{else if (eq webDeploy "vercel")}}
-		adapter: adapter()
+		adapter: adapter({ runtime: 'nodejs24.x' })
 {{else}}
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
 		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
@@ -33704,6 +33725,11 @@ export const env = createEnv({
 {{/if}}
 {{#if (ne backend "self")}}
 		CORS_ORIGIN: z.url(),
+{{/if}}
+{{#if (includes addons "axiom")}}
+		AXIOM_API_KEY: z.string().min(1),
+		AXIOM_DATASET: z.string().min(1),
+		AXIOM_EDGE_URL: z.url(),
 {{/if}}
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},

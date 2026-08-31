@@ -602,4 +602,109 @@ describe("Alchemy providers", () => {
       workerd: true,
     });
   });
+
+  it("provisions Axiom independently and binds it across deployment targets", async () => {
+    const noDeploy = await generate({
+      projectName: "axiom-no-deploy",
+      addons: ["axiom", "turborepo"],
+      frontend: ["next"],
+      backend: "hono",
+      runtime: "bun",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      api: "orpc",
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+      packageManager: "npm",
+    });
+    const cloudflare = await generate({
+      projectName: "axiom-cloudflare",
+      addons: ["axiom", "turborepo"],
+      frontend: ["next"],
+      backend: "hono",
+      runtime: "workers",
+      webDeploy: "cloudflare",
+      serverDeploy: "cloudflare",
+    });
+    const prisma = await generate({
+      projectName: "axiom-prisma",
+      addons: ["axiom", "turborepo"],
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      dbSetup: "none",
+      examples: ["none"],
+      webDeploy: "prisma",
+      serverDeploy: "none",
+    });
+    const vercel = await generate({
+      projectName: "axiom-vercel",
+      addons: ["axiom", "turborepo"],
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      webDeploy: "vercel",
+      serverDeploy: "none",
+    });
+    const docker = await generate({
+      projectName: "axiom-docker",
+      addons: ["axiom", "turborepo"],
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      webDeploy: "docker",
+      serverDeploy: "none",
+    });
+    const splitDocker = await generate({
+      projectName: "axiom-split-docker",
+      addons: ["axiom", "turborepo"],
+      frontend: ["react-router"],
+      backend: "hono",
+      runtime: "bun",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      dbSetup: "none",
+      examples: ["none"],
+      webDeploy: "docker",
+      serverDeploy: "docker",
+    });
+
+    const noDeployInfra = noDeploy.get("packages/infra/alchemy.run.ts") ?? "";
+    const noDeployPackage = JSON.parse(noDeploy.get("package.json") ?? "{}") as {
+      scripts?: Record<string, string>;
+      allowScripts?: Record<string, boolean>;
+    };
+    const cloudflareInfra = cloudflare.get("packages/infra/alchemy.run.ts") ?? "";
+    const prismaInfra = prisma.get("packages/infra/alchemy.run.ts") ?? "";
+    const vercelInfra = vercel.get("packages/infra/alchemy.run.ts") ?? "";
+    const dockerReadme = docker.get("README.md") ?? "";
+    const splitDockerCompose = splitDocker.get("docker-compose.yml") ?? "";
+
+    expect(noDeployInfra).toContain('Axiom.Dataset("logs"');
+    expect(noDeployInfra).toContain('Axiom.ApiToken("logs-ingest"');
+    expect(noDeployInfra).toContain('Command.Dev("web-dev"');
+    expect(noDeployInfra).toContain('Command.Dev("server-dev"');
+    expect(noDeployInfra).not.toContain('effect/Config"');
+    expect(noDeployPackage.scripts?.["dev:web"]).toBeUndefined();
+    expect(noDeployPackage.scripts?.["dev:server"]).toBeUndefined();
+    expect(noDeployPackage.allowScripts).toMatchObject({
+      "msgpackr-extract": true,
+      workerd: true,
+    });
+    expect(cloudflareInfra).toContain("...observabilityBindings");
+    expect(prismaInfra).toContain("...resolvedObservabilityEnv");
+    expect(prismaInfra).not.toContain('effect/Config"');
+    expect(vercelInfra).toContain('Command.Exec("axiom-vercel-env"');
+    expect(vercelInfra).toContain("env: observabilityResources.runtimeEnv");
+    expect(vercel.get("scripts/sync-vercel-env.ts")).toContain('"AXIOM_API_KEY"');
+    expect(dockerReadme).toContain("target platform's secret manager");
+    expect(splitDockerCompose.match(/^\s+AXIOM_API_KEY:/gm)).toHaveLength(1);
+  });
 });
