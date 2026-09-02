@@ -33944,13 +33944,12 @@ export const env = createEnv({
     "@shadcn/react": "^0.2.1",
     "shadcn": "^4.16.0",
     "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
+    "cn": "^0.2.4",
     "lucide-react": "^1.27.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "sonner": "^2.0.7",
-    "tailwind-merge": "^3.6.0",
     "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
@@ -35534,12 +35533,7 @@ function TooltipContent({
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
 `],
   ["packages/ui/src/hooks/.gitkeep", ``],
-  ["packages/ui/src/lib/utils.ts.hbs", `import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+  ["packages/ui/src/lib/utils.ts.hbs", `export { cn } from "cn";
 `],
   ["packages/ui/src/styles/globals.css.hbs", `@import 'tailwindcss';
 @import 'tw-animate-css';
