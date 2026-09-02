@@ -38,7 +38,10 @@ export function generateNxConfig(config: ProjectConfig): NxConfig {
   const hasDatabase = dbSupport.hasDbScripts;
   const isDocker = dbSetup === "docker";
   const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
-  const hasAlchemy = isAlchemyDeployTarget(webDeploy) || isAlchemyDeployTarget(serverDeploy);
+  const hasAlchemy =
+    isAlchemyDeployTarget(webDeploy) ||
+    isAlchemyDeployTarget(serverDeploy) ||
+    config.addons.includes("axiom");
   const hasLocalD1 = getLocalD1Owner(config) === "wrangler";
 
   const targetDefaults: NxTargetMap = {

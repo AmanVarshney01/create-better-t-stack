@@ -129,6 +129,7 @@ export async function displayPostInstallInstructions(
     backend,
     config.auth,
     frontend || [],
+    addons || [],
   );
 
   const hasWeb = frontend?.some((f) => (webFrontends as readonly string[]).includes(f));
@@ -701,26 +702,37 @@ function getAlchemyDeployInstructions(
   backend: Backend,
   auth: ProjectConfig["auth"],
   frontend: Frontend[],
+  addons: ProjectConfig["addons"],
 ) {
   const instructions: string[] = [];
   const isBackendSelf = backend === "self";
   const hasAlchemyWeb = isAlchemyDeployTarget(webDeploy);
   const hasAlchemyServer = isAlchemyDeployTarget(serverDeploy);
+  const hasAxiom = addons.includes("axiom");
   const alchemyExec = runCmd === "npm run" ? "npx" : runCmd === "pnpm run" ? "pnpm exec" : "bunx";
 
-  if (hasAlchemyWeb || hasAlchemyServer) {
+  if (hasAlchemyWeb || hasAlchemyServer || hasAxiom) {
     const targetParts = [
       ...(hasAlchemyWeb ? [`web on ${webDeploy === "cloudflare" ? "Cloudflare" : "Prisma"}`] : []),
       ...(hasAlchemyServer && !isBackendSelf
         ? [`server on ${serverDeploy === "cloudflare" ? "Cloudflare" : "Prisma"}`]
         : []),
+      ...(hasAxiom ? ["Axiom observability"] : []),
     ];
+    const hasAlchemyCompute = hasAlchemyWeb || hasAlchemyServer;
+    const hasExternalDeploy =
+      webDeploy === "vercel" ||
+      serverDeploy === "vercel" ||
+      webDeploy === "docker" ||
+      serverDeploy === "docker";
     const deployScript =
-      webDeploy === "vercel"
-        ? "deploy:server"
-        : serverDeploy === "vercel"
-          ? "deploy:web"
-          : "deploy";
+      !hasAlchemyCompute && hasExternalDeploy
+        ? "deploy:infra"
+        : webDeploy === "vercel"
+          ? "deploy:server"
+          : serverDeploy === "vercel"
+            ? "deploy:web"
+            : "deploy";
     const originSteps: string[] = [];
     const hasWeb = frontend.some((value) => (webFrontends as readonly string[]).includes(value));
 
@@ -741,7 +753,7 @@ function getAlchemyDeployInstructions(
     }
 
     instructions.push(
-      `${pc.bold(`Deploy with Alchemy (${targetParts.join(" + ")}):`)}\n${pc.cyan("•")} Configure provider login: ${`cd packages/infra && ${alchemyExec} alchemy login --configure`}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${deployScript}`}\n${originSteps.join("\n")}${originSteps.length > 0 ? "\n" : ""}${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
+      `${pc.bold(`Deploy with Alchemy (${targetParts.join(" + ")}):`)}\n${pc.cyan("•")} Configure provider login: ${`cd packages/infra && ${alchemyExec} alchemy login --configure`}\n${hasAxiom && (webDeploy === "vercel" || serverDeploy === "vercel") ? `${pc.cyan("•")} Link Vercel before deploying infra: ${`${runCmd} deploy:setup`}\n` : ""}${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${deployScript}`}\n${originSteps.join("\n")}${originSteps.length > 0 ? "\n" : ""}${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
     );
   }
 

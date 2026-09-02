@@ -44,6 +44,9 @@ function writePrismaServer(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): 
   writer.indent(() => {
     writer.writeLine("const project = yield* prismaProject;");
     writer.writeLine("const resolvedDatabaseEnv = yield* databaseEnv;");
+    if (plan.hasAxiomServerRuntime) {
+      writer.writeLine("const resolvedObservabilityEnv = yield* observabilityEnv;");
+    }
     writer.blankLine();
     writer.writeLine("return {");
     writer.indent(() => {

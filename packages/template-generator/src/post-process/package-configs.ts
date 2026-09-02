@@ -185,7 +185,9 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare";
   const hasPrismaDeploy = config.webDeploy === "prisma" || config.serverDeploy === "prisma";
   const hasAlchemyDeploy = hasCloudflareDeploy || hasPrismaDeploy;
+  const hasAxiom = addons.includes("axiom");
   const hasVercelDeploy = config.webDeploy === "vercel" || config.serverDeploy === "vercel";
+  const hasDockerDeploy = config.webDeploy === "docker" || config.serverDeploy === "docker";
   // When web and server deploy to different cloud platforms, deploy scripts
   // are named by target (deploy:web / deploy:server); otherwise plain deploy
   const isMixedCloud = hasAlchemyDeploy && hasVercelDeploy;
@@ -202,6 +204,12 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     if (hasWranglerLocalD1) {
       scripts["db:migrate:local"] = pmConfig.filter("web", "db:migrate:local");
     }
+  }
+
+  if (hasAxiom && !hasAlchemyDeploy) {
+    const alchemyDeployScript = hasVercelDeploy || hasDockerDeploy ? "deploy:infra" : "deploy";
+    scripts[alchemyDeployScript] = pmConfig.filter(infraPackageName, "deploy");
+    scripts.destroy = pmConfig.filter(infraPackageName, "destroy");
   }
 
   if (hasVercelDeploy) {
@@ -280,6 +288,7 @@ function getNpmAllowedScripts(config: ProjectConfig): NpmAllowedScripts {
   const hasCloudflareDeploy =
     config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare";
   const hasPrismaDeploy = config.webDeploy === "prisma" || config.serverDeploy === "prisma";
+  const hasAxiom = config.addons.includes("axiom");
 
   if (
     config.runtime === "node" ||
@@ -312,7 +321,7 @@ function getNpmAllowedScripts(config: ProjectConfig): NpmAllowedScripts {
     allowed.sharp = true;
   }
 
-  if (hasCloudflareDeploy || hasPrismaDeploy) {
+  if (hasCloudflareDeploy || hasPrismaDeploy || hasAxiom) {
     allowed["msgpackr-extract"] = true;
     allowed.workerd = true;
   }
@@ -717,11 +726,27 @@ function updateConvexPackageJson(vfs: VirtualFileSystem, config: ProjectConfig):
 
 export function finalizeAlchemyDevScripts(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { serverDeploy, webDeploy, backend } = config;
+  const hasAxiom = config.addons.includes("axiom");
+  const hasAxiomServerRuntime =
+    hasAxiom && ["hono", "express", "fastify", "elysia"].includes(backend);
+  const hasAxiomWebRuntime =
+    hasAxiom &&
+    config.frontend.some((frontend) =>
+      ["next", "tanstack-start", "nuxt", "svelte", "astro"].includes(frontend),
+    );
   const rootPkgPath = "package.json";
   const rootPkg = vfs.readJson<PackageJson>(rootPkgPath);
+  const pmConfig = getPackageManagerConfig(config.packageManager, {
+    hasTurborepo: config.addons.includes("turborepo"),
+    hasNx: config.addons.includes("nx"),
+    hasVitePlus: config.addons.includes("vite-plus"),
+  });
 
   // Alchemy owns the selected app's development process.
-  if (["cloudflare", "prisma"].includes(serverDeploy) && backend !== "self") {
+  if (
+    (["cloudflare", "prisma"].includes(serverDeploy) || hasAxiomServerRuntime) &&
+    backend !== "self"
+  ) {
     const serverPkgPath = "apps/server/package.json";
     const serverPkg = vfs.readJson<PackageJson>(serverPkgPath);
     if (serverPkg?.scripts?.dev) {
@@ -730,11 +755,15 @@ export function finalizeAlchemyDevScripts(vfs: VirtualFileSystem, config: Projec
       vfs.writeJson(serverPkgPath, serverPkg);
     }
     if (rootPkg?.scripts?.["dev:server"]) {
-      rootPkg.scripts["dev:server"] = rootPkg.scripts["dev:server"].replace(/\bdev$/, "dev:bare");
+      if (hasAxiomServerRuntime) {
+        delete rootPkg.scripts["dev:server"];
+      } else {
+        rootPkg.scripts["dev:server"] = pmConfig.filter(backend, "dev:bare");
+      }
     }
   }
 
-  if (["cloudflare", "prisma"].includes(webDeploy)) {
+  if (["cloudflare", "prisma"].includes(webDeploy) || hasAxiomWebRuntime) {
     const webPkgPath = "apps/web/package.json";
     const webPkg = vfs.readJson<PackageJson>(webPkgPath);
     if (webPkg?.scripts?.dev) {
@@ -743,7 +772,11 @@ export function finalizeAlchemyDevScripts(vfs: VirtualFileSystem, config: Projec
       vfs.writeJson(webPkgPath, webPkg);
     }
     if (rootPkg?.scripts?.["dev:web"]) {
-      rootPkg.scripts["dev:web"] = rootPkg.scripts["dev:web"].replace(/\bdev$/, "dev:bare");
+      if (hasAxiomWebRuntime) {
+        delete rootPkg.scripts["dev:web"];
+      } else {
+        rootPkg.scripts["dev:web"] = pmConfig.filter("web", "dev:bare");
+      }
     }
   }
 

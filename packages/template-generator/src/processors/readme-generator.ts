@@ -259,6 +259,7 @@ ${generateDeploymentCommands(
   frontend,
   database,
   dbSetup,
+  addons,
 )}
 ${generateGitHooksSection(packageManagerRunCmd, addons)}
 
@@ -733,17 +734,23 @@ function generateScriptsList(
     ].includes(f),
   );
   const dbSupport = getDbScriptSupport(config);
+  const hasAxiom = addons.includes("axiom");
+  const hasAxiomWebRuntime =
+    hasAxiom &&
+    frontend.some((item) => ["next", "tanstack-start", "nuxt", "svelte", "astro"].includes(item));
+  const hasAxiomServerRuntime =
+    hasAxiom && ["hono", "express", "fastify", "elysia"].includes(backend);
 
   let scripts = `- \`${packageManagerRunCmd} dev\`: Start all applications in development mode
 - \`${packageManagerRunCmd} build\`: Build all applications`;
 
-  if (hasWeb) {
+  if (hasWeb && !hasAxiomWebRuntime) {
     scripts += `\n- \`${packageManagerRunCmd} dev:web\`: Start only the web application`;
   }
 
   if (isConvex) {
     scripts += `\n- \`${packageManagerRunCmd} dev:setup\`: Setup and configure your Convex project`;
-  } else if (backend !== "none" && !isBackendSelf) {
+  } else if (backend !== "none" && !isBackendSelf && !hasAxiomServerRuntime) {
     scripts += `\n- \`${packageManagerRunCmd} dev:server\`: Start only the server`;
   }
 
@@ -847,10 +854,13 @@ function generateDeploymentCommands(
   frontend: ProjectConfig["frontend"],
   database: ProjectConfig["database"],
   dbSetup: ProjectConfig["dbSetup"],
+  addons: ProjectConfig["addons"],
 ): string {
   const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
   const hasPrismaCompute = webDeploy === "prisma" || serverDeploy === "prisma";
-  const hasAlchemy = hasCloudflare || hasPrismaCompute;
+  const hasAxiom = addons.includes("axiom");
+  const hasAlchemyCompute = hasCloudflare || hasPrismaCompute;
+  const hasAlchemy = hasAlchemyCompute || hasAxiom;
   const hasDocker = webDeploy === "docker" || serverDeploy === "docker";
   const hasVercel = webDeploy === "vercel" || serverDeploy === "vercel";
 
@@ -868,12 +878,16 @@ function generateDeploymentCommands(
       ...(isAlchemyDeployTarget(serverDeploy) && backend !== "self"
         ? [`server on ${serverDeploy === "cloudflare" ? "Cloudflare" : "Prisma"}`]
         : []),
+      ...(hasAxiom ? ["Axiom observability"] : []),
     ].join(" + ");
-    const alchemyDeployScript = hasVercel
-      ? isAlchemyDeployTarget(webDeploy)
-        ? "deploy:web"
-        : "deploy:server"
-      : "deploy";
+    const alchemyDeployScript =
+      !hasAlchemyCompute && (hasVercel || hasDocker)
+        ? "deploy:infra"
+        : hasVercel
+          ? isAlchemyDeployTarget(webDeploy)
+            ? "deploy:web"
+            : "deploy:server"
+          : "deploy";
     const alchemyExec = packageManagerRunCmd.startsWith("npm")
       ? "npx"
       : packageManagerRunCmd.startsWith("pnpm")
@@ -890,7 +904,7 @@ function generateDeploymentCommands(
       `- Deploy: ${packageManagerRunCmd} ${alchemyDeployScript}`,
       `- Destroy: ${packageManagerRunCmd} destroy`,
       "",
-      "`alchemy login --configure` stores the selected Cloudflare, Neon, PlanetScale, and/or Prisma provider profiles under `~/.alchemy`; no provider-specific setup command is required by this scaffold.",
+      "`alchemy login --configure` stores the selected Axiom, Cloudflare, Neon, PlanetScale, and/or Prisma provider profiles under `~/.alchemy`; no provider-specific setup command is required by this scaffold.",
       "",
       "Deploys are staged and default to a personal `dev_<username>` stage. For production, run the deploy with an explicit stage from `packages/infra`:",
       "",
@@ -898,6 +912,23 @@ function generateDeploymentCommands(
       `cd packages/infra && ${alchemyExec} alchemy deploy --stage production`,
       "```",
     );
+
+    if (hasAxiom) {
+      lines.push(
+        "",
+        "Alchemy creates a stage-specific Axiom dataset and a least-privilege ingest token. `dev` injects the credentials into the observed apps without writing the token to an env file.",
+      );
+      if (hasVercel) {
+        lines.push(
+          "Link the Vercel project before the Alchemy deploy. The Alchemy stack then syncs its Axiom credentials to Vercel preview, or to production when deployed with `--stage production`.",
+        );
+      }
+      if (hasDocker) {
+        lines.push(
+          "For a deployed Docker image, pass `AXIOM_API_KEY`, `AXIOM_DATASET`, and `AXIOM_EDGE_URL` through the target platform's secret manager. Local observed development runs through Alchemy with the credentials injected in memory.",
+        );
+      }
+    }
 
     const hasWeb = hasWebFrontend(frontend);
     const needsCorsOrigin = backend !== "self" && isAlchemyDeployTarget(serverDeploy) && hasWeb;

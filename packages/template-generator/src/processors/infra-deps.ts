@@ -10,7 +10,8 @@ export function processInfraDeps(vfs: VirtualFileSystem, config: ProjectConfig):
   const { serverDeploy, webDeploy } = config;
   if (
     ["cloudflare", "prisma"].includes(serverDeploy) ||
-    ["cloudflare", "prisma"].includes(webDeploy)
+    ["cloudflare", "prisma"].includes(webDeploy) ||
+    config.addons.includes("axiom")
   ) {
     addPackageDependency({
       vfs,

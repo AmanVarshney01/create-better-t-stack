@@ -50,6 +50,12 @@ describe("Input schemas", () => {
     }
   });
 
+  it("rejects conflicting observability addon combinations", () => {
+    const result = AddInputSchema.safeParse({ addons: ["evlog", "axiom"] });
+
+    expect(result.success).toBe(false);
+  });
+
   it("rejects unknown keys in JSON-first create input", () => {
     const result = CreateInputSchema.safeParse({
       projectName: "app",

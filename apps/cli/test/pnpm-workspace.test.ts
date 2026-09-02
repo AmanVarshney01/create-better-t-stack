@@ -130,6 +130,30 @@ describe("pnpm workspace", () => {
     });
   });
 
+  it("adds Alchemy build approvals for Axiom without compute deployment", async () => {
+    const workspace = await readPnpmWorkspace({
+      projectName: "pnpm-axiom",
+      frontend: ["tanstack-start"],
+      backend: "self",
+      runtime: "none",
+      api: "orpc",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["axiom"],
+      examples: ["none"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+    });
+
+    expect(workspace.allowBuilds).toMatchObject({
+      "msgpackr-extract": true,
+      workerd: true,
+    });
+  });
+
   it("adds build approvals for node runtime and workspace addons", async () => {
     const workspace = await readPnpmWorkspace({
       projectName: "pnpm-node-addons",

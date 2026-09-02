@@ -40,7 +40,7 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     });
   }
 
-  if (config.addons.includes("evlog")) {
+  if (config.addons.includes("evlog") || config.addons.includes("axiom")) {
     const serverPkgPath = "apps/server/package.json";
     if (vfs.exists(serverPkgPath) && config.backend !== "self" && config.backend !== "none") {
       addPackageDependency({ vfs, packagePath: serverPkgPath, dependencies: ["evlog"] });

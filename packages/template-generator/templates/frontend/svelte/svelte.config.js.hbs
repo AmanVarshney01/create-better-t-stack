@@ -31,7 +31,7 @@ const config = {
 		// adapter-node builds a standalone Node server (run with `node build/index.js`).
 		adapter: adapter()
 {{else if (eq webDeploy "vercel")}}
-		adapter: adapter()
+		adapter: adapter({ runtime: 'nodejs24.x' })
 {{else}}
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
 		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.

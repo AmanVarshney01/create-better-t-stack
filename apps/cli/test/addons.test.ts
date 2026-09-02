@@ -1113,7 +1113,7 @@ describe("Addon Configurations", () => {
         expect(serverIndex).toContain(
           'drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain()',
         );
-        expect(serverPackageJson).toContain('"evlog": "^2.27.1"');
+        expect(serverPackageJson).toContain('"evlog": "^2.28.0"');
         const gitignore = await readFile(join(projectDir, ".gitignore"), "utf-8");
         expect(gitignore).toContain(".evlog/");
       });
@@ -1227,7 +1227,7 @@ describe("Addon Configurations", () => {
         }
 
         const webPackageJson = await readFile(join(projectDir, "apps/web/package.json"), "utf-8");
-        expect(webPackageJson).toContain('"evlog": "^2.27.1"');
+        expect(webPackageJson).toContain('"evlog": "^2.28.0"');
         if (webCase.frontend === "tanstack-start") {
           expect(webPackageJson).toContain('"nitro": "^3.0.260610-beta"');
         }
@@ -1818,7 +1818,7 @@ describe("Addon Configurations", () => {
       expect(serverIndex).toContain(
         'app.use(evlog({ drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain() }));',
       );
-      expect(serverPackageJson).toContain('"evlog": "^2.27.1"');
+      expect(serverPackageJson).toContain('"evlog": "^2.28.0"');
     });
 
     it("should reject evlog when added later to a Convex project", async () => {
@@ -1852,6 +1852,184 @@ describe("Addon Configurations", () => {
       expect(addResult?.success).toBe(false);
       expect(addResult?.error).toContain("Convex and backend none are not supported yet");
     });
+  });
+
+  describe("Axiom Addon", () => {
+    it("should reject adding Axiom after project creation", async () => {
+      const created = await runTRPCTest({
+        projectName: "axiom-add-later",
+        addons: ["turborepo"],
+        frontend: ["next"],
+        backend: "self",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "orpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const result = await add({ projectDir, addons: ["axiom"], install: false });
+      expect(result?.success).toBe(false);
+      expect(result?.error).toContain("must be selected during project creation");
+    });
+
+    it("should wire the Axiom drain and Alchemy resources without a compute deployment", async () => {
+      const result = await runTRPCTest({
+        projectName: "axiom-hono",
+        addons: ["axiom", "turborepo"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "orpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const serverIndex = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf-8");
+      const infra = await readFile(join(projectDir, "packages/infra/alchemy.run.ts"), "utf-8");
+      const rootPackage = JSON.parse(await readFile(join(projectDir, "package.json"), "utf-8")) as {
+        scripts?: Record<string, string>;
+      };
+      const serverPackage = JSON.parse(
+        await readFile(join(projectDir, "apps/server/package.json"), "utf-8"),
+      ) as { scripts?: Record<string, string>; dependencies?: Record<string, string> };
+
+      expect(serverIndex).toContain('import { createAxiomDrain } from "evlog/axiom";');
+      expect(serverIndex).toContain("app.use(evlog({ drain: createAxiomDrain() }));");
+      expect(serverIndex).not.toContain("evlog/fs");
+      expect(serverPackage.dependencies?.evlog).toBe("^2.28.0");
+      expect(serverPackage.scripts?.dev).toBeUndefined();
+      expect(serverPackage.scripts?.["dev:bare"]).toBeDefined();
+      expect(infra).toContain('Axiom.Dataset("logs"');
+      expect(infra).toContain('Axiom.ApiToken("logs-ingest"');
+      expect(infra).toContain('ingest: ["create"]');
+      expect(infra).toContain('Command.Dev("server-dev"');
+      expect(rootPackage.scripts?.deploy).toContain("infra");
+      expect(rootPackage.scripts?.destroy).toContain("infra");
+    });
+
+    it("should use the Axiom drain for a fullstack Next.js application", async () => {
+      const result = await runTRPCTest({
+        projectName: "axiom-next",
+        addons: ["axiom", "turborepo"],
+        frontend: ["next"],
+        backend: "self",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "orpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      const projectDir = result.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const evlogFile = await readFile(join(projectDir, "apps/web/src/lib/evlog.ts"), "utf-8");
+      expect(evlogFile).toContain('import { createAxiomDrain } from "evlog/axiom";');
+      expect(evlogFile).toContain("drain: createAxiomDrain()");
+      expect(evlogFile).not.toContain("evlog/fs");
+    });
+
+    const fullstackCases = [
+      { frontend: "nuxt", file: "apps/web/nuxt.config.ts", marker: "axiom:" },
+      {
+        frontend: "svelte",
+        file: "apps/web/src/hooks.server.ts",
+        marker: "createEvlogHooks({ drain: createAxiomDrain() })",
+      },
+      {
+        frontend: "tanstack-start",
+        file: "apps/web/nitro.config.ts",
+        marker: "axiom:",
+      },
+      {
+        frontend: "astro",
+        file: "apps/web/src/middleware.ts",
+        marker: "drain: createAxiomDrain()",
+      },
+    ] as const;
+
+    for (const { frontend, file, marker } of fullstackCases) {
+      it(`should wire Axiom into ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `axiom-${frontend}`,
+          addons: ["axiom", "turborepo"],
+          frontend: [frontend],
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          api: "orpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        const projectDir = result.result?.projectDirectory;
+        if (!projectDir) throw new Error("Expected generated project directory");
+
+        const content = await readFile(join(projectDir, file), "utf-8");
+        expect(content).toContain(marker);
+      });
+    }
+
+    for (const backend of ["express", "fastify", "elysia"] as const) {
+      it(`should wire the Axiom drain into ${backend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `axiom-${backend}`,
+          addons: ["axiom", "turborepo"],
+          frontend: ["tanstack-router"],
+          backend,
+          runtime: backend === "elysia" ? "bun" : "node",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          api: "orpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+        const projectDir = result.result?.projectDirectory;
+        if (!projectDir) throw new Error("Expected generated project directory");
+
+        const content = await readFile(join(projectDir, "apps/server/src/index.ts"), "utf-8");
+        expect(content).toContain('import { createAxiomDrain } from "evlog/axiom";');
+        expect(content).toContain("createAxiomDrain()");
+      });
+    }
   });
 
   describe("Addons with None Option", () => {

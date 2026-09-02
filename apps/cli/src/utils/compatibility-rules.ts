@@ -23,6 +23,7 @@ type AddonCompatibilityConfig = Pick<
   "frontend" | "auth" | "backend" | "runtime" | "webDeploy" | "database" | "orm" | "dbSetup"
 >;
 export const TASK_RUNNER_ADDONS: readonly Addons[] = ["turborepo", "nx", "vite-plus"];
+export const OBSERVABILITY_ADDONS: readonly Addons[] = ["evlog", "axiom"];
 const STATIC_DESKTOP_ADDONS: readonly Addons[] = ["tauri", "electrobun"];
 const TAURI_STATIC_EXPORT_FRONTENDS: readonly Frontend[] = ["next", "tanstack-start"];
 
@@ -99,7 +100,7 @@ const EVLOG_FULLSTACK_FRONTENDS: readonly Frontend[] = [
 ];
 
 const evlogCompatibilityMessage =
-  "evlog addon supports Hono, Express, Fastify, Elysia, or backend self with Next.js, TanStack Start, Nuxt, SvelteKit, or Astro. Convex and backend none are not supported yet.";
+  "The observability addons support Hono, Express, Fastify, Elysia, or backend self with Next.js, TanStack Start, Nuxt, SvelteKit, or Astro. Convex and backend none are not supported yet.";
 
 export function supportsEvlogAddon(
   frontend: Frontend[] = [],
@@ -503,7 +504,7 @@ export function validateAddonCompatibility(
   backend?: Backend,
   runtime?: Runtime,
 ): AddonCompatibility {
-  if (addon === "evlog" && !supportsEvlogAddon(frontend, backend, runtime)) {
+  if (OBSERVABILITY_ADDONS.includes(addon) && !supportsEvlogAddon(frontend, backend, runtime)) {
     return {
       isCompatible: false,
       reason: evlogCompatibilityMessage,

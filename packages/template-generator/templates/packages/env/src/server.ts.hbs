@@ -162,6 +162,11 @@ export const env = createEnv({
 {{#if (ne backend "self")}}
 		CORS_ORIGIN: z.url(),
 {{/if}}
+{{#if (includes addons "axiom")}}
+		AXIOM_API_KEY: z.string().min(1),
+		AXIOM_DATASET: z.string().min(1),
+		AXIOM_EDGE_URL: z.url(),
+{{/if}}
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
 	runtimeEnv: {{#if (or (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}runtimeEnv{{else}}process.env{{/if}},

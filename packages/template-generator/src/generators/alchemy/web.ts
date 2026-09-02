@@ -265,6 +265,9 @@ function writePrismaWeb(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): voi
     } else if (plan.server.target !== "none") {
       writer.writeLine("const deployedServer = yield* server;");
     }
+    if (plan.hasAxiomWebRuntime) {
+      writer.writeLine("const resolvedObservabilityEnv = yield* observabilityEnv;");
+    }
     writer.blankLine();
     writeObject(
       writer,
