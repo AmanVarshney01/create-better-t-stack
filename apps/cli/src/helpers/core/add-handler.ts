@@ -360,7 +360,7 @@ async function addHandlerInternal(
   }
 
   if (!isSilent()) {
-    renderTitle();
+    await renderTitle();
     intro(pc.magenta("Add to your project"));
   }
 
