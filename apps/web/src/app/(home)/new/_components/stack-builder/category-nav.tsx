@@ -88,37 +88,42 @@ export function CategoryNav({ progress, idPrefix }: CategoryNavProps) {
   }, [activeCategory]);
 
   return (
-    <div
-      ref={railRef}
-      className="-my-1 flex items-center gap-1 overflow-x-auto overscroll-x-contain px-0.5 py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-    >
-      {progress.map(({ category, done, selected }) => {
-        const isActive = category === activeCategory;
-        return (
-          <button
-            key={category}
-            type="button"
-            data-category={category}
-            onClick={() => {
-              track("builder_category_jump", { category, source: "nav" });
-              scrollToCategorySection(idPrefix, category);
-            }}
-            title={`Jump to ${getCategoryDisplayName(category)}`}
-            className={cn(
-              "builder-focus-ring pointer-coarse:min-h-8 flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[4px] border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.10em] transition-colors duration-150",
-              done ? "text-primary" : "text-fd-muted-foreground hover:text-fd-foreground",
-              isActive && "border-primary",
-            )}
-          >
-            <span
-              aria-hidden="true"
-              className={cn("h-1 w-1 shrink-0", done ? "bg-primary" : "bg-fd-muted-foreground/40")}
-            />
-            {getCategoryDisplayName(category)}
-            {selected > 1 && <span className="tabular-nums">({selected})</span>}
-          </button>
-        );
-      })}
+    <div className="relative -my-1">
+      <div
+        ref={railRef}
+        className="flex items-center gap-1 overflow-x-auto overscroll-x-contain px-0.5 py-1 pr-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,black_calc(100%-16px),transparent)]"
+      >
+        {progress.map(({ category, done, selected }) => {
+          const isActive = category === activeCategory;
+          return (
+            <button
+              key={category}
+              type="button"
+              data-category={category}
+              onClick={() => {
+                track("builder_category_jump", { category, source: "nav" });
+                scrollToCategorySection(idPrefix, category);
+              }}
+              title={`Jump to ${getCategoryDisplayName(category)}`}
+              className={cn(
+                "builder-focus-ring pointer-coarse:min-h-8 flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[4px] border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.10em] transition-colors duration-150",
+                done ? "text-primary" : "text-fd-muted-foreground hover:text-fd-foreground",
+                isActive && "border-primary",
+              )}
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "h-1 w-1 shrink-0",
+                  done ? "bg-primary" : "bg-fd-muted-foreground/40",
+                )}
+              />
+              {getCategoryDisplayName(category)}
+              {selected > 1 && <span className="tabular-nums">({selected})</span>}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

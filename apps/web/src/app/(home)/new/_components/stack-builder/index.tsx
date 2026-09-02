@@ -236,7 +236,9 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                         <code
                           className={cn(
                             "block min-w-0 flex-1 font-mono text-[11px] text-fd-muted-foreground leading-[1.55]",
-                            commandExpanded ? "whitespace-pre-wrap break-words" : "truncate",
+                            commandExpanded
+                              ? "whitespace-pre-wrap break-words"
+                              : "overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
                           )}
                         >
                           {commandExpanded ? displayCommand : command}
@@ -466,8 +468,10 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                           </span>
                           <code
                             className={cn(
-                              "min-w-0 flex-1",
-                              commandExpanded ? "whitespace-pre-wrap break-words" : "truncate",
+                              "min-w-0 flex-1 font-mono text-[11px] leading-[1.55]",
+                              commandExpanded
+                                ? "whitespace-pre-wrap break-words"
+                                : "overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
                             )}
                           >
                             {commandExpanded ? displayCommand : command}

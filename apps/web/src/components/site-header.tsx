@@ -221,7 +221,7 @@ export function SiteHeader({ leading, trailing, className, ...props }: SiteHeade
             aria-label="Close menu"
             tabIndex={-1}
             onClick={() => setOpen(false)}
-            className="absolute inset-x-0 top-14 h-svh cursor-default"
+            className="absolute inset-x-0 top-14 h-[calc(100svh-3.5rem)] cursor-default"
           />
           <div
             id="site-header-menu"
