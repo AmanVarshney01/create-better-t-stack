@@ -103,10 +103,12 @@ function addServerDeps(vfs: VirtualFileSystem, api: API, backend: Backend): void
   if (backend === "convex") return;
 
   if (api === "trpc") {
+    const dependencies: AvailableDependencies[] = ["@trpc/server"];
+    if (backend === "hono") dependencies.push("@hono/trpc-server");
     addPackageDependency({
       vfs,
       packagePath: serverPath,
-      dependencies: ["@trpc/server", "@hono/trpc-server"],
+      dependencies,
     });
   } else if (api === "orpc") {
     addPackageDependency({

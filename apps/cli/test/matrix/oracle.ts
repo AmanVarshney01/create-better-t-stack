@@ -35,7 +35,7 @@ export type MatrixRule =
   | "server-deploy-requires-backend"
   | "server-deploy-requires-workers-runtime"
   | "web-deploy-requires-web-frontend"
-  | "workers-requires-hono"
+  | "workers-requires-compatible-backend"
   | "workers-requires-server-deploy"
   | "workers-rejects-mongodb";
 
@@ -258,8 +258,8 @@ function validateBackend(config: ProjectConfig, rules: Set<MatrixRule>) {
 function validateRuntimeAndDeploy(config: ProjectConfig, rules: Set<MatrixRule>) {
   addRule(
     rules,
-    config.runtime === "workers" && config.backend !== "hono",
-    "workers-requires-hono",
+    config.runtime === "workers" && !["hono", "nitro"].includes(config.backend),
+    "workers-requires-compatible-backend",
   );
   addRule(
     rules,
@@ -429,7 +429,7 @@ export function classifyMatrixError(message: string): MatrixRule | "unknown" {
     return "web-deploy-requires-web-frontend";
   }
   if (message.includes("Workers runtime") && message.includes("only supported with Hono")) {
-    return "workers-requires-hono";
+    return "workers-requires-compatible-backend";
   }
   if (message.includes("Workers runtime") && message.includes("not compatible with MongoDB")) {
     return "workers-rejects-mongodb";

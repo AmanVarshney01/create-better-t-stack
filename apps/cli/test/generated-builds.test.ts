@@ -82,6 +82,110 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
+    name: "nitro-orpc-drizzle-auth-todo",
+    packageManagers: ["bun", "npm", "pnpm"],
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-router"],
+      backend: "nitro",
+      runtime: "node",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["todo"],
+    },
+  },
+  {
+    name: "nitro-trpc-clerk-bun",
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-router"],
+      backend: "nitro",
+      runtime: "bun",
+      database: "none",
+      orm: "none",
+      api: "trpc",
+      auth: "clerk",
+      payments: "none",
+      addons: ["nx"],
+      examples: ["none"],
+    },
+  },
+  {
+    name: "nitro-cloudflare-d1-auth-todo",
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-router"],
+      backend: "nitro",
+      runtime: "workers",
+      database: "sqlite",
+      orm: "drizzle",
+      dbSetup: "d1",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["todo"],
+      serverDeploy: "cloudflare",
+    },
+  },
+  {
+    name: "nitro-prisma-better-auth",
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["react-router"],
+      backend: "nitro",
+      runtime: "bun",
+      database: "sqlite",
+      orm: "prisma",
+      api: "trpc",
+      auth: "better-auth",
+      payments: "polar",
+      addons: ["turborepo"],
+      examples: ["none"],
+    },
+  },
+  {
+    name: "nitro-solid-mongoose",
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["solid"],
+      backend: "nitro",
+      runtime: "node",
+      database: "mongodb",
+      orm: "mongoose",
+      api: "orpc",
+      auth: "none",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["none"],
+    },
+  },
+  {
+    name: "nitro-ai-bun",
+    packageManagers: ["bun"],
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-router"],
+      backend: "nitro",
+      runtime: "bun",
+      database: "none",
+      orm: "none",
+      api: "orpc",
+      auth: "none",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["ai"],
+    },
+  },
+  {
     name: "next-self-prisma",
     config: {
       ...baseConfig,
@@ -972,6 +1076,92 @@ async function bootAndValidateSolidDevRuntime(sample: SelectedBuildSample, proje
   }
 }
 
+async function bootAndValidateNitroRuntime(sample: SelectedBuildSample, projectDir: string) {
+  if (sample.config.backend !== "nitro" || sample.config.runtime === "workers") return;
+
+  const serverDir = path.join(projectDir, "apps/server");
+  const port = await getAvailablePort();
+  const runtime = execa(
+    sample.config.runtime === "bun" ? "bun" : "node",
+    [".output/server/index.mjs"],
+    {
+      cwd: serverDir,
+      all: true,
+      reject: false,
+      env: {
+        ...process.env,
+        BETTER_AUTH_SECRET: "generated-build-test-secret-at-least-32-characters",
+        BETTER_AUTH_URL: `http://127.0.0.1:${port}`,
+        CLERK_PUBLISHABLE_KEY: "pk_test_generated-build-test",
+        CLERK_SECRET_KEY: "sk_test_generated-build-test",
+        CORS_ORIGIN: "https://web.example.test",
+        DATABASE_URL: "file:./local.db",
+        GOOGLE_GENERATIVE_AI_API_KEY: "generated-build-test-key",
+        HOST: "127.0.0.1",
+        NODE_ENV: "production",
+        POLAR_ACCESS_TOKEN: "polar_generated-build-test",
+        POLAR_SUCCESS_URL: `http://127.0.0.1:${port}/success`,
+        PORT: String(port),
+      },
+    },
+  );
+
+  let failure: unknown;
+  try {
+    const root = await fetchWhenReady(`http://127.0.0.1:${port}/`);
+    expect(root?.status).toBe(200);
+    expect(await root?.text()).toBe("OK");
+
+    const preflight = await fetchWhenReady(`http://127.0.0.1:${port}/rpc/healthCheck`, {
+      method: "OPTIONS",
+      headers: {
+        origin: "https://web.example.test",
+        "access-control-request-method": "POST",
+      },
+    });
+    expect(preflight?.status).toBe(204);
+    expect(preflight?.headers.get("access-control-allow-origin")).toBe("https://web.example.test");
+
+    if (sample.config.api === "orpc") {
+      const health = await fetchWhenReady(`http://127.0.0.1:${port}/rpc/healthCheck`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ json: null }),
+      });
+      expect(health?.status).toBe(200);
+      expect(await health?.json()).toEqual({ json: "OK" });
+    }
+
+    if (sample.config.api === "trpc" && sample.config.auth !== "clerk") {
+      const input = encodeURIComponent(JSON.stringify({ json: null }));
+      const health = await fetchWhenReady(
+        `http://127.0.0.1:${port}/trpc/healthCheck?input=${input}`,
+      );
+      expect(health?.status).toBe(200);
+      expect(await health?.json()).toEqual({ result: { data: "OK" } });
+    }
+
+    if (sample.config.auth === "better-auth") {
+      const session = await fetchWhenReady(`http://127.0.0.1:${port}/api/auth/get-session`);
+      expect(session?.status).toBe(200);
+      expect(await session?.json()).toBeNull();
+    }
+  } catch (error) {
+    failure = error;
+  } finally {
+    runtime.kill("SIGTERM");
+  }
+
+  const result = await runtime;
+  if (failure) {
+    throw new Error(
+      [`Generated Nitro runtime probe failed: ${String(failure)}`, formatOutput(result.all)]
+        .filter(Boolean)
+        .join("\n\n"),
+    );
+  }
+}
+
 describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples", () => {
   for (const sample of getSelectedBuildSamples()) {
     it(
@@ -992,6 +1182,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
         await bootAndValidatePrismaWebArtifact(sample, projectDir);
         await bootAndValidateSolidDevRuntime(sample, projectDir);
         await bootAndValidateSolidRuntime(sample, projectDir);
+        await bootAndValidateNitroRuntime(sample, projectDir);
         await validateSolidBuildArtifacts(sample, projectDir);
         await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
       },

@@ -1,0 +1,22 @@
+import { defineHandler } from "nitro";
+
+const nativeAppUrl = "{{projectName}}://";
+const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
+
+export default defineHandler((event) => {
+  const requestUrl = new URL(event.req.url);
+  const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
+
+  let redirectUrl: URL;
+  try {
+    redirectUrl = new URL(returnUrl);
+  } catch {
+    return new Response("Invalid return URL", { status: 400 });
+  }
+
+  if (!allowedNativeProtocols.has(redirectUrl.protocol)) {
+    return new Response("Invalid return URL", { status: 400 });
+  }
+
+  return Response.redirect(redirectUrl, 302);
+});

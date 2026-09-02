@@ -134,7 +134,8 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   }
 
   if (packages.server) {
-    const serverDevDependencies: AvailableDependencies[] = ["typescript", "tsdown"];
+    const serverDevDependencies: AvailableDependencies[] =
+      backend === "nitro" ? ["typescript"] : ["typescript", "tsdown"];
     if (runtime === "workers" && orm === "prisma") {
       serverDevDependencies.push("unwasm");
     }

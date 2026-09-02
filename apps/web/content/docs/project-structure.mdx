@@ -40,7 +40,7 @@ Notes:
 
 ## Monorepo structure by backend
 
-### Server backends (hono, express, fastify, elysia)
+### Server backends (hono, express, fastify, elysia, nitro)
 
 <Files>
   <Folder name="my-app" defaultOpen>
@@ -292,6 +292,36 @@ The server structure depends on your backend choice:
   </Folder>
 </Files>
 
+### Nitro
+
+Nitro uses its native file-based server layout rather than a generated framework wrapper:
+
+<Files>
+  <Folder name="apps/server" defaultOpen>
+    <Folder name="server" defaultOpen>
+      <Folder name="middleware">
+        <File name="cors.ts" />
+      </Folder>
+      <Folder name="routes" defaultOpen>
+        <File name="index.get.ts" />
+        <Folder name="rpc">
+          <File name="[...].ts" />
+        </Folder>
+        <Folder name="api">
+          <Folder name="auth">
+            <File name="[...all].ts" />
+          </Folder>
+        </Folder>
+      </Folder>
+    </Folder>
+    <File name="nitro.config.ts" />
+    <File name="package.json" />
+    <File name="tsconfig.json" />
+  </Folder>
+</Files>
+
+The selected features control which route files are present. Node/Bun production builds are emitted to `apps/server/.output` and run from `.output/server/index.mjs`. Vercel deployments use Nitro's detected Vercel output.
+
 ### Workers runtime (optional)
 
 When `runtime=workers`, the server targets Cloudflare Workers. If you also choose Cloudflare deployment, you'll get `packages/infra/alchemy.run.ts` and related infra files.
@@ -433,7 +463,7 @@ Electrobun adds an `apps/desktop` workspace with its own `package.json`, `electr
   "createdAt": "<timestamp>",
   "database": "<none|sqlite|postgres|mysql|mongodb>",
   "orm": "<none|drizzle|prisma|mongoose>",
-  "backend": "<none|hono|express|fastify|elysia|convex|self>",
+  "backend": "<none|hono|express|fastify|elysia|nitro|convex|self>",
   "runtime": "<bun|node|workers|none>",
   "frontend": ["<tanstack-router|react-router|tanstack-start|next|nuxt|svelte|solid|astro|native-bare|native-uniwind|native-unistyles|none>"] ,
   "addons": ["<pwa|tauri|electrobun|starlight|fumadocs|biome|lefthook|husky|mcp|turborepo|nx|vite-plus|ultracite|oxlint|opentui|wxt|skills|evlog|none>"] ,
@@ -442,8 +472,8 @@ Electrobun adds an `apps/desktop` workspace with its own `package.json`, `electr
   "packageManager": "<bun|pnpm|npm>",
   "dbSetup": "<turso|neon|prisma-postgres|planetscale|mongodb-atlas|supabase|d1|docker|none>",
   "api": "<none|trpc|orpc>",
-  "webDeploy": "<cloudflare|docker|vercel|none>",
-  "serverDeploy": "<cloudflare|docker|vercel|none>"
+  "webDeploy": "<cloudflare|prisma|docker|vercel|none>",
+  "serverDeploy": "<cloudflare|prisma|docker|vercel|none>"
 }
 ```
 

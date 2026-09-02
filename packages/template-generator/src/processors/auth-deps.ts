@@ -182,7 +182,7 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
     }
 
     if (apiExists) {
-      if (backend === "self" || backend === "hono" || backend === "elysia") {
+      if (backend === "self" || backend === "hono" || backend === "elysia" || backend === "nitro") {
         addPackageDependency({ vfs, packagePath: apiPath, dependencies: ["@clerk/backend"] });
       } else if (backend === "express") {
         addPackageDependency({ vfs, packagePath: apiPath, dependencies: ["@clerk/express"] });

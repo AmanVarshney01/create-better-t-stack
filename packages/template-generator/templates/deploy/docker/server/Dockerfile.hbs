@@ -32,13 +32,25 @@ FROM node:24-slim AS runner
 {{/if}}
 WORKDIR /app
 ENV NODE_ENV=production
+{{#if (eq backend "nitro")}}
+COPY --from=builder /app/apps/server/.output ./
+{{else}}
 COPY --from=builder /app /app
+{{/if}}
 
 EXPOSE 3000
 
+{{#if (eq backend "nitro")}}
+{{#if (eq runtime "bun")}}
+CMD ["bun", "server/index.mjs"]
+{{else}}
+CMD ["node", "server/index.mjs"]
+{{/if}}
+{{else}}
 WORKDIR /app/apps/server
 {{#if (eq runtime "bun")}}
 CMD ["bun", "dist/index.mjs"]
 {{else}}
 CMD ["node", "dist/index.mjs"]
+{{/if}}
 {{/if}}

@@ -525,6 +525,7 @@ function generateFeaturesList(
     express: "- **Express** - Fast, unopinionated web framework",
     fastify: "- **Fastify** - Fast, low-overhead web framework",
     elysia: "- **Elysia** - Type-safe, high-performance framework",
+    nitro: "- **Nitro** - Portable, file-routed server framework",
   } satisfies Record<string, string>;
 
   if (hasOwnKey(backendFeatures, backend)) {

@@ -1,0 +1,27 @@
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+import { google } from "@ai-sdk/google";
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  type UIMessage,
+  wrapLanguageModel,
+} from "ai";
+import { defineHandler } from "nitro";
+
+export default defineHandler(async (event) => {
+  const { messages = [] } = (await event.req.json()) as { messages?: UIMessage[] };
+  const model = wrapLanguageModel({
+    model: google("gemini-2.5-flash"),
+    middleware: devToolsMiddleware(),
+  });
+  const result = streamText({
+    model,
+    messages: await convertToModelMessages(messages),
+  });
+
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  });
+});

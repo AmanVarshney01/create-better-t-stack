@@ -8,22 +8,24 @@ description: Deploy Better-T-Stack projects to Cloudflare or Prisma and manage h
 [Alchemy](https://alchemy.run) is the infrastructure-as-code layer generated when you choose **Cloudflare** or **Prisma** as a deployment target. The CLI writes a `packages/infra` workspace containing:
 
 - one `alchemy.run.ts` for applications, managed databases, and migrations
-- exact selected Alchemy and latest Effect beta versions
+- exact compatible Alchemy and Effect versions
 - root `dev`, `deploy`, and `destroy` commands
 
 The CLI calls the deployment choice **Prisma**. In the generated TypeScript, that target uses Alchemy's `Prisma.Compute` resource.
 
 ## Supported deployment shapes
 
-Cloudflare supports a separate Hono server on the Workers runtime and supported web frameworks. Full-stack `backend: self` projects deploy as one web application.
+Cloudflare supports separate Hono and Nitro servers on the Workers runtime and supported web frameworks. Full-stack `backend: self` projects deploy as one web application.
 
 Prisma supports:
 
 - web: Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, and Solid
-- server: Hono, Express, Fastify, and Elysia on Bun or Node
+- server: Hono, Express, Fastify, Elysia, and Nitro on Bun or Node
 - mixed stacks, such as Cloudflare web + Prisma server or Prisma web + Cloudflare server
 
 The CLI rejects unsupported framework/runtime combinations before writing files.
+
+Nitro servers use native provider output. Prisma Compute deploys `.output/server/index.mjs` from Nitro's command build. Cloudflare builds the official `cloudflare_module` preset, deploys the same prebuilt ESM entrypoint without rebundling it, and uploads `.output/public` as Worker assets.
 
 Alchemy's automatic framework builds handle Next.js, Nuxt, Astro, and TanStack Start. The generated
 stack supplies explicit production artifacts for the remaining frameworks: Solid's Nitro
