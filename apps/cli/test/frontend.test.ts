@@ -114,7 +114,7 @@ describe("Frontend Configurations", () => {
   });
 
   describe("Frontend Compatibility with API", () => {
-    it("should generate current React Router and shared UI dependencies", async () => {
+    it("should keep React Router on the app's Vite version", async () => {
       const result = await runTRPCTest({
         projectName: "react-router-vite",
         frontend: ["react-router"],
@@ -135,21 +135,45 @@ describe("Frontend Configurations", () => {
       expectSuccess(result);
 
       const packageJson = await fs.readJson(path.join(result.projectDir!, "apps/web/package.json"));
-      const uiPackageJson = await fs.readJson(
-        path.join(result.projectDir!, "packages/ui/package.json"),
-      );
-      const uiUtils = await fs.readFile(
-        path.join(result.projectDir!, "packages/ui/src/lib/utils.ts"),
-        "utf8",
-      );
-
       expect(packageJson.devDependencies.vite).toBe("^8.1.5");
       expect(packageJson.devDependencies["react-router-devtools"]).toBeUndefined();
-      expect(uiPackageJson.dependencies.cn).toBe("^0.2.4");
-      expect(uiPackageJson.dependencies.clsx).toBeUndefined();
-      expect(uiPackageJson.dependencies["tailwind-merge"]).toBeUndefined();
-      expect(uiUtils.trim()).toBe('export { cn } from "cn";');
     });
+
+    for (const frontend of ["tanstack-router", "react-router", "tanstack-start", "next"] as const) {
+      it(`should use cn in the ${frontend} shared UI package`, async () => {
+        const result = await runTRPCTest({
+          projectName: `cn-${frontend}`,
+          frontend: [frontend],
+          backend: "none",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          api: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+
+        const uiPackageJson = await fs.readJson(
+          path.join(result.projectDir!, "packages/ui/package.json"),
+        );
+        const uiUtils = await fs.readFile(
+          path.join(result.projectDir!, "packages/ui/src/lib/utils.ts"),
+          "utf8",
+        );
+
+        expect(uiPackageJson.dependencies.cn).toBe("^0.2.4");
+        expect(uiPackageJson.dependencies.clsx).toBeUndefined();
+        expect(uiPackageJson.dependencies["tailwind-merge"]).toBeUndefined();
+        expect(uiUtils.trim()).toBe('export { cn } from "cn";');
+      });
+    }
 
     it("should generate the Solid 2 project structure", async () => {
       const result = await runTRPCTest({
