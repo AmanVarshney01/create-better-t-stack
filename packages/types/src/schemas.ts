@@ -49,6 +49,7 @@ export const AddonsSchema = z
     "oxlint",
     "opentui",
     "wxt",
+    "nix-flake",
     "skills",
     "evlog",
     "none",

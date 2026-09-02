@@ -67,6 +67,7 @@ export const ADDON_COMPATIBILITY = {
   fumadocs: [],
   opentui: [],
   wxt: [],
+  "nix-flake": [],
   skills: [],
   evlog: [],
   none: [],
