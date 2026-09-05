@@ -538,6 +538,11 @@ function buildServerVars(
       condition: payments === "polar",
     },
     {
+      key: "MOLLIE_API_KEY",
+      value: "",
+      condition: payments === "mollie",
+    },
+    {
       key: "CORS_ORIGIN",
       value: corsOrigin,
       condition: backend !== "self",

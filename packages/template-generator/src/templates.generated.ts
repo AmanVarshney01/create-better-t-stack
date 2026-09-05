@@ -33702,6 +33702,9 @@ export const env = createEnv({
 		POLAR_ACCESS_TOKEN: z.string().min(1),
 		POLAR_SUCCESS_URL: z.url(),
 {{/if}}
+{{#if (eq payments "mollie")}}
+		MOLLIE_API_KEY: z.string().min(1),
+{{/if}}
 {{#if (ne backend "self")}}
 		CORS_ORIGIN: z.url(),
 {{/if}}
@@ -35680,6 +35683,36 @@ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
   "exclude": ["node_modules"]
 }
 `],
+  ["payments/mollie/server/base/src/lib/payments.ts.hbs", `/**
+ * Mollie payment client configuration.
+ */
+import { createMollieClient as createMollieSDKClient } from "@mollie/api-client";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+/**
+ * Create a new Mollie client instance for Cloudflare/Svelte environment.
+ * @param env Environment variables object
+ * @returns Configured Mollie API client instance
+ */
+export function createMollieClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	return createMollieSDKClient({
+		apiKey: env.MOLLIE_API_KEY,
+	});
+}
+{{else}}
+/**
+ * Configured Mollie API client singleton instance.
+ */
+export const mollieClient = createMollieSDKClient({
+	apiKey: env.MOLLIE_API_KEY,
+});
+{{/if}}
+`],
   ["payments/polar/convex/backend/convex/polar.ts.hbs", `import { Polar } from "@convex-dev/polar";
 
 import { api, components } from "./_generated/api";
@@ -35896,4 +35929,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 522;
+export const TEMPLATE_COUNT = 523;

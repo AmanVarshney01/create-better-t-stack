@@ -1,0 +1,29 @@
+/**
+ * Mollie payment client configuration.
+ */
+import { createMollieClient as createMollieSDKClient } from "@mollie/api-client";
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+import type {} from "@{{projectName}}/env/server";
+{{else}}
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+
+{{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}
+/**
+ * Create a new Mollie client instance for Cloudflare/Svelte environment.
+ * @param env Environment variables object
+ * @returns Configured Mollie API client instance
+ */
+export function createMollieClient({{#if (and (eq backend "self") (eq webDeploy "cloudflare") (includes frontend "svelte"))}}env: Env{{/if}}) {
+	return createMollieSDKClient({
+		apiKey: env.MOLLIE_API_KEY,
+	});
+}
+{{else}}
+/**
+ * Configured Mollie API client singleton instance.
+ */
+export const mollieClient = createMollieSDKClient({
+	apiKey: env.MOLLIE_API_KEY,
+});
+{{/if}}

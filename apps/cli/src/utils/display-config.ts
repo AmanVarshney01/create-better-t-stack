@@ -54,6 +54,7 @@ const VALUE_LABELS = {
   "better-auth": "Better Auth",
   clerk: "Clerk",
   polar: "Polar",
+  mollie: "Mollie",
   pwa: "PWA",
   tauri: "Tauri",
   electrobun: "Electrobun",

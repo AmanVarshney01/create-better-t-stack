@@ -650,7 +650,7 @@ export function validateAddonsAgainstConfig(
 export function validatePaymentsCompatibility(
   payments: Payments | undefined,
   auth: Auth | undefined,
-  _backend: Backend | undefined,
+  backend: Backend | undefined,
   _frontends: Frontend[] = [],
 ): ValidationResult {
   if (!payments || payments === "none") return Result.ok(undefined);
@@ -659,6 +659,20 @@ export function validatePaymentsCompatibility(
     if (!auth || auth === "none" || auth !== "better-auth") {
       return validationErr(
         "Polar payments requires Better Auth. Please use '--auth better-auth' or choose a different payments provider.",
+      );
+    }
+  }
+
+  if (payments === "mollie") {
+    if (auth !== "better-auth") {
+      return validationErr(
+        "Mollie payments requires Better Auth. Please use '--auth better-auth' or choose a different payments provider.",
+      );
+    }
+
+    if (backend === "convex") {
+      return validationErr(
+        "Mollie payments is not supported with the Convex backend. Please choose a different backend or payments provider.",
       );
     }
   }
