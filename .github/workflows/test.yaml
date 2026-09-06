@@ -75,6 +75,8 @@ jobs:
           - solid-v2-pwa
           - expo-convex-better-auth-polar
           - workers-
+          - nuxt-orpc
+          - solid-v2-fastify-node-prisma-polar
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
