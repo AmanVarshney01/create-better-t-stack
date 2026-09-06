@@ -126,6 +126,7 @@ describe("PWA template regressions", () => {
     "{ plugins: [] }",
     "() => ({ plugins: [] })",
     "function () { const helper = () => ({ plugins: [] }); return { plugins: [helper()] }; }",
+    "() => { const helper = { make() { return { plugins: [] }; } }; return { plugins: [helper.make()] }; }",
   ]) {
     it(`registers PWA once in ${expression}`, () => {
       const vfs = new VirtualFileSystem();

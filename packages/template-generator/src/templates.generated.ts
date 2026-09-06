@@ -278,7 +278,7 @@ export default function manifest(): MetadataRoute.Manifest {
 		short_name: "{{projectName}}",
 		description:
 			"my pwa app",
-    start_url: "/",
+		start_url: "/",
 		display: "standalone",
 		background_color: "#ffffff",
 		theme_color: "#000000",
@@ -18569,8 +18569,6 @@ if (Platform.OS !== "web") {
 
   setupPolyfills();
 }
-
-export {};
 `],
   ["examples/ai/native/unistyles/app/(drawer)/ai.tsx.hbs", `import "@/unistyles";
 
@@ -19659,8 +19657,6 @@ if (Platform.OS !== "web") {
 
   setupPolyfills();
 }
-
-export {};
 `],
   ["examples/ai/native/uniwind/app/(drawer)/ai.tsx.hbs", `{{#if (eq backend "convex")}}
 import { Ionicons } from "@expo/vector-icons";
@@ -20231,8 +20227,6 @@ if (Platform.OS !== "web") {
 
   setupPolyfills();
 }
-
-export {};
 `],
   ["examples/ai/web/nuxt/app/pages/ai.vue.hbs", `<script setup lang="ts">
 import { useChat } from '@ai-sdk/vue'
