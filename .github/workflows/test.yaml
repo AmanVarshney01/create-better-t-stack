@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+
 concurrency:
   group: test-${{ github.head_ref }}
   cancel-in-progress: true
@@ -16,6 +19,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -62,23 +67,17 @@ jobs:
           BTS_MATRIX_MODE: smoke
 
   generated-builds:
-    name: Generated Build (${{ matrix.sample }})
+    name: Generated Builds (${{ matrix.shard }}/8)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        sample:
-          - hono-trpc-drizzle-todo
-          - solid-v2-frontend-only
-          - solid-v2-self-vercel-npm
-          - solid-v2-pwa
-          - expo-convex-better-auth-polar
-          - workers-
-          - nuxt-orpc
-          - solid-v2-fastify-node-prisma-polar
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version-file: package.json
@@ -97,4 +96,4 @@ jobs:
           AGENT: 1
           BTS_TELEMETRY: 0
           BTS_BUILD_SAMPLES: 1
-          BTS_BUILD_SAMPLE_FILTER: ${{ matrix.sample }}
+          BTS_BUILD_SAMPLE_SHARD: ${{ matrix.shard }}/8

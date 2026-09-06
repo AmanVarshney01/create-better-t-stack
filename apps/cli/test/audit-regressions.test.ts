@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import { processPwaPlugins, VirtualFileSystem } from "@better-t-stack/template-generator";
 import type { ProjectConfig } from "@better-t-stack/types";
+import { Node, Project, SyntaxKind } from "ts-morph";
 
 import { add, create } from "../src";
 import { SMOKE_DIR } from "./setup";
@@ -103,6 +104,83 @@ describe("Add Path regressions", () => {
 });
 
 describe("PWA template regressions", () => {
+  for (const plugins of [
+    "plugins",
+    "plugins: plugins",
+    "plugins: getPlugins()",
+    "plugins: enabled && plugins",
+  ]) {
+    it(`preserves existing plugin expressions (${plugins})`, () => {
+      const vfs = new VirtualFileSystem();
+      vfs.writeFile(
+        "apps/web/vite.config.ts",
+        `import { defineConfig } from "vite";
+const plugins = [{ name: "framework" }];
+const enabled = true;
+const getPlugins = () => Promise.resolve(plugins);
+export default defineConfig({ ${plugins} });`,
+      );
+      processPwaPlugins(vfs, { ...config, addons: ["pwa"] });
+      processPwaPlugins(vfs, { ...config, addons: ["pwa"] });
+      const source = new Project({ useInMemoryFileSystem: true }).createSourceFile(
+        "vite.config.ts",
+        vfs.readFile("apps/web/vite.config.ts"),
+      );
+      const object = source
+        .getExportAssignmentOrThrow(() => true)
+        .getExpression()
+        .asKindOrThrow(SyntaxKind.CallExpression)
+        .getArguments()[0]!
+        .asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+      expect(object.getProperties()).toHaveLength(1);
+      const elements = object
+        .getPropertyOrThrow("plugins")
+        .asKindOrThrow(SyntaxKind.PropertyAssignment)
+        .getInitializerOrThrow()
+        .asKindOrThrow(SyntaxKind.ArrayLiteralExpression)
+        .getElements();
+      expect(elements).toHaveLength(2);
+      expect(elements[0]!.getText()).toBe(
+        plugins === "plugins" ? "plugins" : plugins.slice("plugins: ".length),
+      );
+      expect(elements[1]!.getText()).toStartWith("VitePWA(");
+    });
+  }
+
+  it("escapes package-derived PWA names as string values", () => {
+    const projectName = 'quote"\\newline\n, injected: process.exit(), value: "';
+    const vfs = new VirtualFileSystem();
+    vfs.writeFile(
+      "apps/web/vite.config.ts",
+      'import { defineConfig } from "vite"; export default defineConfig({});',
+    );
+    processPwaPlugins(vfs, { ...config, projectName, addons: ["pwa"] });
+    const source = new Project({ useInMemoryFileSystem: true }).createSourceFile(
+      "vite.config.ts",
+      vfs.readFile("apps/web/vite.config.ts"),
+    );
+    const manifest = source
+      .getDescendantsOfKind(SyntaxKind.PropertyAssignment)
+      .find((property) => property.getName() === "manifest")!
+      .getInitializerOrThrow()
+      .asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+    for (const name of ["name", "short_name", "description"]) {
+      const value = manifest
+        .getPropertyOrThrow(name)
+        .asKindOrThrow(SyntaxKind.PropertyAssignment)
+        .getInitializerOrThrow();
+      expect(Node.isStringLiteral(value)).toBe(true);
+      expect(value.asKindOrThrow(SyntaxKind.StringLiteral).getLiteralValue()).toBe(
+        name === "description" ? `${projectName} - PWA Application` : projectName,
+      );
+    }
+    expect(
+      source
+        .getDescendantsOfKind(SyntaxKind.CallExpression)
+        .map((call) => call.getExpression().getText()),
+    ).toEqual(["defineConfig", "VitePWA"]);
+  });
+
   it("registers PWA in the Solid Cloudflare config callback", async () => {
     const projectDir = await makeProject("solid-cloudflare-pwa", {
       frontend: ["solid"],

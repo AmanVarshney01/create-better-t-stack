@@ -62,9 +62,9 @@ export function processPwaPlugins(vfs: VirtualFileSystem, config: ProjectConfig)
     const pwaConfig = `VitePWA({
   registerType: "autoUpdate",
   manifest: {
-    name: "${projectName}",
-    short_name: "${projectName}",
-    description: "${projectName} - PWA Application",
+    name: ${JSON.stringify(projectName)},
+    short_name: ${JSON.stringify(projectName)},
+    description: ${JSON.stringify(`${projectName} - PWA Application`)},
     theme_color: "#0c0c0c",
   },
   pwaAssets: { disabled: false, config: true },
@@ -78,8 +78,14 @@ export function processPwaPlugins(vfs: VirtualFileSystem, config: ProjectConfig)
         if (!hasPwa) {
           initializer.addElement(pwaConfig);
         }
+      } else if (initializer) {
+        // Vite accepts nested plugin arrays, promises and falsy plugin options.
+        // Keep the existing expression intact without assuming it is iterable.
+        pluginsProperty.setInitializer(`[${initializer.getText()}, ${pwaConfig}]`);
       }
-    } else {
+    } else if (pluginsProperty && Node.isShorthandPropertyAssignment(pluginsProperty)) {
+      pluginsProperty.replaceWithText(`plugins: [${pluginsProperty.getName()}, ${pwaConfig}]`);
+    } else if (!pluginsProperty) {
       object.addPropertyAssignment({
         name: "plugins",
         initializer: `[${pwaConfig}]`,

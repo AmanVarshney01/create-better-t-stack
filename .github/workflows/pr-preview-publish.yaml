@@ -1,0 +1,159 @@
+name: PR Preview Publish
+
+on:
+  workflow_run:
+    workflows: [PR Preview Build]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: pr-preview-publish-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  publish-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
+    steps:
+      # Never check out or execute PR code in this privileged job.
+      - name: Validate preview request
+        id: request
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            if (run.path !== '.github/workflows/pr-preview.yaml') {
+              throw new Error('Unexpected preview workflow path');
+            }
+            const { data: pulls } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              ...context.repo, commit_sha: run.head_sha,
+            });
+            const pull = pulls.find(pr => pr.state === 'open' &&
+              pr.base.repo.full_name === `${context.repo.owner}/${context.repo.repo}` &&
+              pr.head.sha === run.head_sha && pr.labels.some(label => label.name === 'preview'));
+            if (!pull) throw new Error('No current, open, preview-labeled PR matches this build');
+            core.setOutput('pr', String(pull.number));
+            core.setOutput('sha', pull.head.sha);
+      - uses: actions/download-artifact@v8
+        with:
+          name: preview-packages
+          path: ${{ runner.temp }}/preview-packages
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Validate package archives
+        id: validate
+        env:
+          PR_NUMBER: ${{ steps.request.outputs.pr }}
+          COMMIT_SHA: ${{ steps.request.outputs.sha }}
+        run: |
+          python3 - <<'PYTHON'
+          import json, os, pathlib, re, tarfile
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'preview-packages'
+          expected = {'@better-t-stack/types', '@better-t-stack/template-generator', 'create-better-t-stack', 'create-bts'}
+          validated = pathlib.Path(os.environ['RUNNER_TEMP']) / 'validated-preview'
+          validated.mkdir()
+          found, versions = set(), set()
+          archives = list(root.iterdir())
+          if len(archives) != 4:
+              raise ValueError('Expected exactly four package archives')
+          for archive in archives:
+              if archive.is_symlink() or not archive.is_file() or archive.suffix != '.tgz':
+                  raise ValueError('Unexpected artifact entry')
+              with tarfile.open(archive, 'r:gz') as tar:
+                  members = tar.getmembers()
+                  if any(not (m.isfile() or m.isdir()) or not m.name.startswith('package/') or '..' in pathlib.PurePosixPath(m.name).parts for m in members):
+                      raise ValueError('Unsafe archive entry')
+                  if sum(m.name == 'package/package.json' for m in members) != 1:
+                      raise ValueError('Expected one package manifest')
+                  manifest = json.load(tar.extractfile('package/package.json'))
+              name, version = manifest.get('name'), manifest.get('version', '')
+              suffix = f"-pr{os.environ['PR_NUMBER']}.{os.environ['COMMIT_SHA'][:7]}"
+              if name not in expected or name in found or not re.fullmatch(r'\d+\.\d+\.\d+' + re.escape(suffix), version):
+                  raise ValueError('Unexpected package identity or preview version')
+              if manifest.get('publishConfig', {}) != {'access': 'public'}:
+                  raise ValueError('Unexpected publish configuration')
+              for dependency, required in manifest.get('dependencies', {}).items():
+                  if dependency in expected and required != version:
+                      raise ValueError('Preview workspace dependency mismatch')
+              found.add(name)
+              versions.add(version)
+              # Use fixed filenames for publishing; no artifact paths enter shell code.
+              archive.rename(validated / (name.rsplit('/', 1)[-1] + '.tgz'))
+          if found != expected or len(versions) != 1:
+              raise ValueError('Incomplete or inconsistent preview packages')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f"version={versions.pop()}\npr={os.environ['PR_NUMBER']}\ntag=pr{os.environ['PR_NUMBER']}\ncommit={os.environ['COMMIT_SHA'][:7]}\n")
+          PYTHON
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Publish validated archives without lifecycle scripts
+        working-directory: ${{ runner.temp }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TAG: ${{ steps.validate.outputs.tag }}
+        run: |
+          for PACKAGE in types template-generator create-better-t-stack create-bts; do
+            npm publish "$RUNNER_TEMP/validated-preview/$PACKAGE.tgz" --ignore-scripts --access public --provenance --tag "$NPM_TAG" --registry https://registry.npmjs.org
+          done
+
+      - name: Find existing preview comment
+        uses: peter-evans/find-comment@v4
+        id: find-comment
+        with:
+          issue-number: ${{ steps.validate.outputs.pr }}
+          comment-author: "github-actions[bot]"
+          body-includes: "PR Preview Release"
+
+      - name: Create or update PR comment
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ steps.validate.outputs.pr }}
+          edit-mode: replace
+          body: |
+            ## PR Preview Release
+
+            A preview version has been published for this PR.
+
+            | Package | Version | NPM Tag |
+            |---------|---------|---------|
+            | `create-better-t-stack` | `${{ steps.validate.outputs.version }}` | `pr${{ steps.validate.outputs.pr }}` |
+            | `create-bts` | `${{ steps.validate.outputs.version }}` | `pr${{ steps.validate.outputs.pr }}` |
+            | `@better-t-stack/types` | `${{ steps.validate.outputs.version }}` | `pr${{ steps.validate.outputs.pr }}` |
+            | `@better-t-stack/template-generator` | `${{ steps.validate.outputs.version }}` | `pr${{ steps.validate.outputs.pr }}` |
+
+            **Commit:** `${{ steps.validate.outputs.commit }}`
+
+            ### Install
+
+            ```bash
+            # Using the PR tag (always gets latest for this PR)
+            bunx create-better-t-stack@pr${{ steps.validate.outputs.pr }}
+            npx create-better-t-stack@pr${{ steps.validate.outputs.pr }}
+
+            # Using exact version
+            bunx create-better-t-stack@${{ steps.validate.outputs.version }}
+            npx create-better-t-stack@${{ steps.validate.outputs.version }}
+
+            # Using the alias
+            bunx create-bts@pr${{ steps.validate.outputs.pr }}
+            npx create-bts@pr${{ steps.validate.outputs.pr }}
+            ```
+
+            ### NPM Links
+            - [create-better-t-stack@${{ steps.validate.outputs.version }}](https://www.npmjs.com/package/create-better-t-stack/v/${{ steps.validate.outputs.version }})
+            - [create-bts@${{ steps.validate.outputs.version }}](https://www.npmjs.com/package/create-bts/v/${{ steps.validate.outputs.version }})
+            - [@better-t-stack/types@${{ steps.validate.outputs.version }}](https://www.npmjs.com/package/@better-t-stack/types/v/${{ steps.validate.outputs.version }})
+            - [@better-t-stack/template-generator@${{ steps.validate.outputs.version }}](https://www.npmjs.com/package/@better-t-stack/template-generator/v/${{ steps.validate.outputs.version }})
+
+            ---
+            *To publish a new preview after more commits, remove and re-add the `preview` label.*

@@ -64,6 +64,61 @@ const baseConfig = {
 } satisfies Partial<CreateInput>;
 
 const buildSamples: BuildSample[] = [
+  ...(["astro"] as const).map(
+    (frontend) =>
+      ({
+        name: `${frontend}-frontend-only`,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "none",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          auth: "none",
+          payments: "none",
+          addons: ["none"],
+          examples: [],
+        },
+      }) satisfies BuildSample,
+  ),
+  ...(["svelte", "nuxt", "next", "native-bare", "native-uniwind", "native-unistyles"] as const).map(
+    (frontend) =>
+      ({
+        name: `${frontend}-auth-todo-ai`,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          api: frontend === "next" ? "trpc" : "orpc",
+          auth: "better-auth",
+          payments: "none",
+          addons: ["turborepo"],
+          examples: ["todo", "ai"],
+        },
+      }) satisfies BuildSample,
+  ),
+  {
+    name: "react-convex-ai",
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-router"],
+      backend: "convex",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["ai"],
+    },
+  },
+
   {
     name: "hono-trpc-drizzle-todo",
     packageManagers: ["bun", "npm", "pnpm"],
@@ -529,10 +584,21 @@ function expandBuildSample(sample: BuildSample): SelectedBuildSample[] {
 
 function getSelectedBuildSamples() {
   const samples = buildSamples.flatMap(expandBuildSample);
-  if (!sampleFilter) return samples;
-  const selected = samples.filter((sample) => sample.name.includes(sampleFilter));
+  let selected = sampleFilter
+    ? samples.filter((sample) => sample.name.includes(sampleFilter))
+    : samples;
   if (selected.length === 0) {
     throw new Error(`No generated build samples matched BTS_BUILD_SAMPLE_FILTER=${sampleFilter}`);
+  }
+  const shard = process.env.BTS_BUILD_SAMPLE_SHARD;
+  if (shard) {
+    const match = /^(\d+)\/(\d+)$/.exec(shard);
+    const index = Number(match?.[1]);
+    const total = Number(match?.[2]);
+    if (!match || index < 1 || index > total || total > samples.length) {
+      throw new Error(`Invalid BTS_BUILD_SAMPLE_SHARD=${shard}; expected 1/N through N/N`);
+    }
+    selected = selected.filter((_, position) => position % total === index - 1);
   }
   return selected;
 }
@@ -995,6 +1061,20 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
           await bootAndValidateSolidRuntime(sample, projectDir);
           await validateSolidBuildArtifacts(sample, projectDir);
           await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
+          if (sample.config.frontend?.some((frontend) => frontend.startsWith("native-"))) {
+            // Exercise Metro/Babel and platform imports as well as TypeScript.
+            // This exports JS bundles; it does not compile or sign native binaries.
+            for (const platform of ["ios", "android"]) {
+              await runCommand(sample.name, path.join(projectDir, "apps/native"), "bun", [
+                "x",
+                "--no-install",
+                "expo",
+                "export",
+                "--platform",
+                platform,
+              ]);
+            }
+          }
         } finally {
           await fs.remove(projectDir);
         }
