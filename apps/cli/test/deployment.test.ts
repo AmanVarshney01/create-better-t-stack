@@ -951,7 +951,7 @@ describe("Deployment Configurations", () => {
       expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
-        alchemy: "2.0.0-beta.75",
+        alchemy: "2.0.0-beta.76",
         effect: "4.0.0-rc.112",
         "@effect/platform-node": "4.0.0-rc.112",
         "@effect/platform-bun": "4.0.0-rc.112",
@@ -1280,7 +1280,7 @@ describe("Deployment Configurations", () => {
       expect(nuxtConfig).not.toContain("preset: 'cloudflare-module'");
       expect(nuxtPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBeUndefined();
       expect(nuxtPackage.devDependencies?.["@alchemy.run/frontend-frameworks"]).toBe(
-        "2.0.0-beta.75",
+        "2.0.0-beta.76",
       );
       expect(nuxtPackage.devDependencies?.["nitro-cloudflare-dev"]).toBeUndefined();
       expect(nuxtPackage.devDependencies?.wrangler).toBeUndefined();
@@ -1305,7 +1305,7 @@ describe("Deployment Configurations", () => {
       expect(astroConfig).not.toContain("adapter: cloudflare()");
       expect(astroPackage.devDependencies?.["@distilled.cloud/astro"]).toBeUndefined();
       expect(astroPackage.devDependencies?.["@alchemy.run/frontend-frameworks"]).toBe(
-        "2.0.0-beta.75",
+        "2.0.0-beta.76",
       );
       expect(astroPackage.devDependencies?.["@astrojs/cloudflare"]).toBeUndefined();
       expect((astroPackage as { scripts?: Record<string, string> }).scripts?.build).toBeUndefined();
@@ -1992,7 +1992,7 @@ describe("Deployment Configurations", () => {
       const compose = files.get("docker-compose.yml");
 
       expect(webPkg.dependencies["@solidjs/start"]).toBeUndefined();
-      expect(webPkg.dependencies["solid-js"]).toBe("^2.0.0-rc.0");
+      expect(webPkg.dependencies["solid-js"]).toBe("2.0.0-rc.6");
       expect(webPkg.devDependencies.nitro).toBeDefined();
       expect(webPkg.devDependencies["@tanstack/solid-router-devtools"]).toBeUndefined();
       expect(files.get("apps/web/vite.config.ts")).toContain("tsconfigPaths: true");

@@ -526,7 +526,7 @@ describe("Addon Configurations", () => {
       const webViteConfig = await readFile(join(projectDir!, "apps/web/vite.config.ts"), "utf8");
 
       expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.3.0");
-      expect(rootPackageJson.devDependencies.rolldown).toBe("1.2.6");
+      expect(rootPackageJson.devDependencies.rolldown).toBe("1.2.7");
       expect(rootPackageJson.overrides).toMatchObject({
         vite: "npm:@voidzero-dev/vite-plus-core@0.3.0",
       });
@@ -1113,7 +1113,7 @@ describe("Addon Configurations", () => {
         expect(serverIndex).toContain(
           'drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain()',
         );
-        expect(serverPackageJson).toContain('"evlog": "^2.27.1"');
+        expect(serverPackageJson).toContain('"evlog": "^2.28.1"');
         const gitignore = await readFile(join(projectDir, ".gitignore"), "utf-8");
         expect(gitignore).toContain(".evlog/");
       });
@@ -1227,9 +1227,9 @@ describe("Addon Configurations", () => {
         }
 
         const webPackageJson = await readFile(join(projectDir, "apps/web/package.json"), "utf-8");
-        expect(webPackageJson).toContain('"evlog": "^2.27.1"');
+        expect(webPackageJson).toContain('"evlog": "^2.28.1"');
         if (webCase.frontend === "tanstack-start") {
-          expect(webPackageJson).toContain('"nitro": "^3.0.260610-beta"');
+          expect(webPackageJson).toContain('"nitro": "3.0.260903-beta"');
         }
         const gitignore = await readFile(join(projectDir, ".gitignore"), "utf-8");
         expect(gitignore).toContain(".evlog/");
@@ -1272,7 +1272,7 @@ describe("Addon Configurations", () => {
       expect(infra).toContain('Cloudflare.Website.Nuxt("web", {');
       expect(webPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBeUndefined();
       expect(webPackage.devDependencies?.["@alchemy.run/frontend-frameworks"]).toBe(
-        "2.0.0-beta.75",
+        "2.0.0-beta.76",
       );
       expect(webPackage.devDependencies?.["nitro-cloudflare-dev"]).toBeUndefined();
       expect(webPackage.devDependencies?.wrangler).toBeUndefined();
@@ -1818,7 +1818,7 @@ describe("Addon Configurations", () => {
       expect(serverIndex).toContain(
         'app.use(evlog({ drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain() }));',
       );
-      expect(serverPackageJson).toContain('"evlog": "^2.27.1"');
+      expect(serverPackageJson).toContain('"evlog": "^2.28.1"');
     });
 
     it("should reject evlog when added later to a Convex project", async () => {

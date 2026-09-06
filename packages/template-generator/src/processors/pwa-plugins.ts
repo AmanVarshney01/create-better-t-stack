@@ -1,5 +1,12 @@
 import type { ProjectConfig } from "@better-t-stack/types";
-import { IndentationText, Node, Project, QuoteKind } from "ts-morph";
+import {
+  IndentationText,
+  Node,
+  Project,
+  QuoteKind,
+  SyntaxKind,
+  type ObjectLiteralExpression,
+} from "ts-morph";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
@@ -49,8 +56,8 @@ export function processPwaPlugins(vfs: VirtualFileSystem, config: ProjectConfig)
     configObject = defineConfigCall.addArgument("{}");
   }
 
-  if (Node.isObjectLiteralExpression(configObject)) {
-    const pluginsProperty = configObject.getProperty("plugins");
+  for (const object of getConfigObjects(configObject)) {
+    const pluginsProperty = object.getProperty("plugins");
 
     const pwaConfig = `VitePWA({
   registerType: "autoUpdate",
@@ -73,7 +80,7 @@ export function processPwaPlugins(vfs: VirtualFileSystem, config: ProjectConfig)
         }
       }
     } else {
-      configObject.addPropertyAssignment({
+      object.addPropertyAssignment({
         name: "plugins",
         initializer: `[${pwaConfig}]`,
       });
@@ -81,4 +88,31 @@ export function processPwaPlugins(vfs: VirtualFileSystem, config: ProjectConfig)
   }
 
   vfs.writeFile(viteConfigPath, sourceFile.getFullText());
+}
+
+// Vite accepts both an object and a callback returning an object. Only inspect
+// returns belonging to the config callback, not nested plugin/helper functions.
+function getConfigObjects(node: Node): ObjectLiteralExpression[] {
+  if (Node.isParenthesizedExpression(node)) return getConfigObjects(node.getExpression());
+  if (Node.isObjectLiteralExpression(node)) return [node];
+  if (Node.isArrowFunction(node) || Node.isFunctionExpression(node)) {
+    const body = node.getBody();
+    if (!Node.isBlock(body)) return getConfigObjects(body);
+    return body
+      .getDescendantsOfKind(SyntaxKind.ReturnStatement)
+      .filter(
+        (statement) =>
+          statement.getFirstAncestor(
+            (ancestor) =>
+              Node.isArrowFunction(ancestor) ||
+              Node.isFunctionExpression(ancestor) ||
+              Node.isFunctionDeclaration(ancestor),
+          ) === node,
+      )
+      .flatMap((statement) => {
+        const expression = statement.getExpression();
+        return expression ? getConfigObjects(expression) : [];
+      });
+  }
+  return [];
 }

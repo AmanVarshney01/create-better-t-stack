@@ -202,7 +202,7 @@ describe("Alchemy providers", () => {
     expect(files.has("packages/db/prisma/migrations/0000_init/migration.sql")).toBe(true);
     expect(infraPackage.scripts?.["check-types"]).toBe("tsc --noEmit");
     expect(infraPackage.devDependencies).toMatchObject({
-      alchemy: "2.0.0-beta.75",
+      alchemy: "2.0.0-beta.76",
       effect: "4.0.0-rc.112",
       "@effect/platform-node": "4.0.0-rc.112",
       "@effect/platform-bun": "4.0.0-rc.112",
@@ -336,7 +336,7 @@ describe("Alchemy providers", () => {
     expect(webPackage.devDependencies?.unwasm).toBe("^0.6.0");
     expect(dbSource).toContain('from "@prisma/adapter-ppg"');
     expect(dbSource).toContain("new PrismaPostgresAdapter");
-    expect(dbPackage.dependencies?.["@prisma/adapter-ppg"]).toBe("^7.9.1");
+    expect(dbPackage.dependencies?.["@prisma/adapter-ppg"]).toBe("^7.10.0");
     expect(dbPackage.dependencies?.["@prisma/adapter-pg"]).toBeUndefined();
     expect(dbPackage.dependencies?.pg).toBeUndefined();
     expect(files.get("packages/db/prisma/schema/schema.prisma")).toContain(
@@ -504,7 +504,7 @@ describe("Alchemy providers", () => {
     );
     expect(reactRouterPackage.scripts?.["build:prisma"]).toBeUndefined();
     expect(reactRouterPackage.dependencies).toMatchObject({
-      "@react-router/express": "^8.3.0",
+      "@react-router/express": "^8.3.1",
       express: "^5.2.1",
     });
 

@@ -62,7 +62,7 @@
     "access": "public"
   },
   "dependencies": {
-    "create-better-t-stack": "^3.42.1"
+    "create-better-t-stack": "^3.42.2"
   },
   "engines": {
     "node": ">=22.0.0"

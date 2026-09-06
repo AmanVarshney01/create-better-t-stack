@@ -148,7 +148,7 @@ export default {
   "type": "module",
   "scripts": {},
   "devDependencies": {
-    "@types/bun": "^1.4.0",
+    "@types/bun": "^1.4.1",
     "concurrently": "^10.0.5",
     "electrobun": "^2.0.1",
     "typescript": "^6.0.3"
@@ -278,7 +278,7 @@ export default function manifest(): MetadataRoute.Manifest {
 		short_name: "{{projectName}}",
 		description:
 			"my pwa app",
-		start_url: "/new",
+    start_url: "/",
 		display: "standalone",
 		background_color: "#ffffff",
 		theme_color: "#000000",
@@ -14396,7 +14396,7 @@ export default defineSchema({
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/node": "^26.2.0"
+    "@types/node": "^26.4.1"
   },
   "dependencies": {}
 }
@@ -26021,14 +26021,14 @@ declare module "cloudflare:workers" {
 
 minimumReleaseAgeExclude:
   - "@solidjs/meta@1.0.0-next.2"
-  - "@solidjs/router@2.0.0-next.16"
-  - "@solidjs/signals@2.0.0-rc.0"
-  - "@solidjs/vite-plugin@3.0.0-next.28"
-  - "@solidjs/web@2.0.0-rc.0"
-  - "@tanstack/solid-query-devtools@6.0.0-rc.0"
-  - "@tanstack/solid-query@6.0.0-rc.0"
-  - "babel-preset-solid@2.0.0-rc.0"
-  - "solid-js@2.0.0-rc.0"
+  - "@solidjs/router@2.0.0-next.21"
+  - "@solidjs/signals@2.0.0-rc.6"
+  - "@solidjs/vite-plugin@3.0.0-next.39"
+  - "@solidjs/web@2.0.0-rc.6"
+  - "@tanstack/solid-query-devtools@6.0.0-rc.3"
+  - "@tanstack/solid-query@6.0.0-rc.3"
+  - "babel-preset-solid@2.0.0-rc.6"
+  - "solid-js@2.0.0-rc.6"
 {{/if}}
 {{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "prisma") (eq serverDeploy "prisma") (eq webDeploy "docker") (eq serverDeploy "docker") (eq webDeploy "vercel") (eq serverDeploy "vercel") (eq orm "prisma") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "next") (includes frontend "nuxt"))}}
 
@@ -26145,7 +26145,7 @@ export default defineConfig({
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.1.5"
+    "astro": "^7.3.1"
   },
   "devDependencies": {
 		"@astrojs/check": "^0.9.10",
@@ -27526,28 +27526,28 @@ module.exports = config;
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@expo/ui": "~57.0.12",
-    "@expo/vector-icons": "^15.1.1",
-    "@tanstack/react-query": "^5.101.4",
+    "@expo/ui": "~57.0.16",
+    "@expo/vector-icons": "^15.0.2",
+    "@tanstack/react-query": "^5.102.8",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
-    "@ungap/structured-clone": "^1.3.3",
+    "@ungap/structured-clone": "^1.4.0",
     {{/if}}
-    "expo": "~57.0.15",
-    "expo-constants": "~57.0.13",
-    "expo-crypto": "~57.0.1",
-    "expo-font": "~57.0.1",
-    "expo-linking": "~57.0.7",
+    "expo": "~57.0.20",
+    "expo-constants": "~57.0.17",
+    "expo-crypto": "~57.0.2",
+    "expo-font": "~57.0.3",
+    "expo-linking": "~57.0.9",
     "expo-network": "~57.0.1",
-    "expo-router": "~57.0.15",
-    "expo-secure-store": "~57.0.1",
-    "expo-splash-screen": "~57.0.7",
+    "expo-router": "~57.0.19",
+    "expo-secure-store": "~57.0.3",
+    "expo-splash-screen": "~57.0.8",
     "expo-status-bar": "~57.0.1",
-    "expo-system-ui": "~57.0.2",
+    "expo-system-ui": "~57.0.3",
     "expo-web-browser": "~57.0.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.86.2",
+    "react-native": "0.86.3",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
@@ -28870,30 +28870,30 @@ module.exports = config;
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@expo/vector-icons": "^15.1.1",
+    "@expo/vector-icons": "^15.0.2",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
-    "@ungap/structured-clone": "^1.3.3",
+    "@ungap/structured-clone": "^1.4.0",
     {{/if}}
-    "babel-preset-expo": "~57.0.7",
-    "expo": "~57.0.15",
-    "expo-constants": "~57.0.13",
-    "expo-crypto": "~57.0.1",
-    "expo-dev-client": "~57.0.14",
-    "expo-font": "~57.0.1",
-    "expo-linking": "~57.0.7",
+    "babel-preset-expo": "~57.0.10",
+    "expo": "~57.0.20",
+    "expo-constants": "~57.0.17",
+    "expo-crypto": "~57.0.2",
+    "expo-dev-client": "~57.0.18",
+    "expo-font": "~57.0.3",
+    "expo-linking": "~57.0.9",
     "expo-network": "~57.0.1",
-    "expo-router": "~57.0.15",
-    "expo-secure-store": "~57.0.1",
-    "expo-splash-screen": "~57.0.7",
+    "expo-router": "~57.0.19",
+    "expo-secure-store": "~57.0.3",
+    "expo-splash-screen": "~57.0.8",
     "expo-status-bar": "~57.0.1",
-    "expo-system-ui": "~57.0.2",
+    "expo-system-ui": "~57.0.3",
     "expo-web-browser": "~57.0.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.86.2",
+    "react-native": "0.86.3",
     "react-native-gesture-handler": "~2.32.0",
-    "react-native-nitro-modules": "0.36.5",
+    "react-native-nitro-modules": "0.37.1",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
@@ -30055,29 +30055,29 @@ module.exports = uniwindConfig;
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~57.0.12",
-    "@expo/vector-icons": "^15.1.1",
+    "@expo/metro-runtime": "~57.0.15",
+    "@expo/vector-icons": "^15.0.2",
     "@gorhom/bottom-sheet": "^5.2.14",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
-    "@ungap/structured-clone": "^1.3.3",
+    "@ungap/structured-clone": "^1.4.0",
     {{/if}}
-    "expo": "~57.0.15",
-    "expo-constants": "~57.0.13",
-    "expo-font": "~57.0.1",
-    "expo-haptics": "~57.0.1",
-    "expo-linking": "~57.0.7",
+    "expo": "~57.0.20",
+    "expo-constants": "~57.0.17",
+    "expo-font": "~57.0.3",
+    "expo-haptics": "~57.0.2",
+    "expo-linking": "~57.0.9",
     "expo-network": "~57.0.1",
-    "expo-router": "~57.0.15",
-    "expo-secure-store": "~57.0.1",
-    "expo-splash-screen": "~57.0.7",
+    "expo-router": "~57.0.19",
+    "expo-secure-store": "~57.0.3",
+    "expo-splash-screen": "~57.0.8",
     "expo-status-bar": "~57.0.1",
-    "expo-system-ui": "~57.0.2",
+    "expo-system-ui": "~57.0.3",
     "expo-web-browser": "~57.0.2",
-    "heroui-native": "^1.0.8",
+    "heroui-native": "^1.0.9",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.86.2",
+    "react-native": "0.86.3",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-keyboard-controller": "1.21.9",
     "react-native-reanimated": "4.5.1",
@@ -30089,10 +30089,10 @@ module.exports = uniwindConfig;
     "tailwind-merge": "^3.6.0",
     "tailwind-variants": "^3.3.1",
     "tailwindcss": "^4.3.3",
-    "uniwind": "^1.11.0"
+    "uniwind": "^1.12.0"
   },
   "devDependencies": {
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.4.1",
     "@types/react": "~19.2.18",
     "typescript": "~6.0.3"
   }
@@ -30411,15 +30411,15 @@ export default defineNuxtConfig({
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@nuxt/ui": "^4.10.0",
-    "nuxt": "^4.5.1",
-    "vue": "^3.5.40",
-    "vue-router": "^5.2.0"
+    "@nuxt/ui": "^4.11.0",
+    "nuxt": "^4.5.2",
+    "vue": "^3.5.42",
+    "vue-router": "^5.3.1"
   },
   "devDependencies": {
     "tailwindcss": "^4.3.3",
-    "@iconify-json/lucide": "^1.2.120",
-    "vue-tsc": "^3.3.8"
+    "@iconify-json/lucide": "^1.2.129",
+    "vue-tsc": "^3.3.11"
   }
 }
 `],
@@ -30507,19 +30507,19 @@ initOpenNextCloudflareForDev();
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
     "@swc/helpers": "^0.5.23",
-    "lucide-react": "^1.27.0",
-    "next": "^16.3.0",
+    "lucide-react": "^1.41.0",
+    "next": "^16.3.4",
     "next-themes": "^0.4.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "sonner": "^2.0.7",
+    "sonner": "^2.0.8",
     "babel-plugin-react-compiler": "^1.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^26.2.0",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
+    "@types/node": "^26.4.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
     "tailwindcss": "^4.3.3"
   }
 }
@@ -30909,25 +30909,25 @@ export function ThemeProvider({
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@react-router/fs-routes": "^8.3.0",
-    "@react-router/node": "^8.3.0",
-    "@react-router/serve": "^8.3.0",
-    "isbot": "^5.2.1",
-    "lucide-react": "^1.27.0",
+    "@react-router/fs-routes": "^8.3.1",
+    "@react-router/node": "^8.3.1",
+    "@react-router/serve": "^8.3.1",
+    "isbot": "^5.2.2",
+    "lucide-react": "^1.41.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router": "^8.3.0",
-    "sonner": "^2.0.7"
+    "react-router": "^8.3.1",
+    "sonner": "^2.0.8"
   },
   "devDependencies": {
-    "@react-router/dev": "^8.3.0",
+    "@react-router/dev": "^8.3.1",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/node": "^26.2.0",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
+    "@types/node": "^26.4.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.1.5"
+    "vite": "^8.2.2"
   }
 }
 `],
@@ -31483,23 +31483,23 @@ export default defineConfig({
 	"dependencies": {
         "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
 		"@tailwindcss/vite": "^4.3.3",
-		"@tanstack/react-router": "^1.170.18",
-		"lucide-react": "^1.27.0",
+		"@tanstack/react-router": "^1.170.32",
+		"lucide-react": "^1.41.0",
         "next-themes": "^0.4.6",
 		"react": "^19.2.8",
 		"react-dom": "^19.2.8",
-        "sonner": "^2.0.7"
+        "sonner": "^2.0.8"
 	},
 	"devDependencies": {
-		"@tanstack/react-router-devtools": "^1.167.0",
-		"@tanstack/router-plugin": "^1.168.23",
-		"@types/node": "^26.2.0",
-		"@types/react": "^19.2.17",
-		"@types/react-dom": "^19.2.3",
-		"@vitejs/plugin-react": "^6.0.4",
-		"postcss": "^8.5.24",
+		"@tanstack/react-router-devtools": "^1.167.1",
+		"@tanstack/router-plugin": "^1.168.35",
+		"@types/node": "^26.4.1",
+		"@types/react": "^19.2.18",
+		"@types/react-dom": "^19.2.7",
+		"@vitejs/plugin-react": "^6.1.1",
+		"postcss": "^8.5.28",
 		"tailwindcss": "^4.3.3",
-		"vite": "^8.1.5"
+		"vite": "^8.2.2"
 	}
 }
 `],
@@ -31926,26 +31926,26 @@ export default defineConfig({
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
     "@tailwindcss/vite": "^4.3.3",
-    "@tanstack/react-query": "^5.101.4",
-    "@tanstack/react-router": "^1.170.18",
-    "@tanstack/react-start": "^1.168.32",
-    "lucide-react": "^1.27.0",
+    "@tanstack/react-query": "^5.102.8",
+    "@tanstack/react-router": "^1.170.32",
+    "@tanstack/react-start": "^1.168.49",
+    "lucide-react": "^1.41.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "sonner": "^2.0.7",
+    "sonner": "^2.0.8",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@tanstack/react-router-devtools": "^1.167.0",
+    "@tanstack/react-router-devtools": "^1.167.1",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/react": "^16.3.2",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.4",
-    "jsdom": "^30.0.0",
-    "vite": "^8.1.5",
-    "web-vitals": "^6.0.1"
+    "@testing-library/react": "^16.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^30.0.1",
+    "vite": "^8.2.2",
+    "web-vitals": "^6.2.1"
   }
 }
 `],
@@ -32753,18 +32753,18 @@ dist
     "preview": "vite preview"
   },
   "dependencies": {
-    "@solidjs/meta": "^1.0.0-next.2",
-    "@solidjs/router": "^2.0.0-next.16",
-    "@solidjs/web": "^2.0.0-rc.0",
-    "solid-js": "^2.0.0-rc.0"
+    "@solidjs/meta": "1.0.0-next.2",
+    "@solidjs/router": "2.0.0-next.21",
+    "@solidjs/web": "2.0.0-rc.6",
+    "solid-js": "2.0.0-rc.6"
   },
   "devDependencies": {
-    "@solidjs/vite-plugin": "^3.0.0-next.28",
+    "@solidjs/vite-plugin": "3.0.0-next.39",
     "@tailwindcss/vite": "^4.3.3",
-    "filesystem-routing": "0.2.1",
+    "filesystem-routing": "0.3.0",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.1.5"{{#unless (eq webDeploy "cloudflare")}},
-    "nitro": "^3.0.260610-beta"{{/unless}}
+    "vite": "^8.2.2"{{#unless (eq webDeploy "cloudflare")}},
+    "nitro": "3.0.260903-beta"{{/unless}}
   },
   "engines": {
     "node": ">=24"
@@ -33117,13 +33117,13 @@ vite.config.ts.timestamp-*
 		{{else}}
 		"@sveltejs/adapter-auto": "^7.0.1",
 		{{/if}}
-		"@sveltejs/kit": "^2.70.1",
-		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"@sveltejs/kit": "^2.70.3",
+		"@sveltejs/vite-plugin-svelte": "^7.3.0",
 		"@tailwindcss/vite": "^4.3.3",
-		"svelte": "^5.56.8",
-		"svelte-check": "^4.7.4",
+		"svelte": "^5.57.0",
+		"svelte-check": "^4.7.6",
 		"tailwindcss": "^4.3.3",
-		"vite": "^8.1.5"
+		"vite": "^8.2.2"
 	},
 	"dependencies": {}
 }
@@ -33940,22 +33940,22 @@ export const env = createEnv({
     "./postcss.config": "./postcss.config.mjs"
   },
   "dependencies": {
-    "@base-ui/react": "^1.6.0",
-    "@shadcn/react": "^0.2.1",
-    "shadcn": "^4.16.0",
+    "@base-ui/react": "^1.8.0",
+    "@shadcn/react": "^0.3.1",
+    "shadcn": "^4.21.0",
     "class-variance-authority": "^0.7.1",
-    "cn": "^0.2.4",
-    "lucide-react": "^1.27.0",
+    "cn": "^0.2.5",
+    "lucide-react": "^1.41.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "sonner": "^2.0.7",
+    "sonner": "^2.0.8",
     "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
     "tailwindcss": "^4.3.3"
   },
   "scripts": {

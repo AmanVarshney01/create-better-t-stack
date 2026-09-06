@@ -18,5 +18,3 @@ if (Platform.OS !== "web") {
 
   setupPolyfills();
 }
-
-export {};

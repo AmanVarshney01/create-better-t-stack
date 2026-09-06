@@ -10,18 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@solidjs/meta": "^1.0.0-next.2",
-    "@solidjs/router": "^2.0.0-next.16",
-    "@solidjs/web": "^2.0.0-rc.0",
-    "solid-js": "^2.0.0-rc.0"
+    "@solidjs/meta": "1.0.0-next.2",
+    "@solidjs/router": "2.0.0-next.21",
+    "@solidjs/web": "2.0.0-rc.6",
+    "solid-js": "2.0.0-rc.6"
   },
   "devDependencies": {
-    "@solidjs/vite-plugin": "^3.0.0-next.28",
+    "@solidjs/vite-plugin": "3.0.0-next.39",
     "@tailwindcss/vite": "^4.3.3",
-    "filesystem-routing": "0.2.1",
+    "filesystem-routing": "0.3.0",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.1.5"{{#unless (eq webDeploy "cloudflare")}},
-    "nitro": "^3.0.260610-beta"{{/unless}}
+    "vite": "^8.2.2"{{#unless (eq webDeploy "cloudflare")}},
+    "nitro": "3.0.260903-beta"{{/unless}}
   },
   "engines": {
     "node": ">=24"

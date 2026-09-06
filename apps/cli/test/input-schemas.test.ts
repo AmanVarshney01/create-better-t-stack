@@ -149,7 +149,15 @@ describe("Input schemas", () => {
 
     expect(schemaName.success).toBe(true);
     expect(getSchemaResult("betterTStackConfigFile")).toMatchObject({
-      type: "object",
+      $schema: "http://json-schema.org/draft-07/schema#",
+      $ref: "#/definitions/https:~1~1r2.better-t-stack.dev~1schema.json",
+      definitions: {
+        "https://r2.better-t-stack.dev/schema.json": {
+          type: "object",
+          additionalProperties: false,
+          properties: { frontend: { type: "array" } },
+        },
+      },
     });
   });
 });

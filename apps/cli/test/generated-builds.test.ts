@@ -686,8 +686,8 @@ async function validateSolidScaffold(sample: SelectedBuildSample, projectDir: st
 
   const webPackageJson = await fs.readJson(path.join(webDir, "package.json"));
   expect(webPackageJson.dependencies?.["@solidjs/start"]).toBeUndefined();
-  expect(webPackageJson.dependencies?.["solid-js"]).toBe("^2.0.0-rc.0");
-  expect(webPackageJson.dependencies?.["@solidjs/web"]).toBe("^2.0.0-rc.0");
+  expect(webPackageJson.dependencies?.["solid-js"]).toBe("2.0.0-rc.6");
+  expect(webPackageJson.dependencies?.["@solidjs/web"]).toBe("2.0.0-rc.6");
   expect(webPackageJson.dependencies?.["@solidjs/router"]).toBeDefined();
   expect(webPackageJson.devDependencies?.["@solidjs/vite-plugin"]).toBeDefined();
   expect(webPackageJson.devDependencies?.["filesystem-routing"]).toBeDefined();
@@ -695,7 +695,7 @@ async function validateSolidScaffold(sample: SelectedBuildSample, projectDir: st
   expect(webPackageJson.scripts?.["check-types"]).toBe("tsc --noEmit");
 
   if (sample.config.api === "orpc") {
-    expect(webPackageJson.dependencies?.["@tanstack/query-core"]).toBe("5.101.0");
+    expect(webPackageJson.dependencies?.["@tanstack/query-core"]).toBe("5.101.4");
   }
 
   const viteConfig = await fs.readFile(path.join(webDir, "vite.config.ts"), "utf8");
@@ -980,20 +980,24 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
         const projectDir = path.join(SMOKE_DIR, "generated-builds", sample.name);
         await fs.remove(projectDir);
 
-        const createResult = await create(projectDir, sample.config);
-        expect(createResult.isOk()).toBe(true);
-        await validateSolidScaffold(sample, projectDir);
+        try {
+          const createResult = await create(projectDir, sample.config);
+          expect(createResult.isOk()).toBe(true);
+          await validateSolidScaffold(sample, projectDir);
 
-        for (const script of ["install", "build"] as const) {
-          const { command, args } = getPackageManagerCommand(sample.packageManager, script);
-          await runCommand(sample.name, projectDir, command, args);
+          for (const script of ["install", "build"] as const) {
+            const { command, args } = getPackageManagerCommand(sample.packageManager, script);
+            await runCommand(sample.name, projectDir, command, args);
+          }
+          await buildAndValidatePrismaWebArtifact(sample, projectDir);
+          await bootAndValidatePrismaWebArtifact(sample, projectDir);
+          await bootAndValidateSolidDevRuntime(sample, projectDir);
+          await bootAndValidateSolidRuntime(sample, projectDir);
+          await validateSolidBuildArtifacts(sample, projectDir);
+          await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
+        } finally {
+          await fs.remove(projectDir);
         }
-        await buildAndValidatePrismaWebArtifact(sample, projectDir);
-        await bootAndValidatePrismaWebArtifact(sample, projectDir);
-        await bootAndValidateSolidDevRuntime(sample, projectDir);
-        await bootAndValidateSolidRuntime(sample, projectDir);
-        await validateSolidBuildArtifacts(sample, projectDir);
-        await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
       },
       sampleTimeoutMs,
     );
