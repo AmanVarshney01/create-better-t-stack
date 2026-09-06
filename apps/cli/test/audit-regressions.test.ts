@@ -104,6 +104,74 @@ describe("Add Path regressions", () => {
 });
 
 describe("PWA template regressions", () => {
+  it("preserves existing Next headers and supports static exports", async () => {
+    const projectDir = await makeProject("next-pwa-headers", {
+      frontend: ["next"],
+      addons: ["pwa"],
+    });
+    const { withPwa } = await import(join(projectDir, "apps/web/pwa.config.ts"));
+    const custom = { source: "/custom", headers: [{ key: "X-Custom", value: "preserved" }] };
+    const original = { headers: async () => [custom], typedRoutes: true };
+    const wrapped = withPwa(original);
+    expect(wrapped.typedRoutes).toBe(true);
+    expect(await wrapped.headers()).toEqual([
+      custom,
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
+    ]);
+    expect(await original.headers()).toEqual([custom]);
+    const staticConfig = { output: "export" };
+    expect(withPwa(staticConfig)).toBe(staticConfig);
+  });
+
+  for (const [frontend, documentPath] of [
+    ["solid", "apps/web/src/Document.tsx"],
+    ["react-router", "apps/web/src/root.tsx"],
+    ["next", "apps/web/src/app/layout.tsx"],
+  ] as const) {
+    it(`registers PWA in an existing ${frontend} document without losing custom content`, async () => {
+      const projectDir = await makeProject(`add-ssr-pwa-${frontend}`, { frontend: [frontend] });
+      const original = await readFile(join(projectDir, documentPath), "utf8");
+      await writeFile(join(projectDir, documentPath), `// custom document\n${original}`);
+      const result = await add({ projectDir, addons: ["pwa"], install: false });
+      expect(result.success).toBe(true);
+      const document = await readFile(join(projectDir, documentPath), "utf8");
+      expect(document).toContain("// custom document");
+      expect(document).toContain(frontend === "next" ? "<PwaRegistration" : 'src="/registerSW.js"');
+      expect(await readFile(join(projectDir, "apps/web/public/offline.html"), "utf8")).toContain(
+        "You are offline",
+      );
+      const vfs = new VirtualFileSystem();
+      vfs.writeFile(documentPath, document);
+      processPwaPlugins(vfs, { ...config, frontend: [frontend], addons: ["pwa"] });
+      expect(
+        vfs
+          .readFile(documentPath)
+          ?.match(frontend === "next" ? /<PwaRegistration/g : /src="\/registerSW.js"/g),
+      ).toHaveLength(1);
+      if (frontend !== "next") {
+        expect(document).toContain('rel="manifest"');
+        const vite = await readFile(join(projectDir, "apps/web/vite.config.ts"), "utf8");
+        expect(vite).toContain("environments.client.build.outDir");
+        expect(vite).toContain('environment.name === "client"');
+        expect(vite).toContain('handler: "NetworkOnly"');
+      } else {
+        expect(await readFile(join(projectDir, "apps/web/next.config.ts"), "utf8")).toContain(
+          "withPwa(nextConfig)",
+        );
+        expect(await readFile(join(projectDir, "apps/web/pwa.config.ts"), "utf8")).toContain(
+          "no-cache, no-store, must-revalidate",
+        );
+      }
+    });
+  }
+
   for (const plugins of [
     "plugins",
     "plugins: plugins",

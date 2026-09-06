@@ -17,6 +17,11 @@ export async function processAddonTemplates(
     if (addon === "turborepo" || addon === "nx" || addon === "vite-plus") continue;
 
     if (addon === "pwa") {
+      if (
+        config.frontend.some((frontend) => ["solid", "react-router", "next"].includes(frontend))
+      ) {
+        processTemplatesFromPrefix(vfs, templates, "addons/pwa/apps/web/ssr", "apps/web", config);
+      }
       if (config.frontend.includes("next")) {
         processTemplatesFromPrefix(vfs, templates, "addons/pwa/apps/web/next", "apps/web", config);
       } else if (

@@ -68,7 +68,14 @@ const ADD_PACKAGE_JSON_PATHS = [
   "packages/ui/package.json",
 ];
 
-const ADD_TEXT_FILE_PATHS = ["apps/web/vite.config.ts", "lefthook.yml"];
+const ADD_TEXT_FILE_PATHS = [
+  "apps/web/vite.config.ts",
+  "apps/web/next.config.ts",
+  "apps/web/src/Document.tsx",
+  "apps/web/src/root.tsx",
+  "apps/web/src/app/layout.tsx",
+  "lefthook.yml",
+];
 
 const HOOK_ADDONS = ["husky", "lefthook"] as const satisfies readonly Addons[];
 const HOOK_LINTER_ADDONS = ["biome", "oxlint", "vite-plus"] as const satisfies readonly Addons[];

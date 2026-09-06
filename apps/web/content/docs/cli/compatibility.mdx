@@ -164,6 +164,12 @@ create-better-t-stack --frontend next native-uniwind
 - Compatible frontends: `tanstack-router`, `react-router`, `next`, `solid`
 - Not compatible with native-only projects
 
+The TanStack Router PWA caches its application shell for offline reloads. Solid,
+React Router, and Next.js register a service worker and show a cached offline page
+when a server-rendered page cannot be reached. Authenticated pages and API responses
+are not cached. Test installation and offline behavior against a production build
+served over HTTPS (or localhost), rather than relying on the development server.
+
 ### Tauri (Desktop Apps)
 
 - Requires web frontend

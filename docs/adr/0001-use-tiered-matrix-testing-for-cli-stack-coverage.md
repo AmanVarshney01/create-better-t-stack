@@ -18,4 +18,4 @@ We will expose two test entrypoints: `bun test` for the fast default suite and `
 - Invalid matrix cases assert the rejecting rule or category; exact user-facing error messages are covered by focused validation tests.
 - Matrix implementation should use reusable case-generation and oracle utilities with small test entrypoints, not one mega test file.
 
-PR CI also runs Matrix Smoke and a representative subset of the Curated Build Set in separate jobs, alongside source type checks and website/shared-package tests. These checks supplement the Default Suite without making the Exhaustive Matrix a default requirement.
+PR CI also runs Matrix Smoke and the full Curated Build Set, sharded in separate jobs, alongside source type checks and website/shared-package tests. These checks supplement the Default Suite without making the Exhaustive Matrix a default requirement.

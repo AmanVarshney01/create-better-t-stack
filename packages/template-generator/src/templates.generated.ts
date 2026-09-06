@@ -270,6 +270,66 @@ pre-commit:
 `],
   ["addons/pwa/apps/web/next/public/favicon/web-app-manifest-192x192.png", `[Binary file]`],
   ["addons/pwa/apps/web/next/public/favicon/web-app-manifest-512x512.png", `[Binary file]`],
+  ["addons/pwa/apps/web/next/public/sw.js", `// Bump this version when changing offline.html so installed apps refresh it.
+const CACHE_NAME = "bts-pwa-offline-v1";
+const OFFLINE_URL = "/offline.html";
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(async (cache) => {
+      await cache.add(new Request(OFFLINE_URL, { cache: "reload" }));
+      await self.skipWaiting();
+    }),
+  );
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then(async (keys) => {
+      await Promise.all(
+        keys
+          .filter((key) => key.startsWith("bts-pwa-offline-") && key !== CACHE_NAME)
+          .map((key) => caches.delete(key)),
+      );
+      await self.clients.claim();
+    }),
+  );
+});
+
+// Never cache authenticated HTML or API responses. Server-rendered pages need
+// a connection; a precached page keeps offline navigation understandable.
+self.addEventListener("fetch", (event) => {
+  if (event.request.mode !== "navigate" || event.request.method !== "GET") return;
+  event.respondWith(
+    fetch(event.request).catch(async () => {
+      return (await caches.match(OFFLINE_URL)) ?? Response.error();
+    }),
+  );
+});
+`],
+  ["addons/pwa/apps/web/next/pwa.config.ts", `import type { NextConfig } from "next";
+
+export function withPwa(config: NextConfig): NextConfig {
+  // Static exports need these headers configured at the hosting layer.
+  if (config.output === "export") return config;
+  return {
+    ...config,
+    async headers() {
+      return [
+        ...((await config.headers?.()) ?? []),
+        {
+          source: "/sw.js",
+          headers: [
+            { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+            { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+            { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+          ],
+        },
+      ];
+    },
+  };
+}
+`],
   ["addons/pwa/apps/web/next/src/app/manifest.ts.hbs", `import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -296,6 +356,52 @@ export default function manifest(): MetadataRoute.Manifest {
 		],
 	};
 }
+`],
+  ["addons/pwa/apps/web/next/src/components/pwa-registration.tsx", `"use client";
+
+import { useEffect } from "react";
+
+export default function PwaRegistration() {
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker
+      .register("/sw.js", { scope: "/", updateViaCache: "none" })
+      .catch((error) => console.error("Service worker registration failed:", error));
+  }, []);
+
+  return null;
+}
+`],
+  ["addons/pwa/apps/web/ssr/public/offline.html", `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>You are offline</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        min-height: 90vh;
+        display: grid;
+        place-content: center;
+        padding: 1.5rem;
+      }
+      a {
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>You are offline</h1>
+      <p>Reconnect to the internet to load this page.</p>
+      <a href="/">Try again</a>
+    </main>
+  </body>
+</html>
 `],
   ["addons/pwa/apps/web/vite/public/logo.png", `[Binary file]`],
   ["addons/pwa/apps/web/vite/pwa-assets.config.ts.hbs", `import {
@@ -35890,4 +35996,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 522;
+export const TEMPLATE_COUNT = 526;

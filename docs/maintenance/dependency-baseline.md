@@ -22,10 +22,22 @@ Upstream references: [TypeScript 7 package metadata](https://registry.npmjs.org/
 
 ## Verification tiers
 
-The Default Suite includes focused regressions for adding addons through relative and renamed directories, desktop scripts without a task runner, and PWA registration and launch URLs. PR CI additionally runs source type checks, website/shared-package tests, Matrix Smoke, and representative Curated Build Set jobs. The complete local command remains `bun run test:complete`; the Exhaustive Matrix remains opt-in.
+The Default Suite includes focused regressions for adding addons through relative and renamed directories, desktop scripts without a task runner, and PWA registration and launch URLs. PR CI additionally runs source type checks, website/shared-package tests, Matrix Smoke, and every case in the Curated Build Set across eight shards. The set now includes 42 generated projects covering all 11 frontend choices, AI examples, and all four supported PWA frontends. Native samples export iOS and Android JavaScript bundles in addition to type checks; they are not device or native-binary tests. The complete local command remains `bun run test:complete`; the Exhaustive Matrix remains opt-in.
 
 Generated build samples clean up each project after its assertions, including failed samples, to avoid retaining all installed workspaces until suite teardown. On machines with limited free disk space, run sample groups separately with `BTS_BUILD_SAMPLE_FILTER` and an isolated package-manager cache.
 
 The website preview refresh regression was checked by loading a preview, intercepting the next request with HTTP 500, changing the Project Configuration, then allowing a successful refresh. The error replaces the obsolete preview; a later success restores the new project's file tree.
 
 ![A failed preview refresh displays its error](images/preview-refresh-error.png)
+
+## PWA integration
+
+PWA registration is verified in production builds. Vite PWA uses its generated registration script and Workbox precaching. Solid and React Router scope that plugin to Vite's client environment and resolve its actual output directory. This ensures the service worker is complete before Nitro records asset sizes. Public offline pages are explicitly included in the precache, and generated icons are included in build asset patterns.
+
+Next uses a client component to register a public service worker with `updateViaCache: "none"`, its built-in manifest route, and service-worker response headers that disable HTTP caching and restrict script origins. The `withPwa` configuration helper preserves existing header rules. Static exports must configure these headers at the hosting layer.
+
+TanStack Router caches its SPA shell. The SSR frontends use network navigation with a precached offline page; authenticated HTML and API responses are not runtime-cached. Full offline data editing and synchronization remain application-specific.
+
+References: [Next.js PWA guide](https://nextjs.org/docs/app/guides/progressive-web-apps), [Vite PWA registration](https://vite-pwa-org.netlify.app/guide/register-service-worker), [Vite PWA asset inclusion](https://vite-pwa-org.netlify.app/guide/static-assets), [Vite environment plugins](https://vite.dev/guide/api-environment-plugins), [Workbox runtime caching and precache fallback](https://developer.chrome.com/docs/workbox/modules/workbox-build#type-RuntimeCaching).
+
+PR preview builds run under `pull_request` with read-only permissions and no persisted checkout credentials. Publishing runs separately from a trusted `workflow_run` definition: it checks the current PR/commit/label and archive identities, then publishes only the four expected packages with lifecycle scripts disabled. No PR code executes in the publishing job. The archive validator was checked with valid packages and nine invalid artifact scenarios; a live publication requires the workflow to be merged to the default branch.

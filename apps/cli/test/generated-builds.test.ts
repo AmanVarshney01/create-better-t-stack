@@ -64,6 +64,25 @@ const baseConfig = {
 } satisfies Partial<CreateInput>;
 
 const buildSamples: BuildSample[] = [
+  ...(["tanstack-router", "react-router", "next"] as const).map(
+    (frontend) =>
+      ({
+        name: `${frontend}-pwa`,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "none",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          auth: "none",
+          payments: "none",
+          addons: ["pwa"],
+          examples: [],
+        },
+      }) satisfies BuildSample,
+  ),
   ...(["astro"] as const).map(
     (frontend) =>
       ({
@@ -838,6 +857,83 @@ async function validateSolidBuildArtifacts(sample: SelectedBuildSample, projectD
   expect(await fs.pathExists(path.join(projectDir, serverEntry))).toBe(true);
 }
 
+async function validatePwaBuildArtifacts(sample: SelectedBuildSample, projectDir: string) {
+  if (!sample.config.addons?.includes("pwa")) return;
+  const frontend = sample.config.frontend ?? [];
+  const publicDir = path.join(
+    projectDir,
+    "apps/web",
+    frontend.includes("solid")
+      ? ".output/public"
+      : frontend.includes("react-router")
+        ? "build/client"
+        : frontend.includes("next")
+          ? "public"
+          : "dist",
+  );
+  expect(await fs.pathExists(path.join(publicDir, "sw.js"))).toBe(true);
+  if (frontend.includes("next")) {
+    expect(await fs.pathExists(path.join(publicDir, "offline.html"))).toBe(true);
+    const port = await getAvailablePort();
+    const runtime = execa(
+      "bun",
+      ["run", "start", "--hostname", "127.0.0.1", "--port", String(port)],
+      {
+        cwd: path.join(projectDir, "apps/web"),
+        all: true,
+        reject: false,
+      },
+    );
+    try {
+      const response = await fetchWhenReady(`http://127.0.0.1:${port}/sw.js`);
+      expect(response?.status).toBe(200);
+      expect(response?.headers.get("content-type")).toBe("application/javascript; charset=utf-8");
+      expect(response?.headers.get("cache-control")).toBe("no-cache, no-store, must-revalidate");
+      expect(response?.headers.get("content-security-policy")).toBe(
+        "default-src 'self'; script-src 'self'",
+      );
+    } finally {
+      runtime.kill("SIGTERM");
+      await runtime;
+    }
+    return;
+  }
+  expect(await fs.pathExists(path.join(publicDir, "registerSW.js"))).toBe(true);
+  const manifest = await fs.readJson(path.join(publicDir, "manifest.webmanifest"));
+  expect(manifest.start_url).toBe("/");
+  expect(manifest.icons.length).toBeGreaterThan(0);
+  for (const icon of manifest.icons) {
+    expect(await fs.pathExists(path.join(publicDir, icon.src))).toBe(true);
+  }
+  if (frontend.includes("solid")) {
+    const port = await getAvailablePort();
+    const runtime = execa("node", [".output/server/index.mjs"], {
+      cwd: path.join(projectDir, "apps/web"),
+      all: true,
+      reject: false,
+      env: { ...process.env, HOST: "127.0.0.1", PORT: String(port) },
+    });
+    try {
+      // Nitro records asset sizes during its build. Generating a worker later
+      // can leave stale metadata and truncate the script sent to browsers.
+      for (const asset of [
+        "sw.js",
+        "offline.html",
+        ...manifest.icons.map((icon: { src: string }) => icon.src),
+      ]) {
+        const response = await fetchWhenReady(`http://127.0.0.1:${port}/${asset}`);
+        expect(response?.status).toBe(200);
+        expect(Buffer.from(await response!.arrayBuffer())).toEqual(
+          await fs.readFile(path.join(publicDir, asset)),
+        );
+      }
+    } finally {
+      runtime.kill("SIGTERM");
+      await runtime;
+    }
+  }
+}
+
 async function buildAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
   if (sample.config.webDeploy !== "prisma") return;
 
@@ -877,7 +973,11 @@ async function getAvailablePort(): Promise<number> {
 async function fetchWhenReady(url: string, init?: RequestInit) {
   for (let attempt = 0; attempt < 100; attempt++) {
     try {
-      return await fetch(url, { ...init, signal: AbortSignal.timeout(1000) });
+      const response = await fetch(url, { ...init, signal: AbortSignal.timeout(5000) });
+      // SSR can send headers before compilation/streaming finishes. Consume the
+      // body inside the retry boundary so a timeout does not escape afterwards.
+      const body = await response.arrayBuffer();
+      return new Response(body, { status: response.status, headers: response.headers });
     } catch {
       await Bun.sleep(100);
     }
@@ -1060,6 +1160,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
           await bootAndValidateSolidDevRuntime(sample, projectDir);
           await bootAndValidateSolidRuntime(sample, projectDir);
           await validateSolidBuildArtifacts(sample, projectDir);
+          await validatePwaBuildArtifacts(sample, projectDir);
           await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
           if (sample.config.frontend?.some((frontend) => frontend.startsWith("native-"))) {
             // Exercise Metro/Babel and platform imports as well as TypeScript.
