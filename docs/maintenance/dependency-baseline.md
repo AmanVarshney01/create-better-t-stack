@@ -38,6 +38,19 @@ Next uses a client component to register a public service worker with `updateVia
 
 TanStack Router caches its SPA shell. The SSR frontends use network navigation with a precached offline page; authenticated HTML and API responses are not runtime-cached. Full offline data editing and synchronization remain application-specific.
 
+Production browser verification used a persistent Chromium profile on localhost. All four frontends registered an active service worker, returned no Chrome installability errors, loaded their expected offline content after disabling the network, and recovered after reconnecting:
+
+| Frontend        | Offline reload           | Reconnect |
+| --------------- | ------------------------ | --------- |
+| TanStack Router | Cached application shell | Passed    |
+| React Router    | Offline fallback page    | Passed    |
+| Solid           | Offline fallback page    | Passed    |
+| Next.js         | Offline fallback page    | Passed    |
+
+The Next production server also returned the expected service-worker content type, cache policy, and content security policy. In a disposable project, changing the worker cache version and offline page activated the new worker, removed the previous cache, and served the updated page offline. These checks cover browser behavior, not installation on physical devices or Safari. CI additionally checks generated PWA artifacts and production responses, including byte-for-byte checks that catch truncated Solid service workers.
+
+![The generated SSR PWA fallback after a real offline reload](images/pwa-offline-fallback.png)
+
 References: [Next.js PWA guide](https://nextjs.org/docs/app/guides/progressive-web-apps), [Vite PWA registration](https://vite-pwa-org.netlify.app/guide/register-service-worker), [Vite PWA asset inclusion](https://vite-pwa-org.netlify.app/guide/static-assets), [Vite environment plugins](https://vite.dev/guide/api-environment-plugins), [Workbox runtime caching and precache fallback](https://developer.chrome.com/docs/workbox/modules/workbox-build#type-RuntimeCaching).
 
 PR preview builds run under `pull_request` with read-only permissions and no persisted checkout credentials. Publishing runs separately from a trusted `workflow_run` definition: it checks the current PR/commit/label and archive identities, then publishes only the four expected packages with lifecycle scripts disabled. No PR code executes in the publishing job. The archive validator was checked with valid packages and nine invalid artifact scenarios; a live publication requires the workflow to be merged to the default branch.
