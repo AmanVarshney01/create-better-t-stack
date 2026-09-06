@@ -14,7 +14,18 @@ The focused `Varlock Migration Experiment` workflow runs this check when the exp
 
 ## Monorepo design
 
-Each application owns `.env.schema` beside its existing env files. `packages/env` retains separate web/server exports for consumers and contains the generated TypeScript accessors; it does not become a central collection of all application secrets. This follows Varlock's [monorepo schema layout](https://varlock.dev/guides/monorepos/#schema-layout).
+Each application owns `.env.schema` beside its existing env files and generates its own `src/env.ts`. The experiment removes `packages/env` and its workspace dependencies. This follows Varlock's [monorepo schema layout](https://varlock.dev/guides/monorepos/#schema-layout).
+
+```text
+apps/web/.env.schema
+apps/web/src/env.ts       # generated, web schema only
+apps/server/.env.schema
+apps/server/src/env.ts    # generated, server schema only
+```
+
+The generated filename is our convention, not a Varlock default. `exposeEnv=global` is Varlock's default type-generation mode; the monorepo guide recommends `exposeEnv=local` when applications have separate schemas. We configure `@generateTsTypes(path=./src/env.ts, exposeEnv=local)` in each application.
+
+For the full migration, reusable database, auth, payments, and API packages should accept their required configuration or initialized clients from the application. They should not import app source, read a global app env object, or initialize Varlock themselves. Application bootstrap owns initialization and resource lifetime, including request-scoped Worker bindings. Narrow typed configuration keeps these packages independent of Varlock and makes their dependencies explicit. Removing `packages/env` therefore includes refactoring those package APIs; retaining old imports is not a reason to keep the package. This experiment has no database/auth/payments selection, so those refactors remain unverified.
 
 App schemas use `@generateTsTypes(..., exposeEnv=local)`. Global module augmentation would combine keys from different schemas in one TypeScript program. The smoke check asserts that web types cannot access the server secret or an unrelated root secret. See [typed ENV across packages](https://varlock.dev/guides/monorepos/#typed-env-across-packages).
 
@@ -26,7 +37,7 @@ Turbo's strict mode requires ambient variables to be declared in `globalEnv` or 
 
 ## Loading without script wrappers
 
-- The server's env entry imports `varlock/auto-load` before exporting its typed accessor.
+- The server entry imports `varlock/auto-load` before using the app-local generated accessor.
 - Vite uses `varlockVitePlugin()` to load and validate configuration and supply public values to the frontend.
 - `bunfig.toml` disables Bun's own dotenv loading. Framework integrations own loading and watching; no global Varlock preload is added.
 - Generated `dev`, `build`, `start`, and type-check scripts stay unchanged. The smoke check compares every script before and after migration.
@@ -54,7 +65,7 @@ These comments abbreviate separate decorator and value lines. `varlock load --pa
 
 The automated experiment checks installation, generated type isolation, builds in preview and production environments, Node and Bun loading, the built Hono handler and CORS origin, missing-variable failures, unchanged scripts, removal of direct dotenv/T3 Env dependencies, and absence of synthetic secrets in client artifacts.
 
-A separate local production Chromium check of the same Hono/Vite integration rendered the public server URL through the shared env package. Browser automation is not part of this smoke script.
+A separate local production Chromium check of the Hono/Vite prototype, after removing `packages/env`, rendered the public server URL through the app-local generated accessor. Browser automation is not part of this smoke script.
 
 Before replacing the defaults:
 
@@ -64,6 +75,7 @@ Before replacing the defaults:
 - Preserve Expo's Babel/Metro composition and validate iOS/Android exports.
 - Ensure compiled Bun deployments include the required Varlock CLI and configuration.
 - Migrate database and infrastructure loaders, generated env updates, Add Path behavior, Docker build/runtime separation, and provider-derived defaults.
+- Refactor reusable DB/auth/payments/API packages to accept explicit configuration or app-initialized clients, and remove all remaining shared env imports.
 - Include imported schema/value files in container contexts, or validate Varlock's flattening workflow.
 - Run the applicable Curated Build Set and browser/runtime checks after generator integration.
 

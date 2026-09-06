@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // Opt-in migration experiment. Changes only CLI-generated temporary projects.
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 
@@ -52,6 +52,7 @@ async function run(
 }
 
 function migrate(project: string) {
+  rmSync(join(project, "packages/env"), { recursive: true });
   const scripts = new Map<string, string>();
   for (const path of files(project).filter((path) => path.endsWith("/package.json"))) {
     const manifest: Manifest = JSON.parse(readFileSync(path, "utf8"));
@@ -59,14 +60,12 @@ function migrate(project: string) {
     for (const dependencies of [manifest.dependencies, manifest.devDependencies]) {
       if (!dependencies) continue;
       for (const name of Object.keys(dependencies)) {
-        if (name === "dotenv" || name.startsWith("@t3-oss/env-")) delete dependencies[name];
+        if (name === "dotenv" || name.startsWith("@t3-oss/env-") || name === "@varlock-smoke/env") {
+          delete dependencies[name];
+        }
       }
     }
-    if (
-      ["apps/server/package.json", "apps/web/package.json", "packages/env/package.json"].includes(
-        relative(project, path),
-      )
-    ) {
+    if (["apps/server/package.json", "apps/web/package.json"].includes(relative(project, path))) {
       manifest.dependencies ??= {};
       manifest.dependencies.varlock = "1.18.0";
     }
@@ -103,7 +102,7 @@ ROOT_ONLY_SECRET=
 # @import(../../, pick=[SHARED_LABEL])
 # @defaultRequired=true
 # @defaultSensitive=true
-# @generateTsTypes(path=../../packages/env/src/${app}-env.ts, exposeEnv=local)
+# @generateTsTypes(path=./src/env.ts, exposeEnv=local)
 # ---
 # @public @type=enum(development,preview,production,test)
 APP_ENV=preview
@@ -116,11 +115,14 @@ ${fields}`,
   }
   write("apps/web/.env.preview", "VITE_SERVER_URL=http://localhost:4300\n");
   write("apps/web/.env.production", "VITE_SERVER_URL=http://localhost:4400\n");
-  write(
-    "packages/env/src/server.ts",
-    'import "varlock/auto-load";\nexport { ENV as env } from "./server-env";\n',
+  const serverEntry = join(project, "apps/server/src/index.ts");
+  writeFileSync(
+    serverEntry,
+    readFileSync(serverEntry, "utf8").replace(
+      'import { env } from "@varlock-smoke/env/server";',
+      'import "varlock/auto-load";\nimport { ENV as env } from "./env";',
+    ),
   );
-  write("packages/env/src/web.ts", 'export { ENV as env } from "./web-env";\n');
   const vite = join(project, "apps/web/vite.config.ts");
   writeFileSync(
     vite,
@@ -130,7 +132,7 @@ ${fields}`,
   const route = join(project, "apps/web/src/routes/index.tsx");
   writeFileSync(
     route,
-    'import { env } from "@varlock-smoke/env/web";\n' +
+    'import { ENV as env } from "@/env";\n' +
       readFileSync(route, "utf8").replace(
         "<h2",
         '<p data-testid="server-url">{env.VITE_SERVER_URL}</p><span>{env.SHARED_LABEL}</span><h2',
@@ -138,7 +140,7 @@ ${fields}`,
   );
   write(
     "apps/web/src/env-isolation.ts",
-    `import { env } from "@varlock-smoke/env/web";
+    `import { ENV as env } from "./env";
 const excludesServerSecret: "BTS_SERVER_SECRET" extends keyof typeof env ? never : true = true;
 const excludesRootSecret: "ROOT_ONLY_SECRET" extends keyof typeof env ? never : true = true;
 void excludesServerSecret;
@@ -200,6 +202,7 @@ async function verify(turbo: boolean) {
       scratch,
     );
     const originalScripts = migrate(project);
+    assert(!existsSync(join(project, "packages/env")), "Apps must own their env accessors");
     if (turbo) {
       const path = join(project, "turbo.json");
       const config = JSON.parse(readFileSync(path, "utf8"));
@@ -219,7 +222,7 @@ async function verify(turbo: boolean) {
     await run(["bun", "install"], project);
     for (const app of ["server", "web"]) {
       await run(["bun", "x", "--no-install", "varlock", "codegen"], join(project, "apps", app));
-      const types = readFileSync(join(project, `packages/env/src/${app}-env.ts`), "utf8");
+      const types = readFileSync(join(project, `apps/${app}/src/env.ts`), "utf8");
       assert(!types.includes("declare module"), "Env types must not augment the global module");
       assert(!types.includes("ROOT_ONLY_SECRET"), "pick must exclude unrelated root config");
     }
@@ -241,13 +244,6 @@ async function verify(turbo: boolean) {
       "Root process override must reach the build in strict Turbo mode",
     );
     assert(!bundle().includes(secret), "Synthetic secret leaked into the production bundle");
-    const invalidBuild = await run(
-      ["bun", "run", "build"],
-      project,
-      { BTS_BUILD_SECRET: "" },
-      true,
-    );
-    assert(invalidBuild.includes("BTS_BUILD_SECRET"), "Build must report the missing variable");
     const server = join(project, "apps/server");
     const invalidStartup = await run(
       ["bun", "run", "start"],
@@ -257,7 +253,7 @@ async function verify(turbo: boolean) {
     );
     assert(
       invalidStartup.includes("BTS_SERVER_SECRET"),
-      "Startup must report the missing variable",
+      `Startup must report the missing variable:\n${invalidStartup}`,
     );
     for (const runtime of ["node", "bun"]) {
       const output = await run(
@@ -281,13 +277,26 @@ async function verify(turbo: boolean) {
       server,
     );
     assert(response.includes("server-ready"));
+    // A failed Turbo build can cancel tsdown after it cleans server/dist.
+    // Run this negative case after probing the successful production artifacts.
+    const invalidBuild = await run(
+      ["bun", "run", "build"],
+      project,
+      { BTS_BUILD_SECRET: "" },
+      true,
+    );
+    assert(
+      invalidBuild.includes("BTS_BUILD_SECRET"),
+      `Build must report the missing variable:\n${invalidBuild}`,
+    );
     for (const [path, original] of originalScripts) {
       const manifest: Manifest = JSON.parse(readFileSync(path, "utf8"));
       assert.equal(JSON.stringify(manifest.scripts), original, "App scripts must remain unchanged");
       for (const dependencies of [manifest.dependencies, manifest.devDependencies]) {
         assert(
           !Object.keys(dependencies ?? {}).some(
-            (name) => name === "dotenv" || name.startsWith("@t3-oss/env-"),
+            (name) =>
+              name === "dotenv" || name.startsWith("@t3-oss/env-") || name === "@varlock-smoke/env",
           ),
         );
       }
