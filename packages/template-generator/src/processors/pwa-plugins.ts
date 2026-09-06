@@ -100,7 +100,15 @@ function getConfigObjects(node: Node): ObjectLiteralExpression[] {
     if (!Node.isBlock(body)) return getConfigObjects(body);
     return body
       .getDescendantsOfKind(SyntaxKind.ReturnStatement)
-      .filter((statement) => statement.getFirstAncestor(Node.isFunctionLikeDeclaration) === node)
+      .filter(
+        (statement) =>
+          statement.getFirstAncestor(
+            (ancestor) =>
+              Node.isFunctionLikeDeclaration(ancestor) ||
+              Node.isFunctionExpression(ancestor) ||
+              Node.isArrowFunction(ancestor),
+          ) === node,
+      )
       .flatMap((statement) => {
         const expression = statement.getExpression();
         return expression ? getConfigObjects(expression) : [];
