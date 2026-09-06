@@ -531,9 +531,9 @@ function getElectrobunInstructions(runCmd: string, frontend: Frontend[]) {
 }
 
 function getPwaInstructions() {
-  return `\n${pc.bold("PWA with React Router v7:")}\n${pc.yellow(
+  return `\n${pc.bold("PWA with React Router:")}\n${pc.yellow(
     "NOTE:",
-  )} There is a known compatibility issue between VitePWA\n   and React Router v7. See:\n   https://github.com/vite-pwa/vite-plugin-pwa/issues/809`;
+  )} Verify PWA behavior with a production build on HTTPS or localhost.\n   Offline navigation shows a precached fallback page.\n   Server-rendered pages require a connection.`;
 }
 
 function getStarlightInstructions(runCmd: string) {

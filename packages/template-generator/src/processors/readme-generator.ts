@@ -247,7 +247,7 @@ ${generateRunningInstructions(frontend, backend, webPort, hasNative, isConvex)}
 ${generateReactUiSection(hasReactWeb, projectName)}
 ${
   addons.includes("pwa") && hasReactRouter
-    ? "\n## PWA Support with React Router v7\n\nThere is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809\n"
+    ? "\n## PWA Support with React Router\n\nVerify PWA behavior with a production build on HTTPS or localhost. Offline navigation shows a precached fallback page; server-rendered pages require a connection. Authenticated HTML and API responses are not runtime-cached.\n"
     : ""
 }
 ${generateDeploymentCommands(
