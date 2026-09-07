@@ -1,6 +1,9 @@
+import { stripVTControlCharacters } from "node:util";
+
 import { log } from "@clack/prompts";
 import { consola, createConsola } from "consola";
 import pc from "picocolors";
+import stringWidth from "string-width";
 
 import { isSilent } from "./context";
 import { S_BAR, S_STEP_CANCEL, S_STEP_SUBMIT, SPINNER_FRAMES } from "./glyphs";
@@ -21,25 +24,32 @@ const noopSpinner: SpinnerLike = {
 const FRAME_MS = 80;
 const HIDE_CURSOR = "\x1b[?25l";
 const SHOW_CURSOR = "\x1b[?25h";
-const CLEAR_LINE = "\r\x1b[2K";
+const ERASE_DOWN = "\r\x1b[J";
+const cursorUp = (rows: number) => `\x1b[${rows}A`;
+const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+type SpinnerOutput = Pick<NodeJS.WriteStream, "write"> & {
+  isTTY?: boolean;
+  columns?: number;
+};
 
 let cursorHidden = false;
 let restoreCursorOnExit = false;
-function hideCursor(): void {
+function hideCursor(out: SpinnerOutput): void {
   if (cursorHidden) return;
   cursorHidden = true;
-  process.stdout.write(HIDE_CURSOR);
+  out.write(HIDE_CURSOR);
   if (!restoreCursorOnExit) {
     restoreCursorOnExit = true;
     process.once("exit", () => {
-      if (cursorHidden) process.stdout.write(SHOW_CURSOR);
+      if (cursorHidden) out.write(SHOW_CURSOR);
     });
   }
 }
-function showCursor(): void {
+function showCursor(out: SpinnerOutput): void {
   if (!cursorHidden) return;
   cursorHidden = false;
-  process.stdout.write(SHOW_CURSOR);
+  out.write(SHOW_CURSOR);
 }
 
 /**
@@ -47,19 +57,50 @@ function showCursor(): void {
  * keypress handler. This one never touches stdin, so Ctrl-C stays a SIGINT and the
  * interrupt scope decides what happens.
  */
-function createTerminalSpinner(): SpinnerLike {
-  const out = process.stdout;
-  const animate = out.isTTY && !process.env.CI;
+function createTerminalSpinner(out: SpinnerOutput): SpinnerLike {
+  const animate = Boolean(out.isTTY) && !process.env.CI;
   let text = "";
   let active = false;
   let interruptedBefore = false;
   let frame = 0;
   let dots = 0;
+  let renderedRows = 0;
   let timer: ReturnType<typeof setInterval> | undefined;
 
+  /**
+   * Rows a frame occupies once the terminal soft-wraps it. Walk graphemes by cell width so
+   * wide characters (CJK paths, emoji) count as the two columns they take on screen.
+   */
+  const rowsFor = (line: string) => {
+    const columns = out.columns || 80;
+    let rows = 1;
+    let col = 0;
+    for (const { segment } of graphemes.segment(stripVTControlCharacters(line))) {
+      const width = stringWidth(segment);
+      if (col + width > columns) {
+        rows += 1;
+        col = 0;
+      }
+      col += width;
+    }
+    return rows;
+  };
+  /**
+   * `\r` + erase-line only clears the row the cursor is on. A frame wider than the terminal
+   * wraps, leaving the cursor on its last row, so every redraw would push the rows above it
+   * into scrollback (#1215). Climb back to the first row and erase down instead.
+   */
+  const clearFrame = () => {
+    if (renderedRows > 1) out.write(cursorUp(renderedRows - 1));
+    out.write(ERASE_DOWN);
+    renderedRows = 0;
+  };
   const render = () => {
     const suffix = ".".repeat(Math.floor(dots)).slice(0, 3);
-    out.write(`${CLEAR_LINE}${pc.magenta(SPINNER_FRAMES[frame])}  ${text}${suffix}`);
+    const line = `${pc.magenta(SPINNER_FRAMES[frame])}  ${text}${suffix}`;
+    clearFrame();
+    out.write(line);
+    renderedRows = rowsFor(line);
     frame = (frame + 1) % SPINNER_FRAMES.length;
     dots = dots < 4 ? dots + 0.125 : 0;
   };
@@ -75,7 +116,7 @@ function createTerminalSpinner(): SpinnerLike {
       setText(message);
       out.write(`${pc.gray(S_BAR)}\n`);
       if (animate) {
-        hideCursor();
+        hideCursor(out);
         render();
         timer = setInterval(render, FRAME_MS);
       } else {
@@ -88,8 +129,8 @@ function createTerminalSpinner(): SpinnerLike {
       active = false;
       if (timer) clearInterval(timer);
       if (animate) {
-        out.write(CLEAR_LINE);
-        showCursor();
+        clearFrame();
+        showCursor(out);
       }
       const cancelled = wasInterrupted() && !interruptedBefore;
       out.write(
@@ -101,8 +142,9 @@ function createTerminalSpinner(): SpinnerLike {
   };
 }
 
-export function createSpinner(): SpinnerLike {
-  return isSilent() ? noopSpinner : createTerminalSpinner();
+/** `output` defaults to stdout; tests pass a stream with `isTTY`/`columns` set. */
+export function createSpinner(output?: SpinnerOutput): SpinnerLike {
+  return isSilent() ? noopSpinner : createTerminalSpinner(output ?? process.stdout);
 }
 
 const baseConsola = createConsola({
