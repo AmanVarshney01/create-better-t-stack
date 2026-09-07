@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { PassThrough } from "node:stream";
 import { stripVTControlCharacters } from "node:util";
 
@@ -10,6 +10,7 @@ import { createSpinner } from "../src/utils/terminal-output";
 const ESC = String.fromCharCode(27);
 const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
+/** A capturing stream that looks like a terminal of the given width to the spinner. */
 function createOutput(columns: number, isTTY = true) {
   const output = Object.assign(new PassThrough(), { isTTY, columns });
   let rendered = "";
@@ -89,6 +90,7 @@ function replay(bytes: string, columns: number) {
   return { screen, cursorUps };
 }
 
+/** Starts a spinner on `output`, lets a few frames render, then stops it with `done`. */
 async function runSpinner(output: PassThrough, message: string, done: string) {
   const spinner = createSpinner(output);
   spinner.start(message);
@@ -98,6 +100,18 @@ async function runSpinner(output: PassThrough, message: string, done: string) {
 }
 
 describe("terminal spinner", () => {
+  // The spinner falls back to static output when CI is set. Every test below drives the
+  // animated path through the stream it is given, so pin that here and restore it after.
+  let savedCI: string | undefined;
+  beforeAll(() => {
+    savedCI = process.env.CI;
+    delete process.env.CI;
+  });
+  afterAll(() => {
+    if (savedCI === undefined) delete process.env.CI;
+    else process.env.CI = savedCI;
+  });
+
   // 83-86 columns once the frame glyph and animated dots are added.
   const longMessage =
     'Creating Turso database "tanstack-start-hono-turso-alchemyv2" in group "default"...';

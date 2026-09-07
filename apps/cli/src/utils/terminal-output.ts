@@ -35,6 +35,7 @@ type SpinnerOutput = Pick<NodeJS.WriteStream, "write"> & {
 
 let cursorHidden = false;
 let restoreCursorOnExit = false;
+/** Hides the cursor on `out` and makes sure it comes back if the process exits mid-spin. */
 function hideCursor(out: SpinnerOutput): void {
   if (cursorHidden) return;
   cursorHidden = true;
@@ -46,6 +47,7 @@ function hideCursor(out: SpinnerOutput): void {
     });
   }
 }
+/** Restores the cursor hidden by `hideCursor`. */
 function showCursor(out: SpinnerOutput): void {
   if (!cursorHidden) return;
   cursorHidden = false;
