@@ -2718,20 +2718,17 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
-{{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
 
-{{> getServerUrl}}
-{{/unless}}
-
-export const authClient = createAuthClient({
-{{#unless (eq backend "self")}}
-	baseURL: new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(),
-{{/unless}}
+export function createClient(baseURL?: string) {
+  return createAuthClient({
+    baseURL,
 {{#if (eq payments "polar")}}
-	plugins: [polarClient()],
+    plugins: [polarClient()],
 {{/if}}
-});
+  });
+}
+
+export type AuthClient = ReturnType<typeof createClient>;
 `],
   ["auth/better-auth/convex/backend/convex/auth.config.ts.hbs", `import { getAuthConfigProvider } from "@convex-dev/better-auth/auth-config";
 import type { AuthConfig } from "convex/server";
@@ -17074,6 +17071,15 @@ for (const [key, value] of env.entries()) {
 }
 
 console.log("Vercel env sync complete. Redeploy for changes to take effect.");
+`],
+  ["env/auth-client.ts.hbs", `import { createClient, type AuthClient } from "@{{projectName}}/auth/client";
+{{#unless (eq backend "self")}}
+import { env } from "@{{projectName}}/env/web";
+
+{{> getServerUrl}}
+{{/unless}}
+
+export const authClient: AuthClient = createClient({{#unless (eq backend "self")}}new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(){{/unless}});
 `],
   ["env/env.server.ts.hbs", `{{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
 /// <reference types="@cloudflare/workers-types" />
@@ -35356,4 +35362,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 528;
+export const TEMPLATE_COUNT = 529;

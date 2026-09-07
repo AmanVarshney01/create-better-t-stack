@@ -108,16 +108,18 @@ bun db:watch   # docker compose up postgres      (with logs in the foreground)
 Each Dockerfile is a multi-stage build with the monorepo root as build context:
 
 1. A base stage installs the workspace with your package manager (with a mounted dependency cache, so rebuilds are fast).
-2. Images containing a self-hosted server are built with `SKIP_ENV_VALIDATION=1`, so t3-env doesn't require real server secrets at image-build time. Public web variables are passed as build arguments and remain validated. Prisma projects get a placeholder `DATABASE_URL` for `prisma generate`; the real value arrives at runtime from compose.
-3. A separate runtime stage copies the built output. SPA frontends are copied into an nginx image; SSR frontends and servers use `oven/bun:1` for the Bun runtime or `node:24-slim` for the Node.js runtime.
+2. Compose supplies the generated app env files as BuildKit secrets during installation and builds. Varlock validates the app schema, including database configuration needed by Prisma tooling. Public web variables also use build arguments. Fill required configuration before building; validation is not bypassed.
+3. Runtime images retain the built output and the schema/Varlock CLI dependencies needed for startup. Next standalone preloads `varlock/auto-load` with Node. SPA frontends use nginx; SSR frontends and servers use Bun or Node images.
 
 ## Environment Variables
 
 Three rules cover everything:
 
 1. **Public web variables are baked at build time.** Values like `VITE_SERVER_URL` are compose **build args** — they're inlined into the client bundle when the image builds. The generated default is `http://localhost:3000` (the published server port). Changing them requires an image rebuild, not just a restart.
-2. **Runtime variables come from each app's `.env` file.** The compose file loads `apps/web/.env` and `apps/server/.env` via `env_file` (marked optional, so missing files don't break startup).
+2. **Runtime variables come from each app's `.env` file.** Compose loads app values through `env_file`. The same files are required as build-secret sources when building images; Varlock rejects missing required values.
 3. **Compose overrides handle container networking.** Inside the Docker network, containers reach each other by service name, not `localhost` — so compose sets values like `DATABASE_URL: postgresql://postgres:...@postgres:5432/my-app` and `CORS_ORIGIN: http://localhost:3001` in the `environment:` block, which wins over `env_file`. Your local `.env` files stay pointed at localhost for non-Docker development.
+
+BuildKit keeps the mounted env files out of normal `COPY` layers. Frameworks that embed resolved server configuration, including Next, can still put those values in server build artifacts. See [Varlock encrypted deployments](https://varlock.dev/guides/encrypted-deployments/) for encrypting that configuration with a key supplied at both build and runtime.
 
 Database passwords default to `password` and can be overridden with compose variables (`POSTGRES_PASSWORD`, `MYSQL_PASSWORD`, `MONGO_PASSWORD`) — set them in a root `.env` file or export them before `docker:up`.
 

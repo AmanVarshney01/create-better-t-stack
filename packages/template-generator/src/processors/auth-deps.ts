@@ -210,7 +210,9 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
     }
 
     if (hasWebFrontend && webExists) {
-      addPackageDependency({ vfs, packagePath: webPath, dependencies: ["better-auth"] });
+      if (!frontend.includes("solid")) {
+        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["better-auth"] });
+      }
 
       if (hasReactWebAuthForms) {
         addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@tanstack/react-form"] });

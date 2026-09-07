@@ -202,7 +202,7 @@ describe("Authentication Configurations", () => {
         "utf8",
       );
       const sharedAuthClient = await fs.readFile(
-        path.join(result.projectDir, "apps/web/src/client.ts"),
+        path.join(result.projectDir, "packages/auth/src/client.ts"),
         "utf8",
       );
       const authConfig = await fs.readFile(
@@ -232,7 +232,7 @@ describe("Authentication Configurations", () => {
       expect(authConfig).not.toContain("env.CORS_ORIGIN");
       expect(serverEnv).not.toContain("CORS_ORIGIN");
       expect(webEnv).not.toContain("CORS_ORIGIN");
-      expect(webPackageJson.dependencies?.["better-auth"]).toBeDefined();
+      expect(webPackageJson.dependencies?.["better-auth"]).toBeUndefined();
       expect(webPackageJson.dependencies?.["@better-auth-solid-self/auth"]).toBeDefined();
       expect(authPackageJson.dependencies?.["better-auth"]).toBeDefined();
     });

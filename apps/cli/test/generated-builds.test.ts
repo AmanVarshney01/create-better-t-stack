@@ -810,19 +810,23 @@ async function validateSolidScaffold(sample: SelectedBuildSample, projectDir: st
   }
 
   if (sample.config.auth === "better-auth") {
-    const authClient = path.join(webDir, "src/client.ts");
+    const authClient = path.join(projectDir, "packages/auth/src/client.ts");
     const webAuthClient = path.join(webDir, "src/lib/auth-client.ts");
     const authPackageJson = await fs.readJson(path.join(projectDir, "packages/auth/package.json"));
 
     expect(await fs.pathExists(authClient)).toBe(true);
     expect(await fs.readFile(authClient, "utf8")).toContain('from "better-auth/client"');
+    expect(await fs.readFile(authClient, "utf8")).not.toContain("/env/");
+    expect(await fs.readFile(path.join(webDir, "src/client.ts"), "utf8")).toContain(
+      "createClient(",
+    );
     expect(await fs.readFile(webAuthClient, "utf8")).toContain('from "../client"');
-    expect(webPackageJson.dependencies?.["better-auth"]).toBeDefined();
+    expect(webPackageJson.dependencies?.["better-auth"]).toBeUndefined();
     expect(webPackageJson.dependencies?.[`@${sample.name}/auth`]).toBeDefined();
     expect(authPackageJson.dependencies?.["better-auth"]).toBeDefined();
 
     if (sample.config.payments === "polar") {
-      expect(webPackageJson.dependencies?.["@polar-sh/better-auth"]).toBeDefined();
+      expect(webPackageJson.dependencies?.["@polar-sh/better-auth"]).toBeUndefined();
       expect(authPackageJson.dependencies?.["@polar-sh/better-auth"]).toBeDefined();
     }
   }
@@ -1152,6 +1156,7 @@ async function writeSyntheticBuildConfig(projectDir: string) {
       if (key.endsWith("CLERK_PUBLISHABLE_KEY")) return `${key}=${publishableKey}`;
       if (key === "CLERK_SECRET_KEY") return `${key}=sk_test_bts_synthetic_build_key`;
       if (key === "GOOGLE_GENERATIVE_AI_API_KEY") return `${key}=bts-synthetic-build-key`;
+      if (key === "POLAR_ACCESS_TOKEN") return `${key}=bts-synthetic-polar-build-token`;
       return line;
     });
     await fs.writeFile(file, content);

@@ -202,11 +202,16 @@ export function processVarlock(
       .replaceAll(`@${config.projectName}/env/web`, importPath(file, "apps/web/src/env"))
       .replaceAll(`@${config.projectName}/env/native`, importPath(file, "apps/native/src/env"))
       .replaceAll(`@${config.projectName}/env/server`, importPath(file, `${server}/src/env.server`))
-      .replaceAll(`@${config.projectName}/auth/client`, importPath(file, "apps/web/src/client"))
       .replaceAll(
         `@${config.projectName}/app-services`,
         importPath(file, `${server}/src/services`),
       );
+    if (file !== "apps/web/src/client.ts") {
+      content = content.replaceAll(
+        `@${config.projectName}/auth/client`,
+        importPath(file, "apps/web/src/client"),
+      );
+    }
     if (app === server) {
       if (file !== `${server}/src/context.ts`) {
         content = content.replaceAll(

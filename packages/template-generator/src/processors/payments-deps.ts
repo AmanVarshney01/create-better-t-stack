@@ -63,7 +63,7 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
           "astro",
         ].includes(f),
       );
-      if (hasWebFrontend) {
+      if (hasWebFrontend && !frontend.includes("solid")) {
         addPackageDependency({
           vfs,
           packagePath: webPath,
