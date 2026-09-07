@@ -432,8 +432,10 @@ describe("Deployment Configurations", () => {
       // Preview syncs must be non-interactive so the piped-stdin value does not
       // collide with Vercel's interactive "Git branch?" prompt.
       expect(files.get("scripts/sync-vercel-env.ts")).toContain('"--non-interactive"');
-      expect(files.get("scripts/sync-vercel-env.ts")).toContain('import dotenv from "dotenv"');
-      expect(files.get("scripts/sync-vercel-env.ts")).toContain("dotenv.parse");
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain(
+        'import { parseEnv } from "node:util"',
+      );
+      expect(files.get("scripts/sync-vercel-env.ts")).toContain("parseEnv");
       expect(files.get("scripts/sync-vercel-env.ts")).toContain("new Map<string, string>");
       expect(files.get("scripts/sync-vercel-env.ts")).not.toContain("function parseEnvFile");
 
@@ -441,8 +443,7 @@ describe("Deployment Configurations", () => {
       expect(packageJson.devDependencies).toHaveProperty("@types/node");
       expect(packageJson.devDependencies).toHaveProperty("tsx");
       expect(packageJson.devDependencies).toHaveProperty("vercel");
-      // dotenv comes from workspace-deps as a regular dependency; it must not
-      // be duplicated into devDependencies (bun warns on cross-section dupes)
+      // File parsing uses the Node runtime without a dotenv dependency.
       expect(packageJson.devDependencies).not.toHaveProperty("dotenv");
       expect(packageJson.scripts).toMatchObject({
         "deploy:setup": "vercel link",
@@ -454,11 +455,11 @@ describe("Deployment Configurations", () => {
         "deploy:check": "vercel deploy --dry",
       });
       expect(packageJson.scripts).not.toHaveProperty("deploy:vercel");
-      expect(files.get("packages/env/src/web.ts")).toContain("const serverUrlSchema = z.union");
-      expect(files.get("packages/env/src/server.ts")).toContain("function getVercelOrigin()");
+      expect(files.get("apps/web/.env.schema")).toContain("@type=string(matches=");
+      expect(files.get("apps/server/.env.schema")).toContain("VERCEL_ORIGIN=if(");
       // Server-side better-auth must build public callback URLs through the
       // /api rewrite prefix, not the bare origin
-      expect(files.get("packages/env/src/server.ts")).toContain("${vercelOrigin}/api/auth");
+      expect(files.get("apps/server/.env.schema")).toContain("${VERCEL_ORIGIN}/api/auth");
       // better-auth and tRPC clients must normalize the same-origin /api path;
       // both reject relative URLs (BetterAuthError / SSR fetch failure)
       const authClient = files.get("apps/web/src/lib/auth-client.ts") ?? "";
@@ -554,9 +555,7 @@ describe("Deployment Configurations", () => {
       expect(
         (vercelConfig.services?.web as { rewrites?: unknown[] } | undefined)?.rewrites,
       ).toEqual([{ source: "/(.*)", destination: "/index.html" }]);
-      expect(files.get("packages/env/src/web.ts")).toContain(
-        "Use an absolute URL or a same-origin path like /api",
-      );
+      expect(files.get("apps/web/.env.schema")).toContain("@type=string(matches=");
       expect(orpcClient).toContain("function getServerUrl(url: string)");
       expect(orpcClient).toContain("window.location.origin");
       expect(orpcClient).toContain("VERCEL_PROJECT_PRODUCTION_URL");
@@ -1650,10 +1649,12 @@ describe("Deployment Configurations", () => {
         "DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-password}@postgres:5432/docker-self-next",
       );
       expect(webDockerfile).toContain("npm install -g pnpm");
-      expect(webDockerfile).toContain("ENV SKIP_ENV_VALIDATION=1");
+      expect(webDockerfile).not.toContain("SKIP_ENV_VALIDATION");
+      expect(webDockerfile).toContain("--mount=type=secret,id=web_env");
+      expect(compose).toContain("file: apps/web/.env");
       // Next.js Docker deploys use standalone output for a minimal runtime image
       expect(webDockerfile).toContain(".next/standalone");
-      expect(webDockerfile).toContain('CMD ["node", "apps/web/server.js"]');
+      expect(webDockerfile).toContain('CMD ["node", "--import", "varlock/auto-load", "server.js"]');
       expect(files.get("apps/web/next.config.ts")).toContain('output: "standalone"');
     });
 
@@ -1729,7 +1730,7 @@ describe("Deployment Configurations", () => {
         webDockerfile.indexOf("bun install"),
       );
       expect(webDockerfile).not.toContain("SKIP_ENV_VALIDATION");
-      expect(files.get("packages/env/src/web.ts")).not.toContain("SKIP_ENV_VALIDATION");
+      expect(files.get("apps/web/.env.schema")).not.toContain("SKIP_ENV_VALIDATION");
     });
 
     it("should not infer the TanStack Start runtime from the package manager", async () => {

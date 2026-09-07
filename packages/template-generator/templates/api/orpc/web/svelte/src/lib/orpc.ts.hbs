@@ -1,5 +1,5 @@
 {{#unless (eq backend "self")}}
-import { PUBLIC_SERVER_URL } from "$env/static/public";
+import { env } from "@{{projectName}}/env/web";
 {{/unless}}
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
@@ -29,7 +29,7 @@ export const link = new RPCLink({
 		return `${window.location.origin}/rpc`;
 	},
 	{{else}}
-	url: `${getServerUrl(PUBLIC_SERVER_URL)}/rpc`,
+	url: `${getServerUrl(env.PUBLIC_SERVER_URL)}/rpc`,
 	{{/if}}
 	{{#if (eq auth "better-auth")}}
 	fetch(url, options) {

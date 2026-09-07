@@ -1310,7 +1310,7 @@ describe("Addon Configurations", () => {
         join(projectDir, "apps/web/app/plugins/auth-client.ts"),
         "utf-8",
       );
-      const envServer = await readFile(join(projectDir, "packages/env/src/server.ts"), "utf-8");
+      const envServer = await readFile(join(projectDir, "apps/web/src/env.server.ts"), "utf-8");
 
       expect(existsSync(join(projectDir, "apps/web/server/plugins/evlog-auth.ts"))).toBe(false);
       expect(authMiddleware).toContain(
@@ -1333,8 +1333,8 @@ describe("Addon Configurations", () => {
       expect(authClient).not.toContain("as string");
       expectParseableTypeScript(authClient);
 
-      expect(envServer).toContain('import type { CloudflareEnv } from "../env.d.ts";');
-      expect(envServer).toContain('export type { CloudflareEnv } from "../env.d.ts";');
+      expect(envServer).toContain('import type { CloudflareEnv } from "../cloudflare-env.d.ts";');
+      expect(envServer).toContain('export type { CloudflareEnv } from "../cloudflare-env.d.ts";');
       expect(envServer).not.toContain('from "cloudflare:workers"');
       expectParseableTypeScript(envServer);
     });

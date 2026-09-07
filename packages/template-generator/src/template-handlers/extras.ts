@@ -31,6 +31,14 @@ export async function processExtrasTemplates(
     config.serverDeploy === "cloudflare" ||
     (config.backend === "self" && config.webDeploy === "cloudflare")
   ) {
-    processSingleTemplate(vfs, templates, "extras/env.d.ts", "packages/env/env.d.ts", config);
+    processSingleTemplate(
+      vfs,
+      templates,
+      "extras/env.d.ts",
+      config.backend === "self"
+        ? "apps/web/cloudflare-env.d.ts"
+        : "apps/server/cloudflare-env.d.ts",
+      config,
+    );
   }
 }

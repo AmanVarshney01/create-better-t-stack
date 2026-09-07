@@ -26,7 +26,9 @@ function usesOutput(plan: AlchemyDeploymentPlan): boolean {
 function usesRedacted(plan: AlchemyDeploymentPlan): boolean {
   const database = plan.managedDatabase;
   return (
-    database.kind === "neon" || (database.kind === "planetscale-mysql" && database.orm === "prisma")
+    plan.web.target === "prisma" ||
+    database.kind === "neon" ||
+    (database.kind === "planetscale-mysql" && database.orm === "prisma")
   );
 }
 
@@ -55,15 +57,7 @@ function writeImports(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void 
   writer.writeLine('import * as Effect from "effect/Effect";');
   if (usesLayer(plan)) writer.writeLine('import * as Layer from "effect/Layer";');
   if (usesRedacted(plan)) writer.writeLine('import * as Redacted from "effect/Redacted";');
-  writer.writeLine('import { config } from "dotenv";');
-}
-
-function writeDotenv(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void {
-  writer.writeLine('config({ path: "./.env" });');
-  if (plan.web.target !== "none") writer.writeLine('config({ path: "../../apps/web/.env" });');
-  if (plan.server.target !== "none") {
-    writer.writeLine('config({ path: "../../apps/server/.env" });');
-  }
+  writer.writeLine('import "varlock/auto-load";');
 }
 
 function writeStackOptions(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void {
@@ -119,7 +113,6 @@ export function generateAlchemyRun(config: ProjectConfig): string {
 
   writeImports(writer, plan);
   writer.blankLine();
-  writeDotenv(writer, plan);
   writer.blankLine();
   writeDatabaseResources(writer, plan);
   if (plan.hasAlchemyManagedDatabase || plan.hasPrismaDeploy || plan.hasD1Resource) {

@@ -126,6 +126,7 @@ export function selfCloudflareWebEnvEntries(
   entries.push(...commonRuntimeEntries(plan, false));
 
   if (auth === "clerk" && ["next", "solid", "tanstack-start"].includes(framework)) {
+    entries.push("CORS_ORIGIN: Cloudflare.Worker.URL,");
     const insertAt = entries.findIndex(
       (entry) => entry.startsWith("GOOGLE_") || entry.startsWith("POLAR_"),
     );
@@ -211,7 +212,9 @@ export function prismaWebEnvEntries(
   framework: DeployedWebFramework,
 ): string[] {
   const { api, auth, dbSetup, payments } = plan.config;
-  const entries: string[] = [];
+  const entries: string[] = [
+    "...(process.env._VARLOCK_ENV_KEY ? { _VARLOCK_ENV_KEY: Redacted.make(process.env._VARLOCK_ENV_KEY) } : {}),",
+  ];
 
   if (plan.web.target !== "none" && plan.web.topology === "self") {
     entries.push("...resolvedDatabaseEnv,");

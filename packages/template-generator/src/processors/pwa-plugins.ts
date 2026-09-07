@@ -209,6 +209,12 @@ function processNextPwaConfig(vfs: VirtualFileSystem): void {
   if (!source.getImportDeclaration("./pwa.config")) {
     source.addImportDeclaration({ namedImports: ["withPwa"], moduleSpecifier: "./pwa.config" });
   }
-  assignment.setExpression(`withPwa(${assignment.getExpression().getText()})`);
+  const expression = assignment.getExpression().getText();
+  assignment.setExpression(
+    expression.startsWith("withVarlock(")
+      ? `withVarlock(withPwa(${expression.slice("withVarlock(".length, -1)}))`
+      : `withPwa(${expression})`,
+  );
+
   vfs.writeFile(configPath, source.getFullText());
 }

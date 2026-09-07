@@ -1,3 +1,4 @@
+import { varlockVitePlugin } from "@varlock/vite-integration";
 import tailwindcss from "@tailwindcss/vite";
 import solid from "@solidjs/vite-plugin";
 import { fileRoutes } from "filesystem-routing/vite";
@@ -35,6 +36,7 @@ export default defineConfig(({ command }) => {
 export default defineConfig({
 {{/if}}
   plugins: [
+    varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     prismaWasm,
 {{/if}}

@@ -38,7 +38,7 @@ export type LocalRequirements = {
 };
 
 export const PACKAGE_MANAGER_VERSION_RANGES = {
-  bun: ">=1.2.14",
+  bun: ">=1.3.3",
   npm: ">=11.16.0",
   pnpm: ">=10.26.0",
 } as const satisfies Record<PackageManager, string>;
@@ -46,7 +46,7 @@ export const PACKAGE_MANAGER_VERSION_RANGES = {
 export const RECOMMENDED_BUN_VERSION_RANGE = ">=1.4.0";
 
 const PACKAGE_MANAGER_REASONS = {
-  bun: "generated Bun workspaces use dependency catalogs",
+  bun: "Varlock requires Bun 1.3.3 or newer",
   npm: "generated npm workspaces use the allowScripts install-script policy",
   pnpm: "generated pnpm workspaces use catalogs and the allowBuilds policy",
 } as const satisfies Record<PackageManager, string>;
@@ -75,6 +75,8 @@ function addNodeRequirement(
 
 function getNodeToolingRequirements(config: RequirementConfig): VersionRequirement[] {
   const requirements: VersionRequirement[] = [];
+
+  addNodeRequirement(requirements, ">=22.3.0", "Varlock configuration loading");
 
   for (const frontend of config.frontend) {
     switch (frontend) {

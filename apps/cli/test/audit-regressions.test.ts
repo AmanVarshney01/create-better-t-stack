@@ -50,7 +50,7 @@ describe("Add Path regressions", () => {
         addons: ["turborepo"],
       });
       const projectDir = join(SMOKE_DIR, `scope-renamed-${relative}`);
-      const envBefore = await readPackage(originalDir, "packages/env/package.json");
+      const configBefore = await readPackage(originalDir, "packages/config/package.json");
       const webBefore = await readPackage(originalDir, "apps/web/package.json");
       const rootBefore = await readPackage(originalDir);
       rootBefore.name = "custom-root-name";
@@ -70,8 +70,8 @@ describe("Add Path regressions", () => {
         process.chdir(cwd);
       }
       expect((await readPackage(projectDir)).name).toBe("custom-root-name");
-      expect((await readPackage(projectDir, "packages/env/package.json")).name).toBe(
-        envBefore.name,
+      expect((await readPackage(projectDir, "packages/config/package.json")).name).toBe(
+        configBefore.name,
       );
       expect((await readPackage(projectDir, "apps/web/package.json")).dependencies).toEqual(
         webBefore.dependencies,

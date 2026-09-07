@@ -158,7 +158,7 @@ export async function processAuthTemplates(
         vfs,
         templates,
         "auth/better-auth/client/solid",
-        "packages/auth",
+        "apps/web",
         config,
       );
     }

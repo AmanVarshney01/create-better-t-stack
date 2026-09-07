@@ -540,7 +540,7 @@ function buildServerVars(
     {
       key: "CORS_ORIGIN",
       value: corsOrigin,
-      condition: backend !== "self",
+      condition: backend !== "self" || auth === "clerk",
     },
     {
       key: "GOOGLE_GENERATIVE_AI_API_KEY",

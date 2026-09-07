@@ -36,19 +36,19 @@ describe("Cloudflare DB client generation", () => {
     });
     const dbFile = files.get("packages/db/src/index.ts");
     const authFile = files.get("packages/auth/src/index.ts");
-    const envFile = files.get("packages/env/src/server.ts");
+    const envFile = files.get("apps/server/src/env.server.ts");
     const serverFile = files.get("apps/server/src/index.ts");
-    const contextFile = files.get("packages/api/src/context.ts");
+    const contextFile = files.get("apps/server/src/context.ts");
     const todoRouterFile = files.get("packages/api/src/routers/todo.ts");
 
-    expect(dbFile).toContain("export function createDb()");
+    expect(dbFile).toContain("export function createDb(env: DatabaseConfig)");
     expect(dbFile).not.toContain("export const db = createDb();");
-    expect(authFile).toContain("export function createAuth()");
+    expect(authFile).toContain("export function createAuth(env: AuthConfig, database: Database");
     expect(authFile).not.toContain("export const auth = createAuth();");
     expect(envFile).toContain('export { env } from "cloudflare:workers";');
     expect(serverFile).toContain("createAuth().handler(c.req.raw)");
     expect(contextFile).toContain("createAuth().api.getSession");
-    expect(todoRouterFile).toContain("createDb()");
+    expect(todoRouterFile).toContain("ctx.db");
   });
 
   it("uses request-scoped db/auth factories for Next on Cloudflare", async () => {
@@ -73,15 +73,15 @@ describe("Cloudflare DB client generation", () => {
     });
     const dbFile = files.get("packages/db/src/index.ts");
     const authFile = files.get("packages/auth/src/index.ts");
-    const envFile = files.get("packages/env/src/server.ts");
-    const envPackageFile = files.get("packages/env/package.json");
+    const envFile = files.get("apps/web/src/env.server.ts");
+    const envPackageFile = files.get("apps/web/package.json");
     const routeFile = files.get("apps/web/src/app/api/auth/[...all]/route.ts");
     const dashboardFile = files.get("apps/web/src/app/dashboard/page.tsx");
-    const contextFile = files.get("packages/api/src/context.ts");
+    const contextFile = files.get("apps/web/src/context.ts");
 
-    expect(dbFile).toContain("export function createPrismaClient()");
+    expect(dbFile).toContain("export function createPrismaClient(env: DatabaseConfig)");
     expect(dbFile).not.toContain("export default prisma;");
-    expect(authFile).toContain("const prisma = createPrismaClient();");
+    expect(authFile).toContain("prismaAdapter(database,");
     expect(authFile).not.toContain("export const auth = createAuth();");
     expect(envFile).toContain('import { getCloudflareContext } from "@opennextjs/cloudflare";');
     expect(envFile).toContain("type EnvValue = Env[keyof Env];");
@@ -130,7 +130,7 @@ describe("Cloudflare DB client generation", () => {
         "createAuth((event.context.cloudflare as { env: CloudflareEnv }).env)",
         "return auth.handler(toWebRequest(event));",
       ],
-      envNeedle: 'import type { CloudflareEnv } from "../env.d.ts";',
+      envNeedle: 'import type { CloudflareEnv } from "../cloudflare-env.d.ts";',
       envAbsentNeedle: 'from "cloudflare:workers"',
     },
     {
@@ -179,9 +179,9 @@ describe("Cloudflare DB client generation", () => {
 
       const dbFile = files.get("packages/db/src/index.ts");
       const authFile = files.get("packages/auth/src/index.ts");
-      const envFile = files.get("packages/env/src/server.ts");
+      const envFile = files.get("apps/web/src/env.server.ts");
       const routeFile = files.get(scenario.routePath);
-      const contextFile = files.get("packages/api/src/context.ts");
+      const contextFile = files.get("apps/web/src/context.ts");
       const todoRouterFile = files.get("packages/api/src/routers/todo.ts");
 
       expect(dbFile).toContain('import { drizzle } from "drizzle-orm/d1";');
@@ -190,8 +190,8 @@ describe("Cloudflare DB client generation", () => {
       expect(dbFile).not.toContain("export const db = createDb();");
       expect(authFile).toContain(
         scenario.frontend === "nuxt"
-          ? "export function createAuth(env: CloudflareEnv)"
-          : "export function createAuth()",
+          ? "export function createAuth(env: AuthConfig, database: Database"
+          : "export function createAuth(env: AuthConfig, database: Database",
       );
       expect(authFile).not.toContain("export const auth = createAuth();");
       expect(envFile).toContain(scenario.envNeedle);
@@ -206,9 +206,7 @@ describe("Cloudflare DB client generation", () => {
           ? "createAuth(env).api.getSession"
           : "createAuth().api.getSession",
       );
-      expect(todoRouterFile).toContain(
-        scenario.frontend === "nuxt" ? "createDb(context.env)" : "createDb()",
-      );
+      expect(todoRouterFile).toContain(scenario.api === "trpc" ? "ctx.db" : "context.db");
 
       if (scenario.frontend === "astro") {
         const infraFile = files.get("packages/infra/alchemy.run.ts") ?? "";
@@ -253,9 +251,9 @@ describe("Cloudflare DB client generation", () => {
 
     const dbFile = files.get("packages/db/src/index.ts");
     const authFile = files.get("packages/auth/src/index.ts");
-    const envFile = files.get("packages/env/src/server.ts");
+    const envFile = files.get("apps/web/src/env.server.ts");
     const routeFile = files.get("apps/web/src/app/api/auth/[...all]/route.ts");
-    const contextFile = files.get("packages/api/src/context.ts");
+    const contextFile = files.get("apps/web/src/context.ts");
     const infraFile = files.get("packages/infra/alchemy.run.ts") ?? "";
     const wranglerConfig = JSON.parse(files.get("apps/web/wrangler.jsonc") ?? "{}") as {
       d1_databases?: Array<{ migrations_dir?: string; migrations_pattern?: string }>;
@@ -265,7 +263,7 @@ describe("Cloudflare DB client generation", () => {
     expect(dbFile).toContain('import { PrismaD1 } from "@prisma/adapter-d1";');
     expect(dbFile).toContain("const adapter = new PrismaD1(env.DB);");
     expect(dbFile).not.toContain("export default prisma;");
-    expect(authFile).toContain("const prisma = createPrismaClient();");
+    expect(authFile).toContain("prismaAdapter(database,");
     expect(authFile).not.toContain("export const auth = createAuth();");
     expect(envFile).toContain('import { getCloudflareContext } from "@opennextjs/cloudflare";');
     expect(envFile).toContain("type EnvValue = Env[keyof Env];");
@@ -336,7 +334,7 @@ describe("Cloudflare DB client generation", () => {
     const authFile = files.get("packages/auth/src/index.ts");
     const routeFile = files.get("apps/web/src/app/api/auth/[...all]/route.ts");
 
-    expect(authFile).toContain("export function createAuth()");
+    expect(authFile).toContain("export function createAuth(env: AuthConfig, database: Database");
     expect(authFile).not.toContain("export const auth = createAuth();");
     expect(routeFile).toContain("toNextJsHandler(createAuth()).GET(request)");
   });
@@ -365,8 +363,12 @@ describe("Cloudflare DB client generation", () => {
     const authFile = files.get("packages/auth/src/index.ts");
     const serverFile = files.get("apps/server/src/index.ts");
 
-    expect(dbFile).toContain("export const db = createDb();");
-    expect(authFile).toContain("export const auth = createAuth();");
+    expect(dbFile).not.toContain("export const db");
+    expect(files.get("apps/server/src/services.ts")).toContain("const db = createDb(env)");
+    expect(authFile).not.toContain("export const auth");
+    expect(
+      files.get("apps/server/src/services.ts") ?? files.get("apps/web/src/services.ts"),
+    ).toContain("export const auth = createConfiguredAuth");
     expect(serverFile).toContain("auth.handler(c.req.raw)");
   });
 
@@ -393,7 +395,10 @@ describe("Cloudflare DB client generation", () => {
     const authFile = files.get("packages/auth/src/index.ts");
     const routeFile = files.get("apps/web/src/app/api/auth/[...all]/route.ts");
 
-    expect(authFile).toContain("export const auth = createAuth();");
+    expect(authFile).not.toContain("export const auth");
+    expect(
+      files.get("apps/server/src/services.ts") ?? files.get("apps/web/src/services.ts"),
+    ).toContain("export const auth = createConfiguredAuth");
     expect(routeFile).toContain("export const { GET, POST } = toNextJsHandler(auth);");
     expect(routeFile).not.toContain("createAuth()");
   });

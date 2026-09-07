@@ -20,7 +20,7 @@ export function processInfraDeps(vfs: VirtualFileSystem, config: ProjectConfig):
         "effect",
         "@effect/platform-node",
         "@effect/platform-bun",
-        "dotenv",
+        "varlock",
       ],
     });
   }

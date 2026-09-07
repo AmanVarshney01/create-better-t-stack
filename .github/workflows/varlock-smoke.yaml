@@ -1,9 +1,11 @@
-name: Varlock Migration Experiment
+name: Varlock Templates
 
 on:
   workflow_dispatch:
   pull_request:
     paths:
+      - packages/template-generator/**
+      - apps/cli/src/**
       - scripts/varlock-smoke.ts
       - docs/maintenance/varlock-migration.md
       - .github/workflows/varlock-smoke.yaml

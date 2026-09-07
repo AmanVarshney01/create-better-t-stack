@@ -245,6 +245,14 @@ ${packageManagerRunCmd} dev
 
 ${generateRunningInstructions(frontend, backend, webPort, hasNative, isConvex)}
 ${generateReactUiSection(hasReactWeb, projectName)}
+## Environment Configuration
+
+Each app owns its environment schema in \`.env.schema\`. Varlock generates \`src/env.ts\` during installation; run \`${packageManagerRunCmd} env:generate\` after changing a schema. Commit schemas, and keep secrets in ignored env files or your deployment platform.
+
+Import the generated \`ENV\` accessor in application code. Shared database and auth packages receive configuration or initialized clients from the application. See [Varlock's monorepo guide](https://varlock.dev/guides/monorepos/).
+
+Bun's automatic env loading is disabled in \`bunfig.toml\`; the framework integration or server bootstrap loads Varlock. Node deployments must include Varlock and its dependencies alongside the app schema.
+
 ${
   addons.includes("pwa") && hasReactRouter
     ? "\n## PWA Support with React Router\n\nVerify PWA behavior with a production build on HTTPS or localhost. Offline navigation shows a precached fallback page; server-rendered pages require a connection. Authenticated HTML and API responses are not runtime-cached.\n"

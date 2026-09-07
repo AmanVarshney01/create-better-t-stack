@@ -1,16 +1,12 @@
+import type { DatabaseConfig } from "./config";
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
-import type { CloudflareEnv } from "@{{projectName}}/env/server";
-{{else}}
-import { env } from "@{{projectName}}/env/server";
-{{/if}}
 import * as schema from "./schema";
 
 {{#if (eq dbSetup "neon")}}
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 
-export function createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
+export function createDb(env: DatabaseConfig) {
 	const sql = neon(env.DATABASE_URL);
 	return drizzle(sql, { schema });
 }
@@ -22,7 +18,7 @@ import postgres from "postgres";
 import { drizzle } from "drizzle-orm/node-postgres";
 {{/if}}
 
-export function createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
+export function createDb(env: DatabaseConfig) {
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 	const client = postgres(env.DATABASE_URL, { max: 1 });
 
@@ -33,9 +29,6 @@ export function createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy
 }
 {{/if}}
 
-{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
-export const db = createDb();
-{{/if}}
 {{/if}}
 
 {{#if (eq runtime "workers")}}
@@ -44,21 +37,21 @@ import * as schema from "./schema";
 {{#if (eq dbSetup "neon")}}
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { env } from "@{{projectName}}/env/server";
 
-export function createDb() {
+export function createDb(env: DatabaseConfig) {
 	const sql = neon(env.DATABASE_URL || "");
 	return drizzle(sql, { schema });
 }
 {{else}}
 import { drizzle } from "drizzle-orm/postgres-js";
-import { env } from "@{{projectName}}/env/server";
 import postgres from "postgres";
 
-export function createDb() {
+export function createDb(env: DatabaseConfig) {
 	const client = postgres(env.DATABASE_URL || "", { max: 1 });
 
 	return drizzle({ client, schema });
 }
 {{/if}}
 {{/if}}
+
+export type Database = ReturnType<typeof createDb>;

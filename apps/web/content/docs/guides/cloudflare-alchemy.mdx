@@ -157,7 +157,7 @@ bunx alchemy destroy --stage production
 
 The stack loads `packages/infra/.env` plus the relevant app `.env` files. Public configuration uses `Config.string`; secrets use `Config.redacted`. Alchemy Outputs, such as a deployed server URL or database credential, are passed directly so resource dependency ordering is preserved.
 
-For Cloudflare, generated `Cloudflare.InferEnv` types flow into `packages/env/env.d.ts`. Managed database bindings are individual Effect inputs, which keeps each runtime property precisely typed.
+For Cloudflare, generated `Cloudflare.InferEnv` types flow into the owning app’s `cloudflare-env.d.ts`. Managed database bindings are individual Effect inputs, which keeps each runtime property precisely typed.
 
 ## Generated infrastructure
 

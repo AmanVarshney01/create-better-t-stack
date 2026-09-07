@@ -251,7 +251,7 @@ describe("API Configurations", () => {
       }
 
       const files = collectFiles(virtualResult.value.root, virtualResult.value.root.path);
-      const envPackageJson = JSON.parse(files.get("packages/env/package.json") ?? "{}");
+      const envPackageJson = JSON.parse(files.get("package.json") ?? "{}");
       const baseTsconfig = files.get("packages/config/tsconfig.base.json");
 
       expect(envPackageJson.devDependencies?.["@types/bun"]).toBeDefined();
@@ -293,7 +293,7 @@ describe("API Configurations", () => {
       }
 
       const files = collectFiles(virtualResult.value.root, virtualResult.value.root.path);
-      const envPackageJson = JSON.parse(files.get("packages/env/package.json") ?? "{}");
+      const envPackageJson = JSON.parse(files.get("package.json") ?? "{}");
       const baseTsconfig = files.get("packages/config/tsconfig.base.json");
 
       expect(envPackageJson.devDependencies?.["@types/node"]).toBeDefined();
@@ -565,7 +565,7 @@ describe("API Configurations", () => {
 
       const files = collectFiles(result.value.root, result.value.root.path);
       const serverFile = files.get("apps/server/src/index.ts");
-      const contextFile = files.get("packages/api/src/context.ts");
+      const contextFile = files.get("apps/server/src/context.ts");
 
       expect(serverFile).toContain("context: await createContext(request.headers)");
       expect(contextFile).toContain('import type { IncomingHttpHeaders } from "node:http";');

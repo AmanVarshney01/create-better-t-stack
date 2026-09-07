@@ -1,5 +1,8 @@
+import type { DatabaseConfig } from "./config";
 import { PrismaClient } from "../prisma/generated/client";
 
-const prisma = new PrismaClient();
+export function createPrismaClient(env: DatabaseConfig) {
+  return new PrismaClient({ datasourceUrl: env.DATABASE_URL });
+}
 
-export default prisma;
+export type Database = ReturnType<typeof createPrismaClient>;

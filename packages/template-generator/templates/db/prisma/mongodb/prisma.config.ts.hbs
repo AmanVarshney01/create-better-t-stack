@@ -1,14 +1,7 @@
 import path from "node:path";
 import type { PrismaConfig } from "prisma";
-import dotenv from "dotenv";
+import "varlock/auto-load";
 
-dotenv.config({
-    {{#if (eq backend "self")}}
-    path: "../../apps/web/.env",
-    {{else}}
-    path: "../../apps/server/.env",
-    {{/if}}
-});
 
 export default {
   schema: path.join("prisma", "schema"),

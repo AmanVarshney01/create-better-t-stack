@@ -1,18 +1,18 @@
+import type { DatabaseConfig } from "./config";
 {{#if (eq runtime "workers")}}
 import { PrismaClient } from "../prisma/generated/client";
-import { env } from "@{{projectName}}/env/server";
 
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export function createPrismaClient() {
+export function createPrismaClient(env: DatabaseConfig) {
 	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export function createPrismaClient() {
+export function createPrismaClient(env: DatabaseConfig) {
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
@@ -29,23 +29,18 @@ export function createPrismaClient() {
 {{/if}}
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
-{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
-import type { CloudflareEnv } from "@{{projectName}}/env/server";
-{{else}}
-import { env } from "@{{projectName}}/env/server";
-{{/if}}
 
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-export function createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
+export function createPrismaClient(env: DatabaseConfig) {
 	const adapter = new PrismaPlanetScale({ url: env.DATABASE_URL });
 	return new PrismaClient({ adapter });
 }
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-export function createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env: CloudflareEnv{{/if}}) {
+export function createPrismaClient(env: DatabaseConfig) {
 	const databaseUrl: string = env.DATABASE_URL;
 	const url: URL = new URL(databaseUrl);
 	const connectionConfig = {
@@ -61,8 +56,6 @@ export function createPrismaClient({{#if (usesRequestScopedCloudflareEnv backend
 }
 {{/if}}
 
-{{#if (and (ne serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
-const prisma = createPrismaClient();
-export default prisma;
 {{/if}}
-{{/if}}
+
+export type Database = ReturnType<typeof createPrismaClient>;

@@ -1,29 +1,18 @@
 {{#if (eq api "orpc")}}
 import { eq } from "drizzle-orm";
 import z from "zod";
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-import { createDb } from "@{{projectName}}/db";
-{{else}}
-import { db } from "@{{projectName}}/db";
-{{/if}}
 import { todo } from "@{{projectName}}/db/schema/todo";
 import { publicProcedure } from "../index";
 
 export const todoRouter = {
-  getAll: publicProcedure.handler(async ({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}{ context }{{/if}}) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-    const db = createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}context.env{{/if}});
-{{/if}}
-    return await db.select().from(todo);
+  getAll: publicProcedure.handler(async ({ context }) => {
+    return await context.db.select().from(todo);
   }),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .handler(async ({ input{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}, context{{/if}} }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}context.env{{/if}});
-{{/if}}
-      return await db
+    .handler(async ({ input, context }) => {
+      return await context.db
         .insert(todo)
         .values({
           text: input.text,
@@ -32,11 +21,8 @@ export const todoRouter = {
 
   toggle: publicProcedure
     .input(z.object({ id: z.number(), completed: z.boolean() }))
-    .handler(async ({ input{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}, context{{/if}} }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}context.env{{/if}});
-{{/if}}
-      return await db
+    .handler(async ({ input, context }) => {
+      return await context.db
         .update(todo)
         .set({ completed: input.completed })
         .where(eq(todo.id, input.id));
@@ -44,11 +30,8 @@ export const todoRouter = {
 
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
-    .handler(async ({ input{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}, context{{/if}} }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}context.env{{/if}});
-{{/if}}
-      return await db.delete(todo).where(eq(todo.id, input.id));
+    .handler(async ({ input, context }) => {
+      return await context.db.delete(todo).where(eq(todo.id, input.id));
     }),
 };
 {{/if}}
@@ -58,38 +41,24 @@ import z from "zod";
 import { router, publicProcedure } from "../index";
 import { todo } from "@{{projectName}}/db/schema/todo";
 import { eq } from "drizzle-orm";
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-import { createDb } from "@{{projectName}}/db";
-{{else}}
-import { db } from "@{{projectName}}/db";
-{{/if}}
 
 export const todoRouter = router({
-  getAll: publicProcedure.query(async () => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-    const db = createDb();
-{{/if}}
-    return await db.select().from(todo);
+  getAll: publicProcedure.query(async ({ ctx }) => {
+    return await ctx.db.select().from(todo);
   }),
 
   create: publicProcedure
     .input(z.object({ text: z.string().min(1) }))
-    .mutation(async ({ input }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb();
-{{/if}}
-      return await db.insert(todo).values({
+    .mutation(async ({ input, ctx }) => {
+      return await ctx.db.insert(todo).values({
         text: input.text,
       });
     }),
 
   toggle: publicProcedure
     .input(z.object({ id: z.number(), completed: z.boolean() }))
-    .mutation(async ({ input }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb();
-{{/if}}
-      return await db
+    .mutation(async ({ input, ctx }) => {
+      return await ctx.db
         .update(todo)
         .set({ completed: input.completed })
         .where(eq(todo.id, input.id));
@@ -97,11 +66,8 @@ export const todoRouter = router({
 
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
-{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-      const db = createDb();
-{{/if}}
-      return await db.delete(todo).where(eq(todo.id, input.id));
+    .mutation(async ({ input, ctx }) => {
+      return await ctx.db.delete(todo).where(eq(todo.id, input.id));
     }),
 });
 {{/if}}

@@ -166,10 +166,10 @@ describe("Frontend Configurations", () => {
       const packageJson = await fs.readJson(path.join(webDir, "package.json"));
       const rootPackageJson = await fs.readJson(path.join(result.projectDir, "package.json"));
       const envPackageJson = await fs.readJson(
-        path.join(result.projectDir, "packages/env/package.json"),
+        path.join(result.projectDir, "apps/web/package.json"),
       );
       const webEnv = await fs.readFile(
-        path.join(result.projectDir, "packages/env/src/web.ts"),
+        path.join(result.projectDir, "apps/web/.env.schema"),
         "utf8",
       );
       const appFile = await fs.readFile(path.join(webDir, "src/App.tsx"), "utf8");
@@ -196,7 +196,7 @@ describe("Frontend Configurations", () => {
       expect(packageJson.scripts["check-types"]).toBe("tsc --noEmit");
       expect(tsconfig.exclude).toContain("dist");
       expect(rootPackageJson.scripts["dev:web"]).toBeDefined();
-      expect(envPackageJson.exports["./web"]).toBe("./src/web.ts");
+      expect(envPackageJson.dependencies.varlock).toBeDefined();
       expect(webEnv).not.toContain("SKIP_ENV_VALIDATION");
       expect(appFile).toContain('import { Router } from "~/router";');
       expect(viteConfig).toContain("solid({");

@@ -1,3 +1,4 @@
+import { varlockVitePlugin } from "@varlock/vite-integration";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 {{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma"))}}
@@ -30,6 +31,7 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
+    varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     prismaWasm,
 {{/if}}

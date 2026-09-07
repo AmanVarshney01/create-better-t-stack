@@ -6,6 +6,13 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      secrets:
+{{#if (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "astro") (includes frontend "svelte") (includes frontend "solid") (includes frontend "tanstack-router") (includes frontend "tanstack-start") (includes frontend "react-router"))}}
+        - web_env
+{{/if}}
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+        - server_env
+{{/if}}
 {{#if (or (and (ne backend "self") (ne backend "none") (ne backend "convex")) (eq backend "convex") (and (eq auth "clerk") (or (includes frontend "next") (includes frontend "react-router") (includes frontend "tanstack-router") (includes frontend "tanstack-start"))))}}
       args:
 {{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
@@ -105,6 +112,13 @@ services:
     build:
       context: .
       dockerfile: apps/server/Dockerfile
+      secrets:
+{{#if (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "astro") (includes frontend "svelte") (includes frontend "solid") (includes frontend "tanstack-router") (includes frontend "tanstack-start") (includes frontend "react-router"))}}
+        - web_env
+{{/if}}
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+        - server_env
+{{/if}}
     init: true
     ports:
       - "3000:3000"
@@ -222,4 +236,15 @@ services:
 
 volumes:
   {{projectName}}_{{database}}_data:
+{{/if}}
+
+# BuildKit makes these available only while install/build commands run.
+secrets:
+{{#if (or (includes frontend "next") (includes frontend "nuxt") (includes frontend "astro") (includes frontend "svelte") (includes frontend "solid") (includes frontend "tanstack-router") (includes frontend "tanstack-start") (includes frontend "react-router"))}}
+  web_env:
+    file: apps/web/.env
+{{/if}}
+{{#if (and (ne backend "self") (ne backend "none") (ne backend "convex"))}}
+  server_env:
+    file: apps/server/.env
 {{/if}}

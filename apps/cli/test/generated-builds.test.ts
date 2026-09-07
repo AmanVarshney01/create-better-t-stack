@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { createServer } from "node:net";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
 import { execa } from "execa";
@@ -809,21 +810,19 @@ async function validateSolidScaffold(sample: SelectedBuildSample, projectDir: st
   }
 
   if (sample.config.auth === "better-auth") {
-    const authClient = path.join(projectDir, "packages/auth/src/client.ts");
+    const authClient = path.join(webDir, "src/client.ts");
     const webAuthClient = path.join(webDir, "src/lib/auth-client.ts");
     const authPackageJson = await fs.readJson(path.join(projectDir, "packages/auth/package.json"));
 
     expect(await fs.pathExists(authClient)).toBe(true);
     expect(await fs.readFile(authClient, "utf8")).toContain('from "better-auth/client"');
-    expect(await fs.readFile(webAuthClient, "utf8")).toContain(
-      `from "@${sample.name}/auth/client"`,
-    );
-    expect(webPackageJson.dependencies?.["better-auth"]).toBeUndefined();
+    expect(await fs.readFile(webAuthClient, "utf8")).toContain('from "../client"');
+    expect(webPackageJson.dependencies?.["better-auth"]).toBeDefined();
     expect(webPackageJson.dependencies?.[`@${sample.name}/auth`]).toBeDefined();
     expect(authPackageJson.dependencies?.["better-auth"]).toBeDefined();
 
     if (sample.config.payments === "polar") {
-      expect(webPackageJson.dependencies?.["@polar-sh/better-auth"]).toBeUndefined();
+      expect(webPackageJson.dependencies?.["@polar-sh/better-auth"]).toBeDefined();
       expect(authPackageJson.dependencies?.["@polar-sh/better-auth"]).toBeDefined();
     }
   }
@@ -1000,9 +999,12 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   if (!entrypoint) return;
 
   const webDir = path.join(projectDir, "apps/web");
+  const runtimeRoot = await fs.mkdtemp(path.join(tmpdir(), "bts-prisma-artifact-"));
+  const artifactDirectory = entrypoint.split("/")[0]!;
+  await fs.copy(path.join(webDir, artifactDirectory), path.join(runtimeRoot, artifactDirectory));
   const port = await getAvailablePort();
   const runtime = execa("bun", [entrypoint], {
-    cwd: webDir,
+    cwd: runtimeRoot,
     all: true,
     reject: false,
     env: {
@@ -1026,6 +1028,7 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   }
 
   const result = await runtime;
+  await fs.remove(runtimeRoot);
   if (failure) {
     throw new Error(
       [`Generated Prisma runtime probe failed: ${String(failure)}`, formatOutput(result.all)]
@@ -1138,6 +1141,23 @@ async function bootAndValidateSolidDevRuntime(sample: SelectedBuildSample, proje
   }
 }
 
+async function writeSyntheticBuildConfig(projectDir: string) {
+  const publishableKey = `pk_test_${Buffer.from("clerk.example.test$").toString("base64")}`;
+  for (const app of ["web", "server", "native"]) {
+    const file = path.join(projectDir, "apps", app, ".env");
+    if (!(await fs.pathExists(file))) continue;
+    let content = await fs.readFile(file, "utf8");
+    content = content.replaceAll("https://example.convex.", "https://bts-build-test.convex.");
+    content = content.replace(/^\s*#?\s*([A-Z][A-Z0-9_]*)=\s*$/gm, (line, key: string) => {
+      if (key.endsWith("CLERK_PUBLISHABLE_KEY")) return `${key}=${publishableKey}`;
+      if (key === "CLERK_SECRET_KEY") return `${key}=sk_test_bts_synthetic_build_key`;
+      if (key === "GOOGLE_GENERATIVE_AI_API_KEY") return `${key}=bts-synthetic-build-key`;
+      return line;
+    });
+    await fs.writeFile(file, content);
+  }
+}
+
 describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples", () => {
   for (const sample of getSelectedBuildSamples()) {
     it(
@@ -1150,6 +1170,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
           const createResult = await create(projectDir, sample.config);
           expect(createResult.isOk()).toBe(true);
           await validateSolidScaffold(sample, projectDir);
+          await writeSyntheticBuildConfig(projectDir);
 
           for (const script of ["install", "build"] as const) {
             const { command, args } = getPackageManagerCommand(sample.packageManager, script);

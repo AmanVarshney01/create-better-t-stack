@@ -500,12 +500,17 @@ export default defineConfig({
 
 Better-T-Stack always creates `packages/config`. Other packages are added based on your selections:
 
-- `packages/env`: when any frontend is selected or the backend is not `none`
 - `packages/api`: when `--api` is not `none` (non-Convex)
 - `packages/auth`: when `--auth` is not `none` (non-Convex)
 - `packages/db`: when both `--database` and `--orm` are selected (non-Convex)
 - `packages/backend`: Convex backend only
 - `packages/infra`: Alchemy infrastructure for Cloudflare and/or Prisma deployments
+
+## Environment configuration
+
+Each application owns an `.env.schema` and a generated `src/env.ts`. Varlock generates the local `ENV` accessor during installation. Run the root `env:generate` script after changing a schema; do not edit generated types. This uses `@generateTsTypes(path=./src/env.ts, exposeEnv=local)`, as recommended for separate application schemas in [Varlock's monorepo guide](https://varlock.dev/guides/monorepos/).
+
+Shared database and authentication packages accept configuration and database clients from their owning app. Database command-line tools import the app's database settings through `packages/db/.env.schema`.
 
 ## Development Scripts
 

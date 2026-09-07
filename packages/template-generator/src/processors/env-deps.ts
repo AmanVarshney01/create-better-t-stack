@@ -4,36 +4,41 @@ import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
 export function processEnvDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const envPath = "packages/env/package.json";
-  if (!vfs.exists(envPath)) return;
-
-  const { frontend, backend, runtime, webDeploy } = config;
-  const deps: AvailableDependencies[] = ["zod"];
-  const hasNative = frontend.some((value) =>
-    ["native-bare", "native-uniwind", "native-unistyles"].includes(value),
-  );
-  const hasNextJs = frontend.includes("next");
-  const hasNuxt = frontend.includes("nuxt");
-
-  if (hasNextJs) {
-    deps.push("@t3-oss/env-nextjs");
-  } else if (hasNuxt) {
-    deps.push("@t3-oss/env-nuxt");
+  addPackageDependency({ vfs, packagePath: "package.json", devDependencies: ["varlock"] });
+  for (const app of ["web", "server", "native"]) {
+    const dependencies: AvailableDependencies[] = ["varlock"];
+    if (app === "web") {
+      dependencies.push(
+        config.frontend.includes("next")
+          ? "@varlock/nextjs-integration"
+          : config.frontend.includes("nuxt")
+            ? "@varlock/nuxt-integration"
+            : config.frontend.includes("astro")
+              ? "@varlock/astro-integration"
+              : "@varlock/vite-integration",
+      );
+    }
+    if (app === "web" && config.webDeploy === "cloudflare" && config.frontend.includes("next"))
+      dependencies.push("@opennextjs/cloudflare");
+    if (app === "native") {
+      dependencies.push("@varlock/expo-integration");
+      addPackageDependency({
+        vfs,
+        packagePath: "apps/native/package.json",
+        devDependencies: ["babel-preset-expo"],
+      });
+    }
+    addPackageDependency({ vfs, packagePath: `apps/${app}/package.json`, dependencies });
   }
-
-  const needsCoreEnv = hasNative || (!hasNextJs && !hasNuxt);
-  if (needsCoreEnv) {
-    deps.push("@t3-oss/env-core");
+  if (config.frontend.includes("next")) {
+    const version = "npm:@varlock/nextjs-integration@1.2.2";
+    if (config.packageManager === "pnpm") {
+      const path = "pnpm-workspace.yaml";
+      vfs.writeFile(path, `${vfs.readFile(path) ?? ""}\noverrides:\n  '@next/env': '${version}'\n`);
+    } else {
+      const pkg = vfs.readJson<{ overrides?: Record<string, string> }>("package.json")!;
+      pkg.overrides = { ...pkg.overrides, "@next/env": version };
+      vfs.writeJson("package.json", pkg);
+    }
   }
-
-  const needsServerEnv = backend !== "convex" && backend !== "none" && runtime !== "workers";
-  if (needsServerEnv && !deps.includes("@t3-oss/env-core")) {
-    deps.push("@t3-oss/env-core");
-  }
-
-  if (backend === "self" && webDeploy === "cloudflare" && hasNextJs) {
-    deps.push("@opennextjs/cloudflare");
-  }
-
-  addPackageDependency({ vfs, packagePath: envPath, dependencies: deps });
 }

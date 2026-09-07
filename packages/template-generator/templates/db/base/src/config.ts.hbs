@@ -1,0 +1,17 @@
+{{#if (eq dbSetup "d1")}}
+/// <reference types="@cloudflare/workers-types" />
+{{/if}}
+export type DatabaseConfig = {
+{{#if (eq dbSetup "d1")}}
+  DB: D1Database;
+{{else if (and (eq database "mysql") (eq orm "drizzle") (eq dbSetup "planetscale"))}}
+  DATABASE_HOST: string;
+  DATABASE_USERNAME: string;
+  DATABASE_PASSWORD: string;
+{{else}}
+  DATABASE_URL: string;
+{{#if (eq dbSetup "turso")}}
+  DATABASE_AUTH_TOKEN: string;
+{{/if}}
+{{/if}}
+};

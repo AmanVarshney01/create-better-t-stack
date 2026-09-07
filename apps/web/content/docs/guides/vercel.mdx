@@ -168,7 +168,7 @@ There are three layers. Local `.env` files stay the source of truth, and one com
 
 ### 1. Local .env files
 
-Nothing changes from a standard Better-T-Stack app: `apps/web/.env` holds public client vars, `apps/server/.env` holds secrets, and `packages/env` validates both with zod so missing values fail loudly.
+Each app owns its `.env.schema`, env value files, and generated `src/env.ts` accessor. Varlock validates configuration through the framework integration or server bootstrap. Mark browser values `@public`; keep secrets in server configuration.
 
 ### 2. Syncing to Vercel
 
