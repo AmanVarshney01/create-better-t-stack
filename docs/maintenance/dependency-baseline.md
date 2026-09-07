@@ -38,7 +38,7 @@ Next uses a client component to register a public service worker with `updateVia
 
 TanStack Router caches its SPA shell. The SSR frontends use network navigation with a precached offline page; authenticated HTML and API responses are not runtime-cached. Full offline data editing and synchronization remain application-specific.
 
-Production browser verification used a persistent Chromium profile on localhost. All four frontends registered an active service worker, returned no Chrome installability errors, loaded their expected offline content after disabling the network, and recovered after reconnecting:
+Production browser verification used a persistent Chromium profile on localhost. These four checks were repeated successfully against fresh CLI-generated Varlock projects at code commit `42d2bb8e`. All four frontends registered an active service worker, returned no Chrome installability errors, loaded their expected offline content after disabling the network, and recovered after reconnecting:
 
 | Frontend        | Offline reload           | Reconnect |
 | --------------- | ------------------------ | --------- |
