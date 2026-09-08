@@ -1899,7 +1899,9 @@ describe("Addon Configurations", () => {
         const projectDir = result.result!.projectDirectory!;
         if (frontend === "astro") {
           const middleware = await readFile(join(projectDir, "apps/web/src/middleware.ts"), "utf8");
-          expect(middleware).toContain("cfContext.waitUntil.bind(");
+          expect(middleware).toMatch(
+            /context\.locals\.cfContext\.waitUntil\.bind\(\s*context\.locals\.cfContext,?\s*\)/,
+          );
           expect(middleware).toContain("log.set({ status: response.status })");
           expect(await readFile(join(projectDir, "apps/web/src/locals.d.ts"), "utf8")).toContain(
             "cfContext: ExecutionContext",

@@ -65,6 +65,23 @@ const baseConfig = {
 } satisfies Partial<CreateInput>;
 
 const buildSamples: BuildSample[] = [
+  {
+    name: "tanstack-start-axiom-pnpm",
+    packageManagers: ["pnpm"],
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-start"],
+      backend: "self",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["axiom"],
+      examples: [],
+    },
+  },
   ...(["nuxt", "tanstack-start"] as const).map(
     (frontend) =>
       ({
@@ -793,8 +810,9 @@ async function validateSolidScaffold(sample: SelectedBuildSample, projectDir: st
 
   const webPackageJson = await fs.readJson(path.join(webDir, "package.json"));
   expect(webPackageJson.dependencies?.["@solidjs/start"]).toBeUndefined();
-  expect(webPackageJson.dependencies?.["solid-js"]).toBe("2.0.0-rc.6");
-  expect(webPackageJson.dependencies?.["@solidjs/web"]).toBe("2.0.0-rc.6");
+  expect(webPackageJson.devDependencies?.["@tanstack/solid-query-devtools"]).toBeUndefined();
+  expect(webPackageJson.dependencies?.["solid-js"]).toBe("2.0.0-rc.7");
+  expect(webPackageJson.dependencies?.["@solidjs/web"]).toBe("2.0.0-rc.7");
   expect(webPackageJson.dependencies?.["@solidjs/router"]).toBeDefined();
   expect(webPackageJson.devDependencies?.["@solidjs/vite-plugin"]).toBeDefined();
   expect(webPackageJson.devDependencies?.["filesystem-routing"]).toBeDefined();
@@ -997,12 +1015,16 @@ async function getAvailablePort(): Promise<number> {
 async function fetchWhenReady(url: string, init?: RequestInit) {
   for (let attempt = 0; attempt < 100; attempt++) {
     try {
-      const response = await fetch(url, { ...init, signal: AbortSignal.timeout(5000) });
+      const response = await fetch(url, {
+        ...init,
+        signal: init?.signal ?? AbortSignal.timeout(5000),
+      });
       // SSR can send headers before compilation/streaming finishes. Consume the
       // body inside the retry boundary so a timeout does not escape afterwards.
       const body = await response.arrayBuffer();
       return new Response(body, { status: response.status, headers: response.headers });
     } catch {
+      init?.signal?.throwIfAborted();
       await Bun.sleep(100);
     }
   }
@@ -1055,6 +1077,38 @@ async function bootAndValidateAxiomRuntime(sample: SelectedBuildSample, projectD
     collector.stop(true);
   }
 }
+
+describe("Generated runtime readiness", () => {
+  it("stops when the caller cancels a streaming response", async () => {
+    const controller = new AbortController();
+    const reason = new Error("Runtime probe cancelled");
+    let requests = 0;
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch() {
+        requests++;
+        return new Response(
+          new ReadableStream({
+            start(stream) {
+              stream.enqueue(new TextEncoder().encode("pending"));
+              controller.abort(reason);
+            },
+          }),
+        );
+      },
+    });
+
+    try {
+      await expect(fetchWhenReady(server.url.href, { signal: controller.signal })).rejects.toBe(
+        reason,
+      );
+      expect(requests).toBe(1);
+    } finally {
+      await server.stop(true);
+    }
+  });
+});
 
 async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
   if (sample.config.webDeploy !== "prisma") return;
@@ -1110,7 +1164,7 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
 }
 
 async function bootAndValidateSolidRuntime(sample: SelectedBuildSample, projectDir: string) {
-  if (sample.name !== "solid-v2-self-orpc-no-auth") return;
+  if (!["solid-v2-self-orpc-no-auth", "solid-v2-self-orpc-auth-todo"].includes(sample.name)) return;
 
   const webDir = path.join(projectDir, "apps/web");
   const port = await getAvailablePort();
@@ -1141,6 +1195,14 @@ async function bootAndValidateSolidRuntime(sample: SelectedBuildSample, projectD
     });
     expect(health?.status).toBe(200);
     expect(await health?.json()).toEqual({ json: "OK" });
+
+    if (sample.name === "solid-v2-self-orpc-auth-todo") {
+      const dashboard = await fetchWhenReady(`http://127.0.0.1:${port}/dashboard`, {
+        signal: AbortSignal.timeout(15_000),
+      });
+      expect(dashboard?.status).toBe(200);
+      expect(await dashboard?.text()).toContain("Loading...");
+    }
 
     const missing = await fetchWhenReady(`http://127.0.0.1:${port}/missing-page`);
     expect(missing?.status).toBe(404);
@@ -1182,9 +1244,11 @@ async function bootAndValidateSolidDevRuntime(sample: SelectedBuildSample, proje
 
   let failure: unknown;
   try {
-    const root = await fetchWhenReady(`http://127.0.0.1:${port}/`);
-    expect(root?.status).toBe(200);
-    expect(await root?.text()).toContain("Connected");
+    for (let request = 0; request < 2; request++) {
+      const root = await fetchWhenReady(`http://127.0.0.1:${port}/`);
+      expect(root?.status).toBe(200);
+      expect(await root?.text()).toContain("Connected");
+    }
 
     const health = await fetchWhenReady(`http://127.0.0.1:${port}/rpc/healthCheck`, {
       method: "POST",

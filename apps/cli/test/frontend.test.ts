@@ -176,11 +176,16 @@ describe("Frontend Configurations", () => {
       const tsconfig = await fs.readJson(path.join(webDir, "tsconfig.json"));
       const viteConfig = await fs.readFile(path.join(webDir, "vite.config.ts"), "utf8");
 
+      expect(rootPackageJson.overrides).toEqual({
+        "@solidjs/signals": "2.0.0-rc.7",
+        "@solidjs/compiler": "2.0.0-rc.7",
+        "@solidjs/babel-plugin": "2.0.0-rc.7",
+      });
       expect(packageJson.dependencies).toMatchObject({
         "@solidjs/meta": "1.0.0-next.2",
-        "@solidjs/router": "2.0.0-next.21",
-        "@solidjs/web": "2.0.0-rc.6",
-        "solid-js": "2.0.0-rc.6",
+        "@solidjs/router": "2.0.0-next.23",
+        "@solidjs/web": "2.0.0-rc.7",
+        "solid-js": "2.0.0-rc.7",
       });
       expect(packageJson.devDependencies).toMatchObject({
         "@solidjs/vite-plugin": "3.0.0-next.39",

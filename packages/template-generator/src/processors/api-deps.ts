@@ -176,7 +176,6 @@ function addWebClientDeps(
         "@orpc/server",
         "@tanstack/solid-query",
       ],
-      devDependencies: ["@tanstack/solid-query-devtools"],
     });
   } else if (api === "orpc" && frontendType.hasAstroWeb) {
     // Astro uses vanilla oRPC client without TanStack Query
@@ -228,7 +227,6 @@ function addQueryDeps(vfs: VirtualFileSystem, frontend: Frontend[], backend: Bac
       vfs,
       packagePath: webPath,
       dependencies: ["@tanstack/solid-query", "@tanstack/query-core"],
-      devDependencies: ["@tanstack/solid-query-devtools"],
     });
   }
 

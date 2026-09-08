@@ -6,5 +6,12 @@
     "apps/*",
     "packages/*"
   ],
+{{#if (and (includes frontend "solid") (ne packageManager "pnpm"))}}
+  "overrides": {
+    "@solidjs/signals": "2.0.0-rc.7",
+    "@solidjs/compiler": "2.0.0-rc.7",
+    "@solidjs/babel-plugin": "2.0.0-rc.7"
+  },
+{{/if}}
   "scripts": {}
 }

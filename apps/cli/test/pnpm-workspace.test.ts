@@ -19,6 +19,7 @@ async function readPnpmWorkspace(config: TestConfig) {
   const workspacePath = path.join(result.projectDir!, "pnpm-workspace.yaml");
   const content = await readFile(workspacePath, "utf8");
   return yaml.parse(content) as {
+    overrides?: Record<string, string>;
     allowBuilds?: Record<string, boolean>;
     minimumReleaseAgeExclude?: string[];
   };
@@ -43,16 +44,21 @@ describe("pnpm workspace", () => {
       serverDeploy: "none",
     });
 
+    expect(workspace.overrides).toEqual({
+      "@solidjs/signals": "2.0.0-rc.7",
+      "@solidjs/compiler": "2.0.0-rc.7",
+      "@solidjs/babel-plugin": "2.0.0-rc.7",
+    });
     expect(workspace.minimumReleaseAgeExclude).toEqual([
+      "@solidjs/babel-plugin@2.0.0-rc.7",
+      "@solidjs/compiler@2.0.0-rc.7",
       "@solidjs/meta@1.0.0-next.2",
-      "@solidjs/router@2.0.0-next.21",
-      "@solidjs/signals@2.0.0-rc.6",
+      "@solidjs/router@2.0.0-next.23",
+      "@solidjs/signals@2.0.0-rc.7",
       "@solidjs/vite-plugin@3.0.0-next.39",
-      "@solidjs/web@2.0.0-rc.6",
-      "@tanstack/solid-query-devtools@6.0.0-rc.3",
+      "@solidjs/web@2.0.0-rc.7",
       "@tanstack/solid-query@6.0.0-rc.3",
-      "babel-preset-solid@2.0.0-rc.6",
-      "solid-js@2.0.0-rc.6",
+      "solid-js@2.0.0-rc.7",
     ]);
   });
 

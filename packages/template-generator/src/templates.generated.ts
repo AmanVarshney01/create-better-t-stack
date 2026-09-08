@@ -11889,7 +11889,15 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
     setError();
     try {
       await authClient.signIn.email(result.data, {
-        onSuccess: () => navigate("/dashboard"),
+        onSuccess: async () => {
+          await authClient.useSession.get().refetch();
+          const session = authClient.useSession.get();
+          if (!session.data) {
+            setError(session.error?.message || "Unable to load your session. Please sign in again.");
+            return;
+          }
+          navigate("/dashboard");
+        },
         onError: ({ error }) => {
           setError(error.message);
         },
@@ -11968,7 +11976,15 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
     setError();
     try {
       await authClient.signUp.email(result.data, {
-        onSuccess: () => navigate("/dashboard"),
+        onSuccess: async () => {
+          await authClient.useSession.get().refetch();
+          const session = authClient.useSession.get();
+          if (!session.data) {
+            setError(session.error?.message || "Unable to load your session. Please sign in again.");
+            return;
+          }
+          navigate("/dashboard");
+        },
         onError: ({ error }) => {
           setError(error.message);
         },
@@ -12123,13 +12139,6 @@ export default function Dashboard() {
 		},
 	);
 
-	{{#if (eq api "orpc")}}
-	const privateData = useQuery(() => ({
-		...orpc.privateData.queryOptions(),
-		enabled: Boolean(session().data),
-	}));
-	{{/if}}
-
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
 		(customerState()?.activeSubscriptions?.length ?? 0) > 0;
@@ -12141,7 +12150,7 @@ export default function Dashboard() {
 			<h1>Dashboard</h1>
 			<p>Welcome {session().data?.user.name}</p>
 			{{#if (eq api "orpc")}}
-			<p>API: {privateData.data?.message}</p>
+			<PrivateData />
 			{{/if}}
 			{{#if (eq payments "polar")}}
 			<p>Plan: {hasProSubscription() ? "Pro" : "Free"}</p>
@@ -12161,6 +12170,13 @@ export default function Dashboard() {
 		</Show>
 	);
 }
+
+{{#if (eq api "orpc")}}
+function PrivateData() {
+  const privateData = useQuery(() => orpc.privateData.queryOptions());
+  return <p>API: {privateData.data?.message}</p>;
+}
+{{/if}}
 `],
   ["auth/better-auth/web/solid/src/routes/login.tsx.hbs", `import { createSignal, Match, Switch } from "solid-js";
 import SignInForm from "~/components/sign-in-form";
@@ -15332,6 +15348,13 @@ temp
     "apps/*",
     "packages/*"
   ],
+{{#if (and (includes frontend "solid") (ne packageManager "pnpm"))}}
+  "overrides": {
+    "@solidjs/signals": "2.0.0-rc.7",
+    "@solidjs/compiler": "2.0.0-rc.7",
+    "@solidjs/babel-plugin": "2.0.0-rc.7"
+  },
+{{/if}}
   "scripts": {}
 }
 `],
@@ -25947,16 +25970,21 @@ declare module "cloudflare:workers" {
   - "packages/*"
 {{#if (includes frontend "solid")}}
 
+overrides:
+  "@solidjs/signals": "2.0.0-rc.7"
+  "@solidjs/compiler": "2.0.0-rc.7"
+  "@solidjs/babel-plugin": "2.0.0-rc.7"
+
 minimumReleaseAgeExclude:
+  - "@solidjs/babel-plugin@2.0.0-rc.7"
+  - "@solidjs/compiler@2.0.0-rc.7"
   - "@solidjs/meta@1.0.0-next.2"
-  - "@solidjs/router@2.0.0-next.21"
-  - "@solidjs/signals@2.0.0-rc.6"
+  - "@solidjs/router@2.0.0-next.23"
+  - "@solidjs/signals@2.0.0-rc.7"
   - "@solidjs/vite-plugin@3.0.0-next.39"
-  - "@solidjs/web@2.0.0-rc.6"
-  - "@tanstack/solid-query-devtools@6.0.0-rc.3"
+  - "@solidjs/web@2.0.0-rc.7"
   - "@tanstack/solid-query@6.0.0-rc.3"
-  - "babel-preset-solid@2.0.0-rc.6"
-  - "solid-js@2.0.0-rc.6"
+  - "solid-js@2.0.0-rc.7"
 {{/if}}
 {{#if (or (eq runtime "node") (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare") (eq webDeploy "prisma") (eq serverDeploy "prisma") (eq webDeploy "docker") (eq serverDeploy "docker") (eq webDeploy "vercel") (eq serverDeploy "vercel") (eq orm "prisma") (includes addons "axiom") (includes addons "lefthook") (includes addons "nx") (includes addons "pwa") (includes addons "turborepo") (includes addons "vite-plus") (includes frontend "react-router") (includes frontend "next") (includes frontend "nuxt"))}}
 
@@ -32720,9 +32748,9 @@ dist
   },
   "dependencies": {
     "@solidjs/meta": "1.0.0-next.2",
-    "@solidjs/router": "2.0.0-next.21",
-    "@solidjs/web": "2.0.0-rc.6",
-    "solid-js": "2.0.0-rc.6"
+    "@solidjs/router": "2.0.0-next.23",
+    "@solidjs/web": "2.0.0-rc.7",
+    "solid-js": "2.0.0-rc.7"
   },
   "devDependencies": {
     "@solidjs/vite-plugin": "3.0.0-next.39",
@@ -32748,7 +32776,6 @@ import Loader from "~/components/loader";
 import { Router } from "~/router";
 {{#if (eq api "orpc")}}
 import { QueryClientProvider } from "@tanstack/solid-query";
-import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";
 import { createQueryClient } from "~/utils/orpc";
 {{/if}}
 import "./styles.css";
@@ -32774,7 +32801,6 @@ export default function App() {
         )}
       </Router>
 {{#if (eq api "orpc")}}
-      <SolidQueryDevtools />
     </QueryClientProvider>
 {{/if}}
   );
@@ -33025,6 +33051,9 @@ export default defineConfig({
     },
   },
 {{/if}}
+  ssr: {
+    noExternal: ["solid-js", /^@solidjs\\//, "@tanstack/solid-query"],
+  },
   resolve: {
     tsconfigPaths: true,
 {{#if (eq webDeploy "cloudflare")}}

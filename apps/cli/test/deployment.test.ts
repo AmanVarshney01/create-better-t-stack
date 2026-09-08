@@ -1993,7 +1993,7 @@ describe("Deployment Configurations", () => {
       const compose = files.get("docker-compose.yml");
 
       expect(webPkg.dependencies["@solidjs/start"]).toBeUndefined();
-      expect(webPkg.dependencies["solid-js"]).toBe("2.0.0-rc.6");
+      expect(webPkg.dependencies["solid-js"]).toBe("2.0.0-rc.7");
       expect(webPkg.devDependencies.nitro).toBeDefined();
       expect(webPkg.devDependencies["@tanstack/solid-router-devtools"]).toBeUndefined();
       expect(files.get("apps/web/vite.config.ts")).toContain("tsconfigPaths: true");
