@@ -23,6 +23,16 @@ function schemaKeys(vfs: VirtualFileSystem, app: string, config: ProjectConfig):
   if (app === "apps/web" && config.backend === "none") {
     for (const key of keys) if (key.endsWith("SERVER_URL")) keys.delete(key);
   }
+  if (
+    config.addons.includes("axiom") &&
+    ((app === "apps/server" && ["hono", "express", "fastify", "elysia"].includes(config.backend)) ||
+      (app === "apps/web" &&
+        config.frontend.some((f) =>
+          ["next", "tanstack-start", "nuxt", "svelte", "astro"].includes(f),
+        )))
+  ) {
+    for (const key of ["AXIOM_API_KEY", "AXIOM_DATASET", "AXIOM_EDGE_URL"]) keys.add(key);
+  }
   const server = app === (config.backend === "self" ? "apps/web" : "apps/server");
   if (server) {
     if (config.database !== "none" && config.dbSetup !== "d1") {
@@ -65,6 +75,15 @@ function schema(keys: Set<string>, config: ProjectConfig): string {
   }
   for (const key of keys) {
     if (key === "NODE_ENV") continue;
+    if (key.startsWith("AXIOM_")) {
+      lines.push(
+        "# Supplied by Alchemy at runtime; builds do not need ingest credentials.",
+        `# @dynamic @required=false @type=${key === "AXIOM_EDGE_URL" ? "url" : "string(minLength=1)"}`,
+        `${key}=`,
+        "",
+      );
+      continue;
+    }
     const isPublic = /^(VITE_|NEXT_PUBLIC_|NUXT_PUBLIC_|PUBLIC_|EXPO_PUBLIC_)/.test(key);
     let type = "string(minLength=1)";
     if (key === "BETTER_AUTH_SECRET") type = "string(minLength=32)";

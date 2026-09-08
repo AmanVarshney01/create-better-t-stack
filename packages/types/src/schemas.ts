@@ -51,6 +51,7 @@ export const AddonsSchema = z
     "wxt",
     "skills",
     "evlog",
+    "axiom",
     "none",
   ])
   .describe("Additional addons");
@@ -61,6 +62,14 @@ const AddonsListSchema = z.array(AddonsSchema).superRefine((addons, ctx) => {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "`nx`, `turborepo`, and `vite-plus` cannot be used together",
+    });
+  }
+
+  const observabilityAddons = addons.filter((addon) => ["evlog", "axiom"].includes(addon));
+  if (observabilityAddons.length > 1) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "`evlog` and `axiom` cannot be used together because Axiom includes evlog",
     });
   }
 });

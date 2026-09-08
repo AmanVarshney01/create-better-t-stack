@@ -9,6 +9,7 @@ import {
   type Runtime,
 } from "../types";
 import {
+  OBSERVABILITY_ADDONS,
   TASK_RUNNER_ADDONS,
   getCompatibleAddons,
   validateAddonCompatibility,
@@ -109,6 +110,10 @@ function getAddonDisplay(addon: Addons): AddonDisplay {
       label = "evlog";
       hint = "Request logging with Better Auth context and AI SDK telemetry";
       break;
+    case "axiom":
+      label = "Axiom";
+      hint = "Managed production observability through evlog and Alchemy";
+      break;
     default:
       label = addon;
       hint = `Add ${addon}`;
@@ -122,7 +127,7 @@ const ADDON_GROUPS = {
   "Code Quality": ["biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
   "Platform Extensions": ["pwa", "tauri", "electrobun", "opentui", "wxt"],
-  Observability: ["evlog"],
+  Observability: ["evlog", "axiom"],
   "AI & Agent Tools": ["skills", "mcp"],
 };
 
@@ -159,6 +164,12 @@ function validateAddonSelection(selected: Addons[] | undefined) {
   const selectedTaskRunners = selected?.filter((addon) => TASK_RUNNER_ADDONS.includes(addon)) ?? [];
   if (selectedTaskRunners.length > 1) {
     return "Choose Turborepo, Nx, or Vite+ as your task runner, not more than one.";
+  }
+
+  const selectedObservabilityAddons =
+    selected?.filter((addon) => OBSERVABILITY_ADDONS.includes(addon)) ?? [];
+  if (selectedObservabilityAddons.length > 1) {
+    return "Choose evlog or Axiom, not both. Axiom already includes evlog.";
   }
 }
 
@@ -205,7 +216,7 @@ export async function getAddonsChoice(
     options: groupedOptions,
     initialValues: initialValues,
     required: false,
-    exclusive: [TASK_RUNNER_ADDONS],
+    exclusive: [TASK_RUNNER_ADDONS, OBSERVABILITY_ADDONS],
     validate: validateAddonSelection,
   });
 
@@ -220,7 +231,7 @@ export async function getAddonsToAdd(config: AddonProjectConfig) {
   const frontendArray = config.frontend || [];
 
   const compatibleAddons = getCompatibleAddons(
-    AddonsSchema.options.filter((addon) => addon !== "none"),
+    AddonsSchema.options.filter((addon) => addon !== "none" && addon !== "axiom"),
     frontendArray,
     config.addons,
     config.auth,
@@ -244,7 +255,7 @@ export async function getAddonsToAdd(config: AddonProjectConfig) {
     message: "Select addons to add",
     options: groupedOptions,
     required: false,
-    exclusive: [TASK_RUNNER_ADDONS],
+    exclusive: [TASK_RUNNER_ADDONS, OBSERVABILITY_ADDONS],
     validate: validateAddonSelection,
   });
 

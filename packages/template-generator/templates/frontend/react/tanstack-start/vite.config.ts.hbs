@@ -3,7 +3,7 @@ import { varlockVitePlugin } from "@varlock/vite-integration";
 {{/unless}}
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma"))}}
+{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma") (and (ne webDeploy "cloudflare") (includes addons "axiom")))}}
 import { nitro } from "nitro/vite";
 {{/if}}
 import tailwindcss from "@tailwindcss/vite";
@@ -47,7 +47,7 @@ export default defineConfig({
         },
       },
 {{/if}}),
-{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma"))}}
+{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma") (and (ne webDeploy "cloudflare") (includes addons "axiom")))}}
     nitro({{#if (eq webDeploy "docker")}}{ preset: "{{#if (eq runtime "bun")}}bun{{else}}node-server{{/if}}" }{{/if}}),
 {{/if}}
     viteReact(),

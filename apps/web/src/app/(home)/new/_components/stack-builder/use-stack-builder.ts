@@ -3,7 +3,11 @@ import { toast } from "sonner";
 
 import { type BuilderCopySource, stackSnapshot, track } from "@/lib/analytics";
 import { DEFAULT_STACK, PRESET_TEMPLATES, type StackState, TECH_OPTIONS } from "@/lib/constant";
-import { sanitizeStackState, TASK_RUNNER_ADDONS } from "@/lib/sanitize-stack-addons";
+import {
+  OBSERVABILITY_ADDONS,
+  sanitizeStackState,
+  TASK_RUNNER_ADDONS,
+} from "@/lib/sanitize-stack-addons";
 import { useStackState } from "@/lib/stack-url-state.client";
 import {
   CATEGORY_ORDER,
@@ -154,6 +158,16 @@ export function getTechSelectionUpdate(
       ) {
         nextArray = nextArray.filter(
           (id) => id === techId || !(TASK_RUNNER_ADDONS as readonly string[]).includes(id),
+        );
+      }
+
+      if (
+        catKey === "addons" &&
+        !isSelected &&
+        (OBSERVABILITY_ADDONS as readonly string[]).includes(techId)
+      ) {
+        nextArray = nextArray.filter(
+          (id) => id === techId || !(OBSERVABILITY_ADDONS as readonly string[]).includes(id),
         );
       }
 

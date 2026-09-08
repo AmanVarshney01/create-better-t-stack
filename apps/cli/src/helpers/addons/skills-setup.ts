@@ -326,7 +326,7 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
     sources.push("haydenbleasel/ultracite");
   }
 
-  if (addons.includes("evlog")) {
+  if (addons.includes("evlog") || addons.includes("axiom")) {
     sources.push("https://www.evlog.dev");
   }
 

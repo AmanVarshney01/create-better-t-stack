@@ -814,13 +814,18 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       });
     }
   }
-  if (!evlogCompat && nextStack.addons.includes("evlog")) {
-    nextStack.addons = nextStack.addons.filter((a) => a !== "evlog");
+  const incompatibleObservabilityAddons = nextStack.addons.filter(
+    (addon) => (addon === "evlog" || addon === "axiom") && !evlogCompat,
+  );
+  if (incompatibleObservabilityAddons.length > 0) {
+    nextStack.addons = nextStack.addons.filter(
+      (addon) => !incompatibleObservabilityAddons.includes(addon),
+    );
     if (nextStack.addons.length === 0) nextStack.addons = ["none"];
     changed = true;
     changes.push({
       category: "addons",
-      message: "evlog removed (requires a server or fullstack backend)",
+      message: `${incompatibleObservabilityAddons.join(" and ")} removed (requires a server or fullstack backend)`,
     });
   }
 
@@ -1409,8 +1414,11 @@ export const getDisabledReason = (
       }
       return "Electrobun requires a web frontend";
     }
-    if (optionId === "evlog" && !hasEvlogCompatibleBackend(currentStack.backend)) {
-      return "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend";
+    if (
+      (optionId === "evlog" || optionId === "axiom") &&
+      !hasEvlogCompatibleBackend(currentStack.backend)
+    ) {
+      return `${optionId} requires Hono, Express, Fastify, Elysia, or a fullstack backend`;
     }
     // Task runners are mutually exclusive in the CLI, but the builder lets users swap them.
     // URL/state sanitization keeps only the latest selected runner before generating commands.

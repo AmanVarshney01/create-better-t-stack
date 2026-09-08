@@ -85,6 +85,10 @@ export function getStackGeneratedIgnorePatterns(config: ProjectConfig): string[]
     }
   }
 
+  if (config.addons.includes("axiom")) {
+    patterns.add(".alchemy/**");
+  }
+
   if (config.webDeploy === "vercel" || config.serverDeploy === "vercel") {
     patterns.add(".vercel/**");
   }

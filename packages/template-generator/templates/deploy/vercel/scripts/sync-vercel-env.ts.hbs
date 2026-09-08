@@ -57,11 +57,6 @@ for (const arg of remainingArgs) {
 const vercelArgs = [...passthroughArgs, ...forwardedArgs];
 const envFiles = files.length > 0 ? files : DEFAULT_FILES;
 
-if (envFiles.length === 0) {
-	console.log("No env files configured for this Vercel stack.");
-	process.exit(0);
-}
-
 const env = new Map<string, string>();
 
 for (const file of envFiles) {
@@ -75,6 +70,13 @@ for (const file of envFiles) {
 		env.set(key, OVERRIDE_KEYS.get(key) ?? value);
 	}
 }
+
+{{#if (includes addons "axiom")}}
+for (const key of ["AXIOM_API_KEY", "AXIOM_DATASET", "AXIOM_EDGE_URL"] as const) {
+	const value = process.env[key];
+	if (value) env.set(key, value);
+}
+{{/if}}
 
 if (env.size === 0) {
 	console.log("No Vercel env vars found to sync.");

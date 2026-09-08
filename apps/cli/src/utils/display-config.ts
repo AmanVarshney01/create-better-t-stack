@@ -72,6 +72,7 @@ const VALUE_LABELS = {
   skills: "Agent skills",
   mcp: "MCP servers",
   evlog: "evlog",
+  axiom: "Axiom",
   todo: "Todo app",
   ai: "AI chat",
   turso: "Turso",

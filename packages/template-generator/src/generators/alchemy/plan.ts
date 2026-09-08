@@ -44,7 +44,28 @@ export type AlchemyDeploymentPlan = {
   hasPrismaDeploy: boolean;
   hasAlchemyManagedDatabase: boolean;
   hasD1Resource: boolean;
+  hasAxiom: boolean;
+  hasAxiomServerRuntime: boolean;
+  hasAxiomWebRuntime: boolean;
+  hasAxiomVercelRuntime: boolean;
+  needsStandaloneServerDev: boolean;
+  needsStandaloneWebDev: boolean;
 };
+
+const AXIOM_SERVER_BACKENDS: readonly ProjectConfig["backend"][] = [
+  "hono",
+  "express",
+  "fastify",
+  "elysia",
+];
+
+const AXIOM_WEB_FRONTENDS: readonly Frontend[] = [
+  "next",
+  "tanstack-start",
+  "nuxt",
+  "svelte",
+  "astro",
+];
 
 function isDeployedWebFramework(frontend: Frontend): frontend is DeployedWebFramework {
   return (webFrontends as readonly Frontend[]).includes(frontend);
@@ -93,6 +114,13 @@ export function createAlchemyDeploymentPlan(config: ProjectConfig): AlchemyDeplo
   const hasCloudflare = config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare";
   const hasPrismaDeploy = config.webDeploy === "prisma" || config.serverDeploy === "prisma";
   const hasAlchemyManagedDatabase = usesAlchemyManagedDatabase(config);
+  const hasAxiom = config.addons.includes("axiom");
+  const hasAxiomServerRuntime = hasAxiom && AXIOM_SERVER_BACKENDS.includes(config.backend);
+  const hasAxiomWebRuntime =
+    hasAxiom && config.frontend.some((frontend) => AXIOM_WEB_FRONTENDS.includes(frontend));
+  const hasAxiomVercelRuntime =
+    (hasAxiomWebRuntime && config.webDeploy === "vercel") ||
+    (hasAxiomServerRuntime && config.serverDeploy === "vercel");
 
   const web: AlchemyWebPlan = isAlchemyDeployTarget(config.webDeploy)
     ? {
@@ -118,6 +146,12 @@ export function createAlchemyDeploymentPlan(config: ProjectConfig): AlchemyDeplo
       config.dbSetup === "d1" &&
       (config.serverDeploy === "cloudflare" ||
         (config.backend === "self" && config.webDeploy === "cloudflare")),
+    hasAxiom,
+    hasAxiomServerRuntime,
+    hasAxiomWebRuntime,
+    hasAxiomVercelRuntime,
+    needsStandaloneServerDev: hasAxiomServerRuntime && server.target === "none",
+    needsStandaloneWebDev: hasAxiomWebRuntime && web.target === "none",
   };
 }
 

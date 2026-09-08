@@ -6,6 +6,7 @@ const validAddonIds = new Set(["none", ...TECH_OPTIONS.addons.map((option) => op
 const validExampleIds = new Set(["none", ...TECH_OPTIONS.examples.map((option) => option.id)]);
 
 export const TASK_RUNNER_ADDONS = ["nx", "turborepo", "vite-plus"] as const;
+export const OBSERVABILITY_ADDONS = ["evlog", "axiom"] as const;
 
 function sanitizeSingleSelection(
   values: readonly string[] | null | undefined,
@@ -37,17 +38,18 @@ function sanitizeMultiSelection(
   return unique.length > 0 ? unique : ["none"];
 }
 
-function resolveMonorepoAddonConflicts(addons: readonly string[]): string[] {
+function resolveAddonConflicts(addons: readonly string[]): string[] {
   const resolved: string[] = [];
-  const taskRunners = new Set<string>(TASK_RUNNER_ADDONS);
+  const exclusiveGroups = [
+    new Set<string>(TASK_RUNNER_ADDONS),
+    new Set<string>(OBSERVABILITY_ADDONS),
+  ];
 
   for (const addon of addons) {
-    if (taskRunners.has(addon)) {
-      const existingMonorepoIndex = resolved.findIndex((value) => taskRunners.has(value));
-
-      if (existingMonorepoIndex !== -1) {
-        resolved.splice(existingMonorepoIndex, 1);
-      }
+    const group = exclusiveGroups.find((values) => values.has(addon));
+    if (group) {
+      const existingIndex = resolved.findIndex((value) => group.has(value));
+      if (existingIndex !== -1) resolved.splice(existingIndex, 1);
     }
 
     if (!resolved.includes(addon)) {
@@ -60,7 +62,7 @@ function resolveMonorepoAddonConflicts(addons: readonly string[]): string[] {
 
 export function sanitizeAddons(addons: readonly string[] | null | undefined): string[] {
   const sanitized = sanitizeMultiSelection(addons, validAddonIds, DEFAULT_STACK.addons);
-  return resolveMonorepoAddonConflicts(sanitized);
+  return resolveAddonConflicts(sanitized);
 }
 
 export function sanitizeExamples(examples: readonly string[] | null | undefined): string[] {

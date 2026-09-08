@@ -683,6 +683,14 @@ export const TECH_OPTIONS = {
       color: "from-sky-500 to-slate-700",
       default: false,
     },
+    {
+      id: "axiom",
+      name: "Axiom",
+      description: "Managed production observability through evlog and Alchemy",
+      icon: "",
+      color: "from-violet-500 to-indigo-700",
+      default: false,
+    },
   ],
   examples: [
     {

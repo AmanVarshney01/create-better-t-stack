@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, spyOn } from "bun:test";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -65,6 +65,44 @@ const baseConfig = {
 } satisfies Partial<CreateInput>;
 
 const buildSamples: BuildSample[] = [
+  {
+    name: "tanstack-start-axiom-pnpm",
+    packageManagers: ["pnpm"],
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-start"],
+      backend: "self",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["axiom"],
+      examples: [],
+    },
+  },
+  ...(["nuxt", "tanstack-start"] as const).map(
+    (frontend) =>
+      ({
+        name: `${frontend}-axiom`,
+        packageManagers: ["bun"] as const,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          auth: "none",
+          payments: "none",
+          addons: ["axiom", "vite-plus"],
+          examples: [],
+          webDeploy: "docker",
+        },
+      }) satisfies BuildSample,
+  ),
   ...(["tanstack-router", "react-router", "next"] as const).map(
     (frontend) =>
       ({
@@ -988,13 +1026,81 @@ async function fetchWhenReady(url: string, init?: RequestInit) {
     } catch {
       init?.signal?.throwIfAborted();
       await Bun.sleep(100);
+      init?.signal?.throwIfAborted();
     }
   }
 
   return undefined;
 }
 
+async function bootAndValidateAxiomRuntime(sample: SelectedBuildSample, projectDir: string) {
+  if (!sample.config.addons?.includes("axiom")) return;
+  const received: Array<{ path?: string; status?: number }> = [];
+  const collector = Bun.serve({
+    port: 0,
+    hostname: "127.0.0.1",
+    async fetch(request) {
+      const events = z
+        .array(z.object({ path: z.string().optional(), status: z.number().optional() }))
+        .parse(await request.json());
+      received.push(...events);
+      return Response.json({ ingested: events.length, failed: 0 });
+    },
+  });
+  const port = await getAvailablePort();
+  const runtime = execa("node", [".output/server/index.mjs"], {
+    cwd: path.join(projectDir, "apps/web"),
+    all: true,
+    reject: false,
+    env: {
+      ...process.env,
+      NODE_ENV: "production",
+      HOST: "127.0.0.1",
+      PORT: String(port),
+      AXIOM_API_KEY: "xaat-local-test",
+      AXIOM_DATASET: "generated-test",
+      AXIOM_EDGE_URL: collector.url.toString(),
+    },
+  });
+  try {
+    expect((await fetchWhenReady(`http://127.0.0.1:${port}/`))?.status).toBe(200);
+    expect((await fetchWhenReady(`http://127.0.0.1:${port}/missing-axiom-test`))?.status).toBe(404);
+    for (let attempt = 0; attempt < 100 && received.length < 2; attempt++) await Bun.sleep(50);
+    expect(received).toEqual(
+      expect.arrayContaining([
+        { path: "/", status: 200 },
+        { path: "/missing-axiom-test", status: 404 },
+      ]),
+    );
+  } finally {
+    runtime.kill("SIGTERM");
+    await runtime;
+    collector.stop(true);
+  }
+}
+
 describe("Generated runtime readiness", () => {
+  it("preserves cancellation during the final retry delay", async () => {
+    const controller = new AbortController();
+    const reason = new Error("Runtime probe cancelled during retry delay");
+    const fetchMock = spyOn(globalThis, "fetch").mockRejectedValue(new Error("Server not ready"));
+    let delays = 0;
+    const sleepMock = spyOn(Bun, "sleep").mockImplementation(async () => {
+      await Promise.resolve();
+      if (++delays === 100) controller.abort(reason);
+    });
+
+    try {
+      await expect(
+        fetchWhenReady("http://127.0.0.1:1/", { signal: controller.signal }),
+      ).rejects.toBe(reason);
+      expect(delays).toBe(100);
+    } finally {
+      sleepMock.mockRestore();
+      fetchMock.mockRestore();
+    }
+  });
+
   it("stops when the caller cancels a streaming response", async () => {
     const controller = new AbortController();
     const reason = new Error("Runtime probe cancelled");
@@ -1230,6 +1336,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
           }
           await buildAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
+          await bootAndValidateAxiomRuntime(sample, projectDir);
           await bootAndValidateSolidDevRuntime(sample, projectDir);
           await bootAndValidateSolidRuntime(sample, projectDir);
           await validateSolidBuildArtifacts(sample, projectDir);

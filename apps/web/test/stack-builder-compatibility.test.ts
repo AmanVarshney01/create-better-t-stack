@@ -142,6 +142,11 @@ describe("stack builder D1 compatibility", () => {
     expect(getDisabledReason(createStack({ addons: ["vite-plus"] }), "addons", "nx")).toBeNull();
   });
 
+  test("keeps only the latest selected observability addon", () => {
+    expect(sanitizeAddons(["evlog", "axiom"])).toEqual(["axiom"]);
+    expect(sanitizeAddons(["axiom", "evlog"])).toEqual(["evlog"]);
+  });
+
   test("renders long CLI commands with visible flag separators", () => {
     const command = generateStackCommand(
       createStack({ addons: ["vite-plus"], examples: ["none"] }),
