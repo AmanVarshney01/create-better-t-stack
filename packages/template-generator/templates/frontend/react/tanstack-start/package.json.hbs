@@ -6,7 +6,7 @@
     "build": "vite build",
     "serve": "vite preview",
     "dev": "vite dev",
-    "check-types": "tsc --noEmit"
+    "check-types": "vite build && tsc --noEmit"
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",

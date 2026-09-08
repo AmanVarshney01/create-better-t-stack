@@ -1311,10 +1311,11 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
           expect(createResult.isOk()).toBe(true);
           await writeSyntheticBuildConfig(projectDir);
 
-          for (const script of ["install", "build"] as const) {
-            const { command, args } = getPackageManagerCommand(sample.packageManager, script);
-            await runCommand(sample.name, projectDir, command, args);
-          }
+          const install = getPackageManagerCommand(sample.packageManager, "install");
+          await runCommand(sample.name, projectDir, install.command, install.args);
+          await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
+          const build = getPackageManagerCommand(sample.packageManager, "build");
+          await runCommand(sample.name, projectDir, build.command, build.args);
           await buildAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidateAxiomRuntime(sample, projectDir);
@@ -1323,7 +1324,6 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
           await bootAndValidateSolidRuntime(sample, projectDir);
           await validateSolidBuildArtifacts(sample, projectDir);
           await validatePwaBuildArtifacts(sample, projectDir);
-          await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
           if (sample.config.frontend?.some((frontend) => frontend.startsWith("native-"))) {
             // Exercise Metro/Babel and platform imports as well as TypeScript.
             // This exports JS bundles; it does not compile or sign native binaries.

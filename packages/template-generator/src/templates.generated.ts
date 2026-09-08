@@ -1628,13 +1628,10 @@ export type AppRouter = typeof appRouter;
   ["api/orpc/server/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "composite": true
+    "noEmit": true
   }
-}`],
+}
+`],
   ["api/orpc/web/astro/src/lib/orpc.ts.hbs", `import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 
 import { createORPCClient } from "@orpc/client";
@@ -2633,13 +2630,10 @@ export type AppRouter = typeof appRouter;
   ["api/trpc/server/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "composite": true
+    "noEmit": true
   }
-}`],
+}
+`],
   ["api/trpc/web/react/base/src/utils/trpc.ts.hbs", `{{#if (includes frontend 'next')}}
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
@@ -8429,13 +8423,10 @@ export function createAuth(env: AuthConfig{{#if (ne database "none")}}, database
   ["auth/better-auth/server/base/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "composite": true
+    "noEmit": true
   }
-}`],
+}
+`],
   ["auth/better-auth/server/db/drizzle/mysql/src/schema/auth.ts.hbs", `import { relations } from "drizzle-orm";
 import {
   mysqlTable,
@@ -15511,13 +15502,10 @@ export type DatabaseConfig = {
   ["db/base/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "composite": true
+    "noEmit": true
   }
-}`],
+}
+`],
   ["db/drizzle/base/src/schema/index.ts.hbs", `{{#if (eq auth "better-auth")}}
 export * from "./auth";
 {{/if}}
@@ -31918,7 +31906,7 @@ export default defineConfig({
     "build": "vite build",
     "serve": "vite preview",
     "dev": "vite dev",
-    "check-types": "tsc --noEmit"
+    "check-types": "vite build && tsc --noEmit"
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
