@@ -1885,12 +1885,12 @@ describe("Addon Configurations", () => {
           frontend: [frontend],
           backend: "self",
           runtime: "none",
-          database: "none",
-          orm: "none",
-          auth: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "better-auth",
           api: "none",
           examples: ["none"],
-          dbSetup: "none",
+          dbSetup: "d1",
           webDeploy: "cloudflare",
           serverDeploy: "none",
           install: false,
@@ -1899,9 +1899,7 @@ describe("Addon Configurations", () => {
         const projectDir = result.result!.projectDirectory!;
         if (frontend === "astro") {
           const middleware = await readFile(join(projectDir, "apps/web/src/middleware.ts"), "utf8");
-          expect(middleware).toContain(
-            "waitUntil: locals.cfContext.waitUntil.bind(locals.cfContext)",
-          );
+          expect(middleware).toContain("cfContext.waitUntil.bind(");
           expect(middleware).toContain("log.set({ status: response.status })");
           expect(await readFile(join(projectDir, "apps/web/src/locals.d.ts"), "utf8")).toContain(
             "cfContext: ExecutionContext",
@@ -1911,6 +1909,14 @@ describe("Addon Configurations", () => {
           expect(entry).toContain('from "evlog/workers"');
           expect(entry).toContain("withEvlog(");
           expect(entry).toContain("handler.fetch(request)");
+          expect(entry).toContain("await createAuth()");
+          const authRoute = await readFile(
+            join(projectDir, "apps/web/src/routes/api/auth/$.ts"),
+            "utf8",
+          );
+          expect(authRoute).toContain("GET: async");
+          expect(authRoute).toContain("POST: async");
+          expectParseableTypeScript(authRoute);
           expect(entry).toContain("drain: createAxiomDrain()");
           expect(existsSync(join(projectDir, "apps/web/nitro.config.ts"))).toBe(false);
         }
