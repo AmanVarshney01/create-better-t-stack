@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
-import { env } from "@{{projectName}}/env/server";
+import type { DatabaseConfig } from "./config";
 
-await mongoose.connect(env.DATABASE_URL);
+export async function createDb(env: DatabaseConfig) {
+  await mongoose.connect(env.DATABASE_URL);
+  return mongoose.connection.getClient().db();
+}
 
-const client = mongoose.connection.getClient().db();
-
-export { client };
+export type Database = Awaited<ReturnType<typeof createDb>>;

@@ -1,20 +1,5 @@
 import { Polar } from "@polar-sh/sdk";
-{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
-import type { CloudflareEnv } from "@{{projectName}}/env/server";
-{{else}}
-import { env } from "@{{projectName}}/env/server";
-{{/if}}
 
-{{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}
-export function createPolarClient(env: CloudflareEnv) {
-	return new Polar({
-		accessToken: env.POLAR_ACCESS_TOKEN,
-		server: "sandbox",
-	});
+export function createPolarClient(config: { POLAR_ACCESS_TOKEN: string }) {
+  return new Polar({ accessToken: config.POLAR_ACCESS_TOKEN, server: "sandbox" });
 }
-{{else}}
-export const polarClient = new Polar({
-	accessToken: env.POLAR_ACCESS_TOKEN,
-	server: "sandbox",
-});
-{{/if}}

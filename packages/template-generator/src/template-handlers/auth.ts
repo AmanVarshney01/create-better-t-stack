@@ -1,7 +1,7 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
-import { type TemplateData, processTemplatesFromPrefix } from "./utils";
+import { type TemplateData, processSingleTemplate, processTemplatesFromPrefix } from "./utils";
 
 export async function processAuthTemplates(
   vfs: VirtualFileSystem,
@@ -161,6 +161,7 @@ export async function processAuthTemplates(
         "packages/auth",
         config,
       );
+      processSingleTemplate(vfs, templates, "env/auth-client.ts", "apps/web/src/client.ts", config);
     }
   }
 

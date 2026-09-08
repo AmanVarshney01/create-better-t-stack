@@ -135,7 +135,7 @@ describe("Frontend Configurations", () => {
       expectSuccess(result);
 
       const packageJson = await fs.readJson(path.join(result.projectDir!, "apps/web/package.json"));
-      expect(packageJson.devDependencies.vite).toBe("^8.1.5");
+      expect(packageJson.devDependencies.vite).toBe("^8.2.2");
       expect(packageJson.devDependencies["react-router-devtools"]).toBeUndefined();
     });
 
@@ -166,10 +166,10 @@ describe("Frontend Configurations", () => {
       const packageJson = await fs.readJson(path.join(webDir, "package.json"));
       const rootPackageJson = await fs.readJson(path.join(result.projectDir, "package.json"));
       const envPackageJson = await fs.readJson(
-        path.join(result.projectDir, "packages/env/package.json"),
+        path.join(result.projectDir, "apps/web/package.json"),
       );
       const webEnv = await fs.readFile(
-        path.join(result.projectDir, "packages/env/src/web.ts"),
+        path.join(result.projectDir, "apps/web/.env.schema"),
         "utf8",
       );
       const appFile = await fs.readFile(path.join(webDir, "src/App.tsx"), "utf8");
@@ -177,15 +177,15 @@ describe("Frontend Configurations", () => {
       const viteConfig = await fs.readFile(path.join(webDir, "vite.config.ts"), "utf8");
 
       expect(packageJson.dependencies).toMatchObject({
-        "@solidjs/meta": "^1.0.0-next.2",
-        "@solidjs/router": "^2.0.0-next.16",
-        "@solidjs/web": "^2.0.0-rc.0",
-        "solid-js": "^2.0.0-rc.0",
+        "@solidjs/meta": "1.0.0-next.2",
+        "@solidjs/router": "2.0.0-next.21",
+        "@solidjs/web": "2.0.0-rc.6",
+        "solid-js": "2.0.0-rc.6",
       });
       expect(packageJson.devDependencies).toMatchObject({
-        "@solidjs/vite-plugin": "^3.0.0-next.28",
-        "filesystem-routing": "0.2.1",
-        nitro: "^3.0.260610-beta",
+        "@solidjs/vite-plugin": "3.0.0-next.39",
+        "filesystem-routing": "0.3.0",
+        nitro: "3.0.260903-beta",
       });
       expect(packageJson.dependencies["@solidjs/start"]).toBeUndefined();
       expect(packageJson.dependencies["@tanstack/solid-router"]).toBeUndefined();
@@ -196,7 +196,7 @@ describe("Frontend Configurations", () => {
       expect(packageJson.scripts["check-types"]).toBe("tsc --noEmit");
       expect(tsconfig.exclude).toContain("dist");
       expect(rootPackageJson.scripts["dev:web"]).toBeDefined();
-      expect(envPackageJson.exports["./web"]).toBe("./src/web.ts");
+      expect(envPackageJson.dependencies.varlock).toBeDefined();
       expect(webEnv).not.toContain("SKIP_ENV_VALIDATION");
       expect(appFile).toContain('import { Router } from "~/router";');
       expect(viteConfig).toContain("solid({");
@@ -247,12 +247,12 @@ describe("Frontend Configurations", () => {
 
       const packageJson = await fs.readJson(path.join(result.projectDir!, "apps/web/package.json"));
       expect(packageJson.dependencies).toMatchObject({
-        "@nuxt/ui": "^4.10.0",
-        nuxt: "^4.5.1",
-        vue: "^3.5.40",
-        "vue-router": "^5.2.0",
+        "@nuxt/ui": "^4.11.0",
+        nuxt: "^4.5.2",
+        vue: "^3.5.42",
+        "vue-router": "^5.3.1",
       });
-      expect(packageJson.devDependencies["vue-tsc"]).toBe("^3.3.8");
+      expect(packageJson.devDependencies["vue-tsc"]).toBe("^3.3.11");
       expect(packageJson.scripts["check-types"]).toBe("nuxt typecheck");
     });
 

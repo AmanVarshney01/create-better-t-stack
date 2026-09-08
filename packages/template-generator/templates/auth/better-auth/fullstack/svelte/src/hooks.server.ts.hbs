@@ -21,9 +21,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const authEnv = event.platform?.env ?? localEnv;
-	const authInstance = createAuth(authEnv);
+	const authInstance = await createAuth(authEnv);
 {{else}}
-	const authInstance = createAuth();
+	const authInstance = await createAuth();
 {{/if}}
 {{else}}
 	const authInstance = auth;

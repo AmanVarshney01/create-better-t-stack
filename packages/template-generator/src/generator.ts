@@ -16,6 +16,7 @@ import {
   processPwaPlugins,
   processEnvVariables,
 } from "./processors";
+import { processVarlock } from "./processors/varlock";
 import {
   type TemplateData,
   processBaseTemplate,
@@ -24,7 +25,6 @@ import {
   processDbTemplates,
   processApiTemplates,
   processConfigPackage,
-  processEnvPackage,
   processUiPackage,
   processAuthTemplates,
   processPaymentsTemplates,
@@ -74,7 +74,6 @@ export async function generate(
       await processDbTemplates(vfs, templates, config);
       await processApiTemplates(vfs, templates, config);
       await processConfigPackage(vfs, templates, config);
-      await processEnvPackage(vfs, templates, config);
       await processUiPackage(vfs, templates, config);
       await processAuthTemplates(vfs, templates, config);
       await processPaymentsTemplates(vfs, templates, config);
@@ -90,6 +89,7 @@ export async function generate(
       processAuthPlugins(vfs, config);
       processAlchemyPlugins(vfs, config);
       processPwaPlugins(vfs, config);
+      processVarlock(vfs, templates, config);
       processCatalogs(vfs, config);
       processVercelConfig(vfs, config);
       processReadme(vfs, config);

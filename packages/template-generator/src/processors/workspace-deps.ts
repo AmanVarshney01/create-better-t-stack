@@ -4,24 +4,12 @@ import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
 export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const {
-    projectName,
-    packageManager,
-    runtime,
-    orm,
-    backend,
-    database,
-    auth,
-    api,
-    serverDeploy,
-    webDeploy,
-    frontend,
-  } = config;
+  const { projectName, packageManager, runtime, orm, backend, database, auth, api, frontend } =
+    config;
 
   const workspaceVersion = packageManager === "npm" ? "*" : "workspace:*";
   const packages = {
     config: vfs.exists("packages/config/package.json"),
-    env: vfs.exists("packages/env/package.json"),
     infra: vfs.exists("packages/infra/package.json"),
     db: vfs.exists("packages/db/package.json"),
     auth: vfs.exists("packages/auth/package.json"),
@@ -34,12 +22,9 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   };
 
   const configDep = packages.config ? { [`@${projectName}/config`]: workspaceVersion } : {};
-  const envDep = packages.env ? { [`@${projectName}/env`]: workspaceVersion } : {};
   const uiDep = packages.ui ? { [`@${projectName}/ui`]: workspaceVersion } : {};
-  const isAlchemy =
-    ["cloudflare", "prisma"].includes(serverDeploy) || ["cloudflare", "prisma"].includes(webDeploy);
   const runtimeDevDeps = getRuntimeDevDeps(runtime);
-  const commonDeps: AvailableDependencies[] = ["dotenv", "zod"];
+  const commonDeps: AvailableDependencies[] = ["zod"];
   const commonDevDeps: AvailableDependencies[] = ["typescript", ...runtimeDevDeps];
 
   addPackageDependency({
@@ -47,27 +32,8 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     packagePath: "package.json",
     dependencies: commonDeps,
     devDependencies: commonDevDeps,
-    customDependencies: envDep,
     customDevDependencies: configDep,
   });
-
-  if (packages.env) {
-    const envDevDeps = { ...configDep } satisfies Record<string, string>;
-    if (
-      isAlchemy &&
-      packages.infra &&
-      (serverDeploy === "cloudflare" || webDeploy === "cloudflare")
-    ) {
-      envDevDeps[`@${projectName}/infra`] = workspaceVersion;
-    }
-    addPackageDependency({
-      vfs,
-      packagePath: "packages/env/package.json",
-      dependencies: commonDeps,
-      devDependencies: commonDevDeps,
-      customDevDependencies: envDevDeps,
-    });
-  }
 
   if (packages.infra) {
     addPackageDependency({
@@ -85,13 +51,12 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
       packagePath: "packages/db/package.json",
       dependencies: commonDeps,
       devDependencies: ["typescript"],
-      customDependencies: envDep,
       customDevDependencies: configDep,
     });
   }
 
   if (packages.auth) {
-    const authDeps = { ...envDep } satisfies Record<string, string>;
+    const authDeps: Record<string, string> = {};
     if (database !== "none" && packages.db) {
       authDeps[`@${projectName}/db`] = workspaceVersion;
     }
@@ -106,7 +71,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   }
 
   if (packages.api) {
-    const apiPackageDeps = { ...envDep } satisfies Record<string, string>;
+    const apiPackageDeps: Record<string, string> = {};
     if (auth !== "none" && packages.auth) {
       apiPackageDeps[`@${projectName}/auth`] = workspaceVersion;
     }
@@ -138,7 +103,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     if (runtime === "workers" && orm === "prisma") {
       serverDevDependencies.push("unwasm");
     }
-    const serverDeps = { ...envDep } satisfies Record<string, string>;
+    const serverDeps: Record<string, string> = {};
     if (api !== "none" && packages.api) serverDeps[`@${projectName}/api`] = workspaceVersion;
     if (auth !== "none" && packages.auth) serverDeps[`@${projectName}/auth`] = workspaceVersion;
     if (database !== "none" && packages.db) serverDeps[`@${projectName}/db`] = workspaceVersion;
@@ -153,7 +118,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   }
 
   if (packages.web) {
-    const webPackageDeps = { ...envDep, ...uiDep } satisfies Record<string, string>;
+    const webPackageDeps = { ...uiDep } satisfies Record<string, string>;
 
     if (api !== "none" && packages.api) webPackageDeps[`@${projectName}/api`] = workspaceVersion;
     if (
@@ -163,6 +128,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     ) {
       webPackageDeps[`@${projectName}/auth`] = workspaceVersion;
     }
+    if (backend === "self" && packages.db) webPackageDeps[`@${projectName}/db`] = workspaceVersion;
     if (backend === "convex" && packages.backend)
       webPackageDeps[`@${projectName}/backend`] = workspaceVersion;
 
@@ -186,7 +152,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   }
 
   if (packages.native) {
-    const nativeDeps = { ...envDep } satisfies Record<string, string>;
+    const nativeDeps: Record<string, string> = {};
     if (api !== "none" && packages.api) nativeDeps[`@${projectName}/api`] = workspaceVersion;
     if (backend === "convex" && packages.backend)
       nativeDeps[`@${projectName}/backend`] = workspaceVersion;

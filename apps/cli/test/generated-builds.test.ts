@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { createServer } from "node:net";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
 import { execa } from "execa";
@@ -64,6 +65,101 @@ const baseConfig = {
 } satisfies Partial<CreateInput>;
 
 const buildSamples: BuildSample[] = [
+  ...(["nuxt", "tanstack-start"] as const).map(
+    (frontend) =>
+      ({
+        name: `${frontend}-axiom`,
+        packageManagers: ["bun"] as const,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          auth: "none",
+          payments: "none",
+          addons: ["axiom", "vite-plus"],
+          examples: [],
+          webDeploy: "docker",
+        },
+      }) satisfies BuildSample,
+  ),
+  ...(["tanstack-router", "react-router", "next"] as const).map(
+    (frontend) =>
+      ({
+        name: `${frontend}-pwa`,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "none",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          auth: "none",
+          payments: "none",
+          addons: ["pwa"],
+          examples: [],
+        },
+      }) satisfies BuildSample,
+  ),
+  ...(["astro"] as const).map(
+    (frontend) =>
+      ({
+        name: `${frontend}-frontend-only`,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "none",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          auth: "none",
+          payments: "none",
+          addons: ["none"],
+          examples: [],
+        },
+      }) satisfies BuildSample,
+  ),
+  ...(["svelte", "nuxt", "next", "native-bare", "native-uniwind", "native-unistyles"] as const).map(
+    (frontend) =>
+      ({
+        name: `${frontend}-auth-todo-ai`,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          api: frontend === "next" ? "trpc" : "orpc",
+          auth: "better-auth",
+          payments: "none",
+          addons: ["turborepo"],
+          examples: ["todo", "ai"],
+        },
+      }) satisfies BuildSample,
+  ),
+  {
+    name: "react-convex-ai",
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-router"],
+      backend: "convex",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["turborepo"],
+      examples: ["ai"],
+    },
+  },
+
   {
     name: "hono-trpc-drizzle-todo",
     packageManagers: ["bun", "npm", "pnpm"],
@@ -529,10 +625,21 @@ function expandBuildSample(sample: BuildSample): SelectedBuildSample[] {
 
 function getSelectedBuildSamples() {
   const samples = buildSamples.flatMap(expandBuildSample);
-  if (!sampleFilter) return samples;
-  const selected = samples.filter((sample) => sample.name.includes(sampleFilter));
+  let selected = sampleFilter
+    ? samples.filter((sample) => sample.name.includes(sampleFilter))
+    : samples;
   if (selected.length === 0) {
     throw new Error(`No generated build samples matched BTS_BUILD_SAMPLE_FILTER=${sampleFilter}`);
+  }
+  const shard = process.env.BTS_BUILD_SAMPLE_SHARD;
+  if (shard) {
+    const match = /^(\d+)\/(\d+)$/.exec(shard);
+    const index = Number(match?.[1]);
+    const total = Number(match?.[2]);
+    if (!match || index < 1 || index > total || total > samples.length) {
+      throw new Error(`Invalid BTS_BUILD_SAMPLE_SHARD=${shard}; expected 1/N through N/N`);
+    }
+    selected = selected.filter((_, position) => position % total === index - 1);
   }
   return selected;
 }
@@ -686,8 +793,8 @@ async function validateSolidScaffold(sample: SelectedBuildSample, projectDir: st
 
   const webPackageJson = await fs.readJson(path.join(webDir, "package.json"));
   expect(webPackageJson.dependencies?.["@solidjs/start"]).toBeUndefined();
-  expect(webPackageJson.dependencies?.["solid-js"]).toBe("^2.0.0-rc.0");
-  expect(webPackageJson.dependencies?.["@solidjs/web"]).toBe("^2.0.0-rc.0");
+  expect(webPackageJson.dependencies?.["solid-js"]).toBe("2.0.0-rc.6");
+  expect(webPackageJson.dependencies?.["@solidjs/web"]).toBe("2.0.0-rc.6");
   expect(webPackageJson.dependencies?.["@solidjs/router"]).toBeDefined();
   expect(webPackageJson.devDependencies?.["@solidjs/vite-plugin"]).toBeDefined();
   expect(webPackageJson.devDependencies?.["filesystem-routing"]).toBeDefined();
@@ -695,7 +802,7 @@ async function validateSolidScaffold(sample: SelectedBuildSample, projectDir: st
   expect(webPackageJson.scripts?.["check-types"]).toBe("tsc --noEmit");
 
   if (sample.config.api === "orpc") {
-    expect(webPackageJson.dependencies?.["@tanstack/query-core"]).toBe("5.101.0");
+    expect(webPackageJson.dependencies?.["@tanstack/query-core"]).toBe("5.101.4");
   }
 
   const viteConfig = await fs.readFile(path.join(webDir, "vite.config.ts"), "utf8");
@@ -730,9 +837,11 @@ async function validateSolidScaffold(sample: SelectedBuildSample, projectDir: st
 
     expect(await fs.pathExists(authClient)).toBe(true);
     expect(await fs.readFile(authClient, "utf8")).toContain('from "better-auth/client"');
-    expect(await fs.readFile(webAuthClient, "utf8")).toContain(
-      `from "@${sample.name}/auth/client"`,
+    expect(await fs.readFile(authClient, "utf8")).not.toContain("/env/");
+    expect(await fs.readFile(path.join(webDir, "src/client.ts"), "utf8")).toContain(
+      "createClient(",
     );
+    expect(await fs.readFile(webAuthClient, "utf8")).toContain('from "../client"');
     expect(webPackageJson.dependencies?.["better-auth"]).toBeUndefined();
     expect(webPackageJson.dependencies?.[`@${sample.name}/auth`]).toBeDefined();
     expect(authPackageJson.dependencies?.["better-auth"]).toBeDefined();
@@ -770,6 +879,83 @@ async function validateSolidBuildArtifacts(sample: SelectedBuildSample, projectD
       ? "apps/web/dist/server/server.js"
       : "apps/web/.output/server/index.mjs";
   expect(await fs.pathExists(path.join(projectDir, serverEntry))).toBe(true);
+}
+
+async function validatePwaBuildArtifacts(sample: SelectedBuildSample, projectDir: string) {
+  if (!sample.config.addons?.includes("pwa")) return;
+  const frontend = sample.config.frontend ?? [];
+  const publicDir = path.join(
+    projectDir,
+    "apps/web",
+    frontend.includes("solid")
+      ? ".output/public"
+      : frontend.includes("react-router")
+        ? "build/client"
+        : frontend.includes("next")
+          ? "public"
+          : "dist",
+  );
+  expect(await fs.pathExists(path.join(publicDir, "sw.js"))).toBe(true);
+  if (frontend.includes("next")) {
+    expect(await fs.pathExists(path.join(publicDir, "offline.html"))).toBe(true);
+    const port = await getAvailablePort();
+    const runtime = execa(
+      "bun",
+      ["run", "start", "--hostname", "127.0.0.1", "--port", String(port)],
+      {
+        cwd: path.join(projectDir, "apps/web"),
+        all: true,
+        reject: false,
+      },
+    );
+    try {
+      const response = await fetchWhenReady(`http://127.0.0.1:${port}/sw.js`);
+      expect(response?.status).toBe(200);
+      expect(response?.headers.get("content-type")).toBe("application/javascript; charset=utf-8");
+      expect(response?.headers.get("cache-control")).toBe("no-cache, no-store, must-revalidate");
+      expect(response?.headers.get("content-security-policy")).toBe(
+        "default-src 'self'; script-src 'self'",
+      );
+    } finally {
+      runtime.kill("SIGTERM");
+      await runtime;
+    }
+    return;
+  }
+  expect(await fs.pathExists(path.join(publicDir, "registerSW.js"))).toBe(true);
+  const manifest = await fs.readJson(path.join(publicDir, "manifest.webmanifest"));
+  expect(manifest.start_url).toBe("/");
+  expect(manifest.icons.length).toBeGreaterThan(0);
+  for (const icon of manifest.icons) {
+    expect(await fs.pathExists(path.join(publicDir, icon.src))).toBe(true);
+  }
+  if (frontend.includes("solid")) {
+    const port = await getAvailablePort();
+    const runtime = execa("node", [".output/server/index.mjs"], {
+      cwd: path.join(projectDir, "apps/web"),
+      all: true,
+      reject: false,
+      env: { ...process.env, HOST: "127.0.0.1", PORT: String(port) },
+    });
+    try {
+      // Nitro records asset sizes during its build. Generating a worker later
+      // can leave stale metadata and truncate the script sent to browsers.
+      for (const asset of [
+        "sw.js",
+        "offline.html",
+        ...manifest.icons.map((icon: { src: string }) => icon.src),
+      ]) {
+        const response = await fetchWhenReady(`http://127.0.0.1:${port}/${asset}`);
+        expect(response?.status).toBe(200);
+        expect(Buffer.from(await response!.arrayBuffer())).toEqual(
+          await fs.readFile(path.join(publicDir, asset)),
+        );
+      }
+    } finally {
+      runtime.kill("SIGTERM");
+      await runtime;
+    }
+  }
 }
 
 async function buildAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
@@ -811,13 +997,63 @@ async function getAvailablePort(): Promise<number> {
 async function fetchWhenReady(url: string, init?: RequestInit) {
   for (let attempt = 0; attempt < 100; attempt++) {
     try {
-      return await fetch(url, { ...init, signal: AbortSignal.timeout(1000) });
+      const response = await fetch(url, { ...init, signal: AbortSignal.timeout(5000) });
+      // SSR can send headers before compilation/streaming finishes. Consume the
+      // body inside the retry boundary so a timeout does not escape afterwards.
+      const body = await response.arrayBuffer();
+      return new Response(body, { status: response.status, headers: response.headers });
     } catch {
       await Bun.sleep(100);
     }
   }
 
   return undefined;
+}
+
+async function bootAndValidateAxiomRuntime(sample: SelectedBuildSample, projectDir: string) {
+  if (!sample.config.addons?.includes("axiom")) return;
+  const received: Array<{ path?: string; status?: number }> = [];
+  const collector = Bun.serve({
+    port: 0,
+    hostname: "127.0.0.1",
+    async fetch(request) {
+      const events = z
+        .array(z.object({ path: z.string().optional(), status: z.number().optional() }))
+        .parse(await request.json());
+      received.push(...events);
+      return Response.json({ ingested: events.length, failed: 0 });
+    },
+  });
+  const port = await getAvailablePort();
+  const runtime = execa("node", [".output/server/index.mjs"], {
+    cwd: path.join(projectDir, "apps/web"),
+    all: true,
+    reject: false,
+    env: {
+      ...process.env,
+      NODE_ENV: "production",
+      HOST: "127.0.0.1",
+      PORT: String(port),
+      AXIOM_API_KEY: "xaat-local-test",
+      AXIOM_DATASET: "generated-test",
+      AXIOM_EDGE_URL: collector.url.toString(),
+    },
+  });
+  try {
+    expect((await fetchWhenReady(`http://127.0.0.1:${port}/`))?.status).toBe(200);
+    expect((await fetchWhenReady(`http://127.0.0.1:${port}/missing-axiom-test`))?.status).toBe(404);
+    for (let attempt = 0; attempt < 100 && received.length < 2; attempt++) await Bun.sleep(50);
+    expect(received).toEqual(
+      expect.arrayContaining([
+        { path: "/", status: 200 },
+        { path: "/missing-axiom-test", status: 404 },
+      ]),
+    );
+  } finally {
+    runtime.kill("SIGTERM");
+    await runtime;
+    collector.stop(true);
+  }
 }
 
 async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
@@ -834,9 +1070,12 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   if (!entrypoint) return;
 
   const webDir = path.join(projectDir, "apps/web");
+  const runtimeRoot = await fs.mkdtemp(path.join(tmpdir(), "bts-prisma-artifact-"));
+  const artifactDirectory = entrypoint.split("/")[0]!;
+  await fs.copy(path.join(webDir, artifactDirectory), path.join(runtimeRoot, artifactDirectory));
   const port = await getAvailablePort();
   const runtime = execa("bun", [entrypoint], {
-    cwd: webDir,
+    cwd: runtimeRoot,
     all: true,
     reject: false,
     env: {
@@ -860,6 +1099,7 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   }
 
   const result = await runtime;
+  await fs.remove(runtimeRoot);
   if (failure) {
     throw new Error(
       [`Generated Prisma runtime probe failed: ${String(failure)}`, formatOutput(result.all)]
@@ -972,6 +1212,24 @@ async function bootAndValidateSolidDevRuntime(sample: SelectedBuildSample, proje
   }
 }
 
+async function writeSyntheticBuildConfig(projectDir: string) {
+  const publishableKey = `pk_test_${Buffer.from("clerk.example.test$").toString("base64")}`;
+  for (const app of ["web", "server", "native"]) {
+    const file = path.join(projectDir, "apps", app, ".env");
+    if (!(await fs.pathExists(file))) continue;
+    let content = await fs.readFile(file, "utf8");
+    content = content.replaceAll("https://example.convex.", "https://bts-build-test.convex.");
+    content = content.replace(/^\s*#?\s*([A-Z][A-Z0-9_]*)=\s*$/gm, (line, key: string) => {
+      if (key.endsWith("CLERK_PUBLISHABLE_KEY")) return `${key}=${publishableKey}`;
+      if (key === "CLERK_SECRET_KEY") return `${key}=sk_test_bts_synthetic_build_key`;
+      if (key === "GOOGLE_GENERATIVE_AI_API_KEY") return `${key}=bts-synthetic-build-key`;
+      if (key === "POLAR_ACCESS_TOKEN") return `${key}=bts-synthetic-polar-build-token`;
+      return line;
+    });
+    await fs.writeFile(file, content);
+  }
+}
+
 describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples", () => {
   for (const sample of getSelectedBuildSamples()) {
     it(
@@ -980,20 +1238,41 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
         const projectDir = path.join(SMOKE_DIR, "generated-builds", sample.name);
         await fs.remove(projectDir);
 
-        const createResult = await create(projectDir, sample.config);
-        expect(createResult.isOk()).toBe(true);
-        await validateSolidScaffold(sample, projectDir);
+        try {
+          const createResult = await create(projectDir, sample.config);
+          expect(createResult.isOk()).toBe(true);
+          await validateSolidScaffold(sample, projectDir);
+          await writeSyntheticBuildConfig(projectDir);
 
-        for (const script of ["install", "build"] as const) {
-          const { command, args } = getPackageManagerCommand(sample.packageManager, script);
-          await runCommand(sample.name, projectDir, command, args);
+          for (const script of ["install", "build"] as const) {
+            const { command, args } = getPackageManagerCommand(sample.packageManager, script);
+            await runCommand(sample.name, projectDir, command, args);
+          }
+          await buildAndValidatePrismaWebArtifact(sample, projectDir);
+          await bootAndValidatePrismaWebArtifact(sample, projectDir);
+          await bootAndValidateAxiomRuntime(sample, projectDir);
+          await bootAndValidateSolidDevRuntime(sample, projectDir);
+          await bootAndValidateSolidRuntime(sample, projectDir);
+          await validateSolidBuildArtifacts(sample, projectDir);
+          await validatePwaBuildArtifacts(sample, projectDir);
+          await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
+          if (sample.config.frontend?.some((frontend) => frontend.startsWith("native-"))) {
+            // Exercise Metro/Babel and platform imports as well as TypeScript.
+            // This exports JS bundles; it does not compile or sign native binaries.
+            for (const platform of ["ios", "android"]) {
+              await runCommand(sample.name, path.join(projectDir, "apps/native"), "bun", [
+                "x",
+                "--no-install",
+                "expo",
+                "export",
+                "--platform",
+                platform,
+              ]);
+            }
+          }
+        } finally {
+          await fs.remove(projectDir);
         }
-        await buildAndValidatePrismaWebArtifact(sample, projectDir);
-        await bootAndValidatePrismaWebArtifact(sample, projectDir);
-        await bootAndValidateSolidDevRuntime(sample, projectDir);
-        await bootAndValidateSolidRuntime(sample, projectDir);
-        await validateSolidBuildArtifacts(sample, projectDir);
-        await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
       },
       sampleTimeoutMs,
     );

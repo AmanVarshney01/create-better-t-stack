@@ -245,9 +245,19 @@ ${packageManagerRunCmd} dev
 
 ${generateRunningInstructions(frontend, backend, webPort, hasNative, isConvex)}
 ${generateReactUiSection(hasReactWeb, projectName)}
+## Environment Configuration
+
+Each app owns its environment schema in \`.env.schema\`. Varlock generates \`src/env.ts\` during installation; run \`${packageManagerRunCmd} env:generate\` after changing a schema. Commit schemas, and keep secrets in ignored env files or your deployment platform.
+
+Import the generated \`ENV\` accessor in application code. Shared database and auth packages receive configuration or initialized clients from the application. See [Varlock's monorepo guide](https://varlock.dev/guides/monorepos/).
+
+${webDeploy === "cloudflare" || serverDeploy === "cloudflare" ? "For Cloudflare, Alchemy loads and validates deployment inputs with `varlock/auto-load` in its Node/Bun deployment process. Worker code reads native bindings; web clients use the framework's public env API through `src/env.public.ts` where needed. Alchemy supplies resource URLs and managed database credentials. In-Worker Varlock protections are deferred until an official Alchemy integration is available; see [the non-Wrangler deployment guidance](https://varlock.dev/integrations/cloudflare/#non-wrangler-deploy-tools-alchemy-sst-pulumi).\n" : ""}
+
+Bun's automatic env loading is disabled in \`bunfig.toml\`; the framework integration or server bootstrap loads Varlock. Node deployments must include Varlock and its dependencies alongside the app schema.
+
 ${
   addons.includes("pwa") && hasReactRouter
-    ? "\n## PWA Support with React Router v7\n\nThere is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809\n"
+    ? "\n## PWA Support with React Router\n\nVerify PWA behavior with a production build on HTTPS or localhost. Offline navigation shows a precached fallback page; server-rendered pages require a connection. Authenticated HTML and API responses are not runtime-cached.\n"
     : ""
 }
 ${generateDeploymentCommands(
@@ -920,7 +930,7 @@ function generateDeploymentCommands(
       );
       if (hasVercel) {
         lines.push(
-          "Link the Vercel project before the Alchemy deploy. The Alchemy stack then syncs its Axiom credentials to Vercel preview, or to production when deployed with `--stage production`.",
+          "Link the Vercel project before the Alchemy deploy. Deploy from `packages/infra` with `alchemy deploy --stage preview` or `alchemy deploy --stage production` to sync Axiom credentials to the matching Vercel environment. Personal stages do not change shared Vercel credentials.",
         );
       }
       if (hasDocker) {

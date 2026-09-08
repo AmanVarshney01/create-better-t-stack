@@ -1,6 +1,9 @@
+{{#unless (eq webDeploy "cloudflare")}}
+import { varlockVitePlugin } from "@varlock/vite-integration";
+{{/unless}}
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma"))}}
+{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma") (and (ne webDeploy "cloudflare") (includes addons "axiom")))}}
 import { nitro } from "nitro/vite";
 {{/if}}
 import tailwindcss from "@tailwindcss/vite";
@@ -30,6 +33,9 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
+{{#unless (eq webDeploy "cloudflare")}}
+    varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
+{{/unless}}
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     prismaWasm,
 {{/if}}
@@ -41,7 +47,7 @@ export default defineConfig({
         },
       },
 {{/if}}),
-{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma"))}}
+{{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma") (and (ne webDeploy "cloudflare") (includes addons "axiom")))}}
     nitro({{#if (eq webDeploy "docker")}}{ preset: "{{#if (eq runtime "bun")}}bun{{else}}node-server{{/if}}" }{{/if}}),
 {{/if}}
     viteReact(),

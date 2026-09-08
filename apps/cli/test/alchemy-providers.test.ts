@@ -202,7 +202,7 @@ describe("Alchemy providers", () => {
     expect(files.has("packages/db/prisma/migrations/0000_init/migration.sql")).toBe(true);
     expect(infraPackage.scripts?.["check-types"]).toBe("tsc --noEmit");
     expect(infraPackage.devDependencies).toMatchObject({
-      alchemy: "2.0.0-beta.75",
+      alchemy: "2.0.0-beta.76",
       effect: "4.0.0-rc.112",
       "@effect/platform-node": "4.0.0-rc.112",
       "@effect/platform-bun": "4.0.0-rc.112",
@@ -336,7 +336,7 @@ describe("Alchemy providers", () => {
     expect(webPackage.devDependencies?.unwasm).toBe("^0.6.0");
     expect(dbSource).toContain('from "@prisma/adapter-ppg"');
     expect(dbSource).toContain("new PrismaPostgresAdapter");
-    expect(dbPackage.dependencies?.["@prisma/adapter-ppg"]).toBe("^7.9.1");
+    expect(dbPackage.dependencies?.["@prisma/adapter-ppg"]).toBe("^7.10.0");
     expect(dbPackage.dependencies?.["@prisma/adapter-pg"]).toBeUndefined();
     expect(dbPackage.dependencies?.pg).toBeUndefined();
     expect(files.get("packages/db/prisma/schema/schema.prisma")).toContain(
@@ -395,20 +395,20 @@ describe("Alchemy providers", () => {
     const infra = files.get("packages/infra/alchemy.run.ts") ?? "";
     const auth = files.get("packages/auth/src/index.ts") ?? "";
     const db = files.get("packages/db/src/index.ts") ?? "";
-    const context = files.get("packages/api/src/context.ts") ?? "";
+    const context = files.get("apps/web/src/context.ts") ?? "";
     const authRoute = files.get("apps/web/server/api/auth/[...all].ts") ?? "";
     const rpcRoute = files.get("apps/web/server/routes/rpc/[...].ts") ?? "";
     const todoRouter = files.get("packages/api/src/routers/todo.ts") ?? "";
 
     expect(infra).toContain('Cloudflare.Website.Nuxt("web", {');
-    expect(auth).toContain("createAuth(env: CloudflareEnv)");
-    expect(auth).toContain("createPrismaClient(env)");
-    expect(db).toContain("createPrismaClient(env: CloudflareEnv)");
+    expect(auth).toContain("createAuth(env: AuthConfig, database: Database)");
+    expect(auth).toContain("prismaAdapter(database,");
+    expect(db).toContain("createPrismaClient(env: DatabaseConfig)");
     expect(context).toContain("env: CloudflareEnv;");
-    expect(context).toContain("createAuth(env)");
+    expect(context).toContain("await createAuth(env, db)");
     expect(authRoute).toContain("event.context.cloudflare as { env: CloudflareEnv }");
     expect(rpcRoute).toContain("event.context.cloudflare as { env: CloudflareEnv }");
-    expect(todoRouter).toContain("createPrismaClient(context.env)");
+    expect(todoRouter).toContain("context.db.todo");
     expect(files.has("apps/web/cloudflare-workers.dev.ts")).toBe(false);
     expect(files.has("apps/web/wrangler.jsonc")).toBe(false);
   });
@@ -504,7 +504,7 @@ describe("Alchemy providers", () => {
     );
     expect(reactRouterPackage.scripts?.["build:prisma"]).toBeUndefined();
     expect(reactRouterPackage.dependencies).toMatchObject({
-      "@react-router/express": "^8.3.0",
+      "@react-router/express": "^8.3.1",
       express: "^5.2.1",
     });
 
@@ -703,6 +703,17 @@ describe("Alchemy providers", () => {
     expect(prismaInfra).not.toContain('effect/Config"');
     expect(vercelInfra).toContain('Command.Exec("axiom-vercel-env"');
     expect(vercelInfra).toContain("env: observabilityResources.runtimeEnv");
+    expect(vercelInfra).toContain('if (!isDev && (stage === "preview" || stage === "production"))');
+    expect(vercelInfra).toContain("env:${stage}");
+    expect(vercelInfra).not.toContain('stage === "production" ? "production" : "preview"');
+    const appSchema = noDeploy.get("apps/server/.env.schema") ?? "";
+    expect(appSchema).toContain("AXIOM_API_KEY=");
+    expect(appSchema).toContain("@dynamic @required=false");
+    expect(noDeploy.get("apps/web/.env.schema")).toContain("AXIOM_API_KEY=");
+    expect(noDeploy.get("packages/infra/.env.schema")).not.toContain("AXIOM_API_KEY");
+    expect(noDeployInfra).toContain('import "varlock/auto-load"');
+    expect(noDeployInfra).not.toContain("dotenv");
+    expect(JSON.parse(noDeploy.get("turbo.json") ?? "{}").globalEnv).toContain("AXIOM_API_KEY");
     expect(vercel.get("scripts/sync-vercel-env.ts")).toContain('"AXIOM_API_KEY"');
     expect(dockerReadme).toContain("target platform's secret manager");
     expect(splitDockerCompose.match(/^\s+AXIOM_API_KEY:/gm)).toHaveLength(1);

@@ -1,0 +1,8 @@
+import { createClient, type AuthClient } from "@{{projectName}}/auth/client";
+{{#unless (eq backend "self")}}
+import { env } from "@{{projectName}}/env/web";
+
+{{> getServerUrl}}
+{{/unless}}
+
+export const authClient: AuthClient = createClient({{#unless (eq backend "self")}}new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(){{/unless}});

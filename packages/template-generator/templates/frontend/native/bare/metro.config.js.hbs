@@ -1,3 +1,4 @@
+const { withVarlockMetroConfig } = require("@varlock/expo-integration/metro-config");
 // Learn more https://docs.expo.io/guides/customizing-metro
 const { getDefaultConfig } = require("expo/metro-config");
 
@@ -13,4 +14,4 @@ config.resolver.blockList = [
 ];
 {{/if}}
 
-module.exports = config;
+module.exports = withVarlockMetroConfig(config);

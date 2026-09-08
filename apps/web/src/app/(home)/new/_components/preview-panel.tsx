@@ -73,7 +73,7 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
 
       if (requestId !== requestIdRef.current) return;
 
-      if (data.success && data.tree) {
+      if (response.ok && data.success && data.tree) {
         setTree(data.tree.root);
         setFileCount(data.tree.fileCount);
         setDirectoryCount(data.tree.directoryCount);
@@ -157,10 +157,13 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
     );
   }
 
-  if (error && !tree) {
+  if (error) {
     return (
       <div className="flex h-full items-center justify-center rounded-[4px] border bg-fd-background">
-        <p className="rounded-[4px] border border-destructive px-3 py-2 font-mono text-[13px] text-destructive">
+        <p
+          role="alert"
+          className="rounded-[4px] border border-destructive px-3 py-2 font-mono text-[13px] text-destructive"
+        >
           {error}
         </p>
       </div>

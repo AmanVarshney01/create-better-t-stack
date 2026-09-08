@@ -532,9 +532,9 @@ function getElectrobunInstructions(runCmd: string, frontend: Frontend[]) {
 }
 
 function getPwaInstructions() {
-  return `\n${pc.bold("PWA with React Router v7:")}\n${pc.yellow(
+  return `\n${pc.bold("PWA with React Router:")}\n${pc.yellow(
     "NOTE:",
-  )} There is a known compatibility issue between VitePWA\n   and React Router v7. See:\n   https://github.com/vite-pwa/vite-plugin-pwa/issues/809`;
+  )} Verify PWA behavior with a production build on HTTPS or localhost.\n   Offline navigation shows a precached fallback page.\n   Server-rendered pages require a connection.`;
 }
 
 function getStarlightInstructions(runCmd: string) {
@@ -753,7 +753,7 @@ function getAlchemyDeployInstructions(
     }
 
     instructions.push(
-      `${pc.bold(`Deploy with Alchemy (${targetParts.join(" + ")}):`)}\n${pc.cyan("•")} Configure provider login: ${`cd packages/infra && ${alchemyExec} alchemy login --configure`}\n${hasAxiom && (webDeploy === "vercel" || serverDeploy === "vercel") ? `${pc.cyan("•")} Link Vercel before deploying infra: ${`${runCmd} deploy:setup`}\n` : ""}${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${deployScript}`}\n${originSteps.join("\n")}${originSteps.length > 0 ? "\n" : ""}${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
+      `${pc.bold(`Deploy with Alchemy (${targetParts.join(" + ")}):`)}\n${pc.cyan("•")} Configure provider login: ${`cd packages/infra && ${alchemyExec} alchemy login --configure`}\n${hasAxiom && (webDeploy === "vercel" || serverDeploy === "vercel") ? `${pc.cyan("•")} For Axiom, deploy from packages/infra with alchemy deploy --stage preview or --stage production. Link Vercel first: ${`${runCmd} deploy:setup`}\n` : ""}${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} ${deployScript}`}\n${originSteps.join("\n")}${originSteps.length > 0 ? "\n" : ""}${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
     );
   }
 

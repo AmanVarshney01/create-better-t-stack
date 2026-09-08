@@ -1,6 +1,6 @@
 <script lang="ts">
 	{{#unless (eq backend "self")}}
-	import { PUBLIC_SERVER_URL } from "$env/static/public";
+	import { env } from "@{{projectName}}/env/web";
 	{{/unless}}
 	import { Chat } from "@ai-sdk/svelte";
 	import { DefaultChatTransport } from "ai";
@@ -11,7 +11,7 @@
 			{{#if (eq backend "self")}}
 			api: "/api/ai",
 			{{else}}
-			api: `${PUBLIC_SERVER_URL}/ai`,
+			api: `${env.PUBLIC_SERVER_URL}/ai`,
 			{{/if}}
 		}),
 	});

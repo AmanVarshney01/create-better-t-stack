@@ -152,8 +152,10 @@ export async function getDbProvisioningChoice(
 
   if (mode !== undefined) return mode;
 
+  if (dbSetup !== "neon" && dbSetup !== "planetscale" && dbSetup !== "prisma-postgres") {
+    return undefined;
+  }
   const provider = providerLabels[dbSetup];
-  if (!provider) return undefined;
 
   const options: Array<{ value: DbSetupMode; label: string; hint: string }> = [
     {

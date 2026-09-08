@@ -573,6 +573,11 @@ export function getCompatibleAddons(
     if (existingAddons.includes(addon)) return false;
 
     if (addon === "none") return false;
+    if (
+      OBSERVABILITY_ADDONS.includes(addon) &&
+      existingAddons.some((existing) => OBSERVABILITY_ADDONS.includes(existing))
+    )
+      return false;
 
     if (
       (TASK_RUNNER_ADDONS as readonly Addons[]).includes(addon) &&

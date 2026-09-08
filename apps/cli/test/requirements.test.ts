@@ -89,18 +89,18 @@ function config(overrides: Partial<RequirementConfig> = {}): RequirementConfig {
 describe("local tool requirements", () => {
   it("tracks the package-manager features emitted by generated projects", () => {
     expect(PACKAGE_MANAGER_VERSION_RANGES).toEqual({
-      bun: ">=1.2.14",
+      bun: ">=1.3.3",
       npm: ">=11.16.0",
       pnpm: ">=10.26.0",
     });
     expect(RECOMMENDED_BUN_VERSION_RANGE).toBe(">=1.4.0");
   });
 
-  it("recommends Bun 1.4 without rejecting the catalog-compatible minimum", () => {
+  it("recommends Bun 1.4 without rejecting the Varlock-compatible minimum", () => {
     const project = config();
 
-    expect(getLocalToolRecommendations(project, { bun: "1.2.14" })).toEqual([
-      "Bun 1.2.14 meets the minimum requirement, but Bun 1.4 or newer is recommended. Run `bun upgrade`.",
+    expect(getLocalToolRecommendations(project, { bun: "1.3.3" })).toEqual([
+      "Bun 1.3.3 meets the minimum requirement, but Bun 1.4 or newer is recommended. Run `bun upgrade`.",
     ]);
     expect(getLocalToolRecommendations(project, { bun: "1.3.14" })).toEqual([
       "Bun 1.3.14 meets the minimum requirement, but Bun 1.4 or newer is recommended. Run `bun upgrade`.",
@@ -109,7 +109,7 @@ describe("local tool requirements", () => {
   });
 
   it.each([
-    ["bun", "1.2.13", "1.2.14"],
+    ["bun", "1.3.2", "1.3.3"],
     ["npm", "11.15.0", "11.16.0"],
     ["pnpm", "10.25.0", "10.26.0"],
   ] as const)("rejects an old %s and accepts the minimum", (packageManager, old, minimum) => {
@@ -131,7 +131,7 @@ describe("local tool requirements", () => {
   });
 
   it("requires Node 22 for the Node-hosted CLI", () => {
-    const result = validateLocalToolVersions(config(), { bun: "1.2.14", node: "v21.7.3" }, "node");
+    const result = validateLocalToolVersions(config(), { bun: "1.3.3", node: "v21.7.3" }, "node");
 
     expect(result.isErr()).toBe(true);
     expect(result.isErr() ? result.error.message : "").toContain("create-better-t-stack");
@@ -143,8 +143,8 @@ describe("local tool requirements", () => {
     expect(requirements).toEqual([
       {
         tool: "bun",
-        range: ">=1.2.14",
-        reason: "generated Bun workspaces use dependency catalogs",
+        range: ">=1.3.3",
+        reason: "Varlock requires Bun 1.3.3 or newer",
       },
     ]);
   });
@@ -209,13 +209,13 @@ describe("local tool requirements", () => {
   });
 
   it.each([
-    [{ examples: ["ai"] }, "21.7.0", "22.0.0", "AI SDK 7"],
-    [{ orm: "mongoose" }, "20.18.0", "20.19.0", "Mongoose 9 and MongoDB 7"],
-    [{ addons: ["oxlint"] }, "20.18.0", "20.19.0", "Oxlint and Oxfmt"],
+    [{ examples: ["ai"] }, "21.7.0", "22.3.0", "AI SDK 7"],
+    [{ orm: "mongoose" }, "20.18.0", "22.3.0", "Mongoose 9 and MongoDB 7"],
+    [{ addons: ["oxlint"] }, "20.18.0", "22.12.0", "Oxlint and Oxfmt"],
     [
       { addons: ["ultracite"], addonOptions: { ultracite: { linter: "oxlint" } } },
       "20.18.0",
-      "20.19.0",
+      "22.12.0",
       "Oxlint and Oxfmt",
     ],
   ] satisfies Array<[Partial<RequirementConfig>, string, string, string]>)(

@@ -161,14 +161,14 @@ function usesCreateAuthFactory(config: ProjectConfig) {
   );
 }
 
-function getAuthImportLine(config: ProjectConfig) {
+function getAuthImportLine(config: ProjectConfig, source: string) {
   return usesCreateAuthFactory(config)
-    ? `import { createAuth } from "@${config.projectName}/auth";`
-    : `import { auth } from "@${config.projectName}/auth";`;
+    ? `import { createAuth } from "${source}";`
+    : `import { auth } from "${source}";`;
 }
 
 function getAuthExpression(config: ProjectConfig) {
-  return usesCreateAuthFactory(config) ? "createAuth()" : "auth";
+  return usesCreateAuthFactory(config) ? "(await createAuth())" : "auth";
 }
 
 function addAiSdkEvlogTelemetry(content: string, loggerExpression: string) {
@@ -399,16 +399,8 @@ export function addEvlogServerSetup(
   return nextContent;
 }
 
-function addNuxtEvlogSetup(content: string, serviceName: string, axiom: boolean) {
+function addNuxtEvlogSetup(content: string, serviceName: string) {
   let nextContent = content;
-  const axiomConfig = axiom
-    ? `
-    axiom: {
-      apiKey: process.env.AXIOM_API_KEY!,
-      dataset: process.env.AXIOM_DATASET!,
-      edgeUrl: process.env.AXIOM_EDGE_URL!,
-    },`
-    : "";
   if (!nextContent.includes('"evlog/nuxt"') && !nextContent.includes("'evlog/nuxt'")) {
     nextContent = nextContent.replace(/modules:\s*\[/, (match) => `${match}\n    "evlog/nuxt",`);
   }
@@ -417,13 +409,8 @@ function addNuxtEvlogSetup(content: string, serviceName: string, axiom: boolean)
     nextContent = nextContent.replace(/\n\}\)\s*$/, (match) => {
       const contentBeforeConfigClose = nextContent.slice(0, -match.length);
       const needsComma = !/[,{]\s*$/.test(contentBeforeConfigClose);
-      return `${needsComma ? "," : ""}\n  evlog: {\n    env: { service: "${serviceName}" },${axiomConfig}\n  },\n})`;
+      return `${needsComma ? "," : ""}\n  evlog: {\n    env: { service: "${serviceName}" },\n  },\n})`;
     });
-  } else if (axiom && !nextContent.includes("axiom:")) {
-    nextContent = nextContent.replace(
-      /evlog:\s*\{\n/,
-      "evlog: {\n    axiom: {\n      apiKey: process.env.AXIOM_API_KEY!,\n      dataset: process.env.AXIOM_DATASET!,\n      edgeUrl: process.env.AXIOM_EDGE_URL!,\n    },\n",
-    );
   }
 
   return nextContent;
@@ -554,6 +541,7 @@ function addAstroMiddlewareEvlogSetup(
   serviceName: string,
   fsDrain: boolean,
   axiom: boolean,
+  cloudflare: boolean,
 ) {
   let nextContent = prependMissingImports(content, [
     'import { createRequestLogger, initLogger } from "evlog";',
@@ -582,13 +570,13 @@ function addAstroMiddlewareEvlogSetup(
     nextContent = insertAfterOnce(
       nextContent,
       contextMarker,
-      `\n  const url = new URL(context.request.url);\n  const log = createRequestLogger({\n    method: context.request.method,\n    path: url.pathname,\n  });\n\n  context.locals.log = log;\n`,
+      `\n  const url = new URL(context.request.url);\n  const log = createRequestLogger({\n    method: context.request.method,\n    path: url.pathname,\n${cloudflare ? "    waitUntil: context.locals.cfContext.waitUntil.bind(context.locals.cfContext),\n" : ""}  });\n\n  context.locals.log = log;\n`,
       "const log = createRequestLogger({",
     );
 
     return nextContent.replace(
       "return next();",
-      "const response = await next();\n  log.emit();\n  return response;",
+      "const response = await next();\n  log.set({ status: response.status });\n  log.emit();\n  return response;",
     );
   }
 
@@ -598,13 +586,13 @@ function addAstroMiddlewareEvlogSetup(
     nextContent = insertAfterOnce(
       nextContent,
       localsMarker,
-      `\n  const url = new URL(request.url);\n  const log = createRequestLogger({\n    method: request.method,\n    path: url.pathname,\n  });\n\n  locals.log = log;\n`,
+      `\n  const url = new URL(request.url);\n  const log = createRequestLogger({\n    method: request.method,\n    path: url.pathname,\n${cloudflare ? "    waitUntil: locals.cfContext.waitUntil.bind(locals.cfContext),\n" : ""}  });\n\n  locals.log = log;\n`,
       "const log = createRequestLogger({",
     );
 
     return nextContent.replace(
       "return next();",
-      "const response = await next();\n  log.emit();\n  return response;",
+      "const response = await next();\n  log.set({ status: response.status });\n  log.emit();\n  return response;",
     );
   }
 
@@ -737,23 +725,23 @@ function addSvelteBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
     "createAuthMiddleware",
     "type BetterAuthInstance",
   ]);
-  if (!nextContent.includes(`@${config.projectName}/auth`)) {
-    nextContent = prependMissingImports(nextContent, [getAuthImportLine(config)]);
+  if (!nextContent.includes('from "./services"')) {
+    nextContent = prependMissingImports(nextContent, [getAuthImportLine(config, "./services")]);
   }
   if (
     usesCreateAuthFactory(config) &&
     config.webDeploy === "cloudflare" &&
-    !nextContent.includes(`@${config.projectName}/env/server`)
+    !nextContent.includes('from "./env.server"')
   ) {
     nextContent = prependMissingImports(nextContent, [
-      `import { env as localEnv } from "@${config.projectName}/env/server";`,
+      'import { env as localEnv } from "./env.server";',
     ]);
   }
   const authExpression = getAuthExpression(config);
   const authOptions = '{ exclude: ["/api/auth/**"], maskEmail: true }';
   const authHandleSnippet =
     usesCreateAuthFactory(config) && config.webDeploy === "cloudflare"
-      ? `const evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tif (building) {\n\t\treturn resolve(event);\n\t}\n\n\tconst authEnv = event.platform?.env ?? localEnv;\n\tconst identifyUser = createAuthMiddleware(createAuth(authEnv) as BetterAuthInstance, ${authOptions});\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`
+      ? `const evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tif (building) {\n\t\treturn resolve(event);\n\t}\n\n\tconst authEnv = event.platform?.env ?? localEnv;\n\tconst identifyUser = createAuthMiddleware((await createAuth(authEnv)) as BetterAuthInstance, ${authOptions});\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`
       : `const identifyUser = createAuthMiddleware(${authExpression} as BetterAuthInstance, ${authOptions});\n\nconst evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`;
 
   const evlogHandleDeclaration = nextContent.match(
@@ -786,8 +774,8 @@ function addAstroBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
     "createAuthMiddleware",
     "type BetterAuthInstance",
   ]);
-  if (!nextContent.includes(`@${config.projectName}/auth`)) {
-    nextContent = prependMissingImports(nextContent, [getAuthImportLine(config)]);
+  if (!nextContent.includes('from "./services"')) {
+    nextContent = prependMissingImports(nextContent, [getAuthImportLine(config, "./services")]);
   }
   const authExpression = getAuthExpression(config);
   const authOptions = '{ exclude: ["/api/auth/**"], maskEmail: true }';
@@ -831,7 +819,15 @@ export const { register, onRequestError } = createInstrumentation({
 `;
 }
 
-function getNitroEvlogDrainFile() {
+function getNitroEvlogDrainFile(axiom = false, nitroV3 = false) {
+  if (axiom)
+    return `${nitroV3 ? 'import { definePlugin as defineNitroPlugin } from "nitro";\n' : ""}import { createAxiomDrain } from "evlog/axiom";
+
+export default defineNitroPlugin((nitroApp) => {
+  nitroApp.hooks.hook("evlog:drain", createAxiomDrain());
+});
+`;
+
   return `import { createFsDrain } from "evlog/fs";
 
 export default defineNitroPlugin((nitroApp) => {
@@ -861,7 +857,7 @@ export const config = {
 
 function getNextEvlogAuthFile(config: ProjectConfig) {
   if (usesCreateAuthFactory(config)) {
-    return `${getAuthImportLine(config)}
+    return `${getAuthImportLine(config, "../services")}
 import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
 import { useLogger } from "@/lib/evlog";
 
@@ -875,7 +871,7 @@ export async function identifyEvlogUser(request: Request) {
 `;
   }
 
-  return `${getAuthImportLine(config)}
+  return `${getAuthImportLine(config, "../services")}
 import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
 import { useLogger } from "@/lib/evlog";
 
@@ -892,7 +888,7 @@ export async function identifyEvlogUser(request: Request) {
 
 function getNitroEvlogAuthPluginFile(config: ProjectConfig) {
   if (usesCreateAuthFactory(config)) {
-    return `${getAuthImportLine(config)}
+    return `${getAuthImportLine(config, "../../src/services")}
 import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
 
 export default defineNitroPlugin((nitroApp) => {
@@ -907,7 +903,7 @@ export default defineNitroPlugin((nitroApp) => {
 `;
   }
 
-  return `${getAuthImportLine(config)}
+  return `${getAuthImportLine(config, "../../src/services")}
 import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
 
 export default defineNitroPlugin((nitroApp) => {
@@ -926,10 +922,10 @@ function getNuxtEvlogAuthMiddlewareFile(config: ProjectConfig) {
   if (usesCreateAuthFactory(config)) {
     const usesCloudflareRequestEnv = config.backend === "self" && config.webDeploy === "cloudflare";
     const authExpression = usesCloudflareRequestEnv
-      ? "createAuth((event.context.cloudflare as { env: CloudflareEnv }).env)"
+      ? "(await createAuth((event.context.cloudflare as { env: CloudflareEnv }).env))"
       : getAuthExpression(config);
-    return `${getAuthImportLine(config)}
-${usesCloudflareRequestEnv ? `import type { CloudflareEnv } from "@${config.projectName}/env/server";\n` : ""}
+    return `${getAuthImportLine(config, "../../src/services")}
+${usesCloudflareRequestEnv ? `import type { CloudflareEnv } from "../../src/env.server";\n` : ""}
 import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
 
 export default defineEventHandler(async (event) => {
@@ -943,7 +939,7 @@ export default defineEventHandler(async (event) => {
 `;
   }
 
-  return `${getAuthImportLine(config)}
+  return `${getAuthImportLine(config, "../../src/services")}
 import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
 
 const identify = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
@@ -958,33 +954,30 @@ export default defineEventHandler(async (event) => {
 `;
 }
 
-function getTanstackNitroConfigFile(serviceName: string, axiom: boolean) {
-  const axiomConfig = axiom
-    ? `      axiom: {
-        apiKey: process.env.AXIOM_API_KEY!,
-        dataset: process.env.AXIOM_DATASET!,
-        edgeUrl: process.env.AXIOM_EDGE_URL!,
-      },
-`
-    : "";
-
+function getTanstackNitroConfigFile(serviceName: string) {
   return `import { defineConfig } from "nitro";
 import evlog from "evlog/nitro/v3";
 
 export default defineConfig({
+  serverDir: "./server",
   experimental: {
     asyncContext: true,
   },
   modules: [
     evlog({
       env: { service: "${serviceName}" },
-${axiomConfig}    }),
+    }),
   ],
 });
 `;
 }
 
-function getAstroMiddlewareFile(serviceName: string, fsDrain: boolean, axiom: boolean) {
+function getAstroMiddlewareFile(
+  serviceName: string,
+  fsDrain: boolean,
+  axiom: boolean,
+  cloudflare: boolean,
+) {
   return `import { defineMiddleware } from "astro:middleware";
 import { createRequestLogger, initLogger } from "evlog";
 ${fsDrain ? 'import { createFsDrain } from "evlog/fs";\n' : ""}
@@ -997,12 +990,13 @@ export const onRequest = defineMiddleware(async ({ request, locals }, next) => {
   const log = createRequestLogger({
     method: request.method,
     path: url.pathname,
-  });
+${cloudflare ? "    waitUntil: locals.cfContext.waitUntil.bind(locals.cfContext),\n" : ""}  });
 
   locals.log = log;
 
   try {
     const response = await next();
+    log.set({ status: response.status });
     log.emit();
     return response;
   } catch (error) {
@@ -1091,13 +1085,16 @@ async function setupNuxtEvlog(config: ProjectConfig, serviceName: string) {
   const webDir = path.join(config.projectDir, "apps/web");
   const fsDrain = shouldWireEvlogWebFsDrain(config);
   await updateFileIfExists(path.join(webDir, "nuxt.config.ts"), (content) =>
-    addNuxtEvlogSetup(content, serviceName, usesAxiom(config)),
+    addNuxtEvlogSetup(content, serviceName),
   );
 
-  if (fsDrain) {
+  if (fsDrain || usesAxiom(config)) {
     const drainPath = path.join(webDir, "server/plugins/evlog-drain.ts");
     if (!(await fs.pathExists(drainPath))) {
-      await writeFileIfChanged(drainPath, getNitroEvlogDrainFile());
+      await writeFileIfChanged(
+        drainPath,
+        getNitroEvlogDrainFile(usesAxiom(config), config.frontend.includes("tanstack-start")),
+      );
     }
   }
 
@@ -1163,25 +1160,60 @@ export const { handle, handleError } = ${getSvelteEvlogHooksCall(fsDrain, axiom)
   }
 }
 
+function getTanstackWorkersEvlogFile(config: ProjectConfig, serviceName: string) {
+  const identify = shouldIdentifyWebAuth(config);
+  return `import handler from "@tanstack/react-start/server-entry";
+import { initWorkersLogger, withEvlog } from "evlog/workers";
+import { createAxiomDrain } from "evlog/axiom";
+${identify ? `${getAuthImportLine(config, "./services")}\nimport { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";\n` : ""}
+initWorkersLogger({ env: { service: "${serviceName}" } });
+
+export default withEvlog(async (request${identify ? ", _env, _ctx, log" : ""}) => {
+${
+  identify
+    ? `  const identifyUser = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {
+    exclude: ["/api/auth/**"],
+    maskEmail: true,
+  });
+  await identifyUser(log, request.headers, new URL(request.url).pathname);
+`
+    : ""
+}  return handler.fetch(request);
+}, { drain: createAxiomDrain() });
+`;
+}
+
 async function setupTanstackStartEvlog(config: ProjectConfig, serviceName: string) {
   const webDir = path.join(config.projectDir, "apps/web");
   const fsDrain = shouldWireEvlogWebFsDrain(config);
+  if (usesAxiom(config) && config.webDeploy === "cloudflare") {
+    await writeFileIfChanged(
+      path.join(webDir, "src/server.ts"),
+      getTanstackWorkersEvlogFile(config, serviceName),
+    );
+    if (config.examples.includes("ai")) {
+      await updateFileIfExists(path.join(webDir, "src/routes/api/ai/$.ts"), (content) =>
+        addAiSdkEvlogTelemetry(addNamedImport(content, "evlog", ["useLogger"]), "useLogger()"),
+      );
+    }
+    return;
+  }
   const nitroConfigPath = path.join(webDir, "nitro.config.ts");
   if (!(await fs.pathExists(nitroConfigPath))) {
-    await writeFileIfChanged(
-      nitroConfigPath,
-      getTanstackNitroConfigFile(serviceName, usesAxiom(config)),
-    );
+    await writeFileIfChanged(nitroConfigPath, getTanstackNitroConfigFile(serviceName));
   }
   await updateFileIfExists(
     path.join(webDir, "src/routes/__root.tsx"),
     addTanstackStartRootEvlogSetup,
   );
 
-  if (fsDrain) {
+  if (fsDrain || usesAxiom(config)) {
     const drainPath = path.join(webDir, "server/plugins/evlog-drain.ts");
     if (!(await fs.pathExists(drainPath))) {
-      await writeFileIfChanged(drainPath, getNitroEvlogDrainFile());
+      await writeFileIfChanged(
+        drainPath,
+        getNitroEvlogDrainFile(usesAxiom(config), config.frontend.includes("tanstack-start")),
+      );
     }
   }
 
@@ -1206,18 +1238,34 @@ async function setupAstroEvlog(config: ProjectConfig, serviceName: string) {
   const axiom = usesAxiom(config);
   const middlewarePath = path.join(webDir, "src/middleware.ts");
   if (!(await fs.pathExists(middlewarePath))) {
-    await writeFileIfChanged(middlewarePath, getAstroMiddlewareFile(serviceName, fsDrain, axiom));
+    await writeFileIfChanged(
+      middlewarePath,
+      getAstroMiddlewareFile(serviceName, fsDrain, axiom, config.webDeploy === "cloudflare"),
+    );
   } else {
     await updateFileIfExists(middlewarePath, (content) =>
-      addAstroMiddlewareEvlogSetup(content, serviceName, fsDrain, axiom),
+      addAstroMiddlewareEvlogSetup(
+        content,
+        serviceName,
+        fsDrain,
+        axiom,
+        config.webDeploy === "cloudflare",
+      ),
     );
   }
 
-  const envPath = path.join(webDir, "src/env.d.ts");
+  const envPath = path.join(webDir, "src/locals.d.ts");
   if (!(await fs.pathExists(envPath))) {
     await writeFileIfChanged(envPath, getAstroEnvFile());
   } else {
     await updateFileIfExists(envPath, addAstroLocalsType);
+  }
+
+  if (config.webDeploy === "cloudflare") {
+    await updateFileIfExists(envPath, (content) => {
+      if (content.includes("cfContext:")) return content;
+      return `/// <reference types="@cloudflare/workers-types" />\n${content.replace("interface Locals {", "interface Locals {\n      cfContext: ExecutionContext;")}`;
+    });
   }
 
   if (shouldIdentifyWebAuth(config)) {

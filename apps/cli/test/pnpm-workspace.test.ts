@@ -45,14 +45,14 @@ describe("pnpm workspace", () => {
 
     expect(workspace.minimumReleaseAgeExclude).toEqual([
       "@solidjs/meta@1.0.0-next.2",
-      "@solidjs/router@2.0.0-next.16",
-      "@solidjs/signals@2.0.0-rc.0",
-      "@solidjs/vite-plugin@3.0.0-next.28",
-      "@solidjs/web@2.0.0-rc.0",
-      "@tanstack/solid-query-devtools@6.0.0-rc.0",
-      "@tanstack/solid-query@6.0.0-rc.0",
-      "babel-preset-solid@2.0.0-rc.0",
-      "solid-js@2.0.0-rc.0",
+      "@solidjs/router@2.0.0-next.21",
+      "@solidjs/signals@2.0.0-rc.6",
+      "@solidjs/vite-plugin@3.0.0-next.39",
+      "@solidjs/web@2.0.0-rc.6",
+      "@tanstack/solid-query-devtools@6.0.0-rc.3",
+      "@tanstack/solid-query@6.0.0-rc.3",
+      "babel-preset-solid@2.0.0-rc.6",
+      "solid-js@2.0.0-rc.6",
     ]);
   });
 

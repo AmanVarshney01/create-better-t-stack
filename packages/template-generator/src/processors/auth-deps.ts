@@ -124,13 +124,13 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
 function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { auth, backend, frontend, orm } = config;
   const authPath = "packages/auth/package.json";
-  const apiPath = "packages/api/package.json";
+  const apiPath = backend === "self" ? "apps/web/package.json" : "apps/server/package.json";
   const webPath = "apps/web/package.json";
   const nativePath = "apps/native/package.json";
   const serverPath = "apps/server/package.json";
 
   const authExists = vfs.exists(authPath);
-  const apiExists = vfs.exists(apiPath);
+  const apiExists = vfs.exists("packages/api/package.json");
   const webExists = vfs.exists(webPath);
   const nativeExists = vfs.exists(nativePath);
   const serverExists = vfs.exists(serverPath);
@@ -154,7 +154,6 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
     ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
   );
   const hasSvelte = frontend.includes("svelte");
-  const hasSolid = frontend.includes("solid");
   const hasNextJs = frontend.includes("next");
   const hasReactRouter = frontend.includes("react-router");
   const hasTanStackRouter = frontend.includes("tanstack-router");
@@ -211,7 +210,7 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
     }
 
     if (hasWebFrontend && webExists) {
-      if (!hasSolid) {
+      if (!frontend.includes("solid")) {
         addPackageDependency({ vfs, packagePath: webPath, dependencies: ["better-auth"] });
       }
 

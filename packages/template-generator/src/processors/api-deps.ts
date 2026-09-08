@@ -28,7 +28,7 @@ function getFrontendType(frontend: Frontend[]): FrontendType {
 }
 
 export function processApiDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { api, backend, frontend, auth } = config;
+  const { api, backend, frontend } = config;
   const frontendType = getFrontendType(frontend);
 
   if (backend === "convex") {
@@ -38,7 +38,7 @@ export function processApiDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
 
   if (api === "none") return;
 
-  addApiPackageDeps(vfs, api, backend, frontend, auth);
+  addApiPackageDeps(vfs, api);
   addServerDeps(vfs, api, backend);
   addSelfBackendWebDeps(vfs, api, backend, frontendType);
   addWebClientDeps(vfs, api, backend, frontend, frontendType);
@@ -46,13 +46,7 @@ export function processApiDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
   addQueryDeps(vfs, frontend, backend);
 }
 
-function addApiPackageDeps(
-  vfs: VirtualFileSystem,
-  api: API,
-  backend: Backend,
-  frontend: Frontend[],
-  auth: ProjectConfig["auth"],
-): void {
+function addApiPackageDeps(vfs: VirtualFileSystem, api: API): void {
   const pkgPath = "packages/api/package.json";
   if (!vfs.exists(pkgPath)) return;
 
@@ -68,31 +62,6 @@ function addApiPackageDeps(
       packagePath: pkgPath,
       dependencies: ["@orpc/server", "@orpc/client", "@orpc/openapi", "@orpc/zod", "zod"],
     });
-  }
-
-  // Add next dep for api package when backend is self and frontend includes next
-  if (backend === "self" && frontend.includes("next")) {
-    addPackageDependency({ vfs, packagePath: pkgPath, dependencies: ["next"] });
-  }
-
-  // Add better-auth for express/fastify backends
-  if (auth === "better-auth" && (backend === "express" || backend === "fastify")) {
-    addPackageDependency({ vfs, packagePath: pkgPath, dependencies: ["better-auth"] });
-  }
-
-  // Add @types/express for express backend
-  if (backend === "express") {
-    addPackageDependency({ vfs, packagePath: pkgPath, devDependencies: ["@types/express"] });
-  }
-
-  // Add hono types for hono backend
-  if (backend === "hono") {
-    addPackageDependency({ vfs, packagePath: pkgPath, devDependencies: ["hono"] });
-  }
-
-  // Add elysia types for elysia backend
-  if (backend === "elysia") {
-    addPackageDependency({ vfs, packagePath: pkgPath, devDependencies: ["elysia"] });
   }
 }
 

@@ -56,7 +56,7 @@ import { authClient } from "@/lib/auth-client";
 
 export default async function DashboardPage() {
 	{{#if (eq backend "self")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth()){{else}}auth{{/if}}.api.getSession({
 		headers: await headers(),
 	});
 	{{else}}

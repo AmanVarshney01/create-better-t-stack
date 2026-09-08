@@ -4,6 +4,7 @@ export * from "./core/template-processor";
 export * from "./generator";
 export { processAddonTemplates } from "./template-handlers/addons";
 export { processAddonsDeps } from "./processors/addons-deps";
+export { processPwaPlugins } from "./processors/pwa-plugins";
 export { processNxConfig } from "./processors/nx-generator";
 export { processTurboConfig } from "./processors/turbo-generator";
 export { processVitePlusConfig } from "./processors/vite-plus-generator";

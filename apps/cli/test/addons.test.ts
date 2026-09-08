@@ -525,10 +525,10 @@ describe("Addon Configurations", () => {
       );
       const webViteConfig = await readFile(join(projectDir!, "apps/web/vite.config.ts"), "utf8");
 
-      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.3.0");
-      expect(rootPackageJson.devDependencies.rolldown).toBe("1.2.6");
+      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.3.1");
+      expect(rootPackageJson.devDependencies.rolldown).toBe("1.2.7");
       expect(rootPackageJson.overrides).toMatchObject({
-        vite: "npm:@voidzero-dev/vite-plus-core@0.3.0",
+        vite: "npm:@voidzero-dev/vite-plus-core@0.3.1",
       });
       expect(rootPackageJson.overrides.vitest).toBeUndefined();
       expect(rootPackageJson.scripts.dev).toBe("vp run -r dev");
@@ -669,7 +669,7 @@ describe("Addon Configurations", () => {
       const webViteConfig = await readFile(join(projectDir, "apps/web/vite.config.ts"), "utf8");
       const rootViteConfig = await readFile(join(projectDir, "vite.config.ts"), "utf8");
 
-      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.3.0");
+      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.3.1");
       expect(rootPackageJson.scripts.dev).toBe("vp run -r dev");
       expect(rootPackageJson.scripts.staged).toBe("vp staged");
       expect(rootPackageJson.scripts["hooks:setup"]).toBe("vp config");
@@ -1113,7 +1113,7 @@ describe("Addon Configurations", () => {
         expect(serverIndex).toContain(
           'drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain()',
         );
-        expect(serverPackageJson).toContain('"evlog": "^2.28.0"');
+        expect(serverPackageJson).toContain('"evlog": "^2.28.1"');
         const gitignore = await readFile(join(projectDir, ".gitignore"), "utf-8");
         expect(gitignore).toContain(".evlog/");
       });
@@ -1193,7 +1193,7 @@ describe("Addon Configurations", () => {
         files: [
           ["apps/web/src/middleware.ts", "createRequestLogger"],
           ["apps/web/src/middleware.ts", "createFsDrain"],
-          ["apps/web/src/env.d.ts", "log: RequestLogger"],
+          ["apps/web/src/locals.d.ts", "log: RequestLogger"],
         ],
       },
     ] as const;
@@ -1227,9 +1227,9 @@ describe("Addon Configurations", () => {
         }
 
         const webPackageJson = await readFile(join(projectDir, "apps/web/package.json"), "utf-8");
-        expect(webPackageJson).toContain('"evlog": "^2.28.0"');
+        expect(webPackageJson).toContain('"evlog": "^2.28.1"');
         if (webCase.frontend === "tanstack-start") {
-          expect(webPackageJson).toContain('"nitro": "^3.0.260610-beta"');
+          expect(webPackageJson).toContain('"nitro": "3.0.260903-beta"');
         }
         const gitignore = await readFile(join(projectDir, ".gitignore"), "utf-8");
         expect(gitignore).toContain(".evlog/");
@@ -1272,7 +1272,7 @@ describe("Addon Configurations", () => {
       expect(infra).toContain('Cloudflare.Website.Nuxt("web", {');
       expect(webPackage.devDependencies?.["@distilled.cloud/nuxt"]).toBeUndefined();
       expect(webPackage.devDependencies?.["@alchemy.run/frontend-frameworks"]).toBe(
-        "2.0.0-beta.75",
+        "2.0.0-beta.76",
       );
       expect(webPackage.devDependencies?.["nitro-cloudflare-dev"]).toBeUndefined();
       expect(webPackage.devDependencies?.wrangler).toBeUndefined();
@@ -1310,15 +1310,16 @@ describe("Addon Configurations", () => {
         join(projectDir, "apps/web/app/plugins/auth-client.ts"),
         "utf-8",
       );
-      const envServer = await readFile(join(projectDir, "packages/env/src/server.ts"), "utf-8");
+      const envServer = await readFile(join(projectDir, "apps/web/src/env.server.ts"), "utf-8");
 
       expect(existsSync(join(projectDir, "apps/web/server/plugins/evlog-auth.ts"))).toBe(false);
       expect(authMiddleware).toContain(
         'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
       );
-      expect(authMiddleware).toContain(
-        "createAuth((event.context.cloudflare as { env: CloudflareEnv }).env) as BetterAuthInstance",
-      );
+      expect(authMiddleware).toContain("await createAuth(");
+      expect(authMiddleware).toContain("(event.context.cloudflare as { env: CloudflareEnv }).env,");
+      expect(authMiddleware).toContain('from "../../src/services"');
+      expect(authMiddleware).toContain('from "../../src/env.server"');
       expect(authMiddleware).toContain('exclude: ["/api/auth/**"]');
       expect(authMiddleware).toContain("maskEmail: true");
       expect(authMiddleware).toContain("export default defineEventHandler(async (event) => {");
@@ -1333,8 +1334,8 @@ describe("Addon Configurations", () => {
       expect(authClient).not.toContain("as string");
       expectParseableTypeScript(authClient);
 
-      expect(envServer).toContain('import type { CloudflareEnv } from "../env.d.ts";');
-      expect(envServer).toContain('export type { CloudflareEnv } from "../env.d.ts";');
+      expect(envServer).toContain('import type { CloudflareEnv } from "../cloudflare-env.d.ts";');
+      expect(envServer).toContain('export type { CloudflareEnv } from "../cloudflare-env.d.ts";');
       expect(envServer).not.toContain('from "cloudflare:workers"');
       expectParseableTypeScript(envServer);
     });
@@ -1419,36 +1420,35 @@ describe("Addon Configurations", () => {
         frontend: "next",
         api: "trpc",
         path: "apps/web/src/lib/evlog-auth.ts",
-        expected: "createAuthMiddleware(createAuth() as BetterAuthInstance",
+        expected: "createAuthMiddleware((await createAuth()) as BetterAuthInstance",
         insideMarker: "export async function identifyEvlogUser",
       },
       {
         frontend: "nuxt",
         api: "orpc",
         path: "apps/web/server/middleware/evlog-auth.ts",
-        expected:
-          "createAuth((event.context.cloudflare as { env: CloudflareEnv }).env) as BetterAuthInstance",
+        expected: "(event.context.cloudflare as { env: CloudflareEnv }).env,",
         insideMarker: "export default defineEventHandler",
       },
       {
         frontend: "svelte",
         api: "orpc",
         path: "apps/web/src/hooks.server.ts",
-        expected: "createAuthMiddleware(createAuth(authEnv) as BetterAuthInstance",
+        expected: "createAuthMiddleware((await createAuth(authEnv)) as BetterAuthInstance",
         insideMarker: "const evlogAuthHandle",
       },
       {
         frontend: "tanstack-start",
         api: "trpc",
         path: "apps/web/server/plugins/evlog-auth.ts",
-        expected: "createAuthIdentifier(createAuth() as BetterAuthInstance",
+        expected: "createAuthIdentifier((await createAuth()) as BetterAuthInstance",
         insideMarker: 'nitroApp.hooks.hook("request", async (event) => {',
       },
       {
         frontend: "astro",
         api: "orpc",
         path: "apps/web/src/middleware.ts",
-        expected: "createAuthMiddleware(createAuth() as BetterAuthInstance",
+        expected: "createAuthMiddleware((await createAuth()) as BetterAuthInstance",
         insideMarker: "export const onRequest",
       },
     ] as const;
@@ -1818,7 +1818,7 @@ describe("Addon Configurations", () => {
       expect(serverIndex).toContain(
         'app.use(evlog({ drain: process.env.NODE_ENV === "production" ? undefined : createFsDrain() }));',
       );
-      expect(serverPackageJson).toContain('"evlog": "^2.28.0"');
+      expect(serverPackageJson).toContain('"evlog": "^2.28.1"');
     });
 
     it("should reject evlog when added later to a Convex project", async () => {
@@ -1855,6 +1855,68 @@ describe("Addon Configurations", () => {
   });
 
   describe("Axiom Addon", () => {
+    it("does not offer a second observability addon", () => {
+      expect(
+        getCompatibleAddons(
+          ["evlog", "axiom", "biome"],
+          ["next"],
+          ["axiom"],
+          "none",
+          "self",
+          "none",
+        ),
+      ).toEqual(["biome"]);
+      expect(
+        getCompatibleAddons(
+          ["evlog", "axiom", "biome"],
+          ["next"],
+          ["evlog"],
+          "none",
+          "self",
+          "none",
+        ),
+      ).toEqual(["biome"]);
+    });
+    for (const frontend of ["astro", "tanstack-start"] as const) {
+      it(`keeps ${frontend} Axiom drains alive on Cloudflare`, async () => {
+        const result = await runTRPCTest({
+          projectName: `axiom-workers-${frontend}`,
+          addons: ["axiom"],
+          frontend: [frontend],
+          backend: "self",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          api: "none",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "cloudflare",
+          serverDeploy: "none",
+          install: false,
+        });
+        expectSuccess(result);
+        const projectDir = result.result!.projectDirectory!;
+        if (frontend === "astro") {
+          const middleware = await readFile(join(projectDir, "apps/web/src/middleware.ts"), "utf8");
+          expect(middleware).toContain(
+            "waitUntil: locals.cfContext.waitUntil.bind(locals.cfContext)",
+          );
+          expect(middleware).toContain("log.set({ status: response.status })");
+          expect(await readFile(join(projectDir, "apps/web/src/locals.d.ts"), "utf8")).toContain(
+            "cfContext: ExecutionContext",
+          );
+        } else {
+          const entry = await readFile(join(projectDir, "apps/web/src/server.ts"), "utf8");
+          expect(entry).toContain('from "evlog/workers"');
+          expect(entry).toContain("withEvlog(");
+          expect(entry).toContain("handler.fetch(request)");
+          expect(entry).toContain("drain: createAxiomDrain()");
+          expect(existsSync(join(projectDir, "apps/web/nitro.config.ts"))).toBe(false);
+        }
+      });
+    }
+
     it("should reject adding Axiom after project creation", async () => {
       const created = await runTRPCTest({
         projectName: "axiom-add-later",
@@ -1916,7 +1978,7 @@ describe("Addon Configurations", () => {
       expect(serverIndex).toContain('import { createAxiomDrain } from "evlog/axiom";');
       expect(serverIndex).toContain("app.use(evlog({ drain: createAxiomDrain() }));");
       expect(serverIndex).not.toContain("evlog/fs");
-      expect(serverPackage.dependencies?.evlog).toBe("^2.28.0");
+      expect(serverPackage.dependencies?.evlog).toBe("^2.28.1");
       expect(serverPackage.scripts?.dev).toBeUndefined();
       expect(serverPackage.scripts?.["dev:bare"]).toBeDefined();
       expect(infra).toContain('Axiom.Dataset("logs"');
@@ -1956,7 +2018,11 @@ describe("Addon Configurations", () => {
     });
 
     const fullstackCases = [
-      { frontend: "nuxt", file: "apps/web/nuxt.config.ts", marker: "axiom:" },
+      {
+        frontend: "nuxt",
+        file: "apps/web/server/plugins/evlog-drain.ts",
+        marker: 'hooks.hook("evlog:drain", createAxiomDrain())',
+      },
       {
         frontend: "svelte",
         file: "apps/web/src/hooks.server.ts",
@@ -1964,8 +2030,8 @@ describe("Addon Configurations", () => {
       },
       {
         frontend: "tanstack-start",
-        file: "apps/web/nitro.config.ts",
-        marker: "axiom:",
+        file: "apps/web/server/plugins/evlog-drain.ts",
+        marker: 'hooks.hook("evlog:drain", createAxiomDrain())',
       },
       {
         frontend: "astro",
@@ -1999,6 +2065,23 @@ describe("Addon Configurations", () => {
 
         const content = await readFile(join(projectDir, file), "utf-8");
         expect(content).toContain(marker);
+        if (frontend === "nuxt" || frontend === "tanstack-start") {
+          expect(content).not.toContain("import.meta.dev");
+          const config = await readFile(
+            join(
+              projectDir,
+              frontend === "nuxt" ? "apps/web/nuxt.config.ts" : "apps/web/nitro.config.ts",
+            ),
+            "utf8",
+          );
+          expect(config).not.toContain("process.env.AXIOM_");
+          if (frontend === "tanstack-start") {
+            expect(content).toContain('from "nitro"');
+            expect(await readFile(join(projectDir, "apps/web/vite.config.ts"), "utf8")).toContain(
+              "nitro()",
+            );
+          }
+        }
       });
     }
 

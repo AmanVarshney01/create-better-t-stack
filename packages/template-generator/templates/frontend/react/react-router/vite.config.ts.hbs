@@ -1,3 +1,6 @@
+{{#unless (eq webDeploy "cloudflare")}}
+import { varlockVitePlugin } from "@varlock/vite-integration";
+{{/unless}}
 {{#if (and (eq webDeploy "cloudflare") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
 import { fileURLToPath } from "node:url";
 {{/if}}
@@ -10,6 +13,9 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
+{{#unless (eq webDeploy "cloudflare")}}
+    varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
+{{/unless}}
     tailwindcss(),
     reactRouter(),
   ],

@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+
 concurrency:
   group: test-${{ github.head_ref }}
   cancel-in-progress: true
@@ -15,10 +18,12 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: package.json
           check-latest: true
@@ -37,11 +42,21 @@ jobs:
         env:
           BTS_TELEMETRY: 0
 
-      - name: Build Types
-        run: cd packages/types && bun run build
+      - name: Build CLI and Shared Packages
+        run: bun run build:cli
 
-      - name: Build Template Generator
-        run: cd packages/template-generator && bun run build
+      - name: Check Formatting and Lint
+        run: bunx oxfmt --check . && bunx oxlint .
+
+      - name: Check Source Types
+        run: |
+          bunx tsc --noEmit -p apps/cli/tsconfig.json
+          bunx tsc --noEmit -p packages/template-generator/tsconfig.json
+          bunx tsc --noEmit -p packages/backend/convex/tsconfig.json
+          bun run --filter web check-types
+
+      - name: Test Website and Shared Packages
+        run: bun test apps/web/test packages/types/test packages/backend/test
 
       - name: Test CLI
         working-directory: apps/cli
@@ -49,3 +64,36 @@ jobs:
         env:
           AGENT: 1
           BTS_TELEMETRY: 0
+          BTS_MATRIX_MODE: smoke
+
+  generated-builds:
+    name: Generated Builds (${{ matrix.shard }}/8)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: package.json
+          check-latest: true
+          package-manager-cache: false
+      - uses: oven-sh/setup-bun@v2
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11
+      - run: bun install --frozen-lockfile
+      - run: bun run build:cli
+      - name: Install, Build and Type-check Generated Projects
+        working-directory: apps/cli
+        run: bun test test/generated-builds.test.ts
+        env:
+          AGENT: 1
+          BTS_TELEMETRY: 0
+          BTS_BUILD_SAMPLES: 1
+          BTS_BUILD_SAMPLE_SHARD: ${{ matrix.shard }}/8

@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import dotenv from "dotenv";
+import { parseEnv } from "node:util";
 
 const DEFAULT_ENVIRONMENT = "preview";
 const VALID_ENVIRONMENTS = new Set(["development", "preview", "production"]);
@@ -65,7 +65,7 @@ for (const file of envFiles) {
 		continue;
 	}
 
-	for (const [key, value] of Object.entries(dotenv.parse(readFileSync(file, "utf8")))) {
+	for (const [key, value] of Object.entries(parseEnv(readFileSync(file, "utf8")))) {
 		if (SKIP_KEYS.has(key)) continue;
 		env.set(key, OVERRIDE_KEYS.get(key) ?? value);
 	}

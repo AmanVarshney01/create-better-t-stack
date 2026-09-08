@@ -1,13 +1,6 @@
 import { defineConfig } from "drizzle-kit";
-import dotenv from "dotenv";
+import "varlock/auto-load";
 
-dotenv.config({
-    {{#if (eq backend "self")}}
-    path: "../../apps/web/.env",
-    {{else}}
-    path: "../../apps/server/.env",
-    {{/if}}
-});
 
 export default defineConfig({
   schema: "./src/schema",

@@ -40,7 +40,6 @@ const VITE_PLUS_VERSION = dependencyVersionMap["vite-plus"];
 export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectConfig): void {
   updateRootPackageJson(vfs, config);
   updateConfigPackageJson(vfs, config);
-  updateEnvPackageJson(vfs, config);
   updateUiPackageJson(vfs, config);
   updateInfraPackageJson(vfs, config);
   updateDesktopPackageJson(vfs, config);
@@ -665,38 +664,6 @@ function updateConfigPackageJson(vfs: VirtualFileSystem, config: ProjectConfig):
 
   pkgJson.name = `@${config.projectName}/config`;
   vfs.writeJson("packages/config/package.json", pkgJson);
-}
-
-function updateEnvPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const pkgJson = vfs.readJson<PackageJson>("packages/env/package.json");
-  if (!pkgJson) return;
-
-  pkgJson.name = `@${config.projectName}/env`;
-
-  // Set exports based on which env files exist
-  const hasWebFrontend = config.frontend.some((f: string) =>
-    (webFrontends as readonly string[]).includes(f),
-  );
-  const hasNative = config.frontend.some((f: string) =>
-    ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
-  );
-  const needsServerEnv = config.backend !== "none" && config.backend !== "convex";
-
-  const exports: Record<string, string> = {};
-
-  if (needsServerEnv) {
-    exports["./server"] = "./src/server.ts";
-  }
-  if (hasWebFrontend) {
-    exports["./web"] = "./src/web.ts";
-  }
-  if (hasNative) {
-    exports["./native"] = "./src/native.ts";
-  }
-
-  pkgJson.exports = exports;
-
-  vfs.writeJson("packages/env/package.json", pkgJson);
 }
 
 function updateUiPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {

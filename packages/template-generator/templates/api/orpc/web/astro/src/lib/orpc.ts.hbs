@@ -9,12 +9,12 @@ export const link = new RPCLink({
   url: () => `${window.location.origin}/rpc`,
 });
 {{else}}
-import { PUBLIC_SERVER_URL } from "astro:env/client";
+import { env } from "@{{projectName}}/env/web";
 
 {{> getServerUrlSpaces}}
 
 export const link = new RPCLink({
-  url: `${getServerUrl(PUBLIC_SERVER_URL)}/rpc`,
+  url: `${getServerUrl(env.PUBLIC_SERVER_URL)}/rpc`,
 {{#if (eq auth "better-auth")}}
   fetch(url, options) {
     return fetch(url, {

@@ -6,6 +6,7 @@ import {
   processAddonsDeps,
   processNxConfig,
   processPackageConfigs,
+  processPwaPlugins,
   processTurboConfig,
   processVitePlusConfig,
   processTemplateString,
@@ -67,7 +68,14 @@ const ADD_PACKAGE_JSON_PATHS = [
   "packages/ui/package.json",
 ];
 
-const ADD_TEXT_FILE_PATHS = ["apps/web/vite.config.ts", "lefthook.yml"];
+const ADD_TEXT_FILE_PATHS = [
+  "apps/web/vite.config.ts",
+  "apps/web/next.config.ts",
+  "apps/web/src/Document.tsx",
+  "apps/web/src/root.tsx",
+  "apps/web/src/app/layout.tsx",
+  "lefthook.yml",
+];
 
 const HOOK_ADDONS = ["husky", "lefthook"] as const satisfies readonly Addons[];
 const HOOK_LINTER_ADDONS = ["biome", "oxlint", "vite-plus"] as const satisfies readonly Addons[];
@@ -348,8 +356,8 @@ async function reportAddOutcome(
 async function addHandlerInternal(
   input: AddInput,
 ): Promise<Result<AddResult, UserCancelledError | CLIError>> {
-  const projectDir = input.projectDir || process.cwd();
-  const hardeningResult = validateAgentSafePathInput(projectDir, "projectDir");
+  const projectDirInput = input.projectDir || process.cwd();
+  const hardeningResult = validateAgentSafePathInput(projectDirInput, "projectDir");
   if (hardeningResult.isErr()) {
     return Result.err(
       new CLIError({
@@ -358,6 +366,8 @@ async function addHandlerInternal(
       }),
     );
   }
+
+  const projectDir = path.resolve(projectDirInput);
 
   if (!isSilent()) {
     renderTitle();
@@ -543,6 +553,7 @@ async function addHandlerInternal(
     // Process addon templates and dependencies using template-generator's logic.
     await processAddonTemplates(vfs, EMBEDDED_TEMPLATES, config);
     processAddonsDeps(vfs, config);
+    processPwaPlugins(vfs, config);
 
     if (addonsToAdd.includes("turborepo")) {
       processTurboConfig(vfs, updatedConfig);
@@ -560,8 +571,20 @@ async function addHandlerInternal(
       (TASK_RUNNER_ADDONS as readonly Addons[]).includes(addon),
     );
 
-    if (hasTaskRunner) {
+    if (hasTaskRunner || addonsToAdd.includes("electrobun")) {
+      const existingNames = new Map(
+        ADD_PACKAGE_JSON_PATHS.map((filePath) => [
+          filePath,
+          vfs.readJson<{ name?: string }>(filePath)?.name,
+        ]),
+      );
       processPackageConfigs(vfs, updatedConfig);
+      for (const [filePath, name] of existingNames) {
+        if (name) {
+          const pkg = vfs.readJson<{ name: string }>(filePath);
+          if (pkg) vfs.writeJson(filePath, { ...pkg, name });
+        }
+      }
     }
 
     if (updatedAddons.includes("vite-plus")) {

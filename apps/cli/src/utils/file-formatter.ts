@@ -13,6 +13,24 @@ const formatOptions: FormatOptions = {
   },
 };
 
+// A merge can target an installed or previously built project. Never rewrite
+// dependencies (which may be hard-linked to a package-manager cache) or output.
+const ignoredDirectories = new Set([
+  "node_modules",
+  ".git",
+  ".next",
+  ".nuxt",
+  ".output",
+  ".svelte-kit",
+  ".astro",
+  ".turbo",
+  ".vercel",
+  ".wrangler",
+  "dist",
+  "build",
+  "coverage",
+]);
+
 export async function formatCode(filePath: string, content: string): Promise<string | null> {
   const result = await Result.tryPromise({
     try: async () => {
@@ -46,6 +64,7 @@ export async function formatProject(
             const fullPath = path.join(dir, entry.name);
 
             if (entry.isDirectory()) {
+              if (ignoredDirectories.has(entry.name)) return;
               await formatDirectory(fullPath);
             } else if (entry.isFile()) {
               const fileResult = await Result.tryPromise({

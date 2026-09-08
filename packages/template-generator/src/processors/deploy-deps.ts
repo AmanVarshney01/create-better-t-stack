@@ -66,7 +66,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
   }
 
   if (isVercelWeb || isVercelServer) {
-    // dotenv is already a root dependency via workspace-deps
+    // Env file parsing uses node:util; only the Vercel CLI is needed.
     addPackageDependency({
       vfs,
       packagePath: "package.json",

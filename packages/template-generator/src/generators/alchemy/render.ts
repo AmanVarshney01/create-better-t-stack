@@ -2,13 +2,6 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../../core/virtual-fs";
 import { writeDatabaseResources } from "./database";
-import {
-  cloudflareServerEnvEntries,
-  prismaServerEnvEntries,
-  prismaWebEnvEntries,
-  selfCloudflareWebEnvEntries,
-  splitCloudflareWebEnvEntries,
-} from "./env";
 import { writeObservabilityResources } from "./observability";
 import { createAlchemyDeploymentPlan, type AlchemyDeploymentPlan } from "./plan";
 import { writeServerResource } from "./server";
@@ -43,7 +36,9 @@ function usesOutput(plan: AlchemyDeploymentPlan): boolean {
 function usesRedacted(plan: AlchemyDeploymentPlan): boolean {
   const database = plan.managedDatabase;
   return (
-    database.kind === "neon" || (database.kind === "planetscale-mysql" && database.orm === "prisma")
+    plan.web.target === "prisma" ||
+    database.kind === "neon" ||
+    (database.kind === "planetscale-mysql" && database.orm === "prisma")
   );
 }
 
@@ -65,34 +60,6 @@ function usesLayer(plan: AlchemyDeploymentPlan): boolean {
   return providerLayers(plan).length > 1;
 }
 
-function usesConfig(plan: AlchemyDeploymentPlan): boolean {
-  if (
-    plan.hasPrismaDeploy &&
-    !plan.hasAlchemyManagedDatabase &&
-    plan.config.dbSetup !== "d1" &&
-    plan.config.database !== "none"
-  ) {
-    return true;
-  }
-
-  const entries: string[] = [];
-
-  if (plan.server.target === "cloudflare") entries.push(...cloudflareServerEnvEntries(plan));
-  if (plan.server.target === "prisma") entries.push(...prismaServerEnvEntries(plan));
-  if (plan.web.target === "cloudflare") {
-    entries.push(
-      ...(plan.web.topology === "self"
-        ? selfCloudflareWebEnvEntries(plan, plan.web.framework)
-        : splitCloudflareWebEnvEntries(plan, plan.web.framework)),
-    );
-  }
-  if (plan.web.target === "prisma") {
-    entries.push(...prismaWebEnvEntries(plan, plan.web.framework));
-  }
-
-  return entries.some((entry) => entry.includes("Config."));
-}
-
 function writeImports(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void {
   writer.writeLine('import * as Alchemy from "alchemy";');
   if (plan.hasAxiom) writer.writeLine('import * as Axiom from "alchemy/Axiom";');
@@ -111,21 +78,11 @@ function writeImports(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void 
   }
   if (usesOutput(plan)) writer.writeLine('import * as Output from "alchemy/Output";');
   if (plan.hasCloudflare) writer.writeLine('import * as Cloudflare from "alchemy/Cloudflare";');
-  if (usesConfig(plan)) writer.writeLine('import * as Config from "effect/Config";');
+  writer.writeLine('import * as Config from "effect/Config";');
   writer.writeLine('import * as Effect from "effect/Effect";');
   if (usesLayer(plan)) writer.writeLine('import * as Layer from "effect/Layer";');
   if (usesRedacted(plan)) writer.writeLine('import * as Redacted from "effect/Redacted";');
-  writer.writeLine('import { config } from "dotenv";');
-}
-
-function writeDotenv(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void {
-  writer.writeLine('config({ path: "./.env" });');
-  if (plan.web.target !== "none" || plan.hasAxiomWebRuntime) {
-    writer.writeLine('config({ path: "../../apps/web/.env" });');
-  }
-  if (plan.server.target !== "none" || plan.hasAxiomServerRuntime) {
-    writer.writeLine('config({ path: "../../apps/server/.env" });');
-  }
+  writer.writeLine('import "varlock/auto-load";');
 }
 
 function writeStackOptions(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void {
@@ -180,19 +137,14 @@ function writeVercelEnvSync(writer: AlchemyWriter, plan: AlchemyDeploymentPlan):
   if (!plan.hasAxiomVercelRuntime) return;
 
   writer.writeLine("const isDev = yield* Alchemy.ALCHEMY_DEV;");
-  writer.writeLine("if (!isDev) {");
+  writer.writeLine("const { stage } = yield* Alchemy.Stack;");
+  writer.writeLine('if (!isDev && (stage === "preview" || stage === "production")) {');
   writer.indent(() => {
-    writer.writeLine("const { stage } = yield* Alchemy.Stack;");
-    writer.writeLine(
-      'const vercelEnvironment = stage === "production" ? "production" : "preview";',
-    );
     writeObject(
       writer,
       'yield* Command.Exec("axiom-vercel-env", {',
       () => {
-        writer.writeLine(
-          `command: \`${plan.config.packageManager} run env:\${vercelEnvironment}\`,`,
-        );
+        writer.writeLine(`command: \`${plan.config.packageManager} run env:\${stage}\`,`);
         writer.writeLine('cwd: "../..",');
         writer.writeLine("env: observabilityResources.runtimeEnv,");
         writer.writeLine('memo: { include: ["scripts/sync-vercel-env.ts", "vercel.json"] },');
@@ -244,7 +196,6 @@ export function generateAlchemyRun(config: ProjectConfig): string {
 
   writeImports(writer, plan);
   writer.blankLine();
-  writeDotenv(writer, plan);
   writer.blankLine();
   writeDatabaseResources(writer, plan);
   if (plan.hasAlchemyManagedDatabase || plan.hasPrismaDeploy || plan.hasD1Resource) {
@@ -258,7 +209,10 @@ export function generateAlchemyRun(config: ProjectConfig): string {
   if (plan.web.target !== "none") writer.blankLine();
   writeStack(writer, plan);
 
-  return writer.toString();
+  const source = writer.toString();
+  return source.includes("Config.")
+    ? source
+    : source.replace('import * as Config from "effect/Config";\n', "");
 }
 
 export function processAlchemyRun(vfs: VirtualFileSystem, config: ProjectConfig): void {

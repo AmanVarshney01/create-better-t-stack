@@ -37,8 +37,8 @@ describe("Authentication Configurations", () => {
           path.join(result.projectDir, "packages/db/src/schema/auth.ts"),
           "utf8",
         );
-        expect(authSchema).toContain("issuer:");
-        expect(authSchema).toContain('uniqueIndex("account_issuer_accountId_uidx")');
+        expect(authSchema).not.toContain("issuer:");
+        expect(authSchema).toContain('uniqueIndex("account_providerId_accountId_uidx")');
       });
     }
 
@@ -66,7 +66,7 @@ describe("Authentication Configurations", () => {
       const authPackageJson = await fs.readJson(
         path.join(projectDir, "packages/auth/package.json"),
       );
-      expect(authPackageJson.dependencies.mongodb).toBe("^7.5.0");
+      expect(authPackageJson.dependencies.mongodb).toBe("^7.6.0");
 
       const dbIndex = await fs.readFile(path.join(projectDir, "packages/db/src/index.ts"), "utf8");
       expect(dbIndex).toContain("await mongoose.connect(env.DATABASE_URL);");
@@ -97,9 +97,9 @@ describe("Authentication Configurations", () => {
       expect(authModels).toContain("_id: { type: ObjectId, auto: true }");
       expect(authModels).toContain('userId: { type: ObjectId, ref: "User", required: true }');
       expect(authModels).toContain("sessionSchema.index({ userId: 1 })");
-      expect(authModels).toContain("issuer: { type: String, required: true }");
+      expect(authModels).not.toContain("issuer:");
       expect(authModels).toContain(
-        "accountSchema.index({ issuer: 1, accountId: 1 }, { unique: true })",
+        "accountSchema.index({ providerId: 1, accountId: 1 }, { unique: true })",
       );
       expect(authModels).toContain("verificationSchema.index({ identifier: 1 })");
     });
@@ -210,7 +210,7 @@ describe("Authentication Configurations", () => {
         "utf8",
       );
       const serverEnv = await fs.readFile(
-        path.join(result.projectDir, "packages/env/src/server.ts"),
+        path.join(result.projectDir, "apps/web/.env.schema"),
         "utf8",
       );
       const webEnv = await fs.readFile(path.join(result.projectDir, "apps/web/.env"), "utf8");
@@ -223,12 +223,12 @@ describe("Authentication Configurations", () => {
 
       expect(authRoute).toContain('import type { APIHandler } from "filesystem-routing/api";');
       expect(authRoute).toContain("auth.handler(request)");
-      expect(authClient).toContain('from "@better-auth-solid-self/auth/client"');
+      expect(authClient).toContain('from "../client"');
       expect(authClient).toContain("export function useSession()");
       expect(authClient).not.toContain("VITE_SERVER_URL");
       expect(sharedAuthClient).toContain('from "better-auth/client"');
       expect(sharedAuthClient).not.toContain("VITE_SERVER_URL");
-      expect(authConfig).toContain("trustedOrigins: [env.BETTER_AUTH_URL]");
+      expect(authConfig).toContain("env.BETTER_AUTH_URL");
       expect(authConfig).not.toContain("env.CORS_ORIGIN");
       expect(serverEnv).not.toContain("CORS_ORIGIN");
       expect(webEnv).not.toContain("CORS_ORIGIN");
@@ -329,7 +329,7 @@ describe("Authentication Configurations", () => {
         "utf8",
       );
       const webEnvFile = await fs.readFile(
-        path.join(result.projectDir, "packages/env/src/web.ts"),
+        path.join(result.projectDir, "apps/web/.env.schema"),
         "utf8",
       );
 
@@ -346,8 +346,8 @@ describe("Authentication Configurations", () => {
         "# npx convex env set CONVEX_SITE_URL https://example.convex.site",
       );
       expect(convexEnvFile).toContain("# CONVEX_SITE_URL=");
-      expect(webEnvFile).toContain('convexUrlSchema("example.convex.cloud")');
-      expect(webEnvFile).toContain('convexUrlSchema("example.convex.site")');
+      expect(webEnvFile).toContain("@type=url(matches=");
+      expect(webEnvFile).toContain("CONVEX_SITE_URL=");
     });
 
     it("should scaffold react-router with Convex Better Auth wiring", async () => {
@@ -624,7 +624,7 @@ describe("Authentication Configurations", () => {
           "utf8",
         );
         const nativeEnvFile = await fs.readFile(
-          path.join(result.projectDir, "packages/env/src/native.ts"),
+          path.join(result.projectDir, "apps/native/.env.schema"),
           "utf8",
         );
         const polarFile = await fs.readFile(
@@ -658,8 +658,8 @@ describe("Authentication Configurations", () => {
         expect(httpFile).toContain('path: "/polar/success"');
         expect(httpFile).toContain("allowedNativeProtocols");
         expect(httpFile).toContain("status: 302");
-        expect(nativeEnvFile).toContain('convexUrlSchema("example.convex.cloud")');
-        expect(nativeEnvFile).toContain('convexUrlSchema("example.convex.site")');
+        expect(nativeEnvFile).toContain("@type=url(matches=");
+        expect(nativeEnvFile).toContain("CONVEX_SITE_URL=");
         expect(backendPackageFile).toContain('"@convex-dev/polar"');
         expect(backendPackageFile).toContain('"@polar-sh/sdk"');
         expect(nativePackageFile).not.toContain('"@convex-dev/polar"');
@@ -810,7 +810,7 @@ describe("Authentication Configurations", () => {
         const packageJson = JSON.parse(
           await fs.readFile(path.join(result.projectDir, "package.json"), "utf8"),
         );
-        expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.7.1");
+        expect(packageJson.workspaces.catalog["better-auth"]).toBe("1.7.3");
       });
     }
   });
@@ -911,11 +911,11 @@ describe("Authentication Configurations", () => {
         "utf8",
       );
       const apiContextFile = await fs.readFile(
-        path.join(result.projectDir, "packages/api/src/context.ts"),
+        path.join(result.projectDir, "apps/server/src/context.ts"),
         "utf8",
       );
       const serverEnvPackageFile = await fs.readFile(
-        path.join(result.projectDir, "packages/env/src/server.ts"),
+        path.join(result.projectDir, "apps/server/.env.schema"),
         "utf8",
       );
       const serverEnvFile = await fs.readFile(
@@ -930,9 +930,9 @@ describe("Authentication Configurations", () => {
       expect(dashboardFile).toContain("useUser");
       expect(dashboardFile).toContain("privateData.queryOptions()");
       expect(apiContextFile).toContain("type ClerkContextAuth = {");
-      expect(apiContextFile).toContain("type ClerkRequestContext = {");
+      expect(apiContextFile).toContain("session: null");
       expect(apiContextFile).toContain("function toClerkContextAuth(");
-      expect(apiContextFile).toContain("Promise<ClerkRequestContext>");
+      expect(apiContextFile).toContain("auth: clerkAuth");
       expect(apiContextFile).toContain("publishableKey: env.CLERK_PUBLISHABLE_KEY");
       expect(apiContextFile).toContain("authorizedParties: [env.CORS_ORIGIN]");
       expect(serverEnvPackageFile).toContain("CLERK_PUBLISHABLE_KEY");
@@ -1024,7 +1024,7 @@ describe("Authentication Configurations", () => {
         "utf8",
       );
 
-      expect(nativePackageFile).toContain('"@clerk/expo": "^4.5.2"');
+      expect(nativePackageFile).toContain('"@clerk/expo": "^4.6.5"');
 
       expect(signInFile).not.toContain("setActive");
       expect(signInFile).not.toContain("signIn.create");
@@ -1245,9 +1245,9 @@ describe("Authentication Configurations", () => {
             path.join(result.projectDir, "packages/db/prisma/schema/auth.prisma"),
             "utf8",
           );
-          expect(authSchema).toContain("issuer                String");
+          expect(authSchema).not.toContain("issuer                String");
           expect(authSchema).toContain(
-            '@@unique([issuer, accountId], map: "account_issuer_accountId_uidx")',
+            '@@unique([providerId, accountId], map: "account_providerId_accountId_uidx")',
           );
         }
       });

@@ -136,10 +136,12 @@ describe("Clerk matrix", () => {
       const files = collectFiles(result.value.root, result.value.root.path);
 
       if (combo.backend !== "convex" && combo.runtime !== "workers") {
-        const serverEnv = files.get("packages/env/src/server.ts");
+        const serverEnv = files.get(
+          combo.backend === "self" ? "apps/web/.env.schema" : "apps/server/.env.schema",
+        );
         if (!serverEnv?.includes("CLERK_SECRET_KEY")) {
           failures.push(
-            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing CLERK_SECRET_KEY in packages/env/src/server.ts`,
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing CLERK_SECRET_KEY in the app env schema`,
           );
         }
 
@@ -148,13 +150,15 @@ describe("Clerk matrix", () => {
           !serverEnv?.includes("CLERK_PUBLISHABLE_KEY")
         ) {
           failures.push(
-            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing CLERK_PUBLISHABLE_KEY in packages/env/src/server.ts`,
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing CLERK_PUBLISHABLE_KEY in the app env schema`,
           );
         }
       }
 
       if (combo.backend !== "convex" && combo.api !== "none") {
-        const contextFile = files.get("packages/api/src/context.ts");
+        const contextFile = files.get(
+          combo.backend === "self" ? "apps/web/src/context.ts" : "apps/server/src/context.ts",
+        );
         const expectedImport = expectedContextImport(combo.backend);
 
         if (!contextFile?.includes(expectedImport)) {
@@ -169,9 +173,9 @@ describe("Clerk matrix", () => {
           );
         }
 
-        if (!contextFile?.includes("type ClerkRequestContext")) {
+        if (!contextFile?.includes("session: null")) {
           failures.push(
-            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing ClerkRequestContext in packages/api/src/context.ts`,
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing null session in application context`,
           );
         }
 
@@ -341,9 +345,9 @@ describe("Clerk matrix", () => {
         const nativeSignIn = files.get("apps/native/app/(auth)/sign-in.tsx");
         const nativeSignUp = files.get("apps/native/app/(auth)/sign-up.tsx");
 
-        if (!nativePackage?.includes('"@clerk/expo": "^4.5.2"')) {
+        if (!nativePackage?.includes('"@clerk/expo": "^4.6.5"')) {
           failures.push(
-            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: native package is missing @clerk/expo ^4.5.2`,
+            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: native package is missing @clerk/expo ^4.6.5`,
           );
         }
 
