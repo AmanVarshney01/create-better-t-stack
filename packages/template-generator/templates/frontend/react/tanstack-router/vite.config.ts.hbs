@@ -1,4 +1,6 @@
+{{#unless (eq webDeploy "cloudflare")}}
 import { varlockVitePlugin } from "@varlock/vite-integration";
+{{/unless}}
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
@@ -12,7 +14,9 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
+{{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "auto-load" }),
+{{/unless}}
     tailwindcss(),
     tanstackRouter({
       target: "react",

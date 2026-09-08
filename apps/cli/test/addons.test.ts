@@ -1316,9 +1316,10 @@ describe("Addon Configurations", () => {
       expect(authMiddleware).toContain(
         'import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";',
       );
-      expect(authMiddleware).toContain(
-        "createAuth((event.context.cloudflare as { env: CloudflareEnv }).env) as BetterAuthInstance",
-      );
+      expect(authMiddleware).toContain("await createAuth(");
+      expect(authMiddleware).toContain("(event.context.cloudflare as { env: CloudflareEnv }).env,");
+      expect(authMiddleware).toContain('from "../../src/services"');
+      expect(authMiddleware).toContain('from "../../src/env.server"');
       expect(authMiddleware).toContain('exclude: ["/api/auth/**"]');
       expect(authMiddleware).toContain("maskEmail: true");
       expect(authMiddleware).toContain("export default defineEventHandler(async (event) => {");
@@ -1419,36 +1420,35 @@ describe("Addon Configurations", () => {
         frontend: "next",
         api: "trpc",
         path: "apps/web/src/lib/evlog-auth.ts",
-        expected: "createAuthMiddleware(createAuth() as BetterAuthInstance",
+        expected: "createAuthMiddleware((await createAuth()) as BetterAuthInstance",
         insideMarker: "export async function identifyEvlogUser",
       },
       {
         frontend: "nuxt",
         api: "orpc",
         path: "apps/web/server/middleware/evlog-auth.ts",
-        expected:
-          "createAuth((event.context.cloudflare as { env: CloudflareEnv }).env) as BetterAuthInstance",
+        expected: "(event.context.cloudflare as { env: CloudflareEnv }).env,",
         insideMarker: "export default defineEventHandler",
       },
       {
         frontend: "svelte",
         api: "orpc",
         path: "apps/web/src/hooks.server.ts",
-        expected: "createAuthMiddleware(createAuth(authEnv) as BetterAuthInstance",
+        expected: "createAuthMiddleware((await createAuth(authEnv)) as BetterAuthInstance",
         insideMarker: "const evlogAuthHandle",
       },
       {
         frontend: "tanstack-start",
         api: "trpc",
         path: "apps/web/server/plugins/evlog-auth.ts",
-        expected: "createAuthIdentifier(createAuth() as BetterAuthInstance",
+        expected: "createAuthIdentifier((await createAuth()) as BetterAuthInstance",
         insideMarker: 'nitroApp.hooks.hook("request", async (event) => {',
       },
       {
         frontend: "astro",
         api: "orpc",
         path: "apps/web/src/middleware.ts",
-        expected: "createAuthMiddleware(createAuth() as BetterAuthInstance",
+        expected: "createAuthMiddleware((await createAuth()) as BetterAuthInstance",
         insideMarker: "export const onRequest",
       },
     ] as const;

@@ -146,14 +146,14 @@ function usesCreateAuthFactory(config: ProjectConfig) {
   );
 }
 
-function getAuthImportLine(config: ProjectConfig) {
+function getAuthImportLine(config: ProjectConfig, source: string) {
   return usesCreateAuthFactory(config)
-    ? `import { createAuth } from "@${config.projectName}/auth";`
-    : `import { auth } from "@${config.projectName}/auth";`;
+    ? `import { createAuth } from "${source}";`
+    : `import { auth } from "${source}";`;
 }
 
 function getAuthExpression(config: ProjectConfig) {
-  return usesCreateAuthFactory(config) ? "createAuth()" : "auth";
+  return usesCreateAuthFactory(config) ? "(await createAuth())" : "auth";
 }
 
 function addAiSdkEvlogTelemetry(content: string, loggerExpression: string) {
@@ -691,23 +691,23 @@ function addSvelteBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
     "createAuthMiddleware",
     "type BetterAuthInstance",
   ]);
-  if (!nextContent.includes(`@${config.projectName}/auth`)) {
-    nextContent = prependMissingImports(nextContent, [getAuthImportLine(config)]);
+  if (!nextContent.includes('from "./services"')) {
+    nextContent = prependMissingImports(nextContent, [getAuthImportLine(config, "./services")]);
   }
   if (
     usesCreateAuthFactory(config) &&
     config.webDeploy === "cloudflare" &&
-    !nextContent.includes(`@${config.projectName}/env/server`)
+    !nextContent.includes('from "./env.server"')
   ) {
     nextContent = prependMissingImports(nextContent, [
-      `import { env as localEnv } from "@${config.projectName}/env/server";`,
+      'import { env as localEnv } from "./env.server";',
     ]);
   }
   const authExpression = getAuthExpression(config);
   const authOptions = '{ exclude: ["/api/auth/**"], maskEmail: true }';
   const authHandleSnippet =
     usesCreateAuthFactory(config) && config.webDeploy === "cloudflare"
-      ? `const evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tif (building) {\n\t\treturn resolve(event);\n\t}\n\n\tconst authEnv = event.platform?.env ?? localEnv;\n\tconst identifyUser = createAuthMiddleware(createAuth(authEnv) as BetterAuthInstance, ${authOptions});\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`
+      ? `const evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tif (building) {\n\t\treturn resolve(event);\n\t}\n\n\tconst authEnv = event.platform?.env ?? localEnv;\n\tconst identifyUser = createAuthMiddleware((await createAuth(authEnv)) as BetterAuthInstance, ${authOptions});\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`
       : `const identifyUser = createAuthMiddleware(${authExpression} as BetterAuthInstance, ${authOptions});\n\nconst evlogAuthHandle: Handle = async ({ event, resolve }) => {\n\tawait identifyUser(event.locals.log, event.request.headers, event.url.pathname);\n\treturn resolve(event);\n};\n\n`;
 
   const evlogHandleDeclaration = nextContent.match(
@@ -740,8 +740,8 @@ function addAstroBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
     "createAuthMiddleware",
     "type BetterAuthInstance",
   ]);
-  if (!nextContent.includes(`@${config.projectName}/auth`)) {
-    nextContent = prependMissingImports(nextContent, [getAuthImportLine(config)]);
+  if (!nextContent.includes('from "./services"')) {
+    nextContent = prependMissingImports(nextContent, [getAuthImportLine(config, "./services")]);
   }
   const authExpression = getAuthExpression(config);
   const authOptions = '{ exclude: ["/api/auth/**"], maskEmail: true }';
@@ -814,7 +814,7 @@ export const config = {
 
 function getNextEvlogAuthFile(config: ProjectConfig) {
   if (usesCreateAuthFactory(config)) {
-    return `${getAuthImportLine(config)}
+    return `${getAuthImportLine(config, "../services")}
 import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
 import { useLogger } from "@/lib/evlog";
 
@@ -828,7 +828,7 @@ export async function identifyEvlogUser(request: Request) {
 `;
   }
 
-  return `${getAuthImportLine(config)}
+  return `${getAuthImportLine(config, "../services")}
 import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
 import { useLogger } from "@/lib/evlog";
 
@@ -845,7 +845,7 @@ export async function identifyEvlogUser(request: Request) {
 
 function getNitroEvlogAuthPluginFile(config: ProjectConfig) {
   if (usesCreateAuthFactory(config)) {
-    return `${getAuthImportLine(config)}
+    return `${getAuthImportLine(config, "../../src/services")}
 import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
 
 export default defineNitroPlugin((nitroApp) => {
@@ -860,7 +860,7 @@ export default defineNitroPlugin((nitroApp) => {
 `;
   }
 
-  return `${getAuthImportLine(config)}
+  return `${getAuthImportLine(config, "../../src/services")}
 import { createAuthIdentifier, type BetterAuthInstance } from "evlog/better-auth";
 
 export default defineNitroPlugin((nitroApp) => {
@@ -879,10 +879,10 @@ function getNuxtEvlogAuthMiddlewareFile(config: ProjectConfig) {
   if (usesCreateAuthFactory(config)) {
     const usesCloudflareRequestEnv = config.backend === "self" && config.webDeploy === "cloudflare";
     const authExpression = usesCloudflareRequestEnv
-      ? "createAuth((event.context.cloudflare as { env: CloudflareEnv }).env)"
+      ? "(await createAuth((event.context.cloudflare as { env: CloudflareEnv }).env))"
       : getAuthExpression(config);
-    return `${getAuthImportLine(config)}
-${usesCloudflareRequestEnv ? `import type { CloudflareEnv } from "@${config.projectName}/env/server";\n` : ""}
+    return `${getAuthImportLine(config, "../../src/services")}
+${usesCloudflareRequestEnv ? `import type { CloudflareEnv } from "../../src/env.server";\n` : ""}
 import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
 
 export default defineEventHandler(async (event) => {
@@ -896,7 +896,7 @@ export default defineEventHandler(async (event) => {
 `;
   }
 
-  return `${getAuthImportLine(config)}
+  return `${getAuthImportLine(config, "../../src/services")}
 import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
 
 const identify = createAuthMiddleware(${getAuthExpression(config)} as BetterAuthInstance, {

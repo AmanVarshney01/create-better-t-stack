@@ -19,7 +19,9 @@ export default defineNuxtConfig({
     payloadExtraction: 'client',
   },
   modules: [
+    {{#unless (eq webDeploy "cloudflare")}}
     "@varlock/nuxt-integration",
+    {{/unless}}
     {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     prismaWasm,
     {{/if}}
@@ -28,9 +30,11 @@ export default defineNuxtConfig({
     'convex-nuxt'
     {{/if}}
   ],
+  {{#unless (eq webDeploy "cloudflare")}}
   varlock: {
     ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}",
   },
+  {{/unless}}
   css: ['~/assets/css/main.css'],
   devServer: {
     port: 3001

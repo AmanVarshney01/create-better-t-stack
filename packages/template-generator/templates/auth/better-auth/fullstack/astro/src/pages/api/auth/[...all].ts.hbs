@@ -7,7 +7,7 @@ import type { APIRoute } from "astro";
 
 export const ALL: APIRoute = async (ctx) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-  const auth = createAuth();
+  const auth = await createAuth();
 {{/if}}
   return auth.handler(ctx.request);
 };

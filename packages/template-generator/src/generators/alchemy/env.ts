@@ -159,7 +159,7 @@ function prismaPublicEnvEntries(
       if (auth === "better-auth") {
         entries.push('NEXT_PUBLIC_CONVEX_SITE_URL: Config.string("NEXT_PUBLIC_CONVEX_SITE_URL"),');
       }
-    } else if (backend !== "self") {
+    } else if (backend !== "self" && backend !== "none") {
       entries.push(
         `NEXT_PUBLIC_SERVER_URL: ${deployedUrl ?? 'Config.string("NEXT_PUBLIC_SERVER_URL")'},`,
       );
@@ -178,7 +178,7 @@ function prismaPublicEnvEntries(
       if (auth === "better-auth") {
         entries.push('NUXT_PUBLIC_CONVEX_SITE_URL: Config.string("NUXT_PUBLIC_CONVEX_SITE_URL"),');
       }
-    } else if (backend !== "self") {
+    } else if (backend !== "self" && backend !== "none") {
       entries.push(
         `NUXT_PUBLIC_SERVER_URL: ${deployedUrl ?? 'Config.string("NUXT_PUBLIC_SERVER_URL")'},`,
       );
@@ -187,7 +187,7 @@ function prismaPublicEnvEntries(
   }
 
   if (framework === "astro") {
-    if (backend !== "self") {
+    if (backend !== "self" && backend !== "none") {
       entries.push(`PUBLIC_SERVER_URL: ${deployedUrl ?? 'Config.string("PUBLIC_SERVER_URL")'},`);
     }
     return entries;
@@ -198,7 +198,7 @@ function prismaPublicEnvEntries(
     if (auth === "better-auth") {
       entries.push('VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),');
     }
-  } else if (backend !== "self") {
+  } else if (backend !== "self" && backend !== "none") {
     entries.push(`VITE_SERVER_URL: ${deployedUrl ?? 'Config.string("VITE_SERVER_URL")'},`);
   }
   if (auth === "clerk") {
@@ -263,7 +263,9 @@ export function splitCloudflareWebEnvEntries(
     entries.push(
       'SESSION: Cloudflare.KV.Namespace("session"),',
       "IMAGES: Cloudflare.Images.Images(),",
-      `PUBLIC_SERVER_URL: ${serverValue ?? 'Config.string("PUBLIC_SERVER_URL")'},`,
+      ...(backend === "none"
+        ? []
+        : [`PUBLIC_SERVER_URL: ${serverValue ?? 'Config.string("PUBLIC_SERVER_URL")'},`]),
     );
     return entries;
   }
@@ -281,7 +283,7 @@ export function splitCloudflareWebEnvEntries(
     if (auth === "better-auth") {
       entries.push(`${prefix}_CONVEX_SITE_URL: Config.string("${prefix}_CONVEX_SITE_URL"),`);
     }
-  } else {
+  } else if (backend !== "none") {
     entries.push(
       `${prefix}_SERVER_URL: ${serverValue ?? `Config.string("${prefix}_SERVER_URL")`},`,
     );

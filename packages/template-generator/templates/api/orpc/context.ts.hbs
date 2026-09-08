@@ -44,13 +44,16 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -59,7 +62,7 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
 	const clerkAuth = await authenticateClerkRequest(req);
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -67,7 +70,7 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -85,13 +88,16 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -100,7 +106,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
 	const clerkAuth = await authenticateClerkRequest(req);
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -108,7 +114,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -136,11 +142,14 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth({{#if (eq webDeploy "cloudflare")}}env{{/if}}){{else}}auth{{/if}}.api.getSession({ headers });
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (eq webDeploy "cloudflare")}}env{{#if (ne database "none")}}, {{/if}}{{/if}}{{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -148,7 +157,7 @@ export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy 
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -176,11 +185,14 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth({{#if (eq webDeploy "cloudflare")}}env{{/if}}){{else}}auth{{/if}}.api.getSession({ headers });
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (eq webDeploy "cloudflare")}}env{{#if (ne database "none")}}, {{/if}}{{/if}}{{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -188,7 +200,7 @@ export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy 
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -210,11 +222,14 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
+	const session = await {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}(await createAuth({{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -222,7 +237,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -244,11 +259,14 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -256,7 +274,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -279,13 +297,16 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({
 		headers: context.req.raw.headers,
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -294,7 +315,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 	const clerkAuth = await authenticateClerkRequest(context.req.raw);
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -302,7 +323,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -321,13 +342,16 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -336,7 +360,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 	const clerkAuth = await authenticateClerkRequest(context.request);
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -344,7 +368,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -366,13 +390,16 @@ interface CreateContextOptions {
 }
 
 export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -381,7 +408,7 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
 	const clerkAuth = toClerkContextAuth(getAuth(opts.req));
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -389,7 +416,7 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -409,13 +436,16 @@ import type { IncomingHttpHeaders } from "node:http";
 {{/if}}
 
 export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typeof getAuth>[0]{{else}}IncomingHttpHeaders{{/if}}): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(req),
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -424,7 +454,7 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 	const clerkAuth = toClerkContextAuth(getAuth(req));
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -433,7 +463,7 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 	void req;
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -443,9 +473,12 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 
 {{else}}
 export async function createContext(): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,

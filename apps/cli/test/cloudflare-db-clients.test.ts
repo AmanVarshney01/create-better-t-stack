@@ -44,10 +44,10 @@ describe("Cloudflare DB client generation", () => {
     expect(dbFile).toContain("export function createDb(env: DatabaseConfig)");
     expect(dbFile).not.toContain("export const db = createDb();");
     expect(authFile).toContain("export function createAuth(env: AuthConfig, database: Database");
-    expect(authFile).not.toContain("export const auth = createAuth();");
+    expect(authFile).not.toContain("export const auth = await createAuth();");
     expect(envFile).toContain('export { env } from "cloudflare:workers";');
-    expect(serverFile).toContain("createAuth().handler(c.req.raw)");
-    expect(contextFile).toContain("createAuth().api.getSession");
+    expect(serverFile).toContain("(await createAuth()).handler(c.req.raw)");
+    expect(contextFile).toContain("(await createAuth(db)).api.getSession");
     expect(todoRouterFile).toContain("ctx.db");
   });
 
@@ -82,7 +82,7 @@ describe("Cloudflare DB client generation", () => {
     expect(dbFile).toContain("export function createPrismaClient(env: DatabaseConfig)");
     expect(dbFile).not.toContain("export default prisma;");
     expect(authFile).toContain("prismaAdapter(database,");
-    expect(authFile).not.toContain("export const auth = createAuth();");
+    expect(authFile).not.toContain("export const auth = await createAuth();");
     expect(envFile).toContain('import { getCloudflareContext } from "@opennextjs/cloudflare";');
     expect(envFile).toContain("type EnvValue = Env[keyof Env];");
     expect(envFile).toContain(
@@ -93,11 +93,11 @@ describe("Cloudflare DB client generation", () => {
     expect(envFile).toContain("export const env = createEnvProxy(resolveEnvValue);");
     expect(envFile).not.toContain('export { env } from "cloudflare:workers";');
     expect(envPackageFile).toContain('"@opennextjs/cloudflare"');
-    expect(routeFile).toContain("toNextJsHandler(createAuth()).GET(request)");
-    expect(routeFile).toContain("toNextJsHandler(createAuth()).POST(request)");
-    expect(dashboardFile).toContain("createAuth().api.getSession");
+    expect(routeFile).toContain("toNextJsHandler(await createAuth()).GET(request)");
+    expect(routeFile).toContain("toNextJsHandler(await createAuth()).POST(request)");
+    expect(dashboardFile).toContain("(await createAuth()).api.getSession");
     expect(dashboardFile).not.toContain('import { authClient } from "@/lib/auth-client";');
-    expect(contextFile).toContain("createAuth().api.getSession");
+    expect(contextFile).toContain("(await createAuth(db)).api.getSession");
   });
 
   const selfCloudflareD1Scenarios = [
@@ -107,8 +107,8 @@ describe("Cloudflare DB client generation", () => {
       api: "trpc",
       routePath: "apps/web/src/app/api/auth/[...all]/route.ts",
       routeNeedles: [
-        "toNextJsHandler(createAuth()).GET(request)",
-        "toNextJsHandler(createAuth()).POST(request)",
+        "toNextJsHandler(await createAuth()).GET(request)",
+        "toNextJsHandler(await createAuth()).POST(request)",
       ],
       envNeedle: 'import { getCloudflareContext } from "@opennextjs/cloudflare";',
       envAbsentNeedle: 'export { env } from "cloudflare:workers";',
@@ -118,7 +118,7 @@ describe("Cloudflare DB client generation", () => {
       frontend: "tanstack-start",
       api: "trpc",
       routePath: "apps/web/src/routes/api/auth/$.ts",
-      routeNeedles: ["const auth = createAuth()", "return auth.handler(request)"],
+      routeNeedles: ["const auth = await createAuth()", "return auth.handler(request)"],
       envNeedle: 'export { env } from "cloudflare:workers";',
     },
     {
@@ -139,7 +139,7 @@ describe("Cloudflare DB client generation", () => {
       api: "orpc",
       routePath: "apps/web/src/routes/api/auth/[...auth].ts",
       routeNeedles: [
-        "createAuth().handler(request)",
+        "(await createAuth()).handler(request)",
         "export const GET = handle",
         "export const POST = handle",
       ],
@@ -150,7 +150,7 @@ describe("Cloudflare DB client generation", () => {
       frontend: "astro",
       api: "orpc",
       routePath: "apps/web/src/pages/api/auth/[...all].ts",
-      routeNeedles: ["const auth = createAuth();", "return auth.handler(ctx.request);"],
+      routeNeedles: ["const auth = await createAuth();", "return auth.handler(ctx.request);"],
       envNeedle: 'export { env } from "cloudflare:workers";',
     },
   ] as const;
@@ -193,7 +193,7 @@ describe("Cloudflare DB client generation", () => {
           ? "export function createAuth(env: AuthConfig, database: Database"
           : "export function createAuth(env: AuthConfig, database: Database",
       );
-      expect(authFile).not.toContain("export const auth = createAuth();");
+      expect(authFile).not.toContain("export const auth = await createAuth();");
       expect(envFile).toContain(scenario.envNeedle);
       if (scenario.envAbsentNeedle) {
         expect(envFile).not.toContain(scenario.envAbsentNeedle);
@@ -203,8 +203,8 @@ describe("Cloudflare DB client generation", () => {
       }
       expect(contextFile).toContain(
         scenario.frontend === "nuxt"
-          ? "createAuth(env).api.getSession"
-          : "createAuth().api.getSession",
+          ? "(await createAuth(env, db)).api.getSession"
+          : "(await createAuth(db)).api.getSession",
       );
       expect(todoRouterFile).toContain(scenario.api === "trpc" ? "ctx.db" : "context.db");
 
@@ -264,12 +264,12 @@ describe("Cloudflare DB client generation", () => {
     expect(dbFile).toContain("const adapter = new PrismaD1(env.DB);");
     expect(dbFile).not.toContain("export default prisma;");
     expect(authFile).toContain("prismaAdapter(database,");
-    expect(authFile).not.toContain("export const auth = createAuth();");
+    expect(authFile).not.toContain("export const auth = await createAuth();");
     expect(envFile).toContain('import { getCloudflareContext } from "@opennextjs/cloudflare";');
     expect(envFile).toContain("type EnvValue = Env[keyof Env];");
-    expect(routeFile).toContain("toNextJsHandler(createAuth()).GET(request)");
-    expect(routeFile).toContain("toNextJsHandler(createAuth()).POST(request)");
-    expect(contextFile).toContain("createAuth().api.getSession");
+    expect(routeFile).toContain("toNextJsHandler(await createAuth()).GET(request)");
+    expect(routeFile).toContain("toNextJsHandler(await createAuth()).POST(request)");
+    expect(contextFile).toContain("(await createAuth(db)).api.getSession");
     expect(infraFile).toContain('export const web = Cloudflare.Website.StaticSite("web", {');
     expect(infraFile).toContain('BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET")');
     expect(infraFile).not.toContain("BETTER_AUTH_SECRET: yield* Config.redacted");
@@ -335,8 +335,8 @@ describe("Cloudflare DB client generation", () => {
     const routeFile = files.get("apps/web/src/app/api/auth/[...all]/route.ts");
 
     expect(authFile).toContain("export function createAuth(env: AuthConfig, database: Database");
-    expect(authFile).not.toContain("export const auth = createAuth();");
-    expect(routeFile).toContain("toNextJsHandler(createAuth()).GET(request)");
+    expect(authFile).not.toContain("export const auth = await createAuth();");
+    expect(routeFile).toContain("toNextJsHandler(await createAuth()).GET(request)");
   });
 
   it("keeps singleton exports for non-Cloudflare runtimes", async () => {
@@ -403,3 +403,131 @@ describe("Cloudflare DB client generation", () => {
     expect(routeFile).not.toContain("createAuth()");
   });
 });
+
+it("awaits MongoDB and shares one connection between auth and API context per request", async () => {
+  const files = await createVirtualFiles({
+    projectName: "cloudflare-mongo-context",
+    frontend: ["next"],
+    backend: "self",
+    runtime: "none",
+    database: "mongodb",
+    orm: "mongoose",
+    auth: "better-auth",
+    api: "trpc",
+    dbSetup: "mongodb-atlas",
+    webDeploy: "cloudflare",
+    serverDeploy: "none",
+    packageManager: "bun",
+    install: false,
+    git: false,
+    addons: ["none"],
+    examples: ["none"],
+    payments: "none",
+  });
+  // Execute the generated service/context code with an asynchronous database
+  // driver, without opening a network connection or installing a generated app.
+  const transpiler = new Bun.Transpiler({ loader: "ts" });
+  const source = ["apps/web/src/services.ts", "apps/web/src/context.ts"]
+    .map((file) => transpiler.transformSync(files.get(file)!))
+    .join("\n")
+    .replace(/^import .*;\n/gm, "")
+    .replace(/^export /gm, "");
+  let connections = 0;
+  const createContext = new Function(
+    "createDb",
+    "createConfiguredAuth",
+    "env",
+    `${source}\nreturn createContext;`,
+  )(
+    async () => ({ connection: ++connections }),
+    (_env: Record<string, string>, database: { connection: number }) => {
+      expect(database.connection).toBeNumber();
+      return { api: { getSession: async () => ({ database }) } };
+    },
+    {},
+  );
+  const first = await createContext(new Request("https://example.com/api"));
+  const second = await createContext(new Request("https://example.com/api"));
+  expect(connections).toBe(2);
+  expect(first.db).toBe(first.session.database);
+  expect(second.db).toBe(second.session.database);
+  expect(first.db).not.toBe(second.db);
+});
+
+for (const frontend of [
+  "next",
+  "nuxt",
+  "svelte",
+  "solid",
+  "astro",
+  "tanstack-start",
+  "tanstack-router",
+  "react-router",
+] as const) {
+  it(`keeps Node-only Varlock runtime injection out of Alchemy ${frontend} builds`, async () => {
+    const files = await createVirtualFiles({
+      projectName: `alchemy-native-${frontend}`,
+      frontend: [frontend],
+      backend: "hono",
+      runtime: "workers",
+      database: "none",
+      orm: "none",
+      auth: "none",
+      api: "none",
+      dbSetup: "none",
+      webDeploy: "cloudflare",
+      serverDeploy: "cloudflare",
+      packageManager: "bun",
+      install: false,
+      git: false,
+      addons: ["none"],
+      examples: ["none"],
+      payments: "none",
+    });
+    for (const [file, content] of files) {
+      if (!file.startsWith("apps/web/")) continue;
+      expect(content).not.toContain("@varlock/");
+      expect(content).not.toContain("varlock/auto-load");
+    }
+    const accessor = files.get("apps/web/src/env.public.ts");
+    if (accessor) {
+      expect(accessor).toContain("import type { PublicCoercedEnvSchema }");
+      expect(accessor).not.toContain("varlock/env");
+      expect(accessor).not.toContain("CORS_ORIGIN");
+    }
+    const infra = files.get("packages/infra/.env.schema")!;
+    expect(infra).toContain("pick=[NODE_ENV, CORS_ORIGIN]");
+    expect(infra).not.toContain("SERVER_URL");
+    expect(files.get("packages/infra/alchemy.run.ts")).toContain('import "varlock/auto-load"');
+  });
+}
+
+for (const managed of [false, true]) {
+  it(`validates ${managed ? "managed" : "external"} database deployment inputs independently of resource outputs`, async () => {
+    const files = await createVirtualFiles({
+      projectName: `alchemy-inputs-${managed}`,
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      database: "postgres",
+      orm: "drizzle",
+      auth: "better-auth",
+      api: "trpc",
+      dbSetup: managed ? "neon" : "none",
+      webDeploy: "cloudflare",
+      serverDeploy: "none",
+      packageManager: "bun",
+      install: false,
+      git: false,
+      addons: ["none"],
+      examples: ["none"],
+      payments: "none",
+    });
+    const schema = files.get("packages/infra/.env.schema")!;
+    expect(schema).toContain("BETTER_AUTH_SECRET");
+    expect(schema).not.toContain("BETTER_AUTH_URL");
+    expect(schema).not.toContain("CORS_ORIGIN");
+    if (managed) expect(schema).not.toContain("DATABASE_URL");
+    else expect(schema).toContain("DATABASE_URL");
+  });
+}

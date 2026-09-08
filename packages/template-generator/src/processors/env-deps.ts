@@ -7,7 +7,7 @@ export function processEnvDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
   addPackageDependency({ vfs, packagePath: "package.json", devDependencies: ["varlock"] });
   for (const app of ["web", "server", "native"]) {
     const dependencies: AvailableDependencies[] = ["varlock"];
-    if (app === "web") {
+    if (app === "web" && config.webDeploy !== "cloudflare") {
       dependencies.push(
         config.frontend.includes("next")
           ? "@varlock/nextjs-integration"
@@ -30,7 +30,7 @@ export function processEnvDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
     }
     addPackageDependency({ vfs, packagePath: `apps/${app}/package.json`, dependencies });
   }
-  if (config.frontend.includes("next")) {
+  if (config.frontend.includes("next") && config.webDeploy !== "cloudflare") {
     const version = "npm:@varlock/nextjs-integration@1.2.2";
     if (config.packageManager === "pnpm") {
       const path = "pnpm-workspace.yaml";

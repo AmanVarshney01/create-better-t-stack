@@ -1,4 +1,6 @@
+{{#unless (eq webDeploy "cloudflare")}}
 import { varlockVitePlugin } from "@varlock/vite-integration";
+{{/unless}}
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
@@ -8,7 +10,9 @@ import { unwasm } from "unwasm/plugin";
 
 export default defineConfig({
   plugins: [
+{{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
+{{/unless}}
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     unwasm({ esmImport: true }),
 {{/if}}

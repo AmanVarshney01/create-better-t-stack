@@ -463,13 +463,16 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -478,7 +481,7 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
 	const clerkAuth = await authenticateClerkRequest(req);
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -486,7 +489,7 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -504,13 +507,16 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -519,7 +525,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
 	const clerkAuth = await authenticateClerkRequest(req);
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -527,7 +533,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -555,11 +561,14 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth({{#if (eq webDeploy "cloudflare")}}env{{/if}}){{else}}auth{{/if}}.api.getSession({ headers });
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (eq webDeploy "cloudflare")}}env{{#if (ne database "none")}}, {{/if}}{{/if}}{{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -567,7 +576,7 @@ export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy 
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -595,11 +604,14 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy "cloudflare")}}{ env }{{else}}_options{{/if}}{{else}}{ headers{{#if (eq webDeploy "cloudflare")}}, env{{/if}} }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth({{#if (eq webDeploy "cloudflare")}}env{{/if}}){{else}}auth{{/if}}.api.getSession({ headers });
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (eq webDeploy "cloudflare")}}env{{#if (ne database "none")}}, {{/if}}{{/if}}{{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -607,7 +619,7 @@ export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy 
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -629,11 +641,14 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
+	const session = await {{#if (and (eq webDeploy "cloudflare") (eq backend "self"))}}(await createAuth({{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -641,7 +656,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -663,11 +678,14 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ headers }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({ headers });
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({ headers });
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -675,7 +693,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -698,13 +716,16 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({
 		headers: context.req.raw.headers,
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -713,7 +734,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 	const clerkAuth = await authenticateClerkRequest(context.req.raw);
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -721,7 +742,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -740,13 +761,16 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -755,7 +779,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 	const clerkAuth = await authenticateClerkRequest(context.request);
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -763,7 +787,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -785,13 +809,16 @@ interface CreateContextOptions {
 }
 
 export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -800,7 +827,7 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
 	const clerkAuth = toClerkContextAuth(getAuth(opts.req));
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -808,7 +835,7 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -828,13 +855,16 @@ import type { IncomingHttpHeaders } from "node:http";
 {{/if}}
 
 export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typeof getAuth>[0]{{else}}IncomingHttpHeaders{{/if}}): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(req),
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -843,7 +873,7 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 	const clerkAuth = toClerkContextAuth(getAuth(req));
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -852,7 +882,7 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 	void req;
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -862,9 +892,12 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 
 {{else}}
 export async function createContext(): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -2055,13 +2088,16 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if}}: NextRequest): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -2070,7 +2106,7 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
 	const clerkAuth = await authenticateClerkRequest(req);
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -2078,7 +2114,7 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -2096,13 +2132,16 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ req }{{/if}}: { req: Request }): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({
 		headers: req.headers,
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -2111,7 +2150,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
 	const clerkAuth = await authenticateClerkRequest(req);
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -2119,7 +2158,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -2142,13 +2181,16 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth({{#if (ne database "none")}}db{{/if}})){{else}}auth{{/if}}.api.getSession({
 		headers: context.req.raw.headers,
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -2157,7 +2199,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 	const clerkAuth = await authenticateClerkRequest(context.req.raw);
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -2165,7 +2207,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -2184,13 +2226,16 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({{#if (eq auth "none")}}_options{{else}}{ context }{{/if}}: CreateContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: context.request.headers,
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -2199,7 +2244,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 	const clerkAuth = await authenticateClerkRequest(context.request);
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -2207,7 +2252,7 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -2225,13 +2270,16 @@ import { getAuth } from "@clerk/express";
 {{/if}}
 
 export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/if}}: CreateExpressContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -2240,7 +2288,7 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
 	const clerkAuth = toClerkContextAuth(getAuth(opts.req));
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -2248,7 +2296,7 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
 {{else}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -2266,13 +2314,16 @@ import { getAuth } from "@clerk/fastify";
 {{/if}}
 
 export async function createContext({ req }: CreateFastifyContextOptions): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 {{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(req.headers),
 	});
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session,
@@ -2281,7 +2332,7 @@ export async function createContext({ req }: CreateFastifyContextOptions): Promi
 	const clerkAuth = toClerkContextAuth(getAuth(req));
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: clerkAuth,
 		session: null,
@@ -2290,7 +2341,7 @@ export async function createContext({ req }: CreateFastifyContextOptions): Promi
 	void req;
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -2300,9 +2351,12 @@ export async function createContext({ req }: CreateFastifyContextOptions): Promi
 
 {{else}}
 export async function createContext(): Promise<ApiContext> {
+{{#if (ne database "none")}}
+  const db = await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}});
+{{/if}}
 	return {
 {{#if (ne database "none")}}
-    db: await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}env{{/if}}),
+    db,
 {{/if}}
 		auth: null,
 		session: null,
@@ -5976,7 +6030,7 @@ import { defineMiddleware } from "astro:middleware";
 
 export const onRequest = defineMiddleware(async (context, next) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-  const auth = createAuth();
+  const auth = await createAuth();
 {{/if}}
   const isAuthed = await auth.api.getSession({
     headers: context.request.headers,
@@ -6002,7 +6056,7 @@ import type { APIRoute } from "astro";
 
 export const ALL: APIRoute = async (ctx) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-  const auth = createAuth();
+  const auth = await createAuth();
 {{/if}}
   return auth.handler(ctx.request);
 };
@@ -6016,11 +6070,11 @@ import { toNextJsHandler } from "better-auth/next-js";
 
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 export async function GET(request: Request) {
-	return toNextJsHandler(createAuth()).GET(request);
+	return toNextJsHandler(await createAuth()).GET(request);
 }
 
 export async function POST(request: Request) {
-	return toNextJsHandler(createAuth()).POST(request);
+	return toNextJsHandler(await createAuth()).POST(request);
 }
 {{else}}
 export const { GET, POST } = toNextJsHandler(auth);
@@ -6035,9 +6089,9 @@ import { auth } from "@{{projectName}}/auth";
 import type { CloudflareEnv } from "@{{projectName}}/env/server";
 {{/if}}
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-  const auth = createAuth({{#if (eq webDeploy "cloudflare")}}(event.context.cloudflare as { env: CloudflareEnv }).env{{/if}});
+  const auth = (await createAuth({{#if (eq webDeploy "cloudflare")}}(event.context.cloudflare as { env: CloudflareEnv }).env{{/if}}));
 {{/if}}
   return auth.handler(toWebRequest(event));
 });
@@ -6050,7 +6104,7 @@ import { auth } from "@{{projectName}}/auth";
 import type { APIHandler } from "filesystem-routing/api";
 
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
-const handle: APIHandler = ({ request }) => createAuth().handler(request);
+const handle: APIHandler = async ({ request }) => (await createAuth()).handler(request);
 {{else}}
 const handle: APIHandler = ({ request }) => auth.handler(request);
 {{/if}}
@@ -6081,9 +6135,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const authEnv = event.platform?.env ?? localEnv;
-	const authInstance = createAuth(authEnv);
+	const authInstance = await createAuth(authEnv);
 {{else}}
-	const authInstance = createAuth();
+	const authInstance = await createAuth();
 {{/if}}
 {{else}}
 	const authInstance = auth;
@@ -6109,13 +6163,13 @@ export const Route = createFileRoute('/api/auth/$')({
     handlers: {
       GET: ({ request }) => {
         {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-        const auth = createAuth()
+        const auth = await createAuth()
         {{/if}}
         return auth.handler(request)
       },
       POST: ({ request }) => {
         {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-        const auth = createAuth()
+        const auth = await createAuth()
         {{/if}}
         return auth.handler(request)
       },
@@ -9932,7 +9986,7 @@ import { authClient } from "@/lib/auth-client";
 
 export default async function DashboardPage() {
 	{{#if (eq backend "self")}}
-	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+	const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth()){{else}}auth{{/if}}.api.getSession({
 		headers: await headers(),
 	});
 	{{else}}
@@ -11634,7 +11688,7 @@ import { createMiddleware } from "@tanstack/react-start";
 
 
 export const authMiddleware = createMiddleware().server(async ({ next, request }) => {
-    const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}createAuth(){{else}}auth{{/if}}.api.getSession({
+    const session = await {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}(await createAuth()){{else}}auth{{/if}}.api.getSession({
         headers: request.headers,
     })
     return next({
@@ -15046,9 +15100,9 @@ app.use(
 app.on(
 	["POST", "GET"],
 	"/api/auth/*",
-	(c) =>
+	async (c) =>
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
-		createAuth().handler(c.req.raw)
+		(await createAuth()).handler(c.req.raw)
 {{else}}
 		auth.handler(c.req.raw)
 {{/if}}
@@ -17207,8 +17261,8 @@ export function getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy fr
 }
 {{/if}}
 {{#if (eq auth "better-auth")}}
-export function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}bindings: CloudflareEnv{{/if}}) {
-  return createConfiguredAuth({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}bindings{{else}}env{{/if}}{{#if (ne database "none")}}, getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}bindings{{/if}}){{/if}}{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}, desktopOrigins{{/if}});
+export async function createAuth({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}bindings: CloudflareEnv, {{/if}}{{#if (ne database "none")}}database?: Database{{/if}}) {
+  return createConfiguredAuth({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}bindings{{else}}env{{/if}}{{#if (ne database "none")}}, database ?? await getDb({{#if (usesRequestScopedCloudflareEnv backend webDeploy frontend)}}bindings{{/if}}){{/if}}{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}, desktopOrigins{{/if}});
 }
 {{/if}}
 {{else}}
@@ -25942,7 +25996,9 @@ pnpm-debug.log*
 `],
   ["frontend/astro/astro.config.mjs.hbs", `// @ts-check
 import tailwindcss from "@tailwindcss/vite";
+{{#unless (eq webDeploy "cloudflare")}}
 import varlockAstroIntegration from "@varlock/astro-integration";
+{{/unless}}
 import { defineConfig } from "astro/config";
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 {{else if (eq webDeploy "vercel")}}
@@ -25954,7 +26010,9 @@ import node from "@astrojs/node";
 
 // https://astro.build/config
 export default defineConfig({
+{{#unless (eq webDeploy "cloudflare")}}
   integrations: [varlockAstroIntegration({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" })],
+{{/unless}}
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
   output: "static",
 {{else if (eq webDeploy "vercel")}}
@@ -30212,7 +30270,9 @@ export default defineNuxtConfig({
     payloadExtraction: 'client',
   },
   modules: [
+    {{#unless (eq webDeploy "cloudflare")}}
     "@varlock/nuxt-integration",
+    {{/unless}}
     {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     prismaWasm,
     {{/if}}
@@ -30221,9 +30281,11 @@ export default defineNuxtConfig({
     'convex-nuxt'
     {{/if}}
   ],
+  {{#unless (eq webDeploy "cloudflare")}}
   varlock: {
     ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}",
   },
+  {{/unless}}
   css: ['~/assets/css/main.css'],
   devServer: {
     port: 3001
@@ -30327,9 +30389,11 @@ This block is written and re-added by \`next dev\` — verify at \`node_modules/
 // NOTE: This file should not be edited
 // see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
 `],
-  ["frontend/react/next/next.config.ts.hbs", `import { varlockNextConfigPlugin } from "@varlock/nextjs-integration/plugin";
+  ["frontend/react/next/next.config.ts.hbs", `{{#unless (eq webDeploy "cloudflare")}}
+import { varlockNextConfigPlugin } from "@varlock/nextjs-integration/plugin";
 
 const withVarlock = varlockNextConfigPlugin();
+{{/unless}}
 {{#if (eq webDeploy "cloudflare")}}
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 {{/if}}
@@ -30351,7 +30415,7 @@ const nextConfig: NextConfig = {
 	{{/if}}
 };
 
-export default withVarlock(nextConfig);
+export default {{#if (eq webDeploy "cloudflare")}}nextConfig{{else}}withVarlock(nextConfig){{/if}};
 
 {{#if (eq webDeploy "cloudflare")}}
 initOpenNextCloudflareForDev();
@@ -31271,7 +31335,9 @@ export default function Home() {
   }
 }
 `],
-  ["frontend/react/react-router/vite.config.ts.hbs", `import { varlockVitePlugin } from "@varlock/vite-integration";
+  ["frontend/react/react-router/vite.config.ts.hbs", `{{#unless (eq webDeploy "cloudflare")}}
+import { varlockVitePlugin } from "@varlock/vite-integration";
+{{/unless}}
 {{#if (and (eq webDeploy "cloudflare") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
 import { fileURLToPath } from "node:url";
 {{/if}}
@@ -31284,7 +31350,9 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
+{{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
+{{/unless}}
     tailwindcss(),
     reactRouter(),
   ],
@@ -31757,7 +31825,9 @@ function HomeComponent() {
   }
 }
 `],
-  ["frontend/react/tanstack-router/vite.config.ts.hbs", `import { varlockVitePlugin } from "@varlock/vite-integration";
+  ["frontend/react/tanstack-router/vite.config.ts.hbs", `{{#unless (eq webDeploy "cloudflare")}}
+import { varlockVitePlugin } from "@varlock/vite-integration";
+{{/unless}}
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
@@ -31771,7 +31841,9 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
+{{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "auto-load" }),
+{{/unless}}
     tailwindcss(),
     tanstackRouter({
       target: "react",
@@ -32354,7 +32426,9 @@ function HomeComponent() {
   }
 }
 `],
-  ["frontend/react/tanstack-start/vite.config.ts.hbs", `import { varlockVitePlugin } from "@varlock/vite-integration";
+  ["frontend/react/tanstack-start/vite.config.ts.hbs", `{{#unless (eq webDeploy "cloudflare")}}
+import { varlockVitePlugin } from "@varlock/vite-integration";
+{{/unless}}
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 {{#if (or (eq webDeploy "docker") (eq webDeploy "vercel") (eq webDeploy "prisma"))}}
@@ -32387,7 +32461,9 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
+{{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
+{{/unless}}
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     prismaWasm,
 {{/if}}
@@ -32861,7 +32937,9 @@ body {
   "exclude": ["dist", ".output"]
 }
 `],
-  ["frontend/solid/vite.config.ts.hbs", `import { varlockVitePlugin } from "@varlock/vite-integration";
+  ["frontend/solid/vite.config.ts.hbs", `{{#unless (eq webDeploy "cloudflare")}}
+import { varlockVitePlugin } from "@varlock/vite-integration";
+{{/unless}}
 import tailwindcss from "@tailwindcss/vite";
 import solid from "@solidjs/vite-plugin";
 import { fileRoutes } from "filesystem-routing/vite";
@@ -32899,7 +32977,9 @@ export default defineConfig(({ command }) => {
 export default defineConfig({
 {{/if}}
   plugins: [
+{{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
+{{/unless}}
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     prismaWasm,
 {{/if}}
@@ -33301,7 +33381,9 @@ export default config;
 	// from the referenced tsconfig.json - TypeScript does not merge them in
 }
 `],
-  ["frontend/svelte/vite.config.ts.hbs", `import { varlockVitePlugin } from "@varlock/vite-integration";
+  ["frontend/svelte/vite.config.ts.hbs", `{{#unless (eq webDeploy "cloudflare")}}
+import { varlockVitePlugin } from "@varlock/vite-integration";
+{{/unless}}
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
@@ -33311,7 +33393,9 @@ import { unwasm } from "unwasm/plugin";
 
 export default defineConfig({
   plugins: [
+{{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
+{{/unless}}
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     unwasm({ esmImport: true }),
 {{/if}}

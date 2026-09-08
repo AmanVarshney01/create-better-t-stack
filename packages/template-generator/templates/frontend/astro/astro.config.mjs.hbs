@@ -1,6 +1,8 @@
 // @ts-check
 import tailwindcss from "@tailwindcss/vite";
+{{#unless (eq webDeploy "cloudflare")}}
 import varlockAstroIntegration from "@varlock/astro-integration";
+{{/unless}}
 import { defineConfig } from "astro/config";
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
 {{else if (eq webDeploy "vercel")}}
@@ -12,7 +14,9 @@ import node from "@astrojs/node";
 
 // https://astro.build/config
 export default defineConfig({
+{{#unless (eq webDeploy "cloudflare")}}
   integrations: [varlockAstroIntegration({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" })],
+{{/unless}}
 {{#if (or (includes addons "electrobun") (includes addons "tauri"))}}
   output: "static",
 {{else if (eq webDeploy "vercel")}}

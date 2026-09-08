@@ -405,7 +405,7 @@ describe("Alchemy providers", () => {
     expect(auth).toContain("prismaAdapter(database,");
     expect(db).toContain("createPrismaClient(env: DatabaseConfig)");
     expect(context).toContain("env: CloudflareEnv;");
-    expect(context).toContain("createAuth(env)");
+    expect(context).toContain("await createAuth(env, db)");
     expect(authRoute).toContain("event.context.cloudflare as { env: CloudflareEnv }");
     expect(rpcRoute).toContain("event.context.cloudflare as { env: CloudflareEnv }");
     expect(todoRouter).toContain("context.db.todo");

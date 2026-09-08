@@ -105,6 +105,83 @@ function schema(keys: Set<string>, config: ProjectConfig): string {
   return lines.join("\n");
 }
 
+function processAlchemySchema(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  const source = vfs.readFile("packages/infra/alchemy.run.ts");
+  if (!source) return;
+  // Import only actual deployment inputs. Resource URLs and managed database
+  // credentials are Alchemy outputs, so validating them here blocks provisioning.
+  const inputs = new Set([
+    "NODE_ENV",
+    ...Array.from(source.matchAll(/Config\.(?:string|redacted)\("([A-Z_]+)"\)/g), (m) => m[1]!),
+  ]);
+  const imports: string[] = [];
+  for (const app of ["apps/server", "apps/web"]) {
+    if (!vfs.exists(`${app}/.env.schema`)) continue;
+    const keys = new Set(["NODE_ENV", ...schemaKeys(vfs, app, config)]);
+    const pick = [...inputs].filter((key) => keys.has(key));
+    if (!pick.length) continue;
+    imports.push(`# @import(../../${app}/, pick=[${pick.join(", ")}])`);
+    for (const key of pick) inputs.delete(key);
+  }
+  vfs.writeFile(
+    "packages/infra/.env.schema",
+    [
+      ...imports,
+      "# @defaultRequired=false",
+      "# @defaultSensitive=true",
+      "# ---",
+      "ALCHEMY_PASSWORD=",
+      ...[...inputs].map((key) => `\n# @required @type=string(minLength=1)\n${key}=`),
+      "",
+    ].join("\n"),
+  );
+}
+
+function processCloudflarePublicEnv(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  if (config.webDeploy !== "cloudflare") return;
+  if (
+    !vfs
+      .getAllFiles()
+      .some(
+        (file) =>
+          file.startsWith("apps/web/") &&
+          vfs.readFile(file)?.includes(`@${config.projectName}/env/web`),
+      )
+  )
+    return;
+  const keys = [...schemaKeys(vfs, "apps/web", config)].filter((key) =>
+    /^(VITE_|NEXT_PUBLIC_|NUXT_PUBLIC_|PUBLIC_)/.test(key),
+  );
+  const svelte = config.frontend.includes("svelte");
+  const next = config.frontend.includes("next");
+  const nuxt = config.frontend.includes("nuxt");
+  const lines = [
+    "// Alchemy validates deployment inputs with Varlock; Workers use native env bindings.",
+    'import type { PublicCoercedEnvSchema } from "./env";',
+  ];
+  if (svelte && keys.length) lines.push(`import { ${keys.join(", ")} } from "$env/static/public";`);
+  if (nuxt && keys.length) lines.push('import { useRuntimeConfig } from "#imports";');
+  lines.push("", "export const env = {");
+  for (const key of keys) {
+    if (nuxt) {
+      const name = key
+        .replace(/^NUXT_PUBLIC_/, "")
+        .toLowerCase()
+        .replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+      lines.push(`  get ${key}() { return useRuntimeConfig().public.${name}; },`);
+    } else {
+      lines.push(
+        `  ${key}: ${svelte ? key : next ? `process.env.${key}!` : `import.meta.env.${key}`},`,
+      );
+    }
+  }
+  lines.push(
+    `} satisfies Pick<PublicCoercedEnvSchema, ${keys.map((key) => JSON.stringify(key)).join(" | ") || "never"}>;`,
+    "",
+  );
+  vfs.writeFile("apps/web/src/env.public.ts", lines.join("\n"));
+}
+
 /** App-owned schemas, loading, and composition of configured shared services. */
 export function processVarlock(
   vfs: VirtualFileSystem,
@@ -150,22 +227,8 @@ export function processVarlock(
     const ignore = "packages/db/.gitignore";
     vfs.writeFile(ignore, `${vfs.readFile(ignore) ?? ""}\n!.env.schema\n/src/env.ts\n`);
   }
-  if (vfs.exists("packages/infra/package.json")) {
-    const imports = ["apps/web", "apps/server"]
-      .filter((app) => vfs.exists(`${app}/.env.schema`))
-      .map((app) => `# @import(../../${app}/, omit=[DATABASE_*])`);
-    vfs.writeFile(
-      "packages/infra/.env.schema",
-      [
-        ...imports,
-        "# @defaultRequired=false",
-        "# @defaultSensitive=true",
-        "# ---",
-        "ALCHEMY_PASSWORD=",
-        "",
-      ].join("\n"),
-    );
-  }
+  processAlchemySchema(vfs, config);
+  processCloudflarePublicEnv(vfs, config);
   vfs.writeFile("bunfig.toml", `env = false\n${vfs.readFile("bunfig.toml") ?? ""}`);
   const root = vfs.readJson<Package>("package.json")!;
   root.scripts ??= {};
@@ -199,7 +262,13 @@ export function processVarlock(
     const app = file.split("/").slice(0, 2).join("/");
     let content = vfs.readFile(file)!;
     content = content
-      .replaceAll(`@${config.projectName}/env/web`, importPath(file, "apps/web/src/env"))
+      .replaceAll(
+        `@${config.projectName}/env/web`,
+        importPath(
+          file,
+          config.webDeploy === "cloudflare" ? "apps/web/src/env.public" : "apps/web/src/env",
+        ),
+      )
       .replaceAll(`@${config.projectName}/env/native`, importPath(file, "apps/native/src/env"))
       .replaceAll(`@${config.projectName}/env/server`, importPath(file, `${server}/src/env.server`))
       .replaceAll(

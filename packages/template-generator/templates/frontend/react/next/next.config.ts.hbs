@@ -1,6 +1,8 @@
+{{#unless (eq webDeploy "cloudflare")}}
 import { varlockNextConfigPlugin } from "@varlock/nextjs-integration/plugin";
 
 const withVarlock = varlockNextConfigPlugin();
+{{/unless}}
 {{#if (eq webDeploy "cloudflare")}}
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 {{/if}}
@@ -22,7 +24,7 @@ const nextConfig: NextConfig = {
 	{{/if}}
 };
 
-export default withVarlock(nextConfig);
+export default {{#if (eq webDeploy "cloudflare")}}nextConfig{{else}}withVarlock(nextConfig){{/if}};
 
 {{#if (eq webDeploy "cloudflare")}}
 initOpenNextCloudflareForDev();
