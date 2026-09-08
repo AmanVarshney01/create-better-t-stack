@@ -34,7 +34,6 @@ type SpinnerOutput = Writable & {
 
 let cursorOutput: SpinnerOutput | undefined;
 let restoreCursorOnExit = false;
-/** Hides the cursor on `out` and makes sure it comes back if the process exits mid-spin. */
 function hideCursor(out: SpinnerOutput): void {
   if (cursorOutput) return;
   cursorOutput = out;
@@ -46,7 +45,6 @@ function hideCursor(out: SpinnerOutput): void {
     });
   }
 }
-/** Restores the cursor hidden by `hideCursor`. */
 function showCursor(out: SpinnerOutput): void {
   if (cursorOutput !== out) return;
   cursorOutput = undefined;
@@ -68,11 +66,6 @@ function createTerminalSpinner(out: SpinnerOutput): SpinnerLike {
   let renderedRows = 0;
   let timer: ReturnType<typeof setInterval> | undefined;
 
-  /**
-   * `\r` + erase-line only clears the row the cursor is on. A frame wider than the terminal
-   * wraps, leaving the cursor on its last row, so every redraw would push the rows above it
-   * into scrollback (#1215). Climb back to the first row and erase down instead.
-   */
   const clearFrame = () => {
     if (renderedRows > 1) out.write(cursorUp(renderedRows - 1));
     out.write(ERASE_DOWN);
@@ -126,7 +119,6 @@ function createTerminalSpinner(out: SpinnerOutput): SpinnerLike {
   };
 }
 
-/** `output` defaults to stdout; tests pass a stream with `isTTY`/`columns` set. */
 export function createSpinner(output?: SpinnerOutput): SpinnerLike {
   return isSilent() ? noopSpinner : createTerminalSpinner(output ?? process.stdout);
 }
