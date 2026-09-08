@@ -1,9 +1,9 @@
-import { stripVTControlCharacters } from "node:util";
+import type { Writable } from "node:stream";
 
+import { wrapTextWithPrefix } from "@clack/core";
 import { log } from "@clack/prompts";
 import { consola, createConsola } from "consola";
 import pc from "picocolors";
-import stringWidth from "string-width";
 
 import { isSilent } from "./context";
 import { S_BAR, S_STEP_CANCEL, S_STEP_SUBMIT, SPINNER_FRAMES } from "./glyphs";
@@ -26,31 +26,30 @@ const HIDE_CURSOR = "\x1b[?25l";
 const SHOW_CURSOR = "\x1b[?25h";
 const ERASE_DOWN = "\r\x1b[J";
 const cursorUp = (rows: number) => `\x1b[${rows}A`;
-const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
-type SpinnerOutput = Pick<NodeJS.WriteStream, "write"> & {
+type SpinnerOutput = Writable & {
   isTTY?: boolean;
   columns?: number;
 };
 
-let cursorHidden = false;
+let cursorOutput: SpinnerOutput | undefined;
 let restoreCursorOnExit = false;
 /** Hides the cursor on `out` and makes sure it comes back if the process exits mid-spin. */
 function hideCursor(out: SpinnerOutput): void {
-  if (cursorHidden) return;
-  cursorHidden = true;
+  if (cursorOutput) return;
+  cursorOutput = out;
   out.write(HIDE_CURSOR);
   if (!restoreCursorOnExit) {
     restoreCursorOnExit = true;
     process.once("exit", () => {
-      if (cursorHidden) out.write(SHOW_CURSOR);
+      cursorOutput?.write(SHOW_CURSOR);
     });
   }
 }
 /** Restores the cursor hidden by `hideCursor`. */
 function showCursor(out: SpinnerOutput): void {
-  if (!cursorHidden) return;
-  cursorHidden = false;
+  if (cursorOutput !== out) return;
+  cursorOutput = undefined;
   out.write(SHOW_CURSOR);
 }
 
@@ -70,24 +69,6 @@ function createTerminalSpinner(out: SpinnerOutput): SpinnerLike {
   let timer: ReturnType<typeof setInterval> | undefined;
 
   /**
-   * Rows a frame occupies once the terminal soft-wraps it. Walk graphemes by cell width so
-   * wide characters (CJK paths, emoji) count as the two columns they take on screen.
-   */
-  const rowsFor = (line: string) => {
-    const columns = out.columns || 80;
-    let rows = 1;
-    let col = 0;
-    for (const { segment } of graphemes.segment(stripVTControlCharacters(line))) {
-      const width = stringWidth(segment);
-      if (col + width > columns) {
-        rows += 1;
-        col = 0;
-      }
-      col += width;
-    }
-    return rows;
-  };
-  /**
    * `\r` + erase-line only clears the row the cursor is on. A frame wider than the terminal
    * wraps, leaving the cursor on its last row, so every redraw would push the rows above it
    * into scrollback (#1215). Climb back to the first row and erase down instead.
@@ -101,8 +82,9 @@ function createTerminalSpinner(out: SpinnerOutput): SpinnerLike {
     const suffix = ".".repeat(Math.floor(dots)).slice(0, 3);
     const line = `${pc.magenta(SPINNER_FRAMES[frame])}  ${text}${suffix}`;
     clearFrame();
-    out.write(line);
-    renderedRows = rowsFor(line);
+    const wrapped = wrapTextWithPrefix(out, line, "");
+    out.write(wrapped.replaceAll("\n", "\r\n"));
+    renderedRows = wrapped.split("\n").length;
     frame = (frame + 1) % SPINNER_FRAMES.length;
     dots = dots < 4 ? dots + 0.125 : 0;
   };

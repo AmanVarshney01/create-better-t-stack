@@ -2,8 +2,6 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { PassThrough } from "node:stream";
 import { stripVTControlCharacters } from "node:util";
 
-import stringWidth from "string-width";
-
 import { S_BAR, S_STEP_SUBMIT } from "../src/utils/glyphs";
 import { createSpinner } from "../src/utils/terminal-output";
 
@@ -31,7 +29,7 @@ function replay(bytes: string, columns: number) {
   let col = 0;
 
   const put = (grapheme: string) => {
-    const width = stringWidth(grapheme);
+    const width = Bun.stringWidth(grapheme);
     if (width === 0) return;
     if (col + width > columns) {
       row += 1;
@@ -149,6 +147,55 @@ describe("terminal spinner", () => {
     expect(cursorUps.length).toBeGreaterThan(0);
     expect(new Set(cursorUps)).toEqual(new Set([1]));
     expect(screen).toEqual([S_BAR, `${S_STEP_SUBMIT}  Directory cleared`]);
+  });
+
+  for (const [name, message] of [
+    ["exact-width text", "x".repeat(37)],
+    ["a wide character at the margin", "x".repeat(36) + "项目"],
+    ["ANSI-colored text", "\x1b[31m" + "x".repeat(82) + "\x1b[0m"],
+    ["explicit newlines", "first line\nsecond line"],
+  ]) {
+    it(`clears ${name} before the final result`, async () => {
+      const { output, rendered } = createOutput(40);
+      await runSpinner(output, message, "Done");
+      expect(replay(rendered(), 40).screen).toEqual([S_BAR, `${S_STEP_SUBMIT}  Done`]);
+    });
+  }
+
+  it("clears the previous frame when the message becomes shorter", async () => {
+    const { output, rendered } = createOutput(40);
+    const spinner = createSpinner(output);
+    spinner.start(longMessage);
+    spinner.message("Short");
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    spinner.stop("Done");
+    expect(replay(rendered(), 40).screen).toEqual([S_BAR, `${S_STEP_SUBMIT}  Done`]);
+  });
+
+  it("restores the cursor on the active stream when the process exits", async () => {
+    const script = `
+      import { PassThrough } from "node:stream";
+      import { createSpinner } from ${JSON.stringify(new URL("../src/utils/terminal-output.ts", import.meta.url).href)};
+      delete process.env.CI;
+      const streams = [0, 1].map(() => Object.assign(new PassThrough(), { isTTY: true, columns: 80 }));
+      const captured = ["", ""];
+      streams.forEach((stream, index) => stream.on("data", (chunk) => captured[index] += chunk));
+      const first = createSpinner(streams[0]);
+      first.start("First");
+      first.stop("Done");
+      createSpinner(streams[1]).start("Second");
+      process.once("exit", () => process.stdout.write(JSON.stringify(captured)));
+      process.exit(0);
+    `;
+    const child = Bun.spawn([process.execPath, "--eval", script], {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const output = await new Response(child.stdout).text();
+    expect(await child.exited).toBe(0);
+    const [first, active] = JSON.parse(output) as string[];
+    expect(first.split(`${ESC}[?25h`)).toHaveLength(2);
+    expect(active).toEndWith(`${ESC}[?25h`);
   });
 
   it("prints static lines without cursor control when output is not a TTY", async () => {
