@@ -72,10 +72,10 @@
   "dependencies": {
     "@better-t-stack/template-generator": "workspace:*",
     "@better-t-stack/types": "workspace:*",
-    "@clack/core": "^1.4.3",
-    "@clack/prompts": "^1.7.0",
+    "@clack/core": "^1.5.0",
+    "@clack/prompts": "^1.8.0",
     "@modelcontextprotocol/server": "2.0.0",
-    "@trpc/server": "^11.18.0",
+    "@orpc/server": "^1.15.0",
     "better-result": "^3.0.1",
     "consola": "^3.4.2",
     "env-paths": "^4.0.0",
@@ -84,7 +84,7 @@
     "gradient-string": "^3.0.0",
     "handlebars": "^4.7.9",
     "jsonc-parser": "^3.3.1",
-    "oxfmt": "^0.66.0",
+    "oxfmt": "^0.67.0",
     "picocolors": "^1.1.1",
     "semver": "^7.8.5",
     "tinyglobby": "^0.2.17",
@@ -97,11 +97,11 @@
     "@modelcontextprotocol/client": "2.0.0",
     "@types/bun": "^1.4.2",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.5.0",
     "@types/semver": "^7.8.0",
     "publint": "^0.3.24",
     "tsdown": "^0.23.0",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": ">=22.0.0"

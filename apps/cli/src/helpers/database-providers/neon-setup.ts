@@ -5,7 +5,9 @@ import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
+import { z } from "zod";
 
+import { DbSetupModeSchema, NeonSetupMethodSchema } from "../../types";
 import type { PackageManager, ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
@@ -283,7 +285,7 @@ export async function setupNeonPostgres(
         return userCancelled("Operation cancelled");
       }
 
-      selectedMode = promptedMode;
+      selectedMode = DbSetupModeSchema.parse(promptedMode);
     }
   }
 
@@ -324,7 +326,7 @@ export async function setupNeonPostgres(
         return userCancelled("Operation cancelled");
       }
 
-      setupMethod = promptedSetupMethod;
+      setupMethod = NeonSetupMethodSchema.parse(promptedSetupMethod);
     }
   }
 
@@ -384,7 +386,7 @@ export async function setupNeonPostgres(
         return userCancelled("Operation cancelled");
       }
 
-      regionId = promptedRegionId;
+      regionId = z.string().parse(promptedRegionId);
     }
   }
 

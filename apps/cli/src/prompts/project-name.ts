@@ -94,7 +94,7 @@ export async function getProjectName(initialName?: string): Promise<string> {
       throw new UserCancelledError({ message: "Operation cancelled." });
     }
 
-    projectPath = response || defaultName;
+    projectPath = ProjectNameSchema.parse(response || defaultName);
     isValid = true;
   }
 

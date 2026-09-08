@@ -6,6 +6,7 @@ import { type ExecaError, execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
 
+import { DbSetupModeSchema } from "../../types";
 import type { PackageManager, ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
@@ -235,7 +236,7 @@ export async function setupSupabase(
         return userCancelled("Operation cancelled");
       }
 
-      mode = promptedMode;
+      mode = DbSetupModeSchema.parse(promptedMode);
     }
   }
 

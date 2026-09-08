@@ -1,3 +1,5 @@
+import { lineByLineConsoleLogger } from "trpc-cli";
+
 import { createBtsCli } from "./index";
 import { startBtsMcpServer } from "./mcp";
 
@@ -16,5 +18,5 @@ This command is intended to be launched by an MCP client, for example:
 
   await startBtsMcpServer();
 } else {
-  await createBtsCli().run();
+  await createBtsCli().run({ logger: lineByLineConsoleLogger });
 }

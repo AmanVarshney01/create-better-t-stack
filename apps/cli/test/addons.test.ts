@@ -3,14 +3,6 @@ import { existsSync } from "node:fs";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import {
-  DiagnosticCategory,
-  flattenDiagnosticMessageText,
-  ModuleKind,
-  ScriptTarget,
-  transpileModule,
-} from "typescript";
-
 import { add, type Addons, type Backend, type Frontend } from "../src";
 import { getCompatibleAddons } from "../src/utils/compatibility-rules";
 import { expectError, expectSuccess, runCreateTest, type TestConfig } from "./test-utils";
@@ -32,18 +24,7 @@ async function readSourceFiles(dir: string): Promise<{ path: string; content: st
 }
 
 function expectParseableTypeScript(content: string) {
-  const diagnostics =
-    transpileModule(content, {
-      compilerOptions: {
-        module: ModuleKind.ESNext,
-        target: ScriptTarget.ESNext,
-      },
-      reportDiagnostics: true,
-    }).diagnostics?.filter((diagnostic) => diagnostic.category === DiagnosticCategory.Error) ?? [];
-
-  expect(
-    diagnostics.map((diagnostic) => flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
-  ).toEqual([]);
+  expect(() => new Bun.Transpiler({ loader: "ts" }).transformSync(content)).not.toThrow();
 }
 
 function expectDocsWithEvlogAuth(content: string) {

@@ -1,5 +1,5 @@
 import { getAllJsonSchemas } from "@better-t-stack/types/json-schema";
-import { initTRPC } from "@trpc/server";
+import { os } from "@orpc/server";
 import { Result } from "better-result";
 import { createCli, type TrpcCli, type TrpcCliMeta } from "trpc-cli";
 import z from "zod";
@@ -106,7 +106,7 @@ const CreateVirtualInputSchema = ProjectConfigSchema.omit({
 
 export type SchemaName = z.infer<typeof SchemaNameSchema>;
 
-const t = initTRPC.meta<TrpcCliMeta>().create();
+const command = os.$meta<TrpcCliMeta>({});
 
 function getCliSchemaJson(): unknown {
   return createCli({
@@ -130,8 +130,8 @@ export function getSchemaResult(name: SchemaName) {
   return schemas[name];
 }
 
-export const router = t.router({
-  create: t.procedure
+export const router = os.router({
+  create: command
     .meta({
       description: "Create a new Better-T-Stack project",
       default: true,
@@ -189,7 +189,7 @@ export const router = t.router({
         }),
       ]),
     )
-    .mutation(async ({ input }) => {
+    .handler(async ({ input }) => {
       const [projectName, options] = input;
       const combinedInput = {
         projectName,
@@ -201,13 +201,13 @@ export const router = t.router({
         return result;
       }
     }),
-  createJson: t.procedure
+  createJson: command
     .meta({
       description: "Create a project from a raw JSON payload (agent-friendly)",
       jsonInput: "always",
     })
     .input(CreateInputSchema)
-    .mutation(async ({ input }) => {
+    .handler(async ({ input }) => {
       const result = await createProjectHandler(input, { silent: true, mode: "json" });
       if (!result) {
         throw new UserCancelledError({ message: "Operation cancelled" });
@@ -219,24 +219,24 @@ export const router = t.router({
       }
       return result;
     }),
-  schema: t.procedure
+  schema: command
     .meta({ description: "Show runtime CLI and input schemas as JSON" })
     .input(
       z.object({
         name: SchemaNameSchema.describe("Schema name to inspect"),
       }),
     )
-    .query(({ input }) => getSchemaResult(input.name)),
-  sponsors: t.procedure
+    .handler(({ input }) => getSchemaResult(input.name)),
+  sponsors: command
     .meta({ description: "Show Better-T-Stack sponsors" })
-    .mutation(() => showSponsorsCommand()),
-  docs: t.procedure
+    .handler(() => showSponsorsCommand()),
+  docs: command
     .meta({ description: "Open Better-T-Stack documentation" })
-    .mutation(() => openDocsCommand()),
-  builder: t.procedure
+    .handler(() => openDocsCommand()),
+  builder: command
     .meta({ description: "Open the web-based stack builder" })
-    .mutation(() => openBuilderCommand()),
-  add: t.procedure
+    .handler(() => openBuilderCommand()),
+  add: command
     .meta({
       description: "Add addons or a workspace package to an existing Better-T-Stack project",
     })
@@ -259,16 +259,16 @@ export const router = t.router({
         disableAnalytics: z.boolean().optional().default(false).describe("Disable analytics"),
       }),
     )
-    .mutation(async ({ input }) => {
+    .handler(async ({ input }) => {
       await addHandler(input);
     }),
-  addJson: t.procedure
+  addJson: command
     .meta({
       description: "Add addons or a workspace package from a raw JSON payload (agent-friendly)",
       jsonInput: "always",
     })
     .input(AddInputSchema)
-    .mutation(async ({ input }) => {
+    .handler(async ({ input }) => {
       const result = await addHandler(input, { silent: true, mode: "json" });
       if (!result) {
         throw new UserCancelledError({ message: "Operation cancelled" });
@@ -280,7 +280,7 @@ export const router = t.router({
       }
       return result;
     }),
-  history: t.procedure
+  history: command
     .meta({ description: "Show project creation history" })
     .input(
       z.object({
@@ -289,7 +289,7 @@ export const router = t.router({
         json: z.boolean().optional().default(false).describe("Output as JSON"),
       }),
     )
-    .mutation(async ({ input }) => {
+    .handler(async ({ input }) => {
       await historyHandler(input);
     }),
 });

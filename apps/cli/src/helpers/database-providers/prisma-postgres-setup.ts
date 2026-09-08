@@ -5,7 +5,9 @@ import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
+import { z } from "zod";
 
+import { DbSetupModeSchema } from "../../types";
 import type { PackageManager, ProjectConfig } from "../../types";
 import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
@@ -69,7 +71,7 @@ async function setupWithCreateDb(
         return userCancelled("Operation cancelled");
       }
 
-      selectedRegion = promptedRegion;
+      selectedRegion = z.string().parse(promptedRegion);
     }
   }
 
@@ -240,7 +242,7 @@ export async function setupPrismaPostgres(
         return userCancelled("Operation cancelled");
       }
 
-      selectedSetupMode = promptedSetupMode;
+      selectedSetupMode = DbSetupModeSchema.parse(promptedSetupMode);
     }
   }
 

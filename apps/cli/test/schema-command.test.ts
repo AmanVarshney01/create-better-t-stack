@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import { initTRPC } from "@trpc/server";
+import { createRouterClient } from "@orpc/server";
 import { z } from "zod";
 
 import { router } from "../src/index";
@@ -15,7 +15,7 @@ const cliSchema = z.object({
 });
 const allSchemas = z.object({ cli: cliSchema, schemas: z.record(z.string(), z.unknown()) });
 
-const caller = initTRPC.create().createCallerFactory(router)({});
+const caller = createRouterClient(router);
 
 describe("Schema command", () => {
   it("returns full schema payload for 'all'", async () => {
