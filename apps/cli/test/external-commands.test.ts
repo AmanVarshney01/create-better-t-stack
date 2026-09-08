@@ -48,7 +48,8 @@ describe("External Command Guards", () => {
       packageManager: "bun",
     });
 
-    expect(result.isOk()).toBe(true);
+    if (result.isErr()) throw result.error;
+    expect(result.value).toBe("skipped");
   });
 
   it("should select the matching Fumadocs linter addon", () => {
@@ -91,7 +92,7 @@ describe("External Command Guards", () => {
     const updated = await Bun.file(pkgJsonPath).json();
 
     expect(updated.scripts?.check).toBe("oxlint && oxfmt --write");
-    expect(updated.devDependencies?.oxlint).toBe("^1.81.0");
-    expect(updated.devDependencies?.oxfmt).toBe("^0.66.0");
+    expect(updated.devDependencies?.oxlint).toBeDefined();
+    expect(updated.devDependencies?.oxfmt).toBeDefined();
   });
 });

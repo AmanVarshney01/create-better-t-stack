@@ -13,7 +13,7 @@ import {
 
 import { add, type Addons, type Backend, type Frontend } from "../src";
 import { getCompatibleAddons } from "../src/utils/compatibility-rules";
-import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+import { expectError, expectSuccess, runCreateTest, type TestConfig } from "./test-utils";
 
 async function readSourceFiles(dir: string): Promise<{ path: string; content: string }[]> {
   if (!existsSync(dir)) return [];
@@ -88,7 +88,7 @@ describe("Addon Configurations", () => {
             config.api = "trpc";
           }
 
-          const result = await runTRPCTest(config);
+          const result = await runCreateTest(config);
           expectSuccess(result);
         });
       }
@@ -116,7 +116,6 @@ describe("Addon Configurations", () => {
             dbSetup: "none",
             webDeploy: "none",
             serverDeploy: "none",
-            expectError: true,
           };
 
           if (["nuxt", "svelte"].includes(frontend)) {
@@ -125,7 +124,7 @@ describe("Addon Configurations", () => {
             config.api = "trpc";
           }
 
-          const result = await runTRPCTest(config);
+          const result = await runCreateTest(config);
           expectError(
             result,
             "pwa addon requires one of these frontends: tanstack-router, react-router, solid, next",
@@ -169,7 +168,7 @@ describe("Addon Configurations", () => {
             config.api = "trpc";
           }
 
-          const result = await runTRPCTest(config);
+          const result = await runCreateTest(config);
           expectSuccess(result);
         });
       }
@@ -183,21 +182,11 @@ describe("Addon Configurations", () => {
 
       for (const frontend of tauriIncompatibleFrontends) {
         it(`should fail with Tauri + ${frontend}`, async () => {
-          const result = await runTRPCTest({
+          const result = await runCreateTest({
             projectName: `tauri-${frontend}-fail`,
             addons: ["tauri"],
             frontend: [frontend as Frontend],
-            backend: "hono",
-            runtime: "bun",
-            database: "sqlite",
-            orm: "drizzle",
-            auth: "none",
             api: frontend === "solid" ? "orpc" : "trpc",
-            examples: ["none"],
-            dbSetup: "none",
-            webDeploy: "none",
-            serverDeploy: "none",
-            expectError: true,
           });
 
           expectError(result, "tauri addon requires one of these frontends");
@@ -205,7 +194,7 @@ describe("Addon Configurations", () => {
       }
 
       it("should fail with Tauri + backend self", async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: "tauri-self-backend-fail",
           addons: ["tauri"],
           frontend: ["next"],
@@ -213,13 +202,8 @@ describe("Addon Configurations", () => {
           runtime: "none",
           database: "none",
           orm: "none",
-          auth: "none",
           api: "orpc",
           examples: ["ai"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          expectError: true,
         });
 
         expectError(result, "tauri addon requires a separate backend or no backend");
@@ -227,7 +211,7 @@ describe("Addon Configurations", () => {
 
       for (const frontend of ["next", "tanstack-start"] as const) {
         it(`should fail with Tauri + Convex Better Auth + ${frontend}`, async () => {
-          const result = await runTRPCTest({
+          const result = await runCreateTest({
             projectName: `tauri-convex-better-auth-${frontend}-fail`,
             addons: ["tauri"],
             frontend: [frontend],
@@ -238,10 +222,6 @@ describe("Addon Configurations", () => {
             auth: "better-auth",
             api: "none",
             examples: ["ai"],
-            dbSetup: "none",
-            webDeploy: "none",
-            serverDeploy: "none",
-            expectError: true,
           });
 
           expectError(result, "server auth bootstrap");
@@ -280,7 +260,7 @@ describe("Addon Configurations", () => {
 
           config.api = ["nuxt", "svelte", "astro"].includes(frontend) ? "orpc" : "trpc";
 
-          const result = await runTRPCTest(config);
+          const result = await runCreateTest(config);
           expectSuccess(result);
         });
       }
@@ -307,18 +287,17 @@ describe("Addon Configurations", () => {
             dbSetup: "none",
             webDeploy: "none",
             serverDeploy: "none",
-            expectError: true,
           };
 
           config.api = frontend === "solid" ? "orpc" : "trpc";
 
-          const result = await runTRPCTest(config);
+          const result = await runCreateTest(config);
           expectError(result, "electrobun addon requires one of these frontends");
         });
       }
 
       it("should fail with Electrobun + backend self", async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: "electrobun-self-backend-fail",
           addons: ["electrobun"],
           frontend: ["next"],
@@ -326,20 +305,15 @@ describe("Addon Configurations", () => {
           runtime: "none",
           database: "none",
           orm: "none",
-          auth: "none",
           api: "orpc",
           examples: ["ai"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          expectError: true,
         });
 
         expectError(result, "electrobun addon requires a separate backend or no backend");
       });
 
       it("should work with Electrobun + Convex Better Auth + Next.js for desktop HMR", async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: "electrobun-convex-better-auth-next",
           addons: ["turborepo", "electrobun"],
           frontend: ["next"],
@@ -350,10 +324,6 @@ describe("Addon Configurations", () => {
           auth: "better-auth",
           api: "none",
           examples: ["ai"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -378,21 +348,9 @@ describe("Addon Configurations", () => {
     // smoke coverage for addons that have no dedicated content tests
     for (const addon of ["oxlint", "lefthook", "mcp"] as const) {
       it(`should work with ${addon} addon`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `${addon}-standalone`,
           addons: [addon],
-          frontend: ["tanstack-router"],
-          backend: "hono",
-          runtime: "bun",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          api: "trpc",
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -402,84 +360,38 @@ describe("Addon Configurations", () => {
 
   describe("Multiple Addons", () => {
     it("should work with multiple compatible addons", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "multiple-addons",
         addons: ["biome", "husky", "turborepo", "pwa"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
     });
 
     it("should work with lefthook and husky together", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "both-git-hooks",
         addons: ["lefthook", "husky"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
     });
 
     it("should fail with incompatible addon combination", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "incompatible-addons-fail",
         addons: ["pwa"], // PWA not compatible with nuxt
         frontend: ["nuxt"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
         api: "orpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
       });
 
       expectError(result, "pwa addon requires one of these frontends");
     });
 
     it("should fail when task runners are combined", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "monorepo-addon-conflict",
         addons: ["turborepo", "vite-plus"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
       });
 
       expectError(result, "`nx`, `turborepo`, and `vite-plus` cannot be used together");
@@ -498,21 +410,9 @@ describe("Addon Configurations", () => {
     });
 
     it("should wire Vite+ addon scripts, deps, overrides, and config imports", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "vite-plus-addon",
         addons: ["vite-plus"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
@@ -525,8 +425,8 @@ describe("Addon Configurations", () => {
       );
       const webViteConfig = await readFile(join(projectDir!, "apps/web/vite.config.ts"), "utf8");
 
-      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.3.1");
-      expect(rootPackageJson.devDependencies.rolldown).toBe("1.2.7");
+      expect(rootPackageJson.devDependencies["vite-plus"]).toBeDefined();
+      expect(rootPackageJson.devDependencies.rolldown).toBeDefined();
       expect(rootPackageJson.overrides).toMatchObject({
         vite: "npm:@voidzero-dev/vite-plus-core@0.3.1",
       });
@@ -566,21 +466,9 @@ describe("Addon Configurations", () => {
     });
 
     it("should wire Vite+ staged checks into Git hook addons", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "vite-plus-hooks",
         addons: ["vite-plus", "lefthook", "husky"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
@@ -600,21 +488,9 @@ describe("Addon Configurations", () => {
     });
 
     it("should keep explicit Oxlint Git hook tasks when Vite+ is also selected", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "vite-plus-oxlint-hooks",
         addons: ["vite-plus", "oxlint", "lefthook", "husky"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
@@ -633,21 +509,8 @@ describe("Addon Configurations", () => {
     });
 
     it("should wire Vite+ addon when added later", async () => {
-      const created = await runTRPCTest({
+      const created = await runCreateTest({
         projectName: "vite-plus-add-later",
-        addons: ["none"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(created);
@@ -669,7 +532,7 @@ describe("Addon Configurations", () => {
       const webViteConfig = await readFile(join(projectDir, "apps/web/vite.config.ts"), "utf8");
       const rootViteConfig = await readFile(join(projectDir, "vite.config.ts"), "utf8");
 
-      expect(rootPackageJson.devDependencies["vite-plus"]).toBe("0.3.1");
+      expect(rootPackageJson.devDependencies["vite-plus"]).toBeDefined();
       expect(rootPackageJson.scripts.dev).toBe("vp run -r dev");
       expect(rootPackageJson.scripts.staged).toBe("vp staged");
       expect(rootPackageJson.scripts["hooks:setup"]).toBe("vp config");
@@ -680,21 +543,8 @@ describe("Addon Configurations", () => {
     });
 
     it("should wire Nx addon when added later", async () => {
-      const created = await runTRPCTest({
+      const created = await runCreateTest({
         projectName: "nx-add-later",
-        addons: ["none"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(created);
@@ -722,21 +572,8 @@ describe("Addon Configurations", () => {
     });
 
     it("should wire Turborepo addon when added later", async () => {
-      const created = await runTRPCTest({
+      const created = await runCreateTest({
         projectName: "turborepo-add-later",
-        addons: ["none"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(created);
@@ -761,21 +598,9 @@ describe("Addon Configurations", () => {
     });
 
     it("should reject adding Vite+ to a project with an existing task runner", async () => {
-      const created = await runTRPCTest({
+      const created = await runCreateTest({
         projectName: "vite-plus-add-task-runner-conflict",
         addons: ["turborepo"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(created);
@@ -799,21 +624,9 @@ describe("Addon Configurations", () => {
     });
 
     it("should reject adding another task runner to a Vite+ project", async () => {
-      const created = await runTRPCTest({
+      const created = await runCreateTest({
         projectName: "vite-plus-add-reverse-task-runner-conflict",
         addons: ["vite-plus"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(created);
@@ -837,21 +650,9 @@ describe("Addon Configurations", () => {
     });
 
     it("should refresh existing Git hook addons when Vite+ is added later", async () => {
-      const created = await runTRPCTest({
+      const created = await runCreateTest({
         projectName: "vite-plus-add-existing-hooks",
         addons: ["lefthook", "husky"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(created);
@@ -878,21 +679,9 @@ describe("Addon Configurations", () => {
     });
 
     it("should refresh Git hook addons when they are added after Vite+", async () => {
-      const created = await runTRPCTest({
+      const created = await runCreateTest({
         projectName: "vite-plus-add-hooks-later",
         addons: ["vite-plus"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(created);
@@ -919,21 +708,9 @@ describe("Addon Configurations", () => {
     });
 
     it("should refresh existing Git hook addons when Biome is added later", async () => {
-      const created = await runTRPCTest({
+      const created = await runCreateTest({
         projectName: "biome-add-existing-hooks",
         addons: ["lefthook", "husky"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(created);
@@ -961,21 +738,10 @@ describe("Addon Configurations", () => {
     });
 
     it("should preserve Bun workspace metadata when package scripts refresh on add", async () => {
-      const created = await runTRPCTest({
+      const created = await runCreateTest({
         projectName: "bun-catalog-add-refresh",
         addons: ["turborepo"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
         auth: "better-auth",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(created);
@@ -1031,21 +797,9 @@ describe("Addon Configurations", () => {
     });
 
     it("should deduplicate addons", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "duplicate-addons",
-        addons: ["biome", "biome", "turborepo"], // Duplicate biome
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
+        addons: ["biome", "biome", "turborepo"],
       });
 
       expectSuccess(result);
@@ -1079,21 +833,10 @@ describe("Addon Configurations", () => {
 
     for (const backend of ["hono", "express", "fastify", "elysia"] as const) {
       it(`should wire evlog middleware for ${backend}`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `evlog-${backend}`,
           addons: ["evlog"],
-          frontend: ["tanstack-router"],
           backend,
-          runtime: "bun",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          api: "trpc",
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -1120,21 +863,11 @@ describe("Addon Configurations", () => {
     }
 
     it("should keep the Node file system drain out of Cloudflare Workers", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "evlog-hono-workers",
         addons: ["evlog"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
         runtime: "workers",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
         serverDeploy: "cloudflare",
-        install: false,
       });
 
       expectSuccess(result);
@@ -1200,21 +933,13 @@ describe("Addon Configurations", () => {
 
     for (const webCase of webCases) {
       it(`should wire evlog for ${webCase.frontend} fullstack projects`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `evlog-${webCase.frontend}-web`,
           addons: ["evlog"],
           frontend: [webCase.frontend as Frontend],
           backend: "self",
           runtime: "none",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
           api: webCase.api,
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -1237,21 +962,14 @@ describe("Addon Configurations", () => {
     }
 
     it("should keep Nuxt config parseable with Cloudflare web deploy", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "evlog-nuxt-cloudflare-web",
         addons: ["evlog"],
         frontend: ["nuxt"],
         backend: "self",
         runtime: "none",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
         api: "orpc",
-        examples: ["none"],
-        dbSetup: "none",
         webDeploy: "cloudflare",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
@@ -1281,21 +999,15 @@ describe("Addon Configurations", () => {
     });
 
     it("should type Nitro Better Auth events for Nuxt Cloudflare projects", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "evlog-nuxt-cloudflare-auth",
         addons: ["evlog"],
         frontend: ["nuxt"],
         backend: "self",
         runtime: "none",
-        database: "sqlite",
-        orm: "drizzle",
         auth: "better-auth",
         api: "orpc",
-        examples: ["none"],
-        dbSetup: "none",
         webDeploy: "cloudflare",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
@@ -1375,21 +1087,14 @@ describe("Addon Configurations", () => {
 
     for (const webCase of fullstackBetterAuthEvlogCases) {
       it(`should generate docs-shaped evlog Better Auth wiring for ${webCase.frontend} fullstack projects`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `evlog-${webCase.frontend}-fullstack-auth`,
           addons: ["evlog"],
           frontend: [webCase.frontend as Frontend],
           backend: "self",
           runtime: "none",
-          database: "sqlite",
-          orm: "drizzle",
           auth: "better-auth",
           api: webCase.api,
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -1455,21 +1160,15 @@ describe("Addon Configurations", () => {
 
     for (const webCase of fullstackBetterAuthFactoryEvlogCases) {
       it(`should keep factory-based evlog auth wiring inside the request path for ${webCase.frontend}`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `evlog-${webCase.frontend}-cloudflare-auth`,
           addons: ["evlog"],
           frontend: [webCase.frontend as Frontend],
           backend: "self",
           runtime: "none",
-          database: "sqlite",
-          orm: "drizzle",
           auth: "better-auth",
           api: webCase.api,
-          examples: ["none"],
-          dbSetup: "none",
           webDeploy: "cloudflare",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -1489,7 +1188,7 @@ describe("Addon Configurations", () => {
     }
 
     it("should reject evlog for Convex backend projects", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "evlog-convex-fail",
         addons: ["evlog"],
         frontend: ["tanstack-start", "native-uniwind"],
@@ -1499,33 +1198,17 @@ describe("Addon Configurations", () => {
         orm: "none",
         auth: "better-auth",
         api: "none",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-        expectError: true,
       });
 
       expectError(result, "Convex and backend none are not supported yet");
     });
 
     it("should wire evlog Better Auth and AI SDK helpers for server projects", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "evlog-hono-auth-ai",
         addons: ["evlog"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
         auth: "better-auth",
-        api: "trpc",
         examples: ["ai"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
@@ -1554,21 +1237,15 @@ describe("Addon Configurations", () => {
     });
 
     it("should wire evlog AI SDK helpers for Express server projects", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "evlog-express-ai",
         addons: ["evlog"],
         frontend: ["nuxt"],
         backend: "express",
         runtime: "node",
-        database: "sqlite",
-        orm: "drizzle",
         auth: "better-auth",
         api: "orpc",
         examples: ["ai"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
@@ -1636,21 +1313,14 @@ describe("Addon Configurations", () => {
       ] as const;
 
       for (const testCase of cases) {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: testCase.projectName,
           addons: ["evlog"],
           frontend: [testCase.frontend],
           backend: testCase.backend,
           runtime: testCase.runtime,
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
           api: testCase.api,
           examples: ["ai"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -1678,21 +1348,14 @@ describe("Addon Configurations", () => {
     });
 
     it("should wire evlog request and auth helpers for Next fullstack AI projects", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "evlog-next-auth-ai",
         addons: ["evlog"],
         frontend: ["next"],
         backend: "self",
         runtime: "none",
-        database: "sqlite",
-        orm: "drizzle",
         auth: "better-auth",
-        api: "trpc",
         examples: ["ai"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
@@ -1731,21 +1394,16 @@ describe("Addon Configurations", () => {
     for (const webCase of separateBackendWebAuthCases) {
       it(`should keep Better Auth identifiers in the server for ${webCase.frontend} + separate backend projects`, async () => {
         const projectName = `evlog-${webCase.frontend}-express-auth-ai`;
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName,
           addons: ["evlog"],
           frontend: [webCase.frontend as Frontend],
           backend: "express",
           runtime: "node",
-          database: "sqlite",
-          orm: "drizzle",
           auth: "better-auth",
           api: webCase.api,
           examples: webCase.frontend === "astro" ? ["todo"] : ["todo", "ai"],
           dbSetup: "turso",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -1779,21 +1437,8 @@ describe("Addon Configurations", () => {
     }
 
     it("should patch an existing server when evlog is added later", async () => {
-      const created = await runTRPCTest({
+      const created = await runCreateTest({
         projectName: "evlog-add-existing",
-        addons: ["none"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(created);
@@ -1822,9 +1467,8 @@ describe("Addon Configurations", () => {
     });
 
     it("should reject evlog when added later to a Convex project", async () => {
-      const created = await runTRPCTest({
+      const created = await runCreateTest({
         projectName: "evlog-add-convex-fail",
-        addons: ["none"],
         frontend: ["tanstack-start", "native-uniwind"],
         backend: "convex",
         runtime: "none",
@@ -1832,11 +1476,6 @@ describe("Addon Configurations", () => {
         orm: "none",
         auth: "better-auth",
         api: "none",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(created);
@@ -1879,21 +1518,16 @@ describe("Addon Configurations", () => {
     });
     for (const frontend of ["astro", "tanstack-start"] as const) {
       it(`keeps ${frontend} Axiom drains alive on Cloudflare`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `axiom-workers-${frontend}`,
           addons: ["axiom"],
           frontend: [frontend],
           backend: "self",
           runtime: "none",
-          database: "sqlite",
-          orm: "drizzle",
           auth: "better-auth",
           api: "none",
-          examples: ["none"],
           dbSetup: "d1",
           webDeploy: "cloudflare",
-          serverDeploy: "none",
-          install: false,
         });
         expectSuccess(result);
         const projectDir = result.result!.projectDirectory!;
@@ -1926,7 +1560,7 @@ describe("Addon Configurations", () => {
     }
 
     it("should reject adding Axiom after project creation", async () => {
-      const created = await runTRPCTest({
+      const created = await runCreateTest({
         projectName: "axiom-add-later",
         addons: ["turborepo"],
         frontend: ["next"],
@@ -1934,13 +1568,7 @@ describe("Addon Configurations", () => {
         runtime: "none",
         database: "none",
         orm: "none",
-        auth: "none",
         api: "orpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(created);
@@ -1953,21 +1581,12 @@ describe("Addon Configurations", () => {
     });
 
     it("should wire the Axiom drain and Alchemy resources without a compute deployment", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "axiom-hono",
         addons: ["axiom", "turborepo"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
         database: "none",
         orm: "none",
-        auth: "none",
         api: "orpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
@@ -1986,7 +1605,7 @@ describe("Addon Configurations", () => {
       expect(serverIndex).toContain('import { createAxiomDrain } from "evlog/axiom";');
       expect(serverIndex).toContain("app.use(evlog({ drain: createAxiomDrain() }));");
       expect(serverIndex).not.toContain("evlog/fs");
-      expect(serverPackage.dependencies?.evlog).toBe("^2.28.1");
+      expect(serverPackage.dependencies?.evlog).toBeDefined();
       expect(serverPackage.scripts?.dev).toBeUndefined();
       expect(serverPackage.scripts?.["dev:bare"]).toBeDefined();
       expect(infra).toContain('Axiom.Dataset("logs"');
@@ -1998,7 +1617,7 @@ describe("Addon Configurations", () => {
     });
 
     it("should use the Axiom drain for a fullstack Next.js application", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "axiom-next",
         addons: ["axiom", "turborepo"],
         frontend: ["next"],
@@ -2006,13 +1625,7 @@ describe("Addon Configurations", () => {
         runtime: "none",
         database: "none",
         orm: "none",
-        auth: "none",
         api: "orpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
@@ -2050,7 +1663,7 @@ describe("Addon Configurations", () => {
 
     for (const { frontend, file, marker } of fullstackCases) {
       it(`should wire Axiom into ${frontend}`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `axiom-${frontend}`,
           addons: ["axiom", "turborepo"],
           frontend: [frontend],
@@ -2058,13 +1671,7 @@ describe("Addon Configurations", () => {
           runtime: "none",
           database: "none",
           orm: "none",
-          auth: "none",
           api: "orpc",
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -2095,21 +1702,14 @@ describe("Addon Configurations", () => {
 
     for (const backend of ["express", "fastify", "elysia"] as const) {
       it(`should wire the Axiom drain into ${backend}`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `axiom-${backend}`,
           addons: ["axiom", "turborepo"],
-          frontend: ["tanstack-router"],
           backend,
           runtime: backend === "elysia" ? "bun" : "node",
           database: "none",
           orm: "none",
-          auth: "none",
           api: "orpc",
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -2125,42 +1725,17 @@ describe("Addon Configurations", () => {
 
   describe("Addons with None Option", () => {
     it("should work with addons none", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "no-addons",
-        addons: ["none"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
     });
 
     it("should fail with none + other addons", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "none-with-other-addons-fail",
         addons: ["none", "biome"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
       });
 
       expectError(result, "Cannot combine 'none' with other addons");

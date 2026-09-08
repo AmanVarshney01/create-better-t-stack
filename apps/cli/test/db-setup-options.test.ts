@@ -6,8 +6,7 @@ import fs from "fs-extra";
 import { setupNeonPostgres } from "../src/helpers/database-providers/neon-setup";
 import { create } from "../src/index";
 import { readBtsConfig } from "../src/utils/bts-config";
-
-const SMOKE_DIR_PATH = path.join(import.meta.dir, "..", ".smoke");
+import { SMOKE_DIR } from "./setup";
 
 describe("Database setup options", () => {
   beforeEach(() => {
@@ -16,7 +15,7 @@ describe("Database setup options", () => {
   });
 
   it("defaults remote provider setup to manual in silent mode and uses flags when mode is representable", async () => {
-    const projectPath = path.join(SMOKE_DIR_PATH, "db-setup-neon-default-manual");
+    const projectPath = path.join(SMOKE_DIR, "db-setup-neon-default-manual");
     await fs.remove(projectPath);
 
     const result = await create(projectPath, {
@@ -50,7 +49,7 @@ describe("Database setup options", () => {
   });
 
   it("uses flags when dbSetupOptions only contains auto mode", async () => {
-    const projectPath = path.join(SMOKE_DIR_PATH, "db-setup-neon-auto-flags");
+    const projectPath = path.join(SMOKE_DIR, "db-setup-neon-auto-flags");
     await fs.remove(projectPath);
 
     const result = await create(projectPath, {
@@ -84,7 +83,7 @@ describe("Database setup options", () => {
   });
 
   it("keeps reproducible command on normal flags when dbSetupOptions include provider-specific nested options", async () => {
-    const projectPath = path.join(SMOKE_DIR_PATH, "db-setup-neon-structured-options");
+    const projectPath = path.join(SMOKE_DIR, "db-setup-neon-structured-options");
     await fs.remove(projectPath);
 
     const result = await create(projectPath, {
@@ -121,7 +120,7 @@ describe("Database setup options", () => {
   });
 
   it("does not inject manual dbSetupOptions for non-provisioning setups", async () => {
-    const projectPath = path.join(SMOKE_DIR_PATH, "db-setup-d1-no-manual-default");
+    const projectPath = path.join(SMOKE_DIR, "db-setup-d1-no-manual-default");
     await fs.remove(projectPath);
 
     const result = await create(projectPath, {
@@ -153,7 +152,7 @@ describe("Database setup options", () => {
   });
 
   it("does not persist dbSetupOptions or force create-json when dbSetup is none", async () => {
-    const projectPath = path.join(SMOKE_DIR_PATH, "db-setup-none-no-structured-options");
+    const projectPath = path.join(SMOKE_DIR, "db-setup-none-no-structured-options");
     await fs.remove(projectPath);
 
     const result = await create(projectPath, {
@@ -188,7 +187,7 @@ describe("Database setup options", () => {
   });
 
   it("skips Neon prompts when external commands are disabled", async () => {
-    const projectPath = path.join(SMOKE_DIR_PATH, "db-setup-neon-skip-external");
+    const projectPath = path.join(SMOKE_DIR, "db-setup-neon-skip-external");
     await fs.remove(projectPath);
 
     const result = await setupNeonPostgres({

@@ -51,6 +51,7 @@ jobs:
       - name: Check Source Types
         run: |
           bunx tsc --noEmit -p apps/cli/tsconfig.json
+          bun run --filter create-better-t-stack check-test-types
           bunx tsc --noEmit -p packages/template-generator/tsconfig.json
           bunx tsc --noEmit -p packages/backend/convex/tsconfig.json
           bun run --filter web check-types

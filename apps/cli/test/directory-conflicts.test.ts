@@ -24,7 +24,7 @@ describe("Directory conflicts", () => {
       directoryConflict: "error",
     });
 
-    expect(result.isErr()).toBe(true);
+    if (result.isOk()) throw new Error("Expected project creation to fail");
     expect(result.error?.message).toContain("exists and is not a directory");
     expect(result.error?.message).not.toContain("ENOTDIR");
     expect(await fs.readFile(projectPath, "utf8")).toBe("keep-me");
@@ -45,7 +45,7 @@ describe("Directory conflicts", () => {
       directoryConflict: "overwrite",
     });
 
-    expect(result.isErr()).toBe(true);
+    if (result.isOk()) throw new Error("Expected project creation to fail");
     expect(result.error?.message).toContain("symbolic link");
     expect(await fs.readFile(sentinelPath, "utf8")).toBe("keep-me");
     expect(await fs.pathExists(path.join(targetPath, "package.json"))).toBe(false);
@@ -65,7 +65,7 @@ describe("Directory conflicts", () => {
       directoryConflict: "increment",
     });
 
-    expect(result.isOk()).toBe(true);
+    if (result.isErr()) throw result.error;
     expect(result.value?.projectDirectory).toBe(expectedProjectPath);
     expect(await fs.readFile(projectPath, "utf8")).toBe("original");
     expect(await fs.readFile(firstIncrementPath, "utf8")).toBe("first-increment");
@@ -86,7 +86,7 @@ describe("Directory conflicts", () => {
       directoryConflict: "overwrite",
     });
 
-    expect(result.isErr()).toBe(true);
+    if (result.isOk()) throw new Error("Expected project creation to fail");
     expect(result.error?.message).toContain("symbolic link");
     expect(await fs.pathExists(path.join(targetParent, "project"))).toBe(false);
   });
@@ -105,7 +105,7 @@ describe("Directory conflicts", () => {
       directoryConflict: "merge",
     });
 
-    expect(result.isErr()).toBe(true);
+    if (result.isOk()) throw new Error("Expected project creation to fail");
     expect(result.error?.message).toContain("symbolic link");
     expect(await fs.pathExists(path.join(outsidePath, "web"))).toBe(false);
     expect(await fs.pathExists(path.join(outsidePath, "server"))).toBe(false);
@@ -124,7 +124,7 @@ describe("Directory conflicts", () => {
       directoryConflict: "overwrite",
     });
 
-    expect(result.isOk()).toBe(true);
+    if (result.isErr()) throw result.error;
     expect(await fs.pathExists(sentinelPath)).toBe(false);
     expect(await fs.pathExists(path.join(projectPath, "package.json"))).toBe(true);
   });
@@ -142,7 +142,7 @@ describe("Directory conflicts", () => {
       directoryConflict: "merge",
     });
 
-    expect(result.isOk()).toBe(true);
+    if (result.isErr()) throw result.error;
     expect(await fs.readFile(sentinelPath, "utf8")).toBe("keep-me");
     expect(await fs.pathExists(path.join(projectPath, "package.json"))).toBe(true);
   });
@@ -163,7 +163,7 @@ describe("Directory conflicts", () => {
       directoryConflict: "increment",
     });
 
-    expect(result.isOk()).toBe(true);
+    if (result.isErr()) throw result.error;
     expect(result.value?.projectDirectory).toBe(expectedProjectPath);
     expect(await fs.readFile(path.join(projectPath, "keep-me.txt"), "utf8")).toBe("original");
     expect(await fs.readFile(path.join(firstIncrementPath, "keep-me.txt"), "utf8")).toBe("first");
@@ -182,7 +182,7 @@ describe("Directory conflicts", () => {
       directoryConflict: "error",
     });
 
-    expect(result.isErr()).toBe(true);
+    if (result.isOk()) throw new Error("Expected project creation to fail");
     expect(result.error?.message).toContain("already exists and is not empty");
     expect(await fs.readFile(sentinelPath, "utf8")).toBe("keep-me");
     expect(await fs.pathExists(path.join(projectPath, "package.json"))).toBe(false);

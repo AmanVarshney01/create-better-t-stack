@@ -52,7 +52,7 @@
   },
   "devDependencies": {
     "@oxlint/plugins": "1.81.0",
-    "@types/bun": "^1.4.1",
+    "@types/bun": "^1.4.2",
     "changelogithub": "^15.0.5",
     "lefthook": "^2.1.12",
     "lint-staged": "^17.5.0",

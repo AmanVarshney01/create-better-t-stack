@@ -1,7 +1,7 @@
 import { describe, it } from "bun:test";
 
 import type { Database, ORM } from "../src/types";
-import { expectError, expectSuccess, runTRPCTest } from "./test-utils";
+import { expectError, expectSuccess, runCreateTest } from "./test-utils";
 
 describe("Database and ORM Combinations", () => {
   describe("Valid Database-ORM Combinations", () => {
@@ -28,21 +28,10 @@ describe("Database and ORM Combinations", () => {
 
     for (const { database, orm } of validCombinations) {
       it(`should work with ${database} + ${orm}`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `${database}-${orm}`,
           database,
           orm,
-          backend: "hono",
-          runtime: "bun",
-          frontend: ["tanstack-router"],
-          auth: "none",
-          api: "trpc",
-          addons: ["none"],
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -107,21 +96,10 @@ describe("Database and ORM Combinations", () => {
 
     for (const { database, orm, error } of invalidCombinations) {
       it(`should fail with ${database} + ${orm}`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `invalid-${database}-${orm}`,
           database,
           orm,
-          backend: "hono",
-          runtime: "bun",
-          frontend: ["tanstack-router"],
-          auth: "none",
-          api: "trpc",
-          addons: ["none"],
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          expectError: true,
         });
 
         expectError(result, error);

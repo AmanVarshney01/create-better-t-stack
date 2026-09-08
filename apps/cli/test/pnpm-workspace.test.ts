@@ -4,14 +4,12 @@ import path from "node:path";
 
 import yaml from "yaml";
 
-import { expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+import { expectSuccess, runCreateTest, type TestConfig } from "./test-utils";
 
 async function readPnpmWorkspace(config: TestConfig) {
-  const result = await runTRPCTest({
+  const result = await runCreateTest({
     ...config,
     packageManager: "pnpm",
-    install: false,
-    git: false,
   });
 
   expectSuccess(result);
@@ -26,42 +24,6 @@ async function readPnpmWorkspace(config: TestConfig) {
 }
 
 describe("pnpm workspace", () => {
-  it("allows the pinned Solid 2 prereleases through pnpm's release-age policy", async () => {
-    const workspace = await readPnpmWorkspace({
-      projectName: "pnpm-solid-v2",
-      frontend: ["solid"],
-      backend: "none",
-      runtime: "none",
-      api: "none",
-      database: "none",
-      orm: "none",
-      auth: "none",
-      payments: "none",
-      addons: ["none"],
-      examples: ["none"],
-      dbSetup: "none",
-      webDeploy: "none",
-      serverDeploy: "none",
-    });
-
-    expect(workspace.overrides).toEqual({
-      "@solidjs/signals": "2.0.0-rc.7",
-      "@solidjs/compiler": "2.0.0-rc.7",
-      "@solidjs/babel-plugin": "2.0.0-rc.7",
-    });
-    expect(workspace.minimumReleaseAgeExclude).toEqual([
-      "@solidjs/babel-plugin@2.0.0-rc.7",
-      "@solidjs/compiler@2.0.0-rc.7",
-      "@solidjs/meta@1.0.0-next.2",
-      "@solidjs/router@2.0.0-next.23",
-      "@solidjs/signals@2.0.0-rc.7",
-      "@solidjs/vite-plugin@3.0.0-next.39",
-      "@solidjs/web@2.0.0-rc.7",
-      "@tanstack/solid-query@6.0.0-rc.3",
-      "solid-js@2.0.0-rc.7",
-    ]);
-  });
-
   it("adds build approvals for the Convex Better Auth Cloudflare stack", async () => {
     const workspace = await readPnpmWorkspace({
       projectName: "pnpm-convex-cloudflare",

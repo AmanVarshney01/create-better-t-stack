@@ -1,190 +1,76 @@
 import { expect } from "bun:test";
-import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 
-import { create, UserCancelledError, CLIError, ProjectCreationError } from "../src/index";
-import type {
-  CreateInput,
-  InitResult,
-  Database,
-  ORM,
-  Backend,
-  Runtime,
-  Frontend,
-  Addons,
-  Examples,
-  Auth,
-  Payments,
-  API,
-  WebDeploy,
-  ServerDeploy,
-  DatabaseSetup,
-} from "../src/types";
+import { create } from "../src/index";
+import type { CreateInput, InitResult } from "../src/types";
 import { PackageManagerSchema, ServerDeploySchema, WebDeploySchema } from "../src/types";
+import { SMOKE_DIR } from "./setup";
+import { assertWorkspaceGraph } from "./workspace-graph";
 
-// Smoke directory path - use the same as setup.ts
-const SMOKE_DIR_PATH = join(import.meta.dir, "..", ".smoke");
+export type TestConfig = CreateInput;
 
 export interface TestResult {
   success: boolean;
   result?: InitResult;
   error?: string;
   projectDir?: string;
-  config: TestConfig;
 }
 
-export interface TestConfig extends CreateInput {
-  projectName?: string;
-  expectError?: boolean;
-  expectedErrorMessage?: string;
-}
+const defaultStack = {
+  frontend: ["tanstack-router"],
+  backend: "hono",
+  runtime: "bun",
+  api: "trpc",
+  database: "sqlite",
+  orm: "drizzle",
+  auth: "none",
+  payments: "none",
+  addons: ["none"],
+  examples: ["none"],
+  dbSetup: "none",
+  webDeploy: "none",
+  serverDeploy: "none",
+} satisfies CreateInput;
 
-/**
- * Run test using the programmatic create() API instead of the router.
- * The create() API runs in silent mode and returns JSON instead of calling process.exit().
- */
-export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
-  // Ensure smoke directory exists (may be called before global setup in some cases)
-  try {
-    await mkdir(SMOKE_DIR_PATH, { recursive: true });
-  } catch {
-    // Directory may already exist
-  }
-
-  const projectName = config.projectName || "default-app";
-  const projectPath = join(SMOKE_DIR_PATH, projectName);
-
-  // Determine if we should use --yes or not
-  // Only core stack flags conflict with --yes flag (from CLI error message)
-  const coreStackFlags: (keyof TestConfig)[] = [
-    "database",
-    "orm",
-    "backend",
-    "runtime",
-    "frontend",
-    "addons",
-    "examples",
-    "auth",
-    "payments",
-    "dbSetup",
-    "api",
-    "webDeploy",
-    "serverDeploy",
-  ];
-  const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
-
-  // Only use --yes if no core stack flags are provided and not explicitly disabled
-  const willUseYesFlag = config.yes !== undefined ? config.yes : !hasSpecificCoreConfig;
-
-  // Provide defaults for missing core stack options to avoid prompts
-  // But don't provide core stack defaults when yes: true is explicitly set
-  const coreStackDefaults = willUseYesFlag
-    ? {}
-    : {
-        frontend: ["tanstack-router"] as Frontend[],
-        backend: "hono" as Backend,
-        runtime: "bun" as Runtime,
-        api: "trpc" as API,
-        database: "sqlite" as Database,
-        orm: "drizzle" as ORM,
-        auth: "none" as Auth,
-        payments: "none" as Payments,
-        addons: ["none"] as Addons[],
-        examples: ["none"] as Examples[],
-        dbSetup: "none" as DatabaseSetup,
-        webDeploy: "none" as WebDeploy,
-        serverDeploy: "none" as ServerDeploy,
-      };
-
-  // Build options object - let the CLI handle all validation
-  // Remove test-specific properties before passing to create()
-  const { projectName: _, expectError: __, expectedErrorMessage: ___, ...restConfig } = config;
-
-  const options: Partial<CreateInput> = {
-    install: config.install ?? false,
-    git: config.git ?? true,
-    packageManager: config.packageManager ?? "bun",
+export async function runCreateTest({
+  projectName = "default-app",
+  ...config
+}: TestConfig): Promise<TestResult> {
+  const yes = config.yes ?? false;
+  const result = await create(join(SMOKE_DIR, projectName), {
+    install: false,
+    git: false,
+    packageManager: "bun",
     directoryConflict: "overwrite",
     disableAnalytics: true,
-    yes: willUseYesFlag,
-    ...coreStackDefaults,
-    ...restConfig,
-  };
+    yes,
+    ...(yes ? undefined : defaultStack),
+    ...config,
+  });
 
-  // Use the programmatic create() API which runs in silent mode
-  // and returns a Result type instead of calling process.exit()
-  const result = await create(projectPath, options);
+  if (result.isErr()) return { success: false, error: result.error.message };
 
-  // Handle the Result type from better-result
-  if (result.isOk()) {
-    const initResult = result.value;
-    return {
-      success: true,
-      result: initResult,
-      error: undefined,
-      projectDir: initResult.projectDirectory,
-      config,
-    };
-  }
-
-  // Handle error case - extract error message based on error type
-  const error = result.error;
-  let errorMessage: string;
-  if (UserCancelledError.is(error)) {
-    errorMessage = error.message || "User cancelled";
-  } else if (CLIError.is(error)) {
-    errorMessage = error.message;
-  } else if (ProjectCreationError.is(error)) {
-    errorMessage = error.message;
-  } else {
-    errorMessage = String(error);
-  }
-
+  if (!config.dryRun) await assertWorkspaceGraph(result.value.projectDirectory);
   return {
-    success: false,
-    result: undefined,
-    error: errorMessage,
-    projectDir: undefined,
-    config,
+    success: true,
+    result: result.value,
+    projectDir: result.value.projectDirectory,
   };
 }
 
-export function expectSuccess(result: TestResult) {
-  if (!result.success) {
-    console.error("Test failed:");
-    console.error("Error:", result.error);
-    if (result.result) {
-      console.error("Result:", result.result);
-    }
-  }
-  expect(result.success).toBe(true);
+export function expectSuccess(
+  result: TestResult,
+): asserts result is TestResult & { success: true; result: InitResult; projectDir: string } {
+  if (!result.success) throw new Error(result.error ?? "Project creation failed");
   expect(result.result).toBeDefined();
+  expect(result.projectDir).toBeDefined();
 }
 
 export function expectError(result: TestResult, expectedMessage?: string) {
   expect(result.success).toBe(false);
-  if (expectedMessage) {
-    expect(result.error).toContain(expectedMessage);
-  }
+  if (expectedMessage) expect(result.error).toContain(expectedMessage);
 }
 
-/**
- * Extract enum values from a Zod enum schema
- */
-function extractEnumValues<T extends string>(schema: { options: readonly T[] }): readonly T[] {
-  return schema.options;
-}
-
-// Test data generators inferred from Zod schemas
-export const PACKAGE_MANAGERS = extractEnumValues(PackageManagerSchema);
-export const WEB_DEPLOYS = extractEnumValues(WebDeploySchema);
-export const SERVER_DEPLOYS = extractEnumValues(ServerDeploySchema);
-
-export function createCustomConfig(config: Partial<TestConfig>): TestConfig {
-  return {
-    projectName: "test-app",
-    install: false,
-    git: true,
-    ...config,
-  };
-}
+export const PACKAGE_MANAGERS = PackageManagerSchema.options;
+export const WEB_DEPLOYS = WebDeploySchema.options;
+export const SERVER_DEPLOYS = ServerDeploySchema.options;

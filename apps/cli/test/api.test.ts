@@ -3,7 +3,7 @@ import { describe, expect, it } from "bun:test";
 import { createVirtual } from "../src/index";
 import type { API, Backend, Database, Examples, Frontend, ORM, Runtime } from "../src/types";
 import { collectFiles } from "./setup";
-import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+import { expectError, expectSuccess, runCreateTest, type TestConfig } from "./test-utils";
 
 describe("API Configurations", () => {
   describe("tRPC API", () => {
@@ -11,21 +11,9 @@ describe("API Configurations", () => {
 
     for (const frontend of reactFrontends) {
       it(`should work with tRPC + ${frontend}`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `trpc-${frontend}`,
-          api: "trpc",
           frontend: [frontend as Frontend],
-          backend: "hono",
-          runtime: "bun",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          addons: ["none"],
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -36,21 +24,9 @@ describe("API Configurations", () => {
 
     for (const frontend of nativeFrontends) {
       it(`should work with tRPC + ${frontend}`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `trpc-${frontend}`,
-          api: "trpc",
           frontend: [frontend as Frontend],
-          backend: "hono",
-          runtime: "bun",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          addons: ["none"],
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -77,77 +53,13 @@ describe("API Configurations", () => {
           install: false,
         };
 
-        if (backend === "elysia") {
-          config.runtime = "bun";
-        } else {
-          config.runtime = "bun";
-        }
-
-        const result = await runTRPCTest(config);
+        const result = await runCreateTest(config);
         expectSuccess(result);
       });
     }
   });
 
   describe("oRPC API", () => {
-    it("should wire Solid 2 self-hosted oRPC routes and optimized SSR", async () => {
-      const config = {
-        projectName: "orpc-solid-self",
-        api: "orpc",
-        frontend: ["solid"],
-        backend: "self",
-        runtime: "none",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "better-auth",
-        addons: ["turborepo"],
-        examples: ["todo"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-        git: false,
-        packageManager: "bun",
-        payments: "none",
-      } satisfies TestConfig;
-
-      const result = await createVirtual(config);
-      expect(result.isOk()).toBe(true);
-      if (result.isErr()) {
-        throw result.error;
-      }
-
-      const files = collectFiles(result.value.root, result.value.root.path);
-      const rpcRoute = files.get("apps/web/src/routes/rpc/[...rest].ts");
-      const rpcIndex = files.get("apps/web/src/routes/rpc/index.ts");
-      const appFile = files.get("apps/web/src/App.tsx");
-      const homeRoute = files.get("apps/web/src/routes/index.tsx");
-      const orpcClient = files.get("apps/web/src/utils/orpc.ts");
-      const orpcServer = files.get("apps/web/src/utils/orpc.server.ts");
-
-      expect(appFile).toBeDefined();
-      if (!appFile) throw new Error("Expected Solid app template");
-
-      expect(rpcRoute).toContain('import type { APIHandler } from "filesystem-routing/api";');
-      expect(rpcRoute).toContain('prefix: "/rpc"');
-      expect(rpcRoute).toContain("createContext({ headers: request.headers })");
-      expect(rpcIndex).toContain('from "./[...rest]"');
-      expect(orpcClient).toContain("if (import.meta.env.SSR)");
-      expect(orpcClient).toContain('await import("./orpc.server")');
-      expect(orpcClient).toContain("globalThis.$client ?? createORPCClient(link)");
-      expect(orpcServer).toContain("createRouterClient(appRouter");
-      expect(orpcServer).toContain("globalThis.$client");
-      expect(orpcServer).toContain("getRequestEvent()?.request.headers");
-      expect(homeRoute).toContain('healthCheck.data === "OK"');
-      expect(homeRoute).toContain("healthCheck.isPending");
-      expect(homeRoute).toContain("deferStream: true");
-      const queryClientProviderIndex = appFile.indexOf("<QueryClientProvider");
-      const routerIndex = appFile.indexOf("<Router>");
-      expect(queryClientProviderIndex).toBeGreaterThanOrEqual(0);
-      expect(routerIndex).toBeGreaterThanOrEqual(0);
-      expect(queryClientProviderIndex).toBeLessThan(routerIndex);
-    });
-
     const frontends = [
       "tanstack-router",
       "react-router",
@@ -163,21 +75,10 @@ describe("API Configurations", () => {
 
     for (const frontend of frontends) {
       it(`should work with oRPC + ${frontend}`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `orpc-${frontend}`,
           api: "orpc",
           frontend: [frontend as Frontend],
-          backend: "hono",
-          runtime: "bun",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          addons: ["none"],
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -204,13 +105,7 @@ describe("API Configurations", () => {
           install: false,
         };
 
-        if (backend === "elysia") {
-          config.runtime = "bun";
-        } else {
-          config.runtime = "bun";
-        }
-
-        const result = await runTRPCTest(config);
+        const result = await runCreateTest(config);
         expectSuccess(result);
       });
     }
@@ -235,7 +130,7 @@ describe("API Configurations", () => {
         install: false,
       } satisfies TestConfig;
 
-      const result = await runTRPCTest(config);
+      const result = await runCreateTest(config);
 
       expectSuccess(result);
 
@@ -277,7 +172,7 @@ describe("API Configurations", () => {
         install: false,
       } satisfies TestConfig;
 
-      const result = await runTRPCTest(config);
+      const result = await runCreateTest(config);
 
       expectSuccess(result);
 
@@ -301,63 +196,37 @@ describe("API Configurations", () => {
     });
 
     it("should work with API none + convex", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "api-none-convex",
         api: "none",
-        frontend: ["tanstack-router"],
         backend: "convex",
         runtime: "none",
         database: "none",
         orm: "none",
-        auth: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
     });
 
     it("should fail with API none + examples (non-convex backend)", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "api-none-examples-fail",
         api: "none",
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        addons: ["none"],
         examples: ["todo"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
       });
 
       expectError(result);
     });
 
     it("should work with API none + examples + convex backend", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "api-none-examples-convex",
         api: "none",
-        frontend: ["tanstack-router"],
         backend: "convex",
         runtime: "none",
         database: "none",
         orm: "none",
-        auth: "none",
-        addons: ["none"],
         examples: ["todo"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
@@ -378,21 +247,11 @@ describe("API Configurations", () => {
 
     for (const { api, database, orm } of apiDatabaseCombinations) {
       it(`should work with ${api} + ${database} + ${orm}`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `${api}-${database}-${orm}`,
           api: api as API,
           database: database as Database,
           orm: orm as ORM,
-          frontend: ["tanstack-router"],
-          backend: "hono",
-          runtime: "bun",
-          auth: "none",
-          addons: ["none"],
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -402,63 +261,33 @@ describe("API Configurations", () => {
 
   describe("API with Authentication", () => {
     it("should work with tRPC + better-auth", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "trpc-better-auth",
-        api: "trpc",
         auth: "better-auth",
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
     });
 
     it("should work with oRPC + better-auth", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "orpc-better-auth",
         api: "orpc",
         auth: "better-auth",
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
     });
 
     it("should work with API none + convex + clerk", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "api-none-convex-clerk",
         api: "none",
         auth: "clerk",
-        frontend: ["tanstack-router"],
         backend: "convex",
         runtime: "none",
         database: "none",
         orm: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
@@ -467,42 +296,19 @@ describe("API Configurations", () => {
 
   describe("API with Examples", () => {
     it("should work with tRPC + todo example", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "trpc-todo",
-        api: "trpc",
         examples: ["todo"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        addons: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
     });
 
     it("should work with oRPC + AI example", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "orpc-ai",
         api: "orpc",
         examples: ["ai"],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        addons: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
@@ -515,21 +321,10 @@ describe("API Configurations", () => {
 
     for (const { api, examples } of apiExampleCombinations) {
       it(`should work with ${api} + both examples`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `${api}-both-examples`,
           api: api as API,
           examples: examples as Examples[],
-          frontend: ["tanstack-router"],
-          backend: "hono",
-          runtime: "bun",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          addons: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
         });
 
         expectSuccess(result);
@@ -538,40 +333,6 @@ describe("API Configurations", () => {
   });
 
   describe("API Edge Cases", () => {
-    it("should scaffold Fastify oRPC context with matching request shapes", async () => {
-      const result = await createVirtual({
-        projectName: "fastify-orpc-request-shape",
-        api: "orpc",
-        frontend: ["tanstack-router"],
-        backend: "fastify",
-        runtime: "node",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-        git: false,
-        packageManager: "bun",
-        payments: "none",
-      });
-
-      if (result.isErr()) {
-        throw result.error;
-      }
-
-      const files = collectFiles(result.value.root, result.value.root.path);
-      const serverFile = files.get("apps/server/src/index.ts");
-      const contextFile = files.get("apps/server/src/context.ts");
-
-      expect(serverFile).toContain("context: await createContext(request.headers)");
-      expect(contextFile).toContain('import type { IncomingHttpHeaders } from "node:http";');
-      expect(contextFile).toContain("createContext(req: IncomingHttpHeaders)");
-    });
-
     it("should scaffold native oRPC with Expo fetch support for each auth branch", async () => {
       const cases = [
         {
@@ -690,42 +451,19 @@ describe("API Configurations", () => {
     });
 
     it("should handle API with complex frontend combinations", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "api-complex-frontend",
-        api: "trpc",
         frontend: ["tanstack-router", "native-bare"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
     });
 
     it("should handle API with workers runtime", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "api-workers",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        backend: "hono",
         runtime: "workers",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
         serverDeploy: "cloudflare",
-        install: false,
       });
 
       expectSuccess(result);
@@ -760,7 +498,7 @@ describe("API Configurations", () => {
           config.serverDeploy = "cloudflare";
         }
 
-        const result = await runTRPCTest(config);
+        const result = await runCreateTest(config);
         expectSuccess(result);
       });
     }

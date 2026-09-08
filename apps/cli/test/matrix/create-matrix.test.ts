@@ -194,7 +194,7 @@ function defineMatrixSuite(
       );
     });
 
-    test.each(rows)(
+    test.each([...rows])(
       "$name",
       async ({ matrixCase }) => {
         await checkMatrixCase(matrixCase, stats);

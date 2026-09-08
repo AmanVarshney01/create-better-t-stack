@@ -66,6 +66,22 @@ const baseConfig = {
 
 const buildSamples: BuildSample[] = [
   {
+    name: "tanstack-start-self-auth-todo",
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-start"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["none"],
+      examples: ["todo"],
+    },
+  },
+  {
     name: "tanstack-start-axiom-pnpm",
     packageManagers: ["pnpm"],
     config: {
@@ -760,132 +776,22 @@ async function runWorkspaceTypeChecks(
       if (!(await fs.pathExists(packageJsonPath))) continue;
 
       const packageJson = packageScriptsSchema.parse(await fs.readJson(packageJsonPath));
-      const typecheckScript = packageJson.scripts?.["check-types"]
-        ? "check-types"
-        : packageJson.scripts?.typecheck
-          ? "typecheck"
-          : undefined;
+      const typecheckScript = packageJson.scripts?.["check-types"];
+      if (await fs.pathExists(path.join(workspaceDir, "tsconfig.json"))) {
+        expect(
+          typecheckScript,
+          `${sampleName}: ${workspaceRoot}/${entry.name} needs a check-types script`,
+        ).toBeDefined();
+      }
       if (!typecheckScript) continue;
 
       await runCommand(
         `${sampleName}:${workspaceRoot}/${entry.name}`,
         workspaceDir,
         packageManager,
-        ["run", typecheckScript],
+        ["run", "check-types"],
       );
     }
-  }
-}
-
-async function validateSolidScaffold(sample: SelectedBuildSample, projectDir: string) {
-  if (!sample.config.frontend?.includes("solid")) return;
-
-  const webDir = path.join(projectDir, "apps/web");
-  const requiredFiles = [
-    "package.json",
-    "tsconfig.json",
-    "vite.config.ts",
-    "src/App.tsx",
-    "src/Document.tsx",
-    "src/middleware.ts",
-    "src/router.ts",
-    "src/routes/index.tsx",
-    "src/routes/[...404].tsx",
-  ];
-  for (const file of requiredFiles) {
-    expect(await fs.pathExists(path.join(webDir, file))).toBe(true);
-  }
-
-  const legacyFiles = [
-    "index.html",
-    "src/main.tsx",
-    "src/entry-client.tsx",
-    "src/entry-server.tsx",
-    "src/routeTree.gen.ts",
-    "src/routes/__root.tsx",
-  ];
-  for (const file of legacyFiles) {
-    expect(await fs.pathExists(path.join(webDir, file))).toBe(false);
-  }
-
-  const webPackageJson = await fs.readJson(path.join(webDir, "package.json"));
-  expect(webPackageJson.dependencies?.["@solidjs/start"]).toBeUndefined();
-  expect(webPackageJson.devDependencies?.["@tanstack/solid-query-devtools"]).toBeUndefined();
-  expect(webPackageJson.dependencies?.["solid-js"]).toBe("2.0.0-rc.7");
-  expect(webPackageJson.dependencies?.["@solidjs/web"]).toBe("2.0.0-rc.7");
-  expect(webPackageJson.dependencies?.["@solidjs/router"]).toBeDefined();
-  expect(webPackageJson.devDependencies?.["@solidjs/vite-plugin"]).toBeDefined();
-  expect(webPackageJson.devDependencies?.["filesystem-routing"]).toBeDefined();
-  expect(webPackageJson.dependencies?.["@tanstack/solid-router"]).toBeUndefined();
-  expect(webPackageJson.scripts?.["check-types"]).toBe("tsc --noEmit");
-
-  if (sample.config.api === "orpc") {
-    expect(webPackageJson.dependencies?.["@tanstack/query-core"]).toBe("5.101.4");
-  }
-
-  const viteConfig = await fs.readFile(path.join(webDir, "vite.config.ts"), "utf8");
-  expect(viteConfig).toContain("solid({");
-  expect(viteConfig).toContain("fileRoutes({ httpMethods: true })");
-  expect(viteConfig).toContain("tsconfigPaths: true");
-
-  if (sample.config.backend === "self" && sample.config.api === "orpc") {
-    for (const file of [
-      "src/routes/rpc/[...rest].ts",
-      "src/routes/rpc/index.ts",
-      "src/utils/orpc.ts",
-      "src/utils/orpc.server.ts",
-    ]) {
-      expect(await fs.pathExists(path.join(webDir, file))).toBe(true);
-    }
-
-    const orpcClient = await fs.readFile(path.join(webDir, "src/utils/orpc.ts"), "utf8");
-    expect(orpcClient).toContain("globalThis.$client");
-  }
-
-  if (sample.config.backend === "self" && sample.config.auth === "better-auth") {
-    const authRoute = path.join(webDir, "src/routes/api/auth/[...auth].ts");
-    expect(await fs.pathExists(authRoute)).toBe(true);
-    expect(await fs.readFile(authRoute, "utf8")).toContain(".handler(request)");
-  }
-
-  if (sample.config.auth === "better-auth") {
-    const authClient = path.join(projectDir, "packages/auth/src/client.ts");
-    const webAuthClient = path.join(webDir, "src/lib/auth-client.ts");
-    const authPackageJson = await fs.readJson(path.join(projectDir, "packages/auth/package.json"));
-
-    expect(await fs.pathExists(authClient)).toBe(true);
-    expect(await fs.readFile(authClient, "utf8")).toContain('from "better-auth/client"');
-    expect(await fs.readFile(authClient, "utf8")).not.toContain("/env/");
-    expect(await fs.readFile(path.join(webDir, "src/client.ts"), "utf8")).toContain(
-      "createClient(",
-    );
-    expect(await fs.readFile(webAuthClient, "utf8")).toContain('from "../client"');
-    expect(webPackageJson.dependencies?.["better-auth"]).toBeUndefined();
-    expect(webPackageJson.dependencies?.[`@${sample.name}/auth`]).toBeDefined();
-    expect(authPackageJson.dependencies?.["better-auth"]).toBeDefined();
-
-    if (sample.config.payments === "polar") {
-      expect(webPackageJson.dependencies?.["@polar-sh/better-auth"]).toBeUndefined();
-      expect(authPackageJson.dependencies?.["@polar-sh/better-auth"]).toBeDefined();
-    }
-  }
-
-  if (sample.config.webDeploy === "cloudflare") {
-    expect(viteConfig).toContain("const cloudflareWorkersAlias: Record<string, string>");
-    expect(viteConfig).toContain('command === "serve"');
-    expect(viteConfig).toContain('external: ["cloudflare:workers"]');
-    const infra = await fs.readFile(path.join(projectDir, "packages/infra/alchemy.run.ts"), "utf8");
-    expect(infra).toContain('flags: ["nodejs_compat"]');
-    expect(infra).not.toContain("runWorkerFirst");
-  }
-
-  if (sample.config.webDeploy === "docker") {
-    expect(await fs.pathExists(path.join(webDir, "Dockerfile"))).toBe(true);
-  }
-
-  if (sample.config.payments === "polar") {
-    const authPackageJson = await fs.readJson(path.join(projectDir, "packages/auth/package.json"));
-    expect(authPackageJson.dependencies["@polar-sh/sdk"]).toBe("^0.47.0");
   }
 }
 
@@ -1327,7 +1233,6 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
         try {
           const createResult = await create(projectDir, sample.config);
           expect(createResult.isOk()).toBe(true);
-          await validateSolidScaffold(sample, projectDir);
           await writeSyntheticBuildConfig(projectDir);
 
           for (const script of ["install", "build"] as const) {

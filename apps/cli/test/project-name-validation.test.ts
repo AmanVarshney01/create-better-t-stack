@@ -8,8 +8,7 @@ import {
   extractAndValidateProjectName,
   validateProjectName,
 } from "../src/utils/project-name-validation";
-
-const SMOKE_DIR_PATH = path.join(import.meta.dir, "..", ".smoke");
+import { SMOKE_DIR } from "./setup";
 
 describe("Project name validation hardening", () => {
   it("rejects control characters", () => {
@@ -43,7 +42,7 @@ describe("Project name validation hardening", () => {
   });
 
   it("fails invalid names before creating the project directory", async () => {
-    const projectPath = path.join(SMOKE_DIR_PATH, "invalid?name");
+    const projectPath = path.join(SMOKE_DIR, "invalid?name");
     await fs.remove(projectPath);
 
     const result = await create(projectPath, {

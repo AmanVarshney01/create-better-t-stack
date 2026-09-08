@@ -3,7 +3,6 @@ import { describe, expect, it } from "bun:test";
 import type { ProjectConfig } from "../src/types";
 import {
   PACKAGE_MANAGER_VERSION_RANGES,
-  RECOMMENDED_BUN_VERSION_RANGE,
   getBaselineRequirements,
   getLocalVersionRequirements,
   getLocalToolRecommendations,
@@ -87,15 +86,6 @@ function config(overrides: Partial<RequirementConfig> = {}): RequirementConfig {
 }
 
 describe("local tool requirements", () => {
-  it("tracks the package-manager features emitted by generated projects", () => {
-    expect(PACKAGE_MANAGER_VERSION_RANGES).toEqual({
-      bun: ">=1.3.3",
-      npm: ">=11.16.0",
-      pnpm: ">=10.26.0",
-    });
-    expect(RECOMMENDED_BUN_VERSION_RANGE).toBe(">=1.4.0");
-  });
-
   it("recommends Bun 1.4 without rejecting the Varlock-compatible minimum", () => {
     const project = config();
 

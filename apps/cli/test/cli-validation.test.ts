@@ -3,6 +3,7 @@ import { expect, test } from "bun:test";
 import { FailedToExitError } from "trpc-cli";
 
 import { createBtsCli } from "../src/index";
+import type { CLIInput } from "../src/types";
 import { getProvidedFlags, processAndValidateFlags } from "../src/validation";
 
 test("surfaces a friendly validation error for invalid addons", async () => {
@@ -42,7 +43,7 @@ test("allows self + D1 flags before web deploy is resolved by prompts", () => {
     addons: ["none"],
     examples: ["none"],
     runtime: "none",
-  } as const;
+  } satisfies CLIInput;
 
   const result = processAndValidateFlags(options, getProvidedFlags(options), "my-app");
 
@@ -62,7 +63,7 @@ test("allows workers + D1 flags before server deploy is resolved by prompts", ()
     addons: ["none"],
     examples: ["none"],
     runtime: "workers",
-  } as const;
+  } satisfies CLIInput;
 
   const result = processAndValidateFlags(options, getProvidedFlags(options), "my-app");
 
@@ -82,7 +83,7 @@ test("still rejects D1 when the remaining prompt flow cannot resolve it to a val
     addons: ["none"],
     examples: ["none"],
     runtime: "node",
-  } as const;
+  } satisfies CLIInput;
 
   const result = processAndValidateFlags(options, getProvidedFlags(options), "my-app");
 
@@ -110,7 +111,7 @@ test("rejects Alchemy database provisioning without a matching deployment", () =
     runtime: "bun",
     webDeploy: "none",
     serverDeploy: "vercel",
-  } as const;
+  } satisfies CLIInput;
 
   const result = processAndValidateFlags(options, getProvidedFlags(options), "my-app");
 
@@ -138,7 +139,7 @@ test("rejects automatic PlanetScale provisioning with an actionable alternative"
     runtime: "bun",
     webDeploy: "none",
     serverDeploy: "prisma",
-  } as const;
+  } satisfies CLIInput;
 
   const result = processAndValidateFlags(options, getProvidedFlags(options), "my-app");
 

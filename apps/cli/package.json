@@ -63,6 +63,7 @@
     "build": "tsdown --publint",
     "dev": "tsdown --watch",
     "check-types": "tsc --noEmit",
+    "check-test-types": "tsc --noEmit -p tsconfig.tests.json",
     "test": "bun test",
     "test:ci": "bun run build && BTS_SKIP_EXTERNAL_COMMANDS=1 BTS_TEST_MODE=1 bun test --bail=5",
     "test:complete": "cd ../.. && bun run build && cd apps/cli && BTS_MATRIX_MODE=smoke BTS_BUILD_SAMPLES=1 bun test --bail=5",
@@ -94,7 +95,7 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "2.0.0",
-    "@types/bun": "^1.4.1",
+    "@types/bun": "^1.4.2",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^26.4.1",
     "@types/semver": "^7.8.0",

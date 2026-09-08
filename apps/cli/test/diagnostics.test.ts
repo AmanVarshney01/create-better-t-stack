@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test, spyOn } from "bun:test";
 
 import {
   buildDiagnosticPayload,
@@ -126,12 +126,7 @@ describe("buildDiagnosticPayload", () => {
 
 describe("reportDiagnostic", () => {
   test("is a no-op when no CLI website id is configured", async () => {
-    const originalFetch = globalThis.fetch;
-    let called = false;
-    globalThis.fetch = (() => {
-      called = true;
-      return Promise.resolve(new Response("ok"));
-    }) as typeof fetch;
+    const fetchMock = spyOn(globalThis, "fetch").mockResolvedValue(new Response("ok"));
 
     try {
       await reportDiagnostic("cli_failed", {
@@ -142,9 +137,9 @@ describe("reportDiagnostic", () => {
         reason: "invalid",
       });
     } finally {
-      globalThis.fetch = originalFetch;
+      fetchMock.mockRestore();
     }
 
-    expect(called).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

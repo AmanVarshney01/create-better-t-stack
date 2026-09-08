@@ -1,7 +1,7 @@
 import { describe, it } from "bun:test";
 
 import type { Backend, Frontend, Runtime } from "../src/types";
-import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+import { expectError, expectSuccess, runCreateTest, type TestConfig } from "./test-utils";
 
 describe("Backend and Runtime Combinations", () => {
   describe("Valid Backend-Runtime Combinations", () => {
@@ -69,7 +69,7 @@ describe("Backend and Runtime Combinations", () => {
           config.serverDeploy = "cloudflare";
         }
 
-        const result = await runTRPCTest(config);
+        const result = await runCreateTest(config);
         expectSuccess(result);
       });
     }
@@ -177,7 +177,6 @@ describe("Backend and Runtime Combinations", () => {
           dbSetup: "none",
           webDeploy: "none",
           serverDeploy: "none",
-          expectError: true,
         };
 
         // Set appropriate defaults based on backend
@@ -203,7 +202,7 @@ describe("Backend and Runtime Combinations", () => {
           config.api = "trpc";
         }
 
-        const result = await runTRPCTest(config);
+        const result = await runCreateTest(config);
         expectError(result, error);
       });
     }
@@ -211,7 +210,7 @@ describe("Backend and Runtime Combinations", () => {
 
   describe("Convex Backend Constraints", () => {
     it("should enforce all convex constraints", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "convex-app",
         backend: "convex",
         runtime: "none",
@@ -219,20 +218,13 @@ describe("Backend and Runtime Combinations", () => {
         orm: "none",
         auth: "clerk",
         api: "none",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
     });
 
     it("should work convex with better-auth (tanstack-router)", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "convex-better-auth-success",
         backend: "convex",
         runtime: "none",
@@ -240,33 +232,19 @@ describe("Backend and Runtime Combinations", () => {
         orm: "none",
         auth: "better-auth",
         api: "none",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
       });
 
       expectSuccess(result);
     });
 
     it("should fail convex with database", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "convex-with-db",
         backend: "convex",
         runtime: "none",
         database: "postgres",
-        orm: "drizzle",
         auth: "clerk",
         api: "none",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
       });
 
       expectError(result, "Convex backend requires '--database none'");
@@ -275,42 +253,21 @@ describe("Backend and Runtime Combinations", () => {
 
   describe("Workers Runtime Constraints", () => {
     it("should work with workers + hono + compatible database", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "workers-compatible",
-        backend: "hono",
         runtime: "workers",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "cloudflare", // Workers requires server deployment
-        install: false,
+        serverDeploy: "cloudflare",
       });
 
       expectSuccess(result);
     });
 
     it("should fail workers with mongodb", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "workers-mongodb",
-        backend: "hono",
         runtime: "workers",
         database: "mongodb",
         orm: "prisma",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
       });
 
       expectError(
@@ -320,21 +277,9 @@ describe("Backend and Runtime Combinations", () => {
     });
 
     it("should fail workers without server deployment", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "workers-no-deploy",
-        backend: "hono",
         runtime: "workers",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
       });
 
       expectError(result, "Cloudflare Workers runtime requires a server deployment");
@@ -343,43 +288,23 @@ describe("Backend and Runtime Combinations", () => {
 
   describe("Self Backend Constraints", () => {
     it("should work with self backend and Next.js frontend", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "self-backend-success",
         backend: "self",
         runtime: "none",
         frontend: ["next"],
-        database: "sqlite",
-        orm: "drizzle",
         auth: "better-auth",
-        api: "trpc",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
       expectSuccess(result);
     });
 
     it("should fail self backend with non-Next.js frontend", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "self-backend-invalid-frontend",
         backend: "self",
-        runtime: "none",
-        frontend: ["tanstack-router"], // Invalid frontend for self backend
-        database: "sqlite",
-        orm: "drizzle",
+        runtime: "none", // Invalid frontend for self backend
         auth: "better-auth",
-        api: "trpc",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-        install: false,
       });
 
       expectError(
@@ -389,22 +314,11 @@ describe("Backend and Runtime Combinations", () => {
     });
 
     it("should fail self backend with non-none runtime", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "self-backend-invalid-runtime",
-        backend: "self",
-        runtime: "bun", // Invalid runtime for self backend
+        backend: "self", // Invalid runtime for self backend
         frontend: ["next"],
-        database: "sqlite",
-        orm: "drizzle",
         auth: "better-auth",
-        api: "trpc",
-        addons: ["none"],
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-        install: false,
       });
 
       expectError(result, "Backend 'self' (fullstack) requires '--runtime none'");

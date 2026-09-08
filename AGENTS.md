@@ -53,6 +53,7 @@ This repo is a Bun + Turborepo monorepo.
 - Test files use `*.test.ts` naming (see `apps/cli/test` and `packages/template-generator/test`).
 - Add or update tests with behavior changes, especially prompt flows, template output, and config validation.
 - Keep tests deterministic; reuse shared setup utilities in `apps/cli/test/setup.ts`.
+- Test generated projects through installation, typechecking, builds, and runtime behavior. Keep focused assertions for conditional generation, dependency relationships, and preservation of user edits; avoid copying static template source or dependency versions into expectations.
 
 ## Commit & Pull Request Guidelines
 
