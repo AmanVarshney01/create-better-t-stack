@@ -25,7 +25,10 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
     setError();
     try {
       await authClient.signIn.email(result.data, {
-        onSuccess: () => navigate("/dashboard"),
+        onSuccess: async () => {
+          await authClient.useSession.get().refetch();
+          navigate("/dashboard");
+        },
         onError: ({ error }) => {
           setError(error.message);
         },

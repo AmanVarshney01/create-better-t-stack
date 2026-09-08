@@ -100,7 +100,7 @@ export const dependencyVersionMap = {
 
   turbo: "^2.10.12",
   nx: "^23.2.0",
-  "vite-plus": "0.3.0",
+  "vite-plus": "0.3.1",
   rolldown: "1.2.7",
   unwasm: "^0.6.0",
 
@@ -149,7 +149,6 @@ export const dependencyVersionMap = {
 
   // Keep this RC set and its exact Query Core dependency aligned (private class types).
   "@tanstack/solid-query": "6.0.0-rc.3",
-  "@tanstack/solid-query-devtools": "6.0.0-rc.3",
   "@tanstack/query-core": "5.101.4",
 
   wrangler: "^4.129.0",

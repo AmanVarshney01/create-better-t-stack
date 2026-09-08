@@ -5,7 +5,6 @@ import Loader from "~/components/loader";
 import { Router } from "~/router";
 {{#if (eq api "orpc")}}
 import { QueryClientProvider } from "@tanstack/solid-query";
-import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";
 import { createQueryClient } from "~/utils/orpc";
 {{/if}}
 import "./styles.css";
@@ -31,7 +30,6 @@ export default function App() {
         )}
       </Router>
 {{#if (eq api "orpc")}}
-      <SolidQueryDevtools />
     </QueryClientProvider>
 {{/if}}
   );

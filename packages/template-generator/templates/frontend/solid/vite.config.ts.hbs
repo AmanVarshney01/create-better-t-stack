@@ -65,6 +65,9 @@ export default defineConfig({
     },
   },
 {{/if}}
+  ssr: {
+    noExternal: ["solid-js", /^@solidjs\//, "@tanstack/solid-query"],
+  },
   resolve: {
     tsconfigPaths: true,
 {{#if (eq webDeploy "cloudflare")}}

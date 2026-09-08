@@ -772,8 +772,9 @@ async function validateSolidScaffold(sample: SelectedBuildSample, projectDir: st
 
   const webPackageJson = await fs.readJson(path.join(webDir, "package.json"));
   expect(webPackageJson.dependencies?.["@solidjs/start"]).toBeUndefined();
-  expect(webPackageJson.dependencies?.["solid-js"]).toBe("2.0.0-rc.6");
-  expect(webPackageJson.dependencies?.["@solidjs/web"]).toBe("2.0.0-rc.6");
+  expect(webPackageJson.devDependencies?.["@tanstack/solid-query-devtools"]).toBeUndefined();
+  expect(webPackageJson.dependencies?.["solid-js"]).toBe("2.0.0-rc.7");
+  expect(webPackageJson.dependencies?.["@solidjs/web"]).toBe("2.0.0-rc.7");
   expect(webPackageJson.dependencies?.["@solidjs/router"]).toBeDefined();
   expect(webPackageJson.devDependencies?.["@solidjs/vite-plugin"]).toBeDefined();
   expect(webPackageJson.devDependencies?.["filesystem-routing"]).toBeDefined();
@@ -1115,9 +1116,11 @@ async function bootAndValidateSolidDevRuntime(sample: SelectedBuildSample, proje
 
   let failure: unknown;
   try {
-    const root = await fetchWhenReady(`http://127.0.0.1:${port}/`);
-    expect(root?.status).toBe(200);
-    expect(await root?.text()).toContain("Connected");
+    for (let request = 0; request < 2; request++) {
+      const root = await fetchWhenReady(`http://127.0.0.1:${port}/`);
+      expect(root?.status).toBe(200);
+      expect(await root?.text()).toContain("Connected");
+    }
 
     const health = await fetchWhenReady(`http://127.0.0.1:${port}/rpc/healthCheck`, {
       method: "POST",
