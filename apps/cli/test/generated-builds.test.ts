@@ -977,18 +977,54 @@ async function getAvailablePort(): Promise<number> {
 async function fetchWhenReady(url: string, init?: RequestInit) {
   for (let attempt = 0; attempt < 100; attempt++) {
     try {
-      const response = await fetch(url, { ...init, signal: AbortSignal.timeout(5000) });
+      const response = await fetch(url, {
+        ...init,
+        signal: init?.signal ?? AbortSignal.timeout(5000),
+      });
       // SSR can send headers before compilation/streaming finishes. Consume the
       // body inside the retry boundary so a timeout does not escape afterwards.
       const body = await response.arrayBuffer();
       return new Response(body, { status: response.status, headers: response.headers });
     } catch {
+      init?.signal?.throwIfAborted();
       await Bun.sleep(100);
     }
   }
 
   return undefined;
 }
+
+describe("Generated runtime readiness", () => {
+  it("stops when the caller cancels a streaming response", async () => {
+    const controller = new AbortController();
+    const reason = new Error("Runtime probe cancelled");
+    let requests = 0;
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch() {
+        requests++;
+        return new Response(
+          new ReadableStream({
+            start(stream) {
+              stream.enqueue(new TextEncoder().encode("pending"));
+              controller.abort(reason);
+            },
+          }),
+        );
+      },
+    });
+
+    try {
+      await expect(fetchWhenReady(server.url.href, { signal: controller.signal })).rejects.toBe(
+        reason,
+      );
+      expect(requests).toBe(1);
+    } finally {
+      await server.stop(true);
+    }
+  });
+});
 
 async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
   if (sample.config.webDeploy !== "prisma") return;

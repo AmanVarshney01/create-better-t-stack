@@ -11891,6 +11891,11 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
       await authClient.signIn.email(result.data, {
         onSuccess: async () => {
           await authClient.useSession.get().refetch();
+          const session = authClient.useSession.get();
+          if (!session.data) {
+            setError(session.error?.message || "Unable to load your session. Please sign in again.");
+            return;
+          }
           navigate("/dashboard");
         },
         onError: ({ error }) => {
@@ -11973,6 +11978,11 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
       await authClient.signUp.email(result.data, {
         onSuccess: async () => {
           await authClient.useSession.get().refetch();
+          const session = authClient.useSession.get();
+          if (!session.data) {
+            setError(session.error?.message || "Unable to load your session. Please sign in again.");
+            return;
+          }
           navigate("/dashboard");
         },
         onError: ({ error }) => {
