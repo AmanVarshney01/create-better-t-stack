@@ -7,7 +7,7 @@ Better-T-Stack's Cloudflare deployment path depends on the experimental Alchemy 
 - Define the accepted exact Alchemy version and the evidence required to upgrade it.
 - Formalize the supported Cloudflare topology, framework, runtime, database, binding, and deployment-time value behavior.
 - Classify every current workaround as a confirmed Alchemy defect workaround, framework/platform integration shim, Better-T-Stack correctness policy, limitation, or disproved claim.
-- Make `docs/alchemy-v2-beta-findings.md` the versioned evidence ledger for upstream status, reproductions, current handling, and removal conditions.
+- Record upstream status, reproductions, current handling, and removal conditions in the release PR verification notes.
 - Specify provider-free generation/typecheck/build checks and credentialed disposable live tests for version upgrades, resource-wiring changes, and shim removal.
 - Require owned-stage cleanup, process/port cleanup, leak auditing, and independent reconciliation for interrupted live tests.
 - Remove one compatibility shim at a time only after its published-release reproduction, generated-project checks, affected live request, and ledger update all pass.
@@ -45,4 +45,4 @@ None. This repository had no baseline OpenSpec capabilities before this proposal
 
 ## Impact
 
-This change governs `packages/template-generator/templates/packages/infra`, deployment and database ownership schemas, provider-aware setup, generated migration artifacts, application environment types, deployment tests, the external reproduction repository, live verification, and `docs/alchemy-v2-beta-findings.md`. Vercel, Railway, and Docker remain outside this Alchemy design.
+This change governs `packages/template-generator/templates/packages/infra`, deployment and database ownership schemas, provider-aware setup, generated migration artifacts, application environment types, deployment tests, the external reproduction repository, live verification, and release PR verification notes. Vercel, Railway, and Docker remain outside this Alchemy design.

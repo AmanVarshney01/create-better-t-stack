@@ -6,7 +6,7 @@ Alchemy v2 is still a prerelease API. Better-T-Stack currently needs four active
 
 As verified on 2026-08-31, beta.75 contains the first-class framework resources and the published `@alchemy.run/frontend-frameworks@2.0.0-beta.75` source package. Nuxt's provider owns the compiled development bridge and request-context bindings, while Astro owns its build and injects its adapter in memory. The generated Nuxt and Astro paths therefore use `Website.Nuxt` and `Website.Astro`; Next.js and SvelteKit retain their qualified generic paths pending their independent gates. Beta.75 also contains the `Schema.TaggedError` migration and isolated Bun/pnpm runtime-bundling fix, so the graph uses Effect rc.112 and resolves under Bun, npm, and pnpm without an override or hoisting requirement.
 
-The source of truth for observed behavior is [docs/alchemy-v2-beta-findings.md](../../../docs/alchemy-v2-beta-findings.md). It records:
+Record observed behavior in the release PR verification notes, including:
 
 - the accepted published version and tag commit;
 - the inspected upstream-main commit;
@@ -80,7 +80,7 @@ Future implementation and verification work is concentrated in:
 - framework configuration templates for Next.js, Nuxt, SvelteKit, and Astro, whose adapter and development responsibilities may move into a released first-class resource;
 - `packages/template-generator/src/processors/readme-generator.ts` and post-install output for user guidance;
 - `apps/cli/test/deployment.test.ts`, `cloudflare-db-clients.test.ts`, and generated-project smoke tests;
-- `docs/alchemy-v2-beta-findings.md` and the external reproduction repository.
+- Release PR verification notes and the external reproduction repository.
 
 Generated template snapshots in `packages/template-generator/src/templates.generated.ts` are outputs, not an independent source of truth.
 

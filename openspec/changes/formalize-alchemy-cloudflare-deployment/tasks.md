@@ -1,6 +1,6 @@
 ## 1. Baseline and Evidence Ledger
 
-- [x] 1.1 Re-verify the accepted npm version/tag commit, upstream-main commit, relevant PR status, external reproduction commit, and verification date in `docs/alchemy-v2-beta-findings.md`.
+- [x] 1.1 Re-verify the accepted npm version/tag commit, upstream-main commit, relevant PR status, external reproduction commit, and verification date in the release PR verification notes.
 - [ ] 1.2 Inventory every generated Cloudflare topology/framework/runtime/database/addon cell and publish a scoreboard that separates generated, offline-verified, live-verified, experimental, and blocked status.
 - [ ] 1.3 Move the one-off A1 StaticSite Output/dependency plan into the canonical reproduction repository or this repository with an exact dependency lock.
 - [ ] 1.4 Re-run and document canonical reproductions for A2 Config serialization, A3 pure-SPA output, A4 React Router handler selection, A5 sibling-workspace memo scope, and A6 prerelease resolution.
@@ -89,7 +89,7 @@
 
 - [ ] 8.1 Document the exact Alchemy pin, prerelease status, first-login/deploy/destroy commands, stage ownership, cleanup expectations, and current support scoreboard.
 - [ ] 8.2 Explain which non-obvious generated lines are confirmed workarounds, integration shims, correctness policies, open limitations, or disproved claims.
-- [ ] 8.3 Keep README, post-install output, plugin skill, code comments, and `docs/alchemy-v2-beta-findings.md` consistent with the same support claims and removal gates.
+- [ ] 8.3 Keep README, post-install output, plugin skill, code comments, and the release PR verification notes consistent with the same support claims and removal gates.
 - [ ] 8.4 Run formatting/lint, generator typecheck, relevant unit tests, generated-project checks, canonical reproductions, and strict OpenSpec validation.
 - [ ] 8.5 Reader-test the upgrade checklist and recovery instructions with a reviewer that has only the generated project, ledger, and official prerequisites.
 - [x] 8.6 Audit the final diff for out-of-scope provider-unification remnants, unrelated files, stale generated snapshots, local state, secret values, and accidental workaround removal.
