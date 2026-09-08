@@ -1044,7 +1044,7 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
 }
 
 async function bootAndValidateSolidRuntime(sample: SelectedBuildSample, projectDir: string) {
-  if (sample.name !== "solid-v2-self-orpc-no-auth") return;
+  if (!["solid-v2-self-orpc-no-auth", "solid-v2-self-orpc-auth-todo"].includes(sample.name)) return;
 
   const webDir = path.join(projectDir, "apps/web");
   const port = await getAvailablePort();
@@ -1075,6 +1075,14 @@ async function bootAndValidateSolidRuntime(sample: SelectedBuildSample, projectD
     });
     expect(health?.status).toBe(200);
     expect(await health?.json()).toEqual({ json: "OK" });
+
+    if (sample.name === "solid-v2-self-orpc-auth-todo") {
+      const dashboard = await fetchWhenReady(`http://127.0.0.1:${port}/dashboard`, {
+        signal: AbortSignal.timeout(15_000),
+      });
+      expect(dashboard?.status).toBe(200);
+      expect(await dashboard?.text()).toContain("Loading...");
+    }
 
     const missing = await fetchWhenReady(`http://127.0.0.1:${port}/missing-page`);
     expect(missing?.status).toBe(404);

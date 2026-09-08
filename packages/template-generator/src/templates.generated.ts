@@ -12129,13 +12129,6 @@ export default function Dashboard() {
 		},
 	);
 
-	{{#if (eq api "orpc")}}
-	const privateData = useQuery(() => ({
-		...orpc.privateData.queryOptions(),
-		enabled: Boolean(session().data),
-	}));
-	{{/if}}
-
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
 		(customerState()?.activeSubscriptions?.length ?? 0) > 0;
@@ -12147,7 +12140,7 @@ export default function Dashboard() {
 			<h1>Dashboard</h1>
 			<p>Welcome {session().data?.user.name}</p>
 			{{#if (eq api "orpc")}}
-			<p>API: {privateData.data?.message}</p>
+			<PrivateData />
 			{{/if}}
 			{{#if (eq payments "polar")}}
 			<p>Plan: {hasProSubscription() ? "Pro" : "Free"}</p>
@@ -12167,6 +12160,13 @@ export default function Dashboard() {
 		</Show>
 	);
 }
+
+{{#if (eq api "orpc")}}
+function PrivateData() {
+  const privateData = useQuery(() => orpc.privateData.queryOptions());
+  return <p>API: {privateData.data?.message}</p>;
+}
+{{/if}}
 `],
   ["auth/better-auth/web/solid/src/routes/login.tsx.hbs", `import { createSignal, Match, Switch } from "solid-js";
 import SignInForm from "~/components/sign-in-form";
