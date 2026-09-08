@@ -81,32 +81,16 @@ Pass the `ENV` proxy directly when a consumer accepts its shape. Spreading it in
 
 `auto-load` calls the Varlock CLI internally. Production environments need that executable, its dependencies, and the schema; bundling the auto-load module alone is insufficient. See [Node](https://varlock.dev/integrations/javascript/), [Bun](https://varlock.dev/integrations/bun/), and [Vite](https://varlock.dev/integrations/vite/).
 
-## Reproducible runtime checks
+## Verification
 
-```sh
-bun run scripts/varlock-smoke.ts
-```
+Use the existing Default Suite and Curated Build Set for ongoing template verification. The dedicated Varlock workflow and its runtime/Docker scripts have been removed. Historical runtime and browser results below describe checks performed before their removal; they are not additional CI jobs.
 
-This builds the actual CLI, invokes its command-line entry point, installs the generated applications, and removes temporary fixtures afterward. The validation fixtures add synthetic configuration, but do not retrofit a Varlock migration onto the generated projects.
-
-The script checks:
-
-- Bun workspaces and Turbo strict mode builds and types.
-- App-local type isolation and selective root schema imports.
-- Preview/production env file selection and process overrides.
-- Missing-variable failures at build and startup.
-- Node/Bun automatic loading and a built Hono handler.
-- Absence of synthetic secrets in browser bundles.
-- A full Hono/Drizzle/SQLite/tRPC/Better Auth project: schema push, todo create/read, CORS, signup, and an authenticated session.
-
-The runtime check also caught a template mismatch with Better Auth 1.7.3. Its [official upgrade guide](https://better-auth.com/docs/guides/1-7-upgrade-guide) removes the required account `issuer` introduced in 1.7.0–1.7.2. Generated schemas now use the provider/account identity pair without a required issuer column. Existing databases need a separately reviewed schema migration.
-
-The `Varlock Templates` workflow runs these checks. The broader Default Suite and Curated Build Set remain required; a successful build does not establish that every deployment adapter boots correctly.
+The earlier runtime checks caught a template mismatch with Better Auth 1.7.3. Its [official upgrade guide](https://better-auth.com/docs/guides/1-7-upgrade-guide) removes the required account `issuer` introduced in 1.7.0–1.7.2. Generated schemas now use the provider/account identity pair without a required issuer column. Existing databases need a separately reviewed schema migration.
 
 ## Deployment compatibility still blocking merge
 
 1. **Alchemy/Cloudflare — decision:** Keep Alchemy and use `import "varlock/auto-load"` in its Node/Bun deployment script to replace dotenv. The generator already emits this import. Varlock loads and validates deployment configuration into `process.env`; Alchemy can pass resolved values through its normal Worker bindings. This does not require `varlock run --` or an official Alchemy integration. Verify the complete configuration and binding flow before merge. The separate in-Worker Varlock runtime, including console redaction and response leak detection, remains deferred until official integration support tracked in [issue #735](https://github.com/dmno-dev/varlock/issues/735) is available. Do not import the CLI-loading module inside Workers or serialize Varlock's private env graph. See the official [auto-load documentation](https://varlock.dev/integrations/javascript/) and [non-Wrangler deployment guidance](https://varlock.dev/integrations/cloudflare/#non-wrangler-deploy-tools-alchemy-sst-pulumi).
-2. **Packaged Node deployments:** Docker templates mount configuration through BuildKit secrets and retain the schema and installed Varlock CLI where the runtime needs them. Next standalone preloads the public `varlock/auto-load` module with Node before starting the generated server. The generated Hono/Node image passes local build, HTTP startup, and missing-variable rejection checks. `scripts/varlock-docker-smoke.ts` passes in CI for Hono, Next.js, Nuxt, and Solid: image builds, HTTP responses, absence of env value files in runtime working directories, and rejection of invalid runtime configuration. Vercel/Prisma web adapters use the official `resolved-env` mode. Solid, React Router, and SvelteKit Prisma artifacts now pass boot checks after copying only their build output outside the workspace; the automatically detected frameworks and live deployment paths still need verification. Server build artifacts can contain resolved secrets: enable `@encryptInjectedEnv` and provide `_VARLOCK_ENV_KEY` at both build and runtime following [encrypted deployments](https://varlock.dev/guides/encrypted-deployments/). Prisma forwards an explicitly supplied encryption key to both stages; Turbo forwards the key in strict mode.
+2. **Packaged Node deployments:** Docker templates mount configuration through BuildKit secrets and retain the schema and installed Varlock CLI where the runtime needs them. Next standalone preloads the public `varlock/auto-load` module with Node before starting the generated server. The generated Hono/Node image passes local build, HTTP startup, and missing-variable rejection checks. Earlier Docker CI checks passed for Hono, Next.js, Nuxt, and Solid: image builds, HTTP responses, absence of env value files in runtime working directories, and rejection of invalid runtime configuration. Vercel/Prisma web adapters use the official `resolved-env` mode. Solid, React Router, and SvelteKit Prisma artifacts now pass boot checks after copying only their build output outside the workspace; the automatically detected frameworks and live deployment paths still need verification. Server build artifacts can contain resolved secrets: enable `@encryptInjectedEnv` and provide `_VARLOCK_ENV_KEY` at both build and runtime following [encrypted deployments](https://varlock.dev/guides/encrypted-deployments/). Prisma forwards an explicitly supplied encryption key to both stages; Turbo forwards the key in strict mode.
 3. **Managed infrastructure:** IaC-provided database URLs and Worker URLs resolve during provisioning. The deployment schema must validate inputs at the right stage without requiring resource outputs beforehand.
 4. **Cloudflare request lifetimes:** Verify connection ownership and lifetime in request-scoped services, including supported MongoDB selections, using native Worker bindings. These checks can proceed without waiting for the optional in-Worker Varlock integration.
 
