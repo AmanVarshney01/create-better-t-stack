@@ -2,6 +2,7 @@ import { ProjectConfigSchema } from "@better-t-stack/types";
 import { z } from "zod";
 
 import { DEFAULT_STACK, TECH_OPTIONS, type StackState } from "./constant";
+import { getStackBackend, getStackFrontends } from "./stack-model";
 import { formatProjectName } from "./stack-utils";
 
 const option = (category: keyof typeof TECH_OPTIONS) =>
@@ -34,7 +35,6 @@ export const StackStateSchema = z.object({
 });
 
 export function stackStateToConfig(stack: StackState) {
-  const frontend = [...stack.webFrontend, ...stack.nativeFrontend].filter((id) => id !== "none");
   const projectPath = formatProjectName(stack.projectName);
   const projectName = projectPath.split(/[\\/]/).filter(Boolean).at(-1) || "my-better-t-app";
   return ProjectConfigSchema.parse({
@@ -42,8 +42,8 @@ export function stackStateToConfig(stack: StackState) {
     projectName: projectName === "." ? "my-better-t-app" : projectName,
     projectDir: "/virtual",
     relativePath: "./virtual",
-    frontend: frontend.length ? frontend : ["none"],
-    backend: stack.backend.startsWith("self-") ? "self" : stack.backend,
+    frontend: getStackFrontends(stack),
+    backend: getStackBackend(stack.backend),
     addons: stack.addons.filter((id) => id !== "none"),
     examples: stack.examples.filter((id) => id !== "none"),
     git: stack.git === "true",

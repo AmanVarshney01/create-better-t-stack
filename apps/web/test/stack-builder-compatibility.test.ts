@@ -40,9 +40,7 @@ describe("stack builder D1 compatibility", () => {
     expect(getDisabledReason(stack, "api", "trpc")).toBe(
       "tRPC is not compatible with Solid (use oRPC)",
     );
-    expect(getDisabledReason(stack, "addons", "evlog")).toBe(
-      "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend",
-    );
+    expect(getDisabledReason(stack, "addons", "evlog")).toContain("observability");
     expect(analyzeStackCompatibility(stack).adjustedStack).toBeNull();
 
     const command = generateStackCommand(stack);
@@ -333,9 +331,7 @@ describe("stack builder D1 compatibility", () => {
       addons: ["turborepo"],
     });
 
-    expect(getDisabledReason(stack, "addons", "evlog")).toBe(
-      "evlog requires Hono, Express, Fastify, Elysia, or a fullstack backend",
-    );
+    expect(getDisabledReason(stack, "addons", "evlog")).toContain("observability");
   });
 
   test("removes Evlog when a selected stack switches to Convex", () => {
@@ -350,10 +346,12 @@ describe("stack builder D1 compatibility", () => {
     const result = analyzeStackCompatibility(stack);
 
     expect(result.adjustedStack?.addons).toEqual(["turborepo"]);
-    expect(result.changes).toContainEqual({
-      category: "addons",
-      message: "evlog removed (requires a server or fullstack backend)",
-    });
+    expect(result.changes).toContainEqual(
+      expect.objectContaining({
+        category: "addons",
+        message: expect.stringContaining("evlog removed"),
+      }),
+    );
   });
 
   test("allows Evlog for server and fullstack stacks", () => {

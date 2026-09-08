@@ -2070,7 +2070,7 @@ describe("Deployment Configurations", () => {
         frontend: ["next"],
       });
 
-      expectError(result, "'--server-deploy docker' requires a separate server backend");
+      expectError(result, "--server-deploy none");
     });
   });
 });

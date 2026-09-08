@@ -1,3 +1,9 @@
+import {
+  supportsClerkFrontend,
+  supportsClerkBackend,
+  isFrontendAllowedWithBackend,
+} from "@better-t-stack/types";
+
 import { DEFAULT_CONFIG } from "../constants";
 import type { Auth, Backend, Frontend } from "../types";
 import { supportsConvexBetterAuth } from "../utils/compatibility-rules";
@@ -12,29 +18,20 @@ export function getAvailableAuthProviders(
     return ["none"];
   }
 
-  const hasClerkCompatibleFrontends = frontend.some((f) =>
-    [
-      "react-router",
-      "tanstack-router",
-      "tanstack-start",
-      "next",
-      "native-bare",
-      "native-uniwind",
-      "native-unistyles",
-    ].includes(f),
-  );
-
   const options: Auth[] = [];
 
   if (backend === "convex") {
-    if (supportsConvexBetterAuth(frontend)) {
+    if (
+      supportsConvexBetterAuth(frontend) &&
+      frontend.every((f) => isFrontendAllowedWithBackend(f, backend, "better-auth"))
+    ) {
       options.push("better-auth");
     }
   } else {
     options.push("better-auth");
   }
 
-  if (hasClerkCompatibleFrontends) {
+  if (supportsClerkFrontend(frontend) && supportsClerkBackend(backend, frontend)) {
     options.push("clerk");
   }
 

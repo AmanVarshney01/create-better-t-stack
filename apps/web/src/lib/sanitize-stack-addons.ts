@@ -1,12 +1,11 @@
+import { TASK_RUNNER_ADDONS, OBSERVABILITY_ADDONS } from "@better-t-stack/types";
+
 import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "./constant";
 
 const validWebFrontendIds = new Set(TECH_OPTIONS.webFrontend.map((option) => option.id));
 const validNativeFrontendIds = new Set(TECH_OPTIONS.nativeFrontend.map((option) => option.id));
 const validAddonIds = new Set(["none", ...TECH_OPTIONS.addons.map((option) => option.id)]);
 const validExampleIds = new Set(["none", ...TECH_OPTIONS.examples.map((option) => option.id)]);
-
-export const TASK_RUNNER_ADDONS = ["nx", "turborepo", "vite-plus"] as const;
-export const OBSERVABILITY_ADDONS = ["evlog", "axiom"] as const;
 
 function sanitizeSingleSelection(
   values: readonly string[] | null | undefined,

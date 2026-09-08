@@ -1,12 +1,21 @@
+import {
+  supportsOrmDatabase,
+  supportsDatabaseSetup,
+  supportsDatabaseSetupRuntime,
+  isFrontendAllowedWithBackend,
+  supportsClerkBackend,
+  supportsClerkFrontend,
+  supportsRuntimeBackend,
+  supportsServerDeployRuntime,
+  getBackendDisabledOptions,
+} from "@better-t-stack/types";
 import { Result } from "better-result";
 
 import {
   supportsAlchemyManagedDatabase,
   type CLIInput,
-  type Database,
   type DatabaseSetup,
   type ProjectConfig,
-  type Runtime,
 } from "../types";
 import {
   CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS,
@@ -78,37 +87,22 @@ export function validateOrmDatabaseCompat(
   orm: ProjectConfig["orm"] | undefined,
   database: ProjectConfig["database"] | undefined,
 ): ValidationResult {
-  if (orm === "mongoose" && database && database !== "mongodb") {
+  if (!orm || !database || supportsOrmDatabase(orm, database)) return Result.ok(undefined);
+  if (orm === "mongoose")
     return validationErr(
       "Mongoose ORM requires MongoDB database. Please use '--database mongodb' or choose a different ORM.",
     );
-  }
-
-  if (orm === "drizzle" && database === "mongodb") {
+  if (orm === "drizzle" && database === "mongodb")
     return validationErr(
       "Drizzle ORM does not support MongoDB. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
     );
-  }
-
-  if (database === "mongodb" && orm && orm !== "mongoose" && orm !== "prisma" && orm !== "none") {
-    return validationErr(
-      "MongoDB database requires Mongoose or Prisma ORM. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
-    );
-  }
-
-  if (database && database !== "none" && orm === "none") {
+  if (orm === "none")
     return validationErr(
       "Database selection requires an ORM. Please choose '--orm drizzle', '--orm prisma', or '--orm mongoose'.",
     );
-  }
-
-  if (orm && orm !== "none" && database === "none") {
-    return validationErr(
-      "ORM selection requires a database. Please choose a database or set '--orm none'.",
-    );
-  }
-
-  return Result.ok(undefined);
+  return validationErr(
+    "ORM selection requires a database. Please choose a database or set '--orm none'.",
+  );
 }
 
 export function validateDatabaseOrmAuth(
@@ -140,17 +134,14 @@ export function validateDatabaseSetup(
 
   const setupValidations = {
     turso: {
-      database: "sqlite",
       errorMessage:
         "Turso setup requires SQLite database. Please use '--database sqlite' or choose a different setup.",
     },
     neon: {
-      database: "postgres",
       errorMessage:
         "Neon setup requires PostgreSQL database. Please use '--database postgres' or choose a different setup.",
     },
     "prisma-postgres": {
-      database: "postgres",
       errorMessage:
         "Prisma PostgreSQL setup requires PostgreSQL database. Please use '--database postgres' or choose a different setup.",
     },
@@ -159,17 +150,14 @@ export function validateDatabaseSetup(
         "PlanetScale setup requires PostgreSQL or MySQL database. Please use '--database postgres' or '--database mysql' or choose a different setup.",
     },
     "mongodb-atlas": {
-      database: "mongodb",
       errorMessage:
         "MongoDB Atlas setup requires MongoDB database. Please use '--database mongodb' or choose a different setup.",
     },
     supabase: {
-      database: "postgres",
       errorMessage:
         "Supabase setup requires PostgreSQL database. Please use '--database postgres' or choose a different setup.",
     },
     d1: {
-      database: "sqlite",
       errorMessage: "Cloudflare D1 setup requires SQLite database.",
     },
     docker: {
@@ -177,25 +165,12 @@ export function validateDatabaseSetup(
         "Docker setup is not compatible with SQLite database or Cloudflare Workers runtime.",
     },
     none: { errorMessage: "" },
-  } satisfies Record<
-    DatabaseSetup,
-    { database?: Database; runtime?: Runtime; errorMessage: string }
-  >;
+  } satisfies Record<DatabaseSetup, { errorMessage: string }>;
 
   if (dbSetup && dbSetup !== "none") {
     const validation = setupValidations[dbSetup];
 
-    if (dbSetup === "planetscale") {
-      if (database !== "postgres" && database !== "mysql") {
-        return validationErr(validation.errorMessage);
-      }
-    } else {
-      if ("database" in validation && validation.database && database !== validation.database) {
-        return validationErr(validation.errorMessage);
-      }
-    }
-
-    if ("runtime" in validation && validation.runtime && runtime !== validation.runtime) {
+    if (dbSetup !== "docker" && !supportsDatabaseSetup(dbSetup, database)) {
       return validationErr(validation.errorMessage);
     }
 
@@ -218,12 +193,12 @@ export function validateDatabaseSetup(
     }
 
     if (dbSetup === "docker") {
-      if (database === "sqlite") {
+      if (database && !supportsDatabaseSetup(dbSetup, database)) {
         return validationErr(
           "Docker setup is not compatible with SQLite database. SQLite is file-based and doesn't require Docker. Please use '--database postgres', '--database mysql', '--database mongodb', or choose a different setup.",
         );
       }
-      if (runtime === "workers") {
+      if (!supportsDatabaseSetupRuntime(dbSetup, runtime, config.backend)) {
         return validationErr(
           "Docker setup is not compatible with Cloudflare Workers runtime. Workers runtime uses serverless databases (D1) and doesn't support local Docker containers. Please use '--db-setup d1' for SQLite or choose a different runtime.",
         );
@@ -274,42 +249,8 @@ export function validateConvexConstraints(
   }
 
   const has = (k: string) => providedFlags.has(k);
-
-  if (has("runtime") && config.runtime !== "none") {
-    return validationErr(
-      "Convex backend requires '--runtime none'. Please remove the --runtime flag or set it to 'none'.",
-    );
-  }
-
-  if (has("database") && config.database !== "none") {
-    return validationErr(
-      "Convex backend requires '--database none'. Please remove the --database flag or set it to 'none'.",
-    );
-  }
-
-  if (has("orm") && config.orm !== "none") {
-    return validationErr(
-      "Convex backend requires '--orm none'. Please remove the --orm flag or set it to 'none'.",
-    );
-  }
-
-  if (has("api") && config.api !== "none") {
-    return validationErr(
-      "Convex backend requires '--api none'. Please remove the --api flag or set it to 'none'.",
-    );
-  }
-
-  if (has("dbSetup") && config.dbSetup !== "none") {
-    return validationErr(
-      "Convex backend requires '--db-setup none'. Please remove the --db-setup flag or set it to 'none'.",
-    );
-  }
-
-  if (has("serverDeploy") && config.serverDeploy !== "none") {
-    return validationErr(
-      "Convex backend requires '--server-deploy none'. Please remove the --server-deploy flag or set it to 'none'.",
-    );
-  }
+  const disabled = validateBackendDisabledOptions(config, providedFlags);
+  if (disabled.isErr()) return disabled;
 
   if (has("auth") && config.auth === "better-auth") {
     const incompatibleFrontends =
@@ -340,88 +281,41 @@ export function validateConvexConstraints(
   return Result.ok(undefined);
 }
 
+function validateBackendDisabledOptions(
+  config: Partial<ProjectConfig>,
+  providedFlags: Set<string>,
+): ValidationResult {
+  if (!config.backend) return Result.ok(undefined);
+  for (const key of getBackendDisabledOptions(config.backend)) {
+    if (!providedFlags.has(key) || config[key] === "none") continue;
+    const flag = key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+    const label =
+      config.backend === "convex"
+        ? "Convex backend"
+        : `Backend '${config.backend}'${config.backend === "self" ? " (fullstack)" : ""}`;
+    return validationErr(
+      `${label} requires '--${flag} none'. Please remove the --${flag} flag or set it to 'none'.`,
+    );
+  }
+  return Result.ok(undefined);
+}
+
 export function validateBackendNoneConstraints(
   config: Partial<ProjectConfig>,
   providedFlags: Set<string>,
 ): ValidationResult {
-  const { backend } = config;
-
-  if (backend !== "none") {
-    return Result.ok(undefined);
-  }
-
-  const has = (k: string) => providedFlags.has(k);
-
-  if (has("runtime") && config.runtime !== "none") {
-    return validationErr(
-      "Backend 'none' requires '--runtime none'. Please remove the --runtime flag or set it to 'none'.",
-    );
-  }
-
-  if (has("database") && config.database !== "none") {
-    return validationErr(
-      "Backend 'none' requires '--database none'. Please remove the --database flag or set it to 'none'.",
-    );
-  }
-
-  if (has("orm") && config.orm !== "none") {
-    return validationErr(
-      "Backend 'none' requires '--orm none'. Please remove the --orm flag or set it to 'none'.",
-    );
-  }
-
-  if (has("api") && config.api !== "none") {
-    return validationErr(
-      "Backend 'none' requires '--api none'. Please remove the --api flag or set it to 'none'.",
-    );
-  }
-
-  if (has("auth") && config.auth !== "none") {
-    return validationErr(
-      "Backend 'none' requires '--auth none'. Please remove the --auth flag or set it to 'none'.",
-    );
-  }
-
-  if (has("payments") && config.payments !== "none") {
-    return validationErr(
-      "Backend 'none' requires '--payments none'. Please remove the --payments flag or set it to 'none'.",
-    );
-  }
-
-  if (has("dbSetup") && config.dbSetup !== "none") {
-    return validationErr(
-      "Backend 'none' requires '--db-setup none'. Please remove the --db-setup flag or set it to 'none'.",
-    );
-  }
-
-  if (has("serverDeploy") && config.serverDeploy !== "none") {
-    return validationErr(
-      "Backend 'none' requires '--server-deploy none'. Please remove the --server-deploy flag or set it to 'none'.",
-    );
-  }
-
-  return Result.ok(undefined);
+  return config.backend === "none"
+    ? validateBackendDisabledOptions(config, providedFlags)
+    : Result.ok(undefined);
 }
 
 export function validateSelfBackendConstraints(
   config: Partial<ProjectConfig>,
   providedFlags: Set<string>,
 ): ValidationResult {
-  const { backend } = config;
-
-  if (backend !== "self") {
-    return Result.ok(undefined);
-  }
-
-  const has = (k: string) => providedFlags.has(k);
-
-  if (has("runtime") && config.runtime !== "none") {
-    return validationErr(
-      "Backend 'self' (fullstack) requires '--runtime none'. Please remove the --runtime flag or set it to 'none'.",
-    );
-  }
-
-  return Result.ok(undefined);
+  return config.backend === "self"
+    ? validateBackendDisabledOptions(config, providedFlags)
+    : Result.ok(undefined);
 }
 
 export function validateBackendConstraints(
@@ -432,8 +326,8 @@ export function validateBackendConstraints(
   const { backend } = config;
 
   if (config.auth === "clerk" && config.frontend) {
-    const incompatibleFrontends = config.frontend.filter((f) =>
-      ["nuxt", "svelte", "solid", "astro"].includes(f),
+    const incompatibleFrontends = config.frontend.filter(
+      (f) => !isFrontendAllowedWithBackend(f, undefined, "clerk"),
     );
     if (incompatibleFrontends.length > 0) {
       return validationErr(
@@ -444,13 +338,16 @@ export function validateBackendConstraints(
     }
   }
 
-  if (
-    providedFlags.has("backend") &&
-    backend &&
-    backend !== "convex" &&
-    backend !== "none" &&
-    backend !== "self"
-  ) {
+  if (config.auth === "clerk") {
+    if (!supportsClerkBackend(backend, config.frontend))
+      return validationErr(
+        "Clerk requires Convex, a separate server, or backend self with Next.js or TanStack Start.",
+      );
+    if (config.frontend && !supportsClerkFrontend(config.frontend))
+      return validationErr("Clerk requires a React web or native frontend.");
+  }
+
+  if (providedFlags.has("backend") && backend && !supportsRuntimeBackend("none", backend)) {
     if (providedFlags.has("runtime") && options.runtime === "none") {
       return validationErr(
         "'--runtime none' is only supported with '--backend convex', '--backend none', or '--backend self'. Please choose 'bun', 'node', or remove the --runtime flag.",
@@ -459,7 +356,9 @@ export function validateBackendConstraints(
   }
 
   if (backend === "convex" && providedFlags.has("frontend") && options.frontend) {
-    const incompatibleFrontends = options.frontend.filter((f) => f === "solid" || f === "astro");
+    const incompatibleFrontends = options.frontend.filter(
+      (frontend) => !isFrontendAllowedWithBackend(frontend, "convex"),
+    );
     if (incompatibleFrontends.length > 0) {
       return validationErr(
         `The following frontends are not compatible with '--backend convex': ${incompatibleFrontends.join(
@@ -569,7 +468,7 @@ export function validateFullConfig(
     if (
       providedFlags.has("serverDeploy") &&
       config.serverDeploy === "cloudflare" &&
-      config.runtime !== "workers"
+      !supportsServerDeployRuntime(config.serverDeploy, config.runtime)
     ) {
       yield* validationErr(
         `Server deployment '${config.serverDeploy}' requires '--runtime workers'. Please use '--runtime workers' or choose a different server deployment.`,

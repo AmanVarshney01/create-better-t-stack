@@ -1,9 +1,9 @@
+import { OBSERVABILITY_ADDONS, TASK_RUNNER_ADDONS } from "@better-t-stack/types";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { type BuilderCopySource, stackSnapshot, track } from "@/lib/analytics";
 import { DEFAULT_STACK, PRESET_TEMPLATES, type StackState, TECH_OPTIONS } from "@/lib/constant";
-import { OBSERVABILITY_ADDONS, TASK_RUNNER_ADDONS } from "@/lib/sanitize-stack-addons";
 import { applyStackUpdate, resolveStackCompatibility } from "@/lib/stack-compatibility";
 import { StackStateSchema } from "@/lib/stack-schema";
 import { useStackState } from "@/lib/stack-url-state.client";
