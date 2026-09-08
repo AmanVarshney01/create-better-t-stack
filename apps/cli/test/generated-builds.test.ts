@@ -939,6 +939,82 @@ async function fetchWhenReady(url: string, init?: RequestInit) {
   return undefined;
 }
 
+async function bootAndValidateStartAuthRuntime(sample: SelectedBuildSample, projectDir: string) {
+  if (sample.name !== "tanstack-start-self-auth-todo") return;
+
+  await runCommand(sample.name, projectDir, sample.packageManager, ["run", "db:push"]);
+  const port = await getAvailablePort();
+  const origin = `http://127.0.0.1:${port}`;
+  const runtime = execa(
+    sample.packageManager,
+    ["run", "serve", "--host", "127.0.0.1", "--port", String(port)],
+    {
+      cwd: path.join(projectDir, "apps/web"),
+      all: true,
+      reject: false,
+      env: { ...process.env, BETTER_AUTH_URL: origin },
+    },
+  );
+  const rpc = (
+    procedure: string,
+    input: null | { text: string } | { id: number; completed?: boolean } = null,
+    cookie = "",
+  ) =>
+    fetch(`${origin}/api/rpc/${procedure}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie },
+      body: JSON.stringify({ json: input }),
+      signal: AbortSignal.timeout(5000),
+    });
+
+  try {
+    expect((await fetchWhenReady(`${origin}/`))?.status).toBe(200);
+    expect(await (await rpc("healthCheck")).json()).toEqual({ json: "OK" });
+    expect((await rpc("privateData")).status).toBe(401);
+    const signup = await fetch(`${origin}/api/auth/sign-up/email`, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin },
+      body: JSON.stringify({
+        name: "Generated test",
+        email: "generated@example.test",
+        password: "Generated-test-password-2026",
+      }),
+      signal: AbortSignal.timeout(5000),
+    });
+    expect(signup.status).toBe(200);
+    const cookie = signup.headers
+      .getSetCookie()
+      .map((value) => value.split(";")[0])
+      .join("; ");
+    expect(cookie).not.toBe("");
+    const session = await fetch(`${origin}/api/auth/get-session`, {
+      headers: { cookie },
+      signal: AbortSignal.timeout(5000),
+    });
+    expect(await session.json()).toMatchObject({ user: { email: "generated@example.test" } });
+    expect((await rpc("privateData", null, cookie)).status).toBe(200);
+    expect((await rpc("privateData")).status).toBe(401);
+
+    expect((await rpc("todo/create", { text: "Generated runtime todo" })).status).toBe(200);
+    const todos = z.object({
+      json: z.array(z.object({ id: z.number(), text: z.string(), completed: z.boolean() })),
+    });
+    const created = todos.parse(await (await rpc("todo/getAll")).json()).json;
+    expect(created).toHaveLength(1);
+    expect(created[0]).toMatchObject({ text: "Generated runtime todo", completed: false });
+    const { id } = created[0];
+    expect((await rpc("todo/toggle", { id, completed: true })).status).toBe(200);
+    expect(todos.parse(await (await rpc("todo/getAll")).json()).json).toEqual([
+      { id, text: "Generated runtime todo", completed: true },
+    ]);
+    expect((await rpc("todo/delete", { id })).status).toBe(200);
+    expect(todos.parse(await (await rpc("todo/getAll")).json()).json).toEqual([]);
+  } finally {
+    runtime.kill("SIGTERM");
+    await runtime;
+  }
+}
+
 async function bootAndValidateAxiomRuntime(sample: SelectedBuildSample, projectDir: string) {
   if (!sample.config.addons?.includes("axiom")) return;
   const received: Array<{ path?: string; status?: number }> = [];
@@ -1242,6 +1318,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
           await buildAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidateAxiomRuntime(sample, projectDir);
+          await bootAndValidateStartAuthRuntime(sample, projectDir);
           await bootAndValidateSolidDevRuntime(sample, projectDir);
           await bootAndValidateSolidRuntime(sample, projectDir);
           await validateSolidBuildArtifacts(sample, projectDir);
