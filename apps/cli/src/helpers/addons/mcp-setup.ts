@@ -192,6 +192,12 @@ function getAllMcpServers(config: ProjectConfig): McpServerDef[] {
       name: "polar",
       target: "https://mcp.polar.sh/mcp/polar-mcp",
     },
+    {
+      key: "revenuecat",
+      label: "RevenueCat",
+      name: "revenuecat",
+      target: "https://mcp.revenuecat.ai/mcp",
+    },
   ];
 }
 
@@ -264,6 +270,10 @@ export function getRecommendedMcpServers(
 
   if (config.payments === "polar") {
     recommendedServerKeys.push("polar");
+  }
+
+  if (config.payments === "revenuecat") {
+    recommendedServerKeys.push("revenuecat");
   }
 
   return uniqueValues(recommendedServerKeys)

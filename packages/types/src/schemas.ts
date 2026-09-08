@@ -91,7 +91,7 @@ export const AuthSchema = z
   .enum(["better-auth", "clerk", "none"])
   .describe("Authentication provider");
 
-export const PaymentsSchema = z.enum(["polar", "none"]).describe("Payments provider");
+export const PaymentsSchema = z.enum(["polar", "revenuecat", "none"]).describe("Payments provider");
 
 export const WebDeploySchema = z
   .enum(["cloudflare", "prisma", "docker", "vercel", "none"])
@@ -162,6 +162,7 @@ export const McpServerSchema = z
     "clerk",
     "expo",
     "polar",
+    "revenuecat",
   ])
   .describe("MCP server to install");
 

@@ -1,0 +1,9 @@
+import { httpRouter } from "convex/server";
+
+import { revenuecat } from "./revenuecat";
+
+const http = httpRouter();
+
+revenuecat.registerRoutes(http);
+
+export default http;

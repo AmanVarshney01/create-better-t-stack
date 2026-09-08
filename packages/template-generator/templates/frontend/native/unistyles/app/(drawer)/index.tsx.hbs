@@ -8,6 +8,10 @@ import { env } from "@{{projectName}}/env/native";
 {{/if}}
 import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
+{{#if (eq payments "revenuecat")}}
+import { SubscriptionStatusCard } from "@/components/subscription-status-card";
+import { PaywallExample } from "@/components/paywall-example";
+{{/if}}
 
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
@@ -296,6 +300,11 @@ export default function Home() {
             <SignUp />
           </>
         )}
+        {{/if}}
+
+        {{#if (eq payments "revenuecat")}}
+        <SubscriptionStatusCard />
+        <PaywallExample />
         {{/if}}
       </ScrollView>
     </Container>

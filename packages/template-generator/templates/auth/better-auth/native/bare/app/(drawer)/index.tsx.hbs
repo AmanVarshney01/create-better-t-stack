@@ -11,6 +11,10 @@ import { NAV_THEME } from "@/lib/constants";
 import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
+{{#if (eq payments "revenuecat")}}
+import { SubscriptionStatusCard } from "@/components/subscription-status-card";
+import { PaywallExample } from "@/components/paywall-example";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
 import { queryClient, orpc } from "@/utils/orpc";
@@ -198,6 +202,11 @@ return (
         <SignUp />
       </>
       )}
+
+      {{#if (eq payments "revenuecat")}}
+      <SubscriptionStatusCard />
+      <PaywallExample />
+      {{/if}}
     </View>
   </ScrollView>
 </Container>

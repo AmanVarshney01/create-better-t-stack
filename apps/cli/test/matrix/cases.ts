@@ -30,7 +30,7 @@ export const MATRIX_NATIVE_FRONTENDS = [
 ] as const;
 export const MATRIX_APIS = ["trpc", "orpc", "none"] as const;
 export const MATRIX_AUTHS = ["better-auth", "clerk", "none"] as const;
-export const MATRIX_PAYMENTS = ["polar", "none"] as const;
+export const MATRIX_PAYMENTS = ["polar", "revenuecat", "none"] as const;
 export const MATRIX_DB_SETUPS = [
   "turso",
   "neon",
@@ -319,6 +319,26 @@ export function createSmokeMatrixCases(): MatrixCase[] {
         frontend: [...frontend],
       });
     }
+  }
+
+  for (const convexAuth of ["none", "better-auth"] as const) {
+    pushUnique(configs, seen, {
+      payments: "revenuecat",
+      backend: "convex",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: convexAuth,
+      frontend: ["native-bare"],
+    });
+  }
+
+  for (const nativeFrontend of MATRIX_NATIVE_FRONTENDS) {
+    pushUnique(configs, seen, {
+      payments: "revenuecat",
+      frontend: [nativeFrontend],
+    });
   }
 
   for (const dbSetup of MATRIX_DB_SETUPS) {

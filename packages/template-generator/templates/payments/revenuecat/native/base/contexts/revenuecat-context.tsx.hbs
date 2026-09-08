@@ -1,0 +1,286 @@
+import type { ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { AppState } from "react-native";
+import type { PurchasesPackage } from "react-native-purchases";
+
+import {
+  configureRevenueCat,
+  getPackages as getRevenueCatPackages,
+  hasProEntitlement,
+  identifyUser as identifyRevenueCatUser,
+  isPurchaseCancelledError,
+  logOutUser as logOutRevenueCatUser,
+  onCustomerInfoUpdated,
+  purchaseAndCheckPro,
+  type RevenueCatInitFailureReason,
+  refreshProEntitlement,
+  restoreAndCheckPro,
+  setUserAttributes as setRevenueCatUserAttributes,
+  syncAndCheckPro,
+} from "@/lib/revenuecat";
+
+type UserAttributes = {
+  email?: string;
+  displayName?: string;
+};
+
+export type RevenueCatContextValue = {
+  isPro: boolean;
+  isConfigured: boolean;
+  refreshEntitlement: () => Promise<boolean>;
+  getPackages: () => Promise<PurchasesPackage[]>;
+  purchasePackage: (pack: PurchasesPackage) => Promise<boolean>;
+  restorePurchases: () => Promise<boolean>;
+  syncPurchases: () => Promise<boolean>;
+  identifyUser: (userId: string) => Promise<boolean>;
+  logOutUser: () => Promise<void>;
+  setUserAttributes: (attributes: UserAttributes) => Promise<void>;
+};
+
+type RevenueCatProviderProps = {
+  children: ReactNode;
+};
+
+const RevenueCatContext = createContext<RevenueCatContextValue | null>(null);
+
+export function useRevenueCat(): RevenueCatContextValue {
+  const context = useContext(RevenueCatContext);
+
+  if (!context) {
+    throw new Error("useRevenueCat must be used within RevenueCatProvider");
+  }
+
+  return context;
+}
+
+export function useIsPro(): boolean {
+  const context = useContext(RevenueCatContext);
+  return context?.isPro ?? false;
+}
+
+function logInitSkip(reason: RevenueCatInitFailureReason): void {
+  if (reason === "unsupported_platform") {
+    console.warn("[RevenueCat] Initialization skipped: unsupported platform");
+    return;
+  }
+
+  console.warn(
+    "[RevenueCat] Missing API key. Add EXPO_PUBLIC_REVENUECAT_IOS_KEY and EXPO_PUBLIC_REVENUECAT_ANDROID_KEY in apps/native/.env",
+  );
+}
+
+export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
+  const [isConfigured, setIsConfigured] = useState(false);
+  const [isPro, setIsPro] = useState(false);
+
+  const refreshEntitlement = useCallback(async (): Promise<boolean> => {
+    if (!isConfigured) return false;
+    try {
+      const nextIsPro = await refreshProEntitlement();
+      setIsPro(nextIsPro);
+      return nextIsPro;
+    } catch (error) {
+      console.warn("[RevenueCat] Failed to refresh entitlement:", error);
+      return false;
+    }
+  }, [isConfigured]);
+
+  const getPackages = useCallback(async (): Promise<PurchasesPackage[]> => {
+    if (!isConfigured) return [];
+
+    try {
+      return await getRevenueCatPackages();
+    } catch (error) {
+      console.warn("[RevenueCat] Failed to fetch packages:", error);
+      return [];
+    }
+  }, [isConfigured]);
+
+  const purchasePackage = useCallback(
+    async (pack: PurchasesPackage): Promise<boolean> => {
+      if (!isConfigured) return false;
+
+      try {
+        const nextIsPro = await purchaseAndCheckPro(pack);
+        setIsPro(nextIsPro);
+        return nextIsPro;
+      } catch (error) {
+        if (isPurchaseCancelledError(error)) {
+          try {
+            const nextIsPro = await refreshProEntitlement();
+            setIsPro(nextIsPro);
+            return nextIsPro;
+          } catch (refreshError) {
+            console.warn(
+              "[RevenueCat] Failed to refresh entitlement after cancellation:",
+              refreshError,
+            );
+            return false;
+          }
+        }
+
+        console.warn("[RevenueCat] Purchase failed:", error);
+        return false;
+      }
+    },
+    [isConfigured],
+  );
+
+  const restorePurchases = useCallback(async (): Promise<boolean> => {
+    if (!isConfigured) return false;
+
+    try {
+      const nextIsPro = await restoreAndCheckPro();
+      setIsPro(nextIsPro);
+      return nextIsPro;
+    } catch (error) {
+      console.warn("[RevenueCat] Restore failed:", error);
+      return false;
+    }
+  }, [isConfigured]);
+
+  const syncPurchases = useCallback(async (): Promise<boolean> => {
+    if (!isConfigured) return false;
+
+    try {
+      const nextIsPro = await syncAndCheckPro();
+      setIsPro(nextIsPro);
+      return nextIsPro;
+    } catch (error) {
+      console.warn("[RevenueCat] Sync purchases failed:", error);
+      return false;
+    }
+  }, [isConfigured]);
+
+  const identifyUser = useCallback(
+    async (userId: string): Promise<boolean> => {
+      if (!isConfigured) return false;
+
+      try {
+        const nextIsPro = await identifyRevenueCatUser(userId);
+        setIsPro(nextIsPro);
+        return nextIsPro;
+      } catch (error) {
+        console.warn("[RevenueCat] Identify user failed:", error);
+        return false;
+      }
+    },
+    [isConfigured],
+  );
+
+  const logOutUser = useCallback(async (): Promise<void> => {
+    if (!isConfigured) return;
+
+    try {
+      await logOutRevenueCatUser();
+      setIsPro(false);
+    } catch (error) {
+      console.warn("[RevenueCat] Log out failed:", error);
+    }
+  }, [isConfigured]);
+
+  const setUserAttributes = useCallback(
+    async (attributes: UserAttributes): Promise<void> => {
+      if (!isConfigured) return;
+
+      try {
+        await setRevenueCatUserAttributes(attributes);
+      } catch (error) {
+        console.warn("[RevenueCat] Set attributes failed:", error);
+      }
+    },
+    [isConfigured],
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+    let unsubscribe = () => {};
+
+    const initialize = async () => {
+      try {
+        const result = await configureRevenueCat();
+
+        if (!isMounted) return;
+
+        if (!result.configured) {
+          setIsConfigured(false);
+          logInitSkip(result.reason);
+          return;
+        }
+
+        setIsConfigured(true);
+
+        unsubscribe = onCustomerInfoUpdated((customerInfo) => {
+          if (!isMounted) return;
+          setIsPro(hasProEntitlement(customerInfo));
+        });
+
+        const nextIsPro = await refreshProEntitlement();
+        if (isMounted) {
+          setIsPro(nextIsPro);
+        }
+      } catch (error) {
+        console.warn("[RevenueCat] Initialization failed:", error);
+      }
+    };
+
+    initialize();
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isConfigured) return;
+
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
+
+      refreshEntitlement().catch((error) => {
+        console.warn("[RevenueCat] Foreground entitlement refresh failed:", error);
+      });
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isConfigured, refreshEntitlement]);
+
+  const value = useMemo<RevenueCatContextValue>(
+    () => ({
+      isPro,
+      isConfigured,
+      refreshEntitlement,
+      getPackages,
+      purchasePackage,
+      restorePurchases,
+      syncPurchases,
+      identifyUser,
+      logOutUser,
+      setUserAttributes,
+    }),
+    [
+      isPro,
+      isConfigured,
+      refreshEntitlement,
+      getPackages,
+      purchasePackage,
+      restorePurchases,
+      syncPurchases,
+      identifyUser,
+      logOutUser,
+      setUserAttributes,
+    ],
+  );
+
+  return <RevenueCatContext.Provider value={value}>{children}</RevenueCatContext.Provider>;
+}

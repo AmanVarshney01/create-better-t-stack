@@ -1,0 +1,46 @@
+import { Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { StyleSheet, View } from "react-native";
+
+import { NAV_THEME } from "@/lib/constants";
+import { useColorScheme } from "@/lib/use-color-scheme";
+import { useRevenueCat } from "@/contexts/revenuecat-context";
+
+export function SubscriptionStatusCard() {
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
+  const { isPro, isConfigured } = useRevenueCat();
+
+  return (
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <Host matchContents=\{{ vertical: true }}>
+        <Column spacing={6}>
+          <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+            Subscription
+          </ExpoUIText>
+          {!isConfigured ? (
+            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 13 }} style=\{{ opacity: 0.7 }}>
+              RevenueCat is not configured yet. Add your API keys in apps/native/.env.
+            </ExpoUIText>
+          ) : isPro ? (
+            <ExpoUIText textStyle=\{{ color: "#16a34a", fontSize: 14, fontWeight: "500" }}>
+              You're a Premium member 🎉
+            </ExpoUIText>
+          ) : (
+            <ExpoUIText textStyle=\{{ color: theme.text, fontSize: 13 }} style=\{{ opacity: 0.7 }}>
+              You're on the free plan.
+            </ExpoUIText>
+          )}
+        </Column>
+      </Host>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    marginBottom: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderRadius: 16,
+  },
+});

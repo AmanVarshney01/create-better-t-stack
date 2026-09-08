@@ -45,6 +45,9 @@ import { queryClient } from "@/utils/orpc";
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { StyleSheet } from "react-native";
+{{#if (eq payments "revenuecat")}}
+import { RevenueCatProvider } from "@/contexts/revenuecat-context";
+{{/if}}
 
 const LIGHT_THEME = {
   ...DefaultTheme,
@@ -92,6 +95,9 @@ export default function RootLayout() {
 
   return (
     <>
+{{#if (eq payments "revenuecat")}}
+      <RevenueCatProvider>
+{{/if}}
       {{#if (eq backend "convex")}}
         {{#if (eq auth "clerk")}}
           <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
@@ -189,6 +195,9 @@ export default function RootLayout() {
           {{/unless}}
         {{/if}}
       {{/if}}
+{{#if (eq payments "revenuecat")}}
+      </RevenueCatProvider>
+{{/if}}
     </>
   );
 }

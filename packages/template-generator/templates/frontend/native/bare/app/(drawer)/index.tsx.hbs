@@ -8,6 +8,10 @@ import { env } from "@{{projectName}}/env/native";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
+{{#if (eq payments "revenuecat")}}
+import { SubscriptionStatusCard } from "@/components/subscription-status-card";
+import { PaywallExample } from "@/components/paywall-example";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
@@ -337,6 +341,11 @@ return (
         <SignUp />
       </>
       )}
+      {{/if}}
+
+      {{#if (eq payments "revenuecat")}}
+      <SubscriptionStatusCard />
+      <PaywallExample />
       {{/if}}
     </View>
   </ScrollView>
