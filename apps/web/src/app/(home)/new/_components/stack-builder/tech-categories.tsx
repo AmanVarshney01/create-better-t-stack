@@ -4,11 +4,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import type { StackState } from "@/lib/constant";
 import { TECH_OPTIONS } from "@/lib/constant";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";
+import {
+  getCategoryDisplayName,
+  getDisabledReason,
+  isOptionCompatible,
+} from "@/lib/stack-validation";
 import type { TechCategory } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 import { TechIcon } from "../tech-icon";
-import { getCategoryDisplayName, getDisabledReason, isOptionCompatible } from "../utils";
 
 type TechCategoriesProps = {
   mode: "desktop" | "mobile";

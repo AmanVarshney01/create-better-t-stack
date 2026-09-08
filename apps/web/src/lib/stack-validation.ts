@@ -1,28 +1,13 @@
+import { ProjectNameSchema } from "@better-t-stack/types";
 import { desktopWebFrontends } from "@better-t-stack/types";
 
 import { DEFAULT_STACK, type StackState, type TECH_OPTIONS } from "@/lib/constant";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";
 
 export function validateProjectName(name: string): string | undefined {
-  const INVALID_CHARS = ["<", ">", ":", '"', "|", "?", "*"];
-  const MAX_LENGTH = 255;
-
-  if (name === ".") return undefined;
-
-  if (!name) return "Project name cannot be empty";
-  if (name.length > MAX_LENGTH) {
-    return `Project name must be less than ${MAX_LENGTH} characters`;
-  }
-  if (INVALID_CHARS.some((char) => name.includes(char))) {
-    return "Project name contains invalid characters";
-  }
-  if (name.startsWith(".") || name.startsWith("-")) {
-    return "Project name cannot start with a dot or dash";
-  }
-  if (name.toLowerCase() === "node_modules" || name.toLowerCase() === "favicon.ico") {
-    return "Project name is reserved";
-  }
-  return undefined;
+  const basename = name.split(/[\\/]/).filter(Boolean).at(-1) || "";
+  const result = ProjectNameSchema.safeParse(basename);
+  return result.success ? undefined : result.error.issues[0]?.message;
 }
 
 export const hasPWACompatibleFrontend = (webFrontend: string[]) =>

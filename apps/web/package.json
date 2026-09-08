@@ -20,6 +20,8 @@
     "@erquhart/convex-oss-stats": "catalog:",
     "@number-flow/react": "^0.6.2",
     "@orama/orama": "^3.1.18",
+    "@orpc/client": "^1.15.0",
+    "@orpc/server": "^1.15.0",
     "@shikijs/transformers": "^4.4.3",
     "@visx/curve": "4.0.1-alpha.0",
     "@visx/event": "4.0.1-alpha.0",

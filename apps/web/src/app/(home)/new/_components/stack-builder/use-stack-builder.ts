@@ -3,11 +3,9 @@ import { toast } from "sonner";
 
 import { type BuilderCopySource, stackSnapshot, track } from "@/lib/analytics";
 import { DEFAULT_STACK, PRESET_TEMPLATES, type StackState, TECH_OPTIONS } from "@/lib/constant";
-import {
-  OBSERVABILITY_ADDONS,
-  sanitizeStackState,
-  TASK_RUNNER_ADDONS,
-} from "@/lib/sanitize-stack-addons";
+import { OBSERVABILITY_ADDONS, TASK_RUNNER_ADDONS } from "@/lib/sanitize-stack-addons";
+import { applyStackUpdate, resolveStackCompatibility } from "@/lib/stack-compatibility";
+import { StackStateSchema } from "@/lib/stack-schema";
 import { useStackState } from "@/lib/stack-url-state.client";
 import {
   CATEGORY_ORDER,
@@ -15,9 +13,12 @@ import {
   generateStackCommand,
   generateStackSharingUrl,
 } from "@/lib/stack-utils";
+import {
+  analyzeStackCompatibility,
+  isOptionCompatible,
+  validateProjectName,
+} from "@/lib/stack-validation";
 import type { TechCategory } from "@/lib/types";
-
-import { analyzeStackCompatibility, isOptionCompatible, validateProjectName } from "../utils";
 
 export type MobileTab = "build" | "preview";
 
@@ -29,60 +30,11 @@ export type CategoryProgressItem = {
 };
 
 const CATEGORY_LIST = CATEGORY_ORDER as TechCategory[];
-const MAX_COMPATIBILITY_PASSES = 10;
-
 type StackUpdate = Partial<StackState> | ((prev: StackState) => Partial<StackState>);
 type CompatibilityAnalysis = ReturnType<typeof analyzeStackCompatibility>;
 
-export type ResolvedStackCompatibility = CompatibilityAnalysis & {
-  stack: StackState;
-};
-
 function withFormattedProjectName(stack: StackState) {
-  return {
-    ...stack,
-    projectName: formatProjectName(stack.projectName),
-  };
-}
-
-export function resolveStackCompatibility(stack: StackState): ResolvedStackCompatibility {
-  let currentStack = sanitizeStackState(stack);
-  let wasAdjusted = false;
-  const changes: CompatibilityAnalysis["changes"] = [];
-
-  for (let pass = 0; pass < MAX_COMPATIBILITY_PASSES; pass++) {
-    const analysis = analyzeStackCompatibility(currentStack);
-    if (!analysis.adjustedStack) {
-      return {
-        stack: currentStack,
-        adjustedStack: wasAdjusted ? currentStack : null,
-        notes: analysis.notes,
-        changes,
-      };
-    }
-
-    wasAdjusted = true;
-    changes.push(...analysis.changes);
-    currentStack = sanitizeStackState(analysis.adjustedStack);
-  }
-
-  const finalAnalysis = analyzeStackCompatibility(currentStack);
-  return {
-    stack: currentStack,
-    adjustedStack: wasAdjusted ? currentStack : null,
-    notes: finalAnalysis.notes,
-    changes,
-  };
-}
-
-export function applyStackUpdate(
-  currentStack: StackState,
-  update: StackUpdate,
-): ResolvedStackCompatibility {
-  const resolvedCurrentStack = resolveStackCompatibility(currentStack).stack;
-  const partialUpdate = update instanceof Function ? update(resolvedCurrentStack) : update;
-  const requestedStack = sanitizeStackState({ ...resolvedCurrentStack, ...partialUpdate });
-  return resolveStackCompatibility(requestedStack);
+  return { ...stack, projectName: formatProjectName(stack.projectName) };
 }
 
 export function getSelectedTechRemovalUpdate(
@@ -226,7 +178,11 @@ export function useStackBuilder() {
 
   const [copied, setCopied] = useState(false);
   const [lastSavedStack, setLastSavedStack] = useState<StackState | null>(null);
-  const [mobileTab, setMobileTab] = useState<MobileTab>("build");
+  const mobileTab: MobileTab = viewMode === "preview" ? "preview" : "build";
+  const setMobileTab = useCallback(
+    (tab: MobileTab) => setViewMode(tab === "preview" ? "preview" : "command"),
+    [setViewMode],
+  );
 
   const setStack = useCallback(
     async (update: StackUpdate) => {
@@ -259,20 +215,20 @@ export function useStackBuilder() {
 
   const compatibilityAnalysis = useMemo(() => resolveStackCompatibility(stack), [stack]);
   const effectiveStack = compatibilityAnalysis.stack;
-  const projectNameError = validateProjectName(stack.projectName || "");
+  const projectNameError = validateProjectName(formatProjectName(stack.projectName));
 
   useEffect(() => {
-    const savedStack = localStorage.getItem("betterTStackPreference");
-    if (!savedStack) {
-      return;
-    }
-
     try {
-      const parsedStack = sanitizeStackState(JSON.parse(savedStack) as StackState);
-      setLastSavedStack(parsedStack);
-    } catch (error) {
-      console.error("Failed to parse saved stack", error);
-      localStorage.removeItem("betterTStackPreference");
+      const savedStack = localStorage.getItem("betterTStackPreference");
+      if (!savedStack) return;
+      const result = StackStateSchema.safeParse(JSON.parse(savedStack));
+      if (result.success) {
+        setLastSavedStack(resolveStackCompatibility(result.data).stack);
+      } else {
+        localStorage.removeItem("betterTStackPreference");
+      }
+    } catch {
+      setLastSavedStack(null);
     }
   }, []);
 
@@ -396,6 +352,10 @@ export function useStackBuilder() {
   }
 
   async function copyToClipboard(source: BuilderCopySource) {
+    if (projectNameError) {
+      toast.error(projectNameError);
+      return;
+    }
     try {
       await navigator.clipboard.writeText(command);
       setCopied(true);
@@ -415,11 +375,19 @@ export function useStackBuilder() {
   }
 
   function saveCurrentStack() {
-    const stackToSave = withFormattedProjectName(effectiveStack);
-    localStorage.setItem("betterTStackPreference", JSON.stringify(stackToSave));
-    setLastSavedStack(stackToSave);
-    toast.success("Your stack configuration has been saved");
-    track("builder_save", {});
+    if (projectNameError) {
+      toast.error(projectNameError);
+      return;
+    }
+    try {
+      const stackToSave = withFormattedProjectName(effectiveStack);
+      localStorage.setItem("betterTStackPreference", JSON.stringify(stackToSave));
+      setLastSavedStack(stackToSave);
+      toast.success("Your stack configuration has been saved");
+      track("builder_save", {});
+    } catch {
+      toast.error("Unable to save preferences in this browser. You can share your stack instead.");
+    }
   }
 
   function loadSavedStack() {

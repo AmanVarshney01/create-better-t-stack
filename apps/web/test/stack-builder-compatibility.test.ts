@@ -6,18 +6,14 @@ import {
   WEB_DEPLOY_VALUES,
 } from "../../../packages/types/src/schemas";
 import {
-  applyStackUpdate,
   getSelectedTechRemovalUpdate,
   getTechSelectionUpdate,
-  resolveStackCompatibility,
 } from "../src/app/(home)/new/_components/stack-builder/use-stack-builder";
-import {
-  analyzeStackCompatibility,
-  getDisabledReason,
-} from "../src/app/(home)/new/_components/utils";
 import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "../src/lib/constant";
 import { sanitizeAddons } from "../src/lib/sanitize-stack-addons";
+import { applyStackUpdate, resolveStackCompatibility } from "../src/lib/stack-compatibility";
 import { formatStackCommandForDisplay, generateStackCommand } from "../src/lib/stack-utils";
+import { analyzeStackCompatibility, getDisabledReason } from "../src/lib/stack-validation";
 
 function createStack(overrides: Partial<StackState> = {}): StackState {
   return {

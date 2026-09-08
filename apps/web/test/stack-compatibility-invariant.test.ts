@@ -2,14 +2,11 @@ import { describe, expect, test } from "bun:test";
 
 import type { CLIInput, ProjectConfig } from "../../cli/src/types";
 import { validateFullConfig } from "../../cli/src/utils/config-validation";
-import {
-  applyStackUpdate,
-  getTechSelectionUpdate,
-  resolveStackCompatibility,
-} from "../src/app/(home)/new/_components/stack-builder/use-stack-builder";
-import { getDisabledReason } from "../src/app/(home)/new/_components/utils";
+import { getTechSelectionUpdate } from "../src/app/(home)/new/_components/stack-builder/use-stack-builder";
 import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "../src/lib/constant";
 import { sanitizeStackState } from "../src/lib/sanitize-stack-addons";
+import { applyStackUpdate, resolveStackCompatibility } from "../src/lib/stack-compatibility";
+import { getDisabledReason } from "../src/lib/stack-validation";
 import type { TechCategory } from "../src/lib/types";
 
 const RANDOM_STACK_COUNT = 25_000;

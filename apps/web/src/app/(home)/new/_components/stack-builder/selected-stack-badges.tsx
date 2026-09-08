@@ -3,11 +3,11 @@ import { X } from "lucide-react";
 import type { StackState } from "@/lib/constant";
 import { TECH_OPTIONS } from "@/lib/constant";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";
+import { getCategoryDisplayName } from "@/lib/stack-validation";
 import type { TechCategory } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 import { TechIcon } from "../tech-icon";
-import { getCategoryDisplayName } from "../utils";
 
 type SelectedStackBadgesProps = {
   stack: StackState;
