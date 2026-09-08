@@ -6,7 +6,6 @@ import fs from "fs-extra";
 
 import { add } from "../src/index";
 import { readBtsConfig, updateBtsConfig } from "../src/utils/bts-config";
-import { SMOKE_DIR } from "./setup";
 import { expectSuccess, runCreateTest } from "./test-utils";
 
 describe("persisted project configuration", () => {
@@ -25,16 +24,20 @@ describe("persisted project configuration", () => {
     expect(await fs.readFile(configPath, "utf8")).toContain("// my project");
   });
 
-  for (const [name, content] of [
-    ["malformed", '{"addons": ["biome"]'],
-    ["invalid-shape", '{"addons": "biome"}'],
-  ]) {
+  for (const name of ["malformed", "invalid-shape"]) {
     it(`rejects ${name} configuration without changing it`, async () => {
-      const projectDir = join(SMOKE_DIR, `config-${name}`);
-      const configPath = join(projectDir, "bts.jsonc");
-      await fs.outputFile(configPath, content);
-      expect(await readBtsConfig(projectDir)).toBeNull();
-      expect((await updateBtsConfig(projectDir, { addons: ["oxlint"] })).isErr()).toBe(true);
+      const result = await runCreateTest({ projectName: `config-${name}` });
+      expectSuccess(result);
+      const before = await readBtsConfig(result.projectDir);
+      if (!before) throw new Error("Expected a valid generated config");
+      const content =
+        name === "malformed"
+          ? '{"addons": ["biome"]'
+          : JSON.stringify({ ...before, addons: "biome" });
+      const configPath = join(result.projectDir, "bts.jsonc");
+      await fs.writeFile(configPath, content);
+      expect(await readBtsConfig(result.projectDir)).toBeNull();
+      expect((await updateBtsConfig(result.projectDir, { webDeploy: "none" })).isErr()).toBe(true);
       expect(await fs.readFile(configPath, "utf8")).toBe(content);
     });
   }

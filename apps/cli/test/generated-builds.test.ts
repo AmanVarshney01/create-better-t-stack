@@ -952,6 +952,8 @@ async function bootAndValidateStartAuthRuntime(sample: SelectedBuildSample, proj
       cwd: path.join(projectDir, "apps/web"),
       all: true,
       reject: false,
+      timeout: commandTimeoutMs,
+      killDescendants: true,
       env: { ...process.env, BETTER_AUTH_URL: origin },
     },
   );
