@@ -124,7 +124,10 @@ export function generateAlchemyRun(config: ProjectConfig): string {
   if (plan.web.target !== "none") writer.blankLine();
   writeStack(writer, plan);
 
-  return writer.toString();
+  const source = writer.toString();
+  return source.includes("Config.")
+    ? source
+    : source.replace('import * as Config from "effect/Config";\n', "");
 }
 
 export function processAlchemyRun(vfs: VirtualFileSystem, config: ProjectConfig): void {
