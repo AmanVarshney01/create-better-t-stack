@@ -14,9 +14,15 @@ describe("baseline requirements (before prompts)", () => {
   it("covers only the package manager and the host Node.js, never the stack", () => {
     expect(getBaselineRequirements("pnpm", "node")).toEqual([
       expect.objectContaining({ tool: "pnpm", range: PACKAGE_MANAGER_VERSION_RANGES.pnpm }),
-      expect.objectContaining({ tool: "node", range: ">=22.0.0" }),
+      expect.objectContaining({ tool: "node", reason: "create-better-t-stack" }),
     ]);
     expect(getBaselineRequirements(undefined, "bun")).toEqual([]);
+  });
+
+  it("rejects Node versions below the CLI formatter requirement", () => {
+    const requirements = getBaselineRequirements(undefined, "node");
+    expect(validateRequirements(requirements, { node: "22.11.0" }).isErr()).toBe(true);
+    expect(validateRequirements(requirements, { node: "22.12.0" }).isOk()).toBe(true);
   });
 
   it("fails an outdated pnpm before any stack is chosen", () => {
