@@ -1,37 +1,57 @@
 import { ProjectConfigSchema } from "@better-t-stack/types";
 import { z } from "zod";
 
-import { DEFAULT_STACK, TECH_OPTIONS, type StackState } from "./constant";
+import { DEFAULT_STACK, TECH_OPTIONS, getStackOptionIds, type StackState } from "./constant";
 import { getStackBackend, getStackFrontends } from "./stack-model";
 import { formatProjectName } from "./stack-utils";
 
-const option = (category: keyof typeof TECH_OPTIONS) =>
-  z.enum(TECH_OPTIONS[category].map(({ id }) => id));
+const option = <K extends keyof typeof TECH_OPTIONS>(category: K) =>
+  z.enum(getStackOptionIds(category));
+
+const stackFields = {
+  projectName: z.string().nullable(),
+  webFrontend: z.array(option("webFrontend")),
+  nativeFrontend: z.array(option("nativeFrontend")),
+  runtime: option("runtime"),
+  backend: option("backend"),
+  database: option("database"),
+  orm: option("orm"),
+  dbSetup: option("dbSetup"),
+  auth: option("auth"),
+  payments: option("payments"),
+  packageManager: option("packageManager"),
+  addons: z.array(z.enum(["none", ...getStackOptionIds("addons")])),
+  examples: z.array(z.enum(["none", ...getStackOptionIds("examples")])),
+  git: option("git"),
+  install: option("install"),
+  api: option("api"),
+  webDeploy: option("webDeploy"),
+  serverDeploy: option("serverDeploy"),
+  yolo: z.enum(["true", "false"]),
+};
+
+export const StackUpdateSchema = z.object(stackFields).partial();
 
 export const StackStateSchema = z.object({
-  projectName: z.string().nullable().default(DEFAULT_STACK.projectName),
-  webFrontend: z.array(option("webFrontend")).default(DEFAULT_STACK.webFrontend),
-  nativeFrontend: z.array(option("nativeFrontend")).default(DEFAULT_STACK.nativeFrontend),
-  runtime: option("runtime").default(DEFAULT_STACK.runtime),
-  backend: option("backend").default(DEFAULT_STACK.backend),
-  database: option("database").default(DEFAULT_STACK.database),
-  orm: option("orm").default(DEFAULT_STACK.orm),
-  dbSetup: option("dbSetup").default(DEFAULT_STACK.dbSetup),
-  auth: option("auth").default(DEFAULT_STACK.auth),
-  payments: option("payments").default(DEFAULT_STACK.payments),
-  packageManager: option("packageManager").default(DEFAULT_STACK.packageManager),
-  addons: z
-    .array(z.enum(["none", ...TECH_OPTIONS.addons.map(({ id }) => id)]))
-    .default(DEFAULT_STACK.addons),
-  examples: z
-    .array(z.enum(["none", ...TECH_OPTIONS.examples.map(({ id }) => id)]))
-    .default(DEFAULT_STACK.examples),
-  git: option("git").default(DEFAULT_STACK.git),
-  install: option("install").default(DEFAULT_STACK.install),
-  api: option("api").default(DEFAULT_STACK.api),
-  webDeploy: option("webDeploy").default(DEFAULT_STACK.webDeploy),
-  serverDeploy: option("serverDeploy").default(DEFAULT_STACK.serverDeploy),
-  yolo: z.enum(["true", "false"]).default("false"),
+  projectName: stackFields.projectName.default(DEFAULT_STACK.projectName),
+  webFrontend: stackFields.webFrontend.default(DEFAULT_STACK.webFrontend),
+  nativeFrontend: stackFields.nativeFrontend.default(DEFAULT_STACK.nativeFrontend),
+  runtime: stackFields.runtime.default(DEFAULT_STACK.runtime),
+  backend: stackFields.backend.default(DEFAULT_STACK.backend),
+  database: stackFields.database.default(DEFAULT_STACK.database),
+  orm: stackFields.orm.default(DEFAULT_STACK.orm),
+  dbSetup: stackFields.dbSetup.default(DEFAULT_STACK.dbSetup),
+  auth: stackFields.auth.default(DEFAULT_STACK.auth),
+  payments: stackFields.payments.default(DEFAULT_STACK.payments),
+  packageManager: stackFields.packageManager.default(DEFAULT_STACK.packageManager),
+  addons: stackFields.addons.default(DEFAULT_STACK.addons),
+  examples: stackFields.examples.default(DEFAULT_STACK.examples),
+  git: stackFields.git.default(DEFAULT_STACK.git),
+  install: stackFields.install.default(DEFAULT_STACK.install),
+  api: stackFields.api.default(DEFAULT_STACK.api),
+  webDeploy: stackFields.webDeploy.default(DEFAULT_STACK.webDeploy),
+  serverDeploy: stackFields.serverDeploy.default(DEFAULT_STACK.serverDeploy),
+  yolo: stackFields.yolo.default(DEFAULT_STACK.yolo),
 });
 
 export function stackStateToConfig(stack: StackState) {

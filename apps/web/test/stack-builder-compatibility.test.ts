@@ -612,13 +612,13 @@ describe("stack builder Prisma deployment compatibility", () => {
       "tanstack-start",
       "svelte",
       "solid",
-    ]) {
+    ] as const) {
       expect(
         getDisabledReason(createStack({ webFrontend: [frontend] }), "webDeploy", "prisma"),
       ).toBeNull();
     }
 
-    for (const frontend of ["tanstack-router"]) {
+    for (const frontend of ["tanstack-router"] as const) {
       expect(
         getDisabledReason(createStack({ webFrontend: [frontend] }), "webDeploy", "prisma"),
       ).toBe(
@@ -704,4 +704,25 @@ describe("stack builder Prisma deployment compatibility", () => {
       "This Prisma PostgreSQL setup with Next.js is temporarily unavailable on Cloudflare",
     );
   });
+});
+
+test("changing one builder field preserves unrelated settings", () => {
+  const stack = createStack({
+    projectName: "keep-me",
+    database: "postgres",
+    orm: "prisma",
+    runtime: "node",
+  });
+  const update = getTechSelectionUpdate(stack, "git", "false");
+  expect(update).toEqual({ git: "false" });
+  const next = applyStackUpdate(stack, update).stack;
+  expect(next.projectName).toBe("keep-me");
+  expect(next.database).toBe("postgres");
+  expect(next.orm).toBe("prisma");
+  expect(next.runtime).toBe("node");
+});
+
+test("ignores option IDs belonging to a different builder category", () => {
+  expect(getTechSelectionUpdate(DEFAULT_STACK, "runtime", "next")).toEqual({});
+  expect(getTechSelectionUpdate(DEFAULT_STACK, "addons", "postgres")).toEqual({});
 });

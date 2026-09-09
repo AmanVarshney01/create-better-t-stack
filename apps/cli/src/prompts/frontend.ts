@@ -1,5 +1,5 @@
 import { DEFAULT_CONFIG } from "../constants";
-import type { Backend, Frontend } from "../types";
+import type { Backend, Frontend, Auth } from "../types";
 import { isFrontendAllowedWithBackend } from "../utils/compatibility-rules";
 import { isFirstPrompt } from "../utils/context";
 import { UserCancelledError } from "../utils/errors";
@@ -27,7 +27,7 @@ const WEB_FRONTEND_VALUES: readonly Frontend[] = [
 export async function getFrontendChoice(
   frontendOptions?: Frontend[],
   backend?: Backend,
-  auth?: string,
+  auth?: Auth,
   previousValue?: Frontend[],
 ): Promise<Frontend[] | symbol> {
   if (frontendOptions !== undefined) return frontendOptions;

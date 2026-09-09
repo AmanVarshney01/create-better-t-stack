@@ -1,22 +1,52 @@
-// TechCategory for the stack builder UI
-export type TechCategory =
-  | "api"
-  | "webFrontend"
-  | "nativeFrontend"
+import type {
+  Backend,
+  FullstackFrontend,
+  NativeFrontend,
+  ProjectConfig,
+  WebFrontend,
+} from "@better-t-stack/types";
+
+export type StackState = Pick<
+  ProjectConfig,
   | "runtime"
-  | "backend"
   | "database"
   | "orm"
   | "dbSetup"
-  | "webDeploy"
-  | "serverDeploy"
   | "auth"
   | "payments"
   | "packageManager"
   | "addons"
   | "examples"
-  | "git"
-  | "install";
+  | "api"
+  | "webDeploy"
+  | "serverDeploy"
+> & {
+  projectName: string | null;
+  webFrontend: WebFrontend[];
+  nativeFrontend: NativeFrontend[];
+  backend: Exclude<Backend, "self"> | `self-${FullstackFrontend}`;
+  git: "true" | "false";
+  install: "true" | "false";
+  yolo: "true" | "false";
+};
+
+export type TechCategory = Exclude<keyof StackState, "projectName" | "yolo">;
+type StackOptionIds = {
+  [K in TechCategory]: Extract<StackState[K] extends (infer Id)[] ? Id : StackState[K], string>;
+};
+export type StackOptionId<K extends TechCategory> = StackOptionIds[K];
+export type TechOptions = {
+  [K in TechCategory]: {
+    id: StackOptionId<K>;
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+    default?: boolean;
+    className?: string;
+    experimental?: boolean;
+  }[];
+};
 
 export type TechEdge = {
   id: string;

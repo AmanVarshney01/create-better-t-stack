@@ -4,6 +4,7 @@ import {
   supportsAlchemyManagedDatabase,
   type Backend,
   type DatabaseSetup,
+  type Database,
   type DbSetupOptions,
   type ORM,
   type Runtime,
@@ -14,7 +15,7 @@ import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 export async function getDBSetupChoice(
-  databaseType: string,
+  databaseType: Database,
   dbSetup: DatabaseSetup | undefined,
   _orm?: ORM,
   backend?: Backend,

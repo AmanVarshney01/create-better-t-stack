@@ -7,13 +7,11 @@ import {
   type UrlKeys,
 } from "nuqs/server";
 
-import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "@/lib/constant";
+import { DEFAULT_STACK, type StackState, getStackOptionIds } from "@/lib/constant";
 import { resolveStackCompatibility } from "@/lib/stack-compatibility";
 import { stackUrlKeys } from "@/lib/stack-url-keys";
 
-const getValidIds = (category: keyof typeof TECH_OPTIONS): string[] => {
-  return TECH_OPTIONS[category]?.map((opt) => opt.id) ?? [];
-};
+import { sanitizeStackState } from "./sanitize-stack-addons";
 
 const serverStackParsers = {
   projectName: parseAsStringServer.withDefault(DEFAULT_STACK.projectName || "my-better-t-app"),
@@ -21,32 +19,32 @@ const serverStackParsers = {
   nativeFrontend: parseAsArrayOfServer(parseAsStringServer).withDefault(
     DEFAULT_STACK.nativeFrontend,
   ),
-  runtime: parseAsStringEnumServer<StackState["runtime"]>(getValidIds("runtime")).withDefault(
+  runtime: parseAsStringEnumServer<StackState["runtime"]>(getStackOptionIds("runtime")).withDefault(
     DEFAULT_STACK.runtime,
   ),
-  backend: parseAsStringEnumServer<StackState["backend"]>(getValidIds("backend")).withDefault(
+  backend: parseAsStringEnumServer<StackState["backend"]>(getStackOptionIds("backend")).withDefault(
     DEFAULT_STACK.backend,
   ),
-  api: parseAsStringEnumServer<StackState["api"]>(getValidIds("api")).withDefault(
+  api: parseAsStringEnumServer<StackState["api"]>(getStackOptionIds("api")).withDefault(
     DEFAULT_STACK.api,
   ),
-  database: parseAsStringEnumServer<StackState["database"]>(getValidIds("database")).withDefault(
-    DEFAULT_STACK.database,
-  ),
-  orm: parseAsStringEnumServer<StackState["orm"]>(getValidIds("orm")).withDefault(
+  database: parseAsStringEnumServer<StackState["database"]>(
+    getStackOptionIds("database"),
+  ).withDefault(DEFAULT_STACK.database),
+  orm: parseAsStringEnumServer<StackState["orm"]>(getStackOptionIds("orm")).withDefault(
     DEFAULT_STACK.orm,
   ),
-  dbSetup: parseAsStringEnumServer<StackState["dbSetup"]>(getValidIds("dbSetup")).withDefault(
+  dbSetup: parseAsStringEnumServer<StackState["dbSetup"]>(getStackOptionIds("dbSetup")).withDefault(
     DEFAULT_STACK.dbSetup,
   ),
-  auth: parseAsStringEnumServer<StackState["auth"]>(getValidIds("auth")).withDefault(
+  auth: parseAsStringEnumServer<StackState["auth"]>(getStackOptionIds("auth")).withDefault(
     DEFAULT_STACK.auth,
   ),
-  payments: parseAsStringEnumServer<StackState["payments"]>(getValidIds("payments")).withDefault(
-    DEFAULT_STACK.payments,
-  ),
+  payments: parseAsStringEnumServer<StackState["payments"]>(
+    getStackOptionIds("payments"),
+  ).withDefault(DEFAULT_STACK.payments),
   packageManager: parseAsStringEnumServer<StackState["packageManager"]>(
-    getValidIds("packageManager"),
+    getStackOptionIds("packageManager"),
   ).withDefault(DEFAULT_STACK.packageManager),
   addons: parseAsArrayOfServer(parseAsStringServer).withDefault(DEFAULT_STACK.addons),
   examples: parseAsArrayOfServer(parseAsStringServer).withDefault(DEFAULT_STACK.examples),
@@ -54,11 +52,11 @@ const serverStackParsers = {
   install: parseAsStringEnumServer<StackState["install"]>(["true", "false"]).withDefault(
     DEFAULT_STACK.install,
   ),
-  webDeploy: parseAsStringEnumServer<StackState["webDeploy"]>(getValidIds("webDeploy")).withDefault(
-    DEFAULT_STACK.webDeploy,
-  ),
+  webDeploy: parseAsStringEnumServer<StackState["webDeploy"]>(
+    getStackOptionIds("webDeploy"),
+  ).withDefault(DEFAULT_STACK.webDeploy),
   serverDeploy: parseAsStringEnumServer<StackState["serverDeploy"]>(
-    getValidIds("serverDeploy"),
+    getStackOptionIds("serverDeploy"),
   ).withDefault(DEFAULT_STACK.serverDeploy),
   yolo: parseAsStringEnumServer<StackState["yolo"]>(["true", "false"]).withDefault(
     DEFAULT_STACK.yolo,
@@ -77,7 +75,7 @@ export async function loadStackParams(
   searchParams: Parameters<typeof rawLoadStackParams>[0],
 ): Promise<StackState> {
   const stackState = await rawLoadStackParams(searchParams);
-  return resolveStackCompatibility(stackState).stack;
+  return resolveStackCompatibility(sanitizeStackState(stackState)).stack;
 }
 
 export type LoadedStackState = Awaited<ReturnType<typeof loadStackParams>>;

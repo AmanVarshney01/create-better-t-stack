@@ -104,7 +104,8 @@ export function validateSelfBackendCompatibility(
 
   if (backend === "self") {
     const { web, native } = splitFrontends(frontends);
-    const hasSupportedWeb = web.length === 1 && FULLSTACK_FRONTENDS.includes(web[0]);
+    const hasSupportedWeb =
+      web.length === 1 && FULLSTACK_FRONTENDS.some((frontend) => frontend === web[0]);
 
     if (!hasSupportedWeb) {
       return validationErr(
@@ -376,15 +377,9 @@ export function validateAddonsAgainstFrontends(
 
   for (const addon of addons) {
     if (addon === "none") continue;
-    const { isCompatible, reason } = validateAddonCompatibility(
-      addon,
-      frontends,
-      auth,
-      backend,
-      runtime,
-    );
-    if (!isCompatible) {
-      return validationErr(`Incompatible addon/frontend combination: ${reason}`);
+    const compatibility = validateAddonCompatibility(addon, frontends, auth, backend, runtime);
+    if (!compatibility.isCompatible) {
+      return validationErr(`Incompatible addon/frontend combination: ${compatibility.reason}`);
     }
   }
   return Result.ok(undefined);

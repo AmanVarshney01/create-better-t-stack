@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
+import type { Database, ORM } from "@better-t-stack/types";
+
 import type { CLIInput } from "../../cli/src/types";
 import { validateFullConfig } from "../../cli/src/utils/config-validation";
 import { getTechSelectionUpdate } from "../src/app/(home)/new/_components/stack-builder/use-stack-builder";
@@ -113,7 +115,7 @@ function getResolvedSelectionErrors(stack: StackState): string[] {
 
 describe("compatibility adjustment invariants", () => {
   test("exposes exactly the ORM choices offered by the CLI for every database", () => {
-    const expectedOrmChoices = new Map<string, string[]>([
+    const expectedOrmChoices = new Map<Database, ORM[]>([
       ["none", ["none"]],
       ["sqlite", ["drizzle", "prisma"]],
       ["postgres", ["drizzle", "prisma"]],

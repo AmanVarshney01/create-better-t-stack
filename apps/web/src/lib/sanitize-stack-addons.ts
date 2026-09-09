@@ -1,35 +1,37 @@
-import { TASK_RUNNER_ADDONS, OBSERVABILITY_ADDONS } from "@better-t-stack/types";
+import { TASK_RUNNER_ADDONS, OBSERVABILITY_ADDONS, type Addons } from "@better-t-stack/types";
 
 import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "./constant";
 
-const validWebFrontendIds = new Set(TECH_OPTIONS.webFrontend.map((option) => option.id));
-const validNativeFrontendIds = new Set(TECH_OPTIONS.nativeFrontend.map((option) => option.id));
-const validAddonIds = new Set(["none", ...TECH_OPTIONS.addons.map((option) => option.id)]);
-const validExampleIds = new Set(["none", ...TECH_OPTIONS.examples.map((option) => option.id)]);
+const validWebFrontendIds = TECH_OPTIONS.webFrontend.map((option) => option.id);
+const validNativeFrontendIds = TECH_OPTIONS.nativeFrontend.map((option) => option.id);
+const validAddonIds = ["none" as const, ...TECH_OPTIONS.addons.map((option) => option.id)];
+const validExampleIds = ["none" as const, ...TECH_OPTIONS.examples.map((option) => option.id)];
 
-function sanitizeSingleSelection(
+function sanitizeSingleSelection<T extends string>(
   values: readonly string[] | null | undefined,
-  validIds: ReadonlySet<string>,
-  defaultValue: readonly string[],
-): string[] {
+  validIds: readonly T[],
+  defaultValue: readonly (T | "none")[],
+): (T | "none")[] {
   if (values == null) {
     return [...defaultValue];
   }
 
-  const selectedValue = values.filter((value) => validIds.has(value) && value !== "none").at(-1);
+  const selectedValue = values
+    .flatMap((value) => validIds.filter((id) => id === value && id !== "none"))
+    .at(-1);
   return selectedValue ? [selectedValue] : ["none"];
 }
 
-function sanitizeMultiSelection(
+function sanitizeMultiSelection<T extends string>(
   values: readonly string[] | null | undefined,
-  validIds: ReadonlySet<string>,
-  defaultValue: readonly string[],
-): string[] {
+  validIds: readonly T[],
+  defaultValue: readonly (T | "none")[],
+): (T | "none")[] {
   if (values == null) {
     return [...defaultValue];
   }
 
-  const sanitized = values.filter((value) => validIds.has(value));
+  const sanitized = values.flatMap((value) => validIds.filter((id) => id === value));
   const normalized =
     sanitized.length > 1 ? sanitized.filter((value) => value !== "none") : sanitized;
   const unique = [...new Set(normalized)];
@@ -37,11 +39,11 @@ function sanitizeMultiSelection(
   return unique.length > 0 ? unique : ["none"];
 }
 
-function resolveAddonConflicts(addons: readonly string[]): string[] {
-  const resolved: string[] = [];
+function resolveAddonConflicts(addons: readonly Addons[]): Addons[] {
+  const resolved: Addons[] = [];
   const exclusiveGroups = [
-    new Set<string>(TASK_RUNNER_ADDONS),
-    new Set<string>(OBSERVABILITY_ADDONS),
+    new Set<Addons>(TASK_RUNNER_ADDONS),
+    new Set<Addons>(OBSERVABILITY_ADDONS),
   ];
 
   for (const addon of addons) {
@@ -59,22 +61,20 @@ function resolveAddonConflicts(addons: readonly string[]): string[] {
   return resolved;
 }
 
-export function sanitizeAddons(addons: readonly string[] | null | undefined): string[] {
+export function sanitizeAddons(addons: readonly string[] | null | undefined) {
   const sanitized = sanitizeMultiSelection(addons, validAddonIds, DEFAULT_STACK.addons);
   return resolveAddonConflicts(sanitized);
 }
 
-export function sanitizeExamples(examples: readonly string[] | null | undefined): string[] {
+export function sanitizeExamples(examples: readonly string[] | null | undefined) {
   return sanitizeMultiSelection(examples, validExampleIds, DEFAULT_STACK.examples);
 }
 
-export function sanitizeWebFrontends(webFrontend: readonly string[] | null | undefined): string[] {
+export function sanitizeWebFrontends(webFrontend: readonly string[] | null | undefined) {
   return sanitizeSingleSelection(webFrontend, validWebFrontendIds, DEFAULT_STACK.webFrontend);
 }
 
-export function sanitizeNativeFrontends(
-  nativeFrontend: readonly string[] | null | undefined,
-): string[] {
+export function sanitizeNativeFrontends(nativeFrontend: readonly string[] | null | undefined) {
   return sanitizeSingleSelection(
     nativeFrontend,
     validNativeFrontendIds,
@@ -82,7 +82,17 @@ export function sanitizeNativeFrontends(
   );
 }
 
-export function sanitizeStackState(stack: StackState): StackState {
+export type RawStackLists = Omit<
+  StackState,
+  "webFrontend" | "nativeFrontend" | "addons" | "examples"
+> & {
+  webFrontend: string[];
+  nativeFrontend: string[];
+  addons: string[];
+  examples: string[];
+};
+
+export function sanitizeStackState(stack: RawStackLists): StackState {
   return {
     ...stack,
     webFrontend: sanitizeWebFrontends(stack.webFrontend),

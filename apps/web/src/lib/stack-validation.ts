@@ -26,7 +26,7 @@ import {
   getDatabaseSetupDatabases,
 } from "@better-t-stack/types";
 
-import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "@/lib/constant";
+import { DEFAULT_STACK, type StackState, TECH_OPTIONS, isStackOption } from "@/lib/constant";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";
 
 import {
@@ -49,10 +49,15 @@ const clerkFrontendRequirementMessage =
 const convexBetterAuthFrontendRequirementMessage =
   "Better-Auth with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
 
-const isClerkFrontendSelectionCompatible = (web: string[], native: string[]) =>
-  supportsClerkFrontend([...web, ...native]);
+const isClerkFrontendSelectionCompatible = (
+  web: StackState["webFrontend"],
+  native: StackState["nativeFrontend"],
+) => supportsClerkFrontend([...web, ...native]);
 
-const isConvexBetterAuthFrontendSelectionCompatible = (web: string[], native: string[]) =>
+const isConvexBetterAuthFrontendSelectionCompatible = (
+  web: StackState["webFrontend"],
+  native: StackState["nativeFrontend"],
+) =>
   supportsConvexBetterAuth([...web, ...native]) &&
   [...web, ...native].every((frontend) =>
     isFrontendAllowedWithBackend(frontend, "convex", "better-auth"),
@@ -64,16 +69,18 @@ const getCloudflareNextIssue = (stack: StackState) =>
     : null;
 
 const getDockerDesktopConflict = (
-  addons: string[],
-  frontend: string[],
-  backend: string,
-  auth: string,
+  addons: StackState["addons"],
+  frontend: StackState["webFrontend"],
+  backend: StackState["backend"],
+  auth: StackState["auth"],
 ) => getDesktopDeployConflict("docker", addons, frontend, getStackBackend(backend), auth);
 
-const getPrismaDesktopConflict = (addons: string[], frontend: string[]) =>
-  getDesktopDeployConflict("prisma", addons, frontend);
+const getPrismaDesktopConflict = (
+  addons: StackState["addons"],
+  frontend: StackState["webFrontend"],
+) => getDesktopDeployConflict("prisma", addons, frontend);
 
-function getAddonIssue(stack: StackState, addon: string) {
+function getAddonIssue(stack: StackState, addon: StackState["addons"][number]) {
   const result = validateAddonCompatibility(
     addon,
     getStackFrontends(stack),
@@ -559,7 +566,11 @@ export const getDisabledReason = (
         return convexBetterAuthFrontendRequirementMessage;
       }
     }
-    if (category === "webFrontend" && !isFrontendAllowedWithBackend(optionId, "convex")) {
+    if (
+      category === "webFrontend" &&
+      isStackOption("webFrontend", optionId) &&
+      !isFrontendAllowedWithBackend(optionId, "convex")
+    ) {
       return `${optionId.charAt(0).toUpperCase() + optionId.slice(1)} is not compatible with Convex`;
     }
     if (category === "examples" && optionId === "ai") {
@@ -590,7 +601,11 @@ export const getDisabledReason = (
       fullstackFrontend;
     if (category === "runtime" && optionId !== "none")
       return `${name} fullstack uses built-in server routes`;
-    if (category === "webFrontend" && optionId !== fullstackFrontend)
+    if (
+      category === "webFrontend" &&
+      isStackOption("webFrontend", optionId) &&
+      optionId !== fullstackFrontend
+    )
       return `${name} fullstack requires ${name} frontend`;
     if (category === "serverDeploy" && optionId !== "none")
       return "Fullstack uses frontend deployment";
@@ -602,7 +617,7 @@ export const getDisabledReason = (
       return `tRPC is not compatible with ${name} (use oRPC)`;
   }
 
-  if (category === "backend") {
+  if (category === "backend" && isStackOption("backend", optionId)) {
     const requiredFrontend = getSelfBackendFrontend(optionId);
     if (requiredFrontend && !currentStack.webFrontend.includes(requiredFrontend)) {
       const name =
@@ -642,7 +657,7 @@ export const getDisabledReason = (
     }
   }
 
-  if (category === "database") {
+  if (category === "database" && isStackOption("database", optionId)) {
     if (!supportsRuntimeDatabase(currentStack.runtime, optionId)) {
       return "MongoDB is not compatible with Workers runtime";
     }
@@ -650,6 +665,7 @@ export const getDisabledReason = (
 
   if (
     category === "orm" &&
+    isStackOption("orm", optionId) &&
     (!supportsOrmDatabase(optionId, currentStack.database) ||
       (optionId === "mongoose" && !supportsRuntimeDatabase(currentStack.runtime, "mongodb")))
   ) {
@@ -673,7 +689,7 @@ export const getDisabledReason = (
     return `${optionId} does not support ${currentStack.database}`;
   }
 
-  if (category === "dbSetup" && optionId !== "none") {
+  if (category === "dbSetup" && isStackOption("dbSetup", optionId) && optionId !== "none") {
     if (currentStack.database === "none") {
       return "Select a database first";
     }
@@ -724,7 +740,7 @@ export const getDisabledReason = (
     }
   }
 
-  if (category === "addons") {
+  if (category === "addons" && isStackOption("addons", optionId)) {
     const issue = getAddonIssue(currentStack, optionId);
     if (issue) return issue;
     if (

@@ -2,6 +2,10 @@ import { desktopWebFrontends } from "./constants";
 import type {
   Addons,
   API,
+  Auth,
+  Payments,
+  WebDeploy,
+  ServerDeploy,
   Backend,
   Database,
   DatabaseSetup,
@@ -34,14 +38,16 @@ export const CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS = [
 ] as const;
 
 // Frontends that support backend="self" (fullstack mode with built-in server routes)
-export const FULLSTACK_FRONTENDS: readonly Frontend[] = [
+export const FULLSTACK_FRONTENDS = [
   "next",
   "tanstack-start",
   "nuxt",
   "svelte",
   "solid",
   "astro",
-] as const;
+] as const satisfies readonly Frontend[];
+
+export type FullstackFrontend = (typeof FULLSTACK_FRONTENDS)[number];
 
 export const SERVER_BACKENDS: readonly Backend[] = ["hono", "express", "fastify", "elysia"];
 const EVLOG_FULLSTACK_FRONTENDS: readonly Frontend[] = [
@@ -91,8 +97,8 @@ export const ADDON_COMPATIBILITY = {
 } as const;
 
 export function supportsEvlogAddon(
-  frontend: readonly string[] = [],
-  backend?: string,
+  frontend: readonly Frontend[] = [],
+  backend?: Backend,
   _runtime?: Runtime,
 ) {
   if (!backend) return true;
@@ -109,13 +115,11 @@ export function supportsEvlogAddon(
   return false;
 }
 
-export function isFrontendAllowedWithBackend(frontend: string, backend?: string, auth?: string) {
+export function isFrontendAllowedWithBackend(frontend: Frontend, backend?: Backend, auth?: Auth) {
   if (backend === "convex") {
     if (
       auth === "better-auth" &&
-      CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS.includes(
-        frontend as (typeof CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS)[number],
-      )
+      CONVEX_BETTER_AUTH_INCOMPATIBLE_FRONTENDS.some((value) => value === frontend)
     ) {
       return false;
     }
@@ -131,15 +135,13 @@ export function isFrontendAllowedWithBackend(frontend: string, backend?: string,
   return true;
 }
 
-export function supportsConvexBetterAuth(frontends: readonly string[] = []) {
+export function supportsConvexBetterAuth(frontends: readonly Frontend[] = []) {
   return frontends.some((frontend) =>
-    CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS.includes(
-      frontend as (typeof CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS)[number],
-    ),
+    CONVEX_BETTER_AUTH_SUPPORTED_FRONTENDS.some((value) => value === frontend),
   );
 }
 
-export function allowedApisForFrontends(frontends: readonly string[] = []): API[] {
+export function allowedApisForFrontends(frontends: readonly Frontend[] = []): API[] {
   return frontends.some((frontend) =>
     TRPC_INCOMPATIBLE_FRONTENDS.some((value) => value === frontend),
   )
@@ -147,7 +149,7 @@ export function allowedApisForFrontends(frontends: readonly string[] = []): API[
     : ["trpc", "orpc", "none"];
 }
 
-export function isExampleTodoAllowed(backend?: string, database?: string, api?: string) {
+export function isExampleTodoAllowed(backend?: Backend, database?: Database, api?: API) {
   // Convex handles its own data layer, no need for database or API
   if (backend === "convex") return true;
   // Todo requires both database and API to communicate
@@ -155,7 +157,7 @@ export function isExampleTodoAllowed(backend?: string, database?: string, api?: 
   return true;
 }
 
-export function isExampleAIAllowed(backend?: string, frontends: readonly string[] = []) {
+export function isExampleAIAllowed(backend?: Backend, frontends: readonly Frontend[] = []) {
   return (
     backend !== "none" &&
     !frontends.some(
@@ -177,22 +179,19 @@ export const PRISMA_COMPUTE_WEB_FRONTENDS: readonly Frontend[] = [
   "solid",
 ];
 
-export function supportsPrismaWebDeploy(frontend: readonly string[]): boolean {
+export function supportsPrismaWebDeploy(frontend: readonly Frontend[]): boolean {
   return frontend.some((value) =>
     PRISMA_COMPUTE_WEB_FRONTENDS.some((frontend) => frontend === value),
   );
 }
 
-export interface AddonCompatibility {
-  isCompatible: boolean;
-  reason?: string;
-}
+export type AddonCompatibility = { isCompatible: true } | { isCompatible: false; reason: string };
 
 export function validateAddonCompatibility(
-  addon: string,
-  frontend: readonly string[],
-  auth?: string,
-  backend?: string,
+  addon: Addons,
+  frontend: readonly Frontend[],
+  auth?: Auth,
+  backend?: Backend,
   runtime?: Runtime,
 ): AddonCompatibility {
   if (
@@ -233,11 +232,11 @@ export function validateAddonCompatibility(
 
   if (!Object.hasOwn(ADDON_COMPATIBILITY, addon))
     return { isCompatible: false, reason: `Unknown addon: ${addon}` };
-  const compatibleFrontends = ADDON_COMPATIBILITY[addon as Addons];
+  const compatibleFrontends = ADDON_COMPATIBILITY[addon];
 
   if (compatibleFrontends.length > 0) {
     const hasCompatibleFrontend = frontend.some((f) =>
-      (compatibleFrontends as readonly string[]).includes(f),
+      compatibleFrontends.some((value) => value === f),
     );
 
     if (!hasCompatibleFrontend) {
@@ -252,7 +251,7 @@ export function validateAddonCompatibility(
   return { isCompatible: true };
 }
 
-export function supportsClerkFrontend(frontends: readonly string[]) {
+export function supportsClerkFrontend(frontends: readonly Frontend[]) {
   return frontends.every(
     (frontend) =>
       frontend === "none" || CLERK_SUPPORTED_FRONTENDS.some((value) => value === frontend),
@@ -260,8 +259,8 @@ export function supportsClerkFrontend(frontends: readonly string[]) {
 }
 
 export function supportsClerkBackend(
-  backend: string | undefined,
-  frontends: readonly string[] = [],
+  backend: Backend | undefined,
+  frontends: readonly Frontend[] = [],
 ) {
   if (!backend) return true;
   if (backend === "self")
@@ -273,9 +272,9 @@ export function supportsClerkBackend(
 }
 
 export function isTauriBlockedByConvexBetterAuth(
-  frontends: readonly string[],
-  backend?: string,
-  auth?: string,
+  frontends: readonly Frontend[],
+  backend?: Backend,
+  auth?: Auth,
 ) {
   return (
     backend === "convex" &&
@@ -285,11 +284,11 @@ export function isTauriBlockedByConvexBetterAuth(
 }
 
 export function hasCloudflareNextPostgresConflict(config: {
-  webDeploy?: string;
-  frontend?: readonly string[];
-  database?: string;
-  orm?: string;
-  dbSetup?: string;
+  webDeploy?: WebDeploy;
+  frontend?: readonly Frontend[];
+  database?: Database;
+  orm?: ORM;
+  dbSetup?: DatabaseSetup;
 }) {
   return (
     config.webDeploy === "cloudflare" &&
@@ -302,11 +301,11 @@ export function hasCloudflareNextPostgresConflict(config: {
 }
 
 export function getDesktopDeployConflict(
-  deploy: string | undefined,
-  addons: readonly string[] = [],
-  frontends: readonly string[] = [],
-  backend?: string,
-  auth?: string,
+  deploy: WebDeploy | ServerDeploy | undefined,
+  addons: readonly Addons[] = [],
+  frontends: readonly Frontend[] = [],
+  backend?: Backend,
+  auth?: Auth,
 ) {
   if (deploy !== "docker" && deploy !== "prisma") return null;
   const selectedDesktopAddons = addons.filter((addon) =>
@@ -335,10 +334,8 @@ const ORM_DATABASES = {
   mongoose: ["mongodb"],
 } as const satisfies Record<ORM, readonly Database[]>;
 
-export function supportsOrmDatabase(orm: string, database: string) {
-  return Object.entries(ORM_DATABASES).some(
-    ([candidate, databases]) => candidate === orm && databases.some((value) => value === database),
-  );
+export function supportsOrmDatabase(orm: ORM, database: Database) {
+  return ORM_DATABASES[orm].some((value) => value === database);
 }
 
 const DATABASE_SETUP_DATABASES = {
@@ -352,33 +349,40 @@ const DATABASE_SETUP_DATABASES = {
   docker: ["postgres", "mysql", "mongodb"],
 } as const satisfies Record<Exclude<DatabaseSetup, "none">, readonly Database[]>;
 
-export function supportsDatabaseSetup(dbSetup: string, database: string | undefined) {
+export function supportsDatabaseSetup(dbSetup: DatabaseSetup, database: Database | undefined) {
   return (
     dbSetup === "none" ||
     (!!database && getDatabaseSetupDatabases(dbSetup).some((value) => value === database))
   );
 }
 
-export function supportsRuntimeBackend(runtime: string | undefined, backend: string | undefined) {
+export function supportsRuntimeBackend(runtime: Runtime | undefined, backend: Backend | undefined) {
   if (!runtime || !backend) return true;
   if (getBackendDisabledOptions(backend).some((key) => key === "runtime"))
     return runtime === "none";
   return runtime !== "none" && (runtime !== "workers" || backend === "hono");
 }
 
-export function supportsRuntimeDatabase(runtime: string | undefined, database: string | undefined) {
+export function supportsRuntimeDatabase(
+  runtime: Runtime | undefined,
+  database: Database | undefined,
+) {
   return runtime !== "workers" || database !== "mongodb";
 }
 
-export function supportsDatabaseSetupRuntime(dbSetup: string, runtime?: string, backend?: string) {
+export function supportsDatabaseSetupRuntime(
+  dbSetup: DatabaseSetup,
+  runtime?: Runtime,
+  backend?: Backend,
+) {
   if (dbSetup === "docker") return runtime !== "workers";
   if (dbSetup === "d1") return runtime === "workers" || backend === "self";
   return true;
 }
 
 export function supportsServerDeployRuntime(
-  deploy: string | undefined,
-  runtime: string | undefined,
+  deploy: WebDeploy | ServerDeploy | undefined,
+  runtime: Runtime | undefined,
 ) {
   if (!deploy) return true;
   if (deploy === "none") return runtime !== "workers";
@@ -386,7 +390,7 @@ export function supportsServerDeployRuntime(
   return runtime === "bun" || runtime === "node";
 }
 
-export function supportsPaymentsAuth(payments?: string, auth?: string) {
+export function supportsPaymentsAuth(payments?: Payments, auth?: Auth) {
   return payments !== "polar" || auth === "better-auth";
 }
 
@@ -396,14 +400,12 @@ const BACKEND_DISABLED_OPTIONS = {
   self: ["runtime", "serverDeploy"],
 } as const satisfies Partial<Record<Backend, readonly (keyof ProjectConfig)[]>>;
 
-export function getBackendDisabledOptions(backend: string) {
+export function getBackendDisabledOptions(backend: Backend) {
   return (
     Object.entries(BACKEND_DISABLED_OPTIONS).find(([candidate]) => candidate === backend)?.[1] ?? []
   );
 }
 
-export function getDatabaseSetupDatabases(dbSetup: string) {
-  return (
-    Object.entries(DATABASE_SETUP_DATABASES).find(([candidate]) => candidate === dbSetup)?.[1] ?? []
-  );
+export function getDatabaseSetupDatabases(dbSetup: DatabaseSetup) {
+  return dbSetup === "none" ? [] : DATABASE_SETUP_DATABASES[dbSetup];
 }
