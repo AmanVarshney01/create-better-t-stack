@@ -19,7 +19,7 @@ type ActionButtonsProps = {
   stackUrl: string;
   stackState: StackState;
   yolo: boolean;
-  onYoloToggle: (yolo: string) => void;
+  onYoloToggle: (yolo: StackState["yolo"]) => void;
 };
 
 const mutedActionClasses =

@@ -1,150 +1,106 @@
 "use client";
 
 import { Loader2, FolderTree, FileCode2, Info, ChevronLeft } from "lucide-react";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState } from "react";
 
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { scrubMessage, track } from "@/lib/analytics";
 import type { StackState } from "@/lib/constant";
+import { orpc } from "@/lib/orpc";
+import { StackStateSchema } from "@/lib/stack-schema";
+import { formatProjectName } from "@/lib/stack-utils";
+import { validateProjectName } from "@/lib/stack-validation";
 import { cn } from "@/lib/utils";
 
 import { CodeViewer, CodeViewerEmpty } from "./code-viewer";
 import { FileExplorer, type VirtualFile, type VirtualDirectory } from "./file-explorer";
 
+type Preview = Awaited<ReturnType<typeof orpc.preview>>;
+
+export function useStackPreview(stack: StackState, enabled: boolean) {
+  const [data, setData] = useState<Preview | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const nameError = validateProjectName(formatProjectName(stack.projectName));
+  const requestKey = enabled && !nameError ? JSON.stringify(stack) : null;
+
+  useEffect(() => {
+    if (!requestKey) return;
+    const controller = new AbortController();
+    setIsLoading(true);
+    setError(null);
+    const timeout = setTimeout(async () => {
+      try {
+        const input = StackStateSchema.parse(JSON.parse(requestKey));
+        const preview = await orpc.preview(input, { signal: controller.signal });
+        if (!controller.signal.aborted) setData(preview);
+      } catch (cause) {
+        if (controller.signal.aborted) return;
+        const message = cause instanceof Error ? cause.message : "Unable to load preview";
+        setError(message);
+        track("preview_error", { message: scrubMessage(message) });
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
+      }
+    }, 300);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [requestKey, attempt]);
+
+  return {
+    data,
+    isLoading: !nameError && isLoading,
+    error: nameError ?? error,
+    canRetry: !nameError,
+    retry: () => setAttempt((value) => value + 1),
+  };
+}
+
 interface PreviewPanelProps {
-  stack: StackState;
+  preview: ReturnType<typeof useStackPreview>;
   selectedFilePath: string | null;
   onSelectFile: (filePath: string | null) => void;
 }
 
-interface PreviewResponse {
-  success: boolean;
-  tree?: {
-    root: VirtualDirectory;
-    fileCount: number;
-    directoryCount: number;
-  };
-  error?: string;
+function findFileByPath(node: VirtualDirectory, path: string): VirtualFile | null {
+  for (const child of node.children) {
+    if (child.type === "file" && child.path === path) return child;
+    if (child.type === "directory") {
+      const found = findFileByPath(child, path);
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
-export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewPanelProps) {
-  const [tree, setTree] = useState<VirtualDirectory | null>(null);
-  const [fileCount, setFileCount] = useState(0);
-  const [directoryCount, setDirectoryCount] = useState(0);
-  const [selectedFile, setSelectedFile] = useState<VirtualFile | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // On mobile, track whether we're viewing the file tree or the code
+export function PreviewPanel({ preview, selectedFilePath, onSelectFile }: PreviewPanelProps) {
+  const { data, isLoading, error, canRetry, retry } = preview;
+  const tree = data?.root ?? null;
+  const fileCount = data?.fileCount ?? 0;
+  const directoryCount = data?.directoryCount ?? 0;
+  const selectedFile = tree && selectedFilePath ? findFileByPath(tree, selectedFilePath) : null;
   const [mobileView, setMobileView] = useState<"tree" | "code">("tree");
-  const requestIdRef = useRef(0);
-  const abortRef = useRef<AbortController | null>(null);
-  const selectedFilePathRef = useRef<string | null>(selectedFilePath);
-  const onSelectFileRef = useRef(onSelectFile);
 
   useEffect(() => {
-    selectedFilePathRef.current = selectedFilePath;
+    setMobileView(selectedFilePath ? "code" : "tree");
   }, [selectedFilePath]);
 
   useEffect(() => {
-    onSelectFileRef.current = onSelectFile;
-  }, [onSelectFile]);
-
-  const fetchPreview = useCallback(async () => {
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(stack),
-        signal: controller.signal,
-      });
-
-      if (requestId !== requestIdRef.current) return;
-
-      const data: PreviewResponse = await response.json();
-
-      if (requestId !== requestIdRef.current) return;
-
-      if (response.ok && data.success && data.tree) {
-        setTree(data.tree.root);
-        setFileCount(data.tree.fileCount);
-        setDirectoryCount(data.tree.directoryCount);
-
-        // Restore selected file from query state if it exists
-        const currentSelectedFilePath = selectedFilePathRef.current;
-        if (currentSelectedFilePath) {
-          const file = findFileByPath(data.tree.root, currentSelectedFilePath);
-          if (file) {
-            setSelectedFile(file);
-            setMobileView("code");
-          } else {
-            setSelectedFile(null);
-            onSelectFileRef.current(null);
-            setMobileView("tree");
-          }
-        } else {
-          setSelectedFile(null);
-          setMobileView("tree");
-        }
-      } else {
-        const message = data.error || "Failed to generate preview";
-        setError(message);
-        track("preview_error", { message: scrubMessage(message) });
-      }
-    } catch (err) {
-      if (controller.signal.aborted) return;
-      if (requestId !== requestIdRef.current) return;
-      const message = err instanceof Error ? err.message : "Failed to fetch preview";
-      setError(message);
-      track("preview_error", { message: scrubMessage(message) });
-    } finally {
-      if (requestId === requestIdRef.current) {
-        setIsLoading(false);
-      }
+    if (tree && !isLoading && !error && selectedFilePath && !selectedFile) {
+      onSelectFile(null);
     }
-  }, [stack]);
-
-  // Debounced fetch on stack change
-  useEffect(() => {
-    const timeoutId = setTimeout(fetchPreview, 300);
-    return () => {
-      clearTimeout(timeoutId);
-      abortRef.current?.abort();
-    };
-  }, [fetchPreview]);
+  }, [tree, isLoading, error, selectedFilePath, selectedFile, onSelectFile]);
 
   const handleSelectFile = (file: VirtualFile) => {
     track("preview_file_open", { path: file.path, extension: file.extension });
-    setSelectedFile(file);
     onSelectFile(file.path);
     setMobileView("code");
   };
 
-  const handleBackToTree = () => {
-    setMobileView("tree");
-  };
-
-  // Helper function to find a file by path in the tree
-  function findFileByPath(node: VirtualDirectory, path: string): VirtualFile | null {
-    for (const child of node.children) {
-      if (child.type === "file" && child.path === path) {
-        return child;
-      }
-      if (child.type === "directory") {
-        const found = findFileByPath(child, path);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
+  const handleBackToTree = () => setMobileView("tree");
 
   if (isLoading && !tree) {
     return (
@@ -159,13 +115,22 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center rounded-[4px] border bg-fd-background">
+      <div className="flex h-full flex-col items-center justify-center gap-3 rounded-[4px] border bg-fd-background p-4">
         <p
           role="alert"
           className="rounded-[4px] border border-destructive px-3 py-2 font-mono text-[13px] text-destructive"
         >
           {error}
         </p>
+        {canRetry && (
+          <button
+            type="button"
+            onClick={retry}
+            className="builder-focus-ring rounded border px-3 py-2 text-sm"
+          >
+            Try again
+          </button>
+        )}
       </div>
     );
   }
@@ -179,7 +144,10 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
   }
 
   return (
-    <div className="@container flex h-full flex-col overflow-hidden rounded-[4px] border bg-fd-background">
+    <div
+      aria-busy={isLoading}
+      className="@container flex h-full flex-col overflow-hidden rounded-[4px] border bg-fd-background"
+    >
       {/* Stats bar */}
       <div className="@lg:gap-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-3 py-2">
         {/* Back button when the panel is too narrow for the split view */}
@@ -238,7 +206,12 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
               </p>
             </TooltipContent>
           </Tooltip>
-          {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-fd-muted-foreground" />}
+          {isLoading && (
+            <span role="status" className="flex items-center gap-1 text-xs">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-fd-muted-foreground" />
+              Updating preview
+            </span>
+          )}
         </div>
       </div>
 

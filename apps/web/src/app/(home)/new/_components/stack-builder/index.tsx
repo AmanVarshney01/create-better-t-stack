@@ -19,7 +19,7 @@ import type { Sponsor } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 import { ActionButtons } from "../action-buttons";
-import { PreviewPanel } from "../preview-panel";
+import { PreviewPanel, useStackPreview } from "../preview-panel";
 import { SpecialSponsorsPanel } from "../special-sponsors-panel";
 import { CategoryNav, scrollToCategorySection } from "./category-nav";
 import { SelectedStackBadges } from "./selected-stack-badges";
@@ -59,6 +59,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
     viewMode,
   } = useStackBuilder();
   const effectiveStack = compatibilityAnalysis.stack;
+  const preview = useStackPreview(effectiveStack, viewMode === "preview");
   const desktopBuildNote = getDesktopBuildNote(effectiveStack);
   const displayCommand = formatStackCommandForDisplay(command);
   const [commandExpanded, setCommandExpanded] = useState(false);
@@ -198,6 +199,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                         <button
                           type="button"
                           onClick={() => copyToClipboard("button")}
+                          disabled={!!projectNameError}
                           className={cn(
                             "builder-focus-ring flex items-center gap-1 rounded-[4px] border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.10em] transition-colors duration-150",
                             copied
@@ -226,6 +228,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                         }
                       }}
                       aria-label="Copy CLI command"
+                      aria-disabled={!!projectNameError}
                       title="Click to copy command"
                       className="builder-focus-ring cursor-pointer rounded-[4px] border px-2.5 py-2 transition-colors duration-150 hover:border-primary/50"
                     >
@@ -357,7 +360,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
               </div>
             ) : (
               <PreviewPanel
-                stack={effectiveStack}
+                preview={preview}
                 selectedFilePath={selectedFile}
                 onSelectFile={setSelectedFile}
               />
@@ -458,6 +461,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                           copied && "border-primary",
                         )}
                         aria-label="Copy command"
+                        aria-disabled={!!projectNameError}
                         title="Click to copy command"
                       >
                         <div className="flex min-w-0 items-start gap-1.5">
@@ -513,7 +517,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
 
           {mobileTab === "preview" && (
             <PreviewPanel
-              stack={effectiveStack}
+              preview={preview}
               selectedFilePath={selectedFile}
               onSelectFile={setSelectedFile}
             />

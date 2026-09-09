@@ -1,3 +1,5 @@
+import { supportsRuntimeBackend } from "@better-t-stack/types";
+
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Runtime } from "../types";
 import { UserCancelledError } from "../utils/errors";
@@ -8,7 +10,7 @@ export async function getRuntimeChoice(
   backend?: Backend,
   previousValue?: Runtime,
 ) {
-  if (backend === "convex" || backend === "none" || backend === "self") {
+  if (backend && supportsRuntimeBackend("none", backend)) {
     return "none";
   }
 
@@ -31,7 +33,7 @@ export async function getRuntimeChoice(
     },
   ];
 
-  if (backend === "hono") {
+  if (backend && supportsRuntimeBackend("workers", backend)) {
     runtimeOptions.push({
       value: "workers",
       label: "Cloudflare Workers",

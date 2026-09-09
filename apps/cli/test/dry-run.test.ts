@@ -4,12 +4,11 @@ import path from "node:path";
 import fs from "fs-extra";
 
 import { create } from "../src/index";
-
-const SMOKE_DIR_PATH = path.join(import.meta.dir, "..", ".smoke");
+import { SMOKE_DIR } from "./setup";
 
 describe("Dry run", () => {
   it("does not create project directory on dry run", async () => {
-    const projectPath = path.join(SMOKE_DIR_PATH, "dry-run-no-write");
+    const projectPath = path.join(SMOKE_DIR, "dry-run-no-write");
     await fs.remove(projectPath);
 
     const result = await create(projectPath, {
@@ -24,7 +23,7 @@ describe("Dry run", () => {
   });
 
   it("does not clear existing directory with overwrite strategy on dry run", async () => {
-    const projectPath = path.join(SMOKE_DIR_PATH, "dry-run-overwrite-protected");
+    const projectPath = path.join(SMOKE_DIR, "dry-run-overwrite-protected");
     const sentinelPath = path.join(projectPath, "do-not-delete.txt");
 
     await fs.ensureDir(projectPath);

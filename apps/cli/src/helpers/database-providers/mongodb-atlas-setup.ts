@@ -6,6 +6,7 @@ import { $ } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
 
+import { DbSetupModeSchema } from "../../types";
 import type { ProjectConfig } from "../../types";
 import { commandExists } from "../../utils/command-exists";
 import { isSilent } from "../../utils/context";
@@ -212,7 +213,7 @@ export async function setupMongoDBAtlas(
       return userCancelled("Operation cancelled");
     }
 
-    mode = promptedMode;
+    mode = DbSetupModeSchema.parse(promptedMode);
   }
 
   if (mode === "manual") {

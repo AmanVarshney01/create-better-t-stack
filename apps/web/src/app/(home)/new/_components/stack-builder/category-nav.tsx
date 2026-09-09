@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 
 import { track } from "@/lib/analytics";
+import { getCategoryDisplayName } from "@/lib/stack-validation";
 import { cn } from "@/lib/utils";
 
-import { getCategoryDisplayName } from "../utils";
 import type { CategoryProgressItem } from "./use-stack-builder";
 
 type CategoryNavProps = {

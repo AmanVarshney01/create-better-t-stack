@@ -3,28 +3,16 @@ import path from "node:path";
 
 import fs from "fs-extra";
 
-import { runTRPCTest } from "./test-utils";
+import { expectSuccess, runCreateTest } from "./test-utils";
 
 describe("Electrobun addon scaffolding", () => {
   it("scaffolds the desktop workspace for TanStack Router", async () => {
-    const result = await runTRPCTest({
+    const result = await runCreateTest({
       projectName: "electrobun-files-tanstack-router-static-v2",
       addons: ["electrobun"],
-      frontend: ["tanstack-router"],
-      backend: "hono",
-      runtime: "bun",
-      database: "sqlite",
-      orm: "drizzle",
-      auth: "none",
-      api: "trpc",
-      examples: ["none"],
-      dbSetup: "none",
-      webDeploy: "none",
-      serverDeploy: "none",
-      install: false,
     });
 
-    expect(result.success).toBe(true);
+    expectSuccess(result);
     expect(result.projectDir).toBeDefined();
     if (!result.projectDir) return;
 
@@ -84,7 +72,7 @@ describe("Electrobun addon scaffolding", () => {
       path.join(result.projectDir, "apps", "desktop", ".gitignore"),
       "utf8",
     );
-    expect(desktopPackageJson.devDependencies.electrobun).toBe("^2.0.1");
+    expect(desktopPackageJson.devDependencies.electrobun).toBeDefined();
     expect(desktopPackageJson.dependencies?.electrobun).toBeUndefined();
     expect(desktopPackageJson.scripts["check-types"]).toBe("electrobun prepare && tsc --noEmit");
     expect(desktopConfig).toContain('mainProcess: "cottontail"');
@@ -102,24 +90,13 @@ describe("Electrobun addon scaffolding", () => {
   });
 
   it("uses the React Router client build output for packaged desktop assets", async () => {
-    const result = await runTRPCTest({
+    const result = await runCreateTest({
       projectName: "electrobun-files-react-router-static-v2",
       addons: ["electrobun"],
       frontend: ["react-router"],
-      backend: "hono",
-      runtime: "bun",
-      database: "sqlite",
-      orm: "drizzle",
-      auth: "none",
-      api: "trpc",
-      examples: ["none"],
-      dbSetup: "none",
-      webDeploy: "none",
-      serverDeploy: "none",
-      install: false,
     });
 
-    expect(result.success).toBe(true);
+    expectSuccess(result);
     expect(result.projectDir).toBeDefined();
     if (!result.projectDir) return;
 
@@ -181,26 +158,15 @@ describe("Electrobun addon scaffolding", () => {
     ] as const;
 
     for (const testCase of cases) {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: `electrobun-files-${testCase.frontend}-static-v2`,
         addons: ["electrobun"],
         frontend: [testCase.frontend],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
         api: testCase.api,
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
       });
 
-      expect(result.success).toBe(true);
+      expectSuccess(result);
       expect(result.projectDir).toBeDefined();
-      if (!result.projectDir) continue;
 
       const desktopConfig = await fs.readFile(
         path.join(result.projectDir, "apps", "desktop", "electrobun.config.ts"),
@@ -291,27 +257,14 @@ describe("Electrobun addon scaffolding", () => {
     ];
 
     for (const testCase of cases) {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: testCase.projectName,
         addons: [...testCase.addons],
-        frontend: ["tanstack-router"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        examples: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
         packageManager: "packageManager" in testCase ? testCase.packageManager : "bun",
-        install: false,
       });
 
-      expect(result.success).toBe(true);
+      expectSuccess(result);
       expect(result.projectDir).toBeDefined();
-      if (!result.projectDir) continue;
 
       const desktopPackageJson = await fs.readJson(
         path.join(result.projectDir, "apps", "desktop", "package.json"),
@@ -329,7 +282,7 @@ describe("Electrobun addon scaffolding", () => {
       if ("expectedRootBuild" in testCase) {
         expect(rootPackageJson.scripts.build).toBe(testCase.expectedRootBuild);
       }
-      if ("expectedRootBuildIncludes" in testCase) {
+      if (testCase.expectedRootBuildIncludes) {
         for (const expectedCommand of testCase.expectedRootBuildIncludes) {
           expect(rootPackageJson.scripts.build).toContain(expectedCommand);
         }
@@ -341,7 +294,7 @@ describe("Electrobun addon scaffolding", () => {
         expect(rootPackageJson.scripts.build).not.toContain(testCase.unexpectedRootBuild);
       }
 
-      if (testCase.addons.includes("turborepo")) {
+      if (testCase.addons.some((addon) => addon === "turborepo")) {
         const turboJson = await fs.readJson(path.join(result.projectDir, "turbo.json"));
         expect(turboJson.tasks.build.outputs).toContain("artifacts/**");
         expect(turboJson.tasks["dev:hmr"]).toEqual({

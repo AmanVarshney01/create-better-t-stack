@@ -2,6 +2,8 @@ import { DEFAULT_STACK, isStackDefault, type StackState, TECH_OPTIONS } from "@/
 import { SITE_URL } from "@/lib/site";
 import { stackUrlKeys } from "@/lib/stack-url-keys";
 
+import { getStackBackend, getStackFrontends, isSelfHostedFullstackBackend } from "./stack-model";
+
 const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "webFrontend",
   "nativeFrontend",
@@ -34,15 +36,6 @@ const staticDesktopFrontendNames = {
   svelte: "SvelteKit",
   astro: "Astro",
 } as const;
-
-const selfHostedFullstackBackends = [
-  "self-next",
-  "self-tanstack-start",
-  "self-nuxt",
-  "self-svelte",
-  "self-solid",
-  "self-astro",
-] as const;
 
 export function formatProjectName(name: string | null | undefined) {
   return (name || "my-better-t-app").replace(/\s+/g, "-");
@@ -137,11 +130,7 @@ export function getDesktopBuildNote(stack: Pick<StackState, "addons" | "backend"
       ? "Tauri and Electrobun desktop builds"
       : `${desktopAddonNames[selectedDesktopAddons[0]]} desktop builds`;
 
-  if (
-    selfHostedFullstackBackends.includes(
-      stack.backend as (typeof selfHostedFullstackBackends)[number],
-    )
-  ) {
+  if (isSelfHostedFullstackBackend(stack.backend)) {
     return `${addonLabel} package static web assets and require a separate backend or no backend. Fullstack self backends emit server routes inside the web app, so they cannot be bundled for desktop packaging.`;
   }
 
@@ -170,28 +159,9 @@ export function generateStackCommand(stack: StackState) {
     return `${base} ${projectName} --yes`;
   }
 
-  // Map web interface backend IDs to CLI backend flags
-  const mapBackendToCli = (backend: string) => {
-    if (
-      backend === "self-next" ||
-      backend === "self-tanstack-start" ||
-      backend === "self-nuxt" ||
-      backend === "self-svelte" ||
-      backend === "self-solid" ||
-      backend === "self-astro"
-    ) {
-      return "self";
-    }
-    return backend;
-  };
-
   const flags = [
-    `--frontend ${
-      [...stack.webFrontend, ...stack.nativeFrontend]
-        .filter((v, _, arr) => v !== "none" || arr.length === 1)
-        .join(" ") || "none"
-    }`,
-    `--backend ${mapBackendToCli(stack.backend)}`,
+    `--frontend ${getStackFrontends(stack).join(" ")}`,
+    `--backend ${getStackBackend(stack.backend)}`,
     `--runtime ${stack.runtime}`,
     `--api ${stack.api}`,
     `--auth ${stack.auth}`,

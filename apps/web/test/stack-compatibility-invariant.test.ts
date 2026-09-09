@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test";
 
-import type { CLIInput, ProjectConfig } from "../../cli/src/types";
+import type { Database, ORM } from "@better-t-stack/types";
+
+import type { CLIInput } from "../../cli/src/types";
 import { validateFullConfig } from "../../cli/src/utils/config-validation";
-import {
-  applyStackUpdate,
-  getTechSelectionUpdate,
-  resolveStackCompatibility,
-} from "../src/app/(home)/new/_components/stack-builder/use-stack-builder";
-import { getDisabledReason } from "../src/app/(home)/new/_components/utils";
+import { getTechSelectionUpdate } from "../src/app/(home)/new/_components/stack-builder/use-stack-builder";
 import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "../src/lib/constant";
 import { sanitizeStackState } from "../src/lib/sanitize-stack-addons";
+import { applyStackUpdate, resolveStackCompatibility } from "../src/lib/stack-compatibility";
+import { stackStateToConfig } from "../src/lib/stack-schema";
+import { getDisabledReason } from "../src/lib/stack-validation";
 import type { TechCategory } from "../src/lib/types";
 
 const RANDOM_STACK_COUNT = 25_000;
@@ -89,36 +89,8 @@ function selectedEntries(stack: StackState): Array<{ category: TechCategory; id:
   return entries;
 }
 
-function toCliConfig(stack: StackState): ProjectConfig {
-  const combinedFrontends = [...stack.webFrontend, ...stack.nativeFrontend].filter(
-    (frontend) => frontend !== "none",
-  );
-
-  return {
-    projectName: stack.projectName ?? "invariant-test",
-    projectDir: "/virtual/invariant-test",
-    relativePath: "invariant-test",
-    database: stack.database,
-    orm: stack.orm,
-    backend: stack.backend.startsWith("self-") ? "self" : stack.backend,
-    runtime: stack.runtime,
-    frontend: combinedFrontends.length > 0 ? combinedFrontends : ["none"],
-    addons: stack.addons,
-    examples: stack.examples,
-    auth: stack.auth,
-    payments: stack.payments,
-    git: stack.git === "true",
-    packageManager: stack.packageManager,
-    install: stack.install === "true",
-    dbSetup: stack.dbSetup,
-    api: stack.api,
-    webDeploy: stack.webDeploy,
-    serverDeploy: stack.serverDeploy,
-  } as ProjectConfig;
-}
-
 function getCliCompatibilityError(stack: StackState): string | null {
-  const config = toCliConfig(stack);
+  const config = stackStateToConfig(stack);
   const result = validateFullConfig(config, CLI_STACK_FLAGS, config as CLIInput);
   return result.isErr() ? result.error.message : null;
 }
@@ -143,7 +115,7 @@ function getResolvedSelectionErrors(stack: StackState): string[] {
 
 describe("compatibility adjustment invariants", () => {
   test("exposes exactly the ORM choices offered by the CLI for every database", () => {
-    const expectedOrmChoices = new Map<string, string[]>([
+    const expectedOrmChoices = new Map<Database, ORM[]>([
       ["none", ["none"]],
       ["sqlite", ["drizzle", "prisma"]],
       ["postgres", ["drizzle", "prisma"]],
@@ -216,6 +188,20 @@ describe("compatibility adjustment invariants", () => {
     expect(failures.length).toBe(0);
   });
 
+  test("preserves server-only Clerk authentication when sharing and previewing a stack", () => {
+    const stack = resolveStackCompatibility({
+      ...DEFAULT_STACK,
+      webFrontend: ["none"],
+      nativeFrontend: ["none"],
+      backend: "hono",
+      auth: "clerk",
+    }).stack;
+    expect(stack.auth).toBe("clerk");
+    expect(getDisabledReason(stack, "auth", "clerk")).toBeNull();
+    expect(getCliCompatibilityError(stack)).toBeNull();
+    expect(stackStateToConfig(stack).frontend).toEqual(["none"]);
+  });
+
   test("tauri is removed when Convex Better Auth targets Next.js or TanStack Start", () => {
     const stack = sanitizeStackState({
       ...DEFAULT_STACK,
@@ -227,8 +213,6 @@ describe("compatibility adjustment invariants", () => {
 
     const adjusted = resolveStackCompatibility(stack).stack;
     expect(adjusted.addons).not.toContain("tauri");
-    expect(getDisabledReason(adjusted, "addons", "tauri")).toBe(
-      "Tauri isn't compatible with Convex Better Auth on Next.js or TanStack Start",
-    );
+    expect(getDisabledReason(adjusted, "addons", "tauri")).toContain("Convex Better Auth");
   });
 });

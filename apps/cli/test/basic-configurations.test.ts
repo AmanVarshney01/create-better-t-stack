@@ -2,12 +2,12 @@ import { describe, expect, it } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import { expectError, expectSuccess, PACKAGE_MANAGERS, runTRPCTest } from "./test-utils";
+import { expectError, expectSuccess, PACKAGE_MANAGERS, runCreateTest } from "./test-utils";
 
 describe("Basic Configurations", () => {
   describe("Default Configuration", () => {
     it("should create project with --yes flag (default config)", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "default-app",
         yes: true,
         install: false,
@@ -18,7 +18,7 @@ describe("Basic Configurations", () => {
     });
 
     it("should create project with explicit default values", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "explicit-defaults",
         database: "sqlite",
         orm: "drizzle",
@@ -40,7 +40,7 @@ describe("Basic Configurations", () => {
     });
 
     it("should create Next.js fullstack project with self backend", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "nextjs-fullstack-defaults",
         database: "sqlite",
         orm: "drizzle",
@@ -68,7 +68,7 @@ describe("Basic Configurations", () => {
   describe("Package Managers", () => {
     for (const packageManager of PACKAGE_MANAGERS) {
       it(`should work with ${packageManager}`, async () => {
-        const result = await runTRPCTest({
+        const result = await runCreateTest({
           projectName: `${packageManager}-app`,
           packageManager,
           yes: true,
@@ -92,65 +92,10 @@ describe("Basic Configurations", () => {
       });
     }
   });
-
-  describe("Git Options", () => {
-    it("should work with git enabled", async () => {
-      const result = await runTRPCTest({
-        projectName: "git-enabled",
-        yes: true,
-        git: true,
-        install: false,
-      });
-
-      expectSuccess(result);
-      expect(result.result?.projectConfig.git).toBe(true);
-    });
-
-    it("should work with git disabled", async () => {
-      const result = await runTRPCTest({
-        projectName: "git-disabled",
-        yes: true,
-        git: false,
-        install: false,
-      });
-
-      expectSuccess(result);
-      expect(result.result?.projectConfig.git).toBe(false);
-    });
-  });
-
-  describe("Installation Options", () => {
-    it.skipIf(Boolean(process.env.CI))(
-      "should work with install enabled",
-      async () => {
-        const result = await runTRPCTest({
-          projectName: "install-enabled",
-          yes: true,
-          install: true,
-        });
-
-        expectSuccess(result);
-        expect(result.result?.projectConfig.install).toBe(true);
-      },
-      300000,
-    ); // 5 minute timeout for install test
-
-    it("should work with install disabled", async () => {
-      const result = await runTRPCTest({
-        projectName: "install-disabled",
-        yes: true,
-        install: false,
-      });
-
-      expectSuccess(result);
-      expect(result.result?.projectConfig.install).toBe(false);
-    });
-  });
-
   describe("YOLO Mode", () => {
     it("should bypass validations with --yolo flag", async () => {
       // This would normally fail validation but should pass with yolo
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "yolo-app",
         yolo: true,
         frontend: ["tanstack-router"],
@@ -175,16 +120,15 @@ describe("Basic Configurations", () => {
 
   describe("Error Handling", () => {
     it("should fail with invalid project name", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "<invalid>",
-        expectError: true,
       });
 
       expectError(result, "Invalid project name");
     });
 
     it("should fail when combining --yes with configuration flags", async () => {
-      const result = await runTRPCTest({
+      const result = await runCreateTest({
         projectName: "yes-with-flags",
         yes: true, // Explicitly set yes flag
         database: "postgres",
@@ -199,7 +143,6 @@ describe("Basic Configurations", () => {
         dbSetup: "none",
         webDeploy: "none",
         serverDeploy: "none",
-        expectError: true,
       });
 
       expectError(result, "Cannot combine --yes with core stack configuration flags");

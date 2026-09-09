@@ -692,10 +692,11 @@ async function addHandlerInternal(
 
   // Update bts.jsonc with new addons
   if (addonsToAdd.length > 0) {
-    await updateBtsConfig(projectDir, {
+    const configResult = await updateBtsConfig(projectDir, {
       addons: updatedAddons,
       addonOptions: updatedConfig.addonOptions,
     });
+    if (configResult.isErr()) return Result.err(configResult.error);
   }
 
   // Install dependencies if requested

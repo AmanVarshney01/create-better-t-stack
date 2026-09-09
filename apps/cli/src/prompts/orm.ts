@@ -1,3 +1,5 @@
+import { supportsOrmDatabase } from "@better-t-stack/types";
+
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Database, ORM, Runtime } from "../types";
 import { validateOrmDatabaseCompat } from "../utils/config-validation";
@@ -41,10 +43,9 @@ export async function getORMChoice(
     return orm;
   }
 
-  const options =
-    database === "mongodb"
-      ? [ormOptions.prisma, ormOptions.mongoose]
-      : [ormOptions.drizzle, ormOptions.prisma];
+  const options = [ormOptions.drizzle, ormOptions.prisma, ormOptions.mongoose].filter((option) =>
+    supportsOrmDatabase(option.value, database ?? "sqlite"),
+  );
 
   const response = await navigableSelect<ORM>({
     message: "Choose an ORM",

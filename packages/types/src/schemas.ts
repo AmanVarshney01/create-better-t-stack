@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { TASK_RUNNER_ADDONS, OBSERVABILITY_ADDONS } from "./compatibility";
+
 export const DatabaseSchema = z
   .enum(["none", "sqlite", "postgres", "mysql", "mongodb"])
   .describe("Database type");
@@ -57,7 +59,7 @@ export const AddonsSchema = z
   .describe("Additional addons");
 
 const AddonsListSchema = z.array(AddonsSchema).superRefine((addons, ctx) => {
-  const taskRunners = addons.filter((addon) => ["nx", "turborepo", "vite-plus"].includes(addon));
+  const taskRunners = addons.filter((addon) => TASK_RUNNER_ADDONS.includes(addon));
   if (taskRunners.length > 1) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -65,7 +67,7 @@ const AddonsListSchema = z.array(AddonsSchema).superRefine((addons, ctx) => {
     });
   }
 
-  const observabilityAddons = addons.filter((addon) => ["evlog", "axiom"].includes(addon));
+  const observabilityAddons = addons.filter((addon) => OBSERVABILITY_ADDONS.includes(addon));
   if (observabilityAddons.length > 1) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,

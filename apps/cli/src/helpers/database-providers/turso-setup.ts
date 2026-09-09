@@ -5,7 +5,9 @@ import { confirm, isCancel, select, text } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
+import { z } from "zod";
 
+import { DbSetupModeSchema } from "../../types";
 import type { ProjectConfig } from "../../types";
 import { commandExists } from "../../utils/command-exists";
 import { isSilent } from "../../utils/context";
@@ -319,7 +321,7 @@ export async function setupTurso(
         return userCancelled("Operation cancelled");
       }
 
-      mode = promptedMode;
+      mode = DbSetupModeSchema.parse(promptedMode);
     }
   }
 
@@ -368,7 +370,7 @@ export async function setupTurso(
           return userCancelled("Operation cancelled");
         }
 
-        shouldInstall = promptedInstall;
+        shouldInstall = z.boolean().parse(promptedInstall);
       }
     }
 

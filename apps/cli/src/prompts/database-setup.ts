@@ -1,7 +1,10 @@
+import { supportsDatabaseSetup, supportsDatabaseSetupRuntime } from "@better-t-stack/types";
+
 import {
   supportsAlchemyManagedDatabase,
   type Backend,
   type DatabaseSetup,
+  type Database,
   type DbSetupOptions,
   type ORM,
   type Runtime,
@@ -12,7 +15,7 @@ import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect, preferValidInitial } from "./navigable";
 
 export async function getDBSetupChoice(
-  databaseType: string,
+  databaseType: Database,
   dbSetup: DatabaseSetup | undefined,
   _orm?: ORM,
   backend?: Backend,
@@ -29,86 +32,45 @@ export async function getDBSetupChoice(
     return "none";
   }
 
-  let options: Array<{ value: DatabaseSetup; label: string; hint: string }> = [];
-
-  if (databaseType === "sqlite") {
-    options = [
-      {
-        value: "turso" as const,
-        label: "Turso",
-        hint: "SQLite for Production. Powered by libSQL",
-      },
-      ...(runtime === "workers" || backend === "self"
-        ? [
-            {
-              value: "d1" as const,
-              label: "Cloudflare D1",
-              hint: "Cloudflare's managed, serverless database with SQLite's SQL semantics",
-            },
-          ]
-        : []),
-      { value: "none" as const, label: "None", hint: "Manual setup" },
-    ];
-  } else if (databaseType === "postgres") {
-    options = [
-      {
-        value: "neon" as const,
-        label: "Neon Postgres",
-        hint: "Serverless Postgres with branching capability",
-      },
-      {
-        value: "planetscale" as const,
-        label: "PlanetScale",
-        hint: "Postgres & Vitess (MySQL) on NVMe",
-      },
-      {
-        value: "supabase" as const,
-        label: "Supabase",
-        hint: "Local Supabase stack (requires Docker)",
-      },
-      {
-        value: "prisma-postgres" as const,
-        label: "Prisma Postgres",
-        hint: "Instant Postgres for Global Applications",
-      },
-      {
-        value: "docker" as const,
-        label: "Docker",
-        hint: "Run locally with docker compose",
-      },
-      { value: "none" as const, label: "None", hint: "Manual setup" },
-    ];
-  } else if (databaseType === "mysql") {
-    options = [
-      {
-        value: "planetscale" as const,
-        label: "PlanetScale",
-        hint: "MySQL on Vitess (NVMe, HA)",
-      },
-      {
-        value: "docker" as const,
-        label: "Docker",
-        hint: "Run locally with docker compose",
-      },
-      { value: "none" as const, label: "None", hint: "Manual setup" },
-    ];
-  } else if (databaseType === "mongodb") {
-    options = [
-      {
-        value: "mongodb-atlas" as const,
-        label: "MongoDB Atlas",
-        hint: "The most effective way to deploy MongoDB",
-      },
-      {
-        value: "docker" as const,
-        label: "Docker",
-        hint: "Run locally with docker compose",
-      },
-      { value: "none" as const, label: "None", hint: "Manual setup" },
-    ];
-  } else {
-    return "none";
-  }
+  const options = [
+    { value: "turso" as const, label: "Turso", hint: "SQLite for Production. Powered by libSQL" },
+    {
+      value: "d1" as const,
+      label: "Cloudflare D1",
+      hint: "Cloudflare's managed, serverless database with SQLite's SQL semantics",
+    },
+    {
+      value: "neon" as const,
+      label: "Neon Postgres",
+      hint: "Serverless Postgres with branching capability",
+    },
+    {
+      value: "planetscale" as const,
+      label: "PlanetScale",
+      hint: "Postgres & Vitess (MySQL) on NVMe",
+    },
+    {
+      value: "supabase" as const,
+      label: "Supabase",
+      hint: "Local Supabase stack (requires Docker)",
+    },
+    {
+      value: "prisma-postgres" as const,
+      label: "Prisma Postgres",
+      hint: "Instant Postgres for Global Applications",
+    },
+    {
+      value: "mongodb-atlas" as const,
+      label: "MongoDB Atlas",
+      hint: "The most effective way to deploy MongoDB",
+    },
+    { value: "docker" as const, label: "Docker", hint: "Run locally with docker compose" },
+    { value: "none" as const, label: "None", hint: "Manual setup" },
+  ].filter(
+    ({ value }) =>
+      supportsDatabaseSetup(value, databaseType) &&
+      supportsDatabaseSetupRuntime(value, runtime, backend),
+  );
 
   const response = await navigableSelect<DatabaseSetup>({
     message: `Choose a ${databaseType} setup`,

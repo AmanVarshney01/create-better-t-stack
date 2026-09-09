@@ -1,33 +1,30 @@
+import * as fs from "node:fs/promises";
 import path from "node:path";
 
-import type { BetterTStackConfig } from "@better-t-stack/types";
-import fs from "fs-extra";
-import { applyEdits, modify, parse } from "jsonc-parser";
+import { BetterTStackConfigSchema, type BetterTStackConfig } from "@better-t-stack/types";
+import { Result } from "better-result";
+import { applyEdits, modify, parse, type ParseError } from "jsonc-parser";
+
+import { CLIError } from "./errors";
 
 const BTS_CONFIG_FILE = "bts.jsonc";
 
-/**
- * Reads the BTS configuration file from the project directory.
- */
-export async function readBtsConfig(projectDir: string): Promise<BetterTStackConfig | null> {
-  try {
-    const configPath = path.join(projectDir, BTS_CONFIG_FILE);
-
-    if (!(await fs.pathExists(configPath))) {
-      return null;
-    }
-
-    const configContent = await fs.readFile(configPath, "utf-8");
-    const config = parse(configContent) as BetterTStackConfig;
-    return config;
-  } catch {
-    return null;
-  }
+function parseBtsConfig(content: string): BetterTStackConfig {
+  const errors: ParseError[] = [];
+  const value = parse(content, errors, { allowTrailingComma: true });
+  if (errors.length > 0) throw new Error("Invalid JSONC in bts.jsonc");
+  return BetterTStackConfigSchema.parse(value);
 }
 
-/**
- * Updates specific fields in the BTS configuration file.
- */
+export async function readBtsConfig(projectDir: string): Promise<BetterTStackConfig | null> {
+  const result = await Result.tryPromise({
+    try: async () =>
+      parseBtsConfig(await fs.readFile(path.join(projectDir, BTS_CONFIG_FILE), "utf8")),
+    catch: () => null,
+  });
+  return result.isOk() ? result.value : null;
+}
+
 export async function updateBtsConfig(
   projectDir: string,
   updates: Partial<
@@ -36,24 +33,24 @@ export async function updateBtsConfig(
       "addons" | "addonOptions" | "dbSetupOptions" | "webDeploy" | "serverDeploy"
     >
   >,
-): Promise<void> {
-  try {
-    const configPath = path.join(projectDir, BTS_CONFIG_FILE);
-
-    if (!(await fs.pathExists(configPath))) {
-      return;
-    }
-
-    let content = await fs.readFile(configPath, "utf-8");
-
-    // Apply each update using jsonc-parser's modify (preserves comments)
-    for (const [key, value] of Object.entries(updates)) {
-      const edits = modify(content, [key], value, { formattingOptions: { tabSize: 2 } });
-      content = applyEdits(content, edits);
-    }
-
-    await fs.writeFile(configPath, content, "utf-8");
-  } catch {
-    // Silent failure
-  }
+): Promise<Result<void, CLIError>> {
+  return Result.tryPromise({
+    try: async () => {
+      const configPath = path.join(projectDir, BTS_CONFIG_FILE);
+      let content = await fs.readFile(configPath, "utf8");
+      BetterTStackConfigSchema.parse({ ...parseBtsConfig(content), ...updates });
+      for (const [key, value] of Object.entries(updates)) {
+        content = applyEdits(
+          content,
+          modify(content, [key], value, { formattingOptions: { tabSize: 2 } }),
+        );
+      }
+      await fs.writeFile(configPath, content, "utf8");
+    },
+    catch: (cause) =>
+      new CLIError({
+        message: `Failed to update bts.jsonc: ${cause instanceof Error ? cause.message : String(cause)}`,
+        cause,
+      }),
+  });
 }

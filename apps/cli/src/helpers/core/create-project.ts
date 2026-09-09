@@ -54,7 +54,6 @@ export async function createProject(
     const projectDir = options.projectDir;
     const isConvex = options.backend === "convex";
 
-    // Ensure project directory exists
     yield* Result.await(
       Result.tryPromise({
         try: () => fs.ensureDir(projectDir),
@@ -67,7 +66,6 @@ export async function createProject(
       }),
     );
 
-    // Generate virtual project using Result-based API
     const tree = yield* Result.await(
       generate({
         config: options,
@@ -85,7 +83,6 @@ export async function createProject(
       ),
     );
 
-    // Write tree to filesystem using Result-based API
     yield* Result.await(
       writeTree(tree, projectDir).then((result) =>
         result.mapError(
@@ -99,7 +96,6 @@ export async function createProject(
       ),
     );
 
-    // Set package manager version
     yield* Result.await(
       setPackageManagerVersion(projectDir, options.packageManager, cliInput.packageManagerVersion),
     );
@@ -120,7 +116,6 @@ async function* runPostScaffoldSteps(
   projectDir: string,
   isConvex: boolean,
 ) {
-  // Setup database if needed
   if (!isConvex && options.database !== "none") {
     yield* Result.await(
       Result.tryPromise({
@@ -135,7 +130,6 @@ async function* runPostScaffoldSteps(
     );
   }
 
-  // Setup addons if any
   if (options.addons.length > 0 && options.addons[0] !== "none") {
     yield* Result.await(
       Result.tryPromise({
@@ -156,7 +150,6 @@ async function* runPostScaffoldSteps(
 
   if (!isSilent()) log.success("Project scaffolded");
 
-  // Install dependencies if requested
   let install: CreateProjectOutcome["install"] = "skipped";
   let installError: ProjectCreationError | null = null;
   if (options.install) {
@@ -177,7 +170,6 @@ async function* runPostScaffoldSteps(
     "Git initialization cancelled.",
   );
 
-  // Display post-install instructions
   if (!isSilent()) {
     await displayPostInstallInstructions({
       ...options,

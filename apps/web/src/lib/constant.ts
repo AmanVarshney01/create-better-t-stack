@@ -1,8 +1,9 @@
-import type { TechCategory } from "./types";
+import type { StackState, TechOptions, TechCategory, StackOptionId } from "./types";
+export type { StackState } from "./types";
 
 export const ICON_BASE_URL = "https://r2.better-t-stack.dev/icons";
 
-export const TECH_OPTIONS = {
+export const TECH_OPTIONS: TechOptions = {
   api: [
     {
       id: "trpc",
@@ -744,21 +745,25 @@ export const TECH_OPTIONS = {
       color: "from-yellow-400 to-yellow-600",
     },
   ],
-} satisfies Record<
-  TechCategory,
-  {
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
-    color: string;
-    default?: boolean;
-    className?: string;
-    experimental?: boolean;
-  }[]
->;
+};
 
-export const PRESET_TEMPLATES = [
+export function getStackOptionIds<K extends TechCategory>(category: K): StackOptionId<K>[] {
+  return TECH_OPTIONS[category].map(({ id }) => id);
+}
+
+export function isStackOption<K extends TechCategory>(
+  category: K,
+  value: string,
+): value is StackOptionId<K> {
+  return TECH_OPTIONS[category].some(({ id }) => id === value);
+}
+
+export const PRESET_TEMPLATES: {
+  id: string;
+  name: string;
+  description: string;
+  stack: StackState;
+}[] = [
   {
     id: "mern",
     name: "MERN Stack",
@@ -864,28 +869,6 @@ export const PRESET_TEMPLATES = [
     },
   },
 ];
-
-export type StackState = {
-  projectName: string | null;
-  webFrontend: string[];
-  nativeFrontend: string[];
-  runtime: string;
-  backend: string;
-  database: string;
-  orm: string;
-  dbSetup: string;
-  auth: string;
-  payments: string;
-  packageManager: string;
-  addons: string[];
-  examples: string[];
-  git: string;
-  install: string;
-  api: string;
-  webDeploy: string;
-  serverDeploy: string;
-  yolo: string;
-};
 
 export const DEFAULT_STACK: StackState = {
   projectName: "my-better-t-app",

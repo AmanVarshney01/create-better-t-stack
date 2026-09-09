@@ -1,3 +1,5 @@
+import { supportsRuntimeDatabase } from "@better-t-stack/types";
+
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Database, Runtime } from "../types";
 import { UserCancelledError } from "../utils/errors";
@@ -42,7 +44,7 @@ export async function getDatabaseChoice(
     },
   ];
 
-  if (runtime !== "workers") {
+  if (supportsRuntimeDatabase(runtime, "mongodb")) {
     databaseOptions.push({
       value: "mongodb",
       label: "MongoDB",

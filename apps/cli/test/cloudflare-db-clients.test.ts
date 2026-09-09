@@ -195,7 +195,7 @@ describe("Cloudflare DB client generation", () => {
       );
       expect(authFile).not.toContain("export const auth = await createAuth();");
       expect(envFile).toContain(scenario.envNeedle);
-      if (scenario.envAbsentNeedle) {
+      if ("envAbsentNeedle" in scenario && scenario.envAbsentNeedle) {
         expect(envFile).not.toContain(scenario.envAbsentNeedle);
       }
       for (const needle of scenario.routeNeedles) {

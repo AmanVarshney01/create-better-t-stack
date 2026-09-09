@@ -1,14 +1,25 @@
 import { describe, expect, it } from "bun:test";
 
-import { initTRPC } from "@trpc/server";
+import { createRouterClient } from "@orpc/server";
+import { z } from "zod";
 
 import { router } from "../src/index";
 
-const caller = initTRPC.create().createCallerFactory(router)({});
+const cliSchema = z.object({
+  commands: z.array(
+    z.object({
+      name: z.string(),
+      options: z.array(z.object({ name: z.string(), choices: z.array(z.string()).optional() })),
+    }),
+  ),
+});
+const allSchemas = z.object({ cli: cliSchema, schemas: z.record(z.string(), z.unknown()) });
+
+const caller = createRouterClient(router);
 
 describe("Schema command", () => {
   it("returns full schema payload for 'all'", async () => {
-    const result = await caller.schema({ name: "all" });
+    const result = allSchemas.parse(await caller.schema({ name: "all" }));
 
     expect(result).toHaveProperty("cli");
     expect(result).toHaveProperty("schemas");
@@ -27,7 +38,7 @@ describe("Schema command", () => {
   });
 
   it("includes agent-focused commands in CLI introspection", async () => {
-    const result = await caller.schema({ name: "cli" });
+    const result = cliSchema.parse(await caller.schema({ name: "cli" }));
     const commandNames = result.commands.map((command) => command.name);
 
     expect(commandNames).toContain("create-json");
@@ -36,7 +47,7 @@ describe("Schema command", () => {
   });
 
   it("describes the post-create launcher option", async () => {
-    const result = await caller.schema({ name: "cli" });
+    const result = cliSchema.parse(await caller.schema({ name: "cli" }));
     const createCommand = result.commands.find((command) => command.name === "create");
     const openOption = createCommand?.options.find((option) => option.name === "open");
 

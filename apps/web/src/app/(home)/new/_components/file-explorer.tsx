@@ -1,25 +1,10 @@
 "use client";
 
+import type { VirtualFile, VirtualDirectory } from "@better-t-stack/template-generator";
 import { useMemo } from "react";
 
 import { Tree, Folder, File } from "@/components/ui/file-tree";
-
-export interface VirtualFile {
-  type: "file";
-  path: string;
-  name: string;
-  content: string;
-  extension: string;
-}
-
-export interface VirtualDirectory {
-  type: "directory";
-  path: string;
-  name: string;
-  children: VirtualNode[];
-}
-
-export type VirtualNode = VirtualFile | VirtualDirectory;
+export type { VirtualFile, VirtualDirectory } from "@better-t-stack/template-generator";
 
 interface FileExplorerProps {
   root: VirtualDirectory;

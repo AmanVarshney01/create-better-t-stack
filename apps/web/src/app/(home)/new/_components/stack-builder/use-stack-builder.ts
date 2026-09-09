@@ -3,11 +3,9 @@ import { toast } from "sonner";
 
 import { type BuilderCopySource, stackSnapshot, track } from "@/lib/analytics";
 import { DEFAULT_STACK, PRESET_TEMPLATES, type StackState, TECH_OPTIONS } from "@/lib/constant";
-import {
-  OBSERVABILITY_ADDONS,
-  sanitizeStackState,
-  TASK_RUNNER_ADDONS,
-} from "@/lib/sanitize-stack-addons";
+import { sanitizeAddons, sanitizeExamples } from "@/lib/sanitize-stack-addons";
+import { applyStackUpdate, resolveStackCompatibility } from "@/lib/stack-compatibility";
+import { StackStateSchema, StackUpdateSchema } from "@/lib/stack-schema";
 import { useStackState } from "@/lib/stack-url-state.client";
 import {
   CATEGORY_ORDER,
@@ -15,9 +13,12 @@ import {
   generateStackCommand,
   generateStackSharingUrl,
 } from "@/lib/stack-utils";
+import {
+  analyzeStackCompatibility,
+  isOptionCompatible,
+  validateProjectName,
+} from "@/lib/stack-validation";
 import type { TechCategory } from "@/lib/types";
-
-import { analyzeStackCompatibility, isOptionCompatible, validateProjectName } from "../utils";
 
 export type MobileTab = "build" | "preview";
 
@@ -28,61 +29,12 @@ export type CategoryProgressItem = {
   done: boolean;
 };
 
-const CATEGORY_LIST = CATEGORY_ORDER as TechCategory[];
-const MAX_COMPATIBILITY_PASSES = 10;
-
+const CATEGORY_LIST = CATEGORY_ORDER;
 type StackUpdate = Partial<StackState> | ((prev: StackState) => Partial<StackState>);
 type CompatibilityAnalysis = ReturnType<typeof analyzeStackCompatibility>;
 
-export type ResolvedStackCompatibility = CompatibilityAnalysis & {
-  stack: StackState;
-};
-
 function withFormattedProjectName(stack: StackState) {
-  return {
-    ...stack,
-    projectName: formatProjectName(stack.projectName),
-  };
-}
-
-export function resolveStackCompatibility(stack: StackState): ResolvedStackCompatibility {
-  let currentStack = sanitizeStackState(stack);
-  let wasAdjusted = false;
-  const changes: CompatibilityAnalysis["changes"] = [];
-
-  for (let pass = 0; pass < MAX_COMPATIBILITY_PASSES; pass++) {
-    const analysis = analyzeStackCompatibility(currentStack);
-    if (!analysis.adjustedStack) {
-      return {
-        stack: currentStack,
-        adjustedStack: wasAdjusted ? currentStack : null,
-        notes: analysis.notes,
-        changes,
-      };
-    }
-
-    wasAdjusted = true;
-    changes.push(...analysis.changes);
-    currentStack = sanitizeStackState(analysis.adjustedStack);
-  }
-
-  const finalAnalysis = analyzeStackCompatibility(currentStack);
-  return {
-    stack: currentStack,
-    adjustedStack: wasAdjusted ? currentStack : null,
-    notes: finalAnalysis.notes,
-    changes,
-  };
-}
-
-export function applyStackUpdate(
-  currentStack: StackState,
-  update: StackUpdate,
-): ResolvedStackCompatibility {
-  const resolvedCurrentStack = resolveStackCompatibility(currentStack).stack;
-  const partialUpdate = update instanceof Function ? update(resolvedCurrentStack) : update;
-  const requestedStack = sanitizeStackState({ ...resolvedCurrentStack, ...partialUpdate });
-  return resolveStackCompatibility(requestedStack);
+  return { ...stack, projectName: formatProjectName(stack.projectName) };
 }
 
 export function getSelectedTechRemovalUpdate(
@@ -91,7 +43,7 @@ export function getSelectedTechRemovalUpdate(
   techId: string,
 ): Partial<StackState> {
   const effectiveStack = resolveStackCompatibility(stack).stack;
-  const categoryKey = category as keyof StackState;
+  const categoryKey = category;
   const value = effectiveStack[categoryKey];
   const options = TECH_OPTIONS[category] || [];
   const hasNoneOption = options.some((option) => option.id === "none");
@@ -100,11 +52,11 @@ export function getSelectedTechRemovalUpdate(
   if (Array.isArray(value)) {
     const next = value.filter((id) => id !== techId);
     const fallback = next.length === 0 && (hasNoneOption || forceNoneFallback) ? ["none"] : next;
-    return { [categoryKey]: fallback } as Partial<StackState>;
+    return StackUpdateSchema.parse({ [categoryKey]: fallback });
   }
 
   if (value === techId && hasNoneOption) {
-    return { [categoryKey]: "none" } as Partial<StackState>;
+    return StackUpdateSchema.parse({ [categoryKey]: "none" });
   }
 
   return {};
@@ -120,82 +72,44 @@ export function getTechSelectionUpdate(
     return {};
   }
 
-  const catKey = category as keyof StackState;
-  const update: Partial<StackState> = {};
-  const currentValue = effectiveStack[catKey];
+  const currentValue = effectiveStack[category];
+  const candidate = StackUpdateSchema.safeParse({
+    [category]: Array.isArray(currentValue) ? [techId] : techId,
+  });
+  if (!candidate.success) return {};
+  const choice = candidate.data;
+  if (choice.webFrontend)
+    return { webFrontend: toggleSingle(effectiveStack.webFrontend, choice.webFrontend[0]) };
+  if (choice.nativeFrontend)
+    return {
+      nativeFrontend: toggleSingle(effectiveStack.nativeFrontend, choice.nativeFrontend[0]),
+    };
+  if (choice.addons)
+    return { addons: sanitizeAddons(toggleMulti(effectiveStack.addons, choice.addons[0])).sort() };
+  if (choice.examples)
+    return {
+      examples: sanitizeExamples(toggleMulti(effectiveStack.examples, choice.examples[0])).sort(),
+    };
+  if (currentValue !== techId) return choice;
+  if (choice.git) return { git: choice.git === "true" ? "false" : "true" };
+  if (choice.install) return { install: choice.install === "true" ? "false" : "true" };
+  return {};
+}
 
-  if (
-    catKey === "webFrontend" ||
-    catKey === "nativeFrontend" ||
-    catKey === "addons" ||
-    catKey === "examples"
-  ) {
-    const currentArray = Array.isArray(currentValue) ? [...currentValue] : [];
-    let nextArray = [...currentArray];
-    const isSelected = currentArray.includes(techId);
+function toggleSingle<T extends string>(
+  values: readonly (T | "none")[],
+  id: T | "none",
+): (T | "none")[] {
+  return values.includes(id) ? ["none"] : [id];
+}
 
-    if (catKey === "webFrontend") {
-      if (techId === "none") {
-        nextArray = ["none"];
-      } else if (isSelected) {
-        nextArray = currentArray.length > 1 ? nextArray.filter((id) => id !== techId) : ["none"];
-      } else {
-        nextArray = [techId];
-      }
-    } else if (catKey === "nativeFrontend") {
-      if (techId === "none" || isSelected) {
-        nextArray = ["none"];
-      } else {
-        nextArray = [techId];
-      }
-    } else {
-      nextArray = isSelected ? nextArray.filter((id) => id !== techId) : [...nextArray, techId];
-
-      if (
-        catKey === "addons" &&
-        !isSelected &&
-        (TASK_RUNNER_ADDONS as readonly string[]).includes(techId)
-      ) {
-        nextArray = nextArray.filter(
-          (id) => id === techId || !(TASK_RUNNER_ADDONS as readonly string[]).includes(id),
-        );
-      }
-
-      if (
-        catKey === "addons" &&
-        !isSelected &&
-        (OBSERVABILITY_ADDONS as readonly string[]).includes(techId)
-      ) {
-        nextArray = nextArray.filter(
-          (id) => id === techId || !(OBSERVABILITY_ADDONS as readonly string[]).includes(id),
-        );
-      }
-
-      if (nextArray.length > 1) {
-        nextArray = nextArray.filter((id) => id !== "none");
-      }
-    }
-
-    const uniqueNext = [...new Set(nextArray)].sort();
-    const uniqueCurrent = [...new Set(currentArray)].sort();
-
-    if (JSON.stringify(uniqueNext) !== JSON.stringify(uniqueCurrent)) {
-      update[catKey] = uniqueNext as never;
-    }
-  } else if (currentValue !== techId) {
-    update[catKey] = techId as never;
-  } else if ((category === "git" || category === "install") && techId === "false") {
-    update[catKey] = "true" as never;
-  } else if ((category === "git" || category === "install") && techId === "true") {
-    update[catKey] = "false" as never;
-  }
-
-  return update;
+function toggleMulti<T extends string>(values: readonly T[], id: T): T[] {
+  return values.includes(id) ? values.filter((value) => value !== id) : [...values, id];
 }
 
 function isTechSelected(stack: StackState, category: keyof typeof TECH_OPTIONS, techId: string) {
-  const value = stack[category as keyof StackState];
-  return Array.isArray(value) ? value.includes(techId) : value === techId;
+  const value = stack[category];
+  return Array.isArray(value) ? value.some((id) => id === techId) : value === techId;
 }
 
 function showCompatibilityChanges(changes: CompatibilityAnalysis["changes"]) {
@@ -226,7 +140,11 @@ export function useStackBuilder() {
 
   const [copied, setCopied] = useState(false);
   const [lastSavedStack, setLastSavedStack] = useState<StackState | null>(null);
-  const [mobileTab, setMobileTab] = useState<MobileTab>("build");
+  const mobileTab: MobileTab = viewMode === "preview" ? "preview" : "build";
+  const setMobileTab = useCallback(
+    (tab: MobileTab) => setViewMode(tab === "preview" ? "preview" : "command"),
+    [setViewMode],
+  );
 
   const setStack = useCallback(
     async (update: StackUpdate) => {
@@ -259,20 +177,20 @@ export function useStackBuilder() {
 
   const compatibilityAnalysis = useMemo(() => resolveStackCompatibility(stack), [stack]);
   const effectiveStack = compatibilityAnalysis.stack;
-  const projectNameError = validateProjectName(stack.projectName || "");
+  const projectNameError = validateProjectName(formatProjectName(stack.projectName));
 
   useEffect(() => {
-    const savedStack = localStorage.getItem("betterTStackPreference");
-    if (!savedStack) {
-      return;
-    }
-
     try {
-      const parsedStack = sanitizeStackState(JSON.parse(savedStack) as StackState);
-      setLastSavedStack(parsedStack);
-    } catch (error) {
-      console.error("Failed to parse saved stack", error);
-      localStorage.removeItem("betterTStackPreference");
+      const savedStack = localStorage.getItem("betterTStackPreference");
+      if (!savedStack) return;
+      const result = StackStateSchema.safeParse(JSON.parse(savedStack));
+      if (result.success) {
+        setLastSavedStack(resolveStackCompatibility(result.data).stack);
+      } else {
+        localStorage.removeItem("betterTStackPreference");
+      }
+    } catch {
+      setLastSavedStack(null);
     }
   }, []);
 
@@ -283,7 +201,7 @@ export function useStackBuilder() {
   const categoryProgress = useMemo<Array<CategoryProgressItem>>(() => {
     return CATEGORY_LIST.map((category) => {
       const options = TECH_OPTIONS[category] || [];
-      const selectedValue = effectiveStack[category as keyof StackState];
+      const selectedValue = effectiveStack[category];
       const realOptionCount = options.filter((option) => option.id !== "none").length;
 
       if (Array.isArray(selectedValue)) {
@@ -322,53 +240,25 @@ export function useStackBuilder() {
   }
 
   function getRandomStack() {
-    const randomStack: Partial<StackState> = {};
-
-    for (const category of CATEGORY_LIST) {
-      const options = TECH_OPTIONS[category as keyof typeof TECH_OPTIONS] || [];
-      if (options.length === 0) {
-        continue;
-      }
-
-      const catKey = category as keyof StackState;
-      if (
-        catKey === "webFrontend" ||
-        catKey === "nativeFrontend" ||
-        catKey === "addons" ||
-        catKey === "examples"
-      ) {
-        if (catKey === "webFrontend" || catKey === "nativeFrontend") {
-          const selectedOption = options[Math.floor(Math.random() * options.length)]?.id;
-          if (selectedOption) {
-            randomStack[catKey as "webFrontend" | "nativeFrontend"] = [selectedOption];
-          }
-          continue;
-        }
-
-        const numToPick = Math.floor(Math.random() * Math.min(options.length, 4));
-        if (numToPick === 0) {
-          randomStack[catKey as "addons" | "examples"] = ["none"];
-          continue;
-        }
-
-        const shuffledOptions = [...options]
-          .filter((opt) => opt.id !== "none")
+    const entries = CATEGORY_LIST.map((category) => {
+      const options = TECH_OPTIONS[category];
+      if (category === "addons" || category === "examples") {
+        const count = Math.floor(Math.random() * Math.min(options.length, 4));
+        const ids = [...options]
+          .filter(({ id }) => id !== "none")
           .sort(() => 0.5 - Math.random())
-          .slice(0, numToPick);
-
-        randomStack[catKey as "addons" | "examples"] = shuffledOptions.map((opt) => opt.id);
-        continue;
+          .slice(0, count)
+          .map(({ id }) => id);
+        return [category, ids.length ? ids : ["none"]];
       }
-
-      const selectedOption = options[Math.floor(Math.random() * options.length)]?.id;
-      if (selectedOption) {
-        randomStack[catKey] = selectedOption as never;
-      }
-    }
+      const id = options[Math.floor(Math.random() * options.length)].id;
+      return [category, category === "webFrontend" || category === "nativeFrontend" ? [id] : id];
+    });
+    const randomStack = StackStateSchema.parse(Object.fromEntries(entries));
 
     startTransition(() => {
       setStack({
-        ...(randomStack as StackState),
+        ...randomStack,
         projectName: stack.projectName || "my-better-t-app",
       });
     });
@@ -396,6 +286,10 @@ export function useStackBuilder() {
   }
 
   async function copyToClipboard(source: BuilderCopySource) {
+    if (projectNameError) {
+      toast.error(projectNameError);
+      return;
+    }
     try {
       await navigator.clipboard.writeText(command);
       setCopied(true);
@@ -415,11 +309,19 @@ export function useStackBuilder() {
   }
 
   function saveCurrentStack() {
-    const stackToSave = withFormattedProjectName(effectiveStack);
-    localStorage.setItem("betterTStackPreference", JSON.stringify(stackToSave));
-    setLastSavedStack(stackToSave);
-    toast.success("Your stack configuration has been saved");
-    track("builder_save", {});
+    if (projectNameError) {
+      toast.error(projectNameError);
+      return;
+    }
+    try {
+      const stackToSave = withFormattedProjectName(effectiveStack);
+      localStorage.setItem("betterTStackPreference", JSON.stringify(stackToSave));
+      setLastSavedStack(stackToSave);
+      toast.success("Your stack configuration has been saved");
+      track("builder_save", {});
+    } catch {
+      toast.error("Unable to save preferences in this browser. You can share your stack instead.");
+    }
   }
 
   function loadSavedStack() {

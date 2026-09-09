@@ -1,8 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { desktopWebFrontends } from "@better-t-stack/types";
-
 import { getUserPkgManager } from "./utils/get-package-manager";
 
 // Re-export from template-generator (single source of truth)
@@ -48,27 +46,6 @@ export function getDefaultConfig() {
 
 export const DEFAULT_CONFIG = getDefaultConfig();
 
-export { desktopWebFrontends };
+export { desktopWebFrontends } from "@better-t-stack/types";
 
-export const ADDON_COMPATIBILITY = {
-  pwa: ["tanstack-router", "react-router", "solid", "next"],
-  tauri: desktopWebFrontends,
-  electrobun: desktopWebFrontends,
-  biome: [],
-  husky: [],
-  lefthook: [],
-  turborepo: [],
-  nx: [],
-  "vite-plus": [],
-  starlight: [],
-  ultracite: [],
-  mcp: [],
-  oxlint: [],
-  fumadocs: [],
-  opentui: [],
-  wxt: [],
-  skills: [],
-  evlog: [],
-  axiom: [],
-  none: [],
-} as const;
+export { ADDON_COMPATIBILITY } from "@better-t-stack/types";

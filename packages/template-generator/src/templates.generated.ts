@@ -148,7 +148,7 @@ export default {
   "type": "module",
   "scripts": {},
   "devDependencies": {
-    "@types/bun": "^1.4.1",
+    "@types/bun": "^1.4.2",
     "concurrently": "^10.0.5",
     "electrobun": "^2.0.1",
     "typescript": "^6.0.3"
@@ -1511,7 +1511,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
     }
   },
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
   "devDependencies": {},
   "dependencies": {}
 }`],
@@ -1626,13 +1628,10 @@ export type AppRouter = typeof appRouter;
   ["api/orpc/server/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "composite": true
+    "noEmit": true
   }
-}`],
+}
+`],
   ["api/orpc/web/astro/src/lib/orpc.ts.hbs", `import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 
 import { createORPCClient } from "@orpc/client";
@@ -2507,7 +2506,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
     }
   },
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
   "devDependencies": {}
 }`],
   ["api/trpc/server/src/context.ts.hbs", `{{#if (eq auth "better-auth")}}
@@ -2629,13 +2630,10 @@ export type AppRouter = typeof appRouter;
   ["api/trpc/server/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "composite": true
+    "noEmit": true
   }
-}`],
+}
+`],
   ["api/trpc/web/react/base/src/utils/trpc.ts.hbs", `{{#if (includes frontend 'next')}}
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
@@ -8334,7 +8332,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
     }
   },
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
   "devDependencies": {}
 }`],
   ["auth/better-auth/server/base/src/index.ts.hbs", `import { betterAuth } from "better-auth";
@@ -8423,13 +8423,10 @@ export function createAuth(env: AuthConfig{{#if (ne database "none")}}, database
   ["auth/better-auth/server/base/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "composite": true
+    "noEmit": true
   }
-}`],
+}
+`],
   ["auth/better-auth/server/db/drizzle/mysql/src/schema/auth.ts.hbs", `import { relations } from "drizzle-orm";
 import {
   mysqlTable,
@@ -15479,7 +15476,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
   "devDependencies": {}
 }`],
   ["db/base/src/config.ts.hbs", `{{#if (eq dbSetup "d1")}}
@@ -15503,13 +15502,10 @@ export type DatabaseConfig = {
   ["db/base/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "composite": true
+    "noEmit": true
   }
-}`],
+}
+`],
   ["db/drizzle/base/src/schema/index.ts.hbs", `{{#if (eq auth "better-auth")}}
 export * from "./auth";
 {{/if}}
@@ -30881,7 +30877,7 @@ export function ThemeProvider({
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc"
+    "check-types": "react-router typegen && tsc --noEmit"
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
@@ -31909,7 +31905,8 @@ export default defineConfig({
   "scripts": {
     "build": "vite build",
     "serve": "vite preview",
-    "dev": "vite dev"
+    "dev": "vite dev",
+    "check-types": "vite build && tsc --noEmit"
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",

@@ -2,13 +2,13 @@ import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
 
-import type { Addons, PackageManager } from "../../types";
+import type { PackageManager } from "../../types";
 import { ProjectCreationError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getInterruptSignal, startInterruptibleStep, wasInterrupted } from "../../utils/interrupt";
 import { createSpinner } from "../../utils/terminal-output";
 
-export type InstallStatus = "installed" | "cancelled";
+export type InstallStatus = "installed" | "cancelled" | "skipped";
 
 const FORCE_KILL_AFTER_MS = 2000;
 
@@ -18,10 +18,9 @@ export async function installDependencies({
 }: {
   projectDir: string;
   packageManager: PackageManager;
-  addons?: Addons[];
 }): Promise<Result<InstallStatus, ProjectCreationError>> {
   if (shouldSkipExternalCommands()) {
-    return Result.ok("installed");
+    return Result.ok("skipped");
   }
 
   startInterruptibleStep();

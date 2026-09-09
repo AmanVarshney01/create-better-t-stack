@@ -4,9 +4,9 @@ import path from "node:path";
 import fs from "fs-extra";
 
 import { add, create } from "../src/index";
+import type { AddonOptions } from "../src/types";
 import { readBtsConfig } from "../src/utils/bts-config";
-
-const SMOKE_DIR_PATH = path.join(import.meta.dir, "..", ".smoke");
+import { SMOKE_DIR } from "./setup";
 
 describe("Addon options", () => {
   beforeEach(() => {
@@ -15,33 +15,33 @@ describe("Addon options", () => {
   });
 
   it("persists addonOptions during create and keeps reproducible command on normal flags", async () => {
-    const projectPath = path.join(SMOKE_DIR_PATH, "addon-options-create");
+    const projectPath = path.join(SMOKE_DIR, "addon-options-create");
     await fs.remove(projectPath);
 
-    const addonOptions = {
-      wxt: { template: "react" as const, devPort: 5555 },
-      opentui: { template: "react" as const },
-      fumadocs: { template: "astro" as const, devPort: 4000, aiChat: "llmgateway" as const },
+    const addonOptions: AddonOptions = {
+      wxt: { template: "react", devPort: 5555 },
+      opentui: { template: "react" },
+      fumadocs: { template: "astro", devPort: 4000, aiChat: "llmgateway" },
       mcp: {
-        scope: "project" as const,
-        servers: ["context7"] as const,
-        agents: ["grok-build", "windsurf"] as const,
+        scope: "project",
+        servers: ["context7"],
+        agents: ["grok-build", "windsurf"],
       },
       skills: {
-        scope: "project" as const,
-        agents: ["universal", "zenflow"] as const,
+        scope: "project",
+        agents: ["universal", "zenflow"],
         selections: [
           {
-            source: "vercel-labs/agent-skills" as const,
+            source: "vercel-labs/agent-skills",
             skills: ["web-design-guidelines"],
           },
         ],
       },
       ultracite: {
-        linter: "biome" as const,
-        editors: ["vscode", "cursor"] as const,
-        agents: ["claude", "codex"] as const,
-        hooks: ["claude"] as const,
+        linter: "biome",
+        editors: ["vscode", "cursor"],
+        agents: ["claude", "codex"],
+        hooks: ["claude"],
       },
     };
 
@@ -78,7 +78,7 @@ describe("Addon options", () => {
   });
 
   it("persists addonOptions during add", async () => {
-    const projectPath = path.join(SMOKE_DIR_PATH, "addon-options-add");
+    const projectPath = path.join(SMOKE_DIR, "addon-options-add");
     await fs.remove(projectPath);
 
     const createResult = await create(projectPath, {
@@ -90,12 +90,12 @@ describe("Addon options", () => {
     expect(createResult.isOk()).toBe(true);
     if (createResult.isErr()) return;
 
-    const addonOptions = {
-      wxt: { template: "react" as const },
+    const addonOptions: AddonOptions = {
+      wxt: { template: "react" },
       mcp: {
-        scope: "project" as const,
-        servers: ["context7"] as const,
-        agents: ["cursor"] as const,
+        scope: "project",
+        servers: ["context7"],
+        agents: ["cursor"],
       },
     };
 
@@ -115,7 +115,7 @@ describe("Addon options", () => {
   });
 
   it("deep merges nested addonOptions during add", async () => {
-    const projectPath = path.join(SMOKE_DIR_PATH, "addon-options-deep-merge");
+    const projectPath = path.join(SMOKE_DIR, "addon-options-deep-merge");
     await fs.remove(projectPath);
 
     const createResult = await create(projectPath, {

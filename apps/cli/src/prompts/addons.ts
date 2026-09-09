@@ -259,7 +259,7 @@ export async function getAddonsToAdd(config: AddonProjectConfig) {
     validate: validateAddonSelection,
   });
 
-  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
+  if (!Array.isArray(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

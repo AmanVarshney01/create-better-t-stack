@@ -178,7 +178,7 @@ export function getBaselineRequirements(
     });
   }
   if (hostRuntime === "node") {
-    addNodeRequirement(requirements, ">=22.0.0", "create-better-t-stack");
+    addNodeRequirement(requirements, ">=22.12.0", "create-better-t-stack");
   }
   return requirements;
 }

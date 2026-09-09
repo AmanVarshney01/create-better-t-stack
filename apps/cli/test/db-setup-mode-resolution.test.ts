@@ -16,6 +16,7 @@ describe("DB setup mode resolution", () => {
     );
 
     expect(mode).toBeUndefined();
+    if (mode !== undefined) throw new Error("Expected no provisioning choice");
   });
 
   it("defaults remote provisioning setups to manual in silent mode", () => {
@@ -76,6 +77,7 @@ describe("DB setup mode resolution", () => {
     const mode = await getDbProvisioningChoice("alchemy", "neon", "hono", "prisma", "vercel");
 
     expect(mode).toBeUndefined();
+    if (mode !== undefined) throw new Error("Expected no provisioning choice");
     expect(withDbSetupMode({ mode: "alchemy", neon: { method: "neon-new" } }, mode)).toEqual({
       neon: { method: "neon-new" },
     });
