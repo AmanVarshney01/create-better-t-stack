@@ -66,6 +66,38 @@ const baseConfig = {
 
 const buildSamples: BuildSample[] = [
   {
+    name: "next-self-orpc-prisma-polar",
+    config: {
+      ...baseConfig,
+      frontend: ["next"],
+      backend: "self",
+      runtime: "none",
+      database: "sqlite",
+      orm: "prisma",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "polar",
+      addons: ["none"],
+      examples: ["todo"],
+    },
+  },
+  {
+    name: "expo-orpc-auth-todo",
+    config: {
+      ...baseConfig,
+      frontend: ["native-bare"],
+      backend: "hono",
+      runtime: "bun",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "orpc",
+      auth: "better-auth",
+      payments: "none",
+      addons: ["none"],
+      examples: ["todo"],
+    },
+  },
+  {
     name: "tanstack-start-self-auth-todo",
     config: {
       ...baseConfig,
@@ -1300,6 +1332,73 @@ async function writeSyntheticBuildConfig(projectDir: string) {
   }
 }
 
+async function writeOrpcInferenceChecks(sample: SelectedBuildSample, projectDir: string) {
+  if (sample.config.api !== "orpc") return;
+  const root = z
+    .object({ name: z.string() })
+    .parse(await fs.readJson(path.join(projectDir, "package.json")));
+  await fs.appendFile(
+    path.join(projectDir, "packages/api/src/routers/index.ts"),
+    `\nexport const typeBoundaryProbe = {
+  read: publicProcedure.handler(() => {
+    const values: number[] = [];
+    return values[0];
+  }),
+};
+export type TypeBoundaryProbeClient = RouterClient<typeof typeBoundaryProbe>;\n`,
+  );
+  const checks = [
+    `import type { AppRouterClient, TypeBoundaryProbeClient } from "@${root.name}/api/routers/index";`,
+    "type IsAny<T> = 0 extends (1 & T) ? true : false;",
+    "type IsEqual<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;",
+    "type Assert<T extends true> = T;",
+    "type Health = Awaited<ReturnType<AppRouterClient['healthCheck']>>;",
+    "export type HealthIsTyped = Assert<IsAny<Health> extends false ? true : false>;",
+    "type IndexedOutput = Awaited<ReturnType<TypeBoundaryProbeClient['read']>>;",
+    "export type ServerOptionsPreserved = Assert<IsEqual<IndexedOutput, number | undefined>>;",
+    "export async function checkClient(client: AppRouterClient) {",
+    "  const health: string = await client.healthCheck();",
+    "  // @ts-expect-error Health check output is not a number.",
+    "  const invalidHealth: number = await client.healthCheck();",
+  ];
+  if (sample.config.examples?.includes("todo")) {
+    checks.push(
+      '  await client.todo.create({ text: "valid" });',
+      "  // @ts-expect-error Todo input must retain its string type in the client.",
+      "  await client.todo.create({ text: 123 });",
+      "  const todos = await client.todo.getAll();",
+      "  const text: string = todos[0]!.text;",
+      "  const completed: boolean = todos[0]!.completed;",
+      "  // @ts-expect-error Database-derived output must not become any.",
+      "  todos[0]!.text = 123;",
+      "  // @ts-expect-error Unknown database fields must be rejected.",
+      "  todos[0]!.nonexistentField;",
+      "  void [text, completed];",
+    );
+  }
+  if (sample.config.auth === "better-auth") {
+    checks.push(
+      "  const privateData = await client.privateData();",
+      "  const email: string = privateData.user!.email;",
+      "  // @ts-expect-error Auth-derived output must not become any.",
+      "  privateData.user!.email = 123;",
+      "  void email;",
+    );
+  }
+  checks.push("  return { health, invalidHealth };", "}");
+  for (const app of ["web", "native", "server"]) {
+    const dir = path.join(projectDir, "apps", app);
+    if (!(await fs.pathExists(dir))) continue;
+    const source =
+      app === "native"
+        ? dir
+        : app === "web" && sample.config.frontend?.includes("nuxt")
+          ? path.join(dir, "app")
+          : path.join(dir, "src");
+    await fs.outputFile(path.join(source, "orpc-inference-check.ts"), checks.join("\n"));
+  }
+}
+
 describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples", () => {
   for (const sample of getSelectedBuildSamples()) {
     it(
@@ -1315,6 +1414,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
 
           const install = getPackageManagerCommand(sample.packageManager, "install");
           await runCommand(sample.name, projectDir, install.command, install.args);
+          await writeOrpcInferenceChecks(sample, projectDir);
           await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
           const build = getPackageManagerCommand(sample.packageManager, "build");
           await runCommand(sample.name, projectDir, build.command, build.args);

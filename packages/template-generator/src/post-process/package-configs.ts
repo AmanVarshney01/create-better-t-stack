@@ -52,6 +52,58 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
     updateAuthPackageJson(vfs, config);
     updateApiPackageJson(vfs, config);
   }
+
+  configureOrpcTypeBuilds(vfs, config);
+}
+
+function configureOrpcTypeBuilds(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  if (config.api !== "orpc" || !vfs.exists("packages/api/package.json")) return;
+
+  for (const name of ["db", "auth", "api"]) {
+    const file = `packages/${name}/package.json`;
+    const pkg = vfs.readJson<PackageJson>(file);
+    if (!pkg) continue;
+    pkg.scripts = { ...pkg.scripts, build: "tsc -b", "check-types": "tsc -b" };
+    if (name === "api") pkg.scripts.dev = "tsc -b --watch";
+    if (name === "db" && config.orm === "prisma") delete pkg.scripts.postinstall;
+    vfs.writeJson(file, pkg);
+  }
+
+  const root = vfs.readJson<PackageJson>("package.json");
+  if (root) {
+    root.scripts ??= {};
+    const packageManager = getPackageManagerConfig(config.packageManager, {
+      hasTurborepo: false,
+      hasNx: false,
+      hasVitePlus: false,
+    });
+    const generateDatabase =
+      config.orm === "prisma"
+        ? packageManager.filter(`@${config.projectName}/db`, "db:generate")
+        : undefined;
+    // Workspace install hooks can run concurrently; Prisma must finish before declaration builds.
+    root.scripts.postinstall = [root.scripts.postinstall, generateDatabase, "tsc -b packages/api"]
+      .filter(Boolean)
+      .join(" && ");
+    root.scripts["dev:types"] = "tsc -b packages/api --watch";
+    vfs.writeJson("package.json", root);
+  }
+
+  for (const name of ["web", "native", "server"]) {
+    const file = `apps/${name}/package.json`;
+    const pkg = vfs.readJson<PackageJson>(file);
+    if (!pkg?.scripts) continue;
+    if (name === "web" && config.frontend.includes("nuxt")) {
+      // nuxt typecheck passes --noEmit to every referenced project, including packages.
+      pkg.scripts["check-types"] = "nuxt prepare && vue-tsc -b";
+    }
+    for (const script of ["build", "check-types"]) {
+      if (pkg.scripts[script]) {
+        pkg.scripts[script] = `tsc -b ../../packages/api && ${pkg.scripts[script]}`;
+      }
+    }
+    vfs.writeJson(file, pkg);
+  }
 }
 
 function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {

@@ -1,3 +1,8 @@
+{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+import { fileURLToPath } from "node:url";
+
+const apiReference = { path: fileURLToPath(new URL("../../packages/api", import.meta.url)) };
+{{/if}}
 {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
 import { defineNuxtModule } from "nuxt/kit";
 import { unwasm } from "unwasm/plugin";
@@ -13,6 +18,19 @@ const prismaWasm = defineNuxtModule({
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  hooks: {
+    "prepare:types"({ tsConfig, nodeTsConfig, sharedTsConfig }) {
+      for (const config of [tsConfig, nodeTsConfig, sharedTsConfig]) {
+        (config.references ??= []).push(apiReference);
+      }
+    },
+    "nitro:config"(config) {
+      const tsConfig = (config.typescript ??= {}).tsConfig ??= {};
+      (tsConfig.references ??= []).push(apiReference);
+    },
+  },
+  {{/if}}
   compatibilityDate: 'latest',
   devtools: { enabled: true },
   experimental: {

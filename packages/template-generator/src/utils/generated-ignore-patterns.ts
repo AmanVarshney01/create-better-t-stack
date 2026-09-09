@@ -48,6 +48,10 @@ export function getStackGeneratedIgnorePatterns(config: ProjectConfig): string[]
   if (config.database !== "none" && config.orm !== "none") {
     patterns.add("packages/db/dist/**");
   }
+  if (config.api === "orpc" && !["convex", "none"].includes(config.backend)) {
+    patterns.add("packages/api/dist/**");
+    if (config.auth === "better-auth") patterns.add("packages/auth/dist/**");
+  }
 
   if (
     config.database === "sqlite" &&

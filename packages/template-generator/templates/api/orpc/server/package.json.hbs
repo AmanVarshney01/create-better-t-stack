@@ -2,9 +2,11 @@
   "name": "@{{projectName}}/api",
   "exports": {
     ".": {
+      "types": "./dist/src/index.d.ts",
       "default": "./src/index.ts"
     },
     "./*": {
+      "types": "./dist/src/*.d.ts",
       "default": "./src/*.ts"
     }
   },
