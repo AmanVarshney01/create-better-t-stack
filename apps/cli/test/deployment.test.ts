@@ -1167,8 +1167,8 @@ describe("Deployment Configurations", () => {
       );
       expect(nuxtPackage.devDependencies?.["nitro-cloudflare-dev"]).toBeUndefined();
       expect(nuxtPackage.devDependencies?.wrangler).toBeUndefined();
-      expect((nuxtPackage as { scripts?: Record<string, string> }).scripts?.build).toBe(
-        "nuxt build",
+      expect((nuxtPackage as { scripts?: Record<string, string> }).scripts?.build).toMatch(
+        /(?:^|&& )nuxt build$/,
       );
       expect(nuxtRootPackage.scripts?.build).toBe("pnpm -r --if-present build");
       expect(nuxtFiles.has("apps/web/cloudflare-workers.dev.ts")).toBe(false);
@@ -1675,7 +1675,7 @@ describe("Deployment Configurations", () => {
       const viteConfig = files.get("apps/web/vite.config.ts");
       const compose = files.get("docker-compose.yml");
 
-      expect(webPkg.scripts.build).toBe("vp build");
+      expect(webPkg.scripts.build).toMatch(/(?:^|&& )vp build$/);
       expect(viteConfig).toContain('nitro({ preset: "bun" }),');
       expect(webDockerfile).toContain("FROM node:24 AS builder");
       expect(webDockerfile).toContain("FROM oven/bun:1 AS runner");

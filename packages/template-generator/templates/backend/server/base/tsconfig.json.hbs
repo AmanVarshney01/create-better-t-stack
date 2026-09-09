@@ -1,4 +1,7 @@
 {
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  "references": [{ "path": "../../packages/api" }],
+  {{/if}}
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
     "composite": true,

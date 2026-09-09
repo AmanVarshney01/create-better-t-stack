@@ -1,6 +1,18 @@
 {
   "extends": "@{{projectName}}/config/tsconfig.base.json",
+  {{#if (eq api "orpc")}}
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"{{#if (eq orm "prisma")}}, "prisma/generated/**/*.ts"{{/if}}],
+  "references": []
+  {{else}}
   "compilerOptions": {
     "noEmit": true
   }
+  {{/if}}
 }

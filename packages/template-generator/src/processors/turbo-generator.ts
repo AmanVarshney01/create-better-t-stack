@@ -47,6 +47,9 @@ export function generateTurboConfig(config: ProjectConfig): TurboConfig {
   const hasLocalD1 = getLocalD1Owner(config) === "wrangler";
 
   const tasks: TurboTasks = getBaseTasks(frontend, config.addons);
+  if (config.api === "orpc" && !["convex", "none"].includes(backend)) {
+    tasks["check-types"] = { ...tasks["check-types"], outputs: ["dist/**"] };
+  }
 
   if (config.addons.includes("electrobun")) Object.assign(tasks, getElectrobunTasks());
   if (isConvex) Object.assign(tasks, getConvexTasks());

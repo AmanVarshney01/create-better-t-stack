@@ -3,7 +3,14 @@ import { createAuthClient } from "better-auth/client";
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
-export function createClient(baseURL?: string) {
+type ClientOptions = {
+  baseURL?: string;
+{{#if (eq payments "polar")}}
+  plugins: ReturnType<typeof polarClient>[];
+{{/if}}
+};
+
+export function createClient(baseURL?: string): ReturnType<typeof createAuthClient<ClientOptions>> {
   return createAuthClient({
     baseURL,
 {{#if (eq payments "polar")}}
