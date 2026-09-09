@@ -65,13 +65,24 @@ function configureOrpcTypeBuilds(vfs: VirtualFileSystem, config: ProjectConfig):
     if (!pkg) continue;
     pkg.scripts = { ...pkg.scripts, build: "tsc -b", "check-types": "tsc -b" };
     if (name === "api") pkg.scripts.dev = "tsc -b --watch";
+    if (name === "db" && config.orm === "prisma") delete pkg.scripts.postinstall;
     vfs.writeJson(file, pkg);
   }
 
   const root = vfs.readJson<PackageJson>("package.json");
   if (root) {
     root.scripts ??= {};
-    root.scripts.postinstall = [root.scripts.postinstall, "tsc -b packages/api"]
+    const packageManager = getPackageManagerConfig(config.packageManager, {
+      hasTurborepo: false,
+      hasNx: false,
+      hasVitePlus: false,
+    });
+    const generateDatabase =
+      config.orm === "prisma"
+        ? packageManager.filter(`@${config.projectName}/db`, "db:generate")
+        : undefined;
+    // Workspace install hooks can run concurrently; Prisma must finish before declaration builds.
+    root.scripts.postinstall = [root.scripts.postinstall, generateDatabase, "tsc -b packages/api"]
       .filter(Boolean)
       .join(" && ");
     root.scripts["dev:types"] = "tsc -b packages/api --watch";
