@@ -1350,11 +1350,12 @@ export type TypeBoundaryProbeClient = RouterClient<typeof typeBoundaryProbe>;\n`
   const checks = [
     `import type { AppRouterClient, TypeBoundaryProbeClient } from "@${root.name}/api/routers/index";`,
     "type IsAny<T> = 0 extends (1 & T) ? true : false;",
+    "type IsEqual<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;",
     "type Assert<T extends true> = T;",
     "type Health = Awaited<ReturnType<AppRouterClient['healthCheck']>>;",
     "export type HealthIsTyped = Assert<IsAny<Health> extends false ? true : false>;",
     "type IndexedOutput = Awaited<ReturnType<TypeBoundaryProbeClient['read']>>;",
-    "export type ServerOptionsPreserved = Assert<undefined extends IndexedOutput ? true : false>;",
+    "export type ServerOptionsPreserved = Assert<IsEqual<IndexedOutput, number | undefined>>;",
     "export async function checkClient(client: AppRouterClient) {",
     "  const health: string = await client.healthCheck();",
     "  // @ts-expect-error Health check output is not a number.",
