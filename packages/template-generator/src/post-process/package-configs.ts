@@ -64,7 +64,18 @@ function configureOrpcTypeBuilds(vfs: VirtualFileSystem, config: ProjectConfig):
     const pkg = vfs.readJson<PackageJson>(file);
     if (!pkg) continue;
     pkg.scripts = { ...pkg.scripts, build: "tsc -b", "check-types": "tsc -b" };
+    if (name === "api") pkg.scripts.dev = "tsc -b --watch";
     vfs.writeJson(file, pkg);
+  }
+
+  const root = vfs.readJson<PackageJson>("package.json");
+  if (root) {
+    root.scripts ??= {};
+    root.scripts.postinstall = [root.scripts.postinstall, "tsc -b packages/api"]
+      .filter(Boolean)
+      .join(" && ");
+    root.scripts["dev:types"] = "tsc -b packages/api --watch";
+    vfs.writeJson("package.json", root);
   }
 
   for (const name of ["web", "native", "server"]) {

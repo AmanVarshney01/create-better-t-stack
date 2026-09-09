@@ -1504,9 +1504,11 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   "name": "@{{projectName}}/api",
   "exports": {
     ".": {
+      "types": "./dist/src/index.d.ts",
       "default": "./src/index.ts"
     },
     "./*": {
+      "types": "./dist/src/*.d.ts",
       "default": "./src/*.ts"
     }
   },
@@ -8339,9 +8341,15 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   "name": "@{{projectName}}/auth",
   "exports": {
     ".": {
+      {{#if (eq api "orpc")}}
+      "types": "./dist/src/index.d.ts",
+      {{/if}}
       "default": "./src/index.ts"
     },
     "./*": {
+      {{#if (eq api "orpc")}}
+      "types": "./dist/src/*.d.ts",
+      {{/if}}
       "default": "./src/*.ts"
     }
   },
@@ -15499,9 +15507,15 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   "type": "module",
   "exports": {
     ".": {
+      {{#if (eq api "orpc")}}
+      "types": "./dist/src/index.d.ts",
+      {{/if}}
       "default": "./src/index.ts"
     },
     "./*": {
+      {{#if (eq api "orpc")}}
+      "types": "./dist/src/*.d.ts",
+      {{/if}}
       "default": "./src/*.ts"
     }
   },
@@ -33499,6 +33513,9 @@ export default config;
   {{/if}}
 	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
+    {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+    "disableSourceOfProjectReferenceRedirect": true,
+    {{/if}}
 		"allowJs": true,
 		"checkJs": true,
 		"esModuleInterop": true,

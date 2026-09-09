@@ -2,9 +2,15 @@
   "name": "@{{projectName}}/auth",
   "exports": {
     ".": {
+      {{#if (eq api "orpc")}}
+      "types": "./dist/src/index.d.ts",
+      {{/if}}
       "default": "./src/index.ts"
     },
     "./*": {
+      {{#if (eq api "orpc")}}
+      "types": "./dist/src/*.d.ts",
+      {{/if}}
       "default": "./src/*.ts"
     }
   },
