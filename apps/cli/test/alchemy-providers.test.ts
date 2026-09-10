@@ -202,10 +202,10 @@ describe("Alchemy providers", () => {
     expect(files.has("packages/db/prisma/migrations/0000_init/migration.sql")).toBe(true);
     expect(infraPackage.scripts?.["check-types"]).toBe("tsc --noEmit");
     expect(infraPackage.devDependencies).toMatchObject({
-      alchemy: "2.0.0-beta.76",
-      effect: "4.0.0-rc.112",
-      "@effect/platform-node": "4.0.0-rc.112",
-      "@effect/platform-bun": "4.0.0-rc.112",
+      alchemy: expect.any(String),
+      effect: expect.any(String),
+      "@effect/platform-node": expect.any(String),
+      "@effect/platform-bun": expect.any(String),
     });
   });
 

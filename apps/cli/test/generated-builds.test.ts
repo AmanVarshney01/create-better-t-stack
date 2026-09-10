@@ -1491,6 +1491,14 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
 
           const install = getPackageManagerCommand(sample.packageManager, "install");
           await runCommand(sample.name, projectDir, install.command, install.args);
+          if (await fs.pathExists(path.join(projectDir, "packages/infra/alchemy.run.ts"))) {
+            await runCommand(
+              sample.name,
+              path.join(projectDir, "packages/infra"),
+              sample.packageManager,
+              ["run", "dev", ...(sample.packageManager === "npm" ? ["--"] : []), "--help"],
+            );
+          }
           if (sample.config.orm === "prisma") {
             const generatedClient = path.join(projectDir, "packages/db/prisma/generated/client.ts");
             expect(await fs.pathExists(generatedClient)).toBe(false);

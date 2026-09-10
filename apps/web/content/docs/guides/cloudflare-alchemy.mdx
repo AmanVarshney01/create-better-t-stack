@@ -75,7 +75,7 @@ Install dependencies, then let Alchemy configure every provider used by the stac
 ```bash
 bun install
 cd packages/infra
-bunx alchemy login --configure
+bunx alchemy profile edit
 ```
 
 Alchemy stores selected provider profiles under `~/.alchemy`. A generated managed-database stack does not run the Neon, PlanetScale, or Prisma CLI separately and does not ask you to copy a hosted `DATABASE_URL` into the application.
@@ -192,6 +192,8 @@ compressed free-plan limit.
 
 Alchemy v2 is still a beta. Better-T-Stack pins one exact Alchemy version together with the selected
 Effect release candidate, currently `4.0.0-rc.112`, because open prerelease ranges can select
-unintended publications. A pinned set is not called compatible until the CLI starts and the complete
-generated-project and live gates pass. Upgrade these packages as one verified set rather than
-changing one dependency independently.
+unintended publications. Transitive dependencies can still resolve newer release candidates, so
+installation and typechecking alone are insufficient: verify that the Alchemy CLI starts too.
+Alchemy beta.77 still uses APIs removed in Effect rc.113. The generated root dependency overrides
+keep its transitive Effect platform and SQL packages on rc.112 as well. Upgrade these packages
+together once Alchemy supports the new Effect APIs, and commit the resulting lockfile.
