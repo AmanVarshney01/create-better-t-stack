@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   release:
-    name: Release to NPM
+    name: Release CLI and website
     if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'chore(release):')
     permissions:
       contents: write
@@ -20,7 +20,7 @@ jobs:
       group: release-${{ github.ref }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -47,6 +47,15 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Error: Invalid version format '$VERSION'. Expected semver (x.y.z)"
+            exit 1
+          fi
+
+      - name: Check website promotion credentials
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [[ -z "$VERCEL_TOKEN" ]]; then
+            echo "::error::Add the VERCEL_TOKEN repository secret before releasing."
             exit 1
           fi
 
@@ -198,3 +207,59 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### GitHub Release" >> $GITHUB_STEP_SUMMARY
           echo "[v$VERSION](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@59.15.1
+
+      - name: Promote the release website
+        timeout-minutes: 15
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_SCOPE: better-t-stack
+          VERCEL_PROJECT: create-better-t-stack-web
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          for attempt in {1..60}; do
+            deployments=$(vercel list "$VERCEL_PROJECT" \
+              --scope "$VERCEL_SCOPE" --token "$VERCEL_TOKEN" \
+              --environment production --meta "githubCommitSha=$GITHUB_SHA" --json)
+            deployment=$(jq -c --arg sha "$GITHUB_SHA" --arg project "$VERCEL_PROJECT" '
+              [.deployments[] | select(
+                .meta.githubCommitSha == $sha and
+                .name == $project and .target == "production"
+              )] | sort_by(.createdAt) | last // empty
+            ' <<< "$deployments")
+            state=$(jq -r '.state // empty' <<< "$deployment")
+
+            case "$state" in
+              READY)
+                deployment_url=$(jq -er '.url | select(type == "string" and length > 0)' <<< "$deployment")
+                break
+                ;;
+              ERROR|CANCELED)
+                echo "::error::The release website build is $state. Redeploy commit $GITHUB_SHA in Vercel, then rerun this workflow."
+                exit 1
+                ;;
+            esac
+
+            echo "Waiting for the production build of $GITHUB_SHA ($attempt/60)."
+            sleep 10
+          done
+
+          if [[ -z "${deployment_url:-}" ]]; then
+            echo "::error::No ready production build found for $GITHUB_SHA. Check Vercel's build and ignored-build settings, then rerun this workflow."
+            exit 1
+          fi
+
+          # Prevent partial releases and reruns of older releases from advancing the website.
+          for package in @better-t-stack/types @better-t-stack/template-generator create-better-t-stack create-bts; do
+            published_version=$(npm view "$package@latest" version)
+            if [[ "$published_version" != "$RELEASE_VERSION" ]]; then
+              echo "::error::$package@latest is $published_version, expected $RELEASE_VERSION. Website promotion stopped."
+              exit 1
+            fi
+          done
+
+          vercel promote "$deployment_url" \
+            --scope "$VERCEL_SCOPE" --token "$VERCEL_TOKEN" --timeout 5m
+          echo "Website for v$RELEASE_VERSION promoted from commit $GITHUB_SHA: https://$deployment_url" >> "$GITHUB_STEP_SUMMARY"
