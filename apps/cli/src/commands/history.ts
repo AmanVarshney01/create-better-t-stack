@@ -84,7 +84,7 @@ export async function historyHandler(input: HistoryCommandInput): Promise<boolea
     return true;
   }
 
-  renderTitle();
+  await renderTitle();
   intro(pc.magenta(`Project history · ${entries.length}`));
 
   if (entries.length === 0) {
