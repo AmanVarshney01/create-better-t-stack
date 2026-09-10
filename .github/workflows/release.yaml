@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   release:
-    name: Release to NPM
+    name: Release CLI and website
     if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'chore(release):')
     permissions:
       contents: write
@@ -20,7 +20,7 @@ jobs:
       group: release-${{ github.ref }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -50,57 +50,77 @@ jobs:
             exit 1
           fi
 
-      - name: Check if version already exists
-        id: check-version
+      - name: Check website promotion credentials
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          if npm view create-better-t-stack@$VERSION version 2>/dev/null; then
-            echo "Version $VERSION already exists on NPM"
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "Version $VERSION is new"
-            echo "exists=false" >> $GITHUB_OUTPUT
+          if [[ -z "$VERCEL_TOKEN" ]]; then
+            echo "::error::Add the VERCEL_TOKEN repository secret before releasing."
+            exit 1
           fi
 
+      - name: Check published package versions
+        id: published
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          needs_publish=false
+          for entry in types=@better-t-stack/types generator=@better-t-stack/template-generator cli=create-better-t-stack alias=create-bts; do
+            key=${entry%%=*}
+            package=${entry#*=}
+            versions=$(npm view "$package" versions --json)
+            exists=$(jq -r --arg version "$VERSION" 'if type == "array" then index($version) != null else error("Expected an npm version list") end' <<< "$versions")
+            echo "${key}_exists=$exists" >> "$GITHUB_OUTPUT"
+            if [[ "$exists" == false ]]; then
+              needs_publish=true
+            else
+              published_commit=$(npm view "$package@$VERSION" gitHead)
+              if [[ "$published_commit" != "$GITHUB_SHA" ]]; then
+                echo "::error::$package@$VERSION was not published from $GITHUB_SHA. Use a new release version."
+                exit 1
+              fi
+            fi
+          done
+          echo "needs_publish=$needs_publish" >> "$GITHUB_OUTPUT"
+
       - name: Setup Bun
-        if: steps.check-version.outputs.exists == 'false'
         uses: oven-sh/setup-bun@v2
 
       - name: Install Dependencies
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.needs_publish == 'true'
         run: bun install --frozen-lockfile
 
       - name: Update types package version
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.needs_publish == 'true'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd packages/types
           jq --arg v "$VERSION" '.version = $v' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build types package
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.needs_publish == 'true'
         run: cd packages/types && bun run build
 
       - name: Update template-generator package version and types dependency
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.needs_publish == 'true'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd packages/template-generator
           jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["@better-t-stack/types"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build template-generator package
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.needs_publish == 'true'
         run: cd packages/template-generator && bun run build
 
       - name: Update CLI types and template-generator dependencies and version
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.needs_publish == 'true'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd apps/cli
           jq --arg v "^$VERSION" '.dependencies["@better-t-stack/types"] = $v | .dependencies["@better-t-stack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build CLI
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.needs_publish == 'true'
         run: cd apps/cli && bun run build
         env:
           BTS_TELEMETRY: 1
@@ -108,14 +128,14 @@ jobs:
           UMAMI_CLI_WEBSITE_ID: ${{ secrets.UMAMI_CLI_WEBSITE_ID }}
 
       - name: Update create-bts alias package version
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.needs_publish == 'true'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd packages/create-bts
           jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["create-better-t-stack"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
       - name: Setup pnpm
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.needs_publish == 'true'
         uses: pnpm/action-setup@v6
         with:
           version: latest
@@ -124,11 +144,11 @@ jobs:
       # partial release on npm (e.g. types/template-generator published but
       # create-better-t-stack broken).
       - name: Publish smoke test (npm, pnpm, bun)
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.needs_publish == 'true'
         run: bun run smoke:publish
 
       - name: Publish types to NPM
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.types_exists == 'false'
         run: cd packages/types && npm publish --access public
         env:
           BTS_TELEMETRY: 1
@@ -136,7 +156,7 @@ jobs:
           UMAMI_CLI_WEBSITE_ID: ${{ secrets.UMAMI_CLI_WEBSITE_ID }}
 
       - name: Publish template-generator to NPM
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.generator_exists == 'false'
         run: cd packages/template-generator && npm publish --access public
         env:
           BTS_TELEMETRY: 1
@@ -144,7 +164,7 @@ jobs:
           UMAMI_CLI_WEBSITE_ID: ${{ secrets.UMAMI_CLI_WEBSITE_ID }}
 
       - name: Publish CLI to NPM
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.cli_exists == 'false'
         run: cd apps/cli && npm publish --access public
         env:
           BTS_TELEMETRY: 1
@@ -152,7 +172,7 @@ jobs:
           UMAMI_CLI_WEBSITE_ID: ${{ secrets.UMAMI_CLI_WEBSITE_ID }}
 
       - name: Publish create-bts alias to NPM
-        if: steps.check-version.outputs.exists == 'false'
+        if: steps.published.outputs.alias_exists == 'false'
         run: cd packages/create-bts && npm publish --access public
         env:
           BTS_TELEMETRY: 1
@@ -160,7 +180,6 @@ jobs:
           UMAMI_CLI_WEBSITE_ID: ${{ secrets.UMAMI_CLI_WEBSITE_ID }}
 
       - name: Create and push tag
-        if: steps.check-version.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           git config --local user.email "amanvarshney.work@gmail.com"
@@ -169,11 +188,14 @@ jobs:
             git tag -a "v$VERSION" -m "Release v$VERSION"
             git push --tags
           else
+            if [[ "$(git rev-parse "v$VERSION^{commit}")" != "$GITHUB_SHA" ]]; then
+              echo "::error::Tag v$VERSION belongs to a different commit."
+              exit 1
+            fi
             echo "Tag v$VERSION already exists, skipping"
           fi
 
       - name: Create GitHub Release
-        if: steps.check-version.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           if ! gh release view "v$VERSION" >/dev/null 2>&1; then
@@ -185,10 +207,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release Summary
-        if: steps.check-version.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          echo "## Release v$VERSION Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "## Packages published for v$VERSION" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Published Packages" >> $GITHUB_STEP_SUMMARY
           echo "- [create-better-t-stack@$VERSION](https://www.npmjs.com/package/create-better-t-stack/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
@@ -198,3 +219,48 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### GitHub Release" >> $GITHUB_STEP_SUMMARY
           echo "[v$VERSION](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@59.15.1
+
+      - name: Promote the release website
+        timeout-minutes: 20
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_SCOPE: better-t-stack
+          VERCEL_PROJECT: create-better-t-stack-web
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          deployments=$(vercel list "$VERCEL_PROJECT" \
+            --scope "$VERCEL_SCOPE" --token "$VERCEL_TOKEN" \
+            --environment production --meta "githubCommitSha=$GITHUB_SHA" --json)
+          if ! deployment_url=$(jq -er --arg sha "$GITHUB_SHA" --arg project "$VERCEL_PROJECT" '
+            [.deployments[] | select(
+              .meta.githubCommitSha == $sha and
+              .name == $project and .target == "production"
+            )] | sort_by(.createdAt) | last | .url // empty
+          ' <<< "$deployments"); then
+            echo "::error::No production deployment found for $GITHUB_SHA. Create or redeploy that commit in Vercel, then rerun this workflow."
+            exit 1
+          fi
+
+          deployment=$(vercel inspect "$deployment_url" \
+            --scope "$VERCEL_SCOPE" --token "$VERCEL_TOKEN" \
+            --wait --timeout 10m --json)
+          if ! jq -e '.readyState == "READY"' <<< "$deployment" > /dev/null; then
+            echo "::error::The release website did not become ready. Check the Vercel build, then rerun this workflow."
+            exit 1
+          fi
+
+          # Prevent partial releases and reruns of older releases from advancing the website.
+          for package in @better-t-stack/types @better-t-stack/template-generator create-better-t-stack create-bts; do
+            published_version=$(npm view "$package@latest" version)
+            if [[ "$published_version" != "$RELEASE_VERSION" ]]; then
+              echo "::error::$package@latest is $published_version, expected $RELEASE_VERSION. Website promotion stopped."
+              exit 1
+            fi
+          done
+
+          vercel promote "$deployment_url" \
+            --scope "$VERCEL_SCOPE" --token "$VERCEL_TOKEN" --timeout 5m
+          echo "Website for v$RELEASE_VERSION promoted from commit $GITHUB_SHA: https://$deployment_url" >> "$GITHUB_STEP_SUMMARY"
