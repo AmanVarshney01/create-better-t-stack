@@ -1,8 +1,11 @@
 {
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  "references": [{ "path": "../../packages/api" }],
+  {{/if}}
 	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
     {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-    "noUncheckedIndexedAccess": true,
+    "disableSourceOfProjectReferenceRedirect": true,
     {{/if}}
 		"allowJs": true,
 		"checkJs": true,

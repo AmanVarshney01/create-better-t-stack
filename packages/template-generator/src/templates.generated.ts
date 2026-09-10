@@ -1504,15 +1504,19 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   "name": "@{{projectName}}/api",
   "exports": {
     ".": {
+      "types": "./dist/src/index.d.ts",
       "default": "./src/index.ts"
     },
     "./*": {
+      "types": "./dist/src/*.d.ts",
       "default": "./src/*.ts"
     }
   },
   "type": "module",
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "build": "tsc -b",
+    "check-types": "tsc -b",
+    "dev": "tsc -b --watch"
   },
   "devDependencies": {},
   "dependencies": {}
@@ -1628,8 +1632,15 @@ export type AppRouter = typeof appRouter;
   ["api/orpc/server/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true
-  }
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"],
+  "references": [{{#if (ne database "none")}}{ "path": "../db" }{{#if (eq auth "better-auth")}},{{/if}}{{/if}}
+    {{#if (eq auth "better-auth")}}{ "path": "../auth" }{{/if}}]
 }
 `],
   ["api/orpc/web/astro/src/lib/orpc.ts.hbs", `import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
@@ -2760,7 +2771,14 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
-export function createClient(baseURL?: string) {
+type ClientOptions = {
+  baseURL?: string;
+{{#if (eq payments "polar")}}
+  plugins: ReturnType<typeof polarClient>[];
+{{/if}}
+};
+
+export function createClient(baseURL?: string): ReturnType<typeof createAuthClient<ClientOptions>> {
   return createAuthClient({
     baseURL,
 {{#if (eq payments "polar")}}
@@ -8314,15 +8332,26 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   "name": "@{{projectName}}/auth",
   "exports": {
     ".": {
+      {{#if (eq api "orpc")}}
+      "types": "./dist/src/index.d.ts",
+      {{/if}}
       "default": "./src/index.ts"
     },
     "./*": {
+      {{#if (eq api "orpc")}}
+      "types": "./dist/src/*.d.ts",
+      {{/if}}
       "default": "./src/*.ts"
     }
   },
   "type": "module",
   "scripts": {
+    {{#if (eq api "orpc")}}
+    "build": "tsc -b",
+    "check-types": "tsc -b"
+    {{else}}
     "check-types": "tsc --noEmit"
+    {{/if}}
   },
   "devDependencies": {}
 }`],
@@ -8411,9 +8440,21 @@ export function createAuth(env: AuthConfig{{#if (ne database "none")}}, database
 `],
   ["auth/better-auth/server/base/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
+  {{#if (eq api "orpc")}}
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"],
+  "references": [{{#if (ne database "none")}}{ "path": "../db" }{{/if}}]
+  {{else}}
   "compilerOptions": {
     "noEmit": true
   }
+  {{/if}}
 }
 `],
   ["auth/better-auth/server/db/drizzle/mysql/src/schema/auth.ts.hbs", `import { relations } from "drizzle-orm";
@@ -14451,8 +14492,8 @@ next-env.d.ts
 	"main": "src/index.ts",
 	"type": "module",
 	"scripts": {
-		"build": "tsdown",
-		"check-types": "tsc --noEmit",
+		"build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsdown",
+		"check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsc --noEmit",
 		"compile": "bun build --compile --no-compile-autoload-dotenv --minify --sourcemap --bytecode ./src/index.ts --outfile server"
 	},
 	"dependencies": {},
@@ -14466,6 +14507,9 @@ next-env.d.ts
 `],
   ["backend/server/base/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
+  {{#if (eq api "orpc")}}
+  "references": [{ "path": "../../packages/api" }],
+  {{/if}}
   "compilerOptions": {
     "noEmit": true,
 		"paths": {
@@ -15458,14 +15502,25 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   "type": "module",
   "exports": {
     ".": {
+      {{#if (eq api "orpc")}}
+      "types": "./dist/src/index.d.ts",
+      {{/if}}
       "default": "./src/index.ts"
     },
     "./*": {
+      {{#if (eq api "orpc")}}
+      "types": "./dist/src/*.d.ts",
+      {{/if}}
       "default": "./src/*.ts"
     }
   },
   "scripts": {
+    {{#if (eq api "orpc")}}
+    "build": "tsc -b",
+    "check-types": "tsc -b"
+    {{else}}
     "check-types": "tsc --noEmit"
+    {{/if}}
   },
   "devDependencies": {}
 }`],
@@ -15489,9 +15544,21 @@ export type DatabaseConfig = {
 `],
   ["db/base/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
+  {{#if (eq api "orpc")}}
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"{{#if (eq orm "prisma")}}, "prisma/generated/**/*.ts"{{/if}}],
+  "references": []
+  {{else}}
   "compilerOptions": {
     "noEmit": true
   }
+  {{/if}}
 }
 `],
   ["db/drizzle/base/src/schema/index.ts.hbs", `{{#if (eq auth "better-auth")}}
@@ -26070,10 +26137,10 @@ export default defineConfig({
   "scripts": {
     "dev": "astro dev",
 {{#unless (eq webDeploy "cloudflare")}}
-    "build": "astro build",
+    "build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}astro build",
 
 {{/unless}}
-		"check-types": "astro check",
+		"check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}astro check",
 {{#unless (eq webDeploy "cloudflare")}}
     "preview": "astro preview",
 {{/unless}}
@@ -26277,7 +26344,7 @@ const TITLE_TEXT = \`
 `],
   ["frontend/astro/tsconfig.json.hbs", `{
   {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-  "compilerOptions": { "noUncheckedIndexedAccess": true },
+  "references": [{ "path": "../../packages/api" }],
   {{/if}}
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
@@ -27467,7 +27534,7 @@ module.exports = withVarlockMetroConfig(config);
     "ios": "expo run:ios",
     "prebuild": "expo prebuild",
     "web": "expo start --web",
-    "check-types": "tsc --noEmit"
+    "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsc --noEmit"
   },
   "dependencies": {
     "@expo/ui": "~57.0.16",
@@ -27507,11 +27574,11 @@ module.exports = withVarlockMetroConfig(config);
 }
 `],
   ["frontend/native/bare/tsconfig.json.hbs", `{
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  "references": [{ "path": "../../packages/api" }],
+  {{/if}}
 	"extends": "expo/tsconfig.base",
 	"compilerOptions": {
-    {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-    "noUncheckedIndexedAccess": true,
-    {{/if}}
 		"strict": true,
 		"paths": {
 			"@/*": ["./*"]
@@ -28816,7 +28883,7 @@ module.exports = withVarlockMetroConfig(config);
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "check-types": "tsc --noEmit"
+    "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsc --noEmit"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -28959,11 +29026,11 @@ export const darkTheme = {
 } as const;
 `],
   ["frontend/native/unistyles/tsconfig.json.hbs", `{
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  "references": [{ "path": "../../packages/api" }],
+  {{/if}}
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-    "noUncheckedIndexedAccess": true,
-    {{/if}}
     "strict": true,
     "jsx": "react-jsx",
     "paths": {
@@ -30010,7 +30077,7 @@ module.exports = withVarlockMetroConfig(uniwindConfig);
     "ios": "expo run:ios",
     "prebuild": "expo prebuild",
     "web": "expo start --web",
-    "check-types": "tsc --noEmit"
+    "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsc --noEmit"
   },
   "dependencies": {
     "@expo/metro-runtime": "~57.0.15",
@@ -30057,11 +30124,11 @@ module.exports = withVarlockMetroConfig(uniwindConfig);
 }
 `],
   ["frontend/native/uniwind/tsconfig.json.hbs", `{
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  "references": [{ "path": "../../packages/api" }],
+  {{/if}}
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-    "noUncheckedIndexedAccess": true,
-    {{/if}}
     "strict": true,
     "paths": {
       "@/*": ["./*"]
@@ -30294,7 +30361,12 @@ onServerPrefetch(async () => {
   </UContainer>
 </template>
 `],
-  ["frontend/nuxt/nuxt.config.ts.hbs", `{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+  ["frontend/nuxt/nuxt.config.ts.hbs", `{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+import { fileURLToPath } from "node:url";
+
+const apiReference = { path: fileURLToPath(new URL("../../packages/api", import.meta.url)) };
+{{/if}}
+{{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
 import { defineNuxtModule } from "nuxt/kit";
 import { unwasm } from "unwasm/plugin";
 
@@ -30311,9 +30383,9 @@ const prismaWasm = defineNuxtModule({
 export default defineNuxtConfig({
   {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
   typescript: {
-    tsConfig: {
-      compilerOptions: { noUncheckedIndexedAccess: true },
-    },
+    tsConfig: { references: [apiReference] },
+    nodeTsConfig: { references: [apiReference] },
+    sharedTsConfig: { references: [apiReference] },
   },
   {{/if}}
   compatibilityDate: 'latest',
@@ -30342,8 +30414,14 @@ export default defineNuxtConfig({
   devServer: {
     port: 3001
   },
-  {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")))}}
   nitro: {
+    {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+    typescript: {
+      tsConfig: { references: [apiReference] },
+    },
+    {{/if}}
+    {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     {{#if (eq database "postgres")}}
     alias: {
       // pg-native is optional and unavailable in Workers; pg uses its JavaScript driver.
@@ -30356,6 +30434,7 @@ export default defineNuxtConfig({
     wasm: {
       esmImport: true
     }
+    {{/if}}
   },
   {{/if}}
   {{#if (eq backend "convex")}}
@@ -30378,8 +30457,8 @@ export default defineNuxtConfig({
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
-    "check-types": "nuxt typecheck",
+    "build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}nuxt build",
+    "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}nuxt prepare && vue-tsc -b{{else}}nuxt typecheck{{/if}}",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -30479,8 +30558,8 @@ initOpenNextCloudflareForDev();
   "private": true,
   "scripts": {
     "dev": "next dev --port 3001",
-    "build": "next build",
-    "check-types": "tsc --noEmit",
+    "build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}next build",
+    "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsc --noEmit",
     "start": "next start"
   },
   "dependencies": {
@@ -30833,10 +30912,10 @@ export function ThemeProvider({
 }
 `],
   ["frontend/react/next/tsconfig.json.hbs", `{
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  "references": [{ "path": "../../packages/api" }],
+  {{/if}}
   "compilerOptions": {
-    {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-    "noUncheckedIndexedAccess": true,
-    {{/if}}
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
@@ -30884,10 +30963,10 @@ export function ThemeProvider({
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build",
+    "build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
-    "check-types": "react-router typegen && tsc --noEmit"
+    "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}react-router typegen && tsc --noEmit"
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
@@ -31363,6 +31442,9 @@ export default function Home() {
 }
 `],
   ["frontend/react/react-router/tsconfig.json.hbs", `{
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  "references": [{ "path": "../../packages/api" }],
+  {{/if}}
   "include": [
     "**/*",
     "**/.server/**/*",
@@ -31370,9 +31452,6 @@ export default function Home() {
     ".react-router/types/**/*"
   ],
   "compilerOptions": {
-    {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-    "noUncheckedIndexedAccess": true,
-    {{/if}}
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["node", "vite/client"],
     "target": "ES2022",
@@ -31466,10 +31545,10 @@ export default defineConfig({
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}vite build",
 		"serve": "vite preview",
 		"start": "vite",
-		"check-types": "vite build && tsc --noEmit"
+		"check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}vite build && tsc --noEmit"
 	},
 	"dependencies": {
         "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
@@ -31866,10 +31945,10 @@ function HomeComponent() {
 }
 `],
   ["frontend/react/tanstack-router/tsconfig.json.hbs", `{
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  "references": [{ "path": "../../packages/api" }],
+  {{/if}}
   "compilerOptions": {
-    {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-    "noUncheckedIndexedAccess": true,
-    {{/if}}
     "strict": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
@@ -31919,10 +31998,10 @@ export default defineConfig({
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}vite build",
     "serve": "vite preview",
     "dev": "vite dev",
-    "check-types": "vite build && tsc --noEmit"
+    "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}vite build && tsc --noEmit"
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
@@ -32461,11 +32540,11 @@ function HomeComponent() {
 }
 `],
   ["frontend/react/tanstack-start/tsconfig.json.hbs", `{
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  "references": [{ "path": "../../packages/api" }],
+  {{/if}}
   "include": ["**/*.ts", "**/*.tsx"],
   "compilerOptions": {
-    {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-    "noUncheckedIndexedAccess": true,
-    {{/if}}
     "target": "ES2022",
     "jsx": "react-jsx",
     "module": "ESNext",
@@ -32757,8 +32836,8 @@ dist
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
-    "check-types": "tsc --noEmit",
+    "build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}vite build",
+    "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsc --noEmit",
     "start": "{{#if (eq webDeploy "cloudflare")}}vite preview{{else}}node .output/server/index.mjs{{/if}}",
     "preview": "vite preview"
   },
@@ -32979,10 +33058,10 @@ body {
 /// <reference types="filesystem-routing/types" />
 `],
   ["frontend/solid/tsconfig.json.hbs", `{
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  "references": [{ "path": "../../packages/api" }],
+  {{/if}}
   "compilerOptions": {
-    {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-    "noUncheckedIndexedAccess": true,
-    {{/if}}
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -33122,10 +33201,10 @@ vite.config.ts.timestamp-*
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
-		"check-types": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
@@ -33430,10 +33509,13 @@ const config = {
 export default config;
 `],
   ["frontend/svelte/tsconfig.json.hbs", `{
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  "references": [{ "path": "../../packages/api" }],
+  {{/if}}
 	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
     {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-    "noUncheckedIndexedAccess": true,
+    "disableSourceOfProjectReferenceRedirect": true,
     {{/if}}
 		"allowJs": true,
 		"checkJs": true,

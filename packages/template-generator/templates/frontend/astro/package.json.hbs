@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "astro dev",
 {{#unless (eq webDeploy "cloudflare")}}
-    "build": "astro build",
+    "build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}astro build",
 
 {{/unless}}
-		"check-types": "astro check",
+		"check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}astro check",
 {{#unless (eq webDeploy "cloudflare")}}
     "preview": "astro preview",
 {{/unless}}

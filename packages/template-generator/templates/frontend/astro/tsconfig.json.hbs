@@ -1,6 +1,6 @@
 {
   {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-  "compilerOptions": { "noUncheckedIndexedAccess": true },
+  "references": [{ "path": "../../packages/api" }],
   {{/if}}
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],

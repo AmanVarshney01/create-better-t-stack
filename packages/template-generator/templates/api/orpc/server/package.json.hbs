@@ -2,15 +2,19 @@
   "name": "@{{projectName}}/api",
   "exports": {
     ".": {
+      "types": "./dist/src/index.d.ts",
       "default": "./src/index.ts"
     },
     "./*": {
+      "types": "./dist/src/*.d.ts",
       "default": "./src/*.ts"
     }
   },
   "type": "module",
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "build": "tsc -b",
+    "check-types": "tsc -b",
+    "dev": "tsc -b --watch"
   },
   "devDependencies": {},
   "dependencies": {}

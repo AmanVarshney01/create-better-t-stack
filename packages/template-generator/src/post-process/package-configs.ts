@@ -89,6 +89,20 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   scripts.build = pmConfig.build;
   scripts["check-types"] = pmConfig.checkTypes;
 
+  if (config.api === "orpc" && vfs.exists("packages/api/package.json")) {
+    const workspaceCommands = getPackageManagerConfig(packageManager, {
+      hasTurborepo: false,
+      hasNx: false,
+      hasVitePlus: false,
+    });
+    const generateDatabase =
+      orm === "prisma" ? workspaceCommands.filter(dbPackageName, "db:generate") : undefined;
+    scripts.postinstall = [scripts.postinstall, generateDatabase, "tsc -b packages/api"]
+      .filter(Boolean)
+      .join(" && ");
+    scripts["dev:types"] = "tsc -b packages/api --watch";
+  }
+
   if (hasVitePlus) {
     scripts.check = "vp check && vp run -r check-types";
     scripts.lint = "vp lint";
@@ -614,7 +628,9 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
       scripts["db:generate"] = "prisma generate";
       scripts["db:migrate"] = "prisma migrate dev";
       scripts["db:migrate:deploy"] = "prisma migrate deploy";
-      scripts.postinstall ??= "prisma generate";
+      if (config.api !== "orpc") {
+        scripts.postinstall ??= "prisma generate";
+      }
       if (!isD1Alchemy) {
         scripts["db:studio"] = "prisma studio";
       }
@@ -773,10 +789,13 @@ function updateVitePlusPackageScripts(vfs: VirtualFileSystem, config: ProjectCon
   } satisfies Record<string, string>;
 
   for (const [scriptName, command] of Object.entries(webPkg.scripts)) {
+    const typeBuildPrefix = "tsc -b ../../packages/api && ";
+    const prefix = command.startsWith(typeBuildPrefix) ? typeBuildPrefix : "";
+    const frameworkCommand = command.slice(prefix.length);
     const replacement = Object.entries(viteScriptReplacements).find(
-      ([viteCommand]) => viteCommand === command,
+      ([viteCommand]) => viteCommand === frameworkCommand,
     )?.[1];
-    webPkg.scripts[scriptName] = replacement ?? command;
+    webPkg.scripts[scriptName] = replacement ? `${prefix}${replacement}` : command;
   }
 
   vfs.writeJson(webPkgPath, webPkg);

@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
-    "check-types": "tsc --noEmit",
+    "build": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}vite build",
+    "check-types": "{{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}tsc -b ../../packages/api && {{/if}}tsc --noEmit",
     "start": "{{#if (eq webDeploy "cloudflare")}}vite preview{{else}}node .output/server/index.mjs{{/if}}",
     "preview": "vite preview"
   },

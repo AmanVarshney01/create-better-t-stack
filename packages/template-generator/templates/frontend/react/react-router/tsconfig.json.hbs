@@ -1,4 +1,7 @@
 {
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  "references": [{ "path": "../../packages/api" }],
+  {{/if}}
   "include": [
     "**/*",
     "**/.server/**/*",
@@ -6,9 +9,6 @@
     ".react-router/types/**/*"
   ],
   "compilerOptions": {
-    {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-    "noUncheckedIndexedAccess": true,
-    {{/if}}
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["node", "vite/client"],
     "target": "ES2022",
