@@ -617,6 +617,13 @@ function generateDatabaseSetup(config: ProjectConfig, packageManagerRunCmd: stri
 
   let setup = "## Database Setup\n\n";
 
+  if (orm === "prisma" && !isD1Alchemy) {
+    setup += `Generate the Prisma client before development, typechecking, or building, including in CI and deployment builds. Run this again after changing the Prisma schema:\n
+\`\`\`bash
+${packageManagerRunCmd} db:generate
+\`\`\`\n\n`;
+  }
+
   if (isAlchemyManagedDatabase) {
     const provider =
       dbSetup === "prisma-postgres"

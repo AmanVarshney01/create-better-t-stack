@@ -52,58 +52,6 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
     updateAuthPackageJson(vfs, config);
     updateApiPackageJson(vfs, config);
   }
-
-  configureOrpcTypeBuilds(vfs, config);
-}
-
-function configureOrpcTypeBuilds(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  if (config.api !== "orpc" || !vfs.exists("packages/api/package.json")) return;
-
-  for (const name of ["db", "auth", "api"]) {
-    const file = `packages/${name}/package.json`;
-    const pkg = vfs.readJson<PackageJson>(file);
-    if (!pkg) continue;
-    pkg.scripts = { ...pkg.scripts, build: "tsc -b", "check-types": "tsc -b" };
-    if (name === "api") pkg.scripts.dev = "tsc -b --watch";
-    if (name === "db" && config.orm === "prisma") delete pkg.scripts.postinstall;
-    vfs.writeJson(file, pkg);
-  }
-
-  const root = vfs.readJson<PackageJson>("package.json");
-  if (root) {
-    root.scripts ??= {};
-    const packageManager = getPackageManagerConfig(config.packageManager, {
-      hasTurborepo: false,
-      hasNx: false,
-      hasVitePlus: false,
-    });
-    const generateDatabase =
-      config.orm === "prisma"
-        ? packageManager.filter(`@${config.projectName}/db`, "db:generate")
-        : undefined;
-    // Workspace install hooks can run concurrently; Prisma must finish before declaration builds.
-    root.scripts.postinstall = [root.scripts.postinstall, generateDatabase, "tsc -b packages/api"]
-      .filter(Boolean)
-      .join(" && ");
-    root.scripts["dev:types"] = "tsc -b packages/api --watch";
-    vfs.writeJson("package.json", root);
-  }
-
-  for (const name of ["web", "native", "server"]) {
-    const file = `apps/${name}/package.json`;
-    const pkg = vfs.readJson<PackageJson>(file);
-    if (!pkg?.scripts) continue;
-    if (name === "web" && config.frontend.includes("nuxt")) {
-      // nuxt typecheck passes --noEmit to every referenced project, including packages.
-      pkg.scripts["check-types"] = "nuxt prepare && vue-tsc -b";
-    }
-    for (const script of ["build", "check-types"]) {
-      if (pkg.scripts[script]) {
-        pkg.scripts[script] = `tsc -b ../../packages/api && ${pkg.scripts[script]}`;
-      }
-    }
-    vfs.writeJson(file, pkg);
-  }
 }
 
 function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
@@ -140,6 +88,15 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   scripts.dev = pmConfig.dev;
   scripts.build = pmConfig.build;
   scripts["check-types"] = pmConfig.checkTypes;
+
+  if (config.api === "orpc" && vfs.exists("packages/api/package.json")) {
+    if (orm !== "prisma") {
+      scripts.postinstall = [scripts.postinstall, "tsc -b packages/api"]
+        .filter(Boolean)
+        .join(" && ");
+    }
+    scripts["dev:types"] = "tsc -b packages/api --watch";
+  }
 
   if (hasVitePlus) {
     scripts.check = "vp check && vp run -r check-types";
@@ -666,7 +623,6 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
       scripts["db:generate"] = "prisma generate";
       scripts["db:migrate"] = "prisma migrate dev";
       scripts["db:migrate:deploy"] = "prisma migrate deploy";
-      scripts.postinstall ??= "prisma generate";
       if (!isD1Alchemy) {
         scripts["db:studio"] = "prisma studio";
       }
@@ -825,10 +781,13 @@ function updateVitePlusPackageScripts(vfs: VirtualFileSystem, config: ProjectCon
   } satisfies Record<string, string>;
 
   for (const [scriptName, command] of Object.entries(webPkg.scripts)) {
+    const typeBuildPrefix = "tsc -b ../../packages/api && ";
+    const prefix = command.startsWith(typeBuildPrefix) ? typeBuildPrefix : "";
+    const frameworkCommand = command.slice(prefix.length);
     const replacement = Object.entries(viteScriptReplacements).find(
-      ([viteCommand]) => viteCommand === command,
+      ([viteCommand]) => viteCommand === frameworkCommand,
     )?.[1];
-    webPkg.scripts[scriptName] = replacement ?? command;
+    webPkg.scripts[scriptName] = replacement ? `${prefix}${replacement}` : command;
   }
 
   vfs.writeJson(webPkgPath, webPkg);

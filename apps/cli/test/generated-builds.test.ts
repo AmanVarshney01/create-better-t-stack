@@ -496,11 +496,11 @@ const buildSamples: BuildSample[] = [
     config: {
       ...baseConfig,
       frontend: ["solid"],
-      backend: "none",
-      runtime: "none",
+      backend: "hono",
+      runtime: "bun",
       database: "none",
       orm: "none",
-      api: "none",
+      api: "orpc",
       auth: "none",
       payments: "none",
       addons: ["vite-plus"],
@@ -1049,6 +1049,83 @@ async function bootAndValidateStartAuthRuntime(sample: SelectedBuildSample, proj
   }
 }
 
+async function bootAndValidateNuxtAuthRuntime(sample: SelectedBuildSample, projectDir: string) {
+  if (sample.name !== "nuxt-auth-todo-ai") return;
+
+  await runCommand(sample.name, path.join(projectDir, "packages/db"), sample.packageManager, [
+    "run",
+    "db:push",
+  ]);
+  const apiPort = await getAvailablePort();
+  const webPort = await getAvailablePort();
+  const apiOrigin = `http://127.0.0.1:${apiPort}`;
+  const webOrigin = `http://127.0.0.1:${webPort}`;
+  const api = execa(
+    "bun",
+    [
+      "-e",
+      'import app from "./dist/index.mjs"; Bun.serve({ fetch: app.fetch, hostname: "127.0.0.1", port: Number(process.env.PORT) });',
+    ],
+    {
+      cwd: path.join(projectDir, "apps/server"),
+      all: true,
+      reject: false,
+      timeout: commandTimeoutMs,
+      env: {
+        ...process.env,
+        PORT: String(apiPort),
+        BETTER_AUTH_URL: apiOrigin,
+        CORS_ORIGIN: webOrigin,
+      },
+    },
+  );
+  const web = execa("node", [".output/server/index.mjs"], {
+    cwd: path.join(projectDir, "apps/web"),
+    all: true,
+    reject: false,
+    timeout: commandTimeoutMs,
+    env: {
+      ...process.env,
+      HOST: "127.0.0.1",
+      PORT: String(webPort),
+      NUXT_SERVER_URL: apiOrigin,
+      NUXT_PUBLIC_SERVER_URL: apiOrigin,
+    },
+  });
+  try {
+    expect((await fetchWhenReady(apiOrigin))?.status).toBe(200);
+    const signup = await fetch(`${apiOrigin}/api/auth/sign-up/email`, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: webOrigin },
+      body: JSON.stringify({
+        name: "Nuxt SSR",
+        email: "nuxt-ssr@example.test",
+        password: "Generated-test-password-2026",
+      }),
+      signal: AbortSignal.timeout(5000),
+    });
+    expect(signup.status).toBe(200);
+    const cookie = signup.headers
+      .getSetCookie()
+      .map((value) => value.split(";")[0])
+      .join("; ");
+    expect(cookie).not.toBe("");
+    const authenticated = await fetchWhenReady(`${webOrigin}/ssr-auth-probe`, {
+      headers: { cookie },
+    });
+    expect(authenticated?.status).toBe(200);
+    expect(await authenticated!.text()).toContain("data-ssr-user>nuxt-ssr@example.test</p>");
+    const anonymous = await fetchWhenReady(`${webOrigin}/ssr-auth-probe`);
+    expect(anonymous?.status).toBe(200);
+    expect(await anonymous!.text()).toContain("data-ssr-user>anonymous</p>");
+  } finally {
+    api.kill("SIGTERM");
+    web.kill("SIGTERM");
+    const results = await Promise.all([api, web]);
+    for (const result of results) console.info(formatOutput(result.all));
+  }
+}
+
 async function bootAndValidateAxiomRuntime(sample: SelectedBuildSample, projectDir: string) {
   if (!sample.config.addons?.includes("axiom")) return;
   const received: Array<{ path?: string; status?: number }> = [];
@@ -1414,7 +1491,31 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
 
           const install = getPackageManagerCommand(sample.packageManager, "install");
           await runCommand(sample.name, projectDir, install.command, install.args);
+          if (sample.config.orm === "prisma") {
+            const generatedClient = path.join(projectDir, "packages/db/prisma/generated/client.ts");
+            expect(await fs.pathExists(generatedClient)).toBe(false);
+            await runCommand(
+              sample.name,
+              path.join(projectDir, "packages/db"),
+              sample.packageManager,
+              ["run", "db:generate"],
+            );
+            expect(await fs.pathExists(generatedClient)).toBe(true);
+          }
           await writeOrpcInferenceChecks(sample, projectDir);
+          if (sample.name === "nuxt-auth-todo-ai") {
+            await fs.outputFile(
+              path.join(projectDir, "apps/web/app/pages/ssr-auth-probe.vue"),
+              `<script setup lang="ts">
+const { $orpc } = useNuxtApp();
+let user = "anonymous";
+try {
+  user = (await $orpc.privateData.call()).user!.email;
+} catch {}
+</script>
+<template><p data-ssr-user>{{ user }}</p></template>`,
+            );
+          }
           await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
           const build = getPackageManagerCommand(sample.packageManager, "build");
           await runCommand(sample.name, projectDir, build.command, build.args);
@@ -1422,6 +1523,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidateAxiomRuntime(sample, projectDir);
           await bootAndValidateStartAuthRuntime(sample, projectDir);
+          await bootAndValidateNuxtAuthRuntime(sample, projectDir);
           await bootAndValidateSolidDevRuntime(sample, projectDir);
           await bootAndValidateSolidRuntime(sample, projectDir);
           await validateSolidBuildArtifacts(sample, projectDir);
