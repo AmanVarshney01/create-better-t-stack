@@ -90,16 +90,11 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   scripts["check-types"] = pmConfig.checkTypes;
 
   if (config.api === "orpc" && vfs.exists("packages/api/package.json")) {
-    const workspaceCommands = getPackageManagerConfig(packageManager, {
-      hasTurborepo: false,
-      hasNx: false,
-      hasVitePlus: false,
-    });
-    const generateDatabase =
-      orm === "prisma" ? workspaceCommands.filter(dbPackageName, "db:generate") : undefined;
-    scripts.postinstall = [scripts.postinstall, generateDatabase, "tsc -b packages/api"]
-      .filter(Boolean)
-      .join(" && ");
+    if (orm !== "prisma") {
+      scripts.postinstall = [scripts.postinstall, "tsc -b packages/api"]
+        .filter(Boolean)
+        .join(" && ");
+    }
     scripts["dev:types"] = "tsc -b packages/api --watch";
   }
 
@@ -628,9 +623,6 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
       scripts["db:generate"] = "prisma generate";
       scripts["db:migrate"] = "prisma migrate dev";
       scripts["db:migrate:deploy"] = "prisma migrate deploy";
-      if (config.api !== "orpc") {
-        scripts.postinstall ??= "prisma generate";
-      }
       if (!isD1Alchemy) {
         scripts["db:studio"] = "prisma studio";
       }

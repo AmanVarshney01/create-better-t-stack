@@ -1491,6 +1491,17 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
 
           const install = getPackageManagerCommand(sample.packageManager, "install");
           await runCommand(sample.name, projectDir, install.command, install.args);
+          if (sample.config.orm === "prisma") {
+            const generatedClient = path.join(projectDir, "packages/db/prisma/generated/client.ts");
+            expect(await fs.pathExists(generatedClient)).toBe(false);
+            await runCommand(
+              sample.name,
+              path.join(projectDir, "packages/db"),
+              sample.packageManager,
+              ["run", "db:generate"],
+            );
+            expect(await fs.pathExists(generatedClient)).toBe(true);
+          }
           await writeOrpcInferenceChecks(sample, projectDir);
           if (sample.name === "nuxt-auth-todo-ai") {
             await fs.outputFile(

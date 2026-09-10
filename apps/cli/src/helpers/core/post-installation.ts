@@ -175,6 +175,10 @@ export async function displayPostInstallInstructions(
     (serverDeploy === "cloudflare" || (isBackendSelf && webDeploy === "cloudflare"));
   const hasWranglerLocalD1 = getLocalD1Owner(config) === "wrangler";
 
+  if (orm === "prisma" && !hasAlchemyD1) {
+    output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:generate\n`;
+  }
+
   if (hasAlchemyD1 && orm !== "none") {
     output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:generate\n`;
     if (orm === "prisma") {
