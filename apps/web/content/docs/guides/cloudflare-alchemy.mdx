@@ -135,9 +135,9 @@ Astro's Cloudflare scaffold relies on the Alchemy lifecycle because a standalone
 need a competing checked-in adapter.
 
 <Callout type="info">
-  Generated projects pin `alchemy@2.0.0-beta.75` with Effect rc.112 exactly. The framework source
-  package is installed in the web workspace that Alchemy loads it from, so Bun, npm, and pnpm can
-  resolve compatible graphs without overrides or hoisting assumptions.
+  Generated projects pin `alchemy@2.0.0-beta.77` with Effect rc.112 exactly. The framework source
+  package is installed in the web workspace that Alchemy loads it from. Root dependency overrides
+  keep Alchemy's transitive Effect packages on rc.112 across Bun, npm, and pnpm.
 </Callout>
 
 Deployments are staged. For an explicit production stage:
