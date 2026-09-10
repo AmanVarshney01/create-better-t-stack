@@ -30382,16 +30382,10 @@ const prismaWasm = defineNuxtModule({
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-  hooks: {
-    "prepare:types"({ tsConfig, nodeTsConfig, sharedTsConfig }) {
-      for (const config of [tsConfig, nodeTsConfig, sharedTsConfig]) {
-        (config.references ??= []).push(apiReference);
-      }
-    },
-    "nitro:config"(config) {
-      const tsConfig = (config.typescript ??= {}).tsConfig ??= {};
-      (tsConfig.references ??= []).push(apiReference);
-    },
+  typescript: {
+    tsConfig: { references: [apiReference] },
+    nodeTsConfig: { references: [apiReference] },
+    sharedTsConfig: { references: [apiReference] },
   },
   {{/if}}
   compatibilityDate: 'latest',
@@ -30420,8 +30414,14 @@ export default defineNuxtConfig({
   devServer: {
     port: 3001
   },
-  {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
+  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")))}}
   nitro: {
+    {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+    typescript: {
+      tsConfig: { references: [apiReference] },
+    },
+    {{/if}}
+    {{#if (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma"))}}
     {{#if (eq database "postgres")}}
     alias: {
       // pg-native is optional and unavailable in Workers; pg uses its JavaScript driver.
@@ -30434,6 +30434,7 @@ export default defineNuxtConfig({
     wasm: {
       esmImport: true
     }
+    {{/if}}
   },
   {{/if}}
   {{#if (eq backend "convex")}}
