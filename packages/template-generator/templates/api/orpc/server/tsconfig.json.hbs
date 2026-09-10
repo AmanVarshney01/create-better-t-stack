@@ -1,13 +1,6 @@
 {
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "emitDeclarationOnly": true,
-    "outDir": "dist"
-  },
-  "include": ["src/**/*.ts"],
-  "references": [{{#if (ne database "none")}}{ "path": "../db" }{{#if (eq auth "better-auth")}},{{/if}}{{/if}}
-    {{#if (eq auth "better-auth")}}{ "path": "../auth" }{{/if}}]
+    "noEmit": true
+  }
 }

@@ -4,7 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"build": "tsdown",
-		"check-types": "tsc -b",
+		"check-types": "tsc --noEmit",
 		"compile": "bun build --compile --no-compile-autoload-dotenv --minify --sourcemap --bytecode ./src/index.ts --outfile server"
 	},
 	"dependencies": {},

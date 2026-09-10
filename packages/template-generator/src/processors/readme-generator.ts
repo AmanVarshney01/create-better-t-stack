@@ -765,9 +765,6 @@ function generateScriptsList(
   }
 
   scripts += `\n- \`${packageManagerRunCmd} check-types\`: Check TypeScript types across all apps`;
-  if (config.api === "orpc" && !["convex", "none"].includes(backend)) {
-    scripts += `\n- \`${packageManagerRunCmd} dev:types\`: Watch API and dependency declarations when running an app individually. The root \`dev\` command already starts this watcher; installation and builds generate declarations automatically.`;
-  }
 
   if (hasNative) {
     scripts += `\n- \`${packageManagerRunCmd} dev:native\`: Start the React Native/Expo development server`;

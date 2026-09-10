@@ -1,8 +1,8 @@
 {
-  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
-  "references": [{ "path": "../../packages/api" }],
-  {{/if}}
   "compilerOptions": {
+    {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+    "noUncheckedIndexedAccess": true,
+    {{/if}}
     "strict": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
