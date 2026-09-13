@@ -206,7 +206,7 @@ export const SkillsSourceSchema = z
     "vercel-labs/agent-skills",
     "vercel/ai",
     "vercel/turborepo",
-    "yusukebe/hono-skill",
+    "honojs/skills",
     "vercel/next.js",
     "nuxt/ui",
     "heroui-inc/heroui",
