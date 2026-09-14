@@ -180,7 +180,7 @@ function processCloudflarePublicEnv(vfs: VirtualFileSystem, config: ProjectConfi
   ];
   if (svelte && keys.length) lines.push(`import { ${keys.join(", ")} } from "$env/static/public";`);
   if (nuxt && keys.length) lines.push('import { useRuntimeConfig } from "#imports";');
-  lines.push("", "export const env = {");
+  lines.push("", "export const ENV = {");
   for (const key of keys) {
     if (nuxt) {
       const name = key
@@ -318,11 +318,6 @@ export function processVarlock(
             `'${importPath(file, `${server}/src/services`)}'`,
           );
     }
-    // The official generated local accessor exports ENV.
-    content = content.replace(
-      /import \{ env \} from (["'][^"']*\/env["'])/g,
-      "import { ENV as env } from $1",
-    );
     vfs.writeFile(file, content);
   }
   if (vfs.exists(`${server}/cloudflare-env.d.ts`)) {

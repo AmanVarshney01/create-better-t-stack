@@ -368,7 +368,7 @@ describe("Cloudflare DB client generation", () => {
     expect(authFile).not.toContain("export const auth");
     expect(
       files.get("apps/server/src/services.ts") ?? files.get("apps/web/src/services.ts"),
-    ).toContain("export const auth = createConfiguredAuth");
+    ).toContain("export const auth = createAuth");
     expect(serverFile).toContain("auth.handler(c.req.raw)");
   });
 
@@ -398,7 +398,7 @@ describe("Cloudflare DB client generation", () => {
     expect(authFile).not.toContain("export const auth");
     expect(
       files.get("apps/server/src/services.ts") ?? files.get("apps/web/src/services.ts"),
-    ).toContain("export const auth = createConfiguredAuth");
+    ).toContain("export const auth = createAuth");
     expect(routeFile).toContain("export const { GET, POST } = toNextJsHandler(auth);");
     expect(routeFile).not.toContain("createAuth()");
   });

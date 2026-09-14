@@ -6,7 +6,7 @@ import type { CloudflareEnv } from "../cloudflare-env.d.ts";
 import { type Database, {{#if (eq orm "prisma")}}createPrismaClient{{else}}createDb{{/if}} } from "@{{projectName}}/db";
 {{/if}}
 {{#if (eq auth "better-auth")}}
-import { createAuth as createConfiguredAuth } from "@{{projectName}}/auth";
+import { createAuth{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}} as createConfiguredAuth{{/if}} } from "@{{projectName}}/auth";
 {{/if}}
 
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
@@ -29,6 +29,6 @@ export function getDb(): Database {
 }
 {{/if}}
 {{#if (eq auth "better-auth")}}
-export const auth = createConfiguredAuth(env{{#if (ne database "none")}}, db{{/if}}{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}, desktopOrigins{{/if}});
+export const auth = createAuth(env{{#if (ne database "none")}}, db{{/if}}{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}, desktopOrigins{{/if}});
 {{/if}}
 {{/if}}

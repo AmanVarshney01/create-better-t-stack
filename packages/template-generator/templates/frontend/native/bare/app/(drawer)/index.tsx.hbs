@@ -3,7 +3,7 @@ import { View, ScrollView, StyleSheet{{#if (and (eq backend "convex") (eq auth "
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
@@ -69,7 +69,7 @@ const openPolarLink = async (url: string, returnUrl: string) => {
 };
 
 const getPolarReturnUrl = (returnUrl: string) => {
-	const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+	const url = new URL("/polar/success", ENV.EXPO_PUBLIC_CONVEX_SITE_URL);
 	url.searchParams.set("returnUrl", returnUrl);
 	return url.toString();
 };
@@ -85,7 +85,7 @@ const handlePolarCheckout = async () => {
 		const polarReturnUrl = getPolarReturnUrl(returnUrl);
 		const { url } = await generateCheckoutLink({
 			productIds: [recurringProduct.id],
-			origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+			origin: ENV.EXPO_PUBLIC_CONVEX_SITE_URL,
 			successUrl: polarReturnUrl,
 		});
 

@@ -1,5 +1,5 @@
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{/unless}}
 import { createAuthClient } from "better-auth/svelte";
 {{#if (eq payments "polar")}}
@@ -12,9 +12,11 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{/unless}}
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	// better-auth derives its route-matching base from this URL's path, so the
-	// public auth path must equal the server-side mount (/api/auth everywhere)
-		baseURL: new URL("/api/auth", getServerUrl(env.PUBLIC_SERVER_URL)).toString(),
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+  baseURL: new URL("/api/auth", getServerUrl(ENV.PUBLIC_SERVER_URL)).toString(),
+{{else}}
+  baseURL: ENV.PUBLIC_SERVER_URL,
+{{/if}}
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]

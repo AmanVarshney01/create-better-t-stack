@@ -2,7 +2,7 @@ import { Text, View, Pressable{{#if (eq payments "polar")}}, Alert{{/if}} } from
 {{#if (eq payments "polar")}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
 import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
@@ -40,7 +40,7 @@ const openPolarLink = async (url: string, returnUrl: string) => {
 };
 
 const getPolarReturnUrl = (returnUrl: string) => {
-  const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+  const url = new URL("/polar/success", ENV.EXPO_PUBLIC_SERVER_URL);
   url.searchParams.set("returnUrl", returnUrl);
   return url.toString();
 };

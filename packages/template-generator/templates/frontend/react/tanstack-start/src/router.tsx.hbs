@@ -5,7 +5,7 @@ import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query
 import { ConvexQueryClient } from "@convex-dev/react-query";
 import { routeTree } from "./routeTree.gen";
 import Loader from "./components/loader";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{else}}
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import Loader from "./components/loader";
@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { TRPCProvider } from "./utils/trpc";
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{/unless}}
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
@@ -32,7 +32,7 @@ import { createQueryClient, orpc } from "./utils/orpc";
 
 {{#if (eq backend "convex")}}
 export function getRouter() {
-	const convexUrl = env.VITE_CONVEX_URL;
+	const convexUrl = ENV.VITE_CONVEX_URL;
 	if (!convexUrl) {
 		throw new Error("VITE_CONVEX_URL is not set");
 	}
@@ -91,7 +91,13 @@ function createQueryClient() {
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: {{#if (eq backend "self")}}"/api/trpc"{{else}}`${getServerUrl(env.VITE_SERVER_URL)}/trpc`{{/if}},
+{{#if (eq backend "self")}}
+			url: "/api/trpc",
+{{else if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+			url: `${getServerUrl(ENV.VITE_SERVER_URL)}/trpc`,
+{{else}}
+			url: `${ENV.VITE_SERVER_URL.replace(/\/$/, "")}/trpc`,
+{{/if}}
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();

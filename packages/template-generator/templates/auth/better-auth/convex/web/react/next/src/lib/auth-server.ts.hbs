@@ -1,5 +1,5 @@
 import { convexBetterAuthNextJs } from "@convex-dev/better-auth/nextjs";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
 export const {
 	handler,
@@ -10,6 +10,6 @@ export const {
 	fetchAuthMutation,
 	fetchAuthAction,
 } = convexBetterAuthNextJs({
-	convexUrl: env.NEXT_PUBLIC_CONVEX_URL,
-	convexSiteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+	convexUrl: ENV.NEXT_PUBLIC_CONVEX_URL,
+	convexSiteUrl: ENV.NEXT_PUBLIC_CONVEX_SITE_URL,
 });
