@@ -224,13 +224,20 @@ jobs:
         run: npm install --global vercel@59.16.0
 
       - name: Promote the release website
-        timeout-minutes: 30
+        timeout-minutes: 20
         env:
+          GH_TOKEN: ${{ github.token }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_SCOPE: better-t-stack
           VERCEL_PROJECT: create-better-t-stack-web
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
         run: |
+          latest_release=$(gh release view --json tagName --jq .tagName)
+          if [[ "$latest_release" != "v$RELEASE_VERSION" ]]; then
+            echo "::error::v$RELEASE_VERSION is no longer the latest release. Website promotion stopped."
+            exit 1
+          fi
+
           deployments=$(vercel list "$VERCEL_PROJECT" \
             --scope "$VERCEL_SCOPE" --token "$VERCEL_TOKEN" \
             --environment production --meta "githubCommitSha=$GITHUB_SHA" --json)
@@ -251,31 +258,6 @@ jobs:
             echo "::error::The release website did not become ready. Check the Vercel build, then rerun this workflow."
             exit 1
           fi
-
-          # Prevent partial releases and reruns of older releases from advancing the website.
-          packages=(@better-t-stack/types @better-t-stack/template-generator create-better-t-stack create-bts)
-          for attempt in {1..30}; do
-            pending_packages=()
-            for package in "${packages[@]}"; do
-              published_version=$(npm view "$package@latest" version --prefer-online 2>/dev/null || true)
-              if [[ "$published_version" == "$RELEASE_VERSION" ]]; then
-                continue
-              fi
-
-              pending_packages+=("$package@${published_version:-unavailable}")
-            done
-
-            if (( ${#pending_packages[@]} == 0 )); then
-              break
-            fi
-            if (( attempt == 30 )); then
-              echo "::error::npm did not expose $RELEASE_VERSION as latest for: ${pending_packages[*]}"
-              exit 1
-            fi
-
-            echo "Waiting for npm propagation (${pending_packages[*]}); attempt $attempt/30"
-            sleep 10
-          done
 
           promotion_status=0
           promotion_output=$(vercel promote "$deployment_url" \
