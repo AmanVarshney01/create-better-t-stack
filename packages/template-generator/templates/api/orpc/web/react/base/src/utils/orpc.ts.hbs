@@ -13,14 +13,14 @@ import { createContext } from "@{{projectName}}/api/context";
 {{else if (includes frontend "tanstack-start")}}
 import type { RouterClient } from "@orpc/server";
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 {{else}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{/unless}}
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
@@ -83,7 +83,7 @@ const getORPCClient = createIsomorphicFn()
 export const client: RouterClient<typeof appRouter> = getORPCClient();
 {{else if (includes frontend "tanstack-start")}}
 const link = new RPCLink({
-	url: `${getServerUrl(env.VITE_SERVER_URL)}/rpc`,
+	url: `{{serverUrl "ENV.VITE_SERVER_URL"}}/rpc`,
 {{#if (eq auth "clerk")}}
 	headers: async () => {
 		const token = await getClerkAuthToken();
@@ -110,9 +110,9 @@ export const link = new RPCLink({
 {{#if (and (eq backend "self") (includes frontend "next"))}}
 	url: `${typeof window !== "undefined" ? window.location.origin : "http://localhost:3001"}/api/rpc`,
 {{else if (includes frontend "next")}}
-	url: `${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/rpc`,
+	url: `{{serverUrl "ENV.NEXT_PUBLIC_SERVER_URL"}}/rpc`,
 {{else}}
-	url: `${getServerUrl(env.VITE_SERVER_URL)}/rpc`,
+	url: `{{serverUrl "ENV.VITE_SERVER_URL"}}/rpc`,
 {{/if}}
 {{#if (eq auth "clerk")}}
 	headers: async () => {

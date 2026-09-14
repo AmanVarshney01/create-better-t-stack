@@ -3,7 +3,7 @@ import { ScrollView, Text, TouchableOpacity, View{{#if (eq payments "polar")}}, 
 {{#if (eq payments "polar")}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 import { StyleSheet } from "react-native-unistyles";
 
@@ -36,7 +36,7 @@ export default function Home() {
   };
 
   const getPolarReturnUrl = (returnUrl: string) => {
-    const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+    const url = new URL("/polar/success", ENV.EXPO_PUBLIC_SERVER_URL);
     url.searchParams.set("returnUrl", returnUrl);
     return url.toString();
   };

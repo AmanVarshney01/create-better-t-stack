@@ -9,12 +9,12 @@ export const link = new RPCLink({
   url: () => `${window.location.origin}/rpc`,
 });
 {{else}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
 {{> getServerUrlSpaces}}
 
 export const link = new RPCLink({
-  url: `${getServerUrl(env.PUBLIC_SERVER_URL)}/rpc`,
+  url: `{{serverUrl "ENV.PUBLIC_SERVER_URL"}}/rpc`,
 {{#if (eq auth "better-auth")}}
   fetch(url, options) {
     return fetch(url, {

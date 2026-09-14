@@ -3,9 +3,9 @@ import {
 	convexClient,
 	crossDomainClient,
 } from "@convex-dev/better-auth/client/plugins";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
 export const authClient = createAuthClient({
-	baseURL: env.VITE_CONVEX_SITE_URL,
+	baseURL: ENV.VITE_CONVEX_SITE_URL,
 	plugins: [convexClient(), crossDomainClient()],
 });

@@ -101,9 +101,25 @@ Handlebars.registerHelper(
     (frontend.includes("nuxt") || frontend.includes("svelte")),
 );
 
-// Shared across every web client template (oRPC/tRPC/better-auth) so the
-// same-origin URL normalization for Vercel deploys has one source of truth.
-const getServerUrlSource = `function getServerUrl(url: string) {
+function usesServerUrlResolver(config: Pick<ProjectConfig, "webDeploy" | "serverDeploy">) {
+  return (
+    config.webDeploy === config.serverDeploy &&
+    (config.webDeploy === "vercel" || config.webDeploy === "docker")
+  );
+}
+
+Handlebars.registerHelper("usesServerUrlResolver", (options: Handlebars.HelperOptions) =>
+  usesServerUrlResolver(options.data.root),
+);
+Handlebars.registerHelper("serverUrl", (expression: string, options: Handlebars.HelperOptions) => {
+  const url = usesServerUrlResolver(options.data.root)
+    ? `getServerUrl(${expression})`
+    : `${expression}.replace(/\\/$/, "")`;
+  return new Handlebars.SafeString("${" + url + "}");
+});
+
+const getServerUrlSource = `{{#if (usesServerUrlResolver)}}
+function getServerUrl(url: string) {
 	const processEnv = (globalThis as {
 		process?: { env?: Record<string, string | undefined> };
 	}).process?.env;
@@ -113,6 +129,7 @@ const getServerUrlSource = `function getServerUrl(url: string) {
 			: processEnv.SERVER_URL;
 	}
 
+{{#if (eq webDeploy "vercel")}}
 	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
 
 	if (!normalized.startsWith("/")) {
@@ -133,7 +150,11 @@ const getServerUrlSource = `function getServerUrl(url: string) {
 	}
 
 	return \`http://localhost:3000\${normalized}\`;
-}`;
+{{else}}
+	return url.endsWith("/") ? url.slice(0, -1) : url;
+{{/if}}
+}
+{{/if}}`;
 
 Handlebars.registerPartial("getServerUrl", getServerUrlSource);
 Handlebars.registerPartial("getServerUrlSpaces", getServerUrlSource.replaceAll("\t", "  "));

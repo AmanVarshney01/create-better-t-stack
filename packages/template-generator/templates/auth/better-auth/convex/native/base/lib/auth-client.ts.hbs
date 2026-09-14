@@ -4,10 +4,10 @@ import { expoClient } from "@better-auth/expo/client";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 
 export const authClient = createAuthClient({
-	baseURL: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+	baseURL: ENV.EXPO_PUBLIC_CONVEX_SITE_URL,
 	plugins: [
 		convexClient(),
 		Platform.OS === "web"

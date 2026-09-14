@@ -1,8 +1,10 @@
 import { createClient, type AuthClient } from "@{{projectName}}/auth/client";
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
+{{#if (usesServerUrlResolver)}}
 {{> getServerUrl}}
+{{/if}}
 {{/unless}}
 
-export const authClient: AuthClient = createClient({{#unless (eq backend "self")}}new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(){{/unless}});
+export const authClient: AuthClient = createClient({{#unless (eq backend "self")}}{{#if (usesServerUrlResolver)}}new URL("/api/auth", getServerUrl(ENV.VITE_SERVER_URL)).toString(){{else}}ENV.VITE_SERVER_URL{{/if}}{{/unless}});

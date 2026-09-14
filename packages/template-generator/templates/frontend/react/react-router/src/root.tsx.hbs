@@ -22,7 +22,7 @@ import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 
 {{#if (eq backend "convex")}}
 import { ConvexReactClient } from "convex/react";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
   {{#if (eq auth "clerk")}}
 import { ConvexProviderWithClerk } from "convex/react-clerk";
   {{else if (eq auth "better-auth")}}
@@ -102,7 +102,7 @@ export default function App() {
 {{else}}
 export default function App() {
 {{/if}}
-  const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
+  const convex = new ConvexReactClient(ENV.VITE_CONVEX_URL);
   {{#if (eq auth "clerk")}}
   return (
     <ClerkProvider loaderData={loaderData}>

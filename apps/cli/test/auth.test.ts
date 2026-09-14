@@ -498,7 +498,7 @@ describe("Authentication Configurations", () => {
         expect(nativeIndexFile).toContain("polarNativeClient.checkout");
         expect(nativeIndexFile).toContain("polarNativeClient.customer.portal");
         expect(nativeIndexFile).toContain("openAuthSessionAsync");
-        expect(nativeIndexFile).toContain('new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL)');
+        expect(nativeIndexFile).toContain('new URL("/polar/success", ENV.EXPO_PUBLIC_SERVER_URL)');
         expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
         expect(nativeIndexFile).toContain("returnUrl: polarReturnUrl");
         expect(nativeIndexFile).not.toContain("successUrl: returnUrl");
@@ -568,9 +568,9 @@ describe("Authentication Configurations", () => {
         expect(nativeIndexFile).toContain("api.polar.generateCustomerPortalUrl");
         expect(nativeIndexFile).toContain("openAuthSessionAsync");
         expect(nativeIndexFile).toContain(
-          'new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL)',
+          'new URL("/polar/success", ENV.EXPO_PUBLIC_CONVEX_SITE_URL)',
         );
-        expect(nativeIndexFile).toContain("origin: env.EXPO_PUBLIC_CONVEX_SITE_URL");
+        expect(nativeIndexFile).toContain("origin: ENV.EXPO_PUBLIC_CONVEX_SITE_URL");
         expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
         expect(nativeIndexFile).toContain("returnUrl: getPolarReturnUrl(returnUrl)");
         expect(nativeIndexFile).not.toContain("successUrl: returnUrl");

@@ -1393,7 +1393,7 @@ import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{#if (eq auth "better-auth")}}
 import { authClient } from "@/lib/auth-client";
 import { Platform } from "react-native";
@@ -1424,12 +1424,12 @@ async function expoFetch(request: Request, init?: RequestInit) {
 export const link = new RPCLink({
 {{#if (eq backend "self")}}
 {{#if (or (includes frontend "next") (includes frontend "tanstack-start"))}}
-	url: \`\${env.EXPO_PUBLIC_SERVER_URL}/api/rpc\`,
+	url: \`\${ENV.EXPO_PUBLIC_SERVER_URL}/api/rpc\`,
 {{else}}
-	url: \`\${env.EXPO_PUBLIC_SERVER_URL}/rpc\`,
+	url: \`\${ENV.EXPO_PUBLIC_SERVER_URL}/rpc\`,
 {{/if}}
 {{else}}
-	url: \`\${env.EXPO_PUBLIC_SERVER_URL}/rpc\`,
+	url: \`\${ENV.EXPO_PUBLIC_SERVER_URL}/rpc\`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
 	fetch(request, init) {
@@ -1654,12 +1654,12 @@ export const link = new RPCLink({
   url: () => \`\${window.location.origin}/rpc\`,
 });
 {{else}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
 {{> getServerUrlSpaces}}
 
 export const link = new RPCLink({
-  url: \`\${getServerUrl(env.PUBLIC_SERVER_URL)}/rpc\`,
+  url: \`{{serverUrl "ENV.PUBLIC_SERVER_URL"}}/rpc\`,
 {{#if (eq auth "better-auth")}}
   fetch(url, options) {
     return fetch(url, {
@@ -1779,14 +1779,14 @@ import { createContext } from "@{{projectName}}/api/context";
 {{else if (includes frontend "tanstack-start")}}
 import type { RouterClient } from "@orpc/server";
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 {{else}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{/unless}}
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
@@ -1849,7 +1849,7 @@ const getORPCClient = createIsomorphicFn()
 export const client: RouterClient<typeof appRouter> = getORPCClient();
 {{else if (includes frontend "tanstack-start")}}
 const link = new RPCLink({
-	url: \`\${getServerUrl(env.VITE_SERVER_URL)}/rpc\`,
+	url: \`{{serverUrl "ENV.VITE_SERVER_URL"}}/rpc\`,
 {{#if (eq auth "clerk")}}
 	headers: async () => {
 		const token = await getClerkAuthToken();
@@ -1876,9 +1876,9 @@ export const link = new RPCLink({
 {{#if (and (eq backend "self") (includes frontend "next"))}}
 	url: \`\${typeof window !== "undefined" ? window.location.origin : "http://localhost:3001"}/api/rpc\`,
 {{else if (includes frontend "next")}}
-	url: \`\${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/rpc\`,
+	url: \`{{serverUrl "ENV.NEXT_PUBLIC_SERVER_URL"}}/rpc\`,
 {{else}}
-	url: \`\${getServerUrl(env.VITE_SERVER_URL)}/rpc\`,
+	url: \`{{serverUrl "ENV.VITE_SERVER_URL"}}/rpc\`,
 {{/if}}
 {{#if (eq auth "clerk")}}
 	headers: async () => {
@@ -1933,7 +1933,7 @@ import { getRequestEvent } from "@solidjs/web";
 {{/unless}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{/unless}}
 
 {{#if (eq backend "self")}}
@@ -1966,7 +1966,7 @@ const link = new RPCLink({
 {{> getServerUrl}}
 
 const link = new RPCLink({
-	url: \`\${getServerUrl(env.VITE_SERVER_URL)}/rpc\`,
+	url: \`{{serverUrl "ENV.VITE_SERVER_URL"}}/rpc\`,
 	headers: () => getRequestEvent()?.request.headers ?? {},
 {{#if (eq auth "better-auth")}}
 	fetch(url, options) {
@@ -1994,7 +1994,7 @@ export function createQueryClient() {
 }
 `],
   ["api/orpc/web/svelte/src/lib/orpc.ts.hbs", `{{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{/unless}}
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
@@ -2024,7 +2024,7 @@ export const link = new RPCLink({
 		return \`\${window.location.origin}/rpc\`;
 	},
 	{{else}}
-	url: \`\${getServerUrl(env.PUBLIC_SERVER_URL)}/rpc\`,
+	url: \`{{serverUrl "ENV.PUBLIC_SERVER_URL"}}/rpc\`,
 	{{/if}}
 	{{#if (eq auth "better-auth")}}
 	fetch(url, options) {
@@ -2413,7 +2413,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 
 export const queryClient = new QueryClient();
 
@@ -2421,9 +2421,9 @@ const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
 {{#if (eq backend "self")}}
-			url: \`\${env.EXPO_PUBLIC_SERVER_URL}/api/trpc\`,
+			url: \`\${ENV.EXPO_PUBLIC_SERVER_URL}/api/trpc\`,
 {{else}}
-			url: \`\${env.EXPO_PUBLIC_SERVER_URL}/trpc\`,
+			url: \`\${ENV.EXPO_PUBLIC_SERVER_URL}/trpc\`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
 			fetch:
@@ -2641,7 +2641,7 @@ import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { toast } from 'sonner';
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
 {{> getServerUrl}}
 {{/unless}}
@@ -2670,7 +2670,7 @@ const trpcClient = createTRPCClient<AppRouter>({
 {{#if (eq backend "self")}}
 			url: "/api/trpc",
 {{else}}
-			url: \`\${getServerUrl(env.NEXT_PUBLIC_SERVER_URL)}/trpc\`,
+			url: \`{{serverUrl "ENV.NEXT_PUBLIC_SERVER_URL"}}/trpc\`,
 {{/if}}
 {{#if (eq auth "clerk")}}
 			headers: async () => {
@@ -2716,7 +2716,7 @@ import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { toast } from "sonner";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
@@ -2741,7 +2741,7 @@ export const queryClient = new QueryClient({
 export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: \`\${getServerUrl(env.VITE_SERVER_URL)}/trpc\`,
+			url: \`{{serverUrl "ENV.VITE_SERVER_URL"}}/trpc\`,
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();
@@ -3421,10 +3421,10 @@ import { expoClient } from "@better-auth/expo/client";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 
 export const authClient = createAuthClient({
-	baseURL: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+	baseURL: ENV.EXPO_PUBLIC_CONVEX_SITE_URL,
 	plugins: [
 		convexClient(),
 		Platform.OS === "web"
@@ -4658,7 +4658,7 @@ export const authClient = createAuthClient({
 });
 `],
   ["auth/better-auth/convex/web/react/next/src/lib/auth-server.ts.hbs", `import { convexBetterAuthNextJs } from "@convex-dev/better-auth/nextjs";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
 export const {
 	handler,
@@ -4669,8 +4669,8 @@ export const {
 	fetchAuthMutation,
 	fetchAuthAction,
 } = convexBetterAuthNextJs({
-	convexUrl: env.NEXT_PUBLIC_CONVEX_URL,
-	convexSiteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+	convexUrl: ENV.NEXT_PUBLIC_CONVEX_URL,
+	convexSiteUrl: ENV.NEXT_PUBLIC_CONVEX_SITE_URL,
 });
 `],
   ["auth/better-auth/convex/web/react/react-router/src/components/sign-in-form.tsx.hbs", `import { authClient } from "@/lib/auth-client";
@@ -5016,10 +5016,10 @@ import {
   convexClient,
   crossDomainClient,
 } from "@convex-dev/better-auth/client/plugins";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
 export const authClient = createAuthClient({
-  baseURL: env.VITE_CONVEX_SITE_URL,
+  baseURL: ENV.VITE_CONVEX_SITE_URL,
   plugins: [convexClient(), crossDomainClient()],
 });
 `],
@@ -5457,10 +5457,10 @@ import {
 	convexClient,
 	crossDomainClient,
 } from "@convex-dev/better-auth/client/plugins";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
 export const authClient = createAuthClient({
-	baseURL: env.VITE_CONVEX_SITE_URL,
+	baseURL: ENV.VITE_CONVEX_SITE_URL,
 	plugins: [convexClient(), crossDomainClient()],
 });
 `],
@@ -5902,7 +5902,7 @@ export const authClient = createAuthClient({
   plugins: [convexClient()],
 });`],
   ["auth/better-auth/convex/web/react/tanstack-start/src/lib/auth-server.ts.hbs", `import { convexBetterAuthReactStart } from "@convex-dev/better-auth/react-start";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
 export const {
 	handler,
@@ -5911,8 +5911,8 @@ export const {
 	fetchAuthMutation,
 	fetchAuthAction,
 } = convexBetterAuthReactStart({
-	convexUrl: env.VITE_CONVEX_URL,
-	convexSiteUrl: env.VITE_CONVEX_SITE_URL,
+	convexUrl: ENV.VITE_CONVEX_URL,
+	convexSiteUrl: ENV.VITE_CONVEX_SITE_URL,
 });
 `],
   ["auth/better-auth/convex/web/react/tanstack-start/src/routes/_auth/dashboard.tsx.hbs", `import UserMenu from "@/components/user-menu";
@@ -6187,7 +6187,7 @@ import { View, ScrollView, StyleSheet{{#if (eq payments "polar")}}, Alert{{/if}}
 {{#if (eq payments "polar")}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
@@ -6227,7 +6227,7 @@ const openPolarLink = async (url: string, returnUrl: string) => {
 };
 
 const getPolarReturnUrl = (returnUrl: string) => {
-	const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+	const url = new URL("/polar/success", ENV.EXPO_PUBLIC_SERVER_URL);
 	url.searchParams.set("returnUrl", returnUrl);
 	return url.toString();
 };
@@ -6949,10 +6949,10 @@ export { SignUp };
 import { createAuthClient } from "better-auth/react";
 import * as SecureStore from "expo-secure-store";
 import Constants from "expo-constants";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 
 export const authClient = createAuthClient({
-	baseURL: env.EXPO_PUBLIC_SERVER_URL,
+	baseURL: ENV.EXPO_PUBLIC_SERVER_URL,
 	plugins: [
 		expoClient({
 			scheme: Constants.expoConfig?.scheme as string,
@@ -6994,7 +6994,7 @@ import { ScrollView, Text, TouchableOpacity, View{{#if (eq payments "polar")}}, 
 {{#if (eq payments "polar")}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 import { StyleSheet } from "react-native-unistyles";
 
@@ -7027,7 +7027,7 @@ export default function Home() {
   };
 
   const getPolarReturnUrl = (returnUrl: string) => {
-    const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+    const url = new URL("/polar/success", ENV.EXPO_PUBLIC_SERVER_URL);
     url.searchParams.set("returnUrl", returnUrl);
     return url.toString();
   };
@@ -7734,7 +7734,7 @@ const styles = StyleSheet.create((theme) => ({
 {{#if (eq payments "polar")}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
 import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
@@ -7772,7 +7772,7 @@ const openPolarLink = async (url: string, returnUrl: string) => {
 };
 
 const getPolarReturnUrl = (returnUrl: string) => {
-  const url = new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL);
+  const url = new URL("/polar/success", ENV.EXPO_PUBLIC_SERVER_URL);
   url.searchParams.set("returnUrl", returnUrl);
   return url.toString();
 };
@@ -9305,18 +9305,22 @@ import { authClient } from "../lib/auth-client";
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 {{#if (ne backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{/if}}
 
 {{#if (ne backend "self")}}
+{{#if (usesServerUrlResolver)}}
 {{> getServerUrlSpaces}}
+{{/if}}
 
 {{/if}}
 export const authClient = createAuthClient({
 {{#if (ne backend "self")}}
-  // better-auth derives its route-matching base from this URL's path, so the
-	// public auth path must equal the server-side mount (/api/auth everywhere)
-	  baseURL: new URL("/api/auth", getServerUrl(env.PUBLIC_SERVER_URL)).toString(),
+{{#if (usesServerUrlResolver)}}
+  baseURL: new URL("/api/auth", getServerUrl(ENV.PUBLIC_SERVER_URL)).toString(),
+{{else}}
+  baseURL: ENV.PUBLIC_SERVER_URL,
+{{/if}}
 {{/if}}
 {{#if (eq payments "polar")}}
   plugins: [polarClient()],
@@ -9879,16 +9883,20 @@ export default defineNuxtPlugin(() => {
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
+{{#if (usesServerUrlResolver)}}
 {{> getServerUrl}}
+{{/if}}
 {{/unless}}
 
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	// better-auth derives its route-matching base from this URL's path, so the
-	// public auth path must equal the server-side mount (/api/auth everywhere)
-		baseURL: new URL("/api/auth", getServerUrl(env.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})).toString(),
+{{#if (usesServerUrlResolver)}}
+  baseURL: new URL("/api/auth", getServerUrl(ENV.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})).toString(),
+{{else}}
+  baseURL: ENV.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}},
+{{/if}}
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
@@ -12535,7 +12543,7 @@ export default function Login() {
 </div>
 `],
   ["auth/better-auth/web/svelte/src/lib/auth-client.ts.hbs", `{{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{/unless}}
 import { createAuthClient } from "better-auth/svelte";
 {{#if (eq payments "polar")}}
@@ -12543,14 +12551,18 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
 {{#unless (eq backend "self")}}
+{{#if (usesServerUrlResolver)}}
 {{> getServerUrl}}
+{{/if}}
 
 {{/unless}}
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-	// better-auth derives its route-matching base from this URL's path, so the
-	// public auth path must equal the server-side mount (/api/auth everywhere)
-		baseURL: new URL("/api/auth", getServerUrl(env.PUBLIC_SERVER_URL)).toString(),
+{{#if (usesServerUrlResolver)}}
+  baseURL: new URL("/api/auth", getServerUrl(ENV.PUBLIC_SERVER_URL)).toString(),
+{{else}}
+  baseURL: ENV.PUBLIC_SERVER_URL,
+{{/if}}
 {{/unless}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
@@ -17223,12 +17235,14 @@ console.log("Vercel env sync complete. Redeploy for changes to take effect.");
 `],
   ["env/auth-client.ts.hbs", `import { createClient, type AuthClient } from "@{{projectName}}/auth/client";
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
+{{#if (usesServerUrlResolver)}}
 {{> getServerUrl}}
+{{/if}}
 {{/unless}}
 
-export const authClient: AuthClient = createClient({{#unless (eq backend "self")}}new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(){{/unless}});
+export const authClient: AuthClient = createClient({{#unless (eq backend "self")}}{{#if (usesServerUrlResolver)}}new URL("/api/auth", getServerUrl(ENV.VITE_SERVER_URL)).toString(){{else}}ENV.VITE_SERVER_URL{{/if}}{{/unless}});
 `],
   ["env/env.server.ts.hbs", `{{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
 /// <reference types="@cloudflare/workers-types" />
@@ -17346,7 +17360,7 @@ import type { CloudflareEnv } from "../cloudflare-env.d.ts";
 import { type Database, {{#if (eq orm "prisma")}}createPrismaClient{{else}}createDb{{/if}} } from "@{{projectName}}/db";
 {{/if}}
 {{#if (eq auth "better-auth")}}
-import { createAuth as createConfiguredAuth } from "@{{projectName}}/auth";
+import { createAuth{{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}} as createConfiguredAuth{{/if}} } from "@{{projectName}}/auth";
 {{/if}}
 
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
@@ -17369,7 +17383,7 @@ export function getDb(): Database {
 }
 {{/if}}
 {{#if (eq auth "better-auth")}}
-export const auth = createConfiguredAuth(env{{#if (ne database "none")}}, db{{/if}}{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}, desktopOrigins{{/if}});
+export const auth = createAuth(env{{#if (ne database "none")}}, db{{/if}}{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}, desktopOrigins{{/if}});
 {{/if}}
 {{/if}}
 `],
@@ -18091,7 +18105,7 @@ import { DefaultChatTransport } from "ai";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 
 const starterPrompts = [
   {
@@ -18109,7 +18123,7 @@ const starterPrompts = [
 ];
 
 const generateAPIUrl = (relativePath: string) => {
-  const serverUrl = env.EXPO_PUBLIC_SERVER_URL;
+  const serverUrl = ENV.EXPO_PUBLIC_SERVER_URL;
   if (!serverUrl) {
     throw new Error(
       "EXPO_PUBLIC_SERVER_URL environment variable is not defined"
@@ -19185,7 +19199,7 @@ import { DefaultChatTransport } from "ai";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { Container } from "@/components/container";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 
 const starterPrompts = [
   {
@@ -19203,7 +19217,7 @@ const starterPrompts = [
 ];
 
 const generateAPIUrl = (relativePath: string) => {
-  const serverUrl = env.EXPO_PUBLIC_SERVER_URL;
+  const serverUrl = ENV.EXPO_PUBLIC_SERVER_URL;
   if (!serverUrl) {
     throw new Error(
       "EXPO_PUBLIC_SERVER_URL environment variable is not defined"
@@ -20026,7 +20040,7 @@ import { DefaultChatTransport } from "ai";
 import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
 import { Button, Separator, FieldError, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 
 const starterPrompts = [
   {
@@ -20044,7 +20058,7 @@ const starterPrompts = [
 ];
 
 const generateAPIUrl = (relativePath: string) => {
-  const serverUrl = env.EXPO_PUBLIC_SERVER_URL;
+  const serverUrl = ENV.EXPO_PUBLIC_SERVER_URL;
   if (!serverUrl) {
     throw new Error(
       "EXPO_PUBLIC_SERVER_URL environment variable is not defined"
@@ -20792,13 +20806,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
 export default function AIPage() {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
-      api: {{#if (eq backend "self")}}"/api/ai"{{else}}\`\${env.NEXT_PUBLIC_SERVER_URL}/ai\`{{/if}},
+      api: {{#if (eq backend "self")}}"/api/ai"{{else}}\`\${ENV.NEXT_PUBLIC_SERVER_URL}/ai\`{{/if}},
     }),
   });
   const isSending = status === "submitted" || status === "streaming";
@@ -21249,7 +21263,7 @@ import {
 } from "lucide-react";
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
 import { Button } from "@{{projectName}}/ui/components/button";
@@ -21289,7 +21303,7 @@ export default function AI() {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
-      api: \`\${env.VITE_SERVER_URL}/ai\`,
+      api: \`\${ENV.VITE_SERVER_URL}/ai\`,
     }),
   });
   const isSending = status === "submitted" || status === "streaming";
@@ -21747,7 +21761,7 @@ import {
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{/unless}}
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
@@ -21792,7 +21806,7 @@ function RouteComponent() {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
-      api: {{#if (eq backend "self")}}"/api/ai"{{else}}\`\${env.VITE_SERVER_URL}/ai\`{{/if}},
+      api: {{#if (eq backend "self")}}"/api/ai"{{else}}\`\${ENV.VITE_SERVER_URL}/ai\`{{/if}},
     }),
   });
   const isSending = status === "submitted" || status === "streaming";
@@ -22250,7 +22264,7 @@ import {
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{/unless}}
 
 import { Bubble, BubbleContent } from "@{{projectName}}/ui/components/bubble";
@@ -22295,7 +22309,7 @@ function RouteComponent() {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
-      api: {{#if (eq backend "self")}}"/api/ai"{{else}}\`\${env.VITE_SERVER_URL}/ai\`{{/if}},
+      api: {{#if (eq backend "self")}}"/api/ai"{{else}}\`\${ENV.VITE_SERVER_URL}/ai\`{{/if}},
     }),
   });
   const isSending = status === "submitted" || status === "streaming";
@@ -22475,7 +22489,7 @@ function RouteComponent() {
 `],
   ["examples/ai/web/svelte/src/routes/ai/+page.svelte.hbs", `<script lang="ts">
 	{{#unless (eq backend "self")}}
-	import { env } from "@{{projectName}}/env/web";
+	import { ENV } from "@{{projectName}}/env/web";
 	{{/unless}}
 	import { Chat } from "@ai-sdk/svelte";
 	import { DefaultChatTransport } from "ai";
@@ -22486,7 +22500,7 @@ function RouteComponent() {
 			{{#if (eq backend "self")}}
 			api: "/api/ai",
 			{{else}}
-			api: \`\${env.PUBLIC_SERVER_URL}/ai\`,
+			api: \`\${ENV.PUBLIC_SERVER_URL}/ai\`,
 			{{/if}}
 		}),
 	});
@@ -26452,7 +26466,7 @@ import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
 import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 
 {{#if (eq backend "convex")}}
@@ -26460,10 +26474,10 @@ import { env } from "@{{projectName}}/env/native";
     import { ConvexReactClient } from "convex/react";
     import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
     import { authClient } from "@/lib/auth-client";
-    import { env } from "@{{projectName}}/env/native";
+    import { ENV } from "@{{projectName}}/env/native";
   {{else}}
     import { ConvexProvider, ConvexReactClient } from "convex/react";
-    import { env } from "@{{projectName}}/env/native";
+    import { ENV } from "@{{projectName}}/env/native";
   {{/if}}
   {{#if (eq auth "clerk")}}
     import { ClerkProvider, useAuth } from "@clerk/expo";
@@ -26504,7 +26518,7 @@ export const unstable_settings = {
 };
 
 {{#if (eq backend "convex")}}
-const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
+const convex = new ConvexReactClient(ENV.EXPO_PUBLIC_CONVEX_URL, {
   unsavedChangesWarning: false,
 });
 {{/if}}
@@ -26538,7 +26552,7 @@ export default function RootLayout() {
     <>
       {{#if (eq backend "convex")}}
         {{#if (eq auth "clerk")}}
-          <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+          <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
             <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
               <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
                 <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
@@ -26579,7 +26593,7 @@ export default function RootLayout() {
         {{/if}}
       {{else}}
         {{#if (eq auth "clerk")}}
-          <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+          <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
             {{#unless (eq api "none")}}
               <ClerkApiAuthBridge />
               <QueryClientProvider client={queryClient}>
@@ -26865,7 +26879,7 @@ import { View, ScrollView, StyleSheet{{#if (and (eq backend "convex") (eq auth "
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
@@ -26931,7 +26945,7 @@ const openPolarLink = async (url: string, returnUrl: string) => {
 };
 
 const getPolarReturnUrl = (returnUrl: string) => {
-	const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+	const url = new URL("/polar/success", ENV.EXPO_PUBLIC_CONVEX_SITE_URL);
 	url.searchParams.set("returnUrl", returnUrl);
 	return url.toString();
 };
@@ -26947,7 +26961,7 @@ const handlePolarCheckout = async () => {
 		const polarReturnUrl = getPolarReturnUrl(returnUrl);
 		const { url } = await generateCheckoutLink({
 			productIds: [recurringProduct.id],
-			origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+			origin: ENV.EXPO_PUBLIC_CONVEX_SITE_URL,
 			successUrl: polarReturnUrl,
 		});
 
@@ -27700,7 +27714,7 @@ import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
 import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
@@ -27713,10 +27727,10 @@ import { queryClient } from "@/utils/orpc";
 import { ConvexReactClient } from "convex/react";
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { authClient } from "@/lib/auth-client";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{else}}
 import { ConvexProvider, ConvexReactClient } from "convex/react";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 {{#if (eq auth "clerk")}}
 import { ClerkProvider, useAuth } from "@clerk/expo";
@@ -27738,7 +27752,7 @@ export const unstable_settings = {
 };
 
 {{#if (eq backend "convex")}}
-const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
+const convex = new ConvexReactClient(ENV.EXPO_PUBLIC_CONVEX_URL, {
   unsavedChangesWarning: false,
 });
 {{/if}}
@@ -27767,7 +27781,7 @@ export default function RootLayout() {
     {{#if (eq auth "clerk")}}
     <ClerkProvider
       tokenCache={tokenCache}
-      publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
     >
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <GestureHandlerRootView style=\\{{ flex: 1 }}>
@@ -27841,7 +27855,7 @@ export default function RootLayout() {
       {{#if (eq auth "clerk")}}
       <ClerkProvider
         tokenCache={tokenCache}
-        publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
+        publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
       >
         {{#unless (eq api "none")}}
         <ClerkApiAuthBridge />
@@ -28157,7 +28171,7 @@ import { ScrollView, Text, View, TouchableOpacity{{#if (and (eq backend "convex"
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
@@ -28221,7 +28235,7 @@ export default function Home() {
   };
 
   const getPolarReturnUrl = (returnUrl: string) => {
-    const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+    const url = new URL("/polar/success", ENV.EXPO_PUBLIC_CONVEX_SITE_URL);
     url.searchParams.set("returnUrl", returnUrl);
     return url.toString();
   };
@@ -28237,7 +28251,7 @@ export default function Home() {
       const polarReturnUrl = getPolarReturnUrl(returnUrl);
       const { url } = await generateCheckoutLink({
         productIds: [recurringProduct.id],
-        origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+        origin: ENV.EXPO_PUBLIC_CONVEX_SITE_URL,
         successUrl: polarReturnUrl,
       });
 
@@ -29175,7 +29189,7 @@ import "@/global.css";
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
 import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 
 {{#if (eq backend "convex")}}
@@ -29183,10 +29197,10 @@ import { env } from "@{{projectName}}/env/native";
     import { ConvexReactClient } from "convex/react";
     import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
     import { authClient } from "@/lib/auth-client";
-    import { env } from "@{{projectName}}/env/native";
+    import { ENV } from "@{{projectName}}/env/native";
   {{else}}
     import { ConvexProvider, ConvexReactClient } from "convex/react";
-    import { env } from "@{{projectName}}/env/native";
+    import { ENV } from "@{{projectName}}/env/native";
   {{/if}}
 
   {{#if (eq auth "clerk")}}
@@ -29218,7 +29232,7 @@ export const unstable_settings = {
 };
 
 {{#if (eq backend "convex")}}
-  const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
+  const convex = new ConvexReactClient(ENV.EXPO_PUBLIC_CONVEX_URL, {
     unsavedChangesWarning: false,
   });
 {{/if}}
@@ -29255,7 +29269,7 @@ export default function Layout() {
   return (
     {{#if (eq backend "convex")}}
       {{#if (eq auth "clerk")}}
-        <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+        <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
           <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
             <GestureHandlerRootView style=\\{{ flex: 1 }}>
               <KeyboardProvider>
@@ -29295,7 +29309,7 @@ export default function Layout() {
       {{/if}}
     {{else}}
       {{#if (eq auth "clerk")}}
-        <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+        <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
           {{#unless (eq api "none")}}
             <ClerkApiAuthBridge />
             <QueryClientProvider client={queryClient}>
@@ -29524,7 +29538,7 @@ export default function TabTwo() {
 {{#if (and (eq backend "convex") (eq auth "better-auth") (eq payments "polar"))}}
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
 {{#if (eq api "orpc")}}
@@ -29590,7 +29604,7 @@ const openPolarLink = async (url: string, returnUrl: string) => {
 };
 
 const getPolarReturnUrl = (returnUrl: string) => {
-  const url = new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL);
+  const url = new URL("/polar/success", ENV.EXPO_PUBLIC_CONVEX_SITE_URL);
   url.searchParams.set("returnUrl", returnUrl);
   return url.toString();
 };
@@ -29606,7 +29620,7 @@ const handlePolarCheckout = async () => {
     const polarReturnUrl = getPolarReturnUrl(returnUrl);
     const { url } = await generateCheckoutLink({
       productIds: [recurringProduct.id],
-      origin: env.EXPO_PUBLIC_CONVEX_SITE_URL,
+      origin: ENV.EXPO_PUBLIC_CONVEX_SITE_URL,
       successUrl: polarReturnUrl,
     });
 
@@ -30797,15 +30811,15 @@ import { useAuth } from "@clerk/nextjs";
 {{#if (eq auth "clerk")}}
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{else if (eq auth "better-auth")}}
 import { ConvexReactClient } from "convex/react";
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { authClient } from "@/lib/auth-client";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{else}}
 import { ConvexProvider, ConvexReactClient } from "convex/react";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{/if}}
 {{else}}
 {{#unless (eq api "none")}}
@@ -30823,7 +30837,7 @@ import { ThemeProvider } from "./theme-provider";
 import { Toaster } from "@{{projectName}}/ui/components/sonner";
 
 {{#if (eq backend "convex")}}
-const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);
+const convex = new ConvexReactClient(ENV.NEXT_PUBLIC_CONVEX_URL);
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
@@ -31072,7 +31086,7 @@ import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 
 {{#if (eq backend "convex")}}
 import { ConvexReactClient } from "convex/react";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
   {{#if (eq auth "clerk")}}
 import { ConvexProviderWithClerk } from "convex/react-clerk";
   {{else if (eq auth "better-auth")}}
@@ -31152,7 +31166,7 @@ export default function App() {
 {{else}}
 export default function App() {
 {{/if}}
-  const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
+  const convex = new ConvexReactClient(ENV.VITE_CONVEX_URL);
   {{#if (eq auth "clerk")}}
   return (
     <ClerkProvider loaderData={loaderData}>
@@ -31633,7 +31647,7 @@ import { routeTree } from "./routeTree.gen";
   import { queryClient, trpc } from "./utils/trpc";
 {{/if}}
 {{#if (or (eq backend "convex") (eq auth "clerk"))}}
-  import { env } from "@{{projectName}}/env/web";
+  import { ENV } from "@{{projectName}}/env/web";
 {{/if}}
 {{#if (eq auth "clerk")}}
   import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react";
@@ -31648,7 +31662,7 @@ import { routeTree } from "./routeTree.gen";
   {{else}}
   import { ConvexProvider } from "convex/react";
   {{/if}}
-  const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
+  const convex = new ConvexReactClient(ENV.VITE_CONVEX_URL);
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
@@ -31677,7 +31691,7 @@ const router = createRouter({
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return (
       {{#if (eq auth "clerk")}}
-      <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+      <ClerkProvider publishableKey={ENV.VITE_CLERK_PUBLISHABLE_KEY}>
         <ClerkApiAuthBridge />
         <QueryClientProvider client={queryClient}>
           {children}
@@ -31695,7 +31709,7 @@ const router = createRouter({
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return (
       {{#if (eq auth "clerk")}}
-      <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+      <ClerkProvider publishableKey={ENV.VITE_CLERK_PUBLISHABLE_KEY}>
         <ClerkApiAuthBridge />
         <QueryClientProvider client={queryClient}>
           {children}
@@ -31714,7 +31728,7 @@ const router = createRouter({
     {{#if (eq auth "clerk")}}
     return (
       <ClerkProvider
-        publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}
+        publishableKey={ENV.VITE_CLERK_PUBLISHABLE_KEY}
       >
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
           {children}
@@ -31730,7 +31744,7 @@ const router = createRouter({
   {{else if (eq auth "clerk")}}
   context: {},
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
-    return <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>{children}</ClerkProvider>;
+    return <ClerkProvider publishableKey={ENV.VITE_CLERK_PUBLISHABLE_KEY}>{children}</ClerkProvider>;
   },
   {{else}}
   context: {},
@@ -32040,7 +32054,7 @@ import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query
 import { ConvexQueryClient } from "@convex-dev/react-query";
 import { routeTree } from "./routeTree.gen";
 import Loader from "./components/loader";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{else}}
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import Loader from "./components/loader";
@@ -32054,7 +32068,7 @@ import { toast } from "sonner";
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { TRPCProvider } from "./utils/trpc";
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "@{{projectName}}/env/web";
 {{/unless}}
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
@@ -32067,7 +32081,7 @@ import { createQueryClient, orpc } from "./utils/orpc";
 
 {{#if (eq backend "convex")}}
 export function getRouter() {
-	const convexUrl = env.VITE_CONVEX_URL;
+	const convexUrl = ENV.VITE_CONVEX_URL;
 	if (!convexUrl) {
 		throw new Error("VITE_CONVEX_URL is not set");
 	}
@@ -32126,7 +32140,7 @@ function createQueryClient() {
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: {{#if (eq backend "self")}}"/api/trpc"{{else}}\`\${getServerUrl(env.VITE_SERVER_URL)}/trpc\`{{/if}},
+			url: {{#if (eq backend "self")}}"/api/trpc"{{else}}\`{{serverUrl "ENV.VITE_SERVER_URL"}}/trpc\`{{/if}},
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();
