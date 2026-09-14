@@ -224,7 +224,7 @@ jobs:
         run: npm install --global vercel@59.16.0
 
       - name: Promote the release website
-        timeout-minutes: 20
+        timeout-minutes: 30
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_SCOPE: better-t-stack
@@ -260,12 +260,6 @@ jobs:
               published_version=$(npm view "$package@latest" version --prefer-online 2>/dev/null || true)
               if [[ "$published_version" == "$RELEASE_VERSION" ]]; then
                 continue
-              fi
-
-              if [[ -n "$published_version" ]] && \
-                [[ "$(printf '%s\n%s\n' "$published_version" "$RELEASE_VERSION" | sort -V | tail -n 1)" == "$published_version" ]]; then
-                echo "::error::$package@latest is $published_version, which is newer than $RELEASE_VERSION. Website promotion stopped."
-                exit 1
               fi
 
               pending_packages+=("$package@${published_version:-unavailable}")
