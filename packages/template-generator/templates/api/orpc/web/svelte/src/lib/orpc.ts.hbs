@@ -29,7 +29,11 @@ export const link = new RPCLink({
 		return `${window.location.origin}/rpc`;
 	},
 	{{else}}
-	url: `{{serverUrl "ENV.PUBLIC_SERVER_URL"}}/rpc`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+	url: `${getServerUrl(ENV.PUBLIC_SERVER_URL)}/rpc`,
+{{else}}
+	url: `${ENV.PUBLIC_SERVER_URL.replace(/\/$/, "")}/rpc`,
+{{/if}}
 	{{/if}}
 	{{#if (eq auth "better-auth")}}
 	fetch(url, options) {

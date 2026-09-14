@@ -7,14 +7,14 @@ import { ENV } from "@{{projectName}}/env/web";
 {{/if}}
 
 {{#if (ne backend "self")}}
-{{#if (usesServerUrlResolver)}}
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
 {{> getServerUrlSpaces}}
 {{/if}}
 
 {{/if}}
 export const authClient = createAuthClient({
 {{#if (ne backend "self")}}
-{{#if (usesServerUrlResolver)}}
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
   baseURL: new URL("/api/auth", getServerUrl(ENV.PUBLIC_SERVER_URL)).toString(),
 {{else}}
   baseURL: ENV.PUBLIC_SERVER_URL,

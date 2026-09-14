@@ -14,7 +14,11 @@ import { ENV } from "@{{projectName}}/env/web";
 {{> getServerUrlSpaces}}
 
 export const link = new RPCLink({
-  url: `{{serverUrl "ENV.PUBLIC_SERVER_URL"}}/rpc`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+  url: `${getServerUrl(ENV.PUBLIC_SERVER_URL)}/rpc`,
+{{else}}
+  url: `${ENV.PUBLIC_SERVER_URL.replace(/\/$/, "")}/rpc`,
+{{/if}}
 {{#if (eq auth "better-auth")}}
   fetch(url, options) {
     return fetch(url, {

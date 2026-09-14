@@ -91,7 +91,13 @@ function createQueryClient() {
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: {{#if (eq backend "self")}}"/api/trpc"{{else}}`{{serverUrl "ENV.VITE_SERVER_URL"}}/trpc`{{/if}},
+{{#if (eq backend "self")}}
+			url: "/api/trpc",
+{{else if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+			url: `${getServerUrl(ENV.VITE_SERVER_URL)}/trpc`,
+{{else}}
+			url: `${ENV.VITE_SERVER_URL.replace(/\/$/, "")}/trpc`,
+{{/if}}
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();

@@ -101,24 +101,7 @@ Handlebars.registerHelper(
     (frontend.includes("nuxt") || frontend.includes("svelte")),
 );
 
-function usesServerUrlResolver(config: Pick<ProjectConfig, "webDeploy" | "serverDeploy">) {
-  return (
-    config.webDeploy === config.serverDeploy &&
-    (config.webDeploy === "vercel" || config.webDeploy === "docker")
-  );
-}
-
-Handlebars.registerHelper("usesServerUrlResolver", (options: Handlebars.HelperOptions) =>
-  usesServerUrlResolver(options.data.root),
-);
-Handlebars.registerHelper("serverUrl", (expression: string, options: Handlebars.HelperOptions) => {
-  const url = usesServerUrlResolver(options.data.root)
-    ? `getServerUrl(${expression})`
-    : `${expression}.replace(/\\/$/, "")`;
-  return new Handlebars.SafeString("${" + url + "}");
-});
-
-const getServerUrlSource = `{{#if (usesServerUrlResolver)}}
+const getServerUrlSource = `{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
 function getServerUrl(url: string) {
 	const processEnv = (globalThis as {
 		process?: { env?: Record<string, string | undefined> };

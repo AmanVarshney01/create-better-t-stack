@@ -34,7 +34,11 @@ const trpcClient = createTRPCClient<AppRouter>({
 {{#if (eq backend "self")}}
 			url: "/api/trpc",
 {{else}}
-			url: `{{serverUrl "ENV.NEXT_PUBLIC_SERVER_URL"}}/trpc`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+			url: `${getServerUrl(ENV.NEXT_PUBLIC_SERVER_URL)}/trpc`,
+{{else}}
+			url: `${ENV.NEXT_PUBLIC_SERVER_URL.replace(/\/$/, "")}/trpc`,
+{{/if}}
 {{/if}}
 {{#if (eq auth "clerk")}}
 			headers: async () => {
@@ -105,7 +109,11 @@ export const queryClient = new QueryClient({
 export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: `{{serverUrl "ENV.VITE_SERVER_URL"}}/trpc`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+			url: `${getServerUrl(ENV.VITE_SERVER_URL)}/trpc`,
+{{else}}
+			url: `${ENV.VITE_SERVER_URL.replace(/\/$/, "")}/trpc`,
+{{/if}}
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();

@@ -1659,7 +1659,11 @@ import { ENV } from "@{{projectName}}/env/web";
 {{> getServerUrlSpaces}}
 
 export const link = new RPCLink({
-  url: \`{{serverUrl "ENV.PUBLIC_SERVER_URL"}}/rpc\`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+  url: \`\${getServerUrl(ENV.PUBLIC_SERVER_URL)}/rpc\`,
+{{else}}
+  url: \`\${ENV.PUBLIC_SERVER_URL.replace(/\\/$/, "")}/rpc\`,
+{{/if}}
 {{#if (eq auth "better-auth")}}
   fetch(url, options) {
     return fetch(url, {
@@ -1849,7 +1853,11 @@ const getORPCClient = createIsomorphicFn()
 export const client: RouterClient<typeof appRouter> = getORPCClient();
 {{else if (includes frontend "tanstack-start")}}
 const link = new RPCLink({
-	url: \`{{serverUrl "ENV.VITE_SERVER_URL"}}/rpc\`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+	url: \`\${getServerUrl(ENV.VITE_SERVER_URL)}/rpc\`,
+{{else}}
+	url: \`\${ENV.VITE_SERVER_URL.replace(/\\/$/, "")}/rpc\`,
+{{/if}}
 {{#if (eq auth "clerk")}}
 	headers: async () => {
 		const token = await getClerkAuthToken();
@@ -1876,9 +1884,17 @@ export const link = new RPCLink({
 {{#if (and (eq backend "self") (includes frontend "next"))}}
 	url: \`\${typeof window !== "undefined" ? window.location.origin : "http://localhost:3001"}/api/rpc\`,
 {{else if (includes frontend "next")}}
-	url: \`{{serverUrl "ENV.NEXT_PUBLIC_SERVER_URL"}}/rpc\`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+	url: \`\${getServerUrl(ENV.NEXT_PUBLIC_SERVER_URL)}/rpc\`,
 {{else}}
-	url: \`{{serverUrl "ENV.VITE_SERVER_URL"}}/rpc\`,
+	url: \`\${ENV.NEXT_PUBLIC_SERVER_URL.replace(/\\/$/, "")}/rpc\`,
+{{/if}}
+{{else}}
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+	url: \`\${getServerUrl(ENV.VITE_SERVER_URL)}/rpc\`,
+{{else}}
+	url: \`\${ENV.VITE_SERVER_URL.replace(/\\/$/, "")}/rpc\`,
+{{/if}}
 {{/if}}
 {{#if (eq auth "clerk")}}
 	headers: async () => {
@@ -1966,7 +1982,11 @@ const link = new RPCLink({
 {{> getServerUrl}}
 
 const link = new RPCLink({
-	url: \`{{serverUrl "ENV.VITE_SERVER_URL"}}/rpc\`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+	url: \`\${getServerUrl(ENV.VITE_SERVER_URL)}/rpc\`,
+{{else}}
+	url: \`\${ENV.VITE_SERVER_URL.replace(/\\/$/, "")}/rpc\`,
+{{/if}}
 	headers: () => getRequestEvent()?.request.headers ?? {},
 {{#if (eq auth "better-auth")}}
 	fetch(url, options) {
@@ -2024,7 +2044,11 @@ export const link = new RPCLink({
 		return \`\${window.location.origin}/rpc\`;
 	},
 	{{else}}
-	url: \`{{serverUrl "ENV.PUBLIC_SERVER_URL"}}/rpc\`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+	url: \`\${getServerUrl(ENV.PUBLIC_SERVER_URL)}/rpc\`,
+{{else}}
+	url: \`\${ENV.PUBLIC_SERVER_URL.replace(/\\/$/, "")}/rpc\`,
+{{/if}}
 	{{/if}}
 	{{#if (eq auth "better-auth")}}
 	fetch(url, options) {
@@ -2670,7 +2694,11 @@ const trpcClient = createTRPCClient<AppRouter>({
 {{#if (eq backend "self")}}
 			url: "/api/trpc",
 {{else}}
-			url: \`{{serverUrl "ENV.NEXT_PUBLIC_SERVER_URL"}}/trpc\`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+			url: \`\${getServerUrl(ENV.NEXT_PUBLIC_SERVER_URL)}/trpc\`,
+{{else}}
+			url: \`\${ENV.NEXT_PUBLIC_SERVER_URL.replace(/\\/$/, "")}/trpc\`,
+{{/if}}
 {{/if}}
 {{#if (eq auth "clerk")}}
 			headers: async () => {
@@ -2741,7 +2769,11 @@ export const queryClient = new QueryClient({
 export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: \`{{serverUrl "ENV.VITE_SERVER_URL"}}/trpc\`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+			url: \`\${getServerUrl(ENV.VITE_SERVER_URL)}/trpc\`,
+{{else}}
+			url: \`\${ENV.VITE_SERVER_URL.replace(/\\/$/, "")}/trpc\`,
+{{/if}}
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();
@@ -9309,14 +9341,14 @@ import { ENV } from "@{{projectName}}/env/web";
 {{/if}}
 
 {{#if (ne backend "self")}}
-{{#if (usesServerUrlResolver)}}
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
 {{> getServerUrlSpaces}}
 {{/if}}
 
 {{/if}}
 export const authClient = createAuthClient({
 {{#if (ne backend "self")}}
-{{#if (usesServerUrlResolver)}}
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
   baseURL: new URL("/api/auth", getServerUrl(ENV.PUBLIC_SERVER_URL)).toString(),
 {{else}}
   baseURL: ENV.PUBLIC_SERVER_URL,
@@ -9885,14 +9917,12 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{#unless (eq backend "self")}}
 import { ENV } from "@{{projectName}}/env/web";
 
-{{#if (usesServerUrlResolver)}}
 {{> getServerUrl}}
-{{/if}}
 {{/unless}}
 
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-{{#if (usesServerUrlResolver)}}
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
   baseURL: new URL("/api/auth", getServerUrl(ENV.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})).toString(),
 {{else}}
   baseURL: ENV.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}},
@@ -12551,14 +12581,12 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 
 {{#unless (eq backend "self")}}
-{{#if (usesServerUrlResolver)}}
 {{> getServerUrl}}
-{{/if}}
 
 {{/unless}}
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-{{#if (usesServerUrlResolver)}}
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
   baseURL: new URL("/api/auth", getServerUrl(ENV.PUBLIC_SERVER_URL)).toString(),
 {{else}}
   baseURL: ENV.PUBLIC_SERVER_URL,
@@ -17237,12 +17265,10 @@ console.log("Vercel env sync complete. Redeploy for changes to take effect.");
 {{#unless (eq backend "self")}}
 import { ENV } from "@{{projectName}}/env/web";
 
-{{#if (usesServerUrlResolver)}}
 {{> getServerUrl}}
-{{/if}}
 {{/unless}}
 
-export const authClient: AuthClient = createClient({{#unless (eq backend "self")}}{{#if (usesServerUrlResolver)}}new URL("/api/auth", getServerUrl(ENV.VITE_SERVER_URL)).toString(){{else}}ENV.VITE_SERVER_URL{{/if}}{{/unless}});
+export const authClient: AuthClient = createClient({{#unless (eq backend "self")}}{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}new URL("/api/auth", getServerUrl(ENV.VITE_SERVER_URL)).toString(){{else}}ENV.VITE_SERVER_URL{{/if}}{{/unless}});
 `],
   ["env/env.server.ts.hbs", `{{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
 /// <reference types="@cloudflare/workers-types" />
@@ -32140,7 +32166,13 @@ function createQueryClient() {
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
-			url: {{#if (eq backend "self")}}"/api/trpc"{{else}}\`{{serverUrl "ENV.VITE_SERVER_URL"}}/trpc\`{{/if}},
+{{#if (eq backend "self")}}
+			url: "/api/trpc",
+{{else if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+			url: \`\${getServerUrl(ENV.VITE_SERVER_URL)}/trpc\`,
+{{else}}
+			url: \`\${ENV.VITE_SERVER_URL.replace(/\\/$/, "")}/trpc\`,
+{{/if}}
 {{#if (eq auth "clerk")}}
 			headers: async () => {
 				const token = await getClerkAuthToken();

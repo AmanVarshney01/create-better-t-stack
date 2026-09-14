@@ -83,7 +83,11 @@ const getORPCClient = createIsomorphicFn()
 export const client: RouterClient<typeof appRouter> = getORPCClient();
 {{else if (includes frontend "tanstack-start")}}
 const link = new RPCLink({
-	url: `{{serverUrl "ENV.VITE_SERVER_URL"}}/rpc`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+	url: `${getServerUrl(ENV.VITE_SERVER_URL)}/rpc`,
+{{else}}
+	url: `${ENV.VITE_SERVER_URL.replace(/\/$/, "")}/rpc`,
+{{/if}}
 {{#if (eq auth "clerk")}}
 	headers: async () => {
 		const token = await getClerkAuthToken();
@@ -110,9 +114,17 @@ export const link = new RPCLink({
 {{#if (and (eq backend "self") (includes frontend "next"))}}
 	url: `${typeof window !== "undefined" ? window.location.origin : "http://localhost:3001"}/api/rpc`,
 {{else if (includes frontend "next")}}
-	url: `{{serverUrl "ENV.NEXT_PUBLIC_SERVER_URL"}}/rpc`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+	url: `${getServerUrl(ENV.NEXT_PUBLIC_SERVER_URL)}/rpc`,
 {{else}}
-	url: `{{serverUrl "ENV.VITE_SERVER_URL"}}/rpc`,
+	url: `${ENV.NEXT_PUBLIC_SERVER_URL.replace(/\/$/, "")}/rpc`,
+{{/if}}
+{{else}}
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+	url: `${getServerUrl(ENV.VITE_SERVER_URL)}/rpc`,
+{{else}}
+	url: `${ENV.VITE_SERVER_URL.replace(/\/$/, "")}/rpc`,
+{{/if}}
 {{/if}}
 {{#if (eq auth "clerk")}}
 	headers: async () => {

@@ -5,14 +5,12 @@ import { polarClient } from "@polar-sh/better-auth/client";
 {{#unless (eq backend "self")}}
 import { ENV } from "@{{projectName}}/env/web";
 
-{{#if (usesServerUrlResolver)}}
 {{> getServerUrl}}
-{{/if}}
 {{/unless}}
 
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
-{{#if (usesServerUrlResolver)}}
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
   baseURL: new URL("/api/auth", getServerUrl(ENV.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})).toString(),
 {{else}}
   baseURL: ENV.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}},
