@@ -422,12 +422,10 @@ export default defineConfig({
 import { getDb } from "@{{projectName}}/app-services";
 {{/if}}
 {{#if (eq auth "clerk")}}
-type ClerkContextAuth = {
-	userId: string | null;
-};
+type ClerkContextAuth = ApiContext["auth"];
 
 
-function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContextAuth | null {
+function toClerkContextAuth(auth: ClerkContextAuth): ClerkContextAuth {
 	return auth ? { userId: auth.userId } : null;
 }
 {{/if}}
@@ -443,7 +441,7 @@ const clerkClient = createClerkClient({
 	publishableKey: env.CLERK_PUBLISHABLE_KEY,
 });
 
-async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth | null> {
+async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth> {
 	const requestState = await clerkClient.authenticateRequest(request, {
 		authorizedParties: [env.CORS_ORIGIN],
 	});
@@ -474,7 +472,6 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -484,15 +481,12 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -518,7 +512,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -528,15 +521,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -570,7 +560,6 @@ export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy 
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else}}
@@ -578,8 +567,6 @@ export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy 
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -613,7 +600,6 @@ export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy 
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else}}
@@ -621,8 +607,6 @@ export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy 
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -650,7 +634,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else}}
@@ -658,8 +641,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -687,7 +668,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else}}
@@ -695,8 +675,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -727,7 +705,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -737,15 +714,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -772,7 +746,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -782,15 +755,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -820,7 +790,6 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -830,15 +799,12 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -866,7 +832,6 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -876,7 +841,6 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	void req;
@@ -884,8 +848,6 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -899,8 +861,6 @@ export async function createContext(): Promise<ApiContext> {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 }
 {{/if}}
@@ -1503,34 +1463,33 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   ["api/orpc/server/package.json.hbs", `{
   "name": "@{{projectName}}/api",
   "exports": {
-    ".": {
-      "types": "./dist/src/index.d.ts",
-      "default": "./src/index.ts"
-    },
-    "./*": {
-      "types": "./dist/src/*.d.ts",
-      "default": "./src/*.ts"
-    }
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
   },
   "type": "module",
   "scripts": {
     "build": "tsc -b",
-    "check-types": "tsc -b",
-    "dev": "tsc -b --watch"
+    "check-types": "tsc -b"
   },
   "devDependencies": {},
   "dependencies": {}
 }`],
   ["api/orpc/server/src/context.ts.hbs", `{{#if (eq auth "better-auth")}}
-import type { createAuth } from "@{{projectName}}/auth";
+import type { Session } from "@{{projectName}}/auth";
+{{/if}}
+{{#if (eq auth "clerk")}}
+import type { SessionAuthObject } from "@clerk/backend";
 {{/if}}
 {{#if (ne database "none")}}
 import type { Database } from "@{{projectName}}/db";
 {{/if}}
 
 export type Context = {
-  auth: {{#if (eq auth "clerk")}}{ userId: string | null } | null{{else}}null{{/if}};
-  session: {{#if (eq auth "better-auth")}}Awaited<ReturnType<ReturnType<typeof createAuth>["api"]["getSession"]>>{{else}}null{{/if}};
+{{#if (eq auth "clerk")}}
+  auth: Pick<SessionAuthObject, "userId"> | null;
+{{else if (eq auth "better-auth")}}
+  session: Session | null;
+{{/if}}
 {{#if (ne database "none")}}
   db: Database;
 {{/if}}
@@ -1781,8 +1740,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 {{else if (includes frontend "tanstack-start")}}
-import type { RouterClient } from "@orpc/server";
-import type { AppRouter } from "@{{projectName}}/api/routers/index";
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 import { ENV } from "@{{projectName}}/env/web";
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
@@ -1874,11 +1832,7 @@ const link = new RPCLink({
 {{/if}}
 });
 
-const getORPCClient = () => {
-	return createORPCClient(link) as RouterClient<AppRouter>;
-};
-
-export const client: RouterClient<AppRouter> = getORPCClient();
+export const client: AppRouterClient = createORPCClient(link);
 {{else}}
 export const link = new RPCLink({
 {{#if (and (eq backend "self") (includes frontend "next"))}}
@@ -2073,12 +2027,10 @@ export const orpc = createTanstackQueryUtils(client);
 import { getDb } from "@{{projectName}}/app-services";
 {{/if}}
 {{#if (eq auth "clerk")}}
-type ClerkContextAuth = {
-	userId: string | null;
-};
+type ClerkContextAuth = ApiContext["auth"];
 
 
-function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContextAuth | null {
+function toClerkContextAuth(auth: ClerkContextAuth): ClerkContextAuth {
 	return auth ? { userId: auth.userId } : null;
 }
 {{/if}}
@@ -2092,7 +2044,7 @@ const clerkClient = createClerkClient({
 	publishableKey: env.CLERK_PUBLISHABLE_KEY,
 });
 
-async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth | null> {
+async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth> {
 	const requestState = await clerkClient.authenticateRequest(request, {
 		authorizedParties: [env.CORS_ORIGIN],
 	});
@@ -2122,7 +2074,6 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -2132,15 +2083,12 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -2166,7 +2114,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -2176,15 +2123,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -2215,7 +2159,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -2225,15 +2168,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -2260,7 +2200,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -2270,15 +2209,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -2304,7 +2240,6 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -2314,15 +2249,12 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -2348,7 +2280,6 @@ export async function createContext({ req }: CreateFastifyContextOptions): Promi
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -2358,7 +2289,6 @@ export async function createContext({ req }: CreateFastifyContextOptions): Promi
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	void req;
@@ -2366,8 +2296,6 @@ export async function createContext({ req }: CreateFastifyContextOptions): Promi
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -2381,8 +2309,6 @@ export async function createContext(): Promise<ApiContext> {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 }
 {{/if}}
@@ -2522,12 +2448,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   ["api/trpc/server/package.json.hbs", `{
   "name": "@{{projectName}}/api",
   "exports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./*": {
-      "default": "./src/*.ts"
-    }
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
   },
   "type": "module",
   "scripts": {
@@ -2536,15 +2458,21 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   "devDependencies": {}
 }`],
   ["api/trpc/server/src/context.ts.hbs", `{{#if (eq auth "better-auth")}}
-import type { createAuth } from "@{{projectName}}/auth";
+import type { Session } from "@{{projectName}}/auth";
+{{/if}}
+{{#if (eq auth "clerk")}}
+import type { SessionAuthObject } from "@clerk/backend";
 {{/if}}
 {{#if (ne database "none")}}
 import type { Database } from "@{{projectName}}/db";
 {{/if}}
 
 export type Context = {
-  auth: {{#if (eq auth "clerk")}}{ userId: string | null } | null{{else}}null{{/if}};
-  session: {{#if (eq auth "better-auth")}}Awaited<ReturnType<ReturnType<typeof createAuth>["api"]["getSession"]>>{{else}}null{{/if}};
+{{#if (eq auth "clerk")}}
+  auth: Pick<SessionAuthObject, "userId"> | null;
+{{else if (eq auth "better-auth")}}
+  session: Session | null;
+{{/if}}
 {{#if (ne database "none")}}
   db: Database;
 {{/if}}
@@ -6224,7 +6152,7 @@ import { ENV } from "@{{projectName}}/env/native";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
-import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
 {{#if (eq api "orpc")}}
@@ -6267,7 +6195,7 @@ const getPolarReturnUrl = (returnUrl: string) => {
 const handlePolarCheckout = async () => {
 	const returnUrl = Linking.createURL("/");
 	const polarReturnUrl = getPolarReturnUrl(returnUrl);
-	const { data, error } = await polarNativeClient.checkout({
+	const { data, error } = await authClient.checkout({
 		slug: "pro",
 		redirect: false,
 		successUrl: polarReturnUrl,
@@ -6284,7 +6212,7 @@ const handlePolarCheckout = async () => {
 
 const handlePolarPortal = async () => {
 	const returnUrl = Linking.createURL("/");
-	const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
+	const { data, error } = await authClient.customer.portal({ redirect: false });
 
 	if (error || !data?.url) {
 		Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");
@@ -6979,6 +6907,10 @@ export { SignUp };
 `],
   ["auth/better-auth/native/base/lib/auth-client.ts.hbs", `import { expoClient } from "@better-auth/expo/client";
 import { createAuthClient } from "better-auth/react";
+{{#if (eq payments "polar")}}
+import type { BetterAuthClientPlugin } from "better-auth/client";
+import type { polar } from "@polar-sh/better-auth";
+{{/if}}
 import * as SecureStore from "expo-secure-store";
 import Constants from "expo-constants";
 import { ENV } from "@{{projectName}}/env/native";
@@ -6986,6 +6918,13 @@ import { ENV } from "@{{projectName}}/env/native";
 export const authClient = createAuthClient({
 	baseURL: ENV.EXPO_PUBLIC_SERVER_URL,
 	plugins: [
+{{#if (eq payments "polar")}}
+        // Infer Polar endpoints without importing its browser checkout embed.
+        {
+            id: "polar-client",
+            $InferServerPlugin: {} as ReturnType<typeof polar>,
+        } satisfies BetterAuthClientPlugin,
+{{/if}}
 		expoClient({
 			scheme: Constants.expoConfig?.scheme as string,
 			storagePrefix: Constants.expoConfig?.scheme as string,
@@ -6993,35 +6932,8 @@ export const authClient = createAuthClient({
 		}),
 	],
 });
-{{#if (eq payments "polar")}}
-
-type PolarLinkResponse = {
-	url: string;
-	redirect: boolean;
-};
-
-type PolarClientResponse<T> = Promise<{
-	data: T | null;
-	error: { message?: string } | null;
-}>;
-
-type PolarNativeClient = typeof authClient & {
-	checkout: (data: {
-		slug?: string;
-		products?: string[] | string;
-		redirect?: boolean;
-		successUrl?: string;
-		returnUrl?: string;
-	}) => PolarClientResponse<PolarLinkResponse>;
-	customer: {
-		portal: (data?: { redirect?: boolean }) => PolarClientResponse<PolarLinkResponse>;
-	};
-};
-
-export const polarNativeClient = authClient as PolarNativeClient;
-{{/if}}
 `],
-  ["auth/better-auth/native/unistyles/app/(drawer)/index.tsx.hbs", `import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
+  ["auth/better-auth/native/unistyles/app/(drawer)/index.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 import { ScrollView, Text, TouchableOpacity, View{{#if (eq payments "polar")}}, Alert{{/if}} } from "react-native";
 {{#if (eq payments "polar")}}
 import * as Linking from "expo-linking";
@@ -7067,7 +6979,7 @@ export default function Home() {
   const handlePolarCheckout = async () => {
     const returnUrl = Linking.createURL("/");
     const polarReturnUrl = getPolarReturnUrl(returnUrl);
-    const { data, error } = await polarNativeClient.checkout({
+    const { data, error } = await authClient.checkout({
       slug: "pro",
       redirect: false,
       successUrl: polarReturnUrl,
@@ -7084,7 +6996,7 @@ export default function Home() {
 
   const handlePolarPortal = async () => {
     const returnUrl = Linking.createURL("/");
-    const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
+    const { data, error } = await authClient.customer.portal({ redirect: false });
 
     if (error || !data?.url) {
       Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");
@@ -7769,7 +7681,7 @@ import * as WebBrowser from "expo-web-browser";
 import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
-import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { Ionicons } from "@expo/vector-icons";
 import { Card, Chip, useThemeColor } from "heroui-native";
 import { SignIn } from "@/components/sign-in";
@@ -7812,7 +7724,7 @@ const getPolarReturnUrl = (returnUrl: string) => {
 const handlePolarCheckout = async () => {
   const returnUrl = Linking.createURL("/");
   const polarReturnUrl = getPolarReturnUrl(returnUrl);
-  const { data, error } = await polarNativeClient.checkout({
+  const { data, error } = await authClient.checkout({
     slug: "pro",
     redirect: false,
     successUrl: polarReturnUrl,
@@ -7829,7 +7741,7 @@ const handlePolarCheckout = async () => {
 
 const handlePolarPortal = async () => {
   const returnUrl = Linking.createURL("/");
-  const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
+  const { data, error } = await authClient.customer.portal({ redirect: false });
 
   if (error || !data?.url) {
     Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");
@@ -8363,18 +8275,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   ["auth/better-auth/server/base/package.json.hbs", `{
   "name": "@{{projectName}}/auth",
   "exports": {
-    ".": {
-      {{#if (eq api "orpc")}}
-      "types": "./dist/src/index.d.ts",
-      {{/if}}
-      "default": "./src/index.ts"
-    },
-    "./*": {
-      {{#if (eq api "orpc")}}
-      "types": "./dist/src/*.d.ts",
-      {{/if}}
-      "default": "./src/*.ts"
-    }
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
   },
   "type": "module",
   "scripts": {
@@ -8469,6 +8371,8 @@ export function createAuth(env: AuthConfig{{#if (ne database "none")}}, database
     ],
   });
 }
+
+export type Session = ReturnType<typeof createAuth>["$Infer"]["Session"];
 `],
   ["auth/better-auth/server/base/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
@@ -9570,8 +9474,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         },
       },
     )
-  } catch (error: any) {
-    toast.add({ title: 'An unexpected error occurred', description: error.message || 'Please try again.' })
+  } catch (error) {
+    toast.add({ title: 'An unexpected error occurred', description: error instanceof Error ? error.message : 'Please try again.' })
   } finally {
     loading.value = false
   }
@@ -9662,8 +9566,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         },
       },
     )
-  } catch (error: any) {
-    toast.add({ title: 'An unexpected error occurred', description: error.message || 'Please try again.' })
+  } catch (error) {
+    toast.add({ title: 'An unexpected error occurred', description: error instanceof Error ? error.message : 'Please try again.' })
   } finally {
     loading.value = false
   }
@@ -9711,8 +9615,8 @@ const handleSignOut = async () => {
         }
       },
     })
-  } catch (error: any) {
-     toast.add({ title: 'An unexpected error occurred during sign out', description: error.message || 'Please try again.'})
+  } catch (error) {
+     toast.add({ title: 'An unexpected error occurred during sign out', description: error instanceof Error ? error.message : 'Please try again.'})
   }
 }
 </script>
@@ -9751,6 +9655,10 @@ const handleSignOut = async () => {
 });
 `],
   ["auth/better-auth/web/nuxt/app/pages/dashboard.vue.hbs", `<script setup lang="ts">
+{{#if (eq payments "polar")}}
+import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
+{{/if}}
+
 {{#if (eq api "orpc")}}
 import { useQuery } from '@tanstack/vue-query'
 {{/if}}
@@ -9764,7 +9672,7 @@ definePageMeta({
 const session = $authClient.useSession()
 
 {{#if (eq payments "polar")}}
-const customerState = ref<any>(null)
+const customerState = ref<CustomerState | null>(null)
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -9778,7 +9686,7 @@ const privateData = useQuery({
 onMounted(async () => {
   if (session.value?.data) {
     const { data } = await $authClient.customer.state()
-    customerState.value = data
+    customerState.value = data ?? null
   }
 })
 
@@ -9935,6 +9843,10 @@ export const authClient = createAuthClient({
 `],
   ["auth/better-auth/web/react/next/src/app/dashboard/dashboard.tsx.hbs", `"use client";
 {{#if (eq payments "polar")}}
+import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
+{{/if}}
+
+{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -9954,7 +9866,7 @@ export default function Dashboard({
 	session
 }: {
 	{{#if (eq payments "polar")}}
-	customerState: ReturnType<typeof authClient.customer.state>;
+	customerState: CustomerState | null | undefined;
 	{{/if}}
 	session: typeof authClient.$Infer.Session;
 }) {
@@ -10822,6 +10734,9 @@ export default function UserMenu() {
 }
 `],
   ["auth/better-auth/web/react/react-router/src/routes/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
+import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
+{{/if}}
+{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -10841,7 +10756,7 @@ export default function Dashboard() {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
   {{#if (eq payments "polar")}}
-  const [customerState, setCustomerState] = useState<any>(null);
+  const [customerState, setCustomerState] = useState<CustomerState | null>(null);
   {{/if}}
 
   {{#if (eq api "orpc")}}
@@ -10862,7 +10777,7 @@ export default function Dashboard() {
     async function fetchCustomerState() {
       if (session) {
         const { data } = await authClient.customer.state();
-        setCustomerState(data);
+        setCustomerState(data ?? null);
       }
     }
 
@@ -12598,6 +12513,10 @@ export const authClient = createAuthClient({
 });
 `],
   ["auth/better-auth/web/svelte/src/routes/dashboard/+page.svelte.hbs", `<script lang="ts">
+{{#if (eq payments "polar")}}
+import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
+{{/if}}
+
 	import { goto } from '$app/navigation';
 	import { authClient } from '$lib/auth-client';
 	{{#if (eq api "orpc")}}
@@ -12605,7 +12524,7 @@ export const authClient = createAuthClient({
 	import { createQuery } from '@tanstack/svelte-query';
 	{{/if}}
 	{{#if (eq payments "polar")}}
-	let customerState = $state<{ activeSubscriptions?: unknown[] } | null>(null);
+	let customerState = $state<CustomerState | null>(null);
 	{{/if}}
 
 	const sessionQuery = authClient.useSession();
@@ -12624,7 +12543,7 @@ export const authClient = createAuthClient({
 	$effect(() => {
 		if ($sessionQuery.data) {
 			authClient.customer.state().then(({ data }) => {
-				customerState = data;
+				customerState = data ?? null;
 			});
 		}
 	});
@@ -15541,18 +15460,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
   "name": "@{{projectName}}/db",
   "type": "module",
   "exports": {
-    ".": {
-      {{#if (eq api "orpc")}}
-      "types": "./dist/src/index.d.ts",
-      {{/if}}
-      "default": "./src/index.ts"
-    },
-    "./*": {
-      {{#if (eq api "orpc")}}
-      "types": "./dist/src/*.d.ts",
-      {{/if}}
-      "default": "./src/*.ts"
-    }
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
   },
   "scripts": {
     {{#if (eq api "orpc")}}

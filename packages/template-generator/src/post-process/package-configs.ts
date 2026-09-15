@@ -89,15 +89,6 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   scripts.build = pmConfig.build;
   scripts["check-types"] = pmConfig.checkTypes;
 
-  if (config.api === "orpc" && vfs.exists("packages/api/package.json")) {
-    if (orm !== "prisma") {
-      scripts.postinstall = [scripts.postinstall, "tsc -b packages/api"]
-        .filter(Boolean)
-        .join(" && ");
-    }
-    scripts["dev:types"] = "tsc -b packages/api --watch";
-  }
-
   if (hasVitePlus) {
     scripts.check = "vp check && vp run -r check-types";
     scripts.lint = "vp lint";

@@ -2,18 +2,8 @@
   "name": "@{{projectName}}/db",
   "type": "module",
   "exports": {
-    ".": {
-      {{#if (eq api "orpc")}}
-      "types": "./dist/src/index.d.ts",
-      {{/if}}
-      "default": "./src/index.ts"
-    },
-    "./*": {
-      {{#if (eq api "orpc")}}
-      "types": "./dist/src/*.d.ts",
-      {{/if}}
-      "default": "./src/*.ts"
-    }
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
   },
   "scripts": {
     {{#if (eq api "orpc")}}

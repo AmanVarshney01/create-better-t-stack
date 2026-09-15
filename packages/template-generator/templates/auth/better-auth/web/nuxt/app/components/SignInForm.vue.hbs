@@ -51,8 +51,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         },
       },
     )
-  } catch (error: any) {
-    toast.add({ title: 'An unexpected error occurred', description: error.message || 'Please try again.' })
+  } catch (error) {
+    toast.add({ title: 'An unexpected error occurred', description: error instanceof Error ? error.message : 'Please try again.' })
   } finally {
     loading.value = false
   }
