@@ -65,6 +65,44 @@ const baseConfig = {
 } satisfies Partial<CreateInput>;
 
 const buildSamples: BuildSample[] = [
+  ...(["native-bare", "native-uniwind", "native-unistyles"] as const).map(
+    (frontend) =>
+      ({
+        name: `${frontend}-polar-types`,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "node",
+          database: "sqlite",
+          orm: "drizzle",
+          api: "orpc",
+          auth: "better-auth",
+          payments: "polar",
+          addons: [],
+          examples: ["todo"],
+        },
+      }) satisfies BuildSample,
+  ),
+  ...(["react-router", "nuxt", "svelte"] as const).map(
+    (frontend) =>
+      ({
+        name: `${frontend}-polar-types`,
+        config: {
+          ...baseConfig,
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "node",
+          database: "sqlite",
+          orm: "drizzle",
+          api: "orpc",
+          auth: "better-auth",
+          payments: "polar",
+          addons: [],
+          examples: ["todo"],
+        },
+      }) satisfies BuildSample,
+  ),
   {
     name: "next-self-orpc-prisma-polar",
     config: {
@@ -1043,6 +1081,10 @@ async function bootAndValidateStartAuthRuntime(sample: SelectedBuildSample, proj
     ]);
     expect((await rpc("todo/delete", { id })).status).toBe(200);
     expect(todos.parse(await (await rpc("todo/getAll")).json()).json).toEqual([]);
+  } catch (error) {
+    runtime.kill("SIGTERM");
+    const result = await runtime;
+    throw new Error(`TanStack Start runtime failed:\n${result.all}`, { cause: error });
   } finally {
     runtime.kill("SIGTERM");
     await runtime;
@@ -1414,8 +1456,11 @@ async function writeOrpcInferenceChecks(sample: SelectedBuildSample, projectDir:
   const root = z
     .object({ name: z.string() })
     .parse(await fs.readJson(path.join(projectDir, "package.json")));
+  const routerFile = path.join(projectDir, "packages/api/src/routers/index.ts");
+  const originals = new Map([[routerFile, await fs.readFile(routerFile, "utf8")]]);
+  const probeFiles: string[] = [];
   await fs.appendFile(
-    path.join(projectDir, "packages/api/src/routers/index.ts"),
+    routerFile,
     `\nexport const typeBoundaryProbe = {
   read: publicProcedure.handler(() => {
     const values: number[] = [];
@@ -1454,12 +1499,28 @@ export type TypeBoundaryProbeClient = RouterClient<typeof typeBoundaryProbe>;\n`
     );
   }
   if (sample.config.auth === "better-auth") {
+    const authFile = path.join(projectDir, "packages/auth/src/index.ts");
+    const authSource = await fs.readFile(authFile, "utf8");
+    originals.set(authFile, authSource);
+    await fs.writeFile(
+      authFile,
+      authSource.replace(
+        "emailAndPassword:",
+        `user: {
+      additionalFields: { role: { type: "string", required: true, defaultValue: "member", input: false } },
+    },
+    emailAndPassword:`,
+      ),
+    );
     checks.push(
       "  const privateData = await client.privateData();",
       "  const email: string = privateData.user!.email;",
+      "  const role: string = privateData.user!.role;",
       "  // @ts-expect-error Auth-derived output must not become any.",
       "  privateData.user!.email = 123;",
-      "  void email;",
+      "  // @ts-expect-error Configured Better Auth fields must reach the RPC client without becoming any.",
+      "  privateData.user!.role = 123;",
+      "  void [email, role];",
     );
   }
   checks.push("  return { health, invalidHealth };", "}");
@@ -1472,8 +1533,14 @@ export type TypeBoundaryProbeClient = RouterClient<typeof typeBoundaryProbe>;\n`
         : app === "web" && sample.config.frontend?.includes("nuxt")
           ? path.join(dir, "app")
           : path.join(dir, "src");
-    await fs.outputFile(path.join(source, "orpc-inference-check.ts"), checks.join("\n"));
+    const probeFile = path.join(source, "orpc-inference-check.ts");
+    probeFiles.push(probeFile);
+    await fs.outputFile(probeFile, checks.join("\n"));
   }
+  return async () => {
+    for (const [file, content] of originals) await fs.writeFile(file, content);
+    for (const file of probeFiles) await fs.remove(file);
+  };
 }
 
 describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples", () => {
@@ -1510,7 +1577,7 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
             );
             expect(await fs.pathExists(generatedClient)).toBe(true);
           }
-          await writeOrpcInferenceChecks(sample, projectDir);
+          const restoreTypeFixtures = await writeOrpcInferenceChecks(sample, projectDir);
           if (sample.name === "nuxt-auth-todo-ai") {
             await fs.outputFile(
               path.join(projectDir, "apps/web/app/pages/ssr-auth-probe.vue"),
@@ -1524,7 +1591,12 @@ try {
 <template><p data-ssr-user>{{ user }}</p></template>`,
             );
           }
-          await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
+          try {
+            await runWorkspaceTypeChecks(sample.name, projectDir, sample.packageManager);
+          } finally {
+            // Build and boot the scaffold without the compile-only custom auth field.
+            await restoreTypeFixtures?.();
+          }
           const build = getPackageManagerCommand(sample.packageManager, "build");
           await runCommand(sample.name, projectDir, build.command, build.args);
           await buildAndValidatePrismaWebArtifact(sample, projectDir);

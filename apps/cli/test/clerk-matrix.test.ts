@@ -168,18 +168,6 @@ describe("Clerk matrix", () => {
           );
         }
 
-        if (!contextFile?.includes("type ClerkContextAuth")) {
-          failures.push(
-            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing ClerkContextAuth in packages/api/src/context.ts`,
-          );
-        }
-
-        if (!contextFile?.includes("session: null")) {
-          failures.push(
-            `${combo.backend}/${combo.runtime}/${combo.frontend.join("+")}/${combo.api}: missing null session in application context`,
-          );
-        }
-
         if (
           usesBackendClerkClient(combo.backend, combo.api) &&
           !contextFile?.includes("publishableKey: env.CLERK_PUBLISHABLE_KEY")

@@ -3,12 +3,10 @@ import type { Context as ApiContext } from "@{{projectName}}/api/context";
 import { getDb } from "@{{projectName}}/app-services";
 {{/if}}
 {{#if (eq auth "clerk")}}
-type ClerkContextAuth = {
-	userId: string | null;
-};
+type ClerkContextAuth = ApiContext["auth"];
 
 
-function toClerkContextAuth(auth: { userId: string | null } | null): ClerkContextAuth | null {
+function toClerkContextAuth(auth: ClerkContextAuth): ClerkContextAuth {
 	return auth ? { userId: auth.userId } : null;
 }
 {{/if}}
@@ -24,7 +22,7 @@ const clerkClient = createClerkClient({
 	publishableKey: env.CLERK_PUBLISHABLE_KEY,
 });
 
-async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth | null> {
+async function authenticateClerkRequest(request: Request): Promise<ClerkContextAuth> {
 	const requestState = await clerkClient.authenticateRequest(request, {
 		authorizedParties: [env.CORS_ORIGIN],
 	});
@@ -55,7 +53,6 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -65,15 +62,12 @@ export async function createContext({{#if (eq auth "none")}}_req{{else}}req{{/if
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -99,7 +93,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -109,15 +102,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ re
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -151,7 +141,6 @@ export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy 
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else}}
@@ -159,8 +148,6 @@ export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy 
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -194,7 +181,6 @@ export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy 
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else}}
@@ -202,8 +188,6 @@ export async function createContext({{#if (eq auth "none")}}{{#if (eq webDeploy 
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -231,7 +215,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else}}
@@ -239,8 +222,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -268,7 +249,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else}}
@@ -276,8 +256,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ he
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -308,7 +286,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -318,15 +295,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -353,7 +327,6 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -363,15 +336,12 @@ export async function createContext({{#if (eq auth "none")}}_options{{else}}{ co
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -401,7 +371,6 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -411,15 +380,12 @@ export async function createContext({{#if (eq auth "none")}}_opts{{else}}opts{{/
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	return {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -447,7 +413,6 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
 		session,
 	};
 {{else if (eq auth "clerk")}}
@@ -457,7 +422,6 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
     db,
 {{/if}}
 		auth: clerkAuth,
-		session: null,
 	};
 {{else}}
 	void req;
@@ -465,8 +429,6 @@ export async function createContext(req: {{#if (eq auth "clerk")}}Parameters<typ
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 {{/if}}
 }
@@ -480,8 +442,6 @@ export async function createContext(): Promise<ApiContext> {
 {{#if (ne database "none")}}
     db,
 {{/if}}
-		auth: null,
-		session: null,
 	};
 }
 {{/if}}

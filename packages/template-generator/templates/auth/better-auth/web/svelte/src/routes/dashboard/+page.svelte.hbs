@@ -1,4 +1,8 @@
 <script lang="ts">
+{{#if (eq payments "polar")}}
+import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
+{{/if}}
+
 	import { goto } from '$app/navigation';
 	import { authClient } from '$lib/auth-client';
 	{{#if (eq api "orpc")}}
@@ -6,7 +10,7 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	{{/if}}
 	{{#if (eq payments "polar")}}
-	let customerState = $state<{ activeSubscriptions?: unknown[] } | null>(null);
+	let customerState = $state<CustomerState | null>(null);
 	{{/if}}
 
 	const sessionQuery = authClient.useSession();
@@ -25,7 +29,7 @@
 	$effect(() => {
 		if ($sessionQuery.data) {
 			authClient.customer.state().then(({ data }) => {
-				customerState = data;
+				customerState = data ?? null;
 			});
 		}
 	});

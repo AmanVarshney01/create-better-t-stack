@@ -5,7 +5,7 @@ import * as WebBrowser from "expo-web-browser";
 import { ENV } from "@{{projectName}}/env/native";
 {{/if}}
 import { Container } from "@/components/container";
-import { authClient{{#if (eq payments "polar")}}, polarNativeClient{{/if}} } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { Ionicons } from "@expo/vector-icons";
 import { Card, Chip, useThemeColor } from "heroui-native";
 import { SignIn } from "@/components/sign-in";
@@ -48,7 +48,7 @@ const getPolarReturnUrl = (returnUrl: string) => {
 const handlePolarCheckout = async () => {
   const returnUrl = Linking.createURL("/");
   const polarReturnUrl = getPolarReturnUrl(returnUrl);
-  const { data, error } = await polarNativeClient.checkout({
+  const { data, error } = await authClient.checkout({
     slug: "pro",
     redirect: false,
     successUrl: polarReturnUrl,
@@ -65,7 +65,7 @@ const handlePolarCheckout = async () => {
 
 const handlePolarPortal = async () => {
   const returnUrl = Linking.createURL("/");
-  const { data, error } = await polarNativeClient.customer.portal({ redirect: false });
+  const { data, error } = await authClient.customer.portal({ redirect: false });
 
   if (error || !data?.url) {
     Alert.alert("Portal unavailable", error?.message ?? "Unable to open the customer portal.");

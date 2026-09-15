@@ -474,10 +474,6 @@ describe("Authentication Configurations", () => {
           path.join(result.projectDir, "apps/native/app/(drawer)/index.tsx"),
           "utf8",
         );
-        const nativeAuthClientFile = await fs.readFile(
-          path.join(result.projectDir, "apps/native/lib/auth-client.ts"),
-          "utf8",
-        );
         const authPackageFile = await fs.readFile(
           path.join(result.projectDir, "packages/auth/package.json"),
           "utf8",
@@ -495,8 +491,8 @@ describe("Authentication Configurations", () => {
           "utf8",
         );
 
-        expect(nativeIndexFile).toContain("polarNativeClient.checkout");
-        expect(nativeIndexFile).toContain("polarNativeClient.customer.portal");
+        expect(nativeIndexFile).toContain("authClient.checkout");
+        expect(nativeIndexFile).toContain("authClient.customer.portal");
         expect(nativeIndexFile).toContain("openAuthSessionAsync");
         expect(nativeIndexFile).toContain('new URL("/polar/success", ENV.EXPO_PUBLIC_SERVER_URL)');
         expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
@@ -510,10 +506,9 @@ describe("Authentication Configurations", () => {
           expect(nativeIndexFile).toContain('textAlign: "center"');
           expect(nativeIndexFile).toContain("height: 34");
         }
-        expect(nativeAuthClientFile).toContain("export const polarNativeClient");
         expect(authPackageFile).toContain('"@polar-sh/better-auth"');
         expect(authPackageFile).toContain('"@polar-sh/sdk"');
-        expect(nativePackageFile).not.toContain('"@polar-sh/better-auth"');
+        expect(nativePackageFile).toContain('"@polar-sh/better-auth"');
         expect(serverIndexFile).toContain('"/polar/success"');
         expect(serverIndexFile).toContain("allowedNativeProtocols");
         expect(serverIndexFile).toContain("302");
@@ -651,7 +646,7 @@ describe("Authentication Configurations", () => {
         expect(authFile).toContain("portal()");
         expect(authPackageFile).toContain('"@polar-sh/better-auth"');
         expect(authPackageFile).toContain('"@polar-sh/sdk"');
-        expect(nativeIndexFile).toContain("polarNativeClient.checkout");
+        expect(nativeIndexFile).toContain("authClient.checkout");
         expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
         expect(nativeIndexFile).toContain("returnUrl: polarReturnUrl");
         expect(serverIndexFile).toContain('"/polar/success"');
@@ -813,9 +808,6 @@ describe("Authentication Configurations", () => {
       expect(dashboardFile).not.toContain("SignedOut");
       expect(dashboardFile).toContain("useUser");
       expect(dashboardFile).toContain("privateData.queryOptions()");
-      expect(apiContextFile).toContain("type ClerkContextAuth = {");
-      expect(apiContextFile).toContain("session: null");
-      expect(apiContextFile).toContain("function toClerkContextAuth(");
       expect(apiContextFile).toContain("auth: clerkAuth");
       expect(apiContextFile).toContain("publishableKey: env.CLERK_PUBLISHABLE_KEY");
       expect(apiContextFile).toContain("authorizedParties: [env.CORS_ORIGIN]");
