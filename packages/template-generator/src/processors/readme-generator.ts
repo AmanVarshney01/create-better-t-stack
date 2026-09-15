@@ -1036,12 +1036,12 @@ function generateDeploymentCommands(
 
     if (webDeploy === "vercel" && serverDeploy === "vercel" && backend !== "self") {
       lines.push(
-        "- Web requests under `/api/*` route to the server service and are rewritten before reaching the backend.",
+        "- Web requests under `/api/*` route to matching backend paths. Local server URLs also include `/api`. SSR web services use a Vercel service binding for internal server calls.",
       );
     }
 
     lines.push(
-      "Vercel Services share project environment variables, but deploys do not upload local `.env` files automatically. Link the project with `vercel link`, then run the env sync command before your first deploy (otherwise the deployment starts with no env vars), or pass one-off envs with `vercel deploy -e KEY=value`.",
+      "A new Vercel project's first deployment is production: sync production envs before deploying. Vercel Services share project environment variables, but deploys do not upload local `.env` files automatically. Link the project with `vercel link`, then run the env sync command before your first deploy (otherwise the deployment starts with no env vars), or pass one-off envs with `vercel deploy -e KEY=value`.",
       `Pass Vercel CLI flags to the env sync command directly, for example: \`${packageManagerRunCmd} ${vercelNames.envProduction} --scope your-team\`.`,
       "",
       "For more details, see the guide on [Deploying to Vercel](https://www.better-t-stack.dev/docs/guides/vercel).",

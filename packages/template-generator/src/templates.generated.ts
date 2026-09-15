@@ -10390,7 +10390,7 @@ export default function SignInForm({
   onSwitchToSignUp: () => void;
 }) {
   const navigate = useNavigate();
-  const { isPending } = authClient.useSession();
+  const { isPending, refetch } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -10404,7 +10404,8 @@ export default function SignInForm({
           password: value.password,
         },
         {
-          onSuccess: () => {
+          onSuccess: async () => {
+            await refetch();
             navigate("/dashboard");
             toast.success("Sign in successful");
           },
@@ -10526,7 +10527,7 @@ export default function SignUpForm({
   onSwitchToSignIn: () => void;
 }) {
   const navigate = useNavigate();
-  const { isPending } = authClient.useSession();
+  const { isPending, refetch } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -10542,7 +10543,8 @@ export default function SignUpForm({
           name: value.name,
         },
         {
-          onSuccess: () => {
+          onSuccess: async () => {
+            await refetch();
             navigate("/dashboard");
             toast.success("Sign up successful");
           },
@@ -10753,24 +10755,24 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 export default function Dashboard() {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending, isRefetching } = authClient.useSession();
   const navigate = useNavigate();
   {{#if (eq payments "polar")}}
   const [customerState, setCustomerState] = useState<CustomerState | null>(null);
   {{/if}}
 
   {{#if (eq api "orpc")}}
-  const privateData = useQuery(orpc.privateData.queryOptions());
+  const privateData = useQuery(orpc.privateData.queryOptions({ enabled: Boolean(session) }));
   {{/if}}
   {{#if (eq api "trpc")}}
-  const privateData = useQuery(trpc.privateData.queryOptions());
+  const privateData = useQuery(trpc.privateData.queryOptions(undefined, { enabled: Boolean(session) }));
   {{/if}}
 
   useEffect(() => {
-    if (!session && !isPending) {
+    if (!session && !isPending && !isRefetching) {
       navigate("/login");
     }
-  }, [session, isPending, navigate]);
+  }, [session, isPending, isRefetching, navigate]);
 
   {{#if (eq payments "polar")}}
   useEffect(() => {
@@ -10785,7 +10787,7 @@ export default function Dashboard() {
   }, [session]);
   {{/if}}
 
-  if (isPending) {
+  if (isPending || isRefetching || !session) {
     return <div>Loading...</div>;
   }
 
@@ -12183,6 +12185,8 @@ export default function Login() {
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 
+	const session = authClient.useSession();
+
 	let { switchToSignUp } = $props<{ switchToSignUp: () => void }>();
 
 	const validationSchema = z.object({
@@ -12196,7 +12200,10 @@ export default function Login() {
 				await authClient.signIn.email(
 					{ email: value.email, password: value.password },
 					{
-						onSuccess: () => goto('/dashboard'),
+						onSuccess: async () => {
+							await $session.refetch();
+							await goto('/dashboard');
+						},
 						onError: (error) => {
 							console.log(error.error.message || 'Sign in failed. Please try again.');
 						},
@@ -12295,6 +12302,8 @@ export default function Login() {
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 
+	const session = authClient.useSession();
+
 	let { switchToSignIn } = $props<{ switchToSignIn: () => void }>();
 
 	const validationSchema = z.object({
@@ -12314,8 +12323,9 @@ export default function Login() {
 						name: value.name,
 					},
 					{
-						onSuccess: () => {
-							goto('/dashboard');
+						onSuccess: async () => {
+							await $session.refetch();
+							await goto('/dashboard');
 						},
 						onError: (error) => {
 							console.log(error.error.message || 'Sign up failed. Please try again.');
@@ -12530,11 +12540,11 @@ import type { CustomerState } from "@polar-sh/sdk/models/components/customerstat
 	const sessionQuery = authClient.useSession();
 
 	{{#if (eq api "orpc")}}
-	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions());
+	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions({ enabled: Boolean($sessionQuery.data) }));
 	{{/if}}
 
 	$effect(() => {
-		if (!$sessionQuery.isPending && !$sessionQuery.data) {
+		if (!$sessionQuery.isPending && !$sessionQuery.isRefetching && !$sessionQuery.data) {
 			goto('/login');
 		}
 	});
@@ -12550,7 +12560,7 @@ import type { CustomerState } from "@polar-sh/sdk/models/components/customerstat
 	{{/if}}
 </script>
 
-{#if $sessionQuery.isPending}
+{#if $sessionQuery.isPending || $sessionQuery.isRefetching}
 	<div>Loading...</div>
 {:else if !$sessionQuery.data}
 	<div>Redirecting to login...</div>
@@ -14565,7 +14575,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 		}),
 	)
 {{#if (and (eq auth "better-auth") (eq payments "polar") (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")))}}
-	.get("/polar/success", ({ request, status }) => {
+	.get("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/polar/success", ({ request, status }) => {
 		const nativeAppUrl = "{{projectName}}://";
 		const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 		const requestUrl = new URL(request.url);
@@ -14601,10 +14611,10 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 {{/if}}
 {{#if (eq api "orpc")}}
 	.all(
-		"/rpc*",
+		"{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc*",
 		async (context) => {
 			const { response } = await rpcHandler.handle(context.request, {
-				prefix: "/rpc",
+				prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc",
 				context: await createContext({ context }),
 			});
 			return response ?? new Response("Not Found", { status: 404 });
@@ -14614,10 +14624,10 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 		}
 	)
 	.all(
-		"/api-reference*",
+		"{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference*",
 		async (context) => {
 			const { response } = await apiHandler.handle(context.request, {
-				prefix: "/api-reference",
+				prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference",
 				context: await createContext({ context }),
 			});
 			return response ?? new Response("Not Found", { status: 404 });
@@ -14628,9 +14638,9 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	)
 {{/if}}
 {{#if (eq api "trpc")}}
-	.all("/trpc/*", async (context) => {
+	.all("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/trpc/*", async (context) => {
 		const res = await fetchRequestHandler({
-			endpoint: "/trpc",
+			endpoint: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/trpc",
 			router: appRouter,
 			req: context.request,
 			createContext: () => createContext({ context }),
@@ -14639,7 +14649,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	})
 {{/if}}
 {{#if (includes examples "ai")}}
-	.post("/ai", async (context) => {
+	.post("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai", async (context) => {
 		const body = (await context.request.json()) as { messages?: UIMessage[] };
 		const uiMessages = body.messages || [];
 		const model = wrapLanguageModel({
@@ -14731,7 +14741,7 @@ app.all("/api/auth{/*path}", toNodeHandler(auth));
 const nativeAppUrl = "{{projectName}}://";
 const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 
-app.get("/polar/success", (req, res) => {
+app.get("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/polar/success", (req, res) => {
 	const requestUrl = new URL(req.url, env.BETTER_AUTH_URL);
 	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
 
@@ -14754,7 +14764,7 @@ app.get("/polar/success", (req, res) => {
 {{/if}}
 {{#if (eq api "trpc")}}
 app.use(
-	"/trpc",
+	"{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/trpc",
 	createExpressMiddleware({
 		router: appRouter,
 		createContext,
@@ -14785,13 +14795,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 app.use(async (req, res, next) => {
 	const rpcResult = await rpcHandler.handle(req, res, {
-		prefix: "/rpc",
+		prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc",
 		context: await createContext({ req }),
 	});
 	if (rpcResult.matched) return;
 
 	const apiResult = await apiHandler.handle(req, res, {
-		prefix: "/api-reference",
+		prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference",
 		context: await createContext({ req }),
 	});
 	if (apiResult.matched) return;
@@ -14803,7 +14813,7 @@ app.use(async (req, res, next) => {
 app.use(express.json());
 
 {{#if (includes examples "ai")}}
-app.post("/ai", async (req, res) => {
+app.post("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai", async (req, res) => {
 	const { messages = [] } = (req.body || {}) as { messages: UIMessage[] };
 	const model = wrapLanguageModel({
 		model: google("gemini-2.5-flash"),
@@ -14916,7 +14926,7 @@ fastify.register(clerkPlugin, {
 const nativeAppUrl = "{{projectName}}://";
 const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 
-fastify.get("/polar/success", async (request, reply) => {
+fastify.get("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/polar/success", async (request, reply) => {
 	const requestUrl = new URL(request.url, env.BETTER_AUTH_URL);
 	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
 
@@ -14944,10 +14954,10 @@ fastify.register(async (rpcApp) => {
 		done(null, undefined);
 	});
 
-	rpcApp.all("/rpc/*", async (request, reply) => {
+	rpcApp.all("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc/*", async (request, reply) => {
 		const { matched } = await rpcHandler.handle(request, reply, {
 			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
-			prefix: "/rpc",
+			prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc",
 		});
 
 		if (!matched) {
@@ -14955,10 +14965,10 @@ fastify.register(async (rpcApp) => {
 		}
 	});
 
-	rpcApp.all("/api-reference/*", async (request, reply) => {
+	rpcApp.all("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference/*", async (request, reply) => {
 		const { matched } = await apiHandler.handle(request, reply, {
 			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
-			prefix: "/api-reference",
+			prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference",
 		});
 
 		if (!matched) {
@@ -15001,7 +15011,7 @@ fastify.route({
 
 {{#if (eq api "trpc")}}
 fastify.register(fastifyTRPCPlugin, {
-	prefix: "/trpc",
+	prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/trpc",
 	trpcOptions: {
 		router: appRouter,
 		createContext,
@@ -15018,7 +15028,7 @@ interface AiRequestBody {
 	messages: UIMessage[];
 }
 
-fastify.post('/ai', async function (request) {
+fastify.post('{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai', async function (request) {
 	const { messages } = request.body as AiRequestBody;
 	const model = wrapLanguageModel({
 		model: google('gemini-2.5-flash'),
@@ -15117,7 +15127,7 @@ app.on(
 const nativeAppUrl = "{{projectName}}://";
 const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 
-app.get("/polar/success", (c) => {
+app.get("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/polar/success", (c) => {
 	const requestUrl = new URL(c.req.url);
 	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
 
@@ -15162,7 +15172,7 @@ app.use("/*", async (c, next) => {
 	const context = await createContext({ context: c });
 
 	const rpcResult = await rpcHandler.handle(c.req.raw, {
-		prefix: "/rpc",
+		prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc",
 		context: context,
 	});
 
@@ -15171,7 +15181,7 @@ app.use("/*", async (c, next) => {
 	}
 
 	const apiResult = await apiHandler.handle(c.req.raw, {
-		prefix: "/api-reference",
+		prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference",
 		context: context,
 	});
 
@@ -15185,8 +15195,11 @@ app.use("/*", async (c, next) => {
 
 {{#if (eq api "trpc")}}
 app.use(
-	"/trpc/*",
+	"{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/trpc/*",
 	trpcServer({
+{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}
+		endpoint: "/api/trpc",
+{{/if}}
 		router: appRouter,
 		createContext: (_opts, context) => {
 			return createContext({ context });
@@ -15196,7 +15209,7 @@ app.use(
 {{/if}}
 
 {{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
-app.post("/ai", async (c) => {
+app.post("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai", async (c) => {
 	const body = await c.req.json();
 	const uiMessages = body.messages || [];
 	const model = wrapLanguageModel({
@@ -15215,7 +15228,7 @@ app.post("/ai", async (c) => {
 {{/if}}
 
 {{#if (and (includes examples "ai") (eq runtime "workers"))}}
-app.post("/ai", async (c) => {
+app.post("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai", async (c) => {
 	const body = await c.req.json();
 	const uiMessages = body.messages || [];
 	const google = createGoogleGenerativeAI({
@@ -17027,16 +17040,20 @@ app.listen(port, "0.0.0.0", () => {
 });
 `],
   ["deploy/vercel/_vercelignore", `# Local env files must never ship in deployments: Vercel project env vars are
-# the source of truth (bun env:vercel:*), and frameworks like Next.js would
+# the source of truth (env:preview or env:production), and frameworks like Next.js would
 # otherwise load these localhost values at runtime.
 .env
 .env.*
 **/.env
 **/.env.*
 !**/.env.example
+!**/.env.schema
 local.db
 local.db-*
 .alchemy/
+apps/server/dist/
+packages/api/dist/
+packages/db/prisma/generated/
 `],
   ["deploy/vercel/scripts/sync-vercel-env.ts.hbs", `import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";

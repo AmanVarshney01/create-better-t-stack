@@ -59,6 +59,9 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   if (!pkgJson) return;
 
   pkgJson.name = config.projectName;
+  if (config.serverDeploy === "vercel" && config.backend !== "self") {
+    pkgJson.varlock = { loadPath: "./apps/server/" };
+  }
   pkgJson.scripts = pkgJson.scripts || {};
 
   const existingWorkspaces = pkgJson.workspaces;

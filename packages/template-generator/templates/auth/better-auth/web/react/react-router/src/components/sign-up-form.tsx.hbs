@@ -14,7 +14,7 @@ export default function SignUpForm({
   onSwitchToSignIn: () => void;
 }) {
   const navigate = useNavigate();
-  const { isPending } = authClient.useSession();
+  const { isPending, refetch } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -30,7 +30,8 @@ export default function SignUpForm({
           name: value.name,
         },
         {
-          onSuccess: () => {
+          onSuccess: async () => {
+            await refetch();
             navigate("/dashboard");
             toast.success("Sign up successful");
           },

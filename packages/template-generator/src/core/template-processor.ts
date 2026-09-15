@@ -107,9 +107,13 @@ function getServerUrl(url: string) {
 		process?: { env?: Record<string, string | undefined> };
 	}).process?.env;
 	if (typeof window === "undefined" && processEnv?.SERVER_URL) {
+{{#if (eq webDeploy "vercel")}}
+		return new URL("api", processEnv.SERVER_URL).toString().replace(/\\/$/, "");
+{{else}}
 		return processEnv.SERVER_URL.endsWith("/")
 			? processEnv.SERVER_URL.slice(0, -1)
 			: processEnv.SERVER_URL;
+{{/if}}
 	}
 
 {{#if (eq webDeploy "vercel")}}

@@ -55,7 +55,7 @@ app.all("/api/auth{/*path}", toNodeHandler(auth));
 const nativeAppUrl = "{{projectName}}://";
 const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 
-app.get("/polar/success", (req, res) => {
+app.get("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/polar/success", (req, res) => {
 	const requestUrl = new URL(req.url, env.BETTER_AUTH_URL);
 	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
 
@@ -78,7 +78,7 @@ app.get("/polar/success", (req, res) => {
 {{/if}}
 {{#if (eq api "trpc")}}
 app.use(
-	"/trpc",
+	"{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/trpc",
 	createExpressMiddleware({
 		router: appRouter,
 		createContext,
@@ -109,13 +109,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 app.use(async (req, res, next) => {
 	const rpcResult = await rpcHandler.handle(req, res, {
-		prefix: "/rpc",
+		prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc",
 		context: await createContext({ req }),
 	});
 	if (rpcResult.matched) return;
 
 	const apiResult = await apiHandler.handle(req, res, {
-		prefix: "/api-reference",
+		prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference",
 		context: await createContext({ req }),
 	});
 	if (apiResult.matched) return;
@@ -127,7 +127,7 @@ app.use(async (req, res, next) => {
 app.use(express.json());
 
 {{#if (includes examples "ai")}}
-app.post("/ai", async (req, res) => {
+app.post("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai", async (req, res) => {
 	const { messages = [] } = (req.body || {}) as { messages: UIMessage[] };
 	const model = wrapLanguageModel({
 		model: google("gemini-2.5-flash"),

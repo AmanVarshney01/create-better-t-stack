@@ -523,7 +523,7 @@ describe("stack builder Vercel deployment compatibility", () => {
     expect(command).toContain("--web-deploy vercel");
   });
 
-  test("allows Vercel server deploy on bun/node runtimes only", () => {
+  test("allows Vercel server deploy on Node only", () => {
     const bunStack = createStack({
       backend: "hono",
       runtime: "bun",
@@ -537,9 +537,18 @@ describe("stack builder Vercel deployment compatibility", () => {
       dbSetup: "d1",
     });
 
-    expect(getDisabledReason(bunStack, "serverDeploy", "vercel")).toBeNull();
+    expect(getDisabledReason(bunStack, "serverDeploy", "vercel")).toBe(
+      "Vercel server deployment requires the Node runtime",
+    );
+    expect(
+      getDisabledReason(
+        createStack({ backend: "hono", runtime: "node" }),
+        "serverDeploy",
+        "vercel",
+      ),
+    ).toBeNull();
     expect(getDisabledReason(workersStack, "serverDeploy", "vercel")).toBe(
-      "Vercel server deployment requires the Bun or Node runtime",
+      "Vercel server deployment requires the Node runtime",
     );
   });
 

@@ -438,7 +438,7 @@ describe("Alchemy providers", () => {
       webDeploy: "prisma",
       serverDeploy: "vercel",
       backend: "hono",
-      runtime: "bun",
+      runtime: "node",
       dbSetup: "neon",
     });
     const infra = files.get("packages/infra/alchemy.run.ts") ?? "";

@@ -16,11 +16,11 @@ import type { CustomerState } from "@polar-sh/sdk/models/components/customerstat
 	const sessionQuery = authClient.useSession();
 
 	{{#if (eq api "orpc")}}
-	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions());
+	const privateDataQuery = createQuery(() => orpc.privateData.queryOptions({ enabled: Boolean($sessionQuery.data) }));
 	{{/if}}
 
 	$effect(() => {
-		if (!$sessionQuery.isPending && !$sessionQuery.data) {
+		if (!$sessionQuery.isPending && !$sessionQuery.isRefetching && !$sessionQuery.data) {
 			goto('/login');
 		}
 	});
@@ -36,7 +36,7 @@ import type { CustomerState } from "@polar-sh/sdk/models/components/customerstat
 	{{/if}}
 </script>
 
-{#if $sessionQuery.isPending}
+{#if $sessionQuery.isPending || $sessionQuery.isRefetching}
 	<div>Loading...</div>
 {:else if !$sessionQuery.data}
 	<div>Redirecting to login...</div>

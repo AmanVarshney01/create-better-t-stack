@@ -4,6 +4,8 @@
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 
+	const session = authClient.useSession();
+
 	let { switchToSignUp } = $props<{ switchToSignUp: () => void }>();
 
 	const validationSchema = z.object({
@@ -17,7 +19,10 @@
 				await authClient.signIn.email(
 					{ email: value.email, password: value.password },
 					{
-						onSuccess: () => goto('/dashboard'),
+						onSuccess: async () => {
+							await $session.refetch();
+							await goto('/dashboard');
+						},
 						onError: (error) => {
 							console.log(error.error.message || 'Sign in failed. Please try again.');
 						},
