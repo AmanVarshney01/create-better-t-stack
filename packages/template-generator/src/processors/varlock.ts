@@ -113,6 +113,14 @@ function schema(keys: Set<string>, config: ProjectConfig): string {
         value = 'if($VERCEL_ORIGIN, "${VERCEL_ORIGIN}/api/auth", undefined)';
       }
     }
+    if (
+      key.endsWith("SERVER_URL") &&
+      config.webDeploy === "vercel" &&
+      config.serverDeploy === "vercel" &&
+      !value
+    ) {
+      value = "/api";
+    }
     if (key.includes("CONVEX_") && key.endsWith("URL"))
       type = 'url(matches="^(?!https?://example[.]convex[.])")';
     lines.push(
