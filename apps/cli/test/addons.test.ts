@@ -1447,42 +1447,89 @@ describe("Addon Configurations", () => {
       expect(serverPackageJson).toContain('"evlog": "^2.28.1"');
     });
 
-    it("preserves an existing Svelte environment binding when adding evlog", async () => {
-      const created = await runCreateTest({
-        projectName: "evlog-existing-svelte-env",
-        frontend: ["svelte"],
-        backend: "self",
-        runtime: "none",
-        auth: "better-auth",
-        api: "orpc",
-        webDeploy: "cloudflare",
-      });
-      expectSuccess(created);
-      const projectDir = created.result?.projectDirectory;
-      if (!projectDir) throw new Error("Expected generated project directory");
+    it.each([
+      { imported: "env", local: "env" },
+      { imported: "env", local: "localEnv" },
+      { imported: "env", local: "serverEnv" },
+      { imported: "ENV", local: "ENV" },
+      { imported: "ENV", local: "serverEnv" },
+    ])(
+      "preserves Svelte $imported imported as $local when adding evlog",
+      async ({ imported, local }) => {
+        const created = await runCreateTest({
+          projectName: `evlog-existing-svelte-${imported.toLowerCase()}-${local.toLowerCase()}`,
+          frontend: ["svelte"],
+          backend: "self",
+          runtime: "none",
+          auth: "better-auth",
+          api: "orpc",
+          webDeploy: "cloudflare",
+        });
+        expectSuccess(created);
+        const projectDir = created.result?.projectDirectory;
+        if (!projectDir) throw new Error("Expected generated project directory");
 
-      const hooksPath = join(projectDir, "apps/web/src/hooks.server.ts");
-      const hooks = await readFile(hooksPath, "utf-8");
-      await writeFile(
-        hooksPath,
-        hooks
-          .replace("import { ENV }", "import { env as localEnv }")
-          .replaceAll("?? ENV", "?? localEnv"),
-      );
-      const envPath = join(projectDir, "apps/web/src/env.server.ts");
-      await writeFile(
-        envPath,
-        (await readFile(envPath, "utf-8")).replace("export const ENV", "export const env"),
-      );
+        const hooksPath = join(projectDir, "apps/web/src/hooks.server.ts");
+        const hooks = await readFile(hooksPath, "utf-8");
+        const namedImport = imported === local ? imported : `${imported} as ${local}`;
+        await writeFile(
+          hooksPath,
+          hooks
+            .replace(
+              'import { ENV } from "./env.server";',
+              local === "env"
+                ? 'import { env } from "./env.server";'
+                : `import {\n  ${namedImport},\n} from './env.server';`,
+            )
+            .replaceAll("?? ENV", `?? ${local}`),
+        );
+        const envPath = join(projectDir, "apps/web/src/env.server.ts");
+        await writeFile(
+          envPath,
+          (await readFile(envPath, "utf-8")).replace(
+            "export const ENV",
+            `export const ${imported}`,
+          ),
+        );
 
-      const result = await add({ projectDir, addons: ["evlog"], install: false });
-      expect(result?.success).toBe(true);
-      const updated = await readFile(hooksPath, "utf-8");
-      expect(updated).toContain('import { env as localEnv } from "./env.server"');
-      expect(updated).toContain("const authEnv = event.platform?.env ?? localEnv");
-      expect(updated).not.toContain("?? ENV");
-      expectParseableTypeScript(updated);
-    });
+        const result = await add({ projectDir, addons: ["evlog"], install: false });
+        expect(result?.success).toBe(true);
+        const updated = await readFile(hooksPath, "utf-8");
+        expect(updated).toContain(namedImport);
+        expectParseableTypeScript(updated);
+        const start = updated.indexOf("const evlogAuthHandle:");
+        expect(start).toBeGreaterThanOrEqual(0);
+        const handlerSource = updated.slice(start, updated.indexOf("\n};", start) + 3);
+        const compiled = new Bun.Transpiler({ loader: "ts" }).transformSync(handlerSource);
+        const bindings = { BETTER_AUTH_URL: "https://example.test" };
+        const handle = new Function(
+          local,
+          "building",
+          "createAuth",
+          "createAuthMiddleware",
+          `${compiled}\nreturn evlogAuthHandle;`,
+        )(
+          bindings,
+          false,
+          (received: typeof bindings) => {
+            expect(received).toBe(bindings);
+            return {};
+          },
+          () => async () => {},
+        );
+        const response = new Response("ok");
+        expect(
+          await handle({
+            event: {
+              locals: { log: {} },
+              request: new Request("https://example.test"),
+              url: new URL("https://example.test"),
+            },
+            resolve: () => response,
+          }),
+        ).toBe(response);
+      },
+    );
 
     it("should reject evlog when added later to a Convex project", async () => {
       const created = await runCreateTest({

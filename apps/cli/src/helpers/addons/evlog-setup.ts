@@ -2,6 +2,7 @@ import path from "node:path";
 
 import { Result } from "better-result";
 import fs from "fs-extra";
+import { ts } from "ts-morph";
 
 import type { Backend, Frontend, ProjectConfig } from "../../types";
 import { AddonSetupError } from "../../utils/errors";
@@ -728,14 +729,32 @@ function addSvelteBetterAuthEvlogSetup(content: string, config: ProjectConfig) {
   if (!nextContent.includes('from "./services"')) {
     nextContent = prependMissingImports(nextContent, [getAuthImportLine(config, "./services")]);
   }
-  if (
-    usesCreateAuthFactory(config) &&
-    config.webDeploy === "cloudflare" &&
-    !nextContent.includes('from "./env.server"')
-  ) {
-    nextContent = prependMissingImports(nextContent, ['import { ENV } from "./env.server";']);
+  let environmentBinding = "ENV";
+  if (usesCreateAuthFactory(config) && config.webDeploy === "cloudflare") {
+    const source = ts.createSourceFile("hooks.server.ts", nextContent, ts.ScriptTarget.Latest);
+    const environmentImport = source.statements
+      .filter(ts.isImportDeclaration)
+      .filter(
+        (statement) =>
+          ts.isStringLiteral(statement.moduleSpecifier) &&
+          statement.moduleSpecifier.text === "./env.server" &&
+          !statement.importClause?.isTypeOnly,
+      )
+      .flatMap((statement) => {
+        const bindings = statement.importClause?.namedBindings;
+        return bindings && ts.isNamedImports(bindings) ? [...bindings.elements] : [];
+      })
+      .find(
+        (specifier) =>
+          !specifier.isTypeOnly &&
+          ["ENV", "env"].includes((specifier.propertyName ?? specifier.name).text),
+      );
+    if (environmentImport) {
+      environmentBinding = environmentImport.name.text;
+    } else {
+      nextContent = prependMissingImports(nextContent, ['import { ENV } from "./env.server";']);
+    }
   }
-  const environmentBinding = nextContent.includes("env as localEnv") ? "localEnv" : "ENV";
   const authExpression = getAuthExpression(config);
   const authOptions = '{ exclude: ["/api/auth/**"], maskEmail: true }';
   const authHandleSnippet =
