@@ -1747,7 +1747,7 @@ import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}
 {{else}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
-{{#unless (eq backend "self")}}
+{{#unless (or (eq backend "self") (includes frontend "next"))}}
 import { ENV } from "@{{projectName}}/env/web";
 {{/unless}}
 {{#if (eq auth "clerk")}}
@@ -1839,9 +1839,9 @@ export const link = new RPCLink({
 	url: \`\${typeof window !== "undefined" ? window.location.origin : "http://localhost:3001"}/api/rpc\`,
 {{else if (includes frontend "next")}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
-	url: \`\${getServerUrl(ENV.NEXT_PUBLIC_SERVER_URL)}/rpc\`,
+	url: \`\${getServerUrl(process.env.NEXT_PUBLIC_SERVER_URL!)}/rpc\`,
 {{else}}
-	url: \`\${ENV.NEXT_PUBLIC_SERVER_URL.replace(/\\/$/, "")}/rpc\`,
+	url: \`\${process.env.NEXT_PUBLIC_SERVER_URL!.replace(/\\/$/, "")}/rpc\`,
 {{/if}}
 {{else}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
@@ -2593,7 +2593,6 @@ import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { toast } from 'sonner';
 {{#unless (eq backend "self")}}
-import { ENV } from "@{{projectName}}/env/web";
 
 {{> getServerUrl}}
 {{/unless}}
@@ -2623,9 +2622,9 @@ const trpcClient = createTRPCClient<AppRouter>({
 			url: "/api/trpc",
 {{else}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
-			url: \`\${getServerUrl(ENV.NEXT_PUBLIC_SERVER_URL)}/trpc\`,
+			url: \`\${getServerUrl(process.env.NEXT_PUBLIC_SERVER_URL!)}/trpc\`,
 {{else}}
-			url: \`\${ENV.NEXT_PUBLIC_SERVER_URL.replace(/\\/$/, "")}/trpc\`,
+			url: \`\${process.env.NEXT_PUBLIC_SERVER_URL!.replace(/\\/$/, "")}/trpc\`,
 {{/if}}
 {{/if}}
 {{#if (eq auth "clerk")}}
@@ -9823,7 +9822,9 @@ export default defineNuxtPlugin(() => {
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 {{#unless (eq backend "self")}}
+{{#unless (includes frontend "next")}}
 import { ENV } from "@{{projectName}}/env/web";
+{{/unless}}
 
 {{> getServerUrl}}
 {{/unless}}
@@ -9831,9 +9832,9 @@ import { ENV } from "@{{projectName}}/env/web";
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
-  baseURL: new URL("/api/auth", getServerUrl(ENV.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})).toString(),
+  baseURL: new URL("/api/auth", getServerUrl({{#if (includes frontend "next")}}process.env.NEXT_PUBLIC_SERVER_URL!{{else}}ENV.VITE_SERVER_URL{{/if}})).toString(),
 {{else}}
-  baseURL: ENV.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}},
+  baseURL: {{#if (includes frontend "next")}}process.env.NEXT_PUBLIC_SERVER_URL!{{else}}ENV.VITE_SERVER_URL{{/if}},
 {{/if}}
 {{/unless}}
 {{#if (eq payments "polar")}}
@@ -30537,6 +30538,23 @@ initOpenNextCloudflareForDev();
 
 export default config;
 `],
+  ["frontend/react/next/public/better-t-stack.svg", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 550 260" width="550" height="260">
+  <g fill="#000" font-family="monospace" font-size="16" xml:space="preserve">
+    <text x="0" y="16"> ██████╗ ███████╗████████╗████████╗███████╗██████╗</text>
+    <text x="0" y="36"> ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗</text>
+    <text x="0" y="56"> ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝</text>
+    <text x="0" y="76"> ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗</text>
+    <text x="0" y="96"> ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║</text>
+    <text x="0" y="116"> ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝</text>
+    <text x="0" y="156"> ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗</text>
+    <text x="0" y="176"> ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝</text>
+    <text x="0" y="196">    ██║       ███████╗   ██║   ███████║██║     █████╔╝</text>
+    <text x="0" y="216">    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗</text>
+    <text x="0" y="236">    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗</text>
+    <text x="0" y="256">    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝</text>
+  </g>
+</svg>
+`],
   ["frontend/react/next/src/app/favicon.ico", `[Binary file]`],
   ["frontend/react/next/src/app/layout.tsx.hbs", `import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -30615,7 +30633,9 @@ export default function RootLayout({
 }
 {{/if}}
 `],
-  ["frontend/react/next/src/app/page.tsx.hbs", `"use client"
+  ["frontend/react/next/src/app/page.tsx.hbs", `"use client";
+
+import Image from "next/image";
 {{#if (eq backend "convex")}}
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
@@ -30629,22 +30649,6 @@ import { trpc } from "@/utils/trpc";
   {{/if}}
 {{/if}}
 
-const TITLE_TEXT = \`
- ██████╗ ███████╗████████╗████████╗███████╗██████╗
- ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
- ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
- ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
- ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
- ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
-
- ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
- ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
-    ██║       ███████╗   ██║   ███████║██║     █████╔╝
-    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
-    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
-    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
- \`;
-
 export default function Home() {
   {{#if (eq backend "convex")}}
   const healthCheck = useQuery(api.healthCheck.get);
@@ -30656,7 +30660,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-2">
-      <pre className="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
+      <Image src="/better-t-stack.svg" alt="Better T Stack" width={550} height={260} loading="eager" className="h-auto max-w-full dark:invert" />
       <div className="grid gap-6">
         <section className="rounded-lg border p-4">
           <h2 className="mb-2 font-medium">API Status</h2>
@@ -35555,4 +35559,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 529;
+export const TEMPLATE_COUNT = 530;

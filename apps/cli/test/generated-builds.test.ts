@@ -296,6 +296,27 @@ const buildSamples: BuildSample[] = [
       examples: [],
     },
   },
+  ...(["trpc", "orpc"] as const).map(
+    (api) =>
+      ({
+        name: `next-hono-${api}-auth`,
+        config: {
+          ...baseConfig,
+          frontend: ["next"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          api,
+          auth: "better-auth",
+          payments: "none",
+          addons: [],
+          examples: ["todo"],
+          webDeploy: api === "trpc" ? "docker" : "none",
+          serverDeploy: api === "trpc" ? "docker" : "none",
+        },
+      }) satisfies BuildSample,
+  ),
   {
     name: "nuxt-orpc",
     config: {
