@@ -803,14 +803,14 @@ describe("Authentication Configurations", () => {
       );
 
       expect(proxyFile).not.toContain('/env/server"');
-      expect(proxyFile).not.toContain("env.CLERK_SECRET_KEY");
+      expect(proxyFile).not.toContain("ENV.CLERK_SECRET_KEY");
       expect(dashboardFile).not.toContain("SignedIn");
       expect(dashboardFile).not.toContain("SignedOut");
       expect(dashboardFile).toContain("useUser");
       expect(dashboardFile).toContain("privateData.queryOptions()");
       expect(apiContextFile).toContain("auth: clerkAuth");
-      expect(apiContextFile).toContain("publishableKey: env.CLERK_PUBLISHABLE_KEY");
-      expect(apiContextFile).toContain("authorizedParties: [env.CORS_ORIGIN]");
+      expect(apiContextFile).toContain("publishableKey: ENV.CLERK_PUBLISHABLE_KEY");
+      expect(apiContextFile).toContain("authorizedParties: [ENV.CORS_ORIGIN]");
       expect(serverEnvPackageFile).toContain("CLERK_PUBLISHABLE_KEY");
       expect(serverEnvPackageFile).toContain("CLERK_SECRET_KEY");
       expect(serverEnvFile).toContain("CLERK_PUBLISHABLE_KEY=");
@@ -845,7 +845,7 @@ describe("Authentication Configurations", () => {
       );
 
       expect(startFile).not.toContain('/env/server"');
-      expect(startFile).not.toContain("env.CLERK_SECRET_KEY");
+      expect(startFile).not.toContain("ENV.CLERK_SECRET_KEY");
       expect(authRouteFile).toContain('createFileRoute("/_auth")');
       expect(authRouteFile).toContain("SignInButton");
       expect(dashboardFile).toContain('createFileRoute("/_auth/dashboard")');

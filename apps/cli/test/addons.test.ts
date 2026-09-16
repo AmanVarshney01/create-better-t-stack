@@ -1447,6 +1447,43 @@ describe("Addon Configurations", () => {
       expect(serverPackageJson).toContain('"evlog": "^2.28.1"');
     });
 
+    it("preserves an existing Svelte environment binding when adding evlog", async () => {
+      const created = await runCreateTest({
+        projectName: "evlog-existing-svelte-env",
+        frontend: ["svelte"],
+        backend: "self",
+        runtime: "none",
+        auth: "better-auth",
+        api: "orpc",
+        webDeploy: "cloudflare",
+      });
+      expectSuccess(created);
+      const projectDir = created.result?.projectDirectory;
+      if (!projectDir) throw new Error("Expected generated project directory");
+
+      const hooksPath = join(projectDir, "apps/web/src/hooks.server.ts");
+      const hooks = await readFile(hooksPath, "utf-8");
+      await writeFile(
+        hooksPath,
+        hooks
+          .replace("import { ENV }", "import { env as localEnv }")
+          .replaceAll("?? ENV", "?? localEnv"),
+      );
+      const envPath = join(projectDir, "apps/web/src/env.server.ts");
+      await writeFile(
+        envPath,
+        (await readFile(envPath, "utf-8")).replace("export const ENV", "export const env"),
+      );
+
+      const result = await add({ projectDir, addons: ["evlog"], install: false });
+      expect(result?.success).toBe(true);
+      const updated = await readFile(hooksPath, "utf-8");
+      expect(updated).toContain('import { env as localEnv } from "./env.server"');
+      expect(updated).toContain("const authEnv = event.platform?.env ?? localEnv");
+      expect(updated).not.toContain("?? ENV");
+      expectParseableTypeScript(updated);
+    });
+
     it("should reject evlog when added later to a Convex project", async () => {
       const created = await runCreateTest({
         projectName: "evlog-add-convex-fail",
