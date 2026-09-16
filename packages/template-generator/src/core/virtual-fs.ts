@@ -66,6 +66,10 @@ export class VirtualFileSystem {
     this._fs.mkdirSync(this.normalizePath(dirPath), { recursive: true });
   }
 
+  rmdir(dirPath: string): void {
+    this._fs.rmdirSync(this.normalizePath(dirPath));
+  }
+
   deleteFile(filePath: string): boolean {
     try {
       this._fs.unlinkSync(this.normalizePath(filePath));

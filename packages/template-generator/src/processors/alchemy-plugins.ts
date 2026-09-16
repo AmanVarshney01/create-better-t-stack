@@ -35,6 +35,7 @@ function processManagedPrismaMigrations(vfs: VirtualFileSystem, config: ProjectC
 
   if (!usesAlchemyManagedDatabase(config) || !hasInitialModels) {
     vfs.deleteFile(generatedMigration);
+    if (vfs.directoryExists(`${migrationRoot}/0000_init`)) vfs.rmdir(`${migrationRoot}/0000_init`);
     vfs.deleteFile(migrationLock);
     return;
   }

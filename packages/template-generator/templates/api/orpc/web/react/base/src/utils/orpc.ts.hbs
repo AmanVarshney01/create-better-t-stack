@@ -19,7 +19,9 @@ import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{else}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 {{#unless (eq backend "self")}}
+{{#unless (includes frontend "next")}}
 import { ENV } from "@{{projectName}}/env/web";
+{{/unless}}
 {{/unless}}
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
@@ -110,9 +112,9 @@ export const link = new RPCLink({
 	url: `${typeof window !== "undefined" ? window.location.origin : "http://localhost:3001"}/api/rpc`,
 {{else if (includes frontend "next")}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
-	url: `${getServerUrl(ENV.NEXT_PUBLIC_SERVER_URL)}/rpc`,
+	url: `${getServerUrl(process.env.NEXT_PUBLIC_SERVER_URL!)}/rpc`,
 {{else}}
-	url: `${ENV.NEXT_PUBLIC_SERVER_URL.replace(/\/$/, "")}/rpc`,
+	url: `${process.env.NEXT_PUBLIC_SERVER_URL!.replace(/\/$/, "")}/rpc`,
 {{/if}}
 {{else}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
