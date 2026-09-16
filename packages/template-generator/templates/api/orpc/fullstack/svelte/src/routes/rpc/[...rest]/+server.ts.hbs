@@ -1,7 +1,7 @@
 import { createContext } from "@{{projectName}}/api/context";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 {{#if (eq webDeploy "cloudflare")}}
-import { env as localEnv } from "@{{projectName}}/env/server";
+import { ENV } from "@{{projectName}}/env/server";
 {{/if}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -33,7 +33,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 const handle: RequestHandler = async ({ request{{#if (eq webDeploy "cloudflare")}}, platform{{/if}} }) => {
 {{#if (eq webDeploy "cloudflare")}}
-	const env = platform?.env ?? localEnv;
+	const env = platform?.env ?? ENV;
 
 {{/if}}
 	const context = await createContext({
