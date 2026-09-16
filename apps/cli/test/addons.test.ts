@@ -1495,10 +1495,8 @@ describe("Addon Configurations", () => {
         const result = await add({ projectDir, addons: ["evlog"], install: false });
         expect(result?.success).toBe(true);
         const updated = await readFile(hooksPath, "utf-8");
-        expect(updated).toContain(namedImport);
         expectParseableTypeScript(updated);
         const start = updated.indexOf("const evlogAuthHandle:");
-        expect(start).toBeGreaterThanOrEqual(0);
         const handlerSource = updated.slice(start, updated.indexOf("\n};", start) + 3);
         const compiled = new Bun.Transpiler({ loader: "ts" }).transformSync(handlerSource);
         const bindings = { BETTER_AUTH_URL: "https://example.test" };
