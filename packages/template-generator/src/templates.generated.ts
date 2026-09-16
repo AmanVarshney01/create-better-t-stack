@@ -17179,6 +17179,10 @@ import { ENV } from "@{{projectName}}/env/web";
 
 export const authClient: AuthClient = createClient({{#unless (eq backend "self")}}{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}new URL("/api/auth", getServerUrl(ENV.VITE_SERVER_URL)).toString(){{else}}ENV.VITE_SERVER_URL{{/if}}{{/unless}});
 `],
+  ["env/auth.config.ts.hbs", `import "varlock/auto-load";
+
+export { auth } from "./src/services";
+`],
   ["env/env.server.ts.hbs", `{{#if (and (eq serverDeploy "cloudflare") (or (ne backend "self") (ne webDeploy "cloudflare")))}}
 /// <reference types="@cloudflare/workers-types" />
 /// <reference path="../cloudflare-env.d.ts" />
@@ -35555,4 +35559,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 529;
+export const TEMPLATE_COUNT = 530;

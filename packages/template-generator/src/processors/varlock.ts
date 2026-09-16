@@ -255,6 +255,29 @@ export function processVarlock(
     root.scripts["env:generate"] = commands.join(" && ");
     root.scripts.postinstall = [root.scripts.postinstall, ...commands].filter(Boolean).join(" && ");
   }
+  if (
+    config.auth === "better-auth" &&
+    config.backend !== "convex" &&
+    (config.orm === "drizzle" || config.orm === "prisma") &&
+    config.runtime !== "workers" &&
+    config.serverDeploy !== "cloudflare" &&
+    !(config.backend === "self" && config.webDeploy === "cloudflare")
+  ) {
+    processSingleTemplate(vfs, templates, "env/auth.config.ts", `${server}/auth.config.ts`, config);
+    const execute =
+      config.packageManager === "bun"
+        ? "bun x"
+        : config.packageManager === "pnpm"
+          ? "pnpm dlx"
+          : "npx --yes";
+    const output = config.orm === "prisma" ? "prisma/schema/auth.prisma" : "src/schema/auth.ts";
+    const app = vfs.readJson<Package>(`${server}/package.json`)!;
+    app.scripts ??= {};
+    app.scripts["auth:generate"] =
+      `${execute} auth@latest generate --config auth.config.ts --output ../../packages/db/${output} --yes`;
+    vfs.writeJson(`${server}/package.json`, app);
+    root.scripts["auth:generate"] = `cd ${server} && ${config.packageManager} run auth:generate`;
+  }
   vfs.writeJson("package.json", root);
   if (["express", "fastify"].includes(config.backend) && config.auth === "better-auth") {
     addPackageDependency({

@@ -1577,6 +1577,12 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
             );
             expect(await fs.pathExists(generatedClient)).toBe(true);
           }
+          if (["tanstack-start-self-auth-todo", "next-self-prisma"].includes(sample.name)) {
+            await runCommand(sample.name, projectDir, sample.packageManager, [
+              "run",
+              "auth:generate",
+            ]);
+          }
           const restoreTypeFixtures = await writeOrpcInferenceChecks(sample, projectDir);
           if (sample.name === "nuxt-auth-todo-ai") {
             await fs.outputFile(
