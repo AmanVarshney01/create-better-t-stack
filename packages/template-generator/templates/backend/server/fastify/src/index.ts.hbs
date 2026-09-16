@@ -1,4 +1,4 @@
-{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, env } from "@{{projectName}}/env/server";{{else}}import { env } from "@{{projectName}}/env/server";{{/if}}
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, ENV } from "./env.server";{{else}}import { ENV } from "./env.server";{{/if}}
 import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
 
@@ -32,7 +32,7 @@ import { clerkPlugin } from "@clerk/fastify";
 {{/if}}
 
 const baseCorsConfig = {
-	origin: {{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}[env.CORS_ORIGIN, ...desktopOrigins]{{else}}env.CORS_ORIGIN{{/if}},
+	origin: {{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}[ENV.CORS_ORIGIN, ...desktopOrigins]{{else}}ENV.CORS_ORIGIN{{/if}},
 	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 	allowedHeaders: [
 		"Content-Type",
@@ -77,8 +77,8 @@ const fastify = Fastify({
 fastify.register(fastifyCors, baseCorsConfig);
 {{#if (eq auth "clerk")}}
 fastify.register(clerkPlugin, {
-	publishableKey: env.CLERK_PUBLISHABLE_KEY,
-	secretKey: env.CLERK_SECRET_KEY,
+	publishableKey: ENV.CLERK_PUBLISHABLE_KEY,
+	secretKey: ENV.CLERK_SECRET_KEY,
 });
 {{/if}}
 
@@ -87,7 +87,7 @@ const nativeAppUrl = "{{projectName}}://";
 const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 
 fastify.get("/polar/success", async (request, reply) => {
-	const requestUrl = new URL(request.url, env.BETTER_AUTH_URL);
+	const requestUrl = new URL(request.url, ENV.BETTER_AUTH_URL);
 	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
 
 	let redirectUrl: URL;

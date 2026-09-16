@@ -80,3 +80,5 @@ export function createAuth(env: AuthConfig{{#if (ne database "none")}}, database
     ],
   });
 }
+
+export type Session = ReturnType<typeof createAuth>["$Infer"]["Session"];

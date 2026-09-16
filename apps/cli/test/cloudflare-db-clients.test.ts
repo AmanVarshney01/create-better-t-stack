@@ -45,7 +45,7 @@ describe("Cloudflare DB client generation", () => {
     expect(dbFile).not.toContain("export const db = createDb();");
     expect(authFile).toContain("export function createAuth(env: AuthConfig, database: Database");
     expect(authFile).not.toContain("export const auth = await createAuth();");
-    expect(envFile).toContain('export { env } from "cloudflare:workers";');
+    expect(envFile).toContain('export { env as ENV } from "cloudflare:workers";');
     expect(serverFile).toContain("(await createAuth()).handler(c.req.raw)");
     expect(contextFile).toContain("(await createAuth(db)).api.getSession");
     expect(todoRouterFile).toContain("ctx.db");
@@ -90,8 +90,8 @@ describe("Cloudflare DB client generation", () => {
     );
     expect(envFile).toContain("export async function getEnvAsync()");
     expect(envFile).toContain("getCloudflareContext({ async: true })");
-    expect(envFile).toContain("export const env = createEnvProxy(resolveEnvValue);");
-    expect(envFile).not.toContain('export { env } from "cloudflare:workers";');
+    expect(envFile).toContain("export const ENV = createEnvProxy(resolveEnvValue);");
+    expect(envFile).not.toContain('export { env as ENV } from "cloudflare:workers";');
     expect(envPackageFile).toContain('"@opennextjs/cloudflare"');
     expect(routeFile).toContain("toNextJsHandler(await createAuth()).GET(request)");
     expect(routeFile).toContain("toNextJsHandler(await createAuth()).POST(request)");
@@ -111,7 +111,7 @@ describe("Cloudflare DB client generation", () => {
         "toNextJsHandler(await createAuth()).POST(request)",
       ],
       envNeedle: 'import { getCloudflareContext } from "@opennextjs/cloudflare";',
-      envAbsentNeedle: 'export { env } from "cloudflare:workers";',
+      envAbsentNeedle: 'export { env as ENV } from "cloudflare:workers";',
     },
     {
       name: "TanStack Start",
@@ -119,7 +119,7 @@ describe("Cloudflare DB client generation", () => {
       api: "trpc",
       routePath: "apps/web/src/routes/api/auth/$.ts",
       routeNeedles: ["const auth = await createAuth()", "return auth.handler(request)"],
-      envNeedle: 'export { env } from "cloudflare:workers";',
+      envNeedle: 'export { env as ENV } from "cloudflare:workers";',
     },
     {
       name: "Nuxt",
@@ -143,7 +143,7 @@ describe("Cloudflare DB client generation", () => {
         "export const GET = handle",
         "export const POST = handle",
       ],
-      envNeedle: 'export { env } from "cloudflare:workers";',
+      envNeedle: 'export { env as ENV } from "cloudflare:workers";',
     },
     {
       name: "Astro",
@@ -151,7 +151,7 @@ describe("Cloudflare DB client generation", () => {
       api: "orpc",
       routePath: "apps/web/src/pages/api/auth/[...all].ts",
       routeNeedles: ["const auth = await createAuth();", "return auth.handler(ctx.request);"],
-      envNeedle: 'export { env } from "cloudflare:workers";',
+      envNeedle: 'export { env as ENV } from "cloudflare:workers";',
     },
   ] as const;
 
@@ -364,11 +364,11 @@ describe("Cloudflare DB client generation", () => {
     const serverFile = files.get("apps/server/src/index.ts");
 
     expect(dbFile).not.toContain("export const db");
-    expect(files.get("apps/server/src/services.ts")).toContain("const db = createDb(env)");
+    expect(files.get("apps/server/src/services.ts")).toContain("const db = createDb(ENV)");
     expect(authFile).not.toContain("export const auth");
     expect(
       files.get("apps/server/src/services.ts") ?? files.get("apps/web/src/services.ts"),
-    ).toContain("export const auth = createConfiguredAuth");
+    ).toContain("export const auth = createAuth");
     expect(serverFile).toContain("auth.handler(c.req.raw)");
   });
 
@@ -398,7 +398,7 @@ describe("Cloudflare DB client generation", () => {
     expect(authFile).not.toContain("export const auth");
     expect(
       files.get("apps/server/src/services.ts") ?? files.get("apps/web/src/services.ts"),
-    ).toContain("export const auth = createConfiguredAuth");
+    ).toContain("export const auth = createAuth");
     expect(routeFile).toContain("export const { GET, POST } = toNextJsHandler(auth);");
     expect(routeFile).not.toContain("createAuth()");
   });
@@ -436,7 +436,7 @@ it("awaits MongoDB and shares one connection between auth and API context per re
   const createContext = new Function(
     "createDb",
     "createConfiguredAuth",
-    "env",
+    "ENV",
     `${source}\nreturn createContext;`,
   )(
     async () => ({ connection: ++connections }),

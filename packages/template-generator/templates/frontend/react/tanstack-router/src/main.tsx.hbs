@@ -16,7 +16,7 @@ import { routeTree } from "./routeTree.gen";
   import { queryClient, trpc } from "./utils/trpc";
 {{/if}}
 {{#if (or (eq backend "convex") (eq auth "clerk"))}}
-  import { env } from "@{{projectName}}/env/web";
+  import { ENV } from "./env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 {{/if}}
 {{#if (eq auth "clerk")}}
   import { ClerkProvider{{#if (or (eq backend "convex") (ne api "none"))}}, useAuth{{/if}} } from "@clerk/react";
@@ -31,7 +31,7 @@ import { routeTree } from "./routeTree.gen";
   {{else}}
   import { ConvexProvider } from "convex/react";
   {{/if}}
-  const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
+  const convex = new ConvexReactClient(ENV.VITE_CONVEX_URL);
 {{/if}}
 
 {{#if (and (eq auth "clerk") (ne backend "convex") (ne api "none"))}}
@@ -60,7 +60,7 @@ const router = createRouter({
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return (
       {{#if (eq auth "clerk")}}
-      <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+      <ClerkProvider publishableKey={ENV.VITE_CLERK_PUBLISHABLE_KEY}>
         <ClerkApiAuthBridge />
         <QueryClientProvider client={queryClient}>
           {children}
@@ -78,7 +78,7 @@ const router = createRouter({
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return (
       {{#if (eq auth "clerk")}}
-      <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+      <ClerkProvider publishableKey={ENV.VITE_CLERK_PUBLISHABLE_KEY}>
         <ClerkApiAuthBridge />
         <QueryClientProvider client={queryClient}>
           {children}
@@ -97,7 +97,7 @@ const router = createRouter({
     {{#if (eq auth "clerk")}}
     return (
       <ClerkProvider
-        publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}
+        publishableKey={ENV.VITE_CLERK_PUBLISHABLE_KEY}
       >
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
           {children}
@@ -113,7 +113,7 @@ const router = createRouter({
   {{else if (eq auth "clerk")}}
   context: {},
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
-    return <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>{children}</ClerkProvider>;
+    return <ClerkProvider publishableKey={ENV.VITE_CLERK_PUBLISHABLE_KEY}>{children}</ClerkProvider>;
   },
   {{else}}
   context: {},

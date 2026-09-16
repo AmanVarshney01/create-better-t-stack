@@ -50,6 +50,14 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
       });
     }
 
+    if (vfs.exists("apps/native/package.json")) {
+      addPackageDependency({
+        vfs,
+        packagePath: "apps/native/package.json",
+        dependencies: ["@polar-sh/better-auth"],
+      });
+    }
+
     if (vfs.exists(webPath)) {
       const hasWebFrontend = frontend.some((f) =>
         [
@@ -69,6 +77,9 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
           packagePath: webPath,
           dependencies: ["@polar-sh/better-auth"],
         });
+        if (frontend.some((f) => ["react-router", "next", "nuxt", "svelte"].includes(f))) {
+          addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@polar-sh/sdk"] });
+        }
       }
     }
   }

@@ -1,5 +1,5 @@
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 {{/unless}}
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
@@ -29,7 +29,11 @@ export const link = new RPCLink({
 		return `${window.location.origin}/rpc`;
 	},
 	{{else}}
-	url: `${getServerUrl(env.PUBLIC_SERVER_URL)}/rpc`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+	url: `${getServerUrl(ENV.PUBLIC_SERVER_URL)}/rpc`,
+{{else}}
+	url: `${ENV.PUBLIC_SERVER_URL.replace(/\/$/, "")}/rpc`,
+{{/if}}
 	{{/if}}
 	{{#if (eq auth "better-auth")}}
 	fetch(url, options) {

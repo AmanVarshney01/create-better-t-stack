@@ -1,5 +1,5 @@
 import { convexBetterAuthReactStart } from "@convex-dev/better-auth/react-start";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 
 export const {
 	handler,
@@ -8,6 +8,6 @@ export const {
 	fetchAuthMutation,
 	fetchAuthAction,
 } = convexBetterAuthReactStart({
-	convexUrl: env.VITE_CONVEX_URL,
-	convexSiteUrl: env.VITE_CONVEX_SITE_URL,
+	convexUrl: ENV.VITE_CONVEX_URL,
+	convexSiteUrl: ENV.VITE_CONVEX_SITE_URL,
 });

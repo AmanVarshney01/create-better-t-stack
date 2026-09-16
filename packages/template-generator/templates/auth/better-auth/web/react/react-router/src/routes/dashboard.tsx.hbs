@@ -1,4 +1,7 @@
 {{#if (eq payments "polar")}}
+import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate";
+{{/if}}
+{{#if (eq payments "polar")}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -18,7 +21,7 @@ export default function Dashboard() {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
   {{#if (eq payments "polar")}}
-  const [customerState, setCustomerState] = useState<any>(null);
+  const [customerState, setCustomerState] = useState<CustomerState | null>(null);
   {{/if}}
 
   {{#if (eq api "orpc")}}
@@ -39,7 +42,7 @@ export default function Dashboard() {
     async function fetchCustomerState() {
       if (session) {
         const { data } = await authClient.customer.state();
-        setCustomerState(data);
+        setCustomerState(data ?? null);
       }
     }
 

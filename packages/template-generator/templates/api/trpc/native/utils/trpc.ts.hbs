@@ -8,7 +8,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "../src/env";
 
 export const queryClient = new QueryClient();
 
@@ -16,9 +16,9 @@ const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
 {{#if (eq backend "self")}}
-			url: `${env.EXPO_PUBLIC_SERVER_URL}/api/trpc`,
+			url: `${ENV.EXPO_PUBLIC_SERVER_URL}/api/trpc`,
 {{else}}
-			url: `${env.EXPO_PUBLIC_SERVER_URL}/trpc`,
+			url: `${ENV.EXPO_PUBLIC_SERVER_URL}/trpc`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
 			fetch:

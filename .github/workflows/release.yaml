@@ -221,16 +221,23 @@ jobs:
           echo "[v$VERSION](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY
 
       - name: Install Vercel CLI
-        run: npm install --global vercel@59.15.1
+        run: npm install --global vercel@59.16.0
 
       - name: Promote the release website
         timeout-minutes: 20
         env:
+          GH_TOKEN: ${{ github.token }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_SCOPE: better-t-stack
           VERCEL_PROJECT: create-better-t-stack-web
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
         run: |
+          latest_release=$(gh release view --json tagName --jq .tagName)
+          if [[ "$latest_release" != "v$RELEASE_VERSION" ]]; then
+            echo "::error::v$RELEASE_VERSION is no longer the latest release. Website promotion stopped."
+            exit 1
+          fi
+
           deployments=$(vercel list "$VERCEL_PROJECT" \
             --scope "$VERCEL_SCOPE" --token "$VERCEL_TOKEN" \
             --environment production --meta "githubCommitSha=$GITHUB_SHA" --json)
@@ -252,15 +259,12 @@ jobs:
             exit 1
           fi
 
-          # Prevent partial releases and reruns of older releases from advancing the website.
-          for package in @better-t-stack/types @better-t-stack/template-generator create-better-t-stack create-bts; do
-            published_version=$(npm view "$package@latest" version)
-            if [[ "$published_version" != "$RELEASE_VERSION" ]]; then
-              echo "::error::$package@latest is $published_version, expected $RELEASE_VERSION. Website promotion stopped."
-              exit 1
-            fi
-          done
-
-          vercel promote "$deployment_url" \
-            --scope "$VERCEL_SCOPE" --token "$VERCEL_TOKEN" --timeout 5m
+          promotion_status=0
+          promotion_output=$(vercel promote "$deployment_url" \
+            --scope "$VERCEL_SCOPE" --token "$VERCEL_TOKEN" --timeout 5m 2>&1) || promotion_status=$?
+          printf '%s\n' "$promotion_output"
+          if (( promotion_status != 0 )) && \
+            [[ "$promotion_output" != *"already the current production deployment"* ]]; then
+            exit "$promotion_status"
+          fi
           echo "Website for v$RELEASE_VERSION promoted from commit $GITHUB_SHA: https://$deployment_url" >> "$GITHUB_STEP_SUMMARY"

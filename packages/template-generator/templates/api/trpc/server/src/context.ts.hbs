@@ -1,13 +1,19 @@
 {{#if (eq auth "better-auth")}}
-import type { createAuth } from "@{{projectName}}/auth";
+import type { Session } from "@{{projectName}}/auth";
+{{/if}}
+{{#if (eq auth "clerk")}}
+import type { SessionAuthObject } from "@clerk/backend";
 {{/if}}
 {{#if (ne database "none")}}
 import type { Database } from "@{{projectName}}/db";
 {{/if}}
 
 export type Context = {
-  auth: {{#if (eq auth "clerk")}}{ userId: string | null } | null{{else}}null{{/if}};
-  session: {{#if (eq auth "better-auth")}}Awaited<ReturnType<ReturnType<typeof createAuth>["api"]["getSession"]>>{{else}}null{{/if}};
+{{#if (eq auth "clerk")}}
+  auth: Pick<SessionAuthObject, "userId"> | null;
+{{else if (eq auth "better-auth")}}
+  session: Session | null;
+{{/if}}
 {{#if (ne database "none")}}
   db: Database;
 {{/if}}

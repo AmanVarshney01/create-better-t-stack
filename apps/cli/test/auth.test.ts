@@ -8,6 +8,27 @@ import { expectError, expectSuccess, runCreateTest, type TestConfig } from "./te
 
 describe("Authentication Configurations", () => {
   describe("Better-Auth Provider", () => {
+    it.each(["drizzle", "prisma"] as const)(
+      "omits schema generation when yolo skips the database package with %s",
+      async (orm) => {
+        const result = await runCreateTest({
+          projectName: `auth-no-db-${orm}`,
+          auth: "better-auth",
+          database: "none",
+          orm,
+          yolo: true,
+        });
+        expectSuccess(result);
+        expect(await fs.pathExists(path.join(result.projectDir, "packages/db/package.json"))).toBe(
+          false,
+        );
+        for (const file of ["package.json", "apps/server/package.json"]) {
+          const pkg = await fs.readJson(path.join(result.projectDir, file));
+          expect(pkg.scripts?.["auth:generate"]).toBeUndefined();
+        }
+      },
+    );
+
     const databases = ["sqlite", "postgres", "mysql"];
     for (const database of databases) {
       it(`should work with better-auth + ${database}`, async () => {
@@ -474,10 +495,6 @@ describe("Authentication Configurations", () => {
           path.join(result.projectDir, "apps/native/app/(drawer)/index.tsx"),
           "utf8",
         );
-        const nativeAuthClientFile = await fs.readFile(
-          path.join(result.projectDir, "apps/native/lib/auth-client.ts"),
-          "utf8",
-        );
         const authPackageFile = await fs.readFile(
           path.join(result.projectDir, "packages/auth/package.json"),
           "utf8",
@@ -495,10 +512,10 @@ describe("Authentication Configurations", () => {
           "utf8",
         );
 
-        expect(nativeIndexFile).toContain("polarNativeClient.checkout");
-        expect(nativeIndexFile).toContain("polarNativeClient.customer.portal");
+        expect(nativeIndexFile).toContain("authClient.checkout");
+        expect(nativeIndexFile).toContain("authClient.customer.portal");
         expect(nativeIndexFile).toContain("openAuthSessionAsync");
-        expect(nativeIndexFile).toContain('new URL("/polar/success", env.EXPO_PUBLIC_SERVER_URL)');
+        expect(nativeIndexFile).toContain('new URL("/polar/success", ENV.EXPO_PUBLIC_SERVER_URL)');
         expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
         expect(nativeIndexFile).toContain("returnUrl: polarReturnUrl");
         expect(nativeIndexFile).not.toContain("successUrl: returnUrl");
@@ -510,10 +527,9 @@ describe("Authentication Configurations", () => {
           expect(nativeIndexFile).toContain('textAlign: "center"');
           expect(nativeIndexFile).toContain("height: 34");
         }
-        expect(nativeAuthClientFile).toContain("export const polarNativeClient");
         expect(authPackageFile).toContain('"@polar-sh/better-auth"');
         expect(authPackageFile).toContain('"@polar-sh/sdk"');
-        expect(nativePackageFile).not.toContain('"@polar-sh/better-auth"');
+        expect(nativePackageFile).toContain('"@polar-sh/better-auth"');
         expect(serverIndexFile).toContain('"/polar/success"');
         expect(serverIndexFile).toContain("allowedNativeProtocols");
         expect(serverIndexFile).toContain("302");
@@ -568,9 +584,9 @@ describe("Authentication Configurations", () => {
         expect(nativeIndexFile).toContain("api.polar.generateCustomerPortalUrl");
         expect(nativeIndexFile).toContain("openAuthSessionAsync");
         expect(nativeIndexFile).toContain(
-          'new URL("/polar/success", env.EXPO_PUBLIC_CONVEX_SITE_URL)',
+          'new URL("/polar/success", ENV.EXPO_PUBLIC_CONVEX_SITE_URL)',
         );
-        expect(nativeIndexFile).toContain("origin: env.EXPO_PUBLIC_CONVEX_SITE_URL");
+        expect(nativeIndexFile).toContain("origin: ENV.EXPO_PUBLIC_CONVEX_SITE_URL");
         expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
         expect(nativeIndexFile).toContain("returnUrl: getPolarReturnUrl(returnUrl)");
         expect(nativeIndexFile).not.toContain("successUrl: returnUrl");
@@ -651,7 +667,7 @@ describe("Authentication Configurations", () => {
         expect(authFile).toContain("portal()");
         expect(authPackageFile).toContain('"@polar-sh/better-auth"');
         expect(authPackageFile).toContain('"@polar-sh/sdk"');
-        expect(nativeIndexFile).toContain("polarNativeClient.checkout");
+        expect(nativeIndexFile).toContain("authClient.checkout");
         expect(nativeIndexFile).toContain("successUrl: polarReturnUrl");
         expect(nativeIndexFile).toContain("returnUrl: polarReturnUrl");
         expect(serverIndexFile).toContain('"/polar/success"');
@@ -808,17 +824,14 @@ describe("Authentication Configurations", () => {
       );
 
       expect(proxyFile).not.toContain('/env/server"');
-      expect(proxyFile).not.toContain("env.CLERK_SECRET_KEY");
+      expect(proxyFile).not.toContain("ENV.CLERK_SECRET_KEY");
       expect(dashboardFile).not.toContain("SignedIn");
       expect(dashboardFile).not.toContain("SignedOut");
       expect(dashboardFile).toContain("useUser");
       expect(dashboardFile).toContain("privateData.queryOptions()");
-      expect(apiContextFile).toContain("type ClerkContextAuth = {");
-      expect(apiContextFile).toContain("session: null");
-      expect(apiContextFile).toContain("function toClerkContextAuth(");
       expect(apiContextFile).toContain("auth: clerkAuth");
-      expect(apiContextFile).toContain("publishableKey: env.CLERK_PUBLISHABLE_KEY");
-      expect(apiContextFile).toContain("authorizedParties: [env.CORS_ORIGIN]");
+      expect(apiContextFile).toContain("publishableKey: ENV.CLERK_PUBLISHABLE_KEY");
+      expect(apiContextFile).toContain("authorizedParties: [ENV.CORS_ORIGIN]");
       expect(serverEnvPackageFile).toContain("CLERK_PUBLISHABLE_KEY");
       expect(serverEnvPackageFile).toContain("CLERK_SECRET_KEY");
       expect(serverEnvFile).toContain("CLERK_PUBLISHABLE_KEY=");
@@ -853,7 +866,7 @@ describe("Authentication Configurations", () => {
       );
 
       expect(startFile).not.toContain('/env/server"');
-      expect(startFile).not.toContain("env.CLERK_SECRET_KEY");
+      expect(startFile).not.toContain("ENV.CLERK_SECRET_KEY");
       expect(authRouteFile).toContain('createFileRoute("/_auth")');
       expect(authRouteFile).toContain("SignInButton");
       expect(dashboardFile).toContain('createFileRoute("/_auth/dashboard")');

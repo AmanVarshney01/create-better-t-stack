@@ -150,7 +150,12 @@ function hasWebFrontend(frontend: ProjectConfig["frontend"]): boolean {
 }
 
 export function processReadme(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const content = generateReadmeContent(config);
+  let content = generateReadmeContent(config);
+  if (
+    vfs.readJson<{ scripts?: Record<string, string> }>("package.json")?.scripts?.["auth:generate"]
+  ) {
+    content += `\n## Better Auth Schema Generation\n\nAfter changing auth plugins or schema options, run \`${config.packageManager} run auth:generate\` from the project root. The script runs the Better Auth CLI through \`varlock run\` from the owning app directory, loading the auth instance from \`src/services.ts\`. Review the schema changes, then use your ORM's migration workflow to apply them.\n`;
+  }
   vfs.writeFile("README.md", content);
 }
 
@@ -254,6 +259,8 @@ Import the generated \`ENV\` accessor in application code. Shared database and a
 ${webDeploy === "cloudflare" || serverDeploy === "cloudflare" ? "For Cloudflare, Alchemy loads and validates deployment inputs with `varlock/auto-load` in its Node/Bun deployment process. Worker code reads native bindings; web clients use the framework's public env API through `src/env.public.ts` where needed. Alchemy supplies resource URLs and managed database credentials. In-Worker Varlock protections are deferred until an official Alchemy integration is available; see [the non-Wrangler deployment guidance](https://varlock.dev/integrations/cloudflare/#non-wrangler-deploy-tools-alchemy-sst-pulumi).\n" : ""}
 
 Bun's automatic env loading is disabled in \`bunfig.toml\`; the framework integration or server bootstrap loads Varlock. Node deployments must include Varlock and its dependencies alongside the app schema.
+
+Run standalone Node/Bun tools that use Varlock from the owning app directory so they load that app's schema and env files. \`env:generate\` only generates TypeScript files; it does not initialize environment values in a subsequent command.
 
 ${
   addons.includes("pwa") && hasReactRouter
@@ -772,9 +779,6 @@ function generateScriptsList(
   }
 
   scripts += `\n- \`${packageManagerRunCmd} check-types\`: Check TypeScript types across all apps`;
-  if (config.api === "orpc" && !["convex", "none"].includes(backend)) {
-    scripts += `\n- \`${packageManagerRunCmd} dev:types\`: Watch API and dependency declarations when running an app individually. The root \`dev\` command already starts this watcher; installation and builds generate declarations automatically.`;
-  }
 
   if (hasNative) {
     scripts += `\n- \`${packageManagerRunCmd} dev:native\`: Start the React Native/Expo development server`;

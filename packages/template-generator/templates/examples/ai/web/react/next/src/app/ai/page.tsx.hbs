@@ -341,13 +341,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@{{projectName}}/ui/components/tooltip";
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "../../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 
 export default function AIPage() {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
-      api: {{#if (eq backend "self")}}"/api/ai"{{else}}`${env.NEXT_PUBLIC_SERVER_URL}/ai`{{/if}},
+      api: {{#if (eq backend "self")}}"/api/ai"{{else}}`${ENV.NEXT_PUBLIC_SERVER_URL}/ai`{{/if}},
     }),
   });
   const isSending = status === "submitted" || status === "streaming";

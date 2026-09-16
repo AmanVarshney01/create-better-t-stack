@@ -3,7 +3,7 @@ import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "../src/env";
 {{#if (eq auth "better-auth")}}
 import { authClient } from "@/lib/auth-client";
 import { Platform } from "react-native";
@@ -34,12 +34,12 @@ async function expoFetch(request: Request, init?: RequestInit) {
 export const link = new RPCLink({
 {{#if (eq backend "self")}}
 {{#if (or (includes frontend "next") (includes frontend "tanstack-start"))}}
-	url: `${env.EXPO_PUBLIC_SERVER_URL}/api/rpc`,
+	url: `${ENV.EXPO_PUBLIC_SERVER_URL}/api/rpc`,
 {{else}}
-	url: `${env.EXPO_PUBLIC_SERVER_URL}/rpc`,
+	url: `${ENV.EXPO_PUBLIC_SERVER_URL}/rpc`,
 {{/if}}
 {{else}}
-	url: `${env.EXPO_PUBLIC_SERVER_URL}/rpc`,
+	url: `${ENV.EXPO_PUBLIC_SERVER_URL}/rpc`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
 	fetch(request, init) {

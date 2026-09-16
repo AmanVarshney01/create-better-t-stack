@@ -7,7 +7,7 @@ import { getRequestEvent } from "@solidjs/web";
 {{/unless}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 {{#unless (eq backend "self")}}
-import { env } from "@{{projectName}}/env/web";
+import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 {{/unless}}
 
 {{#if (eq backend "self")}}
@@ -40,7 +40,11 @@ const link = new RPCLink({
 {{> getServerUrl}}
 
 const link = new RPCLink({
-	url: `${getServerUrl(env.VITE_SERVER_URL)}/rpc`,
+{{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
+	url: `${getServerUrl(ENV.VITE_SERVER_URL)}/rpc`,
+{{else}}
+	url: `${ENV.VITE_SERVER_URL.replace(/\/$/, "")}/rpc`,
+{{/if}}
 	headers: () => getRequestEvent()?.request.headers ?? {},
 {{#if (eq auth "better-auth")}}
 	fetch(url, options) {

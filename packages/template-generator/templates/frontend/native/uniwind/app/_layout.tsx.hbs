@@ -10,7 +10,7 @@ import "@/global.css";
 {{#if (and (ne backend "convex") (eq auth "clerk"))}}
 import { ClerkProvider{{#unless (eq api "none")}}, useAuth{{/unless}} } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
-import { env } from "@{{projectName}}/env/native";
+import { ENV } from "../src/env";
 {{/if}}
 
 {{#if (eq backend "convex")}}
@@ -18,10 +18,10 @@ import { env } from "@{{projectName}}/env/native";
     import { ConvexReactClient } from "convex/react";
     import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
     import { authClient } from "@/lib/auth-client";
-    import { env } from "@{{projectName}}/env/native";
+    import { ENV } from "../src/env";
   {{else}}
     import { ConvexProvider, ConvexReactClient } from "convex/react";
-    import { env } from "@{{projectName}}/env/native";
+    import { ENV } from "../src/env";
   {{/if}}
 
   {{#if (eq auth "clerk")}}
@@ -53,7 +53,7 @@ export const unstable_settings = {
 };
 
 {{#if (eq backend "convex")}}
-  const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
+  const convex = new ConvexReactClient(ENV.EXPO_PUBLIC_CONVEX_URL, {
     unsavedChangesWarning: false,
   });
 {{/if}}
@@ -90,7 +90,7 @@ export default function Layout() {
   return (
     {{#if (eq backend "convex")}}
       {{#if (eq auth "clerk")}}
-        <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+        <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
           <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
             <GestureHandlerRootView style=\{{ flex: 1 }}>
               <KeyboardProvider>
@@ -130,7 +130,7 @@ export default function Layout() {
       {{/if}}
     {{else}}
       {{#if (eq auth "clerk")}}
-        <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+        <ClerkProvider tokenCache={tokenCache} publishableKey={ENV.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
           {{#unless (eq api "none")}}
             <ClerkApiAuthBridge />
             <QueryClientProvider client={queryClient}>
