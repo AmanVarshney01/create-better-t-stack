@@ -38,7 +38,7 @@ const SKILL_SOURCES = {
   "vercel/turborepo": {
     label: "Turborepo",
   },
-  "yusukebe/hono-skill": {
+  "honojs/skills": {
     label: "Hono Backend",
   },
   "vercel/next.js": {
@@ -307,7 +307,7 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
   }
 
   if (backend === "hono") {
-    sources.push("yusukebe/hono-skill");
+    sources.push("honojs/skills");
   }
 
   if (backend === "elysia") {
@@ -353,7 +353,7 @@ const CURATED_SKILLS_BY_SOURCE = {
   },
   "vercel/ai": () => ["ai-sdk"],
   "vercel/turborepo": () => ["turborepo"],
-  "yusukebe/hono-skill": () => ["hono"],
+  "honojs/skills": () => ["hono"],
   "vercel/next.js": () => [
     "next-dev-loop",
     "next-cache-components-adoption",
