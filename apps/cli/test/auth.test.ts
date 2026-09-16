@@ -8,6 +8,27 @@ import { expectError, expectSuccess, runCreateTest, type TestConfig } from "./te
 
 describe("Authentication Configurations", () => {
   describe("Better-Auth Provider", () => {
+    it.each(["drizzle", "prisma"] as const)(
+      "omits schema generation when yolo skips the database package with %s",
+      async (orm) => {
+        const result = await runCreateTest({
+          projectName: `auth-no-db-${orm}`,
+          auth: "better-auth",
+          database: "none",
+          orm,
+          yolo: true,
+        });
+        expectSuccess(result);
+        expect(await fs.pathExists(path.join(result.projectDir, "packages/db/package.json"))).toBe(
+          false,
+        );
+        for (const file of ["package.json", "apps/server/package.json"]) {
+          const pkg = await fs.readJson(path.join(result.projectDir, file));
+          expect(pkg.scripts?.["auth:generate"]).toBeUndefined();
+        }
+      },
+    );
+
     const databases = ["sqlite", "postgres", "mysql"];
     for (const database of databases) {
       it(`should work with better-auth + ${database}`, async () => {

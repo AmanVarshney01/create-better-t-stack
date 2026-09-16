@@ -5,7 +5,6 @@ import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
 import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { toast } from 'sonner';
 {{#unless (eq backend "self")}}
-import { ENV } from "@{{projectName}}/env/web";
 
 {{> getServerUrl}}
 {{/unless}}
@@ -35,9 +34,9 @@ const trpcClient = createTRPCClient<AppRouter>({
 			url: "/api/trpc",
 {{else}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
-			url: `${getServerUrl(ENV.NEXT_PUBLIC_SERVER_URL)}/trpc`,
+			url: `${getServerUrl(process.env.NEXT_PUBLIC_SERVER_URL!)}/trpc`,
 {{else}}
-			url: `${ENV.NEXT_PUBLIC_SERVER_URL.replace(/\/$/, "")}/trpc`,
+			url: `${process.env.NEXT_PUBLIC_SERVER_URL!.replace(/\/$/, "")}/trpc`,
 {{/if}}
 {{/if}}
 {{#if (eq auth "clerk")}}
@@ -84,7 +83,7 @@ import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { toast } from "sonner";
-import { ENV } from "@{{projectName}}/env/web";
+import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 {{#if (eq auth "clerk")}}
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 {{/if}}

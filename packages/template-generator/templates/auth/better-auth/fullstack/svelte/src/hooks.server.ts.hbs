@@ -5,7 +5,7 @@ import { building } from "$app/environment";
 {{#if (or (eq runtime "workers") (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 import { createAuth } from "@{{projectName}}/auth";
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
-import { ENV } from "@{{projectName}}/env/server";
+import { ENV } from "./env.server";
 {{/if}}
 {{else}}
 import { auth } from "@{{projectName}}/auth";

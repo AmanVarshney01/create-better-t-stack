@@ -344,17 +344,6 @@ describe("Deployment Configurations", () => {
       // Server-side better-auth must build public callback URLs through the
       // /api rewrite prefix, not the bare origin
       expect(files.get("apps/server/.env.schema")).toContain("${VERCEL_ORIGIN}/api/auth");
-      // better-auth and tRPC clients must normalize the same-origin /api path;
-      // both reject relative URLs (BetterAuthError / SSR fetch failure)
-      const authClient = files.get("apps/web/src/lib/auth-client.ts") ?? "";
-      expect(authClient).toContain("function getServerUrl(url: string)");
-      // The /api/auth suffix is required: better-auth uses a baseURL with a
-      // path as-is, so the origin-only shortcut breaks same-origin deploys
-      expect(authClient).toContain(
-        'baseURL: new URL("/api/auth", getServerUrl(ENV.NEXT_PUBLIC_SERVER_URL)).toString()',
-      );
-      const trpcClient = files.get("apps/web/src/utils/trpc.ts") ?? "";
-      expect(trpcClient).toContain("url: `${getServerUrl(ENV.NEXT_PUBLIC_SERVER_URL)}/trpc`");
       expect(files.get("README.md")).toContain("### Vercel Services");
       expect(files.get("README.md")).toContain("Sync preview env");
       expect(files.get("README.md")).toContain("Config: `vercel.json`");
@@ -2080,6 +2069,8 @@ describe("Client URL selection", () => {
     { frontend: "tanstack-router", api: "trpc", deploy: "none" },
     { frontend: "tanstack-router", api: "orpc", deploy: "none" },
     { frontend: "next", api: "orpc", deploy: "none" },
+    { frontend: "next", api: "trpc", deploy: "vercel" },
+    { frontend: "next", api: "orpc", deploy: "docker" },
     { frontend: "svelte", api: "orpc", deploy: "none" },
     { frontend: "astro", api: "orpc", deploy: "none" },
     { frontend: "tanstack-router", api: "trpc", deploy: "vercel" },
@@ -2122,7 +2113,8 @@ describe("Client URL selection", () => {
       const rpcExpression = rpcSource.match(/url: (`[^`\n]+`)/)?.[1];
       expect(rpcExpression).toBeDefined();
       const executable = new Bun.Transpiler({ loader: "ts" })
-        .transformSync(authSource)
+        .transformSync(`${authSource}
+export const urls = [authClient.baseURL, ${rpcExpression}];`)
         .replace(/^import .*;\n/gm, "")
         .replace(/^export /gm, "");
       const evaluate = new Function(
@@ -2130,7 +2122,8 @@ describe("Client URL selection", () => {
         "ENV",
         "window",
         "globalThis",
-        `${executable}\nreturn [authClient.baseURL, ${rpcExpression}];`,
+        "process",
+        `${executable}\nreturn urls;`,
       );
       const processEnv = {
         SERVER_URL: deploy === "docker" ? "http://server:3000/" : undefined,
@@ -2157,6 +2150,7 @@ describe("Client URL selection", () => {
           {
             process: { env: processEnv },
           },
+          { env: { [envKey]: publicUrl } },
         );
         expect(urls).toEqual([
           deploy === "none" ? publicUrl : `${origin}/api/auth`,

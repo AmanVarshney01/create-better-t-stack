@@ -1,6 +1,6 @@
 import { createClient, type AuthClient } from "@{{projectName}}/auth/client";
 {{#unless (eq backend "self")}}
-import { ENV } from "@{{projectName}}/env/web";
+import { ENV } from "./env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
 
 {{> getServerUrl}}
 {{/unless}}

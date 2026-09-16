@@ -22,7 +22,7 @@ import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 
 {{#if (eq backend "convex")}}
 import { ConvexReactClient } from "convex/react";
-import { ENV } from "@{{projectName}}/env/web";
+import { ENV } from "./env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
   {{#if (eq auth "clerk")}}
 import { ConvexProviderWithClerk } from "convex/react-clerk";
   {{else if (eq auth "better-auth")}}

@@ -3,7 +3,9 @@ import { createAuthClient } from "better-auth/react";
 import { polarClient } from "@polar-sh/better-auth/client";
 {{/if}}
 {{#unless (eq backend "self")}}
-import { ENV } from "@{{projectName}}/env/web";
+{{#unless (includes frontend "next")}}
+import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
+{{/unless}}
 
 {{> getServerUrl}}
 {{/unless}}
@@ -11,9 +13,9 @@ import { ENV } from "@{{projectName}}/env/web";
 export const authClient = createAuthClient({
 {{#unless (eq backend "self")}}
 {{#if (and (eq webDeploy serverDeploy) (or (eq webDeploy "vercel") (eq webDeploy "docker")))}}
-  baseURL: new URL("/api/auth", getServerUrl(ENV.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}})).toString(),
+  baseURL: new URL("/api/auth", getServerUrl({{#if (includes frontend "next")}}process.env.NEXT_PUBLIC_SERVER_URL!{{else}}ENV.VITE_SERVER_URL{{/if}})).toString(),
 {{else}}
-  baseURL: ENV.{{#if (includes frontend "next")}}NEXT_PUBLIC_SERVER_URL{{else}}VITE_SERVER_URL{{/if}},
+  baseURL: {{#if (includes frontend "next")}}process.env.NEXT_PUBLIC_SERVER_URL!{{else}}ENV.VITE_SERVER_URL{{/if}},
 {{/if}}
 {{/unless}}
 {{#if (eq payments "polar")}}

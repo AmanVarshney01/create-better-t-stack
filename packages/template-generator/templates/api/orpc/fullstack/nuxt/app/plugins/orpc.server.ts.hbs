@@ -8,7 +8,7 @@ import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 {{/if}}
 {{#if (eq webDeploy "cloudflare")}}
-import type { CloudflareEnv } from "@{{projectName}}/env/server";
+import type { CloudflareEnv } from "../../src/env.server";
 {{/if}}
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 

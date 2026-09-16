@@ -1,4 +1,4 @@
-{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, ENV } from "@{{projectName}}/env/server";{{else}}import { ENV } from "@{{projectName}}/env/server";{{/if}}
+{{#if (and (ne backend "self") (or (includes addons "electrobun") (includes addons "tauri")))}}import { desktopOrigins, ENV } from "./env.server";{{else}}import { ENV } from "./env.server";{{/if}}
 {{#if (eq api "orpc")}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";

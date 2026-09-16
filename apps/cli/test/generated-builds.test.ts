@@ -296,6 +296,27 @@ const buildSamples: BuildSample[] = [
       examples: [],
     },
   },
+  ...(["trpc", "orpc"] as const).map(
+    (api) =>
+      ({
+        name: `next-hono-${api}-auth`,
+        config: {
+          ...baseConfig,
+          frontend: ["next"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          api,
+          auth: "better-auth",
+          payments: "none",
+          addons: [],
+          examples: ["todo"],
+          webDeploy: api === "trpc" ? "docker" : "none",
+          serverDeploy: api === "trpc" ? "docker" : "none",
+        },
+      }) satisfies BuildSample,
+  ),
   {
     name: "nuxt-orpc",
     config: {
@@ -1576,6 +1597,12 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
               ["run", "db:generate"],
             );
             expect(await fs.pathExists(generatedClient)).toBe(true);
+          }
+          if (["tanstack-start-self-auth-todo", "next-self-prisma"].includes(sample.name)) {
+            await runCommand(sample.name, projectDir, sample.packageManager, [
+              "run",
+              "auth:generate",
+            ]);
           }
           const restoreTypeFixtures = await writeOrpcInferenceChecks(sample, projectDir);
           if (sample.name === "nuxt-auth-todo-ai") {
