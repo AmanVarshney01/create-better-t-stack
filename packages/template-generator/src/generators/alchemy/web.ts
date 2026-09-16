@@ -43,7 +43,7 @@ function writeStaticSite(
       if (framework === "next") {
         writer.writeLine('outdir: ".open-next/assets",');
         writer.writeLine('main: "../../apps/web/.open-next/worker.js",');
-        writer.writeLine("bundle: false,");
+        writer.writeLine("bundle: true,");
         writeObject(
           writer,
           "compatibility: {",
