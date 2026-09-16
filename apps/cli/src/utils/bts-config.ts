@@ -13,6 +13,14 @@ function parseBtsConfig(content: string): BetterTStackConfig {
   const errors: ParseError[] = [];
   const value = parse(content, errors, { allowTrailingComma: true });
   if (errors.length > 0) throw new Error("Invalid JSONC in bts.jsonc");
+  const selections = value?.addonOptions?.skills?.selections;
+  if (Array.isArray(selections)) {
+    for (const selection of selections) {
+      if (selection?.source === "yusukebe/hono-skill") {
+        selection.source = "honojs/skills";
+      }
+    }
+  }
   return BetterTStackConfigSchema.parse(value);
 }
 
