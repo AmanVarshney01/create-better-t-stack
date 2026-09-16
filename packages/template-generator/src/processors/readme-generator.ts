@@ -154,7 +154,7 @@ export function processReadme(vfs: VirtualFileSystem, config: ProjectConfig): vo
   if (
     vfs.readJson<{ scripts?: Record<string, string> }>("package.json")?.scripts?.["auth:generate"]
   ) {
-    content += `\n## Better Auth Schema Generation\n\nAfter changing auth plugins or schema options, run \`${config.packageManager} run auth:generate\` from the project root. This runs the Better Auth CLI from the owning app directory, using \`auth.config.ts\` to initialize Varlock before loading your auth instance. Review the schema changes, then use your ORM's migration workflow to apply them.\n`;
+    content += `\n## Better Auth Schema Generation\n\nAfter changing auth plugins or schema options, run \`${config.packageManager} run auth:generate\` from the project root. The script runs the Better Auth CLI from the owning app directory and preloads \`varlock/auto-load\` through \`NODE_OPTIONS\` before loading the auth instance from \`src/services.ts\`. Review the schema changes, then use your ORM's migration workflow to apply them.\n`;
   }
   vfs.writeFile("README.md", content);
 }

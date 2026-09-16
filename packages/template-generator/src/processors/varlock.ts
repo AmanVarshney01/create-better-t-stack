@@ -263,7 +263,6 @@ export function processVarlock(
     config.serverDeploy !== "cloudflare" &&
     !(config.backend === "self" && config.webDeploy === "cloudflare")
   ) {
-    processSingleTemplate(vfs, templates, "env/auth.config.ts", `${server}/auth.config.ts`, config);
     const execute =
       config.packageManager === "bun"
         ? "bun x"
@@ -274,8 +273,15 @@ export function processVarlock(
     const app = vfs.readJson<Package>(`${server}/package.json`)!;
     app.scripts ??= {};
     app.scripts["auth:generate"] =
-      `${execute} auth@latest generate --config auth.config.ts --output ../../packages/db/${output} --yes`;
+      `${config.packageManager === "bun" ? "" : "cross-env "}NODE_OPTIONS=--import=varlock/auto-load ${execute} auth@latest generate --config src/services.ts --output ../../packages/db/${output} --yes`;
     vfs.writeJson(`${server}/package.json`, app);
+    if (config.packageManager !== "bun") {
+      addPackageDependency({
+        vfs,
+        packagePath: `${server}/package.json`,
+        devDependencies: ["cross-env"],
+      });
+    }
     root.scripts["auth:generate"] = `cd ${server} && ${config.packageManager} run auth:generate`;
   }
   vfs.writeJson("package.json", root);

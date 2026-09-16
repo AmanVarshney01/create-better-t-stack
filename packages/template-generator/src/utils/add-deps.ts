@@ -171,6 +171,7 @@ export const dependencyVersionMap = {
 
   "babel-preset-expo": "~57.0.10",
   varlock: "1.18.0",
+  "cross-env": "^10.1.0",
   "@varlock/vite-integration": "1.5.1",
   "@varlock/nextjs-integration": "1.2.2",
   "@varlock/nuxt-integration": "0.1.1",
