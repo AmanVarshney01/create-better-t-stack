@@ -164,7 +164,7 @@ function processCloudflarePublicEnv(vfs: VirtualFileSystem, config: ProjectConfi
       .some(
         (file) =>
           file.startsWith("apps/web/") &&
-          vfs.readFile(file)?.includes(`@${config.projectName}/env/web`),
+          vfs.readFile(file)?.includes(`from "${importPath(file, "apps/web/src/env.public")}"`),
       )
   )
     return;
@@ -303,20 +303,10 @@ export function processVarlock(
     if (!file.startsWith("apps/") || !/\.(ts|tsx|vue|svelte|astro)$/.test(file)) continue;
     const app = file.split("/").slice(0, 2).join("/");
     let content = vfs.readFile(file)!;
-    content = content
-      .replaceAll(
-        `@${config.projectName}/env/web`,
-        importPath(
-          file,
-          config.webDeploy === "cloudflare" ? "apps/web/src/env.public" : "apps/web/src/env",
-        ),
-      )
-      .replaceAll(`@${config.projectName}/env/native`, importPath(file, "apps/native/src/env"))
-      .replaceAll(`@${config.projectName}/env/server`, importPath(file, `${server}/src/env.server`))
-      .replaceAll(
-        `@${config.projectName}/app-services`,
-        importPath(file, `${server}/src/services`),
-      );
+    content = content.replaceAll(
+      `@${config.projectName}/app-services`,
+      importPath(file, `${server}/src/services`),
+    );
     if (file !== "apps/web/src/client.ts") {
       content = content.replaceAll(
         `@${config.projectName}/auth/client`,
