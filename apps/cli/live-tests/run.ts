@@ -10,6 +10,7 @@ import { z } from "zod";
 import { readBtsConfig } from "../src/utils/bts-config";
 import { openBrowser, verificationBlockers, verifyBrowser } from "./browser";
 import { Blocked, Commands } from "./command";
+import { DatabaseAssertions, migrateDatabase } from "./database";
 import { startLocal } from "./local";
 import { caseId, configurations, selectionSchema } from "./matrix";
 import {
@@ -20,6 +21,7 @@ import {
   provisionDatabase,
   writeEnvironment,
 } from "./providers";
+import { verifyServer } from "./server";
 import { RunState, type Status } from "./state";
 
 const { values, positionals } = parseArgs({
@@ -44,27 +46,30 @@ const existingRun = action === "cleanup" || action === "report";
 if (existingRun && !values.directory)
   throw new Error(`${action} requires --directory pointing to an existing run.`);
 const gitSha = (await execa("git", ["rev-parse", "HEAD"], { cwd: root })).stdout;
-const sourceHash = createHash("sha256");
-async function hashDirectory(directory: string) {
+async function hashDirectory(directory: string, sourceHash: ReturnType<typeof createHash>) {
   for (const entry of (await readdir(directory, { withFileTypes: true })).sort((a, b) =>
     a.name.localeCompare(b.name),
   )) {
     const file = path.join(directory, entry.name);
-    if (entry.isDirectory()) await hashDirectory(file);
+    if (entry.isDirectory()) await hashDirectory(file, sourceHash);
     else if (entry.isFile())
       sourceHash.update(path.relative(root, file)).update(await readFile(file));
   }
 }
-if (!existingRun)
+async function fingerprint() {
+  const sourceHash = createHash("sha256");
   for (const directory of [
     "apps/cli/dist",
+    "apps/cli/src",
     "packages/types/dist",
     "packages/template-generator/dist",
     "apps/cli/live-tests",
   ])
-    await hashDirectory(path.join(root, directory));
-if (!existingRun) sourceHash.update(await readFile(path.join(root, "bun.lock")));
-const binaryHash = sourceHash.digest("hex");
+    await hashDirectory(path.join(root, directory), sourceHash);
+  sourceHash.update(await readFile(path.join(root, "bun.lock")));
+  return sourceHash.digest("hex");
+}
+const binaryHash = existingRun ? "" : await fingerprint();
 const identity = JSON.stringify({ gitSha, binaryHash, filter });
 const directory = path.resolve(
   values.directory ??
@@ -121,6 +126,7 @@ async function executeCase(selection: ProjectConfig, id: string) {
     if (value && /TOKEN|SECRET|PASSWORD|API_KEY/.test(key)) commands.secret(value);
   let status: Status = "running";
   let detail = "";
+  let database: DatabaseAssertions | undefined;
   state.record(id, config, status, detail, caseDirectory);
   try {
     if (state.resources(id).length) await cleanCase(id, commands);
@@ -132,6 +138,7 @@ async function executeCase(selection: ProjectConfig, id: string) {
     if (
       config.dbSetup !== "neon" &&
       config.database !== "none" &&
+      !(config.database === "sqlite" && config.dbSetup === "none" && targets.size === 0) &&
       !usesAlchemyManagedDatabase(config) &&
       config.dbSetup !== "d1"
     )
@@ -166,16 +173,11 @@ async function executeCase(selection: ProjectConfig, id: string) {
     const databaseUrl = await provisionDatabase(config, state, id, commands);
     await writeEnvironment(config, databaseUrl, commands);
     if (databaseUrl) {
-      const db = path.join(project, "packages/db");
-      if (config.orm === "prisma")
-        await commands.run("prisma-generate", db, config.packageManager, ["run", "db:generate"]);
-      if (config.orm === "drizzle") {
-        await commands.run("migration-generate", db, config.packageManager, ["run", "db:generate"]);
-        await commands.run("migration-apply", db, config.packageManager, ["run", "db:migrate"]);
-        await commands.run("migration-repeat", db, config.packageManager, ["run", "db:migrate"]);
-      }
-      await commands.run("database-setup", db, config.packageManager, ["run", "db:push"]);
+      await migrateDatabase(config, commands);
+      database = new DatabaseAssertions(databaseUrl);
     }
+    if (config.addons.some((addon) => ["biome", "oxlint", "vite-plus"].includes(addon)))
+      await commands.run("check", project, config.packageManager, ["run", "check"]);
     await commands.run("check-types", project, config.packageManager, ["run", "check-types"]);
     browser ??= await openBrowser();
     if (targets.has("vercel")) {
@@ -188,7 +190,24 @@ async function executeCase(selection: ProjectConfig, id: string) {
         );
         const verificationErrors: unknown[] = [];
         try {
-          await verifyBrowser(browser, config, deployment, caseDirectory, stage);
+          if (config.frontend.length)
+            await verifyBrowser(
+              browser,
+              config,
+              deployment,
+              caseDirectory,
+              stage,
+              database,
+              stage === "preview" ? "production" : undefined,
+            );
+          else
+            await verifyServer(
+              config,
+              deployment,
+              stage,
+              database,
+              stage === "preview" ? "production" : undefined,
+            );
         } catch (error) {
           verificationErrors.push(error);
         }
@@ -201,8 +220,28 @@ async function executeCase(selection: ProjectConfig, id: string) {
       }
     } else if (targets.size === 0) {
       await commands.run("build", project, config.packageManager, ["run", "build"]);
-      const deployment = await startLocal(config, commands);
-      await verifyBrowser(browser, config, deployment, caseDirectory, "local");
+      for (const mode of ["development", "production"] as const) {
+        const deployment = await startLocal(config, commands, mode);
+        if (config.frontend.length)
+          await verifyBrowser(
+            browser,
+            config,
+            deployment,
+            caseDirectory,
+            mode,
+            database,
+            mode === "production" ? "development" : undefined,
+          );
+        else
+          await verifyServer(
+            config,
+            deployment,
+            mode,
+            database,
+            mode === "production" ? "development" : undefined,
+          );
+        await commands.stopAll();
+      }
     } else {
       const deployment = await deployAlchemy(config, state, id, commands);
       await writeFile(
@@ -210,13 +249,21 @@ async function executeCase(selection: ProjectConfig, id: string) {
         JSON.stringify(deployment, null, 2),
         { mode: 0o600 },
       );
-      await verifyBrowser(browser, config, deployment, caseDirectory, "alchemy");
+      if (config.frontend.length)
+        await verifyBrowser(browser, config, deployment, caseDirectory, "alchemy");
+      else await verifyServer(config, deployment, "alchemy");
     }
     status = "passed";
   } catch (error) {
     status = abort.signal.aborted ? "interrupted" : error instanceof Blocked ? "blocked" : "failed";
     detail = commands.redact(error instanceof Error ? error.message : String(error));
   } finally {
+    try {
+      await database?.close();
+    } catch (error) {
+      status = "failed";
+      detail += `\nDatabase connection cleanup failed: ${commands.redact(String(error))}`;
+    }
     try {
       await commands.stopAll();
     } catch (error) {
@@ -270,7 +317,13 @@ try {
         break;
       }
       const id = caseId(config);
-      if (action === "run") await executeCase(config, id);
+      if (action === "run") {
+        if ((await fingerprint()) !== binaryHash)
+          throw new Error(
+            "CLI or runner changed during this run; start a new run with the updated inputs.",
+          );
+        await executeCase(config, id);
+      }
       count++;
       if (count % 10_000 === 0)
         console.log(

@@ -18,13 +18,46 @@ async function requireAvailablePort(port: number) {
   });
 }
 
-async function startService(config: ProjectConfig, commands: Commands, app: string, port: number) {
+type Mode = "development" | "production";
+
+function serviceArgs(config: ProjectConfig, app: string, mode: Mode, port: number): string[] {
+  if (mode === "development") return ["run", "dev"];
+  if (app === "server") return ["run", "start"];
+  const frontend = config.frontend[0];
+  if (frontend === "next" || frontend === "react-router" || frontend === "solid")
+    return ["run", "start"];
+  if (frontend === "nuxt") return ["run", "preview"];
+  const script =
+    frontend === "tanstack-router" || frontend === "tanstack-start" ? "serve" : "preview";
+  return [
+    "run",
+    script,
+    ...(config.packageManager === "npm" ? ["--"] : []),
+    "--port",
+    String(port),
+  ];
+}
+
+async function startService(
+  config: ProjectConfig,
+  commands: Commands,
+  app: string,
+  port: number,
+  mode: Mode,
+) {
   await requireAvailablePort(port);
   const runtime = commands.start(
-    `${app}-dev`,
+    `${app}-${mode}`,
     path.join(config.projectDir, "apps", app),
     config.packageManager,
-    ["run", "dev"],
+    serviceArgs(config, app, mode, port),
+    {
+      NODE_ENV: mode,
+      PORT: String(port),
+      NITRO_PORT: String(port),
+      ASTRO_DEV_BACKGROUND: "0",
+      ASTRO_PREVIEW_BACKGROUND: "0",
+    },
   );
   const origin = `http://localhost:${port}`;
   const readiness = new AbortController();
@@ -59,15 +92,19 @@ async function startService(config: ProjectConfig, commands: Commands, app: stri
   return origin;
 }
 
-export async function startLocal(config: ProjectConfig, commands: Commands): Promise<Deployment> {
+export async function startLocal(
+  config: ProjectConfig,
+  commands: Commands,
+  mode: Mode,
+): Promise<Deployment> {
   const hasServer = !["none", "self", "convex"].includes(config.backend);
-  const server = hasServer ? await startService(config, commands, "server", 3000) : undefined;
+  const server = hasServer ? await startService(config, commands, "server", 3000, mode) : undefined;
   if (!config.frontend.length) return { server };
   const webPort = config.frontend.some((f) => f === "svelte" || f === "react-router")
     ? 5173
     : config.frontend.includes("astro")
       ? 4321
       : 3001;
-  const web = await startService(config, commands, "web", webPort);
+  const web = await startService(config, commands, "web", webPort, mode);
   return { web, server: config.backend === "self" ? `${web}/api` : server };
 }

@@ -10,6 +10,8 @@ bun run test:live plan --where '{"frontend":["tanstack-router"],"backend":"hono"
 
 Replace `plan` with `run` to execute that selection. Remove selection fields to enumerate their valid alternatives. An empty selection enumerates all supported core stack choices, frontend/native pairs, addon subsets, and example subsets using the existing compatibility rules. It does **not** yet enumerate addon-specific options or automatic database-setup login flows.
 
+The complete matrix is much larger than an overnight run: on 2026-09-16, core choices alone (with addons and examples explicitly empty) enumerated 3,667,650 cases. Use explicit filters for manageable batches; a successful batch is not complete-matrix certification.
+
 `--limit N` bounds a run for development; a limited run reports incomplete coverage and exits nonzero. Zero matching cases also exits nonzero. An enumerated case only passes after its runtime checks and resource cleanup succeed. Missing adapters or credentials are blocked, never passed.
 
 ## Accounts
@@ -29,11 +31,12 @@ Vercel function cases require the Node runtime; Bun remains a supported package 
 ## Verification and current limits
 
 - The CLI must save the requested selections in `bts.jsonc`; silently selecting a default is a failure.
-- Generated dependencies install, then the project typechecks. Local cases also build and run the generated dev scripts.
-- Drizzle/Neon cases generate and apply a migration, repeat it to check idempotence, then run `db:push`. Prisma cases generate the client and run `db:push`; Prisma migration lifecycle coverage is still pending.
-- Browser checks cover rendering, API health, Better Auth signup/login/logout, session persistence after reload, protected navigation, and todo create/update/delete with reloads. Browser crashes, failed requests, API errors, and incorrect API origins fail the case.
-- Local browser verification currently targets development servers, not the built production server. Native devices, Docker, mixed deployment providers, AI, payments, and many addons are explicitly blocked until their runtime checks exist. Direct database assertions, redeployment persistence, and PWA offline checks are still pending.
-- Next.js remains under investigation: live runs exposed an intermittent login hydration error, and local Turbopack development leaves an imported utility's public Varlock `ENV` value undefined. Passing retries do not resolve these findings.
+- Generated dependencies install, then the project typechecks. Local cases build and exercise both the generated development and production servers.
+- SQLite and Neon cases generate and apply a migration, repeat it to check idempotence, then run `db:push`. Prisma generates its client and initial migration SQL with the documented `migrate diff` command before applying it.
+- Browser checks cover rendering, API health, Better Auth signup/login/logout, session persistence after reload, protected navigation, and todo create/update/delete with reloads. Browser crashes, hydration mismatches, failed requests, API errors, and incorrect API origins fail the case.
+- Direct SQLite/PostgreSQL queries verify signup and todo changes. The same account and a saved todo must survive the development-to-production restart or Vercel production-to-preview deployment. Server-only cases verify HTTP auth, protected RPC calls and todo CRUD. PWA cases check the manifest, icons, service worker, offline navigation, and exclusion of auth/RPC responses from caches.
+- Native devices, Docker, mixed deployment providers, AI, payments, and unsupported addons are explicitly blocked until their runtime checks exist.
+- Live tests exposed a Next.js public environment replacement failure, login hydration errors, Nuxt session hydration and early form interaction failures, cold dependency optimization failures, and an empty Prisma migration directory. Fixes must pass freshly generated cases; a passing retry alone does not resolve a finding.
 - Framework-specific browser selectors still need validation across the full matrix. A passing TanStack Router case does not certify other frameworks.
 
 ## Results, resume, and cleanup
@@ -45,7 +48,7 @@ bun run test:live report --directory apps/cli/.smoke/live/RUN_ID
 bun run test:live cleanup --directory apps/cli/.smoke/live/RUN_ID
 ```
 
-Repeat the same `run --where ...` command to resume. Passed cases are skipped; use `--retry-failed` to retry failures. Blocked and interrupted cases are revisited. The identity includes the built CLI, generated-template bundle, shared types, runner source, lockfile, commit, and filter; changed inputs require a new run directory.
+Repeat the same `run --where ...` command to resume. Passed cases are skipped; use `--retry-failed` to retry failures. Blocked and interrupted cases are revisited. The identity includes the built CLI, CLI source used by the runner, generated-template bundle, shared types, runner source, lockfile, commit, and filter; changed inputs require a new run directory.
 
 Cleanup normally runs after each case. `--retain-failed` preserves failed deployments for investigation; clean them with the command above. Interruptions retain resource records so cleanup can resume. A failed cleanup keeps the case failed and the resource pending. Unconfirmed Vercel creation intents require inspecting the create log/account before reconciliation; cleanup will not delete an unconfirmed project by name.
 

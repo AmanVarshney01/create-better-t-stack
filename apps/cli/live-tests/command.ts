@@ -24,16 +24,17 @@ export class Commands {
       "$1://[REDACTED]",
     );
   }
-  start(name: string, cwd: string, command: string, args: string[]) {
+  start(name: string, cwd: string, command: string, args: string[], env: NodeJS.ProcessEnv = {}) {
     const log = path.join(this.directory, `${String(++this.index).padStart(2, "0")}-${name}.log`);
     console.log(`  ${name}: starting`);
     const child = execa(command, args, {
       cwd,
-      env: { AGENT: "1", BTS_TELEMETRY: "0", CI: "1" },
+      env: { AGENT: "1", BTS_TELEMETRY: "0", CI: "1", ...env },
       all: true,
       reject: false,
       cancelSignal: this.signal,
       killDescendants: true,
+      forceKillAfterDelay: 5_000,
     });
     const finished = child.then(async (result) => {
       await writeFile(log, this.redact(result.all ?? result.message ?? ""), { mode: 0o600 });

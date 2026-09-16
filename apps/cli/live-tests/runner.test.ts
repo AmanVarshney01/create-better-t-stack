@@ -1,9 +1,11 @@
+import { Database } from "bun:sqlite";
 import { afterEach, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
 import { Commands } from "./command";
+import { DatabaseAssertions } from "./database";
 import { caseId, configurations, type Selection } from "./matrix";
 import { RunState } from "./state";
 
@@ -72,4 +74,33 @@ test("command failures retain useful diagnostics without exposing registered cre
   expect(log).toContain("[REDACTED]");
   expect(log).not.toContain("test-credential-value");
   expect(log).not.toContain("user:pass");
+});
+
+test("database assertions fail on missing, duplicated, or incorrectly persisted records", async () => {
+  const directory = mkdtempSync(path.join(os.tmpdir(), "bts-live-database-"));
+  directories.push(directory);
+  const file = path.join(directory, "test.db");
+  const writer = new Database(file);
+  writer.exec(
+    "CREATE TABLE user (email TEXT, name TEXT); CREATE TABLE todo (text TEXT, completed INTEGER);",
+  );
+  const database = new DatabaseAssertions(`file:${file}`);
+  try {
+    await expect(database.user("test@example.test")).rejects.toThrow();
+    writer.query("INSERT INTO user VALUES (?, ?)").run("test@example.test", "Live Test");
+    await database.user("test@example.test");
+    writer.query("INSERT INTO todo VALUES (?, ?)").run("Task", 0);
+    await database.todo("Task", false);
+    await expect(database.todo("Task", true)).rejects.toThrow();
+    writer.exec("UPDATE todo SET completed=1");
+    await database.todo("Task", true);
+    await expect(database.todo("Task", undefined)).rejects.toThrow();
+    writer.exec("INSERT INTO todo SELECT * FROM todo");
+    await expect(database.todo("Task", true)).rejects.toThrow();
+    writer.exec("DELETE FROM todo");
+    await database.todo("Task", undefined);
+  } finally {
+    await database.close();
+    writer.close();
+  }
 });

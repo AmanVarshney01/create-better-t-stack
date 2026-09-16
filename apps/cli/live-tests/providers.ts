@@ -54,6 +54,13 @@ export async function provisionDatabase(
 ) {
   if (usesAlchemyManagedDatabase(config) || config.dbSetup === "d1" || config.database === "none")
     return undefined;
+  if (
+    config.database === "sqlite" &&
+    config.dbSetup === "none" &&
+    config.webDeploy === "none" &&
+    config.serverDeploy === "none"
+  )
+    return `file:${path.join(config.projectDir, "live-test.db")}`;
   if (config.dbSetup !== "neon")
     throw new Blocked(
       `Database provisioner not yet available: ${config.dbSetup}/${config.database}`,
@@ -203,6 +210,10 @@ export async function deployAlchemy(
   id: string,
   commands: Commands,
 ) {
+  if (!process.env.CLOUDFLARE_ACCOUNT_ID)
+    throw new Blocked(
+      "Set CLOUDFLARE_ACCOUNT_ID and connect Cloudflare in the Alchemy profile before deploying.",
+    );
   const directory = path.join(config.projectDir, "packages/infra");
   const stage = `test-${id.slice(0, 12)}`;
   state.resource(id, "alchemy", stage, directory);
