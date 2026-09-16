@@ -258,6 +258,7 @@ export function processVarlock(
   if (
     config.auth === "better-auth" &&
     config.backend !== "convex" &&
+    vfs.exists("packages/db/package.json") &&
     (config.orm === "drizzle" || config.orm === "prisma") &&
     config.runtime !== "workers" &&
     config.serverDeploy !== "cloudflare" &&
@@ -273,15 +274,8 @@ export function processVarlock(
     const app = vfs.readJson<Package>(`${server}/package.json`)!;
     app.scripts ??= {};
     app.scripts["auth:generate"] =
-      `${config.packageManager === "bun" ? "" : "cross-env "}NODE_OPTIONS=--import=varlock/auto-load ${execute} auth@latest generate --config src/services.ts --output ../../packages/db/${output} --yes`;
+      `varlock run -- ${execute} auth@latest generate --config src/services.ts --output ../../packages/db/${output} --yes`;
     vfs.writeJson(`${server}/package.json`, app);
-    if (config.packageManager !== "bun") {
-      addPackageDependency({
-        vfs,
-        packagePath: `${server}/package.json`,
-        devDependencies: ["cross-env"],
-      });
-    }
     root.scripts["auth:generate"] = `cd ${server} && ${config.packageManager} run auth:generate`;
   }
   vfs.writeJson("package.json", root);
