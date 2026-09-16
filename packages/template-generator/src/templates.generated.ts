@@ -30538,23 +30538,6 @@ initOpenNextCloudflareForDev();
 
 export default config;
 `],
-  ["frontend/react/next/public/better-t-stack.svg", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 550 260" width="550" height="260">
-  <g fill="#000" font-family="monospace" font-size="16" xml:space="preserve">
-    <text x="0" y="16"> ██████╗ ███████╗████████╗████████╗███████╗██████╗</text>
-    <text x="0" y="36"> ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗</text>
-    <text x="0" y="56"> ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝</text>
-    <text x="0" y="76"> ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗</text>
-    <text x="0" y="96"> ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║</text>
-    <text x="0" y="116"> ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝</text>
-    <text x="0" y="156"> ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗</text>
-    <text x="0" y="176"> ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝</text>
-    <text x="0" y="196">    ██║       ███████╗   ██║   ███████║██║     █████╔╝</text>
-    <text x="0" y="216">    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗</text>
-    <text x="0" y="236">    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗</text>
-    <text x="0" y="256">    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝</text>
-  </g>
-</svg>
-`],
   ["frontend/react/next/src/app/favicon.ico", `[Binary file]`],
   ["frontend/react/next/src/app/layout.tsx.hbs", `import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -30633,9 +30616,7 @@ export default function RootLayout({
 }
 {{/if}}
 `],
-  ["frontend/react/next/src/app/page.tsx.hbs", `"use client";
-
-import Image from "next/image";
+  ["frontend/react/next/src/app/page.tsx.hbs", `"use client"
 {{#if (eq backend "convex")}}
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
@@ -30649,6 +30630,22 @@ import { trpc } from "@/utils/trpc";
   {{/if}}
 {{/if}}
 
+const TITLE_TEXT = \`
+ ██████╗ ███████╗████████╗████████╗███████╗██████╗
+ ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
+ ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
+ ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
+ ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
+ ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
+
+ ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
+ ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+    ██║       ███████╗   ██║   ███████║██║     █████╔╝
+    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
+    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
+    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+ \`;
+
 export default function Home() {
   {{#if (eq backend "convex")}}
   const healthCheck = useQuery(api.healthCheck.get);
@@ -30660,7 +30657,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-2">
-      <Image src="/better-t-stack.svg" alt="Better T Stack" width={550} height={260} loading="eager" className="h-auto max-w-full dark:invert" />
+      <pre className="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
       <div className="grid gap-6">
         <section className="rounded-lg border p-4">
           <h2 className="mb-2 font-medium">API Status</h2>
@@ -35559,4 +35556,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 530;
+export const TEMPLATE_COUNT = 529;
