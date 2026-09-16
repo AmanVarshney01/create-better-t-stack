@@ -6,13 +6,9 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
+import { dependencyVersionMap } from "../utils/add-deps";
 
 type VercelRewrite = { source: string; destination: string | { service: string } };
-
-type VercelRoute = {
-  src: string;
-  transforms: { type: string; op: string; args: string }[];
-};
 
 type VercelService = {
   root: string;
@@ -21,8 +17,9 @@ type VercelService = {
   installCommand?: string;
   buildCommand?: string;
   outputDirectory?: string;
+  functions?: Record<string, { includeFiles: string }>;
   rewrites?: VercelRewrite[];
-  routes?: VercelRoute[];
+  bindings?: { type: "service"; service: string; format: "url"; env: string }[];
 };
 
 function getWebFramework(frontend: ProjectConfig["frontend"], isDesktop: boolean): string {
@@ -45,7 +42,7 @@ function getPublicServerUrlVar(frontend: ProjectConfig["frontend"]): string {
 }
 
 export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { webDeploy, serverDeploy, backend, runtime, frontend, addons, packageManager } = config;
+  const { webDeploy, serverDeploy, backend, frontend, addons, packageManager } = config;
 
   if (webDeploy !== "vercel" && serverDeploy !== "vercel") return;
 
@@ -54,7 +51,9 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
   const isDesktop = addons.includes("tauri") || addons.includes("electrobun");
   const isStaticSpa =
     frontend.includes("tanstack-router") || (frontend.includes("react-router") && isDesktop);
-  const installCommand = `cd ../.. && ${packageManager} install`;
+  const installer =
+    packageManager === "bun" ? `bunx bun@${dependencyVersionMap.bun}` : packageManager;
+  const installCommand = `cd ../.. && ${installer} install`;
 
   const services: Record<string, VercelService> = {};
 
@@ -65,7 +64,9 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
       installCommand,
     };
     if (hasServer) {
-      // Same-origin /api: the client calls the domain it was served from
+      if (!isStaticSpa) {
+        web.bindings = [{ type: "service", service: "server", format: "url", env: "SERVER_URL" }];
+      }
       web.buildCommand = `${getPublicServerUrlVar(frontend)}=/api ${packageManager} run build`;
     }
     if (frontend.includes("react-router") && isDesktop) {
@@ -83,18 +84,22 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
       framework: backend,
       entrypoint: "src/index.ts",
       installCommand,
-    };
-    if (hasWeb) {
-      // /api/auth/* must reach the server unstripped: better-auth derives its
-      // router base path from the public URL path
-      server.routes = [
-        {
-          src: "/api/((?!auth(?:/|$)).*)",
-          transforms: [{ type: "request.path", op: "set", args: "/$1" }],
+      buildCommand: `${packageManager} run env:generate && ${packageManager} run check-types`,
+      functions: {
+        "src/index.ts": {
+          includeFiles:
+            "{package.json,apps/server/.env.schema,node_modules/.bin/varlock,node_modules/varlock/**}",
         },
-      ];
-    }
+      },
+    };
     services.server = server;
+  }
+
+  if (config.orm === "prisma" && config.database !== "none") {
+    for (const [name, service] of Object.entries(services)) {
+      const command = service.buildCommand ?? `${packageManager} run build`;
+      service.buildCommand = `cd ../.. && ${packageManager} run db:generate && cd apps/${name} && ${command}`;
+    }
   }
 
   const rewrites: VercelRewrite[] = [];
@@ -111,7 +116,6 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
 
   vfs.writeJson("vercel.json", {
     $schema: "https://openapi.vercel.sh/vercel.json",
-    bunVersion: runtime === "bun" ? "1.x" : undefined,
     services,
     rewrites,
   });

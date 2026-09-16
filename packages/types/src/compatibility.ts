@@ -387,6 +387,7 @@ export function supportsServerDeployRuntime(
   if (!deploy) return true;
   if (deploy === "none") return runtime !== "workers";
   if (deploy === "cloudflare") return runtime === "workers";
+  if (deploy === "vercel") return runtime === "node";
   return runtime === "bun" || runtime === "node";
 }
 

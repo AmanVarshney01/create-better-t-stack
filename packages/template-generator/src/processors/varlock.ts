@@ -50,12 +50,12 @@ function schemaKeys(vfs: VirtualFileSystem, app: string, config: ProjectConfig):
   return keys;
 }
 
-function schema(keys: Set<string>, config: ProjectConfig): string {
+function schema(keys: Set<string>, config: ProjectConfig, app: string): string {
   const lines = [
     "# @defaultRequired=true",
     "# @defaultSensitive=true",
     "# @currentEnv=$NODE_ENV",
-    "# @generateTsTypes(path=./src/env.ts, exposeEnv=local)",
+    `# @generateTsTypes(path=./src/env.ts, exposeEnv=local${app === "apps/server" && config.serverDeploy === "vercel" ? ", auto=false" : ""})`,
     "# ---",
     "",
     "# @public @type=enum(development, production, test)",
@@ -222,7 +222,7 @@ export function processVarlock(
     if (!vfs.exists(`${app}/package.json`)) continue;
     const keys = schemaKeys(vfs, app, config);
     for (const key of keys) allKeys.add(key);
-    vfs.writeFile(`${app}/.env.schema`, schema(keys, config));
+    vfs.writeFile(`${app}/.env.schema`, schema(keys, config, app));
     vfs.writeFile(`${app}/bunfig.toml`, `env = false\n${vfs.readFile(`${app}/bunfig.toml`) ?? ""}`);
     const pkg = vfs.readJson<Package>(`${app}/package.json`)!;
     pkg.scripts = { ...pkg.scripts, "env:generate": "varlock codegen" };

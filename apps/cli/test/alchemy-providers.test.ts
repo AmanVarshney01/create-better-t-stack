@@ -375,7 +375,6 @@ describe("Alchemy providers", () => {
       if (frontend === "nuxt") {
         expect(frameworkConfig).toContain("wasm: true");
         expect(frameworkConfig).toContain("'pg-native': 'unenv/mock/proxy'");
-        expect(nuxtServerPlugin).toContain('url: "/rpc"');
         expect(nuxtServerPlugin).toContain("event.fetch(request, init)");
         expect(nuxtServerPlugin).not.toContain("createRouterClient");
       }
@@ -438,7 +437,7 @@ describe("Alchemy providers", () => {
       webDeploy: "prisma",
       serverDeploy: "vercel",
       backend: "hono",
-      runtime: "bun",
+      runtime: "node",
       dbSetup: "neon",
     });
     const infra = files.get("packages/infra/alchemy.run.ts") ?? "";

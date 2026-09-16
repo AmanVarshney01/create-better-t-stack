@@ -98,7 +98,8 @@ export const dependencyVersionMap = {
   fastify: "^5.12.3",
   "@fastify/cors": "^11.3.0",
 
-  turbo: "^2.10.12",
+  bun: "1.4.2",
+  turbo: "^2.10.13",
   nx: "^23.2.0",
   "vite-plus": "0.3.1",
   rolldown: "1.2.7",

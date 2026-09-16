@@ -15,6 +15,9 @@ export default defineNuxtPlugin(() => {
   {{/if}}
 
   const authClient = createAuthClient({
+    fetchOptions: {
+      headers: import.meta.server ? useRequestHeaders(["cookie"]) : undefined,
+    },
     {{#if (ne backend "self")}}
     baseURL: new URL("/api/auth", serverOrigin).toString(),
     {{/if}}

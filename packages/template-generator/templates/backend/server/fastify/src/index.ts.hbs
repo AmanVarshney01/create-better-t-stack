@@ -86,7 +86,7 @@ fastify.register(clerkPlugin, {
 const nativeAppUrl = "{{projectName}}://";
 const allowedNativeProtocols = new Set(["exp:", new URL(nativeAppUrl).protocol]);
 
-fastify.get("/polar/success", async (request, reply) => {
+fastify.get("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/polar/success", async (request, reply) => {
 	const requestUrl = new URL(request.url, env.BETTER_AUTH_URL);
 	const returnUrl = requestUrl.searchParams.get("returnUrl") || nativeAppUrl;
 
@@ -114,10 +114,10 @@ fastify.register(async (rpcApp) => {
 		done(null, undefined);
 	});
 
-	rpcApp.all("/rpc/*", async (request, reply) => {
+	rpcApp.all("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc/*", async (request, reply) => {
 		const { matched } = await rpcHandler.handle(request, reply, {
 			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
-			prefix: "/rpc",
+			prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/rpc",
 		});
 
 		if (!matched) {
@@ -125,10 +125,10 @@ fastify.register(async (rpcApp) => {
 		}
 	});
 
-	rpcApp.all("/api-reference/*", async (request, reply) => {
+	rpcApp.all("{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference/*", async (request, reply) => {
 		const { matched } = await apiHandler.handle(request, reply, {
 			context: await createContext({{#if (eq auth "clerk")}}request{{else}}request.headers{{/if}}),
-			prefix: "/api-reference",
+			prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/api-reference",
 		});
 
 		if (!matched) {
@@ -171,7 +171,7 @@ fastify.route({
 
 {{#if (eq api "trpc")}}
 fastify.register(fastifyTRPCPlugin, {
-	prefix: "/trpc",
+	prefix: "{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/trpc",
 	trpcOptions: {
 		router: appRouter,
 		createContext,
@@ -188,7 +188,7 @@ interface AiRequestBody {
 	messages: UIMessage[];
 }
 
-fastify.post('/ai', async function (request) {
+fastify.post('{{#if (and (eq webDeploy "vercel") (eq serverDeploy "vercel"))}}/api{{/if}}/ai', async function (request) {
 	const { messages } = request.body as AiRequestBody;
 	const model = wrapLanguageModel({
 		model: google('gemini-2.5-flash'),

@@ -95,6 +95,7 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "2.0.0",
+    "@playwright/test": "1.63.0",
     "@types/bun": "^1.4.2",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^26.5.0",

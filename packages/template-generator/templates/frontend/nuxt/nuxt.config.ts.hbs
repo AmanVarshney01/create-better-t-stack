@@ -1,3 +1,16 @@
+{{#if (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma")))}}
+import { createRequire } from "node:module";
+
+const libsqlRequire = createRequire(import.meta.resolve("libsql"));
+const sqliteBindings = Object.keys(libsqlRequire("./package.json").optionalDependencies)
+  .flatMap((name) => {
+    try {
+      return [libsqlRequire.resolve(name)];
+    } catch {
+      return [];
+    }
+  });
+{{/if}}
 {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
 import { fileURLToPath } from "node:url";
 
@@ -27,6 +40,22 @@ export default defineNuxtConfig({
   {{/if}}
   compatibilityDate: 'latest',
   devtools: { enabled: true },
+  {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
+  vite: {
+    optimizeDeps: {
+      exclude: ['@tanstack/vue-query'],
+      include: [
+        '@orpc/client',
+        '@orpc/client/fetch',
+        '@orpc/tanstack-query',
+        '@tanstack/vue-query-devtools',
+        {{#if (eq auth "better-auth")}}
+        'better-auth/vue',
+        {{/if}}
+      ],
+    },
+  },
+  {{/if}}
   experimental: {
     payloadExtraction: 'client',
   },
@@ -51,8 +80,11 @@ export default defineNuxtConfig({
   devServer: {
     port: 3001
   },
-  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")))}}
+  {{#if (or (and (eq api "orpc") (ne backend "convex") (ne backend "none")) (and (eq webDeploy "cloudflare") (eq backend "self") (eq orm "prisma")) (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma"))))}}
   nitro: {
+    {{#if (and (eq backend "self") (eq database "sqlite") (ne dbSetup "d1") (ne webDeploy "cloudflare") (or (eq orm "drizzle") (eq orm "prisma")))}}
+    externals: { traceInclude: sqliteBindings },
+    {{/if}}
     {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
     typescript: {
       tsConfig: { references: [apiReference] },

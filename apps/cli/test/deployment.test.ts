@@ -108,7 +108,12 @@ describe("Deployment Configurations", () => {
           const result = await runCreateTest({
             projectName: `${serverDeploy}-server-deploy`,
             serverDeploy: serverDeploy,
-            runtime: serverDeploy === "cloudflare" ? "workers" : "bun",
+            runtime:
+              serverDeploy === "cloudflare"
+                ? "workers"
+                : serverDeploy === "vercel"
+                  ? "node"
+                  : "bun",
           });
 
           expectSuccess(result);
@@ -223,6 +228,33 @@ describe("Deployment Configurations", () => {
     });
   });
 
+  it("rejects Bun functions on Vercel while allowing Bun as the package manager", async () => {
+    const result = await runCreateTest({
+      projectName: "vercel-bun-runtime",
+      backend: "hono",
+      serverDeploy: "vercel",
+      runtime: "bun",
+      packageManager: "bun",
+    });
+    expectError(result, "Use '--runtime node'");
+  });
+
+  it("defaults Vercel backends to Node when the runtime is omitted", async () => {
+    const result = await runCreateTest({
+      projectName: "vercel-default-runtime",
+      serverDeploy: "vercel",
+      runtime: undefined,
+      packageManager: "bun",
+      dryRun: true,
+    });
+    expectSuccess(result);
+    expect(result.result.projectConfig.runtime).toBe("node");
+    expect(result.result.projectConfig.packageManager).toBe("bun");
+
+    const virtual = await createVirtual({ serverDeploy: "vercel", packageManager: "bun" });
+    expect(virtual.isOk()).toBe(true);
+  });
+
   describe("Combined Web and Server Deployment", () => {
     it("should generate Vercel Services for combined web and server deploys", async () => {
       const result = await createVirtual({
@@ -230,7 +262,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "vercel",
         serverDeploy: "vercel",
         backend: "hono",
-        runtime: "bun",
+        runtime: "node",
         database: "sqlite",
         orm: "drizzle",
         auth: "better-auth",
@@ -281,7 +313,7 @@ describe("Deployment Configurations", () => {
       // Without this, no-git deploys upload local .env files and frameworks
       // like Next.js load the localhost values at runtime
       expect(files.get(".vercelignore")).toContain("**/.env");
-      expect(vercelConfig.bunVersion).toBe("1.x");
+      expect(vercelConfig.bunVersion).toBeUndefined();
       expect(vercelConfig.services?.web).toMatchObject({
         root: "apps/web",
         framework: "nextjs",
@@ -292,10 +324,7 @@ describe("Deployment Configurations", () => {
         framework: "hono",
         entrypoint: "src/index.ts",
       });
-      expect(vercelConfig.services?.server?.routes?.[0]).toMatchObject({
-        src: "/api/((?!auth(?:/|$)).*)",
-        transforms: [{ type: "request.path", op: "set", args: "/$1" }],
-      });
+      expect(vercelConfig.services?.server?.routes).toBeUndefined();
       expect(vercelConfig.rewrites).toEqual([
         { source: "/api/(.*)", destination: { service: "server" } },
         { source: "/(.*)", destination: { service: "web" } },
@@ -344,17 +373,6 @@ describe("Deployment Configurations", () => {
       // Server-side better-auth must build public callback URLs through the
       // /api rewrite prefix, not the bare origin
       expect(files.get("apps/server/.env.schema")).toContain("${VERCEL_ORIGIN}/api/auth");
-      // better-auth and tRPC clients must normalize the same-origin /api path;
-      // both reject relative URLs (BetterAuthError / SSR fetch failure)
-      const authClient = files.get("apps/web/src/lib/auth-client.ts") ?? "";
-      expect(authClient).toContain("function getServerUrl(url: string)");
-      // The /api/auth suffix is required: better-auth uses a baseURL with a
-      // path as-is, so the origin-only shortcut breaks same-origin deploys
-      expect(authClient).toContain(
-        'baseURL: new URL("/api/auth", getServerUrl(ENV.NEXT_PUBLIC_SERVER_URL)).toString()',
-      );
-      const trpcClient = files.get("apps/web/src/utils/trpc.ts") ?? "";
-      expect(trpcClient).toContain("url: `${getServerUrl(ENV.NEXT_PUBLIC_SERVER_URL)}/trpc`");
       expect(files.get("README.md")).toContain("### Vercel Services");
       expect(files.get("README.md")).toContain("Sync preview env");
       expect(files.get("README.md")).toContain("Config: `vercel.json`");
@@ -408,7 +426,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "vercel",
         serverDeploy: "vercel",
         backend: "express",
-        runtime: "bun",
+        runtime: "node",
         database: "sqlite",
         orm: "drizzle",
         auth: "none",
@@ -433,7 +451,9 @@ describe("Deployment Configurations", () => {
       };
       const orpcClient = files.get("apps/web/src/utils/orpc.ts") ?? "";
 
-      expect(vercelConfig.services?.web?.buildCommand).toBe("VITE_SERVER_URL=/api bun run build");
+      expect(vercelConfig.services?.web?.buildCommand).toEndWith(
+        "VITE_SERVER_URL=/api bun run build",
+      );
       // SPA frontends on the plain vite preset need an in-service fallback,
       // otherwise deep links like /login 404 in production
       expect(
@@ -491,7 +511,7 @@ describe("Deployment Configurations", () => {
     });
 
     for (const packageManager of ["bun", "npm", "pnpm"] as const) {
-      it(`should use the Bun runtime for Vercel web deploys with ${packageManager}`, async () => {
+      it(`should use Node functions for Vercel web deploys with ${packageManager}`, async () => {
         const result = await createVirtual({
           projectName: `tanstack-start-vercel-bun-${packageManager}`,
           webDeploy: "vercel",
@@ -519,11 +539,14 @@ describe("Deployment Configurations", () => {
         const files = collectFiles(result.value.root, result.value.root.path);
         const vercelConfig = JSON.parse(files.get("vercel.json") ?? "{}");
 
-        expect(vercelConfig.bunVersion).toBe("1.x");
+        expect(vercelConfig.bunVersion).toBeUndefined();
         expect(vercelConfig.services.web).toMatchObject({
           root: "apps/web",
           framework: "tanstack-start",
-          installCommand: `cd ../.. && ${packageManager} install`,
+          installCommand:
+            packageManager === "bun"
+              ? expect.stringMatching(/^cd \.\.\/\.\. && bunx bun@\d+\.\d+\.\d+ install$/)
+              : `cd ../.. && ${packageManager} install`,
         });
         expect(vercelConfig.services.server).toBeUndefined();
         expect(files.get("apps/web/vite.config.ts")).toContain("nitro(),");
@@ -536,7 +559,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "none",
         serverDeploy: "vercel",
         backend: "hono",
-        runtime: "bun",
+        runtime: "node",
         database: "sqlite",
         orm: "drizzle",
         auth: "better-auth",
@@ -572,7 +595,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "none",
         serverDeploy: "vercel",
         backend: "elysia",
-        runtime: "bun",
+        runtime: "node",
         database: "sqlite",
         orm: "drizzle",
         auth: "none",
@@ -594,7 +617,7 @@ describe("Deployment Configurations", () => {
       const files = collectFiles(result.value.root, result.value.root.path);
       const serverEntry = files.get("apps/server/src/index.ts");
 
-      expect(serverEntry).toContain("const app = new Elysia()");
+      expect(serverEntry).toContain("const app = new Elysia({ adapter: node() })");
       expect(serverEntry).toContain("export default app;");
       // Bun does not auto-serve Elysia's default export, so a guarded local
       // listen must remain (skipped on Vercel via process.env.VERCEL).
@@ -643,7 +666,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "vercel",
         serverDeploy: "vercel",
         backend: "hono",
-        runtime: "bun",
+        runtime: "node",
         database: "none",
         orm: "none",
         auth: "none",
@@ -688,7 +711,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "vercel",
         serverDeploy: "vercel",
         backend: "hono",
-        runtime: "bun",
+        runtime: "node",
         database: "none",
         orm: "none",
         auth: "none",
@@ -723,7 +746,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "vercel",
         serverDeploy: "vercel",
         backend: "fastify",
-        runtime: "bun",
+        runtime: "node",
         database: "none",
         orm: "none",
         auth: "none",
@@ -761,7 +784,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "vercel",
         serverDeploy: "vercel",
         backend: "hono",
-        runtime: "bun",
+        runtime: "node",
         database: "sqlite",
         orm: "drizzle",
         auth: "none",
@@ -2092,7 +2115,7 @@ describe("Client URL selection", () => {
         projectName: `client-url-${frontend}-${api}-${deploy}`,
         frontend: [frontend],
         backend: "hono",
-        runtime: "bun",
+        runtime: deploy === "vercel" ? "node" : "bun",
         database: "sqlite",
         orm: "drizzle",
         auth: "better-auth",
@@ -2130,7 +2153,8 @@ describe("Client URL selection", () => {
         "ENV",
         "window",
         "globalThis",
-        `${executable}\nreturn [authClient.baseURL, ${rpcExpression}];`,
+        "process",
+        `${executable}\n${new Bun.Transpiler({ loader: "ts" }).transformSync(`const rpcUrl = ${rpcExpression};`)}\nreturn [authClient.baseURL, rpcUrl];`,
       );
       const processEnv = {
         SERVER_URL: deploy === "docker" ? "http://server:3000/" : undefined,
@@ -2157,6 +2181,7 @@ describe("Client URL selection", () => {
           {
             process: { env: processEnv },
           },
+          { env: { ...processEnv, [envKey]: publicUrl } },
         );
         expect(urls).toEqual([
           deploy === "none" ? publicUrl : `${origin}/api/auth`,
