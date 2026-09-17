@@ -668,7 +668,9 @@ describe("Deployment Configurations", () => {
       expect(web?.rewrites).toBeUndefined();
       expect(files.get("apps/web/react-router.config.ts")).not.toContain("ssr: false");
       // Vercel functions have no node_modules; deps must be bundled into the server build
-      expect(files.get("apps/web/vite.config.ts")).toContain("noExternal: true");
+      expect(files.get("apps/web/vite.config.ts")).toContain(
+        'noExternal: command === "build" ? true : undefined',
+      );
     });
 
     it("should use the explicit Vercel adapter for SvelteKit Vercel deploys", async () => {
@@ -820,7 +822,7 @@ describe("Deployment Configurations", () => {
       expect(infraFile).toContain("export type ServerEnv = Cloudflare.InferEnv<typeof server>");
       expect(infraFile).toContain("VITE_SERVER_URL: serverWorker.url.as<string>()");
       expect(infraFile).toContain("BETTER_AUTH_URL: Cloudflare.Worker.URL");
-      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
+      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.String("BETTER_AUTH_URL")');
       expect(infraFile).toContain("export default Alchemy.Stack(");
       expect(infraPackage.devDependencies).toMatchObject({
         alchemy: expect.any(String),
@@ -864,7 +866,7 @@ describe("Deployment Configurations", () => {
       const authFile = files.get("packages/auth/src/index.ts") ?? "";
 
       expect(infraFile).toContain("BETTER_AUTH_URL: Cloudflare.Worker.URL");
-      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
+      expect(infraFile).not.toContain('BETTER_AUTH_URL: Config.String("BETTER_AUTH_URL")');
       expect(authFile).toContain("baseURL: env.BETTER_AUTH_URL");
     });
 
@@ -1131,7 +1133,7 @@ describe("Deployment Configurations", () => {
         'const webWorker = yield* Cloudflare.Website.StaticSite("web", {',
       );
       expect(nextWebOnlyInfra).toContain(
-        'NEXT_PUBLIC_SERVER_URL: Config.string("NEXT_PUBLIC_SERVER_URL")',
+        'NEXT_PUBLIC_SERVER_URL: Config.String("NEXT_PUBLIC_SERVER_URL")',
       );
       expect(nextWebOnlyInfra).not.toContain("const serverWorker = yield* server");
 

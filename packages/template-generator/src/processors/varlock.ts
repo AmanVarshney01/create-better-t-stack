@@ -131,7 +131,7 @@ function processAlchemySchema(vfs: VirtualFileSystem, config: ProjectConfig): vo
   // credentials are Alchemy outputs, so validating them here blocks provisioning.
   const inputs = new Set([
     "NODE_ENV",
-    ...Array.from(source.matchAll(/Config\.(?:string|redacted)\("([A-Z_]+)"\)/g), (m) => m[1]!),
+    ...Array.from(source.matchAll(/Config\.(?:String|Redacted)\("([A-Z_]+)"\)/g), (m) => m[1]!),
   ]);
   const imports: string[] = [];
   for (const app of ["apps/server", "apps/web"]) {
@@ -190,7 +190,7 @@ function processCloudflarePublicEnv(vfs: VirtualFileSystem, config: ProjectConfi
       lines.push(`  get ${key}() { return useRuntimeConfig().public.${name}; },`);
     } else {
       lines.push(
-        `  ${key}: ${svelte ? key : next ? `process.env.${key}!` : `import.meta.env.${key}`},`,
+        `  ${key}: ${svelte ? key : next ? `process.env.${key}!` : `import.meta.env.${key}!`},`,
       );
     }
   }

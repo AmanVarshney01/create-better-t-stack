@@ -278,7 +278,7 @@ export function validatePrismaWebDeploy(
 
   if (!supportsPrismaWebDeploy(frontend)) {
     return validationErr(
-      "'--web-deploy prisma' requires a supported server frontend. Choose Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or Solid. TanStack Router is a static SPA, while Prisma Compute requires an executable server artifact.",
+      "'--web-deploy prisma' requires a supported web frontend. Choose TanStack Router, Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or Solid.",
     );
   }
 

@@ -16,8 +16,8 @@ export const dependencyVersionMap = {
   // TS 7 removes the compiler API required by vue-tsc, svelte-check and our tooling.
   typescript: "^6.0.3",
 
-  "better-auth": "1.7.3",
-  "@better-auth/expo": "1.7.3",
+  "better-auth": "1.7.5",
+  "@better-auth/expo": "1.7.5",
 
   "@clerk/backend": "^3.17.1",
   "@clerk/express": "^2.1.66",
@@ -158,15 +158,15 @@ export const dependencyVersionMap = {
   "@sveltejs/adapter-node": "^5.5.7",
   "@sveltejs/adapter-vercel": "^6.3.4",
   "@cloudflare/workers-types": "^5.20260906.1",
-  "@alchemy.run/frontend-frameworks": "2.0.0-beta.77",
+  "@alchemy.run/frontend-frameworks": "2.0.0-beta.78",
   "@astrojs/node": "^11.1.5",
   "@astrojs/vercel": "^11.0.10",
 
   // exact pins: caret ranges on prereleases can resolve to stray npm test tags
-  alchemy: "2.0.0-beta.77",
-  effect: "4.0.0-rc.112",
-  "@effect/platform-node": "4.0.0-rc.112",
-  "@effect/platform-bun": "4.0.0-rc.112",
+  alchemy: "2.0.0-beta.78",
+  effect: "4.0.0-rc.115",
+  "@effect/platform-node": "4.0.0-rc.115",
+  "@effect/platform-bun": "4.0.0-rc.115",
   vercel: "^59.11.7",
 
   "babel-preset-expo": "~57.0.10",

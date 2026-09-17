@@ -85,7 +85,7 @@ describe("Alchemy providers", () => {
     expect(cloudflareInfra).not.toContain("CORS_ORIGIN");
     expect(cloudflareInfra).toContain("BETTER_AUTH_URL: Cloudflare.Worker.URL");
     expect(prismaInfra).not.toContain("CORS_ORIGIN");
-    expect(prismaInfra).toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
+    expect(prismaInfra).toContain('BETTER_AUTH_URL: Config.String("BETTER_AUTH_URL")');
   });
 
   it("rejects OpenNext combinations that are broken in the current release", async () => {
@@ -169,7 +169,7 @@ describe("Alchemy providers", () => {
       const prismaConfig = files.get("packages/db/prisma.config.ts") ?? "";
 
       expect(infra).toContain('export const server = Prisma.Compute("server"');
-      expect(infra).toContain('DATABASE_URL: Config.redacted("DATABASE_URL")');
+      expect(infra).toContain('DATABASE_URL: Config.Redacted("DATABASE_URL")');
       expect(infra).not.toContain(combination.providerResource);
       expect(prismaConfig).toContain("env('DATABASE_URL')");
       expect(prismaConfig).not.toContain("process.env.DATABASE_URL!");
@@ -445,7 +445,7 @@ describe("Alchemy providers", () => {
 
     expect(infra).not.toContain('Neon.Project("database"');
     expect(infra).not.toContain('Command.Exec("database-migrations"');
-    expect(infra).toContain('DATABASE_URL: Config.redacted("DATABASE_URL")');
+    expect(infra).toContain('DATABASE_URL: Config.Redacted("DATABASE_URL")');
     expect(infra).toContain("export const databaseProviders = Prisma.providers()");
     expect(files.has("packages/db/prisma/migrations/0000_init/migration.sql")).toBe(false);
   });
@@ -498,7 +498,7 @@ describe("Alchemy providers", () => {
     expect(reactRouterInfra).toContain('outdir: "build"');
     expect(reactRouterInfra).toContain('entrypoint: "server/index.js"');
     expect(reactRouterVite).toContain('input: "./prisma.server.ts"');
-    expect(reactRouterVite).toContain("noExternal: true");
+    expect(reactRouterVite).toContain('noExternal: command === "build" ? true : undefined');
     expect(reactRouter.get("apps/web/prisma.server.ts")).toContain(
       'import("virtual:react-router/server-build")',
     );
@@ -531,28 +531,6 @@ describe("Alchemy providers", () => {
     expect(sveltePackage.scripts?.["build:prisma"]).toBeUndefined();
     expect(sveltePackage.devDependencies?.["@sveltejs/adapter-node"]).toBeDefined();
     expect(sveltePackage.devDependencies?.["@sveltejs/adapter-auto"]).toBeUndefined();
-  });
-
-  it("rejects static SPAs for Prisma Compute instead of generating a server shim", async () => {
-    const result = await createVirtual({
-      ...baseConfig,
-      projectName: "prisma-tanstack-router",
-      webDeploy: "prisma",
-      serverDeploy: "none",
-      backend: "none",
-      runtime: "none",
-      database: "none",
-      orm: "none",
-      auth: "none",
-      api: "none",
-      frontend: ["tanstack-router"],
-      dbSetup: "none",
-    });
-
-    expect(result.isErr()).toBe(true);
-    expect(result.isErr() && result.error.message).toContain(
-      "TanStack Router is a static SPA, while Prisma Compute requires an executable server artifact",
-    );
   });
 
   it("rejects desktop builds that replace Prisma server artifacts with static exports", async () => {

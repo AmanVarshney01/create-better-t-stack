@@ -603,8 +603,9 @@ describe("stack builder option parity", () => {
 });
 
 describe("stack builder Prisma deployment compatibility", () => {
-  test("allows Prisma web deployment only for supported SSR frontends", () => {
+  test("allows Prisma web deployment for supported server and SPA frontends", () => {
     for (const frontend of [
+      "tanstack-router",
       "next",
       "nuxt",
       "astro",
@@ -616,14 +617,6 @@ describe("stack builder Prisma deployment compatibility", () => {
       expect(
         getDisabledReason(createStack({ webFrontend: [frontend] }), "webDeploy", "prisma"),
       ).toBeNull();
-    }
-
-    for (const frontend of ["tanstack-router"] as const) {
-      expect(
-        getDisabledReason(createStack({ webFrontend: [frontend] }), "webDeploy", "prisma"),
-      ).toBe(
-        "Prisma requires Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or Solid",
-      );
     }
   });
 
@@ -670,12 +663,12 @@ describe("stack builder Prisma deployment compatibility", () => {
     ).toBe("Prisma server deployment requires the Bun or Node runtime");
   });
 
-  test("repairs invalid Prisma deployment state", () => {
+  test("preserves Prisma SPA deployment and repairs incompatible server runtimes", () => {
     expect(
       resolveStackCompatibility(
         createStack({ webFrontend: ["tanstack-router"], webDeploy: "prisma" }),
       ).stack.webDeploy,
-    ).toBe("none");
+    ).toBe("prisma");
     expect(
       resolveStackCompatibility(
         createStack({

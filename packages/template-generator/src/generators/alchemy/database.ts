@@ -304,12 +304,12 @@ function writeExternalDatabaseEnv(writer: AlchemyWriter, plan: AlchemyDeployment
         config.dbSetup === "planetscale"
       ) {
         writeLines(writer, [
-          'DATABASE_HOST: Config.string("DATABASE_HOST"),',
-          'DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),',
-          'DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),',
+          'DATABASE_HOST: Config.String("DATABASE_HOST"),',
+          'DATABASE_USERNAME: Config.String("DATABASE_USERNAME"),',
+          'DATABASE_PASSWORD: Config.Redacted("DATABASE_PASSWORD"),',
         ]);
       } else if (config.database !== "none") {
-        writer.writeLine('DATABASE_URL: Config.redacted("DATABASE_URL"),');
+        writer.writeLine('DATABASE_URL: Config.Redacted("DATABASE_URL"),');
       }
     },
     "});",

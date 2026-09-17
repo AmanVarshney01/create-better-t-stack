@@ -490,7 +490,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     changed = true;
     changes.push({
       category: "webDeploy",
-      message: "Web deploy set to 'None' (Prisma requires a supported SSR frontend)",
+      message: "Web deploy set to 'None' (Prisma requires a supported web frontend)",
     });
   }
 
@@ -801,7 +801,7 @@ export const getDisabledReason = (
       }
     }
     if (optionId === "prisma" && !supportsPrismaWebDeploy(currentStack.webFrontend)) {
-      return "Prisma requires Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or Solid";
+      return "Prisma requires TanStack Router, Next.js, Nuxt, Astro, React Router, TanStack Start, SvelteKit, or Solid";
     }
     if (optionId === "prisma") {
       const prismaDesktopConflict = getPrismaDesktopConflict(

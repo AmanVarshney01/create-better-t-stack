@@ -44,13 +44,6 @@ describe("Authentication Configurations", () => {
         if (!result.projectDir) {
           throw new Error("Expected projectDir to be defined");
         }
-
-        const authSchema = await fs.readFile(
-          path.join(result.projectDir, "packages/db/src/schema/auth.ts"),
-          "utf8",
-        );
-        expect(authSchema).not.toContain("issuer:");
-        expect(authSchema).toContain('uniqueIndex("account_providerId_accountId_uidx")');
       });
     }
 
@@ -1077,17 +1070,6 @@ describe("Authentication Configurations", () => {
         expectSuccess(result);
         if (!result.projectDir) {
           throw new Error("Expected projectDir to be defined");
-        }
-
-        if (orm === "prisma") {
-          const authSchema = await fs.readFile(
-            path.join(result.projectDir, "packages/db/prisma/schema/auth.prisma"),
-            "utf8",
-          );
-          expect(authSchema).not.toContain("issuer                String");
-          expect(authSchema).toContain(
-            '@@unique([providerId, accountId], map: "account_providerId_accountId_uidx")',
-          );
         }
       });
     }

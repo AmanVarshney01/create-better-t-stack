@@ -813,7 +813,9 @@ async function runCommand(sampleName: string, projectDir: string, command: strin
         BTS_TELEMETRY: "0",
         NEXT_TELEMETRY_DISABLED: "1",
         HUSKY: "0",
-        NODE_ENV: args.includes("build") ? "production" : process.env.NODE_ENV,
+        NODE_ENV: args.some((arg) => arg === "build" || arg.startsWith("build:"))
+          ? "production"
+          : process.env.NODE_ENV,
       },
     });
 
