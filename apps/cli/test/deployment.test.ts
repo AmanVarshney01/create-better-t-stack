@@ -668,7 +668,9 @@ describe("Deployment Configurations", () => {
       expect(web?.rewrites).toBeUndefined();
       expect(files.get("apps/web/react-router.config.ts")).not.toContain("ssr: false");
       // Vercel functions have no node_modules; deps must be bundled into the server build
-      expect(files.get("apps/web/vite.config.ts")).toContain("noExternal: true");
+      expect(files.get("apps/web/vite.config.ts")).toContain(
+        'noExternal: command === "build" ? true : undefined',
+      );
     });
 
     it("should use the explicit Vercel adapter for SvelteKit Vercel deploys", async () => {

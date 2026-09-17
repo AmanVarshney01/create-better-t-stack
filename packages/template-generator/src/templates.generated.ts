@@ -8870,14 +8870,14 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([token])
-  @@index([userId(length: 191)])
+  @@index([userId])
   @@map("session")
 }
 
 model Account {
   id                    String    @id
   accountId             String    @db.VarChar(191)
-  providerId            String    @db.Text
+  providerId            String    @db.VarChar(191)
   userId                String
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?   @db.Text
@@ -8891,7 +8891,7 @@ model Account {
   updatedAt             DateTime  @updatedAt
 
   @@unique([providerId, accountId], map: "account_providerId_accountId_uidx")
-  @@index([userId(length: 191)])
+  @@index([userId])
   @@map("account")
 }
 
@@ -15832,7 +15832,7 @@ CREATE TABLE \`session\` (
     \`userAgent\` TEXT NULL,
     \`userId\` VARCHAR(191) NOT NULL,
 
-    INDEX \`session_userId_idx\`(\`userId\`(191)),
+    INDEX \`session_userId_idx\`(\`userId\`),
     UNIQUE INDEX \`session_token_key\`(\`token\`),
     PRIMARY KEY (\`id\`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -15840,9 +15840,8 @@ CREATE TABLE \`session\` (
 -- CreateTable
 CREATE TABLE \`account\` (
     \`id\` VARCHAR(191) NOT NULL,
-    \`issuer\` VARCHAR(191) NOT NULL,
     \`accountId\` VARCHAR(191) NOT NULL,
-    \`providerId\` TEXT NOT NULL,
+    \`providerId\` VARCHAR(191) NOT NULL,
     \`userId\` VARCHAR(191) NOT NULL,
     \`accessToken\` TEXT NULL,
     \`refreshToken\` TEXT NULL,
@@ -15854,8 +15853,8 @@ CREATE TABLE \`account\` (
     \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     \`updatedAt\` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX \`account_issuer_accountId_uidx\`(\`issuer\`, \`accountId\`),
-    INDEX \`account_userId_idx\`(\`userId\`(191)),
+    UNIQUE INDEX \`account_providerId_accountId_uidx\`(\`providerId\`, \`accountId\`),
+    INDEX \`account_userId_idx\`(\`userId\`),
     PRIMARY KEY (\`id\`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -16023,7 +16022,6 @@ CREATE TABLE "session" (
 -- CreateTable
 CREATE TABLE "account" (
     "id" TEXT NOT NULL,
-    "issuer" TEXT NOT NULL,
     "accountId" TEXT NOT NULL,
     "providerId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -16078,7 +16076,7 @@ CREATE UNIQUE INDEX "session_token_key" ON "session"("token");
 CREATE INDEX "account_userId_idx" ON "account"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "account_issuer_accountId_uidx" ON "account"("issuer", "accountId");
+CREATE UNIQUE INDEX "account_providerId_accountId_uidx" ON "account"("providerId", "accountId");
 
 -- CreateIndex
 CREATE INDEX "verification_identifier_idx" ON "verification"("identifier");
@@ -17206,9 +17204,7 @@ function getCloudflareEnvSync() {
 	}
 }
 
-type EnvValue = Env[keyof Env];
-
-function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefined) {
+function createEnvProxy(getValue: (key: keyof Env & string) => unknown) {
 	return new Proxy({} as Env, {
 		get(_target, prop) {
 			if (typeof prop !== "string") {
@@ -17220,10 +17216,10 @@ function createEnvProxy(getValue: (key: keyof Env & string) => EnvValue | undefi
 	});
 }
 
-function resolveEnvValue(key: keyof Env & string): EnvValue | undefined {
+function resolveEnvValue(key: keyof Env & string) {
 	const nodeValue = getNodeEnvValue(key);
 	if (nodeValue !== undefined) {
-		return nodeValue as EnvValue;
+		return nodeValue;
 	}
 
 	return getCloudflareEnvSync()?.[key as keyof Env];
@@ -26291,6 +26287,9 @@ const TITLE_TEXT = \`
   ["frontend/astro/tsconfig.json.hbs", `{
   {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
   "references": [{ "path": "../../packages/api" }],
+  "compilerOptions": {
+    "disableSourceOfProjectReferenceRedirect": true
+  },
   {{/if}}
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
@@ -31428,7 +31427,7 @@ import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{else}}vite{{/if}}";
 
-export default defineConfig({
+export default defineConfig({{#if (and (or (eq webDeploy "vercel") (eq webDeploy "prisma")) (not (or (includes addons "tauri") (includes addons "electrobun"))))}}({ command }) => ({{/if}}{
   resolve: {
     tsconfigPaths: true,
   },
@@ -31442,7 +31441,7 @@ export default defineConfig({
 {{#if (and (or (eq webDeploy "vercel") (eq webDeploy "prisma")) (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
   ssr: {
     // The deployment artifact has no node_modules; bundle all server dependencies.
-    noExternal: true,
+    noExternal: command === "build" ? true : undefined,
   },
 {{/if}}
 {{#if (and (eq webDeploy "prisma") (not (or (includes addons "tauri") (includes addons "electrobun"))))}}
@@ -31468,7 +31467,7 @@ export default defineConfig({
     },
   },
 {{/if}}
-});
+}{{#if (and (or (eq webDeploy "vercel") (eq webDeploy "prisma")) (not (or (includes addons "tauri") (includes addons "electrobun"))))}}){{/if}});
 `],
   ["frontend/react/tanstack-router/index.html.hbs", `<!DOCTYPE html>
 <html lang="en">
@@ -33497,7 +33496,7 @@ import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{el
 import { unwasm } from "unwasm/plugin";
 {{/if}}
 
-export default defineConfig({
+export default defineConfig({{#if (eq webDeploy "prisma")}}({ command }) => ({{/if}}{
   plugins: [
 {{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
@@ -33512,10 +33511,10 @@ export default defineConfig({
   // Prisma Compute uploads only the build artifact, so keep the official
   // adapter-node output self-contained instead of requiring node_modules.
   ssr: {
-    noExternal: true,
+    noExternal: command === "build" ? true : undefined,
   },
 {{/if}}
-});
+}{{#if (eq webDeploy "prisma")}}){{/if}});
 `],
   ["packages/config/package.json.hbs", `{
   "name": "@{{projectName}}/config",

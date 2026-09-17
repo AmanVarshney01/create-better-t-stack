@@ -8,7 +8,7 @@ import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{el
 import { unwasm } from "unwasm/plugin";
 {{/if}}
 
-export default defineConfig({
+export default defineConfig({{#if (eq webDeploy "prisma")}}({ command }) => ({{/if}}{
   plugins: [
 {{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
@@ -23,7 +23,7 @@ export default defineConfig({
   // Prisma Compute uploads only the build artifact, so keep the official
   // adapter-node output self-contained instead of requiring node_modules.
   ssr: {
-    noExternal: true,
+    noExternal: command === "build" ? true : undefined,
   },
 {{/if}}
-});
+}{{#if (eq webDeploy "prisma")}}){{/if}});

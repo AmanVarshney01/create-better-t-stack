@@ -190,7 +190,7 @@ function processCloudflarePublicEnv(vfs: VirtualFileSystem, config: ProjectConfi
       lines.push(`  get ${key}() { return useRuntimeConfig().public.${name}; },`);
     } else {
       lines.push(
-        `  ${key}: ${svelte ? key : next ? `process.env.${key}!` : `import.meta.env.${key}`},`,
+        `  ${key}: ${svelte ? key : next ? `process.env.${key}!` : `import.meta.env.${key}!`},`,
       );
     }
   }

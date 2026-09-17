@@ -24,7 +24,7 @@ CREATE TABLE `session` (
     `userAgent` TEXT NULL,
     `userId` VARCHAR(191) NOT NULL,
 
-    INDEX `session_userId_idx`(`userId`(191)),
+    INDEX `session_userId_idx`(`userId`),
     UNIQUE INDEX `session_token_key`(`token`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -32,9 +32,8 @@ CREATE TABLE `session` (
 -- CreateTable
 CREATE TABLE `account` (
     `id` VARCHAR(191) NOT NULL,
-    `issuer` VARCHAR(191) NOT NULL,
     `accountId` VARCHAR(191) NOT NULL,
-    `providerId` TEXT NOT NULL,
+    `providerId` VARCHAR(191) NOT NULL,
     `userId` VARCHAR(191) NOT NULL,
     `accessToken` TEXT NULL,
     `refreshToken` TEXT NULL,
@@ -46,8 +45,8 @@ CREATE TABLE `account` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `account_issuer_accountId_uidx`(`issuer`, `accountId`),
-    INDEX `account_userId_idx`(`userId`(191)),
+    UNIQUE INDEX `account_providerId_accountId_uidx`(`providerId`, `accountId`),
+    INDEX `account_userId_idx`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

@@ -498,7 +498,7 @@ describe("Alchemy providers", () => {
     expect(reactRouterInfra).toContain('outdir: "build"');
     expect(reactRouterInfra).toContain('entrypoint: "server/index.js"');
     expect(reactRouterVite).toContain('input: "./prisma.server.ts"');
-    expect(reactRouterVite).toContain("noExternal: true");
+    expect(reactRouterVite).toContain('noExternal: command === "build" ? true : undefined');
     expect(reactRouter.get("apps/web/prisma.server.ts")).toContain(
       'import("virtual:react-router/server-build")',
     );
@@ -526,7 +526,7 @@ describe("Alchemy providers", () => {
     expect(svelteInfra).toContain('outdir: "build"');
     expect(svelteInfra).toContain('entrypoint: "index.js"');
     expect(svelteConfig).toContain("@sveltejs/adapter-node");
-    expect(svelteVite).toContain("noExternal: true");
+    expect(svelteVite).toContain('noExternal: command === "build" ? true : undefined');
     expect(svelte.has("apps/web/vite.prisma.config.ts")).toBe(false);
     expect(sveltePackage.scripts?.["build:prisma"]).toBeUndefined();
     expect(sveltePackage.devDependencies?.["@sveltejs/adapter-node"]).toBeDefined();

@@ -84,10 +84,6 @@ describe("Cloudflare DB client generation", () => {
     expect(authFile).toContain("prismaAdapter(database,");
     expect(authFile).not.toContain("export const auth = await createAuth();");
     expect(envFile).toContain('import { getCloudflareContext } from "@opennextjs/cloudflare";');
-    expect(envFile).toContain("type EnvValue = Env[keyof Env];");
-    expect(envFile).toContain(
-      "function resolveEnvValue(key: keyof Env & string): EnvValue | undefined",
-    );
     expect(envFile).toContain("export async function getEnvAsync()");
     expect(envFile).toContain("getCloudflareContext({ async: true })");
     expect(envFile).toContain("export const ENV = createEnvProxy(resolveEnvValue);");
@@ -266,7 +262,6 @@ describe("Cloudflare DB client generation", () => {
     expect(authFile).toContain("prismaAdapter(database,");
     expect(authFile).not.toContain("export const auth = await createAuth();");
     expect(envFile).toContain('import { getCloudflareContext } from "@opennextjs/cloudflare";');
-    expect(envFile).toContain("type EnvValue = Env[keyof Env];");
     expect(routeFile).toContain("toNextJsHandler(await createAuth()).GET(request)");
     expect(routeFile).toContain("toNextJsHandler(await createAuth()).POST(request)");
     expect(contextFile).toContain("(await createAuth(db)).api.getSession");

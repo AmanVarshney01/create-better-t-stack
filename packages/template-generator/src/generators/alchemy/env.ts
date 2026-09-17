@@ -195,8 +195,10 @@ function prismaPublicEnvEntries(
     return entries;
   }
 
-  if (framework === "astro") {
-    if (backend !== "self" && backend !== "none") {
+  if (framework === "astro" || framework === "svelte") {
+    if (backend === "convex") {
+      entries.push('PUBLIC_CONVEX_URL: Config.String("PUBLIC_CONVEX_URL"),');
+    } else if (backend !== "self" && backend !== "none") {
       entries.push(`PUBLIC_SERVER_URL: ${deployedUrl ?? 'Config.String("PUBLIC_SERVER_URL")'},`);
     }
     return entries;

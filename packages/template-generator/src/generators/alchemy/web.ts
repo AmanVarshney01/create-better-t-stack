@@ -10,7 +10,7 @@ function writeEnv(writer: AlchemyWriter, entries: readonly string[]): void {
   writeObject(writer, "env: {", () => writeLines(writer, entries), "},");
 }
 
-function cloudflareDevPort(framework: DeployedWebFramework): number {
+function webDevPort(framework: DeployedWebFramework): number {
   if (framework === "react-router" || framework === "svelte") return 5173;
   if (framework === "astro") return 4321;
   return 3001;
@@ -70,7 +70,7 @@ function writeStaticSite(
         "dev: {",
         () => {
           writer.writeLine(`command: "${plan.config.packageManager} run dev:bare",`);
-          writer.writeLine(`url: "http://localhost:${cloudflareDevPort(framework)}",`);
+          writer.writeLine(`url: "http://localhost:${webDevPort(framework)}",`);
         },
         "},",
       );
@@ -86,12 +86,7 @@ function writeNuxt(writer: AlchemyWriter, declaration: string, entries: readonly
     () => {
       writer.writeLine('rootDir: "../../apps/web",');
       writeEnv(writer, entries);
-      writeObject(
-        writer,
-        "dev: {",
-        () => writer.writeLine(`port: ${cloudflareDevPort("nuxt")},`),
-        "},",
-      );
+      writeObject(writer, "dev: {", () => writer.writeLine(`port: ${webDevPort("nuxt")},`), "},");
     },
     "});",
   );
@@ -104,12 +99,7 @@ function writeAstro(writer: AlchemyWriter, declaration: string, entries: readonl
     () => {
       writer.writeLine('rootDir: "../../apps/web",');
       writeEnv(writer, entries);
-      writeObject(
-        writer,
-        "dev: {",
-        () => writer.writeLine(`port: ${cloudflareDevPort("astro")},`),
-        "},",
-      );
+      writeObject(writer, "dev: {", () => writer.writeLine(`port: ${webDevPort("astro")},`), "},");
     },
     "});",
   );
@@ -151,7 +141,7 @@ function writeVite(
       writeObject(
         writer,
         "dev: {",
-        () => writer.writeLine(`port: ${cloudflareDevPort(framework)},`),
+        () => writer.writeLine(`port: ${webDevPort(framework)},`),
         "},",
       );
     },
@@ -309,7 +299,7 @@ function writePrismaWeb(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): voi
         "dev: {",
         () => {
           writer.writeLine(`command: "${plan.config.packageManager} run dev:bare",`);
-          writer.writeLine(`port: ${framework === "astro" ? "4321" : "3001"},`);
+          writer.writeLine(`port: ${webDevPort(framework)},`);
           writer.writeLine("env: webEnv,");
         },
         "},",

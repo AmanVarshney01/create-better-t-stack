@@ -136,7 +136,6 @@ function processReactRouterAlchemy(vfs: VirtualFileSystem) {
       `import { createRequestHandler } from "react-router";
 
 const requestHandler = createRequestHandler(
-	// @ts-expect-error - virtual module provided by React Router at build time
 	() => import("virtual:react-router/server-build"),
 	import.meta.env.MODE,
 );
@@ -213,8 +212,6 @@ export default async function handleRequest(
   }
 }
 
-// OpenNext builds the Worker artifact that packages/infra deploys with
-// `bundle: false`; it reads wrangler.jsonc for the worker/assets layout.
 function processNextAlchemy(vfs: VirtualFileSystem, config: ProjectConfig) {
   const webAppDir = "apps/web";
 
