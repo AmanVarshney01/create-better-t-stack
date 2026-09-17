@@ -583,6 +583,24 @@ const buildSamples: BuildSample[] = [
     },
   },
   {
+    name: "prisma-tanstack-router-web",
+    packageManagers: ["bun", "npm", "pnpm"],
+    config: {
+      ...baseConfig,
+      frontend: ["tanstack-router"],
+      backend: "none",
+      runtime: "none",
+      database: "none",
+      orm: "none",
+      api: "none",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: [],
+      webDeploy: "prisma",
+    },
+  },
+  {
     name: "prisma-react-router-web",
     packageManagers: ["bun"],
     config: {
@@ -1288,6 +1306,73 @@ describe("Generated runtime readiness", () => {
   });
 });
 
+async function bootAndValidatePrismaSpa(sample: SelectedBuildSample, projectDir: string) {
+  if (
+    sample.config.webDeploy !== "prisma" ||
+    !sample.config.frontend?.includes("tanstack-router")
+  ) {
+    return;
+  }
+
+  const infraDir = path.join(projectDir, "packages/infra");
+  const probe = path.join(infraDir, "prisma-spa-probe.ts");
+  await fs.writeFile(
+    probe,
+    `
+import { runComputeAutoBuild } from "alchemy/Prisma/ComputeBuild";
+import { BunServices } from "@effect/platform-bun";
+import { Effect } from "effect";
+import { resolve } from "node:path";
+
+const artifact = await Effect.runPromise(runComputeAutoBuild({
+  appPath: resolve("../../apps/web"),
+  framework: "vite",
+}).pipe(Effect.scoped, Effect.provide(BunServices.layer)));
+const port = Number(process.argv[2]);
+const child = Bun.spawn(["bun", artifact.entrypoint], {
+  cwd: artifact.directory,
+  env: { ...process.env, PORT: String(port) },
+  stdout: "inherit",
+  stderr: "inherit",
+});
+try {
+  const origin = "http://127.0.0.1:" + port;
+  let home;
+  for (let attempt = 0; attempt < 100; attempt++) {
+    try {
+      home = await fetch(origin, { signal: AbortSignal.timeout(1000) });
+      break;
+    } catch { await Bun.sleep(100); }
+  }
+  if (home?.status !== 200) throw new Error("Prisma SPA home did not return 200");
+  const html = await home.text();
+  const nested = await fetch(origin + "/nested/client/route");
+  if (nested.status !== 200 || await nested.text() !== html) {
+    throw new Error("Prisma SPA deep-link fallback failed");
+  }
+  const assets = [...html.matchAll(/(?:src|href)="([^" ]+\\.(?:js|css))"/g)];
+  if (!assets.length) throw new Error("Prisma SPA has no bundled assets");
+  for (const [, asset] of assets) {
+    const response = await fetch(new URL(asset!, origin));
+    if (response.status !== 200 || !/(javascript|css)/.test(response.headers.get("content-type") ?? "")) {
+      throw new Error("Prisma SPA asset failed: " + asset);
+    }
+  }
+} finally {
+  child.kill();
+  await child.exited;
+  await Effect.runPromise(artifact.cleanup.pipe(Effect.provide(BunServices.layer)));
+}
+`,
+  );
+  try {
+    const port = await getAvailablePort();
+    await runCommand(sample.name, infraDir, "bun", [probe, String(port)]);
+  } finally {
+    await fs.remove(probe);
+  }
+}
+
 async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
   if (sample.config.webDeploy !== "prisma") return;
 
@@ -1628,6 +1713,7 @@ try {
           await runCommand(sample.name, projectDir, build.command, build.args);
           await buildAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
+          await bootAndValidatePrismaSpa(sample, projectDir);
           await bootAndValidateAxiomRuntime(sample, projectDir);
           await bootAndValidateStartAuthRuntime(sample, projectDir);
           await bootAndValidateNuxtAuthRuntime(sample, projectDir);

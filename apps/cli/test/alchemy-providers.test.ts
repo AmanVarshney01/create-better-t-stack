@@ -533,28 +533,6 @@ describe("Alchemy providers", () => {
     expect(sveltePackage.devDependencies?.["@sveltejs/adapter-auto"]).toBeUndefined();
   });
 
-  it("rejects static SPAs for Prisma Compute instead of generating a server shim", async () => {
-    const result = await createVirtual({
-      ...baseConfig,
-      projectName: "prisma-tanstack-router",
-      webDeploy: "prisma",
-      serverDeploy: "none",
-      backend: "none",
-      runtime: "none",
-      database: "none",
-      orm: "none",
-      auth: "none",
-      api: "none",
-      frontend: ["tanstack-router"],
-      dbSetup: "none",
-    });
-
-    expect(result.isErr()).toBe(true);
-    expect(result.isErr() && result.error.message).toContain(
-      "TanStack Router is a static SPA, while Prisma Compute requires an executable server artifact",
-    );
-  });
-
   it("rejects desktop builds that replace Prisma server artifacts with static exports", async () => {
     for (const frontend of ["next", "react-router", "svelte", "astro"] as const) {
       const result = await createVirtual({

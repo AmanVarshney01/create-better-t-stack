@@ -204,6 +204,7 @@ function prismaFramework(framework: DeployedWebFramework): string | undefined {
     case "tanstack-start":
       return "tanstack-start";
     case "tanstack-router":
+      return "vite";
     case "react-router":
     case "svelte":
     case "solid":
@@ -240,9 +241,6 @@ function prismaCustomBuild(framework: DeployedWebFramework): PrismaCustomBuild {
         entrypoint: "index.js",
       };
     case "tanstack-router":
-      throw new Error(
-        "TanStack Router is a static SPA and Prisma Compute requires an executable server artifact",
-      );
     case "next":
     case "nuxt":
     case "astro":

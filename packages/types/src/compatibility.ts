@@ -170,6 +170,7 @@ export function isExampleAIAllowed(backend?: Backend, frontends: readonly Fronte
 }
 
 export const PRISMA_COMPUTE_WEB_FRONTENDS: readonly Frontend[] = [
+  "tanstack-router",
   "next",
   "nuxt",
   "astro",
