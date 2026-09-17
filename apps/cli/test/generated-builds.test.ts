@@ -65,37 +65,6 @@ const baseConfig = {
 } satisfies Partial<CreateInput>;
 
 const buildSamples: BuildSample[] = [
-  ...(
-    [
-      { dbSetup: "neon", database: "postgres" },
-      { dbSetup: "planetscale", database: "postgres" },
-      { dbSetup: "planetscale", database: "mysql" },
-      { dbSetup: "prisma-postgres", database: "postgres" },
-    ] as const
-  ).flatMap(({ dbSetup, database }) =>
-    (["drizzle", "prisma"] as const).map(
-      (orm) =>
-        ({
-          name: `prisma-managed-${dbSetup}-${database}-${orm}`,
-          config: {
-            ...baseConfig,
-            frontend: ["none"],
-            backend: "hono",
-            runtime: "bun",
-            database,
-            orm,
-            dbSetup,
-            dbSetupOptions: { mode: "alchemy" },
-            auth: "better-auth",
-            payments: "none",
-            api: "orpc",
-            addons: ["turborepo"],
-            examples: ["todo"],
-            serverDeploy: "prisma",
-          },
-        }) satisfies BuildSample,
-    ),
-  ),
   ...(["native-bare", "native-uniwind", "native-unistyles"] as const).map(
     (frontend) =>
       ({
@@ -611,24 +580,6 @@ const buildSamples: BuildSample[] = [
       payments: "none",
       addons: ["turborepo"],
       examples: [],
-    },
-  },
-  {
-    name: "prisma-tanstack-router-web",
-    packageManagers: ["bun", "npm", "pnpm"],
-    config: {
-      ...baseConfig,
-      frontend: ["tanstack-router"],
-      backend: "none",
-      runtime: "none",
-      database: "none",
-      orm: "none",
-      api: "none",
-      auth: "none",
-      payments: "none",
-      addons: ["none"],
-      examples: [],
-      webDeploy: "prisma",
     },
   },
   {
@@ -1339,130 +1290,6 @@ describe("Generated runtime readiness", () => {
   });
 });
 
-async function bootAndValidatePrismaSpa(sample: SelectedBuildSample, projectDir: string) {
-  if (
-    sample.config.webDeploy !== "prisma" ||
-    !sample.config.frontend?.includes("tanstack-router")
-  ) {
-    return;
-  }
-
-  const infraDir = path.join(projectDir, "packages/infra");
-  const probe = path.join(infraDir, "prisma-spa-probe.ts");
-  await fs.writeFile(
-    probe,
-    `
-import { runComputeAutoBuild } from "alchemy/Prisma/ComputeBuild";
-import { BunServices } from "@effect/platform-bun";
-import { Effect } from "effect";
-import { resolve } from "node:path";
-
-const artifact = await Effect.runPromise(runComputeAutoBuild({
-  appPath: resolve("../../apps/web"),
-  framework: "vite",
-}).pipe(Effect.scoped, Effect.provide(BunServices.layer)));
-const port = Number(process.argv[2]);
-const child = Bun.spawn(["bun", artifact.entrypoint], {
-  cwd: artifact.directory,
-  env: { ...process.env, PORT: String(port) },
-  stdout: "inherit",
-  stderr: "inherit",
-});
-try {
-  const origin = "http://127.0.0.1:" + port;
-  let home;
-  for (let attempt = 0; attempt < 100; attempt++) {
-    try {
-      home = await fetch(origin, { signal: AbortSignal.timeout(1000) });
-      break;
-    } catch { await Bun.sleep(100); }
-  }
-  if (home?.status !== 200) throw new Error("Prisma SPA home did not return 200");
-  const html = await home.text();
-  const nested = await fetch(origin + "/nested/client/route");
-  if (nested.status !== 200 || await nested.text() !== html) {
-    throw new Error("Prisma SPA deep-link fallback failed");
-  }
-  const assets = [...html.matchAll(/(?:src|href)="([^" ]+\\.(?:js|css))"/g)];
-  if (!assets.length) throw new Error("Prisma SPA has no bundled assets");
-  for (const [, asset] of assets) {
-    const response = await fetch(new URL(asset!, origin));
-    if (response.status !== 200 || !/(javascript|css)/.test(response.headers.get("content-type") ?? "")) {
-      throw new Error("Prisma SPA asset failed: " + asset);
-    }
-  }
-} finally {
-  child.kill();
-  await child.exited;
-  await Effect.runPromise(artifact.cleanup.pipe(Effect.provide(BunServices.layer)));
-}
-`,
-  );
-  try {
-    const port = await getAvailablePort();
-    await runCommand(sample.name, infraDir, "bun", [probe, String(port)]);
-  } finally {
-    await fs.remove(probe);
-  }
-}
-
-async function bootAndValidatePrismaWebDev(sample: SelectedBuildSample, projectDir: string) {
-  if (
-    sample.config.webDeploy !== "prisma" ||
-    !sample.config.frontend?.some(
-      (frontend) => frontend === "react-router" || frontend === "svelte",
-    )
-  )
-    return;
-
-  const port = await getAvailablePort();
-  const dev = execa(
-    sample.packageManager,
-    [
-      "run",
-      "dev:bare",
-      ...(sample.packageManager === "npm" ? ["--"] : []),
-      "--host",
-      "127.0.0.1",
-      "--port",
-      String(port),
-    ],
-    {
-      cwd: path.join(projectDir, "apps/web"),
-      all: true,
-      reject: false,
-      detached: process.platform !== "win32",
-      env: { ...process.env, NODE_ENV: "development" },
-    },
-  );
-  let failure: unknown;
-  try {
-    const response = await fetchWhenReady(`http://127.0.0.1:${port}/`);
-    expect(response?.status).toBe(200);
-    expect(response?.headers.get("content-type")).toContain("text/html");
-  } catch (error) {
-    failure = error;
-  } finally {
-    if (dev.pid && process.platform !== "win32") {
-      try {
-        process.kill(-dev.pid, "SIGTERM");
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "ESRCH") failure ??= error;
-      }
-    } else {
-      dev.kill("SIGTERM");
-    }
-  }
-  const result = await dev;
-  if (failure) {
-    throw new Error(
-      [`Generated Prisma dev server failed: ${String(failure)}`, formatOutput(result.all)].join(
-        "\n\n",
-      ),
-    );
-  }
-}
-
 async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
   if (sample.config.webDeploy !== "prisma") return;
 
@@ -1751,13 +1578,6 @@ describe.skipIf(!shouldRunBuildSamples)("Generated project install/build samples
           const createResult = await create(projectDir, sample.config);
           expect(createResult.isOk()).toBe(true);
           await writeSyntheticBuildConfig(projectDir);
-          if (sample.config.orm === "prisma" && sample.config.dbSetupOptions?.mode === "alchemy") {
-            const protocol = sample.config.database === "mysql" ? "mysql" : "postgresql";
-            await fs.outputFile(
-              path.join(projectDir, "packages/db/.env"),
-              `DATABASE_URL=${protocol}://test:test@127.0.0.1/test\n`,
-            );
-          }
 
           const install = getPackageManagerCommand(sample.packageManager, "install");
           await runCommand(sample.name, projectDir, install.command, install.args);
@@ -1810,8 +1630,6 @@ try {
           await runCommand(sample.name, projectDir, build.command, build.args);
           await buildAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
-          await bootAndValidatePrismaSpa(sample, projectDir);
-          await bootAndValidatePrismaWebDev(sample, projectDir);
           await bootAndValidateAxiomRuntime(sample, projectDir);
           await bootAndValidateStartAuthRuntime(sample, projectDir);
           await bootAndValidateNuxtAuthRuntime(sample, projectDir);

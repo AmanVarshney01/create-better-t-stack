@@ -8,7 +8,7 @@ description: Deploy Better-T-Stack projects to Cloudflare or Prisma and manage h
 [Alchemy](https://alchemy.run) is the infrastructure-as-code layer generated when you choose **Cloudflare** or **Prisma** as a deployment target. The CLI writes a `packages/infra` workspace containing:
 
 - one `alchemy.run.ts` for applications, managed databases, and migrations
-- exact selected Alchemy and latest Effect beta versions
+- exact Alchemy and Effect version pins
 - root `dev`, `deploy`, and `destroy` commands
 
 The CLI calls the deployment choice **Prisma**. In the generated TypeScript, that target uses Alchemy's `Prisma.Compute` resource.
@@ -33,9 +33,8 @@ Prisma Compute's HTTP entrypoint and enables SPA route fallback.
 
 Cloudflare web deployment uses Alchemy's released framework resources where they match the
 generated stable framework: `Website.Nuxt` for Nuxt, `Website.Astro` for Astro, and `Website.Vite`
-for React Router, TanStack Router, TanStack Start, and Solid. Next.js and stable SvelteKit keep
-their qualified `StaticSite` paths until the released first-class resources accept the latest
-OpenNext and stable SvelteKit versions.
+for React Router, TanStack Router, TanStack Start, and Solid. Next.js and stable SvelteKit use
+`StaticSite` with OpenNext and SvelteKit's Cloudflare adapter, respectively.
 
 Prisma with a generic `node-postgres` connection, including PlanetScale Postgres and Supabase, is
 temporarily unavailable with Next.js on Cloudflare until OpenNext preserves `pg-cloudflare`'s
@@ -134,9 +133,8 @@ Astro's Cloudflare scaffold relies on the Alchemy lifecycle because a standalone
 need a competing checked-in adapter.
 
 <Callout type="info">
-  Generated projects pin `alchemy@2.0.0-beta.78` with Effect rc.115 exactly. The matching framework
-  source package is installed in the web workspace that Alchemy loads it from. This release supports
-  Effect rc.115 without the transitive dependency overrides required by beta.77.
+  Generated projects pin `alchemy@2.0.0-beta.78` with `effect@4.0.0-rc.115` exactly. The matching
+  framework source package is installed in the web workspace that Alchemy loads it from.
 </Callout>
 
 Deployments are staged. For an explicit production stage:
@@ -189,13 +187,6 @@ compressed free-plan limit.
 
 ## Version policy
 
-Alchemy v2 is still a beta. Better-T-Stack pins one exact Alchemy version together with the selected
-Effect release candidate, currently `4.0.0-rc.115`, because open prerelease ranges can select
-unintended publications. Transitive dependencies can still resolve newer release candidates, so
-installation and typechecking alone are insufficient: verify that the Alchemy CLI starts too.
-When upgrading an existing beta.77 project, update Alchemy, `@alchemy.run/frontend-frameworks`,
-Effect, and both Effect platform packages together. Remove the old rc.112 overrides for
-`@effect/platform-node-shared`, `@effect/sql-d1`, `@effect/sql-sqlite-do`, and `@effect/vitest`
-from the root `package.json` (or `pnpm-workspace.yaml` for pnpm), then reinstall and commit the
-resulting lockfile. Update generated infrastructure calls from `Config.string` and
-`Config.redacted` to `Config.String` and `Config.Redacted`, respectively.
+Alchemy v2 is a beta. Better-T-Stack pins Alchemy, `@alchemy.run/frontend-frameworks`, Effect, and
+the Effect platform packages to exact versions. The package-manager lockfile records the resolved
+transitive dependencies.
