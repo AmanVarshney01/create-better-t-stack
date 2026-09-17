@@ -86,9 +86,6 @@ CREATE UNIQUE INDEX "session_token_key" ON "session"("token");
 CREATE INDEX "account_userId_idx" ON "account"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "account_providerId_accountId_uidx" ON "account"("providerId", "accountId");
-
--- CreateIndex
 CREATE INDEX "verification_identifier_idx" ON "verification"("identifier");
 
 {{#unless (eq dbSetup "planetscale")}}
