@@ -526,7 +526,7 @@ describe("Alchemy providers", () => {
     expect(svelteInfra).toContain('outdir: "build"');
     expect(svelteInfra).toContain('entrypoint: "index.js"');
     expect(svelteConfig).toContain("@sveltejs/adapter-node");
-    expect(svelteVite).toContain('noExternal: command === "build" ? true : undefined');
+    expect(svelteVite).toContain("noExternal: true");
     expect(svelte.has("apps/web/vite.prisma.config.ts")).toBe(false);
     expect(sveltePackage.scripts?.["build:prisma"]).toBeUndefined();
     expect(sveltePackage.devDependencies?.["@sveltejs/adapter-node"]).toBeDefined();

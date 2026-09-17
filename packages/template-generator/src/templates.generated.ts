@@ -5976,7 +5976,7 @@ export const Route = createFileRoute("/api/auth/$")({
   },
 });
 `],
-  ["auth/better-auth/fullstack/astro/src/env.d.ts.hbs", `/// <reference path="../.astro/types.d.ts" />
+  ["auth/better-auth/fullstack/astro/src/app.d.ts.hbs", `/// <reference path="../.astro/types.d.ts" />
 
 declare namespace App {
   interface Locals {
@@ -26269,9 +26269,6 @@ const TITLE_TEXT = \`
   ["frontend/astro/tsconfig.json.hbs", `{
   {{#if (and (eq api "orpc") (ne backend "convex") (ne backend "none"))}}
   "references": [{ "path": "../../packages/api" }],
-  "compilerOptions": {
-    "disableSourceOfProjectReferenceRedirect": true
-  },
   {{/if}}
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
@@ -33478,7 +33475,7 @@ import { defineConfig } from "{{#if (includes addons "vite-plus")}}vite-plus{{el
 import { unwasm } from "unwasm/plugin";
 {{/if}}
 
-export default defineConfig({{#if (eq webDeploy "prisma")}}({ command }) => ({{/if}}{
+export default defineConfig({
   plugins: [
 {{#unless (eq webDeploy "cloudflare")}}
     varlockVitePlugin({ ssrInjectMode: "{{#if (or (eq webDeploy "vercel") (eq webDeploy "prisma"))}}resolved-env{{else}}auto-load{{/if}}" }),
@@ -33493,10 +33490,10 @@ export default defineConfig({{#if (eq webDeploy "prisma")}}({ command }) => ({{/
   // Prisma Compute uploads only the build artifact, so keep the official
   // adapter-node output self-contained instead of requiring node_modules.
   ssr: {
-    noExternal: command === "build" ? true : undefined,
+    noExternal: true,
   },
 {{/if}}
-}{{#if (eq webDeploy "prisma")}}){{/if}});
+});
 `],
   ["packages/config/package.json.hbs", `{
   "name": "@{{projectName}}/config",
