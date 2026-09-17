@@ -135,9 +135,9 @@ Astro's Cloudflare scaffold relies on the Alchemy lifecycle because a standalone
 need a competing checked-in adapter.
 
 <Callout type="info">
-  Generated projects pin `alchemy@2.0.0-beta.77` with Effect rc.112 exactly. The framework source
-  package is installed in the web workspace that Alchemy loads it from. Root dependency overrides
-  keep Alchemy's transitive Effect packages on rc.112 across Bun, npm, and pnpm.
+  Generated projects pin `alchemy@2.0.0-beta.78` with Effect rc.115 exactly. The matching framework
+  source package is installed in the web workspace that Alchemy loads it from. This release supports
+  Effect rc.115 without the transitive dependency overrides required by beta.77.
 </Callout>
 
 Deployments are staged. For an explicit production stage:
@@ -191,9 +191,12 @@ compressed free-plan limit.
 ## Version policy
 
 Alchemy v2 is still a beta. Better-T-Stack pins one exact Alchemy version together with the selected
-Effect release candidate, currently `4.0.0-rc.112`, because open prerelease ranges can select
+Effect release candidate, currently `4.0.0-rc.115`, because open prerelease ranges can select
 unintended publications. Transitive dependencies can still resolve newer release candidates, so
 installation and typechecking alone are insufficient: verify that the Alchemy CLI starts too.
-Alchemy beta.77 still uses APIs removed in Effect rc.113. The generated root dependency overrides
-keep its transitive Effect platform and SQL packages on rc.112 as well. Upgrade these packages
-together once Alchemy supports the new Effect APIs, and commit the resulting lockfile.
+When upgrading an existing beta.77 project, update Alchemy, `@alchemy.run/frontend-frameworks`,
+Effect, and both Effect platform packages together. Remove the old rc.112 overrides for
+`@effect/platform-node-shared`, `@effect/sql-d1`, `@effect/sql-sqlite-do`, and `@effect/vitest`
+from the root `package.json` (or `pnpm-workspace.yaml` for pnpm), then reinstall and commit the
+resulting lockfile. Update generated infrastructure calls from `Config.string` and
+`Config.redacted` to `Config.String` and `Config.Redacted`, respectively.

@@ -16,12 +16,12 @@ export function databaseBindingEntries(plan: AlchemyDeploymentPlan): string[] {
   if (plan.hasAlchemyManagedDatabase) return ["...databaseBindings,"];
   if (config.database === "mysql" && config.orm === "drizzle" && config.dbSetup === "planetscale") {
     return [
-      'DATABASE_HOST: Config.string("DATABASE_HOST"),',
-      'DATABASE_USERNAME: Config.string("DATABASE_USERNAME"),',
-      'DATABASE_PASSWORD: Config.redacted("DATABASE_PASSWORD"),',
+      'DATABASE_HOST: Config.String("DATABASE_HOST"),',
+      'DATABASE_USERNAME: Config.String("DATABASE_USERNAME"),',
+      'DATABASE_PASSWORD: Config.Redacted("DATABASE_PASSWORD"),',
     ];
   }
-  if (config.database !== "none") return ['DATABASE_URL: Config.redacted("DATABASE_URL"),'];
+  if (config.database !== "none") return ['DATABASE_URL: Config.Redacted("DATABASE_URL"),'];
   return [];
 }
 
@@ -30,26 +30,26 @@ function commonRuntimeEntries(plan: AlchemyDeploymentPlan, includeCorsOrigin = t
   const entries = [...databaseBindingEntries(plan)];
 
   if (includeCorsOrigin) {
-    entries.push('CORS_ORIGIN: Config.string("CORS_ORIGIN"),');
+    entries.push('CORS_ORIGIN: Config.String("CORS_ORIGIN"),');
   }
 
   if (auth === "better-auth") {
     entries.push(
-      'BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),',
+      'BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET"),',
       "BETTER_AUTH_URL: Cloudflare.Worker.URL,",
     );
   }
   if (hasExample(plan, "ai")) {
-    entries.push('GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),');
+    entries.push('GOOGLE_GENERATIVE_AI_API_KEY: Config.Redacted("GOOGLE_GENERATIVE_AI_API_KEY"),');
   }
   if (payments === "polar") {
     entries.push(
-      'POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),',
-      'POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),',
+      'POLAR_ACCESS_TOKEN: Config.Redacted("POLAR_ACCESS_TOKEN"),',
+      'POLAR_SUCCESS_URL: Config.String("POLAR_SUCCESS_URL"),',
     );
   }
   if (dbSetup === "turso") {
-    entries.push('DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),');
+    entries.push('DATABASE_AUTH_TOKEN: Config.Redacted("DATABASE_AUTH_TOKEN"),');
   }
   if (plan.hasAxiomServerRuntime) {
     entries.push("...observabilityBindings,");
@@ -66,9 +66,9 @@ export function cloudflareServerEnvEntries(plan: AlchemyDeploymentPlan): string[
     const insertAt = entries.findIndex(
       (entry) => entry.startsWith("GOOGLE_") || entry.startsWith("POLAR_"),
     );
-    const clerkEntries = ['CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),'];
+    const clerkEntries = ['CLERK_SECRET_KEY: Config.Redacted("CLERK_SECRET_KEY"),'];
     if (api !== "none" && ["self", "hono", "elysia"].includes(backend)) {
-      clerkEntries.push('CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),');
+      clerkEntries.push('CLERK_PUBLISHABLE_KEY: Config.String("CLERK_PUBLISHABLE_KEY"),');
     }
     entries.splice(insertAt === -1 ? entries.length : insertAt, 0, ...clerkEntries);
   }
@@ -78,34 +78,34 @@ export function cloudflareServerEnvEntries(plan: AlchemyDeploymentPlan): string[
 
 export function prismaServerEnvEntries(plan: AlchemyDeploymentPlan): string[] {
   const { api, auth, backend, dbSetup, payments } = plan.config;
-  const entries = ["...resolvedDatabaseEnv,", 'CORS_ORIGIN: Config.string("CORS_ORIGIN"),'];
+  const entries = ["...resolvedDatabaseEnv,", 'CORS_ORIGIN: Config.String("CORS_ORIGIN"),'];
 
   if (auth === "better-auth") {
     entries.push(
-      'BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),',
-      'BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),',
+      'BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET"),',
+      'BETTER_AUTH_URL: Config.String("BETTER_AUTH_URL"),',
     );
   }
   if (auth === "clerk") {
-    entries.push('CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),');
+    entries.push('CLERK_SECRET_KEY: Config.Redacted("CLERK_SECRET_KEY"),');
     if (
       ["express", "fastify"].includes(backend) ||
       (api !== "none" && ["hono", "elysia"].includes(backend))
     ) {
-      entries.push('CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),');
+      entries.push('CLERK_PUBLISHABLE_KEY: Config.String("CLERK_PUBLISHABLE_KEY"),');
     }
   }
   if (hasExample(plan, "ai")) {
-    entries.push('GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),');
+    entries.push('GOOGLE_GENERATIVE_AI_API_KEY: Config.Redacted("GOOGLE_GENERATIVE_AI_API_KEY"),');
   }
   if (payments === "polar") {
     entries.push(
-      'POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),',
-      'POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),',
+      'POLAR_ACCESS_TOKEN: Config.Redacted("POLAR_ACCESS_TOKEN"),',
+      'POLAR_SUCCESS_URL: Config.String("POLAR_SUCCESS_URL"),',
     );
   }
   if (dbSetup === "turso") {
-    entries.push('DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),');
+    entries.push('DATABASE_AUTH_TOKEN: Config.Redacted("DATABASE_AUTH_TOKEN"),');
   }
   if (plan.hasAxiomServerRuntime) {
     entries.push("...resolvedObservabilityEnv,");
@@ -139,14 +139,14 @@ export function selfCloudflareWebEnvEntries(
     const insertAt = entries.findIndex(
       (entry) => entry.startsWith("GOOGLE_") || entry.startsWith("POLAR_"),
     );
-    const clerkEntries = ['CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),'];
+    const clerkEntries = ['CLERK_SECRET_KEY: Config.Redacted("CLERK_SECRET_KEY"),'];
     if (api !== "none") {
-      clerkEntries.push('CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),');
+      clerkEntries.push('CLERK_PUBLISHABLE_KEY: Config.String("CLERK_PUBLISHABLE_KEY"),');
     }
     clerkEntries.push(
       framework === "next"
-        ? 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.string("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),'
-        : 'VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),',
+        ? 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.String("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),'
+        : 'VITE_CLERK_PUBLISHABLE_KEY: Config.String("VITE_CLERK_PUBLISHABLE_KEY"),',
     );
     entries.splice(insertAt === -1 ? entries.length : insertAt, 0, ...clerkEntries);
   }
@@ -164,18 +164,18 @@ function prismaPublicEnvEntries(
 
   if (framework === "next") {
     if (backend === "convex") {
-      entries.push('NEXT_PUBLIC_CONVEX_URL: Config.string("NEXT_PUBLIC_CONVEX_URL"),');
+      entries.push('NEXT_PUBLIC_CONVEX_URL: Config.String("NEXT_PUBLIC_CONVEX_URL"),');
       if (auth === "better-auth") {
-        entries.push('NEXT_PUBLIC_CONVEX_SITE_URL: Config.string("NEXT_PUBLIC_CONVEX_SITE_URL"),');
+        entries.push('NEXT_PUBLIC_CONVEX_SITE_URL: Config.String("NEXT_PUBLIC_CONVEX_SITE_URL"),');
       }
     } else if (backend !== "self" && backend !== "none") {
       entries.push(
-        `NEXT_PUBLIC_SERVER_URL: ${deployedUrl ?? 'Config.string("NEXT_PUBLIC_SERVER_URL")'},`,
+        `NEXT_PUBLIC_SERVER_URL: ${deployedUrl ?? 'Config.String("NEXT_PUBLIC_SERVER_URL")'},`,
       );
     }
     if (auth === "clerk") {
       entries.push(
-        'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.string("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),',
+        'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.String("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),',
       );
     }
     return entries;
@@ -183,13 +183,13 @@ function prismaPublicEnvEntries(
 
   if (framework === "nuxt") {
     if (backend === "convex") {
-      entries.push('NUXT_PUBLIC_CONVEX_URL: Config.string("NUXT_PUBLIC_CONVEX_URL"),');
+      entries.push('NUXT_PUBLIC_CONVEX_URL: Config.String("NUXT_PUBLIC_CONVEX_URL"),');
       if (auth === "better-auth") {
-        entries.push('NUXT_PUBLIC_CONVEX_SITE_URL: Config.string("NUXT_PUBLIC_CONVEX_SITE_URL"),');
+        entries.push('NUXT_PUBLIC_CONVEX_SITE_URL: Config.String("NUXT_PUBLIC_CONVEX_SITE_URL"),');
       }
     } else if (backend !== "self" && backend !== "none") {
       entries.push(
-        `NUXT_PUBLIC_SERVER_URL: ${deployedUrl ?? 'Config.string("NUXT_PUBLIC_SERVER_URL")'},`,
+        `NUXT_PUBLIC_SERVER_URL: ${deployedUrl ?? 'Config.String("NUXT_PUBLIC_SERVER_URL")'},`,
       );
     }
     return entries;
@@ -197,21 +197,21 @@ function prismaPublicEnvEntries(
 
   if (framework === "astro") {
     if (backend !== "self" && backend !== "none") {
-      entries.push(`PUBLIC_SERVER_URL: ${deployedUrl ?? 'Config.string("PUBLIC_SERVER_URL")'},`);
+      entries.push(`PUBLIC_SERVER_URL: ${deployedUrl ?? 'Config.String("PUBLIC_SERVER_URL")'},`);
     }
     return entries;
   }
 
   if (backend === "convex") {
-    entries.push('VITE_CONVEX_URL: Config.string("VITE_CONVEX_URL"),');
+    entries.push('VITE_CONVEX_URL: Config.String("VITE_CONVEX_URL"),');
     if (auth === "better-auth") {
-      entries.push('VITE_CONVEX_SITE_URL: Config.string("VITE_CONVEX_SITE_URL"),');
+      entries.push('VITE_CONVEX_SITE_URL: Config.String("VITE_CONVEX_SITE_URL"),');
     }
   } else if (backend !== "self" && backend !== "none") {
-    entries.push(`VITE_SERVER_URL: ${deployedUrl ?? 'Config.string("VITE_SERVER_URL")'},`);
+    entries.push(`VITE_SERVER_URL: ${deployedUrl ?? 'Config.String("VITE_SERVER_URL")'},`);
   }
   if (auth === "clerk") {
-    entries.push('VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),');
+    entries.push('VITE_CLERK_PUBLISHABLE_KEY: Config.String("VITE_CLERK_PUBLISHABLE_KEY"),');
   }
   return entries;
 }
@@ -229,29 +229,29 @@ export function prismaWebEnvEntries(
     entries.push("...resolvedDatabaseEnv,");
     if (auth === "better-auth") {
       entries.push(
-        'BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),',
-        'BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL"),',
+        'BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET"),',
+        'BETTER_AUTH_URL: Config.String("BETTER_AUTH_URL"),',
       );
     }
     if (auth === "clerk") {
-      entries.push('CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),');
+      entries.push('CLERK_SECRET_KEY: Config.Redacted("CLERK_SECRET_KEY"),');
       if (api !== "none") {
-        entries.push('CLERK_PUBLISHABLE_KEY: Config.string("CLERK_PUBLISHABLE_KEY"),');
+        entries.push('CLERK_PUBLISHABLE_KEY: Config.String("CLERK_PUBLISHABLE_KEY"),');
       }
     }
     if (hasExample(plan, "ai")) {
       entries.push(
-        'GOOGLE_GENERATIVE_AI_API_KEY: Config.redacted("GOOGLE_GENERATIVE_AI_API_KEY"),',
+        'GOOGLE_GENERATIVE_AI_API_KEY: Config.Redacted("GOOGLE_GENERATIVE_AI_API_KEY"),',
       );
     }
     if (payments === "polar") {
       entries.push(
-        'POLAR_ACCESS_TOKEN: Config.redacted("POLAR_ACCESS_TOKEN"),',
-        'POLAR_SUCCESS_URL: Config.string("POLAR_SUCCESS_URL"),',
+        'POLAR_ACCESS_TOKEN: Config.Redacted("POLAR_ACCESS_TOKEN"),',
+        'POLAR_SUCCESS_URL: Config.String("POLAR_SUCCESS_URL"),',
       );
     }
     if (dbSetup === "turso") {
-      entries.push('DATABASE_AUTH_TOKEN: Config.redacted("DATABASE_AUTH_TOKEN"),');
+      entries.push('DATABASE_AUTH_TOKEN: Config.Redacted("DATABASE_AUTH_TOKEN"),');
     }
     if (plan.hasAxiomWebRuntime) {
       entries.push("...resolvedObservabilityEnv,");
@@ -281,7 +281,7 @@ export function splitCloudflareWebEnvEntries(
       "IMAGES: Cloudflare.Images.Images(),",
       ...(backend === "none"
         ? []
-        : [`PUBLIC_SERVER_URL: ${serverValue ?? 'Config.string("PUBLIC_SERVER_URL")'},`]),
+        : [`PUBLIC_SERVER_URL: ${serverValue ?? 'Config.String("PUBLIC_SERVER_URL")'},`]),
     );
     return entries;
   }
@@ -295,22 +295,22 @@ export function splitCloudflareWebEnvEntries(
           ? "PUBLIC"
           : "VITE";
   if (backend === "convex") {
-    entries.push(`${prefix}_CONVEX_URL: Config.string("${prefix}_CONVEX_URL"),`);
+    entries.push(`${prefix}_CONVEX_URL: Config.String("${prefix}_CONVEX_URL"),`);
     if (auth === "better-auth") {
-      entries.push(`${prefix}_CONVEX_SITE_URL: Config.string("${prefix}_CONVEX_SITE_URL"),`);
+      entries.push(`${prefix}_CONVEX_SITE_URL: Config.String("${prefix}_CONVEX_SITE_URL"),`);
     }
   } else if (backend !== "none") {
     entries.push(
-      `${prefix}_SERVER_URL: ${serverValue ?? `Config.string("${prefix}_SERVER_URL")`},`,
+      `${prefix}_SERVER_URL: ${serverValue ?? `Config.String("${prefix}_SERVER_URL")`},`,
     );
   }
 
   if (auth === "clerk" && ["next", "tanstack-start", "react-router"].includes(framework)) {
-    entries.push('CLERK_SECRET_KEY: Config.redacted("CLERK_SECRET_KEY"),');
+    entries.push('CLERK_SECRET_KEY: Config.Redacted("CLERK_SECRET_KEY"),');
     entries.push(
       framework === "next"
-        ? 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.string("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),'
-        : 'VITE_CLERK_PUBLISHABLE_KEY: Config.string("VITE_CLERK_PUBLISHABLE_KEY"),',
+        ? 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: Config.String("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),'
+        : 'VITE_CLERK_PUBLISHABLE_KEY: Config.String("VITE_CLERK_PUBLISHABLE_KEY"),',
     );
   }
 

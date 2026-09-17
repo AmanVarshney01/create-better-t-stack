@@ -271,8 +271,8 @@ describe("Cloudflare DB client generation", () => {
     expect(routeFile).toContain("toNextJsHandler(await createAuth()).POST(request)");
     expect(contextFile).toContain("(await createAuth(db)).api.getSession");
     expect(infraFile).toContain('export const web = Cloudflare.Website.StaticSite("web", {');
-    expect(infraFile).toContain('BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET")');
-    expect(infraFile).not.toContain("BETTER_AUTH_SECRET: yield* Config.redacted");
+    expect(infraFile).toContain('BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET")');
+    expect(infraFile).not.toContain("BETTER_AUTH_SECRET: yield* Config.Redacted");
     expect(infraFile).toContain("memo: false");
     expect(infraFile).toContain('migrations: "../../packages/db/prisma/migrations"');
     expect(infraFile).not.toContain("migrationsDir:");

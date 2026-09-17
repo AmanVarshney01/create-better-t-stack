@@ -85,7 +85,7 @@ describe("Alchemy providers", () => {
     expect(cloudflareInfra).not.toContain("CORS_ORIGIN");
     expect(cloudflareInfra).toContain("BETTER_AUTH_URL: Cloudflare.Worker.URL");
     expect(prismaInfra).not.toContain("CORS_ORIGIN");
-    expect(prismaInfra).toContain('BETTER_AUTH_URL: Config.string("BETTER_AUTH_URL")');
+    expect(prismaInfra).toContain('BETTER_AUTH_URL: Config.String("BETTER_AUTH_URL")');
   });
 
   it("rejects OpenNext combinations that are broken in the current release", async () => {
@@ -169,7 +169,7 @@ describe("Alchemy providers", () => {
       const prismaConfig = files.get("packages/db/prisma.config.ts") ?? "";
 
       expect(infra).toContain('export const server = Prisma.Compute("server"');
-      expect(infra).toContain('DATABASE_URL: Config.redacted("DATABASE_URL")');
+      expect(infra).toContain('DATABASE_URL: Config.Redacted("DATABASE_URL")');
       expect(infra).not.toContain(combination.providerResource);
       expect(prismaConfig).toContain("env('DATABASE_URL')");
       expect(prismaConfig).not.toContain("process.env.DATABASE_URL!");
@@ -445,7 +445,7 @@ describe("Alchemy providers", () => {
 
     expect(infra).not.toContain('Neon.Project("database"');
     expect(infra).not.toContain('Command.Exec("database-migrations"');
-    expect(infra).toContain('DATABASE_URL: Config.redacted("DATABASE_URL")');
+    expect(infra).toContain('DATABASE_URL: Config.Redacted("DATABASE_URL")');
     expect(infra).toContain("export const databaseProviders = Prisma.providers()");
     expect(files.has("packages/db/prisma/migrations/0000_init/migration.sql")).toBe(false);
   });
