@@ -273,9 +273,7 @@ function writePrismaWeb(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): voi
       writer.writeLine('path: "../../apps/web",');
       const frameworkName = prismaFramework(framework);
       if (frameworkName) {
-        writer.writeLine(
-          `build: { type: "auto" as const, framework: "${frameworkName}" as const, env: webEnv },`,
-        );
+        writer.writeLine(`build: { type: "auto", framework: "${frameworkName}", env: webEnv },`);
       } else {
         const customBuild = prismaCustomBuild(framework);
         writeObject(
