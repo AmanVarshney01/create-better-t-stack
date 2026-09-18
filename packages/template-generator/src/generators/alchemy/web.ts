@@ -3,7 +3,12 @@ import {
   selfCloudflareWebEnvEntries,
   splitCloudflareWebEnvEntries,
 } from "./env";
-import { assertNever, type AlchemyDeploymentPlan, type DeployedWebFramework } from "./plan";
+import {
+  getPrismaWebsiteFramework,
+  assertNever,
+  type AlchemyDeploymentPlan,
+  type DeployedWebFramework,
+} from "./plan";
 import { writeLines, writeObject, type AlchemyWriter } from "./writer";
 
 function writeEnv(writer: AlchemyWriter, entries: readonly string[]): void {
@@ -244,19 +249,7 @@ function prismaCustomBuild(framework: DeployedWebFramework): PrismaCustomBuild {
 function writePrismaWeb(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void {
   if (plan.web.target !== "prisma") return;
   const { framework, topology } = plan.web;
-  const websiteFramework =
-    plan.config.backend === "none"
-      ? {
-          next: "Nextjs",
-          nuxt: "Nuxt",
-          astro: "Astro",
-          svelte: "SvelteKit",
-          "tanstack-start": "TanStackStart",
-          "tanstack-router": "Vite",
-          "react-router": undefined,
-          solid: undefined,
-        }[framework]
-      : undefined;
+  const websiteFramework = getPrismaWebsiteFramework(plan.config);
 
   writer.writeLine(
     websiteFramework
