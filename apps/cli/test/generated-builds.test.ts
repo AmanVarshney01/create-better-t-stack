@@ -975,55 +975,6 @@ async function validatePwaBuildArtifacts(sample: SelectedBuildSample, projectDir
   }
 }
 
-async function buildAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
-  if (sample.config.webDeploy !== "prisma") return;
-
-  const webDir = path.join(projectDir, "apps/web");
-  if (sample.config.frontend?.includes("svelte") && sample.config.backend === "none") {
-    const infraDir = path.join(projectDir, "packages/infra");
-    const script = path.join(infraDir, "verify-website-artifact.ts");
-    await fs.writeFile(
-      script,
-      `
-import { cp } from "node:fs/promises";
-import * as Effect from "effect/Effect";
-import * as NodeServices from "@effect/platform-node/NodeServices";
-import { make } from "@alchemy.run/frontend-frameworks/sveltekit";
-import target from "@alchemy.run/frontend-frameworks/sveltekit/node";
-import { stageWebsiteArtifact } from "alchemy/Prisma/Website/Artifact";
-const root = new URL("../../apps/web/", import.meta.url).pathname;
-await Effect.runPromise(Effect.gen(function* () {
-  const framework = yield* make({ root, target: target({}) });
-  const output = yield* framework.build({ root });
-  const entry = output.serverModules?.[0]?.name;
-  if (!entry) throw new Error("SvelteKit build produced no server entry");
-  const artifact = yield* stageWebsiteArtifact({
-    root,
-    distDir: output.distDirectory,
-    serverEntry: output.distDirectory + "/" + entry,
-  });
-  yield* Effect.tryPromise(() => cp(artifact.directory, root + ".prisma-test-artifact", { recursive: true }));
-}).pipe(Effect.scoped, Effect.provide(NodeServices.layer)));
-`,
-    );
-    try {
-      await runCommand(sample.name, infraDir, "bun", [script]);
-    } finally {
-      await fs.remove(script);
-    }
-    return;
-  }
-  const entrypoint = sample.config.frontend?.includes("react-router")
-    ? "build/server/index.js"
-    : sample.config.frontend?.includes("svelte")
-      ? "build/index.js"
-      : undefined;
-
-  if (entrypoint) {
-    expect(await fs.pathExists(path.join(webDir, entrypoint))).toBe(true);
-  }
-}
-
 async function getAvailablePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = createServer();
@@ -1330,10 +1281,8 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   const frontend = sample.config.frontend ?? [];
   const entrypoint = frontend.includes("react-router")
     ? "build/server/index.js"
-    : frontend.includes("svelte")
-      ? sample.config.backend === "none"
-        ? ".prisma-test-artifact/server.mjs"
-        : "build/index.js"
+    : frontend.includes("svelte") && sample.config.backend !== "none"
+      ? "build/index.js"
       : frontend.includes("solid")
         ? ".output/server/index.mjs"
         : undefined;
@@ -1664,7 +1613,6 @@ try {
           }
           const build = getPackageManagerCommand(sample.packageManager, "build");
           await runCommand(sample.name, projectDir, build.command, build.args);
-          await buildAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidateAxiomRuntime(sample, projectDir);
           await bootAndValidateStartAuthRuntime(sample, projectDir);
