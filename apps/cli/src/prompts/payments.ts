@@ -29,6 +29,11 @@ export async function getPaymentsChoice(
       hint: "Turn your software into a business. 6 lines of code.",
     },
     {
+      value: "mollie" as Payments,
+      label: "Mollie",
+      hint: "European payments processor with support for credit cards, iDEAL, and PayPal.",
+    },
+    {
       value: "none" as Payments,
       label: "None",
       hint: "No payments integration",

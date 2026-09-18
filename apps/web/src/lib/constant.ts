@@ -504,6 +504,14 @@ export const TECH_OPTIONS: TechOptions = {
       default: false,
     },
     {
+      id: "mollie",
+      name: "Mollie",
+      description: "European payments processor with credit cards, iDEAL & PayPal.",
+      icon: `${ICON_BASE_URL}/mollie.svg`,
+      color: "from-blue-400 to-blue-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Payments",
       description: "Skip payments integration",
