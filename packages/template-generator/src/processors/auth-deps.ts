@@ -206,7 +206,7 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
     if (authExists) {
       const authDependencies: AvailableDependencies[] = ["better-auth"];
       if (orm === "drizzle") {
-        authDependencies.push("@better-auth/drizzle-adapter");
+        authDependencies.push("@better-auth/drizzle-adapter", "drizzle-orm");
       }
       if (orm === "mongoose") {
         authDependencies.push("mongodb");

@@ -292,6 +292,7 @@ function getNpmAllowedScripts(config: ProjectConfig): NpmAllowedScripts {
   if (
     config.runtime === "node" ||
     hasCloudflareDeploy ||
+    hasPrismaDeploy ||
     config.webDeploy === "docker" ||
     config.serverDeploy === "docker" ||
     config.webDeploy === "vercel" ||
