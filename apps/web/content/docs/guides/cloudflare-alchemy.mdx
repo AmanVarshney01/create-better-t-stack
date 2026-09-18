@@ -102,6 +102,8 @@ This distinction matters in mixed stacks. A Prisma web app with a Vercel server,
 
 ## Migration workflow
 
+Drizzle templates use Drizzle ORM and Drizzle Kit `1.0.0-rc.4`. Each generated migration has its own directory containing `migration.sql` and `snapshot.json`, which Alchemy applies during deployment. Better Auth uses its official Drizzle Relations v2 adapter.
+
 Database schemas remain source controlled. Generate and review migrations during development:
 
 ```bash

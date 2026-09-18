@@ -1,13 +1,13 @@
 import type { DatabaseConfig } from "./config";
 {{#if (eq dbSetup "d1")}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 import { drizzle } from "drizzle-orm/d1";
 
 export function createDb(env: DatabaseConfig) {
-	return drizzle(env.DB, { schema });
+	return drizzle(env.DB, { relations });
 }
 {{else if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
@@ -19,11 +19,11 @@ export function createDb(env: DatabaseConfig) {
 {{/if}}
 	});
 
-	return drizzle({ client, schema });
+	return drizzle({ client, relations });
 }
 
 {{else if (eq runtime "workers")}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
@@ -35,7 +35,7 @@ export function createDb(env: DatabaseConfig) {
 {{/if}}
 	});
 
-	return drizzle({ client, schema });
+	return drizzle({ client, relations });
 }
 {{/if}}
 

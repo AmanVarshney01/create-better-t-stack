@@ -8292,7 +8292,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 {{#if (eq orm "prisma")}}
 import { prismaAdapter } from "better-auth/adapters/prisma";
 {{else if (eq orm "drizzle")}}
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import * as schema from "@{{projectName}}/db/schema/auth";
 {{else if (eq orm "mongoose")}}
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
@@ -8392,7 +8392,7 @@ export type Session = ReturnType<typeof createAuth>["$Infer"]["Session"];
   {{/if}}
 }
 `],
-  ["auth/better-auth/server/db/drizzle/mysql/src/schema/auth.ts.hbs", `import { relations } from "drizzle-orm";
+  ["auth/better-auth/server/db/drizzle/mysql/src/schema/auth.ts.hbs", `import { defineRelationsPart } from "drizzle-orm";
 import {
   mysqlTable,
   varchar,
@@ -8474,26 +8474,35 @@ export const verification = mysqlTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
-export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
-  accounts: many(account),
-}));
-
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, {
-    fields: [session.userId],
-    references: [user.id],
+export const authRelations = defineRelationsPart(
+  { user, session, account, verification },
+  (r) => ({
+    user: {
+      sessions: r.many.session({
+        from: r.user.id,
+        to: r.session.userId,
+      }),
+      accounts: r.many.account({
+        from: r.user.id,
+        to: r.account.userId,
+      }),
+    },
+    session: {
+      user: r.one.user({
+        from: r.session.userId,
+        to: r.user.id,
+      }),
+    },
+    account: {
+      user: r.one.user({
+        from: r.account.userId,
+        to: r.user.id,
+      }),
+    },
   }),
-}));
-
-export const accountRelations = relations(account, ({ one }) => ({
-  user: one(user, {
-    fields: [account.userId],
-    references: [user.id],
-  }),
-}));
+);
 `],
-  ["auth/better-auth/server/db/drizzle/postgres/src/schema/auth.ts.hbs", `import { relations } from "drizzle-orm";
+  ["auth/better-auth/server/db/drizzle/postgres/src/schema/auth.ts.hbs", `import { defineRelationsPart } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -8568,26 +8577,35 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
-export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
-  accounts: many(account),
-}));
-
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, {
-    fields: [session.userId],
-    references: [user.id],
+export const authRelations = defineRelationsPart(
+  { user, session, account, verification },
+  (r) => ({
+    user: {
+      sessions: r.many.session({
+        from: r.user.id,
+        to: r.session.userId,
+      }),
+      accounts: r.many.account({
+        from: r.user.id,
+        to: r.account.userId,
+      }),
+    },
+    session: {
+      user: r.one.user({
+        from: r.session.userId,
+        to: r.user.id,
+      }),
+    },
+    account: {
+      user: r.one.user({
+        from: r.account.userId,
+        to: r.user.id,
+      }),
+    },
   }),
-}));
-
-export const accountRelations = relations(account, ({ one }) => ({
-  user: one(user, {
-    fields: [account.userId],
-    references: [user.id],
-  }),
-}));
+);
 `],
-  ["auth/better-auth/server/db/drizzle/sqlite/src/schema/auth.ts.hbs", `import { relations, sql } from "drizzle-orm";
+  ["auth/better-auth/server/db/drizzle/sqlite/src/schema/auth.ts.hbs", `import { defineRelationsPart, sql } from "drizzle-orm";
 import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
 
 export const user = sqliteTable("user", {
@@ -8676,24 +8694,33 @@ export const verification = sqliteTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
-export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
-  accounts: many(account),
-}));
-
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, {
-    fields: [session.userId],
-    references: [user.id],
+export const authRelations = defineRelationsPart(
+  { user, session, account, verification },
+  (r) => ({
+    user: {
+      sessions: r.many.session({
+        from: r.user.id,
+        to: r.session.userId,
+      }),
+      accounts: r.many.account({
+        from: r.user.id,
+        to: r.account.userId,
+      }),
+    },
+    session: {
+      user: r.one.user({
+        from: r.session.userId,
+        to: r.user.id,
+      }),
+    },
+    account: {
+      user: r.one.user({
+        from: r.account.userId,
+        to: r.user.id,
+      }),
+    },
   }),
-}));
-
-export const accountRelations = relations(account, ({ one }) => ({
-  user: one(user, {
-    fields: [account.userId],
-    references: [user.id],
-  }),
-}));
+);
 `],
   ["auth/better-auth/server/db/mongoose/mongodb/src/models/auth.model.ts.hbs", `import mongoose from 'mongoose';
 
@@ -15497,6 +15524,16 @@ export type DatabaseConfig = {
   {{/if}}
 }
 `],
+  ["db/drizzle/base/src/relations.ts.hbs", `import { defineRelations } from "drizzle-orm";
+import * as schema from "./schema";
+
+export const relations = {
+  ...defineRelations(schema),
+{{#if (eq auth "better-auth")}}
+  ...schema.authRelations,
+{{/if}}
+};
+`],
   ["db/drizzle/base/src/schema/index.ts.hbs", `{{#if (eq auth "better-auth")}}
 export * from "./auth";
 {{/if}}
@@ -15509,7 +15546,7 @@ import "varlock/auto-load";
 
 
 export default defineConfig({
-  schema: "./src/schema",
+  schema: "./src/schema/index.ts",
   out: "./src/migrations",
   dialect: "mysql",
   dbCredentials: {
@@ -15519,7 +15556,7 @@ export default defineConfig({
 `],
   ["db/drizzle/mysql/src/index.ts.hbs", `import type { DatabaseConfig } from "./config";
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
@@ -15531,7 +15568,7 @@ export function createDb(env: DatabaseConfig) {
 			username: env.DATABASE_USERNAME,
 			password: env.DATABASE_PASSWORD,
 		},
-		schema,
+		relations,
 	});
 }
 {{else}}
@@ -15542,8 +15579,7 @@ export function createDb(env: DatabaseConfig) {
 		connection: {
 			uri: env.DATABASE_URL,
 		},
-		schema,
-		mode: "default",
+		relations,
 	});
 }
 {{/if}}
@@ -15551,7 +15587,7 @@ export function createDb(env: DatabaseConfig) {
 {{/if}}
 
 {{#if (eq runtime "workers")}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
@@ -15563,7 +15599,7 @@ export function createDb(env: DatabaseConfig) {
 			username: env.DATABASE_USERNAME,
 			password: env.DATABASE_PASSWORD,
 		},
-		schema,
+		relations,
 	});
 }
 {{else}}
@@ -15574,8 +15610,7 @@ export function createDb(env: DatabaseConfig) {
 		connection: {
 			uri: env.DATABASE_URL,
 		},
-		schema,
-		mode: "default",
+		relations,
 	});
 }
 {{/if}}
@@ -15590,7 +15625,7 @@ import "varlock/auto-load";
 
 
 export default defineConfig({
-  schema: "./src/schema",
+  schema: "./src/schema/index.ts",
   out: "./src/migrations",
   dialect: "postgresql",
   dbCredentials: {
@@ -15600,7 +15635,7 @@ export default defineConfig({
 `],
   ["db/drizzle/postgres/src/index.ts.hbs", `import type { DatabaseConfig } from "./config";
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 
 {{#if (eq dbSetup "neon")}}
 import { neon } from '@neondatabase/serverless';
@@ -15608,7 +15643,7 @@ import { drizzle } from 'drizzle-orm/neon-http';
 
 export function createDb(env: DatabaseConfig) {
 	const sql = neon(env.DATABASE_URL);
-	return drizzle(sql, { schema });
+	return drizzle({ client: sql, relations });
 }
 {{else}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
@@ -15622,9 +15657,9 @@ export function createDb(env: DatabaseConfig) {
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 	const client = postgres(env.DATABASE_URL, { max: 1 });
 
-	return drizzle({ client, schema });
+	return drizzle({ client, relations });
 {{else}}
-	return drizzle(env.DATABASE_URL, { schema });
+	return drizzle(env.DATABASE_URL, { relations });
 {{/if}}
 }
 {{/if}}
@@ -15632,7 +15667,7 @@ export function createDb(env: DatabaseConfig) {
 {{/if}}
 
 {{#if (eq runtime "workers")}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 
 {{#if (eq dbSetup "neon")}}
 import { neon } from '@neondatabase/serverless';
@@ -15640,7 +15675,7 @@ import { drizzle } from 'drizzle-orm/neon-http';
 
 export function createDb(env: DatabaseConfig) {
 	const sql = neon(env.DATABASE_URL || "");
-	return drizzle(sql, { schema });
+	return drizzle({ client: sql, relations });
 }
 {{else}}
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -15649,7 +15684,7 @@ import postgres from "postgres";
 export function createDb(env: DatabaseConfig) {
 	const client = postgres(env.DATABASE_URL || "", { max: 1 });
 
-	return drizzle({ client, schema });
+	return drizzle({ client, relations });
 }
 {{/if}}
 {{/if}}
@@ -15663,7 +15698,7 @@ import "varlock/auto-load";
 
 
 export default defineConfig({
-  schema: "./src/schema",
+  schema: "./src/schema/index.ts",
   out: "./src/migrations",
   {{#if (eq dbSetup "d1")}}
   // DOCS: https://orm.drizzle.team/docs/guides/d1-http-with-drizzle-kit
@@ -15682,14 +15717,14 @@ export default defineConfig({
 `],
   ["db/drizzle/sqlite/src/index.ts.hbs", `import type { DatabaseConfig } from "./config";
 {{#if (eq dbSetup "d1")}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 import { drizzle } from "drizzle-orm/d1";
 
 export function createDb(env: DatabaseConfig) {
-	return drizzle(env.DB, { schema });
+	return drizzle(env.DB, { relations });
 }
 {{else if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
@@ -15701,11 +15736,11 @@ export function createDb(env: DatabaseConfig) {
 {{/if}}
 	});
 
-	return drizzle({ client, schema });
+	return drizzle({ client, relations });
 }
 
 {{else if (eq runtime "workers")}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
@@ -15717,7 +15752,7 @@ export function createDb(env: DatabaseConfig) {
 {{/if}}
 	});
 
-	return drizzle({ client, schema });
+	return drizzle({ client, relations });
 }
 {{/if}}
 
@@ -35530,4 +35565,4 @@ export default function Success() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 529;
+export const TEMPLATE_COUNT = 530;

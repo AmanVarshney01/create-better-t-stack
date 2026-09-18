@@ -1,6 +1,6 @@
 import type { DatabaseConfig } from "./config";
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 
 {{#if (eq dbSetup "neon")}}
 import { neon } from '@neondatabase/serverless';
@@ -8,7 +8,7 @@ import { drizzle } from 'drizzle-orm/neon-http';
 
 export function createDb(env: DatabaseConfig) {
 	const sql = neon(env.DATABASE_URL);
-	return drizzle(sql, { schema });
+	return drizzle({ client: sql, relations });
 }
 {{else}}
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
@@ -22,9 +22,9 @@ export function createDb(env: DatabaseConfig) {
 {{#if (and (eq backend "self") (eq webDeploy "cloudflare"))}}
 	const client = postgres(env.DATABASE_URL, { max: 1 });
 
-	return drizzle({ client, schema });
+	return drizzle({ client, relations });
 {{else}}
-	return drizzle(env.DATABASE_URL, { schema });
+	return drizzle(env.DATABASE_URL, { relations });
 {{/if}}
 }
 {{/if}}
@@ -32,7 +32,7 @@ export function createDb(env: DatabaseConfig) {
 {{/if}}
 
 {{#if (eq runtime "workers")}}
-import * as schema from "./schema";
+import { relations } from "./relations";
 
 {{#if (eq dbSetup "neon")}}
 import { neon } from '@neondatabase/serverless';
@@ -40,7 +40,7 @@ import { drizzle } from 'drizzle-orm/neon-http';
 
 export function createDb(env: DatabaseConfig) {
 	const sql = neon(env.DATABASE_URL || "");
-	return drizzle(sql, { schema });
+	return drizzle({ client: sql, relations });
 }
 {{else}}
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -49,7 +49,7 @@ import postgres from "postgres";
 export function createDb(env: DatabaseConfig) {
 	const client = postgres(env.DATABASE_URL || "", { max: 1 });
 
-	return drizzle({ client, schema });
+	return drizzle({ client, relations });
 }
 {{/if}}
 {{/if}}

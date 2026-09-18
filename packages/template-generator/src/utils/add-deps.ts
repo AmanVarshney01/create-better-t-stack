@@ -17,6 +17,7 @@ export const dependencyVersionMap = {
   typescript: "^6.0.3",
 
   "better-auth": "1.7.5",
+  "@better-auth/drizzle-adapter": "1.7.5",
   "@better-auth/expo": "1.7.5",
 
   "@clerk/backend": "^3.17.1",
@@ -29,8 +30,8 @@ export const dependencyVersionMap = {
   "@clerk/tanstack-react-start": "^1.5.12",
   "@clerk/expo": "^4.6.5",
 
-  "drizzle-orm": "^0.45.2",
-  "drizzle-kit": "^0.31.10",
+  "drizzle-orm": "1.0.0-rc.4",
+  "drizzle-kit": "1.0.0-rc.4",
   "@planetscale/database": "^1.20.1",
 
   "@libsql/client": "0.18.0",
