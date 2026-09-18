@@ -5,8 +5,31 @@ import { join } from "node:path";
 
 import { add } from "../src/index";
 import { SMOKE_DIR } from "./setup";
+import { expectSuccess, runCreateTest } from "./test-utils";
 
 describe("add()", () => {
+  it("updates npm build approvals without overwriting explicit user denials", async () => {
+    const result = await runCreateTest({
+      projectName: "npm-add-approvals",
+      packageManager: "npm",
+      addons: ["none"],
+    });
+    expectSuccess(result);
+    const packagePath = join(result.projectDir!, "package.json");
+    const pkg = JSON.parse(await readFile(packagePath, "utf8"));
+    pkg.allowScripts = { sharp: false };
+    await writeFile(packagePath, JSON.stringify(pkg));
+
+    const added = await add({
+      projectDir: result.projectDir!,
+      addons: ["turborepo"],
+      install: false,
+    });
+    expect(added.success).toBe(true);
+    const updated = JSON.parse(await readFile(packagePath, "utf8"));
+    expect(updated.allowScripts).toMatchObject({ esbuild: true, sharp: false });
+  });
+
   it("scaffolds a workspace package through add()", async () => {
     const projectDir = join(SMOKE_DIR, "workspace-package-project");
     await rm(projectDir, { recursive: true, force: true });

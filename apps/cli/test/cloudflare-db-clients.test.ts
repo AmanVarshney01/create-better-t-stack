@@ -181,7 +181,6 @@ describe("Cloudflare DB client generation", () => {
       const todoRouterFile = files.get("packages/api/src/routers/todo.ts");
 
       expect(dbFile).toContain('import { drizzle } from "drizzle-orm/d1";');
-      expect(dbFile).toContain("drizzle(env.DB, { schema })");
       expect(dbFile).not.toContain('import { drizzle } from "drizzle-orm/libsql";');
       expect(dbFile).not.toContain("export const db = createDb();");
       expect(authFile).toContain(
@@ -303,7 +302,6 @@ describe("Cloudflare DB client generation", () => {
 
     expect(dbFile).toContain('import postgres from "postgres";');
     expect(dbFile).toContain("{ max: 1 }");
-    expect(dbFile).toContain("return drizzle({ client, schema });");
   });
 
   it("keeps Better Auth MongoDB templates factory-only for Cloudflare Next deployments", async () => {

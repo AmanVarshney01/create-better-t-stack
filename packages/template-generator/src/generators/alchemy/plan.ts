@@ -158,3 +158,23 @@ export function createAlchemyDeploymentPlan(config: ProjectConfig): AlchemyDeplo
 export function assertNever(value: never): never {
   throw new Error(`Unhandled Alchemy plan variant: ${JSON.stringify(value)}`);
 }
+
+export function getPrismaWebsiteFramework(config: ProjectConfig): string | undefined {
+  if (config.webDeploy !== "prisma" || config.backend !== "none") return;
+  for (const frontend of config.frontend) {
+    switch (frontend) {
+      case "next":
+        return "Nextjs";
+      case "nuxt":
+        return "Nuxt";
+      case "astro":
+        return "Astro";
+      case "svelte":
+        return "SvelteKit";
+      case "tanstack-start":
+        return "TanStackStart";
+      case "tanstack-router":
+        return "Vite";
+    }
+  }
+}

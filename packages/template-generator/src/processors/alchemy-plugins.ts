@@ -79,17 +79,14 @@ function d1DatabasesBlock(config: ProjectConfig): string {
   const migrationsDir = isPrisma
     ? "../../packages/db/prisma/migrations"
     : "../../packages/db/src/migrations";
-  // prisma nests migrations as <timestamp>_<name>/migration.sql
-  const pattern = isPrisma
-    ? `,\n      "migrations_pattern": "${migrationsDir}/*/migration.sql"`
-    : "";
   return `,
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "${config.projectName}-db-local",
       "database_id": "local",
-      "migrations_dir": "${migrationsDir}"${pattern}
+      "migrations_dir": "${migrationsDir}",
+      "migrations_pattern": "${migrationsDir}/*/migration.sql"
     }
   ]`;
 }

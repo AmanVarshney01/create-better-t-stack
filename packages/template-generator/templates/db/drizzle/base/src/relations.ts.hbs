@@ -1,0 +1,9 @@
+import { defineRelations } from "drizzle-orm";
+import * as schema from "./schema";
+
+export const relations = {
+  ...defineRelations(schema),
+{{#if (eq auth "better-auth")}}
+  ...schema.authRelations,
+{{/if}}
+};

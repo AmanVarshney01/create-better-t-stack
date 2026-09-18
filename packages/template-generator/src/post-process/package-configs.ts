@@ -9,6 +9,7 @@ import type { JsonValue } from "../core/json-types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 import { dependencyVersionMap } from "../utils/add-deps";
 import { getDbScriptSupport } from "../utils/db-scripts";
+import { getAllowedDependencyScripts } from "../utils/dependency-scripts";
 
 type PackageJson = {
   name?: string;
@@ -39,6 +40,7 @@ const VITE_PLUS_VERSION = dependencyVersionMap["vite-plus"];
  */
 export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectConfig): void {
   updateRootPackageJson(vfs, config);
+  processNpmScriptApprovals(vfs, config);
   updateConfigPackageJson(vfs, config);
   updateUiPackageJson(vfs, config);
   updateInfraPackageJson(vfs, config);
@@ -235,15 +237,6 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   // For preview purposes, we just show the configured package manager
   pkgJson.packageManager ||= `${packageManager}@latest`;
 
-  if (packageManager === "npm") {
-    const allowScripts = getNpmAllowedScripts(config);
-    if (Object.keys(allowScripts).length > 0) {
-      pkgJson.allowScripts = allowScripts;
-    } else {
-      delete pkgJson.allowScripts;
-    }
-  }
-
   if (config.api === "orpc" && config.frontend.includes("nuxt")) {
     pkgJson.overrides = {
       ...pkgJson.overrides,
@@ -278,67 +271,6 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
 
   pkgJson.workspaces = getUpdatedWorkspaces(existingWorkspaces, workspaces);
   vfs.writeJson("package.json", pkgJson);
-}
-
-interface NpmAllowedScripts extends Record<string, boolean> {}
-
-function getNpmAllowedScripts(config: ProjectConfig): NpmAllowedScripts {
-  const allowed: NpmAllowedScripts = {};
-  const hasCloudflareDeploy =
-    config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare";
-  const hasPrismaDeploy = config.webDeploy === "prisma" || config.serverDeploy === "prisma";
-  const hasAxiom = config.addons.includes("axiom");
-
-  if (
-    config.runtime === "node" ||
-    hasCloudflareDeploy ||
-    config.webDeploy === "docker" ||
-    config.serverDeploy === "docker" ||
-    config.webDeploy === "vercel" ||
-    config.serverDeploy === "vercel" ||
-    config.addons.includes("turborepo") ||
-    config.addons.includes("vite-plus") ||
-    config.frontend.includes("react-router") ||
-    config.frontend.includes("nuxt")
-  ) {
-    allowed.esbuild = true;
-  }
-
-  if (config.frontend.includes("nuxt")) {
-    allowed["@parcel/watcher"] = true;
-    allowed["vue-demi"] = true;
-  }
-
-  if (
-    hasCloudflareDeploy ||
-    hasPrismaDeploy ||
-    config.webDeploy === "docker" ||
-    config.webDeploy === "vercel" ||
-    config.addons.includes("pwa") ||
-    config.frontend.includes("next")
-  ) {
-    allowed.sharp = true;
-  }
-
-  if (hasCloudflareDeploy || hasPrismaDeploy || hasAxiom) {
-    allowed["msgpackr-extract"] = true;
-    allowed.workerd = true;
-  }
-
-  if (config.orm === "prisma") {
-    allowed["@prisma/engines"] = true;
-    allowed.prisma = true;
-  }
-
-  if (config.addons.includes("lefthook")) {
-    allowed.lefthook = true;
-  }
-
-  if (config.addons.includes("nx")) {
-    allowed.nx = true;
-  }
-
-  return allowed;
 }
 
 function getWorkspacePackages(workspaces: PackageJson["workspaces"]): string[] {
@@ -782,4 +714,15 @@ function updateVitePlusPackageScripts(vfs: VirtualFileSystem, config: ProjectCon
   }
 
   vfs.writeJson(webPkgPath, webPkg);
+}
+
+export function processNpmScriptApprovals(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  if (config.packageManager !== "npm") return;
+  const pkg = vfs.readJson<PackageJson>("package.json");
+  if (!pkg) return;
+  const allowed = getAllowedDependencyScripts(config);
+  if (Object.keys(allowed).length) {
+    pkg.allowScripts = { ...allowed, ...pkg.allowScripts };
+    vfs.writeJson("package.json", pkg);
+  }
 }

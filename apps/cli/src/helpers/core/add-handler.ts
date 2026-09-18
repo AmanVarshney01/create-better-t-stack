@@ -6,6 +6,8 @@ import {
   processAddonsDeps,
   processNxConfig,
   processPackageConfigs,
+  processPnpmWorkspaceConfig,
+  processNpmScriptApprovals,
   processPwaPlugins,
   processTurboConfig,
   processVitePlusConfig,
@@ -69,6 +71,7 @@ const ADD_PACKAGE_JSON_PATHS = [
 ];
 
 const ADD_TEXT_FILE_PATHS = [
+  "pnpm-workspace.yaml",
   "apps/web/vite.config.ts",
   "apps/web/next.config.ts",
   "apps/web/src/Document.tsx",
@@ -554,6 +557,8 @@ async function addHandlerInternal(
     await processAddonTemplates(vfs, EMBEDDED_TEMPLATES, config);
     processAddonsDeps(vfs, config);
     processPwaPlugins(vfs, config);
+    processPnpmWorkspaceConfig(vfs, updatedConfig);
+    processNpmScriptApprovals(vfs, updatedConfig);
 
     if (addonsToAdd.includes("turborepo")) {
       processTurboConfig(vfs, updatedConfig);

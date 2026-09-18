@@ -1,5 +1,5 @@
 {{#unless (eq backend "self")}}
-import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
+import { ENV } from "../env{{#if (eq webDeploy "cloudflare")}}.public{{else}}.generated{{/if}}";
 {{/unless}}
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";

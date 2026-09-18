@@ -8,10 +8,7 @@ description: Deploy Better-T-Stack projects to Cloudflare or Prisma and manage h
 [Alchemy](https://alchemy.run) is the infrastructure-as-code layer generated when you choose **Cloudflare** or **Prisma** as a deployment target. The CLI writes a `packages/infra` workspace containing:
 
 - one `alchemy.run.ts` for applications, managed databases, and migrations
-- exact Alchemy and Effect version pins
 - root `dev`, `deploy`, and `destroy` commands
-
-The CLI calls the deployment choice **Prisma**. In the generated TypeScript, that target uses Alchemy's `Prisma.Compute` resource.
 
 ## Supported deployment shapes
 
@@ -25,24 +22,7 @@ Prisma supports:
 
 The CLI rejects unsupported framework/runtime combinations before writing files.
 
-Alchemy's automatic framework builds handle Next.js, Nuxt, Astro, and TanStack Start. The generated
-stack supplies explicit production artifacts for the remaining frameworks: Solid's Nitro
-server, React Router's documented custom Express server, and SvelteKit's official `adapter-node`
-server. TanStack Router uses Alchemy's automatic Vite build, which packages static assets with
-Prisma Compute's HTTP entrypoint and enables SPA route fallback.
-
-Cloudflare web deployment uses Alchemy's released framework resources where they match the
-generated stable framework: `Website.Nuxt` for Nuxt, `Website.Astro` for Astro, and `Website.Vite`
-for React Router, TanStack Router, TanStack Start, and Solid. Next.js and stable SvelteKit use
-`StaticSite` with OpenNext and SvelteKit's Cloudflare adapter, respectively.
-
-Prisma with a generic `node-postgres` connection, including PlanetScale Postgres and Supabase, is
-temporarily unavailable with Next.js on Cloudflare until OpenNext preserves `pg-cloudflare`'s
-workerd runtime files.
-
-Next.js with Neon or Prisma Postgres remains supported on Cloudflare. The same PlanetScale
-Postgres Prisma setup remains supported with the other Cloudflare SSR frontends or with Prisma,
-Docker, or Vercel deployment.
+With Next.js on Cloudflare, Prisma ORM supports Neon and Prisma Postgres. Generic PostgreSQL connections, including Supabase and PlanetScale Postgres, are not supported for that combination.
 
 ```bash
 # Full-stack Solid on Prisma with PlanetScale MySQL
@@ -76,24 +56,24 @@ cd packages/infra
 bunx alchemy profile edit
 ```
 
-Alchemy stores selected provider profiles under `~/.alchemy`. A generated managed-database stack does not run the Neon, PlanetScale, or Prisma CLI separately and does not ask you to copy a hosted `DATABASE_URL` into the application.
+Alchemy stores provider profiles under `~/.alchemy`. For Alchemy-managed databases, it creates the database and supplies the connection details to your application.
 
 ## Managed databases
 
-Alchemy manages Neon, PlanetScale, or Prisma Postgres only when the application plane that consumes the database is also deployed through Alchemy:
+Alchemy can create and manage Neon, PlanetScale, and Prisma Postgres databases when the backend deploys to Cloudflare or Prisma:
 
 - `backend: self`: the web deployment owns the database
 - separate backend: the server deployment owns the database
 
-This distinction matters in mixed stacks. A Prisma web app with a Vercel server, for example, keeps the server database external because the Vercel server is the database consumer.
+If the backend deploys elsewhere, configure its database separately.
 
-| Setup                | Generated behavior                                                                                                |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Neon                 | Creates a Neon project, uses the pooled URL at runtime, and the direct URL for migrations                         |
-| PlanetScale Postgres | Creates a `PS_DEV` database and a least-privilege runtime role; Prisma gets a short-lived migration role          |
-| PlanetScale MySQL    | Creates a `PS_DEV` database and a read/write runtime password; Prisma gets a short-lived admin migration password |
-| Prisma Postgres      | Creates the project, database, and connection and injects its pooled application URL                              |
-| Cloudflare D1        | Creates a native D1 binding and applies the generated migration directory                                         |
+| Setup                | What Alchemy creates                   |
+| -------------------- | -------------------------------------- |
+| Neon                 | A project and database connection      |
+| PlanetScale Postgres | A database and application credentials |
+| PlanetScale MySQL    | A database and application credentials |
+| Prisma Postgres      | A project, database, and connection    |
+| Cloudflare D1        | A database bound to your Worker        |
 
 <Callout type="warn">
   PlanetScale can charge for `PS_DEV` databases. Review `clusterSize` in
@@ -102,7 +82,7 @@ This distinction matters in mixed stacks. A Prisma web app with a Vercel server,
 
 ## Migration workflow
 
-Database schemas remain source controlled. Generate and review migrations during development:
+After changing your database schema, generate a migration:
 
 ```bash
 # Drizzle: generate SQL from the current schema
@@ -113,7 +93,7 @@ bun run db:migrate
 bun run db:generate
 ```
 
-Managed Prisma projects include an initial checked-in migration when the scaffold generates Better Auth or Todo models. On deployment, Alchemy runs `db:migrate:deploy` with a migration credential and memoizes it against the checked-in schema and migration files. Drizzle's Neon and PlanetScale resources apply the checked-in Drizzle migration directory directly; Prisma Postgres uses `drizzle-kit migrate` through the same deploy-time command resource.
+Review and commit the generated migration files. Alchemy applies migrations for managed databases during deployment.
 
 ## Develop and deploy
 
@@ -125,17 +105,9 @@ bun run deploy
 bun run destroy
 ```
 
-`bun run dev` starts Alchemy development alongside the generated applications. Application packages expose `dev:bare` internally so the root command does not recursively start Alchemy again.
-
-For Nuxt and Astro on Cloudflare, Alchemy owns the deployment build and injects its Cloudflare
-integration in memory. Nuxt keeps its ordinary framework `build` command for local verification;
-Astro's Cloudflare scaffold relies on the Alchemy lifecycle because a standalone server build would
-need a competing checked-in adapter.
-
-<Callout type="info">
-  Generated projects pin `alchemy@2.0.0-beta.78` with `effect@4.0.0-rc.115` exactly. The matching
-  framework source package is installed in the web workspace that Alchemy loads it from.
-</Callout>
+- `dev` starts local development.
+- `deploy` builds and deploys your applications and managed resources.
+- `destroy` removes the resources in the selected stage, including managed databases.
 
 Deployments are staged. For an explicit production stage:
 
@@ -150,43 +122,12 @@ Use the same stage when destroying it:
 bunx alchemy destroy --stage production
 ```
 
-## Environment variables and secrets
+## Environment variables
 
-The stack loads `packages/infra/.env` plus the relevant app `.env` files. Public configuration uses `Config.String`; secrets use `Config.Redacted`. Alchemy Outputs, such as a deployed server URL or database credential, are passed directly so resource dependency ordering is preserved.
+Set infrastructure configuration in `packages/infra/.env` and application configuration in the relevant app's `.env` file. Alchemy supplies managed database connections and deployed application URLs automatically.
 
-For Cloudflare, generated `Cloudflare.InferEnv` types flow into the owning app’s `cloudflare-env.d.ts`. Managed database bindings are individual Effect inputs, which keeps each runtime property precisely typed.
+Keep secrets out of version control. Run `bun run deploy` after changing deployment configuration.
 
-## Generated infrastructure
+## Customize your infrastructure
 
-A managed Prisma Postgres project is conceptually structured like this:
-
-```ts
-const project = Prisma.Project("project", {
-  createDatabase: false,
-  region: "us-east-1",
-});
-
-const database = yield * Prisma.Postgres("database", { project });
-const connection = yield * Prisma.Connection("database-connection", { database });
-
-yield *
-  Command.Exec("database-migrations", {
-    command: "bun run db:migrate:deploy",
-    cwd: "../../packages/db",
-    env: { DATABASE_URL: migrationUrl },
-    memo: { include: ["prisma/migrations/**", "prisma/schema/**"] },
-  });
-```
-
-The generated file is normal TypeScript. You can add resources or adjust regions and sizes while preserving the root lifecycle commands.
-
-For Nuxt + Prisma on Cloudflare, server-side oRPC calls use Nitro's in-process `event.fetch` against
-the generated `/rpc` route. This keeps the database client in Nitro's server graph only, avoids a
-second Prisma WASM copy in the page graph, and keeps the generated Worker below Cloudflare's 3 MB
-compressed free-plan limit.
-
-## Version policy
-
-Alchemy v2 is a beta. Better-T-Stack pins Alchemy, `@alchemy.run/frontend-frameworks`, Effect, and
-the Effect platform packages to exact versions. The package-manager lockfile records the resolved
-transitive dependencies.
+Edit `packages/infra/alchemy.run.ts` to change regions, database sizes, or add resources. See the [Alchemy documentation](https://alchemy.run) for the available resources and options.

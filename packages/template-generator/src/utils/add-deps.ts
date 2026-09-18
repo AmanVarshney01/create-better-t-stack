@@ -17,6 +17,7 @@ export const dependencyVersionMap = {
   typescript: "^6.0.3",
 
   "better-auth": "1.7.5",
+  "@better-auth/drizzle-adapter": "1.7.5",
   "@better-auth/expo": "1.7.5",
 
   "@clerk/backend": "^3.17.1",
@@ -29,8 +30,8 @@ export const dependencyVersionMap = {
   "@clerk/tanstack-react-start": "^1.5.12",
   "@clerk/expo": "^4.6.5",
 
-  "drizzle-orm": "^0.45.2",
-  "drizzle-kit": "^0.31.10",
+  "drizzle-orm": "1.0.0-rc.4",
+  "drizzle-kit": "1.0.0-rc.4",
   "@planetscale/database": "^1.20.1",
 
   "@libsql/client": "0.18.0",
@@ -158,12 +159,13 @@ export const dependencyVersionMap = {
   "@sveltejs/adapter-node": "^5.5.7",
   "@sveltejs/adapter-vercel": "^6.3.4",
   "@cloudflare/workers-types": "^5.20260906.1",
-  "@alchemy.run/frontend-frameworks": "2.0.0-beta.78",
+  "@alchemy.run/frontend-frameworks": "2.0.0-beta.79",
   "@astrojs/node": "^11.1.5",
   "@astrojs/vercel": "^11.0.10",
 
   // exact pins: caret ranges on prereleases can resolve to stray npm test tags
-  alchemy: "2.0.0-beta.78",
+  "@vercel/nft": "^1.11.0",
+  alchemy: "2.0.0-beta.79",
   effect: "4.0.0-rc.115",
   "@effect/platform-node": "4.0.0-rc.115",
   "@effect/platform-bun": "4.0.0-rc.115",

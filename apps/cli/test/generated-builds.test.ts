@@ -975,21 +975,6 @@ async function validatePwaBuildArtifacts(sample: SelectedBuildSample, projectDir
   }
 }
 
-async function buildAndValidatePrismaWebArtifact(sample: SelectedBuildSample, projectDir: string) {
-  if (sample.config.webDeploy !== "prisma") return;
-
-  const webDir = path.join(projectDir, "apps/web");
-  const entrypoint = sample.config.frontend?.includes("react-router")
-    ? "build/server/index.js"
-    : sample.config.frontend?.includes("svelte")
-      ? "build/index.js"
-      : undefined;
-
-  if (entrypoint) {
-    expect(await fs.pathExists(path.join(webDir, entrypoint))).toBe(true);
-  }
-}
-
 async function getAvailablePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = createServer();
@@ -1296,7 +1281,7 @@ async function bootAndValidatePrismaWebArtifact(sample: SelectedBuildSample, pro
   const frontend = sample.config.frontend ?? [];
   const entrypoint = frontend.includes("react-router")
     ? "build/server/index.js"
-    : frontend.includes("svelte")
+    : frontend.includes("svelte") && sample.config.backend !== "none"
       ? "build/index.js"
       : frontend.includes("solid")
         ? ".output/server/index.mjs"
@@ -1628,7 +1613,6 @@ try {
           }
           const build = getPackageManagerCommand(sample.packageManager, "build");
           await runCommand(sample.name, projectDir, build.command, build.args);
-          await buildAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidatePrismaWebArtifact(sample, projectDir);
           await bootAndValidateAxiomRuntime(sample, projectDir);
           await bootAndValidateStartAuthRuntime(sample, projectDir);

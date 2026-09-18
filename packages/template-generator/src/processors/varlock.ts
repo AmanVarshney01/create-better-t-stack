@@ -50,12 +50,12 @@ function schemaKeys(vfs: VirtualFileSystem, app: string, config: ProjectConfig):
   return keys;
 }
 
-function schema(keys: Set<string>, config: ProjectConfig): string {
+function schema(keys: Set<string>, config: ProjectConfig, envFile: string): string {
   const lines = [
     "# @defaultRequired=true",
     "# @defaultSensitive=true",
     "# @currentEnv=$NODE_ENV",
-    "# @generateTsTypes(path=./src/env.ts, exposeEnv=local)",
+    `# @generateTsTypes(path=./src/${envFile}, exposeEnv=local)`,
     "# ---",
     "",
     "# @public @type=enum(development, production, test)",
@@ -95,12 +95,6 @@ function schema(keys: Set<string>, config: ProjectConfig): string {
     ) {
       type = 'string(matches="^(https?://|/(?!/))")';
     }
-    const publicServer = [
-      "CORS_ORIGIN",
-      "BETTER_AUTH_URL",
-      "POLAR_SUCCESS_URL",
-      "CLERK_PUBLISHABLE_KEY",
-    ].includes(key);
     let value = "";
     if (vercel && ["BETTER_AUTH_URL", "CORS_ORIGIN"].includes(key)) {
       value = "$VERCEL_ORIGIN";
@@ -115,11 +109,7 @@ function schema(keys: Set<string>, config: ProjectConfig): string {
     }
     if (key.includes("CONVEX_") && key.endsWith("URL"))
       type = 'url(matches="^(?!https?://example[.]convex[.])")';
-    lines.push(
-      `# ${isPublic ? "@public " : publicServer ? "@public @dynamic " : ""}@type=${type}`,
-      `${key}=${value}`,
-      "",
-    );
+    lines.push(`# ${isPublic ? "@public " : ""}@type=${type}`, `${key}=${value}`, "");
   }
   return lines.join("\n");
 }
@@ -176,7 +166,7 @@ function processCloudflarePublicEnv(vfs: VirtualFileSystem, config: ProjectConfi
   const nuxt = config.frontend.includes("nuxt");
   const lines = [
     "// Alchemy validates deployment inputs with Varlock; Workers use native env bindings.",
-    'import type { PublicCoercedEnvSchema } from "./env";',
+    `import type { PublicCoercedEnvSchema } from "./env${svelte ? ".generated" : ""}";`,
   ];
   if (svelte && keys.length) lines.push(`import { ${keys.join(", ")} } from "$env/static/public";`);
   if (nuxt && keys.length) lines.push('import { useRuntimeConfig } from "#imports";');
@@ -222,14 +212,16 @@ export function processVarlock(
     if (!vfs.exists(`${app}/package.json`)) continue;
     const keys = schemaKeys(vfs, app, config);
     for (const key of keys) allKeys.add(key);
-    vfs.writeFile(`${app}/.env.schema`, schema(keys, config));
+    const envFile =
+      app === "apps/web" && config.frontend.includes("svelte") ? "env.generated.ts" : "env.ts";
+    vfs.writeFile(`${app}/.env.schema`, schema(keys, config, envFile));
     vfs.writeFile(`${app}/bunfig.toml`, `env = false\n${vfs.readFile(`${app}/bunfig.toml`) ?? ""}`);
     const pkg = vfs.readJson<Package>(`${app}/package.json`)!;
     pkg.scripts = { ...pkg.scripts, "env:generate": "varlock codegen" };
     vfs.writeJson(`${app}/package.json`, pkg);
     commands.push(`varlock codegen --path ./${app}/`);
     const ignore = `${app}/.gitignore`;
-    vfs.writeFile(ignore, `${vfs.readFile(ignore) ?? ""}\n!.env.schema\n/src/env.ts\n`);
+    vfs.writeFile(ignore, `${vfs.readFile(ignore) ?? ""}\n!.env.schema\n/src/${envFile}\n`);
   }
   if (vfs.exists("packages/db/package.json")) {
     const keys = config.dbSetup === "d1" ? ["NODE_ENV"] : ["NODE_ENV", "DATABASE_*"];

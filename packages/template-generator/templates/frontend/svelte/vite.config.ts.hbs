@@ -19,7 +19,7 @@ export default defineConfig({
     tailwindcss(),
     sveltekit(),
   ],
-{{#if (eq webDeploy "prisma")}}
+{{#if (and (eq webDeploy "prisma") (ne backend "none"))}}
   // Prisma Compute uploads only the build artifact, so keep the official
   // adapter-node output self-contained instead of requiring node_modules.
   ssr: {
