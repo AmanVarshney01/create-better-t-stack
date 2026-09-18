@@ -15,37 +15,7 @@ export async function processExtrasTemplates(
   );
   const hasNuxt = config.frontend.includes("nuxt");
 
-  if (config.packageManager === "pnpm") {
-    const workspace = parse(vfs.readFile("pnpm-workspace.yaml") ?? "") ?? {};
-    workspace.packages ??= ["apps/*", "packages/*"];
-    const allowBuilds = getAllowedDependencyScripts(config);
-    if (Object.keys(allowBuilds).length) {
-      workspace.allowBuilds = { ...allowBuilds, ...workspace.allowBuilds };
-    }
-    if (config.frontend.includes("solid")) {
-      workspace.overrides = {
-        "@solidjs/signals": "2.0.0-rc.7",
-        "@solidjs/compiler": "2.0.0-rc.7",
-        "@solidjs/babel-plugin": "2.0.0-rc.7",
-        ...workspace.overrides,
-      };
-      workspace.minimumReleaseAgeExclude = [
-        ...new Set([
-          ...(workspace.minimumReleaseAgeExclude ?? []),
-          "@solidjs/babel-plugin@2.0.0-rc.7",
-          "@solidjs/compiler@2.0.0-rc.7",
-          "@solidjs/meta@1.0.0-next.2",
-          "@solidjs/router@2.0.0-next.23",
-          "@solidjs/signals@2.0.0-rc.7",
-          "@solidjs/vite-plugin@3.0.0-next.39",
-          "@solidjs/web@2.0.0-rc.7",
-          "@tanstack/solid-query@6.0.0-rc.3",
-          "solid-js@2.0.0-rc.7",
-        ]),
-      ];
-    }
-    vfs.writeFile("pnpm-workspace.yaml", stringify(workspace));
-  }
+  processPnpmWorkspaceConfig(vfs, config);
 
   if (config.packageManager === "pnpm" && (hasNative || hasNuxt)) {
     processSingleTemplate(vfs, templates, "extras/_npmrc", ".npmrc", config);
@@ -65,4 +35,37 @@ export async function processExtrasTemplates(
       config,
     );
   }
+}
+
+export function processPnpmWorkspaceConfig(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  if (config.packageManager !== "pnpm") return;
+  const workspace = parse(vfs.readFile("pnpm-workspace.yaml") ?? "") ?? {};
+  workspace.packages ??= ["apps/*", "packages/*"];
+  const allowBuilds = getAllowedDependencyScripts(config);
+  if (Object.keys(allowBuilds).length) {
+    workspace.allowBuilds = { ...allowBuilds, ...workspace.allowBuilds };
+  }
+  if (config.frontend.includes("solid")) {
+    workspace.overrides = {
+      "@solidjs/signals": "2.0.0-rc.7",
+      "@solidjs/compiler": "2.0.0-rc.7",
+      "@solidjs/babel-plugin": "2.0.0-rc.7",
+      ...workspace.overrides,
+    };
+    workspace.minimumReleaseAgeExclude = [
+      ...new Set([
+        ...(workspace.minimumReleaseAgeExclude ?? []),
+        "@solidjs/babel-plugin@2.0.0-rc.7",
+        "@solidjs/compiler@2.0.0-rc.7",
+        "@solidjs/meta@1.0.0-next.2",
+        "@solidjs/router@2.0.0-next.23",
+        "@solidjs/signals@2.0.0-rc.7",
+        "@solidjs/vite-plugin@3.0.0-next.39",
+        "@solidjs/web@2.0.0-rc.7",
+        "@tanstack/solid-query@6.0.0-rc.3",
+        "solid-js@2.0.0-rc.7",
+      ]),
+    ];
+  }
+  vfs.writeFile("pnpm-workspace.yaml", stringify(workspace));
 }

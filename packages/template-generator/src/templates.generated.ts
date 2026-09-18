@@ -22434,7 +22434,7 @@ function RouteComponent() {
 `],
   ["examples/ai/web/svelte/src/routes/ai/+page.svelte.hbs", `<script lang="ts">
 	{{#unless (eq backend "self")}}
-	import { ENV } from "../../env{{#if (eq webDeploy "cloudflare")}}.public{{/if}}";
+	import { ENV } from "../../env{{#if (eq webDeploy "cloudflare")}}.public{{else}}.generated{{/if}}";
 	{{/unless}}
 	import { Chat } from "@ai-sdk/svelte";
 	import { DefaultChatTransport } from "ai";

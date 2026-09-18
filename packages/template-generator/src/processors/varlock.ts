@@ -95,12 +95,6 @@ function schema(keys: Set<string>, config: ProjectConfig, envFile: string): stri
     ) {
       type = 'string(matches="^(https?://|/(?!/))")';
     }
-    const publicServer = [
-      "CORS_ORIGIN",
-      "BETTER_AUTH_URL",
-      "POLAR_SUCCESS_URL",
-      "CLERK_PUBLISHABLE_KEY",
-    ].includes(key);
     let value = "";
     if (vercel && ["BETTER_AUTH_URL", "CORS_ORIGIN"].includes(key)) {
       value = "$VERCEL_ORIGIN";
@@ -115,11 +109,7 @@ function schema(keys: Set<string>, config: ProjectConfig, envFile: string): stri
     }
     if (key.includes("CONVEX_") && key.endsWith("URL"))
       type = 'url(matches="^(?!https?://example[.]convex[.])")';
-    lines.push(
-      `# ${isPublic ? "@public " : publicServer ? "@public @dynamic " : ""}@type=${type}`,
-      `${key}=${value}`,
-      "",
-    );
+    lines.push(`# ${isPublic ? "@public " : ""}@type=${type}`, `${key}=${value}`, "");
   }
   return lines.join("\n");
 }

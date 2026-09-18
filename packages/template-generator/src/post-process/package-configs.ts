@@ -40,6 +40,7 @@ const VITE_PLUS_VERSION = dependencyVersionMap["vite-plus"];
  */
 export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectConfig): void {
   updateRootPackageJson(vfs, config);
+  processNpmScriptApprovals(vfs, config);
   updateConfigPackageJson(vfs, config);
   updateUiPackageJson(vfs, config);
   updateInfraPackageJson(vfs, config);
@@ -235,15 +236,6 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   // Note: packageManager version is set by CLI at runtime since it requires running the actual CLI
   // For preview purposes, we just show the configured package manager
   pkgJson.packageManager ||= `${packageManager}@latest`;
-
-  if (packageManager === "npm") {
-    const allowScripts = getAllowedDependencyScripts(config);
-    if (Object.keys(allowScripts).length > 0) {
-      pkgJson.allowScripts = allowScripts;
-    } else {
-      delete pkgJson.allowScripts;
-    }
-  }
 
   if (config.api === "orpc" && config.frontend.includes("nuxt")) {
     pkgJson.overrides = {
@@ -722,4 +714,15 @@ function updateVitePlusPackageScripts(vfs: VirtualFileSystem, config: ProjectCon
   }
 
   vfs.writeJson(webPkgPath, webPkg);
+}
+
+export function processNpmScriptApprovals(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  if (config.packageManager !== "npm") return;
+  const pkg = vfs.readJson<PackageJson>("package.json");
+  if (!pkg) return;
+  const allowed = getAllowedDependencyScripts(config);
+  if (Object.keys(allowed).length) {
+    pkg.allowScripts = { ...allowed, ...pkg.allowScripts };
+    vfs.writeJson("package.json", pkg);
+  }
 }
