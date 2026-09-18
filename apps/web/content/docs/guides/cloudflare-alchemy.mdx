@@ -133,9 +133,13 @@ Astro's Cloudflare scaffold relies on the Alchemy lifecycle because a standalone
 need a competing checked-in adapter.
 
 <Callout type="info">
-  Generated projects pin `alchemy@2.0.0-beta.78` with `effect@4.0.0-rc.115` exactly. The matching
-  framework source package is installed in the web workspace that Alchemy loads it from.
+  Generated projects pin `alchemy@2.0.0-beta.79` with `effect@4.0.0-rc.115` exactly. The matching
+  framework source package is installed in the workspace that loads it.
 </Callout>
+
+Frontend-only Next.js, Nuxt, Astro, SvelteKit, TanStack Start, and TanStack Router projects use
+Alchemy’s `Prisma.Website` integrations for development, production builds, and runtime packaging.
+Full-stack projects, React Router, Solid, and separate API servers use `Prisma.Compute`.
 
 Deployments are staged. For an explicit production stage:
 

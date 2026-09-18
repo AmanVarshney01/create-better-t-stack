@@ -244,8 +244,25 @@ function prismaCustomBuild(framework: DeployedWebFramework): PrismaCustomBuild {
 function writePrismaWeb(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void {
   if (plan.web.target !== "prisma") return;
   const { framework, topology } = plan.web;
+  const websiteFramework =
+    plan.config.backend === "none"
+      ? {
+          next: "Nextjs",
+          nuxt: "Nuxt",
+          astro: "Astro",
+          svelte: "SvelteKit",
+          "tanstack-start": "TanStackStart",
+          "tanstack-router": "Vite",
+          "react-router": undefined,
+          solid: undefined,
+        }[framework]
+      : undefined;
 
-  writer.writeLine('export const web = Prisma.Compute("web", Effect.gen(function* () {');
+  writer.writeLine(
+    websiteFramework
+      ? "export const web = Effect.gen(function* () {"
+      : 'export const web = Prisma.Compute("web", Effect.gen(function* () {',
+  );
   writer.indent(() => {
     writer.writeLine("const project = yield* prismaProject;");
     if (topology === "self") {
@@ -267,45 +284,59 @@ function writePrismaWeb(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): voi
     );
 
     writer.blankLine();
-    writer.writeLine("return {");
-    writer.indent(() => {
-      writer.writeLine("project,");
-      writer.writeLine('path: "../../apps/web",');
-      const frameworkName = prismaFramework(framework);
-      if (frameworkName) {
-        writer.writeLine(`build: { type: "auto", framework: "${frameworkName}", env: webEnv },`);
-      } else {
-        const customBuild = prismaCustomBuild(framework);
+    if (websiteFramework) {
+      writer.writeLine(`return yield* Prisma.Website.${websiteFramework}("web", {`);
+      writer.indent(() => {
+        writer.writeLine("project,");
+        writer.writeLine('rootDir: "../../apps/web",');
+        writer.writeLine("env: webEnv,");
+        writer.writeLine('compute: { healthCheck: { path: "/" }, destroyOldDeployment: true },');
+        writer.writeLine(`dev: { port: ${webDevPort(framework)} },`);
+      });
+      writer.writeLine("});");
+    } else {
+      writer.writeLine("return {");
+      writer.indent(() => {
+        writer.writeLine("project,");
+        writer.writeLine('path: "../../apps/web",');
+        const frameworkName = prismaFramework(framework);
+        if (frameworkName) {
+          writer.writeLine(`build: { type: "auto", framework: "${frameworkName}", env: webEnv },`);
+        } else {
+          const customBuild = prismaCustomBuild(framework);
+          writeObject(
+            writer,
+            "build: {",
+            () => {
+              writer.writeLine(
+                `command: "${plan.config.packageManager} run ${customBuild.script}",`,
+              );
+              writer.writeLine(`outdir: "${customBuild.outdir}",`);
+              writer.writeLine(`entrypoint: "${customBuild.entrypoint}",`);
+              writer.writeLine("env: webEnv,");
+            },
+            "},",
+          );
+          writer.writeLine("port: 3000,");
+        }
+        writer.writeLine("env: webEnv,");
+        writer.writeLine('healthCheck: { path: "/" },');
+        writer.writeLine("destroyOldDeployment: true,");
         writeObject(
           writer,
-          "build: {",
+          "dev: {",
           () => {
-            writer.writeLine(`command: "${plan.config.packageManager} run ${customBuild.script}",`);
-            writer.writeLine(`outdir: "${customBuild.outdir}",`);
-            writer.writeLine(`entrypoint: "${customBuild.entrypoint}",`);
+            writer.writeLine(`command: "${plan.config.packageManager} run dev:bare",`);
+            writer.writeLine(`port: ${webDevPort(framework)},`);
             writer.writeLine("env: webEnv,");
           },
           "},",
         );
-        writer.writeLine("port: 3000,");
-      }
-      writer.writeLine("env: webEnv,");
-      writer.writeLine('healthCheck: { path: "/" },');
-      writer.writeLine("destroyOldDeployment: true,");
-      writeObject(
-        writer,
-        "dev: {",
-        () => {
-          writer.writeLine(`command: "${plan.config.packageManager} run dev:bare",`);
-          writer.writeLine(`port: ${webDevPort(framework)},`);
-          writer.writeLine("env: webEnv,");
-        },
-        "},",
-      );
-    });
-    writer.writeLine("};");
+      });
+      writer.writeLine("};");
+    }
   });
-  writer.writeLine("}));");
+  writer.writeLine(websiteFramework ? "});" : "}));");
 }
 
 export function writeExportedWebResource(writer: AlchemyWriter, plan: AlchemyDeploymentPlan): void {
