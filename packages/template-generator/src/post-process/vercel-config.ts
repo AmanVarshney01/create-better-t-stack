@@ -87,7 +87,7 @@ export function processVercelConfig(vfs: VirtualFileSystem, config: ProjectConfi
       functions: {
         "src/index.ts": {
           includeFiles:
-            "{package.json,apps/server/.env.schema,node_modules/.bin/varlock,node_modules/varlock/**}",
+            "{package.json,.env.schema,node_modules/.bin/varlock,node_modules/varlock/**}",
         },
       },
     };
